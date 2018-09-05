@@ -26,7 +26,7 @@ namespace egret3d {
         public _retargetBoneNames: string[] | null = null;
         @paper.serializedField
         private _mesh: Mesh | null = null;
-
+        private _rawVertices: Float32Array;
         /**
          * @internal
          */
@@ -41,6 +41,38 @@ namespace egret3d {
                 const matrix = bone ? bone.getWorldMatrix() : Matrix4.IDENTITY;
                 _helpMatrix.fromArray(inverseBindMatrices, offset).premultiply(matrix).toArray(boneMatrices, offset);
             }
+
+            // {
+            //     const vA = Vector3.create();
+            //     const vB = Vector3.create();
+            //     const vC = Vector3.create();
+            //     const mA = Matrix4.create();
+
+            //     const indices = this._mesh.getIndices()!;
+            //     const vertices = this._mesh.getVertices()!;
+            //     const joints = this._mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array;
+            //     const weights = this._mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)! as Float32Array;
+
+            //     if (!this._rawVertices) {
+            //         this._rawVertices = new Float32Array(vertices.length);
+            //         this._rawVertices.set(vertices);
+            //     }
+
+            //     for (const index of <any>indices as number[]) {
+            //         vA.fromArray(this._rawVertices, index * 3);
+            //         vB.set(0.0, 0.0, 0.0).add(
+            //             vC.applyMatrix(mA.fromArray(boneMatrices, joints[index * 4 + 0] * 16), vA).multiplyScalar(weights[index * 4 + 0])
+            //         ).add(
+            //             vC.applyMatrix(mA.fromArray(boneMatrices, joints[index * 4 + 1] * 16), vA).multiplyScalar(weights[index * 4 + 1])
+            //         ).add(
+            //             vC.applyMatrix(mA.fromArray(boneMatrices, joints[index * 4 + 2] * 16), vA).multiplyScalar(weights[index * 4 + 2])
+            //         ).add(
+            //             vC.applyMatrix(mA.fromArray(boneMatrices, joints[index * 4 + 3] * 16), vA).multiplyScalar(weights[index * 4 + 3])
+            //         ).toArray(vertices, index * 3);
+            //     }
+
+            //     this._mesh.uploadVertexBuffer();
+            // }
         }
 
         public initialize(reset?: boolean) {
@@ -50,17 +82,12 @@ namespace egret3d {
                 return;
             }
 
-            //bindMatrix
-            //bindMatrixInverse
-            //boneMatrices
-
             this._bones.length = 0;
             this._rootBone = null;
             this._boneMatrices = null;
             this._inverseBindMatrices = null;
 
             if (this._mesh) {
-                // TODO 
                 const config = this._mesh.config;
                 const skin = config.skins![0];
                 const children = this.gameObject.transform.parent!.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
@@ -85,29 +112,8 @@ namespace egret3d {
                     }
                 }
 
+                this._inverseBindMatrices = this._mesh.createTypeArrayFromAccessor(this._mesh.getAccessor(skin.inverseBindMatrices!));
                 this._boneMatrices = new Float32Array(this._bones.length * 16);
-
-                if (skin.inverseBindMatrices !== undefined) {
-                    this._inverseBindMatrices = this._mesh.createTypeArrayFromAccessor(this._mesh.getAccessor(skin.inverseBindMatrices));
-                }
-                else {
-                    let index = 0;
-                    this._inverseBindMatrices = new Float32Array(this._bones.length * 16);
-
-                    for (const bone of this._bones) {
-                        if (bone) {
-                            _helpMatrix.inverse(bone.getWorldMatrix());
-                        }
-                        else {
-                            _helpMatrix.identity();
-                        }
-
-                        for (let i = 0; i < 16; ++i) {
-                            this._inverseBindMatrices[index++] = _helpMatrix.rawData[i];
-                        }
-                    }
-                }
-
                 // this._update(); TODO
             }
         }

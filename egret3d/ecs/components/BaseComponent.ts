@@ -23,10 +23,8 @@ namespace paper {
          * @internal
          */
         public static __index: number = -1;
-        /**
-         * @internal
-         */
         private static readonly _allComponents: ComponentClass<BaseComponent>[] = [];
+        private static readonly _allSingletonComponents: ComponentClass<BaseComponent>[] = [];
         private static _createEnabled: GameObject | null = null;
         /**
          * @internal
@@ -36,8 +34,8 @@ namespace paper {
                 return false;
             }
 
-            if (this._allComponents.indexOf(this as any) >= 0) {
-                console.debug("Register component class error.", egret.getQualifiedClassName(this));
+            if ((this.__isSingleton ? this._allSingletonComponents : this._allComponents).indexOf(this as any) >= 0) {
+                console.debug("Register component class again.", egret.getQualifiedClassName(this));
                 return false;
             }
 
@@ -48,12 +46,14 @@ namespace paper {
                 this.requireComponents = [];
             }
 
-            this.__index = this._allComponents.length;
             if (this.__isSingleton) {
-                this.__index += 300; // This means that a maximum of 300 non-singleton components can be added.
+                this.__index = this._allSingletonComponents.length + 300; // This means that a maximum of 300 non-singleton components can be added.
+                this._allSingletonComponents.push(this as any);
             }
-
-            this._allComponents.push(this as any);
+            else {
+                this.__index = this._allComponents.length;
+                this._allComponents.push(this as any);
+            }
 
             return true;
         }

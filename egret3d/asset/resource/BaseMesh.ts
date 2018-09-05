@@ -95,9 +95,8 @@ namespace egret3d {
                 this.name = attributeNamesOrName as string;
             }
 
-            const accessor = this.getAccessor(0);
-            this._vertexCount = accessor.count;
             this._glTFMesh = this.config.meshes![0];
+            this._vertexCount = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION!).count;
 
             for (const k in this._glTFMesh.primitives[0].attributes) {
                 this._attributeNames.push(k);

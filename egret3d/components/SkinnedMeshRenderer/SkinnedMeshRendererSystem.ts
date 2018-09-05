@@ -39,6 +39,7 @@ namespace egret3d {
                 const material = renderer.materials[primitive.material!];
                 const drawCall: DrawCall = {
                     renderer: renderer,
+                    matrix: Matrix4.IDENTITY,
 
                     isSkinned: true,
                     subMeshIndex: subMeshIndex++,

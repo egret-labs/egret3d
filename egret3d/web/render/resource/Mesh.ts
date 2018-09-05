@@ -54,7 +54,7 @@ namespace egret3d {
                 return;
             }
 
-            const vertexBufferViewAccessor = this.getAccessor(0);
+            const vertexBufferViewAccessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION!);
             const vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float);
             const webgl = WebGLCapabilities.webgl;
             const vbo = webgl.createBuffer();

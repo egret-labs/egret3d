@@ -1,5 +1,4 @@
 namespace egret3d {
-    const _helpMatrixArray = new Float32Array(16);
     const _helpMatrix = Matrix4.create();
     /**
      * WebGL 渲染系统
@@ -99,8 +98,9 @@ namespace egret3d {
             this._updateAttributes(program, drawCall.mesh, drawCall.subMeshIndex, technique, force);
             // Draw.
             const mesh = drawCall.mesh;
-            const primitive = mesh.glTFMesh.primitives[drawCall.subMeshIndex];
-            const vertexAccessor = mesh.getAccessor(0);
+            const glTFMesh = mesh.glTFMesh;
+            const primitive = glTFMesh.primitives[drawCall.subMeshIndex];
+            const vertexAccessor = mesh.getAccessor(glTFMesh.primitives[0].attributes.POSITION!);
             const bufferOffset = mesh.getBufferOffset(vertexAccessor);
             const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;
 
@@ -159,18 +159,16 @@ namespace egret3d {
                         webgl.uniform3fv(location, context.cameraUp);
                         break;
 
-                    case gltf.UniformSemanticType._BINDMATRIX: {
-                        const renderer = context.drawCall.renderer as SkinnedMeshRenderer;
-                        (renderer.rootBone || renderer.transform).getWorldMatrix().toArray(_helpMatrixArray);
-                        webgl.uniformMatrix4fv(location, false, _helpMatrixArray);
-                        break;
-                    }
-                    case gltf.UniformSemanticType._BINDMATRIXINVERSE: {
-                        const renderer = context.drawCall.renderer as SkinnedMeshRenderer;
-                        _helpMatrix.inverse((renderer.rootBone || renderer.transform).getWorldMatrix()).toArray(_helpMatrixArray);
-                        webgl.uniformMatrix4fv(location, false, _helpMatrixArray);
-                        break;
-                    }
+                    // case gltf.UniformSemanticType._BINDMATRIX: {
+                    //     const renderer = context.drawCall.renderer as SkinnedMeshRenderer;
+                    //     webgl.uniformMatrix4fv(location, false, xxx.rawData);
+                    //     break;
+                    // }
+                    // case gltf.UniformSemanticType._BINDMATRIXINVERSE: {
+                    //     const renderer = context.drawCall.renderer as SkinnedMeshRenderer;
+                    //     webgl.uniformMatrix4fv(location, false, xxx .rawData);
+                    //     break;
+                    // }
                     case gltf.UniformSemanticType.JOINTMATRIX:
                         webgl.uniformMatrix4fv(location, false, (context.drawCall.renderer as SkinnedMeshRenderer)._boneMatrices!);
                         break;

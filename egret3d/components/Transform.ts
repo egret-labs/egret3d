@@ -529,7 +529,7 @@ namespace egret3d {
         public set localScale(value: Readonly<Vector3>) {
             this._localScale.x = value.x;
             this._localScale.y = value.y;
-            this._localScale.z = value.x;
+            this._localScale.z = value.z;
 
             if (!this._dirtyLocal) {
                 this._dirtify(true);
@@ -897,7 +897,7 @@ namespace egret3d {
             else {
                 this._localScale.x = p1 as number;
                 this._localScale.y = p2 !== undefined ? p2 : 1.0;
-                this._localScale.z = p3 !== undefined ? p3 : 1.;
+                this._localScale.z = p3 !== undefined ? p3 : 1.0;
             }
 
             if (this._parent) {
