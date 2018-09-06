@@ -20,10 +20,13 @@ namespace egret3d.particle {
         private _lastFrameFirstCursor: number = 0;
         //最后存活位置
         private _lastAliveCursor: number = 0;
+        private _forceUpdate: boolean = false;
         //原始顶点数量
         private _vertexStride: number = 0;
         //当前爆发的索引
         private _burstIndex: number = 0;
+        //
+        private _readEmitCount: number = 0;
         //最终重力
         private _finalGravity = new Vector3();
         private _vertexAttributes: gltf.MeshAttribute[];
@@ -57,7 +60,8 @@ namespace egret3d.particle {
             for (let l = bursts.length; this._burstIndex < l; this._burstIndex++) {
                 const burst: Burst = bursts[this._burstIndex];
                 if (burst.time >= startTime && burst.time < endTime) {
-                    totalEmitCount += numberLerp(burst.minCount, burst.maxCount, Math.random());
+                    // totalEmitCount += numberLerp(burst.minCount, burst.maxCount, Math.random());
+                    totalEmitCount += burst.maxCount;
                 } else {
                     break;
                 }
@@ -79,7 +83,7 @@ namespace egret3d.particle {
          * @param startCursor 
          * @param endCursor 
          */
-        private _addParticles(time: number, startCursor: number, count: number) {
+        private _addParticles(time: number, startCursor: number, count: number, lastEmittsionTime:number) {
             const comp = this._comp;
             const main = comp.main;
             const velocityModule = comp.velocityOverLifetime;
@@ -111,7 +115,7 @@ namespace egret3d.particle {
             const worldPostionBuffer = this._worldPostionBuffer;
             const worldRoationBuffer = this._worldRoationBuffer;
 
-            const age = Math.min(this._emittsionTime / main.duration, 1.0);
+            const age = Math.min(lastEmittsionTime / main.duration, 1.0);
             const vertexStride = this._vertexStride;
 
             let addCount = 0, startIndex = 0, endIndex = 0;
@@ -214,20 +218,18 @@ namespace egret3d.particle {
             this._finalGravity.z = GRAVITY.z * gravityModifier;
         }
 
-        private _tryEmit(time: number): boolean {
-            const maxParticles = this._comp.main._maxParticles;
-            var nextCursor = this._firstAliveCursor + 1 > maxParticles ? 0 : this._firstAliveCursor + 1;
-            if (nextCursor >= maxParticles) {
-                nextCursor = 0;
-            }
-
-            if (!this._isParticleExpired(nextCursor)) {
+        private _tryEmit(): boolean {
+            if (!this._isParticleExpired(this._firstAliveCursor)) {
                 return false;
             }
-
             //
+            const maxParticles = this._comp.main._maxParticles;
+            var nextCursor = this._firstAliveCursor + 1 >= maxParticles ? 0 : this._firstAliveCursor + 1;
+            //
+            if (nextCursor === this._lastAliveCursor) {
+                this._forceUpdate = true;
+            }
             this._firstAliveCursor = nextCursor;
-            this._dirty = true;
             return true;
         }
 
@@ -239,9 +241,11 @@ namespace egret3d.particle {
             this._firstAliveCursor = 0;
             this._lastFrameFirstCursor = 0;
             this._lastAliveCursor = 0;
+            this._forceUpdate = false;
             this._vertexStride = 0;
             this._vertexAttributes = null!;
             this._burstIndex = 0;
+            this._readEmitCount = 0;
             this._startPositionBuffer = null!;
             this._startVelocityBuffer = null!;
             this._startColorBuffer = null!;
@@ -263,6 +267,7 @@ namespace egret3d.particle {
         public resetTime() {
             this._burstIndex = 0;
             this._emittsionTime = 0;
+            this._readEmitCount = 0;
         }
 
         public init(comp: ParticleComponent, renderer: ParticleRenderer) {
@@ -291,17 +296,7 @@ namespace egret3d.particle {
 
             renderer.batchMesh = mesh;
             //粒子系统不能用共享材质
-            const mat = renderer.materials[0].clone();
-            //
-            const oldShaderName = mat.getShader().url;
-            if (renderer.renderMode === ParticleRenderMode.Mesh) {
-                mat.setShader(DefaultShaders.PARTICLE_3D.clone());
-            } else {
-                mat.setShader(DefaultShaders.PARTICLE_2D.clone());
-            }
-            //
-
-            renderer.batchMaterial = mat;
+            renderer.batchMaterial = renderer.materials[0].clone();
             mesh.uploadSubIndexBuffer();
         }
 
@@ -315,10 +310,11 @@ namespace egret3d.particle {
             const comp = this._comp;
             const mainModule = comp.main;
             //
-            while (this._lastAliveCursor != this._firstAliveCursor) {
+            while (this._lastAliveCursor != this._firstAliveCursor || this._forceUpdate) {
                 if (!this._isParticleExpired(this._lastAliveCursor)) {
                     break;
                 }
+                this._forceUpdate = false;
                 this._lastAliveCursor++;
                 if (this._lastAliveCursor >= mainModule._maxParticles) {
                     this._lastAliveCursor = 0;
@@ -343,48 +339,51 @@ namespace egret3d.particle {
             const lastEmittsionTime = this._emittsionTime;
             this._emittsionTime += elapsedTime;
             const isOver = this._emittsionTime > mainModule.duration;
+            const aliveParticleCount = this.aliveParticleCount;
+            let totalEmitCount = 0;
             if (!isOver) {
                 //由爆发触发的粒子发射
-                let totalEmitCount = 0;
                 if (comp.emission.bursts.length > 0) {
-                    let readyEmitCount = 0;
-                    readyEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
-                    readyEmitCount = Math.min(mainModule._maxParticles - this.aliveParticleCount, readyEmitCount);
-                    //
-                    for (let i = 0; i < readyEmitCount; i++) {
-                        if (this._tryEmit(this._time)) {
-                            totalEmitCount++;
-                        }
-                    }
+                    this._readEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
                 }
-                //由时间触发的粒子发射,不支持曲线
-                const rateOverTime = comp.emission.rateOverTime.constant;
-                if (rateOverTime > 0) {
-                    const minEmissionTime: number = 1 / rateOverTime;
-                    this._frameRateTime += elapsedTime;
-
-                    while (this._frameRateTime > minEmissionTime) {
-                        if (!this._tryEmit(this._time)) {
-                            break;
-                        }
-                        totalEmitCount++;
-                        this._frameRateTime -= minEmissionTime;
-                    }
-                }
-
-                if (totalEmitCount > 0) {
-                    this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount);
-                }
-            } else {
-                //一个生命周期结束
+            }
+            else {
+                //一个发射周期结束
                 if (mainModule.loop) {
-                    //直接置零，对时间敏感的可能有问题
-                    this._emittsionTime = 0;
+                    this._readEmitCount = 0;
+                    this._readEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
+                    this._emittsionTime -= mainModule.duration;
                     this._burstIndex = 0;
-                } else {
+                    this._readEmitCount += this._getBurstCount(0, this._emittsionTime);
+                }
+                else {
                     //自己停止，不要影响子粒子播放状态
                     comp.stop(false);
                 }
+            }
+            //
+            for (let i = 0; i < this._readEmitCount; i++) {
+                if (this._tryEmit()) {
+                    totalEmitCount++;
+                }
+            }
+            //由时间触发的粒子发射,不支持曲线
+            const rateOverTime = comp.emission.rateOverTime.constant;
+            if (rateOverTime > 0) {
+                const minEmissionTime: number = 1 / rateOverTime;
+                this._frameRateTime += elapsedTime;
+                while (this._frameRateTime > minEmissionTime) {
+                    if (!this._tryEmit()) {
+                        break;
+                    }
+                    totalEmitCount++;
+                    this._frameRateTime -= minEmissionTime;
+                }
+            }
+            totalEmitCount = Math.min(mainModule._maxParticles - aliveParticleCount, totalEmitCount);
+            if (totalEmitCount > 0) {
+                this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount, lastEmittsionTime);
+                this._dirty = true;
             }
         }
 
@@ -399,16 +398,12 @@ namespace egret3d.particle {
                 if (this._firstAliveCursor > this._lastFrameFirstCursor) {
                     const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
                     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
-                        // uploadVertexSubData(this._vertexAttributes, bufferOffset, bufferCount);
-                } else {
+                }
+                else {
                     const addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
                     //先更新尾部的，再更新头部的
                     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
                     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
-
-
-                    // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
-                    // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
                 }
                 this._lastFrameFirstCursor = this._firstAliveCursor;
                 this._dirty = false;
