@@ -16749,7 +16749,7 @@ var egret3d;
             var uniformData = gl.getActiveUniform(webglProgram, i);
             var tUniform = technique.uniforms[uniformData.name];
             if (!tUniform) {
-                console.warn("缺少Uniform定义：" + uniformData.name);
+                console.error("缺少Uniform定义：" + uniformData.name);
             }
             var location_2 = gl.getUniformLocation(webglProgram, uniformData.name);
             if (tUniform.semantic) {
@@ -21415,7 +21415,7 @@ var egret3d;
         for (var i = 0; i < tempIndexBuffers.length; i++) {
             var subLen = tempIndexBuffers[i].length;
             //第一个submesh在构造函数中已经添加，需要手动添加后续的
-            combineMesh.addSubMesh(indicesCount, subLen, i);
+            combineMesh.addSubMesh(indicesCount, i);
             indicesCount += subLen;
         }
         return combineMesh;
