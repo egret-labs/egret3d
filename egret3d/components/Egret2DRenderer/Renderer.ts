@@ -88,13 +88,12 @@ module egret.web {
 
             // 目前只使用0号材质单元，默认开启
             gl.activeTexture(gl.TEXTURE0);
+            this.currentProgram = null;
         }
-
-
         /**
-         *  执行目前缓存在命令列表里的命令并清空
+         * @internal
          */
-        public activatedBuffer: WebGLRenderBuffer;
+        public _activatedBuffer: WebGLRenderBuffer;
         public $drawWebGL() {
             if (this.drawCmdManager.drawDataLen == 0) {
                 return;
@@ -117,12 +116,12 @@ module egret.web {
                 offset = this.drawData(data, offset);
                 // 计算draw call
                 if (data.type == DRAWABLE_TYPE.ACT_BUFFER) {
-                    this.activatedBuffer = data.buffer;
+                    this._activatedBuffer = data.buffer;
                     this.egretWebGLRenderContext.activatedBuffer = data.buffer;
                 }
                 if (data.type == DRAWABLE_TYPE.TEXTURE || data.type == DRAWABLE_TYPE.PUSH_MASK || data.type == DRAWABLE_TYPE.POP_MASK) {
-                    if (this.activatedBuffer && this.activatedBuffer.$computeDrawCall) {
-                        this.activatedBuffer.$drawCalls++;
+                    if (this._activatedBuffer && this._activatedBuffer.$computeDrawCall) {
+                        this._activatedBuffer.$drawCalls++;
                     }
                 }
             }
@@ -168,7 +167,7 @@ module egret.web {
                     }
 
                     this.activeProgram(gl, program);
-                    this.syncUniforms(program, filter, data.textureWidth, data.textureHeight);
+                    this.syncUniforms(program, filter, data);
 
                     offset += this.drawTextureElements(data, offset);
                     break;
@@ -176,7 +175,7 @@ module egret.web {
 
                     program = EgretWebGLProgram.getProgram(gl, EgretShaderLib.default_vert, EgretShaderLib.primitive_frag, "primitive");
                     this.activeProgram(gl, program);
-                    this.syncUniforms(program, filter, data.textureWidth, data.textureHeight);
+                    this.syncUniforms(program, filter, data);
 
                     offset += this.drawPushMaskElements(data, offset);
                     break;
@@ -184,7 +183,7 @@ module egret.web {
 
                     program = EgretWebGLProgram.getProgram(gl, EgretShaderLib.default_vert, EgretShaderLib.primitive_frag, "primitive");
                     this.activeProgram(gl, program);
-                    this.syncUniforms(program, filter, data.textureWidth, data.textureHeight);
+                    this.syncUniforms(program, filter, data);
 
                     offset += this.drawPopMaskElements(data, offset);
                     break;
@@ -196,8 +195,8 @@ module egret.web {
                     this.onResize(data.width, data.height);
                     break;
                 case DRAWABLE_TYPE.CLEAR_COLOR:
-                    if (this.activatedBuffer) {
-                        let target = this.activatedBuffer.rootRenderTarget;
+                    if (this._activatedBuffer) {
+                        let target = this._activatedBuffer.rootRenderTarget;
                         if (target.width != 0 || target.height != 0) {
                             target.clear(true);
                         }
@@ -207,7 +206,7 @@ module egret.web {
                     this.activateBuffer(data.buffer, data.width, data.height);
                     break;
                 case DRAWABLE_TYPE.ENABLE_SCISSOR:
-                    let buffer = this.activatedBuffer;
+                    let buffer = this._activatedBuffer;
                     if (buffer) {
                         if (buffer.rootRenderTarget) {
                             buffer.rootRenderTarget.enabledStencil();
@@ -216,7 +215,7 @@ module egret.web {
                     }
                     break;
                 case DRAWABLE_TYPE.DISABLE_SCISSOR:
-                    buffer = this.activatedBuffer;
+                    buffer = this._activatedBuffer;
                     if (buffer) {
                         buffer.disableScissor();
                     }
@@ -230,39 +229,96 @@ module egret.web {
 
         private currentProgram: EgretWebGLProgram;
         private activeProgram(gl: WebGLRenderingContext, program: EgretWebGLProgram): void {
-            // if (program != this.currentProgram) {
-            gl.useProgram(program.id);
+            if (program != this.currentProgram) {
+                gl.useProgram(program.id);
 
-            // 目前所有attribute buffer的绑定方法都是一致的
-            let attribute = program.attributes;
+                // 目前所有attribute buffer的绑定方法都是一致的
+                let attribute = program.attributes;
 
-            for (let key in attribute) {
-                if (key === "aVertexPosition") {
-                    gl.vertexAttribPointer(attribute["aVertexPosition"].location, 2, gl.FLOAT, false, 4 * 4, 0);
-                    gl.enableVertexAttribArray(attribute["aVertexPosition"].location);
-                } else if (key === "aTextureCoord") {
-                    gl.vertexAttribPointer(attribute["aTextureCoord"].location, 2, gl.UNSIGNED_SHORT, true, 4 * 4, 2 * 4);
-                    gl.enableVertexAttribArray(attribute["aTextureCoord"].location);
-                } else if (key === "aColor") {
-                    gl.vertexAttribPointer(attribute["aColor"].location, 1, gl.FLOAT, false, 4 * 4, 3 * 4);
-                    gl.enableVertexAttribArray(attribute["aColor"].location);
+                for (let key in attribute) {
+                    if (key === "aVertexPosition") {
+                        gl.vertexAttribPointer(attribute["aVertexPosition"].location, 2, gl.FLOAT, false, 4 * 4, 0);
+                        gl.enableVertexAttribArray(attribute["aVertexPosition"].location);
+                    }
+                    else if (key === "aTextureCoord") {
+                        gl.vertexAttribPointer(attribute["aTextureCoord"].location, 2, gl.UNSIGNED_SHORT, true, 4 * 4, 2 * 4);
+                        gl.enableVertexAttribArray(attribute["aTextureCoord"].location);
+                    }
+                    else if (key === "aColor") {
+                        gl.vertexAttribPointer(attribute["aColor"].location, 1, gl.FLOAT, false, 4 * 4, 3 * 4);
+                        gl.enableVertexAttribArray(attribute["aColor"].location);
+                    }
+                    //===== particle begin =====
+                    else if (key === "aParticlePosition") {
+                        gl.vertexAttribPointer(attribute["aParticlePosition"].location, 2, gl.FLOAT, false, 22 * 4, 0);
+                        gl.enableVertexAttribArray(attribute["aParticlePosition"].location);
+                    }
+                    else if (key === "aParticleTextureCoord") {
+                        gl.vertexAttribPointer(attribute["aParticleTextureCoord"].location, 2, gl.FLOAT, false, 22 * 4, 2 * 4);
+                        gl.enableVertexAttribArray(attribute["aParticleTextureCoord"].location);
+                    }
+                    else if (key === "aParticleScale") {
+                        gl.vertexAttribPointer(attribute["aParticleScale"].location, 2, gl.FLOAT, false, 22 * 4, 4 * 4);
+                        gl.enableVertexAttribArray(attribute["aParticleScale"].location);
+                    }
+                    else if (key === "aParticleRotation") {
+                        gl.vertexAttribPointer(attribute["aParticleRotation"].location, 2, gl.FLOAT, false, 22 * 4, 6 * 4);
+                        gl.enableVertexAttribArray(attribute["aParticleRotation"].location);
+                    }
+                    else if (key === "aParticleRed") {
+                        gl.vertexAttribPointer(attribute["aParticleRed"].location, 2, gl.FLOAT, false, 22 * 4, 8 * 4);
+                        gl.enableVertexAttribArray(attribute["aParticleRed"].location);
+                    }
+                    else if (key === "aParticleGreen") {
+                        gl.vertexAttribPointer(attribute["aParticleGreen"].location, 2, gl.FLOAT, false, 22 * 4, 10 * 4);
+                        gl.enableVertexAttribArray(attribute["aParticleGreen"].location);
+                    }
+                    else if (key === "aParticleBlue") {
+                        gl.vertexAttribPointer(attribute["aParticleBlue"].location, 2, gl.FLOAT, false, 22 * 4, 12 * 4);
+                        gl.enableVertexAttribArray(attribute["aParticleBlue"].location);
+                    }
+                    else if (key === "aParticleAlpha") {
+                        gl.vertexAttribPointer(attribute["aParticleAlpha"].location, 2, gl.FLOAT, false, 22 * 4, 14 * 4);
+                        gl.enableVertexAttribArray(attribute["aParticleAlpha"].location);
+                    }
+                    else if (key === "aParticleEmitRotation") {
+                        gl.vertexAttribPointer(attribute["aParticleEmitRotation"].location, 2, gl.FLOAT, false, 22 * 4, 16 * 4);
+                        gl.enableVertexAttribArray(attribute["aParticleEmitRotation"].location);
+                    }
+                    else if (key === "aParticleEmitRadius") {
+                        gl.vertexAttribPointer(attribute["aParticleEmitRadius"].location, 2, gl.FLOAT, false, 22 * 4, 18 * 4);
+                        gl.enableVertexAttribArray(attribute["aParticleEmitRadius"].location);
+                    }
+                    else if (key === "aParticleTime") {
+                        gl.vertexAttribPointer(attribute["aParticleTime"].location, 2, gl.FLOAT, false, 22 * 4, 20 * 4);
+                        gl.enableVertexAttribArray(attribute["aParticleTime"].location);
+                    }
+                    //===== particle end =====
                 }
-            }
 
-            this.currentProgram = program;
-            // }
+                this.currentProgram = program;
+            }
         }
 
-        private syncUniforms(program: EgretWebGLProgram, filter: Filter, textureWidth: number, textureHeight: number): void {
+        private syncUniforms(program: EgretWebGLProgram, filter: Filter, data): void {
             let uniforms = program.uniforms;
             for (let key in uniforms) {
                 if (key === "projectionVector") {
                     uniforms[key].setValue({ x: this.projectionX, y: this.projectionY });
-                } else if (key === "uTextureSize") {
-                    uniforms[key].setValue({ x: textureWidth, y: textureHeight });
-                } else if (key === "uSampler") {
+                }
+                else if (key === "uTextureSize") {
+                    uniforms[key].setValue({ x: data.textureWidth, y: data.textureHeight });
+                }
+                else if (key === "uSampler") {
 
-                } else {
+                }
+                else if (key === "uGlobalMatrix") {
+                    uniforms[key].setValue([data.a, data.c, data.tx, data.b, data.d, data.ty, 0, 0, 1]);
+                }
+                else if (key === "uGlobalAlpha") {
+                    uniforms[key].setValue(data.alpha);
+                }
+                else {
                     let value = filter.$uniforms[key];
                     if (value !== undefined) {
                         uniforms[key].setValue(value);
@@ -288,7 +344,7 @@ module egret.web {
         /**
          * 启用RenderBuffer
          */
-        private activateBuffer(buffer: WebGLRenderBuffer, width:number, height:number): void {
+        private activateBuffer(buffer: WebGLRenderBuffer, width: number, height: number): void {
 
             buffer.rootRenderTarget.activate();
 
@@ -336,7 +392,7 @@ module egret.web {
 
             let size = data.count * 3;
 
-            let buffer = this.activatedBuffer;
+            let buffer = this._activatedBuffer;
             if (buffer) {
                 if (buffer.rootRenderTarget) {
                     buffer.rootRenderTarget.enabledStencil();
@@ -372,7 +428,7 @@ module egret.web {
 
             let size = data.count * 3;
 
-            let buffer = this.activatedBuffer;
+            let buffer = this._activatedBuffer;
             if (buffer) {
                 buffer.stencilHandleCount--;
 

@@ -2,117 +2,49 @@ namespace egret3d {
     /**
      * Camera系统
      */
-    export class CameraSystem extends paper.BaseSystem<Camera> {
+    export class CameraSystem extends paper.BaseSystem {
         protected readonly _interests = [
-            { componentClass: Camera, isExtends: true }
+            [
+                { componentClass: Camera }
+            ],
+            [
+                { componentClass: [DirectionalLight, PointLight, SpotLight] }
+            ]
         ];
-        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
+        protected readonly _camerasAndLights: CamerasAndLights = CamerasAndLights.getInstance(CamerasAndLights);
 
-        private _applyDrawCall(context: RenderContext, drawCall: DrawCall): void {
-            const renderer = drawCall.renderer;
-            const lightmapIndex = renderer.lightmapIndex;
-
-            context.drawCall = drawCall;
-
-            context.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
-
-            let drawType: string = "base"; // TODO
-
-            if (drawCall.boneData) {
-                context.updateBones(drawCall.boneData);
-                drawType = "skin";
+        public onAddGameObject(_gameObject: paper.GameObject, group: paper.Group) {
+            if (group === this._groups[0]) {
+                this._camerasAndLights.updateCamera(this._groups[0].gameObjects);
             }
-
-            if (lightmapIndex >= 0) {
-                const activeScene = paper.Application.sceneManager.activeScene;
-                if (activeScene.lightmaps.length > lightmapIndex) {
-                    context.updateLightmap(
-                        activeScene.lightmaps[lightmapIndex],
-                        drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0,
-                        renderer.lightmapScaleOffset,
-                        activeScene.lightmapIntensity
-                    );
-                    drawType = "lightmap";
-                }
-            }
-
-            WebGLKit.draw(context, drawType);
-        }
-
-        protected _onAddComponent(component: Camera) {
-            if (component.gameObject === this._globalGameObject) { // Pass global camera.
-                return;
-            }
-
-            super._onAddComponent(component);
-        }
-
-        public $renderCamera(camera: Camera) {
-            //在这里先剔除，然后排序，最后绘制           
-            this._drawCalls.sortAfterFrustumCulling(camera);
-            // this._drawCalls.sort();
-
-            for (const drawCall of this._drawCalls.drawCalls) {
-                if(drawCall.disable){
-                    continue;
-                }
-                const gameObject = drawCall.renderer.gameObject;
-
-                if (camera.cullingMask & gameObject.layer) {
-                    this._applyDrawCall(camera.context, drawCall);
-                }
-            }
-            // Egret2D渲染不加入DrawCallList的排序
-            const egret2DRenderSystem = paper.Application.systemManager.getSystem(Egret2DRendererSystem);
-            if (egret2DRenderSystem && egret2DRenderSystem.enabled) {
-                for (const egret2DRenderer of egret2DRenderSystem.components) {
-                    if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
-                        egret2DRenderer.render(camera.context, camera);
-                    }
-                }
+            else if (group === this._groups[1]) {
+                this._camerasAndLights.updateLight(this._groups[1].gameObjects);
             }
         }
 
-        public onUpdate() {
-            this._components.sort((a, b) => { // TODO 不应每次产生函数实例。
-                return a.order - b.order;
-            });
+        public onRemoveGameObject(_gameObject: paper.GameObject, group: paper.Group) {
+            if (group === this._groups[0]) {
+                this._camerasAndLights.updateCamera(this._groups[0].gameObjects);
+            }
+            else if (group === this._groups[1]) {
+                this._camerasAndLights.updateLight(this._groups[1].gameObjects);
+            }
+        }
 
-            const lightSystem = paper.Application.systemManager.getSystem(LightSystem);
-            const lights = lightSystem ? lightSystem.components : null;
+        public onUpdate(deltaTime: number) {
+            const cameras = this._camerasAndLights.cameras;
+            if (cameras.length > 0) {
+                const camerasScene = paper.Application.sceneManager.camerasScene || paper.Application.sceneManager.activeScene;
+                this._camerasAndLights.sortCameras();
 
-            for (const component of this._components) {
-                component.update(paper.Time.deltaTime);
+                for (const component of cameras) {
+                    if (component.gameObject.scene !== camerasScene) {
+                        continue;
+                    }
 
-                if (lights && lights.length > 0) {
-                    component.context.updateLights(lights); // TODO 性能优化
+                    component.update(deltaTime);
                 }
             }
-
-            Performance.startCounter("render");
-
-            if (this._components.length > 0) {
-                for (const component of this._components) {
-                    if (component.postQueues.length === 0) {
-                        component.context.drawtype = "";
-                        component._targetAndViewport(component.renderTarget, false);
-                        this.$renderCamera(component);
-                    }
-                    else {
-                        for (const item of component.postQueues) {
-                            item.render(component, this);
-                        }
-                    }
-                }
-            }
-            else {
-                WebGLKit.webgl.clearColor(0, 0, 0, 1);
-                WebGLKit.webgl.clearDepth(1.0);
-                WebGLKit.webgl.clear(WebGLKit.webgl.COLOR_BUFFER_BIT | WebGLKit.webgl.DEPTH_BUFFER_BIT);
-            }
-
-            Performance.endCounter("render");
-            Performance.updateFPS();
         }
     }
 }

@@ -2,57 +2,56 @@ namespace egret3d {
     /**
      * TODO 需要完善
      */
-    export class SkinnedMeshRendererSystem extends paper.BaseSystem<SkinnedMeshRenderer> {
-
+    export class SkinnedMeshRendererSystem extends paper.BaseSystem {
         protected readonly _interests = [
             {
                 componentClass: SkinnedMeshRenderer,
                 listeners: [
                     { type: SkinnedMeshRendererEventType.Mesh, listener: (component: SkinnedMeshRenderer) => { this._updateDrawCalls(component.gameObject); } },
-                    { type: SkinnedMeshRendererEventType.Materials, listener: (component: SkinnedMeshRenderer) => { this._updateDrawCalls(component.gameObject); } },
+                    { type: paper.RendererEventType.Materials, listener: (component: SkinnedMeshRenderer) => { this._updateDrawCalls(component.gameObject); } },
                 ]
             }
         ];
-        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
+        private readonly _drawCalls: DrawCalls = DrawCalls.getInstance(DrawCalls);
 
         private _updateDrawCalls(gameObject: paper.GameObject) {
-            if (!this._enabled || !this._hasGameObject(gameObject)) {
+            if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
                 return;
             }
 
             const renderer = gameObject.renderer as SkinnedMeshRenderer;
+            this._drawCalls.removeDrawCalls(renderer);
+
             if (!renderer.mesh || renderer.materials.length === 0) {
                 return;
             }
-            //
-            this._drawCalls.removeDrawCalls(renderer);
-            //
+
+            renderer.mesh._createBuffer();
             this._drawCalls.renderers.push(renderer);
             //
             let subMeshIndex = 0;
             for (const primitive of renderer.mesh.glTFMesh.primitives) {
+                const material = renderer.materials[primitive.material];
                 const drawCall: DrawCall = {
                     renderer: renderer,
 
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.mesh,
-                    material: renderer.materials[primitive.material || 0],
+                    material: material || DefaultMaterials.MISSING,
 
                     frustumTest: false,
                     zdist: -1,
 
                     boneData: renderer.boneBuffer,
-
-                    disable: false,
                 };
-
+                material.addDefine("SKINNING");
                 this._drawCalls.drawCalls.push(drawCall);
             }
         }
 
         public onEnable() {
-            for (const renderer of this._components) {
-                this._updateDrawCalls(renderer.gameObject);
+            for (const gameObject of this._groups[0].gameObjects) {
+                this._updateDrawCalls(gameObject);
             }
         }
 
@@ -61,10 +60,6 @@ namespace egret3d {
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            if (!this._enabled) {
-                return;
-            }
-
             this._drawCalls.removeDrawCalls(gameObject.renderer as SkinnedMeshRenderer);
         }
 
@@ -73,8 +68,8 @@ namespace egret3d {
         }
 
         public onDisable() {
-            for (const renderer of this._components) {
-                this._drawCalls.removeDrawCalls(renderer);
+            for (const gameObject of this._groups[0].gameObjects) {
+                this._drawCalls.removeDrawCalls(gameObject.renderer as SkinnedMeshRenderer);
             }
         }
     }

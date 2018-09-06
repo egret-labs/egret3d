@@ -12,61 +12,47 @@ namespace paper {
      * @platform Web
      * @language zh_CN
      */
-    @serializedType("assets")
-    export abstract class Asset extends SerializableObject {
-        private static readonly _assets: { [url: string]: Asset } = {};
-
+    export abstract class Asset extends BaseObject {
         /**
-         * 注册资源
-         * 通过此方法注册后，引擎内部可以通过URL字典访问所有注册的资源
-         * 使用外部加载器时，需要在加载完成后注册该资源
+         * @internal
          */
-        public static register(asset: Asset, isLoad: boolean = false) {
-            asset._isLoad = isLoad;
-            this._assets[asset.url] = asset;
-        }
-
+        public static readonly _assets: { [key: string]: Asset } = {};
         /**
-         * 获取资源
-         * @param name 资源的url
+         * @internal
+         */
+        public static register(asset: Asset) {
+            if (!this._assets[asset.name]) {
+                this._assets[asset.name] = asset;
+            }
+            else if (this._assets[asset.name] !== asset) {
+                console.debug("Replace asset.", asset.name);
+                this._assets[asset.name] = asset;
+            }
+        }
+        /**
+         * 
          */
         public static find<T extends Asset>(name: string) {
             const result = this._assets[name]
             if (!result) {
                 return RES.getRes(name) as T;
             }
-            else {
-                return result as T;
-            }
+
+            return result as T;
         }
-
         /**
-         * 
-         * 资源的原始URL
+         * @readonly
          */
-        @serializedField
-        @deserializedIgnore
-        public url: string = "";
-
+        public name: string = "";
         /**
          * @internal
          */
-        public _isLoad: boolean = false;
-        /**
-         * 
-         */
-        constructor(url: string = "") {
-            super();
-            this.url = url;
-        }
-        /**
-         * @inheritDoc
-         */
-        public serialize(): any {
-            const target = serializeRC(this);
-            target.url = this.url;
+        public _isBuiltin: boolean = false;
 
-            return target;
+        public constructor(name: string = "") {
+            super();
+
+            this.name = name;
         }
         /**
          * asset byte length
@@ -81,7 +67,6 @@ namespace paper {
          * @language zh_CN
          */
         public abstract caclByteLength(): number;
-
         /**
          * dispose asset
          * @version paper 1.0
@@ -94,6 +79,16 @@ namespace paper {
          * @platform Web
          * @language zh_CN
          */
-        public abstract dispose(): void;
+        public dispose(disposeChildren?: boolean) {
+            if (this._isBuiltin) {
+                console.warn("Can not dispose builtin asset.", this.name);
+                return false;
+            }
+
+            delete Asset._assets[this.name];
+            this.name = "";
+
+            return true;
+        }
     }
 }

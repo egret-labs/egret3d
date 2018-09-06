@@ -15,8 +15,7 @@ namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
-    export class OBB extends paper.SerializableObject {
-
+    export class OBB {
         /**
          * center
          * @version paper 1.0
@@ -29,7 +28,6 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        @paper.serializedField
         public readonly center: Vector3 = new Vector3();
 
         /**
@@ -44,7 +42,6 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        @paper.serializedField
         public readonly size: Vector3 = new Vector3();
 
         /**
@@ -210,13 +207,12 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public update(worldMatrix: Readonly<Matrix>) {
-            Matrix.getTranslation(worldMatrix, this.center);
-            Matrix.getVector3ByOffset(worldMatrix, 0, this._directions[0]);
-            Matrix.getVector3ByOffset(worldMatrix, 4, this._directions[1]);
-            Matrix.getVector3ByOffset(worldMatrix, 8, this._directions[2]);
+        public update(matrix: Readonly<Matrix4>) {
+            matrix.decompose(this.center);
+            this._directions[0].fromArray(matrix.rawData, 0);
+            this._directions[0].fromArray(matrix.rawData, 4);
+            this._directions[0].fromArray(matrix.rawData, 8);
         }
-
         /**
          * intersect width obb
          * @param value obb
@@ -269,7 +265,7 @@ namespace egret3d {
         /**
          * update vectors by world matrix
          * @param vectors vectors
-         * @param worldMatrix world matrix
+         * @param matrix world matrix
          * @version paper 1.0
          * @platform Web
          * @language en_US
@@ -277,20 +273,22 @@ namespace egret3d {
         /**
          * 计算世界空间下各点坐标
          * @param vectors 结果数组
-         * @param worldMatrix 物体的世界矩阵
+         * @param matrix 物体的世界矩阵
          * @version paper 1.0
          * @platform Web
          * @language zh_CN
          */
-        public caclWorldVectors(vectors: ReadonlyArray<Vector3>, worldMatrix: Readonly<Matrix>) {
+        public caclWorldVectors(vectors: ReadonlyArray<Vector3>, matrix: Readonly<Matrix4>) {
             for (let i = 0; i < 8; ++i) {
-                Matrix.transformVector3(this.vectors[i], worldMatrix, vectors[i]);
+                matrix.transformVector3(this.vectors[i], vectors[i]);
             }
         }
 
-        public deserialize(element: { center: [number, number, number], size: [number, number, number] }): void {
+        public deserialize(element: { center: [number, number, number], size: [number, number, number] }) {
             this.center.deserialize(element.center);
             this.size.deserialize(element.size);
+
+            return this;
         }
     }
 }

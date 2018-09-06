@@ -16,16 +16,6 @@ namespace egret3d {
          */
         frustumTest: boolean = false;
 
-        constructor() {
-            super();
-
-            this.stage = new egret.Stage();
-            this.stage.maxTouches = 98;
-            this.root = new egret.DisplayObjectContainer();
-            this.stage.addChild(this.root);
-        }
-
-
 
         public stage: egret.Stage;
 
@@ -40,24 +30,29 @@ namespace egret3d {
 
         public root: egret.DisplayObjectContainer;
 
-        private app: paper.Application;
-
-        /**
-         * @inheritDoc
-         */
         public initialize() {
             super.initialize();
 
-            let context = WebGLKit.webgl;
+            this.stage = new egret.Stage();
+            this.stage.maxTouches = 98;
+            this.root = new egret.DisplayObjectContainer();
+            this.stage.addChild(this.root);
 
             if (!this.renderer) {
-                this.renderer = egret.web.Renderer.getInstance(context);
+                this.renderer = egret.web.Renderer.getInstance(WebGLCapabilities.webgl);
             }
 
             let stage = this.stage;
             let displayList = new egret.sys.DisplayList(stage);
             displayList.renderBuffer = new egret.sys.RenderBuffer(undefined, undefined, true);
             stage.$displayList = displayList;
+
+
+            // TODO
+            const webInput = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput;
+            if (webInput) {
+                egret.web.$cacheTextAdapter(webInput, stage, WebGLCapabilities.canvas.parentNode as HTMLDivElement, WebGLCapabilities.canvas);
+            }
 
             InputManager.touch.addEventListener("touchstart", this._onTouchStart, this);
             InputManager.touch.addEventListener("touchend", this._onTouchEnd, this);
@@ -69,9 +64,6 @@ namespace egret3d {
             InputManager.mouse.addEventListener("mousemove", this._onTouchMove, this);
         }
 
-        /**
-         * @inheritDoc
-         */
         public uninitialize() {
             super.uninitialize();
 
@@ -86,6 +78,9 @@ namespace egret3d {
             // this.stage.removeChild(this.root);
         }
 
+        public recalculateAABB() {
+            // TODO
+        }
 
         /**
          * 检查屏幕接触事件是否能够穿透此2D层
@@ -184,13 +179,9 @@ namespace egret3d {
          * 
          */
         public render(context: RenderContext, camera: egret3d.Camera) {
-            let gl = WebGLKit.webgl;
-
             this.renderer.beforeRender();
-
             this.stage.drawToSurface();
-
-            WebGLKit.resetState(); // 清除3D渲染器中的标脏
+            // WebGLRenderUtils.resetState(); // 清除3D渲染器中的标脏
         }
     }
 }

@@ -1,58 +1,5 @@
 namespace egret3d {
     /**
-     * Light Type Enum
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 灯光类型的枚举。
-     * @version paper 1.0
-     * @platform Web
-     * @language
-     */
-    export const enum LightType {
-        /**
-         * direction light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 直射光
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Direction = 1,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 点光源
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Point = 2,
-        /**
-         * point light
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        Spot = 3,
-    }
-    /**
      * light component
      * @version paper 1.0
      * @platform Web
@@ -66,9 +13,22 @@ namespace egret3d {
      */
     export abstract class BaseLight extends paper.BaseComponent {
         /**
+         * TODO
+         */
+        @paper.serializedField
+        public cullingMask: paper.CullingMask = paper.CullingMask.Everything;
+        /**
          * 
          */
-        public readonly type: LightType;
+        @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.NUMBER)
+        public intensity: number = 1.0;
+        /**
+         * 
+         */
+        @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.COLOR)
+        public readonly color: Color = Color.create(1.0, 1.0, 1.0, 1.0);
         /**
          * 
          */
@@ -80,83 +40,40 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.NUMBER)
-        public intensity: number = 2;
+        public shadowRadius: number = 0.5;
         /**
          * 
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.NUMBER)
-        public distance: number = 50;
+        public shadowBias: number = 0.001;
         /**
          * 
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.NUMBER)
-        public decay: number = 2;
+        public shadowSize: number = 512;
         /**
          * 
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.NUMBER)
-        public angle: number = Math.PI / 6;
+        public shadowCameraNear: number = 1.0;
         /**
          * 
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.NUMBER)
-        public penumbra: number = 0;
-        /**
-         * spot angel cos
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 聚光灯的开合角度cos值
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
-        public spotAngelCos: number = 0.9;
+        public shadowCameraFar: number = 100.0;
         /**
          * 
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.NUMBER)
-        public shadowBias: number = 0.0003;
-        /**
-         * 
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
-        public shadowRadius: number = 2;
-        /**
-         * 
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
-        public shadowSize: number = 16;
-        /**
-         * 
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
-        public shadowCameraNear: number = 0.1;
-        /**
-         * 
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
-        public shadowCameraFar: number = 200;
-        /**
-         * 
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.COLOR)
-        public readonly color: Color = new Color(1.0, 1.0, 1.0, 1.0);
-        public readonly matrix: Matrix = new Matrix();
+        public shadowCameraSize: number = 30;
+
+        public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
+        public readonly matrix: Matrix4 = Matrix4.create();
         public renderTarget: IRenderTarget;
 
         protected _updateMatrix(camera: Camera) {
@@ -169,19 +86,29 @@ namespace egret3d {
                 0.0, 0.0, 0.0, 1.0
             );
 
-            camera.calcProjectMatrix(512 / 512, helpMatrixA);
-            helpMatrixB.copy(this.gameObject.transform.getWorldMatrix()).inverse();
-            Matrix.multiply(matrix, helpMatrixA, matrix);
-            Matrix.multiply(matrix, helpMatrixB, matrix);
+            const context = camera.context;
+            context.updateCamera(camera, this.gameObject.transform.getWorldMatrix());
+            context.updateLightDepth(this);
+            matrix.multiply(context.matrix_p).multiply(context.matrix_v);
         }
-
+        /**
+         * @internal
+         */
         public update(camera: Camera, faceIndex: number) {
-            camera.opvalue = 1.0;
             camera.backgroundColor.set(1.0, 1.0, 1.0, 1.0);
             camera.clearOption_Color = true;
             camera.clearOption_Depth = true;
 
             this._updateMatrix(camera);
+        }
+        /**
+         * 
+         */
+        public get power() {
+            return this.intensity * (Math.PI * 4.0);
+        }
+        public set power(value: number) {
+            this.intensity = value / (Math.PI * 4.0);
         }
     }
 }

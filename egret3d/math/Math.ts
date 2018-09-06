@@ -7,8 +7,20 @@ namespace egret3d {
      * 
      */
     export const DEG_RAD: number = Math.PI / 180.0;
+    /**
+     * 
+     */
+    export const EPSILON = 2.220446049250313e-16; // Number.EPSILON
 
-    export function floatClamp(v: number, min: number = 0, max: number = 1): number {
+    export function sign(value: number): number {
+        if (value === 0 || value !== value) {
+            return value;
+        }
+
+        return value > 0 ? 1 : -1;
+    }
+
+    export function floatClamp(v: number, min: number = 0.0, max: number = 1.0) {
         if (v < min)
             return min;
         else if (v > max)
@@ -17,17 +29,21 @@ namespace egret3d {
             return v;
     }
 
-    export function sign(value: number): number {
-        value = +value; // convert to a number
-
-        if (value === 0 || isNaN(value))
-            return value;
-
-        return value > 0 ? 1 : -1;
-    }
-
     export function numberLerp(fromV: number, toV: number, v: number) {
         return fromV * (1 - v) + toV * v;
+    }
+
+    export function getNormal(a: Readonly<IVector3>, b: Readonly<IVector3>, c: Readonly<IVector3>, out: Vector3) {
+        out.subtract(c, b);
+        helpVector3A.subtract(a, b);
+        out.cross(helpVector3A);
+
+        const squaredLength = out.squaredLength;
+        if (squaredLength > 0.0) {
+            return out.multiplyScalar(1.0 / Math.sqrt(squaredLength));
+        }
+
+        return out.set(0.0, 0.0, 1.0);
     }
 
     export function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3 {
@@ -55,38 +71,147 @@ namespace egret3d {
         return out;
     }
 
-    let helpVec3_1: Vector3 = new Vector3();
-    let helpVec3_2: Vector3 = new Vector3();
-    let helpVec3_3: Vector3 = new Vector3();
-    let helpVec3_4: Vector3 = new Vector3();
-    let helpVec3_5: Vector3 = new Vector3();
+    export function triangleIntersectsPlane() {
 
-    export function getPointAlongCurve(curveStart: Vector3, curveStartHandle: Vector3, curveEnd: Vector3, curveEndHandle: Vector3, t: number, out: Vector3, crease: number = 0.3) {
-        let oneMinT = 1 - t;
-        let oneMinTPow3 = Math.pow(oneMinT, 3);
-        let oneMinTPow2 = Math.pow(oneMinT, 2);
+    }
 
-        let oneMinCrease = 1 - crease;
+    function satForAxes(axes: Readonly<number[]>) {
+        const v0 = helpVector3A;
+        const v1 = helpVector3B;
+        const v2 = helpVector3C;
+        const extents = helpVector3H;
+        const testAxis = helpVector3A;
 
-        let tempt1 = helpVec3_1;
-        Vector3.copy(curveStart, tempt1);
-        Vector3.scale(tempt1, oneMinTPow3 * oneMinCrease);
-        let tempt2 = helpVec3_2;
-        Vector3.copy(curveStartHandle, tempt2);
-        Vector3.scale(tempt2, 3 * oneMinTPow2 * t * crease);
-        let tempt3 = helpVec3_3;
-        Vector3.copy(curveEndHandle, tempt3);
-        Vector3.scale(tempt3, 3 * oneMinT * Math.pow(t, 2) * crease);
-        let tempt4 = helpVec3_4;
-        Vector3.copy(curveEnd, tempt4);
-        Vector3.scale(tempt4, Math.pow(t, 3) * oneMinCrease);
+        for (let i = 0, l = axes.length - 3; i <= l; i += 3) {
+            testAxis.fromArray(axes, i);
+            // project the aabb onto the seperating axis
+            const r = extents.x * Math.abs(testAxis.x) + extents.y * Math.abs(testAxis.y) + extents.z * Math.abs(testAxis.z);
+            // project all 3 vertices of the triangle onto the seperating axis
+            const p0 = v0.dot(testAxis);
+            const p1 = v1.dot(testAxis);
+            const p2 = v2.dot(testAxis);
+            // actual test, basically see if either of the most extreme of the triangle points intersects r
+            if (Math.max(- Math.max(p0, p1, p2), Math.min(p0, p1, p2)) > r) {
+                // points of the projected triangle are outside the projected half-length of the aabb
+                // the axis is seperating and we can exit
+                return false;
+            }
+        }
 
-        let tempt5 = helpVec3_5;
-        Vector3.add(tempt1, tempt2, tempt5);
-        Vector3.add(tempt5, tempt3, tempt5);
-        Vector3.add(tempt5, tempt4, tempt5);
+        return true;
+    }
 
-        Vector3.copy(tempt5, out);
-        Vector3.scale(out, 1 / (oneMinTPow3 * oneMinCrease + 3 * oneMinTPow2 * t * crease + 3 * oneMinT * Math.pow(t, 2) * crease + Math.pow(t, 3) * oneMinCrease));
+    export function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<AABB>) {
+        if (aabb.isEmpty) {
+            return false;
+        }
+
+        const v0 = helpVector3A;
+        const v1 = helpVector3B;
+        const v2 = helpVector3C;
+        // triangle edge vectors
+        const f0 = helpVector3D;
+        const f1 = helpVector3E;
+        const f2 = helpVector3F;
+        const center = helpVector3G;
+        const extents = helpVector3H;
+
+        // compute box center and extents
+        extents.subtract(this.max, aabb.center);
+        // translate triangle to aabb origin
+        v0.subtract(triangle.a, center);
+        v1.subtract(triangle.b, center);
+        v2.subtract(triangle.c, center);
+        // compute edge vectors for triangle
+        f0.subtract(v1, v0);
+        f1.subtract(v2, v1);
+        f2.subtract(v0, v2);
+        // test against axes that are given by cross product combinations of the edges of the triangle and the edges of the aabb
+        // make an axis testing of each of the 3 sides of the aabb against each of the 3 sides of the triangle = 9 axis of separation
+        // axis_ij = u_i x f_j (u0, u1, u2 = face normals of aabb = x,y,z axes vectors since aabb is axis aligned)
+        let axes = [
+            0, - f0.z, f0.y, 0, - f1.z, f1.y, 0, - f2.z, f2.y,
+            f0.z, 0, - f0.x, f1.z, 0, - f1.x, f2.z, 0, - f2.x,
+            - f0.y, f0.x, 0, - f1.y, f1.x, 0, - f2.y, f2.x, 0
+        ];
+        if (!satForAxes(axes)) {
+            return false;
+        }
+        // test 3 face normals from the aabb
+        axes = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+        if (!satForAxes(axes)) {
+            return false;
+        }
+        // finally testing the face normal of the triangle
+        // use already existing triangle edge vectors here
+        helpVector3A.cross(f0, f1);
+        axes = [helpVector3A.x, helpVector3A.y, helpVector3A.z];
+        return satForAxes(axes);
+    }
+
+    export function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<AABB>) {
+        // We compute the minimum and maximum dot product values. If those values
+        // are on the same side (back or front) of the plane, then there is no intersection.
+        let vMin: number;
+        let vMax: number;
+        const min = aabb.minimum;
+        const max = aabb.maximum;
+
+        if (plane.normal.x > 0.0) {
+            vMin = plane.normal.x * min.x;
+            vMax = plane.normal.x * max.x;
+        }
+        else {
+            vMin = plane.normal.x * max.x;
+            vMax = plane.normal.x * min.x;
+        }
+
+        if (plane.normal.y > 0.0) {
+            vMin += plane.normal.y * min.y;
+            vMax += plane.normal.y * max.y;
+        }
+        else {
+            vMin += plane.normal.y * max.y;
+            vMax += plane.normal.y * min.y;
+        }
+
+        if (plane.normal.z > 0.0) {
+            vMin += plane.normal.z * min.z;
+            vMax += plane.normal.z * max.z;
+        }
+        else {
+            vMin += plane.normal.z * max.z;
+            vMax += plane.normal.z * min.z;
+        }
+
+        return vMin <= plane.constant && vMax >= plane.constant;
+    }
+
+    export function planeIntersectsSphere(plane: Readonly<Plane>, sphere: Readonly<Sphere>) {
+        return Math.abs(plane.getDistance(sphere.center)) <= sphere.radius;
+    }
+
+    export function aabbIntersectsSphere(aabb: Readonly<AABB>, sphere: Readonly<Sphere>) {
+        // Find the point on the AABB closest to the sphere center.
+        helpVector3A.copy(sphere.center).clamp(aabb.minimum, aabb.maximum);
+        // If that point is inside the sphere, the AABB and sphere intersect.
+        return helpVector3A.getSquaredDistance(sphere.center) <= (sphere.radius * sphere.radius);
+    }
+
+    export function aabbIntersectsAABB(valueA: Readonly<AABB>, valueB: Readonly<AABB>) {
+        const minA = valueA.minimum;
+        const maxA = valueA.maximum;
+        const minB = valueB.minimum;
+        const maxB = valueB.maximum;
+        // using 6 splitting planes to rule out intersections.
+        return maxA.x < minB.x || minA.x > maxB.x ||
+            maxA.y < minB.y || minA.y > maxB.y ||
+            maxA.z < minB.z || minA.z > maxB.z ? false : true;
+    }
+
+    export function sphereIntersectsSphere(valueA: Readonly<Sphere>, valueB: Readonly<Sphere>) {
+        const radiusSum = valueA.radius + valueB.radius;
+
+        return valueA.center.getSquaredDistance(valueB.center) <= (radiusSum * radiusSum);
     }
 }

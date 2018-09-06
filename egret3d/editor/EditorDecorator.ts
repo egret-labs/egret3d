@@ -48,8 +48,10 @@ namespace paper.editor {
         MATERIAL_ARRAY,
         /**游戏对象 */
         GAMEOBJECT,
-        /**变换 */
+        /**变换 TODO 不需要*/
         TRANSFROM,
+        /**组件 */
+        COMPONENT,
         /**声音 */
         SOUND,
         /**Mesh */
@@ -70,6 +72,21 @@ namespace paper.editor {
         }
     }
     let propertyMap: { [key: string]: { extends: string, propertyList: PropertyInfo[] } } = {};
+    /**
+     * 从枚举中生成装饰器列表项。
+     */
+    export function getItemsFromEnum(enumObject: any) {
+        const items = [];
+        for (const k in enumObject) {
+            if (!isNaN(Number(k))) {
+                continue;
+            }
+
+            items.push({ label: k, value: enumObject[k] });
+        }
+
+        return items;
+    }
     /**
      * 装饰器:属性
      * @param editType 编辑类型
@@ -100,10 +117,28 @@ namespace paper.editor {
     }
 
     /**
+   * 获取一个实例对象的编辑信息
+   * @param classInstance 实例对象
+   */
+    export function getEditInfo(classInstance) {
+        var whileInsance = classInstance.__proto__;
+        var retrunList = [];
+        var className;
+        while (whileInsance) {
+            className = whileInsance.constructor.name;
+            var classInfo = propertyMap[className];
+            if (classInfo) {
+                retrunList = retrunList.concat(classInfo.propertyList);
+            }
+            whileInsance = whileInsance.__proto__;
+        }
+        return retrunList;
+    }
+    /**
      * 获取一个实例对象的编辑信息
      * @param classInstance 实例对象
      */
-    export function getEditInfo(classInstance: any): PropertyInfo[] {
+    export function getEditInfo2(classInstance: any): PropertyInfo[] {
         let className = classInstance.constructor.name;
         function _getEditInfo(className: string): PropertyInfo[] {
             let classInfo = propertyMap[className];
@@ -117,6 +152,29 @@ namespace paper.editor {
         return _getEditInfo(className);
     }
 
+    export function getEditInfoByPrototype(classInstance: any): PropertyInfo[] {
+        function _getEditInfo(proto: any): PropertyInfo[] {
+            let classInfo;
+            let extendsInfo;
+
+            if (proto && Object.getPrototypeOf(proto)) {
+                classInfo = propertyMap[Object.getPrototypeOf(proto).constructor.name];
+            }
+
+            if (classInfo) {
+                extendsInfo = _getEditInfo(Object.getPrototypeOf(proto));
+                extendsInfo = extendsInfo.concat(classInfo.propertyList);
+                return extendsInfo;
+            } else {
+                if (proto) {
+                    extendsInfo = _getEditInfo(Object.getPrototypeOf(proto));
+                    return extendsInfo;
+                }
+            }
+            return [];
+        }
+        return _getEditInfo(classInstance);
+    }
 
     let extraPropertyMap: { [key: string]: { extends: string, propertyList: PropertyInfo[] } } = {};
     /**

@@ -1,5 +1,7 @@
 namespace paper {
-
+    /**
+     * @internal
+     */
     export const serializeClassMap: { [key: string]: string } = {
         0: "paper.Scene",
         1: "paper.GameObject",
@@ -14,8 +16,6 @@ namespace paper {
         10: "egret3d.SphereCollider",
         11: "egret3d.Transform",
         12: "egret3d.Shader",
-        13: "egret3d.Mesh",
-        14: "egret3d.Material",
         15: "egret3d.AnimationClip",
         16: "egret3d.TPoseInfo",
         17: "egret3d.PoseBoneMatrix",
@@ -43,25 +43,24 @@ namespace paper {
         39: "egret3d.colorKey",
         40: "egret3d.Animation",
         41: "egret3d.GLTFAsset",
+        //
+        13: "paper.Compatible",
+        14: "paper.Compatible",
     };
-
-
-    export function findClassCode(name: string) {
-        for (let key in serializeClassMap) {
-            if (serializeClassMap[key] === name) {
-                return key;
-            }
+    /**
+     * @internal
+     */
+    export class Compatible implements ISerializable {
+        public serialize() {
+            throw new Error("Never");
         }
 
-        return "";
-    }
+        public deserialize(element: ISerializedStruct, data?: Deserializer) {
+            if (!data) {
+                throw new Error("Never");
+            }
 
-
-    export function findClassCodeFrom(target: any) {
-        const proto = target.__proto__;
-        const classTypeOrigin = proto.__class__;
-        const classType = paper.findClassCode(classTypeOrigin);
-
-        return classType;
+            return data.getAssetOrComponent(element._glTFAsset as IAssetReference);
+        }
     }
 }

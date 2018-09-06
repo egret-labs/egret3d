@@ -177,7 +177,7 @@ namespace egret3d {
         /**
          *  
          */
-        public updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number, rotated:boolean) {
+        public updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number, rotated: boolean) {
             this._offsetX = offsetX;
             this._offsetY = offsetY;
             this._scalerX = scalerX;
@@ -314,12 +314,6 @@ namespace egret3d {
         }
 
         private _handleTouchStart(event: TouchEvent) {
-            // call preventDefault to avoid issues in Chrome Android:
-            // http://wilsonpage.co.uk/touch-events-in-chrome-android/
-            if (event["isScroll"] != true && !this._element['userTyping']) {
-                event.preventDefault();
-            }
-
             for (let i = 0; i < event.changedTouches.length; i++) {
                 let touch = event.changedTouches[i];
                 let identifier = touch.identifier;
@@ -330,9 +324,12 @@ namespace egret3d {
                 this.dispatchEvent({ type: "touchstart", x: touchPoint.position.x, y: touchPoint.position.y, identifier: identifier });
             }
 
-            if (this.preventDefault) {
+            // call preventDefault to avoid issues in Chrome Android:
+            // http://wilsonpage.co.uk/touch-events-in-chrome-android/
+            if (this.preventDefault && event["isScroll"] != true && !this._element['userTyping']) {
                 event.preventDefault();
             }
+
             if (this.stopPropagation) {
                 event.stopPropagation();
             }
@@ -349,7 +346,7 @@ namespace egret3d {
                 this.dispatchEvent({ type: "touchend", x: touchPoint.position.x, y: touchPoint.position.y, identifier: identifier });
             }
 
-            if (this.preventDefault) {
+            if (this.preventDefault && event["isScroll"] != true && !this._element['userTyping']) {
                 event.preventDefault();
             }
             if (this.stopPropagation) {
@@ -358,12 +355,6 @@ namespace egret3d {
         }
 
         private _handleTouchMove(event: TouchEvent) {
-            // call preventDefault to avoid issues in Chrome Android:
-            // http://wilsonpage.co.uk/touch-events-in-chrome-android/
-            if (event["isScroll"] != true && !this._element['userTyping']) {
-                event.preventDefault();
-            }
-
             for (let i = 0; i < event.changedTouches.length; i++) {
                 let touch = event.changedTouches[i];
                 let identifier = touch.identifier;
@@ -374,7 +365,7 @@ namespace egret3d {
                 this.dispatchEvent({ type: "touchmove", x: touchPoint.position.x, y: touchPoint.position.y, identifier: identifier });
             }
 
-            if (this.preventDefault) {
+            if (this.preventDefault && event["isScroll"] != true && !this._element['userTyping']) {
                 event.preventDefault();
             }
             if (this.stopPropagation) {
@@ -393,9 +384,10 @@ namespace egret3d {
                 this.dispatchEvent({ type: "touchend", x: touchPoint.position.x, y: touchPoint.position.y, identifier: identifier });
             }
 
-            if (this.preventDefault) {
+            if (this.preventDefault && event["isScroll"] != true && !this._element['userTyping']) {
                 event.preventDefault();
             }
+            
             if (this.stopPropagation) {
                 event.stopPropagation();
             }

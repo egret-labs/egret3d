@@ -11,14 +11,12 @@ namespace egret3d {
     export class MeshFilter extends paper.BaseComponent {
         @paper.serializedField
         private _mesh: Mesh | null = null;
-        /**
-         * @inheritDoc
-         */
+
         public uninitialize() {
             super.uninitialize();
 
             if (this._mesh) {
-                this._mesh.dispose();
+                // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
             }
 
             this._mesh = null;
@@ -37,7 +35,7 @@ namespace egret3d {
             }
 
             if (this._mesh) {
-                this._mesh.dispose();
+                // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
             }
 
             this._mesh = mesh;

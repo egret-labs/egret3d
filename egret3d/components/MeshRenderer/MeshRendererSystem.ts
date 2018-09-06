@@ -2,12 +2,20 @@ namespace egret3d {
     /**
      * 
      */
-    export class MeshRendererSystem extends paper.BaseSystem<MeshFilter | MeshRenderer> {
+    export class MeshRendererSystem extends paper.BaseSystem {
         protected readonly _interests = [
             {
                 componentClass: MeshFilter,
                 listeners: [
-                    { type: MeshFilterEventType.Mesh, listener: (component: MeshFilter) => { this._updateDrawCalls(component.gameObject); } }
+                    {
+                        type: MeshFilterEventType.Mesh, listener: (component: MeshFilter) => {
+                            this._updateDrawCalls(component.gameObject);
+
+                            if (component.gameObject.renderer) {
+                                component.gameObject.renderer.recalculateAABB();
+                            }
+                        }
+                    }
                 ]
             },
             {
@@ -17,21 +25,23 @@ namespace egret3d {
                 ]
             },
         ];
-        private readonly _drawCalls: DrawCalls = this._globalGameObject.getComponent(DrawCalls) || this._globalGameObject.addComponent(DrawCalls);
+        private readonly _drawCalls: DrawCalls = DrawCalls.getInstance(DrawCalls);
 
         private _updateDrawCalls(gameObject: paper.GameObject) {
-            if (!this._enabled || !this._hasGameObject(gameObject)) {
+            if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
                 return;
             }
 
-            const filter = this._getComponent(gameObject, 0) as MeshFilter;
+            const filter = gameObject.getComponent(MeshFilter) as MeshFilter;
             const renderer = gameObject.renderer as MeshRenderer;
-            if (!filter.mesh || renderer.materials.length === 0) {
-                return;
-            }
+            const materials = renderer.materials;
 
             this._drawCalls.removeDrawCalls(renderer);
-            //
+            if (!filter.mesh || materials.length === 0) {
+                return;
+            }
+
+            filter.mesh._createBuffer();
             this._drawCalls.renderers.push(renderer);
             //
             let subMeshIndex = 0;
@@ -41,21 +51,19 @@ namespace egret3d {
 
                     subMeshIndex: subMeshIndex++,
                     mesh: filter.mesh,
-                    material: renderer.materials[primitive.material || 0],
+                    material: materials[primitive.material!] || DefaultMaterials.MISSING,
 
                     frustumTest: false,
                     zdist: -1,
-
-                    disable: false,
                 };
-
                 this._drawCalls.drawCalls.push(drawCall);
             }
+
         }
 
         public onEnable() {
-            for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
-                this._updateDrawCalls(this._components[i].gameObject);
+            for (const gameObject of this._groups[0].gameObjects) {
+                this._updateDrawCalls(gameObject);
             }
         }
 
@@ -64,17 +72,12 @@ namespace egret3d {
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            if (!this._enabled) {
-                return;
-            }
-
-            this._drawCalls.removeDrawCalls(gameObject.renderer);
+            this._drawCalls.removeDrawCalls(gameObject.renderer as MeshRenderer);
         }
 
         public onDisable() {
-            for (let i = 0, l = this._components.length; i < l; i += this._interestComponentCount) {
-                const renderer = this._components[i + 1] as MeshRenderer;
-                this._drawCalls.removeDrawCalls(renderer);
+            for (const gameObject of this._groups[0].gameObjects) {
+                this._drawCalls.removeDrawCalls(gameObject.renderer as MeshRenderer);
             }
         }
     }

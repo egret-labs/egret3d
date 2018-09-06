@@ -1,48 +1,77 @@
 namespace paper.editor {
+
+    const icons = {
+        camera: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIcSURBVFhH7ZbPjtMwEMYj7vAACCFg28Rx4oQmtGnLQo/7Du1pK3Hk2BtSHwYkXoA34C34I7Fozxxoy+6yaocZx9M6u4WkFaA95JN+qu0Z21/riVOnVq1a/0oiaoMXPdlCBxpxG0xaNXlB+vHqIl7Utfo5Jl3LxU2uxpkmmjNp1RTEGfg4kZhOp/eRe8xwOHzqmnjSPXxnpjhBlIEIM5BRb40f96Ch2jCZTO6atGryVQeESjVmqCA/zGNy15/2xuv4xcuBK1N4KBNw445FZugauG/ndKr9GlJRYWBBxcn7LHveHAyOHtC4iJKLbQW0C0IlBRNemH6jTzpSQqouOFQ89iSdibLHcrKKbObYBqhGaC9qc/yaAdnKdMKjoLUe08QpvH7zFsp08fOyMI8N0DHRPqUGRJhXsWr112ME5SwWM73Jp5NTzecvFtg/+XqK0UsQ1vNvG+Ax6nN7bYBN8GPW0HVRZL44h+VqdW2cafcOYYUW9jZAAZb3uHiWxPcfZQae7Wdgmw7wYuEk5r8a8MPNBGa+OIMVGpBRfyu9rI/bL/+OAU/Sy2azOS06m81xgzItoRkmm3l7G2gGr7gwGR8LU+JbLAcvEQ29bIi8L4Li0bEBunR4TK9v2r81QCIDwiQSblwNzifYAMkNW+Dil6A2x/9ogGQvtg8HQn0wS2mxIY5LlV98pRqNRnfG4/HtXcD/CrfM9Fq1at1kOc4vVSG2+aaGzOwAAAAASUVORK5CYII=",
+        light: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPcSURBVFhH3ZdLSNRRFMbn4fuZmtmYZpn0gCx6YbQokBZRq6hVL6xWUdCmICIoIYjaWBDRu3WShhUJLSKIIKISgqBWao9NlIsUwlKn33fnzDij/1HHsU0fHM693z333HPOffxnfNNBMBjcgRpCVjjiX6GwsHAJKhDpjYIAdqLCyEpHxKG8vLwgJyen2rrTR25uboPf7/+Ns31GxTBRAJmZmc2BQKC/rKys0qhpAz+Bt8inUCiUZ5xDsgAIeh5BDzCnzaj0kJ2d3YjDcFZW1imjHJIFkJGRcQf7waKiojqj0gdOH5DRz7y8vLlGeQZA6Vex+DBjLUalhtLS0iJrJoDsl+os4PiGUVqsHu48zVCEcYE+JdAfZF9qVAKS+XfgoM1nch+LnK2oqMg3OgYWvIhcsu44VFVV5RLAXYI9alQMBQUFsxm7prPk5dtBhwejdu03hr04Uonj4TftKy4ursVmP/bH0LvZmlgVQMwOBDlDh/D53bbmWklJSbGNeYMJW3D6kWaYBZ4Q/bLIiM+nM8BYG85G6Gr/ndD/owy5doWyE6joBmzf0Ayz8EsSXBsZmRqycHgCx/1MPieCyKtpdyNhgnTCluh2hHGuIFS519EgsGul/w27g3THPWRTAoemyg6OH2fPtLgWoz9OqI4CUNVu0Ve1QmxVidppgywaUUkXjwplVyWGsF9If+ZA5i3Knuw8F46KApCmEkfQKaEH+ewhWxG9xw+13zQnFJ0DBYl2DxHzDqO8/D5HRsGEVuTeWGFovcZx1D6VAKJVQl+gr8pt9/KLXNb4lIGjMzpgkwWhmyGN3V70zMHeguGJDqECtEP4k9M/Cy59cMe3ktUCtcnqKs7D+fn5bq+hEhYXrzZzjqN1DdcQcIPaKcOe2g6aKqfbr5qamhy4TnHKVA+QSh4V8ez/dbR7iml3Eugw+ibBzRE3KfRBYb+bmfhLwuLNY36IBFn4KGO6NfEVeI/tLhlEoS8ivq5gO8R4H4HoagYjox7AwXIMu5mgTDrIqtaGHOwTG31S/aoSduv0RBvnqhT/PRDYitX4fUFTt6NL35PIyBhoIkE8J8NtRiWAxR4x/tS642DV+4BcNCoefhJqYv5j2ql/F5i8GaV9PxlhXECbUM+QRY4AcLep4CC/pBcbNSMIUsIupFdZGuf5k4xTX0kAAwRy36j0QdkO6Fyg9xjl4BWAwOKnUSPcFFUoPegPBpl/RV7RTdi7ZAHoJxf2Xxh/TXd6vwOiIOt6HPWQzUajYkgWgMC8JsbfJT3xqaCuri7bmgmYKACgzDMizX+EuFswc39A/kfE/0RPAp/vL7M1A0/aWSCCAAAAAElFTkSuQmCC"
+    };
+
     //只有编辑模式可以执行，编辑相机
-    export class Gizmo {
-        private static _editorCamera: GameObject = null;
-
-        private static _enabled: boolean = false;
-
+    @paper.executeInEditMode
+    export class Gizmo extends paper.Behaviour {
+        private static enabled: boolean = false;
         private static webgl: WebGLRenderingContext;
-
-        private static context: egret3d.RenderContext;
-
         private static camera: egret3d.Camera;
 
-        public static Enabled(editorCamera) {
-            this._editorCamera = editorCamera;
-            this.camera = this._editorCamera.getComponent(egret3d.Camera);
-            this.context = this.camera.context;
-            this.webgl = egret3d.WebGLKit.webgl;
-            this._enabled = true;
+        public onStart() {
+            this.nrLine = 100;
+            this._oldTransform = egret3d.Vector3.getLength(this.gameObject.transform.getLocalPosition());
+        }
+        public static Enabled() {
+            this.webgl = egret3d.WebGLCapabilities.webgl;
+            this.camera = Application.sceneManager.editorScene.find("EditorCamera").getComponent(egret3d.Camera);
+
             this.initPrg();
             this.lineVertexBuffer = this.webgl.createBuffer();
             this.setVertices();
-            this.getAllLightAndCamera();
             this.initIconTexture();
-        }
 
-        public static Disabled() {
-            this._editorCamera = null;
-            this._enabled = false;
-            this.camera = null;
-            this.context = null;
-            this.texturePool = {};
-            this.lightPool = null;
-            this.cameraPool = null;
-            this.glProgram_line = null;
-            this.glProgram_icon = null;
-            this.lineVertexBuffer = null;
-            this.verticesCoord = null;
-            this.coordVertexBuffer = null;
-            this.nrLine = null;
-        }
+            this.camera.gameObject.addComponent(Gizmo)
 
-        private static texturePool: { [key: string]: WebGLTexture } = {};
+        }
+        public static setGameObj(obj: GameObject) {
+            this.gameObj = obj
+        }
+        private static gameObj: GameObject
+        public static DrawStroke() {
+            if (!this.enabled) return;
+            if (!this.gameObj) return;
+            let obj = this.gameObj
+            let gl = this.webgl
+            let prg = this.glProgram_stroke;
+            let mesh = obj.getComponent(egret3d.MeshFilter).mesh
+            let position = mesh.getAttributes('POSITION')
+            let normal = mesh.getAttributes('NORMAL')
+            let indices = mesh.getIndices()
+            let vertexCount = position.length / 3
+
+            let vertexBuffer = gl.createBuffer();
+            let normalBuffer = gl.createBuffer();
+            let indiceBuffer = gl.createBuffer();
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
+            gl.bufferData(gl.ARRAY_BUFFER, position, gl.STATIC_DRAW)
+            gl.vertexAttribPointer(gl.getAttribLocation(prg.prg, 'aPosition'), 3, gl.FLOAT, false, 0, 0)
+            gl.enableVertexAttribArray(gl.getAttribLocation(prg.prg, 'aPosition'))
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer)
+            gl.bufferData(gl.ARRAY_BUFFER, normal, gl.STATIC_DRAW)
+            gl.vertexAttribPointer(gl.getAttribLocation(prg.prg, 'aNormal'), 3, gl.FLOAT, false, 0, 0)
+            gl.enableVertexAttribArray(gl.getAttribLocation(prg.prg, 'aNormal'))
+
+            this.setMVPMatrix();
+            prg.setMatrix("mvpMat", this.mvpMatrix);
+            prg.setColor("lineColor", [1, 1, 1, 1]);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indiceBuffer);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+
+            gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0)
+            console.log(position, normal)
+        }
         public static DrawIcon(path: string, pos: egret3d.Vector3, size: number, color?: egret3d.Color) {
-            if (!this._enabled || !this.imageLoaded) return;
+            if (!this.enabled) return;
+
             let gl = this.webgl;
             let prg = this.glProgram_icon;
 
@@ -64,7 +93,7 @@ namespace paper.editor {
                 prg.setColor("iconColor", [color.r, color.g, color.b, color.a]);
             } else {
                 prg.setBool("hasColor", false);
-                prg.setColor("iconColor", [0, 0, 0, 1]);
+                prg.setColor("iconColor", [1, 0, 0, 1]);
             }
 
             prg.setTexture("PointTexture", 0);
@@ -74,63 +103,57 @@ namespace paper.editor {
 
             gl.drawArrays(gl.POINTS, 0, 1);
         }
-        // private static loadTexture(path) {
-        //     let gl = this.webgl;
-        //     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,1);
-        //     let texture: WebGLTexture;
-        //     if (this.texturePool[path]) {
-        //         texture = this.texturePool[path];
-        //     } else {
-        //         texture = (RES.getRes(path) as egret3d.Texture).glTexture.texture;
-        //         this.texturePool[path] = texture;
-        //     }
-        //     return texture;
-        // }
 
         private static verticesLine: number[];
         private static lineVertexBuffer;
 
-        public static DrawLine(posStart: egret3d.Vector3, posEnd: egret3d.Vector3, size?: number, color?: number[]) {
-            if (!this._enabled) return;
-            egret3d.WebGLKit.zTest(true);
-            let gl = this.webgl;
-            let prg = this.glProgram_line;
+        // public static DrawLine(posStart: egret3d.Vector3, posEnd: egret3d.Vector3, size?: number, color?: number[]) {
+        //     if (!this.enabled) return;
 
-            this.verticesLine = [
-                posStart.x, posStart.y, posStart.z,
-                posEnd.x, posEnd.y, posEnd.z
-            ];
-            gl.lineWidth(size || 1);
-            prg.use();
-            let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
+        //     let gl = this.webgl;
+        //     let prg = this.glProgram_line;
+        //     gl.enable(gl.DEPTH_TEST);
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.lineVertexBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.verticesLine), gl.STATIC_DRAW);
-            gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(prgVertexPosition);
-            this.setMVPMatrix();
-            prg.setMatrix("mvpMat", this.mvpMatrix);
-            prg.setColor("lineColor", color);
+        //     this.verticesLine = [
+        //         posStart.x, posStart.y, posStart.z,
+        //         posEnd.x, posEnd.y, posEnd.z
+        //     ];
+        //     gl.lineWidth(size || 1);
+        //     prg.use();
+        //     let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
 
-            gl.drawArrays(gl.LINES, 0, 2);
-        }
+        //     gl.bindBuffer(gl.ARRAY_BUFFER, this.lineVertexBuffer);
+        //     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.verticesLine), gl.STATIC_DRAW);
+        //     gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
+        //     gl.enableVertexAttribArray(prgVertexPosition);
+        //     this.setMVPMatrix();
+        //     prg.setMatrix("mvpMat", this.mvpMatrix);
+        //     prg.setColor("lineColor", color);
 
+        //     gl.drawArrays(gl.LINES, 0, 2);
+        // }
+
+        private _oldTransform
+        private nrLine
         public static DrawCoord() {
-            if (!this._enabled) return;
-            egret3d.WebGLKit.zTest(true);
-            let gl = this.webgl;
-            let prg = this.glProgram_line;
+            let gl = Gizmo.webgl;
+            let prg = Gizmo.glProgram_line;
+
+            let nrLine = this.nrLine
+            if (!this.enabled) return;
+            gl.enable(gl.DEPTH_TEST);
 
             prg.use();
             let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.coordVertexBuffer);
+            gl.bindBuffer(gl.ARRAY_BUFFER, Gizmo.coordVertexBuffer);
             gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
             gl.enableVertexAttribArray(prgVertexPosition);
-            this.setMVPMatrix();
-            prg.setMatrix("mvpMat", this.mvpMatrix);
-            prg.setColor("lineColor", [0.7, 0.7, 0.7, 0.8]);
-            gl.drawArrays(gl.LINES, 0, (2 * this.nrLine + 1) * 4 + 2);
+            Gizmo.setMVPMatrix();
+            prg.setMatrix("mvpMat", Gizmo.mvpMatrix);
+            prg.setColor("lineColor", [0.7, 0.7, 0.7, 1]);
+            gl.drawArrays(gl.LINES, 0, (2 * nrLine + 1) * 4 + 2);
         }
+
         private static verticesCoord: number[];
         private static verticesCylinder: number[];
         private static verticesArrow: number[];
@@ -208,62 +231,49 @@ namespace paper.editor {
             gl.bindBuffer(gl.ARRAY_BUFFER, null);
         }
 
-        private static mvpMatrix: egret3d.Matrix = new egret3d.Matrix();
-        private static mMatrix: egret3d.Matrix = new egret3d.Matrix();
-        private static vMatrix: egret3d.Matrix = new egret3d.Matrix();
-        private static pMatrix: egret3d.Matrix = new egret3d.Matrix();
+        private static mvpMatrix: egret3d.Matrix4 = new egret3d.Matrix4();
+        private static mMatrix: egret3d.Matrix4 = new egret3d.Matrix4();
+        private static vMatrix: egret3d.Matrix4 = new egret3d.Matrix4();
+        private static pMatrix: egret3d.Matrix4 = new egret3d.Matrix4();
 
-        private static setMVPMatrix(m?: egret3d.Matrix) {
-            var asp = this.context.viewPortPixel.w / this.context.viewPortPixel.h;
-            this.camera.calcViewMatrix(this.vMatrix);
+        private static setMVPMatrix(m?: egret3d.Matrix4) {
+            var asp = this.camera.context.viewPortPixel.w / this.camera.context.viewPortPixel.h;
+            this.vMatrix.inverse(this.camera.gameObject.transform.getWorldMatrix());
             this.camera.calcProjectMatrix(asp, this.pMatrix);
-            egret3d.Matrix.multiply(this.pMatrix, this.vMatrix, this.mvpMatrix);
-            m = m || new egret3d.Matrix();
-            egret3d.Matrix.copy(m, this.mMatrix);
-            egret3d.Matrix.multiply(this.mvpMatrix, this.mMatrix, this.mvpMatrix);
+            this.mvpMatrix.multiply(this.pMatrix, this.vMatrix);
+            m = m || new egret3d.Matrix4();
+            this.mMatrix.copy(m);
+            this.mvpMatrix.multiply(this.mMatrix);
         }
 
         private static glProgram_line: editor.GizmoShader;
         private static glProgram_icon: editor.GizmoShader;
+        private static glProgram_stroke: editor.GizmoShader;
 
         private static initPrg() {
             this.glProgram_line = new GizmoShader(this.webgl, editor.line_vert, editor.line_frag);
             this.glProgram_icon = new GizmoShader(this.webgl, editor.icon_vert, editor.icon_frag);
+            this.glProgram_stroke = new GizmoShader(this.webgl, editor.stroke_vert, editor.line_frag);
         }
 
-        private static lightPool: GameObject[];
-        private static cameraPool: GameObject[];
-        private static getAllLightAndCamera() {
-            this.lightPool = [];
-            let lightSystem = Application.systemManager.getSystem(egret3d.LightSystem);
-            let lights = lightSystem.components;
-            for (let i = 0; i < lights.length; i++)
-                this.lightPool.push(lights[i].gameObject);
-            this.cameraPool = [];
-            let allGameObj = Application.sceneManager.activeScene.gameObjects;
-            for (let i = 0; i < allGameObj.length; i++) {
-                if (allGameObj[i].getComponent(egret3d.Camera)) {
-                    if (allGameObj[i].tag != "EditorCamera")
-                        this.cameraPool.push(allGameObj[i]);
-                }
-            }
-        }
+        // const cameras = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
 
         public static DrawLights() {
-            if (!this._enabled) return;
-            let gl = this.webgl;
-            for (let i = 0; i < this.lightPool.length; i++) {
-                let light = this.lightPool[i].getComponent(egret3d.BaseLight as any, true) as egret3d.BaseLight;
-                Gizmo.DrawIcon("light", this.lightPool[i].transform.getPosition(), 30, light.color);
-                Gizmo.DrawCylinder(this.lightPool[i].transform, light.color);
+            if (!this.enabled) return;
+
+            const camerasAndLights = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+            for (const light of camerasAndLights.lights) {
+                Gizmo.DrawIcon("light", light.gameObject.transform.getPosition(), 30, light.color);
+                Gizmo.DrawCylinder(light.gameObject.transform, light.color);
             }
         }
 
         private static DrawCylinder(transform: egret3d.Transform, color: egret3d.Color) {
-            if (!this._enabled) return;
-            egret3d.WebGLKit.zTest(true);
+            if (!this.enabled) return;
+
             let gl = this.webgl;
             let prg = this.glProgram_line;
+            gl.enable(gl.DEPTH_TEST);
 
             prg.use();
             let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
@@ -280,19 +290,34 @@ namespace paper.editor {
         }
 
         public static DrawCameras() {
-            if (!this._enabled) return;
-            let gl = this.webgl;
-            for (let i = 0; i < this.cameraPool.length; i++) {
-                Gizmo.DrawIcon("camera", this.cameraPool[i].transform.getPosition(), 30);
+            if (!this.enabled) return;
+
+            const camerasAndLights = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+
+            for (const camera of camerasAndLights.cameras) {
+                // if (!camera.gameObject.getComponent(egret3d.MeshFilter) && camera.gameObject.name != "EditorCamera") {
+                //     let obj = camera.gameObject
+                //     let mesh = obj.addComponent(egret3d.MeshFilter)
+                //     mesh.mesh = egret3d.DefaultMeshes.CUBE
+                //     // let renderer = obj.addComponent(egret3d.MeshRenderer);
+                //     // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
+                //     // mat.setVector4v("_Color", [1, 0, 0, 1]);
+                //     // renderer.materials = [mat];
+                //     // obj.transform.setScale(0.6, 0.4, 0.4)
+                // }
+
+                Gizmo.DrawIcon("camera", camera.gameObject.transform.getPosition(), 30);
+                Gizmo.DrawCameraSquare(camera.gameObject, [1, 0, 0, 1])
                 //Gizmo.DrawCameraSquare(this.cameraPool[i], [1.0, 0.0, 1.0, 1.0]);
             }
         }
 
         public static DrawCameraSquare(obj: GameObject, color: number[]) {
-            if (!this._enabled) return;
-            egret3d.WebGLKit.zTest(true);
+            if (!this.enabled) return;
+
             let gl = this.webgl;
             let prg = this.glProgram_line;
+            gl.enable(gl.DEPTH_TEST);
 
             this.getCameraSquare(obj);
 
@@ -343,7 +368,7 @@ namespace paper.editor {
             egret3d.Vector3.add(egret3d.Vector3.scale(forward, camera.far), cameraPos, farCenter);
 
 
-            let asp = this.context.viewPortPixel.w / this.context.viewPortPixel.h;
+            let asp = this.camera.context.viewPortPixel.w / this.camera.context.viewPortPixel.h;
             let nearH = camera.opvalue > 0 ? camera.near * Math.tan(camera.fov * 0.5) : camera.size * 0.5;
             let nearW = nearH * asp;
             let farH = camera.opvalue > 0 ? camera.far * Math.tan(camera.fov * 0.5) : camera.size * 0.5;
@@ -400,102 +425,95 @@ namespace paper.editor {
             this.verticesCameraSquare = this.verticesCameraSquare.concat([point.x, point.y, point.z]);
         }
 
-        public static DrawArrow(m: egret3d.Matrix, color: number[], fixSize?: boolean) {
-            if (!this._enabled) return;
-            egret3d.WebGLKit.zTest(false);
-            let gl = this.webgl;
-            let prg = this.glProgram_line;
+        // public static DrawArrow(m: egret3d.Matrix4, color: number[], fixSize?: boolean) {
+        //     if (!this.enabled) return;
 
-            prg.use();
-            let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.arrowVertexBuffer);
-            gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
-            gl.enableVertexAttribArray(prgVertexPosition);
-            this.setMVPMatrix(m);
-            prg.setMatrix("mvpMat", this.mvpMatrix);
-            prg.setColor("lineColor", color);
-            gl.drawArrays(gl.LINES, 0, 2);
-            gl.drawArrays(gl.TRIANGLES, 2, 24);
-        }
+        //     let gl = this.webgl;
+        //     let prg = this.glProgram_line;
+        //     gl.disable(gl.DEPTH_TEST);
 
-        private static xArrowMMatrix = new egret3d.Matrix();
-        private static yArrowMMatrix = new egret3d.Matrix(new Float32Array(
-            [
-                0, 1, 0, 0,
-                -1, 0, 0, 0,
-                0, 0, 1, 0,
-                0, 0, 0, 1
-            ]
-        )
-        );
-        private static zArrowMMatrix = new egret3d.Matrix(new Float32Array(
-            [
-                0, 0, 1, 0,
-                0, 1, 0, 0,
-                -1, 0, 0, 0,
-                0, 0, 0, 1
-            ]
-        )
-        );
+        //     prg.use();
+        //     let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
+        //     gl.bindBuffer(gl.ARRAY_BUFFER, this.arrowVertexBuffer);
+        //     gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
+        //     gl.enableVertexAttribArray(prgVertexPosition);
+        //     this.setMVPMatrix(m);
+        //     prg.setMatrix("mvpMat", this.mvpMatrix);
+        //     prg.setColor("lineColor", color);
+        //     gl.drawArrays(gl.LINES, 0, 2);
+        //     gl.drawArrays(gl.TRIANGLES, 2, 24);
+        // }
 
-        private static helpMat: egret3d.Matrix = new egret3d.Matrix();
-        private static helpMat1: egret3d.Matrix = new egret3d.Matrix();
-        public static DrawArrowXYZ(transform: egret3d.Transform) {
-            let worldMat = Gizmo.helpMat;
-            Gizmo.getWorldMatrixWithoutScale(transform, 10, worldMat);
-            egret3d.Matrix.multiply(worldMat, this.xArrowMMatrix, worldMat);
-            Gizmo.DrawArrow(worldMat, [1.0, 0.0, 0.0, 1.0], true);
-            egret3d.Matrix.multiply(worldMat, this.yArrowMMatrix, worldMat);
-            Gizmo.DrawArrow(worldMat, [0.0, 1.0, 0.0, 1.0], true);
-            egret3d.Matrix.multiply(worldMat, this.zArrowMMatrix, worldMat);
-            Gizmo.DrawArrow(worldMat, [0.0, 0.0, 1.0, 1.0], true);
-        }
-        private static getWorldMatrixWithoutScale(transform: egret3d.Transform, fixScale: number, out: egret3d.Matrix) {
-            egret3d.Matrix.identify(out);
+        // private static xArrowMMatrix = new egret3d.Matrix4();
+        // private static yArrowMMatrix = egret3d.Matrix4.create([
+        //     0, 1, 0, 0,
+        //     -1, 0, 0, 0,
+        //     0, 0, 1, 0,
+        //     0, 0, 0, 1
+        // ]);
+        // private static zArrowMMatrix = egret3d.Matrix4.create([
+        //     0, 0, 1, 0,
+        //     0, 1, 0, 0,
+        //     -1, 0, 0, 0,
+        //     0, 0, 0, 1
+        // ]);
+
+        private static helpMat: egret3d.Matrix4 = new egret3d.Matrix4();
+        private static helpMat1: egret3d.Matrix4 = new egret3d.Matrix4();
+        // public static DrawArrowXYZ(transform: egret3d.Transform) {
+        //     console.log("now drawXYZ", transform)
+        //     let worldMat = Gizmo.helpMat;
+        //     Gizmo.getWorldMatrixWithoutScale(transform, 10, worldMat);
+        //     worldMat.multiply(this.xArrowMMatrix);
+        //     Gizmo.DrawArrow(worldMat, [1.0, 0.0, 0.0, 1.0], true);
+        //     worldMat.multiply(this.yArrowMMatrix);
+        //     Gizmo.DrawArrow(worldMat, [0.0, 1.0, 0.0, 1.0], true);
+        //     worldMat.multiply(this.zArrowMMatrix);
+        //     Gizmo.DrawArrow(worldMat, [0.0, 0.0, 1.0, 1.0], true);
+        // }
+        private static getWorldMatrixWithoutScale(transform: egret3d.Transform, fixScale: number, out: egret3d.Matrix4) {
+            out.identity();
             let p = transform.getPosition();
             let r = transform.getRotation();
-
             let p_c = this.camera.gameObject.transform.getPosition();
             egret3d.Vector3.subtract(p, p_c, p_c);
             let sca = egret3d.Vector3.getLength(p_c) / fixScale;
 
             let matS = this.helpMat1;
-            egret3d.Matrix.formScale(sca, sca, sca, matS);
+            // egret3d.Quaternion.toMatrix(r, out);
+            out.fromRotation(r);
+            matS.fromScale(sca, sca, sca);
 
-            egret3d.Quaternion.toMatrix(r, out);
-            egret3d.Matrix.multiply(out, matS, out);
+            out.multiply(matS);
             out.rawData[12] = p.x;
             out.rawData[13] = p.y;
             out.rawData[14] = p.z;
         }
 
-        private static fixPMat = new egret3d.Matrix();
-
+        private static _imageLoadCount: number = 0;
         private static textures: { [key: string]: WebGLTexture } = {};
-        private static imageLoaded: boolean = false;
         private static initIconTexture() {
-            for (let key in this.icons) {
+            for (let key in icons) {
                 let image = new Image();
-                image.setAttribute('src', this.icons[key]);
+                this._imageLoadCount++;
+                image.setAttribute('src', icons[key]);
                 image.onload = this.loadIconTexture.bind(this, image, key);
             }
         }
+
         private static loadIconTexture(image: HTMLImageElement, key: string) {
-            let gl = this.webgl;
-            let texture = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+            const webgl = egret3d.WebGLCapabilities.webgl;
+            const texture = webgl.createTexture();
+            webgl.bindTexture(webgl.TEXTURE_2D, texture);
+            webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, webgl.RGBA, webgl.UNSIGNED_BYTE, image);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
+            this._imageLoadCount--;
             this.textures[key] = texture;
-            if (this.textures["camera"] && this.textures["light"]) {
-                this.imageLoaded = true;
+
+            if (this._imageLoadCount === 0) {
+                this.enabled = true;
             }
         }
-
-        private static icons = {
-            camera: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIcSURBVFhH7ZbPjtMwEMYj7vAACCFg28Rx4oQmtGnLQo/7Du1pK3Hk2BtSHwYkXoA34C34I7Fozxxoy+6yaocZx9M6u4WkFaA95JN+qu0Z21/riVOnVq1a/0oiaoMXPdlCBxpxG0xaNXlB+vHqIl7Utfo5Jl3LxU2uxpkmmjNp1RTEGfg4kZhOp/eRe8xwOHzqmnjSPXxnpjhBlIEIM5BRb40f96Ch2jCZTO6atGryVQeESjVmqCA/zGNy15/2xuv4xcuBK1N4KBNw445FZugauG/ndKr9GlJRYWBBxcn7LHveHAyOHtC4iJKLbQW0C0IlBRNemH6jTzpSQqouOFQ89iSdibLHcrKKbObYBqhGaC9qc/yaAdnKdMKjoLUe08QpvH7zFsp08fOyMI8N0DHRPqUGRJhXsWr112ME5SwWM73Jp5NTzecvFtg/+XqK0UsQ1vNvG+Ax6nN7bYBN8GPW0HVRZL44h+VqdW2cafcOYYUW9jZAAZb3uHiWxPcfZQae7Wdgmw7wYuEk5r8a8MPNBGa+OIMVGpBRfyu9rI/bL/+OAU/Sy2azOS06m81xgzItoRkmm3l7G2gGr7gwGR8LU+JbLAcvEQ29bIi8L4Li0bEBunR4TK9v2r81QCIDwiQSblwNzifYAMkNW+Dil6A2x/9ogGQvtg8HQn0wS2mxIY5LlV98pRqNRnfG4/HtXcD/CrfM9Fq1at1kOc4vVSG2+aaGzOwAAAAASUVORK5CYII=",
-            light: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPcSURBVFhH3ZdLSNRRFMbn4fuZmtmYZpn0gCx6YbQokBZRq6hVL6xWUdCmICIoIYjaWBDRu3WShhUJLSKIIKISgqBWao9NlIsUwlKn33fnzDij/1HHsU0fHM693z333HPOffxnfNNBMBjcgRpCVjjiX6GwsHAJKhDpjYIAdqLCyEpHxKG8vLwgJyen2rrTR25uboPf7/+Ns31GxTBRAJmZmc2BQKC/rKys0qhpAz+Bt8inUCiUZ5xDsgAIeh5BDzCnzaj0kJ2d3YjDcFZW1imjHJIFkJGRcQf7waKiojqj0gdOH5DRz7y8vLlGeQZA6Vex+DBjLUalhtLS0iJrJoDsl+os4PiGUVqsHu48zVCEcYE+JdAfZF9qVAKS+XfgoM1nch+LnK2oqMg3OgYWvIhcsu44VFVV5RLAXYI9alQMBQUFsxm7prPk5dtBhwejdu03hr04Uonj4TftKy4ursVmP/bH0LvZmlgVQMwOBDlDh/D53bbmWklJSbGNeYMJW3D6kWaYBZ4Q/bLIiM+nM8BYG85G6Gr/ndD/owy5doWyE6joBmzf0Ayz8EsSXBsZmRqycHgCx/1MPieCyKtpdyNhgnTCluh2hHGuIFS519EgsGul/w27g3THPWRTAoemyg6OH2fPtLgWoz9OqI4CUNVu0Ve1QmxVidppgywaUUkXjwplVyWGsF9If+ZA5i3Knuw8F46KApCmEkfQKaEH+ewhWxG9xw+13zQnFJ0DBYl2DxHzDqO8/D5HRsGEVuTeWGFovcZx1D6VAKJVQl+gr8pt9/KLXNb4lIGjMzpgkwWhmyGN3V70zMHeguGJDqECtEP4k9M/Cy59cMe3ktUCtcnqKs7D+fn5bq+hEhYXrzZzjqN1DdcQcIPaKcOe2g6aKqfbr5qamhy4TnHKVA+QSh4V8ez/dbR7iml3Eugw+ibBzRE3KfRBYb+bmfhLwuLNY36IBFn4KGO6NfEVeI/tLhlEoS8ivq5gO8R4H4HoagYjox7AwXIMu5mgTDrIqtaGHOwTG31S/aoSduv0RBvnqhT/PRDYitX4fUFTt6NL35PIyBhoIkE8J8NtRiWAxR4x/tS642DV+4BcNCoefhJqYv5j2ql/F5i8GaV9PxlhXECbUM+QRY4AcLep4CC/pBcbNSMIUsIupFdZGuf5k4xTX0kAAwRy36j0QdkO6Fyg9xjl4BWAwOKnUSPcFFUoPegPBpl/RV7RTdi7ZAHoJxf2Xxh/TXd6vwOiIOt6HPWQzUajYkgWgMC8JsbfJT3xqaCuri7bmgmYKACgzDMizX+EuFswc39A/kfE/0RPAp/vL7M1A0/aWSCCAAAAAElFTkSuQmCC"
-        };
     }
 }

@@ -9,3 +9,5 @@ script
 tests*
 .gitignore
 tsconfig.json
+devconfig
+TODO

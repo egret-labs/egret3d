@@ -1,5 +1,58 @@
 namespace paper {
-
+    /**
+     * 
+     */
+    export const enum HideFlags {
+        /**
+         * 
+         */
+        None,
+        /**
+         * 
+         */
+        NotEditable,
+        /**
+         * 
+         */
+        Hide,
+        /**
+         * 
+         */
+        HideAndDontSave,
+    }
+    /**
+     * 
+     */
+    export const enum DefaultNames {
+        NoName = "NoName",
+        Global = "Global",
+        MainCamera = "MainCamera",
+        EditorCamera = "EditorCamera",
+        Editor = "Editor",
+    }
+    /**
+     * 
+     */
+    export const enum DefaultTags {
+        Untagged = "",
+        Respawn = "Respawn",
+        Finish = "Finish",
+        EditorOnly = "EditorOnly",
+        MainCamera = "MainCamera",
+        Player = "Player",
+        GameController = "GameController",
+        Global = "Global",
+    }
+    /**
+     * 渲染排序
+     */
+    export enum RenderQueue {
+        Background = 1000,
+        Geometry = 2000,
+        AlphaTest = 2450,
+        Transparent = 3000,
+        Overlay = 4000
+    }
     /**
      * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
      * 这个属性可以实现相机的选择性剔除。
@@ -19,7 +72,6 @@ namespace paper {
         UserLayer10 = 0x000800,
         UserLayer11 = 0x000f00,
     }
-
     /**
      * culling mask
      * @version paper 1.0
@@ -50,5 +102,9 @@ namespace paper {
         UserLayer9 = 0x000400,
         UserLayer10 = 0x000800,
         UserLayer11 = 0x000f00
+    }
+
+    export function layerTest(cullingMask: CullingMask, layer: Layer) {
+        return (cullingMask & layer) !== 0;
     }
 }

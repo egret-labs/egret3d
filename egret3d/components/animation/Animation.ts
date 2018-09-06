@@ -98,7 +98,7 @@ namespace egret3d {
         public _globalWeight: number = 0.0;
         /**
          * 融合进度。
-         * 
+         * @internal
          */
         public _fadeProgress: number = 0.0;
         /**
@@ -144,7 +144,7 @@ namespace egret3d {
         }
 
         public fadeOut(fadeTime: number) {
-            const globalTime = paper.Time.time;
+            const globalTime = paper.Time.time; //
             const localFadeTime = globalTime - this._fadeTimeStart;
 
             if (this._fadeState > 0) {
@@ -253,7 +253,7 @@ namespace egret3d {
 
         private _onUpdateFrame() {
             const delta = this._delta;
-            const result = this._animationComponent._skinnedMeshRenderer._skeletonMatrixData;
+            const result = this._animationComponent._skinnedMeshRenderer!._skeletonMatrixData;
             const boneBlendLayers = this._animationComponent._boneBlendLayers;
             const frameBuffer = this._frameBuffer;
 
@@ -438,7 +438,7 @@ namespace egret3d {
          * 
          */
         public initialize(animationComponent: Animation, animationAsset: GLTFAsset, animationClip: GLTFAnimationClip) {
-            const globalTime = paper.Time.time;
+            const globalTime = paper.Time.time; //
             const assetConfig = animationAsset.config;
             //
             this.animationAsset = animationAsset;
@@ -508,7 +508,7 @@ namespace egret3d {
                 const rootGameObject = this._animationComponent.gameObject;
                 const transforms = rootGameObject.transform.getAllChildren();
                 const gameObjects: { [key: string]: paper.GameObject } = {};
-                gameObjects[rootGameObject.name] = rootGameObject;
+                gameObjects[rootGameObject.name] = gameObjects["__root__"] = rootGameObject;
 
                 for (const { gameObject } of transforms) {
                     gameObjects[gameObject.name] = gameObject;
@@ -516,12 +516,12 @@ namespace egret3d {
 
                 for (const glTFChannel of this.animation.channels) {
                     const node = this.animationAsset.getNode(glTFChannel.target.node || 0);
-                    const gameObject = gameObjects[node.name];
+                    const gameObject = gameObjects[node.name!];
                     if (!gameObject) {
                         continue;
                     }
 
-                    const channel = new AnimationChannel();
+                    const channel = new AnimationChannel(); // TODO cache.
                     channel.glTFChannel = glTFChannel;
                     channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
                     channel.gameObject = gameObject;
@@ -547,9 +547,9 @@ namespace egret3d {
                             break;
 
                         case "custom":
-                            switch (channel.glTFChannel.extensions.paper.type) {
+                            switch (channel.glTFChannel.extensions!.paper.type) {
                                 case "paper.GameObject":
-                                    switch (channel.glTFChannel.extensions.paper.property) {
+                                    switch (channel.glTFChannel.extensions!.paper.property) {
                                         case "activeSelf":
                                             channel.update = this._onUpdateActive.bind(this);
                                             break;
@@ -559,7 +559,7 @@ namespace egret3d {
                             break;
 
                         default:
-                            console.warn("Unknown animation channel.", channel.glTFChannel.target.path);
+                            console.debug("Unknown animation channel.", channel.glTFChannel.target.path);
                             break;
                     }
 
@@ -672,6 +672,7 @@ namespace egret3d {
     /**
      * 动画组件。
      */
+    @paper.allowMultiple
     export class Animation extends paper.BaseComponent {
         /**
          * @private
@@ -682,6 +683,10 @@ namespace egret3d {
          * 动画速度。
          */
         public timeScale: number = 1.0;
+        /**
+         * @internal
+         */
+        public _addToSystem: boolean = false;
         /**
          * 动画数据列表。
          */
@@ -700,6 +705,7 @@ namespace egret3d {
          * @internal
          */
         public readonly _animationNames: string[] = [];
+        private _fadeInParamter: any[] | null = null;
         /**
          * 最后一个播放的动画状态。
          * 当进行动画混合时，该值通常没有任何意义。
@@ -713,24 +719,9 @@ namespace egret3d {
          * @internal
          */
         public _dispatchEvent(type: string, animationState: AnimationState, eventObject?: any) { // TODO more event type.
-            for (const component of this.gameObject.getComponents(paper.Behaviour, true)) {
+            for (const component of this.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
                 if (component.onAnimationEvent) {
                     component.onAnimationEvent(type, animationState, eventObject);
-                }
-            }
-        }
-
-        public initialize() {
-            super.initialize();
-
-            if (!this._skinnedMeshRenderer) {
-                this._skinnedMeshRenderer = this.gameObject.getComponentsInChildren(SkinnedMeshRenderer)[0];
-
-                if (this._skinnedMeshRenderer) {
-                    for (const bone of this._skinnedMeshRenderer.bones) {
-                        const boneBlendLayer = new BoneBlendLayer();
-                        this._boneBlendLayers.push(boneBlendLayer);
-                    }
                 }
             }
         }
@@ -738,6 +729,11 @@ namespace egret3d {
          * 
          */
         public update(globalTime: number) {
+            if (this._fadeInParamter) {
+                this.fadeIn.apply(this, this._fadeInParamter);
+                this._fadeInParamter = null;
+            }
+
             const blendNodes = this._blendNodes;
             const blendNodeCount = blendNodes.length;
 
@@ -842,6 +838,12 @@ namespace egret3d {
             fadeTime: number, playTimes: number = -1,
             layer: number = 0, additive: boolean = false,
         ): AnimationState | null {
+            if (!this._addToSystem) {
+                // console.warn("The animation component is not add to system yet.");
+                this._fadeInParamter = arguments as any;
+                return null;
+            }
+
             let animationAsset: GLTFAsset | null = null;
             let animationClip: GLTFAnimationClip | null = null;
 
@@ -900,10 +902,17 @@ namespace egret3d {
             return this.fadeIn(animationNameOrNames, 0.0, playTimes);
         }
 
+        public stop() {
+            for (const blendNode of this._blendNodes) {
+                if (!blendNode.parent) {
+                    blendNode.fadeOut(0.0);
+                }
+            }
+        }
+
         public get lastAnimationnName(): string {
             return this._lastAnimationState ? this._lastAnimationState.animationClip.name : "";
         }
-
         /**
          * 动画数据列表。
          */
@@ -914,29 +923,6 @@ namespace egret3d {
         }
         public get animations(): ReadonlyArray<GLTFAsset> {
             return this._animations;
-        }
-    }
-
-    export class AnimationSystem extends paper.BaseSystem<Animation> {
-        protected readonly _interests = [
-            {
-                componentClass: Animation
-            }
-        ];
-
-        public onAddGameObject(gameObject: paper.GameObject) {
-            const component = this._getComponent(gameObject, 0);
-
-            if (component.autoPlay) {
-                component.play();
-            }
-        }
-
-        public onUpdate() { // TODO 应将组件功能尽量移到系统
-            const globalTime = paper.Time.time;
-            for (const component of this._components) {
-                component.update(globalTime);
-            }
         }
     }
 }

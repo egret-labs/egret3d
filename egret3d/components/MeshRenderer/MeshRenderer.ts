@@ -1,70 +1,30 @@
 namespace egret3d {
-
     /**
-     * mesh的渲染组件
+     * Mesh 渲染组件。
      */
     export class MeshRenderer extends paper.BaseRenderer {
         @paper.serializedField
-        private readonly _materials: Material[] = [];
-        /**
-         * 
-         */
-        public constructor() {
-            super();
+        protected readonly _materials: Material[] = [DefaultMaterials.MESH_BASIC];
 
-            // default
-            const material = new Material();
-            material.setShader(DefaultShaders.DIFFUSE);
-            this._materials.push(material);
-        }
-        /**
-         * @inheritDoc
-         */
-        public serialize() {
-            const target = super.serialize();
-            target._receiveShadows = this._receiveShadows;
-            target._castShadows = this._castShadows;
-            target._lightmapIndex = this._lightmapIndex;
-            target._lightmapScaleOffset = this._lightmapScaleOffset;
-            target._materials = [] as any[];
-
-            for (const material of this._materials) {
-                target._materials.push(paper.serializeAsset(material));
-            }
-
-            return target;
-        }
-        /**
-         * @inheritDoc
-         */
-        public deserialize(element: any) {
-            super.deserialize(element);
-
-            this._receiveShadows = element._receiveShadows || false;
-            this._castShadows = element._castShadows || false;
-            this._lightmapIndex = element._lightmapIndex;
-
-            if (element._materials) {
-                this._materials.length = 0;
-                for (let i = 0, l = element._materials.length; i < l; i++) {
-                    this._materials.push(paper.getDeserializedObject<Material>(element._materials[i]));
-                }
-            }
-
-            if (element._lightmapScaleOffset) {
-                this._lightmapScaleOffset[0] = element._lightmapScaleOffset[0];
-                this._lightmapScaleOffset[1] = element._lightmapScaleOffset[1];
-                this._lightmapScaleOffset[2] = element._lightmapScaleOffset[2];
-                this._lightmapScaleOffset[3] = element._lightmapScaleOffset[3];
-            }
-        }
-        /**
-         * @inheritDoc
-         */
         public uninitialize() {
             super.uninitialize();
 
             this._materials.length = 0;
+        }
+
+        public recalculateAABB() {
+            this.aabb.clear();
+
+            const filter = this.gameObject.getComponent(MeshFilter);
+            if (filter && filter.mesh) {
+                const vertices = filter.mesh.getVertices();
+                const position = helpVector3A;
+
+                for (let i = 0, l = vertices.length; i < l; i += 3) {
+                    position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
+                    this.aabb.add(position);
+                }
+            }
         }
         /**
          * material list
@@ -86,13 +46,47 @@ namespace egret3d {
             if (value === this._materials) {
                 return;
             }
+            // TODO 共享材质的接口。
 
             this._materials.length = 0;
             for (const material of value) {
-                this._materials.push(material);
+                if (!material) {
+                    console.warn("Invalid material.");
+                }
+
+                this._materials.push(material || DefaultMaterials.MISSING);
             }
 
             paper.EventPool.dispatchEvent(paper.RendererEventType.Materials, this);
+        }
+        /**
+         * 材质数组中的第一个材质。
+         */
+        public get material(): Material | null {
+            return this._materials.length > 0 ? this._materials[0] : null;
+        }
+        public set material(value: Material | null) {
+            let dirty = false;
+            if (value) {
+                if (this._materials.length > 0) {
+                    if (this._materials[0] !== value) {
+                        this._materials[0] = value;
+                        dirty = true;
+                    }
+                }
+                else {
+                    this._materials.push(value);
+                    dirty = true;
+                }
+            }
+            else if (this._materials.length > 0) {
+                this._materials.splice(0, 1);
+                dirty = true;
+            }
+
+            if (dirty) {
+                paper.EventPool.dispatchEvent(paper.RendererEventType.Materials, this);
+            }
         }
     }
 }

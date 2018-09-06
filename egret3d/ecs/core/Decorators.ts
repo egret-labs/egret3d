@@ -1,79 +1,80 @@
 namespace paper {
-    const _tagA: any[] = [];
-    const _tagB: any[] = [];
-    const _tagC: any[] = [];
     /**
      * @internal
      */
-    export const _executeInEditModeComponents: any[] = [];
-    /**
-     * @internal
-     */
-    export const enum SerializeKey {
-        Serialized = "__serialized",
-        SerializedType = "__serializedType",
-        DeserializedIgnore = "__deserializedIgnore",
+    export function registerClass(baseClass: BaseClass) {
+        baseClass.__onRegister();
     }
-
     /**
-     * 标记序列化分类
-     * 如果没有标记序列化分类，序列化后的对象只会收集在objects中
-     * 如果被标记了某种序列化分类，序列化后的对象还会被单独收集到一个新的数组中，key即为类名
-     * TODO 不能发布给开发者使用。
+     * 通过装饰器标记序列化属性。
      */
-    export function serializedType(type: string) {
-        return function (clazz: Function) {
-            const classPrototype = clazz.prototype;
-            if (_tagA.indexOf(classPrototype) >= 0) {
-                const types = classPrototype[SerializeKey.SerializedType] as string[];
-                if (types.indexOf(type) < 0) {
-                    types.push(type);
-                }
-            }
-            else {
-                classPrototype[SerializeKey.SerializedType] = [type];
-                _tagA.push(classPrototype);
-            }
-        }
-    }
-
-    /**
-     * 标记序列化属性
-     * 通过装饰器标记需要序列化的属性
-     */
-    export function serializedField(classPrototype: any, type: string) {
-        if (_tagB.indexOf(classPrototype) >= 0) {
-            const types = classPrototype[SerializeKey.Serialized] as string[];
-            if (types.indexOf(type) < 0) {
-                types.push(type);
-            }
+    export function serializedField(classPrototype: any, key: string): void;
+    export function serializedField(key: string): Function;
+    export function serializedField(classPrototypeOrKey: any, key?: string) {
+        if (key) {
+            const baseClass = classPrototypeOrKey.constructor as BaseClass;
+            registerClass(baseClass);
+            baseClass.__serializeKeys![key] = null;
         }
         else {
-            classPrototype[SerializeKey.Serialized] = [type];
-            _tagB.push(classPrototype);
-        }
-    }
-
-    /**
-     * 标记反序列化时需要忽略的属性
-     * 通过装饰器标记反序列化时需要被忽略的属性（但属性中引用的对象依然会被实例化）
-     */
-    export function deserializedIgnore(classPrototype: any, type: string) {
-        if (_tagC.indexOf(classPrototype) >= 0) {
-            const types = classPrototype[SerializeKey.DeserializedIgnore] as string[];
-            if (types.indexOf(type) < 0) {
-                types.push(type);
+            return function (classPrototype: any, key: string) {
+                const baseClass = classPrototype.constructor as BaseClass;
+                registerClass(baseClass);
+                baseClass.__serializeKeys![key] = classPrototypeOrKey as string;
             }
         }
-        else {
-            classPrototype[SerializeKey.DeserializedIgnore] = [type];
-            _tagC.push(classPrototype);
+    }
+    /**
+     * 通过装饰器标记反序列化时需要忽略的属性。
+     */
+    export function deserializedIgnore(classPrototype: any, key: string) {
+        const baseClass = classPrototype.constructor as BaseClass;
+        registerClass(baseClass);
+
+        const keys = baseClass.__deserializeIgnore!;
+        if (keys.indexOf(key) < 0) {
+            keys.push(key);
         }
     }
     /**
-     * 标记脚本组件是否在编辑模式也拥有生命周期。
+     * 通过装饰器标记组件是否允许在同一实体上添加多个实例。
      */
-    export function executeInEditMode<T extends Behaviour>(target: { new(): T }) {
-        _executeInEditModeComponents.push(target);
+    export function allowMultiple(componentClass: ComponentClass<BaseComponent>) {
+        registerClass(componentClass);
+        if (!componentClass.__isSingleton) {
+            componentClass.allowMultiple = true;
+        }
+        else {
+            console.warn("Singleton component cannot allow multiple.");
+        }
+    }
+    /**
+     * 通过装饰器标记组件依赖的其他组件。
+     */
+    export function requireComponent(requireComponentClass: ComponentClass<BaseComponent>) {
+        return function (componentClass: ComponentClass<BaseComponent>) {
+            const requireComponents = componentClass.requireComponents!;
+            if (requireComponents.indexOf(requireComponentClass) < 0) {
+                requireComponents.push(requireComponentClass);
+            }
+        };
+    }
+
+    // executionOrder: number;
+    // /**
+    //  * 通过装饰器标记脚本组件的生命周期优先级。（默认：0）
+    //  */
+    // export function executionOrder(order: number = 0) {
+    //     return function (componentClass: ComponentClass<Behaviour>) {
+    //         registerClass(componentClass);
+    //         componentClass.executionOrder = order;
+    //     }
+    // }
+    /**
+     * 通过装饰器标记脚本组件是否在编辑模式也拥有生命周期。
+     */
+    export function executeInEditMode(componentClass: ComponentClass<Behaviour>) {
+        registerClass(componentClass);
+        componentClass.executeInEditMode = true;
     }
 }
