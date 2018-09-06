@@ -43,6 +43,21 @@ namespace paper {
 
             return null;
         }
+
+        public static get globalScene() {
+            return Application.sceneManager.globalScene;
+        }
+
+        public static get editorScene() {
+            return Application.sceneManager.editorScene;
+        }
+
+        public static get activeScene() {
+            return Application.sceneManager.activeScene;
+        }
+        public static set activeScene(value: Readonly<Scene>) {
+            Application.sceneManager.activeScene = value;
+        }
         /**
          * lightmap 表现的光照强度。
          */
@@ -53,6 +68,11 @@ namespace paper {
          */
         @serializedField
         public readonly name: string = "";
+        /**
+         * 环境光。
+         */
+        @paper.serializedField
+        public readonly ambientColor: egret3d.Color = egret3d.Color.create(0.21, 0.22, 0.25, 1);
         /**
          * 场景的 lightmap 列表。
          */
@@ -69,10 +89,10 @@ namespace paper {
          */
         public readonly _gameObjects: GameObject[] = [];
         /**
-         * 环境光。
+         * 请使用 `paper.Scene.createEmpty()` 创建实例。
+         * @see paper.Scene.createEmpty()
+         * @see paper.Scene.create()
          */
-        @paper.serializedField
-        public readonly ambientColor: egret3d.Color = egret3d.Color.create(0.21, 0.22, 0.25, 1);
         private constructor(name: string) {
             super();
 

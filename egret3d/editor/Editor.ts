@@ -28,8 +28,6 @@ namespace paper.editor {
             //初始化编辑场景
             this.editorSceneModel = new EditorSceneModel();
             this.editorSceneModel.init();
-
-            Application.sceneManager.camerasScene = this.editorSceneModel.editorScene;
         }
         private static _activeEditorModel: EditorModel;
         /**

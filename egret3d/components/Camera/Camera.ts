@@ -22,12 +22,15 @@ namespace egret3d {
          * 编辑相机。
          * - 如果没有则创建一个。
          */
-        public static get edit() {
+        public static get editor() {
             let gameObject = paper.Application.sceneManager.editorScene.find(paper.DefaultNames.EditorCamera);
             if (!gameObject) {
-                gameObject = paper.GameObject.create(paper.DefaultNames.EditorCamera, paper.DefaultTags.EditorOnly);
+                gameObject = paper.GameObject.create(paper.DefaultNames.EditorCamera, paper.DefaultTags.EditorOnly, paper.Application.sceneManager.editorScene);
                 gameObject.transform.setLocalPosition(0.0, 10.0, -10.0);
                 gameObject.transform.lookAt(Vector3.ZERO);
+
+                const camera = gameObject.addComponent(Camera);
+                camera.cullingMask &= ~paper.CullingMask.UI;
             }
 
             return gameObject.getOrAddComponent(Camera);
@@ -38,7 +41,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.extraProperty(paper.editor.EditType.CHECKBOX)
-        public clearOption_Color: boolean = true;
+        public clearOption_Color: boolean = false;
         /**
          * 是否清除深度缓冲区
          */
@@ -46,7 +49,10 @@ namespace egret3d {
         @paper.editor.extraProperty(paper.editor.EditType.CHECKBOX)
         public clearOption_Depth: boolean = true;
         /**
-         * 相机的渲染剔除，对应GameObject的层级
+         * 相机的渲染剔除，对应 GameObject 的层级。
+         * - camera.cullingMask = paper.CullingMask.UI;
+         * - camera.cullingMask |= paper.CullingMask.UI;
+         * - camera.cullingMask &= ~paper.CullingMask.UI;
          */
         @paper.serializedField
         @paper.editor.extraProperty(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.CullingMask) })
@@ -228,7 +234,7 @@ namespace egret3d {
         /**
          * 由屏幕坐标发射射线
          */
-        public createRayByScreen(screenPosX: number, screenPosY: number): Ray {
+        public createRayByScreen(screenPosX: number, screenPosY: number, ray?: Ray): Ray {
             const src1 = helpVector3C;
             src1.x = screenPosX;
             src1.y = screenPosY;
@@ -245,9 +251,20 @@ namespace egret3d {
             this.calcWorldPosFromScreenPos(src2, dest2);
 
             const dir = helpVector3G;
-            Vector3.subtract(dest2, dest1, dir);
-            Vector3.normalize(dir);
-            const ray = Ray.create(dest1, dir);
+            dir.subtract(dest2, dest1);
+            dir.normalize();
+
+            ray = ray || Ray.create();
+            ray.set(dest1, dir);
+
+            // const a = egret3d.Vector3.create(screenPosX, screenPosY, 0.0);
+            // const b = egret3d.Vector3.create(screenPosX, screenPosY, 1.0);
+            // ray = ray || Ray.create();
+
+            // this.calcWorldPosFromScreenPos(a, a);
+            // this.calcWorldPosFromScreenPos(b, b);
+            // b.subtract(a, b).normalize();
+            // ray.set(a, b);
 
             return ray;
         }

@@ -58,7 +58,6 @@ namespace paper {
         public _canvas: HTMLCanvasElement;//TODO临时
         public _webgl: WebGLRenderingContext;////TODO临时
 
-
         private _update() {
             if (this._isRunning) {
                 requestAnimationFrame(this._bindUpdate!);
@@ -67,6 +66,13 @@ namespace paper {
             Time && Time.update();
             ComponentGroup.update();
             this.systemManager.update();
+        }
+
+        private _updatePlayerMode() {
+            if (this._playerMode !== PlayerMode.Player) {
+                egret3d.Camera.editor; // Active editor camera.
+            }
+
         }
 
         public init({ playerMode = PlayerMode.Player, systems = [] as { new(): BaseSystem }[], option = {}, canvas = {}, webgl = {} } = {}) {
@@ -79,6 +85,7 @@ namespace paper {
                 this.systemManager.register(systemClass, null);
             }
 
+            this._updatePlayerMode();
             this.resume();
         }
 
@@ -117,6 +124,14 @@ namespace paper {
 
         public get playerMode() {
             return this._playerMode;
+        }
+        public set playerMode(value: PlayerMode) {
+            if (this._playerMode === value) {
+                return;
+            }
+
+            this._playerMode = value;
+            this._updatePlayerMode();
         }
     }
 

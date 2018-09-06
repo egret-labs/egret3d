@@ -218,30 +218,6 @@ namespace paper {
             }
         }
 
-        private _getComponentsInChildren(componentClass: ComponentClass<BaseComponent>, child: GameObject, components: BaseComponent[], isExtends: boolean = false) {
-            for (const component of child._components) {
-                if (!component) {
-                    continue;
-                }
-
-                if (component.constructor === GroupComponent) {
-                    const groupComponent = component as GroupComponent;
-                    if (isExtends ? groupComponent.components[0] instanceof componentClass : groupComponent.componentClass === componentClass) {
-                        for (const componentInGroup of groupComponent.components) {
-                            components.push(componentInGroup);
-                        }
-                    }
-                }
-                else if (isExtends ? component instanceof componentClass : component.constructor === componentClass) {
-                    components.push(component);
-                }
-            }
-
-            for (const childOfChild of child.transform.children) {
-                this._getComponentsInChildren(componentClass, childOfChild.gameObject, components, isExtends);
-            }
-        }
-
         private _getComponent(componentClass: ComponentClass<BaseComponent>) {
             const componentIndex = componentClass.__index;
             return componentIndex < 0 ? null : this._components[componentIndex];
@@ -608,12 +584,42 @@ namespace paper {
         /**
          * 搜索自己和子节点中所有特定类型的组件
          */
-        public getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
-            const components: T[] = [];
-            this._getComponentsInChildren(componentClass, this, components, isExtends);
+        public getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false, components: T[] | null = null) {
+            components = components || [];
+
+            for (const component of this._components) {
+                if (!component) {
+                    continue;
+                }
+
+                if (component.constructor === GroupComponent) {
+                    const groupComponent = component as GroupComponent;
+                    if (isExtends ? groupComponent.components[0] instanceof componentClass : groupComponent.componentClass === componentClass) {
+                        for (const componentInGroup of groupComponent.components) {
+                            components.push(componentInGroup as T);
+                        }
+                    }
+                }
+                else if (isExtends ? component instanceof componentClass : component.constructor === componentClass) {
+                    components.push(component as T);
+                }
+            }
+
+            for (const child of this.transform.children) {
+                child.gameObject.getComponentsInChildren(componentClass, isExtends, components);
+            }
 
             return components;
         }
+        // /**
+        //  * 搜索自己和子节点中所有特定类型的组件
+        //  */
+        // public getComponentInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
+        //     const components: T[] = [];
+        //     this._getComponentsInChildren(componentClass, this, components, isExtends);
+
+        //     return components.length >0?;
+        // }
         /**
          * 获取组件，如果未添加该组件，则添加该组件。
          */

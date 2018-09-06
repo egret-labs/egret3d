@@ -1,5 +1,4 @@
 namespace egret3d {
-    const _helpMatrix = Matrix4.create();
     /**
      * WebGL 渲染系统
      */
@@ -52,20 +51,22 @@ namespace egret3d {
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
 
-        private _renderCamera(camera: Camera) {
-            //在这里先剔除，然后排序，最后绘制
-            const drawCalls = this._drawCalls;
-            drawCalls.sortAfterFrustumCulling(camera);
-            //
-            const opaqueCalls = drawCalls.opaqueCalls;
-            const transparentCalls = drawCalls.transparentCalls;
-            // Step 1 draw opaques.
-            for (const drawCall of opaqueCalls) {
-                this._draw(camera.context, drawCall, drawCall.material);
-            }
-            // Step 2 draw transparents.
-            for (const drawCall of transparentCalls) {
-                this._draw(camera.context, drawCall, drawCall.material);
+        private _renderCamera(camera: Camera, renderEnabled: boolean) {
+            if (renderEnabled) {
+                //在这里先剔除，然后排序，最后绘制
+                const drawCalls = this._drawCalls;
+                drawCalls.sortAfterFrustumCulling(camera);
+                //
+                const opaqueCalls = drawCalls.opaqueCalls;
+                const transparentCalls = drawCalls.transparentCalls;
+                // Step 1 draw opaques.
+                for (const drawCall of opaqueCalls) {
+                    this._draw(camera.context, drawCall, drawCall.material);
+                }
+                // Step 2 draw transparents.
+                for (const drawCall of transparentCalls) {
+                    this._draw(camera.context, drawCall, drawCall.material);
+                }
             }
             // Egret2D渲染不加入DrawCallList的排序
             for (const gameObject of this._groups[1].gameObjects) {
@@ -170,7 +171,7 @@ namespace egret3d {
                     //     break;
                     // }
                     case gltf.UniformSemanticType.JOINTMATRIX:
-                        webgl.uniformMatrix4fv(location, false, (context.drawCall.renderer as SkinnedMeshRenderer)._boneMatrices!);
+                        webgl.uniformMatrix4fv(location, false, (context.drawCall.renderer as SkinnedMeshRenderer).boneMatrices!);
                         break;
 
                     case gltf.UniformSemanticType._DIRECTLIGHTS:
@@ -399,12 +400,12 @@ namespace egret3d {
         public onUpdate() {
             Performance.startCounter("render");
             let lightsDirty = false;
+            const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
             const renderState = this._renderState;
             const cameras = this._camerasAndLights.cameras;
             const lights = this._camerasAndLights.lights;
             const filteredLights = this._filteredLights;
-            const camerasScene = paper.Application.sceneManager.camerasScene || paper.Application.sceneManager.activeScene;
-            const lightsScene = paper.Application.sceneManager.lightsScene || paper.Application.sceneManager.activeScene;
+            const editorScene = paper.Application.sceneManager.editorScene;
 
             // Lights.
             if (filteredLights.length > 0) {
@@ -414,10 +415,6 @@ namespace egret3d {
 
             if (lights.length > 0) {
                 for (const light of lights) {
-                    if (light.gameObject.scene !== lightsScene) {
-                        continue;
-                    }
-
                     filteredLights.push(light);
 
                     if (!light.castShadows) {
@@ -430,18 +427,21 @@ namespace egret3d {
             // Cameras.
             if (cameras.length > 0) {
                 for (const camera of cameras) {
-                    if (camera.gameObject.scene !== camerasScene) {
-                        continue;
-                    }
+                    const renderEnabled = isPlayerMode ? camera.gameObject.scene !== editorScene : camera.gameObject.scene === editorScene;
 
-                    if (lightsDirty || filteredLights.length > 0) {
-                        camera.context.updateLights(filteredLights, camera.gameObject.scene.ambientColor); // TODO 性能优化
+                    if (renderEnabled) {
+                        if (lightsDirty || filteredLights.length > 0) {
+                            camera.context.updateLights(filteredLights, camera.gameObject.scene.ambientColor); // TODO 性能优化
+                        }
                     }
 
                     if (camera.postQueues.length === 0) {
-                        renderState.targetAndViewport(camera.viewport, camera.renderTarget);
-                        renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
-                        this._renderCamera(camera);
+                        if (renderEnabled) {
+                            renderState.targetAndViewport(camera.viewport, camera.renderTarget);
+                            renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                        }
+
+                        this._renderCamera(camera, renderEnabled);
                     }
                     else {
                         for (const item of camera.postQueues) {

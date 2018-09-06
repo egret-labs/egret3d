@@ -168,6 +168,15 @@ namespace egret3d {
             return out;
         }
         /**
+         * 
+         */
+        public destroyChildren() {
+            let i = this._children.length;
+            while (i--) {
+                this._children[i].gameObject.destroy();
+            }
+        }
+        /**
          * 设置父节点 
          */
         public setParent(newParent: Transform | null, worldPositionStays: boolean = false) {

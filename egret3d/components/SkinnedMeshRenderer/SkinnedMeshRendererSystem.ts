@@ -62,7 +62,7 @@ namespace egret3d {
 
         public onAddGameObject(gameObject: paper.GameObject) {
             const renderer = gameObject.renderer as SkinnedMeshRenderer;
-            if (renderer.mesh && !renderer._boneMatrices) {
+            if (renderer.mesh && !renderer.boneMatrices) {
                 renderer.initialize(true);
             }
 

@@ -12,6 +12,15 @@ namespace egret3d.Primitive {
         Cylinder,
         Sphere,
     }
+
+    export const Axises = Type.Axises;
+    export const Quad = Type.Quad;
+    export const QuadParticle = Type.QuadParticle;
+    export const Plane = Type.Plane;
+    export const Cube = Type.Cube;
+    export const Pyramid = Type.Pyramid;
+    export const Cylinder = Type.Cylinder;
+    export const Sphere = Type.Sphere;
     /**
      * 
      */
