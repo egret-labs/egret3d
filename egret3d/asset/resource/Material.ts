@@ -1,9 +1,6 @@
 namespace egret3d {
     //TODO 运行时DrawCall排序优化使用
     let _hashCode: number = 0;
-    //兼容老的Uniform键值
-    // let _compatible: { [key: string]: string } = { "_MainColor": "diffuse", "_MainTex": "map", "_MainTex_ST": "uvTransform" };
-
     /**
      * 材质资源
      */
@@ -453,6 +450,10 @@ namespace egret3d {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
 
+            if(value instanceof egret3d.BaseRenderTarget){
+                this.addDefine("FLIP_V");
+            }
+
             if (value) {
                 this._textures.push(value);
             }
@@ -580,14 +581,6 @@ namespace egret3d {
          */
         public clearStates() {
             if (this._glTFTechnique.states) {
-                // const enables = this._glTFTechnique.states.enable!;
-                // const functions = this._glTFTechnique.states.functions!;
-                // enables.length = 0;
-
-                // for (const k in functions) {
-                //     delete functions[k];
-                // }
-
                 delete this._glTFTechnique.states;
             }
 

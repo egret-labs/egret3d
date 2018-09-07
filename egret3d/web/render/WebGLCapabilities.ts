@@ -350,7 +350,7 @@ namespace egret3d {
          * @param target render target
          * 
          */
-        public targetAndViewport(viewport: Rectangle, target: IRenderTarget | null) {
+        public targetAndViewport(viewport: Rectangle, target: BaseRenderTarget | null) {
             const webgl = WebGLCapabilities.webgl;
 
             let w: number;

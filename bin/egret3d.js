@@ -7722,11 +7722,11 @@ var egret3d;
             return _super !== null && _super.apply(this, arguments) || this;
         }
         BeginSystem.prototype.onAwake = function () {
+            this._globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities);
             this._globalGameObject.getOrAddComponent(egret3d.DefaultTextures);
             this._globalGameObject.getOrAddComponent(egret3d.DefaultMeshes);
             this._globalGameObject.getOrAddComponent(egret3d.DefaultShaders);
             this._globalGameObject.getOrAddComponent(egret3d.DefaultMaterials);
-            this._globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities);
             paper.Time = this._globalGameObject.getOrAddComponent(paper.Clock);
         };
         BeginSystem.prototype.onUpdate = function () {
@@ -11385,7 +11385,7 @@ var egret3d;
         __extends(DirectionalLight, _super);
         function DirectionalLight() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.renderTarget = new egret3d.GlRenderTarget(1024, 1024, true); // TODO
+            _this.renderTarget = new egret3d.GlRenderTarget("DirectionalLight", 1024, 1024, true); // TODO
             return _this;
         }
         DirectionalLight.prototype.update = function (camera, faceIndex) {
@@ -11394,7 +11394,6 @@ var egret3d;
             camera.size = this.shadowCameraSize;
             camera.fov = Math.PI * 0.25;
             camera.opvalue = 0.0;
-            // camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
             _super.prototype.update.call(this, camera, faceIndex);
         };
         return DirectionalLight;
@@ -11427,7 +11426,7 @@ var egret3d;
              *
              */
             _this.distance = 0.0;
-            _this.renderTarget = new egret3d.GlRenderTarget(1024, 1024, true); // TODO
+            _this.renderTarget = new egret3d.GlRenderTarget("PointLight", 1024, 1024, true); // TODO
             return _this;
         }
         PointLight.prototype.update = function (camera, faceIndex) {
@@ -17432,8 +17431,6 @@ var egret3d;
 (function (egret3d) {
     //TODO 运行时DrawCall排序优化使用
     var _hashCode = 0;
-    //兼容老的Uniform键值
-    // let _compatible: { [key: string]: string } = { "_MainColor": "diffuse", "_MainTex": "map", "_MainTex_ST": "uvTransform" };
     /**
      * 材质资源
      */
@@ -17824,6 +17821,9 @@ var egret3d;
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+            if (value instanceof egret3d.BaseRenderTarget) {
+                this.addDefine("FLIP_V");
+            }
             if (value) {
                 this._textures.push(value);
             }
@@ -17934,12 +17934,6 @@ var egret3d;
          */
         Material.prototype.clearStates = function () {
             if (this._glTFTechnique.states) {
-                // const enables = this._glTFTechnique.states.enable!;
-                // const functions = this._glTFTechnique.states.functions!;
-                // enables.length = 0;
-                // for (const k in functions) {
-                //     delete functions[k];
-                // }
                 delete this._glTFTechnique.states;
             }
             return this;
@@ -18055,7 +18049,7 @@ var egret3d;
     (function (ShaderLib) {
         ShaderLib.cube = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "cube_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n\r\nvoid main() {\r\n\r\n\tvWorldPosition = transformDirection( position, modelMatrix );\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\r\n\tgl_Position.z = gl_Position.w; // set z to camera.far\r\n\r\n}\r\n" }, { "name": "cube_frag", "type": 35632, "uri": "uniform samplerCube tCube;\r\nuniform float tFlip;\r\nuniform float opacity;\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\nvoid main() {\r\n\r\n\tgl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );\r\n\tgl_FragColor.a *= opacity;\r\n\r\n}\r\n" }], "techniques": [{ "name": "cube", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "tCube": { "type": 35680 }, "tFlip": { "type": 5126 }, "opacity": { "type": 5126, "value": 1 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
         ShaderLib.depth = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "depth_vert", "type": 35633, "uri": "#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_DISPLACEMENTMAP\r\n\r\n\t\t#include <beginnormal_vertex>\r\n\t\t#include <morphnormal_vertex>\r\n\t\t#include <skinnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n}\r\n" }, { "name": "depth_frag", "type": 35632, "uri": "#if DEPTH_PACKING == 3200\r\n\r\n\tuniform float opacity;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( 1.0 );\r\n\r\n\t#if DEPTH_PACKING == 3200\r\n\r\n\t\tdiffuseColor.a = opacity;\r\n\r\n\t#endif\r\n\r\n\t#include <map_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\r\n\t#if DEPTH_PACKING == 3200\r\n\r\n\t\tgl_FragColor = vec4( vec3( 1.0 - gl_FragCoord.z ), opacity );\r\n\r\n\t#elif DEPTH_PACKING == 3201\r\n\r\n\t\tgl_FragColor = packDepthToRGBA( gl_FragCoord.z );\r\n\r\n\t#endif\r\n\r\n}\r\n" }], "techniques": [{ "name": "depth", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "bindMatrix": { "type": 35676, "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "boneMatrices[0]": { "type": 35676 }, "logDepthBufFC": { "type": 5126 }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.diffuse = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "diffuse_vert", "type": 35633, "uri": "#include <common>\r\n#include <skinning_pars_vert>\r\n#include <lightmap_pars_vert> \r\nattribute vec4 position;\r\nattribute vec4 uv;\r\nuniform highp mat4 modelViewProjectionMatrix;\r\nuniform highp mat3 uvTransform;  \r\nvarying highp vec2 xlv_TEXCOORD0;\r\n\r\nvoid main() {\r\n    #include <skinning_base_vert>\r\n    xlv_TEXCOORD0 = ( uvTransform * vec3( uv.xy, 1 ) ).xy;\r\n    #include <lightmap_vert>\r\n    gl_Position = (modelViewProjectionMatrix * tmpVertex);\r\n}" }, { "name": "diffuse_frag", "type": 35632, "uri": "#include <common>\r\n#include <lightmap_pars_frag>\r\nuniform vec3 diffuse;\r\nuniform sampler2D map;\r\nuniform lowp float alphaTest;\r\nvarying highp vec2 xlv_TEXCOORD0;\r\nvoid main() {\r\n    lowp vec4 outColor = texture2D(map, xlv_TEXCOORD0) * vec4(diffuse, 1.0);\r\n    if(outColor.a < alphaTest)\r\n        discard;\r\n    #include <lightmap_frag>    \r\n}" }], "techniques": [{ "name": "diffuse", "attributes": { "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" }, "position": { "semantic": "POSITION" }, "uv": { "semantic": "TEXCOORD_0" } }, "uniforms": { "glstate_vec4_bones[0]": { "type": 35666, "semantic": "_BONESVEC4" }, "lightMapOffset": { "type": 35666, "semantic": "_LIGHTMAPOFFSET" }, "lightMapUV": { "type": 5126, "semantic": "_LIGHTMAPUV" }, "modelViewProjectionMatrix": { "type": 35676, "semantic": "MODELVIEWPROJECTION" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "map": { "type": 35678 }, "alphaTest": { "type": 5126, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.diffuse = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "diffuse_vert", "type": 35633, "uri": "#include <common>\r\n#include <skinning_pars_vert>\r\n#include <lightmap_pars_vert> \r\nattribute vec4 position;\r\nattribute vec4 uv;\r\nuniform highp mat4 modelViewProjectionMatrix;\r\nuniform highp mat3 uvTransform;  \r\nvarying highp vec2 xlv_TEXCOORD0;\r\n\r\nvoid main() {\r\n    #include <skinning_base_vert>    \r\n    #if defined FLIP_V\r\n        xlv_TEXCOORD0 = ( uvTransform * vec3( uv.x, 1.0 - uv.y, 1 ) ).xy;// modify egret\r\n    #else\r\n\t\txlv_TEXCOORD0 = ( uvTransform * vec3( uv.xy, 1 ) ).xy;\r\n\t#endif\r\n    #include <lightmap_vert>\r\n    gl_Position = (modelViewProjectionMatrix * tmpVertex);\r\n}" }, { "name": "diffuse_frag", "type": 35632, "uri": "#include <common>\r\n#include <lightmap_pars_frag>\r\nuniform vec3 diffuse;\r\nuniform sampler2D map;\r\nuniform lowp float alphaTest;\r\nvarying highp vec2 xlv_TEXCOORD0;\r\nvoid main() {\r\n    lowp vec4 outColor = texture2D(map, xlv_TEXCOORD0) * vec4(diffuse, 1.0);\r\n    if(outColor.a < alphaTest)\r\n        discard;\r\n    #include <lightmap_frag>    \r\n}" }], "techniques": [{ "name": "diffuse", "attributes": { "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" }, "position": { "semantic": "POSITION" }, "uv": { "semantic": "TEXCOORD_0" } }, "uniforms": { "glstate_vec4_bones[0]": { "type": 35666, "semantic": "_BONESVEC4" }, "lightMapOffset": { "type": 35666, "semantic": "_LIGHTMAPOFFSET" }, "lightMapUV": { "type": 5126, "semantic": "_LIGHTMAPUV" }, "modelViewProjectionMatrix": { "type": 35676, "semantic": "MODELVIEWPROJECTION" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "map": { "type": 35678 }, "alphaTest": { "type": 5126, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
         ShaderLib.distanceRGBA = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "distanceRGBA_vert", "type": 35633, "uri": "#define DISTANCE\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_DISPLACEMENTMAP\r\n\r\n\t\t#include <beginnormal_vertex>\r\n\t\t#include <morphnormal_vertex>\r\n\t\t#include <skinnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvWorldPosition = worldPosition.xyz;\r\n\r\n}\r\n" }, { "name": "distanceRGBA_frag", "type": 35632, "uri": "#define DISTANCE\r\n\r\nuniform vec3 referencePosition;\r\nuniform float nearDistance;\r\nuniform float farDistance;\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main () {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( 1.0 );\r\n\r\n\t#include <map_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\tfloat dist = length( vWorldPosition - referencePosition );\r\n\tdist = ( dist - nearDistance ) / ( farDistance - nearDistance );\r\n\tdist = saturate( dist ); // clamp to [ 0, 1 ]\r\n\r\n\tgl_FragColor = packDepthToRGBA( dist );\r\n\r\n}\r\n" }], "techniques": [{ "name": "distanceRGBA", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "bindMatrix": { "type": 35676, "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "boneMatrices[0]": { "type": 35676 }, "referencePosition": { "type": 35665, "semantic": "_REFERENCEPOSITION" }, "nearDistance": { "type": 5126, "semantic": "_NEARDICTANCE" }, "farDistance": { "type": 5126, "semantic": "_FARDISTANCE" }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
         ShaderLib.equirect = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "equirect_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n\r\nvoid main() {\r\n\r\n\tvWorldPosition = transformDirection( position, modelMatrix );\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\r\n}\r\n" }, { "name": "equirect_frag", "type": 35632, "uri": "uniform sampler2D tEquirect;\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n\r\nvoid main() {\r\n\r\n\tvec3 direction = normalize( vWorldPosition );\r\n\r\n\tvec2 sampleUV;\r\n\r\n\tsampleUV.y = asin( clamp( direction.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\r\n\r\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\r\n\r\n\tgl_FragColor = texture2D( tEquirect, sampleUV );\r\n\r\n}\r\n" }], "techniques": [{ "name": "equirect", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "tEquirect": { "type": 35678 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
         ShaderLib.linedashed = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "linedashed_vert", "type": 35633, "uri": "uniform float scale;\r\nattribute float lineDistance;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <color_vertex>\r\n\r\n\tvLineDistance = scale * lineDistance;\r\n\r\n\tvec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\r\n\tgl_Position = projectionMatrix * mvPosition;\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "linedashed_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\nuniform float dashSize;\r\nuniform float totalSize;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tif ( mod( vLineDistance, totalSize ) > dashSize ) {\r\n\r\n\t\tdiscard;\r\n\r\n\t}\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <color_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb; // simple shader\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "linedashed", "attributes": { "lineDistance": { "semantic": "Unknown" }, "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "scale": { "type": 5126 }, "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "logDepthBufFC": { "type": 5126 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "dashSize": { "type": 5126 }, "totalSize": { "type": 5126 }, "fogColor": { "type": 35665 }, "fogDensity": { "type": 5126 }, "fogNear": { "type": 5126 }, "fogFar": { "type": 5126 }, "clippingPlanes[0]": { "type": 35666 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
@@ -18114,7 +18108,7 @@ var egret3d;
         ShaderChunk.fog_pars_vertex = "#ifdef USE_FOG\n\n varying vec3 vFogPosition;\n\n#endif\n";
         ShaderChunk.fog_vertex = "#ifdef USE_FOG\n\n vFogPosition = mvPosition.xyz;\n\n#endif\n";
         ShaderChunk.gradientmap_pars_fragment = "#ifdef TOON\n\n uniform sampler2D gradientMap;\n\n vec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {\n\n  // dotNL will be from -1.0 to 1.0\n  float dotNL = dot( normal, lightDirection );\n  vec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );\n\n  #ifdef USE_GRADIENTMAP\n\n   return texture2D( gradientMap, coord ).rgb;\n\n  #else\n\n   return ( coord.x < 0.7 ) ? vec3( 0.7 ) : vec3( 1.0 );\n\n  #endif\n\n\n }\n\n#endif\n";
-        ShaderChunk.lightmap_frag = "#ifdef USE_LIGHTMAP\n    lowp vec4 lightmap = texture2D(lightMap, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, lightMapIntensity);\n    gl_FragData[0] = outColor;\n#else\n    gl_FragData[0] = outColor;\n#endif";
+        ShaderChunk.lightmap_frag = "#ifdef USE_LIGHTMAP\n    lowp vec4 lightmap = texture2D(lightMap, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, lightMapIntensity);\n    gl_FragColor = outColor;\n#else\n    gl_FragColor = outColor;\n#endif";
         ShaderChunk.lightmap_fragment = "#ifdef USE_LIGHTMAP\n\n reflectedLight.indirectDiffuse += PI * texture2D( lightMap, vUv2 ).xyz * lightMapIntensity; // factor of PI should not be present; included here to prevent breakage\n\n#endif\n";
         ShaderChunk.lightmap_pars_frag = "#ifdef USE_LIGHTMAP\n    uniform sampler2D lightMap;\n    uniform lowp float lightMapIntensity;\n    varying highp vec2 xlv_TEXCOORD1;\n\n    lowp vec3 decode_hdr(lowp vec4 data, lowp float intensity)\n    {\n        highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n        return data.rgb * power * intensity;\n    }\n#endif";
         ShaderChunk.lightmap_pars_fragment = "#ifdef USE_LIGHTMAP\n\n uniform sampler2D lightMap;\n uniform float lightMapIntensity;\n\n#endif";
@@ -18174,7 +18168,7 @@ var egret3d;
         ShaderChunk.uv2_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n vUv2 = uv2;\n\n#endif";
         ShaderChunk.uv_pars_fragment = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n\n#endif";
         ShaderChunk.uv_pars_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n uniform mat3 uvTransform;\n\n#endif\n";
-        ShaderChunk.uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n\n#endif";
+        ShaderChunk.uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n #if defined FLIP_V \n  vUv = ( uvTransform * vec3( uv.x, 1.0 - uv.y, 1 ) ).xy;//modify egret\n #else\n  vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n #endif\n#endif";
         ShaderChunk.worldpos_vertex = "#if defined( USE_ENVMAP ) || defined( DISTANCE ) || defined ( USE_SHADOWMAP )\n\n vec4 worldPosition = modelMatrix * vec4( transformed, 1.0 );\n\n#endif\n";
     })(ShaderChunk = egret3d.ShaderChunk || (egret3d.ShaderChunk = {}));
 })(egret3d || (egret3d = {}));
@@ -20241,9 +20235,9 @@ var egret3d;
             if (mirroredV === void 0) { mirroredV = false; }
             this._mipmap = mipmap;
             var webgl = egret3d.WebGLCapabilities.webgl;
+            webgl.bindTexture(webgl.TEXTURE_2D, this._texture);
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
-            webgl.bindTexture(webgl.TEXTURE_2D, this._texture);
             var formatGL = webgl.RGBA;
             if (this._format == 2 /* RGB */) {
                 formatGL = webgl.RGB;
@@ -20334,122 +20328,6 @@ var egret3d;
     }(GLTexture));
     egret3d.GLTexture2D = GLTexture2D;
     __reflect(GLTexture2D.prototype, "egret3d.GLTexture2D");
-    var RenderTarget = (function () {
-        function RenderTarget(width, height, depth, stencil) {
-            if (depth === void 0) { depth = false; }
-            if (stencil === void 0) { stencil = false; }
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            this._width = width;
-            this._height = height;
-            this._texture = webgl.createTexture();
-            this._fbo = webgl.createFramebuffer();
-            this._fbo["width"] = width;
-            this._fbo["height"] = height;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
-            if (depth || stencil) {
-                this._renderbuffer = webgl.createRenderbuffer();
-                webgl.bindRenderbuffer(webgl.RENDERBUFFER, this._renderbuffer);
-                if (depth && stencil) {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_STENCIL, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
-                }
-                else if (depth) {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_COMPONENT16, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
-                }
-                else {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.STENCIL_INDEX8, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
-                }
-                webgl.bindRenderbuffer(webgl.RENDERBUFFER, null);
-            }
-        }
-        RenderTarget.prototype.use = function () { };
-        RenderTarget.prototype.dispose = function () {
-            if (this._texture != null) {
-                var webgl = egret3d.WebGLCapabilities.webgl;
-                webgl.deleteFramebuffer(this._renderbuffer);
-                webgl.deleteTexture(this._texture);
-                this._renderbuffer = null;
-                this._texture = null;
-            }
-        };
-        RenderTarget.prototype.caclByteLength = function () {
-            return this.width * this.height * 4;
-        };
-        Object.defineProperty(RenderTarget.prototype, "texture", {
-            get: function () {
-                return this._texture;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(RenderTarget.prototype, "width", {
-            get: function () {
-                return this._width;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(RenderTarget.prototype, "height", {
-            get: function () {
-                return this._height;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return RenderTarget;
-    }());
-    egret3d.RenderTarget = RenderTarget;
-    __reflect(RenderTarget.prototype, "egret3d.RenderTarget", ["egret3d.IRenderTarget", "egret3d.ITexture"]);
-    var GlRenderTarget = (function (_super) {
-        __extends(GlRenderTarget, _super);
-        function GlRenderTarget(width, height, depth, stencil) {
-            if (depth === void 0) { depth = false; }
-            if (stencil === void 0) { stencil = false; }
-            var _this = _super.call(this, width, height, depth, stencil) || this;
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            webgl.bindTexture(webgl.TEXTURE_2D, _this.texture);
-            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
-            webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, width, height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, _this.texture, 0);
-            return _this;
-        }
-        GlRenderTarget.prototype.use = function () {
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
-        };
-        return GlRenderTarget;
-    }(RenderTarget));
-    egret3d.GlRenderTarget = GlRenderTarget;
-    __reflect(GlRenderTarget.prototype, "egret3d.GlRenderTarget");
-    var GlRenderTargetCube = (function (_super) {
-        __extends(GlRenderTargetCube, _super);
-        function GlRenderTargetCube(width, height, depth, stencil) {
-            if (depth === void 0) { depth = false; }
-            if (stencil === void 0) { stencil = false; }
-            var _this = _super.call(this, width, height, depth, stencil) || this;
-            _this.activeCubeFace = 0; // PX 0, NX 1, PY 2, NY 3, PZ 4, NZ 5
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            webgl.bindTexture(webgl.TEXTURE_CUBE_MAP, _this.texture);
-            webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-            webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
-            for (var i = 0; i < 6; i++) {
-                webgl.texImage2D(webgl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, webgl.RGBA, width, height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
-            }
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + _this.activeCubeFace, _this.texture, 0);
-            return _this;
-        }
-        GlRenderTargetCube.prototype.use = function () {
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + this.activeCubeFace, this.texture, 0);
-        };
-        return GlRenderTargetCube;
-    }(RenderTarget));
-    egret3d.GlRenderTargetCube = GlRenderTargetCube;
-    __reflect(GlRenderTargetCube.prototype, "egret3d.GlRenderTargetCube");
     var TextureReader = (function () {
         function TextureReader(texRGBA, width, height, gray) {
             if (gray === void 0) { gray = true; }
@@ -20566,6 +20444,176 @@ var egret3d;
     }());
     egret3d.WriteableTexture2D = WriteableTexture2D;
     __reflect(WriteableTexture2D.prototype, "egret3d.WriteableTexture2D", ["egret3d.ITexture"]);
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var BaseRenderTarget = (function (_super) {
+        __extends(BaseRenderTarget, _super);
+        function BaseRenderTarget(name, width, height, depth, stencil, mipmap, linear) {
+            if (depth === void 0) { depth = false; }
+            if (stencil === void 0) { stencil = false; }
+            if (mipmap === void 0) { mipmap = false; }
+            if (linear === void 0) { linear = false; }
+            var _this = _super.call(this, name) || this;
+            _this._width = width;
+            _this._height = height;
+            _this._depth = depth;
+            _this._stencil = stencil;
+            _this._mipmap = mipmap;
+            _this._linear = linear;
+            _this.uploadTexture();
+            return _this;
+        }
+        BaseRenderTarget.prototype.uploadTexture = function () {
+            var width = this._width;
+            var height = this._height;
+            var depth = this._depth;
+            var stencil = this._stencil;
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            this._texture = webgl.createTexture();
+            this._fbo = webgl.createFramebuffer();
+            this._fbo["width"] = width;
+            this._fbo["height"] = height;
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
+            if (depth || stencil) {
+                this._renderbuffer = webgl.createRenderbuffer();
+                webgl.bindRenderbuffer(webgl.RENDERBUFFER, this._renderbuffer);
+                if (depth && stencil) {
+                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_STENCIL, width, height);
+                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
+                }
+                else if (depth) {
+                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_COMPONENT16, width, height);
+                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
+                }
+                else {
+                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.STENCIL_INDEX8, width, height);
+                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
+                }
+                webgl.bindRenderbuffer(webgl.RENDERBUFFER, null);
+            }
+        };
+        BaseRenderTarget.prototype.use = function () {
+        };
+        BaseRenderTarget.prototype.generateMipmap = function () {
+        };
+        BaseRenderTarget.prototype.dispose = function () {
+            if (!_super.prototype.dispose.call(this)) {
+                return false;
+            }
+            if (this._texture != null) {
+                var webgl = egret3d.WebGLCapabilities.webgl;
+                webgl.deleteFramebuffer(this._renderbuffer);
+                webgl.deleteTexture(this._texture);
+                this._renderbuffer = null;
+                this._texture = null;
+            }
+        };
+        BaseRenderTarget.prototype.caclByteLength = function () {
+            return this.width * this.height * 4;
+        };
+        Object.defineProperty(BaseRenderTarget.prototype, "texture", {
+            get: function () {
+                return this._texture;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(BaseRenderTarget.prototype, "width", {
+            get: function () {
+                return this._width;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(BaseRenderTarget.prototype, "height", {
+            get: function () {
+                return this._height;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return BaseRenderTarget;
+    }(egret3d.Texture));
+    egret3d.BaseRenderTarget = BaseRenderTarget;
+    __reflect(BaseRenderTarget.prototype, "egret3d.BaseRenderTarget");
+    var GlRenderTarget = (function (_super) {
+        __extends(GlRenderTarget, _super);
+        function GlRenderTarget() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        GlRenderTarget.prototype.uploadTexture = function () {
+            _super.prototype.uploadTexture.call(this);
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
+            webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, 4);
+            webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, this._width, this._height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
+            if (this._mipmap) {
+                webgl.generateMipmap(webgl.TEXTURE_2D);
+                if (this._linear) {
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR_MIPMAP_LINEAR);
+                }
+                else {
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST_MIPMAP_NEAREST);
+                }
+            }
+            else {
+                if (this._linear) {
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
+                }
+                else {
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
+                }
+            }
+            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, this.texture, 0);
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+        };
+        GlRenderTarget.prototype.use = function () {
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
+        };
+        GlRenderTarget.prototype.generateMipmap = function () {
+            if (this._mipmap) {
+                var webgl = egret3d.WebGLCapabilities.webgl;
+                webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
+                webgl.generateMipmap(webgl.TEXTURE_2D);
+                webgl.bindTexture(webgl.TEXTURE_2D, null);
+            }
+        };
+        return GlRenderTarget;
+    }(BaseRenderTarget));
+    egret3d.GlRenderTarget = GlRenderTarget;
+    __reflect(GlRenderTarget.prototype, "egret3d.GlRenderTarget");
+    var GlRenderTargetCube = (function (_super) {
+        __extends(GlRenderTargetCube, _super);
+        function GlRenderTargetCube(name, width, height, depth, stencil) {
+            if (depth === void 0) { depth = false; }
+            if (stencil === void 0) { stencil = false; }
+            var _this = _super.call(this, name, width, height, depth, stencil) || this;
+            _this.activeCubeFace = 0; // PX 0, NX 1, PY 2, NY 3, PZ 4, NZ 5
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            webgl.bindTexture(webgl.TEXTURE_CUBE_MAP, _this.texture);
+            webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+            webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
+            for (var i = 0; i < 6; i++) {
+                webgl.texImage2D(webgl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, webgl.RGBA, width, height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
+            }
+            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + _this.activeCubeFace, _this.texture, 0);
+            return _this;
+        }
+        GlRenderTargetCube.prototype.use = function () {
+            var webgl = egret3d.WebGLCapabilities.webgl;
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
+            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + this.activeCubeFace, this.texture, 0);
+        };
+        return GlRenderTargetCube;
+    }(BaseRenderTarget));
+    egret3d.GlRenderTargetCube = GlRenderTargetCube;
+    __reflect(GlRenderTargetCube.prototype, "egret3d.GlRenderTargetCube");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -21056,6 +21104,9 @@ var egret3d;
                         renderState.targetAndViewport(camera.viewport, camera.renderTarget);
                         renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                         this._renderCamera(camera);
+                        if (camera.renderTarget) {
+                            camera.renderTarget.generateMipmap();
+                        }
                     }
                     else {
                         for (var _b = 0, _c = camera.postQueues; _b < _c.length; _b++) {

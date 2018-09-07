@@ -2670,7 +2670,7 @@ declare namespace egret3d {
         shadowCameraSize: number;
         readonly viewPortPixel: IRectangle;
         readonly matrix: Matrix4;
-        renderTarget: IRenderTarget;
+        renderTarget: BaseRenderTarget;
         protected _updateMatrix(camera: Camera): void;
         /**
          *
@@ -4245,7 +4245,7 @@ declare namespace egret3d {
         /**
          * 渲染目标，如果为null，则为画布
          */
-        renderTarget: IRenderTarget | null;
+        renderTarget: BaseRenderTarget | null;
         private _near;
         private _far;
         private readonly _matProjP;
@@ -4692,7 +4692,7 @@ declare namespace egret3d {
      *
      */
     class DirectionalLight extends BaseLight {
-        renderTarget: IRenderTarget;
+        renderTarget: BaseRenderTarget;
         update(camera: Camera, faceIndex: number): void;
     }
 }
@@ -4709,7 +4709,7 @@ declare namespace egret3d {
          *
          */
         distance: number;
-        renderTarget: IRenderTarget;
+        renderTarget: BaseRenderTarget;
         update(camera: Camera, faceIndex: number): void;
     }
 }
@@ -8834,7 +8834,7 @@ declare namespace egret3d.ShaderChunk {
     const fog_pars_vertex = "#ifdef USE_FOG\n\n varying vec3 vFogPosition;\n\n#endif\n";
     const fog_vertex = "#ifdef USE_FOG\n\n vFogPosition = mvPosition.xyz;\n\n#endif\n";
     const gradientmap_pars_fragment = "#ifdef TOON\n\n uniform sampler2D gradientMap;\n\n vec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {\n\n  // dotNL will be from -1.0 to 1.0\n  float dotNL = dot( normal, lightDirection );\n  vec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );\n\n  #ifdef USE_GRADIENTMAP\n\n   return texture2D( gradientMap, coord ).rgb;\n\n  #else\n\n   return ( coord.x < 0.7 ) ? vec3( 0.7 ) : vec3( 1.0 );\n\n  #endif\n\n\n }\n\n#endif\n";
-    const lightmap_frag = "#ifdef USE_LIGHTMAP\n    lowp vec4 lightmap = texture2D(lightMap, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, lightMapIntensity);\n    gl_FragData[0] = outColor;\n#else\n    gl_FragData[0] = outColor;\n#endif";
+    const lightmap_frag = "#ifdef USE_LIGHTMAP\n    lowp vec4 lightmap = texture2D(lightMap, xlv_TEXCOORD1);\n    outColor.xyz *= decode_hdr(lightmap, lightMapIntensity);\n    gl_FragColor = outColor;\n#else\n    gl_FragColor = outColor;\n#endif";
     const lightmap_fragment = "#ifdef USE_LIGHTMAP\n\n reflectedLight.indirectDiffuse += PI * texture2D( lightMap, vUv2 ).xyz * lightMapIntensity; // factor of PI should not be present; included here to prevent breakage\n\n#endif\n";
     const lightmap_pars_frag = "#ifdef USE_LIGHTMAP\n    uniform sampler2D lightMap;\n    uniform lowp float lightMapIntensity;\n    varying highp vec2 xlv_TEXCOORD1;\n\n    lowp vec3 decode_hdr(lowp vec4 data, lowp float intensity)\n    {\n        highp float power =pow( 2.0 ,data.a * 255.0 - 128.0);\n        return data.rgb * power * intensity;\n    }\n#endif";
     const lightmap_pars_fragment = "#ifdef USE_LIGHTMAP\n\n uniform sampler2D lightMap;\n uniform float lightMapIntensity;\n\n#endif";
@@ -8894,7 +8894,7 @@ declare namespace egret3d.ShaderChunk {
     const uv2_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n vUv2 = uv2;\n\n#endif";
     const uv_pars_fragment = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n\n#endif";
     const uv_pars_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n uniform mat3 uvTransform;\n\n#endif\n";
-    const uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n\n#endif";
+    const uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n #if defined FLIP_V \n  vUv = ( uvTransform * vec3( uv.x, 1.0 - uv.y, 1 ) ).xy;//modify egret\n #else\n  vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n #endif\n#endif";
     const worldpos_vertex = "#if defined( USE_ENVMAP ) || defined( DISTANCE ) || defined ( USE_SHADOWMAP )\n\n vec4 worldPosition = modelMatrix * vec4( transformed, 1.0 );\n\n#endif\n";
 }
 declare namespace RES.processor {
@@ -9603,9 +9603,6 @@ declare namespace egret3d {
         dispose(): void;
         caclByteLength(): number;
     }
-    interface IRenderTarget extends ITexture {
-        use(): void;
-    }
     abstract class GLTexture extends egret3d.Texture implements ITexture {
         protected _width: number;
         protected _height: number;
@@ -9629,28 +9626,6 @@ declare namespace egret3d {
         dispose(): boolean;
         getReader(redOnly?: boolean): TextureReader;
     }
-    abstract class RenderTarget implements IRenderTarget {
-        protected _width: number;
-        protected _height: number;
-        protected _fbo: WebGLFramebuffer;
-        protected _renderbuffer: WebGLRenderbuffer;
-        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
-        use(): void;
-        dispose(): void;
-        caclByteLength(): number;
-        readonly texture: WebGLTexture;
-        readonly width: number;
-        readonly height: number;
-    }
-    class GlRenderTarget extends RenderTarget {
-        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
-        use(): void;
-    }
-    class GlRenderTargetCube extends RenderTarget {
-        activeCubeFace: number;
-        constructor(width: number, height: number, depth?: boolean, stencil?: boolean);
-        use(): void;
-    }
     class TextureReader {
         readonly gray: boolean;
         readonly width: number;
@@ -9667,6 +9642,37 @@ declare namespace egret3d {
         constructor(format: TextureFormatEnum, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
         dispose(): void;
         caclByteLength(): number;
+    }
+}
+declare namespace egret3d {
+    abstract class BaseRenderTarget extends egret3d.Texture {
+        protected _width: number;
+        protected _height: number;
+        protected _depth: boolean;
+        protected _stencil: boolean;
+        protected _mipmap: boolean;
+        protected _linear: boolean;
+        protected _fbo: WebGLFramebuffer;
+        protected _renderbuffer: WebGLRenderbuffer;
+        constructor(name: string, width: number, height: number, depth?: boolean, stencil?: boolean, mipmap?: boolean, linear?: boolean);
+        protected uploadTexture(): void;
+        use(): void;
+        generateMipmap(): void;
+        dispose(): boolean;
+        caclByteLength(): number;
+        readonly texture: WebGLTexture;
+        readonly width: number;
+        readonly height: number;
+    }
+    class GlRenderTarget extends BaseRenderTarget {
+        protected uploadTexture(): void;
+        use(): void;
+        generateMipmap(): void;
+    }
+    class GlRenderTargetCube extends BaseRenderTarget {
+        activeCubeFace: number;
+        constructor(name: string, width: number, height: number, depth?: boolean, stencil?: boolean);
+        use(): void;
     }
 }
 declare namespace egret3d {

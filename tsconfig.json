@@ -128,6 +128,7 @@
         "egret3d/web/input/TouchDevice.ts",
         "egret3d/web/render/resource/Mesh.ts",
         "egret3d/web/render/resource/GLTexture.ts",
+        "egret3d/web/render/resource/GLRenderTarget.ts",
         "egret3d/web/render/resource/GLProgram.ts",
         "egret3d/web/render/WebGLRenderSystem.ts",
         "egret3d/components/StaticBatchingUtility.ts",

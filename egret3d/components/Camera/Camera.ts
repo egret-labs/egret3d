@@ -93,7 +93,7 @@ namespace egret3d {
         /**
          * 渲染目标，如果为null，则为画布
          */
-        public renderTarget: IRenderTarget | null = null;
+        public renderTarget: BaseRenderTarget | null = null;
 
         @paper.serializedField
         private _near: number = 0.01;
