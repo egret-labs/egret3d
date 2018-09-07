@@ -443,8 +443,10 @@ namespace egret3d {
                         renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                         this._renderCamera(camera);
 
-                        if(camera.renderTarget){
-                            camera.renderTarget.generateMipmap();
+                        if (camera.renderTarget) {
+                            if (camera.renderTarget.generateMipmap()) {
+                                this._renderState.clearState();//fixed there is no texture bound to the unit 0 error
+                            }
                         }
                     }
                     else {

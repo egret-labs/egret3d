@@ -56,8 +56,8 @@ namespace egret3d {
         use() {
         }
 
-        generateMipmap() {
-
+        generateMipmap(): boolean {
+            return false;
         }
 
         dispose() {
@@ -136,7 +136,9 @@ namespace egret3d {
                 webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
                 webgl.generateMipmap(webgl.TEXTURE_2D);
                 webgl.bindTexture(webgl.TEXTURE_2D, null);
+                return true;
             }
+            return false;
         }
     }
 

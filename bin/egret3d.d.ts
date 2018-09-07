@@ -5951,6 +5951,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneMatrices[0]": {
                             "type": number;
+                            "semantic": string;
                         };
                         "logDepthBufFC": {
                             "type": number;
@@ -6100,6 +6101,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneMatrices[0]": {
                             "type": number;
+                            "semantic": string;
                         };
                         "referencePosition": {
                             "type": number;
@@ -6509,6 +6511,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneMatrices[0]": {
                             "type": number;
+                            "semantic": string;
                         };
                         "logDepthBufFC": {
                             "type": number;
@@ -6741,6 +6744,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneMatrices[0]": {
                             "type": number;
+                            "semantic": string;
                         };
                         "directionalShadowMatrix[0]": {
                             "type": number;
@@ -6981,6 +6985,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneMatrices[0]": {
                             "type": number;
+                            "semantic": string;
                         };
                         "directionalShadowMatrix[0]": {
                             "type": number;
@@ -7272,6 +7277,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneMatrices[0]": {
                             "type": number;
+                            "semantic": string;
                         };
                         "directionalShadowMatrix[0]": {
                             "type": number;
@@ -7568,6 +7574,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneMatrices[0]": {
                             "type": number;
+                            "semantic": string;
                         };
                         "logDepthBufFC": {
                             "type": number;
@@ -9195,7 +9202,7 @@ declare namespace egret3d {
         constructor(name: string, width: number, height: number, depth?: boolean, stencil?: boolean, mipmap?: boolean, linear?: boolean);
         protected uploadTexture(): void;
         use(): void;
-        generateMipmap(): void;
+        generateMipmap(): boolean;
         dispose(): boolean;
         caclByteLength(): number;
         readonly texture: WebGLTexture;
@@ -9205,7 +9212,7 @@ declare namespace egret3d {
     class GlRenderTarget extends BaseRenderTarget {
         protected uploadTexture(): void;
         use(): void;
-        generateMipmap(): void;
+        generateMipmap(): boolean;
     }
     class GlRenderTargetCube extends BaseRenderTarget {
         activeCubeFace: number;
