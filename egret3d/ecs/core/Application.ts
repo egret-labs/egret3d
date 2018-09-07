@@ -65,7 +65,7 @@ namespace paper {
             }
 
             Time && Time.update();
-            Group.update();
+            ComponentGroup.update();
             this.systemManager.update();
         }
 

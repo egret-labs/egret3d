@@ -27,7 +27,6 @@ namespace paper {
         private readonly _scenes: Scene[] = [];
         private _globalScene: Scene | null = null;
         private _editorScene: Scene | null = null;
-        private _globalGameObject: GameObject | null = null;
         /**
          * @internal
          */
@@ -148,17 +147,6 @@ namespace paper {
             }
 
             return this._editorScene;
-        }
-        /**
-         * 
-         */
-        public get globalGameObject() {
-            if (!this._globalGameObject) {
-                this._globalGameObject = GameObject.create(DefaultNames.Global, DefaultTags.Global, this.globalScene);
-                this._globalGameObject.dontDestroy = true;
-            }
-
-            return this._globalGameObject;
         }
 
         /**

@@ -11,7 +11,7 @@ namespace egret3d {
         public static create(shader?: Shader | string): Material;
         public static create(config: GLTF, name: string): Material;
         public static create(shaderOrConfig?: Shader | string | GLTF, name?: string) {
-            return new Material(shaderOrConfig as any, name);
+            return new Material(shaderOrConfig as any, name as any);
         }
         /**
          * 
@@ -118,7 +118,9 @@ namespace egret3d {
                 this._glTFTechnique.states = GLTFAsset.copyTechniqueStates(this._shader._states);
             }
 
-            if (glTFMaterial.extensions.paper.defines) {
+            const materialDefines = glTFMaterial.extensions.paper.defines;
+
+            if (materialDefines && materialDefines.length > 0) {
                 for (const define of glTFMaterial.extensions.paper.defines) {
                     this.addDefine(define);
                 }
@@ -147,6 +149,8 @@ namespace egret3d {
             this._textures.length = 0;
             this._glTFTechnique = null!;
             this._shader = null!;
+
+            return true;
         }
 
         public copy(value: Material) {
@@ -161,8 +165,8 @@ namespace egret3d {
                 targetUniforms[k] = { type: uniform.type, semantic: uniform.semantic, value };
             }
 
-            const sourceStates = value._glTFTechnique.states;
-            const targetStates = this._glTFTechnique.states;
+            const sourceStates = value._glTFTechnique.states!;
+            const targetStates = this._glTFTechnique.states!;
 
             if (sourceStates.enable) {
                 targetStates.enable = sourceStates.enable.concat();
@@ -283,7 +287,7 @@ namespace egret3d {
             return this;
         }
 
-        setVector2(id: string, value: Vector2) {
+        setVector2(id: string, value: Readonly<IVector2>) {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value[0] !== value.x || uniform.value[1] !== value.y) {
@@ -312,7 +316,7 @@ namespace egret3d {
             return this;
         }
 
-        setVector3(id: string, value: Vector3) {
+        setVector3(id: string, value: Readonly<IVector3>) {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value[0] !== value.x || uniform.value[1] !== value.y || uniform.value[2] !== value.z) {
@@ -342,7 +346,7 @@ namespace egret3d {
             return this;
         }
 
-        setVector4(id: string, value: Vector4) {
+        setVector4(id: string, value: Readonly<IVector4>) {
             //兼容老键值
             if (id === "_MainTex_ST" && this._glTFTechnique.uniforms["uvTransform"]) {
                 id = "uvTransform";
@@ -379,7 +383,7 @@ namespace egret3d {
             if (id === "_MainTex_ST" && this._glTFTechnique.uniforms["uvTransform"]) {
                 id = "uvTransform";
                 console.warn("已废弃的键值_MainTex_ST，建议改为:uvTransform-Matrix3");
-                this._glTFTechnique.uniforms[id].value = [value[0], 0, 0, 0, value[1], 0, value[2], value[3], 1];;
+                this._glTFTechnique.uniforms[id].value = [value[0], 0, 0, 0, value[1], 0, value[2], value[3], 1];
                 return;
             }
             else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms["diffuse"]) {
@@ -400,7 +404,7 @@ namespace egret3d {
             return this;
         }
 
-        setMatrix(id: string, value: Matrix4) {
+        setMatrix(id: string, value: Readonly<Matrix4>) {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value.rawData;

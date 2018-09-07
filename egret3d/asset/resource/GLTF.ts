@@ -11,7 +11,7 @@ namespace egret3d {
                 width?: number;
                 height?: number;
             }
-        }
+        };
     }
     /**
      * 
@@ -24,7 +24,7 @@ namespace egret3d {
                 defines?: string[];
                 states?: gltf.States;
             }
-        }
+        };
     }
     /**
      * 
@@ -54,14 +54,6 @@ namespace egret3d {
                  * 动画帧数。
                  */
                 frameCount: number;
-                /**
-                 * 整个帧数据访问器索引。
-                 */
-                data: number;
-                /**
-                 * 采样帧访问器索引列表。
-                 */
-                frames: number[];
                 /**
                  * 骨骼名称列表。
                  */
@@ -115,7 +107,7 @@ namespace egret3d {
                 type: string,
                 property: string,
             }
-        }
+        };
     }
     /**
      * 帧事件反序列化。
@@ -759,15 +751,10 @@ declare namespace gltf {
         VIEWPORT = "VIEWPORT",
         JOINTMATRIX = "JOINTMATRIX",
 
-        //
-        _AMBIENTLIGHTCOLOR = "_AMBIENTLIGHTCOLOR",
-        _BINDMATRIX = "_BINDMATRIX",
-        _BINDMATRIXINVERSE = "_BINDMATRIXINVERSE",
+        // _BINDMATRIX = "_BINDMATRIX",
+        // _BINDMATRIXINVERSE = "_BINDMATRIXINVERSE",
         // _BONETEXTURE = "_BONETEXTURE",
         // _BONETEXTURESIZE = "_BONETEXTURESIZE",
-        _BONEMATRIX = "_BONEMATRIX",
-
-
 
         _VIEWPROJECTION = "_VIEWPROJECTION",
         _CAMERA_POS = "_CAMERA_POS",
@@ -776,7 +763,7 @@ declare namespace gltf {
         _DIRECTLIGHTS = "_DIRECTLIGHTS",
         _POINTLIGHTS = "_POINTLIGHTS",
         _SPOTLIGHTS = "_SPOTLIGHTS",
-        _LIGHTCOUNT = "_LIGHTCOUNT",
+        _AMBIENTLIGHTCOLOR = "_AMBIENTLIGHTCOLOR",
         _DIRECTIONSHADOWMAT = "_DIRECTIONSHADOWMAT",
         _SPOTSHADOWMAT = "_SPOTSHADOWMAT",
         _POINTSHADOWMAT = "_POINTSHADOWMAT",
@@ -785,9 +772,6 @@ declare namespace gltf {
         _SPOTSHADOWMAP = "_SPOTSHADOWMAP",
         _LIGHTMAPTEX = "_LIGHTMAPTEX",
         _LIGHTMAPINTENSITY = "_LIGHTMAPINTENSITY",
-        _LIGHTMAPOFFSET = "_LIGHTMAPOFFSET",
-        _BONESVEC4 = "_BONESVEC4",
-        _LIGHTMAPUV = "_LIGHTMAPUV",
         _REFERENCEPOSITION = "_REFERENCEPOSITION",
         _NEARDICTANCE = "_NEARDICTANCE",
         _FARDISTANCE = "_FARDISTANCE",

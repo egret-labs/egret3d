@@ -2,8 +2,6 @@ namespace paper {
     export const enum RendererEventType {
         Materials = "materials",
     }
-
-    const _helpVector3A = egret3d.Vector3.create();
     /**
      * renderer component interface
      * @version paper 1.0
@@ -28,13 +26,12 @@ namespace paper {
         @serializedField
         protected _lightmapIndex: number = -1;
         protected readonly _boundingSphere: egret3d.Sphere = egret3d.Sphere.create();
-        protected readonly _aabb: egret3d.AABB = egret3d.AABB.create();
         @serializedField
-        protected readonly _lightmapScaleOffset: Float32Array = new Float32Array([1.0, 1.0, 0.0, 0.0]);
+        protected readonly _bounds: egret3d.AABB = egret3d.AABB.create();
 
         protected _recalculateSphere() {
             const worldMatrix = this.gameObject.transform.getWorldMatrix();
-            this._boundingSphere.set(this._aabb.center, this._aabb.boundingSphereRadius);
+            this._boundingSphere.set(this._bounds.center, this._bounds.boundingSphereRadius);
             this._boundingSphere.center.applyMatrix(worldMatrix);
             this._boundingSphere.radius *= worldMatrix.getMaxScaleOnAxis();
         }
@@ -88,7 +85,7 @@ namespace paper {
          * 
          */
         public get aabb(): Readonly<egret3d.AABB> {
-            return this._aabb;
+            return this._bounds;
         }
         /**
          * 
@@ -100,12 +97,6 @@ namespace paper {
             }
 
             return this._boundingSphere;
-        }
-        /**
-         * TODO
-         */
-        public get lightmapScaleOffset() {
-            return this._lightmapScaleOffset;
         }
     }
 }

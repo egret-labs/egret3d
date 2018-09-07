@@ -7,9 +7,9 @@ namespace egret3d.particle {
             {
                 componentClass: ParticleComponent,
                 listeners: [
-                    { type: ParticleCompEventType.StartRotation3DChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, ParticleCompEventType.StartRotation3DChanged) } },
-                    { type: ParticleCompEventType.SimulationSpaceChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, ParticleCompEventType.SimulationSpaceChanged) } },
-                    { type: ParticleCompEventType.ScaleModeChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, ParticleCompEventType.ScaleModeChanged) } },
+                    { type: ParticleCompEventType.StartRotation3DChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, ParticleCompEventType.StartRotation3DChanged); } },
+                    { type: ParticleCompEventType.SimulationSpaceChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, ParticleCompEventType.SimulationSpaceChanged); } },
+                    { type: ParticleCompEventType.ScaleModeChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, ParticleCompEventType.ScaleModeChanged); } },
                     { type: ParticleCompEventType.VelocityChanged, listener: this._onVelocityOverLifetime.bind(this) },
                     { type: ParticleCompEventType.ColorChanged, listener: this._onColorOverLifetime.bind(this) },
                     { type: ParticleCompEventType.SizeChanged, listener: this._onSizeOverLifetime.bind(this) },
@@ -28,7 +28,7 @@ namespace egret3d.particle {
                 ]
             }
         ];
-        private readonly _drawCalls: DrawCalls = DrawCalls.getInstance(DrawCalls);
+        private readonly _drawCalls: DrawCalls = paper.GameObject.globalGameObject.getOrAddComponent(DrawCalls);
         /**
         * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
         */
@@ -468,7 +468,7 @@ namespace egret3d.particle {
             }
         }
 
-        public onAddGameObject(gameObject: paper.GameObject, _group: paper.Group) {
+        public onAddGameObject(gameObject: paper.GameObject, _group: paper.ComponentGroup) {
             this._updateDrawCalls(gameObject);
 
             const component = gameObject.getComponent(ParticleComponent) as ParticleComponent;

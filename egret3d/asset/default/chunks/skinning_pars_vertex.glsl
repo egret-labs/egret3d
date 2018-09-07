@@ -1,7 +1,8 @@
 #ifdef USE_SKINNING
 
-	uniform mat4 bindMatrix;
-	uniform mat4 bindMatrixInverse;
+	// Modify egret.
+	// uniform_mat4 bindMatrix;
+	// uniform_mat4 bindMatrixInverse;
 
 	#ifdef BONE_TEXTURE
 

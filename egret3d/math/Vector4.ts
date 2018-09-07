@@ -103,6 +103,15 @@ namespace egret3d {
             return this;
         }
 
+        public toArray(value: number[] | Float32Array, offset: number = 0) {
+            value[0 + offset] = this.x;
+            value[1 + offset] = this.y;
+            value[2 + offset] = this.z;
+            value[3 + offset] = this.w;
+
+            return value;
+        }
+
         public get length() {
             return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
         }

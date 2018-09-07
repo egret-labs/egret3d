@@ -261,7 +261,7 @@ namespace paper.editor {
         public static DrawLights() {
             if (!this.enabled) return;
 
-            const camerasAndLights = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+            const camerasAndLights = GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
             for (const light of camerasAndLights.lights) {
                 Gizmo.DrawIcon("light", light.gameObject.transform.getPosition(), 30, light.color);
                 Gizmo.DrawCylinder(light.gameObject.transform, light.color);
@@ -292,7 +292,7 @@ namespace paper.editor {
         public static DrawCameras() {
             if (!this.enabled) return;
 
-            const camerasAndLights = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+            const camerasAndLights = GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
 
             for (const camera of camerasAndLights.cameras) {
                 // if (!camera.gameObject.getComponent(egret3d.MeshFilter) && camera.gameObject.name != "EditorCamera") {

@@ -1,6 +1,8 @@
 #ifdef USE_SKINNING
 
-	vec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );
+	// Modify Egret.
+	// vec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );
+	vec4 skinVertex = vec4( transformed, 1.0 );
 
 	vec4 skinned = vec4( 0.0 );
 	skinned += boneMatX * skinVertex * skinWeight.x;
@@ -8,6 +10,8 @@
 	skinned += boneMatZ * skinVertex * skinWeight.z;
 	skinned += boneMatW * skinVertex * skinWeight.w;
 
-	transformed = ( bindMatrixInverse * skinned ).xyz;
+	// Modify Egret.
+	// transformed = ( bindMatrixInverse * skinned ).xyz;
+	transformed = skinned.xyz;
 
 #endif

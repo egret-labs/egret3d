@@ -20,14 +20,14 @@ namespace egret3d {
      * 
      */
     export class Vector3 implements IVector3, paper.IRelease<Vector3>, paper.ISerializable {
-        public static readonly ZERO: Readonly<Vector3> = new Vector3(0.0, 0.0, 0.0);
-        public static readonly ONE: Readonly<Vector3> = new Vector3(1.0, 1.0, 1.0);
-        public static readonly UP: Readonly<Vector3> = new Vector3(0.0, 1.0, 0.0);
-        public static readonly DOWN: Readonly<Vector3> = new Vector3(0.0, -1.0, 0.0);
-        public static readonly LEFT: Readonly<Vector3> = new Vector3(-1.0, 0.0, 0.0);
-        public static readonly RIGHT: Readonly<Vector3> = new Vector3(1.0, 0.0, 0.0);
-        public static readonly FORWARD: Readonly<Vector3> = new Vector3(0.0, 0.0, 1.0);
-        public static readonly BACK: Readonly<Vector3> = new Vector3(0.0, 0.0, -1.0);
+        public static readonly ZERO: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, 0.0);
+        public static readonly ONE: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(1.0, 1.0, 1.0);
+        public static readonly UP: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 1.0, 0.0);
+        public static readonly DOWN: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, -1.0, 0.0);
+        public static readonly LEFT: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(-1.0, 0.0, 0.0);
+        public static readonly RIGHT: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(1.0, 0.0, 0.0);
+        public static readonly FORWARD: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, 1.0);
+        public static readonly BACK: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, -1.0);
 
         private static readonly _instances: Vector3[] = [];
 
@@ -444,6 +444,14 @@ namespace egret3d {
             v = vb * denom;
             w = vc * denom;
             return this.add(a, vac.multiplyScalar(w).add(vab.multiplyScalar(v)));
+        }
+
+        public toArray(value: number[] | Float32Array, offset: number = 0) {
+            value[0 + offset] = this.x;
+            value[1 + offset] = this.y;
+            value[2 + offset] = this.z;
+
+            return value;
         }
 
         public get length() {

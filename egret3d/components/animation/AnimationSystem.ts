@@ -10,19 +10,6 @@ namespace egret3d {
         public onAddComponent(component: Animation) {
             component._addToSystem = true;
 
-            if (component.animations.length > 0) {
-                const animaitonClip = component.animations[0].config.animations![0];
-                if (!animaitonClip.channels || animaitonClip.channels.length < 0) {
-                    component._skinnedMeshRenderer = component.gameObject.getComponentsInChildren(SkinnedMeshRenderer)[0];
-                    if (component._skinnedMeshRenderer) {
-                        for (const bone of component._skinnedMeshRenderer.bones) {
-                            const boneBlendLayer = new BoneBlendLayer();
-                            component._boneBlendLayers.push(boneBlendLayer);
-                        }
-                    }
-                }
-            }
-
             if (component.autoPlay) {
                 component.play();
             }
@@ -32,7 +19,7 @@ namespace egret3d {
             const globalTime = this._clock.time;
             for (const gameObject of this._groups[0].gameObjects) {
                 for (const animation of gameObject.getComponents(Animation)) {
-                    animation.update(globalTime);
+                    animation._update(globalTime);
                 }
             }
         }

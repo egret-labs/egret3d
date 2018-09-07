@@ -4,13 +4,15 @@ namespace egret3d {
      */
     export class BeginSystem extends paper.BaseSystem {
         public onAwake() {
-            this._globalGameObject.getOrAddComponent(WebGLCapabilities);
-            this._globalGameObject.getOrAddComponent(DefaultTextures);
-            this._globalGameObject.getOrAddComponent(DefaultMeshes);
-            this._globalGameObject.getOrAddComponent(DefaultShaders);
-            this._globalGameObject.getOrAddComponent(DefaultMaterials);
+            const globalGameObject = paper.GameObject.globalGameObject;
+            globalGameObject.getOrAddComponent(DefaultTextures);
+            globalGameObject.getOrAddComponent(DefaultMeshes);
+            globalGameObject.getOrAddComponent(DefaultShaders);
+            globalGameObject.getOrAddComponent(DefaultMaterials);
 
-            paper.Time = this._globalGameObject.getOrAddComponent(paper.Clock);
+            paper.Time = globalGameObject.getOrAddComponent(paper.Clock);
+
+            globalGameObject.getOrAddComponent(WebGLCapabilities);
         }
 
         public onUpdate() {

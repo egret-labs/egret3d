@@ -9,25 +9,33 @@ namespace egret3d {
      * 
      */
     export class Matrix4 implements paper.IRelease<Matrix4>, paper.ISerializable {
+        public static readonly IDENTITY: Readonly<Matrix4> = new Matrix4();
 
         private static readonly _instances: Matrix4[] = [];
         /**
          * 
          * @param rawData 
-         * @param offset 
+         * @param offsetOrByteOffset 
          */
-        public static create(rawData: Readonly<ArrayLike<number>> | null = null, offset: number = 0) {
+        public static create(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset: number = 0) {
             if (this._instances.length > 0) {
-                return this._instances.pop();
+                const matrix = this._instances.pop()!;
+                if (rawData) {
+                    if (rawData instanceof ArrayBuffer) {
+                        matrix.fromBuffer(rawData, offsetOrByteOffset);
+                    }
+                    else {
+                        matrix.fromArray(rawData, offsetOrByteOffset);
+                    }
+                }
+                else {
+                    matrix.identity();
+                }
+
+                return matrix;
             }
 
-            const matrix = new Matrix4();
-
-            if (rawData) {
-                matrix.fromArray(rawData, offset)
-            }
-
-            return matrix;
+            return new Matrix4(rawData, offsetOrByteOffset);
         }
         /**
          * 
@@ -40,16 +48,23 @@ namespace egret3d {
             return this;
         }
         /**
-         * 
+         * @readonly
          */
-        public readonly rawData: Float32Array = new Float32Array(_array);
+        public rawData: Float32Array = null!;
         /**
          * 请使用 `egret3d.Matrix4.create()` 创建实例。
          * @see egret3d.Matrix4.create()
          * @deprecated
-         * @private
          */
-        public constructor() { }
+        public constructor(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset: number = 0) {
+            if (rawData && rawData instanceof ArrayBuffer) {
+                this.fromBuffer(rawData, offsetOrByteOffset);
+            }
+            else {
+                this.rawData = new Float32Array(16);
+                this.fromArray(rawData as Readonly<ArrayLike<number>> || _array);
+            }
+        }
 
         public serialize() {
             return this.rawData;
@@ -117,6 +132,12 @@ namespace egret3d {
             for (let i = 0; i < 16; ++i) {
                 this.rawData[i] = value[i + offset];
             }
+
+            return this;
+        }
+
+        public fromBuffer(value: ArrayBuffer, byteOffset: number = 0) {
+            this.rawData = new Float32Array(value, byteOffset, 16);
 
             return this;
         }
@@ -345,8 +366,8 @@ namespace egret3d {
             return this;
         }
 
-        public fromRotationZ(theta) {
-            const c = Math.cos(theta), s = Math.sin(theta);
+        public fromRotationZ(radian: number) {
+            const c = Math.cos(radian), s = Math.sin(radian);
             this.set(
                 c, - s, 0, 0,
                 s, c, 0, 0,
@@ -403,7 +424,7 @@ namespace egret3d {
             );
         }
 
-        public compose(translation: Vector3, rotation: Quaternion, scale: Vector3) {
+        public compose(translation: Readonly<IVector3>, rotation: Readonly<IVector4>, scale: Readonly<IVector3>) {
             const rawData = this.rawData;
             const x = rotation.x, y = rotation.y, z = rotation.z, w = rotation.w;
             const x2 = x + x, y2 = y + y, z2 = z + z;
@@ -592,39 +613,39 @@ namespace egret3d {
                 valueA = this;
             }
 
-            const ae = valueA.rawData;
-            const be = valueB.rawData;
-            const te = this.rawData;
+            const rawDataA = valueA.rawData;
+            const rawDataB = valueB.rawData;
+            const rawData = this.rawData;
 
-            const a11 = ae[0], a12 = ae[4], a13 = ae[8], a14 = ae[12];
-            const a21 = ae[1], a22 = ae[5], a23 = ae[9], a24 = ae[13];
-            const a31 = ae[2], a32 = ae[6], a33 = ae[10], a34 = ae[14];
-            const a41 = ae[3], a42 = ae[7], a43 = ae[11], a44 = ae[15];
+            const a11 = rawDataA[0], a12 = rawDataA[4], a13 = rawDataA[8], a14 = rawDataA[12];
+            const a21 = rawDataA[1], a22 = rawDataA[5], a23 = rawDataA[9], a24 = rawDataA[13];
+            const a31 = rawDataA[2], a32 = rawDataA[6], a33 = rawDataA[10], a34 = rawDataA[14];
+            const a41 = rawDataA[3], a42 = rawDataA[7], a43 = rawDataA[11], a44 = rawDataA[15];
 
-            const b11 = be[0], b12 = be[4], b13 = be[8], b14 = be[12];
-            const b21 = be[1], b22 = be[5], b23 = be[9], b24 = be[13];
-            const b31 = be[2], b32 = be[6], b33 = be[10], b34 = be[14];
-            const b41 = be[3], b42 = be[7], b43 = be[11], b44 = be[15];
+            const b11 = rawDataB[0], b12 = rawDataB[4], b13 = rawDataB[8], b14 = rawDataB[12];
+            const b21 = rawDataB[1], b22 = rawDataB[5], b23 = rawDataB[9], b24 = rawDataB[13];
+            const b31 = rawDataB[2], b32 = rawDataB[6], b33 = rawDataB[10], b34 = rawDataB[14];
+            const b41 = rawDataB[3], b42 = rawDataB[7], b43 = rawDataB[11], b44 = rawDataB[15];
 
-            te[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
-            te[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
-            te[8] = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
-            te[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
+            rawData[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
+            rawData[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
+            rawData[8] = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
+            rawData[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
 
-            te[1] = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
-            te[5] = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
-            te[9] = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
-            te[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
+            rawData[1] = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
+            rawData[5] = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
+            rawData[9] = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
+            rawData[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
 
-            te[2] = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
-            te[6] = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
-            te[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
-            te[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
+            rawData[2] = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
+            rawData[6] = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
+            rawData[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
+            rawData[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
 
-            te[3] = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
-            te[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
-            te[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
-            te[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
+            rawData[3] = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
+            rawData[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
+            rawData[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
+            rawData[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
 
             return this;
         }
@@ -674,7 +695,19 @@ namespace egret3d {
             return Math.sqrt(Math.max(scaleXSq, scaleYSq, scaleZSq));
         }
 
-        public toEuler(value: Vector3, order: EulerOrder = EulerOrder.YXZ) {
+        public toArray(value?: number[] | Float32Array, offset: number = 0) {
+            if (!value) {
+                value = [];
+            }
+
+            for (let i = 0; i < 16; ++i) {
+                value[i + offset] = this.rawData[i];
+            }
+
+            return value;
+        }
+
+        public toEuler(value: Vector3, order: EulerOrder = EulerOrder.XYZ) {
             // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
             const rawData = this.rawData;
             const m11 = rawData[0], m12 = rawData[4], m13 = rawData[8];

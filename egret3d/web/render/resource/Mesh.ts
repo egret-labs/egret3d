@@ -10,8 +10,8 @@ namespace egret3d {
             vertexCount: number, indexCount: number,
             attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
             drawMode?: gltf.DrawMode
-        )
-        public static create(config: GLTF, buffers: Uint32Array[], name: string)
+        ): Mesh;
+        public static create(config: GLTF, buffers: Uint32Array[], name: string): Mesh;
         public static create(
             vertexCountOrConfig: number | GLTF, indexCountOrBuffers?: number | Uint32Array[],
             attributeNamesOrName?: gltf.MeshAttribute[] | null | string, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
@@ -54,7 +54,7 @@ namespace egret3d {
                 return;
             }
 
-            const vertexBufferViewAccessor = this.getAccessor(0);
+            const vertexBufferViewAccessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION!);
             const vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float);
             const webgl = WebGLCapabilities.webgl;
             const vbo = webgl.createBuffer();

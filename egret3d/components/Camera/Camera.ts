@@ -37,11 +37,13 @@ namespace egret3d {
          * 是否清除颜色缓冲区
          */
         @paper.serializedField
+        @paper.editor.extraProperty(paper.editor.EditType.CHECKBOX)
         public clearOption_Color: boolean = true;
         /**
          * 是否清除深度缓冲区
          */
         @paper.serializedField
+        @paper.editor.extraProperty(paper.editor.EditType.CHECKBOX)
         public clearOption_Depth: boolean = true;
         /**
          * 相机的渲染剔除，对应GameObject的层级
@@ -76,6 +78,7 @@ namespace egret3d {
          * 背景色
          */
         @paper.serializedField
+        @paper.editor.extraProperty(paper.editor.EditType.COLOR)
         public readonly backgroundColor: Color = Color.create(0.13, 0.28, 0.51, 1);
         /**
          * 相机视窗
@@ -88,6 +91,7 @@ namespace egret3d {
         public readonly postQueues: ICameraPostQueue[] = [];
         /**
          * 相机渲染上下文
+         * @internal
          */
         public context: RenderContext = null as any;
         /**

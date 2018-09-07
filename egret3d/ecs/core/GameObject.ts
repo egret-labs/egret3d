@@ -7,6 +7,7 @@ namespace paper {
          * @internal
          */
         public static readonly _instances: GameObject[] = [];
+        private static _globalGameObject: GameObject | null = null;
         /**
          * 创建 GameObject，并添加到当前场景中。
          */
@@ -31,6 +32,17 @@ namespace paper {
             // gameObect.addComponent(egret3d.Transform);
 
             return gameObect;
+        }
+        /**
+         * 
+         */
+        public static get globalGameObject() {
+            if (!this._globalGameObject) {
+                this._globalGameObject = GameObject.create(DefaultNames.Global, DefaultTags.Global, Application.sceneManager.globalScene);
+                this._globalGameObject.dontDestroy = true;
+            }
+
+            return this._globalGameObject;
         }
 
         /**
@@ -119,7 +131,7 @@ namespace paper {
                 this._removeComponent(component, null);
             }
 
-            DisposeCollecter.getInstance(DisposeCollecter).gameObjects.push(this);
+            GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).gameObjects.push(this);
 
             this.isStatic = false;
             this.hideFlags = HideFlags.None;
@@ -184,7 +196,7 @@ namespace paper {
                 this.renderer = null;
             }
 
-            DisposeCollecter.getInstance(DisposeCollecter).components.push(value);
+            GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).components.push(value);
 
             if (groupComponent) {
                 groupComponent._removeComponent(value);
@@ -274,7 +286,7 @@ namespace paper {
                 return;
             }
 
-            if (this === Application.sceneManager.globalGameObject) {
+            if (this === GameObject._globalGameObject) {
                 console.warn("Cannot destroy global game object.");
                 return;
             }
@@ -292,8 +304,8 @@ namespace paper {
         public addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T {
             registerClass(componentClass);
             // SingletonComponent.
-            if (componentClass.__isSingleton && this !== Application.sceneManager.globalGameObject) {
-                return Application.sceneManager.globalGameObject.getOrAddComponent(componentClass, config);
+            if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
+                return GameObject.globalGameObject.getOrAddComponent(componentClass, config);
             }
 
             const componentIndex = componentClass.__index;
@@ -353,18 +365,61 @@ namespace paper {
         /**
          * 移除组件。
          */
-        public removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends: boolean = false) {
+        public removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends: boolean = false): void {
             if (componentInstanceOrClass instanceof BaseComponent) {
+                const componentClass = componentInstanceOrClass.constructor as ComponentClass<T>;
+                // SingletonComponent.
+                if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
+                    GameObject.globalGameObject.removeComponent(componentInstanceOrClass, isExtends);
+                    return;
+                }
+
                 if (!this._canRemoveComponent(componentInstanceOrClass)) {
                     return;
                 }
 
                 this._removeComponent(componentInstanceOrClass, null);
             }
-            else if (isExtends) {
-                for (let component of this._components) {
+            else {
+                // SingletonComponent.
+                if (componentInstanceOrClass.__isSingleton && this !== GameObject._globalGameObject) {
+                    return GameObject.globalGameObject.removeComponent(componentInstanceOrClass, isExtends);
+                }
+
+                if (isExtends) {
+                    for (let component of this._components) {
+                        if (!component) {
+                            continue;
+                        }
+
+                        let groupComponent: GroupComponent | null = null;
+                        if (component.constructor === GroupComponent) {
+                            groupComponent = component as GroupComponent;
+                            component = groupComponent.components[0];
+                        }
+
+                        if (groupComponent) {
+                            if (
+                                !(groupComponent.components[0] instanceof componentInstanceOrClass) ||
+                                (groupComponent.components.length === 1 && !this._canRemoveComponent(groupComponent.components[0]))
+                            ) {
+                                continue;
+                            }
+                        }
+                        else if (
+                            !(component instanceof componentInstanceOrClass) ||
+                            !this._canRemoveComponent(component)
+                        ) {
+                            continue;
+                        }
+
+                        this._removeComponent(component, groupComponent);
+                    }
+                }
+                else {
+                    let component = this._getComponent(componentInstanceOrClass);
                     if (!component) {
-                        continue;
+                        return;
                     }
 
                     let groupComponent: GroupComponent | null = null;
@@ -374,45 +429,16 @@ namespace paper {
                     }
 
                     if (groupComponent) {
-                        if (
-                            !(groupComponent.components[0] instanceof componentInstanceOrClass) ||
-                            (groupComponent.components.length === 1 && !this._canRemoveComponent(groupComponent.components[0]))
-                        ) {
-                            continue;
+                        if (groupComponent.components.length === 1 && !this._canRemoveComponent(groupComponent.components[0])) {
+                            return;
                         }
                     }
-                    else if (
-                        !(component instanceof componentInstanceOrClass) ||
-                        !this._canRemoveComponent(component)
-                    ) {
-                        continue;
+                    else if (!this._canRemoveComponent(component)) {
+                        return;
                     }
 
                     this._removeComponent(component, groupComponent);
                 }
-            }
-            else {
-                let component = this._getComponent(componentInstanceOrClass);
-                if (!component) {
-                    return;
-                }
-
-                let groupComponent: GroupComponent | null = null;
-                if (component.constructor === GroupComponent) {
-                    groupComponent = component as GroupComponent;
-                    component = groupComponent.components[0];
-                }
-
-                if (groupComponent) {
-                    if (groupComponent.components.length === 1 && !this._canRemoveComponent(groupComponent.components[0])) {
-                        return;
-                    }
-                }
-                else if (!this._canRemoveComponent(component)) {
-                    return;
-                }
-
-                this._removeComponent(component, groupComponent);
             }
         }
         /**
@@ -420,6 +446,12 @@ namespace paper {
          */
         public removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends: boolean = false) {
             if (componentClass) {
+                // SingletonComponent.
+                if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
+                    GameObject.globalGameObject.removeAllComponents(componentClass, isExtends);
+                    return;
+                }
+
                 if (isExtends) {
                     for (const component of this._components) {
                         if (!component) {
@@ -474,7 +506,12 @@ namespace paper {
         /**
          * 获取组件。
          */
-        public getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
+        public getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false): T | null {
+            // SingletonComponent.
+            if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
+                return GameObject.globalGameObject.getComponent(componentClass, isExtends);
+            }
+
             if (isExtends) {
                 for (const component of this._components) {
                     if (!component) {
@@ -514,7 +551,12 @@ namespace paper {
         /**
          * 
          */
-        public getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
+        public getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false): T[] {
+            // SingletonComponent.
+            if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
+                return GameObject.globalGameObject.getComponents(componentClass, isExtends);
+            }
+
             const components: T[] = [];
 
             if (isExtends) {
@@ -647,7 +689,7 @@ namespace paper {
                 this._addToScene(Application.sceneManager.globalScene);
             }
             else {
-                if (this === Application.sceneManager.globalGameObject) {
+                if (this === GameObject._globalGameObject) {
                     console.warn("Cannot change the `dontDestroy` value of the global game object.", this.name, this.uuid);
                     return;
                 }
@@ -760,7 +802,7 @@ namespace paper {
          * 
          */
         public get globalGameObject() {
-            return Application.sceneManager.globalGameObject;
+            return GameObject.globalGameObject;
         }
         /**
          * @deprecated

@@ -492,14 +492,14 @@ namespace egret3d {
 
             mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
             mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs)
+            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
 
             index = 0;
             const iTop = 4 * segment;
             const iBottom = 4 * segment + 1;
             mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
             mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs)
+            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
             for (let i = 0; i < segment; i++) {
                 // Top
                 indices[index++] = iTop;
@@ -536,9 +536,9 @@ namespace egret3d {
             const vertex = new Vector3();
             const normal = new Vector3();
             const grid = new Array<number[]>();
-            const vertices: number[] = []
-            const normals: number[] = []
-            const uvs: number[] = []
+            const vertices: number[] = [];
+            const normals: number[] = [];
+            const uvs: number[] = [];
 
             for (let iy = 0; iy <= heightSegments; iy++) {
                 const verticesRow = new Array<number>();
@@ -550,7 +550,7 @@ namespace egret3d {
                     vertex.x = -radius * Math.cos(u * Math.PI * 2) * Math.sin(v * Math.PI);
                     vertex.y = radius * Math.cos(v * Math.PI);
                     vertex.z = radius * Math.sin(u * Math.PI * 2) * Math.sin(v * Math.PI);
-                    vertices.push(vertex.x, vertex.y, vertex.z)
+                    vertices.push(vertex.x, vertex.y, vertex.z);
 
                     // Normal.
                     normal.x = vertex.x;
@@ -559,12 +559,12 @@ namespace egret3d {
                     const num = Math.sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
 
                     if (num > Number.MIN_VALUE) {
-                        normals.push(normal.x / num, normal.y / num, normal.z / num)
+                        normals.push(normal.x / num, normal.y / num, normal.z / num);
                     }
                     else {
-                        normals.push(0.0, 0.0, 0.0)
+                        normals.push(0.0, 0.0, 0.0);
                     }
-                    uvs.push(0, 1.0 - u, v)
+                    uvs.push(0, 1.0 - u, v);
                     verticesRow.push(index++);
                 }
 

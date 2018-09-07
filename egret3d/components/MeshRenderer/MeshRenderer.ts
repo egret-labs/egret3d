@@ -17,7 +17,7 @@ namespace egret3d {
 
             const filter = this.gameObject.getComponent(MeshFilter);
             if (filter && filter.mesh) {
-                const vertices = filter.mesh.getVertices();
+                const vertices = filter.mesh.getVertices()!;
                 const position = helpVector3A;
 
                 for (let i = 0, l = vertices.length; i < l; i += 3) {

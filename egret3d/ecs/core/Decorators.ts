@@ -10,7 +10,7 @@ namespace paper {
      */
     export function serializedField(classPrototype: any, key: string): void;
     export function serializedField(key: string): Function;
-    export function serializedField(classPrototypeOrKey: any, key?: string) {
+    export function serializedField(classPrototypeOrKey: any, key?: string): void | Function {
         if (key) {
             const baseClass = classPrototypeOrKey.constructor as BaseClass;
             registerClass(baseClass);
@@ -21,7 +21,7 @@ namespace paper {
                 const baseClass = classPrototype.constructor as BaseClass;
                 registerClass(baseClass);
                 baseClass.__serializeKeys![key] = classPrototypeOrKey as string;
-            }
+            };
         }
     }
     /**
@@ -41,6 +41,7 @@ namespace paper {
      */
     export function allowMultiple(componentClass: ComponentClass<BaseComponent>) {
         registerClass(componentClass);
+        
         if (!componentClass.__isSingleton) {
             componentClass.allowMultiple = true;
         }

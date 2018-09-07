@@ -43,8 +43,6 @@ namespace egret3d {
                 paper.EnableSystem,
                 paper.StartSystem,
                 //
-                // oimo.PhysicsSystem,
-                //
                 paper.UpdateSystem,
                 //
                 AnimationSystem,
@@ -98,7 +96,7 @@ namespace egret3d {
                 antialiasSamples: 4,
                 contentWidth: parseInt(div.getAttribute("data-content-width")),
                 contentHeight: parseInt(div.getAttribute("data-content-height"))
-            } as RequiredRuntimeOptions;;
+            } as RequiredRuntimeOptions;
         }
     }
 }

@@ -13,10 +13,7 @@ namespace paper {
         private _delayTime: number = 0.0;
         private _unscaledTime: number = 0.0;
         private _unscaledDeltaTime: number = 0.0;
-        /**
-         * @internal
-         */
-        public _fixedTime: number = 0.0;
+        private _fixedTime: number = 0.0;
 
         public initialize() {
             super.initialize();
@@ -54,6 +51,10 @@ namespace paper {
 
         public get time() {
             return this._unscaledTime * this.timeScale;
+        }
+
+        public get fixedTime() {
+            return this._fixedTime;
         }
 
         public get deltaTime() {

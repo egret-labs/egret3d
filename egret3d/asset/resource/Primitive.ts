@@ -21,11 +21,10 @@ namespace egret3d.Primitive {
         const renderer = gameObject.addComponent(MeshRenderer);
 
         switch (type) {
-            case Type.Axises: {
+            case Type.Axises:
                 meshFilter.mesh = DefaultMeshes.AXISES;
                 renderer.material = DefaultMaterials.LINEDASHED_COLOR;
                 break;
-            }
 
             case Type.Quad:
                 meshFilter.mesh = DefaultMeshes.QUAD;

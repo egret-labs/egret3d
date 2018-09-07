@@ -18,14 +18,14 @@ namespace paper {
          */
         public static readonly _assets: { [key: string]: Asset } = {};
         /**
-         * @internal
+         * @private
          */
         public static register(asset: Asset) {
             if (!this._assets[asset.name]) {
                 this._assets[asset.name] = asset;
             }
             else if (this._assets[asset.name] !== asset) {
-                console.debug("Replace asset.", asset.name);
+                console.debug("Replace existing asset.", asset.name);
                 this._assets[asset.name] = asset;
             }
         }
@@ -33,7 +33,7 @@ namespace paper {
          * 
          */
         public static find<T extends Asset>(name: string) {
-            const result = this._assets[name]
+            const result = this._assets[name];
             if (!result) {
                 return RES.getRes(name) as T;
             }
@@ -81,7 +81,7 @@ namespace paper {
          */
         public dispose(disposeChildren?: boolean) {
             if (this._isBuiltin) {
-                console.warn("Can not dispose builtin asset.", this.name);
+                console.warn("Cannot dispose builtin asset.", this.name);
                 return false;
             }
 

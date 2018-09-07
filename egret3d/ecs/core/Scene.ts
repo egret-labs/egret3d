@@ -7,7 +7,7 @@ namespace paper {
          * 
          */
         public static createEmpty(name: string = DefaultNames.NoName, isActive: boolean = true) {
-            // const exScene = Application.sceneManager.getSceneByName(name);
+            // const exScene = Application.sceneManager.getSceneByName(name); TODO
             // if (exScene) {
             //     console.warn("The scene with the same name already exists.");
             //     return exScene;
@@ -44,7 +44,7 @@ namespace paper {
             return null;
         }
         /**
-         * lightmap强度
+         * lightmap 表现的光照强度。
          */
         @serializedField
         public lightmapIntensity: number = 1.0;
@@ -54,7 +54,7 @@ namespace paper {
         @serializedField
         public readonly name: string = "";
         /**
-         * 场景的light map列表。
+         * 场景的 lightmap 列表。
          */
         @serializedField
         public readonly lightmaps: egret3d.Texture[] = [];
@@ -64,11 +64,12 @@ namespace paper {
         @paper.serializedField
         public extras?: any = Application.playerMode === PlayerMode.Editor ? {} : undefined;
         /**
+         * TODO
          * @internal
          */
         public readonly _gameObjects: GameObject[] = [];
         /**
-         * 环境光
+         * 环境光。
          */
         @paper.serializedField
         public readonly ambientColor: egret3d.Color = egret3d.Color.create(0.21, 0.22, 0.25, 1);

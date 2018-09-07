@@ -3,16 +3,21 @@ namespace egret3d {
      * TODO 需要完善
      */
     export class SkinnedMeshRendererSystem extends paper.BaseSystem {
+        /**
+         * 
+         */
+        public static maxBoneCount: number = 55;
+
         protected readonly _interests = [
             {
                 componentClass: SkinnedMeshRenderer,
                 listeners: [
-                    { type: SkinnedMeshRendererEventType.Mesh, listener: (component: SkinnedMeshRenderer) => { this._updateDrawCalls(component.gameObject); } },
+                    { type: MeshFilterEventType.Mesh, listener: (component: SkinnedMeshRenderer) => { this._updateDrawCalls(component.gameObject); } },
                     { type: paper.RendererEventType.Materials, listener: (component: SkinnedMeshRenderer) => { this._updateDrawCalls(component.gameObject); } },
                 ]
             }
         ];
-        private readonly _drawCalls: DrawCalls = DrawCalls.getInstance(DrawCalls);
+        private readonly _drawCalls: DrawCalls = paper.GameObject.globalGameObject.getOrAddComponent(DrawCalls);
 
         private _updateDrawCalls(gameObject: paper.GameObject) {
             if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
@@ -31,20 +36,20 @@ namespace egret3d {
             //
             let subMeshIndex = 0;
             for (const primitive of renderer.mesh.glTFMesh.primitives) {
-                const material = renderer.materials[primitive.material];
+                const material = renderer.materials[primitive.material!];
                 const drawCall: DrawCall = {
                     renderer: renderer,
+                    matrix: Matrix4.IDENTITY,
 
+                    isSkinned: true,
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.mesh,
                     material: material || DefaultMaterials.MISSING,
 
                     frustumTest: false,
                     zdist: -1,
-
-                    boneData: renderer.boneBuffer,
                 };
-                material.addDefine("SKINNING");
+                material.addDefine("USE_SKINNING").addDefine(`MAX_BONES ${SkinnedMeshRendererSystem.maxBoneCount}`);
                 this._drawCalls.drawCalls.push(drawCall);
             }
         }
@@ -56,6 +61,11 @@ namespace egret3d {
         }
 
         public onAddGameObject(gameObject: paper.GameObject) {
+            const renderer = gameObject.renderer as SkinnedMeshRenderer;
+            if (renderer.mesh && !renderer._boneMatrices) {
+                renderer.initialize(true);
+            }
+
             this._updateDrawCalls(gameObject);
         }
 
@@ -64,7 +74,9 @@ namespace egret3d {
         }
 
         public onUpdate() {
-            // TODO
+            for (const gameObject of this._groups[0].gameObjects) {
+                (gameObject.renderer as SkinnedMeshRenderer)._update();
+            }
         }
 
         public onDisable() {

@@ -119,7 +119,7 @@ namespace egret3d {
             DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
 
             helpMaterial.clearStates().setDepth(true, true).setBlend(gltf.BlendMode.Blend);
-            helpMaterial.glTFTechnique.states.functions.depthFunc = [gltf.DepthFunc.EQUAL];//TODO
+            helpMaterial.glTFTechnique.states!.functions!.depthFunc = [gltf.DepthFunc.EQUAL];//TODO
             DefaultShaders.PARTICLE_BLEND1 = this._createShader("builtin/particle_blend1.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add);
@@ -154,9 +154,9 @@ namespace egret3d {
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.SPRITE = this._createShader("builtin/sprite.shader.json", egret3d.ShaderLib.sprite as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);
-            // TODO
-            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
-            this._createShader("obsolete/shaders/diffuse.shader.json", egret3d.ShaderLib.diffuse as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            // // TODO
+            // helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+            // this._createShader("obsolete/shaders/diffuse.shader.json", egret3d.ShaderLib.diffuse as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
 
             helpMaterial.dispose();
         }

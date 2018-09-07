@@ -14,8 +14,9 @@ namespace paper {
             keys = keys || {};
 
             for (const key in serializeKeys) {
-                if (serializeKeys[key]) {
-                    keys[serializeKeys[key]] = key;
+                const retargetKey = serializeKeys[key];
+                if (retargetKey) {
+                    keys[retargetKey] = key;
                 }
             }
         }
@@ -265,7 +266,7 @@ namespace paper {
             }
         }
 
-        public getAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent {
+        public getAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent | null {
             if (KEY_ASSET in source) {
                 const assetIndex = (source as IAssetReference).asset;
                 if (assetIndex >= 0) {

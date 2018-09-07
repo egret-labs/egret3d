@@ -16,20 +16,26 @@ namespace paper {
                 if (xOrScene !== undefined && xOrScene !== null) {
                     if (xOrScene instanceof Scene) {
                         const gameObject = prefab.createInstance(xOrScene);
-                        gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
+                        if (gameObject) {
+                            gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
+                        }
 
                         return gameObject;
                     }
                     else {
                         const gameObject = prefab.createInstance(scene || null);
-                        gameObject.transform.setLocalPosition(xOrScene, y!, z!);
+                        if (gameObject) {
+                            gameObject.transform.setLocalPosition(xOrScene, y!, z!);
+                        }
 
                         return gameObject;
                     }
                 }
                 else {
                     const gameObject = prefab.createInstance();
-                    gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
+                    if (gameObject) {
+                        gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
+                    }
 
                     return gameObject;
                 }

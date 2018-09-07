@@ -1,17 +1,14 @@
 namespace egret3d {
-
+    const enum LightSize {
+        Directional = 12,
+        Point = 15,
+        Spot = 18,
+    }
+    const _helpVector3 = Vector3.create();
     /**
-     * 缓存场景通用数据
-     * 包括矩阵信息，灯光，光照贴图，viewport尺寸等等
+     * @internal
      */
     export class RenderContext {
-        public readonly DIRECT_LIGHT_SIZE: number = 12;
-        public readonly POINT_LIGHT_SIZE: number = 15;
-        public readonly SPOT_LIGHT_SIZE: number = 18;
-        /**
-         * 
-         */
-        public version: number = 0;
         /**
          * 
          */
@@ -27,10 +24,8 @@ namespace egret3d {
         public lightmap: Texture | null = null;
         public lightmapUV: number = 1;
         public lightmapIntensity: number = 1.0;
-        public lightmapOffset: Float32Array | null = null;
 
-        public boneData: Float32Array | null = null;
-
+        //TODO
         // 15: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, intensity, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
         public directLightArray: Float32Array = new Float32Array(0);
         // 19: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, intensity, distance, decay, shadow, shadowBias, shadowRadius, shadowCameraNear, shadowCameraFar, shadowMapSizeX, shadowMapSizeY
@@ -39,9 +34,10 @@ namespace egret3d {
         public spotLightArray: Float32Array = new Float32Array(0);
         public directShadowMatrix: Float32Array = new Float32Array(0);
         public spotShadowMatrix: Float32Array = new Float32Array(0);
-        public pointShadowMatrix: Float32Array = new Float32Array(0);//TODO
-        public readonly matrix_m: Matrix4 = new Matrix4();
-        public readonly matrix_mvp: Matrix4 = new Matrix4();
+        public pointShadowMatrix: Float32Array = new Float32Array(0);
+
+        public readonly matrix_m: Matrix4 = Matrix4.create();
+        public readonly matrix_mvp: Matrix4 = Matrix4.create();
         public readonly directShadowMaps: (WebGLTexture | null)[] = [];
         public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
         public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
@@ -56,19 +52,16 @@ namespace egret3d {
 
 
         // transforms
-        public readonly matrix_v: Matrix4 = new Matrix4();
-        public readonly matrix_p: Matrix4 = new Matrix4();
-        public readonly matrix_mv: Matrix4 = new Matrix4();
-        public readonly matrix_vp: Matrix4 = new Matrix4();
+        public readonly matrix_v: Matrix4 = Matrix4.create();
+        public readonly matrix_p: Matrix4 = Matrix4.create();
+        public readonly matrix_mv: Matrix4 = Matrix4.create();
+        public readonly matrix_vp: Matrix4 = Matrix4.create();
         public readonly matrix_mv_inverse: Matrix3 = new Matrix3();//INVERS
 
-        public updateLightmap(texture: Texture, uv: number, offset: Float32Array, intensity: number) {
-            this.lightmap = texture;
-            this.lightmapUV = uv;
-            this.lightmapOffset = offset;
-            this.lightmapIntensity = intensity;
-            this.version++;
-        }
+        public lightShadowCameraNear: number = 0;
+        public lightShadowCameraFar: number = 0;
+        public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0, 1.0]);
+        public drawCall: DrawCall = null!;
 
         public updateCamera(camera: Camera, matrix: Matrix4) {
             camera.calcViewPortPixel(this.viewPortPixel); // update viewport
@@ -85,7 +78,6 @@ namespace egret3d {
                 this.cameraPosition[0] = rawData[12];
                 this.cameraPosition[1] = rawData[13];
                 this.cameraPosition[2] = rawData[14];
-                this.version++;
             }
 
             if (this.cameraUp[0] !== rawData[4] ||
@@ -94,7 +86,6 @@ namespace egret3d {
                 this.cameraUp[0] = rawData[4];
                 this.cameraUp[1] = rawData[5];
                 this.cameraUp[2] = rawData[6];
-                this.version++;
             }
 
             if (this.cameraForward[0] !== rawData[8] ||
@@ -103,7 +94,6 @@ namespace egret3d {
                 this.cameraForward[0] = -rawData[8];
                 this.cameraForward[1] = -rawData[9];
                 this.cameraForward[2] = -rawData[10];
-                this.version++;
             }
         }
 
@@ -130,16 +120,16 @@ namespace egret3d {
             }
 
             // TODO
-            if (this.directLightArray.length !== directLightCount * this.DIRECT_LIGHT_SIZE) {
-                this.directLightArray = new Float32Array(directLightCount * this.DIRECT_LIGHT_SIZE);
+            if (this.directLightArray.length !== directLightCount * LightSize.Directional) {
+                this.directLightArray = new Float32Array(directLightCount * LightSize.Directional);
             }
 
-            if (this.pointLightArray.length !== pointLightCount * this.POINT_LIGHT_SIZE) {
-                this.pointLightArray = new Float32Array(pointLightCount * this.POINT_LIGHT_SIZE);
+            if (this.pointLightArray.length !== pointLightCount * LightSize.Point) {
+                this.pointLightArray = new Float32Array(pointLightCount * LightSize.Point);
             }
 
-            if (this.spotLightArray.length !== spotLightCount * this.SPOT_LIGHT_SIZE) {
-                this.spotLightArray = new Float32Array(spotLightCount * this.SPOT_LIGHT_SIZE);
+            if (this.spotLightArray.length !== spotLightCount * LightSize.Spot) {
+                this.spotLightArray = new Float32Array(spotLightCount * LightSize.Spot);
             }
 
             if (this.directShadowMatrix.length !== directLightCount * 16) {
@@ -169,18 +159,18 @@ namespace egret3d {
             for (const light of lights) {
                 switch (light.constructor) {
                     case DirectionalLight: {
-                        light.gameObject.transform.getForward(dirHelper);
-                        dirHelper.applyDirection(this.matrix_v).normalize();
+                        light.gameObject.transform.getForward(_helpVector3);
+                        _helpVector3.applyDirection(this.matrix_v).normalize();
 
                         lightArray = this.directLightArray;
-                        index = directLightIndex * this.DIRECT_LIGHT_SIZE;
+                        index = directLightIndex * LightSize.Directional;
                         // lightArray[index++] = dirHelper.x; // Right-hand.
                         // lightArray[index++] = dirHelper.y;
                         // lightArray[index++] = dirHelper.z;
 
-                        lightArray[index++] = -dirHelper.x; // Left-hand.
-                        lightArray[index++] = -dirHelper.y;
-                        lightArray[index++] = -dirHelper.z;
+                        lightArray[index++] = -_helpVector3.x; // Left-hand.
+                        lightArray[index++] = -_helpVector3.y;
+                        lightArray[index++] = -_helpVector3.z;
 
                         lightArray[index++] = light.color.r * light.intensity;
                         lightArray[index++] = light.color.g * light.intensity;
@@ -191,7 +181,7 @@ namespace egret3d {
                     case PointLight: {
                         const position = light.gameObject.transform.getPosition();
                         lightArray = this.pointLightArray;
-                        index = pointLightIndex * this.POINT_LIGHT_SIZE;
+                        index = pointLightIndex * LightSize.Point;
 
                         lightArray[index++] = position.x;
                         lightArray[index++] = position.y;
@@ -208,11 +198,11 @@ namespace egret3d {
 
                     case SpotLight: {
                         const position = light.gameObject.transform.getPosition();
-                        light.gameObject.transform.getForward(dirHelper);
-                        dirHelper.applyDirection(this.matrix_v).normalize();
+                        light.gameObject.transform.getForward(_helpVector3);
+                        _helpVector3.applyDirection(this.matrix_v).normalize();
 
                         lightArray = this.spotLightArray;
-                        index = spotLightIndex * this.SPOT_LIGHT_SIZE;
+                        index = spotLightIndex * LightSize.Spot;
 
                         lightArray[index++] = position.x;
                         lightArray[index++] = position.y;
@@ -222,9 +212,9 @@ namespace egret3d {
                         // lightArray[index++] = dirHelper.y;
                         // lightArray[index++] = dirHelper.z;
 
-                        lightArray[index++] = -dirHelper.x; // Left-hand.
-                        lightArray[index++] = -dirHelper.y;
-                        lightArray[index++] = -dirHelper.z;
+                        lightArray[index++] = -_helpVector3.x; // Left-hand.
+                        lightArray[index++] = -_helpVector3.y;
+                        lightArray[index++] = -_helpVector3.z;
 
                         lightArray[index++] = light.color.r * light.intensity;
                         lightArray[index++] = light.color.g * light.intensity;
@@ -288,29 +278,8 @@ namespace egret3d {
                     }
                 }
             }
-
-            this.version++;
         }
 
-        updateModel(matrix: Matrix4) {
-            this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
-            this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
-            this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);
-
-
-            this.matrix_mv_inverse.getNormalMatrix(this.matrix_mv);
-
-            this.version++;
-        }
-
-        updateBones(data: Float32Array | null) {
-            this.boneData = data;
-
-            this.version++;
-        }
-        public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0, 1.0]);
-        public lightShadowCameraNear: number = 0;
-        public lightShadowCameraFar: number = 0;
         public updateLightDepth(light: BaseLight) {
             const position = light.gameObject.transform.getPosition();
             if (this.lightPosition[0] !== position.x ||
@@ -320,7 +289,6 @@ namespace egret3d {
                 this.lightPosition[0] = position.x;
                 this.lightPosition[1] = position.y;
                 this.lightPosition[2] = position.z;
-                this.version++;
             }
 
             if (this.lightShadowCameraNear !== light.shadowCameraNear ||
@@ -328,28 +296,29 @@ namespace egret3d {
                 //
                 this.lightShadowCameraNear = light.shadowCameraNear;
                 this.lightShadowCameraFar = light.shadowCameraFar;
-                this.version++;
             }
         }
 
         public update(drawCall: DrawCall) {
-            this.shaderContextDefine = "";
-            const renderer = drawCall.renderer;
-            this.updateModel(drawCall.matrix || renderer.gameObject.transform.getWorldMatrix());
-            if (drawCall.boneData) {
-                this.updateBones(drawCall.boneData);
+            this.drawCall = drawCall;
+
+            const renderer = this.drawCall.renderer;
+            {
+                const matrix = drawCall.matrix || renderer.gameObject.transform.getWorldMatrix();
+                this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
+                this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
+                this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);
+                this.matrix_mv_inverse.getNormalMatrix(this.matrix_mv);
             }
+
+            this.shaderContextDefine = "";
             //
             if (renderer.lightmapIndex >= 0) {
                 const activeScene = paper.Application.sceneManager.activeScene;
                 if (activeScene.lightmaps.length > renderer.lightmapIndex) {
-                    this.updateLightmap(
-                        activeScene.lightmaps[renderer.lightmapIndex],
-                        drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0,
-                        renderer.lightmapScaleOffset,
-                        activeScene.lightmapIntensity
-                    );
-
+                    this.lightmap = activeScene.lightmaps[renderer.lightmapIndex];
+                    this.lightmapUV = this.drawCall.mesh.glTFMesh.primitives[this.drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0;
+                    this.lightmapIntensity = activeScene.lightmapIntensity;
                     this.shaderContextDefine += "#define USE_LIGHTMAP \n";
                 }
             }
@@ -360,12 +329,15 @@ namespace egret3d {
                 if (this.directLightCount > 0) {
                     this.shaderContextDefine += "#define NUM_DIR_LIGHTS " + this.directLightCount + "\n";
                 }
+
                 if (this.pointLightCount > 0) {
                     this.shaderContextDefine += "#define NUM_POINT_LIGHTS " + this.pointLightCount + "\n";
                 }
+
                 if (this.spotLightCount > 0) {
                     this.shaderContextDefine += "#define NUM_SPOT_LIGHTS " + this.spotLightCount + "\n";
                 }
+
                 if (renderer.receiveShadows) {
                     this.shaderContextDefine += "#define USE_SHADOWMAP \n";
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
@@ -373,6 +345,4 @@ namespace egret3d {
             }
         }
     }
-
-    let dirHelper: Vector3 = new Vector3();
 }
