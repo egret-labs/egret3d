@@ -5830,7 +5830,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
     const depth: {
         "version": string;
@@ -5980,7 +5979,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
     const distanceRGBA: {
         "version": string;
@@ -6135,7 +6133,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
     const equirect: {
         "version": string;
@@ -6246,7 +6243,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
     const linedashed: {
         "version": string;
@@ -6392,7 +6388,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
     const meshbasic: {
         "version": string;
@@ -6593,7 +6588,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
     const meshlambert: {
         "version": string;
@@ -6857,7 +6851,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
     const meshphong: {
         "version": string;
@@ -7153,7 +7146,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
     const meshphysical: {
         "version": string;
@@ -7453,7 +7445,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
     const normal: {
         "version": string;
@@ -7606,7 +7597,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
     const particle: {
         "version": string;
@@ -7857,7 +7847,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
     const points: {
         "version": string;
@@ -8007,7 +7996,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
     const shadow: {
         "version": string;
@@ -8190,7 +8178,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
     const sprite: {
         "version": string;
@@ -8337,7 +8324,6 @@ declare namespace egret3d.ShaderLib {
         };
         "extensionsRequired": string[];
         "extensionsUsed": string[];
-        "materials": any[];
     };
 }
 declare namespace egret3d.ShaderChunk {
