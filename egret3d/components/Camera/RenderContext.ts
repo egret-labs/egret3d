@@ -61,6 +61,13 @@ namespace egret3d {
         public lightShadowCameraNear: number = 0;
         public lightShadowCameraFar: number = 0;
         public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0, 1.0]);
+
+        public fogColor: Float32Array = new Float32Array(3);
+        public fogDensity: number = 0.0;
+        public fogNear: number = 0.0;
+        public fogFar: number = 0.0;
+
+
         public drawCall: DrawCall = null!;
 
         public updateCamera(camera: Camera, matrix: Matrix4) {
@@ -324,8 +331,6 @@ namespace egret3d {
             }
 
             if (this.lightCount > 0) {
-                // this.shaderContextDefine += "#define USE_LIGHT " + this.lightCount + "\n";
-
                 if (this.directLightCount > 0) {
                     this.shaderContextDefine += "#define NUM_DIR_LIGHTS " + this.directLightCount + "\n";
                 }
@@ -341,6 +346,23 @@ namespace egret3d {
                 if (renderer.receiveShadows) {
                     this.shaderContextDefine += "#define USE_SHADOWMAP \n";
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
+                }
+            }
+
+            if (drawCall.renderer.gameObject.scene.fogType !== paper.FogType.NONE) {
+                const scene = drawCall.renderer.gameObject.scene;
+                this.fogColor[0] = scene.fogColor.r;
+                this.fogColor[1] = scene.fogColor.g;
+                this.fogColor[2] = scene.fogColor.b;
+
+                this.shaderContextDefine += "#define USE_FOG \n";
+                if (drawCall.renderer.gameObject.scene.fogType === paper.FogType.FOG_EXP2) {
+                    this.fogDensity = scene.fogDensity;
+                    this.shaderContextDefine += "#define FOG_EXP2 \n";
+                }
+                else {
+                    this.fogNear = scene.fogNear;
+                    this.fogFar = scene.fogFar;
                 }
             }
         }

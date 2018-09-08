@@ -1,4 +1,9 @@
 namespace paper {
+    export const enum FogType {
+        NONE,
+        FOG,
+        FOG_EXP2
+    }
     /**
      * 场景类
      */
@@ -73,6 +78,18 @@ namespace paper {
          */
         @paper.serializedField
         public readonly ambientColor: egret3d.Color = egret3d.Color.create(0.21, 0.22, 0.25, 1);
+
+        @paper.serializedField
+        @paper.editor.extraProperty(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.FogType) })
+        public fogType: FogType = FogType.NONE;
+        @paper.serializedField
+        public readonly fogColor: egret3d.Color = egret3d.Color.create();
+        @paper.serializedField
+        public fogDensity: number = 0.00025;
+        @paper.serializedField
+        public fogNear: number = 1;
+        @paper.serializedField
+        public fogFar: number = 1000;
         private constructor(name: string) {
             super();
 

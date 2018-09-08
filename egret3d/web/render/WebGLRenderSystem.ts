@@ -268,6 +268,18 @@ namespace egret3d {
                     case gltf.UniformSemanticType._FARDISTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraFar);
                         break;
+                    case gltf.UniformSemanticType._FOG_COLOR:
+                        webgl.uniform3fv(location, context.fogColor);
+                        break;
+                    case gltf.UniformSemanticType._FOG_DENSITY:
+                        webgl.uniform1f(location, context.fogDensity);
+                        break;
+                    case gltf.UniformSemanticType._FOG_NEAR:
+                        webgl.uniform1f(location, context.fogNear);
+                        break;
+                    case gltf.UniformSemanticType._FOG_FAR:
+                        webgl.uniform1f(location, context.fogFar);
+                        break;
 
                     default:
                         console.warn("不识别的Uniform语义:" + uniform.semantic);

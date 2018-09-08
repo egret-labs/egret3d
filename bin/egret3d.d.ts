@@ -1235,6 +1235,10 @@ declare namespace gltf {
         _REFERENCEPOSITION = "_REFERENCEPOSITION",
         _NEARDICTANCE = "_NEARDICTANCE",
         _FARDISTANCE = "_FARDISTANCE",
+        _FOG_COLOR = "_FOG_COLOR",
+        _FOG_DENSITY = "_FOG_DENSITY",
+        _FOG_NEAR = "_FOG_NEAR",
+        _FOG_FAR = "_FOG_FAR",
     }
     const enum AccessorType {
         SCALAR = "SCALAR",
@@ -3393,6 +3397,11 @@ declare namespace paper {
     function serializeStruct(source: BaseObject): ISerializedStruct;
 }
 declare namespace paper {
+    const enum FogType {
+        NONE = 0,
+        FOG = 1,
+        FOG_EXP2 = 2,
+    }
     /**
      * 场景类
      */
@@ -3425,6 +3434,11 @@ declare namespace paper {
          * 环境光。
          */
         readonly ambientColor: egret3d.Color;
+        fogType: FogType;
+        readonly fogColor: egret3d.Color;
+        fogDensity: number;
+        fogNear: number;
+        fogFar: number;
         private constructor();
         /**
          *
@@ -6364,15 +6378,19 @@ declare namespace egret3d.ShaderLib {
                         };
                         "fogColor": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogDensity": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogNear": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogFar": {
                             "type": number;
+                            "semantic": string;
                         };
                         "clippingPlanes[0]": {
                             "type": number;
@@ -6561,15 +6579,19 @@ declare namespace egret3d.ShaderLib {
                         };
                         "fogColor": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogDensity": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogNear": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogFar": {
                             "type": number;
+                            "semantic": string;
                         };
                         "specularMap": {
                             "type": number;
@@ -6812,15 +6834,19 @@ declare namespace egret3d.ShaderLib {
                         };
                         "fogColor": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogDensity": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogNear": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogFar": {
                             "type": number;
+                            "semantic": string;
                         };
                         "directionalShadowMap[0]": {
                             "type": number;
@@ -7063,15 +7089,19 @@ declare namespace egret3d.ShaderLib {
                         };
                         "fogColor": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogDensity": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogNear": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogFar": {
                             "type": number;
+                            "semantic": string;
                         };
                         "ambientLightColor": {
                             "type": number;
@@ -7359,15 +7389,19 @@ declare namespace egret3d.ShaderLib {
                         };
                         "fogColor": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogDensity": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogNear": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogFar": {
                             "type": number;
+                            "semantic": string;
                         };
                         "ambientLightColor": {
                             "type": number;
@@ -7972,15 +8006,19 @@ declare namespace egret3d.ShaderLib {
                         };
                         "fogColor": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogDensity": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogNear": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogFar": {
                             "type": number;
+                            "semantic": string;
                         };
                         "clippingPlanes[0]": {
                             "type": number;
@@ -8113,15 +8151,19 @@ declare namespace egret3d.ShaderLib {
                         };
                         "fogColor": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogDensity": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogNear": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogFar": {
                             "type": number;
+                            "semantic": string;
                         };
                         "ambientLightColor": {
                             "type": number;
@@ -8300,15 +8342,19 @@ declare namespace egret3d.ShaderLib {
                         };
                         "fogColor": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogDensity": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogNear": {
                             "type": number;
+                            "semantic": string;
                         };
                         "fogFar": {
                             "type": number;
+                            "semantic": string;
                         };
                         "clippingPlanes[0]": {
                             "type": number;
