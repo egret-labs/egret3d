@@ -12,7 +12,7 @@ namespace egret3d {
          */
         public static create(center: Readonly<IVector3> = Vector3.ZERO, radius: number = 0.0) {
             if (this._instances.length > 0) {
-                return this._instances.pop()!;
+                return this._instances.pop()!.set(center, radius);
             }
 
             return new Sphere().set(center, radius);
@@ -43,7 +43,7 @@ namespace egret3d {
             return [this.center.x, this.center.y, this.center.z, this.radius];
         }
 
-        public deserialize(value: Readonly<[number, number, number]>) {
+        public deserialize(value: Readonly<[number, number, number, number]>) {
             this.radius = value[3];
             this.center.fromArray(value);
 
