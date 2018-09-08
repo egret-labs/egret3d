@@ -8,7 +8,6 @@ namespace egret3d {
     const _attributeNames: gltf.MeshAttributeType[] = [
         gltf.MeshAttributeType.POSITION,
         gltf.MeshAttributeType.NORMAL,
-        gltf.MeshAttributeType.TANGENT,
         gltf.MeshAttributeType.COLOR_0,
         gltf.MeshAttributeType.TEXCOORD_0,
     ];
@@ -363,11 +362,11 @@ namespace egret3d {
         /**
          * 
          */
-        public setIndices(value: Readonly<ArrayLike<number>>, subMeshIndex: number = 0) {
+        public setIndices(value: Readonly<ArrayLike<number>>, subMeshIndex: number = 0, offset: number = 0) {
             const target = this.getIndices(subMeshIndex);
             if (target) {
                 for (let i = 0, l = Math.min(value.length, target.length); i < l; i++) {
-                    target[i] = value[i];
+                    target[i] = value[offset + i];
                 }
             }
 

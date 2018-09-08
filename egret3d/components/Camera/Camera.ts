@@ -235,41 +235,21 @@ namespace egret3d {
          * 由屏幕坐标发射射线
          */
         public createRayByScreen(screenPosX: number, screenPosY: number, ray?: Ray): Ray {
-            const src1 = helpVector3C;
-            src1.x = screenPosX;
-            src1.y = screenPosY;
-            src1.z = 0.0;
+            const from = egret3d.Vector3.create(screenPosX, screenPosY, 0.0);
+            const to = egret3d.Vector3.create(screenPosX, screenPosY, 1.0);
 
-            const src2 = helpVector3D;
-            src2.x = screenPosX;
-            src2.y = screenPosY;
-            src2.z = 1.0;
-
-            const dest1 = helpVector3E;
-            const dest2 = helpVector3F;
-            this.calcWorldPosFromScreenPos(src1, dest1);
-            this.calcWorldPosFromScreenPos(src2, dest2);
-
-            const dir = helpVector3G;
-            dir.subtract(dest2, dest1);
-            dir.normalize();
+            this.calcWorldPosFromScreenPos(from, from);
+            this.calcWorldPosFromScreenPos(to, to);
+            to.subtract(to, from).normalize();
 
             ray = ray || Ray.create();
-            ray.set(dest1, dir);
+            ray.set(from, to);
 
-            // const a = egret3d.Vector3.create(screenPosX, screenPosY, 0.0);
-            // const b = egret3d.Vector3.create(screenPosX, screenPosY, 1.0);
-            // ray = ray || Ray.create();
-
-            // this.calcWorldPosFromScreenPos(a, a);
-            // this.calcWorldPosFromScreenPos(b, b);
-            // b.subtract(a, b).normalize();
-            // ray.set(a, b);
+            from.release();
+            to.release();
 
             return ray;
         }
-
-
         /**
          * 由屏幕坐标得到世界坐标
          */

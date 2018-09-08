@@ -1,8 +1,6 @@
 namespace egret3d {
 
-    export interface IVector3 {
-        x: number;
-        y: number;
+    export interface IVector3 extends IVector2 {
         z: number;
     }
     /**

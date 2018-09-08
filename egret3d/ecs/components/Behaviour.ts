@@ -40,6 +40,7 @@ namespace paper {
         }
         /**
          * 组件被初始化时调用。
+         * - 在整个生命周期中只执行一次。
          * @see paper.GameObject#addComponent()
          */
         public onAwake?(config: any): void;
@@ -106,6 +107,7 @@ namespace paper {
         public onDisable?(): void;
         /**
          * 组件被移除或实体被销毁时调用。
+         * - 在整个生命周期中只执行一次。
          * @see paper.GameObject#removeComponent()
          * @see paper.GameObject#destroy()
          */

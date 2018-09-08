@@ -132,25 +132,9 @@ namespace paper {
             }
 
             GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).gameObjects.push(this);
-
-            this.isStatic = false;
-            this.hideFlags = HideFlags.None;
-            this.layer = Layer.Default;
-            this.name = "";
-            this.tag = "";
-            this.transform = null!;
-            this.renderer = null;
-
-            if (this.extras) { // Editor.
-                this.extras = {};
-            }
-
-            this._activeSelf = true;
-            this._activeInHierarchy = true;
-            this._activeDirty = true;
-
+            //
             this._components.length = 0;
-            this._cachedComponents.length = 0;
+            // set isDestroyed.
             this._scene = null;
         }
 
@@ -254,7 +238,30 @@ namespace paper {
             }
         }
         /**
-         * 
+         * 实体被销毁后，内部卸载。
+         */
+        public uninitialize() {
+            this.isStatic = false;
+            this.hideFlags = HideFlags.None;
+            this.layer = Layer.Default;
+            this.name = "";
+            this.tag = "";
+            this.transform = null!;
+            this.renderer = null;
+
+            if (this.extras) { // Editor.
+                this.extras = {};
+            }
+
+            this._activeSelf = true;
+            this._activeInHierarchy = true;
+            this._activeDirty = true;
+
+            this._cachedComponents.length = 0;
+            this._scene = null;
+        }
+        /**
+         * 销毁实体。
          */
         public destroy() {
             if (this.isDestroyed) {
@@ -582,6 +589,22 @@ namespace paper {
             return result;
         }
         /**
+         * 
+         */
+        public getComponentInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
+            let component = this.getComponent(componentClass, isExtends);
+            if (!component) {
+                for (const child of this.transform.children) {
+                    component = child.gameObject.getComponentInChildren(componentClass, isExtends);
+                    if (component) {
+                        break;
+                    }
+                }
+            }
+
+            return component;
+        }
+        /**
          * 搜索自己和子节点中所有特定类型的组件
          */
         public getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false, components: T[] | null = null) {
@@ -611,15 +634,6 @@ namespace paper {
 
             return components;
         }
-        // /**
-        //  * 搜索自己和子节点中所有特定类型的组件
-        //  */
-        // public getComponentInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
-        //     const components: T[] = [];
-        //     this._getComponentsInChildren(componentClass, this, components, isExtends);
-
-        //     return components.length >0?;
-        // }
         /**
          * 获取组件，如果未添加该组件，则添加该组件。
          */

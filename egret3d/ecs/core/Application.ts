@@ -49,13 +49,15 @@ namespace paper {
          * 场景管理器。
          */
         public readonly sceneManager: SceneManager = SceneManager.getInstance();
+
+        public canvas: HTMLCanvasElement | null = null;
+
         private _isFocused = false;
         private _isRunning = false;
         private _playerMode: PlayerMode = PlayerMode.Player;
         private _bindUpdate: FrameRequestCallback | null = null;
 
         public _option: egret3d.RequiredRuntimeOptions;//TODO临时
-        public _canvas: HTMLCanvasElement;//TODO临时
         public _webgl: WebGLRenderingContext;////TODO临时
 
         private _update() {
@@ -76,9 +78,10 @@ namespace paper {
         }
 
         public init({ playerMode = PlayerMode.Player, systems = [] as { new(): BaseSystem }[], option = {}, canvas = {}, webgl = {} } = {}) {
+            this.canvas = canvas as HTMLCanvasElement;
+
             this._playerMode = playerMode;
             this._option = option as egret3d.RequiredRuntimeOptions;
-            this._canvas = canvas as HTMLCanvasElement;
             this._webgl = webgl as WebGLRenderingContext;
 
             for (const systemClass of systems) {
@@ -108,10 +111,6 @@ namespace paper {
             }
 
             this._update();
-        }
-
-        public callLater(callback: () => void): void {
-            (this.systemManager.getSystem(paper.LateUpdateSystem)!).callLater(callback);
         }
 
         public get isFocused() {

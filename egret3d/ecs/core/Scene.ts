@@ -123,6 +123,16 @@ namespace paper {
         /**
          * 
          */
+        public uninitialize() {
+            this.lightmapIntensity = 1.0;
+            // this.name = "";
+            this.ambientColor.set(0.21, 0.22, 0.25, 1);
+            this.lightmaps.length = 0;
+            // this.extras
+        }
+        /**
+         * 销毁场景。
+         */
         public destroy() {
             if (!Application.sceneManager._removeScene(this)) {
                 return;
@@ -137,8 +147,7 @@ namespace paper {
 
                 gameObject.destroy();
             }
-
-            this.lightmaps.length = 0;
+            //
             this._gameObjects.length = 0;
         }
         /**
