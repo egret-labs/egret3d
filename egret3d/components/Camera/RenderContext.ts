@@ -349,14 +349,14 @@ namespace egret3d {
                 }
             }
 
-            if (drawCall.renderer.gameObject.scene.fogType !== paper.FogType.NONE) {
+            if (drawCall.renderer.gameObject.scene.fogMode !== paper.FogMode.NONE) {
                 const scene = drawCall.renderer.gameObject.scene;
                 this.fogColor[0] = scene.fogColor.r;
                 this.fogColor[1] = scene.fogColor.g;
                 this.fogColor[2] = scene.fogColor.b;
 
                 this.shaderContextDefine += "#define USE_FOG \n";
-                if (drawCall.renderer.gameObject.scene.fogType === paper.FogType.FOG_EXP2) {
+                if (drawCall.renderer.gameObject.scene.fogMode === paper.FogMode.FOG_EXP2) {
                     this.fogDensity = scene.fogDensity;
                     this.shaderContextDefine += "#define FOG_EXP2 \n";
                 }

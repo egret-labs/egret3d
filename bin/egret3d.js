@@ -5349,8 +5349,8 @@ var paper;
                     var mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone();
                     var color1 = new Float32Array([0.8, 0.8, 0.3]);
                     var alpha = new Float32Array([0.3]);
-                    mat.setFloatv("opacity", alpha);
-                    mat.setVector3v("diffuse", color1);
+                    mat.setFloatv("opacity" /* Opacity */, alpha);
+                    mat.setVector3v("diffuse" /* Diffuse */, color1);
                     this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
                 }
                 else if (color == "grey") {
@@ -5360,8 +5360,8 @@ var paper;
                     var mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone();
                     var color1 = new Float32Array([0.3, 0.3, 0.3]);
                     var alpha = new Float32Array([0.2]);
-                    mat.setFloatv("opacity", alpha);
-                    mat.setVector3v("diffuse", color1);
+                    mat.setFloatv("opacity" /* Opacity */, alpha);
+                    mat.setVector3v("diffuse" /* Diffuse */, color1);
                     this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
                 }
             };
@@ -5389,8 +5389,8 @@ var paper;
                 var technique = mat.glTFTechnique;
                 var funs = technique.states.functions;
                 var enables = technique.states.enable;
-                mat.setFloatv("opacity", alpha);
-                mat.setVector3v("diffuse", color1);
+                mat.setFloatv("opacity" /* Opacity */, alpha);
+                mat.setVector3v("diffuse" /* Diffuse */, color1);
                 mat.setCullFace(false);
                 mat.setBlend(1 /* Blend */);
                 mat.renderQueue = 4000 /* Overlay */;
@@ -7430,12 +7430,12 @@ var paper;
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    var FogType;
-    (function (FogType) {
-        FogType[FogType["NONE"] = 0] = "NONE";
-        FogType[FogType["FOG"] = 1] = "FOG";
-        FogType[FogType["FOG_EXP2"] = 2] = "FOG_EXP2";
-    })(FogType = paper.FogType || (paper.FogType = {}));
+    var FogMode;
+    (function (FogMode) {
+        FogMode[FogMode["NONE"] = 0] = "NONE";
+        FogMode[FogMode["FOG"] = 1] = "FOG";
+        FogMode[FogMode["FOG_EXP2"] = 2] = "FOG_EXP2";
+    })(FogMode = paper.FogMode || (paper.FogMode = {}));
     /**
      * 场景类
      */
@@ -7468,11 +7468,11 @@ var paper;
              * 环境光。
              */
             _this.ambientColor = egret3d.Color.create(0.21, 0.22, 0.25, 1);
-            _this.fogType = 0 /* NONE */;
-            _this.fogColor = egret3d.Color.create();
-            _this.fogDensity = 0.00025;
+            _this.fogMode = 0 /* NONE */;
+            _this.fogColor = egret3d.Color.create(0.5, 0.5, 0.5, 1);
+            _this.fogDensity = 0.01;
             _this.fogNear = 1;
-            _this.fogFar = 1000;
+            _this.fogFar = 300;
             _this.name = name;
             return _this;
         }
@@ -7650,8 +7650,8 @@ var paper;
         ], Scene.prototype, "ambientColor", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.extraProperty(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.FogType) })
-        ], Scene.prototype, "fogType", void 0);
+            paper.editor.extraProperty(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.FogMode) })
+        ], Scene.prototype, "fogMode", void 0);
         __decorate([
             paper.serializedField
         ], Scene.prototype, "fogColor", void 0);
@@ -9378,33 +9378,33 @@ var egret3d;
             var helpMaterial = new egret3d.Material(new egret3d.Shader(egret3d.ShaderLib.meshbasic, ""));
             //
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */);
-            DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_BASIC_DOUBLESIDE = this._createShader("builtin/meshbasic_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            DefaultShaders.MESH_BASIC_DOUBLESIDE = this._createShader("builtin/meshbasic_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */);
-            DefaultShaders.MESH_LAMBERT = this._createShader("builtin/meshlambert.shader.json", egret3d.ShaderLib.meshlambert, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            DefaultShaders.MESH_LAMBERT = this._createShader("builtin/meshlambert.shader.json", egret3d.ShaderLib.meshlambert, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_LAMBERT_DOUBLESIDE = this._createShader("builtin/meshlambert_doubleside.shader.json", egret3d.ShaderLib.meshlambert, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            DefaultShaders.MESH_LAMBERT_DOUBLESIDE = this._createShader("builtin/meshlambert_doubleside.shader.json", egret3d.ShaderLib.meshlambert, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */);
-            DefaultShaders.MESH_PHONG = this._createShader("builtin/meshphong.shader.json", egret3d.ShaderLib.meshphong, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            DefaultShaders.MESH_PHONG = this._createShader("builtin/meshphong.shader.json", egret3d.ShaderLib.meshphong, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_PHONE_DOUBLESIDE = this._createShader("builtin/meshphong_doubleside.shader.json", egret3d.ShaderLib.meshphong, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            DefaultShaders.MESH_PHONE_DOUBLESIDE = this._createShader("builtin/meshphong_doubleside.shader.json", egret3d.ShaderLib.meshphong, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */);
-            DefaultShaders.MESH_PHYSICAL = this._createShader("builtin/meshphysical.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            DefaultShaders.MESH_PHYSICAL = this._createShader("builtin/meshphysical.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_PHYSICAL_DOUBLESIDE = this._createShader("builtin/meshphysical_doubleside.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            DefaultShaders.MESH_PHYSICAL_DOUBLESIDE = this._createShader("builtin/meshphysical_doubleside.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(1 /* Blend */);
-            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, false).setBlend(1 /* Blend */);
-            DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(3 /* Add */);
-            DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, false).setBlend(3 /* Add */);
-            DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */);
             DefaultShaders.LINEDASHED = this._createShader("builtin/linedashed.shader.json", egret3d.ShaderLib.linedashed, 2000 /* Geometry */, helpMaterial.glTFTechnique.states);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */);
-            DefaultShaders.VERTEX_COLOR = this._createShader("builtin/vertcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP", "USE_COLOR"]);
+            DefaultShaders.VERTEX_COLOR = this._createShader("builtin/vertcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */, "USE_COLOR" /* USE_COLOR */]);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpMaterial.glTFTechnique.states);
             helpMaterial.clearStates().setDepth(true, true);
@@ -9438,7 +9438,7 @@ var egret3d;
             DefaultShaders.SPRITE = this._createShader("builtin/sprite.shader.json", egret3d.ShaderLib.sprite, 2000 /* Geometry */, helpMaterial.glTFTechnique.states);
             // // TODO
             // helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
-            // this._createShader("obsolete/shaders/diffuse.shader.json", egret3d.ShaderLib.diffuse as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, ["USE_MAP"]);
+            // this._createShader("obsolete/shaders/diffuse.shader.json", egret3d.ShaderLib.diffuse as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP]);
             helpMaterial.dispose();
         };
         return DefaultShaders;
@@ -9468,13 +9468,13 @@ var egret3d;
         DefaultMaterials.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             DefaultMaterials.MESH_BASIC = this._createMaterial("builtin/meshbasic.mat.json", egret3d.DefaultShaders.MESH_BASIC)
-                .setTexture("map", egret3d.DefaultTextures.WHITE);
+                .setTexture("map" /* Map */, egret3d.DefaultTextures.WHITE);
             DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", egret3d.DefaultShaders.LINEDASHED)
-                .addDefine("USE_COLOR");
+                .addDefine("USE_COLOR" /* USE_COLOR */);
             DefaultMaterials.MISSING = this._createMaterial("builtin/missing.mat.json", egret3d.DefaultShaders.MESH_BASIC)
-                .setVector3v("diffuse", new Float32Array([1.0, 0.0, 1.0]));
+                .setVector3v("diffuse" /* Diffuse */, new Float32Array([1.0, 0.0, 1.0]));
             DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/shadow_depth.mat.json", egret3d.DefaultShaders.DEPTH)
-                .addDefine("DEPTH_PACKING 3201");
+                .addDefine("DEPTH_PACKING 3201" /* DEPTH_PACKING_3201 */);
             DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", egret3d.DefaultShaders.DISTANCE_RGBA);
         };
         return DefaultMaterials;
@@ -10464,7 +10464,6 @@ var egret3d;
                 }
             }
             if (this.lightCount > 0) {
-                // this.shaderContextDefine += "#define USE_LIGHT " + this.lightCount + "\n";
                 if (this.directLightCount > 0) {
                     this.shaderContextDefine += "#define NUM_DIR_LIGHTS " + this.directLightCount + "\n";
                 }
@@ -10479,13 +10478,13 @@ var egret3d;
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
             }
-            if (drawCall.renderer.gameObject.scene.fogType !== 0 /* NONE */) {
+            if (drawCall.renderer.gameObject.scene.fogMode !== 0 /* NONE */) {
                 var scene = drawCall.renderer.gameObject.scene;
                 this.fogColor[0] = scene.fogColor.r;
                 this.fogColor[1] = scene.fogColor.g;
                 this.fogColor[2] = scene.fogColor.b;
                 this.shaderContextDefine += "#define USE_FOG \n";
-                if (drawCall.renderer.gameObject.scene.fogType === 2 /* FOG_EXP2 */) {
+                if (drawCall.renderer.gameObject.scene.fogMode === 2 /* FOG_EXP2 */) {
                     this.fogDensity = scene.fogDensity;
                     this.shaderContextDefine += "#define FOG_EXP2 \n";
                 }
@@ -12775,7 +12774,7 @@ var egret3d;
                     frustumTest: false,
                     zdist: -1,
                 };
-                material.addDefine("USE_SKINNING").addDefine("MAX_BONES " + SkinnedMeshRendererSystem.maxBoneCount);
+                material.addDefine("USE_SKINNING" /* USE_SKINNING */).addDefine("MAX_BONES" /* MAX_BONES */ + " " + SkinnedMeshRendererSystem.maxBoneCount);
                 this._drawCalls.drawCalls.push(drawCall);
             }
         };
@@ -17395,6 +17394,43 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
+     * 通用宏定义
+     */
+    var ShaderDefines;
+    (function (ShaderDefines) {
+        ShaderDefines["USE_COLOR"] = "USE_COLOR";
+        ShaderDefines["USE_MAP"] = "USE_MAP";
+        ShaderDefines["USE_SKINNING"] = "USE_SKINNING";
+        ShaderDefines["USE_LIGHTMAP"] = "USE_LIGHTMAP";
+        ShaderDefines["USE_SHADOWMAP"] = "USE_SHADOWMAP";
+        //
+        ShaderDefines["MAX_BONES"] = "MAX_BONES";
+        //
+        ShaderDefines["FLIP_V"] = "FLIP_V";
+        //
+        ShaderDefines["NUM_POINT_LIGHTS"] = "NUM_POINT_LIGHTS";
+        ShaderDefines["NUM_SPOT_LIGHTS"] = "NUM_SPOT_LIGHTS";
+        ShaderDefines["SHADOWMAP_TYPE_PCF"] = "SHADOWMAP_TYPE_PCF";
+        ShaderDefines["SHADOWMAP_TYPE_PCF_SOFT"] = "SHADOWMAP_TYPE_PCF_SOFT";
+        ShaderDefines["DEPTH_PACKING_3200"] = "DEPTH_PACKING 3200";
+        ShaderDefines["DEPTH_PACKING_3201"] = "DEPTH_PACKING 3201";
+        //
+        ShaderDefines["USE_FOG"] = "USE_FOG";
+        ShaderDefines["FOG_EXP2"] = "FOG_EXP2";
+    })(ShaderDefines = egret3d.ShaderDefines || (egret3d.ShaderDefines = {}));
+    /**
+     * 通用Uniform名字
+     */
+    var ShaderUniformNames;
+    (function (ShaderUniformNames) {
+        ShaderUniformNames["Diffuse"] = "diffuse";
+        ShaderUniformNames["Opacity"] = "opacity";
+        ShaderUniformNames["Map"] = "map";
+        ShaderUniformNames["Specular"] = "specular";
+        ShaderUniformNames["Shininess"] = "shininess";
+        ShaderUniformNames["UVTransform"] = "uvTransform";
+    })(ShaderUniformNames = egret3d.ShaderUniformNames || (egret3d.ShaderUniformNames = {}));
+    /**
      *
      */
     var Shader = (function (_super) {
@@ -17711,14 +17747,14 @@ var egret3d;
         };
         Material.prototype.setVector4 = function (id, value) {
             //兼容老键值
-            if (id === "_MainTex_ST" && this._glTFTechnique.uniforms["uvTransform"]) {
-                id = "uvTransform";
+            if (id === "_MainTex_ST" && this._glTFTechnique.uniforms["uvTransform" /* UVTransform */]) {
+                id = "uvTransform" /* UVTransform */;
                 console.warn("已废弃的键值_MainTex_ST，建议改为:uvTransform-Matrix3");
                 this._glTFTechnique.uniforms[id].value = [value.x, 0, 0, 0, value.y, 0, value.z, value.w, 1];
                 return;
             }
-            else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms["diffuse"]) {
-                id = "diffuse";
+            else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms["diffuse" /* Diffuse */]) {
+                id = "diffuse" /* Diffuse */;
                 console.warn("已废弃的键值_MainColor、_Color，建议改为:diffuse-Vector3");
                 this._glTFTechnique.uniforms[id].value = [value.x, value.y, value.z];
                 return;
@@ -17740,14 +17776,14 @@ var egret3d;
         };
         Material.prototype.setVector4v = function (id, value) {
             //兼容老键值
-            if (id === "_MainTex_ST" && this._glTFTechnique.uniforms["uvTransform"]) {
-                id = "uvTransform";
+            if (id === "_MainTex_ST" && this._glTFTechnique.uniforms["uvTransform" /* UVTransform */]) {
+                id = "uvTransform" /* UVTransform */;
                 console.warn("已废弃的键值_MainTex_ST，建议改为:uvTransform-Matrix3");
                 this._glTFTechnique.uniforms[id].value = [value[0], 0, 0, 0, value[1], 0, value[2], value[3], 1];
                 return;
             }
-            else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms["diffuse"]) {
-                id = "diffuse";
+            else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms["diffuse" /* Diffuse */]) {
+                id = "diffuse" /* Diffuse */;
                 console.warn("已废弃的键值_MainColor、_Color，建议改为:diffuse-Vector3");
                 this._glTFTechnique.uniforms[id].value = [value[0], value[1], value[2]];
                 return;
@@ -17787,8 +17823,8 @@ var egret3d;
         Material.prototype.setTexture = function (id, value) {
             value = value || egret3d.DefaultTextures.WHITE;
             //兼容老键值
-            if (id === "_MainTex" && this._glTFTechnique.uniforms["map"]) {
-                id = "map";
+            if (id === "_MainTex" && this._glTFTechnique.uniforms["map" /* Map */]) {
+                id = "map" /* Map */;
                 console.warn("已废弃的键值_MainTex，建议改为:map");
             }
             var uniform = this._glTFTechnique.uniforms[id];
@@ -17808,7 +17844,7 @@ var egret3d;
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
             if (value instanceof egret3d.BaseRenderTarget) {
-                this.addDefine("FLIP_V");
+                this.addDefine("FLIP_V" /* FLIP_V */);
             }
             if (value) {
                 this._textures.push(value);
@@ -23088,7 +23124,7 @@ var paper;
                 }
                 funs.depthMask = [true];
                 funs.depthFunc = [515 /* LEQUAL */];
-                mat.setVector3v("diffuse", color1);
+                mat.setVector3v("diffuse" /* Diffuse */, color1);
                 mesh.setAttributes("POSITION" /* POSITION */, verticesCoord);
                 mesh.setIndices(indices);
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
@@ -27097,8 +27133,8 @@ var paper;
                 mesh.setIndices([0, 1, 2, 2, 1, 3]);
                 selectBox.activeSelf = false;
                 var mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
-                mat.setVector3v("diffuse", new Float32Array([0.8, 0.8, 0.3]));
-                mat.setFloatv("opacity", new Float32Array([0.3]));
+                mat.setVector3v("diffuse" /* Diffuse */, new Float32Array([0.8, 0.8, 0.3]));
+                mat.setFloatv("opacity" /* Opacity */, new Float32Array([0.3]));
                 mat.setDepth(true, true);
                 mat.renderQueue = 4000;
                 mat.setCullFace(false);

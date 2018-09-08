@@ -189,8 +189,8 @@ namespace paper.editor {
             mesh.setIndices([0, 1, 2, 2, 1, 3])
             selectBox.activeSelf = false
             let mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
-            mat.setVector3v("diffuse", new Float32Array([0.8, 0.8, 0.3]));
-            mat.setFloatv("opacity", new Float32Array([0.3]))
+            mat.setVector3v(egret3d.ShaderUniformNames.Diffuse, new Float32Array([0.8, 0.8, 0.3]));
+            mat.setFloatv(egret3d.ShaderUniformNames.Opacity, new Float32Array([0.3]))
             mat.setDepth(true, true)
             mat.renderQueue = 4000
             mat.setCullFace(false)

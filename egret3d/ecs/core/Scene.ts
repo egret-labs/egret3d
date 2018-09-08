@@ -1,5 +1,5 @@
 namespace paper {
-    export const enum FogType {
+    export const enum FogMode {
         NONE,
         FOG,
         FOG_EXP2
@@ -80,16 +80,16 @@ namespace paper {
         public readonly ambientColor: egret3d.Color = egret3d.Color.create(0.21, 0.22, 0.25, 1);
 
         @paper.serializedField
-        @paper.editor.extraProperty(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.FogType) })
-        public fogType: FogType = FogType.NONE;
+        @paper.editor.extraProperty(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.FogMode) })
+        public fogMode: FogMode = FogMode.NONE;
         @paper.serializedField
-        public readonly fogColor: egret3d.Color = egret3d.Color.create();
+        public readonly fogColor: egret3d.Color = egret3d.Color.create(0.5, 0.5, 0.5, 1);
         @paper.serializedField
-        public fogDensity: number = 0.00025;
+        public fogDensity: number = 0.01;
         @paper.serializedField
         public fogNear: number = 1;
         @paper.serializedField
-        public fogFar: number = 1000;
+        public fogFar: number = 300;
         private constructor(name: string) {
             super();
 

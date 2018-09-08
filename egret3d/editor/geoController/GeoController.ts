@@ -277,7 +277,7 @@ namespace paper.editor {
             }
             funs.depthMask = [true];
             funs.depthFunc = [gltf.DepthFunc.LEQUAL];
-            mat.setVector3v("diffuse", color1);
+            mat.setVector3v(egret3d.ShaderUniformNames.Diffuse, color1);
             mesh.setAttributes(gltf.MeshAttributeType.POSITION, verticesCoord)
             mesh.setIndices(indices);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines

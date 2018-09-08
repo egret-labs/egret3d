@@ -3397,7 +3397,7 @@ declare namespace paper {
     function serializeStruct(source: BaseObject): ISerializedStruct;
 }
 declare namespace paper {
-    const enum FogType {
+    const enum FogMode {
         NONE = 0,
         FOG = 1,
         FOG_EXP2 = 2,
@@ -3434,7 +3434,7 @@ declare namespace paper {
          * 环境光。
          */
         readonly ambientColor: egret3d.Color;
-        fogType: FogType;
+        fogMode: FogMode;
         readonly fogColor: egret3d.Color;
         fogDensity: number;
         fogNear: number;
@@ -5634,6 +5634,37 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+    /**
+     * 通用宏定义
+     */
+    const enum ShaderDefines {
+        USE_COLOR = "USE_COLOR",
+        USE_MAP = "USE_MAP",
+        USE_SKINNING = "USE_SKINNING",
+        USE_LIGHTMAP = "USE_LIGHTMAP",
+        USE_SHADOWMAP = "USE_SHADOWMAP",
+        MAX_BONES = "MAX_BONES",
+        FLIP_V = "FLIP_V",
+        NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
+        NUM_SPOT_LIGHTS = "NUM_SPOT_LIGHTS",
+        SHADOWMAP_TYPE_PCF = "SHADOWMAP_TYPE_PCF",
+        SHADOWMAP_TYPE_PCF_SOFT = "SHADOWMAP_TYPE_PCF_SOFT",
+        DEPTH_PACKING_3200 = "DEPTH_PACKING 3200",
+        DEPTH_PACKING_3201 = "DEPTH_PACKING 3201",
+        USE_FOG = "USE_FOG",
+        FOG_EXP2 = "FOG_EXP2",
+    }
+    /**
+     * 通用Uniform名字
+     */
+    const enum ShaderUniformNames {
+        Diffuse = "diffuse",
+        Opacity = "opacity",
+        Map = "map",
+        Specular = "specular",
+        Shininess = "shininess",
+        UVTransform = "uvTransform",
+    }
     /**
      *
      */
