@@ -9,39 +9,23 @@ namespace egret3d {
      * 
      */
     export class DefaultMeshes extends paper.SingletonComponent {
-        public static AXISES: Mesh;
         public static QUAD: Mesh;
         public static QUAD_PARTICLE: Mesh;
         public static PLANE: Mesh;
         public static CIRCLE_LINE: Mesh;
         public static CUBE: Mesh;
         public static PYRAMID: Mesh;
+        public static CONE: Mesh;
         public static CYLINDER: Mesh;
         public static SPHERE: Mesh;
 
+        public static AXISES: Mesh;
         public static CUBE_WIREFRAMED: Mesh;
+        public static PYRAMID_WIREFRAMED: Mesh;
 
         public initialize() {
             super.initialize();
-
-            { // AXISES.
-                const mesh = new Mesh(6, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/axises.mesh.bin";
-                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
-                paper.Asset.register(mesh);
-                DefaultMeshes.AXISES = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
-                    0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
-                    0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
-                ]);
-            }
+            // TODO 颜色切线，球体，更多类型。
 
             { // QUAD.
                 const mesh = DefaultMeshes.createPlane();
@@ -82,22 +66,22 @@ namespace egret3d {
                 paper.Asset.register(mesh);
                 DefaultMeshes.PYRAMID = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    -0.5, -0.5, -0.5,
-                    0, 0.5, 0,
-                    0.5, -0.5, -0.5,
-                    0.5, -0.5, -0.5,
-                    0, 0.5, 0,
-                    0.5, -0.5, 0.5,
-                    0.5, -0.5, 0.5,
-                    0, 0.5, 0,
-                    -0.5, -0.5, 0.5,
-                    -0.5, -0.5, 0.5,
-                    0, 0.5, 0,
-                    -0.5, -0.5, -0.5,
-                    -0.5, -0.5, -0.5,
-                    0.5, -0.5, -0.5,
-                    0.5, -0.5, 0.5,
-                    -0.5, -0.5, 0.5,
+                    -0.5, 0.0, -0.5,
+                    0.0, 1.0, 0.0,
+                    0.5, 0.0, -0.5,
+                    0.5, 0.0, -0.5,
+                    0.0, 1.0, 0.0,
+                    0.5, 0.0, 0.5,
+                    0.5, 0.0, 0.5,
+                    0.0, 1.0, 0.0,
+                    -0.5, 0.0, 0.5,
+                    -0.5, 0.0, 0.5,
+                    0.0, 1.0, 0.0,
+                    -0.5, 0.0, -0.5,
+                    -0.5, 0.0, -0.5,
+                    0.5, 0.0, -0.5,
+                    0.5, 0.0, 0.5,
+                    -0.5, 0.0, 0.5,
                 ]);
                 mesh.setAttributes(gltf.MeshAttributeType.NORMAL, [
                     0, 0, 0,
@@ -160,6 +144,22 @@ namespace egret3d {
                 ]);
             }
 
+            { // CONE.
+                const mesh = DefaultMeshes.createCylinder(0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 16, 1);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/pyramid.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.CONE = mesh;
+            }
+
+            { // CYLINDER.
+                const mesh = DefaultMeshes.createCylinder();
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/cylinder.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.CYLINDER = mesh;
+            }
+
             { // SPHERE.
                 const mesh = DefaultMeshes.createSphereCCW();
                 mesh._isBuiltin = true;
@@ -168,12 +168,23 @@ namespace egret3d {
                 DefaultMeshes.SPHERE = mesh;
             }
 
-            { // CYLINDER.
-                const mesh = DefaultMeshes.createCylinderCCW();
+            { // AXISES.
+                const mesh = new Mesh(6, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/cylinder.mesh.bin";
+                mesh.name = "builtin/axises.mesh.bin";
+                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
-                DefaultMeshes.CYLINDER = mesh;
+                DefaultMeshes.AXISES = mesh;
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+                ]);
+                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                    1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+                    0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+                ]);
             }
 
             { // CUBE_WIREFRAMED.
@@ -238,6 +249,79 @@ namespace egret3d {
                     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
                 ]);
             }
+
+            { // PYRAMID_WIREFRAMED.
+                const mesh = new Mesh(24, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/pyramid_wireframed.mesh.bin";
+                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+                paper.Asset.register(mesh);
+                DefaultMeshes.PYRAMID_WIREFRAMED = mesh;
+                //
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                    -0.5, 0.0, -0.5,
+                    0.5, 0.0, -0.5,
+                    0.5, 0.0, -0.5,
+                    0.5, 0.0, 0.5,
+                    0.5, 0.0, 0.5,
+                    -0.5, 0.0, 0.5,
+                    -0.5, 0.0, 0.5,
+                    -0.5, 0.0, -0.5,
+
+                    -0.5, 0.0, -0.5,
+                    0.0, 1.0, 0.0,
+
+                    0.5, 0.0, -0.5,
+                    0.0, 1.0, 0.0,
+
+                    0.5, 0.0, 0.5,
+                    0.0, 1.0, 0.0,
+
+                    -0.5, 0.0, 0.5,
+                    0.0, 1.0, 0.0,
+                ]);
+                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                ]);
+            }
+        }
+        /**
+         * 创建带网格的实体。
+         */
+        public static createObject(mesh: Mesh, name?: string, tag?: string, scene?: paper.Scene) {
+            const gameObject = paper.GameObject.create(name, tag, scene);
+            const meshFilter = gameObject.addComponent(MeshFilter);
+            const renderer = gameObject.addComponent(MeshRenderer);
+            meshFilter.mesh = mesh;
+
+            switch (mesh) {
+                case this.AXISES:
+                case this.CUBE_WIREFRAMED:
+                    renderer.material = DefaultMaterials.LINEDASHED_COLOR;
+                    break;
+            }
+
+
+            return gameObject;
         }
         /**
          * 创建平面网格。
@@ -329,7 +413,7 @@ namespace egret3d {
             // build geometry
             if (differentFace) {
                 const faceIndexCount = indices.length / 6;
-                const mesh = Mesh.create(meshVertexCount, 0);
+                const mesh = Mesh.create(vertices.length / 3, 0);
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
                 mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
                 mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
@@ -342,7 +426,7 @@ namespace egret3d {
                 return mesh;
             }
             else {
-                const mesh = Mesh.create(meshVertexCount, indices.length);
+                const mesh = Mesh.create(vertices.length / 3, indices.length);
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
                 mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
                 mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
@@ -418,283 +502,206 @@ namespace egret3d {
                 meshVertexCount += vertexCount;
             }
         }
+        /**
+         * 创建圆柱体网格。
+         */
+        public static createCylinder(
+            radiusTop: number = 0.5, radiusBottom: number = 0.5, height: number = 1.0,
+            centerOffsetX: number = 0.0, centerOffsetY: number = 0.0, centerOffsetZ: number = 0.0,
+            radialSegments: number = 16, heightSegments = 1,
+            openEnded: boolean = false, thetaStart: number = 0.0, thetaLength: number = Math.PI * 2.0,
+            differentFace: boolean = false
+        ) {
+            // buffers
+            const indices = [] as number[];
+            const vertices = [] as number[];
+            const normals = [] as number[];
+            const uvs = [] as number[];
 
-        // public static createXXXX(
-        //     radiusTop: number = 0.5, radiusBottom: number = 0.5, height: number = 1.0,
-        //     centerOffsetX: number = 0.0, centerOffsetY: number = 0.0, centerOffsetZ: number = 0.0,
-        //     radialSegments: number = 8, heightSegments = 1,
-        //     openEnded: boolean = false, thetaStart: number = 0.0, thetaLength: number = Math.PI * 2.0
-        // ) {
-        //     // buffers
-        //     const indices = [] as number[];
-        //     const vertices = [] as number[];
-        //     const normals = [] as number[];
-        //     const uvs = [] as number[];
-
-        //     // helper variables
-        //     let index = 0;
-        //     const halfHeight = height / 2;
-        //     const indexArray = [] as number[][];
-
-
-        //     const groupStart = 0;
-
-        //     // generate geometry
-        //     generateTorso();
-
-        //     if (openEnded === false) {
-        //         if (radiusTop > 0) generateCap(true);
-        //         if (radiusBottom > 0) generateCap(false);
-        //     }
-
-        //     // build geometry
-        //     this.setIndex(indices);
-        //     this.addAttribute('position', new Float32BufferAttribute(vertices, 3));
-        //     this.addAttribute('normal', new Float32BufferAttribute(normals, 3));
-        //     this.addAttribute('uv', new Float32BufferAttribute(uvs, 2));
-
-        //     function generateTorso() {
-        //         var groupCount = 0;
-
-        //         // this will be used to calculate the normal
-        //         const slope = (radiusBottom - radiusTop) / height;
-
-        //         // generate vertices, normals and uvs
-        //         for (let iY = 0; iY <= heightSegments; iY++) {
-        //             const indexRow = [];
-        //             const v = iY / heightSegments;
-        //             // calculate the radius of the current row
-        //             const radius = v * (radiusBottom - radiusTop) + radiusTop;
-
-        //             for (let iX = 0; iX <= radialSegments; iX++) {
-        //                 const u = iX / radialSegments;
-        //                 const theta = u * thetaLength + thetaStart;
-        //                 const sinTheta = Math.sin(theta);
-        //                 const cosTheta = Math.cos(theta);
-
-        //                 // vertex
-        //                 _helpVector3.x = radius * sinTheta;
-        //                 _helpVector3.y = -v * height + halfHeight;
-        //                 _helpVector3.z = radius * cosTheta;
-        //                 vertices.push(_helpVector3.x, _helpVector3.y, _helpVector3.z);
-
-        //                 // normal
-        //                 _helpVector3.set(sinTheta, slope, cosTheta).normalize();
-        //                 normals.push(_helpVector3.x, _helpVector3.y, _helpVector3.z);
-
-        //                 // uv
-        //                 uvs.push(u, v);
-
-        //                 // save index of vertex in respective row
-        //                 indexRow.push(index++);
-        //             }
-
-        //             // now save vertices of the row in our index array
-        //             indexArray.push(indexRow);
-        //         }
-
-        //         // generate indices
-        //         for (let iX = 0; iX < radialSegments; iX++) {
-        //             for (let iY = 0; iY < heightSegments; iY++) {
-        //                 // we use the index array to access the correct indices
-        //                 const a = indexArray[iY][iX];
-        //                 const b = indexArray[iY + 1][iX];
-        //                 const c = indexArray[iY + 1][iX + 1];
-        //                 const d = indexArray[iY][iX + 1];
-
-        //                 // faces
-        //                 indices.push(
-        //                     a, b, d,
-        //                     b, c, d
-        //                 );
-
-        //                 // update group counter
-        //                 groupCount += 6;
-        //             }
-        //         }
-
-        //         // add a group to the geometry. this will ensure multi material support
-        //         scope.addGroup(groupStart, groupCount, 0);
-        //         // calculate new start value for groups
-        //         groupStart += groupCount;
-        //     }
-
-        //     function generateCap(top) {
-        //         let centerIndexStart = 0, centerIndexEnd = 0;
-        //         const groupCount = 0;
-        //         const radius = (top === true) ? radiusTop : radiusBottom;
-        //         const sign = (top === true) ? 1 : - 1;
-
-        //         // save the index of the first center vertex
-        //         centerIndexStart = index;
-
-        //         // first we generate the center vertex data of the cap.
-        //         // because the geometry needs one set of uvs per face,
-        //         // we must generate a center vertex per face/segment
-        //         for (let iX = 1; iX <= radialSegments; iX++) {
-        //             // vertex
-        //             vertices.push(0, halfHeight * sign, 0);
-
-        //             // normal
-        //             normals.push(0, sign, 0);
-
-        //             // uv
-        //             uvs.push(0.5, 0.5);
-
-        //             // increase index
-        //             index++;
-        //         }
-
-        //         // save the index of the last center vertex
-        //         centerIndexEnd = index;
-
-        //         // now we generate the surrounding vertices, normals and uvs
-        //         for (let iX = 0; iX <= radialSegments; iX++) {
-        //             const u = iX / radialSegments;
-        //             const theta = u * thetaLength + thetaStart;
-        //             const cosTheta = Math.cos(theta);
-        //             const sinTheta = Math.sin(theta);
-
-        //             // vertex
-        //             _helpVector3.x = radius * sinTheta;
-        //             _helpVector3.y = halfHeight * sign;
-        //             _helpVector3.z = radius * cosTheta;
-        //             vertices.push(_helpVector3.x, _helpVector3.y, _helpVector3.z);
-
-        //             // normal
-        //             normals.push(0.0, sign, 0.0);
-
-        //             // uv
-        //             uvs.push(
-        //                 (cosTheta * 0.5) + 0.5,
-        //                 (sinTheta * 0.5 * sign) + 0.5
-        //             );
-
-        //             // increase index
-        //             index++;
-        //         }
-
-        //         // generate indices
-        //         for (let iX = 0; iX < radialSegments; iX++) {
-        //             const c = centerIndexStart + iX;
-        //             const i = centerIndexEnd + iX;
-
-        //             if (top === true) {
-        //                 // face top
-        //                 indices.push(i, i + 1, c);
-
-        //             }
-        //             else {
-        //                 // face bottom
-        //                 indices.push(i + 1, i, c);
-        //             }
-
-        //             groupCount += 3;
-        //         }
-
-        //         // add a group to the geometry. this will ensure multi material support
-        //         scope.addGroup(groupStart, groupCount, top === true ? 1 : 2);
-
-        //         // calculate new start value for groups
-        //         groupStart += groupCount;
-        //     }
-        // }
-
-        public static createCylinderCCW(height: number = 1.0, radius: number = 0.5, segment = 20) {
+            // helper variables
             let index = 0;
-            const normal = new Vector3(0.0, 1.0, 0.0);
-            const mesh = new Mesh(4 * segment + 2, 3 * 4 * segment, _attributesB);
-            const vertices = mesh.getVertices() as Float32Array;
-            const uvs = mesh.getUVs() as Float32Array;
-            const normals = mesh.getNormals() as Float32Array;
-            const indices = mesh.getIndices() as Uint16Array;
+            let groupStart = 0;
+            const halfHeight = height / 2;
+            const indexArray = [] as number[][];
+            const subIndices = [] as number[];
 
-            for (let s = 0; s < 4; s++) {
-                const y = (s < 2 ? 0.5 : -0.5) * height;
+            // generate geometry
+            generateTorso();
 
-                if (s === 3) {
-                    normal.x = 0.0;
-                    normal.y = -1.0;
-                    normal.z = 0.0;
+            if (openEnded === false) {
+                if (radiusTop > 0.0) generateCap(true);
+                if (radiusBottom > 0.0) generateCap(false);
+            }
+
+            // build geometry
+            if (differentFace) {
+                const mesh = Mesh.create(vertices.length / 3, 0);
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
+                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+
+                for (let i = 0; i < subIndices.length; i += 3) {
+                    mesh.addSubMesh(subIndices[1], subIndices[2]);
+                    mesh.setIndices(indices, i, subIndices[0]);
                 }
 
-                for (let i = 0; i < segment; i++) {
-                    const r = i / segment * Math.PI * 2.0;
-                    const x = Math.sin(r);
-                    const z = Math.cos(r);
+                return mesh;
+            }
+            else {
+                const mesh = Mesh.create(vertices.length / 3, indices.length);
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
+                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+                mesh.setIndices(indices);
 
-                    if (s === 1 || s === 2) {
-                        normal.x = x;
-                        normal.y = 0.0;
-                        normal.z = z;
+                return mesh;
+            }
+
+            function generateTorso() {
+                let groupCount = 0;
+
+                // this will be used to calculate the normal
+                const slope = (radiusBottom - radiusTop) / height;
+
+                // generate vertices, normals and uvs
+                for (let iY = 0; iY <= heightSegments; iY++) {
+                    const indexRow = [];
+                    const v = iY / heightSegments;
+                    // calculate the radius of the current row
+                    const radius = v * (radiusBottom - radiusTop) + radiusTop;
+
+                    for (let iX = 0; iX <= radialSegments; iX++) {
+                        const u = iX / radialSegments;
+                        const theta = u * thetaLength + thetaStart;
+                        const sinTheta = Math.sin(theta);
+                        const cosTheta = Math.cos(theta);
+
+                        // vertex
+                        _helpVector3.x = radius * sinTheta;
+                        _helpVector3.y = -v * height + halfHeight;
+                        _helpVector3.z = -radius * cosTheta;
+                        vertices.push(_helpVector3.x + centerOffsetX, _helpVector3.y + centerOffsetY, _helpVector3.z + centerOffsetZ);
+
+                        // normal
+                        _helpVector3.set(sinTheta, slope, cosTheta).normalize();
+                        normals.push(_helpVector3.x, _helpVector3.y, _helpVector3.z);
+
+                        // uv
+                        uvs.push(u, v);
+
+                        // save index of vertex in respective row
+                        indexRow.push(index++);
                     }
 
-                    vertices[index * 3] = x * radius;
-                    vertices[index * 3 + 1] = y;
-                    vertices[index * 3 + 2] = z * radius;
+                    // now save vertices of the row in our index array
+                    indexArray.push(indexRow);
+                }
 
-                    normals[index * 3] = normal.x;
-                    normals[index * 3 + 1] = normal.y;
-                    normals[index * 3 + 2] = normal.z;
+                // generate indices
+                for (let iX = 0; iX < radialSegments; iX++) {
+                    for (let iY = 0; iY < heightSegments; iY++) {
+                        // we use the index array to access the correct indices
+                        const a = indexArray[iY][iX];
+                        const b = indexArray[iY + 1][iX];
+                        const c = indexArray[iY + 1][iX + 1];
+                        const d = indexArray[iY][iX + 1];
 
-                    if (s === 0 || s === 3) {
-                        uvs[index * 2] = x * 0.5 + 0.5;
-                        uvs[index * 2 + 1] = z * 0.5 + 0.5;
+                        // faces
+                        indices.push(
+                            a, b, d,
+                            b, c, d
+                        );
+
+                        // update group counter
+                        groupCount += 6;
                     }
-                    else {
-                        uvs[index * 2] = i / segment;
-                        uvs[index * 2 + 1] = y < 0.0 ? 0.0 : 1.0;
-                    }
+                }
 
+                // add a group to the geometry. this will ensure multi material support
+                subIndices.push(groupStart, groupCount, 0);
+                // calculate new start value for groups
+                groupStart += groupCount;
+            }
+
+            function generateCap(top) {
+                let centerIndexStart = 0, centerIndexEnd = 0;
+                let groupCount = 0;
+                const radius = (top === true) ? radiusTop : radiusBottom;
+                const sign = (top === true) ? 1 : - 1;
+
+                // save the index of the first center vertex
+                centerIndexStart = index;
+
+                // first we generate the center vertex data of the cap.
+                // because the geometry needs one set of uvs per face,
+                // we must generate a center vertex per face/segment
+                for (let iX = 1; iX <= radialSegments; iX++) {
+                    // vertex
+                    vertices.push(0.0, halfHeight * sign, 0.0);
+
+                    // normal
+                    normals.push(0.0, sign, 0.0);
+
+                    // uv
+                    uvs.push(0.5, 0.5);
+
+                    // increase index
                     index++;
                 }
+
+                // save the index of the last center vertex
+                centerIndexEnd = index;
+
+                // now we generate the surrounding vertices, normals and uvs
+                for (let iX = 0; iX <= radialSegments; iX++) {
+                    const u = iX / radialSegments;
+                    const theta = u * thetaLength + thetaStart;
+                    const cosTheta = Math.cos(theta);
+                    const sinTheta = Math.sin(theta);
+
+                    // vertex
+                    _helpVector3.x = radius * sinTheta;
+                    _helpVector3.y = halfHeight * sign;
+                    _helpVector3.z = -radius * cosTheta;
+                    vertices.push(_helpVector3.x + centerOffsetX, _helpVector3.y + centerOffsetY, _helpVector3.z + centerOffsetZ);
+
+                    // normal
+                    normals.push(0.0, sign, 0.0);
+
+                    // uv
+                    uvs.push(
+                        (sinTheta * 0.5 * sign) + 0.5,
+                        (cosTheta * 0.5) + 0.5
+                    );
+
+                    // increase index
+                    index++;
+                }
+
+                // generate indices
+                for (let iX = 0; iX < radialSegments; iX++) {
+                    const c = centerIndexStart + iX;
+                    const i = centerIndexEnd + iX;
+
+                    if (top === true) {
+                        // face top
+                        indices.push(i, i + 1, c);
+
+                    }
+                    else {
+                        // face bottom
+                        indices.push(i + 1, i, c);
+                    }
+
+                    groupCount += 3;
+                }
+
+                // add a group to the geometry. this will ensure multi material support
+                subIndices.push(groupStart, groupCount, top === true ? 1 : 2);
+
+                // calculate new start value for groups
+                groupStart += groupCount;
             }
-
-            // Top
-            vertices[index * 3] = 0.0;
-            vertices[index * 3 + 1] = 0.5 * height;
-            vertices[index * 3 + 2] = 0.0;
-
-            normals[index * 3] = normal.x;
-            normals[index * 3 + 1] = normal.y;
-            normals[index * 3 + 2] = normal.z;
-
-
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
-
-            index = 0;
-            const iTop = 4 * segment;
-            const iBottom = 4 * segment + 1;
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
-            for (let i = 0; i < segment; i++) {
-                // Top
-                indices[index++] = iTop;
-                indices[index++] = i === segment - 1 ? segment * 0 + 0 : segment * 0 + i + 1;
-                indices[index++] = segment * 0 + i + 0;
-
-                // Bottom
-                indices[index++] = iBottom;
-                indices[index++] = segment * 3 + i + 0;
-                indices[index++] = i === segment - 1 ? segment * 3 + 0 : segment * 3 + i + 1;
-
-                // Side
-                const t = segment * 1 + i;
-                const t2 = i === segment - 1 ? segment * 1 + 0 : segment * 1 + i + 1;
-                const b = segment * 2 + i;
-                const b2 = i === segment - 1 ? segment * 2 + 0 : segment * 2 + i + 1;
-                indices[index++] = t;
-                indices[index++] = t2;
-                indices[index++] = b;
-                indices[index++] = t2;
-                indices[index++] = b2;
-                indices[index++] = b;
-            }
-
-            return mesh;
         }
 
         public static createSphereCCW(radius: number = 0.5, widthSegments: number = 24, heightSegments: number = 12) {

@@ -4,6 +4,7 @@ namespace paper {
      */
     export class SceneManager {
         private static _instance: SceneManager | null = null;
+        
         public static getInstance() {
             if (!this._instance) {
                 this._instance = new SceneManager();

@@ -4,6 +4,7 @@ namespace paper {
      */
     export class SystemManager {
         private static _instance: SystemManager | null = null;
+        
         public static getInstance() {
             if (!this._instance) {
                 this._instance = new SystemManager();
@@ -16,27 +17,28 @@ namespace paper {
         }
 
         private readonly _systems: BaseSystem[] = [];
-        private _currentSystem: BaseSystem = null as any;
 
-        private _preRegister(systemClass: { new(): BaseSystem }) {
-            if (this.getSystem(systemClass)) {
+        private _preRegister<T extends BaseSystem>(systemClass: { new(): T }) {
+            const system = this.getSystem(systemClass);
+            if (system) {
                 console.warn("The system has been registered.", egret.getQualifiedClassName(systemClass));
 
-                return true;
+                return system;
             }
 
-            return false;
+            return system;
         }
         /**
          * 注册一个系统到管理器中。
          */
-        public register(systemClass: { new(): BaseSystem }, after: { new(): BaseSystem } | null = paper.UpdateSystem) {
-            if (this._preRegister(systemClass)) {
-                return;
+        public register<T extends BaseSystem>(systemClass: { new(): T }, after: { new(): BaseSystem } | null = paper.UpdateSystem) {
+            let system = this._preRegister(systemClass);
+            if (system) {
+                return system;
             }
 
             let index = -1;
-            const system = BaseSystem.create(systemClass);
+            system = BaseSystem.create(systemClass) as T;
 
             if (after) {
                 for (let i = 0, l = this._systems.length; i < l; ++i) {
@@ -54,17 +56,20 @@ namespace paper {
             }
 
             system.initialize();
+
+            return system;
         }
         /**
          * 注册一个系统到管理器中。
          */
-        public registerBefore(systemClass: { new(): BaseSystem }, before: { new(): BaseSystem } | null = null) {
-            if (this._preRegister(systemClass)) {
-                return;
+        public registerBefore<T extends BaseSystem>(systemClass: { new(): T }, before: { new(): BaseSystem } | null = null) {
+            let system = this._preRegister(systemClass);
+            if (system) {
+                return system;
             }
 
             let index = -1;
-            const system = BaseSystem.create(systemClass);
+            system = BaseSystem.create(systemClass) as T;
 
             if (before) {
                 for (let i = 0, l = this._systems.length; i < l; ++i) {
@@ -84,30 +89,6 @@ namespace paper {
             system.initialize();
         }
         /**
-         * 
-         */
-        public enableSystem(systemClass: { new(): BaseSystem }) {
-            const system = this.getSystem(systemClass);
-            if (system) {
-                system.enabled = true;
-            }
-            else {
-                console.warn("Enable system error.", egret.getQualifiedClassName(systemClass));
-            }
-        }
-        /**
-         * 
-         */
-        public disableSystem(systemClass: { new(): BaseSystem }) {
-            const system = this.getSystem(systemClass);
-            if (system) {
-                system.enabled = false;
-            }
-            else {
-                console.warn("Disable system error.", egret.getQualifiedClassName(systemClass));
-            }
-        }
-        /**
          * 获取一个管理器中指定的系统实例。
          */
         public getSystem<T extends BaseSystem>(systemClass: { new(): T }) {
@@ -120,12 +101,22 @@ namespace paper {
             return null;
         }
         /**
+         * 获取一个管理器中指定的系统实例。
+         */
+        public getOrRegisterSystem<T extends BaseSystem>(systemClass: { new(): T }) {
+            let system = this.getSystem(systemClass);
+            if (!system) {
+                system = this.register(systemClass);
+            }
+
+            return system;
+        }
+        /**
          * @internal
          */
         public update() {
             for (const system of this._systems) {
                 if (system && system.enabled && !system._started) {
-                    this._currentSystem = system;
                     system._started = true;
                     system.onStart && system.onStart();
                 }
@@ -133,14 +124,12 @@ namespace paper {
 
             for (const system of this._systems) {
                 if (system) {
-                    this._currentSystem = system;
                     system.update();
                 }
             }
 
             for (const system of this._systems) {
                 if (system) {
-                    this._currentSystem = system;
                     system.lateUpdate();
                 }
             }
