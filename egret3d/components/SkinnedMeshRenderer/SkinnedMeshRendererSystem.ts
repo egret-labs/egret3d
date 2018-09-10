@@ -49,7 +49,7 @@ namespace egret3d {
                     frustumTest: false,
                     zdist: -1,
                 };
-                material.addDefine("USE_SKINNING").addDefine(`MAX_BONES ${SkinnedMeshRendererSystem.maxBoneCount}`);
+                material.addDefine(ShaderDefines.USE_SKINNING).addDefine(`${ShaderDefines.MAX_BONES} ${SkinnedMeshRendererSystem.maxBoneCount}`);
                 this._drawCalls.drawCalls.push(drawCall);
             }
         }

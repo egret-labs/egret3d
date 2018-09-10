@@ -1,4 +1,9 @@
 namespace paper {
+    export const enum FogMode {
+        NONE,
+        FOG,
+        FOG_EXP2
+    }
     /**
      * 场景类
      */
@@ -72,12 +77,26 @@ namespace paper {
          * 环境光。
          */
         @paper.serializedField
+        @paper.editor.extraProperty(paper.editor.EditType.COLOR)
         public readonly ambientColor: egret3d.Color = egret3d.Color.create(0.21, 0.22, 0.25, 1);
         /**
          * 场景的 lightmap 列表。
          */
         @serializedField
         public readonly lightmaps: egret3d.Texture[] = [];
+
+        @paper.serializedField
+        @paper.editor.extraProperty(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.FogMode) })
+        public fogMode: FogMode = FogMode.NONE;
+        @paper.serializedField
+        @paper.editor.extraProperty(paper.editor.EditType.COLOR)
+        public readonly fogColor: egret3d.Color = egret3d.Color.create(0.5, 0.5, 0.5, 1);
+        @paper.serializedField
+        public fogDensity: number = 0.01;
+        @paper.serializedField
+        public fogNear: number = 1;
+        @paper.serializedField
+        public fogFar: number = 300.0;
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */

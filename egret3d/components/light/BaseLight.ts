@@ -74,7 +74,7 @@ namespace egret3d {
 
         public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
         public readonly matrix: Matrix4 = Matrix4.create();
-        public renderTarget: IRenderTarget;
+        public renderTarget: BaseRenderTarget;
 
         protected _updateMatrix(camera: Camera) {
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1

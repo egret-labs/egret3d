@@ -7,7 +7,9 @@ namespace egret3d {
         public readonly lights: BaseLight[] = [];
 
         private _sortCameras(a: Camera, b: Camera) {
-            return a.order - b.order;
+            let aOrder = a.renderTarget ? a.order : a.order * 1000 + 1;
+            let bOrder = b.renderTarget ? b.order : b.order * 1000 + 1;
+            return aOrder - bOrder;
         }
 
         public updateCamera(gameObjects: ReadonlyArray<paper.GameObject>) {

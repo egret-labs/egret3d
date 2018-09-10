@@ -15,7 +15,9 @@ namespace paper.editor {
         private _cameraObject: paper.GameObject
         private bindMouse: egret3d.MouseDevice;
         private bindKeyboard: egret3d.KeyboardDevice;
-
+        public get onGeoControll() {
+            return this.mainGeo.onGeoControll
+        }
         private mainGeo: GeoContainer;
         private get controller() {
             return this.mainGeo.geo;
@@ -275,7 +277,7 @@ namespace paper.editor {
             }
             funs.depthMask = [true];
             funs.depthFunc = [gltf.DepthFunc.LEQUAL];
-            mat.setVector3v("diffuse", color1);
+            mat.setVector3v(egret3d.ShaderUniformNames.Diffuse, color1);
             mesh.setAttributes(gltf.MeshAttributeType.POSITION, verticesCoord)
             mesh.setIndices(indices);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines

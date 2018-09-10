@@ -63,8 +63,8 @@ namespace paper.editor {
 
                 let color1 = new Float32Array([0.8, 0.8, 0.3])
                 let alpha = new Float32Array([0.3])
-                mat.setFloatv("opacity", alpha)
-                mat.setVector3v("diffuse", color1);
+                mat.setFloatv(egret3d.ShaderUniformNames.Opacity, alpha)
+                mat.setVector3v(egret3d.ShaderUniformNames.Diffuse, color1);
 
                 this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
             }
@@ -76,8 +76,8 @@ namespace paper.editor {
 
                 let color1 = new Float32Array([0.3, 0.3, 0.3])
                 let alpha = new Float32Array([0.2])
-                mat.setFloatv("opacity", alpha)
-                mat.setVector3v("diffuse", color1);
+                mat.setFloatv(egret3d.ShaderUniformNames.Opacity, alpha)
+                mat.setVector3v(egret3d.ShaderUniformNames.Diffuse, color1);
 
                 this.geo.getComponent(egret3d.MeshRenderer).materials = [mat]
 
@@ -112,8 +112,8 @@ namespace paper.editor {
             const funs = technique.states.functions;
             const enables = technique.states.enable;
 
-            mat.setFloatv("opacity", alpha)
-            mat.setVector3v("diffuse", color1);
+            mat.setFloatv(egret3d.ShaderUniformNames.Opacity, alpha)
+            mat.setVector3v(egret3d.ShaderUniformNames.Diffuse, color1);
             mat.setCullFace(false)
             mat.setBlend(gltf.BlendMode.Blend)
             mat.renderQueue = RenderQueue.Overlay

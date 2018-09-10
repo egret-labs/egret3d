@@ -18,10 +18,6 @@ namespace egret3d {
         caclByteLength(): number;
     }
 
-    export interface IRenderTarget extends ITexture {
-        use(): void;
-    }
-
     export abstract class GLTexture extends egret3d.Texture implements ITexture {
         /**
          * @internal
@@ -94,9 +90,9 @@ namespace egret3d {
         uploadImage(img: HTMLImageElement | Uint8Array, mipmap: boolean, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false) {
             this._mipmap = mipmap;
             const webgl = WebGLCapabilities.webgl;
+            webgl.bindTexture(webgl.TEXTURE_2D, this._texture);
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
-            webgl.bindTexture(webgl.TEXTURE_2D, this._texture);
             let formatGL = webgl.RGBA;
             if (this._format == TextureFormatEnum.RGB) {
                 formatGL = webgl.RGB;
@@ -161,7 +157,6 @@ namespace egret3d {
         }
 
         dispose() {
-
             if (!super.dispose()) {
                 return false;
             }
@@ -191,116 +186,6 @@ namespace egret3d {
                 this._reader = new TextureReader(this._texture, this._width, this._height, redOnly);
 
             return this._reader;
-        }
-    }
-
-    export abstract class RenderTarget implements IRenderTarget {
-        /**
-         * @internal
-         */
-        public _texture: WebGLTexture;
-        protected _width: number;
-        protected _height: number;
-        protected _fbo: WebGLFramebuffer;
-        protected _renderbuffer: WebGLRenderbuffer;
-
-        public constructor(width: number, height: number, depth: boolean = false, stencil: boolean = false) {
-            const webgl = WebGLCapabilities.webgl;
-            this._width = width;
-            this._height = height;
-            this._texture = webgl.createTexture()!;
-            this._fbo = webgl.createFramebuffer()!;
-            (this._fbo as any)["width"] = width;
-            (this._fbo as any)["height"] = height;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
-            if (depth || stencil) {
-                this._renderbuffer = webgl.createRenderbuffer()!;
-                webgl.bindRenderbuffer(webgl.RENDERBUFFER, this._renderbuffer);
-                if (depth && stencil) {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_STENCIL, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
-                } else if (depth) {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_COMPONENT16, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
-                } else {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.STENCIL_INDEX8, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.STENCIL_ATTACHMENT, webgl.RENDERBUFFER, this._renderbuffer);
-                }
-                webgl.bindRenderbuffer(webgl.RENDERBUFFER, null);
-            }
-        }
-
-        use() { }
-
-        dispose() {
-            if (this._texture != null) {
-                const webgl = WebGLCapabilities.webgl;
-                webgl.deleteFramebuffer(this._renderbuffer);
-                webgl.deleteTexture(this._texture);
-                this._renderbuffer = null as any;
-                this._texture = null as any;
-            }
-        }
-
-        caclByteLength() {
-            return this.width * this.height * 4;
-        }
-
-        public get texture() {
-            return this._texture;
-        }
-
-        public get width() {
-            return this._width;
-        }
-
-        public get height() {
-            return this._height;
-        }
-    }
-
-    export class GlRenderTarget extends RenderTarget {
-        constructor(width: number, height: number, depth: boolean = false, stencil: boolean = false) {
-            super(width, height, depth, stencil);
-
-            const webgl = WebGLCapabilities.webgl;
-            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
-            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
-
-            webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, width, height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
-
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, this.texture, 0);
-        }
-
-        use() {
-            const webgl = WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
-        }
-    }
-
-    export class GlRenderTargetCube extends RenderTarget {
-        public activeCubeFace: number = 0; // PX 0, NX 1, PY 2, NY 3, PZ 4, NZ 5
-
-        constructor(width: number, height: number, depth: boolean = false, stencil: boolean = false) {
-            super(width, height, depth, stencil);
-
-            const webgl = WebGLCapabilities.webgl;
-            webgl.bindTexture(webgl.TEXTURE_CUBE_MAP, this.texture);
-            webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-            webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
-
-            for (var i = 0; i < 6; i++) {
-                webgl.texImage2D(webgl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, webgl.RGBA, width, height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
-            }
-
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + this.activeCubeFace, this.texture, 0);
-        }
-
-        use() {
-            const webgl = WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + this.activeCubeFace, this.texture, 0);
         }
     }
 

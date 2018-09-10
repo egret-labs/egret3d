@@ -17,7 +17,7 @@ namespace egret3d {
     function getWebGLShader(type: number, gl: WebGLRenderingContext, info: gltf.Shader, defines: string): WebGLShader {
         let shader = gl.createShader(type);
         //
-        gl.shaderSource(shader, WebGLCapabilities.commonDefines + defines + parseIncludes(info.uri!));
+        gl.shaderSource(shader, defines + parseIncludes(info.uri!));
         gl.compileShader(shader);
         let parameter = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
         if (!parameter) {
@@ -58,7 +58,7 @@ namespace egret3d {
             const uniformData = gl.getActiveUniform(webglProgram, i)!;
             const tUniform = technique.uniforms[uniformData.name];
             if (!tUniform) {
-                console.warn("缺少Uniform定义：" + uniformData.name);
+                console.error("缺少Uniform定义：" + uniformData.name);
             }
             const location = gl.getUniformLocation(webglProgram, uniformData!.name)!;
 
@@ -244,20 +244,20 @@ namespace egret3d {
         private _cacheProgram: GlProgram | null = null;
         private _cacheState: gltf.States | null = null;
 
-        private _getWebGLProgram(gl: WebGLRenderingContext, vs: gltf.Shader, fs: gltf.Shader, defines: string): WebGLProgram {
+        private _getWebGLProgram(gl: WebGLRenderingContext, vs: gltf.Shader, fs: gltf.Shader, customDefines: string): WebGLProgram {
             let program = gl.createProgram();
 
-            let key = vs.name + defines;
+            let key = vs.name + customDefines;
             let vertexShader = this._vsShaders[key];
             if (!vertexShader) {
-                vertexShader = getWebGLShader(gl.VERTEX_SHADER, gl, vs, defines);
+                vertexShader = getWebGLShader(gl.VERTEX_SHADER, gl, vs, WebGLCapabilities.commonDefines + customDefines + ShaderChunk.common_vert_def);
                 this._vsShaders[key] = vertexShader;
             }
 
-            key = fs.name + defines;
+            key = fs.name + customDefines;
             let fragmentShader = this._fsShaders[key];
             if (!fragmentShader) {
-                fragmentShader = getWebGLShader(gl.FRAGMENT_SHADER, gl, fs, defines);
+                fragmentShader = getWebGLShader(gl.FRAGMENT_SHADER, gl, fs, WebGLCapabilities.commonDefines + customDefines + ShaderChunk.common_frag_def);
                 this._fsShaders[key] = fragmentShader;
             }
 
@@ -354,7 +354,7 @@ namespace egret3d {
          * @param target render target
          * 
          */
-        public targetAndViewport(viewport: Rectangle, target: IRenderTarget | null) {
+        public targetAndViewport(viewport: Rectangle, target: BaseRenderTarget | null) {
             const webgl = WebGLCapabilities.webgl;
 
             let w: number;

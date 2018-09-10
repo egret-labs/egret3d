@@ -60,8 +60,19 @@ namespace paper {
             }
         };
     }
+
+    // executionOrder: number;
+    // /**
+    //  * 通过装饰器标记脚本组件的生命周期优先级。（默认：0）
+    //  */
+    // export function executionOrder(order: number = 0) {
+    //     return function (componentClass: ComponentClass<Behaviour>) {
+    //         registerClass(componentClass);
+    //         componentClass.executionOrder = order;
+    //     }
+    // }
     /**
-     * 通过装饰器标记组件是否在编辑模式拥有生命周期。
+     * 通过装饰器标记脚本组件是否在编辑模式也拥有生命周期。
      */
     export function executeInEditMode(componentClass: ComponentClass<Behaviour>) {
         registerClass(componentClass);

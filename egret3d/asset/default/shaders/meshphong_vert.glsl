@@ -9,7 +9,6 @@ varying vec3 vViewPosition;
 #endif
 
 #include <common>
-#include <common2>
 #include <uv_pars_vertex>
 #include <uv2_pars_vertex>
 #include <displacementmap_pars_vertex>

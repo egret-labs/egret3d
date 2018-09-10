@@ -775,6 +775,11 @@ declare namespace gltf {
         _REFERENCEPOSITION = "_REFERENCEPOSITION",
         _NEARDICTANCE = "_NEARDICTANCE",
         _FARDISTANCE = "_FARDISTANCE",
+        //
+        _FOG_COLOR = "_FOG_COLOR",
+        _FOG_DENSITY = "_FOG_DENSITY",
+        _FOG_NEAR = "_FOG_NEAR",
+        _FOG_FAR = "_FOG_FAR",
     }
 
     export const enum AccessorType {

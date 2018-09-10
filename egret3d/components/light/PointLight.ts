@@ -24,7 +24,7 @@ namespace egret3d {
         @paper.editor.property(paper.editor.EditType.NUMBER)
         public distance: number = 0.0;
 
-        public renderTarget: IRenderTarget = new GlRenderTarget(1024, 1024, true); // TODO
+        public renderTarget: BaseRenderTarget = new GlRenderTarget("PointLight",1024, 1024, true); // TODO
 
         public update(camera: Camera, faceIndex: number) {
             const position = this.gameObject.transform.getPosition();

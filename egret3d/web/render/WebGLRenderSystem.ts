@@ -269,6 +269,18 @@ namespace egret3d {
                     case gltf.UniformSemanticType._FARDISTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraFar);
                         break;
+                    case gltf.UniformSemanticType._FOG_COLOR:
+                        webgl.uniform3fv(location, context.fogColor);
+                        break;
+                    case gltf.UniformSemanticType._FOG_DENSITY:
+                        webgl.uniform1f(location, context.fogDensity);
+                        break;
+                    case gltf.UniformSemanticType._FOG_NEAR:
+                        webgl.uniform1f(location, context.fogNear);
+                        break;
+                    case gltf.UniformSemanticType._FOG_FAR:
+                        webgl.uniform1f(location, context.fogFar);
+                        break;
 
                     default:
                         console.warn("不识别的Uniform语义:" + uniform.semantic);
@@ -436,12 +448,15 @@ namespace egret3d {
                     }
 
                     if (camera.postQueues.length === 0) {
-                        if (renderEnabled) {
-                            renderState.targetAndViewport(camera.viewport, camera.renderTarget);
-                            renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
-                        }
-
+                        renderState.targetAndViewport(camera.viewport, camera.renderTarget);
+                        renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                         this._renderCamera(camera, renderEnabled);
+
+                        if (camera.renderTarget) {
+                            if (camera.renderTarget.generateMipmap()) {
+                                this._renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
+                            }
+                        }
                     }
                     else {
                         for (const item of camera.postQueues) {
