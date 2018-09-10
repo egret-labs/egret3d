@@ -14,6 +14,10 @@ namespace egret3d {
         /**
          * 
          */
+        public static LINEDASHED_COLOR_OVERLAY: Material;
+        /**
+         * 
+         */
         public static MISSING: Material;
         /**
          * @internal
@@ -42,7 +46,7 @@ namespace egret3d {
             DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", DefaultShaders.LINEDASHED)
                 .addDefine(ShaderDefines.USE_COLOR);
             DefaultMaterials.MISSING = this._createMaterial("builtin/missing.mat.json", DefaultShaders.MESH_BASIC)
-                .setVector3v(ShaderUniformNames.Diffuse, new Float32Array([1.0, 0.0, 1.0]));
+                .setColor(ShaderUniformNames.Diffuse, Color.create(1.0, 0.0, 1.0).release());
             DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/shadow_depth.mat.json", DefaultShaders.DEPTH)
                 .addDefine(ShaderDefines.DEPTH_PACKING_3201);
             DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", DefaultShaders.DISTANCE_RGBA);

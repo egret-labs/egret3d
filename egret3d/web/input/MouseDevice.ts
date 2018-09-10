@@ -1,5 +1,4 @@
 namespace egret3d {
-
     /**
      * mouse input
      * @version paper 1.0
@@ -14,15 +13,15 @@ namespace egret3d {
      */
     export class MouseDevice extends EventDispatcher {
 
-        private _offsetX:number = 0;
-        private _offsetY:number = 0;
-        private _scalerX:number = 1;
-        private _scalerY:number = 1;
+        private _offsetX: number = 0;
+        private _offsetY: number = 0;
+        private _scalerX: number = 1;
+        private _scalerY: number = 1;
         private _rotated: boolean = false;
         /**
          *  
          */
-        public updateOffsetAndScale(offsetX:number, offsetY:number, scalerX:number, scalerY:number, rotated:boolean) {
+        public updateOffsetAndScale(offsetX: number, offsetY: number, scalerX: number, scalerY: number, rotated: boolean) {
             this._offsetX = offsetX;
             this._offsetY = offsetY;
             this._scalerX = scalerX;
@@ -32,14 +31,16 @@ namespace egret3d {
         /**
          *  
          */
-        public convertPosition(e:MouseEvent, out:Vector2) {
+        public convertPosition(value: Readonly<IVector2>, out: IVector2) {
+            const { x, y } = value;
+
             if (this._rotated) {
-                out.y = (window.innerWidth - e.clientX + this._offsetX) * this._scalerX;
-                out.x = (e.clientY - this._offsetY) * this._scalerY;
+                out.y = (window.innerWidth - x + this._offsetX) * this._scalerX;
+                out.x = (y - this._offsetY) * this._scalerY;
             }
             else {
-                out.x = (e.clientX - this._offsetX) * this._scalerX;
-                out.y = (e.clientY - this._offsetY) * this._scalerY;
+                out.x = (x - this._offsetX) * this._scalerX;
+                out.y = (y - this._offsetY) * this._scalerY;
             }
         }
 
@@ -55,7 +56,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public position:Vector2 = new Vector2();
+        public position: Vector2 = new Vector2();
 
         /**
          * mouse wheel value
@@ -69,19 +70,19 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public wheel:number = 0;
+        public wheel: number = 0;
 
-        private _buttons:boolean[] = [false, false, false];
+        private _buttons: boolean[] = [false, false, false];
 
-        private _lastbuttons:boolean[] = [false, false, false];
+        private _lastbuttons: boolean[] = [false, false, false];
 
         private _element: HTMLElement | null = null;
 
-        private _upHandler:EventListener = this._handleUp.bind(this);
-        private _moveHandler:EventListener = this._handleMove.bind(this);
-        private _downHandler:EventListener = this._handleDown.bind(this);
-        private _wheelHandler:EventListener = this._handleWheel.bind(this);
-        private _contextMenuHandler:EventListener = function(event) {event.preventDefault()};
+        private _upHandler: EventListener = this._handleUp.bind(this);
+        private _moveHandler: EventListener = this._handleMove.bind(this);
+        private _downHandler: EventListener = this._handleDown.bind(this);
+        private _wheelHandler: EventListener = this._handleWheel.bind(this);
+        private _contextMenuHandler: EventListener = function (event) { event.preventDefault(); };
 
         /**
          *  
@@ -104,7 +105,7 @@ namespace egret3d {
          * @language zh_CN
          */
         public disableContextMenu() {
-            if(!this._element) return;
+            if (!this._element) return;
             this._element.addEventListener("contextmenu", this._contextMenuHandler);
         }
 
@@ -121,7 +122,7 @@ namespace egret3d {
          * @language zh_CN
          */
         public enableContextMenu() {
-            if(!this._element) return;
+            if (!this._element) return;
             this._element.removeEventListener("contextmenu", this._contextMenuHandler);
         }
 
@@ -138,7 +139,7 @@ namespace egret3d {
         }
 
         private detach() {
-            if(!this._element) return;
+            if (!this._element) return;
             this._element.removeEventListener("mouseup", this._upHandler, false);
             this._element.removeEventListener("mousemove", this._moveHandler, false);
             this._element.removeEventListener("mousedown", this._downHandler, false);
@@ -173,7 +174,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public isPressed(button:number):boolean {
+        public isPressed(button: number): boolean {
             return this._buttons[button];
         }
 
@@ -191,7 +192,7 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public wasPressed(button:number):boolean {
+        public wasPressed(button: number): boolean {
             return (this._buttons[button] && !this._lastbuttons[button]);
         }
 
@@ -209,35 +210,38 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public wasReleased(button:number):boolean {
+        public wasReleased(button: number): boolean {
             return (!this._buttons[button] && this._lastbuttons[button]);
         }
 
-        private _handleUp(event:MouseEvent) {
+        private _handleUp(event: MouseEvent) {
             // disable released button
             this._buttons[event.button] = false;
-            this.convertPosition(event, this.position);
+            this.position.set(event.clientX, event.clientY);
+            this.convertPosition(this.position, this.position);
 
-            this.dispatchEvent({type: "mouseup", x: this.position.x, y: this.position.y, identifier: event.button});
+            this.dispatchEvent({ type: "mouseup", x: this.position.x, y: this.position.y, identifier: event.button });
         }
 
-        private _handleMove(event:MouseEvent) {
-            this.convertPosition(event, this.position);
+        private _handleMove(event: MouseEvent) {
+            this.position.set(event.clientX, event.clientY);
+            this.convertPosition(this.position, this.position);
 
-            if(this._buttons[event.button]) {
-                this.dispatchEvent({type: "mousemove", x: this.position.x, y: this.position.y, identifier: event.button});
+            if (this._buttons[event.button]) {
+                this.dispatchEvent({ type: "mousemove", x: this.position.x, y: this.position.y, identifier: event.button });
             }
         }
 
-        private _handleDown(event:MouseEvent) {
+        private _handleDown(event: MouseEvent) {
             // Store which button has affected
             this._buttons[event.button] = true;
-            this.convertPosition(event, this.position);
+            this.position.set(event.clientX, event.clientY);
+            this.convertPosition(this.position, this.position);
 
-            this.dispatchEvent({type: "mousedown", x: this.position.x, y: this.position.y, identifier: event.button});
+            this.dispatchEvent({ type: "mousedown", x: this.position.x, y: this.position.y, identifier: event.button });
         }
 
-        private _handleWheel(event:MouseWheelEvent) {
+        private _handleWheel(event: MouseWheelEvent) {
             // FF uses 'detail' and returns a value in 'no. of lines' to scroll
             // WebKit and Opera use 'wheelDelta', WebKit goes in multiples of 120 per wheel notch
             if (event.detail) {

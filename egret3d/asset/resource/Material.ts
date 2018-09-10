@@ -27,7 +27,7 @@ namespace egret3d {
         public _version: number = 0;
         private _cacheDefines: string = "";
         private readonly _defines: Array<string> = [];
-        private readonly _textures: Texture[] = [];//TODO
+        private readonly _textures: Texture[] = []; // TODO
         /**
          * @internal
          */
@@ -429,8 +429,17 @@ namespace egret3d {
 
             return this;
         }
-
-        setTexture(id: string, value: egret3d.Texture) {
+        /**
+         * 
+         */
+        public getTexture(id: string) {
+            let uniform = this._glTFTechnique.uniforms[id];
+            return uniform ? uniform.value || null : null;
+        }
+        /**
+         * 
+         */
+        public setTexture(id: string, value: egret3d.Texture | null) {
             value = value || egret3d.DefaultTextures.WHITE;
             //兼容老键值
             if (id === "_MainTex" && this._glTFTechnique.uniforms[ShaderUniformNames.Map]) {
@@ -461,6 +470,14 @@ namespace egret3d {
             if (value) {
                 this._textures.push(value);
             }
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public setColor(id: string, value: Readonly<Color>) {
+            this.setVector3(id, Vector3.create(value.r, value.g, value.b).release());
 
             return this;
         }
@@ -578,6 +595,13 @@ namespace egret3d {
                 functions.depthMask = [false];
             }
 
+            return this;
+        }
+        /**
+         * 
+         */
+        public setRenderQueue(value: number) {
+            this.renderQueue = value;
             return this;
         }
         /**

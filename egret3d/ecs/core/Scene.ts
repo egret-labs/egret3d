@@ -48,6 +48,21 @@ namespace paper {
 
             return null;
         }
+
+        public static get globalScene() {
+            return Application.sceneManager.globalScene;
+        }
+
+        public static get editorScene() {
+            return Application.sceneManager.editorScene;
+        }
+
+        public static get activeScene() {
+            return Application.sceneManager.activeScene;
+        }
+        public static set activeScene(value: Readonly<Scene>) {
+            Application.sceneManager.activeScene = value;
+        }
         /**
          * lightmap 表现的光照强度。
          */
@@ -59,10 +74,29 @@ namespace paper {
         @serializedField
         public readonly name: string = "";
         /**
+         * 环境光。
+         */
+        @paper.serializedField
+        @paper.editor.extraProperty(paper.editor.EditType.COLOR)
+        public readonly ambientColor: egret3d.Color = egret3d.Color.create(0.21, 0.22, 0.25, 1);
+        /**
          * 场景的 lightmap 列表。
          */
         @serializedField
         public readonly lightmaps: egret3d.Texture[] = [];
+
+        @paper.serializedField
+        @paper.editor.extraProperty(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.FogMode) })
+        public fogMode: FogMode = FogMode.NONE;
+        @paper.serializedField
+        @paper.editor.extraProperty(paper.editor.EditType.COLOR)
+        public readonly fogColor: egret3d.Color = egret3d.Color.create(0.5, 0.5, 0.5, 1);
+        @paper.serializedField
+        public fogDensity: number = 0.01;
+        @paper.serializedField
+        public fogNear: number = 1;
+        @paper.serializedField
+        public fogFar: number = 300.0;
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
@@ -74,22 +108,10 @@ namespace paper {
          */
         public readonly _gameObjects: GameObject[] = [];
         /**
-         * 环境光。
+         * 请使用 `paper.Scene.createEmpty()` 创建实例。
+         * @see paper.Scene.createEmpty()
+         * @see paper.Scene.create()
          */
-        @paper.serializedField
-        public readonly ambientColor: egret3d.Color = egret3d.Color.create(0.21, 0.22, 0.25, 1);
-
-        @paper.serializedField
-        @paper.editor.extraProperty(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.FogMode) })
-        public fogMode: FogMode = FogMode.NONE;
-        @paper.serializedField
-        public readonly fogColor: egret3d.Color = egret3d.Color.create(0.5, 0.5, 0.5, 1);
-        @paper.serializedField
-        public fogDensity: number = 0.01;
-        @paper.serializedField
-        public fogNear: number = 1;
-        @paper.serializedField
-        public fogFar: number = 300;
         private constructor(name: string) {
             super();
 
@@ -120,6 +142,16 @@ namespace paper {
         /**
          * 
          */
+        public uninitialize() {
+            this.lightmapIntensity = 1.0;
+            // this.name = "";
+            this.ambientColor.set(0.21, 0.22, 0.25, 1);
+            this.lightmaps.length = 0;
+            // this.extras
+        }
+        /**
+         * 销毁场景。
+         */
         public destroy() {
             if (!Application.sceneManager._removeScene(this)) {
                 return;
@@ -134,8 +166,7 @@ namespace paper {
 
                 gameObject.destroy();
             }
-
-            this.lightmaps.length = 0;
+            //
             this._gameObjects.length = 0;
         }
         /**

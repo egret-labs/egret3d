@@ -13,27 +13,27 @@ namespace egret3d {
      * @language
      */
     export class SkinnedMeshRenderer extends MeshRenderer {
+        /**
+         * 
+         */
+        public boneMatrices: Float32Array | null = null;
+
         private readonly _bones: (Transform | null)[] = [];
         private _rootBone: Transform | null = null;
         private _inverseBindMatrices: Float32Array | null = null;
         /**
          * @internal
          */
-        public _boneMatrices: Float32Array | null = null;
-        /**
-         * @internal
-         */
         public _retargetBoneNames: string[] | null = null;
         @paper.serializedField
         private _mesh: Mesh | null = null;
-        private _rawVertices: Float32Array;
         /**
          * @internal
          */
         public _update() {
             const bones = this._bones;
             const inverseBindMatrices = this._inverseBindMatrices!;
-            const boneMatrices = this._boneMatrices!;
+            const boneMatrices = this.boneMatrices!;
 
             for (let i = 0, l = bones.length; i < l; ++i) {
                 const offset = i * 16;
@@ -84,7 +84,7 @@ namespace egret3d {
 
             this._bones.length = 0;
             this._rootBone = null;
-            this._boneMatrices = null;
+            this.boneMatrices = null;
             this._inverseBindMatrices = null;
 
             if (this._mesh) {
@@ -113,7 +113,7 @@ namespace egret3d {
                 }
 
                 this._inverseBindMatrices = this._mesh.createTypeArrayFromAccessor(this._mesh.getAccessor(skin.inverseBindMatrices!));
-                this._boneMatrices = new Float32Array(this._bones.length * 16);
+                this.boneMatrices = new Float32Array(this._bones.length * 16);
                 // this._update(); TODO
             }
         }
@@ -128,7 +128,7 @@ namespace egret3d {
 
             this._bones.length = 0;
             this._rootBone = null;
-            this._boneMatrices = null;
+            this.boneMatrices = null;
             this._inverseBindMatrices = null;
             this._retargetBoneNames = null;
             this._mesh = null;

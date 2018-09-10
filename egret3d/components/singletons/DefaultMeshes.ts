@@ -1,5 +1,5 @@
 namespace egret3d {
-
+    const _helpVector3 = Vector3.create();
     const _attributesB: gltf.MeshAttributeType[] = [
         gltf.MeshAttributeType.POSITION,
         gltf.MeshAttributeType.NORMAL,
@@ -9,305 +9,55 @@ namespace egret3d {
      * 
      */
     export class DefaultMeshes extends paper.SingletonComponent {
-        public static AXISES: Mesh;
         public static QUAD: Mesh;
         public static QUAD_PARTICLE: Mesh;
         public static PLANE: Mesh;
         public static CIRCLE_LINE: Mesh;
         public static CUBE: Mesh;
         public static PYRAMID: Mesh;
+        public static CONE: Mesh;
         public static CYLINDER: Mesh;
         public static SPHERE: Mesh;
 
+        public static LINE: Mesh;
+        public static AXISES: Mesh;
+        public static CUBE_WIREFRAMED: Mesh;
+        public static PYRAMID_WIREFRAMED: Mesh;
+
         public initialize() {
             super.initialize();
-
-            { // AXISES.
-                const mesh = new Mesh(6, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/axises.mesh.bin";
-                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
-                paper.Asset.register(mesh);
-                DefaultMeshes.AXISES = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
-                    0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
-                    0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
-                ]);
-            }
+            // TODO 颜色切线，球体，更多类型。
 
             { // QUAD.
-                const mesh = new Mesh(4, 6);
+                const mesh = DefaultMeshes.createPlane();
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/quad.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    -0.5, 0.5, 0,
-                    -0.5, -0.5, 0,
-                    0.5, 0.5, 0,
-                    0.5, -0.5, 0,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, [
-                    0, 0, 1,
-                    0, 0, 1,
-                    0, 0, 1,
-                    0, 0, 1,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.TANGENT, [
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, [
-                    0, 0,
-                    0, 1,
-                    1, 0,
-                    1, 1,
-                ]);
-                mesh.setIndices([
-                    0, 1, 2, 2, 1, 3,
-                ]);
             }
 
             { // QUAD_PARTICLE.
-                const mesh = new Mesh(4, 6);
+                const mesh = DefaultMeshes.createPlane(1.0, 1.0, -0.5, 0.0);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/quad_particle.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD_PARTICLE = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    0, 0.5, 0,
-                    0, -0.5, 0,
-                    1, 0.5, 0,
-                    1, -0.5, 0,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, [
-                    0, 0, 1,
-                    0, 0, 1,
-                    0, 0, 1,
-                    0, 0, 1,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.TANGENT, [
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, [
-                    0, 0,
-                    0, 1,
-                    1, 0,
-                    1, 1,
-                ]);
-                mesh.setIndices([
-                    0, 1, 2, 2, 1, 3,
-                ]);
             }
 
             { // PLANE.
-                const mesh = new Mesh(4, 6);
+                const mesh = DefaultMeshes.createPlane(10.0, 10.0, -0.5, 0.5);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/plane.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PLANE = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    -5, 0, 5,
-                    -5, 0, -5,
-                    5, 0, 5,
-                    5, 0, -5,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, [
-                    0, 1, 0,
-                    0, 1, 0,
-                    0, 1, 0,
-                    0, 1, 0,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.TANGENT, [
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, [
-                    0, 0,
-                    0, 1,
-                    1, 0,
-                    1, 1,
-                ]);
-                mesh.setIndices([
-                    0, 1, 2, 2, 1, 3,
-                ]);
             }
 
             { // CUBE.
-                const mesh = new Mesh(24, 36);
+                const mesh = DefaultMeshes.createCube();
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/cube.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CUBE = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    -0.5, -0.5, -0.5,
-                    -0.5, -0.5, 0.5,
-                    0.5, -0.5, -0.5,
-                    0.5, -0.5, 0.5,
-                    -0.5, 0.5, 0.5,
-                    -0.5, 0.5, -0.5,
-                    0.5, 0.5, 0.5,
-                    0.5, 0.5, -0.5,
-                    -0.5, -0.5, 0.5,
-                    -0.5, 0.5, 0.5,
-                    0.5, -0.5, 0.5,
-                    0.5, 0.5, 0.5,
-                    -0.5, 0.5, -0.5,
-                    -0.5, -0.5, -0.5,
-                    0.5, 0.5, -0.5,
-                    0.5, -0.5, -0.5,
-                    0.5, -0.5, -0.5,
-                    0.5, -0.5, 0.5,
-                    0.5, 0.5, -0.5,
-                    0.5, 0.5, 0.5,
-                    -0.5, -0.5, 0.5,
-                    -0.5, -0.5, -0.5,
-                    -0.5, 0.5, 0.5,
-                    -0.5, 0.5, -0.5,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, [
-                    0, -1, 0,
-                    0, -1, 0,
-                    0, -1, 0,
-                    0, -1, 0,
-                    0, 1, 0,
-                    0, 1, 0,
-                    0, 1, 0,
-                    0, 1, 0,
-                    0, 0, 1,
-                    0, 0, 1,
-                    0, 0, 1,
-                    0, 0, 1,
-                    0, 0, -1,
-                    0, 0, -1,
-                    0, 0, -1,
-                    0, 0, -1,
-                    1, 0, 0,
-                    1, 0, 0,
-                    1, 0, 0,
-                    1, 0, 0,
-                    -1, 0, 0,
-                    -1, 0, 0,
-                    -1, 0, 0,
-                    -1, 0, 0,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.TANGENT, [
-                    -1, 0, 0, 1,
-                    -1, 0, 0, 1,
-                    -1, 0, 0, 1,
-                    -1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    -1, 0, 0, 1,
-                    -1, 0, 0, 1,
-                    -1, 0, 0, 1,
-                    -1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    1, 0, 0, 1,
-                    0, 0, 1, 1,
-                    0, 0, 1, 1,
-                    0, 0, 1, 1,
-                    0, 0, 1, 1,
-                    0, 0, -1, 1,
-                    0, 0, -1, 1,
-                    0, 0, -1, 1,
-                    0, 0, -1, 1,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, [
-                    0, 0,
-                    0, 1,
-                    1, 0,
-                    1, 1,
-                    0, 0,
-                    0, 1,
-                    1, 0,
-                    1, 1,
-                    1, 1,
-                    1, 0,
-                    0, 1,
-                    0, 0,
-                    0, 0,
-                    0, 1,
-                    1, 0,
-                    1, 1,
-                    0, 1,
-                    1, 1,
-                    0, 0,
-                    1, 0,
-                    0, 1,
-                    1, 1,
-                    0, 0,
-                    1, 0,
-                ]);
-                mesh.setIndices([
-                    0, 1, 2, 2, 1, 3,
-                    4, 5, 6, 6, 5, 7,
-                    8, 9, 10, 10, 9, 11,
-                    12, 13, 14, 14, 13, 15,
-                    16, 17, 18, 18, 17, 19,
-                    20, 21, 22, 22, 21, 23
-                ]);
             }
 
             { // PYRAMID.
@@ -317,22 +67,22 @@ namespace egret3d {
                 paper.Asset.register(mesh);
                 DefaultMeshes.PYRAMID = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    -0.5, -1, -0.5,
-                    0, 1, 0,
-                    0.5, -1, -0.5,
-                    0.5, -1, -0.5,
-                    0, 1, 0,
-                    0.5, -1, 0.5,
-                    0.5, -1, 0.5,
-                    0, 1, 0,
-                    -0.5, -1, 0.5,
-                    -0.5, -1, 0.5,
-                    0, 1, 0,
-                    -0.5, -1, -0.5,
-                    -0.5, -1, -0.5,
-                    0.5, -1, -0.5,
-                    0.5, -1, 0.5,
-                    -0.5, -1, 0.5,
+                    -0.5, 0.0, -0.5,
+                    0.0, 1.0, 0.0,
+                    0.5, 0.0, -0.5,
+                    0.5, 0.0, -0.5,
+                    0.0, 1.0, 0.0,
+                    0.5, 0.0, 0.5,
+                    0.5, 0.0, 0.5,
+                    0.0, 1.0, 0.0,
+                    -0.5, 0.0, 0.5,
+                    -0.5, 0.0, 0.5,
+                    0.0, 1.0, 0.0,
+                    -0.5, 0.0, -0.5,
+                    -0.5, 0.0, -0.5,
+                    0.5, 0.0, -0.5,
+                    0.5, 0.0, 0.5,
+                    -0.5, 0.0, 0.5,
                 ]);
                 mesh.setAttributes(gltf.MeshAttributeType.NORMAL, [
                     0, 0, 0,
@@ -351,24 +101,6 @@ namespace egret3d {
                     0, -1, 0,
                     0, -1, 0,
                     0, -1, 0,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.TANGENT, [
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
-                    0, 0, 0, 1,
                 ]);
                 mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
                     1, 1, 1, 1,
@@ -413,6 +145,22 @@ namespace egret3d {
                 ]);
             }
 
+            { // CONE.
+                const mesh = DefaultMeshes.createCylinder(0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 16, 1);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/pyramid.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.CONE = mesh;
+            }
+
+            { // CYLINDER.
+                const mesh = DefaultMeshes.createCylinder();
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/cylinder.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.CYLINDER = mesh;
+            }
+
             { // SPHERE.
                 const mesh = DefaultMeshes.createSphereCCW();
                 mesh._isBuiltin = true;
@@ -421,110 +169,591 @@ namespace egret3d {
                 DefaultMeshes.SPHERE = mesh;
             }
 
-            { // CYLINDER.
-                const mesh = DefaultMeshes.createCylinderCCW();
+            { // LINE.
+                const mesh = new Mesh(2, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/cylinder.mesh.bin";
+                mesh.name = "builtin/axises.mesh.bin";
+                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
-                DefaultMeshes.CYLINDER = mesh;
+                DefaultMeshes.LINE = mesh;
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                ]);
+                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                ]);
+            }
+
+            { // AXISES.
+                const mesh = new Mesh(6, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/axises.mesh.bin";
+                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+                paper.Asset.register(mesh);
+                DefaultMeshes.AXISES = mesh;
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+                ]);
+                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                    1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
+                    0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
+                    0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
+                ]);
+            }
+
+            { // CUBE_WIREFRAMED.
+                const mesh = new Mesh(24, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/cube_wireframed.mesh.bin";
+                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+                paper.Asset.register(mesh);
+                DefaultMeshes.CUBE_WIREFRAMED = mesh;
+                //
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                    // Z-
+                    -0.5, 0.5, -0.5,
+
+                    0.5, 0.5, -0.5,
+                    0.5, 0.5, -0.5,
+
+                    0.5, -0.5, -0.5,
+                    0.5, -0.5, -0.5,
+
+                    -0.5, -0.5, -0.5,
+                    -0.5, -0.5, -0.5,
+
+                    -0.5, 0.5, -0.5,
+                    //
+                    0.5, 0.5, -0.5, 0.5, 0.5, 0.5,
+                    //
+                    0.5, -0.5, -0.5, 0.5, -0.5, 0.5,
+                    //
+                    -0.5, -0.5, -0.5, -0.5, -0.5, 0.5,
+                    //
+                    -0.5, 0.5, -0.5, -0.5, 0.5, 0.5,
+
+                    // Z+
+                    0.5, 0.5, 0.5,
+
+                    0.5, -0.5, 0.5,
+                    0.5, -0.5, 0.5,
+
+                    -0.5, -0.5, 0.5,
+                    -0.5, -0.5, 0.5,
+
+                    -0.5, 0.5, 0.5,
+                    -0.5, 0.5, 0.5,
+
+                    0.5, 0.5, 0.5,
+                ]);
+                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                ]);
+            }
+
+            { // PYRAMID_WIREFRAMED.
+                const mesh = new Mesh(24, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/pyramid_wireframed.mesh.bin";
+                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+                paper.Asset.register(mesh);
+                DefaultMeshes.PYRAMID_WIREFRAMED = mesh;
+                //
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                    -0.5, 0.0, -0.5,
+                    0.5, 0.0, -0.5,
+                    0.5, 0.0, -0.5,
+                    0.5, 0.0, 0.5,
+                    0.5, 0.0, 0.5,
+                    -0.5, 0.0, 0.5,
+                    -0.5, 0.0, 0.5,
+                    -0.5, 0.0, -0.5,
+
+                    -0.5, 0.0, -0.5,
+                    0.0, 1.0, 0.0,
+
+                    0.5, 0.0, -0.5,
+                    0.0, 1.0, 0.0,
+
+                    0.5, 0.0, 0.5,
+                    0.0, 1.0, 0.0,
+
+                    -0.5, 0.0, 0.5,
+                    0.0, 1.0, 0.0,
+                ]);
+                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                ]);
             }
         }
+        /**
+         * 创建带网格的实体。
+         */
+        public static createObject(mesh: Mesh, name?: string, tag?: string, scene?: paper.Scene) {
+            const gameObject = paper.GameObject.create(name, tag, scene);
 
-        public static createCylinderCCW(height: number = 1.0, radius: number = 0.5, segment = 20) {
-            let index = 0;
-            const normal = new Vector3(0.0, 1.0, 0.0);
-            const mesh = new Mesh(4 * segment + 2, 3 * 4 * segment, _attributesB);
-            const vertices = mesh.getVertices() as Float32Array;
-            const uvs = mesh.getUVs() as Float32Array;
-            const normals = mesh.getNormals() as Float32Array;
-            const indices = mesh.getIndices() as Uint16Array;
+            if (mesh === this.AXISES) {
+                const axisX = this.createObject(this.LINE, "axisX", tag, scene);
+                const axisY = this.createObject(this.LINE, "axisY", tag, scene);
+                const axisZ = this.createObject(this.LINE, "axisZ", tag, scene);
+                const arrowX = this.createObject(this.PYRAMID, "arrowX", tag, scene);
+                const arrowY = this.createObject(this.PYRAMID, "arrowY", tag, scene);
+                const arrowZ = this.createObject(this.PYRAMID, "arrowZ", tag, scene);
 
-            for (let s = 0; s < 4; s++) {
-                const y = (s < 2 ? 0.5 : -0.5) * height;
+                axisX.transform.parent = gameObject.transform;
+                axisY.transform.parent = gameObject.transform;
+                axisZ.transform.parent = gameObject.transform;
+                arrowX.transform.parent = axisX.transform;
+                arrowY.transform.parent = axisY.transform;
+                arrowZ.transform.parent = axisZ.transform;
 
-                if (s === 3) {
-                    normal.x = 0.0;
-                    normal.y = -1.0;
-                    normal.z = 0.0;
+                axisY.transform.setLocalEuler(0.0, 0.0, Math.PI * 0.5);
+                axisZ.transform.setLocalEuler(0.0, -Math.PI * 0.5, 0.0);
+                arrowX.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
+                arrowY.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
+                arrowZ.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
+
+                arrowX.transform.setLocalPosition(Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
+                arrowY.transform.setLocalPosition(Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
+                arrowZ.transform.setLocalPosition(Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
+
+                (axisX.renderer as MeshRenderer).material = (axisX.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (axisY.renderer as MeshRenderer).material = (axisY.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (axisZ.renderer as MeshRenderer).material = (axisZ.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (arrowX.renderer as MeshRenderer).material = (arrowX.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (arrowY.renderer as MeshRenderer).material = (arrowY.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (arrowZ.renderer as MeshRenderer).material = (arrowZ.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+            }
+            else {
+                const meshFilter = gameObject.addComponent(MeshFilter);
+                const renderer = gameObject.addComponent(MeshRenderer);
+                meshFilter.mesh = mesh;
+
+                switch (mesh) {
+                    case this.LINE:
+                    case this.CUBE_WIREFRAMED:
+                    case this.PYRAMID_WIREFRAMED:
+                        renderer.material = DefaultMaterials.LINEDASHED_COLOR;
+                        break;
                 }
 
-                for (let i = 0; i < segment; i++) {
-                    const r = i / segment * Math.PI * 2.0;
-                    const x = Math.sin(r);
-                    const z = Math.cos(r);
+            }
 
-                    if (s === 1 || s === 2) {
-                        normal.x = x;
-                        normal.y = 0.0;
-                        normal.z = z;
-                    }
+            return gameObject;
+        }
+        /**
+         * 创建平面网格。
+         */
+        public static createPlane(
+            width: number = 1.0, height: number = 1.0,
+            centerOffsetX: number = 0.0, centerOffsetY: number = 0.0,
+            widthSegments: number = 1, heightSegments: number = 1,
+        ) {
+            const widthHalf = width / 2;
+            const heightHalf = height / 2;
 
-                    vertices[index * 3] = x * radius;
-                    vertices[index * 3 + 1] = y;
-                    vertices[index * 3 + 2] = z * radius;
+            const gridX1 = widthSegments + 1;
+            const gridY1 = heightSegments + 1;
 
-                    normals[index * 3] = normal.x;
-                    normals[index * 3 + 1] = normal.y;
-                    normals[index * 3 + 2] = normal.z;
+            const segmentWidth = width / widthSegments;
+            const segmentHeight = height / heightSegments;
 
-                    if (s === 0 || s === 3) {
-                        uvs[index * 2] = x * 0.5 + 0.5;
-                        uvs[index * 2 + 1] = z * 0.5 + 0.5;
-                    }
-                    else {
-                        uvs[index * 2] = i / segment;
-                        uvs[index * 2 + 1] = y < 0.0 ? 0.0 : 1.0;
-                    }
+            // buffers
+            const indices = [] as number[];
+            const vertices = [] as number[];
+            const normals = [] as number[];
+            const uvs = [] as number[];
 
-                    index++;
+            // generate vertices, normals and uvs
+            for (let iy = 0; iy < gridY1; iy++) {
+                const y = iy * segmentHeight - heightHalf;
+
+                for (let ix = 0; ix < gridX1; ix++) {
+                    const x = ix * segmentWidth - widthHalf;
+
+                    vertices.push(centerOffsetX + x, centerOffsetY - y, 0.0);
+                    normals.push(0.0, 0.0, 1.0);
+                    uvs.push(
+                        ix / widthSegments,
+                        iy / heightSegments
+                    );
                 }
             }
 
-            // Top
-            vertices[index * 3] = 0.0;
-            vertices[index * 3 + 1] = 0.5 * height;
-            vertices[index * 3 + 2] = 0.0;
+            // indices
+            for (let iy = 0; iy < heightSegments; iy++) {
+                for (let ix = 0; ix < widthSegments; ix++) {
+                    const a = ix + gridX1 * iy;
+                    const b = ix + gridX1 * (iy + 1);
+                    const c = (ix + 1) + gridX1 * (iy + 1);
+                    const d = (ix + 1) + gridX1 * iy;
 
-            normals[index * 3] = normal.x;
-            normals[index * 3 + 1] = normal.y;
-            normals[index * 3 + 2] = normal.z;
-
-
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
-
-            index = 0;
-            const iTop = 4 * segment;
-            const iBottom = 4 * segment + 1;
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
-            for (let i = 0; i < segment; i++) {
-                // Top
-                indices[index++] = iTop;
-                indices[index++] = i === segment - 1 ? segment * 0 + 0 : segment * 0 + i + 1;
-                indices[index++] = segment * 0 + i + 0;
-
-                // Bottom
-                indices[index++] = iBottom;
-                indices[index++] = segment * 3 + i + 0;
-                indices[index++] = i === segment - 1 ? segment * 3 + 0 : segment * 3 + i + 1;
-
-                // Side
-                const t = segment * 1 + i;
-                const t2 = i === segment - 1 ? segment * 1 + 0 : segment * 1 + i + 1;
-                const b = segment * 2 + i;
-                const b2 = i === segment - 1 ? segment * 2 + 0 : segment * 2 + i + 1;
-                indices[index++] = t;
-                indices[index++] = t2;
-                indices[index++] = b;
-                indices[index++] = t2;
-                indices[index++] = b2;
-                indices[index++] = b;
+                    // faces
+                    indices.push(
+                        a, b, d,
+                        b, c, d
+                    );
+                }
             }
+
+            const mesh = Mesh.create(vertices.length / 3, indices.length);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
+            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+            mesh.setIndices(indices);
 
             return mesh;
+        }
+        /**
+         * 创建立方体网格。
+         */
+        public static createCube(
+            width: number = 1.0, height: number = 1.0, depth: number = 1.0,
+            centerOffsetX: number = 0.0, centerOffsetY: number = 0.0, centerOffsetZ: number = 0.0,
+            widthSegments: number = 1, heightSegments: number = 1, depthSegments: number = 1,
+            differentFace: boolean = false
+        ) {
+            // helper variables
+            let meshVertexCount = 0;
+            // buffers
+            const indices = [] as number[];
+            const vertices = [] as number[];
+            const normals = [] as number[];
+            const uvs = [] as number[];
+            // build each side of the box geometry
+            buildPlane('z', 'y', 'x', -1, -1, depth, height, -width, depthSegments, heightSegments); // px
+            buildPlane('z', 'y', 'x', 1, -1, depth, height, width, depthSegments, heightSegments); // nx
+            buildPlane('x', 'z', 'y', 1, 1, width, depth, -height, widthSegments, depthSegments); // py
+            buildPlane('x', 'z', 'y', 1, -1, width, depth, height, widthSegments, depthSegments); // ny
+            buildPlane('x', 'y', 'z', 1, -1, width, height, -depth, widthSegments, heightSegments); // pz
+            buildPlane('x', 'y', 'z', -1, -1, width, height, depth, widthSegments, heightSegments); // nz
+
+            // build geometry
+            if (differentFace) {
+                const faceIndexCount = indices.length / 6;
+                const mesh = Mesh.create(vertices.length / 3, 0);
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
+                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+
+                for (let i = 0; i < 6; ++i) {
+                    mesh.addSubMesh(faceIndexCount, i);
+                    mesh.setIndices(indices, i, faceIndexCount * i);
+                }
+
+                return mesh;
+            }
+            else {
+                const mesh = Mesh.create(vertices.length / 3, indices.length);
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
+                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+                mesh.setIndices(indices);
+
+                return mesh;
+            }
+
+            function buildPlane(u: string, v: string, w: string, udir: number, vdir: number, width: number, height: number, depth: number, gridX: number, gridY: number) {
+                const segmentWidth = width / gridX;
+                const segmentHeight = height / gridY;
+
+                const widthHalf = width / 2;
+                const heightHalf = height / 2;
+                const depthHalf = depth / 2;
+
+                const gridX1 = gridX + 1;
+                const gridY1 = gridY + 1;
+
+                let vertexCount = 0;
+
+                // generate vertices, normals and uvs
+                for (let iy = 0; iy < gridY1; iy++) {
+                    const y = iy * segmentHeight - heightHalf;
+                    for (let ix = 0; ix < gridX1; ix++) {
+                        const x = ix * segmentWidth - widthHalf;
+
+                        // set values to correct vector component
+                        _helpVector3[u] = x * udir;
+                        _helpVector3[v] = y * vdir;
+                        _helpVector3[w] = depthHalf;
+
+                        // now apply vector to vertex buffer
+                        vertices.push(_helpVector3.x + centerOffsetX, _helpVector3.y + centerOffsetY, _helpVector3.z + centerOffsetZ);
+
+                        // set values to correct vector component
+                        _helpVector3[u] = 0.0;
+                        _helpVector3[v] = 0.0;
+                        _helpVector3[w] = depth > 0.0 ? 1.0 : - 1.0;
+
+                        // now apply vector to normal buffer
+                        normals.push(_helpVector3.x, _helpVector3.y, _helpVector3.z);
+
+                        // uvs
+                        uvs.push(ix / gridX);
+                        uvs.push(iy / gridY);
+
+                        // counters
+                        vertexCount += 1;
+                    }
+                }
+
+                // indices
+                // 1. you need three indices to draw a single face
+                // 2. a single segment consists of two faces
+                // 3. so we need to generate six (2*3) indices per segment
+                for (let iy = 0; iy < gridY; iy++) {
+                    for (let ix = 0; ix < gridX; ix++) {
+                        const a = meshVertexCount + ix + gridX1 * iy;
+                        const b = meshVertexCount + ix + gridX1 * (iy + 1);
+                        const c = meshVertexCount + (ix + 1) + gridX1 * (iy + 1);
+                        const d = meshVertexCount + (ix + 1) + gridX1 * iy;
+
+                        // faces
+                        indices.push(
+                            a, b, d,
+                            b, c, d
+                        );
+                    }
+                }
+
+                // update total number of vertices
+                meshVertexCount += vertexCount;
+            }
+        }
+        /**
+         * 创建圆柱体网格。
+         */
+        public static createCylinder(
+            radiusTop: number = 0.5, radiusBottom: number = 0.5, height: number = 1.0,
+            centerOffsetX: number = 0.0, centerOffsetY: number = 0.0, centerOffsetZ: number = 0.0,
+            radialSegments: number = 16, heightSegments = 1,
+            openEnded: boolean = false, thetaStart: number = 0.0, thetaLength: number = Math.PI * 2.0,
+            differentFace: boolean = false
+        ) {
+            // buffers
+            const indices = [] as number[];
+            const vertices = [] as number[];
+            const normals = [] as number[];
+            const uvs = [] as number[];
+
+            // helper variables
+            let index = 0;
+            let groupStart = 0;
+            const halfHeight = height / 2;
+            const indexArray = [] as number[][];
+            const subIndices = [] as number[];
+
+            // generate geometry
+            generateTorso();
+
+            if (openEnded === false) {
+                if (radiusTop > 0.0) generateCap(true);
+                if (radiusBottom > 0.0) generateCap(false);
+            }
+
+            // build geometry
+            if (differentFace) {
+                const mesh = Mesh.create(vertices.length / 3, 0);
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
+                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+
+                for (let i = 0; i < subIndices.length; i += 3) {
+                    mesh.addSubMesh(subIndices[1], subIndices[2]);
+                    mesh.setIndices(indices, i, subIndices[0]);
+                }
+
+                return mesh;
+            }
+            else {
+                const mesh = Mesh.create(vertices.length / 3, indices.length);
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
+                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+                mesh.setIndices(indices);
+
+                return mesh;
+            }
+
+            function generateTorso() {
+                let groupCount = 0;
+
+                // this will be used to calculate the normal
+                const slope = (radiusBottom - radiusTop) / height;
+
+                // generate vertices, normals and uvs
+                for (let iY = 0; iY <= heightSegments; iY++) {
+                    const indexRow = [];
+                    const v = iY / heightSegments;
+                    // calculate the radius of the current row
+                    const radius = v * (radiusBottom - radiusTop) + radiusTop;
+
+                    for (let iX = 0; iX <= radialSegments; iX++) {
+                        const u = iX / radialSegments;
+                        const theta = u * thetaLength + thetaStart;
+                        const sinTheta = Math.sin(theta);
+                        const cosTheta = Math.cos(theta);
+
+                        // vertex
+                        _helpVector3.x = radius * sinTheta;
+                        _helpVector3.y = -v * height + halfHeight;
+                        _helpVector3.z = -radius * cosTheta;
+                        vertices.push(_helpVector3.x + centerOffsetX, _helpVector3.y + centerOffsetY, _helpVector3.z + centerOffsetZ);
+
+                        // normal
+                        _helpVector3.set(sinTheta, slope, cosTheta).normalize();
+                        normals.push(_helpVector3.x, _helpVector3.y, _helpVector3.z);
+
+                        // uv
+                        uvs.push(u, v);
+
+                        // save index of vertex in respective row
+                        indexRow.push(index++);
+                    }
+
+                    // now save vertices of the row in our index array
+                    indexArray.push(indexRow);
+                }
+
+                // generate indices
+                for (let iX = 0; iX < radialSegments; iX++) {
+                    for (let iY = 0; iY < heightSegments; iY++) {
+                        // we use the index array to access the correct indices
+                        const a = indexArray[iY][iX];
+                        const b = indexArray[iY + 1][iX];
+                        const c = indexArray[iY + 1][iX + 1];
+                        const d = indexArray[iY][iX + 1];
+
+                        // faces
+                        indices.push(
+                            a, b, d,
+                            b, c, d
+                        );
+
+                        // update group counter
+                        groupCount += 6;
+                    }
+                }
+
+                // add a group to the geometry. this will ensure multi material support
+                subIndices.push(groupStart, groupCount, 0);
+                // calculate new start value for groups
+                groupStart += groupCount;
+            }
+
+            function generateCap(top) {
+                let centerIndexStart = 0, centerIndexEnd = 0;
+                let groupCount = 0;
+                const radius = (top === true) ? radiusTop : radiusBottom;
+                const sign = (top === true) ? 1 : - 1;
+
+                // save the index of the first center vertex
+                centerIndexStart = index;
+
+                // first we generate the center vertex data of the cap.
+                // because the geometry needs one set of uvs per face,
+                // we must generate a center vertex per face/segment
+                for (let iX = 1; iX <= radialSegments; iX++) {
+                    // vertex
+                    vertices.push(0.0, halfHeight * sign, 0.0);
+
+                    // normal
+                    normals.push(0.0, sign, 0.0);
+
+                    // uv
+                    uvs.push(0.5, 0.5);
+
+                    // increase index
+                    index++;
+                }
+
+                // save the index of the last center vertex
+                centerIndexEnd = index;
+
+                // now we generate the surrounding vertices, normals and uvs
+                for (let iX = 0; iX <= radialSegments; iX++) {
+                    const u = iX / radialSegments;
+                    const theta = u * thetaLength + thetaStart;
+                    const cosTheta = Math.cos(theta);
+                    const sinTheta = Math.sin(theta);
+
+                    // vertex
+                    _helpVector3.x = radius * sinTheta;
+                    _helpVector3.y = halfHeight * sign;
+                    _helpVector3.z = -radius * cosTheta;
+                    vertices.push(_helpVector3.x + centerOffsetX, _helpVector3.y + centerOffsetY, _helpVector3.z + centerOffsetZ);
+
+                    // normal
+                    normals.push(0.0, sign, 0.0);
+
+                    // uv
+                    uvs.push(
+                        (sinTheta * 0.5 * sign) + 0.5,
+                        (cosTheta * 0.5) + 0.5
+                    );
+
+                    // increase index
+                    index++;
+                }
+
+                // generate indices
+                for (let iX = 0; iX < radialSegments; iX++) {
+                    const c = centerIndexStart + iX;
+                    const i = centerIndexEnd + iX;
+
+                    if (top === true) {
+                        // face top
+                        indices.push(i, i + 1, c);
+
+                    }
+                    else {
+                        // face bottom
+                        indices.push(i + 1, i, c);
+                    }
+
+                    groupCount += 3;
+                }
+
+                // add a group to the geometry. this will ensure multi material support
+                subIndices.push(groupStart, groupCount, top === true ? 1 : 2);
+
+                // calculate new start value for groups
+                groupStart += groupCount;
+            }
         }
 
         public static createSphereCCW(radius: number = 0.5, widthSegments: number = 24, heightSegments: number = 12) {

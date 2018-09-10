@@ -34,14 +34,9 @@ namespace egret3d {
         public onUpdate(deltaTime: number) {
             const cameras = this._camerasAndLights.cameras;
             if (cameras.length > 0) {
-                const camerasScene = paper.Application.sceneManager.camerasScene || paper.Application.sceneManager.activeScene;
                 this._camerasAndLights.sortCameras();
 
                 for (const component of cameras) {
-                    if (component.gameObject.scene !== camerasScene) {
-                        continue;
-                    }
-
                     component.update(deltaTime);
                 }
             }

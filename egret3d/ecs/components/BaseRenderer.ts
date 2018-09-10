@@ -18,6 +18,10 @@ namespace paper {
         /**
          * @internal
          */
+        public _aabbDirty: boolean = true;
+        /**
+         * @internal
+         */
         public _boundingSphereDirty: boolean = true;
         @serializedField
         protected _receiveShadows: boolean = false;

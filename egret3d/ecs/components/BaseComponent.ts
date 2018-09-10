@@ -16,6 +16,7 @@ namespace paper {
          */
         public static requireComponents: ComponentClass<BaseComponent>[] | null = null;
         /**
+         * // TODO 基类标记，以阻止注册基类。
          * @internal
          */
         public static readonly __isSingleton: boolean = false;
@@ -122,10 +123,10 @@ namespace paper {
                 return;
             }
 
-            if (!value && this.constructor === egret3d.Transform) {
-                console.warn("Cannot disable transform compnent.");
-                return;
-            }
+            // if (!value && this.constructor === egret3d.Transform) { TODO
+            //     console.warn("Cannot disable transform compnent.");
+            //     return;
+            // }
 
             const prevEnabled = this.isActiveAndEnabled;
             this._enabled = value;

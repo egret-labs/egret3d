@@ -8,7 +8,6 @@ namespace egret3d {
     const _attributeNames: gltf.MeshAttributeType[] = [
         gltf.MeshAttributeType.POSITION,
         gltf.MeshAttributeType.NORMAL,
-        gltf.MeshAttributeType.TANGENT,
         gltf.MeshAttributeType.COLOR_0,
         gltf.MeshAttributeType.TEXCOORD_0,
     ];
@@ -21,6 +20,7 @@ namespace egret3d {
         protected readonly _attributeNames: string[] = [];
         protected readonly _customAttributeTypes: { [key: string]: gltf.AccessorType } = {};
         protected _glTFMesh: gltf.Mesh | null = null;
+        private _helpVertices: Float32Array | null = null;
         /**
          * 请使用 `egret3d.Mesh.create()` 创建实例。
          * @see egret3d.Mesh.create()
@@ -96,7 +96,7 @@ namespace egret3d {
             }
 
             this._glTFMesh = this.config.meshes![0];
-            this._vertexCount = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION!).count;
+            this._vertexCount = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION || 0).count;
 
             for (const k in this._glTFMesh.primitives[0].attributes) {
                 this._attributeNames.push(k);
@@ -131,20 +131,64 @@ namespace egret3d {
         /**
          * TODO
          */
-        public raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix4>) {
-            _helpMatrix.inverse(worldMatrix);
-            _helpRay.copy(ray);
-            _helpRay.origin.applyMatrix(_helpMatrix);
-            _helpRay.direction.applyDirection(_helpMatrix).normalize();
-
+        public raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix4>, boneMatrices: Float32Array | null = null) {
             let subMeshIndex = 0;
             const p0 = _helpVector3A;
             const p1 = _helpVector3B;
             const p2 = _helpVector3C;
             const vertices = this.getVertices()!;
+            const joints = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array : null;
+            const weights = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)! as Float32Array : null;
             let pickInfo: PickInfo | null = null; // TODO
 
+            _helpMatrix.inverse(worldMatrix);
+            _helpRay.copy(ray);
+            _helpRay.origin.applyMatrix(_helpMatrix);
+            _helpRay.direction.applyDirection(_helpMatrix).normalize();
+
             for (const primitive of this._glTFMesh!.primitives) {
+                const indices = primitive.indices !== undefined ? this.getIndices(subMeshIndex++)! : null;
+                let castRay = _helpRay;
+                let castVertices = vertices;
+
+                if (boneMatrices) {
+                    if (!this._helpVertices) { // TODO clean
+                        this._helpVertices = new Float32Array(vertices.length);
+                    }
+
+                    castRay = ray;
+                    castVertices = this._helpVertices;
+
+                    if (indices) {
+                        for (const index of <any>indices as number[]) {
+                            const vertexIndex = index * 3;
+                            const jointIndex = index * 3;
+                            p0.fromArray(vertices, vertexIndex);
+                            p1
+                                .set(0.0, 0.0, 0.0)
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 0] * 16), p0).multiplyScalar(weights[jointIndex + 0]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 1] * 16), p0).multiplyScalar(weights[jointIndex + 1]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 2] * 16), p0).multiplyScalar(weights[jointIndex + 2]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 3] * 16), p0).multiplyScalar(weights[jointIndex + 3]))
+                                .toArray(castVertices, vertexIndex);
+                        }
+                    }
+                    else {
+                        let index = 0;
+                        for (let i = 0, l = vertices.length; i < l; i += 3) {
+                            const jointIndex = (index++) * 3;
+                            p0.fromArray(vertices, i);
+                            p1
+                                .set(0.0, 0.0, 0.0)
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 0] * 16), p0).multiplyScalar(weights[jointIndex + 0]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 1] * 16), p0).multiplyScalar(weights[jointIndex + 1]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 2] * 16), p0).multiplyScalar(weights[jointIndex + 2]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 3] * 16), p0).multiplyScalar(weights[jointIndex + 3]))
+                                .toArray(castVertices, i);
+                        }
+                    }
+                }
+
                 switch (primitive.mode) { // TODO
                     case gltf.MeshPrimitiveMode.Points:
                         break;
@@ -166,13 +210,13 @@ namespace egret3d {
 
                     case gltf.MeshPrimitiveMode.Triangles:
                     default:
-                        if (primitive.indices === undefined) {
-                            for (let i = 0, l = vertices.length; i < l; i += 9) { //
-                                p0.fromArray(vertices, i);
-                                p0.fromArray(vertices, i + 3);
-                                p0.fromArray(vertices, i + 6);
+                        if (indices) {
+                            for (let i = 0, l = indices.length; i < l; i += 3) { //
+                                p0.fromArray(castVertices, indices[i] * 3);
+                                p1.fromArray(castVertices, indices[i + 1] * 3);
+                                p2.fromArray(castVertices, indices[i + 2] * 3);
 
-                                const result = _helpRay.intersectTriangle(p0, p1, p2);
+                                const result = castRay.intersectTriangle(p0, p1, p2);
                                 if (result) {
                                     if (result.distance < 0) {
                                         continue;
@@ -187,14 +231,12 @@ namespace egret3d {
                             }
                         }
                         else {
-                            const indices = this.getIndices(subMeshIndex++)!;
+                            for (let i = 0, l = castVertices.length; i < l; i += 9) { //
+                                p0.fromArray(castVertices, i);
+                                p0.fromArray(castVertices, i + 3);
+                                p0.fromArray(castVertices, i + 6);
 
-                            for (let i = 0, l = indices.length; i < l; i += 3) { //
-                                p0.fromArray(vertices, indices[i] * 3);
-                                p1.fromArray(vertices, indices[i + 1] * 3);
-                                p2.fromArray(vertices, indices[i + 2] * 3);
-
-                                const result = _helpRay.intersectTriangle(p0, p1, p2);
+                                const result = castRay.intersectTriangle(p0, p1, p2);
                                 if (result) {
                                     if (result.distance < 0) {
                                         continue;
@@ -210,6 +252,8 @@ namespace egret3d {
                         }
                         break;
                 }
+
+                subMeshIndex++;
             }
 
             return pickInfo;
@@ -318,11 +362,11 @@ namespace egret3d {
         /**
          * 
          */
-        public setIndices(value: Readonly<ArrayLike<number>>, subMeshIndex: number = 0) {
+        public setIndices(value: Readonly<ArrayLike<number>>, subMeshIndex: number = 0, offset: number = 0) {
             const target = this.getIndices(subMeshIndex);
             if (target) {
                 for (let i = 0, l = Math.min(value.length, target.length); i < l; i++) {
-                    target[i] = value[i];
+                    target[i] = value[offset + i];
                 }
             }
 

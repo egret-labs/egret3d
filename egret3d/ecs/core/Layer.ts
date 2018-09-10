@@ -101,9 +101,13 @@ namespace paper {
         UserLayer8 = 0x000200,
         UserLayer9 = 0x000400,
         UserLayer10 = 0x000800,
-        UserLayer11 = 0x000f00
+        UserLayer11 = 0x000f00,
     }
-
+    /**
+     * 
+     * @param cullingMask 
+     * @param layer 
+     */
     export function layerTest(cullingMask: CullingMask, layer: Layer) {
         return (cullingMask & layer) !== 0;
     }

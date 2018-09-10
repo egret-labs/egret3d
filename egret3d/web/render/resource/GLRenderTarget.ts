@@ -64,7 +64,7 @@ namespace egret3d {
             if (!super.dispose()) {
                 return false;
             }
-            if (this._texture != null) {
+            if (this._texture !== null) {
                 const webgl = WebGLCapabilities.webgl;
                 webgl.deleteFramebuffer(this._renderbuffer);
                 webgl.deleteTexture(this._texture);

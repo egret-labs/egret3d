@@ -1,5 +1,7 @@
 namespace RES.processor {
 
+    // export let loadByURL = false;
+
     function promisify(loader: egret.ImageLoader | egret.HttpRequest | egret.Sound, resource: RES.ResourceInfo): Promise<any> {
 
         return new Promise((resolve, reject) => {
@@ -240,12 +242,20 @@ namespace RES.processor {
     };
 
     function loadSubAssets(data: paper.ISerializedData, resource: RES.ResourceInfo) {
+
         return Promise.all(data.assets.map(((item) => {
             const r = (RES.host.resourceConfig as any)["getResource"](item);
             if (r) {
                 return host.load(r);
             }
             else {
+                // if (loadByURL) {
+                //     let root = resource.root;
+                //     if (!root) { // TODO RES 应支持 getbyurl 的 root 设置。
+                //         root = "resource";
+                //     }
+                // }
+
                 console.error("加载不存在的资源", item);
                 return Promise.resolve();
             }

@@ -155,7 +155,7 @@ namespace egret3d {
             return config;
         }
         /**
-         * @internal
+         * 
          */
         public static parseFromBinary(array: Uint32Array) {
             let index = 0;

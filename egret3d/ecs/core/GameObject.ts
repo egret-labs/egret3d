@@ -132,25 +132,9 @@ namespace paper {
             }
 
             GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).gameObjects.push(this);
-
-            this.isStatic = false;
-            this.hideFlags = HideFlags.None;
-            this.layer = Layer.Default;
-            this.name = "";
-            this.tag = "";
-            this.transform = null!;
-            this.renderer = null;
-
-            if (this.extras) { // Editor.
-                this.extras = {};
-            }
-
-            this._activeSelf = true;
-            this._activeInHierarchy = true;
-            this._activeDirty = true;
-
+            //
             this._components.length = 0;
-            this._cachedComponents.length = 0;
+            // set isDestroyed.
             this._scene = null;
         }
 
@@ -218,30 +202,6 @@ namespace paper {
             }
         }
 
-        private _getComponentsInChildren(componentClass: ComponentClass<BaseComponent>, child: GameObject, components: BaseComponent[], isExtends: boolean = false) {
-            for (const component of child._components) {
-                if (!component) {
-                    continue;
-                }
-
-                if (component.constructor === GroupComponent) {
-                    const groupComponent = component as GroupComponent;
-                    if (isExtends ? groupComponent.components[0] instanceof componentClass : groupComponent.componentClass === componentClass) {
-                        for (const componentInGroup of groupComponent.components) {
-                            components.push(componentInGroup);
-                        }
-                    }
-                }
-                else if (isExtends ? component instanceof componentClass : component.constructor === componentClass) {
-                    components.push(component);
-                }
-            }
-
-            for (const childOfChild of child.transform.children) {
-                this._getComponentsInChildren(componentClass, childOfChild.gameObject, components, isExtends);
-            }
-        }
-
         private _getComponent(componentClass: ComponentClass<BaseComponent>) {
             const componentIndex = componentClass.__index;
             return componentIndex < 0 ? null : this._components[componentIndex];
@@ -278,7 +238,30 @@ namespace paper {
             }
         }
         /**
-         * 
+         * 实体被销毁后，内部卸载。
+         */
+        public uninitialize() {
+            this.isStatic = false;
+            this.hideFlags = HideFlags.None;
+            this.layer = Layer.Default;
+            this.name = "";
+            this.tag = "";
+            this.transform = null!;
+            this.renderer = null;
+
+            if (this.extras) { // Editor.
+                this.extras = {};
+            }
+
+            this._activeSelf = true;
+            this._activeInHierarchy = true;
+            this._activeDirty = true;
+
+            this._cachedComponents.length = 0;
+            this._scene = null;
+        }
+        /**
+         * 销毁实体。
          */
         public destroy() {
             if (this.isDestroyed) {
@@ -606,11 +589,48 @@ namespace paper {
             return result;
         }
         /**
+         * 
+         */
+        public getComponentInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
+            let component = this.getComponent(componentClass, isExtends);
+            if (!component) {
+                for (const child of this.transform.children) {
+                    component = child.gameObject.getComponentInChildren(componentClass, isExtends);
+                    if (component) {
+                        break;
+                    }
+                }
+            }
+
+            return component;
+        }
+        /**
          * 搜索自己和子节点中所有特定类型的组件
          */
-        public getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
-            const components: T[] = [];
-            this._getComponentsInChildren(componentClass, this, components, isExtends);
+        public getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false, components: T[] | null = null) {
+            components = components || [];
+
+            for (const component of this._components) {
+                if (!component) {
+                    continue;
+                }
+
+                if (component.constructor === GroupComponent) {
+                    const groupComponent = component as GroupComponent;
+                    if (isExtends ? groupComponent.components[0] instanceof componentClass : groupComponent.componentClass === componentClass) {
+                        for (const componentInGroup of groupComponent.components) {
+                            components.push(componentInGroup as T);
+                        }
+                    }
+                }
+                else if (isExtends ? component instanceof componentClass : component.constructor === componentClass) {
+                    components.push(component as T);
+                }
+            }
+
+            for (const child of this.transform.children) {
+                child.gameObject.getComponentsInChildren(componentClass, isExtends, components);
+            }
 
             return components;
         }

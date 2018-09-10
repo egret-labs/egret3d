@@ -19,9 +19,9 @@ namespace paper.editor {
         set?: string,
         /**下拉项*/
         listItems?: { label: string, value: any }[]
-    }
+    };
     /**编辑类型 */
-    export enum EditType {
+    export const enum EditType {
         /**数字输入 */
         NUMBER,
         /**文本输入 */
