@@ -45,7 +45,7 @@ namespace egret3d {
             }
 
             { // PLANE.
-                const mesh = DefaultMeshes.createPlane(10.0, 10.0, -0.5, 0.5);
+                const mesh = DefaultMeshes.createPlane(10.0, 10.0);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/plane.mesh.bin";
                 paper.Asset.register(mesh);
