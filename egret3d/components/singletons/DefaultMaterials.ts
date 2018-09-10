@@ -50,7 +50,7 @@ namespace egret3d {
             DefaultMaterials.LINEDASHED_COLOR_OVERLAY.renderQueue = paper.RenderQueue.Overlay;
 
             DefaultMaterials.MISSING = this._createMaterial("builtin/missing.mat.json", DefaultShaders.MESH_BASIC)
-                .setVector3v("diffuse", new Float32Array([1.0, 0.0, 1.0]));
+                .setColor("diffuse", Color.create(1.0, 0.0, 1.0).release());
             DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/shadow_depth.mat.json", DefaultShaders.DEPTH)
                 .addDefine("DEPTH_PACKING 3201");
             DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", DefaultShaders.DISTANCE_RGBA);

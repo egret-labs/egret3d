@@ -3,6 +3,9 @@ namespace egret3d {
     export class Color implements paper.IRelease<Color>, paper.ISerializable {
         public static readonly WHITE: Readonly<Color> = new Color().set(1.0, 1.0, 1.0, 1.0);
         public static readonly BLACK: Readonly<Color> = new Color().set(0.0, 0.0, 0.0, 1.0);
+        public static readonly RED: Readonly<Color> = new Color().set(1.0, 0.0, 0.0, 1.0);
+        public static readonly GREEN: Readonly<Color> = new Color().set(0.0, 1.0, 0.0, 1.0);
+        public static readonly BLUE: Readonly<Color> = new Color().set(0.0, 0.0, 1.0, 1.0);
 
         private static readonly _instances: Color[] = [];
 

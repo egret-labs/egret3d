@@ -319,10 +319,10 @@ namespace egret3d {
          * 本地位置。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
-        public get localPosition(): Readonly<Vector3> {
+        public get localPosition(): Readonly<Vector3 | IVector3> {
             return this._localPosition;
         }
-        public set localPosition(value: Readonly<Vector3>) {
+        public set localPosition(value: Readonly<Vector3 | IVector3>) {
             this._localPosition.x = value.x;
             this._localPosition.y = value.y;
             this._localPosition.z = value.z;
@@ -370,10 +370,10 @@ namespace egret3d {
          * 本地旋转。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR4)
-        public get localRotation(): Readonly<Quaternion> {
+        public get localRotation(): Readonly<Quaternion | IVector4> {
             return this._localRotation;
         }
-        public set localRotation(value: Readonly<Quaternion>) {
+        public set localRotation(value: Readonly<Quaternion | IVector4>) {
             this._localRotation.x = value.x;
             this._localRotation.y = value.y;
             this._localRotation.z = value.z;
@@ -421,7 +421,7 @@ namespace egret3d {
         /**
          * 本地欧拉弧度。
          */
-        public get localEuler(): Readonly<Vector3> {
+        public get localEuler(): Readonly<Vector3 | IVector3> {
             // if (this._dirtyLocalRS) {
             if (this._dirtyLocal) {
                 this._updateEuler();
@@ -429,7 +429,7 @@ namespace egret3d {
 
             return this._localEuler;
         }
-        public set localEuler(value: Readonly<Vector3>) {
+        public set localEuler(value: Readonly<Vector3 | IVector3>) {
             this._localRotation.fromEuler(value);
 
             if (!this._dirtyLocal) {
@@ -476,7 +476,7 @@ namespace egret3d {
          * 本地欧拉角度。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
-        public get localEulerAngles(): Readonly<Vector3> {
+        public get localEulerAngles(): Readonly<Vector3 | IVector3> {
             // if (this._dirtyLocalRS) {
             if (this._dirtyLocal) {
                 this._updateEuler();
@@ -484,7 +484,7 @@ namespace egret3d {
 
             return this._localEulerAngles;
         }
-        public set localEulerAngles(value: Readonly<Vector3>) {
+        public set localEulerAngles(value: Readonly<Vector3 | IVector3>) {
             _helpVector3.multiplyScalar(DEG_RAD, value);
             this._localRotation.fromEuler(_helpVector3);
 
@@ -502,7 +502,7 @@ namespace egret3d {
          * 本地缩放。
          */
         public setLocalScale(v: Readonly<IVector3>): this;
-        public setLocalScale(x: number, y: number, z: number): this;
+        public setLocalScale(x: number, y?: number, z?: number): this;
         public setLocalScale(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
             if (p1.hasOwnProperty("x")) {
                 this._localScale.x = (p1 as Readonly<IVector3>).x;
@@ -511,8 +511,8 @@ namespace egret3d {
             }
             else {
                 this._localScale.x = p1 as number;
-                this._localScale.y = p2 !== undefined ? p2 : 1.0;
-                this._localScale.z = p3 !== undefined ? p3 : 1.;
+                this._localScale.y = p2 !== undefined ? p2 : p1 as number;
+                this._localScale.z = p3 !== undefined ? p3 : p1 as number;
             }
 
             // if (!this._dirtyLocalRS) {
@@ -529,10 +529,10 @@ namespace egret3d {
          * 本地缩放。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
-        public get localScale(): Readonly<Vector3> {
+        public get localScale(): Readonly<Vector3 | IVector3> {
             return this._localScale;
         }
-        public set localScale(value: Readonly<Vector3>) {
+        public set localScale(value: Readonly<Vector3 | IVector3>) {
             this._localScale.x = value.x;
             this._localScale.y = value.y;
             this._localScale.z = value.z;
@@ -619,7 +619,7 @@ namespace egret3d {
         /**
          * 世界位置。
          */
-        public get position(): Readonly<Vector3> {
+        public get position(): Readonly<Vector3 | IVector3> {
             // if (this._dirtyWorldT) {
             // if (this._dirtyWorld) {
             //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale);
@@ -629,7 +629,7 @@ namespace egret3d {
 
             return this._position;
         }
-        public set position(value: Readonly<Vector3>) {
+        public set position(value: Readonly<Vector3 | IVector3>) {
             this._localPosition.x = value.x;
             this._localPosition.y = value.y;
             this._localPosition.z = value.z;
@@ -695,7 +695,7 @@ namespace egret3d {
         /**
          * 世界旋转。
          */
-        public get rotation(): Readonly<Quaternion> {
+        public get rotation(): Readonly<Quaternion | IVector4> {
             // if (this._dirtyWorldRS) {
             // if (this._dirtyWorld) {
             //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale);
@@ -705,7 +705,7 @@ namespace egret3d {
 
             return this._rotation;
         }
-        public set rotation(value: Readonly<Quaternion>) {
+        public set rotation(value: Readonly<Quaternion | IVector4>) {
             this._localRotation.x = value.x;
             this._localRotation.y = value.y;
             this._localRotation.z = value.z;
@@ -767,7 +767,7 @@ namespace egret3d {
         /**
          * 世界欧拉弧度。
          */
-        public get euler(): Readonly<Vector3> {
+        public get euler(): Readonly<Vector3 | IVector3> {
             // if (this._dirtyWorldRS) {
             // if (this._dirtyWorld) {
             //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale).toEuler(this._eulerAngles).multiplyScalar(RAD_DEG);
@@ -777,7 +777,7 @@ namespace egret3d {
 
             return this._euler;
         }
-        public set euler(value: Readonly<Vector3>) {
+        public set euler(value: Readonly<Vector3 | IVector3>) {
             this._localRotation.fromEuler(value);
 
             if (this._parent) {
@@ -837,7 +837,7 @@ namespace egret3d {
         /**
          * 世界欧拉角度。
          */
-        public get eulerAngles(): Readonly<Vector3> {
+        public get eulerAngles(): Readonly<Vector3 | IVector3> {
             // if (this._dirtyWorldRS) {
             // if (this._dirtyWorld) {
             //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale).toEuler(this._eulerAngles).multiplyScalar(RAD_DEG);
@@ -847,7 +847,7 @@ namespace egret3d {
 
             return this._eulerAngles;
         }
-        public set eulerAngles(value: Readonly<Vector3>) {
+        public set eulerAngles(value: Readonly<Vector3 | IVector3>) {
             _helpVector3.multiplyScalar(DEG_RAD, value);
             this._localRotation.fromEuler(_helpVector3);
 
@@ -880,7 +880,7 @@ namespace egret3d {
          * 世界缩放。
          */
         public setScale(v: Readonly<IVector3>): this;
-        public setScale(x: number, y: number, z: number): this;
+        public setScale(x: number, y?: number, z?: number): this;
         public setScale(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
             if (p1.hasOwnProperty("x")) {
                 this._localScale.x = (p1 as Readonly<IVector3>).x;
@@ -889,8 +889,8 @@ namespace egret3d {
             }
             else {
                 this._localScale.x = p1 as number;
-                this._localScale.y = p2 !== undefined ? p2 : 1.0;
-                this._localScale.z = p3 !== undefined ? p3 : 1.0;
+                this._localScale.y = p2 !== undefined ? p2 : p1 as number;
+                this._localScale.z = p3 !== undefined ? p3 : p1 as number;
             }
 
             if (this._parent) {
@@ -910,7 +910,7 @@ namespace egret3d {
         /**
          * 世界缩放。
          */
-        public get scale(): Readonly<Vector3> {
+        public get scale(): Readonly<Vector3 | IVector3> {
             // if (this._dirtyWorldRS) {
             // if (this._dirtyWorld) {
             //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale);
@@ -920,7 +920,7 @@ namespace egret3d {
 
             return this._scale;
         }
-        public set scale(value: Readonly<Vector3>) {
+        public set scale(value: Readonly<Vector3 | IVector3>) {
             this._localScale.x = value.x;
             this._localScale.y = value.y;
             this._localScale.z = value.z;

@@ -19,6 +19,7 @@ namespace egret3d {
         public static CYLINDER: Mesh;
         public static SPHERE: Mesh;
 
+        public static LINE: Mesh;
         public static AXISES: Mesh;
         public static CUBE_WIREFRAMED: Mesh;
         public static PYRAMID_WIREFRAMED: Mesh;
@@ -168,6 +169,21 @@ namespace egret3d {
                 DefaultMeshes.SPHERE = mesh;
             }
 
+            { // LINE.
+                const mesh = new Mesh(2, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/axises.mesh.bin";
+                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+                paper.Asset.register(mesh);
+                DefaultMeshes.LINE = mesh;
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                ]);
+                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                ]);
+            }
+
             { // AXISES.
                 const mesh = new Mesh(6, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
@@ -298,7 +314,7 @@ namespace egret3d {
 
                     1, 1, 1, 1,
                     1, 1, 1, 1,
-                    
+
                     1, 1, 1, 1,
                     1, 1, 1, 1,
                 ]);
@@ -309,17 +325,53 @@ namespace egret3d {
          */
         public static createObject(mesh: Mesh, name?: string, tag?: string, scene?: paper.Scene) {
             const gameObject = paper.GameObject.create(name, tag, scene);
-            const meshFilter = gameObject.addComponent(MeshFilter);
-            const renderer = gameObject.addComponent(MeshRenderer);
-            meshFilter.mesh = mesh;
 
-            switch (mesh) {
-                case this.AXISES:
-                case this.CUBE_WIREFRAMED:
-                    renderer.material = DefaultMaterials.LINEDASHED_COLOR;
-                    break;
+            if (mesh === this.AXISES) {
+                const axisX = this.createObject(this.LINE, "axisX", paper.DefaultTags.Untagged, scene);
+                const axisY = this.createObject(this.LINE, "axisY", paper.DefaultTags.Untagged, scene);
+                const axisZ = this.createObject(this.LINE, "axisZ", paper.DefaultTags.Untagged, scene);
+                const arrowX = this.createObject(this.PYRAMID, "arrowX", paper.DefaultTags.Untagged, scene);
+                const arrowY = this.createObject(this.PYRAMID, "arrowY", paper.DefaultTags.Untagged, scene);
+                const arrowZ = this.createObject(this.PYRAMID, "arrowZ", paper.DefaultTags.Untagged, scene);
+
+                axisX.transform.parent = gameObject.transform;
+                axisY.transform.parent = gameObject.transform;
+                axisZ.transform.parent = gameObject.transform;
+                arrowX.transform.parent = axisX.transform;
+                arrowY.transform.parent = axisY.transform;
+                arrowZ.transform.parent = axisZ.transform;
+
+                axisY.transform.setLocalEuler(0.0, 0.0, Math.PI * 0.5);
+                axisZ.transform.setLocalEuler(0.0, -Math.PI * 0.5, 0.0);
+                arrowX.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
+                arrowY.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
+                arrowZ.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
+
+                arrowX.transform.setLocalPosition(Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
+                arrowY.transform.setLocalPosition(Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
+                arrowZ.transform.setLocalPosition(Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
+
+                (axisX.renderer as MeshRenderer).material = (axisX.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (axisY.renderer as MeshRenderer).material = (axisY.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (axisZ.renderer as MeshRenderer).material = (axisZ.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (arrowX.renderer as MeshRenderer).material = (arrowX.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (arrowY.renderer as MeshRenderer).material = (arrowY.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (arrowZ.renderer as MeshRenderer).material = (arrowZ.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
             }
+            else {
+                const meshFilter = gameObject.addComponent(MeshFilter);
+                const renderer = gameObject.addComponent(MeshRenderer);
+                meshFilter.mesh = mesh;
 
+                switch (mesh) {
+                    case this.LINE:
+                    case this.CUBE_WIREFRAMED:
+                    case this.PYRAMID_WIREFRAMED:
+                        renderer.material = DefaultMaterials.LINEDASHED_COLOR;
+                        break;
+                }
+
+            }
 
             return gameObject;
         }
