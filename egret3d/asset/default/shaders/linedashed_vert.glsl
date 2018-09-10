@@ -4,7 +4,6 @@ attribute float lineDistance;
 varying float vLineDistance;
 
 #include <common>
-#include <common2>
 #include <color_pars_vertex>
 #include <fog_pars_vertex>
 #include <logdepthbuf_pars_vertex>

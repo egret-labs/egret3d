@@ -2,7 +2,6 @@ uniform float rotation;
 uniform vec2 center;
 
 #include <common>
-#include <common2>
 #include <uv_pars_vertex>
 #include <fog_pars_vertex>
 #include <logdepthbuf_pars_vertex>
