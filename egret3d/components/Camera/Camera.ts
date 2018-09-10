@@ -47,25 +47,25 @@ namespace egret3d {
          * 相机的渲染剔除，对应GameObject的层级
          */
         @paper.serializedField
-        @paper.editor.extraProperty(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.CullingMask) })
+        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.CullingMask) })
         public cullingMask: paper.CullingMask = paper.CullingMask.Everything;
         /**
          * 相机渲染排序
          */
         @paper.serializedField
-        @paper.editor.extraProperty(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public order: number = 0;
         /**
          * 透视投影的fov
          */
         @paper.serializedField
-        @paper.editor.extraProperty(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public fov: number = Math.PI * 0.25;
         /**
          * 正交投影的竖向size
          */
         @paper.serializedField
-        @paper.editor.extraProperty(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public size: number = 2.0;
         /**
          * 0=正交，1=透视 中间值可以在两种相机间过度
@@ -360,7 +360,7 @@ namespace egret3d {
         /**
          * 相机到近裁剪面距离
          */
-        @paper.editor.extraProperty(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public get near(): number {
             return this._near;
         }
@@ -378,7 +378,7 @@ namespace egret3d {
         /**
          * 相机到远裁剪面距离
          */
-        @paper.editor.extraProperty(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public get far(): number {
             return this._far;
         }

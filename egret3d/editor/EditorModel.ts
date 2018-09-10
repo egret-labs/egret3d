@@ -86,15 +86,6 @@ namespace paper.editor {
                     return element.editType;
                 }
             }
-
-            const extraInfoList = editor.getExtraInfo(target);
-            for (let index = 0; index < extraInfoList.length; index++) {
-                const element = extraInfoList[index];
-                if (element.name === propName) {
-                    return element.editType;
-                }
-            }
-
             return null;
         }
 
