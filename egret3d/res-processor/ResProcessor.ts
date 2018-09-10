@@ -79,13 +79,17 @@ namespace RES.processor {
                 if (_wrap.indexOf("Repeat") >= 0) {
                     _repeat = true;
                 }
+                let _premultiply:boolean = true;
+                if(data["premultiply"] !== undefined){
+                    _premultiply = data["premultiply"] > 0;
+                }
                 const imgResource = (RES.host.resourceConfig as any)["getResource"](_name);
                 let loader = new egret.ImageLoader();
                 loader.load(imgResource.root + imgResource.url);
                 return promisify(loader, imgResource)
                     .then((image) => {
                         const texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, _textureFormat);
-                        texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
+                        texture.uploadImage(image.source, _mipmap, _linear, _premultiply, _repeat);
                         paper.Asset.register(texture);
                         return texture;
                     });

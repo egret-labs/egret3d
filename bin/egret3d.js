@@ -9762,7 +9762,6 @@ var egret3d;
             this.shadowCalls.sort(this._sortFromFarToNear);
         };
         DrawCalls.prototype.sortAfterFrustumCulling = function (camera) {
-            //每次根据视锥裁切填充TODO，放到StartSystem
             this.opaqueCalls.length = 0;
             this.transparentCalls.length = 0;
             var cameraPos = camera.gameObject.transform.getPosition();
@@ -9771,11 +9770,11 @@ var egret3d;
                 var drawCall = _a[_i];
                 var drawTarget = drawCall.renderer.gameObject;
                 var visible = ((camera.cullingMask & drawTarget.layer) !== 0 && (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer))));
-                //裁切没通过
                 if (visible) {
                     var objPos = drawTarget.transform.getPosition();
                     drawCall.zdist = objPos.getDistance(cameraPos);
-                    if (drawCall.material.renderQueue >= 3000 /* Transparent */ && drawCall.material.renderQueue <= 4000 /* Overlay */) {
+                    // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
+                    if (drawCall.material.renderQueue >= 3000 /* Transparent */) {
                         this.transparentCalls.push(drawCall);
                     }
                     else {
@@ -18466,13 +18465,17 @@ var RES;
                     if (_wrap.indexOf("Repeat") >= 0) {
                         _repeat = true;
                     }
+                    var _premultiply = true;
+                    if (data["premultiply"] !== undefined) {
+                        _premultiply = data["premultiply"] > 0;
+                    }
                     var imgResource = RES.host.resourceConfig["getResource"](_name);
                     var loader = new egret.ImageLoader();
                     loader.load(imgResource.root + imgResource.url);
                     return promisify(loader, imgResource)
                         .then(function (image) {
                         var texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, _textureFormat);
-                        texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
+                        texture.uploadImage(image.source, _mipmap, _linear, _premultiply, _repeat);
                         paper.Asset.register(texture);
                         return texture;
                     });
