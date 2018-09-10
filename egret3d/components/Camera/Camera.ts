@@ -85,7 +85,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.COLOR)
-        public readonly backgroundColor: Color = Color.create(0.13, 0.28, 0.51, 1);
+        public readonly backgroundColor: Color = Color.create(0.15, 0.25, 0.5, 1.0);
         /**
          * 相机视窗
          */
