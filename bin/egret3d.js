@@ -110,8 +110,18 @@ var paper;
         };
     }
     paper.requireComponent = requireComponent;
+    // executionOrder: number;
+    // /**
+    //  * 通过装饰器标记脚本组件的生命周期优先级。（默认：0）
+    //  */
+    // export function executionOrder(order: number = 0) {
+    //     return function (componentClass: ComponentClass<Behaviour>) {
+    //         registerClass(componentClass);
+    //         componentClass.executionOrder = order;
+    //     }
+    // }
     /**
-     * 通过装饰器标记组件是否在编辑模式拥有生命周期。
+     * 通过装饰器标记脚本组件是否在编辑模式也拥有生命周期。
      */
     function executeInEditMode(componentClass) {
         registerClass(componentClass);
@@ -6025,7 +6035,7 @@ var paper;
              * @internal
              */
             this._addedComponents = [];
-            this._components = [];
+            this._behaviourComponents = [];
             this._interestConfig = null;
             this._globalGameObject = paper.Application.sceneManager.globalGameObject;
             this._isBehaviour = interestConfig.length === 1 && interestConfig[0].type !== undefined && interestConfig[0].type !== 0;
@@ -6124,7 +6134,7 @@ var paper;
                     return;
                 }
             }
-            if (this._bufferedComponents.indexOf(component) >= 0 || this._components.indexOf(component) >= 0) {
+            if (this._bufferedComponents.indexOf(component) >= 0 || this._behaviourComponents.indexOf(component) >= 0) {
                 return;
             }
             this._bufferedComponents.push(component);
@@ -6137,12 +6147,12 @@ var paper;
                 return;
             }
             if (this._isBehaviour) {
-                index = this._components.indexOf(component);
+                index = this._behaviourComponents.indexOf(component);
                 if (index < 0) {
                     return;
                 }
                 this._isRemoved = true;
-                this._components[index] = null;
+                this._behaviourComponents[index] = null;
                 index = this._addedComponents.indexOf(component);
                 if (index >= 0) {
                     this._addedComponents[index] = null;
@@ -6244,12 +6254,12 @@ var paper;
                 var index = 0;
                 var removeCount = 0;
                 this._isRemoved = false;
-                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                for (var _i = 0, _a = this._behaviourComponents; _i < _a.length; _i++) {
                     var component = _a[_i];
                     if (component) {
                         if (removeCount > 0) {
-                            this._components[index - removeCount] = component;
-                            this._components[index] = null;
+                            this._behaviourComponents[index - removeCount] = component;
+                            this._behaviourComponents[index] = null;
                         }
                     }
                     else {
@@ -6258,7 +6268,7 @@ var paper;
                     index++;
                 }
                 if (removeCount > 0) {
-                    this._components.length -= removeCount;
+                    this._behaviourComponents.length -= removeCount;
                 }
             }
             if (this._bufferedGameObjects.length > 0) {
@@ -6279,7 +6289,14 @@ var paper;
                         continue;
                     }
                     this._addedComponents.push(component);
-                    this._components.push(component);
+                    if (component instanceof paper.Behaviour) {
+                        if (component.gameObject.getComponent(egret3d.Camera)) {
+                            this._behaviourComponents.unshift(component);
+                        }
+                        else {
+                            this._behaviourComponents.push(component);
+                        }
+                    }
                 }
                 this._bufferedComponents.length = 0;
             }
@@ -6305,7 +6322,7 @@ var paper;
              *
              */
             get: function () {
-                return this._components;
+                return this._behaviourComponents;
             },
             enumerable: true,
             configurable: true
@@ -10350,8 +10367,11 @@ var egret3d;
             var displayList = new egret.sys.DisplayList(stage);
             displayList.renderBuffer = new egret.sys.RenderBuffer(undefined, undefined, true);
             stage.$displayList = displayList;
-            //
-            egret.web.$cacheTextAdapter(paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput, stage, egret3d.WebGLCapabilities.canvas.parentNode, egret3d.WebGLCapabilities.canvas);
+            // TODO
+            var webInput = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput;
+            if (webInput) {
+                egret.web.$cacheTextAdapter(webInput, stage, egret3d.WebGLCapabilities.canvas.parentNode, egret3d.WebGLCapabilities.canvas);
+            }
             egret3d.InputManager.touch.addEventListener("touchstart", this._onTouchStart, this);
             egret3d.InputManager.touch.addEventListener("touchend", this._onTouchEnd, this);
             egret3d.InputManager.touch.addEventListener("touchcancel", this._onTouchEnd, this);
@@ -10479,13 +10499,16 @@ var egret3d;
                 { componentClass: egret3d.Egret2DRenderer }
             ];
             /**
+             * TODO
              * @internal
              */
-            _this.webInput = new egret.web.HTMLInput();
+            _this.webInput = egret.Capabilities.runtimeType === egret.RuntimeType.WEB ? new egret["web"].HTMLInput() : null;
             return _this;
         }
         Egret2DRendererSystem.prototype.onAwake = function () {
-            this.webInput._initStageDelegateDiv(egret3d.WebGLCapabilities.canvas.parentNode, egret3d.WebGLCapabilities.canvas);
+            if (this.webInput) {
+                this.webInput._initStageDelegateDiv(egret3d.WebGLCapabilities.canvas.parentNode, egret3d.WebGLCapabilities.canvas);
+            }
         };
         Egret2DRendererSystem.prototype.onUpdate = function (deltaTime) {
             for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
@@ -12784,10 +12807,6 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
-        /**
-         *
-         */
-        SkinnedMeshRenderer.dataCaches = [];
         __decorate([
             paper.serializedField
         ], SkinnedMeshRenderer.prototype, "_mesh", void 0);
@@ -16660,7 +16679,11 @@ var egret3d;
             }
             egret3d.InputManager.touch.updateOffsetAndScale(x, y, touchScaleX, touchScaleY, shouldRotate);
             egret3d.InputManager.mouse.updateOffsetAndScale(x, y, touchScaleX, touchScaleY, shouldRotate);
-            paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput.$updateSize();
+            //
+            var webInput = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput;
+            if (webInput) {
+                webInput.$updateSize();
+            }
         };
         return Stage3D;
     }());
@@ -16726,7 +16749,7 @@ var egret3d;
             var uniformData = gl.getActiveUniform(webglProgram, i);
             var tUniform = technique.uniforms[uniformData.name];
             if (!tUniform) {
-                console.warn("缺少Uniform定义：" + uniformData.name);
+                console.error("缺少Uniform定义：" + uniformData.name);
             }
             var location_2 = gl.getUniformLocation(webglProgram, uniformData.name);
             if (tUniform.semantic) {
@@ -18032,7 +18055,7 @@ var egret3d;
     (function (ShaderLib) {
         ShaderLib.cube = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "cube_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n\r\nvoid main() {\r\n\r\n\tvWorldPosition = transformDirection( position, modelMatrix );\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\r\n\tgl_Position.z = gl_Position.w; // set z to camera.far\r\n\r\n}\r\n" }, { "name": "cube_frag", "type": 35632, "uri": "uniform samplerCube tCube;\r\nuniform float tFlip;\r\nuniform float opacity;\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\nvoid main() {\r\n\r\n\tgl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );\r\n\tgl_FragColor.a *= opacity;\r\n\r\n}\r\n" }], "techniques": [{ "name": "cube", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "tCube": { "type": 35680 }, "tFlip": { "type": 5126 }, "opacity": { "type": 5126, "value": 1 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
         ShaderLib.depth = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "depth_vert", "type": 35633, "uri": "#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_DISPLACEMENTMAP\r\n\r\n\t\t#include <beginnormal_vertex>\r\n\t\t#include <morphnormal_vertex>\r\n\t\t#include <skinnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n}\r\n" }, { "name": "depth_frag", "type": 35632, "uri": "#if DEPTH_PACKING == 3200\r\n\r\n\tuniform float opacity;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( 1.0 );\r\n\r\n\t#if DEPTH_PACKING == 3200\r\n\r\n\t\tdiffuseColor.a = opacity;\r\n\r\n\t#endif\r\n\r\n\t#include <map_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\r\n\t#if DEPTH_PACKING == 3200\r\n\r\n\t\tgl_FragColor = vec4( vec3( 1.0 - gl_FragCoord.z ), opacity );\r\n\r\n\t#elif DEPTH_PACKING == 3201\r\n\r\n\t\tgl_FragColor = packDepthToRGBA( gl_FragCoord.z );\r\n\r\n\t#endif\r\n\r\n}\r\n" }], "techniques": [{ "name": "depth", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "bindMatrix": { "type": 35676, "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "boneMatrices[0]": { "type": 35676 }, "logDepthBufFC": { "type": 5126 }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
-        ShaderLib.diffuse = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "diffuse_vert", "type": 35633, "uri": "#include <common>\r\n#include <skinning_pars_vert>\r\n#include <lightmap_pars_vert> \r\nattribute vec4 position;\r\nattribute vec4 uv;\r\nuniform highp mat4 modelViewProjectionMatrix;\r\nuniform highp mat3 uvTransform;  \r\nvarying highp vec2 xlv_TEXCOORD0;\r\n\r\nvoid main() {\r\n    #include <skinning_base_vert>\r\n    xlv_TEXCOORD0 = ( uvTransform * vec3( uv.xy, 1 ) ).xy;\r\n    #include <lightmap_vert>\r\n    gl_Position = (modelViewProjectionMatrix * tmpVertex);\r\n}" }, { "name": "diffuse_frag", "type": 35632, "uri": "#include <common>\r\n#include <lightmap_pars_frag>\r\nuniform vec3 diffuse;\r\nuniform sampler2D map;\r\nuniform lowp float _AlphaCut;\r\nvarying highp vec2 xlv_TEXCOORD0;\r\nvoid main() {\r\n    lowp vec4 outColor = texture2D(map, xlv_TEXCOORD0) * vec4(diffuse, 1.0);\r\n    if(outColor.a < _AlphaCut)\r\n        discard;\r\n    #include <lightmap_frag>    \r\n}" }], "techniques": [{ "name": "diffuse", "attributes": { "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" }, "position": { "semantic": "POSITION" }, "uv": { "semantic": "TEXCOORD_0" } }, "uniforms": { "glstate_vec4_bones[0]": { "type": 35666, "semantic": "_BONESVEC4" }, "lightMapOffset": { "type": 35666, "semantic": "_LIGHTMAPOFFSET" }, "lightMapUV": { "type": 5126, "semantic": "_LIGHTMAPUV" }, "modelViewProjectionMatrix": { "type": 35676, "semantic": "MODELVIEWPROJECTION" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "map": { "type": 35678 }, "_AlphaCut": { "type": 5126, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
+        ShaderLib.diffuse = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "diffuse_vert", "type": 35633, "uri": "#include <common>\r\n#include <skinning_pars_vert>\r\n#include <lightmap_pars_vert> \r\nattribute vec4 position;\r\nattribute vec4 uv;\r\nuniform highp mat4 modelViewProjectionMatrix;\r\nuniform highp mat3 uvTransform;  \r\nvarying highp vec2 xlv_TEXCOORD0;\r\n\r\nvoid main() {\r\n    #include <skinning_base_vert>\r\n    xlv_TEXCOORD0 = ( uvTransform * vec3( uv.xy, 1 ) ).xy;\r\n    #include <lightmap_vert>\r\n    gl_Position = (modelViewProjectionMatrix * tmpVertex);\r\n}" }, { "name": "diffuse_frag", "type": 35632, "uri": "#include <common>\r\n#include <lightmap_pars_frag>\r\nuniform vec3 diffuse;\r\nuniform sampler2D map;\r\nuniform lowp float alphaTest;\r\nvarying highp vec2 xlv_TEXCOORD0;\r\nvoid main() {\r\n    lowp vec4 outColor = texture2D(map, xlv_TEXCOORD0) * vec4(diffuse, 1.0);\r\n    if(outColor.a < alphaTest)\r\n        discard;\r\n    #include <lightmap_frag>    \r\n}" }], "techniques": [{ "name": "diffuse", "attributes": { "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" }, "position": { "semantic": "POSITION" }, "uv": { "semantic": "TEXCOORD_0" } }, "uniforms": { "glstate_vec4_bones[0]": { "type": 35666, "semantic": "_BONESVEC4" }, "lightMapOffset": { "type": 35666, "semantic": "_LIGHTMAPOFFSET" }, "lightMapUV": { "type": 5126, "semantic": "_LIGHTMAPUV" }, "modelViewProjectionMatrix": { "type": 35676, "semantic": "MODELVIEWPROJECTION" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "map": { "type": 35678 }, "alphaTest": { "type": 5126, "value": [] } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
         ShaderLib.distanceRGBA = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "distanceRGBA_vert", "type": 35633, "uri": "#define DISTANCE\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <uv_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_DISPLACEMENTMAP\r\n\r\n\t\t#include <beginnormal_vertex>\r\n\t\t#include <morphnormal_vertex>\r\n\t\t#include <skinnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <worldpos_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvWorldPosition = worldPosition.xyz;\r\n\r\n}\r\n" }, { "name": "distanceRGBA_frag", "type": 35632, "uri": "#define DISTANCE\r\n\r\nuniform vec3 referencePosition;\r\nuniform float nearDistance;\r\nuniform float farDistance;\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <uv_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main () {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( 1.0 );\r\n\r\n\t#include <map_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\r\n\tfloat dist = length( vWorldPosition - referencePosition );\r\n\tdist = ( dist - nearDistance ) / ( farDistance - nearDistance );\r\n\tdist = saturate( dist ); // clamp to [ 0, 1 ]\r\n\r\n\tgl_FragColor = packDepthToRGBA( dist );\r\n\r\n}\r\n" }], "techniques": [{ "name": "distanceRGBA", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "bindMatrix": { "type": 35676, "semantic": "_BINDMATRIX" }, "bindMatrixInverse": { "type": 35676, "semantic": "_BINDMATRIXINVERSE" }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "boneMatrices[0]": { "type": 35676 }, "referencePosition": { "type": 35665, "semantic": "_REFERENCEPOSITION" }, "nearDistance": { "type": 5126, "semantic": "_NEARDICTANCE" }, "farDistance": { "type": 5126, "semantic": "_FARDISTANCE" }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
         ShaderLib.equirect = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "equirect_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n#include <common2>\r\n\r\nvoid main() {\r\n\r\n\tvWorldPosition = transformDirection( position, modelMatrix );\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\r\n}\r\n" }, { "name": "equirect_frag", "type": 35632, "uri": "uniform sampler2D tEquirect;\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n\r\nvoid main() {\r\n\r\n\tvec3 direction = normalize( vWorldPosition );\r\n\r\n\tvec2 sampleUV;\r\n\r\n\tsampleUV.y = asin( clamp( direction.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\r\n\r\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\r\n\r\n\tgl_FragColor = texture2D( tEquirect, sampleUV );\r\n\r\n}\r\n" }], "techniques": [{ "name": "equirect", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "tEquirect": { "type": 35678 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
         ShaderLib.linedashed = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "linedashed_vert", "type": 35633, "uri": "uniform float scale;\r\nattribute float lineDistance;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <common2>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <color_vertex>\r\n\r\n\tvLineDistance = scale * lineDistance;\r\n\r\n\tvec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\r\n\tgl_Position = projectionMatrix * mvPosition;\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "linedashed_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\nuniform float dashSize;\r\nuniform float totalSize;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tif ( mod( vLineDistance, totalSize ) > dashSize ) {\r\n\r\n\t\tdiscard;\r\n\r\n\t}\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <color_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb; // simple shader\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "linedashed", "attributes": { "lineDistance": { "semantic": "Unknown" }, "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "scale": { "type": 5126 }, "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "logDepthBufFC": { "type": 5126 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "dashSize": { "type": 5126 }, "totalSize": { "type": 5126 }, "fogColor": { "type": 35665 }, "fogDensity": { "type": 5126 }, "fogNear": { "type": 5126 }, "fogFar": { "type": 5126 }, "clippingPlanes[0]": { "type": 35666 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper"], "extensionsUsed": ["paper"], "materials": [] };
@@ -21094,8 +21117,13 @@ var egret3d;
             var combines = allCombines[key];
             for (var _a = 0, combines_1 = combines; _a < combines_1.length; _a++) {
                 var combine_1 = combines_1[_a];
-                _combineInstance(combine_1);
-                afterCombineCount++;
+                if (combine_1.instances.length > 1) {
+                    _combineInstance(combine_1);
+                    afterCombineCount++;
+                }
+                else {
+                    afterCombineCount += combine_1.instances.length;
+                }
             }
         }
         console.log("合并后:" + afterCombineCount + "节省:" + (beforeCombineCount - afterCombineCount));
@@ -21387,7 +21415,7 @@ var egret3d;
         for (var i = 0; i < tempIndexBuffers.length; i++) {
             var subLen = tempIndexBuffers[i].length;
             //第一个submesh在构造函数中已经添加，需要手动添加后续的
-            combineMesh.addSubMesh(indicesCount, subLen, i);
+            combineMesh.addSubMesh(indicesCount, i);
             indicesCount += subLen;
         }
         return combineMesh;
@@ -22155,10 +22183,6 @@ var paper;
                 var state = editor.ModifyComponentPropertyState.create(gameObjectUUid, componentUUid, newValueList, preValueCopylist);
                 this.addState(state);
             };
-            EditorModel.prototype.createModifyAssetPropertyState = function (assetUrl, newValueList, preValueCopylist) {
-                var state = editor.ModifyAssetPropertyState.create(assetUrl, newValueList, preValueCopylist);
-                this.addState(state);
-            };
             EditorModel.prototype.createPrefabState = function (prefab, parent) {
                 var state = editor.CreatePrefabState.create(prefab, parent);
                 this.addState(state);
@@ -22225,7 +22249,7 @@ var paper;
                         return target;
                     case editor.EditType.SHADER:
                         var url = serializeData;
-                        var asset = RES.getRes(url);
+                        var asset = paper.Asset.find(url);
                         return asset;
                     case editor.EditType.LIST:
                         return serializeData;
@@ -22233,12 +22257,12 @@ var paper;
                         var materials = [];
                         for (var _i = 0, serializeData_1 = serializeData; _i < serializeData_1.length; _i++) {
                             var matrial = serializeData_1[_i];
-                            var asset_1 = RES.getRes(matrial.url);
+                            var asset_1 = paper.Asset.find(matrial.url);
                             materials.push(asset_1);
                         }
                         return materials;
                     case editor.EditType.MESH:
-                        var meshAsset = RES.getRes(serializeData);
+                        var meshAsset = paper.Asset.find(serializeData);
                         return meshAsset;
                     case editor.EditType.MATERIAL:
                     case editor.EditType.GAMEOBJECT:
@@ -22495,23 +22519,6 @@ var paper;
                 }
                 return null;
             };
-            EditorModel.prototype.getAssetByAssetUrl = function (url) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var asset;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                asset = RES.getRes(url);
-                                if (!!asset) return [3 /*break*/, 2];
-                                return [4 /*yield*/, RES.getResAsync(url)];
-                            case 1:
-                                asset = _a.sent();
-                                _a.label = 2;
-                            case 2: return [2 /*return*/, asset];
-                        }
-                    });
-                });
-            };
             EditorModel.prototype.getGameObjectsByUUids = function (uuids) {
                 var objects = paper.Application.sceneManager.activeScene.gameObjects;
                 var obj;
@@ -22745,116 +22752,74 @@ var paper;
                 }
                 return objs;
             };
-            EditorModel.prototype.setMaterialTexture = function (target, url, propName) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var asset;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                asset = paper.Asset.find(url);
-                                if (!!asset) return [3 /*break*/, 2];
-                                return [4 /*yield*/, this.getAssetByAssetUrl(url)];
-                            case 1:
-                                asset = _a.sent();
-                                _a.label = 2;
-                            case 2:
-                                if (!asset) {
-                                    console.error(url + " can't find");
-                                    return [2 /*return*/];
-                                }
-                                target._glTFTechnique.uniforms[propName].value = asset;
-                                return [2 /*return*/];
-                        }
-                    });
-                });
-            };
             EditorModel.prototype.modifyMaterialPropertyValues = function (target, valueList) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var _i, valueList_1, propertyValue, propName, copyValue, uniformType, _a, _glTFMaterial, gltfUnifromMap, uniformMap, key, value;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
-                            case 0:
-                                _i = 0, valueList_1 = valueList;
-                                _b.label = 1;
-                            case 1:
-                                if (!(_i < valueList_1.length)) return [3 /*break*/, 14];
-                                propertyValue = valueList_1[_i];
-                                propName = propertyValue.propName, copyValue = propertyValue.copyValue, uniformType = propertyValue.uniformType;
-                                _a = uniformType;
-                                switch (_a) {
-                                    case 35670 /* BOOL */: return [3 /*break*/, 2];
-                                    case 5124 /* INT */: return [3 /*break*/, 3];
-                                    case 5126 /* FLOAT */: return [3 /*break*/, 4];
-                                    case 35671 /* BOOL_VEC2 */: return [3 /*break*/, 5];
-                                    case 35667 /* INT_VEC2 */: return [3 /*break*/, 5];
-                                    case 35664 /* FLOAT_VEC2 */: return [3 /*break*/, 5];
-                                    case 35672 /* BOOL_VEC3 */: return [3 /*break*/, 6];
-                                    case 35668 /* INT_VEC3 */: return [3 /*break*/, 6];
-                                    case 35665 /* FLOAT_VEC3 */: return [3 /*break*/, 6];
-                                    case 35673 /* BOOL_VEC4 */: return [3 /*break*/, 7];
-                                    case 35669 /* INT_VEC4 */: return [3 /*break*/, 7];
-                                    case 35666 /* FLOAT_VEC4 */: return [3 /*break*/, 7];
-                                    case 35678 /* SAMPLER_2D */: return [3 /*break*/, 8];
-                                    case 35674 /* FLOAT_MAT2 */: return [3 /*break*/, 10];
-                                    case 35675 /* FLOAT_MAT3 */: return [3 /*break*/, 10];
-                                    case 35676 /* FLOAT_MAT4 */: return [3 /*break*/, 10];
-                                }
-                                return [3 /*break*/, 11];
-                            case 2:
-                                target.setBoolean(propName, copyValue);
-                                return [3 /*break*/, 12];
-                            case 3:
-                                target.setInt(propName, copyValue);
-                                _b.label = 4;
-                            case 4:
-                                target.setFloat(propName, copyValue);
-                                return [3 /*break*/, 12];
-                            case 5:
-                                target.setVector2v(propName, copyValue);
-                                return [3 /*break*/, 12];
-                            case 6:
-                                target.setVector3v(propName, copyValue);
-                                return [3 /*break*/, 12];
-                            case 7:
-                                target.setVector4v(propName, copyValue);
-                                return [3 /*break*/, 12];
-                            case 8: return [4 /*yield*/, this.setMaterialTexture(target, copyValue.url, propName)];
-                            case 9:
-                                _b.sent();
-                                return [3 /*break*/, 12];
-                            case 10:
-                                target.setMatrixv(propName, copyValue);
-                                return [3 /*break*/, 12];
-                            case 11: return [3 /*break*/, 12];
-                            case 12:
-                                if (propName === "renderQueue") {
-                                    target.config.materials[0].extensions.paper.renderQueue = copyValue;
-                                }
-                                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: copyValue }));
-                                _b.label = 13;
-                            case 13:
-                                _i++;
-                                return [3 /*break*/, 1];
-                            case 14:
-                                _glTFMaterial = target.config.materials[0];
-                                gltfUnifromMap = _glTFMaterial.extensions.KHR_techniques_webgl.values;
-                                uniformMap = target._glTFTechnique.uniforms;
-                                for (key in uniformMap) {
-                                    if (uniformMap[key].semantic === undefined) {
-                                        value = uniformMap[key].value;
-                                        if (Array.isArray(value)) {
-                                            gltfUnifromMap[key] = value.concat();
-                                        }
-                                        else if (value instanceof egret3d.GLTexture2D) {
-                                            gltfUnifromMap[key] = value.name;
-                                        }
-                                        else {
-                                            gltfUnifromMap[key] = value;
-                                        }
-                                    }
-                                }
-                                return [2 /*return*/];
+                    var _i, valueList_1, propertyValue, propName, copyValue, uniformType, _glTFMaterial, gltfUnifromMap, uniformMap, key, value;
+                    return __generator(this, function (_a) {
+                        for (_i = 0, valueList_1 = valueList; _i < valueList_1.length; _i++) {
+                            propertyValue = valueList_1[_i];
+                            propName = propertyValue.propName, copyValue = propertyValue.copyValue, uniformType = propertyValue.uniformType;
+                            if (!copyValue) {
+                                continue;
+                            }
+                            switch (uniformType) {
+                                case 35670 /* BOOL */:
+                                    target.setBoolean(propName, copyValue);
+                                    break;
+                                case 5124 /* INT */:
+                                    target.setInt(propName, copyValue);
+                                case 5126 /* FLOAT */:
+                                    target.setFloat(propName, copyValue);
+                                    break;
+                                case 35671 /* BOOL_VEC2 */:
+                                case 35667 /* INT_VEC2 */:
+                                case 35664 /* FLOAT_VEC2 */:
+                                    target.setVector2v(propName, copyValue);
+                                    break;
+                                case 35672 /* BOOL_VEC3 */:
+                                case 35668 /* INT_VEC3 */:
+                                case 35665 /* FLOAT_VEC3 */:
+                                    target.setVector3v(propName, copyValue);
+                                    break;
+                                case 35673 /* BOOL_VEC4 */:
+                                case 35669 /* INT_VEC4 */:
+                                case 35666 /* FLOAT_VEC4 */:
+                                    target.setVector4v(propName, copyValue);
+                                    break;
+                                case 35678 /* SAMPLER_2D */:
+                                    target._glTFTechnique.uniforms[propName].value = copyValue;
+                                    break;
+                                case 35674 /* FLOAT_MAT2 */:
+                                case 35675 /* FLOAT_MAT3 */:
+                                case 35676 /* FLOAT_MAT4 */:
+                                    target.setMatrixv(propName, copyValue);
+                                    break;
+                                default:
+                                    break;
+                            }
+                            if (propName === "renderQueue") {
+                                target.config.materials[0].extensions.paper.renderQueue = copyValue;
+                            }
+                            this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: copyValue }));
                         }
+                        _glTFMaterial = target.config.materials[0];
+                        gltfUnifromMap = _glTFMaterial.extensions.KHR_techniques_webgl.values;
+                        uniformMap = target._glTFTechnique.uniforms;
+                        for (key in uniformMap) {
+                            if (uniformMap[key].semantic === undefined) {
+                                value = uniformMap[key].value;
+                                if (Array.isArray(value)) {
+                                    gltfUnifromMap[key] = value.concat();
+                                }
+                                else if (value instanceof egret3d.GLTexture2D) {
+                                    gltfUnifromMap[key] = value.name;
+                                }
+                                else {
+                                    gltfUnifromMap[key] = value;
+                                }
+                            }
+                        }
+                        return [2 /*return*/];
                     });
                 });
             };
@@ -25886,75 +25851,6 @@ var paper;
         }(editor.BaseState));
         editor.GameObjectHierarchyState = GameObjectHierarchyState;
         __reflect(GameObjectHierarchyState.prototype, "paper.editor.GameObjectHierarchyState");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        //修改asset
-        var ModifyAssetPropertyState = (function (_super) {
-            __extends(ModifyAssetPropertyState, _super);
-            function ModifyAssetPropertyState() {
-                return _super !== null && _super.apply(this, arguments) || this;
-            }
-            ModifyAssetPropertyState.toString = function () {
-                return "[class common.ModifyAssetPropertyState]";
-            };
-            ModifyAssetPropertyState.create = function (assetUrl, newValueList, preValueCopylist) {
-                var state = new ModifyAssetPropertyState();
-                var data = {
-                    assetUrl: assetUrl,
-                    newValueList: newValueList,
-                    preValueCopylist: preValueCopylist
-                };
-                state.data = data;
-                return state;
-            };
-            ModifyAssetPropertyState.prototype.modifyAssetPropertyValues = function (assetUrl, valueList) {
-                return __awaiter(this, void 0, void 0, function () {
-                    var _this = this;
-                    var target;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0: return [4 /*yield*/, this.editorModel.getAssetByAssetUrl(assetUrl)];
-                            case 1:
-                                target = _a.sent();
-                                valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
-                                    var propName, copyValue, valueEditType, newValue;
-                                    return __generator(this, function (_a) {
-                                        propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                        newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
-                                        this.editorModel.setTargetProperty(propName, target, newValue);
-                                        this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: newValue });
-                                        return [2 /*return*/];
-                                    });
-                                }); });
-                                return [2 /*return*/];
-                        }
-                    });
-                });
-            };
-            ModifyAssetPropertyState.prototype.undo = function () {
-                if (_super.prototype.undo.call(this)) {
-                    var _a = this.data, assetUrl = _a.assetUrl, preValueCopylist = _a.preValueCopylist;
-                    this.modifyAssetPropertyValues(assetUrl, preValueCopylist);
-                    return true;
-                }
-                return false;
-            };
-            ModifyAssetPropertyState.prototype.redo = function () {
-                if (_super.prototype.redo.call(this)) {
-                    var _a = this.data, newValueList = _a.newValueList, assetUrl = _a.assetUrl;
-                    this.modifyAssetPropertyValues(assetUrl, newValueList);
-                    return true;
-                }
-                return false;
-            };
-            return ModifyAssetPropertyState;
-        }(editor.BaseState));
-        editor.ModifyAssetPropertyState = ModifyAssetPropertyState;
-        __reflect(ModifyAssetPropertyState.prototype, "paper.editor.ModifyAssetPropertyState");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;

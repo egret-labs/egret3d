@@ -99,8 +99,12 @@ namespace egret3d {
             }
             egret3d.InputManager.touch.updateOffsetAndScale(x, y, touchScaleX, touchScaleY, shouldRotate);
             egret3d.InputManager.mouse.updateOffsetAndScale(x, y, touchScaleX, touchScaleY, shouldRotate);
-            
-            paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput.$updateSize();
+
+            //
+            const webInput = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput;
+            if (webInput) {
+                webInput.$updateSize();
+            }
         }
     }
 

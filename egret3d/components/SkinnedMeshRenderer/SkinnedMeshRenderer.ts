@@ -37,11 +37,6 @@ namespace egret3d {
      * @language
      */
     export class SkinnedMeshRenderer extends MeshRenderer {
-        /**
-         * 
-         */
-        public static dataCaches: { key: string, data: Float32Array }[] = [];
-
         @paper.serializedField
         private _mesh: Mesh | null = null;
 

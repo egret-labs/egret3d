@@ -46,8 +46,13 @@ namespace egret3d {
             let displayList = new egret.sys.DisplayList(stage);
             displayList.renderBuffer = new egret.sys.RenderBuffer(undefined, undefined, true);
             stage.$displayList = displayList;
-            //
-            egret.web.$cacheTextAdapter(paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput, stage, WebGLCapabilities.canvas.parentNode as HTMLDivElement, WebGLCapabilities.canvas);
+
+
+            // TODO
+            const webInput = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput;
+            if (webInput) {
+                egret.web.$cacheTextAdapter(webInput, stage, WebGLCapabilities.canvas.parentNode as HTMLDivElement, WebGLCapabilities.canvas);
+            }
 
             InputManager.touch.addEventListener("touchstart", this._onTouchStart, this);
             InputManager.touch.addEventListener("touchend", this._onTouchEnd, this);

@@ -8,7 +8,7 @@
         ],
         "sourceMap": false,
         "declaration": true,
-        "stripInternal": false,
+        "stripInternal": true,
         "alwaysStrict": false,
         "noImplicitAny": false,
         "noImplicitThis": false,

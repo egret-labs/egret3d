@@ -117,7 +117,7 @@ namespace paper {
          * @internal
          */
         public readonly _addedComponents: (BaseComponent | null)[] = [];
-        private _components: BaseComponent[] = [];
+        private _behaviourComponents: BaseComponent[] = [];
         private readonly _interestConfig: ReadonlyArray<InterestConfig> = null as any;
         private readonly _globalGameObject: GameObject = Application.sceneManager.globalGameObject;
 
@@ -180,7 +180,7 @@ namespace paper {
                 }
             }
 
-            if (this._bufferedComponents.indexOf(component) >= 0 || this._components.indexOf(component) >= 0) { // Buffered or added.
+            if (this._bufferedComponents.indexOf(component) >= 0 || this._behaviourComponents.indexOf(component) >= 0) { // Buffered or added.
                 return;
             }
 
@@ -197,13 +197,13 @@ namespace paper {
             }
 
             if (this._isBehaviour) {
-                index = this._components.indexOf(component);
+                index = this._behaviourComponents.indexOf(component);
                 if (index < 0) { // Uninclude.
                     return;
                 }
 
                 this._isRemoved = true;
-                this._components[index] = null as any;
+                this._behaviourComponents[index] = null as any;
 
                 index = this._addedComponents.indexOf(component);
                 if (index >= 0) {
@@ -327,11 +327,11 @@ namespace paper {
                 let removeCount = 0;
                 this._isRemoved = false;
 
-                for (const component of this._components) {
+                for (const component of this._behaviourComponents) {
                     if (component) {
                         if (removeCount > 0) {
-                            this._components[index - removeCount] = component;
-                            this._components[index] = null as any;
+                            this._behaviourComponents[index - removeCount] = component;
+                            this._behaviourComponents[index] = null as any;
                         }
                     }
                     else {
@@ -342,7 +342,7 @@ namespace paper {
                 }
 
                 if (removeCount > 0) {
-                    this._components.length -= removeCount;
+                    this._behaviourComponents.length -= removeCount;
                 }
             }
 
@@ -366,7 +366,15 @@ namespace paper {
                     }
 
                     this._addedComponents.push(component);
-                    this._components.push(component);
+
+                    if (component instanceof Behaviour) {
+                        if (component.gameObject.getComponent(egret3d.Camera)) { // Camera component update first.
+                            this._behaviourComponents.unshift(component);
+                        }
+                        else {
+                            this._behaviourComponents.push(component);
+                        }
+                    }
                 }
 
                 this._bufferedComponents.length = 0;
@@ -388,7 +396,7 @@ namespace paper {
          * 
          */
         public get components(): ReadonlyArray<BaseComponent> {
-            return this._components;
+            return this._behaviourComponents;
         }
     }
 }
