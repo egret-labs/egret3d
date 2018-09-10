@@ -3,11 +3,6 @@
 #if defined(SPHERHBILLBOARD)||defined(STRETCHEDBILLBOARD)||defined(HORIZONTALBILLBOARD)||defined(VERTICALBILLBOARD)
 	attribute vec2 corner;
 #endif
-#ifdef RENDERMESH
-	attribute vec3 position;
-	attribute vec4 color;
-#endif
-attribute vec2 uv;
 attribute vec3 startPosition;
 attribute vec3 startVelocity;
 attribute vec4 startColor;
