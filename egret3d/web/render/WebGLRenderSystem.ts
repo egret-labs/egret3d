@@ -101,7 +101,7 @@ namespace egret3d {
             const mesh = drawCall.mesh;
             const glTFMesh = mesh.glTFMesh;
             const primitive = glTFMesh.primitives[drawCall.subMeshIndex];
-            const vertexAccessor = mesh.getAccessor(glTFMesh.primitives[0].attributes.POSITION!);
+            const vertexAccessor = mesh.getAccessor(glTFMesh.primitives[0].attributes.POSITION || 0);
             const bufferOffset = mesh.getBufferOffset(vertexAccessor);
             const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;
 

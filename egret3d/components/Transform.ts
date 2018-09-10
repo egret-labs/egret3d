@@ -187,37 +187,55 @@ namespace egret3d {
                 this._children[i].gameObject.destroy();
             }
         }
+
+        public contains(value: Transform): boolean {
+            if (value === this) {
+                return false;
+            }
+
+            let ancestor: Transform | null = value;
+            while (ancestor !== this && ancestor !== null) {
+                ancestor = ancestor.parent;
+            }
+
+            return ancestor === this;
+        }
         /**
          * 设置父节点 
          */
-        public setParent(newParent: Transform | null, worldPositionStays: boolean = false) {
-            const oldParent = this._parent;
-            if (oldParent === newParent) {
-                return;
+        public setParent(value: Transform | null, worldPositionStays: boolean = false) {
+            const prevParent = this._parent;
+            if (prevParent === value) {
+                return this;
             }
 
             if (
-                newParent &&
-                this.gameObject.scene !== newParent.gameObject.scene
+                value &&
+                this.gameObject.scene !== value.gameObject.scene
             ) {
                 console.warn("Cannot change the parent to a different scene.");
-                return;
+                return this;
+            }
+
+            if (this === value || this.contains(value)) {
+                console.error("Set the parent error.");
+                return this;
             }
 
             if (worldPositionStays) {
                 _helpVector3.copy(this.getPosition());
             }
 
-            if (oldParent) {
-                oldParent._removeFromChildren(this);
+            if (prevParent) {
+                prevParent._removeFromChildren(this);
             }
 
-            if (newParent) {
-                newParent._children.push(this);
+            if (value) {
+                value._children.push(this);
             }
 
-            this._parent = newParent;
-            this._onParentChange(newParent, oldParent);
+            this._parent = value;
+            this._onParentChange(value, prevParent);
 
             if (worldPositionStays) {
                 this.setPosition(_helpVector3);

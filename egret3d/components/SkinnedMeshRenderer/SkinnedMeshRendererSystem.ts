@@ -12,7 +12,15 @@ namespace egret3d {
             {
                 componentClass: SkinnedMeshRenderer,
                 listeners: [
-                    { type: MeshFilterEventType.Mesh, listener: (component: SkinnedMeshRenderer) => { this._updateDrawCalls(component.gameObject); } },
+                    {
+                        type: MeshFilterEventType.Mesh, listener: (component: SkinnedMeshRenderer) => {
+                            this._updateDrawCalls(component.gameObject);
+
+                            if (component.gameObject.renderer) {
+                                component.gameObject.renderer.recalculateAABB();
+                            }
+                        }
+                    },
                     { type: paper.RendererEventType.Materials, listener: (component: SkinnedMeshRenderer) => { this._updateDrawCalls(component.gameObject); } },
                 ]
             }
@@ -29,6 +37,11 @@ namespace egret3d {
 
             if (!renderer.mesh || renderer.materials.length === 0) {
                 return;
+            }
+
+            if (renderer._aabbDirty) {
+                renderer.recalculateAABB();
+                renderer._aabbDirty = false;
             }
 
             renderer.mesh._createBuffer();

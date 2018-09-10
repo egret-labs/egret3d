@@ -41,6 +41,11 @@ namespace egret3d {
                 return;
             }
 
+            if (renderer._aabbDirty) {
+                renderer.recalculateAABB();
+                renderer._aabbDirty = false;
+            }
+
             filter.mesh._createBuffer();
             this._drawCalls.renderers.push(renderer);
             //

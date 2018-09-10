@@ -327,12 +327,12 @@ namespace egret3d {
             const gameObject = paper.GameObject.create(name, tag, scene);
 
             if (mesh === this.AXISES) {
-                const axisX = this.createObject(this.LINE, "axisX", paper.DefaultTags.Untagged, scene);
-                const axisY = this.createObject(this.LINE, "axisY", paper.DefaultTags.Untagged, scene);
-                const axisZ = this.createObject(this.LINE, "axisZ", paper.DefaultTags.Untagged, scene);
-                const arrowX = this.createObject(this.PYRAMID, "arrowX", paper.DefaultTags.Untagged, scene);
-                const arrowY = this.createObject(this.PYRAMID, "arrowY", paper.DefaultTags.Untagged, scene);
-                const arrowZ = this.createObject(this.PYRAMID, "arrowZ", paper.DefaultTags.Untagged, scene);
+                const axisX = this.createObject(this.LINE, "axisX", tag, scene);
+                const axisY = this.createObject(this.LINE, "axisY", tag, scene);
+                const axisZ = this.createObject(this.LINE, "axisZ", tag, scene);
+                const arrowX = this.createObject(this.PYRAMID, "arrowX", tag, scene);
+                const arrowY = this.createObject(this.PYRAMID, "arrowY", tag, scene);
+                const arrowZ = this.createObject(this.PYRAMID, "arrowZ", tag, scene);
 
                 axisX.transform.parent = gameObject.transform;
                 axisY.transform.parent = gameObject.transform;
