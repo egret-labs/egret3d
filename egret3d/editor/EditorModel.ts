@@ -223,8 +223,8 @@ namespace paper.editor {
             }
         }
 
-        public createGameObject(parentList: (GameObject | Scene)[], createType: string) {
-            let state = CreateGameObjectState.create(parentList, createType);
+        public createGameObject(parentList: (GameObject | Scene)[], createType: string,mesh:egret3d.Mesh = null) {
+            let state = CreateGameObjectState.create(parentList, createType,mesh);
             this.addState(state);
         }
 
