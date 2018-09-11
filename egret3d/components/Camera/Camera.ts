@@ -40,13 +40,13 @@ namespace egret3d {
          * 是否清除颜色缓冲区
          */
         @paper.serializedField
-        @paper.editor.extraProperty(paper.editor.EditType.CHECKBOX)
-        public clearOption_Color: boolean = false;
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        public clearOption_Color: boolean = true;
         /**
          * 是否清除深度缓冲区
          */
         @paper.serializedField
-        @paper.editor.extraProperty(paper.editor.EditType.CHECKBOX)
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public clearOption_Depth: boolean = true;
         /**
          * 相机的渲染剔除，对应 GameObject 的层级。
@@ -55,25 +55,25 @@ namespace egret3d {
          * - camera.cullingMask &= ~paper.CullingMask.UI;
          */
         @paper.serializedField
-        @paper.editor.extraProperty(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.CullingMask) })
+        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.CullingMask) })
         public cullingMask: paper.CullingMask = paper.CullingMask.Everything;
         /**
          * 相机渲染排序
          */
         @paper.serializedField
-        @paper.editor.extraProperty(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public order: number = 0;
         /**
          * 透视投影的fov
          */
         @paper.serializedField
-        @paper.editor.extraProperty(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public fov: number = Math.PI * 0.25;
         /**
          * 正交投影的竖向size
          */
         @paper.serializedField
-        @paper.editor.extraProperty(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public size: number = 2.0;
         /**
          * 0=正交，1=透视 中间值可以在两种相机间过度
@@ -84,8 +84,8 @@ namespace egret3d {
          * 背景色
          */
         @paper.serializedField
-        @paper.editor.extraProperty(paper.editor.EditType.COLOR)
-        public readonly backgroundColor: Color = Color.create(0.13, 0.28, 0.51, 1);
+        @paper.editor.property(paper.editor.EditType.COLOR)
+        public readonly backgroundColor: Color = Color.create(0.15, 0.25, 0.5, 1.0);
         /**
          * 相机视窗
          */

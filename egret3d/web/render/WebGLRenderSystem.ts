@@ -448,11 +448,14 @@ namespace egret3d {
                     }
 
                     if (camera.postQueues.length === 0) {
-                        renderState.targetAndViewport(camera.viewport, camera.renderTarget);
-                        renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                        if (renderEnabled) {
+                            renderState.targetAndViewport(camera.viewport, camera.renderTarget);
+                            renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                        }
+
                         this._renderCamera(camera, renderEnabled);
 
-                        if (camera.renderTarget) {
+                        if (renderEnabled && camera.renderTarget) {
                             if (camera.renderTarget.generateMipmap()) {
                                 this._renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
                             }

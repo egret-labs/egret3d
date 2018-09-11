@@ -105,10 +105,10 @@ namespace egret3d {
                 det = n11 * t11 + n21 * t12 + n31 * t13;
 
             if (det === 0) {
+                // TODO
+                // var msg = "can't invert matrix, determinant is 0";
 
-                var msg = "can't invert matrix, determinant is 0";
-
-                console.warn(msg);
+                // console.warn(msg);
 
 
                 return this.identity();
