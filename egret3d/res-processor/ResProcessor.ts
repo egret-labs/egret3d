@@ -1,4 +1,4 @@
-namespace RES.processor {
+namespace egret3d {
 
     function promisify(loader: egret.ImageLoader | egret.HttpRequest | egret.Sound, resource: RES.ResourceInfo): Promise<any> {
 
@@ -152,7 +152,7 @@ namespace RES.processor {
 
     export const MeshProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
-            return host.load(resource, RES.processor.BinaryProcessor).then((result) => {
+            return host.load(resource, "bin").then((result) => {
                 const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
                 let glb: egret3d.GLTFAsset;
 
@@ -181,7 +181,7 @@ namespace RES.processor {
 
     export const AnimationProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
-            return host.load(resource, RES.processor.BinaryProcessor).then((result) => {
+            return host.load(resource, "bin").then((result) => {
                 const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
                 const animation: egret3d.GLTFAsset = new egret3d.GLTFAsset();
                 animation.name = resource.name;
@@ -241,7 +241,8 @@ namespace RES.processor {
 
     function loadSubAssets(data: paper.ISerializedData, resource: RES.ResourceInfo) {
         return Promise.all(data.assets.map(((item) => {
-            const r = (RES.host.resourceConfig as any)["getResource"](item);
+            const host = RES.host;
+            const r = (host.resourceConfig as any)["getResource"](item);
             if (r) {
                 return host.load(r);
             }
