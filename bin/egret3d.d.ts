@@ -3806,6 +3806,7 @@ declare namespace egret3d {
         static AXISES: Mesh;
         static CUBE_WIREFRAMED: Mesh;
         static PYRAMID_WIREFRAMED: Mesh;
+        static GRID: Mesh;
         initialize(): void;
         /**
          * 创建带网格的实体。
@@ -3824,6 +3825,7 @@ declare namespace egret3d {
          */
         static createCylinder(radiusTop?: number, radiusBottom?: number, height?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, radialSegments?: number, heightSegments?: number, openEnded?: boolean, thetaStart?: number, thetaLength?: number, differentFace?: boolean): Mesh;
         static createSphereCCW(radius?: number, widthSegments?: number, heightSegments?: number): Mesh;
+        static createGrid(size: number, divisions: number, color1?: egret3d.Color, color2?: egret3d.Color): Mesh;
     }
 }
 declare namespace egret3d {

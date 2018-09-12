@@ -23,6 +23,7 @@ namespace egret3d {
         public static AXISES: Mesh;
         public static CUBE_WIREFRAMED: Mesh;
         public static PYRAMID_WIREFRAMED: Mesh;
+        public static GRID: Mesh;
 
         public initialize() {
             super.initialize();
@@ -201,6 +202,21 @@ namespace egret3d {
                     0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
                     0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
                 ]);
+                
+                // for (let iy = 0; iy < gridY; iy++) {
+                //     for (let ix = 0; ix < gridX; ix++) {
+                //         const a = meshVertexCount + ix + gridX1 * iy;
+                //         const b = meshVertexCount + ix + gridX1 * (iy + 1);
+                //         const c = meshVertexCount + (ix + 1) + gridX1 * (iy + 1);
+                //         const d = meshVertexCount + (ix + 1) + gridX1 * iy;
+
+                //         // faces
+                //         indices.push(
+                //             a, b, d,
+                //             b, c, d
+                //         );
+                //     }
+                // }
             }
 
             { // CUBE_WIREFRAMED.
@@ -319,6 +335,15 @@ namespace egret3d {
                     1, 1, 1, 1,
                 ]);
             }
+
+            {
+                //GRID
+                const mesh = DefaultMeshes.createGrid(50, 50);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/grid.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.GRID = mesh;
+            }
         }
         /**
          * 创建带网格的实体。
@@ -367,6 +392,7 @@ namespace egret3d {
                     case this.LINE:
                     case this.CUBE_WIREFRAMED:
                     case this.PYRAMID_WIREFRAMED:
+                    case this.GRID:
                         renderer.material = DefaultMaterials.LINEDASHED_COLOR;
                         break;
                 }
@@ -825,6 +851,47 @@ namespace egret3d {
             for (let i = 0, l = tris.length; i < l; i++) {
                 indices[i] = tris[i];
             }
+
+            return mesh;
+        }
+
+        public static createGrid(size: number, divisions: number, color1?: egret3d.Color, color2?: egret3d.Color) {
+            size = size || 10;
+            divisions = divisions || 10;
+            color1 = color1 !== undefined ? color1 : egret3d.Color.create(0.26, 0.26, 0.26);
+            color2 = color2 !== undefined ? color2 : egret3d.Color.create(0.53, 0.53, 0.53);
+
+            const center = divisions / 2;
+            const step = size / divisions;
+            const halfSize = size / 2;
+            const vertices: number[] = [], colors: number[] = [];
+
+            for (let i = 0, k = - halfSize; i <= divisions; i++ , k += step) {
+
+                vertices.push(- halfSize, 0, k);
+                vertices.push(halfSize, 0, k);
+                vertices.push(k, 0, - halfSize);
+                vertices.push(k, 0, halfSize);
+
+                const color = i === center ? color1 : color2;
+
+                colors.push(color.r, color.g, color.b, color.a);
+                colors.push(color.r, color.g, color.b, color.a);
+                colors.push(color.r, color.g, color.b, color.a);
+                colors.push(color.r, color.g, color.b, color.a);
+            }
+
+            for (var i = 0; i < colors.length; i += 80) {
+                for (var j = 0; j < 16; j++) {
+                    colors[i + j] = 0.26;
+                }
+            }
+
+            const mesh = new Mesh(vertices.length, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+            mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, colors);
+
+            mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
 
             return mesh;
         }

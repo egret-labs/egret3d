@@ -193,8 +193,8 @@ namespace egret3d {
                     case gltf.MeshPrimitiveMode.Points:
                         break;
 
-                    case gltf.MeshPrimitiveMode.Lines:
-                        break;
+                    // case gltf.MeshPrimitiveMode.Lines:
+                    //     break;
 
                     case gltf.MeshPrimitiveMode.LineLoop:
                         break;
@@ -233,8 +233,8 @@ namespace egret3d {
                         else {
                             for (let i = 0, l = castVertices.length; i < l; i += 9) { //
                                 p0.fromArray(castVertices, i);
-                                p0.fromArray(castVertices, i + 3);
-                                p0.fromArray(castVertices, i + 6);
+                                p1.fromArray(castVertices, i + 3);
+                                p2.fromArray(castVertices, i + 6);
 
                                 const result = castRay.intersectTriangle(p0, p1, p2);
                                 if (result) {
