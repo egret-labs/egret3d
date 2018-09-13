@@ -348,7 +348,7 @@ namespace egret3d {
 
             {
                 //CAMERA_WIREFRAMED
-                const mesh = DefaultMeshes.createCameraWireframed(egret3d.Color.RED);
+                const mesh = DefaultMeshes.createCameraWireframed(egret3d.Color.create(1.0, 0.7, 0), egret3d.Color.RED, egret3d.Color.create(0, 0.7, 1), egret3d.Color.WHITE, egret3d.Color.create(0.2, 0.2, 0.2));
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/camera.mesh.bin";
                 paper.Asset.register(mesh);
@@ -368,6 +368,9 @@ namespace egret3d {
                 const arrowX = this.createObject(this.PYRAMID, "arrowX", tag, scene);
                 const arrowY = this.createObject(this.PYRAMID, "arrowY", tag, scene);
                 const arrowZ = this.createObject(this.PYRAMID, "arrowZ", tag, scene);
+                const pickX = this.createObject(this.CUBE, "pickAxisX", tag, scene);
+                const pickY = this.createObject(this.CUBE, "pickAxisY", tag, scene);
+                const pickZ = this.createObject(this.CUBE, "pickAxisZ", tag, scene);
 
                 axisX.transform.parent = gameObject.transform;
                 axisY.transform.parent = gameObject.transform;
@@ -375,6 +378,9 @@ namespace egret3d {
                 arrowX.transform.parent = axisX.transform;
                 arrowY.transform.parent = axisY.transform;
                 arrowZ.transform.parent = axisZ.transform;
+                pickX.transform.parent = gameObject.transform;
+                pickY.transform.parent = gameObject.transform;
+                pickZ.transform.parent = gameObject.transform;
 
                 axisY.transform.setLocalEuler(0.0, 0.0, Math.PI * 0.5);
                 axisZ.transform.setLocalEuler(0.0, -Math.PI * 0.5, 0.0);
@@ -386,12 +392,21 @@ namespace egret3d {
                 arrowY.transform.setLocalPosition(Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
                 arrowZ.transform.setLocalPosition(Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
 
+                pickX.transform.setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(1, 0.3, 0.3);
+                pickY.transform.setLocalPosition(egret3d.Vector3.UP).setLocalScale(0.3, 1, 0.3);
+                pickZ.transform.setLocalPosition(egret3d.Vector3.FORWARD).setLocalScale(0.3, 0.3, 1);
+                pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = false;
+
                 (axisX.renderer as MeshRenderer).material = (axisX.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (axisY.renderer as MeshRenderer).material = (axisY.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (axisZ.renderer as MeshRenderer).material = (axisZ.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (arrowX.renderer as MeshRenderer).material = (arrowX.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (arrowY.renderer as MeshRenderer).material = (arrowY.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (arrowZ.renderer as MeshRenderer).material = (arrowZ.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+
+                (pickX.renderer as MeshRenderer).material = (pickX.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (pickY.renderer as MeshRenderer).material = (pickY.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (pickZ.renderer as MeshRenderer).material = (pickZ.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
             }
             else {
                 const meshFilter = gameObject.addComponent(MeshFilter);
@@ -866,15 +881,31 @@ namespace egret3d {
             return mesh;
         }
 
-        public static createCameraWireframed(color: egret3d.Color) {
+        public static createCameraWireframed(colorFrustum: egret3d.Color, colorCone: egret3d.Color, colorUp: egret3d.Color, colorTarget: egret3d.Color, colorCross: egret3d.Color) {
 
             const vertices: number[] = [], colors: number[] = [];
-
-            for (let i = 0; i < 50; i++) {
+            const verticeCount = 50;
+            for (let i = 0; i < verticeCount; i++) {
                 vertices.push(0.0, 0.0, 0.0);
-                colors.push(color.r, color.g, color.b, color.a);
+
+                if (i < 24) {
+                    colors.push(colorFrustum.r, colorFrustum.g, colorFrustum.b, colorFrustum.a);
+                }
+                else if (i < 32) {// cone
+                    colors.push(colorCone.r, colorCone.g, colorCone.b, colorCone.a);
+                }
+                else if (i < 38) {// up
+                    colors.push(colorUp.r, colorUp.g, colorUp.b, colorUp.a);
+                }
+                else if (i < 40) {// target
+                    colors.push(colorTarget.r, colorTarget.g, colorTarget.b, colorTarget.a);
+                }
+                else {
+                    colors.push(colorCross.r, colorCross.g, colorCross.b, colorCross.a);
+                }
+
             }
-            const mesh = new Mesh(50, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+            const mesh = new Mesh(verticeCount, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
             mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
             mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, colors);
 

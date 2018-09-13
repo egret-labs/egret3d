@@ -3739,6 +3739,7 @@ var egret3d;
             if (order === void 0) { order = 2 /* YXZ */; }
             return _helpMatrix.fromRotation(this).toEuler(value, order);
         };
+        Quaternion.IDENTITY = new Quaternion();
         Quaternion._instancesQ = [];
         return Quaternion;
     }(egret3d.Vector4));
@@ -4933,8 +4934,8 @@ var egret3d;
                 switch (primitive.mode) {
                     case 0 /* Points */:
                         break;
-                    // case gltf.MeshPrimitiveMode.Lines:
-                    //     break;
+                    case 1 /* Lines */:
+                        break;
                     case 2 /* LineLoop */:
                         break;
                     case 3 /* LineStrip */:
@@ -9051,6 +9052,14 @@ var egret3d;
                 paper.Asset.register(mesh);
                 DefaultMeshes.GRID = mesh;
             }
+            {
+                //CAMERA_WIREFRAMED
+                var mesh = DefaultMeshes.createCameraWireframed(egret3d.Color.create(1.0, 0.7, 0), egret3d.Color.RED, egret3d.Color.create(0, 0.7, 1), egret3d.Color.WHITE, egret3d.Color.create(0.2, 0.2, 0.2));
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/camera.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.CAMERA_WIREFRAMED = mesh;
+            }
         };
         /**
          * 创建带网格的实体。
@@ -9064,12 +9073,18 @@ var egret3d;
                 var arrowX = this.createObject(this.PYRAMID, "arrowX", tag, scene);
                 var arrowY = this.createObject(this.PYRAMID, "arrowY", tag, scene);
                 var arrowZ = this.createObject(this.PYRAMID, "arrowZ", tag, scene);
+                var pickX = this.createObject(this.CUBE, "pickAxisX", tag, scene);
+                var pickY = this.createObject(this.CUBE, "pickAxisY", tag, scene);
+                var pickZ = this.createObject(this.CUBE, "pickAxisZ", tag, scene);
                 axisX.transform.parent = gameObject.transform;
                 axisY.transform.parent = gameObject.transform;
                 axisZ.transform.parent = gameObject.transform;
                 arrowX.transform.parent = axisX.transform;
                 arrowY.transform.parent = axisY.transform;
                 arrowZ.transform.parent = axisZ.transform;
+                pickX.transform.parent = gameObject.transform;
+                pickY.transform.parent = gameObject.transform;
+                pickZ.transform.parent = gameObject.transform;
                 axisY.transform.setLocalEuler(0.0, 0.0, Math.PI * 0.5);
                 axisZ.transform.setLocalEuler(0.0, -Math.PI * 0.5, 0.0);
                 arrowX.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
@@ -9078,12 +9093,19 @@ var egret3d;
                 arrowX.transform.setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
                 arrowY.transform.setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
                 arrowZ.transform.setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
+                pickX.transform.setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(1, 0.3, 0.3);
+                pickY.transform.setLocalPosition(egret3d.Vector3.UP).setLocalScale(0.3, 1, 0.3);
+                pickZ.transform.setLocalPosition(egret3d.Vector3.FORWARD).setLocalScale(0.3, 0.3, 1);
+                pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = false;
                 axisX.renderer.material = axisX.renderer.material.clone().setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
                 axisY.renderer.material = axisY.renderer.material.clone().setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
                 axisZ.renderer.material = axisZ.renderer.material.clone().setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
                 arrowX.renderer.material = arrowX.renderer.material.clone().setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
                 arrowY.renderer.material = arrowY.renderer.material.clone().setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
                 arrowZ.renderer.material = arrowZ.renderer.material.clone().setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
+                pickX.renderer.material = pickX.renderer.material.clone().setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
+                pickY.renderer.material = pickY.renderer.material.clone().setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
+                pickZ.renderer.material = pickZ.renderer.material.clone().setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
             }
             else {
                 var meshFilter = gameObject.addComponent(egret3d.MeshFilter);
@@ -9094,6 +9116,7 @@ var egret3d;
                     case this.CUBE_WIREFRAMED:
                     case this.PYRAMID_WIREFRAMED:
                     case this.GRID:
+                    case this.CAMERA_WIREFRAMED:
                         renderer.material = egret3d.DefaultMaterials.LINEDASHED_COLOR;
                         break;
                 }
@@ -9478,6 +9501,33 @@ var egret3d;
             for (var i = 0, l = tris.length; i < l; i++) {
                 indices[i] = tris[i];
             }
+            return mesh;
+        };
+        DefaultMeshes.createCameraWireframed = function (colorFrustum, colorCone, colorUp, colorTarget, colorCross) {
+            var vertices = [], colors = [];
+            var verticeCount = 50;
+            for (var i = 0; i < verticeCount; i++) {
+                vertices.push(0.0, 0.0, 0.0);
+                if (i < 24) {
+                    colors.push(colorFrustum.r, colorFrustum.g, colorFrustum.b, colorFrustum.a);
+                }
+                else if (i < 32) {
+                    colors.push(colorCone.r, colorCone.g, colorCone.b, colorCone.a);
+                }
+                else if (i < 38) {
+                    colors.push(colorUp.r, colorUp.g, colorUp.b, colorUp.a);
+                }
+                else if (i < 40) {
+                    colors.push(colorTarget.r, colorTarget.g, colorTarget.b, colorTarget.a);
+                }
+                else {
+                    colors.push(colorCross.r, colorCross.g, colorCross.b, colorCross.a);
+                }
+            }
+            var mesh = new egret3d.Mesh(verticeCount, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
+            mesh.setAttributes("POSITION" /* POSITION */, vertices);
+            mesh.setAttributes("COLOR_0" /* COLOR_0 */, colors);
+            mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
             return mesh;
         };
         DefaultMeshes.createGrid = function (size, divisions, color1, color2) {

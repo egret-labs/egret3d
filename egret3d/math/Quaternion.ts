@@ -3,7 +3,7 @@ namespace egret3d {
      * 
      */
     export class Quaternion extends Vector4 {
-
+        public static readonly IDENTITY: Readonly<Quaternion> = new Quaternion();
         private static readonly _instancesQ: Quaternion[] = [];
         /**
          * 

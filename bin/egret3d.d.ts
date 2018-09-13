@@ -2300,6 +2300,7 @@ declare namespace egret3d {
      *
      */
     class Quaternion extends Vector4 {
+        static readonly IDENTITY: Readonly<Quaternion>;
         private static readonly _instancesQ;
         /**
          *
@@ -3806,6 +3807,7 @@ declare namespace egret3d {
         static AXISES: Mesh;
         static CUBE_WIREFRAMED: Mesh;
         static PYRAMID_WIREFRAMED: Mesh;
+        static CAMERA_WIREFRAMED: Mesh;
         static GRID: Mesh;
         initialize(): void;
         /**
@@ -3825,6 +3827,7 @@ declare namespace egret3d {
          */
         static createCylinder(radiusTop?: number, radiusBottom?: number, height?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, radialSegments?: number, heightSegments?: number, openEnded?: boolean, thetaStart?: number, thetaLength?: number, differentFace?: boolean): Mesh;
         static createSphereCCW(radius?: number, widthSegments?: number, heightSegments?: number): Mesh;
+        static createCameraWireframed(colorFrustum: egret3d.Color, colorCone: egret3d.Color, colorUp: egret3d.Color, colorTarget: egret3d.Color, colorCross: egret3d.Color): Mesh;
         static createGrid(size: number, divisions: number, color1?: egret3d.Color, color2?: egret3d.Color): Mesh;
     }
 }
