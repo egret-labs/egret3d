@@ -1,8 +1,6 @@
-namespace RES.processor {
+namespace egret3d {
 
-    // export let loadByURL = false;
-
-    function promisify(loader: egret.ImageLoader | egret.HttpRequest | egret.Sound, resource: RES.ResourceInfo): Promise<any> {
+    function promisify(loader: egret.HttpRequest | egret.Sound, resource: RES.ResourceInfo): Promise<any> {
 
         return new Promise((resolve, reject) => {
             let onSuccess = () => {
@@ -17,6 +15,38 @@ namespace RES.processor {
             loader.addEventListener(egret.Event.COMPLETE, onSuccess, this);
             loader.addEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
         })
+    }
+
+
+    export const BitmapDataProcessor: RES.processor.Processor = {
+
+        onLoadStart(host, resource) {
+
+            const loader = new egret.ImageLoader();
+
+            loader.load(resource.root + resource.url);
+            return new Promise((resolve, reject) => {
+                let onSuccess = () => {
+                    let bitmapData = loader.data;
+                    loader.removeEventListener(egret.Event.COMPLETE, onSuccess, this);
+                    loader.removeEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
+                    resolve(bitmapData);
+                }
+
+                let onError = () => {
+                    loader.removeEventListener(egret.Event.COMPLETE, onSuccess, this);
+                    loader.removeEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
+                    let e = new RES.ResourceManagerError(1001, resource.url);
+                    reject(e);
+                }
+                loader.addEventListener(egret.Event.COMPLETE, onSuccess, this);
+                loader.addEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
+            })
+        },
+
+        onRemoveStart(host, resource) {
+            return Promise.resolve();
+        }
     }
 
     export const ShaderProcessor: RES.processor.Processor = {
@@ -54,41 +84,47 @@ namespace RES.processor {
         }
     };
 
+    type ImgDescConfig = {
+        name: string,
+        filterMode: string,
+        format: string,
+        mipmap: boolean,
+        wrap: string
+    }
+
     export const TextureDescProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
-            return host.load(resource, "json").then((data) => {
-                let _name: string = data["name"];
-                let _filterMode: string = data["filterMode"];
-                let _format: string = data["format"];
-                let _mipmap: boolean = data["mipmap"];
-                let _wrap: string = data["wrap"];
+            return host.load(resource, "json").then((data: ImgDescConfig) => {
+                const name = data.name;
+                const filterMode = data.filterMode;
+                const format = data.format;
+                const mipmap = data.mipmap;
+                const wrap = data.wrap;
 
                 let _textureFormat = egret3d.TextureFormatEnum.RGBA;
-                if (_format == "RGB") {
+                if (format == "RGB") {
                     _textureFormat = egret3d.TextureFormatEnum.RGB;
-                } else if (_format == "Gray") {
+                } else if (format == "Gray") {
                     _textureFormat = egret3d.TextureFormatEnum.Gray;
                 }
 
                 let _linear: boolean = true;
-                if (_filterMode.indexOf("linear") < 0) {
+                if (filterMode.indexOf("linear") < 0) {
                     _linear = false;
                 }
 
                 let _repeat: boolean = false;
-                if (_wrap.indexOf("Repeat") >= 0) {
+                if (wrap.indexOf("Repeat") >= 0) {
                     _repeat = true;
                 }
-                const imgResource = (RES.host.resourceConfig as any)["getResource"](_name);
-                let loader = new egret.ImageLoader();
-                loader.load(imgResource.root + imgResource.url);
-                return promisify(loader, imgResource)
-                    .then((image) => {
-                        const texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, _textureFormat);
-                        texture.uploadImage(image.source, _mipmap, _linear, true, _repeat);
-                        paper.Asset.register(texture);
-                        return texture;
-                    });
+                const imgResource = (RES.host.resourceConfig as any)["getResource"](name);
+                return host.load(imgResource, BitmapDataProcessor).then((bitmapData: egret.BitmapData) => {
+                    const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, _textureFormat);
+                    texture.uploadImage(bitmapData.source, mipmap, _linear, true, _repeat);
+                    paper.Asset.register(texture);
+                    return texture;
+
+                })
             });
         },
         onRemoveStart(host, resource) {
@@ -100,17 +136,16 @@ namespace RES.processor {
 
     export const TextureProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
-            const loader = new egret.ImageLoader();
-            loader.load(resource.root + resource.url);
-            return promisify(loader, resource).then((image) => {
-                const texture = new egret3d.GLTexture2D(resource.name, image.source.width, image.source.height, egret3d.TextureFormatEnum.RGBA);
-                texture.uploadImage(image.source, true, true, true, true);
+
+            return host.load(resource, BitmapDataProcessor).then((bitmapData: egret.BitmapData) => {
+                const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, egret3d.TextureFormatEnum.RGBA);
+                texture.uploadImage(bitmapData.source, true, true, true, true);
                 paper.Asset.register(texture);
                 return texture;
-            });
+            })
         },
         onRemoveStart(host, resource) {
-            let data = host.get(resource);
+            let data: egret3d.GLTexture2D = host.get(resource);
             data.dispose();
             return Promise.resolve();
         }
@@ -154,7 +189,7 @@ namespace RES.processor {
 
     export const MeshProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
-            return host.load(resource, RES.processor.BinaryProcessor).then((result) => {
+            return host.load(resource, "bin").then((result) => {
                 const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
                 let glb: egret3d.GLTFAsset;
 
@@ -183,7 +218,7 @@ namespace RES.processor {
 
     export const AnimationProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
-            return host.load(resource, RES.processor.BinaryProcessor).then((result) => {
+            return host.load(resource, "bin").then((result) => {
                 const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
                 const animation: egret3d.GLTFAsset = new egret3d.GLTFAsset();
                 animation.name = resource.name;
@@ -242,20 +277,13 @@ namespace RES.processor {
     };
 
     function loadSubAssets(data: paper.ISerializedData, resource: RES.ResourceInfo) {
-
         return Promise.all(data.assets.map(((item) => {
-            const r = (RES.host.resourceConfig as any)["getResource"](item);
+            const host = RES.host;
+            const r = (host.resourceConfig as any)["getResource"](item);
             if (r) {
                 return host.load(r);
             }
             else {
-                // if (loadByURL) {
-                //     let root = resource.root;
-                //     if (!root) { // TODO RES 应支持 getbyurl 的 root 设置。
-                //         root = "resource";
-                //     }
-                // }
-
                 console.error("加载不存在的资源", item);
                 return Promise.resolve();
             }
@@ -270,4 +298,5 @@ namespace RES.processor {
     RES.processor.map("Animation", AnimationProcessor);
     RES.processor.map("Prefab", PrefabProcessor);
     RES.processor.map("Scene", SceneProcessor);
+    RES.processor.map("bitmapdata", BitmapDataProcessor);
 }

@@ -83,7 +83,7 @@ namespace paper.editor {
             valueList.forEach(async (propertyValue) => {
                 const { propName, copyValue, valueEditType } = propertyValue;
                 let newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
-                this.editorModel.setTargetProperty(propName, gameObj, newValue);
+                this.editorModel.setTargetProperty(propName, gameObj, newValue,valueEditType);
                 this.dispathPropertyEvent(gameObj, propName, newValue);
             });
         }
@@ -95,7 +95,7 @@ namespace paper.editor {
                     valueList.forEach(async (propertyValue) => {
                         const { propName, copyValue, valueEditType } = propertyValue;
                         let newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
-                        this.editorModel.setTargetProperty(propName, prefabComp, newValue);
+                        this.editorModel.setTargetProperty(propName, prefabComp, newValue,valueEditType);
                         this.dispathPropertyEvent(prefabComp, propName, newValue);
                     })
                 }

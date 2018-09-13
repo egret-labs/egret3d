@@ -73,21 +73,6 @@ namespace paper.editor {
     }
     let propertyMap: { [key: string]: { extends: string, propertyList: PropertyInfo[] } } = {};
     /**
-     * 从枚举中生成装饰器列表项。
-     */
-    export function getItemsFromEnum(enumObject: any) {
-        const items = [];
-        for (const k in enumObject) {
-            if (!isNaN(Number(k))) {
-                continue;
-            }
-
-            items.push({ label: k, value: enumObject[k] });
-        }
-
-        return items;
-    }
-    /**
      * 装饰器:属性
      * @param editType 编辑类型
      */
@@ -117,6 +102,22 @@ namespace paper.editor {
     }
 
     /**
+     * 从枚举中生成装饰器列表项。
+     */
+    export function getItemsFromEnum(enumObject: any) {
+        const items = [];
+        for (const k in enumObject) {
+            if (!isNaN(Number(k))) {
+                continue;
+            }
+
+            items.push({ label: k, value: enumObject[k] });
+        }
+
+        return items;
+    }
+
+    /**
    * 获取一个实例对象的编辑信息
    * @param classInstance 实例对象
    */
@@ -133,87 +134,6 @@ namespace paper.editor {
             whileInsance = whileInsance.__proto__;
         }
         return retrunList;
-    }
-    /**
-     * 获取一个实例对象的编辑信息
-     * @param classInstance 实例对象
-     */
-    export function getEditInfo2(classInstance: any): PropertyInfo[] {
-        let className = classInstance.constructor.name;
-        function _getEditInfo(className: string): PropertyInfo[] {
-            let classInfo = propertyMap[className];
-            if (classInfo) {
-                let extendsInfo = _getEditInfo(classInfo.extends);
-                extendsInfo = extendsInfo.concat(classInfo.propertyList);
-                return extendsInfo;
-            }
-            return [];
-        }
-        return _getEditInfo(className);
-    }
-
-    export function getEditInfoByPrototype(classInstance: any): PropertyInfo[] {
-        function _getEditInfo(proto: any): PropertyInfo[] {
-            let classInfo;
-            let extendsInfo;
-
-            if (proto && Object.getPrototypeOf(proto)) {
-                classInfo = propertyMap[Object.getPrototypeOf(proto).constructor.name];
-            }
-
-            if (classInfo) {
-                extendsInfo = _getEditInfo(Object.getPrototypeOf(proto));
-                extendsInfo = extendsInfo.concat(classInfo.propertyList);
-                return extendsInfo;
-            } else {
-                if (proto) {
-                    extendsInfo = _getEditInfo(Object.getPrototypeOf(proto));
-                    return extendsInfo;
-                }
-            }
-            return [];
-        }
-        return _getEditInfo(classInstance);
-    }
-
-    let extraPropertyMap: { [key: string]: { extends: string, propertyList: PropertyInfo[] } } = {};
-    /**
-     * 装饰器:属性
-     * @param editType 编辑类型
-     */
-    export function extraProperty(editType?: EditType, option?: PropertyOption) {
-        return function (target: any, property: string) {
-            if (!extraPropertyMap[target.constructor.name]) {
-                extraPropertyMap[target.constructor.name] = {
-                    extends: target.__proto__.constructor.name,
-                    propertyList: [],
-                }
-            }
-            if (editType !== undefined) {
-                extraPropertyMap[target.constructor.name].propertyList.push(new PropertyInfo(property, editType, option));
-            }
-            else {
-                //TODO:自动分析编辑类型
-            }
-        }
-    }
-
-    /**
-     * 额外信息
-     * @param classInstance 实例对象
-     */
-    export function getExtraInfo(classInstance: any): PropertyInfo[] {
-        let className = classInstance.constructor.name;
-        function _getExtraInfo(className: string): PropertyInfo[] {
-            let classInfo = extraPropertyMap[className];
-            if (classInfo) {
-                let extendsInfo = _getExtraInfo(classInfo.extends);
-                extendsInfo = extendsInfo.concat(classInfo.propertyList);
-                return extendsInfo;
-            }
-            return [];
-        }
-        return _getExtraInfo(className);
     }
 
 }

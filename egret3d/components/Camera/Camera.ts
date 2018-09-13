@@ -361,7 +361,7 @@ namespace egret3d {
         /**
          * 相机到近裁剪面距离
          */
-        @paper.editor.extraProperty(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public get near(): number {
             return this._near;
         }
@@ -379,7 +379,7 @@ namespace egret3d {
         /**
          * 相机到远裁剪面距离
          */
-        @paper.editor.extraProperty(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.NUMBER)
         public get far(): number {
             return this._far;
         }
