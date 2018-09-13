@@ -23,6 +23,7 @@ namespace egret3d {
         public static AXISES: Mesh;
         public static CUBE_WIREFRAMED: Mesh;
         public static PYRAMID_WIREFRAMED: Mesh;
+        public static CAMERA_WIREFRAMED: Mesh;
         public static GRID: Mesh;
 
         public initialize() {
@@ -202,7 +203,7 @@ namespace egret3d {
                     0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
                     0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
                 ]);
-                
+
                 // for (let iy = 0; iy < gridY; iy++) {
                 //     for (let ix = 0; ix < gridX; ix++) {
                 //         const a = meshVertexCount + ix + gridX1 * iy;
@@ -344,6 +345,15 @@ namespace egret3d {
                 paper.Asset.register(mesh);
                 DefaultMeshes.GRID = mesh;
             }
+
+            {
+                //CAMERA_WIREFRAMED
+                const mesh = DefaultMeshes.createCameraWireframed(egret3d.Color.RED);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/camera.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.CAMERA_WIREFRAMED = mesh;
+            }
         }
         /**
          * 创建带网格的实体。
@@ -393,6 +403,7 @@ namespace egret3d {
                     case this.CUBE_WIREFRAMED:
                     case this.PYRAMID_WIREFRAMED:
                     case this.GRID:
+                    case this.CAMERA_WIREFRAMED:
                         renderer.material = DefaultMaterials.LINEDASHED_COLOR;
                         break;
                 }
@@ -851,6 +862,23 @@ namespace egret3d {
             for (let i = 0, l = tris.length; i < l; i++) {
                 indices[i] = tris[i];
             }
+
+            return mesh;
+        }
+
+        public static createCameraWireframed(color: egret3d.Color) {
+
+            const vertices: number[] = [], colors: number[] = [];
+
+            for (let i = 0; i < 50; i++) {
+                vertices.push(0.0, 0.0, 0.0);
+                colors.push(color.r, color.g, color.b, color.a);
+            }
+            const mesh = new Mesh(50, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+            mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, colors);
+
+            mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
 
             return mesh;
         }

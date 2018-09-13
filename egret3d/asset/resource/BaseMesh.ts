@@ -193,8 +193,8 @@ namespace egret3d {
                     case gltf.MeshPrimitiveMode.Points:
                         break;
 
-                    // case gltf.MeshPrimitiveMode.Lines:
-                    //     break;
+                    case gltf.MeshPrimitiveMode.Lines:
+                        break;
 
                     case gltf.MeshPrimitiveMode.LineLoop:
                         break;
