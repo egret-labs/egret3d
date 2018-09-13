@@ -24,7 +24,7 @@ namespace paper {
         /**
          * 
          */
-        protected readonly _groups: ComponentGroup[] = [];
+        protected readonly _groups: GameObjectGroup[] = [];
         /**
          * 
          */
@@ -73,7 +73,7 @@ namespace paper {
                         }
                     }
 
-                    this._groups.push(ComponentGroup.create(interest));
+                    this._groups.push(GameObjectGroup.create(interest));
                 }
             }
 
@@ -181,23 +181,23 @@ namespace paper {
          * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
          * @see paper.GameObject#addComponent()
          */
-        public onAddGameObject?(gameObject: GameObject, group: ComponentGroup): void;
+        public onAddGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
         /**
          * 充分非必要组件添加到实体时调用。
          * - 注意，该调用并不是立即的，而是等到添加到实体的下一帧才被调用。
          * @see paper.GameObject#addComponent()
          */
-        public onAddComponent?(component: BaseComponent, group: ComponentGroup): void;
+        public onAddComponent?(component: BaseComponent, group: GameObjectGroup): void;
         /**
          * 充分非必要组件从实体移除时调用。
          * @see paper.GameObject#removeComponent()
          */
-        public onRemoveComponent?(component: BaseComponent, group: ComponentGroup): void;
+        public onRemoveComponent?(component: BaseComponent, group: GameObjectGroup): void;
         /**
          * 实体从系统移除时调用。
          * @see paper.GameObject#removeComponent()
          */
-        public onRemoveGameObject?(gameObject: GameObject, group: ComponentGroup): void;
+        public onRemoveGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
         /**
          * 系统更新时调用。
          */
@@ -246,7 +246,7 @@ namespace paper {
         /**
          * 
          */
-        public get groups(): ReadonlyArray<ComponentGroup> {
+        public get groups(): ReadonlyArray<GameObjectGroup> {
             return this._groups;
         }
     }

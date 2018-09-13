@@ -277,7 +277,7 @@ namespace egret3d {
             }
 
             _helpVector3A.set(pitch, yaw, 0.0);
-            this.fromEuler(_helpVector3A, EulerOrder.ZYX).normalize();
+            this.fromEuler(_helpVector3A, EulerOrder.YXZ).normalize();
 
             return this;
         }

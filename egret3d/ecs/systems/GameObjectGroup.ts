@@ -45,12 +45,12 @@ namespace paper {
     /**
      * 
      */
-    export class ComponentGroup {
-        private static readonly _groups: ComponentGroup[] = [];
+    export class GameObjectGroup {
+        private static readonly _groups: GameObjectGroup[] = [];
         /**
          * @internal
          */
-        public static create(interestConfig: ReadonlyArray<InterestConfig>): ComponentGroup {
+        public static create(interestConfig: ReadonlyArray<InterestConfig>): GameObjectGroup {
             interestConfig = Array.isArray(interestConfig) ? interestConfig : [interestConfig];
 
             for (const group of this._groups) {
@@ -85,7 +85,7 @@ namespace paper {
                 }
             }
 
-            const group = new ComponentGroup(interestConfig);
+            const group = new GameObjectGroup(interestConfig);
             this._groups.push(group);
 
             return group;

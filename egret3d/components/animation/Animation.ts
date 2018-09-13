@@ -461,6 +461,7 @@ namespace egret3d {
             if (this.animation.channels) {
                 const rootGameObject = this._animationComponent.gameObject;
                 const children = rootGameObject.transform.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
+                children["__root__"] = rootGameObject.transform;
 
                 for (const glTFChannel of this.animation.channels) {
                     const node = this.animationAsset.getNode(glTFChannel.target.node || 0);

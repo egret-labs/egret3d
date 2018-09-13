@@ -1072,6 +1072,7 @@ namespace egret3d {
                     this.euler = this._localEuler.add(p1 as Readonly<IVector3>, this.euler);
                 }
                 else {
+                    this.localEuler; //
                     this.localEuler = this._localEuler.add(p1 as Readonly<IVector3>);
                 }
             }
@@ -1082,6 +1083,7 @@ namespace egret3d {
                     this.euler = this._localEuler.add(_helpVector3, this.euler);
                 }
                 else {
+                    this.localEuler; //
                     this.localEuler = this._localEuler.add(_helpVector3);
                 }
             }
@@ -1099,6 +1101,7 @@ namespace egret3d {
                     this.eulerAngles = this._localEulerAngles.add(p1 as Readonly<IVector3>, this.eulerAngles);
                 }
                 else {
+                    this.localEulerAngles; //
                     this.localEulerAngles = this._localEulerAngles.add(p1 as Readonly<IVector3>);
                 }
             }
@@ -1109,6 +1112,7 @@ namespace egret3d {
                     this.eulerAngles = this._localEulerAngles.add(_helpVector3, this.eulerAngles);
                 }
                 else {
+                    this.localEulerAngles; //
                     this.localEulerAngles = this._localEulerAngles.add(_helpVector3);
                 }
             }

@@ -66,7 +66,7 @@ namespace paper {
             }
 
             Time && Time.update();
-            ComponentGroup.update();
+            GameObjectGroup.update();
             this.systemManager.update();
         }
 

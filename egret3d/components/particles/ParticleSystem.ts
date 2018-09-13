@@ -468,7 +468,7 @@ namespace egret3d.particle {
             }
         }
 
-        public onAddGameObject(gameObject: paper.GameObject, _group: paper.ComponentGroup) {
+        public onAddGameObject(gameObject: paper.GameObject, _group: paper.GameObjectGroup) {
             this._updateDrawCalls(gameObject);
 
             const component = gameObject.getComponent(ParticleComponent) as ParticleComponent;
