@@ -500,6 +500,7 @@ declare namespace egret3d {
         set(x: number, y: number, z: number): this;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
         fromPlaneProjection(plane: Readonly<Plane>, source?: Readonly<IVector3>): this;
+        applyMatrix3(matrix: Readonly<Matrix3>, source?: Readonly<IVector3>): this;
         applyMatrix(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
         applyDirection(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
         applyQuaternion(quaternion: Readonly<IVector4>, source?: Readonly<IVector3>): this;
@@ -5179,12 +5180,17 @@ declare namespace egret3d.particle {
     }
 }
 declare namespace egret3d {
-    class Matrix3 {
+    class Matrix3 implements paper.IRelease<Matrix3>, paper.ISerializable {
         private static readonly _instances;
         static create(): Matrix3;
-        static release(value: Matrix3): void;
-        readonly rawData: Float32Array;
+        release(): this;
+        /**
+         * @readonly
+         */
+        rawData: Float32Array;
         constructor(rawData?: Float32Array | null);
+        serialize(): Float32Array;
+        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): this;
         copy(value: Readonly<Matrix3>): this;
         clone(): Matrix3;
         set(n11: number, n12: number, n13: number, n21: number, n22: number, n23: number, n31: number, n32: number, n33: number): this;
@@ -5192,8 +5198,10 @@ declare namespace egret3d {
         inverse(matrix: Matrix3): this;
         getNormalMatrix(matrix4: Readonly<Matrix4>): this;
         transpose(): this;
-        setFromMatrix4(m: Matrix): this;
+        setFromMatrix4(m: Matrix4): this;
         determinant(): number;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromBuffer(value: ArrayBuffer, byteOffset?: number): this;
     }
 }
 declare namespace egret3d.particle {

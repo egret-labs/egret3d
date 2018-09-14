@@ -408,6 +408,16 @@ namespace egret3d {
                 (pickY.renderer as MeshRenderer).material = (pickY.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (pickZ.renderer as MeshRenderer).material = (pickZ.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
             }
+            else if (mesh === this.CAMERA_WIREFRAMED) {
+                const meshFilter = gameObject.addComponent(MeshFilter);
+                const renderer = gameObject.addComponent(MeshRenderer);
+                meshFilter.mesh = mesh;
+                
+                const pick = this.createObject(this.CUBE, "pickCamera", tag, scene);
+                pick.transform.parent = gameObject.transform;
+                pick.activeSelf = false;
+                renderer.material = DefaultMaterials.LINEDASHED_COLOR;(pick.renderer as MeshRenderer).material = (pick.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+            }
             else {
                 const meshFilter = gameObject.addComponent(MeshFilter);
                 const renderer = gameObject.addComponent(MeshRenderer);
@@ -418,7 +428,6 @@ namespace egret3d {
                     case this.CUBE_WIREFRAMED:
                     case this.PYRAMID_WIREFRAMED:
                     case this.GRID:
-                    case this.CAMERA_WIREFRAMED:
                         renderer.material = DefaultMaterials.LINEDASHED_COLOR;
                         break;
                 }

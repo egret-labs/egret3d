@@ -860,6 +860,23 @@ var egret3d;
             }
             return this.add(egret3d.helpVector3A.multiplyScalar(-plane.getDistance(source), plane.normal));
         };
+        Vector3.prototype.applyMatrix3 = function (matrix, source) {
+            if (!source) {
+                source = this;
+            }
+            // const x = source.x, y = source.y, z = source.z;
+            // const rawData = matrix.rawData;
+            // const w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]);
+            // this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
+            // this.y = (rawData[1] * x + rawData[5] * y + rawData[9] * z + rawData[13]) * w;
+            // this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
+            var x = source.x, y = source.y, z = source.z;
+            var e = matrix.rawData;
+            this.x = e[0] * x + e[3] * y + e[6] * z;
+            this.y = e[1] * x + e[4] * y + e[7] * z;
+            this.z = e[2] * x + e[5] * y + e[8] * z;
+            return this;
+        };
         Vector3.prototype.applyMatrix = function (matrix, source) {
             if (!source) {
                 source = this;
@@ -9107,6 +9124,16 @@ var egret3d;
                 pickY.renderer.material = pickY.renderer.material.clone().setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
                 pickZ.renderer.material = pickZ.renderer.material.clone().setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
             }
+            else if (mesh === this.CAMERA_WIREFRAMED) {
+                var meshFilter = gameObject.addComponent(egret3d.MeshFilter);
+                var renderer = gameObject.addComponent(egret3d.MeshRenderer);
+                meshFilter.mesh = mesh;
+                var pick = this.createObject(this.CUBE, "pickCamera", tag, scene);
+                pick.transform.parent = gameObject.transform;
+                pick.activeSelf = false;
+                renderer.material = egret3d.DefaultMaterials.LINEDASHED_COLOR;
+                pick.renderer.material = pick.renderer.material.clone().setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
+            }
             else {
                 var meshFilter = gameObject.addComponent(egret3d.MeshFilter);
                 var renderer = gameObject.addComponent(egret3d.MeshRenderer);
@@ -9116,7 +9143,6 @@ var egret3d;
                     case this.CUBE_WIREFRAMED:
                     case this.PYRAMID_WIREFRAMED:
                     case this.GRID:
-                    case this.CAMERA_WIREFRAMED:
                         renderer.material = egret3d.DefaultMaterials.LINEDASHED_COLOR;
                         break;
                 }
@@ -15847,6 +15873,10 @@ var egret3d;
     var Matrix3 = (function () {
         function Matrix3(rawData) {
             if (rawData === void 0) { rawData = null; }
+            /**
+             * @readonly
+             */
+            this.rawData = null;
             if (rawData) {
                 this.rawData = rawData;
             }
@@ -15864,24 +15894,20 @@ var egret3d;
             }
             return new Matrix3();
         };
-        Matrix3.release = function (value) {
-            if (this._instances.indexOf(value) >= 0) {
-                return;
+        Matrix3.prototype.release = function () {
+            if (Matrix3._instances.indexOf(this) < 0) {
+                Matrix3._instances.push(this);
             }
-            this._instances.push(value);
+            return this;
+        };
+        Matrix3.prototype.serialize = function () {
+            return this.rawData;
+        };
+        Matrix3.prototype.deserialize = function (value) {
+            return this.fromArray(value);
         };
         Matrix3.prototype.copy = function (value) {
-            var fromRawData = value.rawData;
-            var toRawData = this.rawData;
-            toRawData[0] = fromRawData[0];
-            toRawData[1] = fromRawData[1];
-            toRawData[2] = fromRawData[2];
-            toRawData[3] = fromRawData[3];
-            toRawData[4] = fromRawData[4];
-            toRawData[5] = fromRawData[5];
-            toRawData[6] = fromRawData[6];
-            toRawData[7] = fromRawData[7];
-            toRawData[8] = fromRawData[8];
+            this.fromArray(value.rawData);
             return this;
         };
         Matrix3.prototype.clone = function () {
@@ -15956,11 +15982,23 @@ var egret3d;
             var a = te[0], b = te[1], c = te[2], d = te[3], e = te[4], f = te[5], g = te[6], h = te[7], i = te[8];
             return a * e * i - a * f * h - b * d * i + b * f * g + c * d * h - c * e * g;
         };
+        Matrix3.prototype.fromArray = function (value, offset) {
+            if (offset === void 0) { offset = 0; }
+            for (var i = 0; i < 9; ++i) {
+                this.rawData[i] = value[i + offset];
+            }
+            return this;
+        };
+        Matrix3.prototype.fromBuffer = function (value, byteOffset) {
+            if (byteOffset === void 0) { byteOffset = 0; }
+            this.rawData = new Float32Array(value, byteOffset, 9);
+            return this;
+        };
         Matrix3._instances = [];
         return Matrix3;
     }());
     egret3d.Matrix3 = Matrix3;
-    __reflect(Matrix3.prototype, "egret3d.Matrix3");
+    __reflect(Matrix3.prototype, "egret3d.Matrix3", ["paper.IRelease", "paper.ISerializable"]);
     var helpMat_1 = new Matrix3();
 })(egret3d || (egret3d = {}));
 var egret3d;
