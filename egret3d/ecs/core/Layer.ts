@@ -26,9 +26,9 @@ namespace paper {
     export const enum DefaultNames {
         NoName = "NoName",
         Global = "Global",
-        MainCamera = "MainCamera",
-        EditorCamera = "EditorCamera",
-        Editor = "Editor",
+        MainCamera = "Main Camera",
+        EditorCamera = "Editor Camera",
+        EditorOnly = "Editor Only",
     }
     /**
      * 
@@ -110,5 +110,13 @@ namespace paper {
      */
     export function layerTest(cullingMask: CullingMask, layer: Layer) {
         return (cullingMask & layer) !== 0;
+    }
+    /**
+     * 
+     * @param cullingMask 
+     * @param layer 
+     */
+    export function removeLayer(cullingMask: CullingMask, layer: Layer) {
+        return cullingMask & ~layer;
     }
 }

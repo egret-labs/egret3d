@@ -139,7 +139,7 @@ namespace egret3d {
             const vertices = this.getVertices()!;
             const joints = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array : null;
             const weights = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)! as Float32Array : null;
-            let pickInfo: PickInfo | null = null; // TODO
+            let pickInfo: RaycastInfo | null = null; // TODO
 
             _helpMatrix.inverse(worldMatrix);
             _helpRay.copy(ray);
@@ -147,7 +147,7 @@ namespace egret3d {
             _helpRay.direction.applyDirection(_helpMatrix).normalize();
 
             for (const primitive of this._glTFMesh!.primitives) {
-                const indices = primitive.indices !== undefined ? this.getIndices(subMeshIndex++)! : null;
+                const indices = primitive.indices !== undefined ? this.getIndices(subMeshIndex)! : null;
                 let castRay = _helpRay;
                 let castVertices = vertices;
 

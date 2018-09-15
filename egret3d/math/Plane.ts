@@ -82,8 +82,9 @@ namespace egret3d {
                 source = this;
             }
 
-            this.constant = source.constant * (1.0 / source.normal.length);
-            this.normal.normalize(source.normal);
+            const inverseNormalLength = source.normal.length;
+            this.constant = source.constant * (1.0 / inverseNormalLength);
+            this.normal.multiplyScalar(inverseNormalLength, source.normal);
 
             return this;
         }
@@ -93,7 +94,7 @@ namespace egret3d {
                 source = this;
             }
 
-            this.constant = source.constant * -1.0;
+            this.constant = -source.constant;
             this.normal.negate(source.normal);
 
             return this;

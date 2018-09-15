@@ -19,7 +19,9 @@ namespace egret3d {
         public static CYLINDER: Mesh;
         public static SPHERE: Mesh;
 
-        public static LINE: Mesh;
+        public static LINE_X: Mesh;
+        public static LINE_Y: Mesh;
+        public static LINE_Z: Mesh;
         public static AXISES: Mesh;
         public static CUBE_WIREFRAMED: Mesh;
         public static PYRAMID_WIREFRAMED: Mesh;
@@ -169,15 +171,45 @@ namespace egret3d {
                 DefaultMeshes.SPHERE = mesh;
             }
 
-            { // LINE.
+            { // LINE_X.
                 const mesh = new Mesh(2, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/axises.mesh.bin";
+                mesh.name = "builtin/line_x.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
-                DefaultMeshes.LINE = mesh;
+                DefaultMeshes.LINE_X = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
                     0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                ]);
+                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                ]);
+            }
+
+            { // LINE_Y.
+                const mesh = new Mesh(2, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/line_y.mesh.bin";
+                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+                paper.Asset.register(mesh);
+                DefaultMeshes.LINE_Y = mesh;
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+                ]);
+                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                ]);
+            }
+
+            { // LINE_Z.
+                const mesh = new Mesh(2, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/line_z.mesh.bin";
+                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+                paper.Asset.register(mesh);
+                DefaultMeshes.LINE_Z = mesh;
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
                 ]);
                 mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
                     1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
@@ -327,9 +359,9 @@ namespace egret3d {
             const gameObject = paper.GameObject.create(name, tag, scene);
 
             if (mesh === this.AXISES) {
-                const axisX = this.createObject(this.LINE, "axisX", tag, scene);
-                const axisY = this.createObject(this.LINE, "axisY", tag, scene);
-                const axisZ = this.createObject(this.LINE, "axisZ", tag, scene);
+                const axisX = this.createObject(this.LINE_X, "axisX", tag, scene);
+                const axisY = this.createObject(this.LINE_Y, "axisY", tag, scene);
+                const axisZ = this.createObject(this.LINE_Z, "axisZ", tag, scene);
                 const arrowX = this.createObject(this.PYRAMID, "arrowX", tag, scene);
                 const arrowY = this.createObject(this.PYRAMID, "arrowY", tag, scene);
                 const arrowZ = this.createObject(this.PYRAMID, "arrowZ", tag, scene);
@@ -337,19 +369,17 @@ namespace egret3d {
                 axisX.transform.parent = gameObject.transform;
                 axisY.transform.parent = gameObject.transform;
                 axisZ.transform.parent = gameObject.transform;
-                arrowX.transform.parent = axisX.transform;
-                arrowY.transform.parent = axisY.transform;
-                arrowZ.transform.parent = axisZ.transform;
+                arrowX.transform.parent = gameObject.transform;
+                arrowY.transform.parent = gameObject.transform;
+                arrowZ.transform.parent = gameObject.transform;
 
-                axisY.transform.setLocalEuler(0.0, 0.0, Math.PI * 0.5);
-                axisZ.transform.setLocalEuler(0.0, -Math.PI * 0.5, 0.0);
                 arrowX.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
-                arrowY.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
-                arrowZ.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
+                // arrowY.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
+                arrowZ.transform.setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
 
                 arrowX.transform.setLocalPosition(Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
-                arrowY.transform.setLocalPosition(Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
-                arrowZ.transform.setLocalPosition(Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
+                arrowY.transform.setLocalPosition(Vector3.UP).setLocalScale(0.05, 0.1, 0.05);
+                arrowZ.transform.setLocalPosition(Vector3.FORWARD).setLocalScale(0.05, 0.1, 0.05);
 
                 (axisX.renderer as MeshRenderer).material = (axisX.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (axisY.renderer as MeshRenderer).material = (axisY.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
@@ -364,7 +394,7 @@ namespace egret3d {
                 meshFilter.mesh = mesh;
 
                 switch (mesh) {
-                    case this.LINE:
+                    case this.LINE_X:
                     case this.CUBE_WIREFRAMED:
                     case this.PYRAMID_WIREFRAMED:
                         renderer.material = DefaultMaterials.LINEDASHED_COLOR;
@@ -755,7 +785,9 @@ namespace egret3d {
                 groupStart += groupCount;
             }
         }
-
+        /**
+         * TODO 
+         */
         public static createSphereCCW(radius: number = 0.5, widthSegments: number = 24, heightSegments: number = 12) {
             widthSegments = Math.max(3, Math.floor(widthSegments));
             heightSegments = Math.max(2, Math.floor(heightSegments));
