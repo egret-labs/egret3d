@@ -707,7 +707,7 @@ namespace egret3d {
             return value;
         }
 
-        public toEuler(value: Vector3, order: EulerOrder = EulerOrder.XYZ) {
+        public toEuler(value: Vector3, order: EulerOrder = EulerOrder.YXZ) {
             // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
             const rawData = this.rawData;
             const m11 = rawData[0], m12 = rawData[4], m13 = rawData[8];

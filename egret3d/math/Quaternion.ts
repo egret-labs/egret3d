@@ -253,7 +253,7 @@ namespace egret3d {
             this.z = (z * ratioA + this.z * ratioB);
         }
 
-        public lookAt(eye: Vector3, target: Vector3) {
+        public lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>) {
             const dir = _helpVector3A.subtract(target, eye).normalize();
             const dirxz = _helpVector3B.set(dir.x, 0.0, dir.z).normalize();
             const dirxz1 = _helpVector3C.set(dir.x, 0.0, dir.z);
