@@ -15,6 +15,8 @@ namespace egret3d {
     }
     /**
      * Transform 组件。
+     * - 存储实体之间的父子关系。
+     * - 存储实体 3D 空间坐标系。
      */
     export class Transform extends paper.BaseComponent {
         private _localDirty: TransformDirty = TransformDirty.PRS | TransformDirty.Euler | TransformDirty.Matrix;
@@ -170,7 +172,7 @@ namespace egret3d {
             return out;
         }
         /**
-         * 
+         * 销毁所有子 Transform 组件。
          */
         public destroyChildren() {
             let i = this._children.length;
@@ -178,7 +180,9 @@ namespace egret3d {
                 this._children[i].gameObject.destroy();
             }
         }
-
+        /**
+         * 是否包含指定的子 Transform 组件。
+         */
         public contains(value: Transform): boolean {
             if (value === this) {
                 return false;
@@ -192,7 +196,7 @@ namespace egret3d {
             return ancestor === this;
         }
         /**
-         * 设置父节点 
+         * 设置指定的父 Transform 组件。
          */
         public setParent(value: Transform | null, worldPositionStays: boolean = false) {
             const prevParent = this._parent;
@@ -257,8 +261,7 @@ namespace egret3d {
             this._children.splice(index, 0, value);
         }
         /**
-         * 获取对象下标的子集对象
-         * @param index 
+         * 
          */
         public getChildAt(index: number) {
             return 0 <= index && index < this._children.length ? this._children[index] : null;
@@ -935,16 +938,7 @@ namespace egret3d {
             return this;
         }
         /**
-         * x-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取世界坐标系下当前x轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 获取世界坐标系下当前 X 轴的正方向。
          */
         public getRight(out?: Vector3) {
             if (!out) {
@@ -954,16 +948,7 @@ namespace egret3d {
             return out.applyDirection(this.worldMatrix, Vector3.RIGHT);
         }
         /**
-         * y-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取世界坐标系下当前y轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 获取世界坐标系下当前 Y 轴的正方向。
          */
         public getUp(out?: Vector3) {
             if (!out) {
@@ -973,16 +958,7 @@ namespace egret3d {
             return out.applyDirection(this.worldMatrix, Vector3.UP);
         }
         /**
-         * z-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取世界坐标系下当前z轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 获取世界坐标系下当前 Z 轴的正方向。
          */
         public getForward(out?: Vector3) {
             if (!out) {
@@ -992,53 +968,27 @@ namespace egret3d {
             return out.applyDirection(this.worldMatrix, Vector3.FORWARD);
         }
         /**
-         * look at a target
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * 旋转 Z 轴，使其正方向指向目标位置。
          */
-        /**
-         * 旋转当前transform 到指定的目标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public lookAt(target: Readonly<Transform> | Readonly<IVector3>, up?: Readonly<IVector3>) {
-            if (target instanceof Transform) {
-                _helpVector3.copy(target.position);
-            }
-            else {
-                _helpVector3.copy(target as Readonly<IVector3>);
-            }
-
-            if (up) {
-                this._localRotation.fromMatrix(_helpMatrix.lookAt(this.position, _helpVector3, up));
-            }
-            else {
-                this._localRotation.lookAt(this.position, _helpVector3);
-            }
-
-            this.rotation = this._localRotation;
+        public lookAt(target: Readonly<Transform> | Readonly<IVector3>, up: Readonly<IVector3> = Vector3.UP) {
+            this.rotation = this._localRotation.fromMatrix(
+                _helpMatrix.lookAt(
+                    this.position,
+                    target instanceof Transform ? target.position : target as Readonly<IVector3>,
+                    up
+                )
+            );
 
             return this;
         }
         /**
-         * 当前子集对象的数量
+         * 所有子 Transform 组件的总数。
          */
         public get childCount(): number {
             return this._children.length;
         }
         /**
-         * children list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 子物体列表
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 所有子 Transform 组件。
          */
         @paper.serializedField
         @paper.deserializedIgnore
@@ -1046,16 +996,7 @@ namespace egret3d {
             return this._children;
         }
         /**
-         * instance of parent transform
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 父元素实例
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 父 Transform 组件。
          */
         public get parent() {
             return this._parent;

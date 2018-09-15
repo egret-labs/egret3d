@@ -673,7 +673,7 @@ namespace egret3d {
          * @param up 
          */
         public lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>) {
-            const z = _helpVector3C.subtract(target, eye).normalize();//right handle
+            const z = _helpVector3C.subtract(target, eye).normalize(); // left hand.
             const x = _helpVector3A.cross(up, z).normalize();
             const y = _helpVector3B.cross(z, x);
             const rawData = this.rawData;
