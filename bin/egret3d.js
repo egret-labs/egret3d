@@ -4975,6 +4975,7 @@ var egret3d;
                                     }
                                     if (!pickInfo || pickInfo.distance > result.distance) {
                                         pickInfo = result;
+                                        pickInfo.position.applyMatrix(worldMatrix);
                                         pickInfo.subMeshIndex = subMeshIndex;
                                         pickInfo.triangleIndex = i / 3; // TODO
                                     }
@@ -4993,6 +4994,7 @@ var egret3d;
                                     }
                                     if (!pickInfo || pickInfo.distance > result.distance) {
                                         pickInfo = result;
+                                        pickInfo.position.applyMatrix(worldMatrix);
                                         pickInfo.subMeshIndex = subMeshIndex;
                                         pickInfo.triangleIndex = i / 3; // TODO
                                     }
