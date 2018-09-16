@@ -236,7 +236,7 @@ namespace egret3d {
             }
 
             { // CUBE_WIREFRAMED.
-                const mesh = new Mesh(24, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                const mesh = new Mesh(8, 24, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/cube_wireframed.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
@@ -246,60 +246,36 @@ namespace egret3d {
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
                     // Z-
                     -0.5, 0.5, -0.5,
-
                     0.5, 0.5, -0.5,
-                    0.5, 0.5, -0.5,
-
                     0.5, -0.5, -0.5,
-                    0.5, -0.5, -0.5,
-
                     -0.5, -0.5, -0.5,
-                    -0.5, -0.5, -0.5,
-
-                    -0.5, 0.5, -0.5,
-                    //
-                    0.5, 0.5, -0.5, 0.5, 0.5, 0.5,
-                    //
-                    0.5, -0.5, -0.5, 0.5, -0.5, 0.5,
-                    //
-                    -0.5, -0.5, -0.5, -0.5, -0.5, 0.5,
-                    //
-                    -0.5, 0.5, -0.5, -0.5, 0.5, 0.5,
 
                     // Z+
                     0.5, 0.5, 0.5,
-
                     0.5, -0.5, 0.5,
-                    0.5, -0.5, 0.5,
-
                     -0.5, -0.5, 0.5,
-                    -0.5, -0.5, 0.5,
-
                     -0.5, 0.5, 0.5,
-                    -0.5, 0.5, 0.5,
-
-                    0.5, 0.5, 0.5,
                 ]);
                 mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
 
-                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-
-                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-                    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                    1, 1, 1, 1,
+                ]);
+                mesh.setIndices([
+                    0, 1, 1, 2, 2, 3, 3, 0,
+                    4, 5, 5, 6, 6, 7, 7, 4,
+                    0, 7, 1, 4, 2, 5, 3, 6,
                 ]);
             }
 
             { // PYRAMID_WIREFRAMED.
-                const mesh = new Mesh(24, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                const mesh = new Mesh(5, 16, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/pyramid_wireframed.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
@@ -309,22 +285,7 @@ namespace egret3d {
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
                     -0.5, 0.0, -0.5,
                     0.5, 0.0, -0.5,
-                    0.5, 0.0, -0.5,
                     0.5, 0.0, 0.5,
-                    0.5, 0.0, 0.5,
-                    -0.5, 0.0, 0.5,
-                    -0.5, 0.0, 0.5,
-                    -0.5, 0.0, -0.5,
-
-                    -0.5, 0.0, -0.5,
-                    0.0, 1.0, 0.0,
-
-                    0.5, 0.0, -0.5,
-                    0.0, 1.0, 0.0,
-
-                    0.5, 0.0, 0.5,
-                    0.0, 1.0, 0.0,
-
                     -0.5, 0.0, 0.5,
                     0.0, 1.0, 0.0,
                 ]);
@@ -334,21 +295,10 @@ namespace egret3d {
                     1, 1, 1, 1,
                     1, 1, 1, 1,
                     1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
+                ]);
+                mesh.setIndices([
+                    0, 1, 1, 2, 2, 3, 3, 0,
+                    0, 4, 1, 4, 2, 4, 3, 4,
                 ]);
             }
         }

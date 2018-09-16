@@ -66,6 +66,13 @@ namespace egret3d {
             return this;
         }
 
+        public applyMatrix(value: Readonly<Matrix4>, ray?: Readonly<Ray>) {
+            this.origin.applyMatrix(value, (ray || this).origin);
+            this.direction.applyDirection(value, (ray || this).direction);
+
+            return this;
+        }
+
         public getSquaredDistance(value: Readonly<IVector3>): number {
             const directionDistance = helpVector3A.subtract(value, this.origin).dot(this.direction);
             // point behind the ray
@@ -255,7 +262,13 @@ namespace egret3d {
         /**
          * 与 AABB 相交检测。
          */
-        public intersectAABB(aabb: Readonly<AABB>, raycastInfo?: RaycastInfo) {
+        public intersectAABB(aabb: Readonly<AABB>, raycastInfo?: RaycastInfo): boolean;
+        public intersectAABB(minimum: Readonly<IVector3>, maximum: Readonly<IVector3>, raycastInfo?: RaycastInfo): boolean;
+        public intersectAABB(p1: Readonly<AABB> | Readonly<IVector3>, p2?: RaycastInfo | Readonly<IVector3>, p3?: RaycastInfo) {
+            const isA = p1 instanceof AABB;
+            const minimum = isA ? (p1 as Readonly<AABB>).minimum : p1 as Readonly<IVector3>;
+            const maximum = isA ? (p1 as Readonly<AABB>).maximum : p2 as Readonly<IVector3>;
+
             let tmin: number, tmax: number, tymin: number, tymax: number, tzmin: number, tzmax: number;
             const invdirx = 1.0 / this.direction.x,
                 invdiry = 1.0 / this.direction.y,
@@ -263,24 +276,24 @@ namespace egret3d {
             const origin = this.origin;
 
             if (invdirx >= 0.0) {
-                tmin = (aabb.minimum.x - origin.x) * invdirx;
-                tmax = (aabb.maximum.x - origin.x) * invdirx;
+                tmin = (minimum.x - origin.x) * invdirx;
+                tmax = (maximum.x - origin.x) * invdirx;
             }
             else {
-                tmin = (aabb.maximum.x - origin.x) * invdirx;
-                tmax = (aabb.minimum.x - origin.x) * invdirx;
+                tmin = (maximum.x - origin.x) * invdirx;
+                tmax = (minimum.x - origin.x) * invdirx;
             }
 
             if (invdiry >= 0.0) {
-                tymin = (aabb.minimum.y - origin.y) * invdiry;
-                tymax = (aabb.maximum.y - origin.y) * invdiry;
+                tymin = (minimum.y - origin.y) * invdiry;
+                tymax = (maximum.y - origin.y) * invdiry;
             }
             else {
-                tymin = (aabb.maximum.y - origin.y) * invdiry;
-                tymax = (aabb.minimum.y - origin.y) * invdiry;
+                tymin = (maximum.y - origin.y) * invdiry;
+                tymax = (minimum.y - origin.y) * invdiry;
             }
 
-            if ((tmin > tymax) || (tymin > tmax)) return null;
+            if ((tmin > tymax) || (tymin > tmax)) return false;
 
             // These lines also handle the case where tmin or tmax is NaN
             // (result of 0 * Infinity). x !== x returns true if x is NaN
@@ -290,15 +303,15 @@ namespace egret3d {
             if (tymax < tmax || tmax !== tmax) tmax = tymax;
 
             if (invdirz >= 0.0) {
-                tzmin = (aabb.minimum.z - origin.z) * invdirz;
-                tzmax = (aabb.maximum.z - origin.z) * invdirz;
+                tzmin = (minimum.z - origin.z) * invdirz;
+                tzmax = (maximum.z - origin.z) * invdirz;
             }
             else {
-                tzmin = (aabb.maximum.z - origin.z) * invdirz;
-                tzmax = (aabb.minimum.z - origin.z) * invdirz;
+                tzmin = (maximum.z - origin.z) * invdirz;
+                tzmax = (minimum.z - origin.z) * invdirz;
             }
 
-            if ((tmin > tzmax) || (tzmin > tmax)) return null;
+            if ((tmin > tzmax) || (tzmin > tmax)) return false;
 
             if (tzmin > tmin || tmin !== tmin) tmin = tzmin;
 
@@ -306,27 +319,30 @@ namespace egret3d {
 
             // return point closest to the ray (positive side)
 
-            if (tmax < 0.0) return null;
+            if (tmax < 0.0) return false;
 
-            if (!raycastInfo) {
-                raycastInfo = RaycastInfo.create();
+            const raycastInfo = isA ? p2 as RaycastInfo | undefined : p3;
+            if (raycastInfo) {
+                this.at(raycastInfo.distance = tmin >= 0.0 ? tmin : tmax, raycastInfo.position);
             }
 
-            raycastInfo.distance = tmin >= 0.0 ? tmin : tmax;
-            this.at(raycastInfo.distance, raycastInfo.position);
-
-            return raycastInfo;
+            return true;
         }
         /**
          * 与球相交检测。
          */
-        public intersectSphere(center: Readonly<IVector3>, radius: number, raycastInfo?: RaycastInfo) {
+        public intersectSphere(sphere: Readonly<Sphere>, raycastInfo?: RaycastInfo): boolean;
+        public intersectSphere(center: Readonly<IVector3>, radius: number, raycastInfo?: RaycastInfo): boolean;
+        public intersectSphere(p1: Readonly<Sphere> | Readonly<IVector3>, p2?: RaycastInfo | number, p3?: RaycastInfo) {
+            const isA = p1 instanceof AABB;
+            const center = isA ? (p1 as Readonly<Sphere>).center : p1 as Readonly<IVector3>;
+            const radius = isA ? (p1 as Readonly<Sphere>).radius : p2 as number;
             const v1 = helpVector3A.subtract(center, this.origin);
             const tca = v1.dot(this.direction);
             const d2 = v1.dot(v1) - tca * tca;
             const radius2 = radius * radius;
 
-            if (d2 > radius2) return null;
+            if (d2 > radius2) return false;
 
             const thc = Math.sqrt(radius2 - d2);
 
@@ -337,7 +353,7 @@ namespace egret3d {
             const t1 = tca + thc;
 
             // test to see if both t0 and t1 are behind the ray - if so, return null
-            if (t0 < 0.0 && t1 < 0.0) return null;
+            if (t0 < 0.0 && t1 < 0.0) return false;
 
             // test to see if t0 is behind the ray:
             // if it is, the ray is inside the sphere, so return the second exit point scaled by t1,
@@ -345,13 +361,12 @@ namespace egret3d {
 
             // else t0 is in front of the ray, so return the first collision point scaled by t0
 
-            if (!raycastInfo) {
-                raycastInfo = RaycastInfo.create();
+            const raycastInfo = isA ? p2 as RaycastInfo | undefined : p3;
+            if (raycastInfo) {
+                this.at(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
             }
 
-            this.at(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
-
-            return raycastInfo;
+            return true;
 
             // let center_ori = helpVec3_1;
             // Vector3.subtract(center, this.origin, center_ori);
@@ -369,98 +384,6 @@ namespace egret3d {
             // if (d < 0) return false;
 
             // return true;
-        }
-
-        /**
-         * @deprecated
-         */
-        public intersectBoxMinMax(minimum: Readonly<IVector3>, maximum: Readonly<IVector3>): boolean {
-            let d = 0.0;
-            let maxValue = Number.MAX_VALUE;
-            let inv: number;
-            let min: number;
-            let max: number;
-            let temp: number;
-            if (Math.abs(this.direction.x) < 0.0000001) {
-                if (this.origin.x < minimum.x || this.origin.x > maximum.x) {
-                    return false;
-                }
-            } else {
-                inv = 1.0 / this.direction.x;
-                min = (minimum.x - this.origin.x) * inv;
-                max = (maximum.x - this.origin.x) * inv;
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
-
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
-
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-
-                if (d > maxValue) {
-                    return false;
-                }
-            }
-
-            if (Math.abs(this.direction.y) < 0.0000001) {
-                if (this.origin.y < minimum.y || this.origin.y > maximum.y) {
-                    return false;
-                }
-            } else {
-                inv = 1.0 / this.direction.y;
-                min = (minimum.y - this.origin.y) * inv;
-                max = (maximum.y - this.origin.y) * inv;
-
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
-
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
-
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-
-                if (d > maxValue) {
-                    return false;
-                }
-            }
-
-            if (Math.abs(this.direction.z) < 0.0000001) {
-                if (this.origin.z < minimum.z || this.origin.z > maximum.z) {
-                    return false;
-                }
-            } else {
-                inv = 1.0 / this.direction.z;
-                min = (minimum.z - this.origin.z) * inv;
-                max = (maximum.z - this.origin.z) * inv;
-
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
-
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
-
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-
-                if (d > maxValue) {
-                    return false;
-                }
-            }
-            return true;
         }
         /**
          * @deprecated
