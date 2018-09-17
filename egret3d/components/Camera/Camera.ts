@@ -61,24 +61,25 @@ namespace egret3d {
          * 相机渲染排序
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.INT)
         public order: number = 0;
         /**
          * 透视投影的fov
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT)
         public fov: number = Math.PI * 0.25;
         /**
          * 正交投影的竖向size
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT)
         public size: number = 2.0;
         /**
          * 0=正交，1=透视 中间值可以在两种相机间过度
          */
         @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0 })
         public opvalue: number = 1.0;
         /**
          * 背景色
@@ -361,7 +362,7 @@ namespace egret3d {
         /**
          * 相机到近裁剪面距离
          */
-        @paper.editor.extraProperty(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public get near(): number {
             return this._near;
         }
@@ -379,7 +380,7 @@ namespace egret3d {
         /**
          * 相机到远裁剪面距离
          */
-        @paper.editor.extraProperty(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public get far(): number {
             return this._far;
         }

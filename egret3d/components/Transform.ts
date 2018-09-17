@@ -3,32 +3,31 @@ namespace egret3d {
     const _helpRotation = Quaternion.create();
     const _helpMatrix = Matrix4.create();
 
+    const enum TransformDirty {
+        PRS = 0b00111,
+
+        Position = 0b00001,
+        Rotation = 0b00010,
+        Scale = 0b00100,
+
+        Euler = 0b01000,
+        Matrix = 0b10000,
+    }
     /**
-     * Transform Class
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * Transform实例可以被添加到3D场景中，并持有一个GameObejct实例
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * Transform 组件。
+     * - 存储实体之间的父子关系。
+     * - 存储实体 3D 空间坐标系。
      */
     export class Transform extends paper.BaseComponent {
-        // private _dirtyLocalT: boolean = true;
-        // private _dirtyLocalRS: boolean = true;
-        // private _dirtyWorldT: boolean = true;
-        // private _dirtyWorldRS: boolean = true;
-        private _dirtyLocal: boolean = true;
-        private _dirtyWorld: boolean = true;
+        private _localDirty: TransformDirty = TransformDirty.PRS | TransformDirty.Euler | TransformDirty.Matrix;
+        private _worldDirty: TransformDirty = TransformDirty.PRS | TransformDirty.Euler | TransformDirty.Matrix;
         /**
          * 世界矩阵的行列式，如果小于0，说明进行了反转
          * @internal
          */
         public _worldMatrixDeterminant: number = 0.0;
         private readonly _localMatrix: Matrix4 = Matrix4.create();
-        private readonly _localToWorld: Matrix4 = Matrix4.create();
+        private readonly _worldMatrix: Matrix4 = Matrix4.create();
 
         @paper.serializedField("localPosition")
         private readonly _localPosition: Vector3 = Vector3.create();
@@ -65,75 +64,70 @@ namespace egret3d {
             }
         }
 
-        private _dirtify(isLocalDirty: ConstrainBoolean) {
+        private _dirtify(isLocalDirty: ConstrainBoolean, dirty: TransformDirty) {
             if (isLocalDirty) {
-                this._dirtyLocal = true;
-            }
+                this._localDirty |= dirty | TransformDirty.Matrix;
 
-            if (!this._dirtyWorld) {
-                this._dirtyWorld = true;
-
-                for (const child of this._children) {
-                    if (child._dirtyWorld) {
-                        continue;
-                    }
-
-                    child._dirtify(false);
+                if (dirty & TransformDirty.Rotation) {
+                    this._localDirty |= TransformDirty.Euler;
                 }
             }
 
-            if (this.gameObject.renderer) {
-                this.gameObject.renderer._boundingSphereDirty = true;
+            if (!(this._worldDirty & dirty) || !(this._worldDirty & TransformDirty.Matrix)) {
+                this._worldDirty |= dirty | TransformDirty.Matrix;
+
+                if (dirty & TransformDirty.Rotation) {
+                    this._worldDirty |= TransformDirty.Euler;
+                }
+
+                for (const child of this._children) {
+                    child._dirtify(false, dirty);
+                }
+
+                if (this.gameObject.renderer) { // TODO
+                    this.gameObject.renderer._boundingSphereDirty = true;
+                }
             }
         }
 
-        // private _dirtify(isLocalDirty: boolean, isTranslateDirty: boolean) {
-        //     if (isLocalDirty) {
-        //         if (isTranslateDirty) {
-        //             this._dirtyLocalT = true;
-        //         }
-        //         else {
-        //             this._dirtyLocalRS = true;
-        //         }
-        //     }
-
-        //     if (isTranslateDirty) {
-        //         if (!this._dirtyWorldT) {
-        //             this._dirtyWorldT = true;
-
-        //             for (const child of this._children) {
-        //                 if (child._dirtyWorldT) {
-        //                     continue;
-        //                 }
-
-        //                 child._dirtify(false, isTranslateDirty);
-        //             }
-        //         }
-        //     }
-        //     else if (!this._dirtyWorldRS) {
-        //         this._dirtyWorldRS = true;
-
-        //         for (const child of this._children) {
-        //             if (child._dirtyWorldRS) {
-        //                 continue;
-        //             }
-
-        //             child._dirtify(false, isTranslateDirty);
-        //         }
-        //     }
-
-
-        //     if (this.gameObject.renderer) {
-        //         this.gameObject.renderer._boundingSphereDirty = true;
-        //     }
-        // }
-        private _updateEuler(order?: EulerOrder, isWorldSpace?: boolean) {
+        private _updateMatrix(isWorldSpace: boolean) {
             if (isWorldSpace) {
+                const localMatrix = this.localMatrix;
 
+                if (this._parent) {
+                    this._worldMatrix.multiply(this._parent.worldMatrix, localMatrix);
+                }
+                else {
+                    this._worldMatrix.copy(localMatrix);
+                }
+
+                this._worldMatrixDeterminant = this._worldMatrix.determinant();
+                this._worldDirty &= ~TransformDirty.Matrix;
             }
             else {
-                this.getLocalMatrix().toEuler(this._localEuler, order);
+                if ((this._localDirty & TransformDirty.Rotation) || (this._localDirty & TransformDirty.Scale)) {
+                    this._localMatrix.compose(this.localPosition, this.localRotation, this.localScale);
+                    this._localDirty &= ~TransformDirty.PRS;
+                }
+                else if (this._localDirty & TransformDirty.Position) {
+                    this._localMatrix.fromTranslate(this.localPosition, true);
+                    this._localDirty &= ~TransformDirty.Position;
+                }
+
+                this._localDirty &= ~TransformDirty.Matrix;
+            }
+        }
+
+        private _updateEuler(isWorldSpace: boolean, order?: EulerOrder) {
+            if (isWorldSpace) {
+                this.worldMatrix.toEuler(this._euler, order);
+                this._eulerAngles.multiplyScalar(RAD_DEG, this._euler);
+                this._worldDirty &= ~TransformDirty.Euler;
+            }
+            else {
+                this.localMatrix.toEuler(this._localEuler, order);
                 this._localEulerAngles.multiplyScalar(RAD_DEG, this._localEuler);
+                this._localDirty &= ~TransformDirty.Euler;
             }
         }
         /**
@@ -146,8 +140,7 @@ namespace egret3d {
                 this.gameObject._activeInHierarchyDirty(prevActive);
             }
 
-            // this._dirtify(false, false);
-            this._dirtify(false);
+            this._dirtify(false, TransformDirty.PRS);
         }
         /**
          * @internal
@@ -179,7 +172,7 @@ namespace egret3d {
             return out;
         }
         /**
-         * 
+         * 销毁所有子 Transform 组件。
          */
         public destroyChildren() {
             let i = this._children.length;
@@ -187,7 +180,9 @@ namespace egret3d {
                 this._children[i].gameObject.destroy();
             }
         }
-
+        /**
+         * 是否包含指定的子 Transform 组件。
+         */
         public contains(value: Transform): boolean {
             if (value === this) {
                 return false;
@@ -201,7 +196,7 @@ namespace egret3d {
             return ancestor === this;
         }
         /**
-         * 设置父节点 
+         * 设置指定的父 Transform 组件。
          */
         public setParent(value: Transform | null, worldPositionStays: boolean = false) {
             const prevParent = this._parent;
@@ -223,7 +218,7 @@ namespace egret3d {
             }
 
             if (worldPositionStays) {
-                _helpVector3.copy(this.getPosition());
+                _helpVector3.copy(this.position);
             }
 
             if (prevParent) {
@@ -238,7 +233,7 @@ namespace egret3d {
             this._onParentChange(value, prevParent);
 
             if (worldPositionStays) {
-                this.setPosition(_helpVector3);
+                this.position = _helpVector3;
             }
 
             return this;
@@ -266,8 +261,7 @@ namespace egret3d {
             this._children.splice(index, 0, value);
         }
         /**
-         * 获取对象下标的子集对象
-         * @param index 
+         * 
          */
         public getChildAt(index: number) {
             return 0 <= index && index < this._children.length ? this._children[index] : null;
@@ -323,13 +317,7 @@ namespace egret3d {
                 this._localPosition.z = p3 || 0.0;
             }
 
-            // if (!this._dirtyLocalT) {
-            //     this._dirtify(true, true);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Position);
 
             return this;
         }
@@ -345,9 +333,7 @@ namespace egret3d {
             this._localPosition.y = value.y;
             this._localPosition.z = value.z;
 
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Position);
         }
         /**
          * 本地旋转。
@@ -374,20 +360,13 @@ namespace egret3d {
                 this._localRotation.w = p4 !== undefined ? p4 : 1.0;
             }
 
-            // if (!this._dirtyLocalRS) {
-            //     this._dirtify(true, false);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
 
             return this;
         }
         /**
          * 本地旋转。
          */
-        @paper.editor.property(paper.editor.EditType.VECTOR4)
         public get localRotation(): Readonly<Quaternion | IVector4> {
             return this._localRotation;
         }
@@ -397,17 +376,14 @@ namespace egret3d {
             this._localRotation.z = value.z;
             this._localRotation.w = value.w;
 
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
         }
         /**
          * 本地欧拉弧度。
          */
         public getLocalEuler(order?: EulerOrder): Readonly<Vector3> {
-            // if (this._dirtyLocalRS) {
-            if (this._dirtyLocal) {
-                this._updateEuler(order);
+            if (this._localDirty & TransformDirty.Euler) {
+                this._updateEuler(false, order);
             }
 
             return this._localEuler;
@@ -419,20 +395,22 @@ namespace egret3d {
         public setLocalEuler(x: number, y: number, z: number, order?: EulerOrder): this;
         public setLocalEuler(p1: Readonly<IVector3> | number, p2?: EulerOrder | number, p3?: number, p4?: EulerOrder) {
             if (p1.hasOwnProperty("x")) {
-                this._localRotation.fromEuler(p1 as Readonly<IVector3>, p2 as EulerOrder);
+                this._localEuler.x = (p1 as Readonly<IVector3>).x;
+                this._localEuler.y = (p1 as Readonly<IVector3>).y;
+                this._localEuler.z = (p1 as Readonly<IVector3>).z;
+                this._localEulerAngles.multiplyScalar(RAD_DEG, this._localEuler);
+                this._localRotation.fromEuler(this._localEuler, p2 as EulerOrder);
             }
             else {
-                _helpVector3.set(p1 as number, p2 as number, p3 as number);
-                this._localRotation.fromEuler(_helpVector3, p4 as EulerOrder);
+                this._localEuler.x = p1 as number;
+                this._localEuler.y = p2 as number;
+                this._localEuler.z = p3 as number;
+                this._localEulerAngles.multiplyScalar(RAD_DEG, this._localEuler);
+                this._localRotation.fromEuler(this._localEuler, p4 as EulerOrder);
             }
 
-            // if (!this._dirtyLocalRS) {
-            //     this._dirtify(true, false);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._localDirty &= ~TransformDirty.Euler;
 
             return this;
         }
@@ -440,27 +418,27 @@ namespace egret3d {
          * 本地欧拉弧度。
          */
         public get localEuler(): Readonly<Vector3 | IVector3> {
-            // if (this._dirtyLocalRS) {
-            if (this._dirtyLocal) {
-                this._updateEuler();
+            if (this._localDirty & TransformDirty.Euler) {
+                this._updateEuler(false);
             }
 
             return this._localEuler;
         }
         public set localEuler(value: Readonly<Vector3 | IVector3>) {
-            this._localRotation.fromEuler(value);
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._localEuler.x = value.x;
+            this._localEuler.y = value.y;
+            this._localEuler.z = value.z;
+            this._localEulerAngles.multiplyScalar(RAD_DEG, this._localEuler);
+            this._localRotation.fromEuler(this._localEuler);
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._localDirty &= ~TransformDirty.Euler;
         }
         /**
          * 本地欧拉角度。
          */
         public getLocalEulerAngles(order?: EulerOrder): Readonly<Vector3> {
-            // if (this._dirtyLocalRS) {
-            if (this._dirtyLocal) {
-                this._updateEuler(order);
+            if (this._localDirty & TransformDirty.Euler) {
+                this._updateEuler(false);
             }
 
             return this._localEulerAngles;
@@ -472,43 +450,44 @@ namespace egret3d {
         public setLocalEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
         public setLocalEulerAngles(p1: Readonly<IVector3> | number, p2?: EulerOrder | number, p3?: number, p4?: EulerOrder) {
             if (p1.hasOwnProperty("x")) {
-                _helpVector3.multiplyScalar(DEG_RAD, p1 as Readonly<IVector3>);
-                this._localRotation.fromEuler(_helpVector3, p2 as EulerOrder);
+                this._localEulerAngles.x = (p1 as Readonly<IVector3>).x;
+                this._localEulerAngles.y = (p1 as Readonly<IVector3>).y;
+                this._localEulerAngles.z = (p1 as Readonly<IVector3>).z;
+                this._localEuler.multiplyScalar(DEG_RAD, this._localEulerAngles);
+                this._localRotation.fromEuler(this._localEuler, p2 as EulerOrder);
             }
             else {
-                _helpVector3.set(p1 as number * DEG_RAD, p2 as number * DEG_RAD, p3 as number * DEG_RAD);
-                this._localRotation.fromEuler(_helpVector3, p4 as EulerOrder);
+                this._localEulerAngles.x = p1 as number;
+                this._localEulerAngles.y = p2 as number;
+                this._localEulerAngles.z = p3 as number;
+                this._localEuler.multiplyScalar(DEG_RAD, this._localEulerAngles);
+                this._localRotation.fromEuler(this._localEuler, p4 as EulerOrder);
             }
 
-            // if (!this._dirtyLocalRS) {
-            //     this._dirtify(true, false);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._localDirty &= ~TransformDirty.Euler;
 
             return this;
         }
         /**
          * 本地欧拉角度。
          */
-        @paper.editor.property(paper.editor.EditType.VECTOR3)
+        @paper.editor.property(paper.editor.EditType.VECTOR3, { step: 1.0 })
         public get localEulerAngles(): Readonly<Vector3 | IVector3> {
-            // if (this._dirtyLocalRS) {
-            if (this._dirtyLocal) {
-                this._updateEuler();
+            if (this._localDirty & TransformDirty.Euler) {
+                this._updateEuler(false);
             }
 
             return this._localEulerAngles;
         }
         public set localEulerAngles(value: Readonly<Vector3 | IVector3>) {
-            _helpVector3.multiplyScalar(DEG_RAD, value);
-            this._localRotation.fromEuler(_helpVector3);
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._localEulerAngles.x = value.x;
+            this._localEulerAngles.y = value.y;
+            this._localEulerAngles.z = value.z;
+            this._localEuler.multiplyScalar(DEG_RAD, this._localEulerAngles);
+            this._localRotation.fromEuler(this._localEuler);
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._localDirty &= ~TransformDirty.Euler;
         }
         /**
          * 本地缩放。
@@ -533,13 +512,7 @@ namespace egret3d {
                 this._localScale.z = p3 !== undefined ? p3 : p1 as number;
             }
 
-            // if (!this._dirtyLocalRS) {
-            //     this._dirtify(true, false);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
 
             return this;
         }
@@ -555,37 +528,24 @@ namespace egret3d {
             this._localScale.y = value.y;
             this._localScale.z = value.z;
 
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
         }
         /**
+         * 本地矩阵。
          */
         public getLocalMatrix(): Readonly<Matrix4> {
-            // if (this._dirtyLocalRS) {
-            //     this._localMatrix.compose(this.localPosition, this.localRotation, this.localScale);
-            //     this._dirtyLocalT = false;
-            //     this._dirtyLocalRS = false;
-            // }
-            // else if (this._dirtyLocalT) {
-            //     this._localMatrix.fromTranslate(this.localPosition, true);
-            //     this._dirtyLocalT = false;
-            // }
-
-            if (this._dirtyLocal) {
-                this._localMatrix.compose(this._localPosition, this._localRotation, this._localScale);
-                this._dirtyLocal = false;
+            if (this._localDirty & TransformDirty.Matrix) {
+                this._updateMatrix(false);
             }
 
             return this._localMatrix;
         }
         /**
-         * 
+         * 本地矩阵。
          */
         public get localMatrix(): Readonly<Matrix4> {
-            if (this._dirtyLocal) {
-                this._localMatrix.compose(this._localPosition, this._localRotation, this._localScale);
-                this._dirtyLocal = false;
+            if (this._localDirty & TransformDirty.Matrix) {
+                this._updateMatrix(false);
             }
 
             return this._localMatrix;
@@ -594,12 +554,10 @@ namespace egret3d {
          * 世界位置。
          */
         public getPosition(): Readonly<Vector3> {
-            // if (this._dirtyWorldT) {
-            // if (this._dirtyWorld) {
-            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale);
-            // }
-
-            this.getWorldMatrix().decompose(this._position, null, null);
+            if (this._worldDirty & TransformDirty.Position) {
+                this.worldMatrix.decompose(this._position, null, null);
+                this._worldDirty &= ~TransformDirty.Position;
+            }
 
             return this._position;
         }
@@ -621,16 +579,10 @@ namespace egret3d {
             }
 
             if (this._parent) {
-                this._localPosition.applyMatrix(_helpMatrix.inverse(this._parent.getWorldMatrix()));
+                this._localPosition.applyMatrix(_helpMatrix.inverse(this._parent.worldMatrix));
             }
 
-            // if (!this._dirtyWorldT) {
-            //     this._dirtify(true, true);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Position);
 
             return this;
         }
@@ -638,12 +590,10 @@ namespace egret3d {
          * 世界位置。
          */
         public get position(): Readonly<Vector3 | IVector3> {
-            // if (this._dirtyWorldT) {
-            // if (this._dirtyWorld) {
-            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale);
-            // }
-
-            this.getWorldMatrix().decompose(this._position, null, null);
+            if (this._worldDirty & TransformDirty.Position) {
+                this.worldMatrix.decompose(this._position, null, null);
+                this._worldDirty &= ~TransformDirty.Position;
+            }
 
             return this._position;
         }
@@ -653,27 +603,19 @@ namespace egret3d {
             this._localPosition.z = value.z;
 
             if (this._parent) {
-                this._localPosition.applyMatrix(_helpMatrix.inverse(this._parent.getWorldMatrix()));
+                this._localPosition.applyMatrix(_helpMatrix.inverse(this._parent.worldMatrix));
             }
 
-            // if (!this._dirtyWorldT) {
-            //     this._dirtify(true, true);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Position);
         }
         /**
          * 世界旋转。
          */
         public getRotation(): Readonly<Quaternion> {
-            // if (this._dirtyWorldRS) {
-            // if (this._dirtyWorld) {
-            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale);
-            // }
-
-            this.getWorldMatrix().decompose(null, this._rotation, null);
+            if (this._worldDirty & TransformDirty.Rotation) {
+                this.worldMatrix.decompose(null, this._rotation, null);
+                this._worldDirty &= ~TransformDirty.Rotation;
+            }
 
             return this._rotation;
         }
@@ -697,16 +639,10 @@ namespace egret3d {
             }
 
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.getRotation()));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
             }
 
-            // if (!this._dirtyWorldRS) {
-            //     this._dirtify(true, false);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
 
             return this;
         }
@@ -714,12 +650,10 @@ namespace egret3d {
          * 世界旋转。
          */
         public get rotation(): Readonly<Quaternion | IVector4> {
-            // if (this._dirtyWorldRS) {
-            // if (this._dirtyWorld) {
-            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale);
-            // }
-
-            this.getWorldMatrix().decompose(null, this._rotation, null);
+            if (this._worldDirty & TransformDirty.Rotation) {
+                this.worldMatrix.decompose(null, this._rotation, null);
+                this._worldDirty &= ~TransformDirty.Rotation;
+            }
 
             return this._rotation;
         }
@@ -730,27 +664,18 @@ namespace egret3d {
             this._localRotation.w = value.w;
 
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.getRotation()));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
             }
 
-            // if (!this._dirtyWorldRS) {
-            //     this._dirtify(true, false);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
         }
         /**
          * 世界欧拉弧度。
          */
         public getEuler(order?: EulerOrder): Readonly<Vector3> {
-            // if (this._dirtyWorldRS) {
-            // if (this._dirtyWorld) {
-            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale).toEuler(this._eulerAngles).multiplyScalar(RAD_DEG);
-            // }
-
-            this.getWorldMatrix().toEuler(this._euler, order);
+            if (this._worldDirty & TransformDirty.Euler) {
+                this._updateEuler(true, order);
+            }
 
             return this._euler;
         }
@@ -769,16 +694,10 @@ namespace egret3d {
             }
 
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.getRotation()));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
             }
 
-            // if (!this._dirtyWorldRS) {
-            //     this._dirtify(true, false);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
 
             return this;
         }
@@ -786,12 +705,9 @@ namespace egret3d {
          * 世界欧拉弧度。
          */
         public get euler(): Readonly<Vector3 | IVector3> {
-            // if (this._dirtyWorldRS) {
-            // if (this._dirtyWorld) {
-            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale).toEuler(this._eulerAngles).multiplyScalar(RAD_DEG);
-            // }
-
-            this.getWorldMatrix().toEuler(this._euler);
+            if (this._worldDirty & TransformDirty.Euler) {
+                this._updateEuler(true);
+            }
 
             return this._euler;
         }
@@ -799,27 +715,18 @@ namespace egret3d {
             this._localRotation.fromEuler(value);
 
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.getRotation()));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
             }
 
-            // if (!this._dirtyWorldRS) {
-            //     this._dirtify(true, false);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
         }
         /**
          * 世界欧拉角度。
          */
         public getEulerAngles(order?: EulerOrder): Readonly<Vector3> {
-            // if (this._dirtyWorldRS) {
-            // if (this._dirtyWorld) {
-            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale).toEuler(this._eulerAngles).multiplyScalar(RAD_DEG);
-            // }
-
-            this.getWorldMatrix().toEuler(this._eulerAngles, order).multiplyScalar(RAD_DEG);
+            if (this._worldDirty & TransformDirty.Euler) {
+                this._updateEuler(true, order);
+            }
 
             return this._eulerAngles;
         }
@@ -839,16 +746,10 @@ namespace egret3d {
             }
 
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.getRotation()));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
             }
 
-            // if (!this._dirtyWorldRS) {
-            //     this._dirtify(true, false);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
 
             return this;
         }
@@ -856,12 +757,9 @@ namespace egret3d {
          * 世界欧拉角度。
          */
         public get eulerAngles(): Readonly<Vector3 | IVector3> {
-            // if (this._dirtyWorldRS) {
-            // if (this._dirtyWorld) {
-            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale).toEuler(this._eulerAngles).multiplyScalar(RAD_DEG);
-            // }
-
-            this.getWorldMatrix().toEuler(this._eulerAngles).multiplyScalar(RAD_DEG);
+            if (this._worldDirty & TransformDirty.Euler) {
+                this._updateEuler(true);
+            }
 
             return this._eulerAngles;
         }
@@ -870,27 +768,19 @@ namespace egret3d {
             this._localRotation.fromEuler(_helpVector3);
 
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.getRotation()));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
             }
 
-            // if (!this._dirtyWorldRS) {
-            //     this._dirtify(true, false);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
         }
         /**
          * 世界缩放。
          */
         public getScale(): Readonly<Vector3> {
-            // if (this._dirtyWorldRS) {
-            // if (this._dirtyWorld) {
-            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale);
-            // }
-
-            this.getWorldMatrix().decompose(null, null, this._scale);
+            if (this._worldDirty & TransformDirty.Scale) {
+                this.worldMatrix.decompose(null, null, this._scale);
+                this._worldDirty &= ~TransformDirty.Scale;
+            }
 
             return this._scale;
         }
@@ -912,16 +802,10 @@ namespace egret3d {
             }
 
             if (this._parent) {
-                this._localScale.applyDirection(_helpMatrix.inverse(this._parent.getWorldMatrix()));
+                this._localScale.applyDirection(_helpMatrix.inverse(this._parent.worldMatrix));
             }
 
-            // if (!this._dirtyWorldRS) {
-            //     this._dirtify(true, false);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
 
             return this;
         }
@@ -929,12 +813,10 @@ namespace egret3d {
          * 世界缩放。
          */
         public get scale(): Readonly<Vector3 | IVector3> {
-            // if (this._dirtyWorldRS) {
-            // if (this._dirtyWorld) {
-            //     this.getWorldMatrix().decompose(this._position, this._rotation, this._scale);
-            // }
-
-            this.getWorldMatrix().decompose(null, null, this._scale);
+            if (this._worldDirty & TransformDirty.Scale) {
+                this.worldMatrix.decompose(null, null, this._scale);
+                this._worldDirty &= ~TransformDirty.Scale;
+            }
 
             return this._scale;
         }
@@ -944,98 +826,33 @@ namespace egret3d {
             this._localScale.z = value.z;
 
             if (this._parent) {
-                this._localScale.applyDirection(_helpMatrix.inverse(this._parent.getWorldMatrix()));
+                this._localScale.applyDirection(_helpMatrix.inverse(this._parent.worldMatrix));
             }
 
-            // if (!this._dirtyWorldRS) {
-            //     this._dirtify(true, false);
-            // }
-
-            if (!this._dirtyLocal) {
-                this._dirtify(true);
-            }
+            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
         }
         /**
-         * get world matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获得世界矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 世界矩阵。
          */
         public getWorldMatrix(): Readonly<Matrix4> {
-            // if (this._dirtyWorldT || this._dirtyWorldRS) {
-            //     const localMatrix = this.getLocalMatrix();
-
-            //     if (this._parent) {
-            //         this._worldMatrix.multiply(this._parent.getWorldMatrix(), localMatrix);
-            //     }
-            //     else {
-            //         this._worldMatrix.copy(localMatrix);
-            //     }
-
-            //     this._worldMatrixDeterminant = this._worldMatrix.determinant();
-            //     this._dirtyWorldT = false;
-            //     this._dirtyWorldRS = false;
-            // }
-
-            if (this._dirtyWorld) {
-                const localMatrix = this.getLocalMatrix();
-
-                if (this._parent) {
-                    this._localToWorld.multiply(this._parent.getWorldMatrix(), localMatrix);
-                }
-                else {
-                    this._localToWorld.copy(localMatrix);
-                }
-
-                this._worldMatrixDeterminant = this._localToWorld.determinant();
-                this._dirtyWorld = false;
+            if (this._worldDirty & TransformDirty.Matrix) {
+                this._updateMatrix(true);
             }
 
-            return this._localToWorld;
+            return this._worldMatrix;
         }
         /**
-         * 
+         * 世界矩阵。
          */
         public get worldMatrix(): Readonly<Matrix4> {
-            // if (this._dirtyWorldT || this._dirtyWorldRS) {
-            //     const localMatrix = this.getLocalMatrix();
-
-            //     if (this._parent) {
-            //         this._worldMatrix.multiply(this._parent.getWorldMatrix(), localMatrix);
-            //     }
-            //     else {
-            //         this._worldMatrix.copy(localMatrix);
-            //     }
-
-            //     this._worldMatrixDeterminant = this._worldMatrix.determinant();
-            //     this._dirtyWorldT = false;
-            //     this._dirtyWorldRS = false;
-            // }
-
-            if (this._dirtyWorld) {
-                const localMatrix = this.getLocalMatrix();
-
-                if (this._parent) {
-                    this._localToWorld.multiply(this._parent.getWorldMatrix(), localMatrix);
-                }
-                else {
-                    this._localToWorld.copy(localMatrix);
-                }
-
-                this._worldMatrixDeterminant = this._localToWorld.determinant();
-                this._dirtyWorld = false;
+            if (this._worldDirty & TransformDirty.Matrix) {
+                this._updateMatrix(true);
             }
 
-            return this._localToWorld;
+            return this._worldMatrix;
         }
         /**
-         * 
+         * 位移指定距离。
          */
         public translate(value: Readonly<IVector3>, isWorldSpace?: boolean): this;
         public translate(x: number, y: number, z: number, isWorldSpace?: boolean): this;
@@ -1062,7 +879,7 @@ namespace egret3d {
             return this;
         }
         /**
-         * 
+         * 旋转指定欧拉弧度。
          */
         public rotate(value: Readonly<IVector3>, isWorldSpace?: boolean, order?: EulerOrder): this;
         public rotate(x: number, y: number, z: number, isWorldSpace?: boolean, order?: EulerOrder): this;
@@ -1072,6 +889,7 @@ namespace egret3d {
                     this.euler = this._localEuler.add(p1 as Readonly<IVector3>, this.euler);
                 }
                 else {
+                    this.localEuler; // Update euler.
                     this.localEuler = this._localEuler.add(p1 as Readonly<IVector3>);
                 }
             }
@@ -1082,6 +900,7 @@ namespace egret3d {
                     this.euler = this._localEuler.add(_helpVector3, this.euler);
                 }
                 else {
+                    this.localEuler; // Update euler.
                     this.localEuler = this._localEuler.add(_helpVector3);
                 }
             }
@@ -1089,7 +908,31 @@ namespace egret3d {
             return this;
         }
         /**
+         * 绕轴旋转弧度。
+         */
+        public rotateOnAxis(axis: Readonly<IVector3>, radian: number, isWorldSpace?: boolean) {
+            _helpRotation.fromAxis(axis, radian);
+
+            if (isWorldSpace) {
+                this.localRotation = this._localRotation.premultiply(_helpRotation);
+            }
+            else {
+                this.localRotation = this._localRotation.multiply(_helpRotation);
+            }
+
+            return this;
+        }
+        /**
          * 
+         */
+        public rotateAround(position: Readonly<IVector3>, axis: Readonly<IVector3>, radian: number) {
+            this.rotateOnAxis(axis, radian, true);
+            this.position = this._localPosition.applyMatrix(_helpMatrix.fromRotation(_helpRotation.fromAxis(axis, radian)).fromTranslate(position, true), this.position);
+
+            return this;
+        }
+        /**
+         * 旋转指定欧拉角度。
          */
         public rotateAngle(value: Readonly<IVector3>, isWorldSpace?: boolean, order?: EulerOrder): this;
         public rotateAngle(x: number, y: number, z: number, isWorldSpace?: boolean, order?: EulerOrder): this;
@@ -1099,6 +942,7 @@ namespace egret3d {
                     this.eulerAngles = this._localEulerAngles.add(p1 as Readonly<IVector3>, this.eulerAngles);
                 }
                 else {
+                    this.localEulerAngles; // Update euler.
                     this.localEulerAngles = this._localEulerAngles.add(p1 as Readonly<IVector3>);
                 }
             }
@@ -1109,6 +953,7 @@ namespace egret3d {
                     this.eulerAngles = this._localEulerAngles.add(_helpVector3, this.eulerAngles);
                 }
                 else {
+                    this.localEulerAngles; // Update euler.
                     this.localEulerAngles = this._localEulerAngles.add(_helpVector3);
                 }
             }
@@ -1116,110 +961,69 @@ namespace egret3d {
             return this;
         }
         /**
-         * x-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * 绕轴旋转角度。
          */
+        public rotateAngleOnAxis(axis: Readonly<IVector3>, angle: number, isWorldSpace?: boolean) {
+            return this.rotateOnAxis(axis, angle * DEG_RAD, isWorldSpace);
+        }
         /**
-         * 获取世界坐标系下当前x轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 
+         */
+        public rotateAngleAround(position: Readonly<IVector3>, axis: Readonly<IVector3>, angle: number) {
+            return this.rotateAround(position, axis, angle * DEG_RAD);
+        }
+        /**
+         * 获取世界坐标系下当前 X 轴的正方向。
          */
         public getRight(out?: Vector3) {
             if (!out) {
                 out = Vector3.create();
             }
 
-            return out.applyDirection(this.getWorldMatrix(), Vector3.RIGHT).normalize();
+            return out.applyDirection(this.worldMatrix, Vector3.RIGHT).normalize();
         }
         /**
-         * y-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取世界坐标系下当前y轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 获取世界坐标系下当前 Y 轴的正方向。
          */
         public getUp(out?: Vector3) {
             if (!out) {
                 out = Vector3.create();
             }
 
-            return out.applyDirection(this.getWorldMatrix(), Vector3.UP).normalize();
+            return out.applyDirection(this.worldMatrix, Vector3.UP).normalize();
         }
         /**
-         * z-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取世界坐标系下当前z轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 获取世界坐标系下当前 Z 轴的正方向。
          */
         public getForward(out?: Vector3) {
             if (!out) {
                 out = Vector3.create();
             }
 
-            return out.applyDirection(this.getWorldMatrix(), Vector3.FORWARD).normalize();
+            return out.applyDirection(this.worldMatrix, Vector3.FORWARD).normalize();
         }
         /**
-         * look at a target
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * 旋转 Z 轴，使其正方向指向目标位置。
          */
-        /**
-         * 旋转当前transform 到指定的目标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public lookAt(target: Readonly<Transform> | Readonly<IVector3>, up?: Readonly<IVector3>) {
-            if (target instanceof Transform) {
-                _helpVector3.copy(target.getPosition());
-            }
-            else {
-                _helpVector3.copy(target as Readonly<IVector3>);
-            }
-
-            if (up) {
-                this._localRotation.fromMatrix(_helpMatrix.lookAt(this.getPosition(), _helpVector3, up));
-            }
-            else {
-                this._localRotation.lookAt(this.getPosition(), _helpVector3);
-            }
-
-            this.setRotation(this._localRotation);
+        public lookAt(target: Readonly<Transform> | Readonly<IVector3>, up: Readonly<IVector3> = Vector3.UP) {
+            this.rotation = this._localRotation.fromMatrix(
+                _helpMatrix.lookAt(
+                    this.position,
+                    target instanceof Transform ? target.position : target as Readonly<IVector3>,
+                    up
+                )
+            );
 
             return this;
         }
         /**
-         * 当前子集对象的数量
+         * 所有子 Transform 组件的总数。
          */
         public get childCount(): number {
             return this._children.length;
         }
         /**
-         * children list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 子物体列表
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 所有子 Transform 组件。
          */
         @paper.serializedField
         @paper.deserializedIgnore
@@ -1227,16 +1031,7 @@ namespace egret3d {
             return this._children;
         }
         /**
-         * instance of parent transform
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 父元素实例
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 父 Transform 组件。
          */
         public get parent() {
             return this._parent;

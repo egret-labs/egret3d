@@ -139,7 +139,7 @@ namespace egret3d {
             const vertices = this.getVertices()!;
             const joints = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array : null;
             const weights = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)! as Float32Array : null;
-            let pickInfo: PickInfo | null = null; // TODO
+            let raycastInfo: RaycastInfo | null = null; // TODO
 
             _helpMatrix.inverse(worldMatrix);
             _helpRay.copy(ray);
@@ -147,7 +147,7 @@ namespace egret3d {
             _helpRay.direction.applyDirection(_helpMatrix).normalize();
 
             for (const primitive of this._glTFMesh!.primitives) {
-                const indices = primitive.indices !== undefined ? this.getIndices(subMeshIndex++)! : null;
+                const indices = primitive.indices !== undefined ? this.getIndices(subMeshIndex)! : null;
                 let castRay = _helpRay;
                 let castVertices = vertices;
 
@@ -222,11 +222,11 @@ namespace egret3d {
                                         continue;
                                     }
 
-                                    if (!pickInfo || pickInfo.distance > result.distance) {
-                                        pickInfo = result;
-                                        pickInfo.position.applyMatrix(worldMatrix);
-                                        pickInfo.subMeshIndex = subMeshIndex;
-                                        pickInfo.triangleIndex = i / 3; // TODO
+                                    if (!raycastInfo || raycastInfo.distance > result.distance) {
+                                        raycastInfo = result;
+                                        raycastInfo.position.applyMatrix(worldMatrix);
+                                        raycastInfo.subMeshIndex = subMeshIndex;
+                                        raycastInfo.triangleIndex = i / 3; // TODO
                                     }
                                 }
                             }
@@ -243,11 +243,11 @@ namespace egret3d {
                                         continue;
                                     }
 
-                                    if (!pickInfo || pickInfo.distance > result.distance) {
-                                        pickInfo = result;
-                                        pickInfo.position.applyMatrix(worldMatrix);
-                                        pickInfo.subMeshIndex = subMeshIndex;
-                                        pickInfo.triangleIndex = i / 3; // TODO
+                                    if (!raycastInfo || raycastInfo.distance > result.distance) {
+                                        raycastInfo = result;
+                                        raycastInfo.position.applyMatrix(worldMatrix);
+                                        raycastInfo.subMeshIndex = subMeshIndex;
+                                        raycastInfo.triangleIndex = i / 3; // TODO
                                     }
                                 }
                             }
@@ -258,7 +258,7 @@ namespace egret3d {
                 subMeshIndex++;
             }
 
-            return pickInfo;
+            return raycastInfo;
         }
         /**
          * 

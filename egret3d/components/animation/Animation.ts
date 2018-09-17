@@ -461,7 +461,7 @@ namespace egret3d {
             if (this.animation.channels) {
                 const rootGameObject = this._animationComponent.gameObject;
                 const children = rootGameObject.transform.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
-                children["__root__"] = rootGameObject.transform
+                children["__root__"] = rootGameObject.transform;
 
                 for (const glTFChannel of this.animation.channels) {
                     const node = this.animationAsset.getNode(glTFChannel.target.node || 0);
@@ -607,11 +607,8 @@ namespace egret3d {
         /**
          * 动画速度。
          */
+        @paper.editor.property(paper.editor.EditType.FLOAT)
         public timeScale: number = 1.0;
-        /**
-         * @internal
-         */
-        public _addToSystem: boolean = false;
         /**
          * 动画数据列表。
          */
@@ -741,13 +738,6 @@ namespace egret3d {
             fadeTime: number, playTimes: number = -1,
             layer: number = 0, additive: boolean = false,
         ): AnimationState | null {
-            if (!this._addToSystem) {
-                // console.warn("The animation component is not add to system yet.");
-                this._fadeInParamter = arguments as any;
-
-                return null;
-            }
-
             let animationAsset: GLTFAsset | null = null;
             let animationClip: GLTFAnimationClip | null = null;
 

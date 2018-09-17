@@ -21,7 +21,7 @@ namespace egret3d {
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public intensity: number = 1.0;
         /**
          * 
@@ -39,37 +39,37 @@ namespace egret3d {
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public shadowRadius: number = 0.5;
         /**
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
-        public shadowBias: number = 0.001;
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01 })
+        public shadowBias: number = 0.01;
         /**
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.UINT)
         public shadowSize: number = 512;
         /**
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public shadowCameraNear: number = 1.0;
         /**
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public shadowCameraFar: number = 100.0;
         /**
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public shadowCameraSize: number = 30;
 
         public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };

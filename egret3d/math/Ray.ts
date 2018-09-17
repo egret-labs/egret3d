@@ -1,5 +1,4 @@
 namespace egret3d {
-    let helpVec3_1: Vector3 = new Vector3();
     /**
      * 射线
      */
@@ -7,7 +6,7 @@ namespace egret3d {
 
         private static readonly _instances: Ray[] = [];
 
-        public static create(origin: Readonly<IVector3> = Vector3.ZERO, direction: Readonly<IVector3> = Vector3.RIGHT) {
+        public static create(origin: Readonly<IVector3> = Vector3.ZERO, direction: Readonly<IVector3> = Vector3.FORWARD) {
             if (this._instances.length > 0) {
                 return this._instances.pop()!.set(origin, direction);
             }
@@ -67,6 +66,13 @@ namespace egret3d {
             return this;
         }
 
+        public applyMatrix(value: Readonly<Matrix4>, ray?: Readonly<Ray>) {
+            this.origin.applyMatrix(value, (ray || this).origin);
+            this.direction.applyDirection(value, (ray || this).direction).normalize();
+
+            return this;
+        }
+
         public getSquaredDistance(value: Readonly<IVector3>): number {
             const directionDistance = helpVector3A.subtract(value, this.origin).dot(this.direction);
             // point behind the ray
@@ -82,10 +88,21 @@ namespace egret3d {
         public getDistance(value: Readonly<IVector3>): number {
             return Math.sqrt(this.getSquaredDistance(value));
         }
+
+        public at(value: number, out?: Vector3) {
+            if (!out) {
+                out = Vector3.create();
+            }
+
+            out.multiplyScalar(value, this.direction).add(this.origin);
+
+            return out;
+        }
         /**
-         * 与三角形相交检测
+         * 与三角形相交检测。
+         * TODO
          */
-        public intersectTriangle(p1: Vector3, p2: Vector3, p3: Vector3, backfaceCulling: boolean = false): PickInfo | null {
+        public intersectTriangle(p1: Readonly<Vector3>, p2: Readonly<Vector3>, p3: Readonly<Vector3>, backfaceCulling: boolean = false): RaycastInfo | null {
             // // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
             // const edge1 = helpVector3A;
             // const edge2 = helpVector3B;
@@ -178,19 +195,13 @@ namespace egret3d {
                 return null;
             }
 
-            const pickInfo = new PickInfo();
-            pickInfo.distance = qvec.dot(edge2) * invdet;
-            pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
-            pickInfo.textureCoordA.x = bu;
-            pickInfo.textureCoordA.y = bv;
+            const raycastInfo = new RaycastInfo();
+            raycastInfo.distance = qvec.dot(edge2) * invdet;
+            raycastInfo.position.multiplyScalar(raycastInfo.distance, this.direction).add(this.origin);
+            raycastInfo.textureCoordA.x = bu;
+            raycastInfo.textureCoordA.y = bv;
 
-            return pickInfo;
-        }
-        /**
-         * 与aabb碰撞相交检测
-         */
-        public intersectAABB(aabb: AABB): boolean {
-            return this.intersectBoxMinMax(aabb.minimum, aabb.maximum);
+            return raycastInfo;
         }
 
         public intersectPlane(planePoint: Vector3, planeNormal: Vector3) {
@@ -214,155 +225,182 @@ namespace egret3d {
                 return new Vector3(m1 + v1 * t, m2 + v2 * t, m3 + v3 * t);
             }
         }
-        // /**
-        //  * 与transform表示的plane碰撞相交检测，主要用于2d检测
-        //  * @param transform transform实例
-        //  */
-        // public intersectPlaneTransform(transform: Transform): PickInfo {
-        //     let pickinfo = null;
-        //     let panelpoint = transform.getPosition();
-        //     let forward = helpVec3_1;
-        //     transform.getForward(forward);
-        //     let hitposition = this.intersectPlane(panelpoint, forward);
-        //     if (hitposition) {
-        //         pickinfo = new PickInfo();
-        //         pickinfo.hitposition = hitposition;
-        //         pickinfo.distance = Vector3.getDistance(pickinfo.hitposition, this.origin);
+        // TODO
+        // public intersectPlane(plane: Readonly<Plane>): RaycastInfo | null;
+        // public intersectPlane(plane: Readonly<IVector3>, normal: Readonly<IVector3>): RaycastInfo | null;
+        // public intersectPlane(p1: Readonly<Plane | IVector3>, p2?: Readonly<IVector3>) {
+        //     if (p1 instanceof Plane) {
+        //         // TODO
+        //         return null;
         //     }
-        //     return pickinfo;
+        //     else {
+        //         let vp1 = (p2 as Readonly<IVector3>).x;
+        //         let vp2 = (p2 as Readonly<IVector3>).y;
+        //         let vp3 = (p2 as Readonly<IVector3>).z;
+        //         let n1 = (p1 as Readonly<IVector3>).x;
+        //         let n2 = (p1 as Readonly<IVector3>).y;
+        //         let n3 = (p1 as Readonly<IVector3>).z;
+        //         let v1 = this.direction.x;
+        //         let v2 = this.direction.y;
+        //         let v3 = this.direction.z;
+        //         let m1 = this.origin.x;
+        //         let m2 = this.origin.y;
+        //         let m3 = this.origin.z;
+        //         let vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
+
+        //         if (vpt === 0) {
+        //             return null;
+        //         }
+        //         else {
+        //             const raycastInfo = RaycastInfo.create();
+        //             raycastInfo.distance = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
+        //             raycastInfo.position.multiplyScalar(raycastInfo.distance, this.direction).add(this.origin);
+        //             return raycastInfo;
+        //         }
+        //     }
         // }
-
         /**
-         * 与最大最小点表示的box相交检测
-         * @param minimum 最小点
-         * @param maximum 最大点
-         * @version paper 1.0
+         * 与 AABB 相交检测。
          */
-        public intersectBoxMinMax(minimum: Readonly<IVector3>, maximum: Readonly<IVector3>): boolean {
-            let d = 0.0;
-            let maxValue = Number.MAX_VALUE;
-            let inv: number;
-            let min: number;
-            let max: number;
-            let temp: number;
-            if (Math.abs(this.direction.x) < 0.0000001) {
-                if (this.origin.x < minimum.x || this.origin.x > maximum.x) {
-                    return false;
-                }
-            } else {
-                inv = 1.0 / this.direction.x;
-                min = (minimum.x - this.origin.x) * inv;
-                max = (maximum.x - this.origin.x) * inv;
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
+        public intersectAABB(aabb: Readonly<AABB>, raycastInfo?: RaycastInfo): boolean;
+        public intersectAABB(minimum: Readonly<IVector3>, maximum: Readonly<IVector3>, raycastInfo?: RaycastInfo): boolean;
+        public intersectAABB(p1: Readonly<AABB> | Readonly<IVector3>, p2?: RaycastInfo | Readonly<IVector3>, p3?: RaycastInfo) {
+            const isA = p1 instanceof AABB;
+            const minimum = isA ? (p1 as Readonly<AABB>).minimum : p1 as Readonly<IVector3>;
+            const maximum = isA ? (p1 as Readonly<AABB>).maximum : p2 as Readonly<IVector3>;
 
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
+            let tmin: number, tmax: number, tymin: number, tymax: number, tzmin: number, tzmax: number;
+            const invdirx = 1.0 / this.direction.x,
+                invdiry = 1.0 / this.direction.y,
+                invdirz = 1.0 / this.direction.z;
+            const origin = this.origin;
 
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-
-                if (d > maxValue) {
-                    return false;
-                }
+            if (invdirx >= 0.0) {
+                tmin = (minimum.x - origin.x) * invdirx;
+                tmax = (maximum.x - origin.x) * invdirx;
+            }
+            else {
+                tmin = (maximum.x - origin.x) * invdirx;
+                tmax = (minimum.x - origin.x) * invdirx;
             }
 
-            if (Math.abs(this.direction.y) < 0.0000001) {
-                if (this.origin.y < minimum.y || this.origin.y > maximum.y) {
-                    return false;
-                }
-            } else {
-                inv = 1.0 / this.direction.y;
-                min = (minimum.y - this.origin.y) * inv;
-                max = (maximum.y - this.origin.y) * inv;
-
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
-
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
-
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
-
-                if (d > maxValue) {
-                    return false;
-                }
+            if (invdiry >= 0.0) {
+                tymin = (minimum.y - origin.y) * invdiry;
+                tymax = (maximum.y - origin.y) * invdiry;
+            }
+            else {
+                tymin = (maximum.y - origin.y) * invdiry;
+                tymax = (minimum.y - origin.y) * invdiry;
             }
 
-            if (Math.abs(this.direction.z) < 0.0000001) {
-                if (this.origin.z < minimum.z || this.origin.z > maximum.z) {
-                    return false;
-                }
-            } else {
-                inv = 1.0 / this.direction.z;
-                min = (minimum.z - this.origin.z) * inv;
-                max = (maximum.z - this.origin.z) * inv;
+            if ((tmin > tymax) || (tymin > tmax)) return false;
 
-                if (max === -Infinity) {
-                    max = Infinity;
-                }
+            // These lines also handle the case where tmin or tmax is NaN
+            // (result of 0 * Infinity). x !== x returns true if x is NaN
 
-                if (min > max) {
-                    temp = min;
-                    min = max;
-                    max = temp;
-                }
+            if (tymin > tmin || tmin !== tmin) tmin = tymin;
 
-                d = Math.max(min, d);
-                maxValue = Math.min(max, maxValue);
+            if (tymax < tmax || tmax !== tmax) tmax = tymax;
 
-                if (d > maxValue) {
-                    return false;
-                }
+            if (invdirz >= 0.0) {
+                tzmin = (minimum.z - origin.z) * invdirz;
+                tzmax = (maximum.z - origin.z) * invdirz;
             }
-            return true;
-        }
-        /**
-         * 与球相交检测
-         */
-        public intersectsSphere(center: Vector3, radius: number): boolean {
-            let center_ori = helpVec3_1;
-            Vector3.subtract(center, this.origin, center_ori);
-            let raydist = Vector3.dot(this.direction, center_ori);
+            else {
+                tzmin = (maximum.z - origin.z) * invdirz;
+                tzmax = (minimum.z - origin.z) * invdirz;
+            }
 
-            if (raydist < 0) return false; // 到圆心的向量在方向向量上的投影为负，夹角不在-90与90之间
+            if ((tmin > tzmax) || (tzmin > tmax)) return false;
 
-            let orilen2 = Vector3.getSqrLength(center_ori);
+            if (tzmin > tmin || tmin !== tmin) tmin = tzmin;
 
-            let rad2 = radius * radius;
+            if (tzmax < tmax || tmax !== tmax) tmax = tzmax;
 
-            if (orilen2 < rad2) return true; // 射线起点在球里
+            // return point closest to the ray (positive side)
 
-            let d = rad2 - (orilen2 - raydist * raydist);
-            if (d < 0) return false;
+            if (tmax < 0.0) return false;
+
+            const raycastInfo = isA ? p2 as RaycastInfo | undefined : p3;
+            if (raycastInfo) {
+                this.at(raycastInfo.distance = tmin >= 0.0 ? tmin : tmax, raycastInfo.position);
+            }
 
             return true;
         }
         /**
-         * 获取射线拾取到的最近物体。
+         * 与球相交检测。
          */
-        public static raycast(ray: Ray, isPickMesh: boolean = false, maxDistance: number = Number.MAX_VALUE, layerMask: paper.Layer = paper.Layer.Default | paper.Layer.UI): PickInfo | null {
-            return this._doPick(ray, maxDistance, layerMask, false, isPickMesh) as PickInfo | null;
+        public intersectSphere(sphere: Readonly<Sphere>, raycastInfo?: RaycastInfo): boolean;
+        public intersectSphere(center: Readonly<IVector3>, radius: number, raycastInfo?: RaycastInfo): boolean;
+        public intersectSphere(p1: Readonly<Sphere> | Readonly<IVector3>, p2?: RaycastInfo | number, p3?: RaycastInfo) {
+            const isA = p1 instanceof AABB;
+            const center = isA ? (p1 as Readonly<Sphere>).center : p1 as Readonly<IVector3>;
+            const radius = isA ? (p1 as Readonly<Sphere>).radius : p2 as number;
+            const v1 = helpVector3A.subtract(center, this.origin);
+            const tca = v1.dot(this.direction);
+            const d2 = v1.dot(v1) - tca * tca;
+            const radius2 = radius * radius;
+
+            if (d2 > radius2) return false;
+
+            const thc = Math.sqrt(radius2 - d2);
+
+            // t0 = first intersect point - entrance on front of sphere
+            const t0 = tca - thc;
+
+            // t1 = second intersect point - exit point on back of sphere
+            const t1 = tca + thc;
+
+            // test to see if both t0 and t1 are behind the ray - if so, return null
+            if (t0 < 0.0 && t1 < 0.0) return false;
+
+            // test to see if t0 is behind the ray:
+            // if it is, the ray is inside the sphere, so return the second exit point scaled by t1,
+            // in order to always return an intersect point that is in front of the ray.
+
+            // else t0 is in front of the ray, so return the first collision point scaled by t0
+
+            const raycastInfo = isA ? p2 as RaycastInfo | undefined : p3;
+            if (raycastInfo) {
+                this.at(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
+            }
+
+            return true;
+
+            // let center_ori = helpVec3_1;
+            // Vector3.subtract(center, this.origin, center_ori);
+            // let raydist = Vector3.dot(this.direction, center_ori);
+
+            // if (raydist < 0) return false; // 到圆心的向量在方向向量上的投影为负，夹角不在-90与90之间
+
+            // let orilen2 = Vector3.getSqrLength(center_ori);
+
+            // let rad2 = radius * radius;
+
+            // if (orilen2 < rad2) return true; // 射线起点在球里
+
+            // let d = rad2 - (orilen2 - raydist * raydist);
+            // if (d < 0) return false;
+
+            // return true;
+        }
+        /**
+         * @deprecated
+         */
+        public static raycast(ray: Ray, isPickMesh: boolean = false, maxDistance: number = Number.MAX_VALUE, layerMask: paper.Layer = paper.Layer.Default | paper.Layer.UI): RaycastInfo | null {
+            return this._doPick(ray, maxDistance, layerMask, false, isPickMesh) as RaycastInfo | null;
         }
 
         /**
-         * 获取射线路径上的所有物体。
+         * @deprecated
          */
-        public static raycastAll(ray: Ray, isPickMesh: boolean = false, maxDistance: number = Number.MAX_VALUE, layerMask: paper.Layer = paper.Layer.Default | paper.Layer.UI): PickInfo[] | null {
-            return this._doPick(ray, maxDistance, layerMask, true, isPickMesh) as PickInfo[] | null;
+        public static raycastAll(ray: Ray, isPickMesh: boolean = false, maxDistance: number = Number.MAX_VALUE, layerMask: paper.Layer = paper.Layer.Default | paper.Layer.UI): RaycastInfo[] | null {
+            return this._doPick(ray, maxDistance, layerMask, true, isPickMesh) as RaycastInfo[] | null;
         }
 
         private static _doPick(ray: Ray, maxDistance: number = Number.MAX_VALUE, layerMask: paper.Layer, pickAll: boolean = false, isPickMesh: boolean = false) {
-            const pickedList: PickInfo[] = [];
+            const pickedList: RaycastInfo[] = [];
 
             for (const gameObject of paper.Application.sceneManager.activeScene.getRootGameObjects()) {
                 if (gameObject.layer & layerMask) {
@@ -394,7 +432,7 @@ namespace egret3d {
 
         }
 
-        private static _pickMesh(ray: Ray, transform: Transform, pickInfos: PickInfo[]) {
+        private static _pickMesh(ray: Ray, transform: Transform, pickInfos: RaycastInfo[]) {
             if (transform.gameObject.activeInHierarchy) {
                 const meshFilter = transform.gameObject.getComponent(MeshFilter);
                 if (meshFilter) {
@@ -424,7 +462,7 @@ namespace egret3d {
             }
         }
 
-        private static _pickCollider(ray: Ray, transform: Transform, pickInfos: PickInfo[]) {
+        private static _pickCollider(ray: Ray, transform: Transform, pickInfos: RaycastInfo[]) {
             if (transform.gameObject.activeInHierarchy) {
                 // const pickInfo = ray.intersectCollider(transform);
                 // if (pickInfo) {
@@ -439,11 +477,28 @@ namespace egret3d {
         }
     }
 
-
     /**
-     * 场景拣选信息
+     * 射线投射信息。
      */
-    export class PickInfo {
+    export class RaycastInfo {
+        private static readonly _instances: RaycastInfo[] = [];
+
+        public static create() {
+            if (this._instances.length > 0) {
+                return this._instances.pop()!;
+            }
+
+            return new RaycastInfo();
+        }
+
+        public release() {
+            if (RaycastInfo._instances.indexOf(this) >= 0) {
+                RaycastInfo._instances.push(this);
+            }
+
+            return this;
+        }
+
         public subMeshIndex: number = -1;
         public triangleIndex: number = -1;
         public distance: number = 0.0;
@@ -451,5 +506,13 @@ namespace egret3d {
         public readonly textureCoordA: Vector2 = new Vector2();
         public readonly textureCoordB: Vector2 = new Vector2();
         public transform: Transform | null = null;
+
+        public clear() {
+            this.subMeshIndex = -1;
+            this.triangleIndex = -1;
+            this.distance = 0.0;
+            // TODO
+            this.transform = null;
+        }
     }
 }

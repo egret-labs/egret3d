@@ -27,7 +27,9 @@ namespace egret3d {
         public clone() {
             return Quaternion.create(this.x, this.y, this.z, this.w);
         }
-
+        /**
+         * - 旋转矩阵。
+         */
         public fromMatrix(matrix: Readonly<Matrix4>) {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
 
@@ -253,42 +255,10 @@ namespace egret3d {
             this.z = (z * ratioA + this.z * ratioB);
         }
 
-        public lookAt(eye: Vector3, target: Vector3) {
-            const dir = _helpVector3A.subtract(target, eye).normalize();
-            const dirxz = _helpVector3B.set(dir.x, 0.0, dir.z).normalize();
-            const dirxz1 = _helpVector3C.set(dir.x, 0.0, dir.z);
-
-            let yaw = Math.acos(dirxz.z);
-            if (dirxz.x < 0) {
-                yaw = -yaw;
-            }
-
-            let v3length = dirxz1.length;
-            if (v3length > 0.999999) {
-                v3length = 1.0;
-            }
-            else if (v3length < -0.999999) {
-                v3length = -1.0;
-            }
-
-            let pitch = Math.acos(v3length);
-            if (dir.y > 0.0) {
-                pitch = -pitch;
-            }
-
-            _helpVector3A.set(pitch, yaw, 0.0);
-            this.fromEuler(_helpVector3A, EulerOrder.ZYX).normalize();
-
-            return this;
-        }
-
         public toEuler(value: Vector3, order: EulerOrder = EulerOrder.YXZ) {
             return _helpMatrix.fromRotation(this).toEuler(value, order);
         }
     }
 
-    const _helpVector3A = Vector3.create();
-    const _helpVector3B = Vector3.create();
-    const _helpVector3C = Vector3.create();
     const _helpMatrix = Matrix4.create();
 }

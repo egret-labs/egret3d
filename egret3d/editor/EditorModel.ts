@@ -86,15 +86,6 @@ namespace paper.editor {
                     return element.editType;
                 }
             }
-
-            const extraInfoList = editor.getExtraInfo(target);
-            for (let index = 0; index < extraInfoList.length; index++) {
-                const element = extraInfoList[index];
-                if (element.name === propName) {
-                    return element.editType;
-                }
-            }
-
             return null;
         }
 
@@ -135,7 +126,9 @@ namespace paper.editor {
 
         public serializeProperty(value: any, editType: editor.EditType): any {
             switch (editType) {
-                case editor.EditType.NUMBER:
+                case editor.EditType.UINT:
+                case editor.EditType.INT:
+                case editor.EditType.FLOAT:
                 case editor.EditType.TEXT:
                 case editor.EditType.CHECKBOX:
                     return value;
@@ -177,7 +170,9 @@ namespace paper.editor {
 
         public deserializeProperty(serializeData: any, editType: editor.EditType) {
             switch (editType) {
-                case editor.EditType.NUMBER:
+                case editor.EditType.UINT:
+                case editor.EditType.INT:
+                case editor.EditType.FLOAT:
                 case editor.EditType.TEXT:
                 case editor.EditType.CHECKBOX:
                     return serializeData;
@@ -223,8 +218,8 @@ namespace paper.editor {
             }
         }
 
-        public createGameObject(parentList: (GameObject | Scene)[], createType: string) {
-            let state = CreateGameObjectState.create(parentList, createType);
+        public createGameObject(parentList: (GameObject | Scene)[], createType: string,mesh:egret3d.Mesh = null) {
+            let state = CreateGameObjectState.create(parentList, createType,mesh);
             this.addState(state);
         }
 
@@ -483,34 +478,65 @@ namespace paper.editor {
             return result;
         }
 
-        private findOptionSetName(propName: string, target: any): string | null {
-            const editInfoList = editor.getEditInfo(target);
-            for (let index = 0; index < editInfoList.length; index++) {
-                const element = editInfoList[index];
-                if (element.name === propName && element.option && element.option.set) {
-                    return element.option.set;
-                }
-            }
-
-            const extraInfoList = editor.getExtraInfo(target);
-            for (let index = 0; index < extraInfoList.length; index++) {
-                const element = extraInfoList[index];
-                if (element.name === propName && element.option && element.option.set) {
-                    return element.option.set;
-                }
-            }
-
-            return null;
-        }
-
-        public setTargetProperty(propName: string, target: any, value: any): void {
-            let setFunName: string = this.findOptionSetName(propName, target);
-            if (setFunName !== null && target[setFunName]) {
-                (target[setFunName] as Function).call(target, value);
-            } else {
+        public setTargetProperty(propName: string, target: any, value: any, editType: paper.editor.EditType): void {
+            if (editType != paper.editor.EditType.VECTOR2 &&
+                editType != paper.editor.EditType.VECTOR3 &&
+                editType != paper.editor.EditType.VECTOR4 &&
+                editType != paper.editor.EditType.COLOR) {
                 target[propName] = value;
+                return;
+            }
+
+            if (this.propertyHasGetterSetter(propName, target)) {
+                target[propName] = value;
+            } else {
+                switch (editType) {
+                    case paper.editor.EditType.VECTOR2:
+                        const vec2: egret3d.Vector2 = target[propName];
+                        vec2.x = value.x;
+                        vec2.y = value.y;
+                        break;
+                    case paper.editor.EditType.VECTOR3:
+                        const vec3: egret3d.Vector3 = target[propName];
+                        vec3.x = value.x;
+                        vec3.y = value.y;
+                        vec3.z = value.z;
+                        break;
+                    case paper.editor.EditType.VECTOR4:
+                        const vec4: egret3d.Vector4 = target[propName];
+                        vec4.x = value.x;
+                        vec4.y = value.y;
+                        vec4.z = value.z;
+                        vec4.w = value.w;
+                        break;
+                    case paper.editor.EditType.COLOR:
+                        const color: egret3d.Color = target[propName];
+                        color.r = value.r;
+                        color.g = value.g;
+                        color.b = value.b;
+                        color.a = value.a;
+                        break;
+                    default:
+                        break;
+                }
             }
         }
+
+        private propertyHasGetterSetter(propName: string, target: any) {
+            let prototype = Object.getPrototypeOf(target);
+            let descriptror;
+
+            while (prototype) {
+                descriptror = Object.getOwnPropertyDescriptor(prototype, propName);
+                if (descriptror && descriptror.get && descriptror.set) {
+                    return true;
+                }
+                prototype = Object.getPrototypeOf(prototype);
+            }
+
+            return false;
+        }
+
         /**当前选中的对象 */
         public currentSelected: GameObject[];
         /**
@@ -730,7 +756,7 @@ namespace paper.editor {
         public async modifyMaterialPropertyValues(target: egret3d.Material, valueList: any[]): Promise<void> {
             for (const propertyValue of valueList) {
                 const { propName, copyValue, uniformType } = propertyValue;
-                
+
                 if (!copyValue) {
                     continue;
                 }

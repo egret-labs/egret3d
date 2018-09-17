@@ -30,7 +30,7 @@ namespace paper {
             }
         }
         /**
-         * 
+         * @internal
          */
         public static find<T extends Asset>(name: string) {
             const result = this._assets[name];

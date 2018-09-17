@@ -170,6 +170,9 @@ declare namespace paper.editor {
     }
     /**属性配置 */
     type PropertyOption = {
+        minimum?: number;
+        maximum?: number;
+        step?: number;
         /**赋值函数*/
         set?: string;
         /**下拉项*/
@@ -181,52 +184,50 @@ declare namespace paper.editor {
     /**编辑类型 */
     const enum EditType {
         /**数字输入 */
-        NUMBER = 0,
+        UINT = 0,
+        INT = 1,
+        FLOAT = 2,
         /**文本输入 */
-        TEXT = 1,
+        TEXT = 3,
         /**选中框 */
-        CHECKBOX = 2,
+        CHECKBOX = 4,
         /**vertor2 */
-        VECTOR2 = 3,
+        VECTOR2 = 5,
         /**vertor3 */
-        VECTOR3 = 4,
+        VECTOR3 = 6,
         /**vertor4 */
-        VECTOR4 = 5,
+        VECTOR4 = 7,
         /**Quaternion */
-        QUATERNION = 6,
+        QUATERNION = 8,
         /**颜色选择器 */
-        COLOR = 7,
+        COLOR = 9,
         /**下拉 */
-        LIST = 8,
+        LIST = 10,
         /**Rect */
-        RECT = 9,
+        RECT = 11,
         /**材质 */
-        MATERIAL = 10,
+        MATERIAL = 12,
         /**材质数组 */
-        MATERIAL_ARRAY = 11,
+        MATERIAL_ARRAY = 13,
         /**游戏对象 */
-        GAMEOBJECT = 12,
+        GAMEOBJECT = 14,
         /**变换 TODO 不需要*/
-        TRANSFROM = 13,
+        TRANSFROM = 15,
         /**组件 */
-        COMPONENT = 14,
+        COMPONENT = 16,
         /**声音 */
-        SOUND = 15,
+        SOUND = 17,
         /**Mesh */
-        MESH = 16,
+        MESH = 18,
         /**shader */
-        SHADER = 17,
+        SHADER = 19,
         /**数组 */
-        ARRAY = 18,
+        ARRAY = 20,
     }
     /**
      * 装饰器:自定义
      */
     function custom(): (target: any) => void;
-    /**
-     * 从枚举中生成装饰器列表项。
-     */
-    function getItemsFromEnum(enumObject: any): any[];
     /**
      * 装饰器:属性
      * @param editType 编辑类型
@@ -238,26 +239,14 @@ declare namespace paper.editor {
      */
     function isCustom(classInstance: any): boolean;
     /**
-   * 获取一个实例对象的编辑信息
-   * @param classInstance 实例对象
-   */
-    function getEditInfo(classInstance: any): any[];
+     * 从枚举中生成装饰器列表项。
+     */
+    function getItemsFromEnum(enumObject: any): any[];
     /**
      * 获取一个实例对象的编辑信息
      * @param classInstance 实例对象
      */
-    function getEditInfo2(classInstance: any): PropertyInfo[];
-    function getEditInfoByPrototype(classInstance: any): PropertyInfo[];
-    /**
-     * 装饰器:属性
-     * @param editType 编辑类型
-     */
-    function extraProperty(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
-    /**
-     * 额外信息
-     * @param classInstance 实例对象
-     */
-    function getExtraInfo(classInstance: any): PropertyInfo[];
+    function getEditInfo(classInstance: any): PropertyInfo[];
 }
 declare namespace egret3d {
     /**
@@ -399,10 +388,6 @@ declare namespace paper {
          * @private
          */
         static register(asset: Asset): void;
-        /**
-         *
-         */
-        static find<T extends Asset>(name: string): T;
         /**
          * @readonly
          */
@@ -798,44 +783,45 @@ declare namespace egret3d {
         clone(): Ray;
         set(origin: Readonly<IVector3>, direction: Readonly<IVector3>): this;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        applyMatrix(value: Readonly<Matrix4>, ray?: Readonly<Ray>): this;
         getSquaredDistance(value: Readonly<IVector3>): number;
         getDistance(value: Readonly<IVector3>): number;
+        at(value: number, out?: Vector3): Vector3;
         /**
-         * 与三角形相交检测
+         * 与三角形相交检测。
+         * TODO
          */
-        intersectTriangle(p1: Vector3, p2: Vector3, p3: Vector3, backfaceCulling?: boolean): PickInfo | null;
-        /**
-         * 与aabb碰撞相交检测
-         */
-        intersectAABB(aabb: AABB): boolean;
+        intersectTriangle(p1: Readonly<Vector3>, p2: Readonly<Vector3>, p3: Readonly<Vector3>, backfaceCulling?: boolean): RaycastInfo | null;
         intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3;
         /**
-         * 与最大最小点表示的box相交检测
-         * @param minimum 最小点
-         * @param maximum 最大点
-         * @version paper 1.0
+         * 与 AABB 相交检测。
          */
-        intersectBoxMinMax(minimum: Readonly<IVector3>, maximum: Readonly<IVector3>): boolean;
+        intersectAABB(aabb: Readonly<AABB>, raycastInfo?: RaycastInfo): boolean;
+        intersectAABB(minimum: Readonly<IVector3>, maximum: Readonly<IVector3>, raycastInfo?: RaycastInfo): boolean;
         /**
-         * 与球相交检测
+         * 与球相交检测。
          */
-        intersectsSphere(center: Vector3, radius: number): boolean;
+        intersectSphere(sphere: Readonly<Sphere>, raycastInfo?: RaycastInfo): boolean;
+        intersectSphere(center: Readonly<IVector3>, radius: number, raycastInfo?: RaycastInfo): boolean;
         /**
-         * 获取射线拾取到的最近物体。
+         * @deprecated
          */
-        static raycast(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo | null;
+        static raycast(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): RaycastInfo | null;
         /**
-         * 获取射线路径上的所有物体。
+         * @deprecated
          */
-        static raycastAll(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): PickInfo[] | null;
+        static raycastAll(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): RaycastInfo[] | null;
         private static _doPick(ray, maxDistance, layerMask, pickAll?, isPickMesh?);
         private static _pickMesh(ray, transform, pickInfos);
         private static _pickCollider(ray, transform, pickInfos);
     }
     /**
-     * 场景拣选信息
+     * 射线投射信息。
      */
-    class PickInfo {
+    class RaycastInfo {
+        private static readonly _instances;
+        static create(): RaycastInfo;
+        release(): this;
         subMeshIndex: number;
         triangleIndex: number;
         distance: number;
@@ -843,6 +829,7 @@ declare namespace egret3d {
         readonly textureCoordA: Vector2;
         readonly textureCoordB: Vector2;
         transform: Transform | null;
+        clear(): void;
     }
 }
 declare namespace egret3d {
@@ -2309,6 +2296,9 @@ declare namespace egret3d {
         static create(x?: number, y?: number, z?: number, w?: number): Quaternion;
         release(): this;
         clone(): Quaternion;
+        /**
+         * - 旋转矩阵。
+         */
         fromMatrix(matrix: Readonly<Matrix4>): this;
         fromEuler(value: Readonly<IVector3>, order?: EulerOrder): this;
         /**
@@ -2320,7 +2310,6 @@ declare namespace egret3d {
         multiply(valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
         premultiply(value: Readonly<IVector4>): this;
         lerp(t: number, valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
-        lookAt(eye: Vector3, target: Vector3): this;
         toEuler(value: Vector3, order?: EulerOrder): Vector3;
     }
 }
@@ -2359,9 +2348,9 @@ declare namespace paper {
     const enum DefaultNames {
         NoName = "NoName",
         Global = "Global",
-        MainCamera = "MainCamera",
-        EditorCamera = "EditorCamera",
-        Editor = "Editor",
+        MainCamera = "Main Camera",
+        EditorCamera = "Editor Camera",
+        EditorOnly = "Editor Only",
     }
     /**
      *
@@ -2442,6 +2431,12 @@ declare namespace paper {
      * @param layer
      */
     function layerTest(cullingMask: CullingMask, layer: Layer): boolean;
+    /**
+     *
+     * @param cullingMask
+     * @param layer
+     */
+    function removeLayer(cullingMask: CullingMask, layer: Layer): number;
 }
 declare namespace paper {
     /**
@@ -2555,7 +2550,7 @@ declare namespace paper {
         /**
          *
          */
-        protected readonly _groups: ComponentGroup[];
+        protected readonly _groups: GameObjectGroup[];
         /**
          *
          */
@@ -2583,23 +2578,23 @@ declare namespace paper {
          * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
          * @see paper.GameObject#addComponent()
          */
-        onAddGameObject?(gameObject: GameObject, group: ComponentGroup): void;
+        onAddGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
         /**
          * 充分非必要组件添加到实体时调用。
          * - 注意，该调用并不是立即的，而是等到添加到实体的下一帧才被调用。
          * @see paper.GameObject#addComponent()
          */
-        onAddComponent?(component: BaseComponent, group: ComponentGroup): void;
+        onAddComponent?(component: BaseComponent, group: GameObjectGroup): void;
         /**
          * 充分非必要组件从实体移除时调用。
          * @see paper.GameObject#removeComponent()
          */
-        onRemoveComponent?(component: BaseComponent, group: ComponentGroup): void;
+        onRemoveComponent?(component: BaseComponent, group: GameObjectGroup): void;
         /**
          * 实体从系统移除时调用。
          * @see paper.GameObject#removeComponent()
          */
-        onRemoveGameObject?(gameObject: GameObject, group: ComponentGroup): void;
+        onRemoveGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
         /**
          * 系统更新时调用。
          */
@@ -2626,7 +2621,7 @@ declare namespace paper {
         /**
          *
          */
-        readonly groups: ReadonlyArray<ComponentGroup>;
+        readonly groups: ReadonlyArray<GameObjectGroup>;
     }
 }
 declare namespace egret3d {
@@ -2852,7 +2847,7 @@ declare namespace egret3d {
         /**
          * TODO
          */
-        raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix4>, boneMatrices?: Float32Array | null): PickInfo;
+        raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix4>, boneMatrices?: Float32Array | null): RaycastInfo;
         /**
          *
          */
@@ -3192,7 +3187,7 @@ declare namespace paper {
     /**
      *
      */
-    class ComponentGroup {
+    class GameObjectGroup {
         private static readonly _groups;
         /**
          *
@@ -3482,22 +3477,15 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * Transform Class
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * Transform实例可以被添加到3D场景中，并持有一个GameObejct实例
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * Transform 组件。
+     * - 存储实体之间的父子关系。
+     * - 存储实体 3D 空间坐标系。
      */
     class Transform extends paper.BaseComponent {
-        private _dirtyLocal;
-        private _dirtyWorld;
+        private _localDirty;
+        private _worldDirty;
         private readonly _localMatrix;
-        private readonly _localToWorld;
+        private readonly _worldMatrix;
         private readonly _localPosition;
         private readonly _localRotation;
         private readonly _localEuler;
@@ -3509,27 +3497,30 @@ declare namespace egret3d {
         private readonly _eulerAngles;
         private readonly _scale;
         private _removeFromChildren(value);
-        private _dirtify(isLocalDirty);
-        private _updateEuler(order?, isWorldSpace?);
+        private _dirtify(isLocalDirty, dirty);
+        private _updateMatrix(isWorldSpace);
+        private _updateEuler(isWorldSpace, order?);
         /**
          * 父节点发生改变的回调方法
          * 子类可通过重载此方法进行标脏状态传递
          */
         protected _onParentChange(newParent: Transform | null, oldParent: Transform | null): void;
         /**
-         *
+         * 销毁所有子 Transform 组件。
          */
         destroyChildren(): void;
+        /**
+         * 是否包含指定的子 Transform 组件。
+         */
         contains(value: Transform): boolean;
         /**
-         * 设置父节点
+         * 设置指定的父 Transform 组件。
          */
         setParent(value: Transform | null, worldPositionStays?: boolean): this;
         getChildIndex(value: Transform): number;
         setChildIndex(value: Transform, index: number): void;
         /**
-         * 获取对象下标的子集对象
-         * @param index
+         *
          */
         getChildAt(index: number): Transform;
         /**
@@ -3603,10 +3594,11 @@ declare namespace egret3d {
          */
         localScale: Readonly<Vector3 | IVector3>;
         /**
+         * 本地矩阵。
          */
         getLocalMatrix(): Readonly<Matrix4>;
         /**
-         *
+         * 本地矩阵。
          */
         readonly localMatrix: Readonly<Matrix4>;
         /**
@@ -3675,117 +3667,70 @@ declare namespace egret3d {
          */
         scale: Readonly<Vector3 | IVector3>;
         /**
-         * get world matrix
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获得世界矩阵
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 世界矩阵。
          */
         getWorldMatrix(): Readonly<Matrix4>;
         /**
-         *
+         * 世界矩阵。
          */
         readonly worldMatrix: Readonly<Matrix4>;
         /**
-         *
+         * 位移指定距离。
          */
         translate(value: Readonly<IVector3>, isWorldSpace?: boolean): this;
         translate(x: number, y: number, z: number, isWorldSpace?: boolean): this;
         /**
-         *
+         * 旋转指定欧拉弧度。
          */
         rotate(value: Readonly<IVector3>, isWorldSpace?: boolean, order?: EulerOrder): this;
         rotate(x: number, y: number, z: number, isWorldSpace?: boolean, order?: EulerOrder): this;
         /**
+         * 绕轴旋转弧度。
+         */
+        rotateOnAxis(axis: Readonly<IVector3>, radian: number, isWorldSpace?: boolean): this;
+        /**
          *
+         */
+        rotateAround(position: Readonly<IVector3>, axis: Readonly<IVector3>, radian: number): this;
+        /**
+         * 旋转指定欧拉角度。
          */
         rotateAngle(value: Readonly<IVector3>, isWorldSpace?: boolean, order?: EulerOrder): this;
         rotateAngle(x: number, y: number, z: number, isWorldSpace?: boolean, order?: EulerOrder): this;
         /**
-         * x-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * 绕轴旋转角度。
          */
+        rotateAngleOnAxis(axis: Readonly<IVector3>, angle: number, isWorldSpace?: boolean): this;
         /**
-         * 获取世界坐标系下当前x轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         *
+         */
+        rotateAngleAround(position: Readonly<IVector3>, axis: Readonly<IVector3>, angle: number): this;
+        /**
+         * 获取世界坐标系下当前 X 轴的正方向。
          */
         getRight(out?: Vector3): Vector3;
         /**
-         * y-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取世界坐标系下当前y轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 获取世界坐标系下当前 Y 轴的正方向。
          */
         getUp(out?: Vector3): Vector3;
         /**
-         * z-axis towards in world space
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取世界坐标系下当前z轴的朝向
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 获取世界坐标系下当前 Z 轴的正方向。
          */
         getForward(out?: Vector3): Vector3;
         /**
-         * look at a target
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 旋转当前transform 到指定的目标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 旋转 Z 轴，使其正方向指向目标位置。
          */
         lookAt(target: Readonly<Transform> | Readonly<IVector3>, up?: Readonly<IVector3>): this;
         /**
-         * 当前子集对象的数量
+         * 所有子 Transform 组件的总数。
          */
         readonly childCount: number;
         /**
-         * children list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 子物体列表
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 所有子 Transform 组件。
          */
         readonly children: ReadonlyArray<Transform>;
         /**
-         * instance of parent transform
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 父元素实例
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 父 Transform 组件。
          */
         parent: Transform | null;
     }
@@ -3804,12 +3749,12 @@ declare namespace egret3d {
         static CONE: Mesh;
         static CYLINDER: Mesh;
         static SPHERE: Mesh;
-        static LINE: Mesh;
+        static LINE_X: Mesh;
+        static LINE_Y: Mesh;
+        static LINE_Z: Mesh;
         static AXISES: Mesh;
         static CUBE_WIREFRAMED: Mesh;
         static PYRAMID_WIREFRAMED: Mesh;
-        static CAMERA_WIREFRAMED: Mesh;
-        static GRID: Mesh;
         initialize(): void;
         /**
          * 创建带网格的实体。
@@ -3827,9 +3772,10 @@ declare namespace egret3d {
          * 创建圆柱体网格。
          */
         static createCylinder(radiusTop?: number, radiusBottom?: number, height?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, radialSegments?: number, heightSegments?: number, openEnded?: boolean, thetaStart?: number, thetaLength?: number, differentFace?: boolean): Mesh;
+        /**
+         * TODO
+         */
         static createSphereCCW(radius?: number, widthSegments?: number, heightSegments?: number): Mesh;
-        static createCameraWireframed(colorFrustum: egret3d.Color, colorCone: egret3d.Color, colorUp: egret3d.Color, colorTarget: egret3d.Color, colorCross: egret3d.Color): Mesh;
-        static createGrid(size: number, divisions: number, color1?: egret3d.Color, color2?: egret3d.Color): Mesh;
     }
 }
 declare namespace egret3d {
@@ -4008,8 +3954,8 @@ declare namespace egret3d {
             componentClass: typeof DirectionalLight[];
         }[])[];
         protected readonly _camerasAndLights: CamerasAndLights;
-        onAddGameObject(_gameObject: paper.GameObject, group: paper.ComponentGroup): void;
-        onRemoveGameObject(_gameObject: paper.GameObject, group: paper.ComponentGroup): void;
+        onAddGameObject(_gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
+        onRemoveGameObject(_gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
         onUpdate(deltaTime: number): void;
     }
 }
@@ -4949,7 +4895,6 @@ declare namespace egret3d {
         }[];
         onAddComponent(component: Animation): void;
         onUpdate(): void;
-        onRemoveComponent(component: Animation): void;
     }
 }
 declare namespace egret3d.particle {
@@ -5436,7 +5381,7 @@ declare namespace egret3d.particle {
         private _onTextureSheetAnimation(comp);
         private _updateDrawCalls(gameObject);
         onEnable(): void;
-        onAddGameObject(gameObject: paper.GameObject, _group: paper.ComponentGroup): void;
+        onAddGameObject(gameObject: paper.GameObject, _group: paper.GameObjectGroup): void;
         onRemoveGameObject(gameObject: paper.GameObject): void;
         onUpdate(deltaTime: number): void;
         onDisable(): void;
@@ -5586,10 +5531,6 @@ declare namespace paper {
          */
         static getInstance(): ECS;
         private constructor();
-        /**
-         *
-         */
-        readonly version: string;
         /**
          * 系统管理器。
          */
@@ -8578,7 +8519,8 @@ declare namespace egret3d.ShaderChunk {
     const uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n #if defined FLIP_V \n  vUv = ( uvTransform * vec3( uv.x, 1.0 - uv.y, 1 ) ).xy;//modify egret\n #else\n  vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n #endif\n#endif";
     const worldpos_vertex = "#if defined( USE_ENVMAP ) || defined( DISTANCE ) || defined ( USE_SHADOWMAP )\n\n vec4 worldPosition = modelMatrix * vec4( transformed, 1.0 );\n\n#endif\n";
 }
-declare namespace RES.processor {
+declare namespace egret3d {
+    const BitmapDataProcessor: RES.processor.Processor;
     const ShaderProcessor: RES.processor.Processor;
     const TextureDescProcessor: RES.processor.Processor;
     const TextureProcessor: RES.processor.Processor;
@@ -9595,7 +9537,7 @@ declare namespace paper.editor {
         createPrefabState(prefab: Prefab, parent?: GameObject): void;
         serializeProperty(value: any, editType: editor.EditType): any;
         deserializeProperty(serializeData: any, editType: editor.EditType): any;
-        createGameObject(parentList: (GameObject | Scene)[], createType: string): void;
+        createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh?: egret3d.Mesh): void;
         addComponent(gameObjectUUid: string, compClzName: string): void;
         removeComponent(gameObjectUUid: string, componentUUid: string): void;
         getComponentById(gameObject: GameObject, componentId: string): BaseComponent | null;
@@ -9640,8 +9582,8 @@ declare namespace paper.editor {
         filtTopHierarchyGameObjects(gameObjects: GameObject[]): void;
         getGameObjectByUUid(uuid: string): GameObject | null;
         getGameObjectsByUUids(uuids: string[]): GameObject[];
-        private findOptionSetName(propName, target);
-        setTargetProperty(propName: string, target: any, value: any): void;
+        setTargetProperty(propName: string, target: any, value: any, editType: paper.editor.EditType): void;
+        private propertyHasGetterSetter(propName, target);
         /**当前选中的对象 */
         currentSelected: GameObject[];
         /**
@@ -10036,13 +9978,14 @@ declare namespace paper.editor {
 declare namespace paper.editor {
     class CreateGameObjectState extends BaseState {
         static toString(): string;
-        static create(parentList: (GameObject | Scene)[], createType: string): CreateGameObjectState | null;
+        static create(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh): CreateGameObjectState | null;
         infos: {
             parentUUID: string;
             serializeData: any;
         }[];
         createType: string;
         addList: string[];
+        private mesh;
         private isFirst;
         undo(): boolean;
         redo(): boolean;

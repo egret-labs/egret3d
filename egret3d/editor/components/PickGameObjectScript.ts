@@ -234,7 +234,7 @@ namespace paper.editor {
                     let max = new egret3d.Vector3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
                     // min.applyQuaternion(rot)
                     // max.applyQuaternion(rot)
-                    if (ray.intersectBoxMinMax(min, max)) {
+                    if (ray.intersectAABB(min, max)) {
                         return item.gameObject
                     }
                 }
@@ -247,7 +247,7 @@ namespace paper.editor {
                 let max = new egret3d.Vector3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
                 // min.applyQuaternion(rot)
                 // max.applyQuaternion(rot)
-                if (ray.intersectBoxMinMax(min, max)) {
+                if (ray.intersectAABB(min, max)) {
                     return item.gameObject
                 }
 
