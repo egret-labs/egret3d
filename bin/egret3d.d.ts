@@ -5704,7 +5704,6 @@ declare namespace egret3d {
          */
         renderQueue: paper.RenderQueue | number;
         private _cacheDefines;
-        private readonly _defines;
         private readonly _textures;
         /**
          * 请使用 `egret3d.Material.create()` 创建实例。

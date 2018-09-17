@@ -26,6 +26,9 @@ namespace egret3d {
           */
         public _version: number = 0;
         private _cacheDefines: string = "";
+        /**
+          * @internal
+          */
         private readonly _defines: Array<string> = [];
         private readonly _textures: Texture[] = []; // TODO
         /**
@@ -185,6 +188,11 @@ namespace egret3d {
                         targetStates.functions[k] = sourceStates.functions[k];
                     }
                 }
+            }
+
+            //
+            for (const define of value._defines) {
+                this.addDefine(define);
             }
 
             return this;

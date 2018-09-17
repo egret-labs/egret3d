@@ -21,6 +21,7 @@ namespace egret3d {
 
         public static LINE: Mesh;
         public static AXISES: Mesh;
+        // public static 
         public static CUBE_WIREFRAMED: Mesh;
         public static PYRAMID_WIREFRAMED: Mesh;
         public static CAMERA_WIREFRAMED: Mesh;

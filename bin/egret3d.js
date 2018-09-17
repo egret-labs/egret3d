@@ -17844,6 +17844,9 @@ var egret3d;
               */
             _this._version = 0;
             _this._cacheDefines = "";
+            /**
+              * @internal
+              */
             _this._defines = [];
             _this._textures = []; // TODO
             /**
@@ -17980,6 +17983,11 @@ var egret3d;
                         targetStates.functions[k] = sourceStates.functions[k];
                     }
                 }
+            }
+            //
+            for (var _i = 0, _a = value._defines; _i < _a.length; _i++) {
+                var define = _a[_i];
+                this.addDefine(define);
             }
             return this;
         };
