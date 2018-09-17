@@ -15,15 +15,20 @@ namespace paper.editor {
     }
     /**属性配置 */
     export type PropertyOption = {
+        minimum?: number;
+        maximum?: number;
+        step?: number;
         /**赋值函数*/
-        set?: string,
+        set?: string;
         /**下拉项*/
-        listItems?: { label: string, value: any }[]
+        listItems?: { label: string, value: any }[];
     };
     /**编辑类型 */
     export const enum EditType {
         /**数字输入 */
-        NUMBER,
+        UINT,
+        INT,
+        FLOAT,
         /**文本输入 */
         TEXT,
         /**选中框 */
@@ -118,12 +123,12 @@ namespace paper.editor {
     }
 
     /**
-   * 获取一个实例对象的编辑信息
-   * @param classInstance 实例对象
-   */
+     * 获取一个实例对象的编辑信息
+     * @param classInstance 实例对象
+     */
     export function getEditInfo(classInstance) {
         var whileInsance = classInstance.__proto__;
-        var retrunList = [];
+        var retrunList = [] as PropertyInfo[];
         var className;
         while (whileInsance) {
             className = whileInsance.constructor.name;
@@ -135,5 +140,4 @@ namespace paper.editor {
         }
         return retrunList;
     }
-
 }

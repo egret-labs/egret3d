@@ -8,8 +8,6 @@ namespace egret3d {
         ];
 
         public onAddComponent(component: Animation) {
-            component._addToSystem = true;
-
             if (component.autoPlay) {
                 component.play();
             }
@@ -22,10 +20,6 @@ namespace egret3d {
                     animation._update(globalTime);
                 }
             }
-        }
-
-        public onRemoveComponent(component: Animation) {
-            component._addToSystem = false;
         }
     }
 }

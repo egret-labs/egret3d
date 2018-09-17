@@ -126,7 +126,9 @@ namespace paper.editor {
 
         public serializeProperty(value: any, editType: editor.EditType): any {
             switch (editType) {
-                case editor.EditType.NUMBER:
+                case editor.EditType.UINT:
+                case editor.EditType.INT:
+                case editor.EditType.FLOAT:
                 case editor.EditType.TEXT:
                 case editor.EditType.CHECKBOX:
                     return value;
@@ -168,7 +170,9 @@ namespace paper.editor {
 
         public deserializeProperty(serializeData: any, editType: editor.EditType) {
             switch (editType) {
-                case editor.EditType.NUMBER:
+                case editor.EditType.UINT:
+                case editor.EditType.INT:
+                case editor.EditType.FLOAT:
                 case editor.EditType.TEXT:
                 case editor.EditType.CHECKBOX:
                     return serializeData;

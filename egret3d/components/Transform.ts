@@ -367,7 +367,6 @@ namespace egret3d {
         /**
          * 本地旋转。
          */
-        @paper.editor.property(paper.editor.EditType.VECTOR4)
         public get localRotation(): Readonly<Quaternion | IVector4> {
             return this._localRotation;
         }
@@ -473,7 +472,7 @@ namespace egret3d {
         /**
          * 本地欧拉角度。
          */
-        @paper.editor.property(paper.editor.EditType.VECTOR3)
+        @paper.editor.property(paper.editor.EditType.VECTOR3, { step: 1.0 })
         public get localEulerAngles(): Readonly<Vector3 | IVector3> {
             if (this._localDirty & TransformDirty.Euler) {
                 this._updateEuler(false);
@@ -909,6 +908,30 @@ namespace egret3d {
             return this;
         }
         /**
+         * 绕轴旋转弧度。
+         */
+        public rotateOnAxis(axis: Readonly<IVector3>, radian: number, isWorldSpace?: boolean) {
+            _helpRotation.fromAxis(axis, radian);
+
+            if (isWorldSpace) {
+                this.localRotation = this._localRotation.premultiply(_helpRotation);
+            }
+            else {
+                this.localRotation = this._localRotation.multiply(_helpRotation);
+            }
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public rotateAround(position: Readonly<IVector3>, axis: Readonly<IVector3>, radian: number) {
+            this.rotateOnAxis(axis, radian, true);
+            this.position = this._localPosition.applyMatrix(_helpMatrix.fromRotation(_helpRotation.fromAxis(axis, radian)).fromTranslate(position, true), this.position);
+
+            return this;
+        }
+        /**
          * 旋转指定欧拉角度。
          */
         public rotateAngle(value: Readonly<IVector3>, isWorldSpace?: boolean, order?: EulerOrder): this;
@@ -938,6 +961,18 @@ namespace egret3d {
             return this;
         }
         /**
+         * 绕轴旋转角度。
+         */
+        public rotateAngleOnAxis(axis: Readonly<IVector3>, angle: number, isWorldSpace?: boolean) {
+            return this.rotateOnAxis(axis, angle * DEG_RAD, isWorldSpace);
+        }
+        /**
+         * 
+         */
+        public rotateAngleAround(position: Readonly<IVector3>, axis: Readonly<IVector3>, angle: number) {
+            return this.rotateAround(position, axis, angle * DEG_RAD);
+        }
+        /**
          * 获取世界坐标系下当前 X 轴的正方向。
          */
         public getRight(out?: Vector3) {
@@ -945,7 +980,7 @@ namespace egret3d {
                 out = Vector3.create();
             }
 
-            return out.applyDirection(this.worldMatrix, Vector3.RIGHT);
+            return out.applyDirection(this.worldMatrix, Vector3.RIGHT).normalize();
         }
         /**
          * 获取世界坐标系下当前 Y 轴的正方向。
@@ -955,7 +990,7 @@ namespace egret3d {
                 out = Vector3.create();
             }
 
-            return out.applyDirection(this.worldMatrix, Vector3.UP);
+            return out.applyDirection(this.worldMatrix, Vector3.UP).normalize();
         }
         /**
          * 获取世界坐标系下当前 Z 轴的正方向。
@@ -965,7 +1000,7 @@ namespace egret3d {
                 out = Vector3.create();
             }
 
-            return out.applyDirection(this.worldMatrix, Vector3.FORWARD);
+            return out.applyDirection(this.worldMatrix, Vector3.FORWARD).normalize();
         }
         /**
          * 旋转 Z 轴，使其正方向指向目标位置。

@@ -15,16 +15,16 @@ namespace egret3d {
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public decay: number = 2.0;
         /**
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public distance: number = 0.0;
 
-        public renderTarget: BaseRenderTarget = new GlRenderTarget("PointLight",1024, 1024, true); // TODO
+        public renderTarget: BaseRenderTarget = new GlRenderTarget("PointLight", 1024, 1024, true); // TODO
 
         public update(camera: Camera, faceIndex: number) {
             const position = this.gameObject.transform.getPosition();

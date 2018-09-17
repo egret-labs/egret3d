@@ -74,7 +74,7 @@ namespace paper {
         /**
          * 
          */
-        @editor.property(editor.EditType.NUMBER)
+        @editor.property(editor.EditType.INT, { minimum: -1 })
         public get lightmapIndex() {
             return this._lightmapIndex;
         }

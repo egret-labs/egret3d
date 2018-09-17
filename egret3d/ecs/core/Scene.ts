@@ -67,7 +67,7 @@ namespace paper {
          * lightmap 表现的光照强度。
          */
         @serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public lightmapIntensity: number = 1.0;
         /**
          * 场景名称。
@@ -93,13 +93,13 @@ namespace paper {
         @paper.editor.property(paper.editor.EditType.COLOR)
         public readonly fogColor: egret3d.Color = egret3d.Color.create(0.5, 0.5, 0.5, 1);
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public fogDensity: number = 0.01;
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
-        public fogNear: number = 1;
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        public fogNear: number = 1.0;
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NUMBER)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public fogFar: number = 300.0;
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。

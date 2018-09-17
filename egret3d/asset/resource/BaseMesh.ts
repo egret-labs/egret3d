@@ -144,7 +144,7 @@ namespace egret3d {
             _helpMatrix.inverse(worldMatrix);
             _helpRay.copy(ray);
             _helpRay.origin.applyMatrix(_helpMatrix);
-            _helpRay.direction.applyDirection(_helpMatrix);
+            _helpRay.direction.applyDirection(_helpMatrix).normalize();
 
             for (const primitive of this._glTFMesh!.primitives) {
                 const indices = primitive.indices !== undefined ? this.getIndices(subMeshIndex)! : null;
