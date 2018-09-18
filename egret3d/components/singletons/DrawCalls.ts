@@ -89,7 +89,6 @@ namespace egret3d {
             this.shadowCalls.sort(this._sortFromFarToNear);
         }
         public sortAfterFrustumCulling(camera: Camera) {
-            //每次根据视锥裁切填充TODO，放到StartSystem
             this.opaqueCalls.length = 0;
             this.transparentCalls.length = 0;
             const cameraPos = camera.gameObject.transform.getPosition();
@@ -97,11 +96,11 @@ namespace egret3d {
             for (const drawCall of this.drawCalls) {
                 const drawTarget = drawCall.renderer.gameObject;
                 const visible = ((camera.cullingMask & drawTarget.layer) !== 0 && (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer!))));
-                //裁切没通过
                 if (visible) {
                     const objPos = drawTarget.transform.getPosition();
                     drawCall.zdist = objPos.getDistance(cameraPos);
-                    if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue < paper.RenderQueue.Overlay) {
+                    // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
+                    if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent) {
                         this.transparentCalls.push(drawCall);
                     }
                     else {

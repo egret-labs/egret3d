@@ -77,10 +77,11 @@ namespace paper {
         public tag: string = "";
         /**
          * 变换组件
+         * @readonly
          */
-        public transform: egret3d.Transform = null as any;
+        public transform: egret3d.Transform = null!;
         /**
-         * 
+         * @readonly
          */
         public renderer: BaseRenderer | null = null;
         /**

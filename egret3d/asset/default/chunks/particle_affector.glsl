@@ -141,5 +141,5 @@ vec3 center=computePosition(startVelocity, lifeVelocity, age, t,gravity,worldRot
 			}
 		}
 		#endif
-		v_mesh_color=color;
+		v_mesh_color=vec4(color, 1.0);
 	 #endif

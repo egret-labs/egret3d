@@ -224,6 +224,7 @@ namespace egret3d {
 
                                     if (!raycastInfo || raycastInfo.distance > result.distance) {
                                         raycastInfo = result;
+                                        raycastInfo.position.applyMatrix(worldMatrix);
                                         raycastInfo.subMeshIndex = subMeshIndex;
                                         raycastInfo.triangleIndex = i / 3; // TODO
                                     }
@@ -233,8 +234,8 @@ namespace egret3d {
                         else {
                             for (let i = 0, l = castVertices.length; i < l; i += 9) { //
                                 p0.fromArray(castVertices, i);
-                                p0.fromArray(castVertices, i + 3);
-                                p0.fromArray(castVertices, i + 6);
+                                p1.fromArray(castVertices, i + 3);
+                                p2.fromArray(castVertices, i + 6);
 
                                 const result = castRay.intersectTriangle(p0, p1, p2);
                                 if (result) {
@@ -244,6 +245,7 @@ namespace egret3d {
 
                                     if (!raycastInfo || raycastInfo.distance > result.distance) {
                                         raycastInfo = result;
+                                        raycastInfo.position.applyMatrix(worldMatrix);
                                         raycastInfo.subMeshIndex = subMeshIndex;
                                         raycastInfo.triangleIndex = i / 3; // TODO
                                     }

@@ -1,5 +1,5 @@
 namespace egret3d {
-    export class Matrix3 {
+    export class Matrix3 implements paper.IRelease<Matrix3>, paper.ISerializable {
         private static readonly _instances: Matrix3[] = [];
 
         public static create() {
@@ -10,15 +10,18 @@ namespace egret3d {
             return new Matrix3();
         }
 
-        public static release(value: Matrix3) {
-            if (this._instances.indexOf(value) >= 0) {
-                return;
+        public release() {
+            if (Matrix3._instances.indexOf(this) < 0) {
+                Matrix3._instances.push(this);
             }
 
-            this._instances.push(value);
+            return this;
         }
 
-        public readonly rawData: Float32Array;
+        /**
+         * @readonly
+         */
+        public rawData: Float32Array = null!;
 
         public constructor(rawData: Float32Array | null = null) {
             if (rawData) {
@@ -35,20 +38,21 @@ namespace egret3d {
             }
         }
 
+        public serialize() {
+            return this.rawData;
+        }
+
+        public deserialize(value: Readonly<[
+            number, number, number, number,
+            number, number, number, number,
+            number, number, number, number,
+            number, number, number, number
+        ]>) {
+            return this.fromArray(value);
+        }
+
         public copy(value: Readonly<Matrix3>) {
-            const fromRawData = value.rawData;
-            const toRawData = this.rawData;
-            toRawData[0] = fromRawData[0];
-            toRawData[1] = fromRawData[1];
-            toRawData[2] = fromRawData[2];
-
-            toRawData[3] = fromRawData[3];
-            toRawData[4] = fromRawData[4];
-            toRawData[5] = fromRawData[5];
-
-            toRawData[6] = fromRawData[6];
-            toRawData[7] = fromRawData[7];
-            toRawData[8] = fromRawData[8];
+            this.fromArray(value.rawData);
 
             return this;
         }
@@ -147,7 +151,7 @@ namespace egret3d {
             return this;
         }
 
-        public setFromMatrix4(m: Matrix) {
+        public setFromMatrix4(m: Matrix4) {
 
             var me = m.rawData;
             this.set(
@@ -172,6 +176,20 @@ namespace egret3d {
                 g = te[6], h = te[7], i = te[8];
 
             return a * e * i - a * f * h - b * d * i + b * f * g + c * d * h - c * e * g;
+        }
+
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+            for (let i = 0; i < 9; ++i) {
+                this.rawData[i] = value[i + offset];
+            }
+
+            return this;
+        }
+
+        public fromBuffer(value: ArrayBuffer, byteOffset: number = 0) {
+            this.rawData = new Float32Array(value, byteOffset, 9);
+
+            return this;
         }
     }
 

@@ -31,11 +31,13 @@ namespace paper {
         protected _lightmapIndex: number = -1;
         protected readonly _boundingSphere: egret3d.Sphere = egret3d.Sphere.create();
         @serializedField
-        protected readonly _bounds: egret3d.AABB = egret3d.AABB.create();
+        protected readonly _aabb: egret3d.AABB = egret3d.AABB.create();
 
         protected _recalculateSphere() {
+            const aabb = this.aabb; // Update aabb.
+
             const worldMatrix = this.gameObject.transform.getWorldMatrix();
-            this._boundingSphere.set(this._bounds.center, this._bounds.boundingSphereRadius);
+            this._boundingSphere.set(aabb.center, aabb.boundingSphereRadius);
             this._boundingSphere.center.applyMatrix(worldMatrix);
             this._boundingSphere.radius *= worldMatrix.getMaxScaleOnAxis();
         }
@@ -89,7 +91,12 @@ namespace paper {
          * 
          */
         public get aabb(): Readonly<egret3d.AABB> {
-            return this._bounds;
+            if (this._aabbDirty) {
+                this.recalculateAABB();
+                this._aabbDirty = false;
+            }
+
+            return this._aabb;
         }
         /**
          * 

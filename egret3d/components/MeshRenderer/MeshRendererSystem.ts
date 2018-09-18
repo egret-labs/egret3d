@@ -12,7 +12,7 @@ namespace egret3d {
                             this._updateDrawCalls(component.gameObject);
 
                             if (component.gameObject.renderer) {
-                                component.gameObject.renderer.recalculateAABB();
+                                component.gameObject.renderer._aabbDirty = true;
                             }
                         }
                     }
@@ -39,11 +39,6 @@ namespace egret3d {
             this._drawCalls.removeDrawCalls(renderer);
             if (!filter.mesh || materials.length === 0) {
                 return;
-            }
-
-            if (renderer._aabbDirty) {
-                renderer.recalculateAABB();
-                renderer._aabbDirty = false;
             }
 
             filter.mesh._createBuffer();

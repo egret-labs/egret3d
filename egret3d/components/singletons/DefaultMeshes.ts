@@ -22,9 +22,7 @@ namespace egret3d {
         public static LINE_X: Mesh;
         public static LINE_Y: Mesh;
         public static LINE_Z: Mesh;
-        public static AXISES: Mesh;
         public static CUBE_WIREFRAMED: Mesh;
-        public static PYRAMID_WIREFRAMED: Mesh;
 
         public initialize() {
             super.initialize();
@@ -216,25 +214,6 @@ namespace egret3d {
                 ]);
             }
 
-            { // AXISES.
-                const mesh = new Mesh(6, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/axises.mesh.bin";
-                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
-                paper.Asset.register(mesh);
-                DefaultMeshes.AXISES = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
-                    0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
-                    0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
-                ]);
-            }
-
             { // CUBE_WIREFRAMED.
                 const mesh = new Mesh(8, 24, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
@@ -273,34 +252,6 @@ namespace egret3d {
                     0, 7, 1, 4, 2, 5, 3, 6,
                 ]);
             }
-
-            { // PYRAMID_WIREFRAMED.
-                const mesh = new Mesh(5, 16, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/pyramid_wireframed.mesh.bin";
-                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
-                paper.Asset.register(mesh);
-                DefaultMeshes.PYRAMID_WIREFRAMED = mesh;
-                //
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    -0.5, 0.0, -0.5,
-                    0.5, 0.0, -0.5,
-                    0.5, 0.0, 0.5,
-                    -0.5, 0.0, 0.5,
-                    0.0, 1.0, 0.0,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                ]);
-                mesh.setIndices([
-                    0, 1, 1, 2, 2, 3, 3, 0,
-                    0, 4, 1, 4, 2, 4, 3, 4,
-                ]);
-            }
         }
         /**
          * 创建带网格的实体。
@@ -308,49 +259,17 @@ namespace egret3d {
         public static createObject(mesh: Mesh, name?: string, tag?: string, scene?: paper.Scene) {
             const gameObject = paper.GameObject.create(name, tag, scene);
 
-            if (mesh === this.AXISES) {
-                const axisX = this.createObject(this.LINE_X, "axisX", tag, scene);
-                const axisY = this.createObject(this.LINE_Y, "axisY", tag, scene);
-                const axisZ = this.createObject(this.LINE_Z, "axisZ", tag, scene);
-                const arrowX = this.createObject(this.PYRAMID, "arrowX", tag, scene);
-                const arrowY = this.createObject(this.PYRAMID, "arrowY", tag, scene);
-                const arrowZ = this.createObject(this.PYRAMID, "arrowZ", tag, scene);
+            const meshFilter = gameObject.addComponent(MeshFilter);
+            const renderer = gameObject.addComponent(MeshRenderer);
+            meshFilter.mesh = mesh;
 
-                axisX.transform.parent = gameObject.transform;
-                axisY.transform.parent = gameObject.transform;
-                axisZ.transform.parent = gameObject.transform;
-                arrowX.transform.parent = gameObject.transform;
-                arrowY.transform.parent = gameObject.transform;
-                arrowZ.transform.parent = gameObject.transform;
-
-                arrowX.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
-                // arrowY.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
-                arrowZ.transform.setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
-
-                arrowX.transform.setLocalPosition(Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
-                arrowY.transform.setLocalPosition(Vector3.UP).setLocalScale(0.05, 0.1, 0.05);
-                arrowZ.transform.setLocalPosition(Vector3.FORWARD).setLocalScale(0.05, 0.1, 0.05);
-
-                (axisX.renderer as MeshRenderer).material = (axisX.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
-                (axisY.renderer as MeshRenderer).material = (axisY.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
-                (axisZ.renderer as MeshRenderer).material = (axisZ.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
-                (arrowX.renderer as MeshRenderer).material = (arrowX.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
-                (arrowY.renderer as MeshRenderer).material = (arrowY.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
-                (arrowZ.renderer as MeshRenderer).material = (arrowZ.renderer as MeshRenderer).material.clone().setColor("diffuse", Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
-            }
-            else {
-                const meshFilter = gameObject.addComponent(MeshFilter);
-                const renderer = gameObject.addComponent(MeshRenderer);
-                meshFilter.mesh = mesh;
-
-                switch (mesh) {
-                    case this.LINE_X:
-                    case this.CUBE_WIREFRAMED:
-                    case this.PYRAMID_WIREFRAMED:
-                        renderer.material = DefaultMaterials.LINEDASHED_COLOR;
-                        break;
-                }
-
+            switch (mesh) {
+                case this.LINE_X:
+                case this.LINE_Y:
+                case this.LINE_Z:
+                case this.CUBE_WIREFRAMED:
+                    renderer.material = DefaultMaterials.LINEDASHED_COLOR;
+                    break;
             }
 
             return gameObject;
@@ -807,6 +726,80 @@ namespace egret3d {
             for (let i = 0, l = tris.length; i < l; i++) {
                 indices[i] = tris[i];
             }
+
+            return mesh;
+        }
+
+        public static createCameraWireframed(colorFrustum: egret3d.Color, colorCone: egret3d.Color, colorUp: egret3d.Color, colorTarget: egret3d.Color, colorCross: egret3d.Color) {
+
+            const vertices: number[] = [], colors: number[] = [];
+            const verticeCount = 50;
+            for (let i = 0; i < verticeCount; i++) {
+                vertices.push(0.0, 0.0, 0.0);
+
+                if (i < 24) {
+                    colors.push(colorFrustum.r, colorFrustum.g, colorFrustum.b, colorFrustum.a);
+                }
+                else if (i < 32) {// cone
+                    colors.push(colorCone.r, colorCone.g, colorCone.b, colorCone.a);
+                }
+                else if (i < 38) {// up
+                    colors.push(colorUp.r, colorUp.g, colorUp.b, colorUp.a);
+                }
+                else if (i < 40) {// target
+                    colors.push(colorTarget.r, colorTarget.g, colorTarget.b, colorTarget.a);
+                }
+                else {
+                    colors.push(colorCross.r, colorCross.g, colorCross.b, colorCross.a);
+                }
+
+            }
+            const mesh = new Mesh(verticeCount, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+            mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, colors);
+
+            mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+
+            return mesh;
+        }
+
+        public static createGrid(size: number, divisions: number, color1?: egret3d.Color, color2?: egret3d.Color) {
+            size = size || 10;
+            divisions = divisions || 10;
+            color1 = color1 !== undefined ? color1 : egret3d.Color.create(0.26, 0.26, 0.26);
+            color2 = color2 !== undefined ? color2 : egret3d.Color.create(0.53, 0.53, 0.53);
+
+            const center = divisions / 2;
+            const step = size / divisions;
+            const halfSize = size / 2;
+            const vertices: number[] = [], colors: number[] = [];
+
+            for (let i = 0, k = - halfSize; i <= divisions; i++ , k += step) {
+
+                vertices.push(- halfSize, 0, k);
+                vertices.push(halfSize, 0, k);
+                vertices.push(k, 0, - halfSize);
+                vertices.push(k, 0, halfSize);
+
+                const color = i === center ? color1 : color2;
+
+                colors.push(color.r, color.g, color.b, color.a);
+                colors.push(color.r, color.g, color.b, color.a);
+                colors.push(color.r, color.g, color.b, color.a);
+                colors.push(color.r, color.g, color.b, color.a);
+            }
+
+            for (var i = 0; i < colors.length; i += 80) {
+                for (var j = 0; j < 16; j++) {
+                    colors[i + j] = 0.26;
+                }
+            }
+
+            const mesh = new Mesh(vertices.length, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+            mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, colors);
+
+            mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
 
             return mesh;
         }

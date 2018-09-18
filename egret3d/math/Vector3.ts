@@ -118,6 +118,30 @@ namespace egret3d {
             return this.add(helpVector3A.multiplyScalar(-plane.getDistance(source), plane.normal));
         }
 
+        public applyMatrix3(matrix: Readonly<Matrix3>, source?: Readonly<IVector3>) {
+            if (!source) {
+                source = this;
+            }
+
+            // const x = source.x, y = source.y, z = source.z;
+            // const rawData = matrix.rawData;
+
+            // const w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]);
+            // this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
+            // this.y = (rawData[1] * x + rawData[5] * y + rawData[9] * z + rawData[13]) * w;
+            // this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
+
+
+            var x = source.x, y = source.y, z = source.z;
+            var e = matrix.rawData;
+
+            this.x = e[0] * x + e[3] * y + e[6] * z;
+            this.y = e[1] * x + e[4] * y + e[7] * z;
+            this.z = e[2] * x + e[5] * y + e[8] * z;
+
+            return this;
+        }
+
         public applyMatrix(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>) {
             if (!source) {
                 source = this;

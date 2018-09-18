@@ -11,9 +11,6 @@ uniform vec3 u_positionScale;
 uniform vec3 u_sizeScale;
 uniform mat4 viewProjectionMatrix;
 
-#ifdef STRETCHEDBILLBOARD
-	uniform vec3 cameraPosition;
-#endif
 uniform vec3 cameraForward;
 uniform vec3 cameraUp;
 
