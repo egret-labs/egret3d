@@ -3745,6 +3745,7 @@ declare namespace egret3d {
         static QUAD_PARTICLE: Mesh;
         static PLANE: Mesh;
         static CIRCLE_LINE: Mesh;
+        static TORUS: Mesh;
         static CUBE: Mesh;
         static PYRAMID: Mesh;
         static CONE: Mesh;
@@ -3775,6 +3776,8 @@ declare namespace egret3d {
          * TODO
          */
         static createSphereCCW(radius?: number, widthSegments?: number, heightSegments?: number): Mesh;
+        static createCircle(radius: number, arc: number): Mesh;
+        static createTorus(radius?: number, tube?: number, radialSegments?: number, tubularSegments?: number, arc?: number): Mesh;
     }
 }
 declare namespace egret3d {
@@ -3848,10 +3851,6 @@ declare namespace egret3d {
          *
          */
         static MESH_BASIC: Material;
-        /**
-         *
-         */
-        static MATERIAL_COLOR: Material;
         /**
          *
          */
@@ -5417,10 +5416,9 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     class WebGLCapabilities extends paper.SingletonComponent {
-        static canvas: HTMLCanvasElement;
-        static webgl: WebGLRenderingContext;
+        static canvas: HTMLCanvasElement | null;
+        static webgl: WebGLRenderingContext | null;
         static commonDefines: string;
-        webgl: WebGLRenderingContext;
         version: number;
         precision: string;
         maxPrecision: string;
@@ -5543,22 +5541,13 @@ declare namespace paper {
          * 场景管理器。
          */
         readonly sceneManager: SceneManager;
-        canvas: HTMLCanvasElement | null;
         private _isFocused;
         private _isRunning;
         private _playerMode;
         private _bindUpdate;
-        _option: egret3d.RequiredRuntimeOptions;
-        _webgl: WebGLRenderingContext;
         private _update();
         private _updatePlayerMode();
-        init({playerMode, systems, option, canvas, webgl}?: {
-            playerMode?: PlayerMode;
-            systems?: (new () => BaseSystem)[];
-            option?: {};
-            canvas?: {};
-            webgl?: {};
-        }): void;
+        init(options: egret3d.RunEgretOptions): void;
         /**
          *
          */
@@ -9206,7 +9195,7 @@ declare namespace egret3d {
         /**
          *
          */
-        uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: number, count?: number): void;
+        uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]) | null, offset?: number, count?: number): void;
         /**
          *
          */
