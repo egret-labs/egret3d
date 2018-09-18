@@ -37,10 +37,10 @@ namespace paper {
         Untagged = "",
         Respawn = "Respawn",
         Finish = "Finish",
-        EditorOnly = "EditorOnly",
-        MainCamera = "MainCamera",
+        EditorOnly = "Editor Only",
+        MainCamera = "Main Camera",
         Player = "Player",
-        GameController = "GameController",
+        GameController = "Game Controller",
         Global = "Global",
     }
     /**
