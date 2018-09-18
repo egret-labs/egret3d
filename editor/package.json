@@ -7,7 +7,7 @@
   "bin": {},
   "scripts": {
     "build": "egret build",
-    "build-examples": "egret build & cd .. & cd examples & egret clean"
+    "build-examples": "egret build & cd .. & cd examples & egret clean & cd .. & cd editor"
   },
   "author": "egret",
   "license": "ISC"
