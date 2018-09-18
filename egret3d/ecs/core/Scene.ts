@@ -172,6 +172,8 @@ namespace paper {
             }
             //
             this._gameObjects.length = 0;
+
+            GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).scenes.push(this);
         }
         /**
          * 
