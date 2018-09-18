@@ -16,19 +16,19 @@ namespace paper.debug {
 
         private _sceneSelectedHandler = (_c: any, value: Scene) => {
             this._selectSceneOrGameObject(value);
-        };
+        }
 
         private _sceneUnselectedHandler = (_c: any, value: Scene) => {
             this._selectSceneOrGameObject(null);
-        };
+        }
 
         private _gameObjectSelectedHandler = (_c: any, value: GameObject) => {
             this._selectSceneOrGameObject(value);
-        };
+        }
 
         private _gameObjectUnselectedHandler = (_c: any, value: GameObject) => {
             this._selectSceneOrGameObject(null);
-        };
+        }
 
         private _createGameObject = () => {
             if (this._guiComponent.selectedScene) {
@@ -38,7 +38,7 @@ namespace paper.debug {
                 this._selectGameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, DefaultNames.NoName, DefaultTags.Untagged, this._guiComponent.selectedGameObject!.scene);
                 this._selectGameObject.transform.parent = this._guiComponent.selectedGameObject!.transform;
             }
-        };
+        }
 
         private _destroySceneOrGameObject = () => {
             const selectedSceneOrGameObject = this._guiComponent.inspector.instance as Scene | GameObject;
@@ -46,11 +46,11 @@ namespace paper.debug {
                 this._guiComponent.select(null); // TODO 
                 (selectedSceneOrGameObject).destroy();
             }
-        };
+        }
 
         private _nodeClickHandler = (gui: dat.GUI) => {
             this._guiComponent.select(gui.instance, true);
-        };
+        }
 
         private _openFolder(folder: dat.GUI) {
             folder.open();

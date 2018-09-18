@@ -5,3 +5,8 @@ devconfig
 tests**
 TODO
 docs
+
+*bin-debug
+*libs/modules
+*manifest.json
+*.res.json

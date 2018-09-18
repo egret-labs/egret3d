@@ -110,7 +110,7 @@ namespace paper.debug {
             event.preventDefault();
             this._mouseDown = true;
             this._lastMouseX = event.x;
-            this._lastMouseY = event.y
+            this._lastMouseY = event.y;
         };
 
         private _mouseUpHandler = (event: MouseEvent) => {
@@ -143,16 +143,16 @@ namespace paper.debug {
             move.release();
 
             event.preventDefault();
-        };
+        }
 
         private _mouseWheelHandler = (event: WheelEvent) => {
             this.distance = Math.max(this.distance - (event.wheelDelta > 0 ? 2 : -2), 1);
             event.preventDefault();
-        };
+        }
 
         private move() {
             let distanceX = this.distance * Math.sin(this._panRad) * Math.cos(this._tiltRad);
-            let distanceY = this.distance * (this._tiltRad == 0 ? 0 : Math.sin(this._tiltRad));
+            let distanceY = this.distance * (this._tiltRad === 0 ? 0 : Math.sin(this._tiltRad));
             let distanceZ = this.distance * Math.cos(this._panRad) * Math.cos(this._tiltRad);
 
             let target: egret3d.Vector3 = egret3d.Vector3.create();

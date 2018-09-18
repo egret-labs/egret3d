@@ -10,6 +10,7 @@
         "declaration": true,
         "stripInternal": false,
         "alwaysStrict": false,
+        "skipLibCheck": true,
         "noImplicitAny": false,
         "noImplicitThis": false,
         "noUnusedLocals": false,

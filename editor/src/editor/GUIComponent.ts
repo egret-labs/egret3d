@@ -103,5 +103,7 @@ namespace paper.debug {
         }
     }
     // 
-    GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
+    if (dat) {
+        GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
+    }
 }
