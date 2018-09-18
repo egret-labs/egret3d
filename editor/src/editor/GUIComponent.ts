@@ -36,17 +36,17 @@ namespace paper.debug {
             };
 
             this.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
-                // const guiSceneSystem = Application.systemManager.getOrRegisterSystem(debug.GUISceneSystem);
+                const guiSceneSystem = Application.systemManager.getOrRegisterSystem(debug.GUISceneSystem);
                 const guiSystem = Application.systemManager.getOrRegisterSystem(debug.GUISystem);
 
                 if (v) {
                     Application.playerMode = PlayerMode.DebugPlayer;
-                    // guiSceneSystem.enabled = true;
+                    guiSceneSystem.enabled = true;
                     guiSystem.enabled = true;
                 }
                 else {
                     Application.playerMode = PlayerMode.Player;
-                    // guiSceneSystem.enabled = false;
+                    guiSceneSystem.enabled = false;
                     guiSystem.enabled = false;
                 }
             });

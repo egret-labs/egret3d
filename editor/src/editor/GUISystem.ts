@@ -342,13 +342,6 @@ namespace paper.debug {
                 }
             }
 
-            // if (
-            //     this._guiComponent.selectedGameObject &&
-            //     this._guiComponent.selectedGameObject.isDestroyed
-            // ) {
-            //     this._guiComponent.select(null); // TODO
-            // }
-
             { // Clear folders.
                 for (const scene of this._disposeCollecter.scenes) {
                     const folder = this._hierarchyFolders[scene.uuid];
