@@ -42,6 +42,9 @@ namespace paper.editor {
         public get scene(): Scene {
             return this._scene;
         }
+        public set scene(v:paper.Scene){
+            this._scene=v;
+        }
         private _contentType: 'scene' | 'prefab';
         public get contentType() {
             return this._contentType;
@@ -70,7 +73,6 @@ namespace paper.editor {
             this._contentType = contentType;
             this._contentUrl = contentUrl;
         }
-
         public addState(state: BaseState | null) {
             if (state) {
                 state.editorModel = this;
@@ -214,8 +216,8 @@ namespace paper.editor {
             }
         }
 
-        public createGameObject(parentList: (GameObject | Scene)[], createType: string,mesh:egret3d.Mesh = null) {
-            let state = CreateGameObjectState.create(parentList, createType,mesh);
+        public createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh = null) {
+            let state = CreateGameObjectState.create(parentList, createType, mesh);
             this.addState(state);
         }
 

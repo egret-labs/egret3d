@@ -58,7 +58,6 @@ namespace paper.editor {
                 obj.activeSelf = true;
             });
         }
-        private static currentEditInfo: { url: string, type: string };
         /**
          * 编辑场景
          * @param sceneUrl 场景资源URL
@@ -73,7 +72,6 @@ namespace paper.editor {
                 let sceneEditorModel = new EditorModel();
                 sceneEditorModel.init(scene, 'scene', sceneUrl);
                 this.setActiveModel(sceneEditorModel);
-                this.currentEditInfo = { url: sceneUrl, type: 'scene' }
             }
         }
         /**
@@ -93,9 +91,9 @@ namespace paper.editor {
                 prefabEditorModel.init(scene, 'prefab', prefabUrl);
                 //清除自身的预置体信息
                 let clearPrefabInfo = (obj: GameObject): void => {
-                    obj.extras={};
-                    for(let comp of obj.components){
-                        comp.extras={};
+                    obj.extras = {};
+                    for (let comp of obj.components) {
+                        comp.extras = {};
                     }
                     for (let i: number = 0; i < obj.transform.children.length; i++) {
                         let child = obj.transform.children[i].gameObject;
@@ -105,23 +103,6 @@ namespace paper.editor {
                 }
                 clearPrefabInfo(prefabInstance);
                 this.setActiveModel(prefabEditorModel);
-                this.currentEditInfo = { url: prefabUrl, type: 'prefab' }
-            }
-        }
-        /**
-         * 刷新
-         */
-        public static async refresh() {
-            if (this.activeEditorModel) {
-                this.activeEditorModel.scene.destroy();
-            }
-            //初始化资源
-            await RES.loadConfig("resource/default.res.json", "resource/");
-            if (this.currentEditInfo) {
-                switch (this.currentEditInfo.type) {
-                    case 'scene': this.editScene(this.currentEditInfo.url); break;
-                    case 'prefab': this.editPrefab(this.currentEditInfo.url); break;
-                }
             }
         }
         /**
