@@ -117,10 +117,16 @@ namespace egret3d {
                 if (wrap.indexOf("Repeat") >= 0) {
                     _repeat = true;
                 }
+
+                let _premultiply: boolean = true;
+                if (data["premultiply"] !== undefined) {
+                    _premultiply = data["premultiply"] > 0;
+                }
+
                 const imgResource = (RES.host.resourceConfig as any)["getResource"](name);
                 return host.load(imgResource, BitmapDataProcessor).then((bitmapData: egret.BitmapData) => {
                     const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, _textureFormat);
-                    texture.uploadImage(bitmapData.source, mipmap, _linear, true, _repeat);
+                    texture.uploadImage(bitmapData.source, mipmap, _linear, _premultiply, _repeat);
                     paper.Asset.register(texture);
                     return texture;
 

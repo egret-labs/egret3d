@@ -3752,7 +3752,9 @@ declare namespace egret3d {
         static LINE_X: Mesh;
         static LINE_Y: Mesh;
         static LINE_Z: Mesh;
+        static AXISES: Mesh;
         static CUBE_WIREFRAMED: Mesh;
+        static PYRAMID_WIREFRAMED: Mesh;
         initialize(): void;
         /**
          * 创建带网格的实体。
@@ -3774,8 +3776,6 @@ declare namespace egret3d {
          * TODO
          */
         static createSphereCCW(radius?: number, widthSegments?: number, heightSegments?: number): Mesh;
-        static createCameraWireframed(colorFrustum: egret3d.Color, colorCone: egret3d.Color, colorUp: egret3d.Color, colorTarget: egret3d.Color, colorCross: egret3d.Color): Mesh;
-        static createGrid(size: number, divisions: number, color1?: egret3d.Color, color2?: egret3d.Color): Mesh;
     }
 }
 declare namespace egret3d {
@@ -5645,7 +5645,6 @@ declare namespace egret3d {
          */
         renderQueue: paper.RenderQueue | number;
         private _cacheDefines;
-        private readonly _defines;
         private readonly _textures;
         /**
          * 请使用 `egret3d.Material.create()` 创建实例。
