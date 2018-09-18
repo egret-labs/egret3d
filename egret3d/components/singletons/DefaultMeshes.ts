@@ -12,7 +12,7 @@ namespace egret3d {
         public static QUAD: Mesh;
         public static QUAD_PARTICLE: Mesh;
         public static PLANE: Mesh;
-        public static CIRCLE_LINE: Mesh;
+        public static TORUS: Mesh;
         public static CUBE: Mesh;
         public static PYRAMID: Mesh;
         public static CONE: Mesh;
@@ -22,7 +22,8 @@ namespace egret3d {
         public static LINE_X: Mesh;
         public static LINE_Y: Mesh;
         public static LINE_Z: Mesh;
-        public static CUBE_WIREFRAMED: Mesh;
+        public static CIRCLE_LINE: Mesh;
+        public static CUBE_LINE: Mesh;
 
         public initialize() {
             super.initialize();
@@ -58,6 +59,15 @@ namespace egret3d {
                 mesh.name = "builtin/cube.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CUBE = mesh;
+            }
+
+            
+            { // TORUS.
+                const mesh = DefaultMeshes.createTorus();
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/torus.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.TORUS = mesh;
             }
 
             { // PYRAMID.
@@ -214,13 +224,21 @@ namespace egret3d {
                 ]);
             }
 
-            { // CUBE_WIREFRAMED.
+            { // CIRCLE_LINE
+                const mesh = DefaultMeshes.createCircle(1, 0.5);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/circle_line.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.CIRCLE_LINE = mesh;
+            }
+
+            { // CUBE_LINE
                 const mesh = new Mesh(8, 24, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/cube_wireframed.mesh.bin";
+                mesh.name = "builtin/cube_line.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
-                DefaultMeshes.CUBE_WIREFRAMED = mesh;
+                DefaultMeshes.CUBE_LINE = mesh;
                 //
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
                     // Z-
@@ -267,7 +285,7 @@ namespace egret3d {
                 case this.LINE_X:
                 case this.LINE_Y:
                 case this.LINE_Z:
-                case this.CUBE_WIREFRAMED:
+                case this.CUBE_LINE:
                     renderer.material = DefaultMaterials.LINEDASHED_COLOR;
                     break;
             }
@@ -726,6 +744,97 @@ namespace egret3d {
             for (let i = 0, l = tris.length; i < l; i++) {
                 indices[i] = tris[i];
             }
+
+            return mesh;
+        }
+
+        public static createCircle(radius: number, arc: number) {
+            const vertices: number[] = [];
+            for (var i = 0; i <= 64 * arc; ++i) {
+                vertices.push(0, Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius);
+            }
+            const mesh = egret3d.Mesh.create(64, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+            mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.LineStrip;
+
+            return mesh;
+        }
+
+        public static createTorus(radius: number = 1, tube: number = 0.1, radialSegments: number = 4, tubularSegments: number = 14, arc: number = Math.PI * 2) {
+            const indices: number[] = [];
+            const vertices: number[] = [];
+            const normals: number[] = [];
+            const uvs: number[] = [];
+
+            // helper variables
+
+            const center = Vector3.create();
+            const vertex = Vector3.create();
+            const normal = Vector3.create();
+
+            var j, i;
+            // generate vertices, normals and uvs
+            for (j = 0; j <= radialSegments; j++) {
+
+                for (i = 0; i <= tubularSegments; i++) {
+
+                    var u = i / tubularSegments * arc;
+                    var v = j / radialSegments * Math.PI * 2;
+
+                    // vertex
+                    vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
+                    vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
+                    vertex.z = tube * Math.sin(v);
+
+                    vertices.push(vertex.x, vertex.y, vertex.z);
+
+                    // normal
+                    center.x = radius * Math.cos(u);
+                    center.y = radius * Math.sin(u);
+                    normal.subtract(vertex, center).normalize();
+
+                    normals.push(normal.x, normal.y, normal.z);
+
+                    // uv
+                    uvs.push(i / tubularSegments);
+                    uvs.push(j / radialSegments);
+
+                }
+
+            }
+
+            // generate indices
+
+            for (j = 1; j <= radialSegments; j++) {
+
+                for (i = 1; i <= tubularSegments; i++) {
+
+                    // indices
+
+                    var a = (tubularSegments + 1) * j + i - 1;
+                    var b = (tubularSegments + 1) * (j - 1) + i - 1;
+                    var c = (tubularSegments + 1) * (j - 1) + i;
+                    var d = (tubularSegments + 1) * j + i;
+
+                    // faces
+
+                    indices.push(a, b, d);
+                    indices.push(b, c, d);
+
+                }
+
+            }
+
+            center.release();
+            vertex.release();
+            normal.release();
+
+            // build geometry
+            const mesh = Mesh.create(vertices.length / 3, indices.length, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.NORMAL, gltf.MeshAttributeType.TEXCOORD_0]);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
+            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+            mesh.setIndices(indices);
 
             return mesh;
         }
