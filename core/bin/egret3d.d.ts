@@ -2360,10 +2360,10 @@ declare namespace paper {
         Untagged = "",
         Respawn = "Respawn",
         Finish = "Finish",
-        EditorOnly = "EditorOnly",
-        MainCamera = "MainCamera",
+        EditorOnly = "Editor Only",
+        MainCamera = "Main Camera",
         Player = "Player",
-        GameController = "GameController",
+        GameController = "Game Controller",
         Global = "Global",
     }
     /**
@@ -3744,7 +3744,6 @@ declare namespace egret3d {
         static QUAD: Mesh;
         static QUAD_PARTICLE: Mesh;
         static PLANE: Mesh;
-        static CIRCLE_LINE: Mesh;
         static TORUS: Mesh;
         static CUBE: Mesh;
         static PYRAMID: Mesh;
@@ -3754,7 +3753,8 @@ declare namespace egret3d {
         static LINE_X: Mesh;
         static LINE_Y: Mesh;
         static LINE_Z: Mesh;
-        static CUBE_WIREFRAMED: Mesh;
+        static CIRCLE_LINE: Mesh;
+        static CUBE_LINE: Mesh;
         initialize(): void;
         /**
          * 创建带网格的实体。

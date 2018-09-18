@@ -1,0 +1,15 @@
+{
+  "name": "@egret/egret3d_oimo",
+  "version": "1.0.1",
+  "compilerVersion": "5.3.1",
+  "description": "egret 3d oimo",
+  "main": "bin/oimo/oimo.js",
+  "scripts": {
+    "build": "egret build & node ./script/build.js"
+  },
+  "author": "egret",
+  "license": "ISC",
+  "devDependencies": {
+    "fs-extra": "^7.0.0"
+  }
+}

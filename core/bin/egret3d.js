@@ -3737,10 +3737,10 @@ var paper;
         DefaultTags["Untagged"] = "";
         DefaultTags["Respawn"] = "Respawn";
         DefaultTags["Finish"] = "Finish";
-        DefaultTags["EditorOnly"] = "EditorOnly";
-        DefaultTags["MainCamera"] = "MainCamera";
+        DefaultTags["EditorOnly"] = "Editor Only";
+        DefaultTags["MainCamera"] = "Main Camera";
         DefaultTags["Player"] = "Player";
-        DefaultTags["GameController"] = "GameController";
+        DefaultTags["GameController"] = "Game Controller";
         DefaultTags["Global"] = "Global";
     })(DefaultTags = paper.DefaultTags || (paper.DefaultTags = {}));
     /**
@@ -8563,13 +8563,6 @@ var egret3d;
                 DefaultMeshes.CUBE = mesh;
             }
             {
-                var mesh = DefaultMeshes.createCircle(1, 0.5);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/circle.mesh.bin";
-                paper.Asset.register(mesh);
-                DefaultMeshes.CIRCLE_LINE = mesh;
-            }
-            {
                 var mesh = DefaultMeshes.createTorus();
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/torus.mesh.bin";
@@ -8724,12 +8717,19 @@ var egret3d;
                 ]);
             }
             {
+                var mesh = DefaultMeshes.createCircle(1, 0.5);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/circle_line.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.CIRCLE_LINE = mesh;
+            }
+            {
                 var mesh = new egret3d.Mesh(8, 24, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/cube_wireframed.mesh.bin";
+                mesh.name = "builtin/cube_line.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
                 paper.Asset.register(mesh);
-                DefaultMeshes.CUBE_WIREFRAMED = mesh;
+                DefaultMeshes.CUBE_LINE = mesh;
                 //
                 mesh.setAttributes("POSITION" /* POSITION */, [
                     // Z-
@@ -8772,7 +8772,7 @@ var egret3d;
                 case this.LINE_X:
                 case this.LINE_Y:
                 case this.LINE_Z:
-                case this.CUBE_WIREFRAMED:
+                case this.CUBE_LINE:
                     renderer.material = egret3d.DefaultMaterials.LINEDASHED_COLOR;
                     break;
             }
@@ -9722,9 +9722,9 @@ var egret3d;
              * - 如果没有则创建一个。
              */
             get: function () {
-                var gameObject = paper.Application.sceneManager.activeScene.findWithTag("MainCamera" /* MainCamera */);
+                var gameObject = paper.Application.sceneManager.activeScene.findWithTag("Main Camera" /* MainCamera */);
                 if (!gameObject) {
-                    gameObject = paper.GameObject.create("Main Camera" /* MainCamera */, "MainCamera" /* MainCamera */);
+                    gameObject = paper.GameObject.create("Main Camera" /* MainCamera */, "Main Camera" /* MainCamera */);
                     gameObject.transform.setLocalPosition(0.0, 10.0, -10.0);
                     gameObject.transform.lookAt(egret3d.Vector3.ZERO);
                 }
@@ -9741,7 +9741,7 @@ var egret3d;
             get: function () {
                 var gameObject = paper.Application.sceneManager.editorScene.find("Editor Camera" /* EditorCamera */);
                 if (!gameObject) {
-                    gameObject = paper.GameObject.create("Editor Camera" /* EditorCamera */, "EditorOnly" /* EditorOnly */, paper.Application.sceneManager.editorScene);
+                    gameObject = paper.GameObject.create("Editor Camera" /* EditorCamera */, "Editor Only" /* EditorOnly */, paper.Application.sceneManager.editorScene);
                     gameObject.transform.setLocalPosition(0.0, 10.0, -10.0);
                     gameObject.transform.lookAt(egret3d.Vector3.ZERO);
                     var camera = gameObject.addComponent(Camera);
@@ -11424,6 +11424,7 @@ var paper;
             }
             //
             this._gameObjects.length = 0;
+            paper.GameObject.globalGameObject.getOrAddComponent(paper.DisposeCollecter).scenes.push(this);
         };
         /**
          *
@@ -22928,7 +22929,7 @@ var paper;
                 configurable: true
             });
             EditorSceneModel.prototype.init = function () {
-                this.cameraObject = paper.GameObject.create("EditorCamera", "EditorOnly" /* EditorOnly */, paper.Application.sceneManager.editorScene);
+                this.cameraObject = paper.GameObject.create("EditorCamera", "Editor Only" /* EditorOnly */, paper.Application.sceneManager.editorScene);
                 var camera = this.cameraObject.addComponent(egret3d.Camera);
                 camera.near = 0.1;
                 camera.far = 500.0;
