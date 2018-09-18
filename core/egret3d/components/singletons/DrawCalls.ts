@@ -35,15 +35,12 @@ namespace egret3d {
          * 透明列表
          */
         public readonly transparentCalls: DrawCall[] = [];
-
         /**
          * 阴影列表
          */
         public readonly shadowCalls: DrawCall[] = [];
         /**
          * 所有非透明的, 按照从近到远排序
-         * @param a 
-         * @param b 
          */
         private _sortOpaque(a: DrawCall, b: DrawCall) {
             const aMat = a.material;
@@ -63,8 +60,6 @@ namespace egret3d {
         }
         /**
          * 所有透明的，按照从远到近排序
-         * @param a 
-         * @param b 
          */
         private _sortFromFarToNear(a: DrawCall, b: DrawCall) {
             if (a.material.renderQueue === b.material.renderQueue) {
@@ -74,6 +69,9 @@ namespace egret3d {
                 return a.material.renderQueue - b.material.renderQueue;
             }
         }
+        /**
+         * 
+         */
         public shadowFrustumCulling(camera: Camera) {
             this.shadowCalls.length = 0;
             for (const drawCall of this.drawCalls) {
@@ -88,6 +86,9 @@ namespace egret3d {
 
             this.shadowCalls.sort(this._sortFromFarToNear);
         }
+        /**
+         * 
+         */
         public sortAfterFrustumCulling(camera: Camera) {
             this.opaqueCalls.length = 0;
             this.transparentCalls.length = 0;
@@ -95,8 +96,11 @@ namespace egret3d {
             //
             for (const drawCall of this.drawCalls) {
                 const drawTarget = drawCall.renderer.gameObject;
-                const visible = ((camera.cullingMask & drawTarget.layer) !== 0 && (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer!))));
-                if (visible) {
+
+                if (
+                    (camera.cullingMask & drawTarget.layer) !== 0 &&
+                    (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer!)))
+                ) {
                     const objPos = drawTarget.transform.getPosition();
                     drawCall.zdist = objPos.getDistance(cameraPos);
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
@@ -114,7 +118,6 @@ namespace egret3d {
         }
         /**
          * 移除指定渲染器的 draw call 列表。
-         * @param renderer 
          */
         public removeDrawCalls(renderer: paper.BaseRenderer) {
             const index = this.renderers.indexOf(renderer);
@@ -132,8 +135,7 @@ namespace egret3d {
             this.renderers.splice(index, 1);
         }
         /**
-         * 指定渲染器是否生成了 draw call 列表。
-         * @param renderer 
+         * 是否包含指定渲染器的 draw call 列表。
          */
         public hasDrawCalls(renderer: paper.BaseRenderer) {
             return this.renderers.indexOf(renderer) >= 0;

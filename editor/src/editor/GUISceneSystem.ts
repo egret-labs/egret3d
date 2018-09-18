@@ -76,8 +76,6 @@ namespace paper.debug {
                 this._skeletonDrawer.activeSelf = false;
             }
 
-            // Update game object.
-            this._guiComponent.select(select);
             // Update axis target.
             this._axises.activeSelf = true;
 
@@ -138,7 +136,7 @@ namespace paper.debug {
 
             if (selected) {
                 if (this._pickableTool[this._transformMode].indexOf(selected) < 0) {
-                    this._selectGameObject(selected);
+                    this._guiComponent.select(selected, true); // TODO
                 }
                 else {
                     raycastInfos = Helper.getPickObjects([this._touchPlane], mousePosition.x, mousePosition.y);

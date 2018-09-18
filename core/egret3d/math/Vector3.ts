@@ -219,9 +219,11 @@ namespace egret3d {
                 source = this;
             }
 
-            this.x = source.x * -1.00;
-            this.y = source.y * -1.00;
-            this.z = source.z * -1.00;
+            this.x = source.x * -1.0;
+            this.y = source.y * -1.0;
+            this.z = source.z * -1.0;
+            
+            return this;
         }
 
         public addScalar(add: number, source?: Readonly<IVector3>) {
