@@ -6,7 +6,8 @@
   "main": "bin/editor/editor.js",
   "bin": {},
   "scripts": {
-    "build": "egret build"
+    "build": "egret build",
+    "build-examples": "egret build & cd .. & cd examples & egret clean"
   },
   "author": "egret",
   "license": "ISC"
