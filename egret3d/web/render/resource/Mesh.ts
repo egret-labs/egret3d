@@ -34,13 +34,14 @@ namespace egret3d {
             }
 
             const webgl = WebGLCapabilities.webgl;
+            if (webgl) {
+                for (const ibo of this._ibos) {
+                    webgl.deleteBuffer(ibo);
+                }
 
-            for (const ibo of this._ibos) {
-                webgl.deleteBuffer(ibo);
-            }
-
-            if (this._vbo) {
-                webgl.deleteBuffer(this._vbo);
+                if (this._vbo) {
+                    webgl.deleteBuffer(this._vbo);
+                }
             }
 
             this._ibos.length = 0;
@@ -50,13 +51,13 @@ namespace egret3d {
         }
 
         public _createBuffer() {
-            if (this._vbo) {
+            const webgl = WebGLCapabilities.webgl;
+            if (this._vbo || !webgl) {
                 return;
             }
 
             const vertexBufferViewAccessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION || 0);
             const vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float);
-            const webgl = WebGLCapabilities.webgl;
             const vbo = webgl.createBuffer();
 
             if (vbo) {
@@ -104,14 +105,12 @@ namespace egret3d {
         /**
          * 
          */
-        public uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: number, count?: number) {
-            if (!this._vbo) {
+        public uploadVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]) | null = null, offset: number = 0, count: number = 0) {
+            const webgl = WebGLCapabilities.webgl;
+            if (!this._vbo || !webgl) {
                 return;
             }
 
-            offset = offset || 0;
-            count = count || 0;
-            const webgl = WebGLCapabilities.webgl;
             const { attributes } = this._glTFMesh!.primitives[0];
             webgl.bindBuffer(webgl.ARRAY_BUFFER, this._vbo);
 
@@ -153,12 +152,12 @@ namespace egret3d {
          * 
          */
         public uploadSubIndexBuffer(subMeshIndex: number = 0) {
-            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh!.primitives.length) {
-                if (!this._vbo) {
-                    return;
-                }
+            const webgl = WebGLCapabilities.webgl;
+            if (!this._vbo || !webgl) {
+                return;
+            }
 
-                const webgl = WebGLCapabilities.webgl;
+            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh!.primitives.length) {
                 const primitive = this._glTFMesh!.primitives[subMeshIndex];
 
                 if (primitive.indices !== undefined) {

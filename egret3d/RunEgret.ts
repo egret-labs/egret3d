@@ -13,7 +13,7 @@ namespace egret3d {
         playerMode?: paper.PlayerMode;
         isPlaying?: boolean;
         systems?: any[];
-    }
+    };
 
     export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number }
 
@@ -21,9 +21,9 @@ namespace egret3d {
      * 引擎启动入口
      */
     export function runEgret(options: RunEgretOptions = { antialias: false }) {
-        // TODO WebAssembly load
-        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound'] //TODO:Sound
+        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
         egret.Capabilities["renderMode" + ""] = "webgl";
+
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas(options);
         //TODO

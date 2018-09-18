@@ -47,7 +47,7 @@ namespace egret3d {
                 }
             }
 
-            const webgl = WebGLCapabilities.webgl;
+            const webgl = WebGLCapabilities.webgl!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
 
@@ -82,7 +82,7 @@ namespace egret3d {
         private _draw(context: RenderContext, drawCall: DrawCall, material: Material) {
             context.update(drawCall);
             //
-            const webgl = WebGLCapabilities.webgl;
+            const webgl = WebGLCapabilities.webgl!;
             const technique = material._glTFTechnique;
             const renderState = this._renderState;
             // Get program.
@@ -115,7 +115,7 @@ namespace egret3d {
         }
 
         private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique) {
-            const webgl = WebGLCapabilities.webgl;
+            const webgl = WebGLCapabilities.webgl!;
             const uniforms = technique.uniforms;
             const glUniforms = program.contextUniforms;
 
@@ -297,9 +297,11 @@ namespace egret3d {
 
             this._cacheMaterial = material;
             this._cacheMaterialVerision = material._version;
-            const webgl = WebGLCapabilities.webgl;
+
+            const webgl = WebGLCapabilities.webgl!;
             const unifroms = technique.uniforms;
             const glUniforms = program.uniforms;
+
             for (const glUniform of glUniforms) {
                 const uniform = unifroms[glUniform.name];
                 if (uniform.semantic) {
@@ -308,6 +310,7 @@ namespace egret3d {
 
                 const location = glUniform.location;
                 const value = uniform.value;
+
                 switch (uniform.type) {
                     case gltf.UniformType.BOOL:
                     case gltf.UniformType.INT:
@@ -380,7 +383,7 @@ namespace egret3d {
             this._cacheSubMeshIndex = subMeshIndex;
             this._cacheMesh = mesh;
 
-            const webgl = WebGLCapabilities.webgl;
+            const webgl = WebGLCapabilities.webgl!;
             const primitive = mesh.glTFMesh.primitives[subMeshIndex];
             // vbo.
             const webglAttributes = program.attributes;
@@ -410,6 +413,11 @@ namespace egret3d {
         }
 
         public onUpdate() {
+            const webgl = WebGLCapabilities.webgl;
+            if (!webgl) {
+                return;
+            }
+
             Performance.startCounter("render");
             let lightsDirty = false;
             const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
@@ -457,7 +465,7 @@ namespace egret3d {
 
                         if (renderEnabled && camera.renderTarget) {
                             if (camera.renderTarget.generateMipmap()) {
-                                this._renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
+                                renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
                             }
                         }
                     }
@@ -469,10 +477,7 @@ namespace egret3d {
                 }
             }
             else {
-                const webgl = WebGLCapabilities.webgl;
-                webgl.clearColor(0, 0, 0, 1);
-                webgl.clearDepth(1.0);
-                webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
+                renderState.cleanBuffer(true, true, Color.BLACK);
             }
 
             Performance.endCounter("render");

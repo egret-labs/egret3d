@@ -158,11 +158,9 @@ namespace egret3d {
     }
 
     export class WebGLCapabilities extends paper.SingletonComponent {
-        public static canvas: HTMLCanvasElement;
-        public static webgl: WebGLRenderingContext;
-        public static commonDefines: string;
-
-        public webgl: WebGLRenderingContext;
+        public static canvas: HTMLCanvasElement | null = null;
+        public static webgl: WebGLRenderingContext | null = null;
+        public static commonDefines: string = "";
 
         public version: number;
 
@@ -194,38 +192,39 @@ namespace egret3d {
         public textureFloat: boolean;
         public textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
 
-
         public initialize() {
             super.initialize();
 
-            this.webgl = WebGLCapabilities.webgl;
+            const webgl = WebGLCapabilities.webgl;
+            if (!webgl) {
+                return;
+            }
 
-            const gl = this.webgl;
-            this.version = parseFloat(/^WebGL\ ([0-9])/.exec(gl.getParameter(gl.VERSION))![1]);
+            this.version = parseFloat(/^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION))![1]);
 
-            this.maxPrecision = getMaxPrecision(gl, this.precision);
+            this.maxPrecision = getMaxPrecision(webgl, this.precision);
 
-            this.maxTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+            this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
 
-            this.maxVertexTextures = gl.getParameter(gl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+            this.maxVertexTextures = webgl.getParameter(webgl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
 
-            this.maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE);
-            this.maxCubemapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE);
+            this.maxTextureSize = webgl.getParameter(webgl.MAX_TEXTURE_SIZE);
+            this.maxCubemapSize = webgl.getParameter(webgl.MAX_CUBE_MAP_TEXTURE_SIZE);
 
-            this.maxVertexUniformVectors = gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS);
+            this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
 
-            this.floatTextures = !!getExtension(gl, 'OES_texture_float');
+            this.floatTextures = !!getExtension(webgl, 'OES_texture_float');
 
-            this.anisotropyExt = getExtension(gl, 'EXT_texture_filter_anisotropic');
+            this.anisotropyExt = getExtension(webgl, 'EXT_texture_filter_anisotropic');
 
-            this.shaderTextureLOD = getExtension(gl, 'EXT_shader_texture_lod');
+            this.shaderTextureLOD = getExtension(webgl, 'EXT_shader_texture_lod');
 
-            this.maxAnisotropy = (this.anisotropyExt !== null) ? gl.getParameter(this.anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
+            this.maxAnisotropy = (this.anisotropyExt !== null) ? webgl.getParameter(this.anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
 
             // use dfdx and dfdy must enable OES_standard_derivatives
-            getExtension(gl, "OES_standard_derivatives");
+            getExtension(webgl, "OES_standard_derivatives");
             // GL_OES_standard_derivatives
-            getExtension(gl, "GL_OES_standard_derivatives");
+            getExtension(webgl, "GL_OES_standard_derivatives");
 
             //TODO
             WebGLCapabilities.commonDefines = getConstDefines(this.maxPrecision);
@@ -291,7 +290,7 @@ namespace egret3d {
             }
             this._cacheState = state;
 
-            const webgl = WebGLCapabilities.webgl;
+            const webgl = WebGLCapabilities.webgl!;
             const stateEnables = this._stateEnables;
             const cacheStateEnable = this._cacheStateEnable;
             //TODO WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshIndex, drawType, transform._worldMatrixDeterminant < 0);
@@ -316,7 +315,7 @@ namespace egret3d {
         public useProgram(program: GlProgram) {
             if (this._cacheProgram !== program) {
                 this._cacheProgram = program;
-                WebGLCapabilities.webgl.useProgram(program.program);
+                WebGLCapabilities.webgl!.useProgram(program.program);
 
                 return true;
             }
@@ -330,7 +329,7 @@ namespace egret3d {
             const vertexShader = extensions!.shaders[0];
             const fragShader = extensions!.shaders[1];
             const name = vertexShader.name + "_" + fragShader.name + "_" + defines;//TODO材质标脏可以优化
-            const webgl = WebGLCapabilities.webgl;
+            const webgl = WebGLCapabilities.webgl!;
             let program = this._programs[name];
 
             if (!program) {
@@ -355,7 +354,7 @@ namespace egret3d {
          * 
          */
         public targetAndViewport(viewport: Rectangle, target: BaseRenderTarget | null) {
-            const webgl = WebGLCapabilities.webgl;
+            const webgl = WebGLCapabilities.webgl!;
 
             let w: number;
             let h: number;
@@ -378,7 +377,7 @@ namespace egret3d {
          * @param camera 
          */
         public cleanBuffer(clearOptColor: boolean, clearOptDepath: boolean, clearColor: Color) {
-            const webgl = WebGLCapabilities.webgl;
+            const webgl = WebGLCapabilities.webgl!;
             if (clearOptColor && clearOptDepath) {
                 webgl.depthMask(true);
                 webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);

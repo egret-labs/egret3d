@@ -46,15 +46,10 @@ namespace paper {
          */
         public readonly sceneManager: SceneManager = SceneManager.getInstance();
 
-        public canvas: HTMLCanvasElement | null = null;
-
         private _isFocused = false;
         private _isRunning = false;
         private _playerMode: PlayerMode = PlayerMode.Player;
         private _bindUpdate: FrameRequestCallback | null = null;
-
-        public _option: egret3d.RequiredRuntimeOptions;//TODO临时
-        public _webgl: WebGLRenderingContext;////TODO临时
 
         private _update() {
             if (this._isRunning) {
@@ -73,14 +68,10 @@ namespace paper {
 
         }
 
-        public init({ playerMode = PlayerMode.Player, systems = [] as { new(): BaseSystem }[], option = {}, canvas = {}, webgl = {} } = {}) {
-            this.canvas = canvas as HTMLCanvasElement;
+        public init(options: egret3d.RunEgretOptions) {
+            this._playerMode = options.playerMode || PlayerMode.Player;
 
-            this._playerMode = playerMode;
-            this._option = option as egret3d.RequiredRuntimeOptions;
-            this._webgl = webgl as WebGLRenderingContext;
-
-            for (const systemClass of systems) {
+            for (const systemClass of options.systems) {
                 this.systemManager.register(systemClass, null);
             }
 
