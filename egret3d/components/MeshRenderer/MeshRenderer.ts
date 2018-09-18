@@ -13,7 +13,7 @@ namespace egret3d {
         }
 
         public recalculateAABB() {
-            this.aabb.clear();
+            this._aabb.clear();
 
             const filter = this.gameObject.getComponent(MeshFilter);
             if (filter && filter.mesh) {
@@ -22,7 +22,7 @@ namespace egret3d {
 
                 for (let i = 0, l = vertices.length; i < l; i += 3) {
                     position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
-                    this.aabb.add(position);
+                    this._aabb.add(position);
                 }
             }
         }

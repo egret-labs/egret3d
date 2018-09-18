@@ -741,6 +741,9 @@ namespace paper {
                 this._activeSelf = value;
                 this._activeInHierarchyDirty(prevActive);
             }
+            else {
+                this._activeSelf = value;//TODO
+            }
         }
 
         /**

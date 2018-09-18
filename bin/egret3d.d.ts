@@ -502,6 +502,7 @@ declare namespace egret3d {
         min(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         max(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, source?: Readonly<IVector3>): this;
+        divide(source?: Readonly<IVector3>): this;
         getSquaredDistance(value: Readonly<IVector3>): number;
         getDistance(value: Readonly<IVector3>): number;
         closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>): this;
@@ -635,7 +636,7 @@ declare namespace paper {
         protected _castShadows: boolean;
         protected _lightmapIndex: number;
         protected readonly _boundingSphere: egret3d.Sphere;
-        protected readonly _bounds: egret3d.AABB;
+        protected readonly _aabb: egret3d.AABB;
         protected _recalculateSphere(): void;
         /**
          * 重新计算 AABB。
@@ -3752,9 +3753,7 @@ declare namespace egret3d {
         static LINE_X: Mesh;
         static LINE_Y: Mesh;
         static LINE_Z: Mesh;
-        static AXISES: Mesh;
         static CUBE_WIREFRAMED: Mesh;
-        static PYRAMID_WIREFRAMED: Mesh;
         initialize(): void;
         /**
          * 创建带网格的实体。
@@ -3849,6 +3848,10 @@ declare namespace egret3d {
          *
          */
         static MESH_BASIC: Material;
+        /**
+         *
+         */
+        static MATERIAL_COLOR: Material;
         /**
          *
          */
@@ -4525,10 +4528,11 @@ declare namespace paper {
         tag: string;
         /**
          * 变换组件
+         * @readonly
          */
         transform: egret3d.Transform;
         /**
-         *
+         * @readonly
          */
         renderer: BaseRenderer | null;
         /**

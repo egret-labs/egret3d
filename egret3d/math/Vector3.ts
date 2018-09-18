@@ -378,6 +378,14 @@ namespace egret3d {
             return this;
         }
 
+        public divide(source?: Readonly<IVector3>) {
+            this.x /= source.x;
+            this.y /= source.y;
+            this.z /= source.z;
+
+            return this;
+        }
+
         public getSquaredDistance(value: Readonly<IVector3>): number {
             return helpVector.subtract(value, this).squaredLength;
         }

@@ -990,6 +990,12 @@ var egret3d;
             this.z = Math.max(min.z, Math.min(max.z, source.z));
             return this;
         };
+        Vector3.prototype.divide = function (source) {
+            this.x /= source.x;
+            this.y /= source.y;
+            this.z /= source.z;
+            return this;
+        };
         Vector3.prototype.getSquaredDistance = function (value) {
             return helpVector.subtract(value, this).squaredLength;
         };
@@ -1388,12 +1394,13 @@ var paper;
             _this._castShadows = false;
             _this._lightmapIndex = -1;
             _this._boundingSphere = egret3d.Sphere.create();
-            _this._bounds = egret3d.AABB.create();
+            _this._aabb = egret3d.AABB.create();
             return _this;
         }
         BaseRenderer.prototype._recalculateSphere = function () {
+            var aabb = this.aabb; // Update aabb.
             var worldMatrix = this.gameObject.transform.getWorldMatrix();
-            this._boundingSphere.set(this._bounds.center, this._bounds.boundingSphereRadius);
+            this._boundingSphere.set(aabb.center, aabb.boundingSphereRadius);
             this._boundingSphere.center.applyMatrix(worldMatrix);
             this._boundingSphere.radius *= worldMatrix.getMaxScaleOnAxis();
         };
@@ -1450,7 +1457,11 @@ var paper;
              *
              */
             get: function () {
-                return this._bounds;
+                if (this._aabbDirty) {
+                    this.recalculateAABB();
+                    this._aabbDirty = false;
+                }
+                return this._aabb;
             },
             enumerable: true,
             configurable: true
@@ -1480,7 +1491,7 @@ var paper;
         ], BaseRenderer.prototype, "_lightmapIndex", void 0);
         __decorate([
             paper.serializedField
-        ], BaseRenderer.prototype, "_bounds", void 0);
+        ], BaseRenderer.prototype, "_aabb", void 0);
         __decorate([
             paper.editor.property(4 /* CHECKBOX */)
         ], BaseRenderer.prototype, "receiveShadows", null);
@@ -4265,14 +4276,14 @@ var egret3d;
             this._materials.length = 0;
         };
         MeshRenderer.prototype.recalculateAABB = function () {
-            this.aabb.clear();
+            this._aabb.clear();
             var filter = this.gameObject.getComponent(egret3d.MeshFilter);
             if (filter && filter.mesh) {
                 var vertices = filter.mesh.getVertices();
                 var position = egret3d.helpVector3A;
                 for (var i = 0, l = vertices.length; i < l; i += 3) {
                     position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
-                    this.aabb.add(position);
+                    this._aabb.add(position);
                 }
             }
         };
@@ -8699,24 +8710,6 @@ var egret3d;
                 ]);
             }
             {
-                var mesh = new egret3d.Mesh(6, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/axises.mesh.bin";
-                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
-                paper.Asset.register(mesh);
-                DefaultMeshes.AXISES = mesh;
-                mesh.setAttributes("POSITION" /* POSITION */, [
-                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
-                ]);
-                mesh.setAttributes("COLOR_0" /* COLOR_0 */, [
-                    1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0,
-                    0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
-                    0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0,
-                ]);
-            }
-            {
                 var mesh = new egret3d.Mesh(8, 24, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/cube_wireframed.mesh.bin";
@@ -8752,76 +8745,22 @@ var egret3d;
                     0, 7, 1, 4, 2, 5, 3, 6,
                 ]);
             }
-            {
-                var mesh = new egret3d.Mesh(5, 16, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/pyramid_wireframed.mesh.bin";
-                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
-                paper.Asset.register(mesh);
-                DefaultMeshes.PYRAMID_WIREFRAMED = mesh;
-                //
-                mesh.setAttributes("POSITION" /* POSITION */, [
-                    -0.5, 0.0, -0.5,
-                    0.5, 0.0, -0.5,
-                    0.5, 0.0, 0.5,
-                    -0.5, 0.0, 0.5,
-                    0.0, 1.0, 0.0,
-                ]);
-                mesh.setAttributes("COLOR_0" /* COLOR_0 */, [
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                ]);
-                mesh.setIndices([
-                    0, 1, 1, 2, 2, 3, 3, 0,
-                    0, 4, 1, 4, 2, 4, 3, 4,
-                ]);
-            }
         };
         /**
          * 创建带网格的实体。
          */
         DefaultMeshes.createObject = function (mesh, name, tag, scene) {
             var gameObject = paper.GameObject.create(name, tag, scene);
-            if (mesh === this.AXISES) {
-                var axisX = this.createObject(this.LINE_X, "axisX", tag, scene);
-                var axisY = this.createObject(this.LINE_Y, "axisY", tag, scene);
-                var axisZ = this.createObject(this.LINE_Z, "axisZ", tag, scene);
-                var arrowX = this.createObject(this.PYRAMID, "arrowX", tag, scene);
-                var arrowY = this.createObject(this.PYRAMID, "arrowY", tag, scene);
-                var arrowZ = this.createObject(this.PYRAMID, "arrowZ", tag, scene);
-                axisX.transform.parent = gameObject.transform;
-                axisY.transform.parent = gameObject.transform;
-                axisZ.transform.parent = gameObject.transform;
-                arrowX.transform.parent = gameObject.transform;
-                arrowY.transform.parent = gameObject.transform;
-                arrowZ.transform.parent = gameObject.transform;
-                arrowX.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
-                // arrowY.transform.setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
-                arrowZ.transform.setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
-                arrowX.transform.setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
-                arrowY.transform.setLocalPosition(egret3d.Vector3.UP).setLocalScale(0.05, 0.1, 0.05);
-                arrowZ.transform.setLocalPosition(egret3d.Vector3.FORWARD).setLocalScale(0.05, 0.1, 0.05);
-                axisX.renderer.material = axisX.renderer.material.clone().setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
-                axisY.renderer.material = axisY.renderer.material.clone().setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
-                axisZ.renderer.material = axisZ.renderer.material.clone().setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
-                arrowX.renderer.material = arrowX.renderer.material.clone().setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
-                arrowY.renderer.material = arrowY.renderer.material.clone().setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
-                arrowZ.renderer.material = arrowZ.renderer.material.clone().setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
-            }
-            else {
-                var meshFilter = gameObject.addComponent(egret3d.MeshFilter);
-                var renderer = gameObject.addComponent(egret3d.MeshRenderer);
-                meshFilter.mesh = mesh;
-                switch (mesh) {
-                    case this.LINE_X:
-                    case this.CUBE_WIREFRAMED:
-                    case this.PYRAMID_WIREFRAMED:
-                        renderer.material = egret3d.DefaultMaterials.LINEDASHED_COLOR;
-                        break;
-                }
+            var meshFilter = gameObject.addComponent(egret3d.MeshFilter);
+            var renderer = gameObject.addComponent(egret3d.MeshRenderer);
+            meshFilter.mesh = mesh;
+            switch (mesh) {
+                case this.LINE_X:
+                case this.LINE_Y:
+                case this.LINE_Z:
+                case this.CUBE_WIREFRAMED:
+                    renderer.material = egret3d.DefaultMaterials.LINEDASHED_COLOR;
+                    break;
             }
             return gameObject;
         };
@@ -9379,6 +9318,9 @@ var egret3d;
             _super.prototype.initialize.call(this);
             DefaultMaterials.MESH_BASIC = this._createMaterial("builtin/meshbasic.mat.json", egret3d.DefaultShaders.MESH_BASIC)
                 .setTexture("map" /* Map */, egret3d.DefaultTextures.WHITE);
+            DefaultMaterials.MATERIAL_COLOR = this._createMaterial("builtin/materialColor.mat.json", egret3d.DefaultShaders.MATERIAL_COLOR)
+                .addDefine("USE_COLOR" /* USE_COLOR */)
+                .setColor("diffuse" /* Diffuse */, egret3d.Color.WHITE);
             DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", egret3d.DefaultShaders.LINEDASHED)
                 .addDefine("USE_COLOR" /* USE_COLOR */);
             DefaultMaterials.MISSING = this._createMaterial("builtin/missing.mat.json", egret3d.DefaultShaders.MESH_BASIC)
@@ -11762,10 +11704,11 @@ var paper;
             _this.tag = "";
             /**
              * 变换组件
+             * @readonly
              */
             _this.transform = null;
             /**
-             *
+             * @readonly
              */
             _this.renderer = null;
             /**
@@ -12419,6 +12362,9 @@ var paper;
                     this._activeSelf = value;
                     this._activeInHierarchyDirty(prevActive);
                 }
+                else {
+                    this._activeSelf = value; //TODO
+                }
             },
             enumerable: true,
             configurable: true
@@ -12603,7 +12549,7 @@ var egret3d;
                             type: "mesh" /* Mesh */, listener: function (component) {
                                 _this._updateDrawCalls(component.gameObject);
                                 if (component.gameObject.renderer) {
-                                    component.gameObject.renderer.recalculateAABB();
+                                    component.gameObject.renderer._aabbDirty = true;
                                 }
                             }
                         }
@@ -12629,10 +12575,6 @@ var egret3d;
             this._drawCalls.removeDrawCalls(renderer);
             if (!filter.mesh || materials.length === 0) {
                 return;
-            }
-            if (renderer._aabbDirty) {
-                renderer.recalculateAABB();
-                renderer._aabbDirty = false;
             }
             filter.mesh._createBuffer();
             this._drawCalls.renderers.push(renderer);
@@ -12872,7 +12814,7 @@ var egret3d;
                             type: "mesh" /* Mesh */, listener: function (component) {
                                 _this._updateDrawCalls(component.gameObject);
                                 if (component.gameObject.renderer) {
-                                    component.gameObject.renderer.recalculateAABB();
+                                    component.gameObject.renderer._aabbDirty = true;
                                 }
                             }
                         },
@@ -12891,10 +12833,6 @@ var egret3d;
             this._drawCalls.removeDrawCalls(renderer);
             if (!renderer.mesh || renderer.materials.length === 0) {
                 return;
-            }
-            if (renderer._aabbDirty) {
-                renderer.recalculateAABB();
-                renderer._aabbDirty = false;
             }
             renderer.mesh._createBuffer();
             this._drawCalls.renderers.push(renderer);
