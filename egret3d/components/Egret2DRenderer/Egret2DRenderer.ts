@@ -47,7 +47,6 @@ namespace egret3d {
             displayList.renderBuffer = new egret.sys.RenderBuffer(undefined, undefined, true);
             stage.$displayList = displayList;
 
-
             // TODO
             const webInput = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput;
             if (webInput) {

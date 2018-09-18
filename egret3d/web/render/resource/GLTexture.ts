@@ -31,7 +31,11 @@ namespace egret3d {
 
             this._width = width;
             this._height = height;
-            this._texture = WebGLCapabilities.webgl.createTexture()!;
+
+            const webgl = WebGLCapabilities.webgl;
+            if (webgl) {
+                this._texture = webgl.createTexture()!;
+            }
         }
 
         public get texture() {
@@ -68,7 +72,7 @@ namespace egret3d {
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const seek = (y * width + x) * 4;
-                    const bool = ((x - width * 0.5) * (y - height * 0.5)) > 0
+                    const bool = ((x - width * 0.5) * (y - height * 0.5)) > 0;
                     data[seek] = data[seek + 1] = data[seek + 2] = bool ? 0 : 255;
                     data[seek + 3] = 255;
                 }
@@ -90,13 +94,19 @@ namespace egret3d {
         uploadImage(img: HTMLImageElement | Uint8Array, mipmap: boolean, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false) {
             this._mipmap = mipmap;
             const webgl = WebGLCapabilities.webgl;
+
+            if (!webgl) {
+                return;
+            }
+
             webgl.bindTexture(webgl.TEXTURE_2D, this._texture);
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
             let formatGL = webgl.RGBA;
-            if (this._format == TextureFormatEnum.RGB) {
+            if (this._format === TextureFormatEnum.RGB) {
                 formatGL = webgl.RGB;
-            } else if (this._format == TextureFormatEnum.Gray) {
+            }
+            else if (this._format === TextureFormatEnum.Gray) {
                 formatGL = webgl.LUMINANCE;
             }
             //
@@ -143,10 +153,10 @@ namespace egret3d {
 
         caclByteLength(): number {
             let pixellen = 1;
-            if (this._format == TextureFormatEnum.RGBA) {
+            if (this._format === TextureFormatEnum.RGBA) {
                 pixellen = 4;
             }
-            else if (this._format == TextureFormatEnum.RGB) {
+            else if (this._format === TextureFormatEnum.RGB) {
                 pixellen = 3;
             }
             let len = this.width * this.height * pixellen;
@@ -161,8 +171,8 @@ namespace egret3d {
                 return false;
             }
 
-            if (this._texture != null) {
-                WebGLCapabilities.webgl.deleteTexture(this._texture);
+            if (this._texture !== null) {
+                WebGLCapabilities.webgl!.deleteTexture(this._texture);
                 this._texture = null!;
             }
 
@@ -170,19 +180,19 @@ namespace egret3d {
         }
 
         getReader(redOnly: boolean = false): TextureReader {
-            if (this._reader != null) {
-                if (this._reader.gray != redOnly) {
+            if (this._reader !== null) {
+                if (this._reader.gray !== redOnly) {
                     throw new Error("get param diff with this.reader");
                 }
                 return this._reader;
             }
-            if (this._format != TextureFormatEnum.RGBA) {
+            if (this._format !== TextureFormatEnum.RGBA) {
                 throw new Error("only rgba texture can read");
             }
-            if (this._texture == null) {
+            if (this._texture === null) {
                 return null as any;
             }
-            if (this._reader == null)
+            if (this._reader === null)
                 this._reader = new TextureReader(this._texture, this._width, this._height, redOnly);
 
             return this._reader;
@@ -200,17 +210,20 @@ namespace egret3d {
             this.width = width;
             this.height = height;
 
-            const webgl = WebGLCapabilities.webgl;
-            const fbo = webgl.createFramebuffer();
-            const fbold = webgl.getParameter(webgl.FRAMEBUFFER_BINDING);
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, fbo);
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, texRGBA, 0);
-
             const readData = new Uint8Array(this.width * this.height * 4);
             readData[0] = 2;
-            webgl.readPixels(0, 0, this.width, this.height, webgl.RGBA, webgl.UNSIGNED_BYTE, readData);
-            webgl.deleteFramebuffer(fbo);
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, fbold);
+
+            const webgl = WebGLCapabilities.webgl;
+            if (webgl) {
+                const fbo = webgl.createFramebuffer();
+                const fbold = webgl.getParameter(webgl.FRAMEBUFFER_BINDING);
+                webgl.bindFramebuffer(webgl.FRAMEBUFFER, fbo);
+                webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, texRGBA, 0);
+
+                webgl.readPixels(0, 0, this.width, this.height, webgl.RGBA, webgl.UNSIGNED_BYTE, readData);
+                webgl.deleteFramebuffer(fbo);
+                webgl.bindFramebuffer(webgl.FRAMEBUFFER, fbold);
+            }
 
             if (gray) {
                 this.data = new Uint8Array(this.width * this.height);
@@ -248,6 +261,9 @@ namespace egret3d {
 
         constructor(format: TextureFormatEnum = TextureFormatEnum.RGBA, width: number, height: number, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false) {
             const webgl = WebGLCapabilities.webgl;
+            if (!webgl) {
+                return;
+            }
 
             this.texture = webgl.createTexture()!;
 
@@ -258,10 +274,10 @@ namespace egret3d {
             this.format = format;
             let formatGL = webgl.RGBA;
 
-            if (format == TextureFormatEnum.RGB) {
+            if (format === TextureFormatEnum.RGB) {
                 formatGL = webgl.RGB;
             }
-            else if (format == TextureFormatEnum.Gray) {
+            else if (format === TextureFormatEnum.Gray) {
                 formatGL = webgl.LUMINANCE;
             }
 
@@ -296,18 +312,18 @@ namespace egret3d {
         }
 
         dispose() {
-            if (this.texture != null) {
-                WebGLCapabilities.webgl.deleteTexture(this.texture);
+            if (this.texture) {
+                WebGLCapabilities.webgl!.deleteTexture(this.texture);
                 this.texture = null as any;
             }
         }
 
         caclByteLength(): number {
             let pixellen = 1;
-            if (this.format == TextureFormatEnum.RGBA) {
+            if (this.format === TextureFormatEnum.RGBA) {
                 pixellen = 4;
             }
-            else if (this.format == TextureFormatEnum.RGB) {
+            else if (this.format === TextureFormatEnum.RGB) {
                 pixellen = 3;
             }
             const len = this.width * this.height * pixellen;
