@@ -18,7 +18,7 @@
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": false,
         "preserveConstEnums": true,
-        "outFile": "bin/editor、editor.js"
+        "outFile": "bin/editor/editor.js"
     },
     "include": [
         "../core/libs/",
