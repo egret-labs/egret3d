@@ -176,6 +176,7 @@ var paper;
             KeyCode["Q"] = "q";
             KeyCode["W"] = "w";
             KeyCode["E"] = "e";
+            KeyCode["R"] = "r";
         })(KeyCode || (KeyCode = {}));
         var GUISceneSystem = (function (_super) {
             __extends(GUISceneSystem, _super);
@@ -211,6 +212,7 @@ var paper;
                 _this._startWorldScale = egret3d.Vector3.create(1.0, 1.0, 1.0);
                 //
                 _this._selectedWorldPostion = egret3d.Vector3.create();
+                _this._selectedWorldQuaternion = egret3d.Quaternion.create();
                 _this._cameraPosition = egret3d.Vector3.create();
                 _this._eye = egret3d.Vector3.create();
                 _this._onMouseDown = function (event) {
@@ -231,7 +233,7 @@ var paper;
                     }
                     if (selected) {
                         if (_this._pickableTool[_this._transformMode].indexOf(selected) < 0) {
-                            _this._selectGameObject(selected);
+                            _this._guiComponent.select(selected, true); // TODO
                         }
                         else {
                             raycastInfos = debug.Helper.getPickObjects([_this._touchPlane], mousePosition.x, mousePosition.y);
@@ -375,17 +377,17 @@ var paper;
                                 ;
                             }
                             break;
-                        case "q" /* Q */:
+                        case "w" /* W */:
                             {
                                 _this._transformModeHandler(0 /* TRANSLATE */);
                             }
                             break;
-                        case "w" /* W */:
+                        case "e" /* E */:
                             {
                                 _this._transformModeHandler(1 /* ROTATE */);
                             }
                             break;
-                        case "e" /* E */:
+                        case "r" /* R */:
                             {
                                 _this._transformModeHandler(2 /* SCALE */);
                             }
@@ -401,7 +403,7 @@ var paper;
                 return _this;
             }
             GUISceneSystem.prototype._selectGameObject = function (select) {
-                if (this._guiComponent.selectedGameObject === select || !select) {
+                if (!select) {
                     return;
                 }
                 if (this._axises && this._axises.activeSelf) {
@@ -415,8 +417,6 @@ var paper;
                     this._skeletonDrawer.dontDestroy = true;
                     this._skeletonDrawer.activeSelf = false;
                 }
-                // Update game object.
-                this._guiComponent.select(select);
                 // Update axis target.
                 this._axises.activeSelf = true;
                 {
@@ -472,26 +472,101 @@ var paper;
             };
             GUISceneSystem.prototype._updateAxises = function () {
                 if (this._axises && this._axises.activeSelf) {
-                    var target = this._guiComponent.selectedGameObject;
                     // Update position and rotation.
-                    this._axises.transform.position = target.transform.position;
-                    this._axises.transform.rotation = target.transform.rotation;
+                    this._axises.transform.position = this._selectedWorldPostion;
+                    // this._axises.transform.rotation = target.transform.rotation;
                     var eyeDistance = this._selectedWorldPostion.getDistance(this._cameraPosition);
+                    var translateObj = this._axises.transform.find("translate");
+                    var rotateObj = this._axises.transform.find("rotate");
+                    var scaleObj = this._axises.transform.find("scale");
+                    //
                     var scale = egret3d.Vector3.ONE.clone();
                     scale.multiplyScalar(eyeDistance / 10);
-                    this._axises.transform.find("translate").transform.setScale(scale);
-                    this._axises.transform.find("rotate").transform.setScale(scale);
-                    this._axises.transform.find("scale").transform.setScale(scale);
-                    scale.release();
-                    if (this._transformMode === 0 /* TRANSLATE */) {
+                    this._axises.transform.setScale(scale);
+                    // translateObj.transform.setScale(scale);
+                    // rotateObj.transform.setScale(scale);
+                    // scaleObj.transform.setScale(scale);
+                    if (this._transformMode === 0 /* TRANSLATE */ || this._transformMode === 2 /* SCALE */) {
                         var AXIS_HIDE_TRESHOLD = 0.99;
                         var PLANE_HIDE_TRESHOLD = 0.2;
                         var AXIS_FLIP_TRESHOLD = -0.4;
+                        translateObj.rotation = this._selectedWorldQuaternion;
+                        scaleObj.rotation = this._selectedWorldQuaternion;
+                        // {
+                        //     const axisX = translateObj.find("axisX");
+                        //     axisX.transform.setScale(scale);
+                        // }
+                        // {
+                        //     const axisY = translateObj.find("axisY");
+                        //     axisY.transform.setScale(scale);
+                        // }
+                        // {
+                        //     const axisZ = translateObj.find("axisZ");
+                        //     axisZ.transform.setScale(scale);
+                        // }
                     }
                     else if (this._transformMode === 1 /* ROTATE */) {
+                        // const quaternion = this._guiComponent.selectedGameObject.transform.getRotation();
+                        {
+                            var quaternion = egret3d.Quaternion.IDENTITY;
+                            var tempQuaternion = quaternion.clone();
+                            var tempQuaternion2 = quaternion.clone();
+                            var alignVector = this._eye.clone();
+                            alignVector.applyQuaternion(tempQuaternion.inverse());
+                            var axisX = rotateObj.find("axisX");
+                            var pickX = rotateObj.find("pickX");
+                            tempQuaternion.fromAxis(egret3d.Vector3.RIGHT, Math.atan2(-alignVector.y, alignVector.z));
+                            tempQuaternion.multiply(tempQuaternion2, tempQuaternion);
+                            axisX.setRotation(tempQuaternion);
+                            pickX.setRotation(tempQuaternion);
+                            tempQuaternion.release();
+                            tempQuaternion2.release();
+                            alignVector.release();
+                        }
+                        {
+                            var quaternion = egret3d.Quaternion.IDENTITY;
+                            var tempQuaternion = quaternion.clone();
+                            var tempQuaternion2 = quaternion.clone();
+                            var alignVector = this._eye.clone();
+                            alignVector.applyQuaternion(tempQuaternion.inverse());
+                            var axisY = rotateObj.find("axisY");
+                            var pickY = rotateObj.find("pickY");
+                            tempQuaternion.fromAxis(egret3d.Vector3.UP, Math.atan2(alignVector.x, alignVector.z));
+                            tempQuaternion.multiply(tempQuaternion2, tempQuaternion);
+                            // axisY.setRotation(tempQuaternion);
+                            var tt = egret3d.Vector3.create();
+                            tempQuaternion.toEuler(tt);
+                            axisY.setEuler(tt.x, tt.y, -Math.PI * 0.5);
+                            pickY.setRotation(tempQuaternion);
+                            tempQuaternion.release();
+                            tempQuaternion2.release();
+                            alignVector.release();
+                        }
+                        {
+                            var axisZ = rotateObj.find("axisZ");
+                            var pickZ = rotateObj.find("pickZ");
+                            var quaternion = egret3d.Quaternion.IDENTITY;
+                            var tempQuaternion = quaternion.clone();
+                            var tempQuaternion2 = quaternion.clone();
+                            var alignVector = this._eye.clone();
+                            alignVector.applyQuaternion(tempQuaternion.inverse());
+                            tempQuaternion.fromAxis(egret3d.Vector3.RIGHT, Math.atan2(-alignVector.y, alignVector.z));
+                            tempQuaternion.multiply(tempQuaternion2, tempQuaternion);
+                            axisZ.setRotation(tempQuaternion);
+                            var tt = egret3d.Vector3.create();
+                            tempQuaternion.toEuler(tt);
+                            axisZ.setEuler(tt.x, Math.PI * 0.5, tt.z);
+                            // pickZ.setRotation(tempQuaternion);
+                            tempQuaternion.release();
+                            tempQuaternion2.release();
+                            alignVector.release();
+                        }
                     }
-                    else if (this._transformMode === 2 /* SCALE */) {
-                    }
+                    scale.release();
+                }
+                //TODO
+                if (this._guiComponent.selectedGameObject) {
+                    this._guiComponent.selectedGameObject.transform.getLocalEulerAngles();
                 }
             };
             GUISceneSystem.prototype._updateBox = function () {
@@ -673,7 +748,7 @@ var paper;
                 this._pickableSelected.length = 0;
                 paper.EventPool.addEventListener("GameObjectSelected" /* GameObjectSelected */, debug.GUIComponent, this._gameObjectSelectedHandler);
                 paper.EventPool.addEventListener("GameObjectUnselected" /* GameObjectUnselected */, debug.GUIComponent, this._gameObjectUnselectedHandler);
-                egret3d.WebGLCapabilities.canvas.addEventListener('contextmenu', function contextmenu(event) { event.preventDefault(); });
+                // egret3d.WebGLCapabilities.canvas!.addEventListener('contextmenu', function contextmenu(event: Event) { event.preventDefault(); });
                 egret3d.WebGLCapabilities.canvas.addEventListener("mousedown", this._onMouseDown);
                 egret3d.WebGLCapabilities.canvas.addEventListener("mouseup", this._onMouseUp);
                 egret3d.WebGLCapabilities.canvas.addEventListener("mousemove", this._onMouseHover);
@@ -746,18 +821,20 @@ var paper;
                 if (this._skeletonDrawer && this._skeletonDrawer.isDestroyed) {
                     this._skeletonDrawer = null;
                 }
-                if (this._guiComponent.selectedGameObject && this._guiComponent.selectedGameObject.isDestroyed) {
+                var selectedGameObject = this._guiComponent.selectedGameObject;
+                if (selectedGameObject && selectedGameObject.isDestroyed) {
                     this._guiComponent.select(null); // TODO
                 }
-                if (this._guiComponent.selectedGameObject) {
+                if (selectedGameObject) {
+                    this._selectedWorldPostion.copy(selectedGameObject.transform.getPosition());
+                    this._selectedWorldQuaternion.copy(selectedGameObject.transform.getRotation());
                     var camera = egret3d.Camera.editor;
-                    this._selectedWorldPostion.copy(this._guiComponent.selectedGameObject.transform.getPosition());
                     this._cameraPosition.copy(camera.transform.getPosition());
-                    if (camera.opvalue > 0) {
-                        this._eye.copy(this._cameraPosition).subtract(this._selectedWorldPostion).normalize();
-                    }
-                    else if (camera.opvalue == 0) {
+                    if (camera.opvalue == 0) {
                         this._eye.copy(this._cameraPosition).normalize();
+                    }
+                    else {
+                        this._eye.copy(this._cameraPosition).subtract(this._selectedWorldPostion).normalize();
                     }
                 }
                 this._updateAxises();
@@ -1134,6 +1211,10 @@ var paper;
                 this._addToHierarchy(gameObject);
             };
             GUISystem.prototype.onUpdate = function (dt) {
+                if (this._selectGameObject) {
+                    this._guiComponent.select(this._selectGameObject, true);
+                    this._selectGameObject = null;
+                }
                 this._guiComponent.inspector.updateDisplay();
                 if (this._guiComponent.inspector.__folders) {
                     for (var k in this._guiComponent.inspector.__folders) {
@@ -1484,9 +1565,9 @@ var paper;
                     arrowX.transform.setParent(axisX.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
                     arrowY.transform.setParent(axisY.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
                     arrowZ.transform.setParent(axisZ.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
-                    pickX.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.RIGHT.clone().multiplyScalar(0.5)).setLocalScale(1, 0.1, 0.1);
-                    pickY.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.UP.clone().multiplyScalar(0.5)).setLocalScale(0.1, 1, 0.1);
-                    pickZ.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.FORWARD.clone().multiplyScalar(0.5)).setLocalScale(0.1, 0.1, 1);
+                    pickX.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.RIGHT.clone().multiplyScalar(0.5)).setLocalScale(1.2, 0.1, 0.1);
+                    pickY.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.UP.clone().multiplyScalar(0.5)).setLocalScale(0.1, 1.2, 0.1);
+                    pickZ.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.FORWARD.clone().multiplyScalar(0.5)).setLocalScale(0.1, 0.1, 1.2);
                     pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = false;
                     axisX.renderer.material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
                     axisY.renderer.material.setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
@@ -1508,13 +1589,14 @@ var paper;
                     var pickX = this._createGameObject("pickX", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickY = this._createGameObject("pickY", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickZ = this._createGameObject("pickZ", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    axisX.transform.setParent(rotate.transform);
-                    axisY.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, Math.PI * 0.5);
-                    axisZ.transform.setParent(rotate.transform).setLocalEuler(0.0, -Math.PI * 0.5, 0.0);
+                    axisX.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, 0.0);
+                    axisY.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
+                    axisZ.transform.setParent(rotate.transform).setLocalEuler(0.0, Math.PI * 0.5, 0.0);
                     pickX.transform.setParent(rotate.transform).setLocalEuler(0, -Math.PI * 0.5, -Math.PI * 0.5);
                     pickY.transform.setParent(rotate.transform).setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
                     pickZ.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
                     pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = false;
+                    // pickX.activeSelf = true;
                     axisX.renderer.material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
                     axisY.renderer.material.setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
                     axisZ.renderer.material.setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
@@ -1541,9 +1623,9 @@ var paper;
                     arrowX.transform.setParent(axisX.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.2, 0.2, 0.2);
                     arrowY.transform.setParent(axisY.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.2, 0.2, 0.2);
                     arrowZ.transform.setParent(axisZ.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.2, 0.2, 0.2);
-                    pickX.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.RIGHT.clone().multiplyScalar(0.5)).setLocalScale(1, 0.1, 0.1);
-                    pickY.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.UP.clone().multiplyScalar(0.5)).setLocalScale(0.1, 1, 0.1);
-                    pickZ.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.FORWARD.clone().multiplyScalar(0.5)).setLocalScale(0.1, 0.1, 1);
+                    pickX.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.RIGHT.clone().multiplyScalar(0.5)).setLocalScale(1.2, 0.2, 0.2);
+                    pickY.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.UP.clone().multiplyScalar(0.5)).setLocalScale(0.2, 1.2, 0.2);
+                    pickZ.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.FORWARD.clone().multiplyScalar(0.5)).setLocalScale(0.2, 0.2, 1.2);
                     pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = false;
                     axisX.renderer.material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
                     axisY.renderer.material.setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(4000 /* Overlay */);

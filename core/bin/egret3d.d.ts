@@ -490,7 +490,7 @@ declare namespace egret3d {
         applyDirection(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
         applyQuaternion(quaternion: Readonly<IVector4>, source?: Readonly<IVector3>): this;
         normalize(source?: Readonly<IVector3>): this;
-        negate(source?: Readonly<IVector3>): void;
+        negate(source?: Readonly<IVector3>): this;
         addScalar(add: number, source?: Readonly<IVector3>): this;
         add(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         subtract(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
@@ -981,7 +981,7 @@ declare namespace egret3d {
          */
         static parseFromBinary(array: Uint32Array): {
             config: GLTF;
-            buffers: (Float32Array | Uint16Array | Uint32Array)[];
+            buffers: (Float32Array | Uint32Array | Uint16Array)[];
         };
         /**
          *
@@ -1006,11 +1006,11 @@ declare namespace egret3d {
         /**
          * 根据指定 BufferView 创建二进制数组。
          */
-        createTypeArrayFromBufferView(bufferView: gltf.BufferView, componentType: gltf.ComponentType): Uint8Array;
+        createTypeArrayFromBufferView(bufferView: gltf.BufferView, componentType: gltf.ComponentType): Float32Array;
         /**
          * 根据指定 Accessor 创建二进制数组。
          */
-        createTypeArrayFromAccessor(accessor: gltf.Accessor, offset?: number, count?: number): Uint8Array;
+        createTypeArrayFromAccessor(accessor: gltf.Accessor, offset?: number, count?: number): Float32Array;
         /**
          *
          */
@@ -1034,7 +1034,7 @@ declare namespace egret3d {
         /**
          * 通过 Accessor 获取指定 Buffer。
          */
-        getBuffer(accessor: gltf.Accessor): Float32Array | Uint16Array | Uint32Array;
+        getBuffer(accessor: gltf.Accessor): Float32Array | Uint32Array | Uint16Array;
         /**
          * 通过 Accessor 获取指定 BufferView。
          */
@@ -2876,11 +2876,11 @@ declare namespace egret3d {
         /**
          *
          */
-        getAttributes(attributeType: gltf.MeshAttribute, offset?: number, count?: number): Uint8Array;
+        getAttributes(attributeType: gltf.MeshAttribute, offset?: number, count?: number): Float32Array;
         /**
          *
          */
-        setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset?: number, count?: number): Uint8Array;
+        setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset?: number, count?: number): Float32Array;
         /**
          *
          */
@@ -3773,11 +3773,18 @@ declare namespace egret3d {
          */
         static createCylinder(radiusTop?: number, radiusBottom?: number, height?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, radialSegments?: number, heightSegments?: number, openEnded?: boolean, thetaStart?: number, thetaLength?: number, differentFace?: boolean): Mesh;
         /**
+         * 创建圆形网格。
+         */
+        static createCircle(radius: number, arc: number): Mesh;
+        /**
+         * 创建圆环网格。
+         */
+        static createTorus(radius?: number, tube?: number, radialSegments?: number, tubularSegments?: number, arc?: number): Mesh;
+        /**
+         * 创建球体网格。
          * TODO
          */
-        static createSphereCCW(radius?: number, widthSegments?: number, heightSegments?: number): Mesh;
-        static createCircle(radius: number, arc: number): Mesh;
-        static createTorus(radius?: number, tube?: number, radialSegments?: number, tubularSegments?: number, arc?: number): Mesh;
+        static createSphere(radius?: number, widthSegments?: number, heightSegments?: number): Mesh;
     }
 }
 declare namespace egret3d {
@@ -3921,26 +3928,26 @@ declare namespace egret3d {
         readonly shadowCalls: DrawCall[];
         /**
          * 所有非透明的, 按照从近到远排序
-         * @param a
-         * @param b
          */
         private _sortOpaque(a, b);
         /**
          * 所有透明的，按照从远到近排序
-         * @param a
-         * @param b
          */
         private _sortFromFarToNear(a, b);
+        /**
+         *
+         */
         shadowFrustumCulling(camera: Camera): void;
+        /**
+         *
+         */
         sortAfterFrustumCulling(camera: Camera): void;
         /**
          * 移除指定渲染器的 draw call 列表。
-         * @param renderer
          */
         removeDrawCalls(renderer: paper.BaseRenderer): void;
         /**
-         * 指定渲染器是否生成了 draw call 列表。
-         * @param renderer
+         * 是否包含指定渲染器的 draw call 列表。
          */
         hasDrawCalls(renderer: paper.BaseRenderer): boolean;
     }
@@ -4027,16 +4034,13 @@ declare namespace egret3d {
         private _far;
         private readonly _matProjP;
         private readonly _matProjO;
-        private readonly _frameVecs;
+        private readonly _frameVectors;
         /**
          * 计算相机视锥区域
          */
         private _calcCameraFrame();
+        private _intersectPlane(boundingSphere, v0, v1, v2);
         initialize(): void;
-        /**
-         *
-         */
-        update(_delta: number): void;
         /**
          * 计算相机的 project matrix（投影矩阵）
          */
@@ -4046,10 +4050,6 @@ declare namespace egret3d {
          */
         calcViewPortPixel(viewPortPixel: IRectangle): void;
         /**
-         * 由屏幕坐标发射射线
-         */
-        createRayByScreen(screenPosX: number, screenPosY: number, ray?: Ray): Ray;
-        /**
          * 由屏幕坐标得到世界坐标
          */
         calcWorldPosFromScreenPos(screenPos: Vector3, outWorldPos: Vector3): void;
@@ -4058,7 +4058,10 @@ declare namespace egret3d {
          */
         calcScreenPosFromWorldPos(worldPos: Vector3, outScreenPos: Vector2): void;
         getPosAtXPanelInViewCoordinateByScreenPos(screenPos: Vector2, z: number, out: Vector2): void;
-        private _intersectPlane(boundingSphere, v0, v1, v2);
+        /**
+         * 由屏幕坐标发射射线
+         */
+        createRayByScreen(screenPosX: number, screenPosY: number, ray?: Ray): Ray;
         testFrustumCulling(node: paper.BaseRenderer): boolean;
         /**
          * 相机到近裁剪面距离

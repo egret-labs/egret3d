@@ -679,7 +679,7 @@ namespace egret3d {
             for (var i = 0; i <= 64 * arc; ++i) {
                 vertices.push(0, Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius);
             }
-            const mesh = egret3d.Mesh.create(64, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+            const mesh = egret3d.Mesh.create(vertices.length / 3, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
             mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.LineStrip;
 

@@ -860,9 +860,10 @@ var egret3d;
             if (!source) {
                 source = this;
             }
-            this.x = source.x * -1.00;
-            this.y = source.y * -1.00;
-            this.z = source.z * -1.00;
+            this.x = source.x * -1.0;
+            this.y = source.y * -1.0;
+            this.z = source.z * -1.0;
+            return this;
         };
         Vector3.prototype.addScalar = function (add, source) {
             if (source) {
@@ -8668,7 +8669,7 @@ var egret3d;
                 DefaultMeshes.CYLINDER = mesh;
             }
             {
-                var mesh = DefaultMeshes.createSphereCCW();
+                var mesh = DefaultMeshes.createSphere();
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/sphere.mesh.bin";
                 paper.Asset.register(mesh);
@@ -9093,9 +9094,84 @@ var egret3d;
             }
         };
         /**
+         * 创建圆形网格。
+         */
+        DefaultMeshes.createCircle = function (radius, arc) {
+            var vertices = [];
+            for (var i = 0; i <= 64 * arc; ++i) {
+                vertices.push(0, Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius);
+            }
+            var mesh = egret3d.Mesh.create(vertices.length / 3, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
+            mesh.setAttributes("POSITION" /* POSITION */, vertices);
+            mesh.glTFMesh.primitives[0].mode = 3 /* LineStrip */;
+            return mesh;
+        };
+        /**
+         * 创建圆环网格。
+         */
+        DefaultMeshes.createTorus = function (radius, tube, radialSegments, tubularSegments, arc) {
+            if (radius === void 0) { radius = 1; }
+            if (tube === void 0) { tube = 0.1; }
+            if (radialSegments === void 0) { radialSegments = 4; }
+            if (tubularSegments === void 0) { tubularSegments = 14; }
+            if (arc === void 0) { arc = Math.PI * 2; }
+            var indices = [];
+            var vertices = [];
+            var normals = [];
+            var uvs = [];
+            // helper variables
+            var center = egret3d.Vector3.create();
+            var vertex = egret3d.Vector3.create();
+            var normal = egret3d.Vector3.create();
+            var j, i;
+            // generate vertices, normals and uvs
+            for (j = 0; j <= radialSegments; j++) {
+                for (i = 0; i <= tubularSegments; i++) {
+                    var u = i / tubularSegments * arc;
+                    var v = j / radialSegments * Math.PI * 2;
+                    // vertex
+                    vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
+                    vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
+                    vertex.z = tube * Math.sin(v);
+                    vertices.push(vertex.x, vertex.y, vertex.z);
+                    // normal
+                    center.x = radius * Math.cos(u);
+                    center.y = radius * Math.sin(u);
+                    normal.subtract(vertex, center).normalize();
+                    normals.push(normal.x, normal.y, normal.z);
+                    // uv
+                    uvs.push(i / tubularSegments);
+                    uvs.push(j / radialSegments);
+                }
+            }
+            // generate indices
+            for (j = 1; j <= radialSegments; j++) {
+                for (i = 1; i <= tubularSegments; i++) {
+                    // indices
+                    var a = (tubularSegments + 1) * j + i - 1;
+                    var b = (tubularSegments + 1) * (j - 1) + i - 1;
+                    var c = (tubularSegments + 1) * (j - 1) + i;
+                    var d = (tubularSegments + 1) * j + i;
+                    // faces
+                    indices.push(a, b, d, b, c, d);
+                }
+            }
+            center.release();
+            vertex.release();
+            normal.release();
+            // build geometry
+            var mesh = egret3d.Mesh.create(vertices.length / 3, indices.length, ["POSITION" /* POSITION */, "NORMAL" /* NORMAL */, "TEXCOORD_0" /* TEXCOORD_0 */]);
+            mesh.setAttributes("POSITION" /* POSITION */, vertices);
+            mesh.setAttributes("NORMAL" /* NORMAL */, normals);
+            mesh.setAttributes("TEXCOORD_0" /* TEXCOORD_0 */, uvs);
+            mesh.setIndices(indices);
+            return mesh;
+        };
+        /**
+         * 创建球体网格。
          * TODO
          */
-        DefaultMeshes.createSphereCCW = function (radius, widthSegments, heightSegments) {
+        DefaultMeshes.createSphere = function (radius, widthSegments, heightSegments) {
             if (radius === void 0) { radius = 0.5; }
             if (widthSegments === void 0) { widthSegments = 24; }
             if (heightSegments === void 0) { heightSegments = 12; }
@@ -9159,75 +9235,6 @@ var egret3d;
             for (var i = 0, l = tris.length; i < l; i++) {
                 indices[i] = tris[i];
             }
-            return mesh;
-        };
-        DefaultMeshes.createCircle = function (radius, arc) {
-            var vertices = [];
-            for (var i = 0; i <= 64 * arc; ++i) {
-                vertices.push(0, Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius);
-            }
-            var mesh = egret3d.Mesh.create(64, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
-            mesh.setAttributes("POSITION" /* POSITION */, vertices);
-            mesh.glTFMesh.primitives[0].mode = 3 /* LineStrip */;
-            return mesh;
-        };
-        DefaultMeshes.createTorus = function (radius, tube, radialSegments, tubularSegments, arc) {
-            if (radius === void 0) { radius = 1; }
-            if (tube === void 0) { tube = 0.1; }
-            if (radialSegments === void 0) { radialSegments = 4; }
-            if (tubularSegments === void 0) { tubularSegments = 14; }
-            if (arc === void 0) { arc = Math.PI * 2; }
-            var indices = [];
-            var vertices = [];
-            var normals = [];
-            var uvs = [];
-            // helper variables
-            var center = egret3d.Vector3.create();
-            var vertex = egret3d.Vector3.create();
-            var normal = egret3d.Vector3.create();
-            var j, i;
-            // generate vertices, normals and uvs
-            for (j = 0; j <= radialSegments; j++) {
-                for (i = 0; i <= tubularSegments; i++) {
-                    var u = i / tubularSegments * arc;
-                    var v = j / radialSegments * Math.PI * 2;
-                    // vertex
-                    vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
-                    vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
-                    vertex.z = tube * Math.sin(v);
-                    vertices.push(vertex.x, vertex.y, vertex.z);
-                    // normal
-                    center.x = radius * Math.cos(u);
-                    center.y = radius * Math.sin(u);
-                    normal.subtract(vertex, center).normalize();
-                    normals.push(normal.x, normal.y, normal.z);
-                    // uv
-                    uvs.push(i / tubularSegments);
-                    uvs.push(j / radialSegments);
-                }
-            }
-            // generate indices
-            for (j = 1; j <= radialSegments; j++) {
-                for (i = 1; i <= tubularSegments; i++) {
-                    // indices
-                    var a = (tubularSegments + 1) * j + i - 1;
-                    var b = (tubularSegments + 1) * (j - 1) + i - 1;
-                    var c = (tubularSegments + 1) * (j - 1) + i;
-                    var d = (tubularSegments + 1) * j + i;
-                    // faces
-                    indices.push(a, b, d);
-                    indices.push(b, c, d);
-                }
-            }
-            center.release();
-            vertex.release();
-            normal.release();
-            // build geometry
-            var mesh = egret3d.Mesh.create(vertices.length / 3, indices.length, ["POSITION" /* POSITION */, "NORMAL" /* NORMAL */, "TEXCOORD_0" /* TEXCOORD_0 */]);
-            mesh.setAttributes("POSITION" /* POSITION */, vertices);
-            mesh.setAttributes("NORMAL" /* NORMAL */, normals);
-            mesh.setAttributes("TEXCOORD_0" /* TEXCOORD_0 */, uvs);
-            mesh.setIndices(indices);
             return mesh;
         };
         return DefaultMeshes;
@@ -9487,8 +9494,6 @@ var egret3d;
         }
         /**
          * 所有非透明的, 按照从近到远排序
-         * @param a
-         * @param b
          */
         DrawCalls.prototype._sortOpaque = function (a, b) {
             var aMat = a.material;
@@ -9508,8 +9513,6 @@ var egret3d;
         };
         /**
          * 所有透明的，按照从远到近排序
-         * @param a
-         * @param b
          */
         DrawCalls.prototype._sortFromFarToNear = function (a, b) {
             if (a.material.renderQueue === b.material.renderQueue) {
@@ -9519,6 +9522,9 @@ var egret3d;
                 return a.material.renderQueue - b.material.renderQueue;
             }
         };
+        /**
+         *
+         */
         DrawCalls.prototype.shadowFrustumCulling = function (camera) {
             this.shadowCalls.length = 0;
             for (var _i = 0, _a = this.drawCalls; _i < _a.length; _i++) {
@@ -9533,6 +9539,9 @@ var egret3d;
             }
             this.shadowCalls.sort(this._sortFromFarToNear);
         };
+        /**
+         *
+         */
         DrawCalls.prototype.sortAfterFrustumCulling = function (camera) {
             this.opaqueCalls.length = 0;
             this.transparentCalls.length = 0;
@@ -9541,8 +9550,8 @@ var egret3d;
             for (var _i = 0, _a = this.drawCalls; _i < _a.length; _i++) {
                 var drawCall = _a[_i];
                 var drawTarget = drawCall.renderer.gameObject;
-                var visible = ((camera.cullingMask & drawTarget.layer) !== 0 && (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer))));
-                if (visible) {
+                if ((camera.cullingMask & drawTarget.layer) !== 0 &&
+                    (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer)))) {
                     var objPos = drawTarget.transform.getPosition();
                     drawCall.zdist = objPos.getDistance(cameraPos);
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
@@ -9560,7 +9569,6 @@ var egret3d;
         };
         /**
          * 移除指定渲染器的 draw call 列表。
-         * @param renderer
          */
         DrawCalls.prototype.removeDrawCalls = function (renderer) {
             var index = this.renderers.indexOf(renderer);
@@ -9576,8 +9584,7 @@ var egret3d;
             this.renderers.splice(index, 1);
         };
         /**
-         * 指定渲染器是否生成了 draw call 列表。
-         * @param renderer
+         * 是否包含指定渲染器的 draw call 列表。
          */
         DrawCalls.prototype.hasDrawCalls = function (renderer) {
             return this.renderers.indexOf(renderer) >= 0;
@@ -9629,7 +9636,7 @@ var egret3d;
                 this._camerasAndLights.sortCameras();
                 for (var _i = 0, cameras_1 = cameras; _i < cameras_1.length; _i++) {
                     var component = cameras_1[_i];
-                    component.update(deltaTime);
+                    component._update(deltaTime);
                 }
             }
         };
@@ -9704,7 +9711,7 @@ var egret3d;
             _this._far = 1000;
             _this._matProjP = egret3d.Matrix4.create();
             _this._matProjO = egret3d.Matrix4.create();
-            _this._frameVecs = [
+            _this._frameVectors = [
                 egret3d.Vector3.create(),
                 egret3d.Vector3.create(),
                 egret3d.Vector3.create(),
@@ -9758,14 +9765,14 @@ var egret3d;
         Camera.prototype._calcCameraFrame = function () {
             var vpp = helpRectA;
             this.calcViewPortPixel(vpp);
-            var farLD = this._frameVecs[0];
-            var nearLD = this._frameVecs[1];
-            var farRD = this._frameVecs[2];
-            var nearRD = this._frameVecs[3];
-            var farLT = this._frameVecs[4];
-            var nearLT = this._frameVecs[5];
-            var farRT = this._frameVecs[6];
-            var nearRT = this._frameVecs[7];
+            var farLD = this._frameVectors[0];
+            var nearLD = this._frameVectors[1];
+            var farRD = this._frameVectors[2];
+            var nearRD = this._frameVectors[3];
+            var farLT = this._frameVectors[4];
+            var nearLT = this._frameVectors[5];
+            var farRT = this._frameVectors[6];
+            var nearRT = this._frameVectors[7];
             var near_h = this.near * Math.tan(this.fov * 0.5);
             var asp = vpp.w / vpp.h;
             var near_w = near_h * asp;
@@ -9780,25 +9787,47 @@ var egret3d;
             farRT.set(far_w, far_h, this.far);
             farRD.set(far_w, -far_h, this.far);
             var matrix = this.gameObject.transform.getWorldMatrix();
-            matrix.transformVector3(farLD);
-            matrix.transformVector3(nearLD);
-            matrix.transformVector3(farRD);
-            matrix.transformVector3(nearRD);
-            matrix.transformVector3(farLT);
-            matrix.transformVector3(nearLT);
-            matrix.transformVector3(farRT);
-            matrix.transformVector3(nearRT);
+            farLD.applyMatrix(matrix);
+            nearLD.applyMatrix(matrix);
+            farRD.applyMatrix(matrix);
+            nearRD.applyMatrix(matrix);
+            farLT.applyMatrix(matrix);
+            nearLT.applyMatrix(matrix);
+            farRT.applyMatrix(matrix);
+            nearRT.applyMatrix(matrix);
+        };
+        Camera.prototype._intersectPlane = function (boundingSphere, v0, v1, v2) {
+            var subV0 = egret3d.helpVector3A;
+            var subV1 = egret3d.helpVector3B;
+            var cross = egret3d.helpVector3C;
+            var hitPoint = egret3d.helpVector3D;
+            var distVec = egret3d.helpVector3E;
+            var center = boundingSphere.center;
+            subV0.subtract(v1, v0);
+            subV1.subtract(v2, v1);
+            cross.cross(subV0, subV1);
+            egret3d.calPlaneLineIntersectPoint(cross, v0, cross, center, hitPoint);
+            distVec.subtract(hitPoint, center);
+            var val = distVec.dot(cross);
+            if (val <= 0) {
+                return true;
+            }
+            var dist = hitPoint.getDistance(center);
+            if (dist < boundingSphere.radius) {
+                return true;
+            }
+            return false;
+        };
+        /**
+         * @internal
+         */
+        Camera.prototype._update = function (_delta) {
+            this._calcCameraFrame();
+            this.context.updateCamera(this, this.gameObject.transform.getWorldMatrix());
         };
         Camera.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             this.context = new egret3d.RenderContext();
-        };
-        /**
-         *
-         */
-        Camera.prototype.update = function (_delta) {
-            this._calcCameraFrame();
-            this.context.updateCamera(this, this.gameObject.transform.getWorldMatrix());
         };
         /**
          * 计算相机的 project matrix（投影矩阵）
@@ -9842,21 +9871,6 @@ var egret3d;
             viewPortPixel.w = w * viewport.w;
             viewPortPixel.h = h * viewport.h;
             //asp = this.viewPortPixel.w / this.viewPortPixel.h;
-        };
-        /**
-         * 由屏幕坐标发射射线
-         */
-        Camera.prototype.createRayByScreen = function (screenPosX, screenPosY, ray) {
-            var from = egret3d.Vector3.create(screenPosX, screenPosY, 0.0);
-            var to = egret3d.Vector3.create(screenPosX, screenPosY, 1.0);
-            this.calcWorldPosFromScreenPos(from, from);
-            this.calcWorldPosFromScreenPos(to, to);
-            to.subtract(to, from).normalize();
-            ray = ray || egret3d.Ray.create();
-            ray.set(from, to);
-            from.release();
-            to.release();
-            return ray;
         };
         /**
          * 由屏幕坐标得到世界坐标
@@ -9909,41 +9923,34 @@ var egret3d;
             out.x = nearpos.x - (nearpos.x - farpos.x) * rate;
             out.y = nearpos.y - (nearpos.y - farpos.y) * rate;
         };
-        Camera.prototype._intersectPlane = function (boundingSphere, v0, v1, v2) {
-            var subV0 = egret3d.helpVector3A;
-            var subV1 = egret3d.helpVector3B;
-            var cross = egret3d.helpVector3C;
-            var hitPoint = egret3d.helpVector3D;
-            var distVec = egret3d.helpVector3E;
-            var center = boundingSphere.center;
-            subV0.subtract(v1, v0);
-            subV1.subtract(v2, v1);
-            cross.cross(subV0, subV1);
-            egret3d.calPlaneLineIntersectPoint(cross, v0, cross, center, hitPoint);
-            distVec.subtract(hitPoint, center);
-            var val = distVec.dot(cross);
-            if (val <= 0) {
-                return true;
-            }
-            var dist = hitPoint.getDistance(center);
-            if (dist < boundingSphere.radius) {
-                return true;
-            }
-            return false;
+        /**
+         * 由屏幕坐标发射射线
+         */
+        Camera.prototype.createRayByScreen = function (screenPosX, screenPosY, ray) {
+            var from = egret3d.Vector3.create(screenPosX, screenPosY, 0.0);
+            var to = egret3d.Vector3.create(screenPosX, screenPosY, 1.0);
+            this.calcWorldPosFromScreenPos(from, from);
+            this.calcWorldPosFromScreenPos(to, to);
+            to.subtract(to, from).normalize();
+            ray = ray || egret3d.Ray.create();
+            ray.set(from, to);
+            from.release();
+            to.release();
+            return ray;
         };
         Camera.prototype.testFrustumCulling = function (node) {
             var boundingSphere = node.boundingSphere;
-            if (!this._intersectPlane(boundingSphere, this._frameVecs[0], this._frameVecs[1], this._frameVecs[5]))
+            if (!this._intersectPlane(boundingSphere, this._frameVectors[0], this._frameVectors[1], this._frameVectors[5]))
                 return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVecs[1], this._frameVecs[3], this._frameVecs[7]))
+            if (!this._intersectPlane(boundingSphere, this._frameVectors[1], this._frameVectors[3], this._frameVectors[7]))
                 return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVecs[3], this._frameVecs[2], this._frameVecs[6]))
+            if (!this._intersectPlane(boundingSphere, this._frameVectors[3], this._frameVectors[2], this._frameVectors[6]))
                 return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVecs[2], this._frameVecs[0], this._frameVecs[4]))
+            if (!this._intersectPlane(boundingSphere, this._frameVectors[2], this._frameVectors[0], this._frameVectors[4]))
                 return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVecs[5], this._frameVecs[7], this._frameVecs[6]))
+            if (!this._intersectPlane(boundingSphere, this._frameVectors[5], this._frameVectors[7], this._frameVectors[6]))
                 return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVecs[0], this._frameVecs[2], this._frameVecs[3]))
+            if (!this._intersectPlane(boundingSphere, this._frameVectors[0], this._frameVectors[2], this._frameVectors[3]))
                 return false;
             return true;
         };
@@ -10003,11 +10010,11 @@ var egret3d;
         ], Camera.prototype, "order", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */)
+            paper.editor.property(2 /* FLOAT */, { minimum: 0 })
         ], Camera.prototype, "fov", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */)
+            paper.editor.property(2 /* FLOAT */, { minimum: 0 })
         ], Camera.prototype, "size", void 0);
         __decorate([
             paper.serializedField,
@@ -27863,10 +27870,13 @@ var egret3d;
                 this._lastFrameFirstCursor = 0;
                 //最后存活位置
                 this._lastAliveCursor = 0;
+                this._forceUpdate = false;
                 //原始顶点数量
                 this._vertexStride = 0;
                 //当前爆发的索引
                 this._burstIndex = 0;
+                //
+                this._readEmitCount = 0;
                 //最终重力
                 this._finalGravity = new egret3d.Vector3();
             }
@@ -27881,7 +27891,8 @@ var egret3d;
                 for (var l = bursts.length; this._burstIndex < l; this._burstIndex++) {
                     var burst = bursts[this._burstIndex];
                     if (burst.time >= startTime && burst.time < endTime) {
-                        totalEmitCount += egret3d.numberLerp(burst.minCount, burst.maxCount, Math.random());
+                        // totalEmitCount += numberLerp(burst.minCount, burst.maxCount, Math.random());
+                        totalEmitCount += burst.maxCount;
                     }
                     else {
                         break;
@@ -27903,7 +27914,7 @@ var egret3d;
              * @param startCursor
              * @param endCursor
              */
-            ParticleBatcher.prototype._addParticles = function (time, startCursor, count) {
+            ParticleBatcher.prototype._addParticles = function (time, startCursor, count, lastEmittsionTime) {
                 var comp = this._comp;
                 var main = comp.main;
                 var velocityModule = comp.velocityOverLifetime;
@@ -27930,7 +27941,7 @@ var egret3d;
                 var random1Buffer = this._random1Buffer;
                 var worldPostionBuffer = this._worldPostionBuffer;
                 var worldRoationBuffer = this._worldRoationBuffer;
-                var age = Math.min(this._emittsionTime / main.duration, 1.0);
+                var age = Math.min(lastEmittsionTime / main.duration, 1.0);
                 var vertexStride = this._vertexStride;
                 var addCount = 0, startIndex = 0, endIndex = 0;
                 var lifetime = 0.0;
@@ -27939,7 +27950,6 @@ var egret3d;
                 var randomColor = 0.0, randomSize = 0.0, randomRotation = 0.0, randomTextureAnimation = 0.0;
                 var vector2Offset = 0, vector3Offset = 0, vector4Offset = 0;
                 while (addCount !== count) {
-                    //发射粒子要根据粒子发射器的形状发射
                     comp.shape.generatePositionAndDirection(positionHelper, velocityHelper);
                     main.startColor.evaluate(age, startColorHelper);
                     lifetime = main.startLifetime.evaluate(age);
@@ -28006,6 +28016,7 @@ var egret3d;
                             worldRoationBuffer[vector4Offset + 3] = worldRotation.w;
                         }
                     }
+                    ;
                     startCursor++;
                     if (startCursor >= main._maxParticles) {
                         startCursor = 0;
@@ -28018,18 +28029,18 @@ var egret3d;
                 this._finalGravity.y = GRAVITY.y * gravityModifier;
                 this._finalGravity.z = GRAVITY.z * gravityModifier;
             };
-            ParticleBatcher.prototype._tryEmit = function (time) {
-                var maxParticles = this._comp.main._maxParticles;
-                var nextCursor = this._firstAliveCursor + 1 > maxParticles ? 0 : this._firstAliveCursor + 1;
-                if (nextCursor >= maxParticles) {
-                    nextCursor = 0;
-                }
-                if (!this._isParticleExpired(nextCursor)) {
+            ParticleBatcher.prototype._tryEmit = function () {
+                if (!this._isParticleExpired(this._firstAliveCursor)) {
                     return false;
                 }
                 //
+                var maxParticles = this._comp.main._maxParticles;
+                var nextCursor = this._firstAliveCursor + 1 >= maxParticles ? 0 : this._firstAliveCursor + 1;
+                //
+                if (nextCursor === this._lastAliveCursor) {
+                    this._forceUpdate = true;
+                }
                 this._firstAliveCursor = nextCursor;
-                this._dirty = true;
                 return true;
             };
             ParticleBatcher.prototype.clean = function () {
@@ -28040,9 +28051,11 @@ var egret3d;
                 this._firstAliveCursor = 0;
                 this._lastFrameFirstCursor = 0;
                 this._lastAliveCursor = 0;
+                this._forceUpdate = false;
                 this._vertexStride = 0;
                 this._vertexAttributes = null;
                 this._burstIndex = 0;
+                this._readEmitCount = 0;
                 this._startPositionBuffer = null;
                 this._startVelocityBuffer = null;
                 this._startColorBuffer = null;
@@ -28061,6 +28074,7 @@ var egret3d;
             ParticleBatcher.prototype.resetTime = function () {
                 this._burstIndex = 0;
                 this._emittsionTime = 0;
+                this._readEmitCount = 0;
             };
             ParticleBatcher.prototype.init = function (comp, renderer) {
                 this._comp = comp;
@@ -28083,12 +28097,11 @@ var egret3d;
                     this._vertexAttributes.push(k);
                 }
                 renderer.batchMesh = mesh;
-                //粒子系统不能用共享材质
                 renderer.batchMaterial = renderer.materials[0].clone();
                 mesh.uploadSubIndexBuffer();
             };
             ParticleBatcher.prototype.update = function (elapsedTime) {
-                if (this._comp.isPaused) {
+                if (!this._comp || this._comp.isPaused) {
                     return;
                 }
                 //
@@ -28096,10 +28109,11 @@ var egret3d;
                 var comp = this._comp;
                 var mainModule = comp.main;
                 //
-                while (this._lastAliveCursor !== this._firstAliveCursor) {
+                while (this._lastAliveCursor !== this._firstAliveCursor || this._forceUpdate) {
                     if (!this._isParticleExpired(this._lastAliveCursor)) {
                         break;
                     }
+                    this._forceUpdate = false;
                     this._lastAliveCursor++;
                     if (this._lastAliveCursor >= mainModule._maxParticles) {
                         this._lastAliveCursor = 0;
@@ -28108,7 +28122,6 @@ var egret3d;
                 var transform = comp.gameObject.transform;
                 this._worldPostionCache = transform.getPosition();
                 this._worldRotationCache = transform.getRotation();
-                //检测是否已经过了Delay时间，否则不能发射
                 if (comp._isPlaying && this._time >= mainModule.startDelay.constant && comp.emission.enable) {
                     this._updateEmission(elapsedTime);
                 }
@@ -28117,52 +28130,51 @@ var egret3d;
             ParticleBatcher.prototype._updateEmission = function (elapsedTime) {
                 var comp = this._comp;
                 var mainModule = comp.main;
-                //根据时间判断
                 var lastEmittsionTime = this._emittsionTime;
                 this._emittsionTime += elapsedTime;
                 var isOver = this._emittsionTime > mainModule.duration;
+                var aliveParticleCount = this.aliveParticleCount;
+                var totalEmitCount = 0;
                 if (!isOver) {
-                    //由爆发触发的粒子发射
-                    var totalEmitCount = 0;
                     if (comp.emission.bursts.length > 0) {
-                        var readyEmitCount = 0;
-                        readyEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
-                        readyEmitCount = Math.min(mainModule._maxParticles - this.aliveParticleCount, readyEmitCount);
-                        //
-                        for (var i = 0; i < readyEmitCount; i++) {
-                            if (this._tryEmit(this._time)) {
-                                totalEmitCount++;
-                            }
-                        }
-                    }
-                    //由时间触发的粒子发射,不支持曲线
-                    var rateOverTime = comp.emission.rateOverTime.constant;
-                    if (rateOverTime > 0) {
-                        var minEmissionTime = 1 / rateOverTime;
-                        this._frameRateTime += elapsedTime;
-                        while (this._frameRateTime > minEmissionTime) {
-                            if (!this._tryEmit(this._time)) {
-                                break;
-                            }
-                            totalEmitCount++;
-                            this._frameRateTime -= minEmissionTime;
-                        }
-                    }
-                    if (totalEmitCount > 0) {
-                        this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount);
+                        this._readEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
                     }
                 }
                 else {
-                    //一个生命周期结束
                     if (mainModule.loop) {
-                        //直接置零，对时间敏感的可能有问题
-                        this._emittsionTime = 0;
+                        this._readEmitCount = 0;
+                        this._readEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
+                        this._emittsionTime -= mainModule.duration;
                         this._burstIndex = 0;
+                        this._readEmitCount += this._getBurstCount(0, this._emittsionTime);
                     }
                     else {
-                        //自己停止，不要影响子粒子播放状态
                         comp.stop(false);
                     }
+                }
+                //
+                for (var i = 0; i < this._readEmitCount; i++) {
+                    if (this._tryEmit()) {
+                        totalEmitCount++;
+                        this._readEmitCount--;
+                    }
+                }
+                var rateOverTime = comp.emission.rateOverTime.constant;
+                if (rateOverTime > 0) {
+                    var minEmissionTime = 1 / rateOverTime;
+                    this._frameRateTime += elapsedTime;
+                    while (this._frameRateTime > minEmissionTime) {
+                        if (!this._tryEmit()) {
+                            break;
+                        }
+                        totalEmitCount++;
+                        this._frameRateTime -= minEmissionTime;
+                    }
+                }
+                totalEmitCount = Math.min(mainModule._maxParticles - aliveParticleCount, totalEmitCount);
+                if (totalEmitCount > 0) {
+                    this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount, lastEmittsionTime);
+                    this._dirty = true;
                 }
             };
             ParticleBatcher.prototype._updateRender = function () {
@@ -28171,21 +28183,21 @@ var egret3d;
                 var mainModule = comp.main;
                 //
                 if (this._dirty) {
-                    //为了性能，不能提交整个buffer，只提交改变的buffer
-                    var bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
-                    if (this._firstAliveCursor > this._lastFrameFirstCursor) {
-                        var bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
-                        renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
-                        // uploadVertexSubData(this._vertexAttributes, bufferOffset, bufferCount);
-                    }
-                    else {
-                        var addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
-                        //先更新尾部的，再更新头部的
-                        renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
-                        renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
-                        // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
-                        // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
-                    }
+                    renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes);
+                    // const bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
+                    // const bufferOffset = this._lastFrameFirstCursor;
+                    // if (this._firstAliveCursor > this._lastFrameFirstCursor) {
+                    //     const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
+                    //     // const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor);
+                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
+                    // }
+                    // else {
+                    //     const addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
+                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
+                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
+                    //     // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount);
+                    //     // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor);
+                    // }
                     this._lastFrameFirstCursor = this._firstAliveCursor;
                     this._dirty = false;
                 }

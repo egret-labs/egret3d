@@ -80,9 +80,9 @@ namespace paper.debug {
                 arrowY.transform.setParent(axisY.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
                 arrowZ.transform.setParent(axisZ.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
 
-                pickX.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.RIGHT.clone().multiplyScalar(0.5)).setLocalScale(1, 0.1, 0.1);
-                pickY.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.UP.clone().multiplyScalar(0.5)).setLocalScale(0.1, 1, 0.1);
-                pickZ.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.FORWARD.clone().multiplyScalar(0.5)).setLocalScale(0.1, 0.1, 1);
+                pickX.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.RIGHT.clone().multiplyScalar(0.5)).setLocalScale(1.2, 0.1, 0.1);
+                pickY.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.UP.clone().multiplyScalar(0.5)).setLocalScale(0.1, 1.2, 0.1);
+                pickZ.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.FORWARD.clone().multiplyScalar(0.5)).setLocalScale(0.1, 0.1, 1.2);
                 pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = false;
 
                 (axisX.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
@@ -110,14 +110,15 @@ namespace paper.debug {
                 const pickY = this._createGameObject("pickY", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const pickZ = this._createGameObject("pickZ", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
 
-                axisX.transform.setParent(rotate.transform);
-                axisY.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, Math.PI * 0.5);
-                axisZ.transform.setParent(rotate.transform).setLocalEuler(0.0, -Math.PI * 0.5, 0.0);
+                axisX.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, 0.0);
+                axisY.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
+                axisZ.transform.setParent(rotate.transform).setLocalEuler(0.0, Math.PI * 0.5, 0.0);
 
                 pickX.transform.setParent(rotate.transform).setLocalEuler(0, -Math.PI * 0.5, -Math.PI * 0.5);
                 pickY.transform.setParent(rotate.transform).setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
                 pickZ.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
                 pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = false;
+                // pickX.activeSelf = true;
 
                 (axisX.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (axisY.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
@@ -151,9 +152,9 @@ namespace paper.debug {
                 arrowY.transform.setParent(axisY.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.2, 0.2, 0.2);
                 arrowZ.transform.setParent(axisZ.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.2, 0.2, 0.2);
 
-                pickX.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.RIGHT.clone().multiplyScalar(0.5)).setLocalScale(1, 0.1, 0.1);
-                pickY.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.UP.clone().multiplyScalar(0.5)).setLocalScale(0.1, 1, 0.1);
-                pickZ.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.FORWARD.clone().multiplyScalar(0.5)).setLocalScale(0.1, 0.1, 1);
+                pickX.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.RIGHT.clone().multiplyScalar(0.5)).setLocalScale(1.2, 0.2, 0.2);
+                pickY.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.UP.clone().multiplyScalar(0.5)).setLocalScale(0.2, 1.2, 0.2);
+                pickZ.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.FORWARD.clone().multiplyScalar(0.5)).setLocalScale(0.2, 0.2, 1.2);
                 pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = false;
 
                 (axisX.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);

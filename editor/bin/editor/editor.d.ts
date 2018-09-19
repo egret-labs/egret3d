@@ -55,6 +55,7 @@ declare namespace paper.debug {
         private _startWorldQuaternion;
         private _startWorldScale;
         private _selectedWorldPostion;
+        private _selectedWorldQuaternion;
         private _cameraPosition;
         private _eye;
         private _selectGameObject(select);
