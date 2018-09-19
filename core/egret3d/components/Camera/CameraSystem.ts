@@ -37,7 +37,7 @@ namespace egret3d {
                 this._camerasAndLights.sortCameras();
 
                 for (const component of cameras) {
-                    component.update(deltaTime);
+                    component._update(deltaTime);
                 }
             }
         }

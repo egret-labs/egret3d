@@ -61,7 +61,6 @@ namespace egret3d {
                 DefaultMeshes.CUBE = mesh;
             }
 
-            
             { // TORUS.
                 const mesh = DefaultMeshes.createTorus();
                 mesh._isBuiltin = true;
@@ -172,7 +171,7 @@ namespace egret3d {
             }
 
             { // SPHERE.
-                const mesh = DefaultMeshes.createSphereCCW();
+                const mesh = DefaultMeshes.createSphere();
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/sphere.mesh.bin";
                 paper.Asset.register(mesh);
@@ -673,9 +672,109 @@ namespace egret3d {
             }
         }
         /**
-         * TODO 
+         * 创建圆形网格。
          */
-        public static createSphereCCW(radius: number = 0.5, widthSegments: number = 24, heightSegments: number = 12) {
+        public static createCircle(radius: number, arc: number) {
+            const vertices: number[] = [];
+            for (var i = 0; i <= 64 * arc; ++i) {
+                vertices.push(0, Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius);
+            }
+            const mesh = egret3d.Mesh.create(64, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+            mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.LineStrip;
+
+            return mesh;
+        }
+        /**
+         * 创建圆环网格。
+         */
+        public static createTorus(radius: number = 1, tube: number = 0.1, radialSegments: number = 4, tubularSegments: number = 14, arc: number = Math.PI * 2) {
+            const indices: number[] = [];
+            const vertices: number[] = [];
+            const normals: number[] = [];
+            const uvs: number[] = [];
+
+            // helper variables
+
+            const center = Vector3.create();
+            const vertex = Vector3.create();
+            const normal = Vector3.create();
+
+            let j: number, i: number;
+            // generate vertices, normals and uvs
+            for (j = 0; j <= radialSegments; j++) {
+
+                for (i = 0; i <= tubularSegments; i++) {
+
+                    var u = i / tubularSegments * arc;
+                    var v = j / radialSegments * Math.PI * 2;
+
+                    // vertex
+                    vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
+                    vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
+                    vertex.z = tube * Math.sin(v);
+
+                    vertices.push(vertex.x, vertex.y, vertex.z);
+
+                    // normal
+                    center.x = radius * Math.cos(u);
+                    center.y = radius * Math.sin(u);
+                    normal.subtract(vertex, center).normalize();
+
+                    normals.push(normal.x, normal.y, normal.z);
+
+                    // uv
+                    uvs.push(i / tubularSegments);
+                    uvs.push(j / radialSegments);
+
+                }
+
+            }
+
+            // generate indices
+
+            for (j = 1; j <= radialSegments; j++) {
+
+                for (i = 1; i <= tubularSegments; i++) {
+
+                    // indices
+
+                    const a = (tubularSegments + 1) * j + i - 1;
+                    const b = (tubularSegments + 1) * (j - 1) + i - 1;
+                    const c = (tubularSegments + 1) * (j - 1) + i;
+                    const d = (tubularSegments + 1) * j + i;
+
+                    // faces
+
+                    indices.push(
+                        a, b, d,
+                        b, c, d
+                    );
+                }
+            }
+
+            center.release();
+            vertex.release();
+            normal.release();
+
+            // build geometry
+            const mesh = Mesh.create(vertices.length / 3, indices.length, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.NORMAL, gltf.MeshAttributeType.TEXCOORD_0]);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
+            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+            mesh.setIndices(indices);
+
+            return mesh;
+        }
+        /**
+         * 创建球体网格。
+         * TODO
+         */
+        public static createSphere(
+            radius: number = 0.5,
+            widthSegments: number = 24,
+            heightSegments: number = 12
+        ) {
             widthSegments = Math.max(3, Math.floor(widthSegments));
             heightSegments = Math.max(2, Math.floor(heightSegments));
             const mesh = new Mesh((widthSegments + 1) * (heightSegments + 1), widthSegments * heightSegments * 6 - 6, _attributesB);
@@ -744,97 +843,6 @@ namespace egret3d {
             for (let i = 0, l = tris.length; i < l; i++) {
                 indices[i] = tris[i];
             }
-
-            return mesh;
-        }
-
-        public static createCircle(radius: number, arc: number) {
-            const vertices: number[] = [];
-            for (var i = 0; i <= 64 * arc; ++i) {
-                vertices.push(0, Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius);
-            }
-            const mesh = egret3d.Mesh.create(64, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-            mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.LineStrip;
-
-            return mesh;
-        }
-
-        public static createTorus(radius: number = 1, tube: number = 0.1, radialSegments: number = 4, tubularSegments: number = 14, arc: number = Math.PI * 2) {
-            const indices: number[] = [];
-            const vertices: number[] = [];
-            const normals: number[] = [];
-            const uvs: number[] = [];
-
-            // helper variables
-
-            const center = Vector3.create();
-            const vertex = Vector3.create();
-            const normal = Vector3.create();
-
-            var j, i;
-            // generate vertices, normals and uvs
-            for (j = 0; j <= radialSegments; j++) {
-
-                for (i = 0; i <= tubularSegments; i++) {
-
-                    var u = i / tubularSegments * arc;
-                    var v = j / radialSegments * Math.PI * 2;
-
-                    // vertex
-                    vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
-                    vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
-                    vertex.z = tube * Math.sin(v);
-
-                    vertices.push(vertex.x, vertex.y, vertex.z);
-
-                    // normal
-                    center.x = radius * Math.cos(u);
-                    center.y = radius * Math.sin(u);
-                    normal.subtract(vertex, center).normalize();
-
-                    normals.push(normal.x, normal.y, normal.z);
-
-                    // uv
-                    uvs.push(i / tubularSegments);
-                    uvs.push(j / radialSegments);
-
-                }
-
-            }
-
-            // generate indices
-
-            for (j = 1; j <= radialSegments; j++) {
-
-                for (i = 1; i <= tubularSegments; i++) {
-
-                    // indices
-
-                    var a = (tubularSegments + 1) * j + i - 1;
-                    var b = (tubularSegments + 1) * (j - 1) + i - 1;
-                    var c = (tubularSegments + 1) * (j - 1) + i;
-                    var d = (tubularSegments + 1) * j + i;
-
-                    // faces
-
-                    indices.push(a, b, d);
-                    indices.push(b, c, d);
-
-                }
-
-            }
-
-            center.release();
-            vertex.release();
-            normal.release();
-
-            // build geometry
-            const mesh = Mesh.create(vertices.length / 3, indices.length, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.NORMAL, gltf.MeshAttributeType.TEXCOORD_0]);
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
-            mesh.setIndices(indices);
 
             return mesh;
         }

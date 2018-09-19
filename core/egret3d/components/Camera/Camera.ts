@@ -67,13 +67,13 @@ namespace egret3d {
          * 透视投影的fov
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0 })
         public fov: number = Math.PI * 0.25;
         /**
          * 正交投影的竖向size
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0 })
         public size: number = 2.0;
         /**
          * 0=正交，1=透视 中间值可以在两种相机间过度
@@ -112,7 +112,7 @@ namespace egret3d {
         private _far: number = 1000;
         private readonly _matProjP: Matrix4 = Matrix4.create();
         private readonly _matProjO: Matrix4 = Matrix4.create();
-        private readonly _frameVecs: Vector3[] = [
+        private readonly _frameVectors: Vector3[] = [
             Vector3.create(),
             Vector3.create(),
             Vector3.create(),
@@ -129,14 +129,14 @@ namespace egret3d {
             const vpp = helpRectA;
             this.calcViewPortPixel(vpp);
 
-            const farLD = this._frameVecs[0];
-            const nearLD = this._frameVecs[1];
-            const farRD = this._frameVecs[2];
-            const nearRD = this._frameVecs[3];
-            const farLT = this._frameVecs[4];
-            const nearLT = this._frameVecs[5];
-            const farRT = this._frameVecs[6];
-            const nearRT = this._frameVecs[7];
+            const farLD = this._frameVectors[0];
+            const nearLD = this._frameVectors[1];
+            const farRD = this._frameVectors[2];
+            const nearRD = this._frameVectors[3];
+            const farLT = this._frameVectors[4];
+            const nearLT = this._frameVectors[5];
+            const farRT = this._frameVectors[6];
+            const nearRT = this._frameVectors[7];
 
             const near_h = this.near * Math.tan(this.fov * 0.5);
             const asp = vpp.w / vpp.h;
@@ -156,14 +156,54 @@ namespace egret3d {
             farRD.set(far_w, -far_h, this.far);
 
             const matrix = this.gameObject.transform.getWorldMatrix();
-            matrix.transformVector3(farLD);
-            matrix.transformVector3(nearLD);
-            matrix.transformVector3(farRD);
-            matrix.transformVector3(nearRD);
-            matrix.transformVector3(farLT);
-            matrix.transformVector3(nearLT);
-            matrix.transformVector3(farRT);
-            matrix.transformVector3(nearRT);
+            farLD.applyMatrix(matrix);
+            nearLD.applyMatrix(matrix);
+            farRD.applyMatrix(matrix);
+            nearRD.applyMatrix(matrix);
+            farLT.applyMatrix(matrix);
+            nearLT.applyMatrix(matrix);
+            farRT.applyMatrix(matrix);
+            nearRT.applyMatrix(matrix);
+        }
+
+        private _intersectPlane(boundingSphere: egret3d.Sphere, v0: Vector3, v1: Vector3, v2: Vector3) {
+            let subV0 = helpVector3A;
+            let subV1 = helpVector3B;
+            let cross = helpVector3C;
+            let hitPoint = helpVector3D;
+            let distVec = helpVector3E;
+
+            let center = boundingSphere.center;
+
+            subV0.subtract(v1, v0);
+            subV1.subtract(v2, v1);
+            cross.cross(subV0, subV1);
+
+            calPlaneLineIntersectPoint(cross, v0, cross, center, hitPoint);
+
+            distVec.subtract(hitPoint, center);
+
+            let val = distVec.dot(cross);
+
+            if (val <= 0) {
+                return true;
+            }
+
+            let dist = hitPoint.getDistance(center);
+
+            if (dist < boundingSphere.radius) {
+                return true;
+            }
+
+            return false;
+        }
+        /**
+         * @internal
+         */
+        public _update(_delta: number) {
+            this._calcCameraFrame();
+
+            this.context.updateCamera(this, this.gameObject.transform.getWorldMatrix());
         }
 
         public initialize() {
@@ -171,15 +211,6 @@ namespace egret3d {
 
             this.context = new RenderContext();
         }
-        /**
-         * 
-         */
-        public update(_delta: number) {
-            this._calcCameraFrame();
-
-            this.context.updateCamera(this, this.gameObject.transform.getWorldMatrix());
-        }
-
         /**
          * 计算相机的 project matrix（投影矩阵）
          */
@@ -204,8 +235,6 @@ namespace egret3d {
 
             return matrix;
         }
-
-
         /**
          * 计算相机视口像素rect
          */
@@ -230,27 +259,6 @@ namespace egret3d {
             viewPortPixel.h = h * viewport.h;
             //asp = this.viewPortPixel.w / this.viewPortPixel.h;
         }
-
-
-        /**
-         * 由屏幕坐标发射射线
-         */
-        public createRayByScreen(screenPosX: number, screenPosY: number, ray?: Ray): Ray {
-            const from = egret3d.Vector3.create(screenPosX, screenPosY, 0.0);
-            const to = egret3d.Vector3.create(screenPosX, screenPosY, 1.0);
-
-            this.calcWorldPosFromScreenPos(from, from);
-            this.calcWorldPosFromScreenPos(to, to);
-            to.subtract(to, from).normalize();
-
-            ray = ray || Ray.create();
-            ray.set(from, to);
-
-            from.release();
-            to.release();
-
-            return ray;
-        }
         /**
          * 由屏幕坐标得到世界坐标
          */
@@ -274,8 +282,6 @@ namespace egret3d {
                 .inverse()
                 .transformVector3(vppos, outWorldPos);
         }
-
-
         /**
          * 由世界坐标得到屏幕坐标
          */
@@ -314,47 +320,34 @@ namespace egret3d {
             out.x = nearpos.x - (nearpos.x - farpos.x) * rate;
             out.y = nearpos.y - (nearpos.y - farpos.y) * rate;
         }
+        /**
+         * 由屏幕坐标发射射线
+         */
+        public createRayByScreen(screenPosX: number, screenPosY: number, ray?: Ray): Ray {
+            const from = egret3d.Vector3.create(screenPosX, screenPosY, 0.0);
+            const to = egret3d.Vector3.create(screenPosX, screenPosY, 1.0);
 
-        private _intersectPlane(boundingSphere: egret3d.Sphere, v0: Vector3, v1: Vector3, v2: Vector3) {
-            let subV0 = helpVector3A;
-            let subV1 = helpVector3B;
-            let cross = helpVector3C;
-            let hitPoint = helpVector3D;
-            let distVec = helpVector3E;
+            this.calcWorldPosFromScreenPos(from, from);
+            this.calcWorldPosFromScreenPos(to, to);
+            to.subtract(to, from).normalize();
 
-            let center = boundingSphere.center;
+            ray = ray || Ray.create();
+            ray.set(from, to);
 
-            subV0.subtract(v1, v0);
-            subV1.subtract(v2, v1);
-            cross.cross(subV0, subV1);
+            from.release();
+            to.release();
 
-            calPlaneLineIntersectPoint(cross, v0, cross, center, hitPoint);
-
-            distVec.subtract(hitPoint, center);
-
-            let val = distVec.dot(cross);
-
-            if (val <= 0) {
-                return true;
-            }
-
-            let dist = hitPoint.getDistance(center);
-
-            if (dist < boundingSphere.radius) {
-                return true;
-            }
-
-            return false;
+            return ray;
         }
 
         public testFrustumCulling(node: paper.BaseRenderer) {
             const boundingSphere = node.boundingSphere;
-            if (!this._intersectPlane(boundingSphere, this._frameVecs[0], this._frameVecs[1], this._frameVecs[5])) return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVecs[1], this._frameVecs[3], this._frameVecs[7])) return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVecs[3], this._frameVecs[2], this._frameVecs[6])) return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVecs[2], this._frameVecs[0], this._frameVecs[4])) return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVecs[5], this._frameVecs[7], this._frameVecs[6])) return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVecs[0], this._frameVecs[2], this._frameVecs[3])) return false;
+            if (!this._intersectPlane(boundingSphere, this._frameVectors[0], this._frameVectors[1], this._frameVectors[5])) return false;
+            if (!this._intersectPlane(boundingSphere, this._frameVectors[1], this._frameVectors[3], this._frameVectors[7])) return false;
+            if (!this._intersectPlane(boundingSphere, this._frameVectors[3], this._frameVectors[2], this._frameVectors[6])) return false;
+            if (!this._intersectPlane(boundingSphere, this._frameVectors[2], this._frameVectors[0], this._frameVectors[4])) return false;
+            if (!this._intersectPlane(boundingSphere, this._frameVectors[5], this._frameVectors[7], this._frameVectors[6])) return false;
+            if (!this._intersectPlane(boundingSphere, this._frameVectors[0], this._frameVectors[2], this._frameVectors[3])) return false;
 
             return true;
         }

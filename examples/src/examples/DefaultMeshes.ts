@@ -28,19 +28,15 @@ namespace DefaultMeshes {
             "CONE",
             "CYLINDER",
             "SPHERE",
-
-            "AXISES",
-            "CUBE_WIREFRAMED",
-            "PYRAMID_WIREFRAMED",
         ]).onChange((v: string) => {
             meshFilter.mesh = egret3d.DefaultMeshes[v];
         });
         gui.add(options, "texture").onChange(async (v: boolean) => {
             if (v) {
-                meshRenderer.material.setTexture("map", await RES.getResAsync("logo.png"));
+                meshRenderer.material.setTexture(egret3d.ShaderUniformNames.Map, await RES.getResAsync("logo.png"));
             }
             else {
-                meshRenderer.material.setTexture("map", null);
+                meshRenderer.material.setTexture(egret3d.ShaderUniformNames.Map, null);
             }
         });
     }

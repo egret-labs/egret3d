@@ -334,6 +334,11 @@ namespace paper.debug {
         }
 
         public onUpdate(dt: number) {
+            if (this._selectGameObject) {
+                this._guiComponent.select(this._selectGameObject, true);
+                this._selectGameObject = null;
+            }
+
             this._guiComponent.inspector.updateDisplay();
 
             if (this._guiComponent.inspector.__folders) {

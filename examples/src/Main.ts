@@ -1,4 +1,8 @@
 function main() {
+    startExamples();
+}
+
+function startExamples() {
     const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.debug.GUIComponent);
     const allScripts = window["allScripts"] as string[];
     const examples = [] as string[];
@@ -19,10 +23,10 @@ function main() {
     gui.add(options, "example", examples).onChange((v: string) => {
         let url = location.href;
         const index = url.indexOf("?");
-        if (index != -1) {
+        if (index !== -1) {
             url = url.slice(0, index);
         }
-        if (url.indexOf(".html") == -1) {
+        if (url.indexOf(".html") === -1) {
             url += "index.html";
         }
         url += "?example=" + v;
@@ -43,10 +47,10 @@ function main() {
         var totalArray = str.split("&");
         for (var i = 0; i < totalArray.length; i++) {
             var itemArray = totalArray[i].split("=");
-            if (itemArray.length == 2) {
+            if (itemArray.length === 2) {
                 var key = itemArray[0];
                 var value = itemArray[1];
-                if (key == "example") {
+                if (key === "example") {
                     appFile = value;
                     hasTest = true;
                     break;

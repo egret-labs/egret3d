@@ -9,6 +9,7 @@
   },
   "scripts": {
     "build": "egret build && node script/report.js",
+    "build-examples": "egret build & cd .. & cd examples & egret clean & cd .. & cd core",
     "build-shader": "node script/shaderCompiler.js",
     "generate-shader": "node script/shaderGenerate.js",
     "docs": "typedoc --out docs/test --tsconfig tsconfig.json --json api.json"
