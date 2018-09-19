@@ -3,7 +3,7 @@ namespace egret3d {
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
     const _helpMatrix = Matrix4.create();
-    const _helpRay = Ray.create();
+    const _helpRaycastInfo = RaycastInfo.create();
 
     const _attributeNames: gltf.MeshAttributeType[] = [
         gltf.MeshAttributeType.POSITION,
@@ -131,7 +131,7 @@ namespace egret3d {
         /**
          * TODO
          */
-        public raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix4>, boneMatrices: Float32Array | null = null) {
+        public raycast(ray: Readonly<Ray>, boneMatrices: Float32Array | null = null, out?: RaycastInfo) {
             let subMeshIndex = 0;
             const p0 = _helpVector3A;
             const p1 = _helpVector3B;
@@ -139,16 +139,10 @@ namespace egret3d {
             const vertices = this.getVertices()!;
             const joints = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array : null;
             const weights = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)! as Float32Array : null;
-            let raycastInfo: RaycastInfo | null = null; // TODO
-
-            _helpMatrix.inverse(worldMatrix);
-            _helpRay.copy(ray);
-            _helpRay.origin.applyMatrix(_helpMatrix);
-            _helpRay.direction.applyDirection(_helpMatrix).normalize();
+            let hit = false;
 
             for (const primitive of this._glTFMesh!.primitives) {
                 const indices = primitive.indices !== undefined ? this.getIndices(subMeshIndex)! : null;
-                let castRay = _helpRay;
                 let castVertices = vertices;
 
                 if (boneMatrices) {
@@ -156,7 +150,6 @@ namespace egret3d {
                         this._helpVertices = new Float32Array(vertices.length);
                     }
 
-                    castRay = ray;
                     castVertices = this._helpVertices;
 
                     if (indices) {
@@ -216,18 +209,21 @@ namespace egret3d {
                                 p1.fromArray(castVertices, indices[i + 1] * 3);
                                 p2.fromArray(castVertices, indices[i + 2] * 3);
 
-                                const result = castRay.intersectTriangle(p0, p1, p2);
-                                if (result) {
-                                    if (result.distance < 0) {
-                                        continue;
+                                if (out) {
+                                    if (ray.intersectTriangle(p0, p1, p2, false, _helpRaycastInfo)) {
+                                        if (!hit || out.distance > _helpRaycastInfo.distance) {
+                                            out.subMeshIndex = subMeshIndex;
+                                            out.triangleIndex = i / 3; // TODO
+                                            out.distance = _helpRaycastInfo.distance;
+                                            out.position.copy(_helpRaycastInfo.position);
+                                            out.textureCoordA.copy(_helpRaycastInfo.textureCoordA);
+                                            out.textureCoordB.copy(_helpRaycastInfo.textureCoordB);
+                                            hit = true;
+                                        }
                                     }
-
-                                    if (!raycastInfo || raycastInfo.distance > result.distance) {
-                                        raycastInfo = result;
-                                        raycastInfo.position.applyMatrix(worldMatrix);
-                                        raycastInfo.subMeshIndex = subMeshIndex;
-                                        raycastInfo.triangleIndex = i / 3; // TODO
-                                    }
+                                }
+                                else if (ray.intersectTriangle(p0, p1, p2)) {
+                                    return true;
                                 }
                             }
                         }
@@ -237,18 +233,21 @@ namespace egret3d {
                                 p1.fromArray(castVertices, i + 3);
                                 p2.fromArray(castVertices, i + 6);
 
-                                const result = castRay.intersectTriangle(p0, p1, p2);
-                                if (result) {
-                                    if (result.distance < 0) {
-                                        continue;
+                                if (out) {
+                                    if (ray.intersectTriangle(p0, p1, p2, false, _helpRaycastInfo)) {
+                                        if (!hit || out.distance > _helpRaycastInfo.distance) {
+                                            out.subMeshIndex = subMeshIndex;
+                                            out.triangleIndex = i / 3; // TODO
+                                            out.distance = _helpRaycastInfo.distance;
+                                            out.position.copy(_helpRaycastInfo.position);
+                                            out.textureCoordA.copy(_helpRaycastInfo.textureCoordA);
+                                            out.textureCoordB.copy(_helpRaycastInfo.textureCoordB);
+                                            hit = true;
+                                        }
                                     }
-
-                                    if (!raycastInfo || raycastInfo.distance > result.distance) {
-                                        raycastInfo = result;
-                                        raycastInfo.position.applyMatrix(worldMatrix);
-                                        raycastInfo.subMeshIndex = subMeshIndex;
-                                        raycastInfo.triangleIndex = i / 3; // TODO
-                                    }
+                                }
+                                else if (ray.intersectTriangle(p0, p1, p2)) {
+                                    return true;
                                 }
                             }
                         }
@@ -258,7 +257,7 @@ namespace egret3d {
                 subMeshIndex++;
             }
 
-            return raycastInfo;
+            return hit;
         }
         /**
          * 

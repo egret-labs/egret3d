@@ -29,8 +29,8 @@ namespace egret3d {
         public get mesh() {
             return this._mesh;
         }
-        public set mesh(mesh: Mesh | null) {
-            if (this._mesh === mesh) {
+        public set mesh(value: Mesh | null) {
+            if (this._mesh === value) {
                 return;
             }
 
@@ -38,7 +38,7 @@ namespace egret3d {
                 // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
             }
 
-            this._mesh = mesh;
+            this._mesh = value;
             paper.EventPool.dispatchEvent(MeshFilterEventType.Mesh, this);
         }
     }

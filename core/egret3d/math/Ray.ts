@@ -73,19 +73,17 @@ namespace egret3d {
             return this;
         }
 
-        public getSquaredDistance(value: Readonly<IVector3>): number {
+        public getSquaredDistance(value: Readonly<IVector3>) {
             const directionDistance = helpVector3A.subtract(value, this.origin).dot(this.direction);
             // point behind the ray
             if (directionDistance < 0.0) {
                 return this.origin.getSquaredDistance(value);
             }
 
-            helpVector3A.multiplyScalar(directionDistance, this.direction).add(this.origin);
-
-            return helpVector3A.getSquaredDistance(value);
+            return this.at(directionDistance, helpVector3A).getSquaredDistance(value);
         }
 
-        public getDistance(value: Readonly<IVector3>): number {
+        public getDistance(value: Readonly<IVector3>) {
             return Math.sqrt(this.getSquaredDistance(value));
         }
 
@@ -102,7 +100,9 @@ namespace egret3d {
          * 与三角形相交检测。
          * TODO
          */
-        public intersectTriangle(p1: Readonly<Vector3>, p2: Readonly<Vector3>, p3: Readonly<Vector3>, backfaceCulling: boolean = false): RaycastInfo | null {
+        public intersectTriangle(triangle: Readonly<Triangle>, backfaceCulling?: boolean, raycastInfo?: RaycastInfo): boolean;
+        public intersectTriangle(p1: Readonly<Vector3>, p2: Readonly<Vector3>, p3: Readonly<Vector3>, backfaceCulling?: boolean, raycastInfo?: RaycastInfo): boolean;
+        public intersectTriangle(p1: Readonly<Triangle | Vector3>, p2?: boolean | Readonly<Vector3>, p3?: RaycastInfo | Readonly<Vector3>, p4?: boolean, p5?: RaycastInfo) {
             // // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
             // const edge1 = helpVector3A;
             // const edge2 = helpVector3B;
@@ -163,28 +163,32 @@ namespace egret3d {
 
             // return pickInfo;
             // TODO
+            const isA = p1 instanceof Triangle;
             const edge1 = helpVector3A;
             const edge2 = helpVector3B;
             const pvec = helpVector3C;
             const tvec = helpVector3D;
             const qvec = helpVector3E;
+            const pA = isA ? (p1 as Readonly<Triangle>).a : p1 as Readonly<IVector3>;
+            const pB = isA ? (p1 as Readonly<Triangle>).b : p2 as Readonly<IVector3>;
+            const pC = isA ? (p1 as Readonly<Triangle>).c : p3 as Readonly<IVector3>;
 
-            edge1.subtract(p2, p1);
-            edge2.subtract(p3, p1);
+            edge1.subtract(pB, pA);
+            edge2.subtract(pC, pA);
             pvec.cross(this.direction, edge2);
 
             const det = pvec.dot(edge1);
             if (det === 0.0) {
-                return null;
+                return false;
             }
 
             const invdet = 1.0 / det;
 
-            tvec.subtract(this.origin, p1);
+            tvec.subtract(this.origin, pA);
 
             const bu = pvec.dot(tvec) * invdet;
             if (bu < 0.0 || bu > 1.0) {
-                return null;
+                return false;
             }
 
             qvec.cross(tvec, edge1);
@@ -192,16 +196,18 @@ namespace egret3d {
             const bv = qvec.dot(this.direction) * invdet;
 
             if (bv < 0.0 || bu + bv > 1.0) {
-                return null;
+                return false;
             }
 
-            const raycastInfo = new RaycastInfo();
-            raycastInfo.distance = qvec.dot(edge2) * invdet;
-            raycastInfo.position.multiplyScalar(raycastInfo.distance, this.direction).add(this.origin);
-            raycastInfo.textureCoordA.x = bu;
-            raycastInfo.textureCoordA.y = bv;
+            const raycastInfo = isA ? p3 as RaycastInfo | undefined : p5;
+            if (raycastInfo) {
+                raycastInfo.textureCoordA.x = bu;
+                raycastInfo.textureCoordA.y = bv;
+                this.at(raycastInfo.distance = qvec.dot(edge2) * invdet, raycastInfo.position);
+            }
 
-            return raycastInfo;
+
+            return true;
         }
 
         public intersectPlane(planePoint: Vector3, planeNormal: Vector3) {
@@ -433,33 +439,33 @@ namespace egret3d {
         }
 
         private static _pickMesh(ray: Ray, transform: Transform, pickInfos: RaycastInfo[]) {
-            if (transform.gameObject.activeInHierarchy) {
-                const meshFilter = transform.gameObject.getComponent(MeshFilter);
-                if (meshFilter) {
-                    const mesh = meshFilter.mesh;
-                    if (mesh) {
-                        const pickinfo = mesh.raycast(ray, transform.getWorldMatrix());
-                        if (pickinfo) {
-                            pickInfos.push(pickinfo);
-                            pickinfo.transform = transform;
-                        }
-                    }
-                }
-                else {
-                    const skinmesh = transform.gameObject.getComponent(SkinnedMeshRenderer);
-                    if (skinmesh && skinmesh.mesh) {
-                        const pickinfo = skinmesh.mesh.raycast(ray, transform.getWorldMatrix());
-                        if (pickinfo) {
-                            pickInfos.push(pickinfo);
-                            pickinfo.transform = transform;
-                        }
-                    }
-                }
-            }
+            // if (transform.gameObject.activeInHierarchy) {
+            //     const meshFilter = transform.gameObject.getComponent(MeshFilter);
+            //     if (meshFilter) {
+            //         const mesh = meshFilter.mesh;
+            //         if (mesh) {
+            //             const pickinfo = mesh.raycast(ray, transform.getWorldMatrix());
+            //             if (pickinfo) {
+            //                 pickInfos.push(pickinfo);
+            //                 pickinfo.transform = transform;
+            //             }
+            //         }
+            //     }
+            //     else {
+            //         const skinmesh = transform.gameObject.getComponent(SkinnedMeshRenderer);
+            //         if (skinmesh && skinmesh.mesh) {
+            //             const pickinfo = skinmesh.mesh.raycast(ray, transform.getWorldMatrix());
+            //             if (pickinfo) {
+            //                 pickInfos.push(pickinfo);
+            //                 pickinfo.transform = transform;
+            //             }
+            //         }
+            //     }
+            // }
 
-            for (const child of transform.children) {
-                this._pickMesh(ray, child, pickInfos);
-            }
+            // for (const child of transform.children) {
+            //     this._pickMesh(ray, child, pickInfos);
+            // }
         }
 
         private static _pickCollider(ray: Ray, transform: Transform, pickInfos: RaycastInfo[]) {

@@ -511,7 +511,7 @@ namespace egret3d {
                             break;
 
                         default:
-                            console.debug("Unknown animation channel.", channel.glTFChannel.target.path);
+                            console.warn("Unknown animation channel.", channel.glTFChannel.target.path);
                             break;
                     }
 

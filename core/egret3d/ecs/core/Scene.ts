@@ -34,7 +34,7 @@ namespace paper {
             }
 
             const rawScene = paper.Asset.find<RawScene>(name);
-            if (rawScene) {
+            if (rawScene && rawScene instanceof RawScene) {
                 const scene = rawScene.createInstance();
 
                 if (scene) {
@@ -44,6 +44,9 @@ namespace paper {
 
                     return scene;
                 }
+            }
+            else {
+                console.warn("The scene don't exists.", name);
             }
 
             return null;
@@ -126,7 +129,7 @@ namespace paper {
          */
         public _addGameObject(gameObject: GameObject) {
             if (this._gameObjects.indexOf(gameObject) >= 0) {
-                console.debug("Add game object error.", gameObject.path);
+                console.warn("Add game object error.", gameObject.path);
             }
 
             this._gameObjects.push(gameObject);
@@ -138,7 +141,7 @@ namespace paper {
             const index = this._gameObjects.indexOf(gameObject);
 
             if (index < 0) {
-                console.debug("Remove game object error.", gameObject.path);
+                console.warn("Remove game object error.", gameObject.path);
             }
 
             this._gameObjects.splice(index, 1);

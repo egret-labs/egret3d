@@ -6,7 +6,7 @@ namespace egret3d {
         /**
          * 
          */
-        public static maxBoneCount: number = 55;
+        public static maxBoneCount: number = 56;
 
         protected readonly _interests = [
             {
@@ -54,7 +54,6 @@ namespace egret3d {
                     mesh: renderer.mesh,
                     material: material || DefaultMaterials.MISSING,
 
-                    frustumTest: false,
                     zdist: -1,
                 };
                 material.addDefine(ShaderDefines.USE_SKINNING).addDefine(`${ShaderDefines.MAX_BONES} ${SkinnedMeshRendererSystem.maxBoneCount}`);

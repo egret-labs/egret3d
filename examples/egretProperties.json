@@ -21,10 +21,6 @@
       "name": "promise"
     },
     {
-      "name": "dat.gui",
-      "path": "./libs/dat.gui"
-    },
-    {
       "name": "egret3d",
       "path": "../core/bin"
     },

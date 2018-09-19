@@ -25,7 +25,7 @@ namespace paper {
                 this._assets[asset.name] = asset;
             }
             else if (this._assets[asset.name] !== asset) {
-                console.debug("Replace existing asset.", asset.name);
+                console.warn("Replace existing asset.", asset.name);
                 this._assets[asset.name] = asset;
             }
         }

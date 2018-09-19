@@ -1,4 +1,7 @@
 namespace paper {
+    /**
+     * 
+     */
     export const enum RendererEventType {
         Materials = "materials",
     }
@@ -15,6 +18,9 @@ namespace paper {
      * @language zh_CN
      */
     export abstract class BaseRenderer extends BaseComponent {
+        @serializedField
+        @editor.property(editor.EditType.CHECKBOX)
+        public frustumCulled: boolean = true;
         /**
          * @internal
          */
@@ -45,6 +51,12 @@ namespace paper {
          * 重新计算 AABB。
          */
         public abstract recalculateAABB(): void;
+        /**
+         * 射线检测。
+         * @param ray 
+         * @param raycastInfo 是否将检测的详细数据写入 RaycastInfo。
+         */
+        public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo): boolean;
         /**
          * 
          */

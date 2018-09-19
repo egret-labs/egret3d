@@ -31,6 +31,7 @@ namespace egret3d {
 
                 const camera = gameObject.addComponent(Camera);
                 camera.cullingMask &= ~paper.CullingMask.UI;
+                camera.far = 10000.0;
             }
 
             return gameObject.getOrAddComponent(Camera);
@@ -67,19 +68,19 @@ namespace egret3d {
          * 透视投影的fov
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: Math.PI, step: 0.02 })
         public fov: number = Math.PI * 0.25;
         /**
          * 正交投影的竖向size
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public size: number = 2.0;
         /**
          * 0=正交，1=透视 中间值可以在两种相机间过度
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 1.0, step: 0.01 })
         public opvalue: number = 1.0;
         /**
          * 背景色
@@ -107,10 +108,10 @@ namespace egret3d {
         public renderTarget: BaseRenderTarget | null = null;
 
         @paper.serializedField
-        private _near: number = 0.01;
+        private _near: number = 0.001;
         @paper.serializedField
-        private _far: number = 1000;
-        private readonly _matProjP: Matrix4 = Matrix4.create();
+        private _far: number = 1000.0;
+        private readonly _projectionMatrix: Matrix4 = Matrix4.create();
         private readonly _matProjO: Matrix4 = Matrix4.create();
         private readonly _frameVectors: Vector3[] = [
             Vector3.create(),
@@ -122,6 +123,15 @@ namespace egret3d {
             Vector3.create(),
             Vector3.create()
         ];
+
+        // private readonly _frustumPlanes: Plane[] = [
+        //     Plane.create(),
+        //     Plane.create(),
+        //     Plane.create(),
+        //     Plane.create(),
+        //     Plane.create(),
+        //     Plane.create(),
+        // ];
         /**
          * 计算相机视锥区域
          */
@@ -216,7 +226,7 @@ namespace egret3d {
          */
         public calcProjectMatrix(asp: number, matrix: Matrix4): Matrix4 {
             if (this.opvalue > 0) {
-                Matrix4.perspectiveProjectLH(this.fov, asp, this.near, this.far, this._matProjP);
+                Matrix4.perspectiveProjectLH(this.fov, asp, this.near, this.far, this._projectionMatrix);
             }
 
             if (this.opvalue < 1) {
@@ -227,10 +237,10 @@ namespace egret3d {
                 matrix.copy(this._matProjO);
             }
             else if (this.opvalue === 1.0) {
-                matrix.copy(this._matProjP);
+                matrix.copy(this._projectionMatrix);
             }
             else {
-                matrix.lerp(this.opvalue, this._matProjO, this._matProjP);
+                matrix.lerp(this.opvalue, this._matProjO, this._projectionMatrix);
             }
 
             return matrix;
@@ -351,11 +361,10 @@ namespace egret3d {
 
             return true;
         }
-
         /**
-         * 相机到近裁剪面距离
+         * 相机到近裁剪面距离。
          */
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.001, step: 1 })
         public get near(): number {
             return this._near;
         }
@@ -364,16 +373,16 @@ namespace egret3d {
                 value = this.far - 1.0;
             }
 
-            if (value < 0.01) {
-                value = 0.01;
+            if (value < 0.001) {
+                value = 0.001;
             }
 
             this._near = value;
         }
         /**
-         * 相机到远裁剪面距离
+         * 相机到远裁剪面距离。
          */
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 3000.0, step: 1 })
         public get far(): number {
             return this._far;
         }
@@ -382,8 +391,8 @@ namespace egret3d {
                 value = this.near + 1.0;
             }
 
-            if (value >= 1000.0) {
-                value = 1000.0;
+            if (value >= 10000.0) {
+                value = 10000.0;
             }
 
             this._far = value;

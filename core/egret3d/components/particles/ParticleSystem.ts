@@ -454,8 +454,7 @@ namespace egret3d.particle {
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.batchMesh,
                     material: renderer.batchMaterial || DefaultMaterials.MISSING,
-
-                    frustumTest: false,
+                    
                     zdist: -1,
                 };
                 this._drawCalls.drawCalls.push(drawCall);

@@ -27,6 +27,9 @@ namespace egret3d {
          */
         public _worldMatrixDeterminant: number = 0.0;
         private readonly _localMatrix: Matrix4 = Matrix4.create();
+        /**
+         * TODO inverse world matrix.
+         */
         private readonly _worldMatrix: Matrix4 = Matrix4.create();
 
         @paper.serializedField("localPosition")

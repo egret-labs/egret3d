@@ -1,8 +1,10 @@
 namespace egret3d {
+    const _helpMatrix = Matrix4.create();
     /**
      * Mesh 渲染组件。
      */
     export class MeshRenderer extends paper.BaseRenderer {
+        protected static readonly _helpRay: Ray = Ray.create();
         @paper.serializedField
         protected readonly _materials: Material[] = [DefaultMaterials.MESH_BASIC];
 
@@ -25,6 +27,23 @@ namespace egret3d {
                     this._aabb.add(position);
                 }
             }
+        }
+
+        public raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo) {
+            const meshFilter = this.gameObject.getComponent(MeshFilter);
+            if (!meshFilter || !meshFilter.mesh) {
+                return false;
+            }
+
+            const worldMatrix = this.gameObject.transform.worldMatrix;
+            _helpMatrix.inverse(worldMatrix);
+            const localRay = MeshRenderer._helpRay.applyMatrix(_helpMatrix, ray);
+
+            if (!localRay.intersectAABB(this.aabb)) {
+                return false;
+            }
+
+            return meshFilter.mesh.raycast(localRay, null, raycastInfo);
         }
         /**
          * material list

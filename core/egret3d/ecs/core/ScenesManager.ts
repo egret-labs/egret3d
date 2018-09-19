@@ -24,7 +24,7 @@ namespace paper {
          */
         public _addScene(scene: Scene, isActive: boolean) {
             if (this._scenes.indexOf(scene) >= 0) {
-                console.debug("Add the scene again.", scene.name);
+                console.warn("Add the scene again.", scene.name);
             }
 
             if (isActive) {
@@ -49,7 +49,7 @@ namespace paper {
             const index = this._scenes.indexOf(scene);
 
             if (index < 0) {
-                console.debug("Remove scene error.", scene.name);
+                console.warn("Remove scene error.", scene.name);
                 return false;
             }
 
@@ -123,7 +123,7 @@ namespace paper {
             const index = this._scenes.indexOf(value);
 
             if (index < 0) {
-                console.debug("Active scene error.", value.name);
+                console.warn("Active scene error.", value.name);
             }
 
             this._scenes.splice(index, 1);

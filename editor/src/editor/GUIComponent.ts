@@ -32,7 +32,26 @@ namespace paper.debug {
             super.initialize();
 
             const sceneOptions = {
-                debug: false
+                debug: false,
+                assets: () => {
+                    const assets = paper.Asset["_assets"] as any;
+                    const assetNames = [];
+
+                    for (const k in assets) {
+                        if (k.indexOf("builtin") >= 0) {
+                            continue;
+                        }
+
+                        assetNames.push(k);
+
+                        if (assets[k] instanceof egret3d.Texture) {
+                            assetNames.push(k.replace(".image.json", ".png"));
+                            assetNames.push(k.replace(".image.json", ".jpg"));
+                        }
+                    }
+
+                    console.info(JSON.stringify(assetNames));
+                }
             };
 
             this.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
@@ -50,6 +69,8 @@ namespace paper.debug {
                     guiSystem.enabled = false;
                 }
             });
+            this.hierarchy.add(sceneOptions, "assets");
+            this.hierarchy.close();
         }
 
         public select(value: Scene | GameObject | null, isReplace?: boolean) {

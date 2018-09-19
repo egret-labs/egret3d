@@ -157,7 +157,7 @@ namespace egret3d {
             { // CONE.
                 const mesh = DefaultMeshes.createCylinder(0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 16, 1);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/pyramid.mesh.bin";
+                mesh.name = "builtin/cone.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CONE = mesh;
             }

@@ -12,7 +12,6 @@ namespace egret3d {
         mesh: Mesh,
         material: Material,
 
-        frustumTest: boolean,
         zdist: number,
     };
     /**
@@ -78,7 +77,7 @@ namespace egret3d {
                 const drawTarget = drawCall.renderer.gameObject;
                 const visible = (camera.cullingMask & drawTarget.layer) !== 0;
                 if (visible && drawCall.renderer.castShadows) {
-                    if (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer!))) {
+                    if (!drawCall.renderer.frustumCulled || camera.testFrustumCulling(drawTarget.renderer!)) {
                         this.shadowCalls.push(drawCall);
                     }
                 }
@@ -99,7 +98,7 @@ namespace egret3d {
 
                 if (
                     (camera.cullingMask & drawTarget.layer) !== 0 &&
-                    (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer!)))
+                    (!drawCall.renderer.frustumCulled || camera.testFrustumCulling(drawTarget.renderer!))
                 ) {
                     const objPos = drawTarget.transform.getPosition();
                     drawCall.zdist = objPos.getDistance(cameraPos);
