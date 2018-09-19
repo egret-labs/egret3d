@@ -56,7 +56,7 @@ namespace egret3d {
                 return;
             }
 
-            const vertexBufferViewAccessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION || 0);
+            const vertexBufferViewAccessor = this.getAccessor(this._glTFMesh!.primitives[0].attributes.POSITION || 0);
             const vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float);
             const vbo = webgl.createBuffer();
 
@@ -116,7 +116,7 @@ namespace egret3d {
 
             if (!uploadAttributes) {
                 uploadAttributes = [];
-                for (const attributeName in this._glTFMesh.primitives[0].attributes) {
+                for (const attributeName in this._glTFMesh!.primitives[0].attributes) {
                     uploadAttributes.push(attributeName);
                 }
             }

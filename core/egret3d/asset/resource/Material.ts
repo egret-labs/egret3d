@@ -124,7 +124,7 @@ namespace egret3d {
             const materialDefines = glTFMaterial.extensions.paper.defines;
 
             if (materialDefines && materialDefines.length > 0) {
-                for (const define of glTFMaterial.extensions.paper.defines) {
+                for (const define of materialDefines) {
                     this.addDefine(define);
                 }
             }

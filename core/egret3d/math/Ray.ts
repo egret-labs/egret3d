@@ -1,5 +1,16 @@
 namespace egret3d {
     /**
+     * 射线检测接口。
+     */
+    export interface IRaycast {
+        /**
+         * 射线检测。
+         * @param ray 
+         * @param raycastInfo 是否将检测的详细数据写入 RaycastInfo。
+         */
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+    }
+    /**
      * 射线
      */
     export class Ray implements paper.IRelease<Ray>, paper.ISerializable {

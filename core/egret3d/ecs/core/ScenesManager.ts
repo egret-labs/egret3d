@@ -4,7 +4,7 @@ namespace paper {
      */
     export class SceneManager {
         private static _instance: SceneManager | null = null;
-        
+
         public static getInstance() {
             if (!this._instance) {
                 this._instance = new SceneManager();
@@ -110,7 +110,7 @@ namespace paper {
 
             return this._scenes[0];
         }
-        public set activeScene(value: Readonly<Scene>) {
+        public set activeScene(value: Scene) {
             if (
                 this._scenes.length <= 1 ||
                 this._scenes[0] === value ||

@@ -222,7 +222,7 @@ namespace egret3d {
             this.x = source.x * -1.0;
             this.y = source.y * -1.0;
             this.z = source.z * -1.0;
-            
+
             return this;
         }
 
@@ -381,6 +381,10 @@ namespace egret3d {
         }
 
         public divide(source?: Readonly<IVector3>) {
+            if (!source) {
+                source = this;
+            }
+
             this.x /= source.x;
             this.y /= source.y;
             this.z /= source.z;

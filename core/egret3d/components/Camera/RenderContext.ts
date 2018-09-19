@@ -321,11 +321,11 @@ namespace egret3d {
             this.shaderContextDefine = "";
             //
             if (renderer.lightmapIndex >= 0) {
-                const activeScene = paper.Application.sceneManager.activeScene;
-                if (activeScene.lightmaps.length > renderer.lightmapIndex) {
-                    this.lightmap = activeScene.lightmaps[renderer.lightmapIndex];
+                const scene = renderer.gameObject.scene;
+                if (scene.lightmaps.length > renderer.lightmapIndex) {
+                    this.lightmap = scene.lightmaps[renderer.lightmapIndex];
                     this.lightmapUV = this.drawCall.mesh.glTFMesh.primitives[this.drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0;
-                    this.lightmapIntensity = activeScene.lightmapIntensity;
+                    this.lightmapIntensity = scene.lightmapIntensity;
                     this.shaderContextDefine += "#define USE_LIGHTMAP \n";
                 }
             }

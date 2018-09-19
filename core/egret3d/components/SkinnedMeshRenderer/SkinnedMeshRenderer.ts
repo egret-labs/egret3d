@@ -153,20 +153,34 @@ namespace egret3d {
             }
         }
 
-        public raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo) {
-            if (this._mesh) {
+        public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
+            if (!this._mesh) {
                 return false;
             }
 
-            const worldMatrix = this.gameObject.transform.worldMatrix;
-            _helpMatrix.inverse(worldMatrix);
-            const localRay = MeshRenderer._helpRay.applyMatrix(_helpMatrix, ray);
+            let raycastMesh = false;
+            let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
+            const localRay = MeshRenderer._helpRay.applyMatrix(_helpMatrix.inverse(this.gameObject.transform.worldMatrix), p1); // TODO
 
-            if (!localRay.intersectAABB(this.aabb)) {
+            if (p2) {
+                if (p2 === true) {
+                    raycastMesh = true;
+                }
+                else {
+                    raycastMesh = p3 || false;
+                    raycastInfo = p2;
+                }
+            }
+
+            if (raycastMesh) {
+                if (localRay.intersectAABB(this.aabb)) {
+                    return this._mesh.raycast(p1, raycastInfo, this.boneMatrices);
+                }
+
                 return false;
             }
 
-            return this._mesh.raycast(ray, null, raycastInfo);
+            return localRay.intersectAABB(this.aabb, raycastInfo);
         }
 
         public get bones(): ReadonlyArray<Transform | null> {

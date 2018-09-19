@@ -66,7 +66,7 @@ namespace paper {
         private _keepUUID: boolean;
         private _makeLink: boolean;
         private readonly _deserializers: { [key: string]: Deserializer } = {};
-        private _target: Scene | GameObject = null!;
+        private _target: Scene | GameObject | null = null;
 
         private _deserializeObject(source: ISerializedObject, target: BaseObject) {
             const deserializedKeys = _getDeserializedKeys(<any>target.constructor as BaseClass);
@@ -218,7 +218,7 @@ namespace paper {
                             return this.components[uuid];
                         }
                         else if (classCodeOrName) { // Link expand objects and components.
-                            const scene = this._target instanceof GameObject ? this._target.scene : this._target;
+                            const scene = this._target instanceof GameObject ? this._target.scene : this._target!;
 
                             if ((serializeClassMap[classCodeOrName] || classCodeOrName) === egret.getQualifiedClassName(GameObject)) { // GameObject.
                                 for (const gameObject of scene.gameObjects) {

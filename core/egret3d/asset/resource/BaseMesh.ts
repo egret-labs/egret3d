@@ -14,7 +14,7 @@ namespace egret3d {
     /**
      * 
      */
-    export abstract class BaseMesh extends GLTFAsset {
+    export abstract class BaseMesh extends GLTFAsset implements egret3d.IRaycast {
         protected _drawMode: gltf.DrawMode = gltf.DrawMode.Static;
         protected _vertexCount: number = 0;
         protected readonly _attributeNames: string[] = [];
@@ -128,17 +128,15 @@ namespace egret3d {
 
             return value;
         }
-        /**
-         * TODO
-         */
-        public raycast(ray: Readonly<Ray>, boneMatrices: Float32Array | null = null, out?: RaycastInfo) {
+
+        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo, boneMatrices?: Float32Array | null) {
             let subMeshIndex = 0;
             const p0 = _helpVector3A;
             const p1 = _helpVector3B;
             const p2 = _helpVector3C;
             const vertices = this.getVertices()!;
-            const joints = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array : null;
-            const weights = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)! as Float32Array : null;
+            const joints = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.JOINTS_0) as Float32Array : null;
+            const weights = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.WEIGHTS_0) as Float32Array : null;
             let hit = false;
 
             for (const primitive of this._glTFMesh!.primitives) {
@@ -159,10 +157,10 @@ namespace egret3d {
                             p0.fromArray(vertices, vertexIndex);
                             p1
                                 .set(0.0, 0.0, 0.0)
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 0] * 16), p0).multiplyScalar(weights[jointIndex + 0]))
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 1] * 16), p0).multiplyScalar(weights[jointIndex + 1]))
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 2] * 16), p0).multiplyScalar(weights[jointIndex + 2]))
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 3] * 16), p0).multiplyScalar(weights[jointIndex + 3]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 0] * 16), p0).multiplyScalar(weights![jointIndex + 0]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 1] * 16), p0).multiplyScalar(weights![jointIndex + 1]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 2] * 16), p0).multiplyScalar(weights![jointIndex + 2]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 3] * 16), p0).multiplyScalar(weights![jointIndex + 3]))
                                 .toArray(castVertices, vertexIndex);
                         }
                     }
@@ -173,10 +171,10 @@ namespace egret3d {
                             p0.fromArray(vertices, i);
                             p1
                                 .set(0.0, 0.0, 0.0)
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 0] * 16), p0).multiplyScalar(weights[jointIndex + 0]))
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 1] * 16), p0).multiplyScalar(weights[jointIndex + 1]))
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 2] * 16), p0).multiplyScalar(weights[jointIndex + 2]))
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + 3] * 16), p0).multiplyScalar(weights[jointIndex + 3]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 0] * 16), p0).multiplyScalar(weights![jointIndex + 0]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 1] * 16), p0).multiplyScalar(weights![jointIndex + 1]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 2] * 16), p0).multiplyScalar(weights![jointIndex + 2]))
+                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 3] * 16), p0).multiplyScalar(weights![jointIndex + 3]))
                                 .toArray(castVertices, i);
                         }
                     }
@@ -209,15 +207,15 @@ namespace egret3d {
                                 p1.fromArray(castVertices, indices[i + 1] * 3);
                                 p2.fromArray(castVertices, indices[i + 2] * 3);
 
-                                if (out) {
+                                if (raycastInfo) {
                                     if (ray.intersectTriangle(p0, p1, p2, false, _helpRaycastInfo)) {
-                                        if (!hit || out.distance > _helpRaycastInfo.distance) {
-                                            out.subMeshIndex = subMeshIndex;
-                                            out.triangleIndex = i / 3; // TODO
-                                            out.distance = _helpRaycastInfo.distance;
-                                            out.position.copy(_helpRaycastInfo.position);
-                                            out.textureCoordA.copy(_helpRaycastInfo.textureCoordA);
-                                            out.textureCoordB.copy(_helpRaycastInfo.textureCoordB);
+                                        if (!hit || raycastInfo.distance > _helpRaycastInfo.distance) {
+                                            raycastInfo.subMeshIndex = subMeshIndex;
+                                            raycastInfo.triangleIndex = i / 3; // TODO
+                                            raycastInfo.distance = _helpRaycastInfo.distance;
+                                            raycastInfo.position.copy(_helpRaycastInfo.position);
+                                            raycastInfo.textureCoordA.copy(_helpRaycastInfo.textureCoordA);
+                                            raycastInfo.textureCoordB.copy(_helpRaycastInfo.textureCoordB);
                                             hit = true;
                                         }
                                     }
@@ -233,15 +231,15 @@ namespace egret3d {
                                 p1.fromArray(castVertices, i + 3);
                                 p2.fromArray(castVertices, i + 6);
 
-                                if (out) {
+                                if (raycastInfo) {
                                     if (ray.intersectTriangle(p0, p1, p2, false, _helpRaycastInfo)) {
-                                        if (!hit || out.distance > _helpRaycastInfo.distance) {
-                                            out.subMeshIndex = subMeshIndex;
-                                            out.triangleIndex = i / 3; // TODO
-                                            out.distance = _helpRaycastInfo.distance;
-                                            out.position.copy(_helpRaycastInfo.position);
-                                            out.textureCoordA.copy(_helpRaycastInfo.textureCoordA);
-                                            out.textureCoordB.copy(_helpRaycastInfo.textureCoordB);
+                                        if (!hit || raycastInfo.distance > _helpRaycastInfo.distance) {
+                                            raycastInfo.subMeshIndex = subMeshIndex;
+                                            raycastInfo.triangleIndex = i / 3; // TODO
+                                            raycastInfo.distance = _helpRaycastInfo.distance;
+                                            raycastInfo.position.copy(_helpRaycastInfo.position);
+                                            raycastInfo.textureCoordA.copy(_helpRaycastInfo.textureCoordA);
+                                            raycastInfo.textureCoordB.copy(_helpRaycastInfo.textureCoordB);
                                             hit = true;
                                         }
                                     }

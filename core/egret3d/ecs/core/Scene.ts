@@ -51,19 +51,25 @@ namespace paper {
 
             return null;
         }
-
+        /**
+         * 
+         */
         public static get globalScene() {
             return Application.sceneManager.globalScene;
         }
-
+        /**
+         * 
+         */
         public static get editorScene() {
             return Application.sceneManager.editorScene;
         }
-
+        /**
+         * 
+         */
         public static get activeScene() {
             return Application.sceneManager.activeScene;
         }
-        public static set activeScene(value: Readonly<Scene>) {
+        public static set activeScene(value: Scene) {
             Application.sceneManager.activeScene = value;
         }
         /**
@@ -88,21 +94,35 @@ namespace paper {
          */
         @serializedField
         public readonly lightmaps: egret3d.Texture[] = [];
-
+        /**
+         * 
+         */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.FogMode) })
         public fogMode: FogMode = FogMode.NONE;
+        /**
+         * 
+         */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.COLOR)
         public readonly fogColor: egret3d.Color = egret3d.Color.create(0.5, 0.5, 0.5, 1);
+        /**
+         * 
+         */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public fogDensity: number = 0.01;
+        /**
+         * 
+         */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public fogNear: number = 1.0;
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.001, step: 1.0 })
+        public fogNear: number = 0.001;
+        /**
+         * 
+         */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.001, step: 1.0 })
         public fogFar: number = 300.0;
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
@@ -177,6 +197,41 @@ namespace paper {
             this._gameObjects.length = 0;
 
             GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).scenes.push(this);
+        }
+
+        private _raycast(ray: Readonly<egret3d.Ray>, gameObject: GameObject, maxDistance: number = Infinity, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false, raycastInfos: egret3d.RaycastInfo[]) {
+            if (!gameObject.activeInHierarchy) {
+                return;
+            }
+
+            const raycastInfo = egret3d.RaycastInfo.create();
+            if (gameObject.renderer && gameObject.renderer.raycast(ray, raycastInfo)) {
+                raycastInfo.transform = gameObject.transform;
+                raycastInfos.push(raycastInfo);
+            }
+            else {
+                raycastInfo.release();
+
+                for (const child of gameObject.transform.children) {
+                    this._raycast(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+                }
+            }
+        }
+
+        private _sortRaycastInfo(a: egret3d.RaycastInfo, b: egret3d.RaycastInfo) {
+            return b.distance - a.distance;
+        }
+
+        public raycast(ray: Readonly<egret3d.Ray>, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false) {
+            const raycastInfos = [] as egret3d.RaycastInfo[];
+
+            for (const gameObject of this.getRootGameObjects()) {
+                this._raycast(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+            }
+
+            raycastInfos.sort(this._sortRaycastInfo);
+
+            return raycastInfos;
         }
         /**
          * 

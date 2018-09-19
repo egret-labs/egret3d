@@ -17,7 +17,7 @@ namespace paper {
      * @platform Web
      * @language zh_CN
      */
-    export abstract class BaseRenderer extends BaseComponent {
+    export abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
         @serializedField
         @editor.property(editor.EditType.CHECKBOX)
         public frustumCulled: boolean = true;
@@ -51,12 +51,9 @@ namespace paper {
          * 重新计算 AABB。
          */
         public abstract recalculateAABB(): void;
-        /**
-         * 射线检测。
-         * @param ray 
-         * @param raycastInfo 是否将检测的详细数据写入 RaycastInfo。
-         */
-        public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo): boolean;
+
+        public abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
+        public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
         /**
          * 
          */

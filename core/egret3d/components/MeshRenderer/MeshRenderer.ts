@@ -29,21 +29,35 @@ namespace egret3d {
             }
         }
 
-        public raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo) {
+        public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
             const meshFilter = this.gameObject.getComponent(MeshFilter);
             if (!meshFilter || !meshFilter.mesh) {
                 return false;
             }
 
-            const worldMatrix = this.gameObject.transform.worldMatrix;
-            _helpMatrix.inverse(worldMatrix);
-            const localRay = MeshRenderer._helpRay.applyMatrix(_helpMatrix, ray);
+            let raycastMesh = false;
+            let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
+            const localRay = MeshRenderer._helpRay.applyMatrix(_helpMatrix.inverse(this.gameObject.transform.worldMatrix), p1); // TODO
 
-            if (!localRay.intersectAABB(this.aabb)) {
+            if (p2) {
+                if (p2 === true) {
+                    raycastMesh = true;
+                }
+                else {
+                    raycastMesh = p3 || false;
+                    raycastInfo = p2;
+                }
+            }
+
+            if (raycastMesh) {
+                if (localRay.intersectAABB(this.aabb)) {
+                    return meshFilter.mesh.raycast(localRay, raycastInfo);
+                }
+
                 return false;
             }
 
-            return meshFilter.mesh.raycast(localRay, null, raycastInfo);
+            return localRay.intersectAABB(this.aabb, raycastInfo);
         }
         /**
          * material list

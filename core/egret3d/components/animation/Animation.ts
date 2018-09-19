@@ -615,11 +615,6 @@ namespace egret3d {
         @paper.serializedField
         private readonly _animations: GLTFAsset[] = [];
         /**
-         * 骨骼姿势列表。
-         * @internal
-         */
-        public readonly _blendLayers: BlendLayer[] = [];
-        /**
          * 混合节点列表。
          */
         private readonly _blendNodes: BlendNode[] = [];
@@ -627,6 +622,11 @@ namespace egret3d {
          * @internal
          */
         public readonly _animationNames: string[] = [];
+        /**
+         * 骨骼姿势列表。
+         * @internal
+         */
+        public readonly _blendLayers: { [key: string]: { [key: string]: BlendLayer } } = {};
         private _fadeInParamter: any[] | null = null;
         /**
          * 最后一个播放的动画状态。
@@ -725,12 +725,12 @@ namespace egret3d {
 
         public uninitialize() {
             super.uninitialize();
+            // TODO
+            // for (const blendLayer in this._blendLayers) {
+            //     blendLayer.release();
+            // }
 
-            for (const blendLayer of this._blendLayers) {
-                blendLayer.release();
-            }
-
-            this._blendLayers.length = 0;
+            // this._blendLayers.length = 0;
         }
 
         public fadeIn(

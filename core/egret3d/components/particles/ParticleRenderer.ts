@@ -142,7 +142,7 @@ namespace egret3d.particle {
             // TODO
         }
 
-        public raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo) {
+        public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
             // TODO
             return false;
         }

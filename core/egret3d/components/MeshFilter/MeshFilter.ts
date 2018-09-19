@@ -21,7 +21,6 @@ namespace egret3d {
 
             this._mesh = null;
         }
-
         /**
          * 组件挂载的 mesh 模型
          */

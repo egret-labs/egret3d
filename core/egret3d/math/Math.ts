@@ -117,7 +117,7 @@ namespace egret3d {
         const extents = helpVector3H;
 
         // compute box center and extents
-        extents.subtract(this.max, aabb.center);
+        extents.subtract(aabb.maximum, aabb.center);
         // translate triangle to aabb origin
         v0.subtract(triangle.a, center);
         v1.subtract(triangle.b, center);
