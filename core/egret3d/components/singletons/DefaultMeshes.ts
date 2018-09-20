@@ -674,10 +674,21 @@ namespace egret3d {
         /**
          * 创建圆形网格。
          */
-        public static createCircle(radius: number, arc: number) {
+        public static createCircle(radius: number, arc: number, axis: number = 1) {
             const vertices: number[] = [];
             for (var i = 0; i <= 64 * arc; ++i) {
-                vertices.push(0, Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius);
+                switch (axis) {
+                    case 1:
+                        vertices.push(0, Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius);
+                        break;
+                    case 2:
+                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, 0, Math.sin(i / 32 * Math.PI) * radius);
+                        break;
+                    case 3:
+                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius, 0);
+                        break;
+                }
+
             }
             const mesh = egret3d.Mesh.create(vertices.length / 3, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
             mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);

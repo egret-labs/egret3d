@@ -102,31 +102,36 @@ namespace paper.debug {
                 const rotate = this._createGameObject("rotate");
                 rotate.transform.setParent(gameObject.transform);
 
-                const axisX = this._createGameObject("axisX", egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const axisY = this._createGameObject("axisY", egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const axisZ = this._createGameObject("axisZ", egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisX = this._createGameObject("axisX", egret3d.DefaultMeshes.createCircle(1, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisY = this._createGameObject("axisY", egret3d.DefaultMeshes.createCircle(1, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisZ = this._createGameObject("axisZ", egret3d.DefaultMeshes.createCircle(1, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisE = this._createGameObject("axisE", egret3d.DefaultMeshes.createCircle(1.25, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
 
                 const pickX = this._createGameObject("pickX", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const pickY = this._createGameObject("pickY", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const pickZ = this._createGameObject("pickZ", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickE = this._createGameObject("pickE", egret3d.DefaultMeshes.createTorus(1.25, 0.1, 2, 24), egret3d.DefaultMaterials.MESH_BASIC.clone());
 
-                axisX.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, 0.0);
-                axisY.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
-                axisZ.transform.setParent(rotate.transform).setLocalEuler(0.0, Math.PI * 0.5, 0.0);
+                axisX.transform.setParent(rotate.transform);
+                axisY.transform.setParent(rotate.transform);
+                axisZ.transform.setParent(rotate.transform);
+                axisE.transform.setParent(rotate.transform);
 
                 pickX.transform.setParent(rotate.transform).setLocalEuler(0, -Math.PI * 0.5, -Math.PI * 0.5);
                 pickY.transform.setParent(rotate.transform).setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
                 pickZ.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
-                pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = false;
-                // pickX.activeSelf = true;
+                pickE.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, 0.0);
+                pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = pickE.activeSelf = false;
 
                 (axisX.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (axisY.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (axisZ.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (axisE.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.YELLOW).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
 
                 (pickX.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (pickY.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (pickZ.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (pickE.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.YELLOW).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
             }
             //
             {
