@@ -366,7 +366,7 @@ namespace egret3d {
          */
         public createTypeArrayFromAccessor(accessor: gltf.Accessor, offset: number = 0, count: number = 0) {
             const accessorTypeCount = this.getAccessorTypeCount(accessor.type);
-            const bufferCount = accessorTypeCount * (count || accessor.count);
+            const bufferCount = accessorTypeCount * Math.min(accessor.count - offset, count || accessor.count);
             const bufferView = this.getBufferView(accessor);
             const buffer = this.buffers[bufferView.buffer];
             // assert.config.buffers[bufferView.buffer];

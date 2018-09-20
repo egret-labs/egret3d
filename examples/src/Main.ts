@@ -1,12 +1,12 @@
 function main() {
-    ArrowIO.start();
-    // startExamples();
+    // ArrowIO.start();
+    startExamples();
 
-    // if ((window || global).dat) {
-    //     // fps TODO
-    //     const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
-    //     Stats.show(div);
-    // }
+    if ((window || global).dat) {
+        // fps TODO
+        const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
+        Stats.show(div);
+    }
 }
 
 function startExamples() {

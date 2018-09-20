@@ -15,13 +15,13 @@ namespace MathTest {
         public onAwake() {
             {
                 const material = egret3d.Material.create(egret3d.DefaultShaders.MATERIAL_COLOR);
-                material.setCullFace(false).setBlend(gltf.BlendMode.Blend).setFloat(egret3d.ShaderUniformNames.Opacity, 0.7);
+                material.setCullFace(false).setBlend(gltf.BlendMode.Blend).setFloat(egret3d.ShaderUniformName.Opacity, 0.7);
                 (this._planeObject.renderer as egret3d.MeshRenderer).material = material;
             }
 
             {
                 const material = egret3d.Material.create(egret3d.DefaultShaders.MATERIAL_COLOR);
-                material.setBlend(gltf.BlendMode.Blend).setFloat(egret3d.ShaderUniformNames.Opacity, 0.7);
+                material.setBlend(gltf.BlendMode.Blend).setFloat(egret3d.ShaderUniformName.Opacity, 0.7);
                 (this._sphereObject.renderer as egret3d.MeshRenderer).material = material;
             }
         }
@@ -33,10 +33,10 @@ namespace MathTest {
             const material = (this._sphereObject.renderer as egret3d.MeshRenderer).material;
 
             if (egret3d.planeIntersectsSphere(this._plane, this._sphere)) {
-                material.setColor(egret3d.ShaderUniformNames.Diffuse, egret3d.Color.RED);
+                material.setColor(egret3d.ShaderUniformName.Diffuse, egret3d.Color.RED);
             }
             else {
-                material.setColor(egret3d.ShaderUniformNames.Diffuse, egret3d.Color.GREEN);
+                material.setColor(egret3d.ShaderUniformName.Diffuse, egret3d.Color.GREEN);
             }
         }
     }

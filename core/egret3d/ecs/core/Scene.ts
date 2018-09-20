@@ -9,7 +9,7 @@ namespace paper {
      */
     export class Scene extends BaseObject {
         /**
-         * 
+         * 创建空场景。
          */
         public static createEmpty(name: string = DefaultNames.NoName, isActive: boolean = true) {
             // const exScene = Application.sceneManager.getSceneByName(name); TODO
@@ -24,7 +24,7 @@ namespace paper {
             return scene;
         }
         /**
-         * 
+         * 通过 Asset name 创建指定场景。
          */
         public static create(name: string, combineStaticObjects: boolean = true) {
             const exScene = Application.sceneManager.getSceneByName(name);
@@ -52,7 +52,7 @@ namespace paper {
             return null;
         }
         /**
-         * 
+         * 全局静态场景。
          */
         public static get globalScene() {
             return Application.sceneManager.globalScene;
@@ -64,7 +64,7 @@ namespace paper {
             return Application.sceneManager.editorScene;
         }
         /**
-         * 
+         * 当前激活场景。
          */
         public static get activeScene() {
             return Application.sceneManager.activeScene;
@@ -199,15 +199,26 @@ namespace paper {
             GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).scenes.push(this);
         }
 
-        private _raycast(ray: Readonly<egret3d.Ray>, gameObject: GameObject, maxDistance: number = Infinity, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false, raycastInfos: egret3d.RaycastInfo[]) {
-            if (!gameObject.activeInHierarchy) {
+        private _raycast(ray: Readonly<egret3d.Ray>, gameObject: GameObject, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false, raycastInfos: egret3d.RaycastInfo[]) {
+            if (
+                !gameObject.activeInHierarchy ||
+                (
+                    (gameObject.hideFlags === paper.HideFlags.Hide || gameObject.hideFlags === paper.HideFlags.HideAndDontSave) &&
+                    gameObject.tag === paper.DefaultTags.EditorOnly
+                )
+            ) {
                 return;
             }
 
             const raycastInfo = egret3d.RaycastInfo.create();
-            if (gameObject.renderer && gameObject.renderer.raycast(ray, raycastInfo)) {
-                raycastInfo.transform = gameObject.transform;
-                raycastInfos.push(raycastInfo);
+            if ((gameObject.layer & cullingMask) && gameObject.renderer && gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
+                if (maxDistance <= 0.0 || raycastInfo.distance <= maxDistance) {
+                    raycastInfo.transform = gameObject.transform;
+                    raycastInfos.push(raycastInfo);
+                }
+                else {
+                    raycastInfo.release();
+                }
             }
             else {
                 raycastInfo.release();

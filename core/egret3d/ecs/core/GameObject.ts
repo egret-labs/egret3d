@@ -55,7 +55,6 @@ namespace paper {
          * 
          */
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.HideFlags) })
         public hideFlags: HideFlags = HideFlags.None;
         /**
          * 层级

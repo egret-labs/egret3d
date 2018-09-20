@@ -21,7 +21,7 @@ namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
-    export class AABB implements paper.IRelease<AABB>, paper.ISerializable {
+    export class AABB implements paper.IRelease<AABB>, paper.ISerializable, IRaycast {
         private static readonly _instances: AABB[] = [];
 
         public static create(minimum: Readonly<IVector3> | null = null, maximum: Readonly<IVector3> | null = null) {
@@ -269,6 +269,66 @@ namespace egret3d {
 
         public clampPoints(value: Readonly<IVector3>, out: Vector3) {
             return out.clamp(this._minimum, this._maximum, value);
+        }
+
+        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+            let tmin: number, tmax: number, tymin: number, tymax: number, tzmin: number, tzmax: number;
+            const invdirx = 1.0 / ray.direction.x,
+                invdiry = 1.0 / ray.direction.y,
+                invdirz = 1.0 / ray.direction.z;
+            const origin = ray.origin;
+
+            if (invdirx >= 0.0) {
+                tmin = (this.minimum.x - origin.x) * invdirx;
+                tmax = (this.maximum.x - origin.x) * invdirx;
+            }
+            else {
+                tmin = (this.maximum.x - origin.x) * invdirx;
+                tmax = (this.minimum.x - origin.x) * invdirx;
+            }
+
+            if (invdiry >= 0.0) {
+                tymin = (this.minimum.y - origin.y) * invdiry;
+                tymax = (this.maximum.y - origin.y) * invdiry;
+            }
+            else {
+                tymin = (this.maximum.y - origin.y) * invdiry;
+                tymax = (this.minimum.y - origin.y) * invdiry;
+            }
+
+            if ((tmin > tymax) || (tymin > tmax)) return false;
+
+            // These lines also handle the case where tmin or tmax is NaN
+            // (result of 0 * Infinity). x !== x returns true if x is NaN
+
+            if (tymin > tmin || tmin !== tmin) tmin = tymin;
+
+            if (tymax < tmax || tmax !== tmax) tmax = tymax;
+
+            if (invdirz >= 0.0) {
+                tzmin = (this.minimum.z - origin.z) * invdirz;
+                tzmax = (this.maximum.z - origin.z) * invdirz;
+            }
+            else {
+                tzmin = (this.maximum.z - origin.z) * invdirz;
+                tzmax = (this.minimum.z - origin.z) * invdirz;
+            }
+
+            if ((tmin > tzmax) || (tzmin > tmax)) return false;
+
+            if (tzmin > tmin || tmin !== tmin) tmin = tzmin;
+
+            if (tzmax < tmax || tmax !== tmax) tmax = tzmax;
+
+            // return point closest to the ray (positive side)
+
+            if (tmax < 0.0) return false;
+
+            if (raycastInfo) {
+                ray.at(raycastInfo.distance = tmin >= 0.0 ? tmin : tmax, raycastInfo.position);
+            }
+
+            return true;
         }
 
         public get isEmpty() {

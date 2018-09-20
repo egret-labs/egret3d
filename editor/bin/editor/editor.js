@@ -4191,33 +4191,22 @@ var paper;
         var Helper = (function () {
             function Helper() {
             }
-            Helper._rayCastGameObject = function (ray, gameObject, raycastInfos) {
-                if (!gameObject.activeInHierarchy && gameObject.tag !== "Editor Only" /* EditorOnly */) {
+            Helper._raycast = function (ray, gameObject, raycastInfos) {
+                if (!gameObject.activeInHierarchy ||
+                    ((gameObject.hideFlags === 2 /* Hide */ || gameObject.hideFlags === 3 /* HideAndDontSave */) &&
+                        gameObject.tag === "Editor Only" /* EditorOnly */)) {
                     return;
                 }
-                var raycastInfo = null;
-                var meshFilter = gameObject.getComponent(egret3d.MeshFilter);
-                if (meshFilter && meshFilter.mesh) {
-                    raycastInfo = meshFilter.mesh.raycast(ray, gameObject.transform.getWorldMatrix());
-                    if (raycastInfo) {
-                        raycastInfo.transform = gameObject.transform;
-                        raycastInfos.push(raycastInfo);
-                    }
+                var raycastInfo = egret3d.RaycastInfo.create();
+                if (gameObject.renderer && gameObject.renderer.raycast(ray, raycastInfo, true)) {
+                    raycastInfo.transform = gameObject.transform;
+                    raycastInfos.push(raycastInfo);
                 }
                 else {
-                    var skinnedMeshRenderer = gameObject.getComponent(egret3d.SkinnedMeshRenderer);
-                    if (skinnedMeshRenderer && skinnedMeshRenderer.mesh) {
-                        raycastInfo = skinnedMeshRenderer.mesh.raycast(ray, gameObject.transform.getWorldMatrix(), skinnedMeshRenderer.boneMatrices);
-                        if (raycastInfo) {
-                            raycastInfo.transform = gameObject.transform;
-                            raycastInfos.push(raycastInfo);
-                        }
-                    }
-                }
-                if (!raycastInfo) {
+                    raycastInfo.release();
                     for (var _i = 0, _a = gameObject.transform.children; _i < _a.length; _i++) {
                         var child = _a[_i];
-                        this._rayCastGameObject(ray, child.gameObject, raycastInfos);
+                        this._raycast(ray, child.gameObject, raycastInfos);
                     }
                 }
             };
@@ -4227,7 +4216,7 @@ var paper;
                 var raycastInfos = [];
                 for (var _i = 0, pickables_1 = pickables; _i < pickables_1.length; _i++) {
                     var gameObject = pickables_1[_i];
-                    this._rayCastGameObject(ray, gameObject, raycastInfos);
+                    this._raycast(ray, gameObject, raycastInfos);
                 }
                 //
                 raycastInfos.sort(function (a, b) {

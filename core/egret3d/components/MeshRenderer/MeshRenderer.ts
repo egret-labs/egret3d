@@ -37,7 +37,9 @@ namespace egret3d {
 
             let raycastMesh = false;
             let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
-            const localRay = MeshRenderer._helpRay.applyMatrix(_helpMatrix.inverse(this.gameObject.transform.worldMatrix), p1); // TODO
+            const worldMatrix = this.gameObject.transform.worldMatrix;
+            const localRay = MeshRenderer._helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
+            const aabb = this.aabb;
 
             if (p2) {
                 if (p2 === true) {
@@ -49,15 +51,16 @@ namespace egret3d {
                 }
             }
 
-            if (raycastMesh) {
-                if (localRay.intersectAABB(this.aabb)) {
-                    return meshFilter.mesh.raycast(localRay, raycastInfo);
+            if (raycastMesh ? aabb.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo) : aabb.raycast(localRay, raycastInfo)) {
+                if (raycastInfo) { // Update local raycast info to world.
+                    raycastInfo.position.applyMatrix(worldMatrix);
+                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
                 }
 
-                return false;
+                return true;
             }
 
-            return localRay.intersectAABB(this.aabb, raycastInfo);
+            return false;
         }
         /**
          * material list

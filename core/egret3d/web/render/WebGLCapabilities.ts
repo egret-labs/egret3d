@@ -230,7 +230,7 @@ namespace egret3d {
             WebGLCapabilities.commonDefines = getConstDefines(this.maxPrecision);
 
             // TODO
-            SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
+            // SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
         }
     }
 

@@ -5,7 +5,7 @@
 		"skipLibCheck": true,
 		"experimentalDecorators": true,
         "preserveConstEnums": true,
-		"strict": true,
+		"strict": false,
         "noUnusedLocals": false,
         "noUnusedParameters": false,
 		"strictPropertyInitialization": false,

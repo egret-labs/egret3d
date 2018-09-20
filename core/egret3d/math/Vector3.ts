@@ -193,7 +193,7 @@ namespace egret3d {
             return this;
         }
 
-        public normalize(source?: Readonly<IVector3>) {
+        public normalize(source?: Readonly<IVector3>, defaultAxis?: Readonly<IVector3>) {
             if (!source) {
                 source = this;
             }
@@ -206,9 +206,11 @@ namespace egret3d {
                 this.z *= l;
             }
             else {
-                this.x = 0.0;
-                this.y = 0.0;
-                this.z = 1.0;
+                if (!defaultAxis) {
+                    defaultAxis = Vector3.FORWARD;
+                }
+
+                this.copy(defaultAxis);
             }
 
             return this;

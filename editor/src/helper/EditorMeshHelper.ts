@@ -89,9 +89,9 @@ namespace paper.debug {
                 (axisY.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (axisZ.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
 
-                (arrowX.renderer as egret3d.MeshRenderer).material.addDefine(egret3d.ShaderDefines.USE_COLOR).setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
-                (arrowY.renderer as egret3d.MeshRenderer).material.addDefine(egret3d.ShaderDefines.USE_COLOR).setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
-                (arrowZ.renderer as egret3d.MeshRenderer).material.addDefine(egret3d.ShaderDefines.USE_COLOR).setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (arrowX.renderer as egret3d.MeshRenderer).material.addDefine(egret3d.ShaderDefine.USE_COLOR).setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (arrowY.renderer as egret3d.MeshRenderer).material.addDefine(egret3d.ShaderDefine.USE_COLOR).setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (arrowZ.renderer as egret3d.MeshRenderer).material.addDefine(egret3d.ShaderDefine.USE_COLOR).setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
 
                 (pickX.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (pickY.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);

@@ -179,48 +179,75 @@ namespace egret3d {
             }
 
             { // LINE_X.
-                const mesh = new Mesh(2, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                const mesh = new Mesh(4, 2, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/line_x.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.LINE_X = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, // Line start.
+                    1.0, 0.0, 0.0, // Line end.
+
+                    0.0, 0.0, 0.0, // Point start.
+                    1.0, 0.0, 0.0, // Point end.
                 ]);
                 mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
                 ]);
+                mesh.setIndices([0, 1], 0);
             }
 
             { // LINE_Y.
-                const mesh = new Mesh(2, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                const mesh = new Mesh(4, 2, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/line_y.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.LINE_Y = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, // Line start.
+                    0.0, 1.0, 0.0, // Line end.
+
+                    0.0, 0.0, 0.0, // Point start.
+                    0.0, 1.0, 0.0, // Point end.
                 ]);
                 mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
                 ]);
+                mesh.setIndices([0, 1], 0);
             }
 
             { // LINE_Z.
-                const mesh = new Mesh(2, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                const mesh = new Mesh(4, 2, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/line_z.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.LINE_Z = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+                    0.0, 0.0, 0.0, // Line start.
+                    0.0, 0.0, 1.0, // Line end.
+
+                    0.0, 0.0, 0.0, // Point start.
+                    0.0, 0.0, 1.0, // Point end.
                 ]);
                 mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
                 ]);
+                mesh.setIndices([0, 1], 0);
             }
 
             { // CIRCLE_LINE

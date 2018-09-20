@@ -259,7 +259,7 @@ declare namespace paper.debug {
 }
 declare namespace paper.debug {
     class Helper {
-        private static _rayCastGameObject(ray, gameObject, raycastInfos);
+        private static _raycast(ray, gameObject, raycastInfos);
         static getPickObjects(pickables: paper.GameObject[], mousePositionX: number, mousePositionY: number): egret3d.RaycastInfo[];
     }
 }

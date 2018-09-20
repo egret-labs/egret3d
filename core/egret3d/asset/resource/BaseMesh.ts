@@ -278,7 +278,7 @@ namespace egret3d {
             primitive.material = materialIndex;
             primitive.mode = randerMode;
             accessors!.push({
-                bufferView: 1, byteOffset: 0,
+                bufferView: subMeshIndex + 1, byteOffset: 0,
                 count: indexCount,
                 componentType: gltf.ComponentType.UnsignedShort, type: gltf.AccessorType.SCALAR,
             });
@@ -331,8 +331,8 @@ namespace egret3d {
         /**
          * 
          */
-        public setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset: number = 0, count: number = 0) {
-            const target = this.getAttributes(attributeType, offset, count);
+        public setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset: number = 0) {
+            const target = this.getAttributes(attributeType, offset);
             if (target) {
                 for (let i = 0, l = Math.min(value.length, target.length); i < l; i++) {
                     target[i] = value[i];

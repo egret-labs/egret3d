@@ -277,7 +277,7 @@ namespace egret3d {
         //     }
         // }
         /**
-         * 与 AABB 相交检测。
+         * @deprecated
          */
         public intersectAABB(aabb: Readonly<AABB>, raycastInfo?: RaycastInfo): boolean;
         public intersectAABB(minimum: Readonly<IVector3>, maximum: Readonly<IVector3>, raycastInfo?: RaycastInfo): boolean;
@@ -344,63 +344,6 @@ namespace egret3d {
             }
 
             return true;
-        }
-        /**
-         * 与球相交检测。
-         */
-        public intersectSphere(sphere: Readonly<Sphere>, raycastInfo?: RaycastInfo): boolean;
-        public intersectSphere(center: Readonly<IVector3>, radius: number, raycastInfo?: RaycastInfo): boolean;
-        public intersectSphere(p1: Readonly<Sphere> | Readonly<IVector3>, p2?: RaycastInfo | number, p3?: RaycastInfo) {
-            const isA = p1 instanceof AABB;
-            const center = isA ? (p1 as Readonly<Sphere>).center : p1 as Readonly<IVector3>;
-            const radius = isA ? (p1 as Readonly<Sphere>).radius : p2 as number;
-            const v1 = helpVector3A.subtract(center, this.origin);
-            const tca = v1.dot(this.direction);
-            const d2 = v1.dot(v1) - tca * tca;
-            const radius2 = radius * radius;
-
-            if (d2 > radius2) return false;
-
-            const thc = Math.sqrt(radius2 - d2);
-
-            // t0 = first intersect point - entrance on front of sphere
-            const t0 = tca - thc;
-
-            // t1 = second intersect point - exit point on back of sphere
-            const t1 = tca + thc;
-
-            // test to see if both t0 and t1 are behind the ray - if so, return null
-            if (t0 < 0.0 && t1 < 0.0) return false;
-
-            // test to see if t0 is behind the ray:
-            // if it is, the ray is inside the sphere, so return the second exit point scaled by t1,
-            // in order to always return an intersect point that is in front of the ray.
-
-            // else t0 is in front of the ray, so return the first collision point scaled by t0
-
-            const raycastInfo = isA ? p2 as RaycastInfo | undefined : p3;
-            if (raycastInfo) {
-                this.at(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
-            }
-
-            return true;
-
-            // let center_ori = helpVec3_1;
-            // Vector3.subtract(center, this.origin, center_ori);
-            // let raydist = Vector3.dot(this.direction, center_ori);
-
-            // if (raydist < 0) return false; // 到圆心的向量在方向向量上的投影为负，夹角不在-90与90之间
-
-            // let orilen2 = Vector3.getSqrLength(center_ori);
-
-            // let rad2 = radius * radius;
-
-            // if (orilen2 < rad2) return true; // 射线起点在球里
-
-            // let d = rad2 - (orilen2 - raydist * raydist);
-            // if (d < 0) return false;
-
-            // return true;
         }
         /**
          * @deprecated
