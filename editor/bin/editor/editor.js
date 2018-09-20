@@ -3425,9 +3425,9 @@ var paper;
                 ];
                 _this._disposeCollecter = paper.GameObject.globalGameObject.getOrAddComponent(paper.DisposeCollecter);
                 _this._guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
+                _this._bufferedGameObjects = [];
                 _this._hierarchyFolders = {};
                 _this._inspectorFolders = {};
-                _this._selectGameObject = null;
                 _this._selectFolder = null;
                 _this._sceneSelectedHandler = function (_c, value) {
                     _this._selectSceneOrGameObject(value);
@@ -3443,11 +3443,13 @@ var paper;
                 };
                 _this._createGameObject = function () {
                     if (_this._guiComponent.selectedScene) {
-                        _this._selectGameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "NoName" /* NoName */, "" /* Untagged */, _this._guiComponent.selectedScene);
+                        var gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "NoName" /* NoName */, "" /* Untagged */, _this._guiComponent.selectedScene);
+                        _this._guiComponent.select(gameObject, true);
                     }
                     else {
-                        _this._selectGameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "NoName" /* NoName */, "" /* Untagged */, _this._guiComponent.selectedGameObject.scene);
-                        _this._selectGameObject.transform.parent = _this._guiComponent.selectedGameObject.transform;
+                        var gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "NoName" /* NoName */, "" /* Untagged */, _this._guiComponent.selectedGameObject.scene);
+                        gameObject.transform.parent = _this._guiComponent.selectedGameObject.transform;
+                        _this._guiComponent.select(gameObject, true);
                     }
                 };
                 _this._destroySceneOrGameObject = function () {
@@ -3476,12 +3478,6 @@ var paper;
                 }
                 this._guiComponent.inspector.instance = sceneOrGameObject;
                 if (sceneOrGameObject) {
-                    // Open and select folder.
-                    if (sceneOrGameObject.uuid in this._hierarchyFolders) {
-                        this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
-                        this._selectFolder.selected = true;
-                        this._openFolder(this._selectFolder.parent);
-                    }
                     if (sceneOrGameObject instanceof paper.Scene) {
                         // Update scene.
                         this._guiComponent.inspector.add(this, "_createGameObject", "createObject");
@@ -3698,20 +3694,28 @@ var paper;
                 paper.EventPool.addEventListener("SceneUnselected" /* SceneUnselected */, debug.GUIComponent, this._sceneUnselectedHandler);
                 paper.EventPool.addEventListener("GameObjectSelected" /* GameObjectSelected */, debug.GUIComponent, this._gameObjectSelectedHandler);
                 paper.EventPool.addEventListener("GameObjectUnselected" /* GameObjectUnselected */, debug.GUIComponent, this._gameObjectUnselectedHandler);
-                // TODO
-                this.onAddGameObject(paper.GameObject.globalGameObject, this._groups[0]);
+                this._bufferedGameObjects.push(paper.GameObject.globalGameObject);
                 for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
                     var gameObject = _a[_i];
-                    this._addToHierarchy(gameObject);
+                    this._bufferedGameObjects.push(gameObject);
                 }
             };
             GUISystem.prototype.onAddGameObject = function (gameObject, _group) {
-                this._addToHierarchy(gameObject);
+                this._bufferedGameObjects.push(gameObject);
             };
             GUISystem.prototype.onUpdate = function (dt) {
-                if (this._selectGameObject) {
-                    this._guiComponent.select(this._selectGameObject, true);
-                    this._selectGameObject = null;
+                var i = 0;
+                while (this._bufferedGameObjects.length > 0 && i++ < 5) {
+                    this._addToHierarchy(this._bufferedGameObjects.shift());
+                }
+                // Open and select folder.
+                if (!this._selectFolder) {
+                    var sceneOrGameObject = this._guiComponent.selectedScene || this._guiComponent.selectedGameObject;
+                    if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
+                        this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
+                        this._selectFolder.selected = true;
+                        this._openFolder(this._selectFolder.parent);
+                    }
                 }
                 this._guiComponent.inspector.updateDisplay();
                 if (this._guiComponent.inspector.__folders) {
@@ -3758,12 +3762,17 @@ var paper;
                     }
                 }
             };
+            GUISystem.prototype.onRemoveGameObject = function (gameObject, _group) {
+                var index = this._bufferedGameObjects.indexOf(gameObject);
+                if (index >= 0) {
+                    this._bufferedGameObjects[index] = null;
+                }
+            };
             GUISystem.prototype.onDisable = function () {
                 paper.EventPool.removeEventListener("SceneSelected" /* SceneSelected */, debug.GUIComponent, this._sceneSelectedHandler);
                 paper.EventPool.removeEventListener("SceneUnselected" /* SceneUnselected */, debug.GUIComponent, this._sceneUnselectedHandler);
                 paper.EventPool.removeEventListener("GameObjectSelected" /* GameObjectSelected */, debug.GUIComponent, this._gameObjectSelectedHandler);
                 paper.EventPool.removeEventListener("GameObjectUnselected" /* GameObjectUnselected */, debug.GUIComponent, this._gameObjectUnselectedHandler);
-                //
                 for (var k in this._hierarchyFolders) {
                     var folder = this._hierarchyFolders[k];
                     delete this._hierarchyFolders[k];
@@ -3775,6 +3784,19 @@ var paper;
                         }
                     }
                 }
+                for (var k in this._inspectorFolders) {
+                    var folder = this._inspectorFolders[k];
+                    delete this._inspectorFolders[k];
+                    if (folder && folder.parent) {
+                        try {
+                            folder.parent.removeFolder(folder);
+                        }
+                        catch (e) {
+                        }
+                    }
+                }
+                this._bufferedGameObjects.length = 0;
+                this._selectFolder = null;
             };
             return GUISystem;
         }(paper.BaseSystem));

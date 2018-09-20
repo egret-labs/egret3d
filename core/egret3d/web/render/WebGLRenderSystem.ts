@@ -160,16 +160,6 @@ namespace egret3d {
                         webgl.uniform3fv(location, context.cameraUp);
                         break;
 
-                    // case gltf.UniformSemanticType._BINDMATRIX: {
-                    //     const renderer = context.drawCall.renderer as SkinnedMeshRenderer;
-                    //     webgl.uniformMatrix4fv(location, false, xxx.rawData);
-                    //     break;
-                    // }
-                    // case gltf.UniformSemanticType._BINDMATRIXINVERSE: {
-                    //     const renderer = context.drawCall.renderer as SkinnedMeshRenderer;
-                    //     webgl.uniformMatrix4fv(location, false, xxx .rawData);
-                    //     break;
-                    // }
                     case gltf.UniformSemanticType.JOINTMATRIX:
                         webgl.uniformMatrix4fv(location, false, (context.drawCall.renderer as SkinnedMeshRenderer).boneMatrices!);
                         break;

@@ -156,40 +156,40 @@ namespace egret3d {
         protected _onFadeStateChange() {
 
         }
+        /**
+         * @internal
+         */
+        public _update(deltaTime: number) {
+            if (this._fadeState !== 0 || this._subFadeState !== 0) {
+                const isFadeOut = this._fadeState > 0;
 
-        public update(deltaTime: number) {
-            if (this._fadeState === 0 && this._subFadeState === 0) {
-                return;
-            }
-
-            const isFadeOut = this._fadeState > 0;
-
-            if (this._subFadeState < 0) { // Fade start event.
-                this._subFadeState = 0;
-                this._onFadeStateChange();
-            }
-
-            if (deltaTime < 0.0) {
-                deltaTime = -deltaTime;
-            }
-
-            this._fadeTime += deltaTime;
-
-            if (this._fadeTime >= this.fadeTotalTime) { // Fade complete.
-                this._subFadeState = 1;
-                this._fadeProgress = isFadeOut ? 0.0 : 1.0;
-            }
-            else if (this._fadeTime > 0.0) { // Fading.
-                this._fadeProgress = isFadeOut ? (1.0 - this._fadeTime / this.fadeTotalTime) : (this._fadeTime / this.fadeTotalTime);
-            }
-            else { // Before fade.
-                this._fadeProgress = isFadeOut ? 1.0 : 0.0;
-            }
-
-            if (this._subFadeState > 0) { // Fade complete event.
-                if (!isFadeOut) {
-                    this._fadeState = 0;
+                if (this._subFadeState < 0) { // Fade start event.
+                    this._subFadeState = 0;
                     this._onFadeStateChange();
+                }
+
+                if (deltaTime < 0.0) {
+                    deltaTime = -deltaTime;
+                }
+
+                this._fadeTime += deltaTime;
+
+                if (this._fadeTime >= this.fadeTotalTime) { // Fade complete.
+                    this._subFadeState = 1;
+                    this._fadeProgress = isFadeOut ? 0.0 : 1.0;
+                }
+                else if (this._fadeTime > 0.0) { // Fading.
+                    this._fadeProgress = isFadeOut ? (1.0 - this._fadeTime / this.fadeTotalTime) : (this._fadeTime / this.fadeTotalTime);
+                }
+                else { // Before fade.
+                    this._fadeProgress = isFadeOut ? 1.0 : 0.0;
+                }
+
+                if (this._subFadeState > 0) { // Fade complete event.
+                    if (!isFadeOut) {
+                        this._fadeState = 0;
+                        this._onFadeStateChange();
+                    }
                 }
             }
 
@@ -489,18 +489,18 @@ namespace egret3d {
 
                     switch (pathName) {
                         case "translation":
-                            channel.update = this._onUpdateTranslation;
                             channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name!);
+                            channel.update = this._onUpdateTranslation;
                             break;
 
                         case "rotation":
-                            channel.update = this._onUpdateRotation;
                             channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name!);
+                            channel.update = this._onUpdateRotation;
                             break;
 
                         case "scale":
-                            channel.update = this._onUpdateScale;
                             channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name!);
+                            channel.update = this._onUpdateScale;
                             break;
 
                         case "weights":
@@ -529,17 +529,14 @@ namespace egret3d {
             }
         }
         /**
-         * 
+         * @internal
          */
-        public update(deltaTime: number) {
-            super.update(deltaTime);
+        public _update(deltaTime: number) {
+            super._update(deltaTime);
 
             // Update time.
             if (this._isPlaying) { // 11
-                if (this.timeScale !== 1.0) {
-                    deltaTime *= this.timeScale;
-                }
-
+                deltaTime *= this.timeScale * this._animationComponent.timeScale;
                 this._time += deltaTime;
             }
 
@@ -598,6 +595,14 @@ namespace egret3d {
                     this._animationComponent.play(animationName);
                 }
             }
+        }
+
+        public play() {
+            this._isPlaying = true;
+        }
+
+        public stop() {
+            this._isPlaying = false;
         }
 
         public fateOut(): void {
@@ -697,7 +702,7 @@ namespace egret3d {
                     }
                 }
                 else {
-                    blendNode.update(globalTime);
+                    blendNode._update(globalTime);
                 }
             }
             else if (blendNodeCount > 1) {
@@ -715,7 +720,7 @@ namespace egret3d {
                             blendNodes[i - r] = blendNode;
                         }
 
-                        blendNode.update(globalTime);
+                        blendNode._update(globalTime);
                     }
 
                     if (i === blendNodeCount - 1 && r > 0) {
@@ -811,8 +816,8 @@ namespace egret3d {
 
         public stop() {
             for (const blendNode of this._blendNodes) {
-                if (!blendNode.parent) {
-                    blendNode.fadeOut(0.0);
+                if (!blendNode.parent && blendNode instanceof AnimationState) {
+                    blendNode.stop();
                 }
             }
         }

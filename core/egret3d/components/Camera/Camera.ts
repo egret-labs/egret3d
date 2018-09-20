@@ -68,7 +68,7 @@ namespace egret3d {
          * 透视投影的fov
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: Math.PI, step: 0.02 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: Math.PI, step: 0.01 })
         public fov: number = Math.PI * 0.25;
         /**
          * 正交投影的竖向size

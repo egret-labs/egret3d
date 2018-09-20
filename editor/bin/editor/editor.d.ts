@@ -182,9 +182,9 @@ declare namespace paper.debug {
         }[][];
         private readonly _disposeCollecter;
         private readonly _guiComponent;
+        private readonly _bufferedGameObjects;
         private readonly _hierarchyFolders;
         private readonly _inspectorFolders;
-        private _selectGameObject;
         private _selectFolder;
         private _sceneSelectedHandler;
         private _sceneUnselectedHandler;
@@ -201,6 +201,7 @@ declare namespace paper.debug {
         onEnable(): void;
         onAddGameObject(gameObject: GameObject, _group: GameObjectGroup): void;
         onUpdate(dt: number): void;
+        onRemoveGameObject(gameObject: GameObject, _group: GameObjectGroup): void;
         onDisable(): void;
     }
 }
