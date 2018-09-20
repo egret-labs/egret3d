@@ -19,18 +19,22 @@ namespace egret3d {
         private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
         private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
         //
-        private readonly _filteredLights: BaseLight[] = [];
+        private _cacheLightCount: number = 0;
+        //
         private _cacheMaterialVerision: number = -1;
         private _cacheMaterial: Material | null = null;
+        //
         private _cacheSubMeshIndex: number = -1;
         private _cacheMesh: Mesh | null = null;
 
         private _renderLightShadow(light: BaseLight) {
             const camera = this._lightCamera;
-            const drawCalls = this._drawCalls;
-            const faceCount = light.constructor === PointLight ? 6 : 1;
             const renderState = this._renderState;
-            for (let i = 0; i < faceCount; ++i) {
+            const shadowMaterial = light.constructor === PointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
+            const drawCalls = this._drawCalls;
+            const shadowCalls = drawCalls.shadowCalls;
+
+            for (let i = 0, l = light.constructor === PointLight ? 6 : 1; i < l; ++i) {
                 const context = camera.context;
                 light.update(camera, i);
 
@@ -38,11 +42,8 @@ namespace egret3d {
                 renderState.targetAndViewport(camera.viewport, light.renderTarget);
                 renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                 drawCalls.shadowFrustumCulling(camera);
-                //
-                const shadowCalls = drawCalls.shadowCalls;
-                const shadowMaterial = light.constructor === PointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
+
                 for (const drawCall of shadowCalls) {
-                    //TODO, 现在不支持蒙皮动画阴影     
                     this._draw(context, drawCall, shadowMaterial);
                 }
             }
@@ -55,7 +56,7 @@ namespace egret3d {
             if (renderEnabled) {
                 //在这里先剔除，然后排序，最后绘制
                 const drawCalls = this._drawCalls;
-                drawCalls.sortAfterFrustumCulling(camera);
+                drawCalls.frustumCulling(camera);
                 //
                 const opaqueCalls = drawCalls.opaqueCalls;
                 const transparentCalls = drawCalls.transparentCalls;
@@ -409,23 +410,20 @@ namespace egret3d {
             }
 
             Performance.startCounter("render");
-            let lightsDirty = false;
+            let lightCountDirty = false;
             const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
             const renderState = this._renderState;
             const cameras = this._camerasAndLights.cameras;
             const lights = this._camerasAndLights.lights;
-            const filteredLights = this._filteredLights;
             const editorScene = paper.Application.sceneManager.editorScene;
-
-            // Lights.
-            if (filteredLights.length > 0) {
-                lightsDirty = true;
-                filteredLights.length = 0;
-            }
-
+            this._drawCalls.drawCallCount = 0;
+            // Render lights.
             if (lights.length > 0) {
+                lightCountDirty = true;
+                this._cacheLightCount = 0;
+
                 for (const light of lights) {
-                    filteredLights.push(light);
+                    this._cacheLightCount++;
 
                     if (!light.castShadows) {
                         continue;
@@ -434,15 +432,17 @@ namespace egret3d {
                     this._renderLightShadow(light);
                 }
             }
-            // Cameras.
+            else if (this._cacheLightCount > 0) {
+                lightCountDirty = true;
+                this._cacheLightCount = 0;
+            }
+            // Render cameras.
             if (cameras.length > 0) {
                 for (const camera of cameras) {
                     const renderEnabled = isPlayerMode ? camera.gameObject.scene !== editorScene : camera.gameObject.scene === editorScene;
 
-                    if (renderEnabled) {
-                        if (lightsDirty || filteredLights.length > 0) {
-                            camera.context.updateLights(filteredLights, camera.gameObject.scene.ambientColor); // TODO 性能优化
-                        }
+                    if (renderEnabled && lightCountDirty) {
+                        camera.context.updateLights(lights, camera.gameObject.scene.ambientColor); // TODO 性能优化
                     }
 
                     if (camera.postQueues.length === 0) {

@@ -386,13 +386,13 @@ namespace paper {
             return this._gameObjects.indexOf(gameObject) >= 0;
         }
         /**
-         * 
+         * 所有收集的实体。
          */
         public get gameObjects(): ReadonlyArray<GameObject> {
             return this._gameObjects;
         }
         /**
-         * 
+         * 所有收集的组件。
          */
         public get components(): ReadonlyArray<BaseComponent> {
             return this._behaviourComponents;

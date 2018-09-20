@@ -1374,16 +1374,7 @@ var paper;
         RendererEventType["Materials"] = "materials";
     })(RendererEventType = paper.RendererEventType || (paper.RendererEventType = {}));
     /**
-     * renderer component interface
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 渲染器组件接口
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * 基础渲染器。
      */
     var BaseRenderer = (function (_super) {
         __extends(BaseRenderer, _super);
@@ -6105,7 +6096,7 @@ var paper;
         };
         Object.defineProperty(GameObjectGroup.prototype, "gameObjects", {
             /**
-             *
+             * 所有收集的实体。
              */
             get: function () {
                 return this._gameObjects;
@@ -6115,7 +6106,7 @@ var paper;
         });
         Object.defineProperty(GameObjectGroup.prototype, "components", {
             /**
-             *
+             * 所有收集的组件。
              */
             get: function () {
                 return this._behaviourComponents;
@@ -9535,7 +9526,7 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     *
+     * 激活的摄像机和灯光。
      */
     var CamerasAndLights = (function (_super) {
         __extends(CamerasAndLights, _super);
@@ -9550,14 +9541,17 @@ var egret3d;
             var bOrder = b.renderTarget ? b.order : b.order * 1000 + 1;
             return aOrder - bOrder;
         };
-        CamerasAndLights.prototype.updateCamera = function (gameObjects) {
+        /**
+         * 更新摄像机。
+         */
+        CamerasAndLights.prototype.updateCameras = function (gameObjects) {
             this.cameras.length = 0;
             for (var _i = 0, gameObjects_1 = gameObjects; _i < gameObjects_1.length; _i++) {
                 var gameObject = gameObjects_1[_i];
                 this.cameras.push(gameObject.getComponent(egret3d.Camera));
             }
         };
-        CamerasAndLights.prototype.updateLight = function (gameObjects) {
+        CamerasAndLights.prototype.updateLights = function (gameObjects) {
             this.lights.length = 0;
             for (var _i = 0, gameObjects_2 = gameObjects; _i < gameObjects_2.length; _i++) {
                 var gameObject = gameObjects_2[_i];
@@ -9565,8 +9559,35 @@ var egret3d;
             }
         };
         CamerasAndLights.prototype.sortCameras = function () {
+            // TODO camera order event.
             this.cameras.sort(this._sortCameras);
         };
+        Object.defineProperty(CamerasAndLights.prototype, "cameraCount", {
+            /**
+             * 摄像机计数
+             */
+            get: function () {
+                return this.cameras.length;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(CamerasAndLights.prototype, "lightCount", {
+            /**
+             * 灯光计数。
+             */
+            get: function () {
+                return this.lightCount.length;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        __decorate([
+            paper.editor.property(0 /* UINT */)
+        ], CamerasAndLights.prototype, "cameraCount", null);
+        __decorate([
+            paper.editor.property(0 /* UINT */)
+        ], CamerasAndLights.prototype, "lightCount", null);
         return CamerasAndLights;
     }(paper.SingletonComponent));
     egret3d.CamerasAndLights = CamerasAndLights;
@@ -9575,30 +9596,34 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     *
+     * 所有 Draw call 信息。
      */
     var DrawCalls = (function (_super) {
         __extends(DrawCalls, _super);
         function DrawCalls() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
+             * 每个渲染帧的 Draw call 计数。
+             */
+            _this.drawCallCount = 0;
+            /**
              * 参与渲染的渲染器列表。
              */
             _this.renderers = [];
             /**
-             * 所有的 draw call 列表。
+             * Draw call 列表。
              */
             _this.drawCalls = [];
             /**
-             * 非透明列表
+             * 非透明 Draw call 列表。
              */
             _this.opaqueCalls = [];
             /**
-             * 透明列表
+             * 透明 Draw call 列表。
              */
             _this.transparentCalls = [];
             /**
-             * 阴影列表
+             * 阴影 Draw call 列表。
              */
             _this.shadowCalls = [];
             return _this;
@@ -9640,12 +9665,12 @@ var egret3d;
             this.shadowCalls.length = 0;
             for (var _i = 0, _a = this.drawCalls; _i < _a.length; _i++) {
                 var drawCall = _a[_i];
-                var drawTarget = drawCall.renderer.gameObject;
-                var visible = (camera.cullingMask & drawTarget.layer) !== 0;
-                if (visible && drawCall.renderer.castShadows) {
-                    if (!drawCall.renderer.frustumCulled || camera.testFrustumCulling(drawTarget.renderer)) {
-                        this.shadowCalls.push(drawCall);
-                    }
+                var renderer = drawCall.renderer;
+                if (renderer.castShadows &&
+                    (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
+                    (!renderer.frustumCulled || camera.testFrustumCulling(renderer))) {
+                    this.drawCallCount++;
+                    this.shadowCalls.push(drawCall);
                 }
             }
             this.shadowCalls.sort(this._sortFromFarToNear);
@@ -9653,18 +9678,16 @@ var egret3d;
         /**
          *
          */
-        DrawCalls.prototype.sortAfterFrustumCulling = function (camera) {
+        DrawCalls.prototype.frustumCulling = function (camera) {
+            var cameraPosition = camera.gameObject.transform.position;
             this.opaqueCalls.length = 0;
             this.transparentCalls.length = 0;
-            var cameraPos = camera.gameObject.transform.getPosition();
-            //
             for (var _i = 0, _a = this.drawCalls; _i < _a.length; _i++) {
                 var drawCall = _a[_i];
-                var drawTarget = drawCall.renderer.gameObject;
-                if ((camera.cullingMask & drawTarget.layer) !== 0 &&
-                    (!drawCall.renderer.frustumCulled || camera.testFrustumCulling(drawTarget.renderer))) {
-                    var objPos = drawTarget.transform.getPosition();
-                    drawCall.zdist = objPos.getDistance(cameraPos);
+                var renderer = drawCall.renderer;
+                if ((camera.cullingMask & renderer.gameObject.layer) !== 0 &&
+                    (!renderer.frustumCulled || camera.testFrustumCulling(renderer))) {
+                    this.drawCallCount++;
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
                     if (drawCall.material.renderQueue >= 3000 /* Transparent */) {
                         this.transparentCalls.push(drawCall);
@@ -9672,9 +9695,9 @@ var egret3d;
                     else {
                         this.opaqueCalls.push(drawCall);
                     }
+                    drawCall.zdist = renderer.gameObject.transform.getPosition().getDistance(cameraPosition);
                 }
             }
-            //
             this.opaqueCalls.sort(this._sortOpaque);
             this.transparentCalls.sort(this._sortFromFarToNear);
         };
@@ -9700,6 +9723,9 @@ var egret3d;
         DrawCalls.prototype.hasDrawCalls = function (renderer) {
             return this.renderers.indexOf(renderer) >= 0;
         };
+        __decorate([
+            paper.editor.property(0 /* UINT */)
+        ], DrawCalls.prototype, "drawCallCount", void 0);
         return DrawCalls;
     }(paper.SingletonComponent));
     egret3d.DrawCalls = DrawCalls;
@@ -9708,11 +9734,11 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 摄像机系统。
+     * 摄像机和灯光系统。
      */
-    var CameraSystem = (function (_super) {
-        __extends(CameraSystem, _super);
-        function CameraSystem() {
+    var CameraAndLightSystem = (function (_super) {
+        __extends(CameraAndLightSystem, _super);
+        function CameraAndLightSystem() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this._interests = [
                 [
@@ -9725,23 +9751,23 @@ var egret3d;
             _this._camerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
             return _this;
         }
-        CameraSystem.prototype.onAddGameObject = function (_gameObject, group) {
+        CameraAndLightSystem.prototype.onAddGameObject = function (_gameObject, group) {
             if (group === this._groups[0]) {
-                this._camerasAndLights.updateCamera(this._groups[0].gameObjects);
+                this._camerasAndLights.updateCameras(this._groups[0].gameObjects);
             }
             else if (group === this._groups[1]) {
-                this._camerasAndLights.updateLight(this._groups[1].gameObjects);
+                this._camerasAndLights.updateLights(this._groups[1].gameObjects);
             }
         };
-        CameraSystem.prototype.onRemoveGameObject = function (_gameObject, group) {
+        CameraAndLightSystem.prototype.onRemoveGameObject = function (_gameObject, group) {
             if (group === this._groups[0]) {
-                this._camerasAndLights.updateCamera(this._groups[0].gameObjects);
+                this._camerasAndLights.updateCameras(this._groups[0].gameObjects);
             }
             else if (group === this._groups[1]) {
-                this._camerasAndLights.updateLight(this._groups[1].gameObjects);
+                this._camerasAndLights.updateLights(this._groups[1].gameObjects);
             }
         };
-        CameraSystem.prototype.onUpdate = function (deltaTime) {
+        CameraAndLightSystem.prototype.onUpdate = function (deltaTime) {
             var cameras = this._camerasAndLights.cameras;
             if (cameras.length > 0) {
                 this._camerasAndLights.sortCameras();
@@ -9751,10 +9777,10 @@ var egret3d;
                 }
             }
         };
-        return CameraSystem;
+        return CameraAndLightSystem;
     }(paper.BaseSystem));
-    egret3d.CameraSystem = CameraSystem;
-    __reflect(CameraSystem.prototype, "egret3d.CameraSystem");
+    egret3d.CameraAndLightSystem = CameraAndLightSystem;
+    __reflect(CameraAndLightSystem.prototype, "egret3d.CameraAndLightSystem");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -10130,7 +10156,7 @@ var egret3d;
         ], Camera.prototype, "order", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0, maximum: Math.PI, step: 0.02 })
+            paper.editor.property(2 /* FLOAT */, { minimum: 0.0, maximum: Math.PI, step: 0.01 })
         ], Camera.prototype, "fov", void 0);
         __decorate([
             paper.serializedField,
@@ -10496,25 +10522,22 @@ var egret3d;
             }
         };
         RenderContext.prototype.update = function (drawCall) {
+            var renderer = drawCall.renderer;
+            var scene = renderer.gameObject.scene;
+            var matrix = drawCall.matrix || renderer.gameObject.transform.worldMatrix;
             this.drawCall = drawCall;
-            var renderer = this.drawCall.renderer;
-            {
-                var matrix = drawCall.matrix || renderer.gameObject.transform.getWorldMatrix();
-                this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
-                this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
-                this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);
-                this.matrix_mv_inverse.getNormalMatrix(this.matrix_mv);
-            }
-            this.shaderContextDefine = "";
+            this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
+            this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
+            this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);
+            this.matrix_mv_inverse.getNormalMatrix(this.matrix_mv);
             //
-            if (renderer.lightmapIndex >= 0) {
-                var scene = renderer.gameObject.scene;
-                if (scene.lightmaps.length > renderer.lightmapIndex) {
-                    this.lightmap = scene.lightmaps[renderer.lightmapIndex];
-                    this.lightmapUV = this.drawCall.mesh.glTFMesh.primitives[this.drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0;
-                    this.lightmapIntensity = scene.lightmapIntensity;
-                    this.shaderContextDefine += "#define USE_LIGHTMAP \n";
-                }
+            this.shaderContextDefine = "";
+            if (renderer.lightmapIndex >= 0 &&
+                scene.lightmaps.length > renderer.lightmapIndex) {
+                this.lightmap = scene.lightmaps[renderer.lightmapIndex];
+                this.lightmapUV = drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0;
+                this.lightmapIntensity = scene.lightmapIntensity;
+                this.shaderContextDefine += "#define USE_LIGHTMAP \n";
             }
             if (this.lightCount > 0) {
                 if (this.directLightCount > 0) {
@@ -10531,13 +10554,12 @@ var egret3d;
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
             }
-            if (drawCall.renderer.gameObject.scene.fogMode !== 0 /* NONE */) {
-                var scene = drawCall.renderer.gameObject.scene;
+            if (scene.fogMode !== 0 /* NONE */) {
                 this.fogColor[0] = scene.fogColor.r;
                 this.fogColor[1] = scene.fogColor.g;
                 this.fogColor[2] = scene.fogColor.b;
                 this.shaderContextDefine += "#define USE_FOG \n";
-                if (drawCall.renderer.gameObject.scene.fogMode === 2 /* FOG_EXP2 */) {
+                if (scene.fogMode === 2 /* FOG_EXP2 */) {
                     this.fogDensity = scene.fogDensity;
                     this.shaderContextDefine += "#define FOG_EXP2 \n";
                 }
@@ -13156,7 +13178,6 @@ var egret3d;
                 var drawCall = {
                     renderer: renderer,
                     matrix: egret3d.Matrix4.IDENTITY,
-                    isSkinned: true,
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.mesh,
                     material: material || egret3d.DefaultMaterials.MISSING,
@@ -13308,7 +13329,7 @@ var egret3d;
             /**
              * 淡入淡出的时间。
              */
-            this.fadeTime = 1.0;
+            this.fadeTotalTime = 1.0;
             /**
              * 父节点。
              */
@@ -13334,33 +13355,41 @@ var egret3d;
              */
             this._fadeProgress = 0.0;
             /**
-             * 全局融合时间标记。
+             * 本地融合时间。
              */
-            this._fadeTimeStart = 0.0;
+            this._fadeTime = 0.0;
         }
         BlendNode.prototype._onFadeStateChange = function () {
         };
-        BlendNode.prototype.update = function (globalTime) {
-            var isFadeOut = this._fadeState > 0;
-            var localFadeTime = globalTime - this._fadeTimeStart;
-            if (this._subFadeState < 0) {
-                this._subFadeState = 0;
-                this._onFadeStateChange();
-            }
-            if (localFadeTime >= this.fadeTime) {
-                this._subFadeState = 1;
-                this._fadeProgress = isFadeOut ? 0.0 : 1.0;
-            }
-            else if (localFadeTime > 0.0) {
-                this._fadeProgress = isFadeOut ? (1.0 - localFadeTime / this.fadeTime) : (localFadeTime / this.fadeTime);
-            }
-            else {
-                this._fadeProgress = isFadeOut ? 1.0 : 0.0;
-            }
-            if (this._subFadeState > 0) {
-                if (!isFadeOut) {
-                    this._fadeState = 0;
+        /**
+         * @internal
+         */
+        BlendNode.prototype._update = function (deltaTime) {
+            if (this._fadeState !== 0 || this._subFadeState !== 0) {
+                var isFadeOut = this._fadeState > 0;
+                if (this._subFadeState < 0) {
+                    this._subFadeState = 0;
                     this._onFadeStateChange();
+                }
+                if (deltaTime < 0.0) {
+                    deltaTime = -deltaTime;
+                }
+                this._fadeTime += deltaTime;
+                if (this._fadeTime >= this.fadeTotalTime) {
+                    this._subFadeState = 1;
+                    this._fadeProgress = isFadeOut ? 0.0 : 1.0;
+                }
+                else if (this._fadeTime > 0.0) {
+                    this._fadeProgress = isFadeOut ? (1.0 - this._fadeTime / this.fadeTotalTime) : (this._fadeTime / this.fadeTotalTime);
+                }
+                else {
+                    this._fadeProgress = isFadeOut ? 1.0 : 0.0;
+                }
+                if (this._subFadeState > 0) {
+                    if (!isFadeOut) {
+                        this._fadeState = 0;
+                        this._onFadeStateChange();
+                    }
                 }
             }
             this._globalWeight = this.weight * this._fadeProgress;
@@ -13368,23 +13397,24 @@ var egret3d;
                 this._globalWeight *= this.parent._globalWeight;
             }
         };
-        BlendNode.prototype.fadeOut = function (fadeTime) {
-            var globalTime = paper.Time.time; //
-            var localFadeTime = globalTime - this._fadeTimeStart;
+        BlendNode.prototype.fadeOut = function (fadeOutTime) {
+            if (fadeOutTime < 0.0 || fadeOutTime !== fadeOutTime) {
+                fadeOutTime = 0.0;
+            }
             if (this._fadeState > 0) {
-                if (fadeTime > this.fadeTime - localFadeTime) {
+                if (fadeOutTime > this.fadeTotalTime - this._fadeTime) {
                     return;
                 }
             }
             else {
                 this._fadeState = 1;
                 this._subFadeState = -1;
-                if (fadeTime <= 0.0 || this._fadeProgress <= 0.0) {
+                if (fadeOutTime <= 0.0 || this._fadeProgress <= 0.0) {
                     this._fadeProgress = 0.000001; // Modify fade progress to different value.
                 }
             }
-            this.fadeTime = this._fadeProgress > 0.000001 ? fadeTime / this._fadeProgress : 0.0;
-            this._fadeTimeStart = globalTime - this.fadeTime * (1.0 - this._fadeProgress);
+            this.fadeTotalTime = this._fadeProgress > 0.000001 ? fadeOutTime / this._fadeProgress : 0.0;
+            this._fadeTime = this.fadeTotalTime * (1.0 - this._fadeProgress);
         };
         return BlendNode;
     }());
@@ -13449,16 +13479,16 @@ var egret3d;
              */
             _this._playState = -1;
             /**
-             * 全局播放时间标记。
-             */
-            _this._playTimeStart = 0.0;
-            /**
              * 本地播放时间。
              */
-            _this._playTime = 0.0;
-            _this._animationComponent = null;
+            _this._time = 0.0;
+            /**
+             * 当前动画时间。
+             */
+            _this._currentTime = 0.0;
             // TODO cache.
             _this._channels = [];
+            _this._animationComponent = null;
             return _this;
         }
         AnimationState.prototype._onUpdateTranslation = function (channel, animationState) {
@@ -13466,15 +13496,15 @@ var egret3d;
             var frameIndex = 0;
             var inputBuffer = channel.inputBuffer;
             var outputBuffer = channel.outputBuffer;
-            if (animationState._playTime <= inputBuffer[0]) {
+            if (animationState._currentTime <= inputBuffer[0]) {
             }
-            else if (animationState._playTime >= inputBuffer[inputBuffer.length - 1]) {
+            else if (animationState._currentTime >= inputBuffer[inputBuffer.length - 1]) {
                 frameIndex = inputBuffer.length - 1;
             }
             else {
                 isInterpolation = channel.glTFSampler.interpolation !== "STEP";
                 for (var i = 0, l = inputBuffer.length; i < l; ++i) {
-                    if (animationState._playTime < inputBuffer[i]) {
+                    if (animationState._currentTime < inputBuffer[i]) {
                         break;
                     }
                     frameIndex = i;
@@ -13486,7 +13516,7 @@ var egret3d;
             var y = outputBuffer[offset++];
             var z = outputBuffer[offset++];
             if (isInterpolation) {
-                var progress = (animationState._playTime - inputBuffer[frameIndex]) / (inputBuffer[frameIndex + 1] - inputBuffer[frameIndex]);
+                var progress = (animationState._currentTime - inputBuffer[frameIndex]) / (inputBuffer[frameIndex + 1] - inputBuffer[frameIndex]);
                 x += (outputBuffer[offset++] - x) * progress;
                 y += (outputBuffer[offset++] - y) * progress;
                 z += (outputBuffer[offset++] - z) * progress;
@@ -13506,15 +13536,15 @@ var egret3d;
             var frameIndex = 0;
             var inputBuffer = channel.inputBuffer;
             var outputBuffer = channel.outputBuffer;
-            if (animationState._playTime <= inputBuffer[0]) {
+            if (animationState._currentTime <= inputBuffer[0]) {
             }
-            else if (animationState._playTime >= inputBuffer[inputBuffer.length - 1]) {
+            else if (animationState._currentTime >= inputBuffer[inputBuffer.length - 1]) {
                 frameIndex = inputBuffer.length - 1;
             }
             else {
                 isInterpolation = channel.glTFSampler.interpolation !== "STEP";
                 for (var i = 0, l = inputBuffer.length; i < l; ++i) {
-                    if (animationState._playTime < inputBuffer[i]) {
+                    if (animationState._currentTime < inputBuffer[i]) {
                         break;
                     }
                     frameIndex = i;
@@ -13527,7 +13557,7 @@ var egret3d;
             var z = outputBuffer[offset++];
             var w = outputBuffer[offset++];
             if (isInterpolation) {
-                var progress = (animationState._playTime - inputBuffer[frameIndex]) / (inputBuffer[frameIndex + 1] - inputBuffer[frameIndex]);
+                var progress = (animationState._currentTime - inputBuffer[frameIndex]) / (inputBuffer[frameIndex + 1] - inputBuffer[frameIndex]);
                 x += (outputBuffer[offset++] - x) * progress;
                 y += (outputBuffer[offset++] - y) * progress;
                 z += (outputBuffer[offset++] - z) * progress;
@@ -13548,15 +13578,15 @@ var egret3d;
             var frameIndex = 0;
             var inputBuffer = channel.inputBuffer;
             var outputBuffer = channel.outputBuffer;
-            if (animationState._playTime <= inputBuffer[0]) {
+            if (animationState._currentTime <= inputBuffer[0]) {
             }
-            else if (animationState._playTime >= inputBuffer[inputBuffer.length - 1]) {
+            else if (animationState._currentTime >= inputBuffer[inputBuffer.length - 1]) {
                 frameIndex = inputBuffer.length - 1;
             }
             else {
                 isInterpolation = channel.glTFSampler.interpolation !== "STEP";
                 for (var i = 0, l = inputBuffer.length; i < l; ++i) {
-                    if (animationState._playTime < inputBuffer[i]) {
+                    if (animationState._currentTime < inputBuffer[i]) {
                         break;
                     }
                     frameIndex = i;
@@ -13568,7 +13598,7 @@ var egret3d;
             var y = outputBuffer[offset++];
             var z = outputBuffer[offset++];
             if (isInterpolation) {
-                var progress = (animationState._playTime - inputBuffer[frameIndex]) / (inputBuffer[frameIndex + 1] - inputBuffer[frameIndex]);
+                var progress = (animationState._currentTime - inputBuffer[frameIndex]) / (inputBuffer[frameIndex + 1] - inputBuffer[frameIndex]);
                 x += (outputBuffer[offset++] - x) * progress;
                 y += (outputBuffer[offset++] - y) * progress;
                 z += (outputBuffer[offset++] - z) * progress;
@@ -13587,14 +13617,14 @@ var egret3d;
             var frameIndex = 0;
             var inputBuffer = channel.inputBuffer;
             var outputBuffer = channel.outputBuffer;
-            if (animationState._playTime <= inputBuffer[0]) {
+            if (animationState._currentTime <= inputBuffer[0]) {
             }
-            else if (animationState._playTime >= inputBuffer[inputBuffer.length - 1]) {
+            else if (animationState._currentTime >= inputBuffer[inputBuffer.length - 1]) {
                 frameIndex = inputBuffer.length - 1;
             }
             else {
                 for (var i = 0, l = inputBuffer.length; i < l; ++i) {
-                    if (animationState._playTime < inputBuffer[i]) {
+                    if (animationState._currentTime < inputBuffer[i]) {
                         break;
                     }
                     frameIndex = i;
@@ -13616,15 +13646,14 @@ var egret3d;
          * @internal
          */
         AnimationState.prototype.initialize = function (animationComponent, animationAsset, animationClip) {
-            var globalTime = paper.Time.time; //
             var assetConfig = animationAsset.config;
             //
             this.animationAsset = animationAsset;
             this.animationClip = animationClip;
             this.animation = assetConfig.animations[0]; // TODO 动画数据暂不合并。
             //
-            this._fadeTimeStart = globalTime;
-            this._playTimeStart = globalTime;
+            this._fadeTime = 0.0;
+            this._time = 0.0;
             this._animationComponent = animationComponent;
             if (this.animation.channels) {
                 var rootGameObject = this._animationComponent.gameObject;
@@ -13646,16 +13675,16 @@ var egret3d;
                     channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output));
                     switch (pathName) {
                         case "translation":
-                            channel.update = this._onUpdateTranslation;
                             channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name);
+                            channel.update = this._onUpdateTranslation;
                             break;
                         case "rotation":
-                            channel.update = this._onUpdateRotation;
                             channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name);
+                            channel.update = this._onUpdateRotation;
                             break;
                         case "scale":
-                            channel.update = this._onUpdateScale;
                             channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name);
+                            channel.update = this._onUpdateScale;
                             break;
                         case "weights":
                             // TODO
@@ -13680,49 +13709,48 @@ var egret3d;
             }
         };
         /**
-         *
+         * @internal
          */
-        AnimationState.prototype.update = function (globalTime) {
-            _super.prototype.update.call(this, globalTime);
-            // const prevPlayTimes = this.currentPlayTimes;
+        AnimationState.prototype._update = function (deltaTime) {
+            _super.prototype._update.call(this, deltaTime);
+            // Update time.
+            if (this._isPlaying) {
+                deltaTime *= this.timeScale * this._animationComponent.timeScale;
+                this._time += deltaTime;
+            }
             var prevPlayState = this._playState;
-            var timeScale = this.timeScale * this._animationComponent.timeScale;
-            var timeScaleR = timeScale === 0.0 ? 0.0 : 1.0 / timeScale;
-            var position = this.animationClip.position;
+            // const prevPlayTimes = this.currentPlayTimes;
             var duration = this.animationClip.duration;
             var totalTime = this.playTimes * duration;
-            var localPlayTime = (globalTime - this._playTimeStart) * timeScaleR;
-            var currentTime = 0.0;
-            if (this.playTimes > 0 && (timeScale >= 0.0 ? localPlayTime >= totalTime : localPlayTime <= 0.0)) {
+            if (this.playTimes > 0 && (this._time >= totalTime || this._time <= -totalTime)) {
                 if (this._playState <= 0 && this._isPlaying) {
                     this._playState = 1;
                 }
                 this.currentPlayTimes = this.playTimes;
-                if (localPlayTime >= totalTime) {
+                if (this._time >= totalTime) {
                     // currentTime = duration + 0.000001; // Precision problem.
-                    currentTime = duration; // TODO CHECK.
+                    this._currentTime = duration; // TODO CHECK.
                 }
                 else {
-                    currentTime = 0.0;
+                    this._currentTime = 0.0;
                 }
             }
             else {
                 if (this._playState !== 0 && this._isPlaying) {
                     this._playState = 0;
                 }
-                if (localPlayTime < 0.0) {
-                    localPlayTime = -localPlayTime;
-                    this.currentPlayTimes = Math.floor(localPlayTime / duration);
-                    currentTime = duration - (localPlayTime % duration);
+                if (this._time < 0.0) {
+                    this._time = -this._time;
+                    this.currentPlayTimes = Math.floor(this._time / duration);
+                    this._currentTime = duration - (this._time % duration);
                 }
                 else {
-                    this.currentPlayTimes = Math.floor(localPlayTime / duration);
-                    currentTime = localPlayTime % duration;
+                    this.currentPlayTimes = Math.floor(this._time / duration);
+                    this._currentTime = this._time % duration;
                 }
             }
-            currentTime += position;
-            this._playTime = currentTime;
-            if (this._channels.length > 0) {
+            this._currentTime += this.animationClip.position;
+            if (this.weight !== 0.0) {
                 for (var _i = 0, _a = this._channels; _i < _a.length; _i++) {
                     var channel = _a[_i];
                     if (channel.update) {
@@ -13739,10 +13767,30 @@ var egret3d;
                 }
             }
         };
+        AnimationState.prototype.play = function () {
+            this._isPlaying = true;
+        };
+        AnimationState.prototype.stop = function () {
+            this._isPlaying = false;
+        };
         AnimationState.prototype.fateOut = function () {
             this._fadeState = 1;
             this._subFadeState = -1;
         };
+        Object.defineProperty(AnimationState.prototype, "totalTime", {
+            get: function () {
+                return this.animationClip.duration;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(AnimationState.prototype, "currentTime", {
+            get: function () {
+                return this._currentTime;
+            },
+            enumerable: true,
+            configurable: true
+        });
         return AnimationState;
     }(BlendNode));
     egret3d.AnimationState = AnimationState;
@@ -13779,7 +13827,6 @@ var egret3d;
              * @internal
              */
             _this._blendLayers = {};
-            _this._fadeInParamter = null;
             /**
              * 最后一个播放的动画状态。
              * - 当进行动画混合时，该值通常没有任何意义。
@@ -13817,10 +13864,6 @@ var egret3d;
          * @internal
          */
         Animation.prototype._update = function (globalTime) {
-            if (this._fadeInParamter) {
-                this.fadeIn.apply(this, this._fadeInParamter);
-                this._fadeInParamter = null;
-            }
             var blendNodes = this._blendNodes;
             var blendNodeCount = blendNodes.length;
             if (blendNodeCount === 1) {
@@ -13832,7 +13875,7 @@ var egret3d;
                     }
                 }
                 else {
-                    blendNode.update(globalTime);
+                    blendNode._update(globalTime);
                 }
             }
             else if (blendNodeCount > 1) {
@@ -13848,7 +13891,7 @@ var egret3d;
                         if (r > 0) {
                             blendNodes[i - r] = blendNode;
                         }
-                        blendNode.update(globalTime);
+                        blendNode._update(globalTime);
                     }
                     if (i === blendNodeCount - 1 && r > 0) {
                         blendNodes.length -= r;
@@ -13905,7 +13948,7 @@ var egret3d;
             var animationState = new AnimationState();
             animationState.initialize(this, animationAsset, animationClip);
             animationState.additive = additive;
-            animationState.fadeTime = fadeTime;
+            animationState.fadeTotalTime = fadeTime;
             animationState.playTimes = playTimes < 0 ? (animationClip.playTimes || 0) : playTimes;
             // TODO sort by layer and blend tree.
             this._blendNodes.push(animationState);
@@ -13931,8 +13974,8 @@ var egret3d;
         Animation.prototype.stop = function () {
             for (var _i = 0, _a = this._blendNodes; _i < _a.length; _i++) {
                 var blendNode = _a[_i];
-                if (!blendNode.parent) {
-                    blendNode.fadeOut(0.0);
+                if (!blendNode.parent && blendNode instanceof AnimationState) {
+                    blendNode.stop();
                 }
             }
         };
@@ -13994,13 +14037,12 @@ var egret3d;
                 component.play();
             }
         };
-        AnimationSystem.prototype.onUpdate = function () {
-            var globalTime = this._clock.time;
+        AnimationSystem.prototype.onUpdate = function (deltaTime) {
             for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
                 var gameObject = _a[_i];
                 for (var _b = 0, _c = gameObject.getComponents(egret3d.Animation); _b < _c.length; _b++) {
                     var animation = _c[_b];
-                    animation._update(globalTime);
+                    animation._update(deltaTime);
                 }
             }
         };
@@ -20939,31 +20981,30 @@ var egret3d;
             _this._renderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.WebGLRenderState);
             _this._lightCamera = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.Camera);
             //
-            _this._filteredLights = [];
+            _this._cacheLightCount = 0;
+            //
             _this._cacheMaterialVerision = -1;
             _this._cacheMaterial = null;
+            //
             _this._cacheSubMeshIndex = -1;
             _this._cacheMesh = null;
             return _this;
         }
         WebGLRenderSystem.prototype._renderLightShadow = function (light) {
             var camera = this._lightCamera;
-            var drawCalls = this._drawCalls;
-            var faceCount = light.constructor === egret3d.PointLight ? 6 : 1;
             var renderState = this._renderState;
-            for (var i = 0; i < faceCount; ++i) {
+            var shadowMaterial = light.constructor === egret3d.PointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
+            var drawCalls = this._drawCalls;
+            var shadowCalls = drawCalls.shadowCalls;
+            for (var i = 0, l = light.constructor === egret3d.PointLight ? 6 : 1; i < l; ++i) {
                 var context = camera.context;
                 light.update(camera, i);
                 light.renderTarget.activeCubeFace = i; // TODO 创建接口。
                 renderState.targetAndViewport(camera.viewport, light.renderTarget);
                 renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                 drawCalls.shadowFrustumCulling(camera);
-                //
-                var shadowCalls = drawCalls.shadowCalls;
-                var shadowMaterial = light.constructor === egret3d.PointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
                 for (var _i = 0, shadowCalls_1 = shadowCalls; _i < shadowCalls_1.length; _i++) {
                     var drawCall = shadowCalls_1[_i];
-                    //TODO, 现在不支持蒙皮动画阴影     
                     this._draw(context, drawCall, shadowMaterial);
                 }
             }
@@ -20974,7 +21015,7 @@ var egret3d;
             if (renderEnabled) {
                 //在这里先剔除，然后排序，最后绘制
                 var drawCalls = this._drawCalls;
-                drawCalls.sortAfterFrustumCulling(camera);
+                drawCalls.frustumCulling(camera);
                 //
                 var opaqueCalls = drawCalls.opaqueCalls;
                 var transparentCalls = drawCalls.transparentCalls;
@@ -21075,16 +21116,6 @@ var egret3d;
                     case "CAMERA_UP" /* _CAMERA_UP */:
                         webgl.uniform3fv(location_3, context.cameraUp);
                         break;
-                    // case gltf.UniformSemanticType._BINDMATRIX: {
-                    //     const renderer = context.drawCall.renderer as SkinnedMeshRenderer;
-                    //     webgl.uniformMatrix4fv(location, false, xxx.rawData);
-                    //     break;
-                    // }
-                    // case gltf.UniformSemanticType._BINDMATRIXINVERSE: {
-                    //     const renderer = context.drawCall.renderer as SkinnedMeshRenderer;
-                    //     webgl.uniformMatrix4fv(location, false, xxx .rawData);
-                    //     break;
-                    // }
                     case "JOINTMATRIX" /* JOINTMATRIX */:
                         webgl.uniformMatrix4fv(location_3, false, context.drawCall.renderer.boneMatrices);
                         break;
@@ -21316,37 +21347,37 @@ var egret3d;
                 return;
             }
             egret3d.Performance.startCounter("render");
-            var lightsDirty = false;
+            var lightCountDirty = false;
             var isPlayerMode = paper.Application.playerMode === 0 /* Player */;
             var renderState = this._renderState;
             var cameras = this._camerasAndLights.cameras;
             var lights = this._camerasAndLights.lights;
-            var filteredLights = this._filteredLights;
             var editorScene = paper.Application.sceneManager.editorScene;
-            // Lights.
-            if (filteredLights.length > 0) {
-                lightsDirty = true;
-                filteredLights.length = 0;
-            }
+            this._drawCalls.drawCallCount = 0;
+            // Render lights.
             if (lights.length > 0) {
+                lightCountDirty = true;
+                this._cacheLightCount = 0;
                 for (var _i = 0, lights_3 = lights; _i < lights_3.length; _i++) {
                     var light = lights_3[_i];
-                    filteredLights.push(light);
+                    this._cacheLightCount++;
                     if (!light.castShadows) {
                         continue;
                     }
                     this._renderLightShadow(light);
                 }
             }
-            // Cameras.
+            else if (this._cacheLightCount > 0) {
+                lightCountDirty = true;
+                this._cacheLightCount = 0;
+            }
+            // Render cameras.
             if (cameras.length > 0) {
                 for (var _a = 0, cameras_2 = cameras; _a < cameras_2.length; _a++) {
                     var camera = cameras_2[_a];
                     var renderEnabled = isPlayerMode ? camera.gameObject.scene !== editorScene : camera.gameObject.scene === editorScene;
-                    if (renderEnabled) {
-                        if (lightsDirty || filteredLights.length > 0) {
-                            camera.context.updateLights(filteredLights, camera.gameObject.scene.ambientColor); // TODO 性能优化
-                        }
+                    if (renderEnabled && lightCountDirty) {
+                        camera.context.updateLights(lights, camera.gameObject.scene.ambientColor); // TODO 性能优化
                     }
                     if (camera.postQueues.length === 0) {
                         if (renderEnabled) {
@@ -21989,7 +22020,7 @@ var egret3d;
                 egret3d.particle.ParticleSystem,
                 egret3d.Egret2DRendererSystem,
                 //
-                egret3d.CameraSystem,
+                egret3d.CameraAndLightSystem,
                 egret3d.WebGLRenderSystem,
                 //
                 paper.DisableSystem,
@@ -22265,7 +22296,7 @@ var paper;
                         egret3d.particle.ParticleSystem,
                         egret3d.Egret2DRendererSystem,
                         //
-                        egret3d.CameraSystem,
+                        egret3d.CameraAndLightSystem,
                         egret3d.WebGLRenderSystem,
                         egret3d.GizmoRenderSystem,
                         //

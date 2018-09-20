@@ -6,16 +6,7 @@ namespace paper {
         Materials = "materials",
     }
     /**
-     * renderer component interface
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 渲染器组件接口
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * 基础渲染器。
      */
     export abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
         @serializedField

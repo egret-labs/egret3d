@@ -406,6 +406,8 @@ namespace paper.debug {
             EventPool.removeEventListener(GUIComponentEvent.GameObjectSelected, GUIComponent, this._gameObjectSelectedHandler);
             EventPool.removeEventListener(GUIComponentEvent.GameObjectUnselected, GUIComponent, this._gameObjectUnselectedHandler);
 
+            this._selectSceneOrGameObject(null);
+
             for (const k in this._hierarchyFolders) {
                 const folder = this._hierarchyFolders[k];
                 delete this._hierarchyFolders[k];
@@ -420,16 +422,7 @@ namespace paper.debug {
             }
 
             for (const k in this._inspectorFolders) {
-                const folder = this._inspectorFolders[k];
                 delete this._inspectorFolders[k];
-
-                if (folder && folder.parent) {
-                    try {
-                        folder.parent.removeFolder(folder);
-                    }
-                    catch (e) {
-                    }
-                }
             }
 
             this._bufferedGameObjects.length = 0;

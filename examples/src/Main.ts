@@ -1,6 +1,6 @@
 function main() {
-    ArrowIO.start();
-    // startExamples();
+    // ArrowIO.start();
+    startExamples();
 
     // if ((window || global).dat) {
     //     // fps TODO

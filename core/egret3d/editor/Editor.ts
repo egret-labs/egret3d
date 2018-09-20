@@ -173,7 +173,7 @@ namespace paper.editor {
                     egret3d.particle.ParticleSystem,
                     egret3d.Egret2DRendererSystem,
                     //
-                    egret3d.CameraSystem,
+                    egret3d.CameraAndLightSystem,
                     egret3d.WebGLRenderSystem,
                     egret3d.GizmoRenderSystem,
                     //

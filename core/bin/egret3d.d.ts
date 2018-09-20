@@ -623,16 +623,7 @@ declare namespace paper {
         Materials = "materials",
     }
     /**
-     * renderer component interface
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 渲染器组件接口
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * 基础渲染器。
      */
     abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
         frustumCulled: boolean;
@@ -3228,11 +3219,11 @@ declare namespace paper {
          */
         hasGameObject(gameObject: GameObject): boolean;
         /**
-         *
+         * 所有收集的实体。
          */
         readonly gameObjects: ReadonlyArray<GameObject>;
         /**
-         *
+         * 所有收集的组件。
          */
         readonly components: ReadonlyArray<BaseComponent>;
     }
@@ -3897,53 +3888,66 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     *
+     * 激活的摄像机和灯光。
      */
     class CamerasAndLights extends paper.SingletonComponent {
         readonly cameras: Camera[];
         readonly lights: BaseLight[];
         private _sortCameras(a, b);
-        updateCamera(gameObjects: ReadonlyArray<paper.GameObject>): void;
-        updateLight(gameObjects: ReadonlyArray<paper.GameObject>): void;
+        /**
+         * 更新摄像机。
+         */
+        updateCameras(gameObjects: ReadonlyArray<paper.GameObject>): void;
+        updateLights(gameObjects: ReadonlyArray<paper.GameObject>): void;
         sortCameras(): void;
+        /**
+         * 摄像机计数
+         */
+        readonly cameraCount: number;
+        /**
+         * 灯光计数。
+         */
+        readonly lightCount: any;
     }
 }
 declare namespace egret3d {
     /**
-     * @private
-     * draw call type
+     * Draw call 信息。
      */
     type DrawCall = {
         renderer: paper.BaseRenderer;
         matrix?: Matrix4;
-        isSkinned?: boolean;
         subMeshIndex: number;
         mesh: Mesh;
         material: Material;
         zdist: number;
     };
     /**
-     *
+     * 所有 Draw call 信息。
      */
     class DrawCalls extends paper.SingletonComponent {
+        /**
+         * 每个渲染帧的 Draw call 计数。
+         */
+        drawCallCount: number;
         /**
          * 参与渲染的渲染器列表。
          */
         readonly renderers: paper.BaseRenderer[];
         /**
-         * 所有的 draw call 列表。
+         * Draw call 列表。
          */
         readonly drawCalls: DrawCall[];
         /**
-         * 非透明列表
+         * 非透明 Draw call 列表。
          */
         readonly opaqueCalls: DrawCall[];
         /**
-         * 透明列表
+         * 透明 Draw call 列表。
          */
         readonly transparentCalls: DrawCall[];
         /**
-         * 阴影列表
+         * 阴影 Draw call 列表。
          */
         readonly shadowCalls: DrawCall[];
         /**
@@ -3961,7 +3965,7 @@ declare namespace egret3d {
         /**
          *
          */
-        sortAfterFrustumCulling(camera: Camera): void;
+        frustumCulling(camera: Camera): void;
         /**
          * 移除指定渲染器的 draw call 列表。
          */
@@ -3974,9 +3978,9 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 摄像机系统。
+     * 摄像机和灯光系统。
      */
-    class CameraSystem extends paper.BaseSystem {
+    class CameraAndLightSystem extends paper.BaseSystem {
         protected readonly _interests: ({
             componentClass: typeof Camera;
         }[] | {
@@ -4823,18 +4827,17 @@ declare namespace egret3d {
         /**
          * 淡入淡出的时间。
          */
-        fadeTime: number;
+        fadeTotalTime: number;
         /**
          * 父节点。
          */
         parent: BlendNode | null;
         /**
-         * 全局融合时间标记。
+         * 本地融合时间。
          */
-        protected _fadeTimeStart: number;
+        protected _fadeTime: number;
         protected _onFadeStateChange(): void;
-        update(globalTime: number): void;
-        fadeOut(fadeTime: number): void;
+        fadeOut(fadeOutTime: number): void;
     }
     /**
      * 动画混合树节点。
@@ -4884,24 +4887,24 @@ declare namespace egret3d {
          */
         private _playState;
         /**
-         * 全局播放时间标记。
-         */
-        private _playTimeStart;
-        /**
          * 本地播放时间。
          */
-        private _playTime;
-        private _animationComponent;
+        private _time;
+        /**
+         * 当前动画时间。
+         */
+        private _currentTime;
         private readonly _channels;
+        private _animationComponent;
         private _onUpdateTranslation(channel, animationState);
         private _onUpdateRotation(channel, animationState);
         private _onUpdateScale(channel, animationState);
         private _onUpdateActive(channel, animationState);
-        /**
-         *
-         */
-        update(globalTime: number): void;
+        play(): void;
+        stop(): void;
         fateOut(): void;
+        readonly totalTime: number;
+        readonly currentTime: number;
     }
     /**
      * 动画组件。
@@ -4923,7 +4926,6 @@ declare namespace egret3d {
          * 混合节点列表。
          */
         private readonly _blendNodes;
-        private _fadeInParamter;
         /**
          * 最后一个播放的动画状态。
          * - 当进行动画混合时，该值通常没有任何意义。
@@ -4949,7 +4951,7 @@ declare namespace egret3d {
             componentClass: typeof Animation;
         }[];
         onAddComponent(component: Animation): void;
-        onUpdate(): void;
+        onUpdate(deltaTime: number): void;
     }
 }
 declare namespace egret3d.particle {
@@ -9374,7 +9376,7 @@ declare namespace egret3d {
         private readonly _camerasAndLights;
         private readonly _renderState;
         private readonly _lightCamera;
-        private readonly _filteredLights;
+        private _cacheLightCount;
         private _cacheMaterialVerision;
         private _cacheMaterial;
         private _cacheSubMeshIndex;

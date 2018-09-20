@@ -1,8 +1,8 @@
 namespace egret3d {
     /**
-     * 摄像机系统。
+     * 摄像机和灯光系统。
      */
-    export class CameraSystem extends paper.BaseSystem {
+    export class CameraAndLightSystem extends paper.BaseSystem {
         protected readonly _interests = [
             [
                 { componentClass: Camera }
@@ -15,19 +15,19 @@ namespace egret3d {
 
         public onAddGameObject(_gameObject: paper.GameObject, group: paper.GameObjectGroup) {
             if (group === this._groups[0]) {
-                this._camerasAndLights.updateCamera(this._groups[0].gameObjects);
+                this._camerasAndLights.updateCameras(this._groups[0].gameObjects);
             }
             else if (group === this._groups[1]) {
-                this._camerasAndLights.updateLight(this._groups[1].gameObjects);
+                this._camerasAndLights.updateLights(this._groups[1].gameObjects);
             }
         }
 
         public onRemoveGameObject(_gameObject: paper.GameObject, group: paper.GameObjectGroup) {
             if (group === this._groups[0]) {
-                this._camerasAndLights.updateCamera(this._groups[0].gameObjects);
+                this._camerasAndLights.updateCameras(this._groups[0].gameObjects);
             }
             else if (group === this._groups[1]) {
-                this._camerasAndLights.updateLight(this._groups[1].gameObjects);
+                this._camerasAndLights.updateLights(this._groups[1].gameObjects);
             }
         }
 

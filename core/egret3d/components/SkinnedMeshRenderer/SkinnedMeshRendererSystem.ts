@@ -49,7 +49,6 @@ namespace egret3d {
                     renderer: renderer,
                     matrix: Matrix4.IDENTITY,
 
-                    isSkinned: true,
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.mesh,
                     material: material || DefaultMaterials.MISSING,

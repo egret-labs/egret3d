@@ -54,7 +54,7 @@ namespace egret3d {
                 particle.ParticleSystem,
                 Egret2DRendererSystem,
                 //
-                CameraSystem,
+                CameraAndLightSystem,
                 WebGLRenderSystem,
                 //
                 paper.DisableSystem,
