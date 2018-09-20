@@ -1,9 +1,13 @@
 namespace paper.debug {
     export class Helper {
         private static _rayCastGameObject(ray: egret3d.Ray, gameObject: paper.GameObject, raycastInfos: egret3d.RaycastInfo[]) {
-            if (!gameObject.activeInHierarchy && gameObject.tag !== paper.DefaultTags.EditorOnly) {
+            if(gameObject.name === "__editor"){
                 return;
             }
+            if (!gameObject.activeInHierarchy && gameObject.tag !== paper.DefaultTags.EditorOnly && gameObject.hideFlags !== paper.HideFlags.HideAndDontSave) {
+                return;
+            }
+
 
             let raycastInfo: egret3d.RaycastInfo | null = null;
             const meshFilter = gameObject.getComponent(egret3d.MeshFilter);
