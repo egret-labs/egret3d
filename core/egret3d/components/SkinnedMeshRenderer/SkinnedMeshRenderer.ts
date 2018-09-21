@@ -114,6 +114,10 @@ namespace egret3d {
 
                 this._inverseBindMatrices = this._mesh.createTypeArrayFromAccessor(this._mesh.getAccessor(skin.inverseBindMatrices!));
                 this.boneMatrices = new Float32Array(this._bones.length * 16);
+
+                if (this._bones.length > SkinnedMeshRendererSystem.maxBoneCount) {
+                    // TODO
+                }
                 // this._update(); TODO
             }
         }
@@ -137,16 +141,52 @@ namespace egret3d {
         public recalculateAABB() {
             // TODO
             if (this._mesh) {
-                this.aabb.clear();
+                this._aabb.clear();
 
                 const vertices = this._mesh.getVertices()!; // T pose mesh aabb.
                 const position = helpVector3A;
 
                 for (let i = 0, l = vertices.length; i < l; i += 3) {
                     position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
-                    this.aabb.add(position);
+                    this._aabb.add(position);
                 }
             }
+        }
+
+        public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
+            if (!this._mesh) {
+                return false;
+            }
+
+            let raycastMesh = false;
+            let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
+            const worldMatrix = this.gameObject.transform.worldMatrix;
+            const localRay = MeshRenderer._helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
+            const aabb = this.aabb;
+
+            if (p2) {
+                if (p2 === true) {
+                    raycastMesh = true;
+                }
+                else {
+                    raycastMesh = p3 || false;
+                    raycastInfo = p2;
+                }
+            }
+
+            if (raycastMesh) {
+                return aabb.raycast(localRay) && this._mesh.raycast(p1, raycastInfo, this.boneMatrices);
+            }
+            else if (aabb.raycast(localRay, raycastInfo)) {
+                if (raycastInfo) { // Update local raycast info to world.
+                    raycastInfo.position.applyMatrix(worldMatrix);
+                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
+                }
+
+                return true;
+            }
+
+            return false;
         }
 
         public get bones(): ReadonlyArray<Transform | null> {

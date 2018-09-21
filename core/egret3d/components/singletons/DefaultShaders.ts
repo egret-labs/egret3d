@@ -68,68 +68,68 @@ namespace egret3d {
             const helpMaterial = new Material(new Shader(egret3d.ShaderLib.meshbasic as any, ""));
             //
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
-            DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP]);
+            DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
 
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_BASIC_DOUBLESIDE = this._createShader("builtin/meshbasic_doubleside.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP]);
+            DefaultShaders.MESH_BASIC_DOUBLESIDE = this._createShader("builtin/meshbasic_doubleside.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
 
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
-            DefaultShaders.MESH_LAMBERT = this._createShader("builtin/meshlambert.shader.json", egret3d.ShaderLib.meshlambert as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP]);
+            DefaultShaders.MESH_LAMBERT = this._createShader("builtin/meshlambert.shader.json", egret3d.ShaderLib.meshlambert as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
 
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_LAMBERT_DOUBLESIDE = this._createShader("builtin/meshlambert_doubleside.shader.json", egret3d.ShaderLib.meshlambert as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP]);
+            DefaultShaders.MESH_LAMBERT_DOUBLESIDE = this._createShader("builtin/meshlambert_doubleside.shader.json", egret3d.ShaderLib.meshlambert as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
 
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
-            DefaultShaders.MESH_PHONG = this._createShader("builtin/meshphong.shader.json", egret3d.ShaderLib.meshphong as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP]);
+            DefaultShaders.MESH_PHONG = this._createShader("builtin/meshphong.shader.json", egret3d.ShaderLib.meshphong as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
 
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_PHONE_DOUBLESIDE = this._createShader("builtin/meshphong_doubleside.shader.json", egret3d.ShaderLib.meshphong as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP]);
+            DefaultShaders.MESH_PHONE_DOUBLESIDE = this._createShader("builtin/meshphong_doubleside.shader.json", egret3d.ShaderLib.meshphong as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
 
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
-            DefaultShaders.MESH_PHYSICAL = this._createShader("builtin/meshphysical.shader.json", egret3d.ShaderLib.meshphysical as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP]);
+            DefaultShaders.MESH_PHYSICAL = this._createShader("builtin/meshphysical.shader.json", egret3d.ShaderLib.meshphysical as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
 
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_PHYSICAL_DOUBLESIDE = this._createShader("builtin/meshphysical_doubleside.shader.json", egret3d.ShaderLib.meshphysical as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP]);
+            DefaultShaders.MESH_PHYSICAL_DOUBLESIDE = this._createShader("builtin/meshphysical_doubleside.shader.json", egret3d.ShaderLib.meshphysical as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
 
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK).setBlend(gltf.BlendMode.Blend);
-            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP]);
+            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend);
-            DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP]);
+            DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
 
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK).setBlend(gltf.BlendMode.Add);
-            DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP]);
+            DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add);
-            DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP]);
+            DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
 
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
             DefaultShaders.LINEDASHED = this._createShader("builtin/linedashed.shader.json", egret3d.ShaderLib.linedashed as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);
 
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
-            DefaultShaders.VERTEX_COLOR = this._createShader("builtin/vertcolor.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_MAP, ShaderDefines.USE_COLOR]);
+            DefaultShaders.VERTEX_COLOR = this._createShader("builtin/vertcolor.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP, ShaderDefine.USE_COLOR]);
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);
 
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_COLOR]);
+            DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend);
-            DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_COLOR]);
+            DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);
 
             helpMaterial.clearStates().setDepth(true, true).setBlend(gltf.BlendMode.Blend);
             helpMaterial.glTFTechnique.states!.functions!.depthFunc = [gltf.DepthFunc.EQUAL];//TODO
-            DefaultShaders.PARTICLE_BLEND1 = this._createShader("builtin/particle_blend1.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_COLOR]);
+            DefaultShaders.PARTICLE_BLEND1 = this._createShader("builtin/particle_blend1.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add);
-            DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_COLOR]);
+            DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend_PreMultiply);
-            DefaultShaders.PARTICLE_BLEND_PREMULTIPLY = this._createShader("builtin/particle_blend_premultiply.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_COLOR]);
+            DefaultShaders.PARTICLE_BLEND_PREMULTIPLY = this._createShader("builtin/particle_blend_premultiply.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add_PreMultiply);
-            DefaultShaders.PARTICLE_ADDITIVE_PREMULTIPLY = this._createShader("builtin/particle_additive_premultiply.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefines.USE_COLOR]);
+            DefaultShaders.PARTICLE_ADDITIVE_PREMULTIPLY = this._createShader("builtin/particle_additive_premultiply.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.CUBE = this._createShader("builtin/cube.shader.json", egret3d.ShaderLib.cube as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);

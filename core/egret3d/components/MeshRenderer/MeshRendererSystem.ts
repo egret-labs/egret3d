@@ -52,8 +52,6 @@ namespace egret3d {
                     subMeshIndex: subMeshIndex++,
                     mesh: filter.mesh,
                     material: materials[primitive.material!] || DefaultMaterials.MISSING,
-
-                    frustumTest: false,
                     zdist: -1,
                 };
                 this._drawCalls.drawCalls.push(drawCall);

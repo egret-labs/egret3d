@@ -12,7 +12,7 @@ namespace paper {
         public static create(name: string, x: number, y: number, z: number, scene: Scene): GameObject | null;
         public static create(name: string, xOrScene?: number | Scene, y?: number, z?: number, scene?: Scene) {
             const prefab = paper.Asset.find<Prefab>(name);
-            if (prefab) {
+            if (prefab && prefab instanceof Prefab) {
                 if (xOrScene !== undefined && xOrScene !== null) {
                     if (xOrScene instanceof Scene) {
                         const gameObject = prefab.createInstance(xOrScene);
@@ -39,6 +39,9 @@ namespace paper {
 
                     return gameObject;
                 }
+            }
+            else {
+                console.warn("The prefab don't exists.", name);
             }
 
             return null;

@@ -5,6 +5,7 @@ namespace paper.debug {
     export const enum GUIComponentEvent {
         SceneSelected = "SceneSelected",
         SceneUnselected = "SceneUnselected",
+        GameObjectHovered = "GameObjectHovered",
         GameObjectSelected = "GameObjectSelected",
         GameObjectUnselected = "GameObjectUnselected",
     }
@@ -12,9 +13,8 @@ namespace paper.debug {
      * 
      */
     export class GUIComponent extends SingletonComponent {
-        // public readonly inspector: dat.GUI = new dat.GUI({ closeOnTop: true, width: 330 });
-        // public readonly hierarchy: dat.GUI = new dat.GUI({ closeOnTop: true, width: 330 });
-
+        public readonly inspector: dat.GUI = new dat.GUI({ closeOnTop: true, width: 330 });
+        public readonly hierarchy: dat.GUI = new dat.GUI({ closeOnTop: true, width: 330 });
         /**
          * 所有选中的实体。
          */
@@ -24,87 +24,64 @@ namespace paper.debug {
          */
         public selectedScene: Scene | null = null;
         /**
+         * 
+         */
+        public hoverGameObject: GameObject | null = null;
+        /**
          * 最后一个选中的实体。
          */
         public selectedGameObject: GameObject | null = null;
 
-        public editorModel: editor.EditorModel | null;
-
         public initialize() {
             super.initialize();
 
-            if (paper.Application.playerMode === PlayerMode.Editor) {
-                const guiSceneSystem = Application.systemManager.getOrRegisterSystem(debug.GUISceneSystem);
-                this.editorModel = paper.editor.Editor.activeEditorModel;
+            const sceneOptions = {
+                debug: false,
+                assets: () => {
+                    const assets = paper.Asset["_assets"] as any;
+                    const assetNames = [];
 
-                this.editorModel.addEventListener(paper.editor.EditorModelEvent.SELECT_GAMEOBJECTS, e => this.selectGameObjects(e.data), this);
-                // this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_MODE, e => this.changeEditMode(e.data), this);
-                // this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_TYPE, e => this.changeEditType(e.data), this);
-                this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_PROPERTY, e => this.changeProperty(e.data), this);
-            }
+                    for (const k in assets) {
+                        if (k.indexOf("builtin") >= 0) {
+                            continue;
+                        }
 
-            // const sceneOptions = {
-            //     debug: false
-            // };
+                        assetNames.push(k);
 
-            // this.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
-            //     const guiSceneSystem = Application.systemManager.getOrRegisterSystem(debug.GUISceneSystem);
-            //     const guiSystem = Application.systemManager.getOrRegisterSystem(debug.GUISystem);
+                        if (assets[k] instanceof egret3d.Texture) {
+                            assetNames.push(k.replace(".image.json", ".png"));
+                            assetNames.push(k.replace(".image.json", ".jpg"));
+                        }
+                    }
 
-            //     if (v) {
-            //         Application.playerMode = PlayerMode.DebugPlayer;
-            //         guiSceneSystem.enabled = true;
-            //         guiSystem.enabled = true;
-            //     }
-            //     else {
-            //         Application.playerMode = PlayerMode.Player;
-            //         guiSceneSystem.enabled = false;
-            //         guiSystem.enabled = false;
-            //     }
-            // });
-        }
-
-        public uninitialize() {
-            if (paper.Application.playerMode === PlayerMode.Editor) {
-                this.editorModel.removeEventListener(paper.editor.EditorModelEvent.SELECT_GAMEOBJECTS, e => this.selectGameObjects(e.data), this);
-                // this.editorModel.removeEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_MODE, e => this.changeEditMode(e.data), this);
-                // this.editorModel.removeEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_TYPE, e => this.changeEditType(e.data), this);
-                this.editorModel.removeEventListener(paper.editor.EditorModelEvent.CHANGE_PROPERTY, e => this.changeProperty(e.data), this);
-            }
-        }
-
-        public selectGameObjects(gameObjs: GameObject[]) {
-
-        }
-
-        private changeProperty(data) {
-            if ((data.target instanceof egret3d.Transform) && data.propName && this.selectedGameObjects.length > 0) {
-                let propName = <string>data.propName;
-                let target = <egret3d.Transform>data.target;
-                switch (propName) {
-                    case "position":
-                        // this.controller.transform.setPosition(this._ctrlPos);
-                        break;
-                    case "rotation":
-                        // this.controller.transform.setRotation(this._ctrlRot);
-                        break;
-                    case "localPosition":
-                        // this._ctrlPos = this.selectedGameObjs[0].transform.getPosition();
-                        // this.controller.transform.setPosition(this._ctrlPos);
-                        break;
-                    case "localRotation":
-                        // this._ctrlRot = this.selectedGameObjs[0].transform.getRotation();
-                        // this.controller.transform.setRotation(this._ctrlRot);
-                        break;
-                    default:
-                        break;
+                    console.info(JSON.stringify(assetNames));
                 }
-            }
-            //
-            if (data.target instanceof GameObject) {
-                let propName = <string>data.propName;
-                console.log(propName);
-            }
+            };
+
+            this.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
+                const guiSceneSystem = Application.systemManager.getOrRegisterSystem(debug.GUISceneSystem);
+                const guiSystem = Application.systemManager.getOrRegisterSystem(debug.GUISystem);
+
+                if (v) {
+                    Application.playerMode = PlayerMode.DebugPlayer;
+                    guiSceneSystem.enabled = true;
+                    guiSystem.enabled = true;
+                }
+                else {
+                    this.select(null);
+
+                    Application.playerMode = PlayerMode.Player;
+                    guiSceneSystem.enabled = false;
+                    guiSystem.enabled = false;
+
+                    this.selectedGameObjects.length = 0;
+                    this.selectedScene = null;
+                    this.hoverGameObject = null;
+                    this.selectedGameObject = null;
+                }
+            });
+            this.hierarchy.add(sceneOptions, "assets");
+            this.hierarchy.close();
         }
 
         public select(value: Scene | GameObject | null, isReplace?: boolean) {
@@ -128,8 +105,9 @@ namespace paper.debug {
 
             if (isReplace) {
                 if (this.selectedScene) {
-                    EventPool.dispatchEvent(GUIComponentEvent.SceneUnselected, this, this.selectedScene);
+                    const selectedScene = this.selectedScene;
                     this.selectedScene = null;
+                    EventPool.dispatchEvent(GUIComponentEvent.SceneUnselected, this, selectedScene);
                 }
                 else if (this.selectedGameObjects.length > 0) {
                     const gameObjects = this.selectedGameObjects.concat();
@@ -154,12 +132,40 @@ namespace paper.debug {
                 }
             }
 
-            (global || window)["psgo"] = value; // For quick debug;
+            (global || window)["psgo"] = value; // For quick debug.
+        }
+
+        public unselect(value: Scene | GameObject) {
+            if (value instanceof Scene) {
+                if (this.selectedScene === value) {
+                    this.selectedScene = null;
+                    EventPool.dispatchEvent(GUIComponentEvent.SceneUnselected, this, value);
+                }
+            }
+            else {
+                const index = this.selectedGameObjects.indexOf(value);
+                if (index >= 0) {
+                    if (this.selectedGameObject === value) {
+                        this.selectedGameObject = null;
+                    }
+
+                    this.selectedGameObjects.splice(index, 1);
+                    EventPool.dispatchEvent(GUIComponentEvent.GameObjectUnselected, this, value);
+                }
+            }
+        }
+
+        public hover(value: GameObject | null) {
+            if (this.hoverGameObject === value) {
+                return;
+            }
+
+            this.hoverGameObject = value;
+            EventPool.dispatchEvent(GUIComponentEvent.GameObjectHovered, this, this.hoverGameObject);
         }
     }
-
     // 
-    // if (dat) {
-    //     GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
-    // }
+    if (dat) {
+        GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
+    }
 }

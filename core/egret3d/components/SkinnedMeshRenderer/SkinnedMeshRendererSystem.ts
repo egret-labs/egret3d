@@ -6,7 +6,7 @@ namespace egret3d {
         /**
          * 
          */
-        public static maxBoneCount: number = 55;
+        public static maxBoneCount: number = 24;
 
         protected readonly _interests = [
             {
@@ -49,15 +49,13 @@ namespace egret3d {
                     renderer: renderer,
                     matrix: Matrix4.IDENTITY,
 
-                    isSkinned: true,
                     subMeshIndex: subMeshIndex++,
                     mesh: renderer.mesh,
                     material: material || DefaultMaterials.MISSING,
 
-                    frustumTest: false,
                     zdist: -1,
                 };
-                material.addDefine(ShaderDefines.USE_SKINNING).addDefine(`${ShaderDefines.MAX_BONES} ${SkinnedMeshRendererSystem.maxBoneCount}`);
+                material.addDefine(ShaderDefine.USE_SKINNING).addDefine(`${ShaderDefine.MAX_BONES} ${SkinnedMeshRendererSystem.maxBoneCount}`);
                 this._drawCalls.drawCalls.push(drawCall);
             }
         }

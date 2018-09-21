@@ -10,6 +10,10 @@ namespace egret3d {
         /**
          * 
          */
+        public static MESH_LAMBERT: Material;
+        /**
+         * 
+         */
         public static LINEDASHED_COLOR: Material;
         /**
          * 
@@ -42,13 +46,20 @@ namespace egret3d {
             super.initialize();
 
             DefaultMaterials.MESH_BASIC = this._createMaterial("builtin/meshbasic.mat.json", DefaultShaders.MESH_BASIC)
-                .setTexture(ShaderUniformNames.Map, DefaultTextures.WHITE);
+                .setTexture(ShaderUniformName.Map, DefaultTextures.WHITE);
+
+            DefaultMaterials.MESH_LAMBERT = this._createMaterial("builtin/meshlambert.mat.json", DefaultShaders.MESH_LAMBERT)
+                .setTexture(ShaderUniformName.Map, DefaultTextures.WHITE);
+
             DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", DefaultShaders.LINEDASHED)
-                .addDefine(ShaderDefines.USE_COLOR);
+                .addDefine(ShaderDefine.USE_COLOR);
+
             DefaultMaterials.MISSING = this._createMaterial("builtin/missing.mat.json", DefaultShaders.MESH_BASIC)
-                .setColor(ShaderUniformNames.Diffuse, Color.create(1.0, 0.0, 1.0).release());
+                .setColor(ShaderUniformName.Diffuse, Color.create(1.0, 0.0, 1.0).release());
+
             DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/shadow_depth.mat.json", DefaultShaders.DEPTH)
-                .addDefine(ShaderDefines.DEPTH_PACKING_3201);
+                .addDefine(ShaderDefine.DEPTH_PACKING_3201);
+
             DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", DefaultShaders.DISTANCE_RGBA);
         }
     }

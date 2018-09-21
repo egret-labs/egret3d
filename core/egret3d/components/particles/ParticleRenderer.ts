@@ -103,6 +103,11 @@ namespace egret3d.particle {
      * 
      */
     export class ParticleRenderer extends paper.BaseRenderer {
+        /**
+         * TODO
+         */
+        public frustumCulled: boolean = false;
+
         @paper.serializedField
         private _mesh: egret3d.Mesh | null;
         @paper.serializedField
@@ -133,8 +138,13 @@ namespace egret3d.particle {
         }
 
         public recalculateAABB() {
-            this.aabb.clear();
+            this._aabb.clear();
             // TODO
+        }
+
+        public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
+            // TODO
+            return false;
         }
 
         public get renderMode(): ParticleRenderMode {

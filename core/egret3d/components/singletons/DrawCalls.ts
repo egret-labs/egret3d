@@ -1,42 +1,44 @@
 namespace egret3d {
     /**
-     * @private
-     * draw call type
+     * Draw call 信息。
      */
     export type DrawCall = {
         renderer: paper.BaseRenderer,
         matrix?: Matrix4,
 
-        isSkinned?: boolean,
         subMeshIndex: number,
         mesh: Mesh,
         material: Material,
 
-        frustumTest: boolean,
         zdist: number,
     };
     /**
-     * 
+     * 所有 Draw call 信息。
      */
     export class DrawCalls extends paper.SingletonComponent {
+        /**
+         * 每个渲染帧的 Draw call 计数。
+         */
+        @paper.editor.property(paper.editor.EditType.UINT)
+        public drawCallCount: number = 0;
         /**
          * 参与渲染的渲染器列表。
          */
         public readonly renderers: paper.BaseRenderer[] = [];
         /**
-         * 所有的 draw call 列表。
+         * Draw call 列表。
          */
         public readonly drawCalls: DrawCall[] = [];
         /**
-         * 非透明列表
+         * 非透明 Draw call 列表。
          */
         public readonly opaqueCalls: DrawCall[] = [];
         /**
-         * 透明列表
+         * 透明 Draw call 列表。
          */
         public readonly transparentCalls: DrawCall[] = [];
         /**
-         * 阴影列表
+         * 阴影 Draw call 列表。
          */
         public readonly shadowCalls: DrawCall[] = [];
         /**
@@ -74,13 +76,16 @@ namespace egret3d {
          */
         public shadowFrustumCulling(camera: Camera) {
             this.shadowCalls.length = 0;
+
             for (const drawCall of this.drawCalls) {
-                const drawTarget = drawCall.renderer.gameObject;
-                const visible = (camera.cullingMask & drawTarget.layer) !== 0;
-                if (visible && drawCall.renderer.castShadows) {
-                    if (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer!))) {
-                        this.shadowCalls.push(drawCall);
-                    }
+                const renderer = drawCall.renderer;
+                if (
+                    renderer.castShadows &&
+                    (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
+                    (!renderer.frustumCulled || camera.testFrustumCulling(renderer))
+                ) {
+                    this.drawCallCount++;
+                    this.shadowCalls.push(drawCall);
                 }
             }
 
@@ -89,20 +94,18 @@ namespace egret3d {
         /**
          * 
          */
-        public sortAfterFrustumCulling(camera: Camera) {
+        public frustumCulling(camera: Camera) {
+            const cameraPosition = camera.gameObject.transform.position;
             this.opaqueCalls.length = 0;
             this.transparentCalls.length = 0;
-            const cameraPos = camera.gameObject.transform.getPosition();
-            //
-            for (const drawCall of this.drawCalls) {
-                const drawTarget = drawCall.renderer.gameObject;
 
+            for (const drawCall of this.drawCalls) {
+                const renderer = drawCall.renderer;
                 if (
-                    (camera.cullingMask & drawTarget.layer) !== 0 &&
-                    (!drawCall.frustumTest || (drawCall.frustumTest && camera.testFrustumCulling(drawTarget.renderer!)))
+                    (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
+                    (!renderer.frustumCulled || camera.testFrustumCulling(renderer))
                 ) {
-                    const objPos = drawTarget.transform.getPosition();
-                    drawCall.zdist = objPos.getDistance(cameraPos);
+                    this.drawCallCount++;
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
                     if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent) {
                         this.transparentCalls.push(drawCall);
@@ -110,9 +113,11 @@ namespace egret3d {
                     else {
                         this.opaqueCalls.push(drawCall);
                     }
+                    
+                    drawCall.zdist = renderer.gameObject.transform.getPosition().getDistance(cameraPosition);
                 }
             }
-            //
+
             this.opaqueCalls.sort(this._sortOpaque);
             this.transparentCalls.sort(this._sortFromFarToNear);
         }

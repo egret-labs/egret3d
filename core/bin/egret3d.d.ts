@@ -489,7 +489,7 @@ declare namespace egret3d {
         applyMatrix(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
         applyDirection(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
         applyQuaternion(quaternion: Readonly<IVector4>, source?: Readonly<IVector3>): this;
-        normalize(source?: Readonly<IVector3>): this;
+        normalize(source?: Readonly<IVector3>, defaultAxis?: Readonly<IVector3>): this;
         negate(source?: Readonly<IVector3>): this;
         addScalar(add: number, source?: Readonly<IVector3>): this;
         add(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
@@ -617,22 +617,17 @@ declare namespace egret3d {
     const helpVector4F: Vector4;
 }
 declare namespace paper {
+    /**
+     *
+     */
     const enum RendererEventType {
         Materials = "materials",
     }
     /**
-     * renderer component interface
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     * 基础渲染器。
      */
-    /**
-     * 渲染器组件接口
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    abstract class BaseRenderer extends BaseComponent {
+    abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
+        frustumCulled: boolean;
         protected _receiveShadows: boolean;
         protected _castShadows: boolean;
         protected _lightmapIndex: number;
@@ -643,6 +638,8 @@ declare namespace paper {
          * 重新计算 AABB。
          */
         abstract recalculateAABB(): void;
+        abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
+        abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
         /**
          *
          */
@@ -760,6 +757,17 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
+     * 射线检测接口。
+     */
+    interface IRaycast {
+        /**
+         * 射线检测。
+         * @param ray
+         * @param raycastInfo 是否将检测的详细数据写入 RaycastInfo。
+         */
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+    }
+    /**
      * 射线
      */
     class Ray implements paper.IRelease<Ray>, paper.ISerializable {
@@ -793,18 +801,14 @@ declare namespace egret3d {
          * 与三角形相交检测。
          * TODO
          */
-        intersectTriangle(p1: Readonly<Vector3>, p2: Readonly<Vector3>, p3: Readonly<Vector3>, backfaceCulling?: boolean): RaycastInfo | null;
+        intersectTriangle(triangle: Readonly<Triangle>, backfaceCulling?: boolean, raycastInfo?: RaycastInfo): boolean;
+        intersectTriangle(p1: Readonly<Vector3>, p2: Readonly<Vector3>, p3: Readonly<Vector3>, backfaceCulling?: boolean, raycastInfo?: RaycastInfo): boolean;
         intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3;
         /**
-         * 与 AABB 相交检测。
+         * @deprecated
          */
         intersectAABB(aabb: Readonly<AABB>, raycastInfo?: RaycastInfo): boolean;
         intersectAABB(minimum: Readonly<IVector3>, maximum: Readonly<IVector3>, raycastInfo?: RaycastInfo): boolean;
-        /**
-         * 与球相交检测。
-         */
-        intersectSphere(sphere: Readonly<Sphere>, raycastInfo?: RaycastInfo): boolean;
-        intersectSphere(center: Readonly<IVector3>, radius: number, raycastInfo?: RaycastInfo): boolean;
         /**
          * @deprecated
          */
@@ -1280,7 +1284,7 @@ declare namespace gltf {
         JOINTS_0 = "JOINTS_0",
         WEIGHTS_0 = "WEIGHTS_0",
     }
-    type MeshAttribute = MeshAttributeType | string;
+    type MeshAttribute = AttributeSemanticType | string;
     /**
      * Indices of those attributes that deviate from their initialization value.
      */
@@ -2262,7 +2266,7 @@ declare namespace paper {
         /**
          * 当前激活的场景。
          */
-        activeScene: Readonly<Scene>;
+        activeScene: Scene;
         /**
          *
          */
@@ -2282,7 +2286,7 @@ declare namespace paper {
         /**
          * @deprecated
          */
-        getActiveScene(): Readonly<Scene>;
+        getActiveScene(): Scene;
     }
 }
 declare namespace egret3d {
@@ -2742,9 +2746,11 @@ declare namespace egret3d {
      * Mesh 渲染组件。
      */
     class MeshRenderer extends paper.BaseRenderer {
+        protected static readonly _helpRay: Ray;
         protected readonly _materials: Material[];
         uninitialize(): void;
         recalculateAABB(): void;
+        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
         /**
          * material list
          * @version paper 1.0
@@ -2825,7 +2831,7 @@ declare namespace egret3d {
     /**
      *
      */
-    abstract class BaseMesh extends GLTFAsset {
+    abstract class BaseMesh extends GLTFAsset implements egret3d.IRaycast {
         protected _drawMode: gltf.DrawMode;
         protected _vertexCount: number;
         protected readonly _attributeNames: string[];
@@ -2847,10 +2853,7 @@ declare namespace egret3d {
          *
          */
         clone(): Mesh;
-        /**
-         * TODO
-         */
-        raycast(ray: Readonly<Ray>, worldMatrix: Readonly<Matrix4>, boneMatrices?: Float32Array | null): RaycastInfo;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo, boneMatrices?: Float32Array | null): boolean;
         /**
          *
          */
@@ -2882,7 +2885,7 @@ declare namespace egret3d {
         /**
          *
          */
-        setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset?: number, count?: number): Float32Array;
+        setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset?: number): Float32Array;
         /**
          *
          */
@@ -3057,7 +3060,7 @@ declare namespace egret3d {
     /**
      *
      */
-    class Sphere implements paper.IRelease<Sphere>, paper.ISerializable {
+    class Sphere implements paper.IRelease<Sphere>, paper.ISerializable, IRaycast {
         private static readonly _instances;
         /**
          *
@@ -3067,11 +3070,11 @@ declare namespace egret3d {
         static create(center?: Readonly<IVector3>, radius?: number): Sphere;
         release(): this;
         /**
-         *
+         * 球半径。
          */
         radius: number;
         /**
-         *
+         * 中心坐标。
          */
         readonly center: Vector3;
         /**
@@ -3089,6 +3092,7 @@ declare namespace egret3d {
         contains(value: Readonly<IVector3 | Sphere>): boolean;
         getDistance(value: Readonly<IVector3>): number;
         clampPoint(point: Readonly<IVector3>, out: Vector3): Vector3;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
 }
 declare namespace egret3d {
@@ -3203,11 +3207,11 @@ declare namespace paper {
          */
         hasGameObject(gameObject: GameObject): boolean;
         /**
-         *
+         * 所有收集的实体。
          */
         readonly gameObjects: ReadonlyArray<GameObject>;
         /**
-         *
+         * 所有收集的组件。
          */
         readonly components: ReadonlyArray<BaseComponent>;
     }
@@ -3225,7 +3229,7 @@ declare namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
-    class AABB implements paper.IRelease<AABB>, paper.ISerializable {
+    class AABB implements paper.IRelease<AABB>, paper.ISerializable, IRaycast {
         private static readonly _instances;
         static create(minimum?: Readonly<IVector3> | null, maximum?: Readonly<IVector3> | null): AABB;
         release(): this;
@@ -3286,6 +3290,7 @@ declare namespace egret3d {
         contains(value: Readonly<IVector3 | AABB>): boolean;
         getDistance(value: Readonly<IVector3>): number;
         clampPoints(value: Readonly<IVector3>, out: Vector3): Vector3;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
         readonly isEmpty: boolean;
         /**
          * Bounding sphere radius.
@@ -3474,6 +3479,9 @@ declare namespace egret3d {
         private _localDirty;
         private _worldDirty;
         private readonly _localMatrix;
+        /**
+         * TODO inverse world matrix.
+         */
         private readonly _worldMatrix;
         private readonly _localPosition;
         private readonly _localRotation;
@@ -3851,6 +3859,10 @@ declare namespace egret3d {
         /**
          *
          */
+        static MESH_LAMBERT: Material;
+        /**
+         *
+         */
         static LINEDASHED_COLOR: Material;
         /**
          *
@@ -3866,54 +3878,66 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     *
+     * 激活的摄像机和灯光。
      */
     class CamerasAndLights extends paper.SingletonComponent {
         readonly cameras: Camera[];
         readonly lights: BaseLight[];
         private _sortCameras(a, b);
-        updateCamera(gameObjects: ReadonlyArray<paper.GameObject>): void;
-        updateLight(gameObjects: ReadonlyArray<paper.GameObject>): void;
+        /**
+         * 更新摄像机。
+         */
+        updateCameras(gameObjects: ReadonlyArray<paper.GameObject>): void;
+        updateLights(gameObjects: ReadonlyArray<paper.GameObject>): void;
         sortCameras(): void;
+        /**
+         * 摄像机计数
+         */
+        readonly cameraCount: number;
+        /**
+         * 灯光计数。
+         */
+        readonly lightCount: number;
     }
 }
 declare namespace egret3d {
     /**
-     * @private
-     * draw call type
+     * Draw call 信息。
      */
     type DrawCall = {
         renderer: paper.BaseRenderer;
         matrix?: Matrix4;
-        isSkinned?: boolean;
         subMeshIndex: number;
         mesh: Mesh;
         material: Material;
-        frustumTest: boolean;
         zdist: number;
     };
     /**
-     *
+     * 所有 Draw call 信息。
      */
     class DrawCalls extends paper.SingletonComponent {
+        /**
+         * 每个渲染帧的 Draw call 计数。
+         */
+        drawCallCount: number;
         /**
          * 参与渲染的渲染器列表。
          */
         readonly renderers: paper.BaseRenderer[];
         /**
-         * 所有的 draw call 列表。
+         * Draw call 列表。
          */
         readonly drawCalls: DrawCall[];
         /**
-         * 非透明列表
+         * 非透明 Draw call 列表。
          */
         readonly opaqueCalls: DrawCall[];
         /**
-         * 透明列表
+         * 透明 Draw call 列表。
          */
         readonly transparentCalls: DrawCall[];
         /**
-         * 阴影列表
+         * 阴影 Draw call 列表。
          */
         readonly shadowCalls: DrawCall[];
         /**
@@ -3931,7 +3955,7 @@ declare namespace egret3d {
         /**
          *
          */
-        sortAfterFrustumCulling(camera: Camera): void;
+        frustumCulling(camera: Camera): void;
         /**
          * 移除指定渲染器的 draw call 列表。
          */
@@ -3944,9 +3968,9 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * Camera系统
+     * 摄像机和灯光系统。
      */
-    class CameraSystem extends paper.BaseSystem {
+    class CameraAndLightSystem extends paper.BaseSystem {
         protected readonly _interests: ({
             componentClass: typeof Camera;
         }[] | {
@@ -4022,7 +4046,7 @@ declare namespace egret3d {
         renderTarget: BaseRenderTarget | null;
         private _near;
         private _far;
-        private readonly _matProjP;
+        private readonly _projectionMatrix;
         private readonly _matProjO;
         private readonly _frameVectors;
         /**
@@ -4054,11 +4078,11 @@ declare namespace egret3d {
         createRayByScreen(screenPosX: number, screenPosY: number, ray?: Ray): Ray;
         testFrustumCulling(node: paper.BaseRenderer): boolean;
         /**
-         * 相机到近裁剪面距离
+         * 相机到近裁剪面距离。
          */
         near: number;
         /**
-         * 相机到远裁剪面距离
+         * 相机到远裁剪面距离。
          */
         far: number;
     }
@@ -4097,18 +4121,19 @@ declare namespace egret3d {
      * @language zh_CN
      */
     class Egret2DRenderer extends paper.BaseRenderer {
-        private renderer;
         /**
-         * 是否使用视锥剔除
+         * TODO
          */
-        frustumTest: boolean;
+        frustumCulled: boolean;
         stage: egret.Stage;
+        private renderer;
         private _screenAdapter;
         screenAdapter: IScreenAdapter;
         root: egret.DisplayObjectContainer;
         initialize(): void;
         uninitialize(): void;
         recalculateAABB(): void;
+        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
         /**
          * 检查屏幕接触事件是否能够穿透此2D层
          */
@@ -4340,16 +4365,25 @@ declare namespace paper {
      */
     class Scene extends BaseObject {
         /**
-         *
+         * 创建空场景。
          */
         static createEmpty(name?: string, isActive?: boolean): Scene;
         /**
-         *
+         * 通过 Asset name 创建指定场景。
          */
         static create(name: string, combineStaticObjects?: boolean): Scene;
+        /**
+         * 全局静态场景。
+         */
         static readonly globalScene: Scene;
+        /**
+         *
+         */
         static readonly editorScene: Scene;
-        static activeScene: Readonly<Scene>;
+        /**
+         * 当前激活场景。
+         */
+        static activeScene: Scene;
         /**
          * lightmap 表现的光照强度。
          */
@@ -4366,10 +4400,25 @@ declare namespace paper {
          * 场景的 lightmap 列表。
          */
         readonly lightmaps: egret3d.Texture[];
+        /**
+         *
+         */
         fogMode: FogMode;
+        /**
+         *
+         */
         readonly fogColor: egret3d.Color;
+        /**
+         *
+         */
         fogDensity: number;
+        /**
+         *
+         */
         fogNear: number;
+        /**
+         *
+         */
         fogFar: number;
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
@@ -4389,6 +4438,9 @@ declare namespace paper {
          * 销毁场景。
          */
         destroy(): void;
+        private _raycast(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+        private _sortRaycastInfo(a, b);
+        raycast(ray: Readonly<egret3d.Ray>, maxDistance?: number, cullingMask?: CullingMask, raycastMesh?: boolean): egret3d.RaycastInfo[];
         /**
          *
          */
@@ -4519,7 +4571,7 @@ declare namespace paper {
         /**
          *
          */
-        getComponentInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
+        getComponentInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T | null;
         /**
          * 搜索自己和子节点中所有特定类型的组件
          */
@@ -4716,6 +4768,7 @@ declare namespace egret3d {
         initialize(reset?: boolean): void;
         uninitialize(): void;
         recalculateAABB(): void;
+        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
         readonly bones: ReadonlyArray<Transform | null>;
         readonly rootBone: Transform;
         /**
@@ -4772,18 +4825,17 @@ declare namespace egret3d {
         /**
          * 淡入淡出的时间。
          */
-        fadeTime: number;
+        fadeTotalTime: number;
         /**
          * 父节点。
          */
         parent: BlendNode | null;
         /**
-         * 全局融合时间标记。
+         * 本地融合时间。
          */
-        protected _fadeTimeStart: number;
+        protected _fadeTime: number;
         protected _onFadeStateChange(): void;
-        update(globalTime: number): void;
-        fadeOut(fadeTime: number): void;
+        fadeOut(fadeOutTime: number): void;
     }
     /**
      * 动画混合树节点。
@@ -4833,24 +4885,24 @@ declare namespace egret3d {
          */
         private _playState;
         /**
-         * 全局播放时间标记。
-         */
-        private _playTimeStart;
-        /**
          * 本地播放时间。
          */
-        private _playTime;
-        private _animationComponent;
+        private _time;
+        /**
+         * 当前动画时间。
+         */
+        private _currentTime;
         private readonly _channels;
+        private _animationComponent;
         private _onUpdateTranslation(channel, animationState);
         private _onUpdateRotation(channel, animationState);
         private _onUpdateScale(channel, animationState);
         private _onUpdateActive(channel, animationState);
-        /**
-         *
-         */
-        update(globalTime: number): void;
+        play(): void;
+        stop(): void;
         fateOut(): void;
+        readonly totalTime: number;
+        readonly currentTime: number;
     }
     /**
      * 动画组件。
@@ -4872,7 +4924,6 @@ declare namespace egret3d {
          * 混合节点列表。
          */
         private readonly _blendNodes;
-        private _fadeInParamter;
         /**
          * 最后一个播放的动画状态。
          * - 当进行动画混合时，该值通常没有任何意义。
@@ -4898,7 +4949,7 @@ declare namespace egret3d {
             componentClass: typeof Animation;
         }[];
         onAddComponent(component: Animation): void;
-        onUpdate(): void;
+        onUpdate(deltaTime: number): void;
     }
 }
 declare namespace egret3d.particle {
@@ -5268,6 +5319,10 @@ declare namespace egret3d.particle {
      *
      */
     class ParticleRenderer extends paper.BaseRenderer {
+        /**
+         * TODO
+         */
+        frustumCulled: boolean;
         private _mesh;
         private readonly _materials;
         velocityScale: number;
@@ -5275,6 +5330,7 @@ declare namespace egret3d.particle {
         lengthScale: number;
         uninitialize(): void;
         recalculateAABB(): void;
+        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
         renderMode: ParticleRenderMode;
         /**
          * mesh model
@@ -5530,9 +5586,15 @@ declare namespace paper {
          *
          */
         pause(): void;
+        /**
+         *
+         */
         resume(): void;
         readonly isFocused: boolean;
         readonly isRunning: boolean;
+        /**
+         *
+         */
         playerMode: PlayerMode;
     }
 }
@@ -5567,12 +5629,13 @@ declare namespace egret3d {
     /**
      * 通用宏定义
      */
-    const enum ShaderDefines {
+    const enum ShaderDefine {
         USE_COLOR = "USE_COLOR",
         USE_MAP = "USE_MAP",
         USE_SKINNING = "USE_SKINNING",
         USE_LIGHTMAP = "USE_LIGHTMAP",
         USE_SHADOWMAP = "USE_SHADOWMAP",
+        USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
         MAX_BONES = "MAX_BONES",
         FLIP_V = "FLIP_V",
         NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
@@ -5587,9 +5650,10 @@ declare namespace egret3d {
     /**
      * 通用Uniform名字
      */
-    const enum ShaderUniformNames {
+    const enum ShaderUniformName {
         Diffuse = "diffuse",
         Opacity = "opacity",
+        Size = "size",
         Map = "map",
         Specular = "specular",
         Shininess = "shininess",
@@ -9287,7 +9351,7 @@ declare namespace egret3d {
         private readonly _camerasAndLights;
         private readonly _renderState;
         private readonly _lightCamera;
-        private readonly _filteredLights;
+        private _cacheLightCount;
         private _cacheMaterialVerision;
         private _cacheMaterial;
         private _cacheSubMeshIndex;

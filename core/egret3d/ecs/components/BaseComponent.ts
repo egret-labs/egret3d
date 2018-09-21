@@ -36,7 +36,7 @@ namespace paper {
             }
 
             if ((this.__isSingleton ? this._allSingletonComponents : this._allComponents).indexOf(this as any) >= 0) {
-                console.debug("Register component class again.", egret.getQualifiedClassName(this));
+                console.warn("Register component class again.", egret.getQualifiedClassName(this));
                 return false;
             }
 

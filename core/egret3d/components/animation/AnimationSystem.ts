@@ -13,11 +13,10 @@ namespace egret3d {
             }
         }
 
-        public onUpdate() { // TODO 应将组件功能尽量移到系统
-            const globalTime = this._clock.time;
+        public onUpdate(deltaTime: number) { // TODO 应将组件功能尽量移到系统
             for (const gameObject of this._groups[0].gameObjects) {
                 for (const animation of gameObject.getComponents(Animation)) {
-                    animation._update(globalTime);
+                    animation._update(deltaTime);
                 }
             }
         }

@@ -307,27 +307,25 @@ namespace egret3d {
         }
 
         public update(drawCall: DrawCall) {
+            const renderer = drawCall.renderer;
+            const scene = renderer.gameObject.scene;
+            const matrix = drawCall.matrix || renderer.gameObject.transform.worldMatrix;
             this.drawCall = drawCall;
-
-            const renderer = this.drawCall.renderer;
-            {
-                const matrix = drawCall.matrix || renderer.gameObject.transform.getWorldMatrix();
-                this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
-                this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
-                this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);
-                this.matrix_mv_inverse.getNormalMatrix(this.matrix_mv);
-            }
-
-            this.shaderContextDefine = "";
+            this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
+            this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
+            this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);
+            this.matrix_mv_inverse.getNormalMatrix(this.matrix_mv);
             //
-            if (renderer.lightmapIndex >= 0) {
-                const activeScene = paper.Application.sceneManager.activeScene;
-                if (activeScene.lightmaps.length > renderer.lightmapIndex) {
-                    this.lightmap = activeScene.lightmaps[renderer.lightmapIndex];
-                    this.lightmapUV = this.drawCall.mesh.glTFMesh.primitives[this.drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0;
-                    this.lightmapIntensity = activeScene.lightmapIntensity;
-                    this.shaderContextDefine += "#define USE_LIGHTMAP \n";
-                }
+            this.shaderContextDefine = "";
+
+            if (
+                renderer.lightmapIndex >= 0 &&
+                scene.lightmaps.length > renderer.lightmapIndex
+            ) {
+                this.lightmap = scene.lightmaps[renderer.lightmapIndex];
+                this.lightmapUV = drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0;
+                this.lightmapIntensity = scene.lightmapIntensity;
+                this.shaderContextDefine += "#define USE_LIGHTMAP \n";
             }
 
             if (this.lightCount > 0) {
@@ -349,14 +347,13 @@ namespace egret3d {
                 }
             }
 
-            if (drawCall.renderer.gameObject.scene.fogMode !== paper.FogMode.NONE) {
-                const scene = drawCall.renderer.gameObject.scene;
+            if (scene.fogMode !== paper.FogMode.NONE) {
                 this.fogColor[0] = scene.fogColor.r;
                 this.fogColor[1] = scene.fogColor.g;
                 this.fogColor[2] = scene.fogColor.b;
 
                 this.shaderContextDefine += "#define USE_FOG \n";
-                if (drawCall.renderer.gameObject.scene.fogMode === paper.FogMode.FOG_EXP2) {
+                if (scene.fogMode === paper.FogMode.FOG_EXP2) {
                     this.fogDensity = scene.fogDensity;
                     this.shaderContextDefine += "#define FOG_EXP2 \n";
                 }

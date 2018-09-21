@@ -1,20 +1,17 @@
 namespace paper {
+    /**
+     * 
+     */
     export const enum RendererEventType {
         Materials = "materials",
     }
     /**
-     * renderer component interface
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     * 基础渲染器。
      */
-    /**
-     * 渲染器组件接口
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    export abstract class BaseRenderer extends BaseComponent {
+    export abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
+        @serializedField
+        @editor.property(editor.EditType.CHECKBOX)
+        public frustumCulled: boolean = true;
         /**
          * @internal
          */
@@ -45,6 +42,9 @@ namespace paper {
          * 重新计算 AABB。
          */
         public abstract recalculateAABB(): void;
+
+        public abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
+        public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
         /**
          * 
          */

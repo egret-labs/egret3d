@@ -25,7 +25,7 @@ namespace paper {
      */
     export function serialize(source: Scene | GameObject | BaseComponent, inline: boolean = false): ISerializedData {
         if (_serializeData) {
-            console.debug("The deserialization is not complete.");
+            console.warn("The deserialization is not complete.");
         }
 
         if (!_defaultGameObject) {

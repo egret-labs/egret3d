@@ -9,7 +9,7 @@ namespace paper {
      */
     export class Scene extends BaseObject {
         /**
-         * 
+         * 创建空场景。
          */
         public static createEmpty(name: string = DefaultNames.NoName, isActive: boolean = true) {
             // const exScene = Application.sceneManager.getSceneByName(name); TODO
@@ -24,7 +24,7 @@ namespace paper {
             return scene;
         }
         /**
-         * 
+         * 通过 Asset name 创建指定场景。
          */
         public static create(name: string, combineStaticObjects: boolean = true) {
             const exScene = Application.sceneManager.getSceneByName(name);
@@ -34,7 +34,7 @@ namespace paper {
             }
 
             const rawScene = paper.Asset.find<RawScene>(name);
-            if (rawScene) {
+            if (rawScene && rawScene instanceof RawScene) {
                 const scene = rawScene.createInstance();
 
                 if (scene) {
@@ -45,22 +45,31 @@ namespace paper {
                     return scene;
                 }
             }
+            else {
+                console.warn("The scene don't exists.", name);
+            }
 
             return null;
         }
-
+        /**
+         * 全局静态场景。
+         */
         public static get globalScene() {
             return Application.sceneManager.globalScene;
         }
-
+        /**
+         * 
+         */
         public static get editorScene() {
             return Application.sceneManager.editorScene;
         }
-
+        /**
+         * 当前激活场景。
+         */
         public static get activeScene() {
             return Application.sceneManager.activeScene;
         }
-        public static set activeScene(value: Readonly<Scene>) {
+        public static set activeScene(value: Scene) {
             Application.sceneManager.activeScene = value;
         }
         /**
@@ -85,21 +94,35 @@ namespace paper {
          */
         @serializedField
         public readonly lightmaps: egret3d.Texture[] = [];
-
+        /**
+         * 
+         */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.FogMode) })
         public fogMode: FogMode = FogMode.NONE;
+        /**
+         * 
+         */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.COLOR)
         public readonly fogColor: egret3d.Color = egret3d.Color.create(0.5, 0.5, 0.5, 1);
+        /**
+         * 
+         */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public fogDensity: number = 0.01;
+        /**
+         * 
+         */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public fogNear: number = 1.0;
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.001, step: 1.0 })
+        public fogNear: number = 0.001;
+        /**
+         * 
+         */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.001, step: 1.0 })
         public fogFar: number = 300.0;
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
@@ -126,7 +149,7 @@ namespace paper {
          */
         public _addGameObject(gameObject: GameObject) {
             if (this._gameObjects.indexOf(gameObject) >= 0) {
-                console.debug("Add game object error.", gameObject.path);
+                console.warn("Add game object error.", gameObject.path);
             }
 
             this._gameObjects.push(gameObject);
@@ -138,7 +161,7 @@ namespace paper {
             const index = this._gameObjects.indexOf(gameObject);
 
             if (index < 0) {
-                console.debug("Remove game object error.", gameObject.path);
+                console.warn("Remove game object error.", gameObject.path);
             }
 
             this._gameObjects.splice(index, 1);
@@ -174,6 +197,50 @@ namespace paper {
             this._gameObjects.length = 0;
 
             GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).scenes.push(this);
+        }
+
+        private _raycast(ray: Readonly<egret3d.Ray>, gameObject: GameObject, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false, raycastInfos: egret3d.RaycastInfo[]) {
+            if (
+                (
+                    gameObject.hideFlags === paper.HideFlags.HideAndDontSave && gameObject.tag === paper.DefaultTags.EditorOnly
+                ) ? gameObject.activeInHierarchy : !gameObject.activeInHierarchy
+            ) {
+                return;
+            }
+
+            const raycastInfo = egret3d.RaycastInfo.create();
+            if ((gameObject.layer & cullingMask) && gameObject.renderer && gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
+                if (maxDistance <= 0.0 || raycastInfo.distance <= maxDistance) {
+                    raycastInfo.transform = gameObject.transform;
+                    raycastInfos.push(raycastInfo);
+                }
+                else {
+                    raycastInfo.release();
+                }
+            }
+            else {
+                raycastInfo.release();
+
+                for (const child of gameObject.transform.children) {
+                    this._raycast(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+                }
+            }
+        }
+
+        private _sortRaycastInfo(a: egret3d.RaycastInfo, b: egret3d.RaycastInfo) {
+            return b.distance - a.distance;
+        }
+
+        public raycast(ray: Readonly<egret3d.Ray>, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false) {
+            const raycastInfos = [] as egret3d.RaycastInfo[];
+
+            for (const gameObject of this.getRootGameObjects()) {
+                this._raycast(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+            }
+
+            raycastInfos.sort(this._sortRaycastInfo);
+
+            return raycastInfos;
         }
         /**
          * 

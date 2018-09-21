@@ -2,12 +2,13 @@ namespace egret3d {
     /**
      * 通用宏定义
      */
-    export const enum ShaderDefines {
+    export const enum ShaderDefine {
         USE_COLOR = "USE_COLOR",
         USE_MAP = "USE_MAP",
         USE_SKINNING = "USE_SKINNING",
         USE_LIGHTMAP = "USE_LIGHTMAP",
         USE_SHADOWMAP = "USE_SHADOWMAP",
+        USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
         //
         MAX_BONES = "MAX_BONES",
         //
@@ -26,9 +27,10 @@ namespace egret3d {
     /**
      * 通用Uniform名字
      */
-    export const enum ShaderUniformNames {
+    export const enum ShaderUniformName {
         Diffuse = "diffuse",
         Opacity = "opacity",
+        Size = "size",
         Map = "map",
         Specular = "specular",
         Shininess = "shininess",

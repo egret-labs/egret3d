@@ -71,21 +71,24 @@ namespace paper {
         public init(options: egret3d.RunEgretOptions) {
             this._playerMode = options.playerMode || PlayerMode.Player;
 
-            for (const systemClass of options.systems) {
-                this.systemManager.register(systemClass, null);
+            if (options.systems) {
+                for (const systemClass of options.systems) {
+                    this.systemManager.register(systemClass, null);
+                }
             }
 
             this._updatePlayerMode();
             this.resume();
         }
-
         /**
          * 
          */
         public pause() {
             this._isRunning = false;
         }
-
+        /**
+         * 
+         */
         public resume() {
             if (this._isRunning) {
                 return;
@@ -107,7 +110,9 @@ namespace paper {
         public get isRunning() {
             return this._isRunning;
         }
-
+        /**
+         * 
+         */
         public get playerMode() {
             return this._playerMode;
         }

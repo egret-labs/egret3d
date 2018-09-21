@@ -1,5 +1,12 @@
 function main() {
+    // ArrowIO.start();
     startExamples();
+
+    // if ((window || global).dat) {
+    //     // fps TODO
+    //     const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
+    //     Stats.show(div);
+    // }
 }
 
 function startExamples() {
@@ -34,10 +41,6 @@ function startExamples() {
     });
 
     window[current].start();
-
-    // fps TODO
-    const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
-    Stats.show(div);
 
     function getCurrentTest() {
         var appFile;

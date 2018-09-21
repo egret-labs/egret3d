@@ -55,7 +55,6 @@ namespace paper {
          * 
          */
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.HideFlags) })
         public hideFlags: HideFlags = HideFlags.None;
         /**
          * 层级
@@ -592,7 +591,7 @@ namespace paper {
         /**
          * 
          */
-        public getComponentInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
+        public getComponentInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false): T | null {
             let component = this.getComponent(componentClass, isExtends);
             if (!component) {
                 for (const child of this.transform.children) {
@@ -828,6 +827,7 @@ namespace paper {
         public get globalGameObject() {
             return GameObject.globalGameObject;
         }
+
         /**
          * @deprecated
          * @see paper.Scene#find()

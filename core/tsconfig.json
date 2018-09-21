@@ -1,24 +1,20 @@
 {
     "compilerOptions": {
-        "target": "es5",
-        "lib": [
-            "es5",
-            "dom",
-            "es2015.promise"
-        ],
-        "sourceMap": false,
-        "declaration": true,
+		"declaration": true,
         "stripInternal": true,
-        "alwaysStrict": true,
-        "skipLibCheck": true,
-        "noImplicitAny": false,
-        "noImplicitThis": false,
+		"skipLibCheck": true,
+		"experimentalDecorators": true,
+        "preserveConstEnums": true,
+		"strict": false,
         "noUnusedLocals": false,
         "noUnusedParameters": false,
-        "strictNullChecks": false,
-        "experimentalDecorators": true,
-        "allowSyntheticDefaultImports": false,
-        "preserveConstEnums": true,
+		"strictPropertyInitialization": false,
+		"target": "es5",
+		"lib": [
+			"es5",
+			"dom",
+			"es2015.promise"
+		],
         "outFile": "bin/egret3d.js"
     },
     "files": [

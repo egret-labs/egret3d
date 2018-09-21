@@ -124,7 +124,7 @@ namespace egret3d {
             const materialDefines = glTFMaterial.extensions.paper.defines;
 
             if (materialDefines && materialDefines.length > 0) {
-                for (const define of glTFMaterial.extensions.paper.defines) {
+                for (const define of materialDefines) {
                     this.addDefine(define);
                 }
             }
@@ -356,14 +356,14 @@ namespace egret3d {
 
         setVector4(id: string, value: Readonly<IVector4>) {
             //兼容老键值
-            if (id === "_MainTex_ST" && this._glTFTechnique.uniforms[ShaderUniformNames.UVTransform]) {
-                id = ShaderUniformNames.UVTransform;
+            if (id === "_MainTex_ST" && this._glTFTechnique.uniforms[ShaderUniformName.UVTransform]) {
+                id = ShaderUniformName.UVTransform;
                 console.warn("已废弃的键值_MainTex_ST，建议改为:uvTransform-Matrix3");
                 this._glTFTechnique.uniforms[id].value = [value.x, 0, 0, 0, value.y, 0, value.z, value.w, 1];
                 return;
             }
-            else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms[ShaderUniformNames.Diffuse]) {
-                id = ShaderUniformNames.Diffuse;
+            else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms[ShaderUniformName.Diffuse]) {
+                id = ShaderUniformName.Diffuse;
                 console.warn("已废弃的键值_MainColor、_Color，建议改为:diffuse-Vector3");
                 this._glTFTechnique.uniforms[id].value = [value.x, value.y, value.z];
                 return;
@@ -388,14 +388,14 @@ namespace egret3d {
 
         setVector4v(id: string, value: Float32Array | [number, number, number, number]) {
             //兼容老键值
-            if (id === "_MainTex_ST" && this._glTFTechnique.uniforms[ShaderUniformNames.UVTransform]) {
-                id = ShaderUniformNames.UVTransform;
+            if (id === "_MainTex_ST" && this._glTFTechnique.uniforms[ShaderUniformName.UVTransform]) {
+                id = ShaderUniformName.UVTransform;
                 console.warn("已废弃的键值_MainTex_ST，建议改为:uvTransform-Matrix3");
                 this._glTFTechnique.uniforms[id].value = [value[0], 0, 0, 0, value[1], 0, value[2], value[3], 1];
                 return;
             }
-            else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms[ShaderUniformNames.Diffuse]) {
-                id = ShaderUniformNames.Diffuse;
+            else if ((id === "_MainColor" || id === "_Color") && this._glTFTechnique.uniforms[ShaderUniformName.Diffuse]) {
+                id = ShaderUniformName.Diffuse;
                 console.warn("已废弃的键值_MainColor、_Color，建议改为:diffuse-Vector3");
                 this._glTFTechnique.uniforms[id].value = [value[0], value[1], value[2]];
                 return;
@@ -450,8 +450,8 @@ namespace egret3d {
         public setTexture(id: string, value: egret3d.Texture | null) {
             value = value || egret3d.DefaultTextures.WHITE;
             //兼容老键值
-            if (id === "_MainTex" && this._glTFTechnique.uniforms[ShaderUniformNames.Map]) {
-                id = ShaderUniformNames.Map;
+            if (id === "_MainTex" && this._glTFTechnique.uniforms[ShaderUniformName.Map]) {
+                id = ShaderUniformName.Map;
                 console.warn("已废弃的键值_MainTex，建议改为:map");
             }
             let uniform = this._glTFTechnique.uniforms[id];
@@ -472,7 +472,7 @@ namespace egret3d {
             }
 
             if (value instanceof egret3d.BaseRenderTarget) {
-                this.addDefine(ShaderDefines.FLIP_V);
+                this.addDefine(ShaderDefine.FLIP_V);
             }
 
             if (value) {

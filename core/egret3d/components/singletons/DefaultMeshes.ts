@@ -157,7 +157,7 @@ namespace egret3d {
             { // CONE.
                 const mesh = DefaultMeshes.createCylinder(0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 16, 1);
                 mesh._isBuiltin = true;
-                mesh.name = "builtin/pyramid.mesh.bin";
+                mesh.name = "builtin/cone.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CONE = mesh;
             }
@@ -179,48 +179,75 @@ namespace egret3d {
             }
 
             { // LINE_X.
-                const mesh = new Mesh(2, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                const mesh = new Mesh(4, 2, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/line_x.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.LINE_X = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, // Line start.
+                    1.0, 0.0, 0.0, // Line end.
+
+                    0.0, 0.0, 0.0, // Point start.
+                    1.0, 0.0, 0.0, // Point end.
                 ]);
                 mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
                 ]);
+                mesh.setIndices([0, 1], 0);
             }
 
             { // LINE_Y.
-                const mesh = new Mesh(2, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                const mesh = new Mesh(4, 2, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/line_y.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.LINE_Y = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+                    0.0, 0.0, 0.0, // Line start.
+                    0.0, 1.0, 0.0, // Line end.
+
+                    0.0, 0.0, 0.0, // Point start.
+                    0.0, 1.0, 0.0, // Point end.
                 ]);
                 mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
                 ]);
+                mesh.setIndices([0, 1], 0);
             }
 
             { // LINE_Z.
-                const mesh = new Mesh(2, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                const mesh = new Mesh(4, 2, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/line_z.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.LINE_Z = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    0.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+                    0.0, 0.0, 0.0, // Line start.
+                    0.0, 0.0, 1.0, // Line end.
+
+                    0.0, 0.0, 0.0, // Point start.
+                    0.0, 0.0, 1.0, // Point end.
                 ]);
                 mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
                 ]);
+                mesh.setIndices([0, 1], 0);
             }
 
             { // CIRCLE_LINE
@@ -371,12 +398,12 @@ namespace egret3d {
             const normals = [] as number[];
             const uvs = [] as number[];
             // build each side of the box geometry
-            buildPlane('z', 'y', 'x', -1, -1, depth, height, -width, depthSegments, heightSegments); // px
-            buildPlane('z', 'y', 'x', 1, -1, depth, height, width, depthSegments, heightSegments); // nx
-            buildPlane('x', 'z', 'y', 1, 1, width, depth, -height, widthSegments, depthSegments); // py
-            buildPlane('x', 'z', 'y', 1, -1, width, depth, height, widthSegments, depthSegments); // ny
-            buildPlane('x', 'y', 'z', 1, -1, width, height, -depth, widthSegments, heightSegments); // pz
-            buildPlane('x', 'y', 'z', -1, -1, width, height, depth, widthSegments, heightSegments); // nz
+            buildPlane("z", "y", "x", -1, -1, depth, height, -width, depthSegments, heightSegments); // px
+            buildPlane("z", "y", "x", 1, -1, depth, height, width, depthSegments, heightSegments); // nx
+            buildPlane("x", "z", "y", 1, 1, width, depth, -height, widthSegments, depthSegments); // py
+            buildPlane("x", "z", "y", 1, -1, width, depth, height, widthSegments, depthSegments); // ny
+            buildPlane("x", "y", "z", 1, -1, width, height, -depth, widthSegments, heightSegments); // pz
+            buildPlane("x", "y", "z", -1, -1, width, height, depth, widthSegments, heightSegments); // nz
 
             // build geometry
             if (differentFace) {
@@ -403,7 +430,7 @@ namespace egret3d {
                 return mesh;
             }
 
-            function buildPlane(u: string, v: string, w: string, udir: number, vdir: number, width: number, height: number, depth: number, gridX: number, gridY: number) {
+            function buildPlane(u: "x" | "y" | "z", v: "x" | "y" | "z", w: "x" | "y" | "z", udir: number, vdir: number, width: number, height: number, depth: number, gridX: number, gridY: number) {
                 const segmentWidth = width / gridX;
                 const segmentHeight = height / gridY;
 
@@ -591,11 +618,11 @@ namespace egret3d {
                 groupStart += groupCount;
             }
 
-            function generateCap(top) {
+            function generateCap(top: boolean) {
                 let centerIndexStart = 0, centerIndexEnd = 0;
                 let groupCount = 0;
-                const radius = (top === true) ? radiusTop : radiusBottom;
-                const sign = (top === true) ? 1 : - 1;
+                const radius = top ? radiusTop : radiusBottom;
+                const sign = top ? 1 : - 1;
 
                 // save the index of the first center vertex
                 centerIndexStart = index;

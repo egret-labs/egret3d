@@ -8,16 +8,13 @@ namespace egret3d {
      * @language zh_CN
      */
     export class Egret2DRenderer extends paper.BaseRenderer {
-        private renderer: egret.web.Renderer;
-
-
         /**
-         * 是否使用视锥剔除
+         * TODO
          */
-        frustumTest: boolean = false;
-
-
+        public frustumCulled: boolean = false;
         public stage: egret.Stage;
+
+        private renderer: egret.web.Renderer;
 
         private _screenAdapter: IScreenAdapter = new ConstantAdapter();
         public set screenAdapter(adapter: IScreenAdapter) {
@@ -79,6 +76,11 @@ namespace egret3d {
 
         public recalculateAABB() {
             // TODO
+        }
+
+        public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
+            // TODO
+            return false;
         }
 
         /**
