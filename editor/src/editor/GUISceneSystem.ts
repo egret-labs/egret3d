@@ -25,7 +25,6 @@ namespace paper.debug {
 
         private _orbitControls: OrbitControls | null = null;
 
-        private _buttons: number = 0;
         private readonly _mouseStart: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _startPoint: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _endPoint: egret3d.Vector3 = egret3d.Vector3.create();
@@ -85,7 +84,7 @@ namespace paper.debug {
             const mousePosition = egret3d.Vector3.create(event.clientX, event.clientY, 0.0);
             egret3d.InputManager.mouse.convertPosition(mousePosition, mousePosition);
 
-            if (event.button === 0b01) {
+            if (event.button === 0) {
                 if (event.buttons & 0b10) { // 正在控制摄像机。
                     return;
                 }
@@ -102,11 +101,10 @@ namespace paper.debug {
                     this._positionStart.copy(selectedGameObject.transform.getPosition()); // TODO
                 }
             }
-            else if (event.button === 0b10) {
+            else if (event.button === 1) {
 
             }
 
-            this._buttons = event.buttons;
             this._mouseStart.set(event.clientX, event.clientY, 0.0);
             mousePosition.release();
             event.preventDefault();
@@ -144,7 +142,6 @@ namespace paper.debug {
                     }
 
                     const selected = this._guiComponent.selectedGameObject;
-                    this._orbitControls.enableMove = false;
                     const intersectObject = raycastInfos[0];
                     const intersectObjectPos = intersectObject.position;
                     this._endPoint.copy(intersectObjectPos).subtract(this._startWorldPosition, this._endPoint);
@@ -282,8 +279,7 @@ namespace paper.debug {
         };
 
         private _onMouseUp = (event: MouseEvent) => {
-            const button = (this._buttons & (~event.buttons));
-            if (button === 0b01) {
+            if (event.button === 0) {
                 if (this._transformAxis !== TransformAxis.None) {
                     // TODO
                 }
@@ -310,11 +306,10 @@ namespace paper.debug {
                     }
                 }
             }
-            else if (button === 0b10) {
-                this._orbitControls.enableMove = true;
+            else if (event.button === 1) {
+
             }
 
-            this._buttons = event.buttons;
             event.preventDefault();
         }
 

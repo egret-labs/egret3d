@@ -1,16 +1,29 @@
 namespace RaycastTest {
     export async function start() {
+        await RES.loadConfig("resource/default.res.json", "resource/");
+
         // Create camera.
         egret3d.Camera.main;
 
         {
-            const cube = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CYLINDER);
-            cube.transform.setLocalPosition(0.0, 0.0, 0.0);
+            const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CYLINDER, "Cube");
+            gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
 
-            const line = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z);
+            const line = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "Line");
             line.transform.setLocalPosition(0.0, 5.0, -5.0);
-            line.addComponent(behaviors.RotateComponent).target = cube;
-            line.addComponent(RendererRaycast).target = cube;
+            line.addComponent(behaviors.RotateComponent).target = gameObject;
+            line.addComponent(RendererRaycast).target = gameObject;
+        }
+
+        {
+            await RES.getResAsync("Assets/pp1.prefab.json");
+            const gameObject = paper.Prefab.create("Assets/pp1.prefab.json");
+            gameObject.transform.setLocalPosition(2.0, 0.0, 0.0);
+
+            const line = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "Line");
+            line.transform.setLocalPosition(2.0, 5.0, -5.0);
+            line.addComponent(behaviors.RotateComponent).target = gameObject.getComponentInChildren(egret3d.Animation)!.gameObject;
+            line.addComponent(RendererRaycast).target = gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.gameObject;
         }
     }
 
@@ -37,7 +50,7 @@ namespace RaycastTest {
                 meshRenderer.material!,
                 egret3d.Material.create(egret3d.DefaultShaders.POINTS)
                     .addDefine(egret3d.ShaderDefine.USE_COLOR)
-                    .setFloat("size", 10.0)
+                    .setFloat(egret3d.ShaderUniformName.Size, 10.0)
             ];
         }
 
