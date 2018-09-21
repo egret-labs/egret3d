@@ -201,11 +201,9 @@ namespace paper {
 
         private _raycast(ray: Readonly<egret3d.Ray>, gameObject: GameObject, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false, raycastInfos: egret3d.RaycastInfo[]) {
             if (
-                !gameObject.activeInHierarchy ||
                 (
-                    (gameObject.hideFlags === paper.HideFlags.Hide || gameObject.hideFlags === paper.HideFlags.HideAndDontSave) &&
-                    gameObject.tag === paper.DefaultTags.EditorOnly
-                )
+                    gameObject.hideFlags === paper.HideFlags.HideAndDontSave && gameObject.tag === paper.DefaultTags.EditorOnly
+                ) ? gameObject.activeInHierarchy : !gameObject.activeInHierarchy
             ) {
                 return;
             }

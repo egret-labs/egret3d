@@ -4,6 +4,7 @@ namespace paper.debug {
         public static createGameObject(name: string, mesh: egret3d.Mesh = null, material: egret3d.Material = null, tag: string = paper.DefaultTags.EditorOnly, scene: paper.Scene = paper.Scene.editorScene) {
             const gameObject = paper.GameObject.create(name, tag, scene);
             gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
+
             if (mesh) {
                 gameObject.addComponent(egret3d.MeshFilter).mesh = mesh;
             }
@@ -178,16 +179,17 @@ namespace paper.debug {
             return gameObject;
         }
 
-        public static createBox(name: string, color: egret3d.Color) {
-            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone());
-            gameObject.getComponent(egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.create(0.0, 1.0, 1.0).release());
-            return gameObject;
+        public static createBox(name: string, color: egret3d.Color, scene: Scene) {
+            const box = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone(), paper.DefaultTags.EditorOnly, scene);
+            box.getComponent(egret3d.MeshRenderer).material.setColor(egret3d.ShaderUniformName.Diffuse, color);
+
+            return box;
         }
 
         public static createCameraIcon(name: string, parent: paper.GameObject) {
             const material = new egret3d.Material(egret3d.DefaultShaders.TRANSPARENT);
             material.renderQueue = paper.RenderQueue.Overlay;
-            material.setTexture(egret3d.ShaderUniformNames.Map, egret3d.DefaultTextures.CAMERA_ICON);
+            material.setTexture(egret3d.ShaderUniformName.Map, egret3d.DefaultTextures.CAMERA_ICON);
             const gameObject = this.createGameObject(name, null, null, parent.tag, parent.scene);
             const pick = this.createGameObject("pick", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone(), parent.tag, parent.scene);
             pick.transform.setParent(gameObject.transform);
@@ -202,8 +204,8 @@ namespace paper.debug {
         public static createLightIcon(name: string, parent: paper.GameObject) {
             const material = new egret3d.Material(egret3d.DefaultShaders.TRANSPARENT);
             material.renderQueue = paper.RenderQueue.Overlay;
-            material.setTexture(egret3d.ShaderUniformNames.Map, egret3d.DefaultTextures.LIGHT_ICON);
-            material.setColor(egret3d.ShaderUniformNames.Diffuse, egret3d.Color.RED);
+            material.setTexture(egret3d.ShaderUniformName.Map, egret3d.DefaultTextures.LIGHT_ICON);
+            material.setColor(egret3d.ShaderUniformName.Diffuse, egret3d.Color.RED);
             const gameObject = this.createGameObject(name, null, null, parent.tag, parent.scene);
             const pick = this.createGameObject("pick", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone(), parent.tag, parent.scene);
             pick.transform.setParent(gameObject.transform);

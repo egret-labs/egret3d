@@ -407,8 +407,6 @@ namespace paper.debug {
             EventPool.removeEventListener(GUIComponentEvent.GameObjectSelected, GUIComponent, this._gameObjectSelectedHandler);
             EventPool.removeEventListener(GUIComponentEvent.GameObjectUnselected, GUIComponent, this._gameObjectUnselectedHandler);
 
-            this._selectSceneOrGameObject(null);
-
             for (const k in this._hierarchyFolders) {
                 const folder = this._hierarchyFolders[k];
                 delete this._hierarchyFolders[k];

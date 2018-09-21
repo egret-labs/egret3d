@@ -107,15 +107,19 @@ namespace paper.debug {
         };
 
         private _mouseDownHandler = (event: MouseEvent) => {
-            event.preventDefault();
-            this._mouseDown = true;
-            this._lastMouseX = event.x;
-            this._lastMouseY = event.y;
+            if (event.button === 0b10) {
+                this._mouseDown = true;
+                this._lastMouseX = event.x;
+                this._lastMouseY = event.y;
+                event.preventDefault();
+            }
         };
 
         private _mouseUpHandler = (event: MouseEvent) => {
-            event.preventDefault();
-            this._mouseDown = false;
+            if (event.button === 0b10) {
+                this._mouseDown = false;
+                event.preventDefault();
+            }
         };
         private _mouseMoveHandler = (event: MouseEvent) => {
             if (!this._mouseDown || !this._enableMove) {

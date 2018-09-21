@@ -5,6 +5,7 @@ namespace paper.debug {
     export const enum GUIComponentEvent {
         SceneSelected = "SceneSelected",
         SceneUnselected = "SceneUnselected",
+        GameObjectHovered = "GameObjectHovered",
         GameObjectSelected = "GameObjectSelected",
         GameObjectUnselected = "GameObjectUnselected",
     }
@@ -22,6 +23,10 @@ namespace paper.debug {
          * 选中的场景。
          */
         public selectedScene: Scene | null = null;
+        /**
+         * 
+         */
+        public hoverGameObject: GameObject | null = null;
         /**
          * 最后一个选中的实体。
          */
@@ -63,11 +68,15 @@ namespace paper.debug {
                     guiSystem.enabled = true;
                 }
                 else {
+                    this.select(null);
+
                     Application.playerMode = PlayerMode.Player;
                     guiSceneSystem.enabled = false;
                     guiSystem.enabled = false;
+
                     this.selectedGameObjects.length = 0;
                     this.selectedScene = null;
+                    this.hoverGameObject = null;
                     this.selectedGameObject = null;
                 }
             });
@@ -96,8 +105,9 @@ namespace paper.debug {
 
             if (isReplace) {
                 if (this.selectedScene) {
-                    EventPool.dispatchEvent(GUIComponentEvent.SceneUnselected, this, this.selectedScene);
+                    const selectedScene = this.selectedScene;
                     this.selectedScene = null;
+                    EventPool.dispatchEvent(GUIComponentEvent.SceneUnselected, this, selectedScene);
                 }
                 else if (this.selectedGameObjects.length > 0) {
                     const gameObjects = this.selectedGameObjects.concat();
@@ -122,7 +132,36 @@ namespace paper.debug {
                 }
             }
 
-            (global || window)["psgo"] = value; // For quick debug;
+            (global || window)["psgo"] = value; // For quick debug.
+        }
+
+        public unselect(value: Scene | GameObject) {
+            if (value instanceof Scene) {
+                if (this.selectedScene === value) {
+                    this.selectedScene = null;
+                    EventPool.dispatchEvent(GUIComponentEvent.SceneUnselected, this, value);
+                }
+            }
+            else {
+                const index = this.selectedGameObjects.indexOf(value);
+                if (index >= 0) {
+                    if (this.selectedGameObject === value) {
+                        this.selectedGameObject = null;
+                    }
+
+                    this.selectedGameObjects.splice(index, 1);
+                    EventPool.dispatchEvent(GUIComponentEvent.GameObjectUnselected, this, value);
+                }
+            }
+        }
+
+        public hover(value: GameObject | null) {
+            if (this.hoverGameObject === value) {
+                return;
+            }
+
+            this.hoverGameObject = value;
+            EventPool.dispatchEvent(GUIComponentEvent.GameObjectHovered, this, this.hoverGameObject);
         }
     }
     // 

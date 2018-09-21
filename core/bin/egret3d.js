@@ -9543,7 +9543,7 @@ var egret3d;
             _super.prototype.initialize.call(this);
             DefaultMaterials.MESH_BASIC = this._createMaterial("builtin/meshbasic.mat.json", egret3d.DefaultShaders.MESH_BASIC)
                 .setTexture("map" /* Map */, egret3d.DefaultTextures.WHITE);
-            DefaultMaterials.MESH_LAMBERT = this._createMaterial("builtin/meshbasic.mat.json", egret3d.DefaultShaders.MESH_BASIC)
+            DefaultMaterials.MESH_LAMBERT = this._createMaterial("builtin/meshlambert.mat.json", egret3d.DefaultShaders.MESH_LAMBERT)
                 .setTexture("map" /* Map */, egret3d.DefaultTextures.WHITE);
             DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", egret3d.DefaultShaders.LINEDASHED)
                 .addDefine("USE_COLOR" /* USE_COLOR */);

@@ -108,6 +108,7 @@ declare namespace paper.debug {
     const enum GUIComponentEvent {
         SceneSelected = "SceneSelected",
         SceneUnselected = "SceneUnselected",
+        GameObjectHovered = "GameObjectHovered",
         GameObjectSelected = "GameObjectSelected",
         GameObjectUnselected = "GameObjectUnselected",
     }
@@ -126,11 +127,17 @@ declare namespace paper.debug {
          */
         selectedScene: Scene | null;
         /**
+         *
+         */
+        hoverGameObject: GameObject | null;
+        /**
          * 最后一个选中的实体。
          */
         selectedGameObject: GameObject | null;
         initialize(): void;
         select(value: Scene | GameObject | null, isReplace?: boolean): void;
+        unselect(value: Scene | GameObject): void;
+        hover(value: GameObject | null): void;
     }
 }
 declare namespace paper.debug {
@@ -141,20 +148,21 @@ declare namespace paper.debug {
         private readonly _camerasAndLights;
         private readonly _guiComponent;
         private _orbitControls;
-        private _touchPlane;
-        private _grids;
+        private _buttons;
+        private readonly _mouseStart;
+        private readonly _startPoint;
+        private readonly _endPoint;
         private _axises;
-        private _box;
+        private _hoverBox;
+        private _grids;
+        private _touchPlane;
         private _cameraViewFrustum;
-        private _skeletonDrawer;
         private _transformMode;
         private _transformAxis;
-        private _gizomsMap;
-        private _pickableTool;
-        private _pickableSelected;
-        private _isDragging;
-        private _startPoint;
-        private _endPoint;
+        private readonly _pickableSelected;
+        private readonly _boxes;
+        private readonly _pickableTool;
+        private readonly _gizomsMap;
         private _positionStart;
         private _startWorldPosition;
         private _startWorldQuaternion;
@@ -163,18 +171,19 @@ declare namespace paper.debug {
         private _selectedWorldQuaternion;
         private _cameraPosition;
         private _eye;
-        private _selectGameObject(select);
+        private _selectGameObject(value, selected);
         private _onMouseDown;
-        private _onMouseUp;
-        private _onMouseHover;
         private _onMouseMove;
+        private _onMouseUp;
+        private _onKeyUp;
         private _onKeyDown;
         private _onGameObjectSelected;
+        private _onGameObjectHovered;
         private _onGameObjectUnselected;
         private _transformModeHandler(value);
         private _setPoint(cameraProject, positions, x, y, z, points);
         private _updateAxises();
-        private _updateBox();
+        private _updateBoxes();
         private _updateCameras();
         private _updateLights();
         private _updateTouchPlane();
@@ -263,7 +272,7 @@ declare namespace paper.debug {
         static createGrid(name: string, size?: number, divisions?: number, color1?: egret3d.Color, color2?: egret3d.Color): GameObject;
         static createTouchPlane(name: string, width?: number, height?: number): GameObject;
         static createAxises(name: string): GameObject;
-        static createBox(name: string, color: egret3d.Color): GameObject;
+        static createBox(name: string, color: egret3d.Color, scene: Scene): GameObject;
         static createCameraIcon(name: string, parent: paper.GameObject): GameObject;
         static createLightIcon(name: string, parent: paper.GameObject): GameObject;
         static createCameraWireframed(name: string, colorFrustum?: egret3d.Color, colorCone?: egret3d.Color, colorUp?: egret3d.Color, colorTarget?: egret3d.Color, colorCross?: egret3d.Color): GameObject;
@@ -272,7 +281,7 @@ declare namespace paper.debug {
 declare namespace paper.debug {
     class Helper {
         private static _raycast(ray, gameObject, raycastInfos);
-        static getPickObjects(pickables: paper.GameObject[], mousePositionX: number, mousePositionY: number): egret3d.RaycastInfo[];
+        static raycast(gameObjects: paper.GameObject[], mousePositionX: number, mousePositionY: number): egret3d.RaycastInfo[];
     }
 }
 declare namespace helper {

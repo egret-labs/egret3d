@@ -48,7 +48,7 @@ namespace egret3d {
             DefaultMaterials.MESH_BASIC = this._createMaterial("builtin/meshbasic.mat.json", DefaultShaders.MESH_BASIC)
                 .setTexture(ShaderUniformName.Map, DefaultTextures.WHITE);
 
-            DefaultMaterials.MESH_LAMBERT = this._createMaterial("builtin/meshbasic.mat.json", DefaultShaders.MESH_BASIC)
+            DefaultMaterials.MESH_LAMBERT = this._createMaterial("builtin/meshlambert.mat.json", DefaultShaders.MESH_LAMBERT)
                 .setTexture(ShaderUniformName.Map, DefaultTextures.WHITE);
 
             DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", DefaultShaders.LINEDASHED)
