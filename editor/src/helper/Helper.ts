@@ -10,6 +10,10 @@ namespace paper.debug {
             ) {
                 return;
             }
+            if (!gameObject.activeInHierarchy && gameObject.tag !== paper.DefaultTags.EditorOnly && gameObject.hideFlags !== paper.HideFlags.HideAndDontSave) {
+                return;
+            }
+
 
             const raycastInfo = egret3d.RaycastInfo.create();
             if (gameObject.renderer && gameObject.renderer.raycast(ray, raycastInfo, true)) {

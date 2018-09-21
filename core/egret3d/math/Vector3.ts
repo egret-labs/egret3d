@@ -394,6 +394,13 @@ namespace egret3d {
             return this;
         }
 
+        public getAngle(value: Readonly<IVector3>) {
+            const theta = this.dot(value) / (Math.sqrt(this.squaredLength * Vector3.getSqrLength(value)));
+
+            // clamp, to handle numerical problems
+            return Math.acos(Math.max(- 1, Math.min(1, theta)));
+        }
+
         public getSquaredDistance(value: Readonly<IVector3>): number {
             return helpVector.subtract(value, this).squaredLength;
         }

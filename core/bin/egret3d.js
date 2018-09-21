@@ -1000,6 +1000,11 @@ var egret3d;
             this.z /= source.z;
             return this;
         };
+        Vector3.prototype.getAngle = function (value) {
+            var theta = this.dot(value) / (Math.sqrt(this.squaredLength * Vector3.getSqrLength(value)));
+            // clamp, to handle numerical problems
+            return Math.acos(Math.max(-1, Math.min(1, theta)));
+        };
         Vector3.prototype.getSquaredDistance = function (value) {
             return helpVector.subtract(value, this).squaredLength;
         };
@@ -4480,6 +4485,7 @@ var egret3d;
         Color.RED = new Color().set(1.0, 0.0, 0.0, 1.0);
         Color.GREEN = new Color().set(0.0, 1.0, 0.0, 1.0);
         Color.BLUE = new Color().set(0.0, 0.0, 1.0, 1.0);
+        Color.YELLOW = new Color().set(1.0, 1.0, 0.0, 1.0);
         Color._instances = [];
         return Color;
     }());
@@ -9196,12 +9202,23 @@ var egret3d;
         /**
          * 创建圆形网格。
          */
-        DefaultMeshes.createCircle = function (radius, arc) {
+        DefaultMeshes.createCircle = function (radius, arc, axis) {
+            if (axis === void 0) { axis = 1; }
             var vertices = [];
             for (var i = 0; i <= 64 * arc; ++i) {
-                vertices.push(0, Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius);
+                switch (axis) {
+                    case 1:
+                        vertices.push(0, Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius);
+                        break;
+                    case 2:
+                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, 0, Math.sin(i / 32 * Math.PI) * radius);
+                        break;
+                    case 3:
+                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius, 0);
+                        break;
+                }
             }
-            var mesh = egret3d.Mesh.create(64, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
+            var mesh = egret3d.Mesh.create(vertices.length / 3, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
             mesh.setAttributes("POSITION" /* POSITION */, vertices);
             mesh.glTFMesh.primitives[0].mode = 3 /* LineStrip */;
             return mesh;
@@ -9376,6 +9393,24 @@ var egret3d;
                 texture._isBuiltin = true;
                 DefaultTextures.MISSING = texture;
                 paper.Asset.register(texture);
+            }
+            {
+                var texture_1 = new egret3d.GLTexture2D("builtin/camera_icon.image.json");
+                var image_1 = new Image();
+                image_1.setAttribute('src', paper.editor.icons["camera"]);
+                image_1.onload = function () { texture_1.uploadImage(image_1, false, true, true, false); };
+                texture_1._isBuiltin = true;
+                DefaultTextures.CAMERA_ICON = texture_1;
+                paper.Asset.register(texture_1);
+            }
+            {
+                var texture_2 = new egret3d.GLTexture2D("builtin/light_icon.image.json");
+                var image_2 = new Image();
+                image_2.setAttribute('src', paper.editor.icons["light"]);
+                image_2.onload = function () { texture_2.uploadImage(image_2, false, true, true, false); };
+                texture_2._isBuiltin = true;
+                DefaultTextures.LIGHT_ICON = texture_2;
+                paper.Asset.register(texture_2);
             }
         };
         return DefaultTextures;
@@ -9577,7 +9612,7 @@ var egret3d;
              * 灯光计数。
              */
             get: function () {
-                return this.lightCount.length;
+                return this.lights.length;
             },
             enumerable: true,
             configurable: true
@@ -27566,7 +27601,7 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
-        var icons = {
+        editor.icons = {
             camera: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIcSURBVFhH7ZbPjtMwEMYj7vAACCFg28Rx4oQmtGnLQo/7Du1pK3Hk2BtSHwYkXoA34C34I7Fozxxoy+6yaocZx9M6u4WkFaA95JN+qu0Z21/riVOnVq1a/0oiaoMXPdlCBxpxG0xaNXlB+vHqIl7Utfo5Jl3LxU2uxpkmmjNp1RTEGfg4kZhOp/eRe8xwOHzqmnjSPXxnpjhBlIEIM5BRb40f96Ch2jCZTO6atGryVQeESjVmqCA/zGNy15/2xuv4xcuBK1N4KBNw445FZugauG/ndKr9GlJRYWBBxcn7LHveHAyOHtC4iJKLbQW0C0IlBRNemH6jTzpSQqouOFQ89iSdibLHcrKKbObYBqhGaC9qc/yaAdnKdMKjoLUe08QpvH7zFsp08fOyMI8N0DHRPqUGRJhXsWr112ME5SwWM73Jp5NTzecvFtg/+XqK0UsQ1vNvG+Ax6nN7bYBN8GPW0HVRZL44h+VqdW2cafcOYYUW9jZAAZb3uHiWxPcfZQae7Wdgmw7wYuEk5r8a8MPNBGa+OIMVGpBRfyu9rI/bL/+OAU/Sy2azOS06m81xgzItoRkmm3l7G2gGr7gwGR8LU+JbLAcvEQ29bIi8L4Li0bEBunR4TK9v2r81QCIDwiQSblwNzifYAMkNW+Dil6A2x/9ogGQvtg8HQn0wS2mxIY5LlV98pRqNRnfG4/HtXcD/CrfM9Fq1at1kOc4vVSG2+aaGzOwAAAAASUVORK5CYII=",
             light: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPcSURBVFhH3ZdLSNRRFMbn4fuZmtmYZpn0gCx6YbQokBZRq6hVL6xWUdCmICIoIYjaWBDRu3WShhUJLSKIIKISgqBWao9NlIsUwlKn33fnzDij/1HHsU0fHM693z333HPOffxnfNNBMBjcgRpCVjjiX6GwsHAJKhDpjYIAdqLCyEpHxKG8vLwgJyen2rrTR25uboPf7/+Ns31GxTBRAJmZmc2BQKC/rKys0qhpAz+Bt8inUCiUZ5xDsgAIeh5BDzCnzaj0kJ2d3YjDcFZW1imjHJIFkJGRcQf7waKiojqj0gdOH5DRz7y8vLlGeQZA6Vex+DBjLUalhtLS0iJrJoDsl+os4PiGUVqsHu48zVCEcYE+JdAfZF9qVAKS+XfgoM1nch+LnK2oqMg3OgYWvIhcsu44VFVV5RLAXYI9alQMBQUFsxm7prPk5dtBhwejdu03hr04Uonj4TftKy4ursVmP/bH0LvZmlgVQMwOBDlDh/D53bbmWklJSbGNeYMJW3D6kWaYBZ4Q/bLIiM+nM8BYG85G6Gr/ndD/owy5doWyE6joBmzf0Ayz8EsSXBsZmRqycHgCx/1MPieCyKtpdyNhgnTCluh2hHGuIFS519EgsGul/w27g3THPWRTAoemyg6OH2fPtLgWoz9OqI4CUNVu0Ve1QmxVidppgywaUUkXjwplVyWGsF9If+ZA5i3Knuw8F46KApCmEkfQKaEH+ewhWxG9xw+13zQnFJ0DBYl2DxHzDqO8/D5HRsGEVuTeWGFovcZx1D6VAKJVQl+gr8pt9/KLXNb4lIGjMzpgkwWhmyGN3V70zMHeguGJDqECtEP4k9M/Cy59cMe3ktUCtcnqKs7D+fn5bq+hEhYXrzZzjqN1DdcQcIPaKcOe2g6aKqfbr5qamhy4TnHKVA+QSh4V8ez/dbR7iml3Eugw+ibBzRE3KfRBYb+bmfhLwuLNY36IBFn4KGO6NfEVeI/tLhlEoS8ivq5gO8R4H4HoagYjox7AwXIMu5mgTDrIqtaGHOwTG31S/aoSduv0RBvnqhT/PRDYitX4fUFTt6NL35PIyBhoIkE8J8NtRiWAxR4x/tS642DV+4BcNCoefhJqYv5j2ql/F5i8GaV9PxlhXECbUM+QRY4AcLep4CC/pBcbNSMIUsIupFdZGuf5k4xTX0kAAwRy36j0QdkO6Fyg9xjl4BWAwOKnUSPcFFUoPegPBpl/RV7RTdi7ZAHoJxf2Xxh/TXd6vwOiIOt6HPWQzUajYkgWgMC8JsbfJT3xqaCuri7bmgmYKACgzDMizX+EuFswc39A/kfE/0RPAp/vL7M1A0/aWSCCAAAAAElFTkSuQmCC"
         };
@@ -27917,10 +27952,10 @@ var paper;
                 out.rawData[14] = p.z;
             };
             Gizmo.initIconTexture = function () {
-                for (var key in icons) {
+                for (var key in editor.icons) {
                     var image = new Image();
                     this._imageLoadCount++;
-                    image.setAttribute('src', icons[key]);
+                    image.setAttribute('src', editor.icons[key]);
                     image.onload = this.loadIconTexture.bind(this, image, key);
                 }
             };
@@ -28143,10 +28178,13 @@ var egret3d;
                 this._lastFrameFirstCursor = 0;
                 //最后存活位置
                 this._lastAliveCursor = 0;
+                this._forceUpdate = false;
                 //原始顶点数量
                 this._vertexStride = 0;
                 //当前爆发的索引
                 this._burstIndex = 0;
+                //
+                this._readEmitCount = 0;
                 //最终重力
                 this._finalGravity = new egret3d.Vector3();
             }
@@ -28161,7 +28199,8 @@ var egret3d;
                 for (var l = bursts.length; this._burstIndex < l; this._burstIndex++) {
                     var burst = bursts[this._burstIndex];
                     if (burst.time >= startTime && burst.time < endTime) {
-                        totalEmitCount += egret3d.numberLerp(burst.minCount, burst.maxCount, Math.random());
+                        // totalEmitCount += numberLerp(burst.minCount, burst.maxCount, Math.random());
+                        totalEmitCount += burst.maxCount;
                     }
                     else {
                         break;
@@ -28183,7 +28222,7 @@ var egret3d;
              * @param startCursor
              * @param endCursor
              */
-            ParticleBatcher.prototype._addParticles = function (time, startCursor, count) {
+            ParticleBatcher.prototype._addParticles = function (time, startCursor, count, lastEmittsionTime) {
                 var comp = this._comp;
                 var main = comp.main;
                 var velocityModule = comp.velocityOverLifetime;
@@ -28210,7 +28249,7 @@ var egret3d;
                 var random1Buffer = this._random1Buffer;
                 var worldPostionBuffer = this._worldPostionBuffer;
                 var worldRoationBuffer = this._worldRoationBuffer;
-                var age = Math.min(this._emittsionTime / main.duration, 1.0);
+                var age = Math.min(lastEmittsionTime / main.duration, 1.0);
                 var vertexStride = this._vertexStride;
                 var addCount = 0, startIndex = 0, endIndex = 0;
                 var lifetime = 0.0;
@@ -28219,7 +28258,6 @@ var egret3d;
                 var randomColor = 0.0, randomSize = 0.0, randomRotation = 0.0, randomTextureAnimation = 0.0;
                 var vector2Offset = 0, vector3Offset = 0, vector4Offset = 0;
                 while (addCount !== count) {
-                    //发射粒子要根据粒子发射器的形状发射
                     comp.shape.generatePositionAndDirection(positionHelper, velocityHelper);
                     main.startColor.evaluate(age, startColorHelper);
                     lifetime = main.startLifetime.evaluate(age);
@@ -28286,6 +28324,7 @@ var egret3d;
                             worldRoationBuffer[vector4Offset + 3] = worldRotation.w;
                         }
                     }
+                    ;
                     startCursor++;
                     if (startCursor >= main._maxParticles) {
                         startCursor = 0;
@@ -28298,18 +28337,18 @@ var egret3d;
                 this._finalGravity.y = GRAVITY.y * gravityModifier;
                 this._finalGravity.z = GRAVITY.z * gravityModifier;
             };
-            ParticleBatcher.prototype._tryEmit = function (time) {
-                var maxParticles = this._comp.main._maxParticles;
-                var nextCursor = this._firstAliveCursor + 1 > maxParticles ? 0 : this._firstAliveCursor + 1;
-                if (nextCursor >= maxParticles) {
-                    nextCursor = 0;
-                }
-                if (!this._isParticleExpired(nextCursor)) {
+            ParticleBatcher.prototype._tryEmit = function () {
+                if (!this._isParticleExpired(this._firstAliveCursor)) {
                     return false;
                 }
                 //
+                var maxParticles = this._comp.main._maxParticles;
+                var nextCursor = this._firstAliveCursor + 1 >= maxParticles ? 0 : this._firstAliveCursor + 1;
+                //
+                if (nextCursor === this._lastAliveCursor) {
+                    this._forceUpdate = true;
+                }
                 this._firstAliveCursor = nextCursor;
-                this._dirty = true;
                 return true;
             };
             ParticleBatcher.prototype.clean = function () {
@@ -28320,9 +28359,11 @@ var egret3d;
                 this._firstAliveCursor = 0;
                 this._lastFrameFirstCursor = 0;
                 this._lastAliveCursor = 0;
+                this._forceUpdate = false;
                 this._vertexStride = 0;
                 this._vertexAttributes = null;
                 this._burstIndex = 0;
+                this._readEmitCount = 0;
                 this._startPositionBuffer = null;
                 this._startVelocityBuffer = null;
                 this._startColorBuffer = null;
@@ -28341,6 +28382,7 @@ var egret3d;
             ParticleBatcher.prototype.resetTime = function () {
                 this._burstIndex = 0;
                 this._emittsionTime = 0;
+                this._readEmitCount = 0;
             };
             ParticleBatcher.prototype.init = function (comp, renderer) {
                 this._comp = comp;
@@ -28363,12 +28405,11 @@ var egret3d;
                     this._vertexAttributes.push(k);
                 }
                 renderer.batchMesh = mesh;
-                //粒子系统不能用共享材质
                 renderer.batchMaterial = renderer.materials[0].clone();
                 mesh.uploadSubIndexBuffer();
             };
             ParticleBatcher.prototype.update = function (elapsedTime) {
-                if (this._comp.isPaused) {
+                if (!this._comp || this._comp.isPaused) {
                     return;
                 }
                 //
@@ -28376,10 +28417,11 @@ var egret3d;
                 var comp = this._comp;
                 var mainModule = comp.main;
                 //
-                while (this._lastAliveCursor !== this._firstAliveCursor) {
+                while (this._lastAliveCursor !== this._firstAliveCursor || this._forceUpdate) {
                     if (!this._isParticleExpired(this._lastAliveCursor)) {
                         break;
                     }
+                    this._forceUpdate = false;
                     this._lastAliveCursor++;
                     if (this._lastAliveCursor >= mainModule._maxParticles) {
                         this._lastAliveCursor = 0;
@@ -28388,7 +28430,6 @@ var egret3d;
                 var transform = comp.gameObject.transform;
                 this._worldPostionCache = transform.getPosition();
                 this._worldRotationCache = transform.getRotation();
-                //检测是否已经过了Delay时间，否则不能发射
                 if (comp._isPlaying && this._time >= mainModule.startDelay.constant && comp.emission.enable) {
                     this._updateEmission(elapsedTime);
                 }
@@ -28397,52 +28438,51 @@ var egret3d;
             ParticleBatcher.prototype._updateEmission = function (elapsedTime) {
                 var comp = this._comp;
                 var mainModule = comp.main;
-                //根据时间判断
                 var lastEmittsionTime = this._emittsionTime;
                 this._emittsionTime += elapsedTime;
                 var isOver = this._emittsionTime > mainModule.duration;
+                var aliveParticleCount = this.aliveParticleCount;
+                var totalEmitCount = 0;
                 if (!isOver) {
-                    //由爆发触发的粒子发射
-                    var totalEmitCount = 0;
                     if (comp.emission.bursts.length > 0) {
-                        var readyEmitCount = 0;
-                        readyEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
-                        readyEmitCount = Math.min(mainModule._maxParticles - this.aliveParticleCount, readyEmitCount);
-                        //
-                        for (var i = 0; i < readyEmitCount; i++) {
-                            if (this._tryEmit(this._time)) {
-                                totalEmitCount++;
-                            }
-                        }
-                    }
-                    //由时间触发的粒子发射,不支持曲线
-                    var rateOverTime = comp.emission.rateOverTime.constant;
-                    if (rateOverTime > 0) {
-                        var minEmissionTime = 1 / rateOverTime;
-                        this._frameRateTime += elapsedTime;
-                        while (this._frameRateTime > minEmissionTime) {
-                            if (!this._tryEmit(this._time)) {
-                                break;
-                            }
-                            totalEmitCount++;
-                            this._frameRateTime -= minEmissionTime;
-                        }
-                    }
-                    if (totalEmitCount > 0) {
-                        this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount);
+                        this._readEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
                     }
                 }
                 else {
-                    //一个生命周期结束
                     if (mainModule.loop) {
-                        //直接置零，对时间敏感的可能有问题
-                        this._emittsionTime = 0;
+                        this._readEmitCount = 0;
+                        this._readEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
+                        this._emittsionTime -= mainModule.duration;
                         this._burstIndex = 0;
+                        this._readEmitCount += this._getBurstCount(0, this._emittsionTime);
                     }
                     else {
-                        //自己停止，不要影响子粒子播放状态
                         comp.stop(false);
                     }
+                }
+                //
+                for (var i = 0; i < this._readEmitCount; i++) {
+                    if (this._tryEmit()) {
+                        totalEmitCount++;
+                        this._readEmitCount--;
+                    }
+                }
+                var rateOverTime = comp.emission.rateOverTime.constant;
+                if (rateOverTime > 0) {
+                    var minEmissionTime = 1 / rateOverTime;
+                    this._frameRateTime += elapsedTime;
+                    while (this._frameRateTime > minEmissionTime) {
+                        if (!this._tryEmit()) {
+                            break;
+                        }
+                        totalEmitCount++;
+                        this._frameRateTime -= minEmissionTime;
+                    }
+                }
+                totalEmitCount = Math.min(mainModule._maxParticles - aliveParticleCount, totalEmitCount);
+                if (totalEmitCount > 0) {
+                    this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount, lastEmittsionTime);
+                    this._dirty = true;
                 }
             };
             ParticleBatcher.prototype._updateRender = function () {
@@ -28451,21 +28491,21 @@ var egret3d;
                 var mainModule = comp.main;
                 //
                 if (this._dirty) {
-                    //为了性能，不能提交整个buffer，只提交改变的buffer
-                    var bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
-                    if (this._firstAliveCursor > this._lastFrameFirstCursor) {
-                        var bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
-                        renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
-                        // uploadVertexSubData(this._vertexAttributes, bufferOffset, bufferCount);
-                    }
-                    else {
-                        var addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
-                        //先更新尾部的，再更新头部的
-                        renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
-                        renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
-                        // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
-                        // renderer.batchMesh.uploadVertexSubData(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
-                    }
+                    renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes);
+                    // const bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
+                    // const bufferOffset = this._lastFrameFirstCursor;
+                    // if (this._firstAliveCursor > this._lastFrameFirstCursor) {
+                    //     const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
+                    //     // const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor);
+                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
+                    // }
+                    // else {
+                    //     const addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
+                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
+                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
+                    //     // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount);
+                    //     // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor);
+                    // }
                     this._lastFrameFirstCursor = this._firstAliveCursor;
                     this._dirty = false;
                 }

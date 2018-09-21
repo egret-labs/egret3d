@@ -96,6 +96,12 @@ declare namespace dat {
         remove(): GUIController;
     }
 }declare namespace paper.debug {
+    class GizmoPickComponent extends Behaviour {
+        pickTarget: GameObject | null;
+        onDestroy(): void;
+    }
+}
+declare namespace paper.debug {
     /**
      *
      */
@@ -139,9 +145,11 @@ declare namespace paper.debug {
         private _grids;
         private _axises;
         private _box;
+        private _cameraViewFrustum;
         private _skeletonDrawer;
         private _transformMode;
         private _transformAxis;
+        private _gizomsMap;
         private _pickableTool;
         private _pickableSelected;
         private _isDragging;
@@ -152,6 +160,7 @@ declare namespace paper.debug {
         private _startWorldQuaternion;
         private _startWorldScale;
         private _selectedWorldPostion;
+        private _selectedWorldQuaternion;
         private _cameraPosition;
         private _eye;
         private _selectGameObject(select);
@@ -159,15 +168,15 @@ declare namespace paper.debug {
         private _onMouseUp;
         private _onMouseHover;
         private _onMouseMove;
-        private _onKeyUp;
         private _onKeyDown;
-        private _gameObjectSelectedHandler;
-        private _gameObjectUnselectedHandler;
+        private _onGameObjectSelected;
+        private _onGameObjectUnselected;
         private _transformModeHandler(value);
         private _setPoint(cameraProject, positions, x, y, z, points);
         private _updateAxises();
         private _updateBox();
-        private _updateCamera();
+        private _updateCameras();
+        private _updateLights();
         private _updateTouchPlane();
         onAwake(): void;
         onEnable(): void;
@@ -250,12 +259,14 @@ declare namespace paper.debug {
 }
 declare namespace paper.debug {
     class EditorMeshHelper {
-        static _createGameObject(name: string, mesh?: egret3d.Mesh, material?: egret3d.Material, tag?: string, scene?: paper.Scene): GameObject;
+        static createGameObject(name: string, mesh?: egret3d.Mesh, material?: egret3d.Material, tag?: string, scene?: paper.Scene): GameObject;
         static createGrid(name: string, size?: number, divisions?: number, color1?: egret3d.Color, color2?: egret3d.Color): GameObject;
         static createTouchPlane(name: string, width?: number, height?: number): GameObject;
         static createAxises(name: string): GameObject;
         static createBox(name: string, color: egret3d.Color): GameObject;
-        static createCameraWireframed(name: string, tag: string, scene: paper.Scene, colorFrustum?: egret3d.Color, colorCone?: egret3d.Color, colorUp?: egret3d.Color, colorTarget?: egret3d.Color, colorCross?: egret3d.Color): GameObject;
+        static createCameraIcon(name: string, parent: paper.GameObject): GameObject;
+        static createLightIcon(name: string, parent: paper.GameObject): GameObject;
+        static createCameraWireframed(name: string, colorFrustum?: egret3d.Color, colorCone?: egret3d.Color, colorUp?: egret3d.Color, colorTarget?: egret3d.Color, colorCross?: egret3d.Color): GameObject;
     }
 }
 declare namespace paper.debug {

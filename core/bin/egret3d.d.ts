@@ -503,6 +503,7 @@ declare namespace egret3d {
         max(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
         clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, source?: Readonly<IVector3>): this;
         divide(source?: Readonly<IVector3>): this;
+        getAngle(value: Readonly<IVector3>): number;
         getSquaredDistance(value: Readonly<IVector3>): number;
         getDistance(value: Readonly<IVector3>): number;
         closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>): this;
@@ -1283,7 +1284,7 @@ declare namespace gltf {
         JOINTS_0 = "JOINTS_0",
         WEIGHTS_0 = "WEIGHTS_0",
     }
-    type MeshAttribute = MeshAttributeType | string;
+    type MeshAttribute = AttributeSemanticType | string;
     /**
      * Indices of those attributes that deviate from their initialization value.
      */
@@ -2776,6 +2777,7 @@ declare namespace egret3d {
         static readonly RED: Readonly<Color>;
         static readonly GREEN: Readonly<Color>;
         static readonly BLUE: Readonly<Color>;
+        static readonly YELLOW: Readonly<Color>;
         private static readonly _instances;
         static create(r?: number, g?: number, b?: number, a?: number): Color;
         release(): this;
@@ -3783,7 +3785,7 @@ declare namespace egret3d {
         /**
          * 创建圆形网格。
          */
-        static createCircle(radius: number, arc: number): Mesh;
+        static createCircle(radius: number, arc: number, axis?: number): Mesh;
         /**
          * 创建圆环网格。
          */
@@ -3816,6 +3818,8 @@ declare namespace egret3d {
          *
          */
         static MISSING: Texture;
+        static CAMERA_ICON: Texture;
+        static LIGHT_ICON: Texture;
         initialize(): void;
     }
 }
@@ -3907,7 +3911,7 @@ declare namespace egret3d {
         /**
          * 灯光计数。
          */
-        readonly lightCount: any;
+        readonly lightCount: number;
     }
 }
 declare namespace egret3d {
@@ -10253,6 +10257,10 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
+    const icons: {
+        camera: string;
+        light: string;
+    };
     class Gizmo extends paper.Behaviour {
         private static enabled;
         private static webgl;

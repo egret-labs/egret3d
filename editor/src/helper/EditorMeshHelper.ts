@@ -1,7 +1,7 @@
 namespace paper.debug {
     export class EditorMeshHelper {
         //
-        public static _createGameObject(name: string, mesh: egret3d.Mesh = null, material: egret3d.Material = null, tag: string = paper.DefaultTags.EditorOnly, scene: paper.Scene = paper.Scene.editorScene) {
+        public static createGameObject(name: string, mesh: egret3d.Mesh = null, material: egret3d.Material = null, tag: string = paper.DefaultTags.EditorOnly, scene: paper.Scene = paper.Scene.editorScene) {
             const gameObject = paper.GameObject.create(name, tag, scene);
             gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
             if (mesh) {
@@ -46,31 +46,31 @@ namespace paper.debug {
             mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, colors);
 
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
-            const gameObject = this._createGameObject(name, mesh, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone());
+            const gameObject = this.createGameObject(name, mesh, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone());
             return gameObject;
         }
 
         public static createTouchPlane(name: string, width: number = 500000, height: number = 500000) {
-            const gameObject = this._createGameObject(name, egret3d.DefaultMeshes.createPlane(width, height), egret3d.DefaultMaterials.LINEDASHED_COLOR.clone());
+            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.createPlane(width, height), egret3d.DefaultMaterials.LINEDASHED_COLOR.clone());
             return gameObject;
         }
 
         public static createAxises(name: string) {
-            const gameObject = this._createGameObject(name);
+            const gameObject = this.createGameObject(name);
             {
-                const translate = this._createGameObject("translate");
+                const translate = this.createGameObject("translate");
                 translate.transform.setParent(gameObject.transform);
-                const axisX = this._createGameObject("axisX", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const axisY = this._createGameObject("axisY", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const axisZ = this._createGameObject("axisZ", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisX = this.createGameObject("axisX", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisY = this.createGameObject("axisY", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisZ = this.createGameObject("axisZ", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
 
-                const arrowX = this._createGameObject("arrowX", egret3d.DefaultMeshes.PYRAMID, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const arrowY = this._createGameObject("arrowY", egret3d.DefaultMeshes.PYRAMID, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const arrowZ = this._createGameObject("arrowZ", egret3d.DefaultMeshes.PYRAMID, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const arrowX = this.createGameObject("arrowX", egret3d.DefaultMeshes.PYRAMID, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const arrowY = this.createGameObject("arrowY", egret3d.DefaultMeshes.PYRAMID, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const arrowZ = this.createGameObject("arrowZ", egret3d.DefaultMeshes.PYRAMID, egret3d.DefaultMaterials.MESH_BASIC.clone());
 
-                const pickX = this._createGameObject("pickX", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickY = this._createGameObject("pickY", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickZ = this._createGameObject("pickZ", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickX = this.createGameObject("pickX", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickY = this.createGameObject("pickY", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickZ = this.createGameObject("pickZ", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
 
                 axisX.transform.setParent(translate.transform);
                 axisY.transform.setParent(translate.transform).setLocalEuler(0.0, 0.0, Math.PI * 0.5);
@@ -80,9 +80,9 @@ namespace paper.debug {
                 arrowY.transform.setParent(axisY.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
                 arrowZ.transform.setParent(axisZ.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.05, 0.1, 0.05);
 
-                pickX.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.RIGHT.clone().multiplyScalar(0.5)).setLocalScale(1, 0.1, 0.1);
-                pickY.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.UP.clone().multiplyScalar(0.5)).setLocalScale(0.1, 1, 0.1);
-                pickZ.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.FORWARD.clone().multiplyScalar(0.5)).setLocalScale(0.1, 0.1, 1);
+                pickX.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.RIGHT.clone().multiplyScalar(0.5)).setLocalScale(1.2, 0.1, 0.1);
+                pickY.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.UP.clone().multiplyScalar(0.5)).setLocalScale(0.1, 1.2, 0.1);
+                pickZ.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.FORWARD.clone().multiplyScalar(0.5)).setLocalScale(0.1, 0.1, 1.2);
                 pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = false;
 
                 (axisX.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
@@ -99,49 +99,55 @@ namespace paper.debug {
             }
             //
             {
-                const rotate = this._createGameObject("rotate");
+                const rotate = this.createGameObject("rotate");
                 rotate.transform.setParent(gameObject.transform);
 
-                const axisX = this._createGameObject("axisX", egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const axisY = this._createGameObject("axisY", egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const axisZ = this._createGameObject("axisZ", egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisX = this.createGameObject("axisX", egret3d.DefaultMeshes.createCircle(1, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisY = this.createGameObject("axisY", egret3d.DefaultMeshes.createCircle(1, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisZ = this.createGameObject("axisZ", egret3d.DefaultMeshes.createCircle(1, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisE = this.createGameObject("axisE", egret3d.DefaultMeshes.createCircle(1.25, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
 
-                const pickX = this._createGameObject("pickX", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickY = this._createGameObject("pickY", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickZ = this._createGameObject("pickZ", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickX = this.createGameObject("pickX", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickY = this.createGameObject("pickY", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickZ = this.createGameObject("pickZ", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickE = this.createGameObject("pickE", egret3d.DefaultMeshes.createTorus(1.25, 0.1, 2, 24), egret3d.DefaultMaterials.MESH_BASIC.clone());
 
                 axisX.transform.setParent(rotate.transform);
-                axisY.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, Math.PI * 0.5);
-                axisZ.transform.setParent(rotate.transform).setLocalEuler(0.0, -Math.PI * 0.5, 0.0);
+                axisY.transform.setParent(rotate.transform);
+                axisZ.transform.setParent(rotate.transform);
+                axisE.transform.setParent(rotate.transform);
 
                 pickX.transform.setParent(rotate.transform).setLocalEuler(0, -Math.PI * 0.5, -Math.PI * 0.5);
                 pickY.transform.setParent(rotate.transform).setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
                 pickZ.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
-                pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = false;
+                pickE.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, 0.0);
+                pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = pickE.activeSelf = false;
 
                 (axisX.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (axisY.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (axisZ.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (axisE.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.YELLOW).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
 
                 (pickX.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (pickY.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
                 (pickZ.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.BLUE).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
+                (pickE.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.YELLOW).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
             }
             //
             {
-                const scale = this._createGameObject("scale");
+                const scale = this.createGameObject("scale");
                 scale.transform.setParent(gameObject.transform);
-                const axisX = this._createGameObject("axisX", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const axisY = this._createGameObject("axisY", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const axisZ = this._createGameObject("axisZ", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisX = this.createGameObject("axisX", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisY = this.createGameObject("axisY", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisZ = this.createGameObject("axisZ", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
 
-                const arrowX = this._createGameObject("arrowX", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const arrowY = this._createGameObject("arrowY", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const arrowZ = this._createGameObject("arrowZ", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const arrowX = this.createGameObject("arrowX", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const arrowY = this.createGameObject("arrowY", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const arrowZ = this.createGameObject("arrowZ", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
 
-                const pickX = this._createGameObject("pickX", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickY = this._createGameObject("pickY", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickZ = this._createGameObject("pickZ", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickX = this.createGameObject("pickX", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickY = this.createGameObject("pickY", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickZ = this.createGameObject("pickZ", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
 
                 axisX.transform.setParent(scale.transform);
                 axisY.transform.setParent(scale.transform).setLocalEuler(0.0, 0.0, Math.PI * 0.5);
@@ -151,9 +157,9 @@ namespace paper.debug {
                 arrowY.transform.setParent(axisY.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.2, 0.2, 0.2);
                 arrowZ.transform.setParent(axisZ.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.2, 0.2, 0.2);
 
-                pickX.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.RIGHT.clone().multiplyScalar(0.5)).setLocalScale(1, 0.1, 0.1);
-                pickY.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.UP.clone().multiplyScalar(0.5)).setLocalScale(0.1, 1, 0.1);
-                pickZ.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.FORWARD.clone().multiplyScalar(0.5)).setLocalScale(0.1, 0.1, 1);
+                pickX.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.RIGHT.clone().multiplyScalar(0.5)).setLocalScale(1.2, 0.2, 0.2);
+                pickY.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.UP.clone().multiplyScalar(0.5)).setLocalScale(0.2, 1.2, 0.2);
+                pickZ.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.FORWARD.clone().multiplyScalar(0.5)).setLocalScale(0.2, 0.2, 1.2);
                 pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = false;
 
                 (axisX.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);
@@ -173,12 +179,43 @@ namespace paper.debug {
         }
 
         public static createBox(name: string, color: egret3d.Color) {
-            const gameObject = this._createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone());
+            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone());
             gameObject.getComponent(egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.create(0.0, 1.0, 1.0).release());
             return gameObject;
         }
 
-        public static createCameraWireframed(name: string, tag: string, scene: paper.Scene,
+        public static createCameraIcon(name: string, parent: paper.GameObject) {
+            const material = new egret3d.Material(egret3d.DefaultShaders.TRANSPARENT);
+            material.renderQueue = paper.RenderQueue.Overlay;
+            material.setTexture(egret3d.ShaderUniformNames.Map, egret3d.DefaultTextures.CAMERA_ICON);
+            const gameObject = this.createGameObject(name, null, null, parent.tag, parent.scene);
+            const pick = this.createGameObject("pick", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone(), parent.tag, parent.scene);
+            pick.transform.setParent(gameObject.transform);
+            const icon = this.createGameObject("icon", egret3d.DefaultMeshes.QUAD, material, parent.tag, parent.scene);
+            icon.transform.setParent(gameObject.transform);
+            pick.activeSelf = false;
+            pick.addComponent(GizmoPickComponent).pickTarget = parent;
+            gameObject.transform.setParent(parent.transform);
+            return gameObject;
+        }
+
+        public static createLightIcon(name: string, parent: paper.GameObject) {
+            const material = new egret3d.Material(egret3d.DefaultShaders.TRANSPARENT);
+            material.renderQueue = paper.RenderQueue.Overlay;
+            material.setTexture(egret3d.ShaderUniformNames.Map, egret3d.DefaultTextures.LIGHT_ICON);
+            material.setColor(egret3d.ShaderUniformNames.Diffuse, egret3d.Color.RED);
+            const gameObject = this.createGameObject(name, null, null, parent.tag, parent.scene);
+            const pick = this.createGameObject("pick", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone(), parent.tag, parent.scene);
+            pick.transform.setParent(gameObject.transform);
+            const icon = this.createGameObject("icon", egret3d.DefaultMeshes.QUAD, material, parent.tag, parent.scene);
+            icon.transform.setParent(gameObject.transform);
+            pick.activeSelf = false;
+            pick.addComponent(GizmoPickComponent).pickTarget = parent;
+            gameObject.transform.setParent(parent.transform);
+            return gameObject;
+        }
+
+        public static createCameraWireframed(name: string,
             colorFrustum: egret3d.Color = egret3d.Color.create(1.0, 0.7, 0),
             colorCone: egret3d.Color = egret3d.Color.RED,
             colorUp: egret3d.Color = egret3d.Color.create(0, 0.7, 1),
@@ -209,12 +246,7 @@ namespace paper.debug {
             mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, colors);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
 
-            const gameObject = this._createGameObject(name, mesh, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone(), tag, scene);
-
-            const pick = this._createGameObject("pick", egret3d.DefaultMeshes.CUBE, null, tag, scene);
-            pick.transform.parent = gameObject.transform;
-            pick.activeSelf = false;
-
+            const gameObject = this.createGameObject(name, mesh, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone());
             return gameObject;
         }
     }
