@@ -2872,7 +2872,7 @@ var paper;
                 _this._onMouseDown = function (event) {
                     var mousePosition = egret3d.Vector3.create(event.clientX, event.clientY, 0.0);
                     egret3d.InputManager.mouse.convertPosition(mousePosition, mousePosition);
-                    if (event.button === 1) {
+                    if (event.button === 0) {
                         if (event.buttons & 2) {
                             return;
                         }
@@ -2998,34 +2998,39 @@ var paper;
                         }
                     }
                     else {
-                        var raycastInfos = debug.Helper.raycast(_this._pickableTool[_this._transformMode], mousePosition.x, mousePosition.y);
-                        if (raycastInfos.length > 0) {
-                            var transform = raycastInfos[0].transform;
-                            switch (transform.gameObject.name) {
-                                case "pickX":
-                                    _this._transformAxis = 1 /* X */;
-                                    break;
-                                case "pickY":
-                                    _this._transformAxis = 2 /* Y */;
-                                    break;
-                                case "pickZ":
-                                    _this._transformAxis = 3 /* Z */;
-                                    break;
-                                case "pickE":
-                                    _this._transformAxis = 4 /* E */;
-                                    break;
-                                default:
-                                    _this._transformAxis = 0 /* None */;
-                                    break;
+                        if (_this._guiComponent.selectedGameObject) {
+                            var raycastInfos = debug.Helper.raycast(_this._pickableTool[_this._transformMode], mousePosition.x, mousePosition.y);
+                            if (raycastInfos.length > 0) {
+                                var transform = raycastInfos[0].transform;
+                                switch (transform.gameObject.name) {
+                                    case "pickX":
+                                        _this._transformAxis = 1 /* X */;
+                                        break;
+                                    case "pickY":
+                                        _this._transformAxis = 2 /* Y */;
+                                        break;
+                                    case "pickZ":
+                                        _this._transformAxis = 3 /* Z */;
+                                        break;
+                                    case "pickE":
+                                        _this._transformAxis = 4 /* E */;
+                                        break;
+                                    default:
+                                        _this._transformAxis = 0 /* None */;
+                                        break;
+                                }
+                            }
+                            else {
+                                _this._transformAxis = 0 /* None */;
                             }
                         }
                         else {
                             _this._transformAxis = 0 /* None */;
                         }
                         if (_this._transformAxis === 0 /* None */) {
-                            var raycastInfos_1 = debug.Helper.raycast(paper.Scene.activeScene.getRootGameObjects(), mousePosition.x, mousePosition.y);
-                            if (raycastInfos_1.length > 0) {
-                                _this._guiComponent.hover(raycastInfos_1[0].transform.gameObject);
+                            var raycastInfos = debug.Helper.raycast(paper.Scene.activeScene.getRootGameObjects(), mousePosition.x, mousePosition.y);
+                            if (raycastInfos.length > 0) {
+                                _this._guiComponent.hover(raycastInfos[0].transform.gameObject);
                             }
                             else {
                                 _this._guiComponent.hover(null);
@@ -3128,6 +3133,7 @@ var paper;
                     }
                 }
                 else {
+                    this._transformAxis = 0 /* None */;
                     this._axises.activeSelf = false; // TODO
                     var box = this._boxes[value.uuid];
                     if (!box) {
@@ -3427,7 +3433,7 @@ var paper;
                     this._cameraViewFrustum = debug.EditorMeshHelper.createCameraWireframed("Camera");
                     this._cameraViewFrustum.activeSelf = false;
                 }
-                this._transformAxis = null;
+                this._transformAxis = 0 /* None */;
                 //
                 this._gizomsMap[1 /* X */] = [];
                 //

@@ -68,6 +68,7 @@ namespace paper.debug {
                 }
             }
             else {
+                this._transformAxis = TransformAxis.None;
                 this._axises.activeSelf = false; // TODO
 
                 const box = this._boxes[value.uuid];
@@ -84,7 +85,7 @@ namespace paper.debug {
             const mousePosition = egret3d.Vector3.create(event.clientX, event.clientY, 0.0);
             egret3d.InputManager.mouse.convertPosition(mousePosition, mousePosition);
 
-            if (event.button === 0b01) {
+            if (event.button === 0b00) {
                 if (event.buttons & 0b10) { // 正在控制摄像机。
                     return;
                 }
@@ -228,29 +229,34 @@ namespace paper.debug {
                 }
             }
             else {
-                const raycastInfos = Helper.raycast(this._pickableTool[this._transformMode], mousePosition.x, mousePosition.y);
-                if (raycastInfos.length > 0) {
-                    const transform = raycastInfos[0].transform;
-                    switch (transform.gameObject.name) {
-                        case "pickX":
-                            this._transformAxis = TransformAxis.X;
-                            break;
+                if (this._guiComponent.selectedGameObject) {
+                    const raycastInfos = Helper.raycast(this._pickableTool[this._transformMode], mousePosition.x, mousePosition.y);
+                    if (raycastInfos.length > 0) {
+                        const transform = raycastInfos[0].transform;
+                        switch (transform.gameObject.name) {
+                            case "pickX":
+                                this._transformAxis = TransformAxis.X;
+                                break;
 
-                        case "pickY":
-                            this._transformAxis = TransformAxis.Y;
-                            break;
+                            case "pickY":
+                                this._transformAxis = TransformAxis.Y;
+                                break;
 
-                        case "pickZ":
-                            this._transformAxis = TransformAxis.Z;
-                            break;
+                            case "pickZ":
+                                this._transformAxis = TransformAxis.Z;
+                                break;
 
-                        case "pickE":
-                            this._transformAxis = TransformAxis.E;
-                            break;
+                            case "pickE":
+                                this._transformAxis = TransformAxis.E;
+                                break;
 
-                        default:
-                            this._transformAxis = TransformAxis.None;
-                            break;
+                            default:
+                                this._transformAxis = TransformAxis.None;
+                                break;
+                        }
+                    }
+                    else {
+                        this._transformAxis = TransformAxis.None;
                     }
                 }
                 else {
@@ -695,7 +701,7 @@ namespace paper.debug {
                 this._cameraViewFrustum.activeSelf = false;
             }
 
-            this._transformAxis = null;
+            this._transformAxis = TransformAxis.None;
             //
             this._gizomsMap[TransformAxis.X] = [];
             //
