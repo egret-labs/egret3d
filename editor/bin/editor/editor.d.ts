@@ -57,7 +57,6 @@ declare namespace paper.debug {
         private readonly _camerasAndLights;
         private readonly _guiComponent;
         private _orbitControls;
-        private _buttons;
         private readonly _mouseStart;
         private readonly _startPoint;
         private readonly _endPoint;

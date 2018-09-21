@@ -284,7 +284,6 @@ var paper;
                 _this._camerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
                 _this._guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
                 _this._orbitControls = null;
-                _this._buttons = 0;
                 _this._mouseStart = egret3d.Vector3.create();
                 _this._startPoint = egret3d.Vector3.create();
                 _this._endPoint = egret3d.Vector3.create();
@@ -327,9 +326,8 @@ var paper;
                             _this._positionStart.copy(selectedGameObject.transform.getPosition()); // TODO
                         }
                     }
-                    else if (event.button === 2) {
+                    else if (event.button === 1) {
                     }
-                    _this._buttons = event.buttons;
                     _this._mouseStart.set(event.clientX, event.clientY, 0.0);
                     mousePosition.release();
                     event.preventDefault();
@@ -360,7 +358,6 @@ var paper;
                                 return;
                             }
                             var selected = _this._guiComponent.selectedGameObject;
-                            _this._orbitControls.enableMove = false;
                             var intersectObject = raycastInfos[0];
                             var intersectObjectPos = intersectObject.position;
                             _this._endPoint.copy(intersectObjectPos).subtract(_this._startWorldPosition, _this._endPoint);
@@ -486,8 +483,7 @@ var paper;
                     event.preventDefault();
                 };
                 _this._onMouseUp = function (event) {
-                    var button = (_this._buttons & (~event.buttons));
-                    if (button === 1) {
+                    if (event.button === 0) {
                         if (_this._transformAxis !== 0 /* None */) {
                             // TODO
                         }
@@ -512,10 +508,8 @@ var paper;
                             }
                         }
                     }
-                    else if (button === 2) {
-                        _this._orbitControls.enableMove = true;
+                    else if (event.button === 1) {
                     }
-                    _this._buttons = event.buttons;
                     event.preventDefault();
                 };
                 _this._onKeyUp = function (event) {
