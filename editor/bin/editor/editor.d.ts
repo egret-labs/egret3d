@@ -96,6 +96,14 @@ declare namespace dat {
         remove(): GUIController;
     }
 }declare namespace paper.debug {
+    /**
+     * TODO 临时的
+     */
+    class Bootstrap extends paper.Behaviour {
+        initialize(): void;
+    }
+}
+declare namespace paper.debug {
     class GizmoPickComponent extends Behaviour {
         pickTarget: GameObject | null;
         onDestroy(): void;

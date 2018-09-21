@@ -175,7 +175,6 @@ namespace paper.editor {
                     //
                     egret3d.CameraAndLightSystem,
                     egret3d.WebGLRenderSystem,
-                    egret3d.GizmoRenderSystem,
                     //
                     paper.DisableSystem,
                     egret3d.EndSystem

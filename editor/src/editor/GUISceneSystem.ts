@@ -404,8 +404,8 @@ namespace paper.debug {
                 //
                 this._axises.transform.setScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10).release());
                 if (this._transformMode === TransformMode.TRANSLATE || this._transformMode === TransformMode.SCALE) {
-                    translateObj.rotation = this._selectedWorldQuaternion;
-                    scaleObj.rotation = this._selectedWorldQuaternion;
+                    // translateObj.rotation = this._selectedWorldQuaternion;
+                    // scaleObj.rotation = this._selectedWorldQuaternion;
                 }
                 else if (this._transformMode === TransformMode.ROTATE) {
                     const quaternion = egret3d.Quaternion.IDENTITY;//TODO local

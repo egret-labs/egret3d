@@ -35,7 +35,7 @@ namespace paper.debug {
             ray.release();
             //
             raycastInfos.sort((a, b) => {
-                return b.distance - a.distance;
+                return a.distance - b.distance;
             });
 
             return raycastInfos;

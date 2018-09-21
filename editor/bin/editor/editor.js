@@ -2608,6 +2608,30 @@ var paper;
 (function (paper) {
     var debug;
     (function (debug) {
+        /**
+         * TODO 临时的
+         */
+        var Bootstrap = (function (_super) {
+            __extends(Bootstrap, _super);
+            function Bootstrap() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            Bootstrap.prototype.initialize = function () {
+                paper.GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
+            };
+            return Bootstrap;
+        }(paper.Behaviour));
+        debug.Bootstrap = Bootstrap;
+        __reflect(Bootstrap.prototype, "paper.debug.Bootstrap");
+        setTimeout(function () {
+            paper.GameObject.globalGameObject.getOrAddComponent(debug.Bootstrap);
+        }, 1000);
+    })(debug = paper.debug || (paper.debug = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var debug;
+    (function (debug) {
         var GizmoPickComponent = (function (_super) {
             __extends(GizmoPickComponent, _super);
             function GizmoPickComponent() {
@@ -3144,8 +3168,8 @@ var paper;
                     //
                     this._axises.transform.setScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10).release());
                     if (this._transformMode === 0 /* TRANSLATE */ || this._transformMode === 2 /* SCALE */) {
-                        translateObj.rotation = this._selectedWorldQuaternion;
-                        scaleObj.rotation = this._selectedWorldQuaternion;
+                        // translateObj.rotation = this._selectedWorldQuaternion;
+                        // scaleObj.rotation = this._selectedWorldQuaternion;
                     }
                     else if (this._transformMode === 1 /* ROTATE */) {
                         var quaternion = egret3d.Quaternion.IDENTITY; //TODO local
@@ -4385,7 +4409,7 @@ var paper;
                 ray.release();
                 //
                 raycastInfos.sort(function (a, b) {
-                    return b.distance - a.distance;
+                    return a.distance - b.distance;
                 });
                 return raycastInfos;
             };

@@ -2705,35 +2705,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * Mesh 渲染组件。
-     */
-    class MeshRenderer extends paper.BaseRenderer {
-        protected static readonly _helpRay: Ray;
-        protected readonly _materials: Material[];
-        uninitialize(): void;
-        recalculateAABB(): void;
-        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
-        /**
-         * material list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 材质数组
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        materials: ReadonlyArray<Material>;
-        /**
-         * 材质数组中的第一个材质。
-         */
-        material: Material | null;
-    }
-}
-declare namespace egret3d {
-    /**
      *
      */
     interface IRectangle {
@@ -2768,6 +2739,35 @@ declare namespace egret3d {
         constructor(x?: number, y?: number, w?: number, h?: number);
         serialize(): number[];
         deserialize(element: number[]): this;
+    }
+}
+declare namespace egret3d {
+    /**
+     * Mesh 渲染组件。
+     */
+    class MeshRenderer extends paper.BaseRenderer {
+        protected static readonly _helpRay: Ray;
+        protected readonly _materials: Material[];
+        uninitialize(): void;
+        recalculateAABB(): void;
+        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
+        /**
+         * material list
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 材质数组
+         * @version paper 1.0
+         * @platform Web
+         * @language
+         */
+        materials: ReadonlyArray<Material>;
+        /**
+         * 材质数组中的第一个材质。
+         */
+        material: Material | null;
     }
 }
 declare namespace egret3d {
@@ -2980,44 +2980,6 @@ declare namespace paper {
     }
 }
 declare namespace paper.editor {
-    abstract class BaseGeo {
-        editorModel: EditorModel;
-        geo: GameObject;
-        private baseColor;
-        greyColor: egret3d.Material;
-        yellowColor: egret3d.Material;
-        protected helpVec3_1: egret3d.Vector3;
-        protected helpVec3_2: egret3d.Vector3;
-        protected helpVec3_3: egret3d.Vector3;
-        protected helpQuat_1: egret3d.Quaternion;
-        protected helpQuat_2: egret3d.Quaternion;
-        protected forward: egret3d.Vector3;
-        protected up: egret3d.Vector3;
-        protected right: egret3d.Vector3;
-        protected _dragOffset: egret3d.Vector3;
-        protected _delta: egret3d.Vector3;
-        protected _newPosition: egret3d.Vector3;
-        protected _ctrlPos: egret3d.Vector3;
-        _ctrlRot: egret3d.Quaternion;
-        protected _dragPlanePoint: egret3d.Vector3;
-        protected _dragPlaneNormal: egret3d.Vector3;
-        protected _initRotation: egret3d.Quaternion;
-        protected _oldLocalScale: egret3d.Vector3;
-        constructor();
-        onSet(): void;
-        abstract isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
-        abstract wasPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
-        abstract isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
-        abstract wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): any;
-        abstract wasReleased(selectedGameObj: GameObject[]): any;
-        _checkIntersect(ray: egret3d.Ray): this;
-        changeColor(color: string): void;
-        protected _createAxis(color: egret3d.Vector4, type: number): GameObject;
-        protected _createCircleLine(): egret3d.Mesh;
-        protected createFan(maxAngle: number, _mesh?: egret3d.MeshFilter): any;
-    }
-}
-declare namespace paper.editor {
     abstract class BaseState {
         editorModel: EditorModel;
         autoClear: boolean;
@@ -3030,6 +2992,30 @@ declare namespace paper.editor {
         dispatchEditorModelEvent(type: string, data?: any): void;
         serialize(): any;
         deserialize(data: any): void;
+    }
+}
+declare namespace paper {
+    /**
+     *
+     */
+    class Clock extends SingletonComponent {
+        maxFixedSubSteps: number;
+        fixedDeltaTime: number;
+        timeScale: number;
+        private _frameCount;
+        private _beginTime;
+        private _lastTime;
+        private _delayTime;
+        private _unscaledTime;
+        private _unscaledDeltaTime;
+        private _fixedTime;
+        initialize(): void;
+        readonly frameCount: number;
+        readonly time: number;
+        readonly fixedTime: number;
+        readonly deltaTime: number;
+        readonly unscaledTime: number;
+        readonly unscaledDeltaTime: number;
     }
 }
 declare namespace paper {
@@ -4490,66 +4476,6 @@ declare namespace egret3d {
         update(camera: Camera, faceIndex: number): void;
     }
 }
-declare namespace egret3d {
-    /**
-     *
-     */
-    class PointLight extends BaseLight {
-        /**
-         *
-         */
-        decay: number;
-        /**
-         *
-         */
-        distance: number;
-        renderTarget: BaseRenderTarget;
-        update(camera: Camera, faceIndex: number): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    class SpotLight extends BaseLight {
-        /**
-         *
-         */
-        decay: number;
-        /**
-         *
-         */
-        distance: number;
-        /**
-         *
-         */
-        angle: number;
-        /**
-         *
-         */
-        penumbra: number;
-        update(camera: Camera, faceIndex: number): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    const enum MeshFilterEventType {
-        Mesh = "mesh",
-    }
-    /**
-     * MeshFilter 组件
-     */
-    class MeshFilter extends paper.BaseComponent {
-        private _mesh;
-        uninitialize(): void;
-        /**
-         * 组件挂载的 mesh 模型
-         */
-        mesh: Mesh | null;
-    }
-}
 declare namespace paper {
     /**
      * 可以挂载Component的实体类。
@@ -4721,6 +4647,74 @@ declare namespace paper {
          * @see paper.Scene#findGameObjectsWithTag()
          */
         static findGameObjectsWithTag(tag: string, scene?: Scene | null): GameObject[];
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    class SpotLight extends BaseLight {
+        /**
+         *
+         */
+        decay: number;
+        /**
+         *
+         */
+        distance: number;
+        /**
+         *
+         */
+        angle: number;
+        /**
+         *
+         */
+        penumbra: number;
+        update(camera: Camera, faceIndex: number): void;
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    const enum MeshFilterEventType {
+        Mesh = "mesh",
+    }
+    /**
+     * MeshFilter 组件
+     */
+    class MeshFilter extends paper.BaseComponent {
+        private _mesh;
+        uninitialize(): void;
+        /**
+         * 组件挂载的 mesh 模型
+         */
+        mesh: Mesh | null;
+    }
+}
+declare namespace egret3d {
+    class Matrix3 implements paper.IRelease<Matrix3>, paper.ISerializable {
+        private static readonly _instances;
+        static create(): Matrix3;
+        release(): this;
+        /**
+         * @readonly
+         */
+        rawData: Float32Array;
+        constructor(rawData?: Float32Array | null);
+        serialize(): Float32Array;
+        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): this;
+        copy(value: Readonly<Matrix3>): this;
+        clone(): Matrix3;
+        set(n11: number, n12: number, n13: number, n21: number, n22: number, n23: number, n31: number, n32: number, n33: number): this;
+        identity(): this;
+        inverse(matrix: Matrix3): this;
+        getNormalMatrix(matrix4: Readonly<Matrix4>): this;
+        transpose(): this;
+        setFromMatrix4(m: Matrix4): this;
+        determinant(): number;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromBuffer(value: ArrayBuffer, byteOffset?: number): this;
     }
 }
 declare namespace egret3d {
@@ -5185,30 +5179,7 @@ declare namespace egret3d.particle {
         readonly floatValues: Readonly<Float32Array>;
     }
 }
-declare namespace egret3d {
-    class Matrix3 implements paper.IRelease<Matrix3>, paper.ISerializable {
-        private static readonly _instances;
-        static create(): Matrix3;
-        release(): this;
-        /**
-         * @readonly
-         */
-        rawData: Float32Array;
-        constructor(rawData?: Float32Array | null);
-        serialize(): Float32Array;
-        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): this;
-        copy(value: Readonly<Matrix3>): this;
-        clone(): Matrix3;
-        set(n11: number, n12: number, n13: number, n21: number, n22: number, n23: number, n31: number, n32: number, n33: number): this;
-        identity(): this;
-        inverse(matrix: Matrix3): this;
-        getNormalMatrix(matrix4: Readonly<Matrix4>): this;
-        transpose(): this;
-        setFromMatrix4(m: Matrix4): this;
-        determinant(): number;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        fromBuffer(value: ArrayBuffer, byteOffset?: number): this;
-    }
+declare namespace egret3d.particle {
 }
 declare namespace egret3d.particle {
     const enum ParticleCompEventType {
@@ -9686,215 +9657,8 @@ declare namespace paper.editor {
         readonly editorScene: Scene;
         private currentModel;
         editorModel: EditorModel;
-        private editorCameraScript;
-        private pickGameScript;
-        private geoController;
         private cameraObject;
         init(): void;
-    }
-}
-declare namespace paper.editor {
-    class Controller extends paper.Behaviour {
-        private _modeCanChange;
-        private _isEditing;
-        selectedGameObjs: GameObject[];
-        private _cameraObject;
-        private bindMouse;
-        private bindKeyboard;
-        readonly onGeoControll: boolean;
-        private mainGeo;
-        private readonly controller;
-        private _editorModel;
-        editorModel: EditorModel;
-        private geoCtrlMode;
-        private geoCtrlType;
-        private coord;
-        constructor();
-        onUpdate(): void;
-        private updateInLocalMode();
-        private updateInWorldMode();
-        private _oldResult;
-        private mouseRayCastUpdate();
-        private _oldTransform;
-        private geoChangeByCamera();
-        private inputUpdate();
-        private changeEditMode(mode);
-        private changeEditType(type);
-        private addEventListener();
-        private selectGameObjects(gameObjs);
-        private drawCoord();
-    }
-}
-declare namespace paper {
-    /**
-     *
-     */
-    class MissingComponent extends BaseComponent {
-        missingObject: any | null;
-    }
-}
-declare namespace paper.editor {
-    class GeoContainer extends BaseGeo {
-        private geos;
-        private selectedGeo;
-        readonly onGeoControll: boolean;
-        constructor();
-        onSet(): void;
-        checkIntersect(ray: egret3d.Ray): BaseGeo;
-        private clear();
-        changeType(type: string): void;
-        wasPressed_local(ray: egret3d.Ray, selected: any): any;
-        isPressed_local(ray: egret3d.Ray, selected: any): void;
-        wasPressed_world(ray: egret3d.Ray, selected: any): any;
-        isPressed_world(ray: egret3d.Ray, selected: any): void;
-        wasReleased(selectedGameObjs: GameObject[]): void;
-    }
-}
-declare namespace paper.editor {
-    class xAxis extends BaseGeo {
-        constructor();
-        onSet(): void;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        wasReleased(selectedGameObjs: GameObject[]): void;
-    }
-}
-declare namespace paper.editor {
-    class xyAxis extends BaseGeo {
-        constructor();
-        onSet(): void;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(selectedGameObjs: GameObject[]): void;
-    }
-}
-declare namespace paper.editor {
-    class xzAxis extends BaseGeo {
-        constructor();
-        onSet(): void;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(selectedGameObjs: GameObject[]): void;
-    }
-}
-declare namespace paper.editor {
-    class yzAxis extends BaseGeo {
-        constructor();
-        onSet(): void;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(selectedGameObjs: GameObject[]): void;
-    }
-}
-declare namespace paper.editor {
-    class yAxis extends BaseGeo {
-        constructor();
-        onSet(): void;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(selectedGameObjs: GameObject[]): void;
-    }
-}
-declare namespace paper.editor {
-    class zAxis extends BaseGeo {
-        constructor();
-        onSet(): void;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        wasReleased(selectedGameObjs: GameObject[]): void;
-    }
-}
-declare namespace paper.editor {
-    class xRot extends BaseGeo {
-        constructor();
-        private fan;
-        onSet(): void;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        wasReleased(): void;
-    }
-}
-declare namespace paper.editor {
-    class yRot extends BaseGeo {
-        constructor();
-        onSet(): void;
-        private fan;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        wasReleased(): void;
-    }
-}
-declare namespace paper.editor {
-    class zRot extends BaseGeo {
-        constructor();
-        onSet(): void;
-        private fan;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        wasReleased(): void;
-    }
-}
-declare namespace paper.editor {
-    class ballRot extends BaseGeo {
-        constructor();
-        onSet(): void;
-        drawBall(SPHERE_DIV: number): egret3d.Mesh;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: GameObject[]): void;
-        wasReleased(): void;
-    }
-}
-declare namespace paper.editor {
-    class xScl extends BaseGeo {
-        constructor();
-        onSet(): void;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
-    }
-}
-declare namespace paper.editor {
-    class yScl extends BaseGeo {
-        constructor();
-        onSet(): void;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
-    }
-}
-declare namespace paper.editor {
-    class zScl extends BaseGeo {
-        constructor();
-        onSet(): void;
-        wasPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_local(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        isPressed_world(ray: egret3d.Ray, selectedGameObjs: any): void;
-        wasReleased(): void;
     }
 }
 declare namespace paper.editor {
@@ -9986,24 +9750,8 @@ declare namespace paper {
     /**
      *
      */
-    class Clock extends SingletonComponent {
-        maxFixedSubSteps: number;
-        fixedDeltaTime: number;
-        timeScale: number;
-        private _frameCount;
-        private _beginTime;
-        private _lastTime;
-        private _delayTime;
-        private _unscaledTime;
-        private _unscaledDeltaTime;
-        private _fixedTime;
-        initialize(): void;
-        readonly frameCount: number;
-        readonly time: number;
-        readonly fixedTime: number;
-        readonly deltaTime: number;
-        readonly unscaledTime: number;
-        readonly unscaledDeltaTime: number;
+    class MissingComponent extends BaseComponent {
+        missingObject: any | null;
     }
 }
 declare namespace paper.editor {
@@ -10207,146 +9955,6 @@ declare namespace paper.editor {
     function parse(value: string): UUID;
     function generateUuid(): string;
 }
-declare namespace paper.editor {
-    class EditorCameraScript extends paper.Behaviour {
-        editorModel: EditorModel;
-        moveSpeed: number;
-        wheelSpeed: number;
-        rotateSpeed: number;
-        private bindKeyboard;
-        private bindMouse;
-        private _lastMouseX;
-        private _lastMouseY;
-        private _mouseDown_r;
-        private _mouseDown_l;
-        private _mouseDown_m;
-        onStart(): any;
-        onUpdate(delta: number): any;
-        OnEnable(): void;
-        OnDisable(): void;
-        private inputUpdate(delta);
-        private _lookAtPiont;
-        private _dragPlanePoint;
-        private _dragPlaneNormal;
-        private _helpQuat;
-        private _helpVec3;
-        onDestroy(): any;
-    }
-}
-declare namespace paper.editor {
-    class PickGameObjectScript extends paper.Behaviour {
-        editorModel: EditorModel;
-        private bindMouse;
-        private bindKeyboard;
-        private cameraScript;
-        private camera;
-        private lastX;
-        private lastY;
-        private selectBox;
-        onStart(): any;
-        private _tapStart;
-        private selectedGameObjects;
-        clearSelected(): void;
-        onUpdate(delta: number): any;
-        private excludingChild();
-        private boxSelect();
-        private setStroke(picked);
-        private initSelectBox();
-        private drawSelectBox(start, end);
-        private intersectWithCameraAndLight(ray);
-    }
-}
-declare namespace paper.editor {
-    const icons: {
-        camera: string;
-        light: string;
-    };
-    class Gizmo extends paper.Behaviour {
-        private static enabled;
-        private static webgl;
-        private static camera;
-        onStart(): void;
-        static Enabled(): void;
-        static setGameObj(obj: GameObject): void;
-        private static gameObj;
-        static DrawStroke(): void;
-        static DrawIcon(path: string, pos: egret3d.Vector3, size: number, color?: egret3d.Color): void;
-        private static verticesLine;
-        private static lineVertexBuffer;
-        private _oldTransform;
-        private nrLine;
-        static DrawCoord(): void;
-        private static verticesCoord;
-        private static verticesCylinder;
-        private static verticesArrow;
-        private static coordVertexBuffer;
-        private static cylinderVertexBuffer;
-        private static arrowVertexBuffer;
-        private static cameraVertexBuffer;
-        private static cameraIndexBuffer;
-        private static nrLine;
-        private static setVertices();
-        private static mvpMatrix;
-        private static mMatrix;
-        private static vMatrix;
-        private static pMatrix;
-        private static setMVPMatrix(m?);
-        private static glProgram_line;
-        private static glProgram_icon;
-        private static glProgram_stroke;
-        private static initPrg();
-        static DrawLights(): void;
-        private static DrawCylinder(transform, color);
-        static DrawCameras(): void;
-        static DrawCameraSquare(obj: GameObject, color: number[]): void;
-        private static helpVec31;
-        private static helpVec32;
-        private static helpVec33;
-        private static helpVec34;
-        private static helpVec35;
-        private static helpVec36;
-        private static verticesCameraSquare;
-        private static getCameraSquare(obj);
-        private static helpMat;
-        private static helpMat1;
-        private static getWorldMatrixWithoutScale(transform, fixScale, out);
-        private static _imageLoadCount;
-        private static textures;
-        private static initIconTexture();
-        private static loadIconTexture(image, key);
-    }
-}
-declare namespace paper.editor {
-    class GizmoShader {
-        prg: WebGLProgram;
-        private gl;
-        constructor(gl: WebGLRenderingContext, vshader: string, fshader: string);
-        private createProgram(vshader, fshader);
-        private createShader(type, str);
-        use(): void;
-        setFloat(name: string, value: number): void;
-        setInt(name: string, value: number): void;
-        setBool(name: string, value: boolean): void;
-        setVec3(name: string, value: egret3d.Vector3): void;
-        setVec4(name: string, value: egret3d.Vector4): void;
-        setColor(name: string, value: number[]): void;
-        setMatrix(name: string, value: egret3d.Matrix4): void;
-        setTexture(name: string, value: number): void;
-    }
-}
-declare namespace paper.editor {
-    const icon_frag: string;
-    const icon_vert: string;
-    const line_frag: string;
-    const line_vert: string;
-    const stroke_vert: string;
-}
-declare namespace egret3d {
-    class GizmoRenderSystem extends paper.BaseSystem {
-        private readonly _renderState;
-        onUpdate(): void;
-    }
-}
 declare namespace egret3d {
     /**
      * @deprecated
@@ -10373,5 +9981,20 @@ declare namespace egret3d {
      */
     type RawScene = paper.RawScene;
 }
-declare namespace egret3d.particle {
+declare namespace egret3d {
+    /**
+     *
+     */
+    class PointLight extends BaseLight {
+        /**
+         *
+         */
+        decay: number;
+        /**
+         *
+         */
+        distance: number;
+        renderTarget: BaseRenderTarget;
+        update(camera: Camera, faceIndex: number): void;
+    }
 }
