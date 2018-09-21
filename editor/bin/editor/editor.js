@@ -48,6 +48,30 @@ var paper;
 (function (paper) {
     var debug;
     (function (debug) {
+        /**
+         * TODO 临时的
+         */
+        var Bootstrap = (function (_super) {
+            __extends(Bootstrap, _super);
+            function Bootstrap() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            Bootstrap.prototype.initialize = function () {
+                paper.GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
+            };
+            return Bootstrap;
+        }(paper.Behaviour));
+        debug.Bootstrap = Bootstrap;
+        __reflect(Bootstrap.prototype, "paper.debug.Bootstrap");
+        setTimeout(function () {
+            paper.GameObject.globalGameObject.getOrAddComponent(debug.Bootstrap);
+        }, 1000);
+    })(debug = paper.debug || (paper.debug = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var debug;
+    (function (debug) {
         var GizmoPickComponent = (function (_super) {
             __extends(GizmoPickComponent, _super);
             function GizmoPickComponent() {
@@ -84,9 +108,9 @@ var paper;
         var GUIComponent = (function (_super) {
             __extends(GUIComponent, _super);
             function GUIComponent() {
+                // public readonly inspector: dat.GUI = new dat.GUI({ closeOnTop: true, width: 330 });
+                // public readonly hierarchy: dat.GUI = new dat.GUI({ closeOnTop: true, width: 330 });
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.inspector = new dat.GUI({ closeOnTop: true, width: 330 });
-                _this.hierarchy = new dat.GUI({ closeOnTop: true, width: 330 });
                 /**
                  * 所有选中的实体。
                  */
@@ -103,23 +127,24 @@ var paper;
             }
             GUIComponent.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
-                var sceneOptions = {
-                    debug: false
-                };
-                this.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
-                    var guiSceneSystem = paper.Application.systemManager.getOrRegisterSystem(debug.GUISceneSystem);
-                    var guiSystem = paper.Application.systemManager.getOrRegisterSystem(debug.GUISystem);
-                    if (v) {
-                        paper.Application.playerMode = 1 /* DebugPlayer */;
-                        guiSceneSystem.enabled = true;
-                        guiSystem.enabled = true;
-                    }
-                    else {
-                        paper.Application.playerMode = 0 /* Player */;
-                        guiSceneSystem.enabled = false;
-                        guiSystem.enabled = false;
-                    }
-                });
+                var guiSceneSystem = paper.Application.systemManager.getOrRegisterSystem(debug.GUISceneSystem);
+                // const sceneOptions = {
+                //     debug: false
+                // };
+                // this.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
+                //     const guiSceneSystem = Application.systemManager.getOrRegisterSystem(debug.GUISceneSystem);
+                //     const guiSystem = Application.systemManager.getOrRegisterSystem(debug.GUISystem);
+                //     if (v) {
+                //         Application.playerMode = PlayerMode.DebugPlayer;
+                //         guiSceneSystem.enabled = true;
+                //         guiSystem.enabled = true;
+                //     }
+                //     else {
+                //         Application.playerMode = PlayerMode.Player;
+                //         guiSceneSystem.enabled = false;
+                //         guiSystem.enabled = false;
+                //     }
+                // });
             };
             GUIComponent.prototype.select = function (value, isReplace) {
                 if (value) {
@@ -169,9 +194,9 @@ var paper;
         debug.GUIComponent = GUIComponent;
         __reflect(GUIComponent.prototype, "paper.debug.GUIComponent");
         // 
-        if (dat) {
-            paper.GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
-        }
+        // if (dat) {
+        //     GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
+        // }
     })(debug = paper.debug || (paper.debug = {}));
 })(paper || (paper = {}));
 var paper;
@@ -509,8 +534,8 @@ var paper;
                     //
                     this._axises.transform.setScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10).release());
                     if (this._transformMode === 0 /* TRANSLATE */ || this._transformMode === 2 /* SCALE */) {
-                        translateObj.rotation = this._selectedWorldQuaternion;
-                        scaleObj.rotation = this._selectedWorldQuaternion;
+                        // translateObj.rotation = this._selectedWorldQuaternion;
+                        // scaleObj.rotation = this._selectedWorldQuaternion;
                     }
                     else if (this._transformMode === 1 /* ROTATE */) {
                         var quaternion = egret3d.Quaternion.IDENTITY; //TODO local
@@ -1382,7 +1407,7 @@ var paper;
                 _this._panAngle = 0;
                 _this._panRad = 0;
                 _this._tiltAngle = 0;
-                _this._tiltRad = 0.25;
+                _this._tiltRad = 0;
                 _this._mouseDownHandler = function (event) {
                     event.preventDefault();
                     _this._mouseDown = true;
@@ -1838,7 +1863,7 @@ var paper;
                 }
                 //
                 raycastInfos.sort(function (a, b) {
-                    return b.distance - a.distance;
+                    return a.distance - b.distance;
                 });
                 return raycastInfos;
             };

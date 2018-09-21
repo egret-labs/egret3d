@@ -3486,88 +3486,6 @@ var egret3d;
         Quaternion.prototype.clone = function () {
             return Quaternion.create(this.x, this.y, this.z, this.w);
         };
-        Quaternion.prototype.fromMatrix2 = function (matrix) {
-            var m00, m01, m02, m10, m11, m12, m20, m21, m22, tr, s, rs, lx, ly, lz;
-            var m = matrix.rawData;
-            // Cache matrix values for super-speed
-            m00 = m[0];
-            m01 = m[1];
-            m02 = m[2];
-            m10 = m[4];
-            m11 = m[5];
-            m12 = m[6];
-            m20 = m[8];
-            m21 = m[9];
-            m22 = m[10];
-            // Remove the scale from the matrix
-            lx = 1 / Math.sqrt(m00 * m00 + m01 * m01 + m02 * m02);
-            ly = 1 / Math.sqrt(m10 * m10 + m11 * m11 + m12 * m12);
-            lz = 1 / Math.sqrt(m20 * m20 + m21 * m21 + m22 * m22);
-            m00 *= lx;
-            m01 *= lx;
-            m02 *= lx;
-            m10 *= ly;
-            m11 *= ly;
-            m12 *= ly;
-            m20 *= lz;
-            m21 *= lz;
-            m22 *= lz;
-            // http://www.cs.ucr.edu/~vbz/resources/quatut.pdf
-            tr = m00 + m11 + m22;
-            if (tr >= 0) {
-                s = Math.sqrt(tr + 1);
-                this.w = s * 0.5;
-                s = 0.5 / s;
-                this.x = (m12 - m21) * s;
-                this.y = (m20 - m02) * s;
-                this.z = (m01 - m10) * s;
-            }
-            else {
-                if (m00 > m11) {
-                    if (m00 > m22) {
-                        // XDiagDomMatrix
-                        rs = (m00 - (m11 + m22)) + 1;
-                        rs = Math.sqrt(rs);
-                        this.x = rs * 0.5;
-                        rs = 0.5 / rs;
-                        this.w = (m12 - m21) * rs;
-                        this.y = (m01 + m10) * rs;
-                        this.z = (m02 + m20) * rs;
-                    }
-                    else {
-                        // ZDiagDomMatrix
-                        rs = (m22 - (m00 + m11)) + 1;
-                        rs = Math.sqrt(rs);
-                        this.z = rs * 0.5;
-                        rs = 0.5 / rs;
-                        this.w = (m01 - m10) * rs;
-                        this.x = (m20 + m02) * rs;
-                        this.y = (m21 + m12) * rs;
-                    }
-                }
-                else if (m11 > m22) {
-                    // YDiagDomMatrix
-                    rs = (m11 - (m22 + m00)) + 1;
-                    rs = Math.sqrt(rs);
-                    this.y = rs * 0.5;
-                    rs = 0.5 / rs;
-                    this.w = (m20 - m02) * rs;
-                    this.z = (m12 + m21) * rs;
-                    this.x = (m10 + m01) * rs;
-                }
-                else {
-                    // ZDiagDomMatrix
-                    rs = (m22 - (m00 + m11)) + 1;
-                    rs = Math.sqrt(rs);
-                    this.z = rs * 0.5;
-                    rs = 0.5 / rs;
-                    this.w = (m01 - m10) * rs;
-                    this.x = (m20 + m02) * rs;
-                    this.y = (m21 + m12) * rs;
-                }
-            }
-            return this;
-        };
         /**
          * - 旋转矩阵。
          */
@@ -4350,6 +4268,40 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
+     * 矩形可序列化对象
+     */
+    var Rectangle = (function () {
+        /**
+         *
+         */
+        function Rectangle(x, y, w, h) {
+            if (x === void 0) { x = 0.0; }
+            if (y === void 0) { y = 0.0; }
+            if (w === void 0) { w = 0.0; }
+            if (h === void 0) { h = 0.0; }
+            this.x = x;
+            this.y = y;
+            this.w = w;
+            this.h = h;
+        }
+        Rectangle.prototype.serialize = function () {
+            return [this.x, this.y, this.w, this.h];
+        };
+        Rectangle.prototype.deserialize = function (element) {
+            this.x = element[0];
+            this.y = element[1];
+            this.w = element[2];
+            this.h = element[3];
+            return this;
+        };
+        return Rectangle;
+    }());
+    egret3d.Rectangle = Rectangle;
+    __reflect(Rectangle.prototype, "egret3d.Rectangle", ["egret3d.IRectangle", "paper.ISerializable"]);
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
      * Mesh 渲染组件。
      */
     var MeshRenderer = (function (_super) {
@@ -4451,40 +4403,6 @@ var egret3d;
     }(paper.BaseRenderer));
     egret3d.MeshRenderer = MeshRenderer;
     __reflect(MeshRenderer.prototype, "egret3d.MeshRenderer");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * 矩形可序列化对象
-     */
-    var Rectangle = (function () {
-        /**
-         *
-         */
-        function Rectangle(x, y, w, h) {
-            if (x === void 0) { x = 0.0; }
-            if (y === void 0) { y = 0.0; }
-            if (w === void 0) { w = 0.0; }
-            if (h === void 0) { h = 0.0; }
-            this.x = x;
-            this.y = y;
-            this.w = w;
-            this.h = h;
-        }
-        Rectangle.prototype.serialize = function () {
-            return [this.x, this.y, this.w, this.h];
-        };
-        Rectangle.prototype.deserialize = function (element) {
-            this.x = element[0];
-            this.y = element[1];
-            this.w = element[2];
-            this.h = element[3];
-            return this;
-        };
-        return Rectangle;
-    }());
-    egret3d.Rectangle = Rectangle;
-    __reflect(Rectangle.prototype, "egret3d.Rectangle", ["egret3d.IRectangle", "paper.ISerializable"]);
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -5364,170 +5282,6 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
-        var BaseGeo = (function () {
-            function BaseGeo() {
-                this.helpVec3_1 = new egret3d.Vector3();
-                this.helpVec3_2 = new egret3d.Vector3();
-                this.helpVec3_3 = new egret3d.Vector3();
-                this.helpQuat_1 = new egret3d.Quaternion();
-                this.helpQuat_2 = new egret3d.Quaternion();
-                this.forward = new egret3d.Vector3(0, 0, 1);
-                this.up = new egret3d.Vector3(0, 1, 0);
-                this.right = new egret3d.Vector3(1, 0, 0);
-                this._dragOffset = new egret3d.Vector3();
-                this._delta = new egret3d.Vector3();
-                this._newPosition = new egret3d.Vector3();
-                this._ctrlPos = new egret3d.Vector3();
-                this._ctrlRot = new egret3d.Quaternion();
-                this._dragPlanePoint = new egret3d.Vector3();
-                this._dragPlaneNormal = new egret3d.Vector3();
-                this._initRotation = new egret3d.Quaternion();
-                this._oldLocalScale = new egret3d.Vector3();
-                this.onSet();
-                if (this.geo) {
-                    if (this.geo.getComponent(egret3d.MeshRenderer))
-                        this.baseColor = this.geo.getComponent(egret3d.MeshRenderer).materials[0];
-                }
-            }
-            BaseGeo.prototype.onSet = function () {
-            };
-            BaseGeo.prototype._checkIntersect = function (ray) {
-                var mesh = this.geo.getComponent(egret3d.MeshFilter).mesh;
-                var temp = mesh.raycast(ray, this.geo.transform.getWorldMatrix());
-                if (temp) {
-                    return this;
-                }
-            };
-            BaseGeo.prototype.changeColor = function (color) {
-                if (color == "origin") {
-                    this.geo.getComponent(egret3d.MeshRenderer).materials = [this.baseColor];
-                }
-                else if (color == "yellow") {
-                    if (this.yellowColor) {
-                        this.geo.getComponent(egret3d.MeshRenderer).materials = [this.greyColor];
-                    }
-                    var mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone();
-                    var color1 = new Float32Array([0.8, 0.8, 0.3]);
-                    var alpha = new Float32Array([0.3]);
-                    mat.setFloatv("opacity" /* Opacity */, alpha);
-                    mat.setVector3v("diffuse" /* Diffuse */, color1);
-                    this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
-                }
-                else if (color == "grey") {
-                    if (this.greyColor) {
-                        this.geo.getComponent(egret3d.MeshRenderer).materials = [this.greyColor];
-                    }
-                    var mat = this.geo.getComponent(egret3d.MeshRenderer).materials[0].clone();
-                    var color1 = new Float32Array([0.3, 0.3, 0.3]);
-                    var alpha = new Float32Array([0.2]);
-                    mat.setFloatv("opacity" /* Opacity */, alpha);
-                    mat.setVector3v("diffuse" /* Diffuse */, color1);
-                    this.geo.getComponent(egret3d.MeshRenderer).materials = [mat];
-                }
-            };
-            BaseGeo.prototype._createAxis = function (color, type) {
-                var gizmoAxis = new paper.GameObject("", "", paper.Application.sceneManager.editorScene);
-                var mesh = gizmoAxis.addComponent(egret3d.MeshFilter);
-                switch (type) {
-                    case 0:
-                        mesh.mesh = egret3d.DefaultMeshes.CUBE;
-                        break;
-                    case 1:
-                        mesh.mesh = this._createCircleLine();
-                        break;
-                    case 2:
-                        mesh.mesh = egret3d.DefaultMeshes.CUBE;
-                        break;
-                    case 3:
-                        mesh.mesh = egret3d.DefaultMeshes.PLANE;
-                        break;
-                }
-                var renderer = gizmoAxis.addComponent(egret3d.MeshRenderer);
-                var mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
-                var color1 = new Float32Array([color.x, color.y, color.z]);
-                var alpha = new Float32Array([color.w]);
-                var technique = mat.glTFTechnique;
-                var funs = technique.states.functions;
-                var enables = technique.states.enable;
-                mat.setFloatv("opacity" /* Opacity */, alpha);
-                mat.setVector3v("diffuse" /* Diffuse */, color1);
-                mat.setCullFace(false);
-                mat.setBlend(1 /* Blend */);
-                mat.renderQueue = 4000 /* Overlay */;
-                // funs.depthMask = [true];
-                funs.depthFunc = [519 /* ALWAYS */];
-                renderer.materials = [mat];
-                return gizmoAxis;
-            };
-            BaseGeo.prototype._createCircleLine = function () {
-                var vertexCount = 1;
-                var triangleFan = [];
-                var indices = [];
-                for (var angle = 0; angle <= 360; angle += 1) {
-                    var x = Math.cos(angle / 180.0 * 3.14) / 1.03;
-                    var y = Math.sin(angle / 180.0 * 3.14) / 1.03;
-                    var z = 0.0;
-                    triangleFan.push(x, y, z);
-                    var x = Math.cos(angle / 180.0 * 3.14);
-                    var y = Math.sin(angle / 180.0 * 3.14);
-                    var z = 0.0;
-                    triangleFan.push(x, y, z);
-                    vertexCount++;
-                }
-                console.log(vertexCount);
-                for (var angle = 0; angle <= vertexCount * 2 - 3; angle += 1) {
-                    indices.push(angle, angle + 1, angle + 2);
-                }
-                var mesh = new egret3d.Mesh(vertexCount * 2, (vertexCount * 2 - 3) * 3);
-                mesh.setIndices(indices);
-                mesh.setAttributes("POSITION" /* POSITION */, triangleFan);
-                return mesh;
-            };
-            BaseGeo.prototype.createFan = function (maxAngle, _mesh) {
-                if (_mesh) {
-                    mesh = _mesh;
-                }
-                var mesh;
-                var vertexCount = 1;
-                var triangleFan = [0, 0, 0];
-                var indices = [];
-                if (maxAngle >= 0) {
-                    for (var angle = 0; angle <= maxAngle; angle += 1) {
-                        var x = Math.cos(angle / 180.0 * 3.14);
-                        var y = Math.sin(angle / 180.0 * 3.14);
-                        var z = 0.0;
-                        triangleFan.push(x, y, z);
-                        vertexCount++;
-                    }
-                }
-                else {
-                    for (var angle = 0; angle >= maxAngle; angle -= 1) {
-                        var x = Math.cos(angle / 180.0 * 3.14);
-                        var y = Math.sin(angle / 180.0 * 3.14);
-                        var z = 0.0;
-                        triangleFan.push(x, y, z);
-                        vertexCount++;
-                    }
-                }
-                console.log(vertexCount);
-                for (var angle = 0; angle <= (vertexCount - 1) * 3; angle += 1) {
-                    indices.push(0, angle, angle + 1);
-                }
-                mesh = new egret3d.Mesh(vertexCount, (vertexCount - 1) * 3);
-                mesh.setIndices(indices);
-                mesh.setAttributes("POSITION" /* POSITION */, triangleFan);
-                return mesh;
-            };
-            return BaseGeo;
-        }());
-        editor.BaseGeo = BaseGeo;
-        __reflect(BaseGeo.prototype, "paper.editor.BaseGeo");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
         var BaseState = (function () {
             function BaseState() {
                 this.autoClear = false;
@@ -5572,6 +5326,99 @@ var paper;
         editor.BaseState = BaseState;
         __reflect(BaseState.prototype, "paper.editor.BaseState");
     })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    /**
+     *
+     */
+    var Clock = (function (_super) {
+        __extends(Clock, _super);
+        function Clock() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.maxFixedSubSteps = 3;
+            _this.fixedDeltaTime = 1.0 / 50.0; // TODO same as fps.
+            _this.timeScale = 1.0;
+            _this._frameCount = 0;
+            _this._beginTime = 0.0;
+            _this._lastTime = 0.0;
+            _this._delayTime = 0.0;
+            _this._unscaledTime = 0.0;
+            _this._unscaledDeltaTime = 0.0;
+            _this._fixedTime = 0.0;
+            return _this;
+        }
+        Clock.prototype.initialize = function () {
+            _super.prototype.initialize.call(this);
+            this._beginTime = Date.now() * 0.001;
+        };
+        /**
+         * @internal
+         */
+        Clock.prototype.update = function (time) {
+            if (this._unscaledTime !== 0.0) {
+                this._lastTime = this._unscaledTime;
+                if (this._fixedTime < this.fixedDeltaTime) {
+                }
+                else if (this._fixedTime < this.fixedDeltaTime * this.maxFixedSubSteps) {
+                    this._fixedTime %= this.fixedDeltaTime;
+                }
+                else {
+                    this._fixedTime -= this.fixedDeltaTime * this.maxFixedSubSteps;
+                }
+            }
+            var now = time || Date.now() * 0.001;
+            this._frameCount += 1;
+            this._unscaledTime = now - this._beginTime;
+            this._unscaledDeltaTime = this._unscaledTime - this._lastTime;
+            this._fixedTime += this._unscaledDeltaTime;
+        };
+        Object.defineProperty(Clock.prototype, "frameCount", {
+            get: function () {
+                return this._frameCount;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Clock.prototype, "time", {
+            get: function () {
+                return this._unscaledTime * this.timeScale;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Clock.prototype, "fixedTime", {
+            get: function () {
+                return this._fixedTime;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Clock.prototype, "deltaTime", {
+            get: function () {
+                return this._unscaledDeltaTime * this.timeScale;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Clock.prototype, "unscaledTime", {
+            get: function () {
+                return this._unscaledTime;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Clock.prototype, "unscaledDeltaTime", {
+            get: function () {
+                return this._unscaledDeltaTime;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Clock;
+    }(paper.SingletonComponent));
+    paper.Clock = Clock;
+    __reflect(Clock.prototype, "paper.Clock");
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -9343,6 +9190,10 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    var icons = {
+        camera: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIcSURBVFhH7ZbPjtMwEMYj7vAACCFg28Rx4oQmtGnLQo/7Du1pK3Hk2BtSHwYkXoA34C34I7Fozxxoy+6yaocZx9M6u4WkFaA95JN+qu0Z21/riVOnVq1a/0oiaoMXPdlCBxpxG0xaNXlB+vHqIl7Utfo5Jl3LxU2uxpkmmjNp1RTEGfg4kZhOp/eRe8xwOHzqmnjSPXxnpjhBlIEIM5BRb40f96Ch2jCZTO6atGryVQeESjVmqCA/zGNy15/2xuv4xcuBK1N4KBNw445FZugauG/ndKr9GlJRYWBBxcn7LHveHAyOHtC4iJKLbQW0C0IlBRNemH6jTzpSQqouOFQ89iSdibLHcrKKbObYBqhGaC9qc/yaAdnKdMKjoLUe08QpvH7zFsp08fOyMI8N0DHRPqUGRJhXsWr112ME5SwWM73Jp5NTzecvFtg/+XqK0UsQ1vNvG+Ax6nN7bYBN8GPW0HVRZL44h+VqdW2cafcOYYUW9jZAAZb3uHiWxPcfZQae7Wdgmw7wYuEk5r8a8MPNBGa+OIMVGpBRfyu9rI/bL/+OAU/Sy2azOS06m81xgzItoRkmm3l7G2gGr7gwGR8LU+JbLAcvEQ29bIi8L4Li0bEBunR4TK9v2r81QCIDwiQSblwNzifYAMkNW+Dil6A2x/9ogGQvtg8HQn0wS2mxIY5LlV98pRqNRnfG4/HtXcD/CrfM9Fq1at1kOc4vVSG2+aaGzOwAAAAASUVORK5CYII=",
+        light: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPcSURBVFhH3ZdLSNRRFMbn4fuZmtmYZpn0gCx6YbQokBZRq6hVL6xWUdCmICIoIYjaWBDRu3WShhUJLSKIIKISgqBWao9NlIsUwlKn33fnzDij/1HHsU0fHM693z333HPOffxnfNNBMBjcgRpCVjjiX6GwsHAJKhDpjYIAdqLCyEpHxKG8vLwgJyen2rrTR25uboPf7/+Ns31GxTBRAJmZmc2BQKC/rKys0qhpAz+Bt8inUCiUZ5xDsgAIeh5BDzCnzaj0kJ2d3YjDcFZW1imjHJIFkJGRcQf7waKiojqj0gdOH5DRz7y8vLlGeQZA6Vex+DBjLUalhtLS0iJrJoDsl+os4PiGUVqsHu48zVCEcYE+JdAfZF9qVAKS+XfgoM1nch+LnK2oqMg3OgYWvIhcsu44VFVV5RLAXYI9alQMBQUFsxm7prPk5dtBhwejdu03hr04Uonj4TftKy4ursVmP/bH0LvZmlgVQMwOBDlDh/D53bbmWklJSbGNeYMJW3D6kWaYBZ4Q/bLIiM+nM8BYG85G6Gr/ndD/owy5doWyE6joBmzf0Ayz8EsSXBsZmRqycHgCx/1MPieCyKtpdyNhgnTCluh2hHGuIFS519EgsGul/w27g3THPWRTAoemyg6OH2fPtLgWoz9OqI4CUNVu0Ve1QmxVidppgywaUUkXjwplVyWGsF9If+ZA5i3Knuw8F46KApCmEkfQKaEH+ewhWxG9xw+13zQnFJ0DBYl2DxHzDqO8/D5HRsGEVuTeWGFovcZx1D6VAKJVQl+gr8pt9/KLXNb4lIGjMzpgkwWhmyGN3V70zMHeguGJDqECtEP4k9M/Cy59cMe3ktUCtcnqKs7D+fn5bq+hEhYXrzZzjqN1DdcQcIPaKcOe2g6aKqfbr5qamhy4TnHKVA+QSh4V8ez/dbR7iml3Eugw+ibBzRE3KfRBYb+bmfhLwuLNY36IBFn4KGO6NfEVeI/tLhlEoS8ivq5gO8R4H4HoagYjox7AwXIMu5mgTDrIqtaGHOwTG31S/aoSduv0RBvnqhT/PRDYitX4fUFTt6NL35PIyBhoIkE8J8NtRiWAxR4x/tS642DV+4BcNCoefhJqYv5j2ql/F5i8GaV9PxlhXECbUM+QRY4AcLep4CC/pBcbNSMIUsIupFdZGuf5k4xTX0kAAwRy36j0QdkO6Fyg9xjl4BWAwOKnUSPcFFUoPegPBpl/RV7RTdi7ZAHoJxf2Xxh/TXd6vwOiIOt6HPWQzUajYkgWgMC8JsbfJT3xqaCuri7bmgmYKACgzDMizX+EuFswc39A/kfE/0RPAp/vL7M1A0/aWSCCAAAAAElFTkSuQmCC"
+    };
     /**
      *
      */
@@ -9379,8 +9230,8 @@ var egret3d;
             {
                 var texture_1 = new egret3d.GLTexture2D("builtin/camera_icon.image.json");
                 var image_1 = new Image();
-                image_1.setAttribute('src', paper.editor.icons["camera"]);
-                image_1.onload = function () { texture_1.uploadImage(image_1, true, true); };
+                image_1.setAttribute('src', icons["camera"]);
+                image_1.onload = function () { texture_1.uploadImage(image_1, false, true, true, false); };
                 texture_1._isBuiltin = true;
                 DefaultTextures.CAMERA_ICON = texture_1;
                 paper.Asset.register(texture_1);
@@ -9388,8 +9239,8 @@ var egret3d;
             {
                 var texture_2 = new egret3d.GLTexture2D("builtin/light_icon.image.json");
                 var image_2 = new Image();
-                image_2.setAttribute('src', paper.editor.icons["light"]);
-                image_2.onload = function () { texture_2.uploadImage(image_2, true, true); };
+                image_2.setAttribute('src', icons["light"]);
+                image_2.onload = function () { texture_2.uploadImage(image_2, false, true, true, false); };
                 texture_2._isBuiltin = true;
                 DefaultTextures.LIGHT_ICON = texture_2;
                 paper.Asset.register(texture_2);
@@ -11704,174 +11555,6 @@ var egret3d;
     egret3d.DirectionalLight = DirectionalLight;
     __reflect(DirectionalLight.prototype, "egret3d.DirectionalLight");
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var _targets = [
-        new egret3d.Vector3(-1, 0, 0), new egret3d.Vector3(1, 0, 0), new egret3d.Vector3(0, 1, 0),
-        new egret3d.Vector3(0, -1, 0), new egret3d.Vector3(0, 0, 1), new egret3d.Vector3(0, 0, -1)
-    ];
-    var _ups = [
-        new egret3d.Vector3(0, -1, 0), new egret3d.Vector3(0, -1, 0), new egret3d.Vector3(0, 0, 1),
-        new egret3d.Vector3(0, 0, -1), new egret3d.Vector3(0, -1, 0), new egret3d.Vector3(0, -1, 0)
-    ];
-    /**
-     *
-     */
-    var PointLight = (function (_super) {
-        __extends(PointLight, _super);
-        function PointLight() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             *
-             */
-            _this.decay = 2.0;
-            /**
-             *
-             */
-            _this.distance = 0.0;
-            _this.renderTarget = new egret3d.GlRenderTarget("PointLight", 1024, 1024, true); // TODO
-            return _this;
-        }
-        PointLight.prototype.update = function (camera, faceIndex) {
-            var position = this.gameObject.transform.getPosition();
-            egret3d.helpVector3A.set(position.x + _targets[faceIndex].x, position.y + _targets[faceIndex].y, position.z + _targets[faceIndex].z);
-            camera.near = this.shadowCameraNear;
-            camera.far = this.shadowCameraFar;
-            camera.size = this.shadowCameraSize;
-            camera.fov = Math.PI * 0.5;
-            camera.opvalue = 1.0;
-            camera.gameObject.transform.setPosition(position); // TODO support copy matrix.
-            camera.gameObject.transform.setRotation(this.gameObject.transform.getRotation());
-            camera.gameObject.transform.lookAt(egret3d.helpVector3A, _ups[faceIndex]);
-            _super.prototype.update.call(this, camera, faceIndex);
-        };
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
-        ], PointLight.prototype, "decay", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
-        ], PointLight.prototype, "distance", void 0);
-        return PointLight;
-    }(egret3d.BaseLight));
-    egret3d.PointLight = PointLight;
-    __reflect(PointLight.prototype, "egret3d.PointLight");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     *
-     */
-    var SpotLight = (function (_super) {
-        __extends(SpotLight, _super);
-        function SpotLight() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             *
-             */
-            _this.decay = 2.0;
-            /**
-             *
-             */
-            _this.distance = 0.0;
-            /**
-             *
-             */
-            _this.angle = Math.PI / 3.0;
-            /**
-             *
-             */
-            _this.penumbra = 0.0;
-            return _this;
-        }
-        SpotLight.prototype.update = function (camera, faceIndex) {
-            camera.near = this.shadowCameraNear;
-            camera.far = this.shadowCameraFar;
-            camera.size = this.shadowCameraSize;
-            camera.fov = this.angle;
-            camera.opvalue = 1.0;
-            camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
-            _super.prototype.update.call(this, camera, faceIndex);
-        };
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
-        ], SpotLight.prototype, "decay", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
-        ], SpotLight.prototype, "distance", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(2 /* FLOAT */)
-        ], SpotLight.prototype, "angle", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.01 })
-        ], SpotLight.prototype, "penumbra", void 0);
-        return SpotLight;
-    }(egret3d.BaseLight));
-    egret3d.SpotLight = SpotLight;
-    __reflect(SpotLight.prototype, "egret3d.SpotLight");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     *
-     */
-    var MeshFilterEventType;
-    (function (MeshFilterEventType) {
-        MeshFilterEventType["Mesh"] = "mesh";
-    })(MeshFilterEventType = egret3d.MeshFilterEventType || (egret3d.MeshFilterEventType = {}));
-    /**
-     * MeshFilter 组件
-     */
-    var MeshFilter = (function (_super) {
-        __extends(MeshFilter, _super);
-        function MeshFilter() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._mesh = null;
-            return _this;
-        }
-        MeshFilter.prototype.uninitialize = function () {
-            _super.prototype.uninitialize.call(this);
-            if (this._mesh) {
-                // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
-            }
-            this._mesh = null;
-        };
-        Object.defineProperty(MeshFilter.prototype, "mesh", {
-            /**
-             * 组件挂载的 mesh 模型
-             */
-            get: function () {
-                return this._mesh;
-            },
-            set: function (mesh) {
-                if (this._mesh === mesh) {
-                    return;
-                }
-                if (this._mesh) {
-                    // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
-                }
-                this._mesh = mesh;
-                paper.EventPool.dispatchEvent("mesh" /* Mesh */, this);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        __decorate([
-            paper.serializedField
-        ], MeshFilter.prototype, "_mesh", void 0);
-        __decorate([
-            paper.editor.property(18 /* MESH */)
-        ], MeshFilter.prototype, "mesh", null);
-        return MeshFilter;
-    }(paper.BaseComponent));
-    egret3d.MeshFilter = MeshFilter;
-    __reflect(MeshFilter.prototype, "egret3d.MeshFilter");
-})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     /**
@@ -12737,6 +12420,253 @@ var paper;
     paper.GameObject = GameObject;
     __reflect(GameObject.prototype, "paper.GameObject");
 })(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     *
+     */
+    var SpotLight = (function (_super) {
+        __extends(SpotLight, _super);
+        function SpotLight() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            /**
+             *
+             */
+            _this.decay = 2.0;
+            /**
+             *
+             */
+            _this.distance = 0.0;
+            /**
+             *
+             */
+            _this.angle = Math.PI / 3.0;
+            /**
+             *
+             */
+            _this.penumbra = 0.0;
+            return _this;
+        }
+        SpotLight.prototype.update = function (camera, faceIndex) {
+            camera.near = this.shadowCameraNear;
+            camera.far = this.shadowCameraFar;
+            camera.size = this.shadowCameraSize;
+            camera.fov = this.angle;
+            camera.opvalue = 1.0;
+            camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
+            _super.prototype.update.call(this, camera, faceIndex);
+        };
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+        ], SpotLight.prototype, "decay", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+        ], SpotLight.prototype, "distance", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(2 /* FLOAT */)
+        ], SpotLight.prototype, "angle", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(2 /* FLOAT */, { minimum: 0.01 })
+        ], SpotLight.prototype, "penumbra", void 0);
+        return SpotLight;
+    }(egret3d.BaseLight));
+    egret3d.SpotLight = SpotLight;
+    __reflect(SpotLight.prototype, "egret3d.SpotLight");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     *
+     */
+    var MeshFilterEventType;
+    (function (MeshFilterEventType) {
+        MeshFilterEventType["Mesh"] = "mesh";
+    })(MeshFilterEventType = egret3d.MeshFilterEventType || (egret3d.MeshFilterEventType = {}));
+    /**
+     * MeshFilter 组件
+     */
+    var MeshFilter = (function (_super) {
+        __extends(MeshFilter, _super);
+        function MeshFilter() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._mesh = null;
+            return _this;
+        }
+        MeshFilter.prototype.uninitialize = function () {
+            _super.prototype.uninitialize.call(this);
+            if (this._mesh) {
+                // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
+            }
+            this._mesh = null;
+        };
+        Object.defineProperty(MeshFilter.prototype, "mesh", {
+            /**
+             * 组件挂载的 mesh 模型
+             */
+            get: function () {
+                return this._mesh;
+            },
+            set: function (mesh) {
+                if (this._mesh === mesh) {
+                    return;
+                }
+                if (this._mesh) {
+                    // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
+                }
+                this._mesh = mesh;
+                paper.EventPool.dispatchEvent("mesh" /* Mesh */, this);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        __decorate([
+            paper.serializedField
+        ], MeshFilter.prototype, "_mesh", void 0);
+        __decorate([
+            paper.editor.property(18 /* MESH */)
+        ], MeshFilter.prototype, "mesh", null);
+        return MeshFilter;
+    }(paper.BaseComponent));
+    egret3d.MeshFilter = MeshFilter;
+    __reflect(MeshFilter.prototype, "egret3d.MeshFilter");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var Matrix3 = (function () {
+        function Matrix3(rawData) {
+            if (rawData === void 0) { rawData = null; }
+            /**
+             * @readonly
+             */
+            this.rawData = null;
+            if (rawData) {
+                this.rawData = rawData;
+            }
+            else {
+                this.rawData = new Float32Array([
+                    1.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0,
+                    0.0, 0.0, 1.0,
+                ]);
+            }
+        }
+        Matrix3.create = function () {
+            if (this._instances.length > 0) {
+                return this._instances.pop();
+            }
+            return new Matrix3();
+        };
+        Matrix3.prototype.release = function () {
+            if (Matrix3._instances.indexOf(this) < 0) {
+                Matrix3._instances.push(this);
+            }
+            return this;
+        };
+        Matrix3.prototype.serialize = function () {
+            return this.rawData;
+        };
+        Matrix3.prototype.deserialize = function (value) {
+            return this.fromArray(value);
+        };
+        Matrix3.prototype.copy = function (value) {
+            this.fromArray(value.rawData);
+            return this;
+        };
+        Matrix3.prototype.clone = function () {
+            var value = new Matrix3();
+            value.copy(this);
+            return value;
+        };
+        Matrix3.prototype.set = function (n11, n12, n13, n21, n22, n23, n31, n32, n33) {
+            this.rawData[0] = n11;
+            this.rawData[3] = n12;
+            this.rawData[6] = n13;
+            this.rawData[1] = n21;
+            this.rawData[4] = n22;
+            this.rawData[7] = n23;
+            this.rawData[2] = n31;
+            this.rawData[5] = n32;
+            this.rawData[8] = n33;
+            return this;
+        };
+        Matrix3.prototype.identity = function () {
+            this.set(1, 0, 0, 0, 1, 0, 0, 0, 1);
+            return this;
+        };
+        Matrix3.prototype.inverse = function (matrix) {
+            var me = matrix.rawData, te = this.rawData, n11 = me[0], n21 = me[1], n31 = me[2], n12 = me[3], n22 = me[4], n32 = me[5], n13 = me[6], n23 = me[7], n33 = me[8], t11 = n33 * n22 - n32 * n23, t12 = n32 * n13 - n33 * n12, t13 = n23 * n12 - n22 * n13, det = n11 * t11 + n21 * t12 + n31 * t13;
+            if (det === 0) {
+                // TODO
+                // var msg = "can't invert matrix, determinant is 0";
+                // console.warn(msg);
+                return this.identity();
+            }
+            var detInv = 1 / det;
+            te[0] = t11 * detInv;
+            te[1] = (n31 * n23 - n33 * n21) * detInv;
+            te[2] = (n32 * n21 - n31 * n22) * detInv;
+            te[3] = t12 * detInv;
+            te[4] = (n33 * n11 - n31 * n13) * detInv;
+            te[5] = (n31 * n12 - n32 * n11) * detInv;
+            te[6] = t13 * detInv;
+            te[7] = (n21 * n13 - n23 * n11) * detInv;
+            te[8] = (n22 * n11 - n21 * n12) * detInv;
+            return this;
+        };
+        Matrix3.prototype.getNormalMatrix = function (matrix4) {
+            return this.setFromMatrix4(matrix4).inverse(this).transpose();
+        };
+        Matrix3.prototype.transpose = function () {
+            var tmp, m = this.rawData;
+            tmp = m[1];
+            m[1] = m[3];
+            m[3] = tmp;
+            tmp = m[2];
+            m[2] = m[6];
+            m[6] = tmp;
+            tmp = m[5];
+            m[5] = m[7];
+            m[7] = tmp;
+            return this;
+        };
+        Matrix3.prototype.setFromMatrix4 = function (m) {
+            var me = m.rawData;
+            this.set(me[0], me[4], me[8], me[1], me[5], me[9], me[2], me[6], me[10]);
+            // this.set(
+            //     me[0], me[1], me[2],
+            //     me[4], me[5], me[6],
+            //     me[8], me[9], me[10]
+            // );
+            return this;
+        };
+        Matrix3.prototype.determinant = function () {
+            var te = this.rawData;
+            var a = te[0], b = te[1], c = te[2], d = te[3], e = te[4], f = te[5], g = te[6], h = te[7], i = te[8];
+            return a * e * i - a * f * h - b * d * i + b * f * g + c * d * h - c * e * g;
+        };
+        Matrix3.prototype.fromArray = function (value, offset) {
+            if (offset === void 0) { offset = 0; }
+            for (var i = 0; i < 9; ++i) {
+                this.rawData[i] = value[i + offset];
+            }
+            return this;
+        };
+        Matrix3.prototype.fromBuffer = function (value, byteOffset) {
+            if (byteOffset === void 0) { byteOffset = 0; }
+            this.rawData = new Float32Array(value, byteOffset, 9);
+            return this;
+        };
+        Matrix3._instances = [];
+        return Matrix3;
+    }());
+    egret3d.Matrix3 = Matrix3;
+    __reflect(Matrix3.prototype, "egret3d.Matrix3", ["paper.IRelease", "paper.ISerializable"]);
+    var helpMat_1 = new Matrix3();
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -15625,136 +15555,410 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    var Matrix3 = (function () {
-        function Matrix3(rawData) {
-            if (rawData === void 0) { rawData = null; }
+    var particle;
+    (function (particle) {
+        //
+        var positionHelper = new egret3d.Vector3();
+        var velocityHelper = new egret3d.Vector3();
+        var startSizeHelper = new egret3d.Vector3();
+        var startColorHelper = egret3d.Color.create();
+        var startRotationHelper = new egret3d.Vector3();
+        var GRAVITY = new egret3d.Vector3(0, -9.81, 0); //TODO没有物理系统，暂时先放到这里
+        /**
+         * @internal
+         */
+        var ParticleBatcher = (function () {
+            function ParticleBatcher() {
+                this._dirty = false;
+                this._time = 0.0;
+                this._emittsionTime = 0;
+                this._frameRateTime = 0;
+                //最新存活位置
+                this._firstAliveCursor = 0;
+                this._lastFrameFirstCursor = 0;
+                //最后存活位置
+                this._lastAliveCursor = 0;
+                this._forceUpdate = false;
+                //原始顶点数量
+                this._vertexStride = 0;
+                //当前爆发的索引
+                this._burstIndex = 0;
+                //
+                this._readEmitCount = 0;
+                //最终重力
+                this._finalGravity = new egret3d.Vector3();
+            }
             /**
-             * @readonly
+            * 计算粒子爆发数量
+            * @param startTime
+            * @param endTime
+            */
+            ParticleBatcher.prototype._getBurstCount = function (startTime, endTime) {
+                var totalEmitCount = 0;
+                var bursts = this._comp.emission.bursts;
+                for (var l = bursts.length; this._burstIndex < l; this._burstIndex++) {
+                    var burst = bursts[this._burstIndex];
+                    if (burst.time >= startTime && burst.time < endTime) {
+                        // totalEmitCount += numberLerp(burst.minCount, burst.maxCount, Math.random());
+                        totalEmitCount += burst.maxCount;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                return totalEmitCount;
+            };
+            /**
+             * 判断粒子是否已经过期
+             * @param particleIndex
              */
-            this.rawData = null;
-            if (rawData) {
-                this.rawData = rawData;
-            }
-            else {
-                this.rawData = new Float32Array([
-                    1.0, 0.0, 0.0,
-                    0.0, 1.0, 0.0,
-                    0.0, 0.0, 1.0,
-                ]);
-            }
-        }
-        Matrix3.create = function () {
-            if (this._instances.length > 0) {
-                return this._instances.pop();
-            }
-            return new Matrix3();
-        };
-        Matrix3.prototype.release = function () {
-            if (Matrix3._instances.indexOf(this) < 0) {
-                Matrix3._instances.push(this);
-            }
-            return this;
-        };
-        Matrix3.prototype.serialize = function () {
-            return this.rawData;
-        };
-        Matrix3.prototype.deserialize = function (value) {
-            return this.fromArray(value);
-        };
-        Matrix3.prototype.copy = function (value) {
-            this.fromArray(value.rawData);
-            return this;
-        };
-        Matrix3.prototype.clone = function () {
-            var value = new Matrix3();
-            value.copy(this);
-            return value;
-        };
-        Matrix3.prototype.set = function (n11, n12, n13, n21, n22, n23, n31, n32, n33) {
-            this.rawData[0] = n11;
-            this.rawData[3] = n12;
-            this.rawData[6] = n13;
-            this.rawData[1] = n21;
-            this.rawData[4] = n22;
-            this.rawData[7] = n23;
-            this.rawData[2] = n31;
-            this.rawData[5] = n32;
-            this.rawData[8] = n33;
-            return this;
-        };
-        Matrix3.prototype.identity = function () {
-            this.set(1, 0, 0, 0, 1, 0, 0, 0, 1);
-            return this;
-        };
-        Matrix3.prototype.inverse = function (matrix) {
-            var me = matrix.rawData, te = this.rawData, n11 = me[0], n21 = me[1], n31 = me[2], n12 = me[3], n22 = me[4], n32 = me[5], n13 = me[6], n23 = me[7], n33 = me[8], t11 = n33 * n22 - n32 * n23, t12 = n32 * n13 - n33 * n12, t13 = n23 * n12 - n22 * n13, det = n11 * t11 + n21 * t12 + n31 * t13;
-            if (det === 0) {
-                // TODO
-                // var msg = "can't invert matrix, determinant is 0";
-                // console.warn(msg);
-                return this.identity();
-            }
-            var detInv = 1 / det;
-            te[0] = t11 * detInv;
-            te[1] = (n31 * n23 - n33 * n21) * detInv;
-            te[2] = (n32 * n21 - n31 * n22) * detInv;
-            te[3] = t12 * detInv;
-            te[4] = (n33 * n11 - n31 * n13) * detInv;
-            te[5] = (n31 * n12 - n32 * n11) * detInv;
-            te[6] = t13 * detInv;
-            te[7] = (n21 * n13 - n23 * n11) * detInv;
-            te[8] = (n22 * n11 - n21 * n12) * detInv;
-            return this;
-        };
-        Matrix3.prototype.getNormalMatrix = function (matrix4) {
-            return this.setFromMatrix4(matrix4).inverse(this).transpose();
-        };
-        Matrix3.prototype.transpose = function () {
-            var tmp, m = this.rawData;
-            tmp = m[1];
-            m[1] = m[3];
-            m[3] = tmp;
-            tmp = m[2];
-            m[2] = m[6];
-            m[6] = tmp;
-            tmp = m[5];
-            m[5] = m[7];
-            m[7] = tmp;
-            return this;
-        };
-        Matrix3.prototype.setFromMatrix4 = function (m) {
-            var me = m.rawData;
-            this.set(me[0], me[4], me[8], me[1], me[5], me[9], me[2], me[6], me[10]);
-            // this.set(
-            //     me[0], me[1], me[2],
-            //     me[4], me[5], me[6],
-            //     me[8], me[9], me[10]
-            // );
-            return this;
-        };
-        Matrix3.prototype.determinant = function () {
-            var te = this.rawData;
-            var a = te[0], b = te[1], c = te[2], d = te[3], e = te[4], f = te[5], g = te[6], h = te[7], i = te[8];
-            return a * e * i - a * f * h - b * d * i + b * f * g + c * d * h - c * e * g;
-        };
-        Matrix3.prototype.fromArray = function (value, offset) {
-            if (offset === void 0) { offset = 0; }
-            for (var i = 0; i < 9; ++i) {
-                this.rawData[i] = value[i + offset];
-            }
-            return this;
-        };
-        Matrix3.prototype.fromBuffer = function (value, byteOffset) {
-            if (byteOffset === void 0) { byteOffset = 0; }
-            this.rawData = new Float32Array(value, byteOffset, 9);
-            return this;
-        };
-        Matrix3._instances = [];
-        return Matrix3;
-    }());
-    egret3d.Matrix3 = Matrix3;
-    __reflect(Matrix3.prototype, "egret3d.Matrix3", ["paper.IRelease", "paper.ISerializable"]);
-    var helpMat_1 = new Matrix3();
+            ParticleBatcher.prototype._isParticleExpired = function (particleIndex) {
+                var startTimeOffset = particleIndex * this._vertexStride * 2;
+                return this._time - this._startTimeBuffer[startTimeOffset + 1] + 0.0001 > this._startTimeBuffer[startTimeOffset];
+            };
+            /**
+             *
+             * @param time 批量增加粒子
+             * @param startCursor
+             * @param endCursor
+             */
+            ParticleBatcher.prototype._addParticles = function (time, startCursor, count, lastEmittsionTime) {
+                var comp = this._comp;
+                var main = comp.main;
+                var velocityModule = comp.velocityOverLifetime;
+                var colorModule = comp.colorOverLifetime;
+                var sizeModule = comp.sizeOverLifetime;
+                var rotationModule = comp.rotationOverLifetime;
+                var textureSheetModule = comp.textureSheetAnimation;
+                var isVelocityRandom = velocityModule.enable && (velocityModule._mode === 3 /* TwoConstants */ || velocityModule._mode === 2 /* TwoCurves */);
+                var isColorRandom = colorModule.enable && colorModule._color.mode === 3 /* TwoGradients */;
+                var isSizeRandom = sizeModule.enable && (sizeModule._size.mode === 3 /* TwoConstants */ || sizeModule._size.mode === 2 /* TwoCurves */);
+                var isRotationRandom = rotationModule.enable && (rotationModule._x.mode === 3 /* TwoConstants */ || rotationModule._x.mode === 2 /* TwoCurves */);
+                var isTextureRandom = textureSheetModule.enable && (textureSheetModule._startFrame.mode === 3 /* TwoConstants */ || textureSheetModule._startFrame.mode === 2 /* TwoCurves */);
+                var needRandom0 = isColorRandom || isSizeRandom || isRotationRandom || isTextureRandom;
+                var worldPosition = this._worldPostionCache;
+                var worldRotation = this._worldRotationCache;
+                var isWorldSpace = main._simulationSpace === 1 /* World */;
+                var startPositionBuffer = this._startPositionBuffer;
+                var startVelocityBuffer = this._startVelocityBuffer;
+                var startColorBuffer = this._startColorBuffer;
+                var startSizeBuffer = this._startSizeBuffer;
+                var startRotationBuffer = this._startRotationBuffer;
+                var startTimeBuffer = this._startTimeBuffer;
+                var random0Buffer = this._random0Buffer;
+                var random1Buffer = this._random1Buffer;
+                var worldPostionBuffer = this._worldPostionBuffer;
+                var worldRoationBuffer = this._worldRoationBuffer;
+                var age = Math.min(lastEmittsionTime / main.duration, 1.0);
+                var vertexStride = this._vertexStride;
+                var addCount = 0, startIndex = 0, endIndex = 0;
+                var lifetime = 0.0;
+                var startSpeed = 0.0;
+                var randomVelocityX = 0.0, randomVelocityY = 0.0, randomVelocityZ = 0.0;
+                var randomColor = 0.0, randomSize = 0.0, randomRotation = 0.0, randomTextureAnimation = 0.0;
+                var vector2Offset = 0, vector3Offset = 0, vector4Offset = 0;
+                while (addCount !== count) {
+                    comp.shape.generatePositionAndDirection(positionHelper, velocityHelper);
+                    main.startColor.evaluate(age, startColorHelper);
+                    lifetime = main.startLifetime.evaluate(age);
+                    startSpeed = main.startSpeed.evaluate(age);
+                    velocityHelper.x *= startSpeed;
+                    velocityHelper.y *= startSpeed;
+                    velocityHelper.z *= startSpeed;
+                    startSizeHelper.x = main.startSizeX.evaluate(age);
+                    startSizeHelper.y = main.startSizeY.evaluate(age);
+                    startSizeHelper.z = main.startSizeZ.evaluate(age);
+                    startRotationHelper.x = main.startRotationX.evaluate(age);
+                    startRotationHelper.y = main.startRotationY.evaluate(age);
+                    startRotationHelper.z = main.startRotationZ.evaluate(age);
+                    randomVelocityX = isVelocityRandom ? Math.random() : 0.0;
+                    randomVelocityY = isVelocityRandom ? Math.random() : 0.0;
+                    randomVelocityZ = isVelocityRandom ? Math.random() : 0.0;
+                    randomColor = isColorRandom ? Math.random() : 0.0;
+                    randomSize = isSizeRandom ? Math.random() : 0.0;
+                    randomRotation = isRotationRandom ? Math.random() : 0.0;
+                    randomTextureAnimation = isTextureRandom ? Math.random() : 0.0;
+                    for (startIndex = startCursor * vertexStride, endIndex = startIndex + vertexStride; startIndex < endIndex; startIndex++) {
+                        vector2Offset = startIndex * 2;
+                        vector3Offset = startIndex * 3;
+                        vector4Offset = startIndex * 4;
+                        //
+                        startPositionBuffer[vector3Offset] = positionHelper.x;
+                        startPositionBuffer[vector3Offset + 1] = positionHelper.y;
+                        startPositionBuffer[vector3Offset + 2] = positionHelper.z;
+                        startVelocityBuffer[vector3Offset] = velocityHelper.x;
+                        startVelocityBuffer[vector3Offset + 1] = velocityHelper.y;
+                        startVelocityBuffer[vector3Offset + 2] = velocityHelper.z;
+                        startColorBuffer[vector4Offset] = startColorHelper.r;
+                        startColorBuffer[vector4Offset + 1] = startColorHelper.g;
+                        startColorBuffer[vector4Offset + 2] = startColorHelper.b;
+                        startColorBuffer[vector4Offset + 3] = startColorHelper.a;
+                        startSizeBuffer[vector3Offset] = startSizeHelper.x;
+                        startSizeBuffer[vector3Offset + 1] = startSizeHelper.y;
+                        startSizeBuffer[vector3Offset + 2] = startSizeHelper.z;
+                        startRotationBuffer[vector3Offset] = startRotationHelper.x;
+                        startRotationBuffer[vector3Offset + 1] = startRotationHelper.y;
+                        startRotationBuffer[vector3Offset + 2] = startRotationHelper.z;
+                        startTimeBuffer[vector2Offset] = lifetime;
+                        startTimeBuffer[vector2Offset + 1] = time;
+                        //
+                        if (needRandom0) {
+                            random0Buffer[vector4Offset] = randomColor;
+                            random0Buffer[vector4Offset + 1] = randomSize;
+                            random0Buffer[vector4Offset + 2] = randomRotation;
+                            random0Buffer[vector4Offset + 3] = randomTextureAnimation;
+                        }
+                        if (isVelocityRandom) {
+                            random1Buffer[vector4Offset] = randomVelocityX;
+                            random1Buffer[vector4Offset + 1] = randomVelocityY;
+                            random1Buffer[vector4Offset + 2] = randomVelocityZ;
+                            random1Buffer[vector4Offset + 3] = 0;
+                        }
+                        if (isWorldSpace) {
+                            worldPostionBuffer[vector3Offset] = worldPosition.x;
+                            worldPostionBuffer[vector3Offset + 1] = worldPosition.y;
+                            worldPostionBuffer[vector3Offset + 2] = worldPosition.z;
+                            worldRoationBuffer[vector4Offset] = worldRotation.x;
+                            worldRoationBuffer[vector4Offset + 1] = worldRotation.y;
+                            worldRoationBuffer[vector4Offset + 2] = worldRotation.z;
+                            worldRoationBuffer[vector4Offset + 3] = worldRotation.w;
+                        }
+                    }
+                    ;
+                    startCursor++;
+                    if (startCursor >= main._maxParticles) {
+                        startCursor = 0;
+                    }
+                    addCount++;
+                }
+                //TODO理论上应该是每帧更新，不过现在没有物理系统，先放到这里
+                var gravityModifier = main.gravityModifier.constant;
+                this._finalGravity.x = GRAVITY.x * gravityModifier;
+                this._finalGravity.y = GRAVITY.y * gravityModifier;
+                this._finalGravity.z = GRAVITY.z * gravityModifier;
+            };
+            ParticleBatcher.prototype._tryEmit = function () {
+                if (!this._isParticleExpired(this._firstAliveCursor)) {
+                    return false;
+                }
+                //
+                var maxParticles = this._comp.main._maxParticles;
+                var nextCursor = this._firstAliveCursor + 1 >= maxParticles ? 0 : this._firstAliveCursor + 1;
+                //
+                if (nextCursor === this._lastAliveCursor) {
+                    this._forceUpdate = true;
+                }
+                this._firstAliveCursor = nextCursor;
+                return true;
+            };
+            ParticleBatcher.prototype.clean = function () {
+                this._time = 0.0;
+                this._dirty = false;
+                this._emittsionTime = 0.0;
+                this._frameRateTime = 0.0;
+                this._firstAliveCursor = 0;
+                this._lastFrameFirstCursor = 0;
+                this._lastAliveCursor = 0;
+                this._forceUpdate = false;
+                this._vertexStride = 0;
+                this._vertexAttributes = null;
+                this._burstIndex = 0;
+                this._readEmitCount = 0;
+                this._startPositionBuffer = null;
+                this._startVelocityBuffer = null;
+                this._startColorBuffer = null;
+                this._startSizeBuffer = null;
+                this._startRotationBuffer = null;
+                this._startTimeBuffer = null;
+                this._random0Buffer = null;
+                this._random1Buffer = null;
+                this._worldPostionBuffer = null;
+                this._worldRoationBuffer = null;
+                this._worldPostionCache = null;
+                this._worldRotationCache = null;
+                this._comp = null;
+                this._renderer = null;
+            };
+            ParticleBatcher.prototype.resetTime = function () {
+                this._burstIndex = 0;
+                this._emittsionTime = 0;
+                this._readEmitCount = 0;
+            };
+            ParticleBatcher.prototype.init = function (comp, renderer) {
+                this._comp = comp;
+                this._renderer = renderer;
+                var mesh = particle.createBatchMesh(renderer, comp.main._maxParticles);
+                this._vertexStride = renderer._renderMode === 4 /* Mesh */ ? renderer.mesh.vertexCount : 4;
+                this._startPositionBuffer = mesh.getAttributes("_START_POSITION" /* _START_POSITION */);
+                this._startVelocityBuffer = mesh.getAttributes("_START_VELOCITY" /* _START_VELOCITY */);
+                this._startColorBuffer = mesh.getAttributes("_START_COLOR" /* _START_COLOR */);
+                this._startSizeBuffer = mesh.getAttributes("_START_SIZE" /* _START_SIZE */);
+                this._startRotationBuffer = mesh.getAttributes("_START_ROTATION" /* _START_ROTATION */);
+                this._startTimeBuffer = mesh.getAttributes("_TIME" /* _TIME */);
+                this._random0Buffer = mesh.getAttributes("_RANDOM0" /* _RANDOM0 */);
+                this._random1Buffer = mesh.getAttributes("_RANDOM1" /* _RANDOM1 */);
+                this._worldPostionBuffer = mesh.getAttributes("_WORLD_POSITION" /* _WORLD_POSITION */);
+                this._worldRoationBuffer = mesh.getAttributes("_WORLD_ROTATION" /* _WORLD_ROTATION */);
+                var primitive = mesh.glTFMesh.primitives[0];
+                this._vertexAttributes = [];
+                for (var k in primitive.attributes) {
+                    this._vertexAttributes.push(k);
+                }
+                renderer.batchMesh = mesh;
+                renderer.batchMaterial = renderer.materials[0].clone();
+                mesh.uploadSubIndexBuffer();
+            };
+            ParticleBatcher.prototype.update = function (elapsedTime) {
+                if (!this._comp || this._comp.isPaused) {
+                    return;
+                }
+                //
+                this._time += elapsedTime;
+                var comp = this._comp;
+                var mainModule = comp.main;
+                //
+                while (this._lastAliveCursor !== this._firstAliveCursor || this._forceUpdate) {
+                    if (!this._isParticleExpired(this._lastAliveCursor)) {
+                        break;
+                    }
+                    this._forceUpdate = false;
+                    this._lastAliveCursor++;
+                    if (this._lastAliveCursor >= mainModule._maxParticles) {
+                        this._lastAliveCursor = 0;
+                    }
+                }
+                var transform = comp.gameObject.transform;
+                this._worldPostionCache = transform.getPosition();
+                this._worldRotationCache = transform.getRotation();
+                if (comp._isPlaying && this._time >= mainModule.startDelay.constant && comp.emission.enable) {
+                    this._updateEmission(elapsedTime);
+                }
+                this._updateRender();
+            };
+            ParticleBatcher.prototype._updateEmission = function (elapsedTime) {
+                var comp = this._comp;
+                var mainModule = comp.main;
+                var lastEmittsionTime = this._emittsionTime;
+                this._emittsionTime += elapsedTime;
+                var isOver = this._emittsionTime > mainModule.duration;
+                var aliveParticleCount = this.aliveParticleCount;
+                var totalEmitCount = 0;
+                if (!isOver) {
+                    if (comp.emission.bursts.length > 0) {
+                        this._readEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
+                    }
+                }
+                else {
+                    if (mainModule.loop) {
+                        this._readEmitCount = 0;
+                        this._readEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
+                        this._emittsionTime -= mainModule.duration;
+                        this._burstIndex = 0;
+                        this._readEmitCount += this._getBurstCount(0, this._emittsionTime);
+                    }
+                    else {
+                        comp.stop(false);
+                    }
+                }
+                //
+                for (var i = 0; i < this._readEmitCount; i++) {
+                    if (this._tryEmit()) {
+                        totalEmitCount++;
+                        this._readEmitCount--;
+                    }
+                }
+                var rateOverTime = comp.emission.rateOverTime.constant;
+                if (rateOverTime > 0) {
+                    var minEmissionTime = 1 / rateOverTime;
+                    this._frameRateTime += elapsedTime;
+                    while (this._frameRateTime > minEmissionTime) {
+                        if (!this._tryEmit()) {
+                            break;
+                        }
+                        totalEmitCount++;
+                        this._frameRateTime -= minEmissionTime;
+                    }
+                }
+                totalEmitCount = Math.min(mainModule._maxParticles - aliveParticleCount, totalEmitCount);
+                if (totalEmitCount > 0) {
+                    this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount, lastEmittsionTime);
+                    this._dirty = true;
+                }
+            };
+            ParticleBatcher.prototype._updateRender = function () {
+                var renderer = this._renderer;
+                var comp = this._comp;
+                var mainModule = comp.main;
+                //
+                if (this._dirty) {
+                    renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes);
+                    // const bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
+                    // const bufferOffset = this._lastFrameFirstCursor;
+                    // if (this._firstAliveCursor > this._lastFrameFirstCursor) {
+                    //     const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
+                    //     // const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor);
+                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
+                    // }
+                    // else {
+                    //     const addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
+                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
+                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
+                    //     // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount);
+                    //     // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor);
+                    // }
+                    this._lastFrameFirstCursor = this._firstAliveCursor;
+                    this._dirty = false;
+                }
+                var transform = comp.gameObject.transform;
+                var material = renderer.batchMaterial;
+                if (mainModule._simulationSpace === 0 /* Local */) {
+                    material.setVector3("u_worldPosition" /* WORLD_POSITION */, this._worldPostionCache);
+                    material.setVector4("u_worldRotation" /* WORLD_ROTATION */, this._worldRotationCache);
+                }
+                //
+                switch (mainModule._scaleMode) {
+                    case 1 /* Local */:
+                        {
+                            var scale = transform.getLocalScale();
+                            material.setVector3("u_positionScale" /* POSITION_SCALE */, scale);
+                            material.setVector3("u_sizeScale" /* SIZE_SCALE */, scale);
+                        }
+                        break;
+                    case 2 /* Shape */:
+                        {
+                            var scale = transform.getScale();
+                            material.setVector3("u_positionScale" /* POSITION_SCALE */, scale);
+                            material.setVector3("u_sizeScale" /* SIZE_SCALE */, egret3d.Vector3.ONE);
+                        }
+                        break;
+                    case 0 /* Hierarchy */:
+                        {
+                            var scale = transform.getScale();
+                            material.setVector3("u_positionScale" /* POSITION_SCALE */, scale);
+                            material.setVector3("u_sizeScale" /* SIZE_SCALE */, scale);
+                        }
+                        break;
+                }
+                material.setFloat("u_currentTime" /* CURRENTTIME */, this._time);
+                material.setVector3("u_gravity" /* GRAVIT */, this._finalGravity);
+            };
+            Object.defineProperty(ParticleBatcher.prototype, "aliveParticleCount", {
+                get: function () {
+                    if (this._firstAliveCursor >= this._lastAliveCursor) {
+                        return this._firstAliveCursor - this._lastAliveCursor;
+                    }
+                    else {
+                        return this._comp.main._maxParticles - this._lastAliveCursor + this._firstAliveCursor;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            return ParticleBatcher;
+        }());
+        particle.ParticleBatcher = ParticleBatcher;
+        __reflect(ParticleBatcher.prototype, "egret3d.particle.ParticleBatcher");
+    })(particle = egret3d.particle || (egret3d.particle = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -22142,7 +22346,6 @@ var paper;
                         //
                         egret3d.CameraSystem,
                         egret3d.WebGLRenderSystem,
-                        egret3d.GizmoRenderSystem,
                         //
                         paper.DisableSystem,
                         egret3d.EndSystem
@@ -23036,9 +23239,9 @@ var paper;
                     }
                     // this.pickGameScript.clearSelected();
                     // this.geoController.clearSelected();//TODO:应在controller里新增清空状态函数
-                    this.editorCameraScript.editorModel = v;
-                    this.pickGameScript.editorModel = v;
-                    this.geoController.editorModel = v;
+                    // this.editorCameraScript.editorModel = v;
+                    // this.pickGameScript.editorModel = v;
+                    // this.geoController.editorModel = v;
                     this.currentModel = v;
                     if (v && this.viewCache[v.contentUrl]) {
                         this.cameraObject.transform.setPosition(this.viewCache[v.contentUrl].position);
@@ -23053,1876 +23256,25 @@ var paper;
                 configurable: true
             });
             EditorSceneModel.prototype.init = function () {
-                this.cameraObject = paper.GameObject.create("EditorCamera", "Editor Only" /* EditorOnly */, paper.Application.sceneManager.editorScene);
-                var camera = this.cameraObject.addComponent(egret3d.Camera);
+                this.cameraObject = egret3d.Camera.editor.gameObject;
+                // this.cameraObject = GameObject.create("EditorCamera", DefaultTags.EditorOnly, Application.sceneManager.editorScene);
+                var camera = this.cameraObject.getOrAddComponent(egret3d.Camera);
                 camera.near = 0.1;
                 camera.far = 500.0;
                 camera.backgroundColor.set(0.13, 0.28, 0.51, 1.00);
                 this.cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
                 this.cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
-                this.editorCameraScript = this.cameraObject.addComponent(editor.EditorCameraScript);
-                this.editorCameraScript.moveSpeed = 10;
-                this.editorCameraScript.rotateSpeed = 0.5;
-                this.pickGameScript = this.cameraObject.addComponent(editor.PickGameObjectScript);
-                this.geoController = this.cameraObject.addComponent(editor.Controller);
-                editor.Gizmo.Enabled();
+                paper.GameObject.globalGameObject.sendMessage("bootstrap");
+                // this.editorCameraScript = this.cameraObject.addComponent(EditorCameraScript);
+                // this.editorCameraScript.moveSpeed = 10;
+                // this.editorCameraScript.rotateSpeed = 0.5;
+                // this.pickGameScript = this.cameraObject.addComponent(PickGameObjectScript);
+                // this.geoController = this.cameraObject.addComponent(Controller)
             };
             return EditorSceneModel;
         }());
         editor.EditorSceneModel = EditorSceneModel;
         __reflect(EditorSceneModel.prototype, "paper.editor.EditorSceneModel");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var helpVec3_1 = new egret3d.Vector3();
-        var helpVec3_2 = new egret3d.Vector3();
-        var helpVec3_3 = new egret3d.Vector3();
-        var helpQuat_1 = new egret3d.Quaternion();
-        var helpQuat_2 = new egret3d.Quaternion();
-        var Controller = (function (_super) {
-            __extends(Controller, _super);
-            function Controller() {
-                var _this = _super.call(this) || this;
-                _this._modeCanChange = true;
-                _this._isEditing = false;
-                _this.selectedGameObjs = [];
-                _this.geoCtrlMode = 'world';
-                _this.mainGeo = new editor.GeoContainer();
-                _this.coord = new paper.GameObject();
-                _this.bindMouse = egret3d.InputManager.mouse;
-                _this.bindKeyboard = egret3d.InputManager.keyboard;
-                _this._cameraObject = paper.Application.sceneManager.editorScene.find("EditorCamera");
-                _this._oldTransform = egret3d.Vector3.getDistance(_this.controller.transform.getLocalPosition(), _this.gameObject.transform.getLocalPosition());
-                return _this;
-            }
-            Object.defineProperty(Controller.prototype, "onGeoControll", {
-                get: function () {
-                    return this.mainGeo.onGeoControll;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(Controller.prototype, "controller", {
-                get: function () {
-                    return this.mainGeo.geo;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(Controller.prototype, "editorModel", {
-                get: function () {
-                    return this._editorModel;
-                },
-                set: function (editorModel) {
-                    this._editorModel = editorModel;
-                    this.mainGeo.editorModel = editorModel;
-                    this.selectGameObjects([]);
-                    this.addEventListener();
-                    this.changeEditType('position');
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Controller.prototype.onUpdate = function () {
-                if (!this.editorModel) {
-                    return;
-                }
-                this.drawCoord();
-                this.geoChangeByCamera();
-                this.inputUpdate();
-                if (this._isEditing) {
-                    (this.geoCtrlMode == "world" || this.selectedGameObjs.length > 1) ? this.updateInWorldMode() : this.updateInLocalMode();
-                }
-                if (this.bindMouse.wasReleased(0)) {
-                    this.mainGeo.wasReleased(this.selectedGameObjs);
-                }
-            };
-            Controller.prototype.updateInLocalMode = function () {
-                var len = this.selectedGameObjs.length;
-                if (len <= 0)
-                    return;
-                var camera = this._cameraObject.getComponent(egret3d.Camera);
-                if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
-                    var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                    this.mainGeo.wasPressed_local(ray, this.selectedGameObjs);
-                }
-                else if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
-                    var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                    this.mainGeo.isPressed_local(ray, this.selectedGameObjs);
-                }
-                else {
-                    this.mouseRayCastUpdate();
-                }
-            };
-            Controller.prototype.updateInWorldMode = function () {
-                var len = this.selectedGameObjs.length;
-                if (len <= 0)
-                    return;
-                var camera = this._cameraObject.getComponent(egret3d.Camera);
-                if (this.bindMouse.wasPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
-                    var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                    this.mainGeo.wasPressed_world(ray, this.selectedGameObjs);
-                }
-                else if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
-                    var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                    this.mainGeo.isPressed_world(ray, this.selectedGameObjs);
-                }
-                else {
-                    this.mouseRayCastUpdate();
-                }
-            };
-            Controller.prototype.mouseRayCastUpdate = function () {
-                //变色逻辑
-                var camera = this._cameraObject.getComponent(egret3d.Camera);
-                var ray = camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                var result = this.mainGeo.checkIntersect(ray);
-                if (this._oldResult != result) {
-                    if (this._oldResult) {
-                        if (this._oldResult.geo) {
-                            this._oldResult.changeColor("origin");
-                        }
-                    }
-                    this._oldResult = result;
-                    if (result) {
-                        result.changeColor("yellow");
-                    }
-                }
-            };
-            Controller.prototype.geoChangeByCamera = function () {
-                //控制杆大小随镜头远近变化
-                var dis1;
-                var delta;
-                dis1 = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
-                delta = (dis1 - this._oldTransform) / 20;
-                this._oldTransform = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
-                var scale = this.controller.transform.getLocalScale();
-                this.controller.transform.setScale(new egret3d.Vector3(scale.x + delta, scale.y + delta, scale.z + delta));
-            };
-            Controller.prototype.inputUpdate = function () {
-                var mouse = this.bindMouse;
-                var keyboard = this.bindKeyboard;
-                if (keyboard.wasPressed("Q")) {
-                    if (this.geoCtrlMode == "local") {
-                        this.changeEditMode("world");
-                        this.editorModel.changeEditMode("world");
-                    }
-                    else {
-                        this.changeEditMode("local");
-                        this.editorModel.changeEditMode("local");
-                    }
-                }
-                if (keyboard.wasPressed("W")) {
-                    this.changeEditType("position");
-                    this.editorModel.changeEditType("position");
-                }
-                if (keyboard.wasPressed("E")) {
-                    this.changeEditType("rotation");
-                    this.editorModel.changeEditType("rotation");
-                }
-                if (keyboard.wasPressed("R")) {
-                    this.changeEditType("scale");
-                    this.editorModel.changeEditType("scale");
-                }
-            };
-            Controller.prototype.changeEditMode = function (mode) {
-                if (!this._modeCanChange) {
-                    console.log("current mode: " + this.geoCtrlMode);
-                    return;
-                }
-                this.geoCtrlMode = mode;
-                var len = this.selectedGameObjs.length;
-                if (len < 1)
-                    return;
-                if (this.geoCtrlType != "scale") {
-                    switch (mode) {
-                        case "local":
-                            this.controller.transform.setRotation(this.selectedGameObjs[0].transform.getRotation());
-                            break;
-                        case "world":
-                            this.controller.transform.setRotation(0, 0, 0, 1);
-                            break;
-                        default:
-                            break;
-                    }
-                }
-                console.log("current mode: " + this.geoCtrlMode);
-            };
-            Controller.prototype.changeEditType = function (type) {
-                if (this.geoCtrlType == type)
-                    return;
-                this.geoCtrlType = type;
-                this.editorModel.changeEditType(type);
-                if (type == 'scale') {
-                    this.mainGeo.geo.transform.setRotation(this.selectedGameObjs[0].transform.getRotation());
-                }
-                if (this.geoCtrlMode == 'world') {
-                    this.controller.transform.setRotation(0, 0, 0, 1);
-                }
-                this.mainGeo.changeType(type);
-            };
-            Controller.prototype.addEventListener = function () {
-                var _this = this;
-                this.editorModel.addEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, function (e) { return _this.selectGameObjects(e.data); }, this);
-                this.editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_MODE, function (e) { return _this.changeEditMode(e.data); }, this);
-                this.editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, function (e) { return _this.changeEditType(e.data); }, this);
-                // this.editorModel.addEventListener(EditorModelEvent.CHANGE_PROPERTY, e => this.changeProperty(e.data), this);
-            };
-            Controller.prototype.selectGameObjects = function (gameObjs) {
-                if (!gameObjs) {
-                    gameObjs = [];
-                }
-                this.selectedGameObjs = gameObjs;
-                var len = this.selectedGameObjs.length;
-                this._modeCanChange = true;
-                if (len > 0) {
-                    this._isEditing = true;
-                    this.controller.activeSelf = true;
-                    if (len == 1) {
-                        // console.log("select: " + this.selectedGameObjs[0].name);
-                        this.controller.transform.setPosition(this.selectedGameObjs[0].transform.getPosition());
-                        if (this.geoCtrlMode == "local") {
-                            this.controller.transform.setRotation(this.selectedGameObjs[0].transform.getRotation());
-                        }
-                        else if (this.geoCtrlMode == "world") {
-                            this.controller.transform.setRotation(0, 0, 0, 1);
-                        }
-                    }
-                    else {
-                        var ctrlPos = egret3d.Vector3.set(0, 0, 0, helpVec3_3);
-                        for (var i = 0; i < len; i++) {
-                            // console.log("select: " + i + " " + this.selectedGameObjs[i].name);
-                            var obj = this.selectedGameObjs[i];
-                            egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                        }
-                        ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                        this.controller.transform.setPosition(ctrlPos);
-                        this.controller.transform.setRotation(0, 0, 0, 1);
-                        this.geoCtrlMode = "world";
-                        this._modeCanChange = false;
-                    }
-                }
-                else {
-                    this._isEditing = false;
-                    this.controller.activeSelf = false;
-                }
-            };
-            Controller.prototype.drawCoord = function () {
-                var nrLine = 100;
-                var bia = -0.05;
-                var verticesCoord = [];
-                var indices = [];
-                var dis1;
-                var delta;
-                dis1 = egret3d.Vector3.getDistance(this.controller.transform.getLocalPosition(), this.gameObject.transform.getLocalPosition());
-                delta = (dis1 - this._oldTransform) / 20;
-                for (var i = 0, len = 2 * nrLine + 1; i < len; i++) {
-                    verticesCoord[6 * i] = -nrLine + i;
-                    verticesCoord[6 * i + 1] = bia;
-                    verticesCoord[6 * i + 2] = -nrLine;
-                    verticesCoord[6 * i + 3] = -nrLine + i;
-                    verticesCoord[6 * i + 4] = bia;
-                    verticesCoord[6 * i + 5] = nrLine;
-                    verticesCoord[6 * len + 6 * i] = -nrLine;
-                    verticesCoord[6 * len + 6 * i + 1] = bia;
-                    verticesCoord[6 * len + 6 * i + 2] = -nrLine + i;
-                    verticesCoord[6 * len + 6 * i + 3] = nrLine;
-                    verticesCoord[6 * len + 6 * i + 4] = bia;
-                    verticesCoord[6 * len + 6 * i + 5] = -nrLine + i;
-                }
-                for (var i = 0; i < 8 * nrLine + 1; i++) {
-                    indices.push(i);
-                }
-                var mesh = new egret3d.Mesh(nrLine * 8, 8 * nrLine);
-                var mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
-                var color1 = new Float32Array([0.3, 0.3, 0.5]);
-                var funs = mat.glTFTechnique.states.functions;
-                var enables = mat.glTFTechnique.states.enable;
-                var index = enables.indexOf(2929 /* DEPTH_TEST */);
-                if (index < 0) {
-                    enables.push(2929 /* DEPTH_TEST */);
-                }
-                funs.depthMask = [true];
-                funs.depthFunc = [515 /* LEQUAL */];
-                mat.setVector3v("diffuse" /* Diffuse */, color1);
-                mesh.setAttributes("POSITION" /* POSITION */, verticesCoord);
-                mesh.setIndices(indices);
-                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
-                this.coord.getOrAddComponent(egret3d.MeshFilter).mesh = mesh;
-                this.coord.getOrAddComponent(egret3d.MeshRenderer).materials = [mat];
-            };
-            Controller = __decorate([
-                paper.executeInEditMode
-            ], Controller);
-            return Controller;
-        }(paper.Behaviour));
-        editor.Controller = Controller;
-        __reflect(Controller.prototype, "paper.editor.Controller");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
-     *
-     */
-    var MissingComponent = (function (_super) {
-        __extends(MissingComponent, _super);
-        function MissingComponent() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.missingObject = null;
-            return _this;
-        }
-        __decorate([
-            paper.serializedField
-        ], MissingComponent.prototype, "missingObject", void 0);
-        return MissingComponent;
-    }(paper.BaseComponent));
-    paper.MissingComponent = MissingComponent;
-    __reflect(MissingComponent.prototype, "paper.MissingComponent");
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var GeoContainer = (function (_super) {
-            __extends(GeoContainer, _super);
-            function GeoContainer() {
-                var _this = _super.call(this) || this;
-                _this.geos = [];
-                _this.changeType("position");
-                return _this;
-            }
-            Object.defineProperty(GeoContainer.prototype, "onGeoControll", {
-                get: function () {
-                    if (this.selectedGeo) {
-                        return true;
-                    }
-                    return false;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            GeoContainer.prototype.onSet = function () {
-                var controller = new paper.GameObject("", "", paper.Application.sceneManager.editorScene);
-                controller.activeSelf = false;
-                controller.name = "GizmoController";
-                controller.tag = "Editor";
-                this.geo = controller;
-            };
-            GeoContainer.prototype.checkIntersect = function (ray) {
-                for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
-                    var item = _a[_i];
-                    var temp = item._checkIntersect(ray);
-                    if (temp) {
-                        return temp;
-                    }
-                }
-            };
-            GeoContainer.prototype.clear = function () {
-                if (this.geos) {
-                    for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
-                        var item = _a[_i];
-                        item.geo.destroy();
-                        item.geo = null;
-                    }
-                }
-                this.geos = [];
-            };
-            // public clearAll() {
-            //     this.clear();
-            //     this.selectedGeo = null;
-            // }
-            GeoContainer.prototype.changeType = function (type) {
-                this.clear();
-                switch (type) {
-                    case "position":
-                        {
-                            var x = new editor.xAxis;
-                            var y = new editor.yAxis;
-                            var z = new editor.zAxis;
-                            var xy = new editor.xyAxis;
-                            var xz = new editor.xzAxis;
-                            var yz = new editor.yzAxis;
-                            this.geos.push(x, y, z, xy, xz, yz);
-                        }
-                        break;
-                    case "rotation":
-                        {
-                            var ball = new editor.ballRot;
-                            var x = new editor.xRot;
-                            var y = new editor.yRot;
-                            var z = new editor.zRot;
-                            this.geos.push(x, y, z, ball);
-                        }
-                        break;
-                    case "scale":
-                        {
-                            var x = new editor.xScl;
-                            var y = new editor.yScl;
-                            var z = new editor.zScl;
-                            this.geos.push(x, y, z);
-                        }
-                        break;
-                }
-                for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
-                    var geo = _a[_i];
-                    geo.editorModel = this.editorModel;
-                    geo.geo.transform.setParent(this.geo.transform);
-                }
-            };
-            GeoContainer.prototype.wasPressed_local = function (ray, selected) {
-                var result = this.checkIntersect(ray);
-                if (result) {
-                    result.wasPressed_local(ray, selected);
-                    this.selectedGeo = result;
-                    for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
-                        var item = _a[_i];
-                        item.changeColor('grey');
-                    }
-                    this.selectedGeo.changeColor('yellow');
-                    return;
-                }
-                this.selectedGeo = null;
-                return null;
-            };
-            GeoContainer.prototype.isPressed_local = function (ray, selected) {
-                if (this.selectedGeo) {
-                    this.selectedGeo.isPressed_local(ray, selected);
-                    this.geo.transform.setLocalPosition(selected[0].transform.getPosition());
-                    this.geo.transform.setLocalRotation(selected[0].transform.getRotation());
-                }
-            };
-            GeoContainer.prototype.wasPressed_world = function (ray, selected) {
-                var ctrlRot = this.geo.transform.getRotation();
-                var result = this.checkIntersect(ray);
-                if (result) {
-                    console.log(result.geo.name);
-                    this._ctrlRot = ctrlRot;
-                    result.wasPressed_world(ray, selected);
-                    this.selectedGeo = result;
-                    for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
-                        var item = _a[_i];
-                        item.changeColor('grey');
-                    }
-                    this.selectedGeo.changeColor('yellow');
-                    return;
-                }
-                this.selectedGeo = null;
-                return null;
-            };
-            GeoContainer.prototype.isPressed_world = function (ray, selected) {
-                if (this.selectedGeo) {
-                    this.selectedGeo.isPressed_world(ray, selected);
-                    var len = selected.length;
-                    var ctrlPos = egret3d.Vector3.set(0, 0, 0, this.helpVec3_3);
-                    for (var i = 0; i < len; i++) {
-                        // console.log("select: " + i + " " + this.selectedGameObjs[i].name);
-                        var obj = selected[i];
-                        egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                    }
-                    ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                    if (this.selectedGeo._ctrlRot) {
-                        this._ctrlRot.copy(this.selectedGeo._ctrlRot);
-                        this.geo.transform.setRotation(this._ctrlRot);
-                    }
-                    this.geo.transform.setPosition(ctrlPos);
-                }
-            };
-            GeoContainer.prototype.wasReleased = function (selectedGameObjs) {
-                if (this.selectedGeo) {
-                    this.selectedGeo.wasReleased(selectedGameObjs);
-                    for (var _i = 0, _a = this.geos; _i < _a.length; _i++) {
-                        var item = _a[_i];
-                        item.changeColor('origin');
-                    }
-                    this.selectedGeo = null;
-                }
-            };
-            return GeoContainer;
-        }(editor.BaseGeo));
-        editor.GeoContainer = GeoContainer;
-        __reflect(GeoContainer.prototype, "paper.editor.GeoContainer");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var xAxis = (function (_super) {
-            __extends(xAxis, _super);
-            function xAxis() {
-                return _super.call(this) || this;
-            }
-            xAxis.prototype.onSet = function () {
-                var xAxis = this._createAxis(new egret3d.Vector4(1, 0.0, 0.0, 1), 0);
-                xAxis.name = "GizmoController_X";
-                xAxis.tag = "Editor";
-                xAxis.transform.setLocalScale(0.1, 2, 0.1);
-                xAxis.transform.setLocalEulerAngles(0, 0, 90);
-                xAxis.transform.setLocalPosition(1, 0, 0);
-                this.geo = xAxis;
-            };
-            xAxis.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var normal = new egret3d.Vector3;
-                var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
-                normal.applyQuaternion(worldRotation, this.right);
-                _normal.cross(normal);
-                normal.cross(_normal);
-                this._dragPlaneNormal = normal.normalize();
-                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                // {
-                //     let dragPlane = this._createAxis(new egret3d.Vector4(0, 0.2, 0.2), 3)
-                //     dragPlane.transform.setPosition(worldPosition)
-                //     this.helpVec3_1.set(0, 1, 0)
-                //     this.helpQuat_1.w = Math.sqrt(normal.getDistance(new egret3d.Vector3(0, 0, 0)) ^ 2) + normal.dot(this.helpVec3_3)
-                //     this.helpVec3_1.cross(normal)
-                //     this.helpQuat_1.x = this.helpVec3_1.x
-                //     this.helpQuat_1.y = this.helpVec3_1.y
-                //     this.helpQuat_1.z = this.helpVec3_1.z
-                //     this.helpQuat_1.normalize()
-                //     dragPlane.transform.setRotation(this.helpQuat_1)
-                //     // normal.fromPlaneProjection
-                //     // dragPlane.transform.setRotation
-                // }
-            };
-            xAxis.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                console.log(hit);
-                egret3d.Vector3.subtract(hit, this._dragOffset, hit);
-                egret3d.Vector3.subtract(hit, worldPosition, hit);
-                var worldOffset = new egret3d.Vector3;
-                worldOffset.applyQuaternion(worldRotation, this.right);
-                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
-                egret3d.Vector3.scale(worldOffset, cosHit);
-                var position = egret3d.Vector3.add(worldPosition, worldOffset, this.helpVec3_2);
-                egret3d.Vector3.copy(position, this._ctrlPos);
-                // if (selectedGameObjs[0].transform.parent) {
-                //     let parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix()
-                //     parentMatrix = parentMatrix.inverse()
-                //     parentMatrix.transformNormal(position)
-                // }
-                selectedGameObjs[0].transform.setPosition(position);
-                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
-            };
-            xAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                var normal = new egret3d.Vector3;
-                var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
-                normal.copy(this.right);
-                _normal.cross(normal);
-                normal.cross(_normal);
-                this._dragPlaneNormal = normal.normalize();
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-            };
-            xAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                var worldOffset = new egret3d.Vector3;
-                worldOffset = egret3d.Vector3.copy(this.right, this.helpVec3_1);
-                var cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
-                egret3d.Vector3.scale(worldOffset, cosHit);
-                egret3d.Vector3.add(this._ctrlPos, worldOffset, this._ctrlPos);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    var lastPos = obj.transform.getPosition();
-                    egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
-                    // if (obj.transform.parent) {
-                    //     let parentMatrix = obj.transform.parent.getWorldMatrix()
-                    //     parentMatrix = parentMatrix.inverse()
-                    //     parentMatrix.transformNormal(this._newPosition)
-                    // }
-                    obj.transform.setPosition(this._newPosition);
-                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
-                }
-                egret3d.Vector3.copy(hit, this._dragOffset);
-            };
-            xAxis.prototype.wasReleased = function (selectedGameObjs) {
-                for (var _i = 0, selectedGameObjs_1 = selectedGameObjs; _i < selectedGameObjs_1.length; _i++) {
-                    var item = selectedGameObjs_1[_i];
-                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
-                }
-            };
-            return xAxis;
-        }(editor.BaseGeo));
-        editor.xAxis = xAxis;
-        __reflect(xAxis.prototype, "paper.editor.xAxis");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var xyAxis = (function (_super) {
-            __extends(xyAxis, _super);
-            function xyAxis() {
-                return _super.call(this) || this;
-            }
-            xyAxis.prototype.onSet = function () {
-                var xyPlane = this._createAxis(new egret3d.Vector4(1, 0.0, 0.0, 0.5), 3);
-                xyPlane.name = "GizmoController_XY";
-                xyPlane.tag = "Editor";
-                xyPlane.transform.setLocalScale(0.05, 0.05, 0.05);
-                xyPlane.transform.setLocalEulerAngles(90, 0, 0);
-                xyPlane.transform.setLocalPosition(0.2, 0.2, 0);
-                this.geo = xyPlane;
-            };
-            xyAxis.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                // let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
-                var normal = this.forward;
-                this._dragPlaneNormal.applyQuaternion(worldRotation, normal);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                // let normal1 = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x)
-                // this._dragPlaneNormal1.applyQuaternion(worldRotation, normal1)
-                // this._dragOffset1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
-                // egret3d.Vector3.subtract(this._dragOffset1, worldPosition, this._dragOffset1);
-            };
-            xyAxis.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, hit);
-                egret3d.Vector3.subtract(hit, worldPosition, hit);
-                var worldOffset1 = new egret3d.Vector3();
-                var worldOffset = new egret3d.Vector3();
-                worldOffset.applyQuaternion(worldRotation, this.up);
-                worldOffset1.applyQuaternion(worldRotation, this.right);
-                var cosHit1 = egret3d.Vector3.dot(hit, worldOffset1);
-                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
-                egret3d.Vector3.scale(worldOffset1, cosHit1);
-                egret3d.Vector3.scale(worldOffset, cosHit);
-                var position = egret3d.Vector3.add(worldPosition, worldOffset1, this.helpVec3_2);
-                position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
-                // let hit1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
-                // egret3d.Vector3.subtract(hit1, this._dragOffset, hit1);
-                // egret3d.Vector3.subtract(hit1, worldPosition, hit1);
-                // let worldOffset = new egret3d.Vector3();
-                // worldOffset.applyQuaternion(worldRotation, this.up);
-                // let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
-                // egret3d.Vector3.scale(worldOffset, cosHit);
-                // position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
-                // if (selectedGameObjs[0].transform.parent) {
-                //     let parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix()
-                //     parentMatrix = parentMatrix.inverse()
-                //     parentMatrix.transformNormal(position)
-                // }
-                egret3d.Vector3.copy(position, this._ctrlPos);
-                selectedGameObjs[0].transform.setPosition(position);
-                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
-            };
-            xyAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                var normal = this.forward;
-                egret3d.Vector3.copy(normal, this._dragPlaneNormal);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-            };
-            xyAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                // let worldOffset = new egret3d.Vector3;
-                // let worldOffset1 = new egret3d.Vector3;
-                // worldOffset = egret3d.Vector3.copy(this.right, this.helpVec3_1);
-                // worldOffset1 = egret3d.Vector3.copy(this.up, this.helpVec3_1);
-                // let cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
-                // let cosHit1 = egret3d.Vector3.dot(this._delta, worldOffset1);
-                // egret3d.Vector3.scale(worldOffset, cosHit);
-                // egret3d.Vector3.scale(worldOffset1, cosHit1);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    var lastPos = obj.transform.getPosition();
-                    egret3d.Vector3.add(lastPos, this._delta, this._newPosition);
-                    // if (obj.transform.parent) {
-                    //     let parentMatrix = obj.transform.parent.getWorldMatrix()
-                    //     parentMatrix = parentMatrix.inverse()
-                    //     parentMatrix.transformNormal(this._newPosition)
-                    // }
-                    obj.transform.setPosition(this._newPosition);
-                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
-                }
-                egret3d.Vector3.copy(hit, this._dragOffset);
-            };
-            xyAxis.prototype.wasReleased = function (selectedGameObjs) {
-                for (var _i = 0, selectedGameObjs_2 = selectedGameObjs; _i < selectedGameObjs_2.length; _i++) {
-                    var item = selectedGameObjs_2[_i];
-                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
-                }
-            };
-            return xyAxis;
-        }(editor.BaseGeo));
-        editor.xyAxis = xyAxis;
-        __reflect(xyAxis.prototype, "paper.editor.xyAxis");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var xzAxis = (function (_super) {
-            __extends(xzAxis, _super);
-            function xzAxis() {
-                return _super.call(this) || this;
-            }
-            xzAxis.prototype.onSet = function () {
-                var xyPlane = this._createAxis(new egret3d.Vector4(0.0, 0.0, 1, 0.5), 3);
-                xyPlane.name = "GizmoController_XZ";
-                xyPlane.tag = "Editor";
-                xyPlane.transform.setLocalScale(0.05, 0.05, 0.05);
-                xyPlane.transform.setLocalEulerAngles(0, 90, 0);
-                xyPlane.transform.setLocalPosition(0.2, 0, 0.2);
-                this.geo = xyPlane;
-            };
-            xzAxis.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                // let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
-                var normal = this.forward;
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                // let normal1 = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x)
-                // this._dragPlaneNormal1.applyQuaternion(worldRotation, normal1)
-                // this._dragOffset1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
-                // egret3d.Vector3.subtract(this._dragOffset1, worldPosition, this._dragOffset1);
-            };
-            xzAxis.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, hit);
-                egret3d.Vector3.subtract(hit, worldPosition, hit);
-                var worldOffset1 = new egret3d.Vector3();
-                var worldOffset = new egret3d.Vector3();
-                worldOffset.applyQuaternion(worldRotation, this.right);
-                worldOffset1.applyQuaternion(worldRotation, this.forward);
-                var cosHit1 = egret3d.Vector3.dot(hit, worldOffset1);
-                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
-                egret3d.Vector3.scale(worldOffset1, cosHit1);
-                egret3d.Vector3.scale(worldOffset, cosHit);
-                var position = egret3d.Vector3.add(worldPosition, worldOffset1, this.helpVec3_2);
-                position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
-                // let hit1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
-                // egret3d.Vector3.subtract(hit1, this._dragOffset, hit1);
-                // egret3d.Vector3.subtract(hit1, worldPosition, hit1);
-                // let worldOffset = new egret3d.Vector3();
-                // worldOffset.applyQuaternion(worldRotation, this.up);
-                // let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
-                // egret3d.Vector3.scale(worldOffset, cosHit);
-                // position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
-                // if (selectedGameObjs[0].transform.parent) {
-                //     let parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix()
-                //     parentMatrix = parentMatrix.inverse()
-                //     parentMatrix.transformNormal(position)
-                // }
-                egret3d.Vector3.copy(position, this._ctrlPos);
-                selectedGameObjs[0].transform.setPosition(position);
-                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
-            };
-            xzAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                var normal = this.up;
-                egret3d.Vector3.copy(normal, this._dragPlaneNormal);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-            };
-            xzAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                // let worldOffset = new egret3d.Vector3;
-                // let worldOffset1 = new egret3d.Vector3;
-                // worldOffset = egret3d.Vector3.copy(this.right, this.helpVec3_1);
-                // worldOffset1 = egret3d.Vector3.copy(this.up, this.helpVec3_1);
-                // let cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
-                // let cosHit1 = egret3d.Vector3.dot(this._delta, worldOffset1);
-                // egret3d.Vector3.scale(worldOffset, cosHit);
-                // egret3d.Vector3.scale(worldOffset1, cosHit1);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    var lastPos = obj.transform.getPosition();
-                    egret3d.Vector3.add(lastPos, this._delta, this._newPosition);
-                    // if (obj.transform.parent) {
-                    //     let parentMatrix = obj.transform.parent.getWorldMatrix()
-                    //     parentMatrix = parentMatrix.inverse()
-                    //     parentMatrix.transformNormal(this._newPosition)
-                    // }
-                    obj.transform.setPosition(this._newPosition);
-                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
-                }
-                egret3d.Vector3.copy(hit, this._dragOffset);
-            };
-            xzAxis.prototype.wasReleased = function (selectedGameObjs) {
-                for (var _i = 0, selectedGameObjs_3 = selectedGameObjs; _i < selectedGameObjs_3.length; _i++) {
-                    var item = selectedGameObjs_3[_i];
-                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
-                }
-            };
-            return xzAxis;
-        }(editor.BaseGeo));
-        editor.xzAxis = xzAxis;
-        __reflect(xzAxis.prototype, "paper.editor.xzAxis");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var yzAxis = (function (_super) {
-            __extends(yzAxis, _super);
-            function yzAxis() {
-                return _super.call(this) || this;
-            }
-            yzAxis.prototype.onSet = function () {
-                var xyPlane = this._createAxis(new egret3d.Vector4(0.0, 1, 0.0, 0.5), 3);
-                xyPlane.name = "GizmoController_YZ";
-                xyPlane.tag = "Editor";
-                xyPlane.transform.setLocalScale(0.05, 0.05, 0.05);
-                xyPlane.transform.setLocalEulerAngles(0, 0, 90);
-                xyPlane.transform.setLocalPosition(0.0, 0.2, 0.2);
-                this.geo = xyPlane;
-            };
-            yzAxis.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                // let normal = new egret3d.Vector3(0, pos.y + pos.z, pos.z + pos.y)
-                var normal = this.forward;
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.right);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                // let normal1 = new egret3d.Vector3(pos.x + pos.z, 0, pos.z + pos.x)
-                // this._dragPlaneNormal1.applyQuaternion(worldRotation, normal1)
-                // this._dragOffset1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
-                // egret3d.Vector3.subtract(this._dragOffset1, worldPosition, this._dragOffset1);
-            };
-            yzAxis.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, hit);
-                egret3d.Vector3.subtract(hit, worldPosition, hit);
-                var worldOffset1 = new egret3d.Vector3();
-                var worldOffset = new egret3d.Vector3();
-                worldOffset.applyQuaternion(worldRotation, this.up);
-                worldOffset1.applyQuaternion(worldRotation, this.forward);
-                var cosHit1 = egret3d.Vector3.dot(hit, worldOffset1);
-                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
-                egret3d.Vector3.scale(worldOffset1, cosHit1);
-                egret3d.Vector3.scale(worldOffset, cosHit);
-                var position = egret3d.Vector3.add(worldPosition, worldOffset1, this.helpVec3_2);
-                position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
-                // let hit1 = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal1);
-                // egret3d.Vector3.subtract(hit1, this._dragOffset, hit1);
-                // egret3d.Vector3.subtract(hit1, worldPosition, hit1);
-                // let worldOffset = new egret3d.Vector3();
-                // worldOffset.applyQuaternion(worldRotation, this.up);
-                // let cosHit = egret3d.Vector3.dot(hit1, worldOffset);
-                // egret3d.Vector3.scale(worldOffset, cosHit);
-                // position = egret3d.Vector3.add(position, worldOffset, this.helpVec3_2);
-                // if (selectedGameObjs[0].transform.parent) {
-                //     let parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix()
-                //     parentMatrix = parentMatrix.inverse()
-                //     parentMatrix.transformNormal(position)
-                // }
-                egret3d.Vector3.copy(position, this._ctrlPos);
-                selectedGameObjs[0].transform.setPosition(position);
-                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
-            };
-            yzAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                var pos = paper.Application.sceneManager.editorScene.find("EditorCamera").transform.getPosition();
-                var normal = this.right;
-                egret3d.Vector3.copy(normal, this._dragPlaneNormal);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-            };
-            yzAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                // let worldOffset = new egret3d.Vector3;
-                // let worldOffset1 = new egret3d.Vector3;
-                // worldOffset = egret3d.Vector3.copy(this.right, this.helpVec3_1);
-                // worldOffset1 = egret3d.Vector3.copy(this.up, this.helpVec3_1);
-                // let cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
-                // let cosHit1 = egret3d.Vector3.dot(this._delta, worldOffset1);
-                // egret3d.Vector3.scale(worldOffset, cosHit);
-                // egret3d.Vector3.scale(worldOffset1, cosHit1);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    var lastPos = obj.transform.getPosition();
-                    egret3d.Vector3.add(lastPos, this._delta, this._newPosition);
-                    // if (obj.transform.parent) {
-                    //     let parentMatrix = obj.transform.parent.getWorldMatrix()
-                    //     parentMatrix = parentMatrix.inverse()
-                    //     parentMatrix.transformNormal(this._newPosition)
-                    // }
-                    obj.transform.setPosition(this._newPosition);
-                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
-                }
-                egret3d.Vector3.copy(hit, this._dragOffset);
-            };
-            yzAxis.prototype.wasReleased = function (selectedGameObjs) {
-                for (var _i = 0, selectedGameObjs_4 = selectedGameObjs; _i < selectedGameObjs_4.length; _i++) {
-                    var item = selectedGameObjs_4[_i];
-                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
-                }
-            };
-            return yzAxis;
-        }(editor.BaseGeo));
-        editor.yzAxis = yzAxis;
-        __reflect(yzAxis.prototype, "paper.editor.yzAxis");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var yAxis = (function (_super) {
-            __extends(yAxis, _super);
-            function yAxis() {
-                return _super.call(this) || this;
-            }
-            yAxis.prototype.onSet = function () {
-                var yAxis = this._createAxis(new egret3d.Vector4(0.0, 1, 0.0, 1), 0);
-                yAxis.name = "GizmoController_Y";
-                yAxis.tag = "Editor";
-                yAxis.transform.setLocalScale(0.1, 2, 0.1);
-                yAxis.transform.setLocalEulerAngles(0, 0, 0);
-                yAxis.transform.setLocalPosition(0, 1, 0);
-                this.geo = yAxis;
-            };
-            yAxis.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var normal = new egret3d.Vector3;
-                var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
-                normal.applyQuaternion(worldRotation, this.up);
-                _normal.cross(normal);
-                normal.cross(_normal);
-                this._dragPlaneNormal = normal.normalize();
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-            };
-            yAxis.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, hit);
-                egret3d.Vector3.subtract(hit, worldPosition, hit);
-                var worldOffset = new egret3d.Vector3;
-                worldOffset.applyQuaternion(worldRotation, this.up);
-                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
-                egret3d.Vector3.scale(worldOffset, cosHit);
-                var position = egret3d.Vector3.add(worldPosition, worldOffset, this.helpVec3_2);
-                egret3d.Vector3.copy(position, this._ctrlPos);
-                // if (selectedGameObjs[0].transform.parent) {
-                //     let parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix()
-                //     parentMatrix = parentMatrix.inverse()
-                //     parentMatrix.transformNormal(position)
-                // }
-                selectedGameObjs[0].transform.setPosition(position);
-                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
-            };
-            yAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                var normal = new egret3d.Vector3;
-                var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
-                normal.copy(this.up);
-                _normal.cross(normal);
-                normal.cross(_normal);
-                this._dragPlaneNormal = normal.normalize();
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
-            };
-            yAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                var worldOffset = new egret3d.Vector3;
-                worldOffset = egret3d.Vector3.copy(this.up, this.helpVec3_1);
-                var cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
-                egret3d.Vector3.scale(worldOffset, cosHit);
-                egret3d.Vector3.add(this._ctrlPos, worldOffset, this._ctrlPos);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    var lastPos = obj.transform.getPosition();
-                    egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
-                    // if (obj.transform.parent) {
-                    //     let parentMatrix = obj.transform.parent.getWorldMatrix()
-                    //     parentMatrix = parentMatrix.inverse()
-                    //     parentMatrix.transformNormal(this._newPosition)
-                    // }
-                    obj.transform.setPosition(this._newPosition);
-                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
-                }
-                egret3d.Vector3.copy(hit, this._dragOffset);
-            };
-            yAxis.prototype.wasReleased = function (selectedGameObjs) {
-                for (var _i = 0, selectedGameObjs_5 = selectedGameObjs; _i < selectedGameObjs_5.length; _i++) {
-                    var item = selectedGameObjs_5[_i];
-                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
-                }
-            };
-            return yAxis;
-        }(editor.BaseGeo));
-        editor.yAxis = yAxis;
-        __reflect(yAxis.prototype, "paper.editor.yAxis");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var zAxis = (function (_super) {
-            __extends(zAxis, _super);
-            function zAxis() {
-                return _super.call(this) || this;
-            }
-            zAxis.prototype.onSet = function () {
-                var zAxis = this._createAxis(new egret3d.Vector4(0.0, 0.0, 1, 1), 0);
-                zAxis.name = "GizmoController_Z";
-                zAxis.tag = "Editor";
-                zAxis.transform.setLocalScale(0.1, 2, 0.1);
-                zAxis.transform.setLocalEulerAngles(90, 0, 0);
-                zAxis.transform.setLocalPosition(0, 0, 1);
-                this.geo = zAxis;
-            };
-            zAxis.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                var normal = new egret3d.Vector3;
-                var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
-                normal.applyQuaternion(worldRotation, this.forward);
-                _normal.cross(normal);
-                normal.cross(_normal);
-                this._dragPlaneNormal = normal.normalize();
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-            };
-            zAxis.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, hit);
-                egret3d.Vector3.subtract(hit, worldPosition, hit);
-                var worldOffset = new egret3d.Vector3;
-                worldOffset.applyQuaternion(worldRotation, this.forward);
-                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
-                egret3d.Vector3.scale(worldOffset, cosHit);
-                var position = egret3d.Vector3.add(worldPosition, worldOffset, this.helpVec3_2);
-                egret3d.Vector3.copy(position, this._ctrlPos);
-                if (selectedGameObjs[0].transform.parent) {
-                    var parentMatrix = selectedGameObjs[0].transform.parent.getWorldMatrix();
-                    parentMatrix = parentMatrix.inverse();
-                    parentMatrix.transformNormal(position);
-                }
-                selectedGameObjs[0].transform.setLocalPosition(position);
-                // this.editorModel.setTransformProperty("localPosition", position, selectedGameObjs[0].transform);
-            };
-            zAxis.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                egret3d.Vector3.set(0, 0, 0, this._dragOffset);
-                var len = selectedGameObjs.length;
-                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                var normal = new egret3d.Vector3;
-                var _normal = new egret3d.Vector3(ray.direction.x, ray.direction.y, ray.direction.z);
-                normal.copy(this.forward);
-                _normal.cross(normal);
-                normal.cross(_normal);
-                this._dragPlaneNormal = normal.normalize();
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, normal);
-            };
-            zAxis.prototype.isPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                var worldOffset = new egret3d.Vector3;
-                worldOffset = egret3d.Vector3.copy(this.forward, this.helpVec3_1);
-                var cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
-                egret3d.Vector3.scale(worldOffset, cosHit);
-                egret3d.Vector3.add(this._ctrlPos, worldOffset, this._ctrlPos);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    var lastPos = obj.transform.getPosition();
-                    egret3d.Vector3.add(lastPos, worldOffset, this._newPosition);
-                    // if (obj.transform.parent) {
-                    //     let parentMatrix = obj.transform.parent.getPosition();
-                    //     this._newPosition.subtract(this._newPosition, parentMatrix)
-                    // }
-                    obj.transform.setPosition(this._newPosition);
-                    // this.editorModel.setTransformProperty("localPosition", this._newPosition, obj.transform);
-                }
-                egret3d.Vector3.copy(hit, this._dragOffset);
-            };
-            zAxis.prototype.wasReleased = function (selectedGameObjs) {
-                for (var _i = 0, selectedGameObjs_6 = selectedGameObjs; _i < selectedGameObjs_6.length; _i++) {
-                    var item = selectedGameObjs_6[_i];
-                    this.editorModel.setTransformProperty("localPosition", item.transform.getLocalPosition(), item.transform);
-                }
-            };
-            return zAxis;
-        }(editor.BaseGeo));
-        editor.zAxis = zAxis;
-        __reflect(zAxis.prototype, "paper.editor.zAxis");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var xRot = (function (_super) {
-            __extends(xRot, _super);
-            function xRot() {
-                return _super.call(this) || this;
-            }
-            xRot.prototype.onSet = function () {
-                var xRotate = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 0.8), 1);
-                xRotate.name = "GizmoController_Rotate_X";
-                xRotate.tag = "Editor";
-                xRotate.transform.setLocalScale(2, 2, 2);
-                xRotate.transform.setLocalEulerAngles(90, 0, 0);
-                this.geo = xRotate;
-                this.greyColor = this.geo.getComponent(egret3d.MeshRenderer).materials[0];
-            };
-            xRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var lastY = egret3d.InputManager.mouse.position.y;
-                var lastX = egret3d.InputManager.mouse.position.x;
-                this.helpVec3_1.set(lastX, lastY, 0);
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
-                this.fan = this._createAxis(new egret3d.Vector4(0.8, 0.8, 0.3, 0.6), 1);
-                this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(0);
-                this.fan.transform.setLocalPosition(this.geo.transform.getPosition());
-                this.fan.transform.setLocalRotation(this.geo.transform.getRotation());
-                this.fan.transform.setLocalScale(this.geo.parent.transform.getScale());
-                this.helpVec3_3.x = 0;
-            };
-            xRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.y;
-                var delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x;
-                var rot = selectedGameObjs[0].transform.getRotation();
-                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
-                this.helpVec3_3.x = this.helpVec3_3.x + delta;
-                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
-                this.helpQuat_2.multiply(this.helpQuat_1, rot);
-                this.helpQuat_2.normalize();
-                this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(this.helpVec3_3.x);
-                this.helpVec3_1.set(lastX, lastY, 0);
-                selectedGameObjs[0].transform.setLocalRotation(this.helpQuat_2);
-                // this.editorModel.setTransformProperty("rotation", this.helpQuat_2, selectedGameObjs[0].transform);
-            };
-            xRot.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.y;
-                var len = selectedGameObjs.length;
-                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                var ctrlRot = this.geo.transform.parent.getRotation();
-                this._dragPlaneNormal.applyQuaternion(ctrlRot, this.up);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                this.helpVec3_1.set(lastX, lastY, 0);
-                this._ctrlRot = ctrlRot;
-                this.fan = this._createAxis(new egret3d.Vector4(0.8, 0.8, 0.3, 0.6), 1);
-                this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(0);
-                this.fan.transform.setLocalPosition(this.geo.transform.getPosition());
-                this.fan.transform.setLocalRotation(this.geo.transform.getRotation());
-                this.fan.transform.setLocalScale(this.geo.parent.transform.getScale());
-                this.helpVec3_3.x = 0;
-            };
-            xRot.prototype.isPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.y;
-                var delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x;
-                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
-                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
-                this.helpVec3_3.x = this.helpVec3_3.x + delta;
-                this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(this.helpVec3_3.x);
-                this._ctrlRot.premultiply(this.helpQuat_1);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    var rot = obj.transform.getRotation();
-                    this.helpQuat_2.multiply(this.helpQuat_1, rot);
-                    this.helpQuat_2.normalize();
-                    obj.transform.setLocalRotation(this.helpQuat_2);
-                }
-                this.helpVec3_1.set(lastX, lastY, 0);
-            };
-            xRot.prototype.wasReleased = function () {
-                if (this.fan) {
-                    this.fan.destroy();
-                }
-                return;
-            };
-            return xRot;
-        }(editor.BaseGeo));
-        editor.xRot = xRot;
-        __reflect(xRot.prototype, "paper.editor.xRot");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var yRot = (function (_super) {
-            __extends(yRot, _super);
-            function yRot() {
-                return _super.call(this) || this;
-            }
-            yRot.prototype.onSet = function () {
-                var yRotate = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 0.8), 1);
-                yRotate.name = "GizmoController_Rotate_Y";
-                yRotate.tag = "Editor";
-                yRotate.transform.setLocalScale(2, 2, 2);
-                yRotate.transform.setLocalEulerAngles(90, 90, 0);
-                this.geo = yRotate;
-            };
-            yRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.y;
-                this.helpVec3_1.set(lastX, lastY, 0);
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.right);
-                this.fan = this._createAxis(new egret3d.Vector4(0.8, 0.8, 0.3, 0.6), 1);
-                this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(0);
-                this.fan.transform.setLocalPosition(this.geo.transform.getPosition());
-                this.fan.transform.setLocalRotation(this.geo.transform.getRotation());
-                this.fan.transform.setLocalScale(this.geo.parent.transform.getScale());
-                this.helpVec3_3.x = 0;
-            };
-            yRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.y;
-                var delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x;
-                var rot = selectedGameObjs[0].transform.getRotation();
-                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
-                this.helpVec3_3.x = this.helpVec3_3.x + delta;
-                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
-                this.helpQuat_2.multiply(this.helpQuat_1, rot);
-                this.helpQuat_2.normalize();
-                this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(this.helpVec3_3.x);
-                this.helpVec3_1.set(lastX, lastY, 0);
-                selectedGameObjs[0].transform.setLocalRotation(this.helpQuat_2);
-                // this.editorModel.setTransformProperty("rotation", this.helpQuat_2, selectedGameObjs[0].transform);
-            };
-            yRot.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.y;
-                var len = selectedGameObjs.length;
-                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                var ctrlRot = this.geo.transform.parent.getRotation();
-                this._dragPlaneNormal.applyQuaternion(ctrlRot, this.right);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                this.helpVec3_1.set(lastX, lastY, 0);
-                this._ctrlRot = ctrlRot;
-                this.fan = this._createAxis(new egret3d.Vector4(0.8, 0.8, 0.3, 0.6), 1);
-                this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(0);
-                this.fan.transform.setLocalPosition(this.geo.transform.getPosition());
-                this.fan.transform.setLocalRotation(this.geo.transform.getRotation());
-                this.fan.transform.setLocalScale(this.geo.parent.transform.getScale());
-                this.helpVec3_3.x = 0;
-            };
-            yRot.prototype.isPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.y;
-                var delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x;
-                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
-                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
-                this.helpVec3_3.x = this.helpVec3_3.x + delta;
-                this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(this.helpVec3_3.x);
-                this._ctrlRot.premultiply(this.helpQuat_1);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    var rot = obj.transform.getRotation();
-                    this.helpQuat_2.multiply(this.helpQuat_1, rot);
-                    this.helpQuat_2.normalize();
-                    obj.transform.setLocalRotation(this.helpQuat_2);
-                }
-                this.helpVec3_1.set(lastX, lastY, 0);
-            };
-            yRot.prototype.wasReleased = function () {
-                if (this.fan) {
-                    this.fan.destroy();
-                }
-                return;
-            };
-            return yRot;
-        }(editor.BaseGeo));
-        editor.yRot = yRot;
-        __reflect(yRot.prototype, "paper.editor.yRot");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var zRot = (function (_super) {
-            __extends(zRot, _super);
-            function zRot() {
-                return _super.call(this) || this;
-            }
-            zRot.prototype.onSet = function () {
-                var zRotate = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 0.8), 1);
-                zRotate.name = "GizmoController_Rotate_Z";
-                zRotate.tag = "Editor";
-                zRotate.transform.setLocalEulerAngles(0, 0, 0);
-                zRotate.transform.setLocalScale(2, 2, 2);
-                this.geo = zRotate;
-            };
-            zRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.y;
-                this.helpVec3_1.set(lastX, lastY, 0);
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.forward);
-                this.fan = this._createAxis(new egret3d.Vector4(0.8, 0.8, 0.3, 0.6), 1);
-                this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(0);
-                this.fan.transform.setLocalPosition(this.geo.transform.getPosition());
-                this.fan.transform.setLocalRotation(this.geo.transform.getRotation());
-                this.fan.transform.setLocalScale(this.geo.parent.transform.getScale());
-                this.helpVec3_3.x = 0;
-            };
-            zRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.x;
-                var delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x;
-                var rot = selectedGameObjs[0].transform.getRotation();
-                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
-                this.helpVec3_3.x = this.helpVec3_3.x + delta;
-                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
-                this.helpQuat_2.multiply(this.helpQuat_1, rot);
-                this.helpQuat_2.normalize();
-                this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(this.helpVec3_3.x);
-                this.helpVec3_1.set(lastX, lastY, 0);
-                selectedGameObjs[0].transform.setLocalRotation(this.helpQuat_2);
-                // this.editorModel.setTransformProperty("rotation", this.helpQuat_2, selectedGameObjs[0].transform);
-            };
-            zRot.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.y;
-                var len = selectedGameObjs.length;
-                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                var ctrlRot = this.geo.transform.parent.getRotation();
-                this._dragPlaneNormal.applyQuaternion(ctrlRot, this.forward);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                this.helpVec3_1.set(lastX, lastY, 0);
-                this._ctrlRot = ctrlRot;
-                this.fan = this._createAxis(new egret3d.Vector4(0.8, 0.8, 0.3, 0.6), 1);
-                this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(0);
-                this.fan.transform.setLocalPosition(this.geo.transform.getPosition());
-                this.fan.transform.setLocalRotation(this.geo.transform.getRotation());
-                this.fan.transform.setLocalScale(this.geo.parent.transform.getScale());
-                this.helpVec3_3.x = 0;
-            };
-            zRot.prototype.isPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.y;
-                var delta = lastY - this.helpVec3_1.y + lastX - this.helpVec3_1.x;
-                var cos = Math.cos(delta / 180 * Math.PI / 2), sin = Math.sin(delta / 180 * Math.PI / 2);
-                this.helpQuat_1.set(this._dragPlaneNormal.x * sin, this._dragPlaneNormal.y * sin, this._dragPlaneNormal.z * sin, cos);
-                this.helpVec3_3.x = this.helpVec3_3.x + delta;
-                this.fan.getComponent(egret3d.MeshFilter).mesh = this.createFan(this.helpVec3_3.x);
-                this._ctrlRot.premultiply(this.helpQuat_1);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    var rot = obj.transform.getRotation();
-                    this.helpQuat_2.multiply(this.helpQuat_1, rot);
-                    this.helpQuat_2.normalize();
-                    obj.transform.setLocalRotation(this.helpQuat_2);
-                }
-                this.helpVec3_1.set(lastX, lastY, 0);
-            };
-            zRot.prototype.wasReleased = function () {
-                if (this.fan) {
-                    this.fan.destroy();
-                }
-                return;
-            };
-            return zRot;
-        }(editor.BaseGeo));
-        editor.zRot = zRot;
-        __reflect(zRot.prototype, "paper.editor.zRot");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var ballRot = (function (_super) {
-            __extends(ballRot, _super);
-            function ballRot() {
-                return _super.call(this) || this;
-            }
-            ballRot.prototype.onSet = function () {
-                var xRotate = this._createAxis(new egret3d.Vector4(0.3, 0.3, 0.2, 0.4), 1);
-                xRotate.name = "GizmoController_Rotate_X";
-                xRotate.tag = "Editor";
-                xRotate.transform.setLocalScale(1.3, 1.3, 1.3);
-                xRotate.getComponent(egret3d.MeshFilter).mesh = this.drawBall(32);
-                this.geo = xRotate;
-            };
-            ballRot.prototype.drawBall = function (SPHERE_DIV) {
-                var points = [];
-                var indices = [];
-                for (var j = 0; j <= SPHERE_DIV; j++) {
-                    var aj = j * Math.PI / SPHERE_DIV;
-                    var sj = Math.sin(aj);
-                    var cj = Math.cos(aj);
-                    for (var i = 0; i <= SPHERE_DIV; i++) {
-                        var ai = i * 2 * Math.PI / SPHERE_DIV;
-                        var si = Math.sin(ai);
-                        var ci = Math.cos(ai);
-                        points.push(si * sj); //point为顶点坐标
-                        points.push(cj);
-                        points.push(ci * sj);
-                    }
-                }
-                for (var j = 0; j < SPHERE_DIV; j++) {
-                    for (var i = 0; i < SPHERE_DIV; i++) {
-                        var p1 = j * (SPHERE_DIV + 1) + i;
-                        var p2 = p1 + (SPHERE_DIV + 1);
-                        indices.push(p1); //indices为顶点的索引
-                        indices.push(p2);
-                        indices.push(p1 + 1);
-                        indices.push(p1 + 1);
-                        indices.push(p2);
-                        indices.push(p2 + 1);
-                    }
-                }
-                var mesh = new egret3d.Mesh(points.length, indices.length);
-                mesh.setAttributes("POSITION" /* POSITION */, points);
-                mesh.setIndices(indices);
-                return mesh;
-            };
-            ballRot.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var lastY = egret3d.InputManager.mouse.position.y;
-                var lastX = egret3d.InputManager.mouse.position.x;
-                this.helpVec3_1.set(lastX, lastY, 0);
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
-            };
-            ballRot.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.y;
-                var deltaX = -(lastX - this.helpVec3_1.x);
-                var deltaY = -(lastY - this.helpVec3_1.y);
-                var rot = selectedGameObjs[0].transform.getRotation();
-                var cosX = Math.cos(deltaX / 180 * Math.PI / 2), sinX = Math.sin(deltaX / 180 * Math.PI / 2);
-                var cosY = Math.cos(deltaY / 180 * Math.PI / 2), sinY = Math.sin(deltaY / 180 * Math.PI / 2);
-                this._dragPlaneNormal.set(0, 1, 0);
-                this.helpQuat_1.set(this._dragPlaneNormal.x * sinX, this._dragPlaneNormal.y * sinX, this._dragPlaneNormal.z * sinX, cosX);
-                this.helpQuat_2.multiply(this.helpQuat_1, rot);
-                this.helpQuat_2.normalize();
-                var camera = paper.Application.sceneManager.editorScene.find("EditorCamera");
-                camera.transform.getRight(this._dragPlaneNormal);
-                this._dragPlaneNormal.normalize();
-                this.helpQuat_1.set(this._dragPlaneNormal.x * sinY, this._dragPlaneNormal.y * sinY, this._dragPlaneNormal.z * sinY, cosY);
-                this.helpQuat_2.multiply(this.helpQuat_1, this.helpQuat_2);
-                this.helpQuat_2.normalize();
-                this.helpVec3_1.set(lastX, lastY, 0);
-                selectedGameObjs[0].transform.setLocalRotation(this.helpQuat_2);
-                // this.editorModel.setTransformProperty("rotation", this.helpQuat_2, selectedGameObjs[0].transform);
-            };
-            ballRot.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.y;
-                var len = selectedGameObjs.length;
-                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                var ctrlRot = this.geo.transform.parent.getRotation();
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                this.helpVec3_1.set(lastX, lastY, 0);
-                this._ctrlRot = ctrlRot;
-            };
-            ballRot.prototype.isPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var lastX = egret3d.InputManager.mouse.position.x;
-                var lastY = egret3d.InputManager.mouse.position.y;
-                var deltaX = -(lastX - this.helpVec3_1.x);
-                var deltaY = -(lastY - this.helpVec3_1.y);
-                var cosX = Math.cos(deltaX / 180 * Math.PI / 2), sinX = Math.sin(deltaX / 180 * Math.PI / 2);
-                var cosY = Math.cos(deltaY / 180 * Math.PI / 2), sinY = Math.sin(deltaY / 180 * Math.PI / 2);
-                var camera = paper.Application.sceneManager.editorScene.find("EditorCamera");
-                this._dragPlaneNormal.set(0, 1, 0);
-                this.helpQuat_1.set(this._dragPlaneNormal.x * sinX, this._dragPlaneNormal.y * sinX, this._dragPlaneNormal.z * sinX, cosX);
-                camera.transform.getRight(this._dragPlaneNormal);
-                this._dragPlaneNormal.normalize();
-                this.helpQuat_2.set(this._dragPlaneNormal.x * sinY, this._dragPlaneNormal.y * sinY, this._dragPlaneNormal.z * sinY, cosY);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    var rot = obj.transform.getRotation();
-                    rot.multiply(this.helpQuat_1, rot);
-                    rot.normalize();
-                    rot.multiply(this.helpQuat_2, rot);
-                    rot.normalize();
-                    obj.transform.setLocalRotation(rot);
-                }
-                this._ctrlRot.premultiply(this.helpQuat_1);
-                this._ctrlRot.premultiply(this.helpQuat_2);
-                this.helpVec3_1.set(lastX, lastY, 0);
-            };
-            ballRot.prototype.wasReleased = function () { return; };
-            return ballRot;
-        }(editor.BaseGeo));
-        editor.ballRot = ballRot;
-        __reflect(ballRot.prototype, "paper.editor.ballRot");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var xScl = (function (_super) {
-            __extends(xScl, _super);
-            function xScl() {
-                return _super.call(this) || this;
-            }
-            xScl.prototype.onSet = function () {
-                var xScale = this._createAxis(new egret3d.Vector4(0.8, 0.0, 0.0, 1), 2);
-                xScale.name = "GizmoController_Scale_X";
-                xScale.tag = "Editor";
-                xScale.transform.setLocalScale(0.2, 0.2, 0.2);
-                xScale.transform.setLocalPosition(2, 0, 0);
-                this.geo = xScale;
-            };
-            xScl.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
-                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                this._initRotation.copy(worldRotation);
-                egret3d.Vector3.copy(selectedGameObjs[0].transform.getLocalScale(), this._oldLocalScale);
-            };
-            xScl.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, worldPosition, this._delta);
-                var worldOffset = new egret3d.Vector3;
-                var scale;
-                worldOffset.applyQuaternion(worldRotation, this.right);
-                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
-                var len = egret3d.Vector3.dot(this._dragOffset, worldOffset);
-                this.geo.transform.setLocalPosition(cosHit / len * 2, 0, 0);
-                var oldScale = this._oldLocalScale;
-                var sx = this.geo.transform.getLocalPosition().x / 2;
-                var sy = 1;
-                var sz = 1;
-                scale = egret3d.Vector3.set(oldScale.x * sx, oldScale.y * sy, oldScale.z * sz, this.helpVec3_2);
-                this.editorModel.setTransformProperty("localScale", scale, selectedGameObjs[0].transform);
-            };
-            xScl.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                var ctrlRot = this.geo.transform.parent.getRotation();
-                this._ctrlRot = ctrlRot;
-                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                this._dragPlaneNormal.applyQuaternion(ctrlRot, this.up);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-            };
-            xScl.prototype.isPressed_world = function (ray, selectedGameObjs) {
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                var worldOffset = new egret3d.Vector3;
-                var scale;
-                var len = selectedGameObjs.length;
-                worldOffset.applyQuaternion(this._ctrlRot, this.right);
-                var cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
-                var src = this.geo.transform.getLocalPosition().x;
-                this.geo.transform.setLocalPosition(cosHit + src, 0, 0);
-                var s = cosHit / src + 1;
-                for (var i = 0; i < len; i++) {
-                    var lastSca = selectedGameObjs[i].transform.getLocalScale();
-                    scale = egret3d.Vector3.set(lastSca.x * s, lastSca.y, lastSca.z, this.helpVec3_2);
-                    this.editorModel.setTransformProperty("localScale", scale, selectedGameObjs[i].transform);
-                    var pos = selectedGameObjs[i].transform.getPosition();
-                    var sub = this.helpVec3_2;
-                    egret3d.Vector3.subtract(pos, this._ctrlPos, this.helpVec3_2);
-                    this.helpVec3_3.applyQuaternion(this.geo.transform.parent.getRotation(), this.right);
-                    var cos = egret3d.Vector3.dot(sub, this.helpVec3_3);
-                    egret3d.Vector3.scale(this.helpVec3_3, cos * (s - 1));
-                    egret3d.Vector3.add(pos, this.helpVec3_3, pos);
-                    this.editorModel.setTransformProperty("position", pos, selectedGameObjs[i].transform);
-                }
-                egret3d.Vector3.copy(hit, this._dragOffset);
-            };
-            xScl.prototype.wasReleased = function () {
-                this.geo.transform.setLocalPosition(2, 0, 0);
-            };
-            return xScl;
-        }(editor.BaseGeo));
-        editor.xScl = xScl;
-        __reflect(xScl.prototype, "paper.editor.xScl");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var yScl = (function (_super) {
-            __extends(yScl, _super);
-            function yScl() {
-                return _super.call(this) || this;
-            }
-            yScl.prototype.onSet = function () {
-                var yScale = this._createAxis(new egret3d.Vector4(0.0, 0.8, 0.0, 1), 2);
-                yScale.name = "GizmoController_Scale_Y";
-                yScale.tag = "Editor";
-                yScale.transform.setLocalScale(0.2, 0.2, 0.2);
-                yScale.transform.setLocalPosition(0, 2, 0);
-                this.geo = yScale;
-            };
-            yScl.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.forward);
-                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                this._initRotation.copy(worldRotation);
-                egret3d.Vector3.copy(selectedGameObjs[0].transform.getLocalScale(), this._oldLocalScale);
-            };
-            yScl.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, worldPosition, this._delta);
-                var worldOffset = new egret3d.Vector3;
-                var scale;
-                worldOffset.applyQuaternion(worldRotation, this.up);
-                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
-                var len = egret3d.Vector3.dot(this._dragOffset, worldOffset);
-                this.geo.transform.setLocalPosition(0, cosHit / len * 2, 0);
-                var oldScale = this._oldLocalScale;
-                var sx = 1;
-                var sy = this.geo.transform.getLocalPosition().y / 2;
-                var sz = 1;
-                scale = egret3d.Vector3.set(oldScale.x * sx, oldScale.y * sy, oldScale.z * sz, this.helpVec3_2);
-                this.editorModel.setTransformProperty("localScale", scale, selectedGameObjs[0].transform);
-            };
-            yScl.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                var ctrlRot = this.geo.transform.parent.getRotation();
-                this._ctrlRot = ctrlRot;
-                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                this._dragPlaneNormal.applyQuaternion(ctrlRot, this.forward);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-            };
-            yScl.prototype.isPressed_world = function (ray, selectedGameObjs) {
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                var worldOffset = new egret3d.Vector3;
-                var scale;
-                var len = selectedGameObjs.length;
-                worldOffset.applyQuaternion(this._ctrlRot, this.up);
-                var cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
-                var src = this.geo.transform.getLocalPosition().y;
-                this.geo.transform.setLocalPosition(0, cosHit + src, 0);
-                var s = cosHit / src + 1;
-                for (var i = 0; i < len; i++) {
-                    var lastSca = selectedGameObjs[i].transform.getLocalScale();
-                    scale = egret3d.Vector3.set(lastSca.x, lastSca.y * s, lastSca.z, this.helpVec3_2);
-                    this.editorModel.setTransformProperty("localScale", scale, selectedGameObjs[i].transform);
-                    var pos = selectedGameObjs[i].transform.getPosition();
-                    var sub = this.helpVec3_2;
-                    egret3d.Vector3.subtract(pos, this._ctrlPos, this.helpVec3_2);
-                    this.helpVec3_3.applyQuaternion(this.geo.parent.transform.getRotation(), this.up);
-                    var cos = egret3d.Vector3.dot(sub, this.helpVec3_3);
-                    egret3d.Vector3.scale(this.helpVec3_3, cos * (s - 1));
-                    egret3d.Vector3.add(pos, this.helpVec3_3, pos);
-                    this.editorModel.setTransformProperty("position", pos, selectedGameObjs[i].transform);
-                }
-                egret3d.Vector3.copy(hit, this._dragOffset);
-            };
-            yScl.prototype.wasReleased = function () {
-                this.geo.transform.setLocalPosition(0, 2, 0);
-            };
-            return yScl;
-        }(editor.BaseGeo));
-        editor.yScl = yScl;
-        __reflect(yScl.prototype, "paper.editor.yScl");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var zScl = (function (_super) {
-            __extends(zScl, _super);
-            function zScl() {
-                return _super.call(this) || this;
-            }
-            zScl.prototype.onSet = function () {
-                var zScale = this._createAxis(new egret3d.Vector4(0.0, 0.0, 0.8, 1), 2);
-                zScale.name = "GizmoController_Scale_Z";
-                zScale.tag = "Editor";
-                zScale.transform.setLocalScale(0.2, 0.2, 0.2);
-                zScale.transform.setLocalPosition(0, 0, 2);
-                this.geo = zScale;
-            };
-            zScl.prototype.wasPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                this._dragPlaneNormal.applyQuaternion(worldRotation, this.up);
-                egret3d.Vector3.copy(worldPosition, this._dragPlanePoint);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(this._dragOffset, worldPosition, this._dragOffset);
-                this._initRotation.copy(worldRotation);
-                egret3d.Vector3.copy(selectedGameObjs[0].transform.getLocalScale(), this._oldLocalScale);
-            };
-            zScl.prototype.isPressed_local = function (ray, selectedGameObjs) {
-                var worldRotation = selectedGameObjs[0].transform.getRotation();
-                var worldPosition = selectedGameObjs[0].transform.getPosition();
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, worldPosition, this._delta);
-                var worldOffset = new egret3d.Vector3;
-                var scale;
-                worldOffset.applyQuaternion(worldRotation, this.forward);
-                var cosHit = egret3d.Vector3.dot(hit, worldOffset);
-                var len = egret3d.Vector3.dot(this._dragOffset, worldOffset);
-                this.geo.transform.setLocalPosition(0, 0, cosHit / len * 2);
-                var oldScale = this._oldLocalScale;
-                var sx = 1;
-                var sy = 1;
-                var sz = this.geo.transform.getLocalPosition().z / 2;
-                scale = egret3d.Vector3.set(oldScale.x * sx, oldScale.y * sy, oldScale.z * sz, this.helpVec3_2);
-                this.editorModel.setTransformProperty("localScale", scale, selectedGameObjs[0].transform);
-            };
-            zScl.prototype.wasPressed_world = function (ray, selectedGameObjs) {
-                var len = selectedGameObjs.length;
-                var ctrlPos = egret3d.Vector3.set(0, 0, 0, this._ctrlPos);
-                for (var i = 0; i < len; i++) {
-                    var obj = selectedGameObjs[i];
-                    egret3d.Vector3.add(obj.transform.getPosition(), ctrlPos, ctrlPos);
-                }
-                ctrlPos = egret3d.Vector3.scale(ctrlPos, 1 / len);
-                var ctrlRot = this.geo.transform.parent.getRotation();
-                this._ctrlRot = ctrlRot;
-                egret3d.Vector3.copy(ctrlPos, this._dragPlanePoint);
-                this._dragPlaneNormal.applyQuaternion(ctrlRot, this.up);
-                this._dragOffset = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-            };
-            zScl.prototype.isPressed_world = function (ray, selectedGameObjs) {
-                var hit = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                egret3d.Vector3.subtract(hit, this._dragOffset, this._delta);
-                var worldOffset = new egret3d.Vector3;
-                var scale;
-                var len = selectedGameObjs.length;
-                worldOffset.applyQuaternion(this._ctrlRot, this.forward);
-                var cosHit = egret3d.Vector3.dot(this._delta, worldOffset);
-                var src = this.geo.transform.getLocalPosition().z;
-                this.geo.transform.setLocalPosition(0, 0, cosHit + src);
-                var s = cosHit / src + 1;
-                for (var i = 0; i < len; i++) {
-                    var lastSca = selectedGameObjs[i].transform.getLocalScale();
-                    scale = egret3d.Vector3.set(lastSca.x, lastSca.y, lastSca.z * s, this.helpVec3_2);
-                    this.editorModel.setTransformProperty("localScale", scale, selectedGameObjs[i].transform);
-                    var pos = selectedGameObjs[i].transform.getPosition();
-                    var sub = this.helpVec3_2;
-                    egret3d.Vector3.subtract(pos, this._ctrlPos, this.helpVec3_2);
-                    this.helpVec3_3.applyQuaternion(this.geo.parent.transform.getRotation(), this.forward);
-                    var cos = egret3d.Vector3.dot(sub, this.helpVec3_3);
-                    egret3d.Vector3.scale(this.helpVec3_3, cos * (s - 1));
-                    egret3d.Vector3.add(pos, this.helpVec3_3, pos);
-                    this.editorModel.setTransformProperty("position", pos, selectedGameObjs[i].transform);
-                }
-                egret3d.Vector3.copy(hit, this._dragOffset);
-            };
-            zScl.prototype.wasReleased = function () {
-                this.geo.transform.setLocalPosition(0, 0, 2);
-            };
-            return zScl;
-        }(editor.BaseGeo));
-        editor.zScl = zScl;
-        __reflect(zScl.prototype, "paper.editor.zScl");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -25169,93 +23521,20 @@ var paper;
     /**
      *
      */
-    var Clock = (function (_super) {
-        __extends(Clock, _super);
-        function Clock() {
+    var MissingComponent = (function (_super) {
+        __extends(MissingComponent, _super);
+        function MissingComponent() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.maxFixedSubSteps = 3;
-            _this.fixedDeltaTime = 1.0 / 50.0; // TODO same as fps.
-            _this.timeScale = 1.0;
-            _this._frameCount = 0;
-            _this._beginTime = 0.0;
-            _this._lastTime = 0.0;
-            _this._delayTime = 0.0;
-            _this._unscaledTime = 0.0;
-            _this._unscaledDeltaTime = 0.0;
-            _this._fixedTime = 0.0;
+            _this.missingObject = null;
             return _this;
         }
-        Clock.prototype.initialize = function () {
-            _super.prototype.initialize.call(this);
-            this._beginTime = Date.now() * 0.001;
-        };
-        /**
-         * @internal
-         */
-        Clock.prototype.update = function (time) {
-            if (this._unscaledTime !== 0.0) {
-                this._lastTime = this._unscaledTime;
-                if (this._fixedTime < this.fixedDeltaTime) {
-                }
-                else if (this._fixedTime < this.fixedDeltaTime * this.maxFixedSubSteps) {
-                    this._fixedTime %= this.fixedDeltaTime;
-                }
-                else {
-                    this._fixedTime -= this.fixedDeltaTime * this.maxFixedSubSteps;
-                }
-            }
-            var now = time || Date.now() * 0.001;
-            this._frameCount += 1;
-            this._unscaledTime = now - this._beginTime;
-            this._unscaledDeltaTime = this._unscaledTime - this._lastTime;
-            this._fixedTime += this._unscaledDeltaTime;
-        };
-        Object.defineProperty(Clock.prototype, "frameCount", {
-            get: function () {
-                return this._frameCount;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Clock.prototype, "time", {
-            get: function () {
-                return this._unscaledTime * this.timeScale;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Clock.prototype, "fixedTime", {
-            get: function () {
-                return this._fixedTime;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Clock.prototype, "deltaTime", {
-            get: function () {
-                return this._unscaledDeltaTime * this.timeScale;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Clock.prototype, "unscaledTime", {
-            get: function () {
-                return this._unscaledTime;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Clock.prototype, "unscaledDeltaTime", {
-            get: function () {
-                return this._unscaledDeltaTime;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return Clock;
-    }(paper.SingletonComponent));
-    paper.Clock = Clock;
-    __reflect(Clock.prototype, "paper.Clock");
+        __decorate([
+            paper.serializedField
+        ], MissingComponent.prototype, "missingObject", void 0);
+        return MissingComponent;
+    }(paper.BaseComponent));
+    paper.MissingComponent = MissingComponent;
+    __reflect(MissingComponent.prototype, "paper.MissingComponent");
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -26900,1053 +25179,6 @@ var paper;
         editor.generateUuid = generateUuid;
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var forward = new egret3d.Vector3();
-        var up = new egret3d.Vector3();
-        var right = new egret3d.Vector3();
-        var EditorCameraScript = (function (_super) {
-            __extends(EditorCameraScript, _super);
-            function EditorCameraScript() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.moveSpeed = 20;
-                _this.wheelSpeed = 2;
-                _this.rotateSpeed = 1;
-                _this._lastMouseX = 0;
-                _this._lastMouseY = 0;
-                _this._mouseDown_r = false;
-                _this._mouseDown_l = false;
-                _this._mouseDown_m = false;
-                _this._lookAtPiont = new egret3d.Vector3();
-                _this._dragPlanePoint = new egret3d.Vector3(0, 0, 0);
-                _this._dragPlaneNormal = new egret3d.Vector3(0, 1, 0);
-                _this._helpQuat = new egret3d.Quaternion();
-                _this._helpVec3 = new egret3d.Vector3();
-                return _this;
-            }
-            EditorCameraScript.prototype.onStart = function () {
-                this.bindKeyboard = egret3d.InputManager.keyboard;
-                this.bindMouse = egret3d.InputManager.mouse;
-            };
-            ;
-            EditorCameraScript.prototype.onUpdate = function (delta) {
-                this.inputUpdate(delta);
-                //this.mouseUpdate(delta);
-                //Gizmo.DrawLine(new egret3d.Vector3(-5, 5, 0.5), new egret3d.Vector3(5, 5, 0.5), 100.0, [1.0, 0.0, 0.0, 1.0]);
-                // Gizmo.DrawCoord();
-                // Gizmo.DrawLights();
-                // Gizmo.DrawCameras();
-                //Gizmo.DrawArrowXYZ();
-                // this.editorModel.geoController.update();
-            };
-            ;
-            EditorCameraScript.prototype.OnEnable = function () {
-                this._lastMouseX = 0;
-                this._lastMouseY = 0;
-                this._mouseDown_r = false;
-                this._mouseDown_l = false;
-            };
-            EditorCameraScript.prototype.OnDisable = function () {
-                this._lastMouseX = 0;
-                this._lastMouseY = 0;
-                this._mouseDown_r = false;
-                this._mouseDown_l = false;
-            };
-            EditorCameraScript.prototype.inputUpdate = function (delta) {
-                var mouse = this.bindMouse;
-                var keyboard = this.bindKeyboard;
-                forward.x = 0;
-                forward.y = 0;
-                forward.z = 0;
-                up.x = 0;
-                up.y = this.moveSpeed * delta;
-                up.z = 0;
-                right.x = this.moveSpeed * delta;
-                right.y = 0;
-                right.z = 0;
-                var rotation = this.gameObject.transform.getLocalRotation();
-                up.applyQuaternion(rotation);
-                right.applyQuaternion(rotation);
-                var p = this.gameObject.transform.getLocalPosition();
-                var result = new egret3d.Vector3();
-                egret3d.Vector3.copy(p, result);
-                //上下左右
-                if (keyboard.isPressed("LEFT")) {
-                    egret3d.Vector3.subtract(result, right, result);
-                    this.gameObject.transform.setLocalPosition(result);
-                }
-                if (keyboard.isPressed("RIGHT")) {
-                    egret3d.Vector3.add(result, right, result);
-                    this.gameObject.transform.setLocalPosition(result);
-                }
-                if (keyboard.isPressed("UP")) {
-                    egret3d.Vector3.add(result, up, result);
-                    this.gameObject.transform.setLocalPosition(result);
-                }
-                if (keyboard.isPressed("DOWN")) {
-                    egret3d.Vector3.subtract(result, up, result);
-                    this.gameObject.transform.setLocalPosition(result);
-                }
-                if (mouse.isPressed(1)) {
-                    if (!this._mouseDown_m) {
-                        this._mouseDown_m = true;
-                        this._lastMouseX = mouse.position.x;
-                        this._lastMouseY = mouse.position.y;
-                    }
-                    else {
-                        var move = new egret3d.Vector3;
-                        move.z = 0;
-                        move.x = (mouse.position.x - this._lastMouseX) / 10;
-                        move.y = -(mouse.position.y - this._lastMouseY) / 10;
-                        move.applyQuaternion(rotation);
-                        egret3d.Vector3.subtract(result, move, result);
-                        this.gameObject.transform.setLocalPosition(result);
-                        this._lastMouseX = mouse.position.x;
-                        this._lastMouseY = mouse.position.y;
-                    }
-                }
-                else if (mouse.wasReleased(1)) {
-                    this._mouseDown_m = false;
-                }
-                //放大缩小
-                if (mouse.wheel !== 0) {
-                    forward.z = mouse.wheel * this.wheelSpeed;
-                    forward.applyQuaternion(rotation);
-                    result.add(forward);
-                    this.gameObject.transform.setLocalPosition(result);
-                }
-                if (mouse.isPressed(2) && keyboard.isPressed('ALT')) {
-                    if (!this._mouseDown_r) {
-                        this._mouseDown_r = true;
-                        this._lastMouseX = mouse.position.x;
-                        this._lastMouseY = mouse.position.y;
-                    }
-                    else {
-                        var moveX = mouse.position.x - this._lastMouseX;
-                        var moveY = mouse.position.y - this._lastMouseY;
-                        forward.z = moveX * 0.1 + moveY * 0.1;
-                        forward.applyQuaternion(rotation);
-                        egret3d.Vector3.add(result, forward, result);
-                        this.gameObject.transform.setLocalPosition(result);
-                        this._lastMouseX = mouse.position.x;
-                        this._lastMouseY = mouse.position.y;
-                    }
-                }
-                else if (keyboard.wasReleased('ALT') || mouse.wasReleased(0)) {
-                    this._mouseDown_r = false;
-                }
-                //方向
-                if (mouse.isPressed(2) && !keyboard.isPressed('ALT')) {
-                    if (!this._mouseDown_r) {
-                        this._mouseDown_r = true;
-                        this._lastMouseX = mouse.position.x;
-                        this._lastMouseY = mouse.position.y;
-                        console.log(this.gameObject.transform.getLocalEulerAngles());
-                    }
-                    else {
-                        var moveX = mouse.position.x - this._lastMouseX;
-                        var moveY = mouse.position.y - this._lastMouseY;
-                        var theta_x = moveY * this.rotateSpeed, theta_y = moveX * this.rotateSpeed;
-                        var sinX = Math.sin(theta_x / 180 * Math.PI / 2), cosX = Math.cos(theta_x / 180 * Math.PI / 2);
-                        var sinY = Math.sin(theta_y / 180 * Math.PI / 2), cosY = Math.cos(theta_y / 180 * Math.PI / 2);
-                        var rot = this.gameObject.transform.getRotation();
-                        this.gameObject.transform.getRight(this._helpVec3);
-                        egret3d.Vector3.normalize(this._helpVec3);
-                        this._helpQuat.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX);
-                        rot.multiply(this._helpQuat, rot);
-                        rot.normalize();
-                        egret3d.Vector3.set(0, 1, 0, this._helpVec3);
-                        this._helpQuat.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY);
-                        rot.multiply(this._helpQuat, rot);
-                        rot.normalize();
-                        this.gameObject.transform.setRotation(rot);
-                        this._lastMouseX = mouse.position.x;
-                        this._lastMouseY = mouse.position.y;
-                    }
-                }
-                else if (mouse.wasReleased(2) || keyboard.wasPressed('ALT')) {
-                    this._mouseDown_r = false;
-                }
-                if (keyboard.isPressed('ALT') && mouse.isPressed(0)) {
-                    if (!this._mouseDown_l) {
-                        this._mouseDown_l = true;
-                        this._lastMouseX = mouse.position.x;
-                        this._lastMouseY = mouse.position.y;
-                        var screenPosition = new egret3d.Vector2(egret3d.stage.screenViewport.w / 2, egret3d.stage.screenViewport.h / 2);
-                        var camera = this.gameObject.getComponent(egret3d.Camera);
-                        var ray = camera.createRayByScreen(screenPosition.x, screenPosition.y);
-                        this._lookAtPiont = ray.intersectPlane(this._dragPlanePoint, this._dragPlaneNormal);
-                    }
-                    else {
-                        var moveX = mouse.position.x - this._lastMouseX;
-                        var moveY = mouse.position.y - this._lastMouseY;
-                        //let euler = this.gameObject.transform.getLocalEulerAngles();
-                        var theta_x = moveY * this.rotateSpeed, theta_y = moveX * this.rotateSpeed;
-                        var sinX = Math.sin(theta_x / 180 * Math.PI / 2), cosX = Math.cos(theta_x / 180 * Math.PI / 2);
-                        var sinY = Math.sin(theta_y / 180 * Math.PI / 2), cosY = Math.cos(theta_y / 180 * Math.PI / 2);
-                        //this.gameObject.transform.setLocalEulerAngles(Math.max(Math.min((euler.x + theta_x), 89.9), -89.9), euler.y + theta_y, euler.z);
-                        var rot = this.gameObject.transform.getRotation();
-                        var pos = this.gameObject.transform.getPosition();
-                        egret3d.Vector3.subtract(pos, this._lookAtPiont, pos);
-                        this.gameObject.transform.getRight(this._helpVec3);
-                        egret3d.Vector3.normalize(this._helpVec3);
-                        this._helpQuat.set(sinX * this._helpVec3.x, sinX * this._helpVec3.y, sinX * this._helpVec3.z, cosX);
-                        pos.applyQuaternion(this._helpQuat, pos);
-                        rot.multiply(this._helpQuat, rot);
-                        rot.normalize();
-                        egret3d.Vector3.set(0, 1, 0, this._helpVec3);
-                        this._helpQuat.set(sinY * this._helpVec3.x, sinY * this._helpVec3.y, sinY * this._helpVec3.z, cosY);
-                        pos.applyQuaternion(this._helpQuat);
-                        rot.multiply(this._helpQuat, rot);
-                        rot.normalize();
-                        egret3d.Vector3.add(pos, this._lookAtPiont, pos);
-                        this.gameObject.transform.setRotation(rot);
-                        this.gameObject.transform.setPosition(pos);
-                        this._lastMouseX = mouse.position.x;
-                        this._lastMouseY = mouse.position.y;
-                    }
-                }
-                else if (keyboard.wasReleased('ALT') || mouse.wasReleased(0)) {
-                    this._mouseDown_l = false;
-                }
-                // 复制粘贴
-                // if (keyboard.isPressed('CONTROL') && keyboard.wasPressed('C')) {
-                //     let clipboard = __global.runtimeModule.getClipborad()
-                //     clipboard.writeText("zhrit", "paper");
-                // }
-                // if (keyboard.isPressed('CONTROL') && keyboard.wasPressed('V')) {
-                //     let clipboard = __global.runtimeModule.getClipborad()
-                //     let msg = clipboard.readText("paper");
-                //     console.log(msg);
-                // }
-                //(keyboard.isPressed('ALT') && mouse.isPressed(0)) || 
-            };
-            ;
-            EditorCameraScript.prototype.onDestroy = function () {
-                var inputManager = egret3d.InputManager;
-                if (inputManager.mouse.wasPressed(0)) {
-                    // do something
-                }
-                if (inputManager.keyboard.isPressed("K")) {
-                    // do something
-                }
-                if (inputManager.touch.touchCount > 0) {
-                    var touch = inputManager.touch.getTouch(0);
-                    // do something
-                }
-            };
-            EditorCameraScript = __decorate([
-                paper.executeInEditMode
-            ], EditorCameraScript);
-            return EditorCameraScript;
-        }(paper.Behaviour));
-        editor.EditorCameraScript = EditorCameraScript;
-        __reflect(EditorCameraScript.prototype, "paper.editor.EditorCameraScript");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var PickGameObjectScript = (function (_super) {
-            __extends(PickGameObjectScript, _super);
-            function PickGameObjectScript() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._tapStart = 0;
-                _this.selectedGameObjects = [];
-                return _this;
-            }
-            PickGameObjectScript.prototype.onStart = function () {
-                this.bindMouse = egret3d.InputManager.mouse;
-                this.bindKeyboard = egret3d.InputManager.keyboard;
-                this.camera = this.gameObject.getComponent(egret3d.Camera);
-                this.cameraScript = this.gameObject.getComponent(editor.EditorCameraScript);
-                this.selectedGameObjects = [];
-                this.initSelectBox();
-            };
-            PickGameObjectScript.prototype.clearSelected = function () {
-                this.selectedGameObjects = [];
-            };
-            PickGameObjectScript.prototype.onUpdate = function (delta) {
-                try {
-                    // 点击 game object 激活
-                    if (this.bindMouse.wasReleased(0)) {
-                        var lastX = this.lastX;
-                        var lastY = this.lastY;
-                        var ray = this.camera.createRayByScreen(this.bindMouse.position.x, this.bindMouse.position.y);
-                        var pickInfo = egret3d.Ray.raycast(ray, true);
-                        var tapDelta = Date.now() - this._tapStart;
-                        var pickCamera = this.intersectWithCameraAndLight(ray);
-                        if (pickCamera) {
-                            pickInfo = pickCamera;
-                        }
-                        if (this.bindKeyboard.isPressed('CONTROL')) {
-                            if (pickInfo) {
-                                var picked = pickInfo.transform.gameObject;
-                                if (picked.name !== "GizmoController_YZ" && picked.name !== "GizmoController_XZ" && picked.name !== "GizmoController_XY" && picked.name !== "GizmoController_X" && picked.name !== "GizmoController_Y" && picked.name !== "GizmoController_Z"
-                                    && picked.name !== "GizmoController_Rotate_X" && picked.name !== "GizmoController_Rotate_Y" && picked.name !== "GizmoController_Rotate_Z"
-                                    && picked.name !== "GizmoController_Scale_X" && picked.name !== "GizmoController_Scale_Y" && picked.name !== "GizmoController_Scale_Z") {
-                                    // 对GameObject的点选
-                                    if (tapDelta < 200) {
-                                        var index = -1;
-                                        var l = this.selectedGameObjects.length;
-                                        for (var i = 0; i < l; i++) {
-                                            if (this.selectedGameObjects[i] == picked) {
-                                                index = i;
-                                                break;
-                                            }
-                                        }
-                                        if (index < 0) {
-                                            this.selectedGameObjects.push(picked);
-                                        }
-                                        else if (l > 1) {
-                                            this.selectedGameObjects.splice(index, 1);
-                                        }
-                                    }
-                                }
-                            }
-                            else if (tapDelta >= 200) {
-                                this.boxSelect();
-                            }
-                        }
-                        else {
-                            if (pickInfo) {
-                                var picked = pickInfo.transform.gameObject;
-                                this.setStroke(picked);
-                                if (picked.name !== "GizmoController_YZ" && picked.name !== "GizmoController_XZ" && picked.name !== "GizmoController_XY" && picked.name !== "GizmoController_X" && picked.name !== "GizmoController_Y" && picked.name !== "GizmoController_Z"
-                                    && picked.name !== "GizmoController_Rotate_X" && picked.name !== "GizmoController_Rotate_Y" && picked.name !== "GizmoController_Rotate_Z"
-                                    && picked.name !== "GizmoController_Scale_X" && picked.name !== "GizmoController_Scale_Y" && picked.name !== "GizmoController_Scale_Z") {
-                                    // 对GameObject的点选
-                                    if (tapDelta < 200) {
-                                        this.selectedGameObjects = [picked];
-                                        // this.setStroke(picked)
-                                    }
-                                }
-                            }
-                            else if (tapDelta < 200) {
-                                this.selectedGameObjects = [];
-                            }
-                            else if (tapDelta >= 200) {
-                                this.selectedGameObjects = [];
-                                this.boxSelect();
-                            }
-                        }
-                        this.excludingChild();
-                        this.selectBox.activeSelf = false;
-                        this.editorModel.selectGameObject(this.selectedGameObjects);
-                    }
-                    if (this.bindMouse.isPressed(0) && !this.bindKeyboard.isPressed('ALT')) {
-                        var MaxX = Math.max(this.lastX, this.bindMouse.position.x);
-                        var MinX = Math.min(this.lastX, this.bindMouse.position.x);
-                        var MaxY = Math.max(this.lastY, this.bindMouse.position.y);
-                        var MinY = Math.min(this.lastY, this.bindMouse.position.y);
-                        this.drawSelectBox(new egret3d.Vector2(MaxX, MaxY), new egret3d.Vector2(MinX, MinY));
-                    }
-                    // 点击控制杆，更新控制点
-                    if (this.bindMouse.wasPressed(0)) {
-                        this.lastX = this.bindMouse.position.x;
-                        this.lastY = this.bindMouse.position.y;
-                        this.selectBox.activeSelf = true;
-                        this._tapStart = Date.now();
-                    }
-                }
-                catch (e) {
-                    console.log(e);
-                }
-            };
-            //当父对象被选中时剔除子物体
-            PickGameObjectScript.prototype.excludingChild = function () {
-                var children = [];
-                for (var _i = 0, _a = this.selectedGameObjects; _i < _a.length; _i++) {
-                    var item = _a[_i];
-                    if (item.transform.childCount > 0) {
-                        children = children.concat(item.transform.getAllChildren());
-                    }
-                }
-                for (var _b = 0, children_5 = children; _b < children_5.length; _b++) {
-                    var child = children_5[_b];
-                    for (var i = 0; i < this.selectedGameObjects.length; i++) {
-                        if (this.selectedGameObjects[i].transform == child) {
-                            this.selectedGameObjects.splice(i, 1);
-                            break;
-                        }
-                    }
-                }
-            };
-            //框选
-            PickGameObjectScript.prototype.boxSelect = function () {
-                var MaxX = Math.max(this.lastX, this.bindMouse.position.x);
-                var MinX = Math.min(this.lastX, this.bindMouse.position.x);
-                var MaxY = Math.max(this.lastY, this.bindMouse.position.y);
-                var MinY = Math.min(this.lastY, this.bindMouse.position.y);
-                for (var _i = 0, _a = paper.Application.sceneManager.activeScene.gameObjects; _i < _a.length; _i++) {
-                    var gameObject = _a[_i];
-                    var pos = new egret3d.Vector2;
-                    this.camera.calcScreenPosFromWorldPos(gameObject.transform.getPosition(), pos);
-                    if (pos.x < MaxX && pos.y < MaxY && pos.x > MinX && pos.y > MinY) {
-                        var l = this.selectedGameObjects.length;
-                        var js = 1;
-                        for (var i = 0; i < l; i++) {
-                            if (this.selectedGameObjects[i] == gameObject) {
-                                js = 0;
-                                break;
-                            }
-                        }
-                        if (js) {
-                            this.selectedGameObjects.push(gameObject);
-                        }
-                    }
-                }
-            };
-            //TODO,描边
-            PickGameObjectScript.prototype.setStroke = function (picked) {
-                // let render = picked.getComponent(egret3d.MeshRenderer);
-                // let mat = new egret3d.Material(egret3d.DefaultShaders.DIFFUSE_TINT_COLOR)
-                // const strokeObj = new GameObject('stroke', '', Application.sceneManager.editorScene)
-                // let mesh = strokeObj.addComponent(egret3d.MeshFilter)
-                // let render = strokeObj.addComponent(egret3d.MeshRenderer)
-                // let transform = strokeObj.getComponent(egret3d.Transform)
-                // let _transform = picked.getComponent(egret3d.Transform)
-                // mesh.mesh = picked.getComponent(egret3d.MeshFilter).mesh
-                // render.materials = [egret3d.DefaultMaterials.MESH_BASIC.clone()];
-                // transform.setPosition(_transform.getPosition())
-                // transform.setRotation(_transform.getRotation())
-                // transform.setScale(_transform.getScale())
-                // transform.setLocalScale(new egret3d.Vector3(1.05, 1.05, 1.05))
-                // transform.parent = _transform
-                // console.log(render.materials)
-            };
-            //
-            PickGameObjectScript.prototype.initSelectBox = function () {
-                this.selectBox = new paper.GameObject('selectBox', '', paper.Application.sceneManager.editorScene);
-                var selectBox = this.selectBox;
-                var MeshFilter = selectBox.addComponent(egret3d.MeshFilter);
-                var render = selectBox.addComponent(egret3d.MeshRenderer);
-                var mesh = new egret3d.Mesh(4, 6);
-                MeshFilter.mesh = mesh;
-                mesh.setAttributes("POSITION" /* POSITION */, [
-                    0, 1, 0,
-                    1, 1, 0,
-                    0, 0, 0,
-                    1, 0, 0
-                ]);
-                mesh.setIndices([0, 1, 2, 2, 1, 3]);
-                selectBox.activeSelf = false;
-                var mat = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
-                mat.setVector3v("diffuse" /* Diffuse */, new Float32Array([0.8, 0.8, 0.3]));
-                mat.setFloatv("opacity" /* Opacity */, new Float32Array([0.3]));
-                mat.setDepth(true, true);
-                mat.renderQueue = 4000;
-                mat.setCullFace(false);
-                mat.setBlend(1 /* Blend */);
-                render.materials = [mat];
-            };
-            //
-            PickGameObjectScript.prototype.drawSelectBox = function (start, end) {
-                var selectBox = this.selectBox;
-                var MeshFilter = selectBox.getOrAddComponent(egret3d.MeshFilter);
-                var mesh;
-                mesh = MeshFilter.mesh;
-                // mesh = egret3d.DefaultMeshes.QUAD
-                var a = new egret3d.Vector3;
-                var a1 = new egret3d.Vector3;
-                var a2 = new egret3d.Vector3;
-                var a3 = new egret3d.Vector3;
-                this.camera.calcWorldPosFromScreenPos(new egret3d.Vector3(start.x, start.y, 0), a);
-                this.camera.calcWorldPosFromScreenPos(new egret3d.Vector3(start.x, end.y, 0), a1);
-                this.camera.calcWorldPosFromScreenPos(new egret3d.Vector3(end.x, start.y, 0), a2);
-                this.camera.calcWorldPosFromScreenPos(new egret3d.Vector3(end.x, end.y, 0), a3);
-                mesh.setAttributes("POSITION" /* POSITION */, [
-                    a.x, a.y, a.z,
-                    a1.x, a1.y, a1.z,
-                    a2.x, a2.y, a2.z,
-                    a3.x, a3.y, a3.z,
-                ]);
-                mesh.uploadVertexBuffer("POSITION" /* POSITION */);
-                mesh.setIndices([0, 1, 2, 2, 1, 3]);
-            };
-            //点击选择相机和灯光
-            PickGameObjectScript.prototype.intersectWithCameraAndLight = function (ray) {
-                var camerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
-                for (var _i = 0, _a = camerasAndLights.cameras; _i < _a.length; _i++) {
-                    var item = _a[_i];
-                    if (item.gameObject.name != "EditorCamera") {
-                        var pos = item.transform.getPosition();
-                        var rot = item.transform.getRotation();
-                        var min = new egret3d.Vector3(pos.x - 0.5, pos.y - 0.5, pos.z - 0.5);
-                        var max = new egret3d.Vector3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5);
-                        // min.applyQuaternion(rot)
-                        // max.applyQuaternion(rot)
-                        if (ray.intersectAABB(min, max)) {
-                            return item.gameObject;
-                        }
-                    }
-                }
-                for (var _b = 0, _c = camerasAndLights.lights; _b < _c.length; _b++) {
-                    var item = _c[_b];
-                    var pos = item.transform.getPosition();
-                    var rot = item.transform.getRotation();
-                    var min = new egret3d.Vector3(pos.x - 0.5, pos.y - 0.5, pos.z - 0.5);
-                    var max = new egret3d.Vector3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5);
-                    // min.applyQuaternion(rot)
-                    // max.applyQuaternion(rot)
-                    if (ray.intersectAABB(min, max)) {
-                        return item.gameObject;
-                    }
-                }
-            };
-            PickGameObjectScript = __decorate([
-                paper.executeInEditMode
-            ], PickGameObjectScript);
-            return PickGameObjectScript;
-        }(paper.Behaviour));
-        editor.PickGameObjectScript = PickGameObjectScript;
-        __reflect(PickGameObjectScript.prototype, "paper.editor.PickGameObjectScript");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        editor.icons = {
-            camera: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIcSURBVFhH7ZbPjtMwEMYj7vAACCFg28Rx4oQmtGnLQo/7Du1pK3Hk2BtSHwYkXoA34C34I7Fozxxoy+6yaocZx9M6u4WkFaA95JN+qu0Z21/riVOnVq1a/0oiaoMXPdlCBxpxG0xaNXlB+vHqIl7Utfo5Jl3LxU2uxpkmmjNp1RTEGfg4kZhOp/eRe8xwOHzqmnjSPXxnpjhBlIEIM5BRb40f96Ch2jCZTO6atGryVQeESjVmqCA/zGNy15/2xuv4xcuBK1N4KBNw445FZugauG/ndKr9GlJRYWBBxcn7LHveHAyOHtC4iJKLbQW0C0IlBRNemH6jTzpSQqouOFQ89iSdibLHcrKKbObYBqhGaC9qc/yaAdnKdMKjoLUe08QpvH7zFsp08fOyMI8N0DHRPqUGRJhXsWr112ME5SwWM73Jp5NTzecvFtg/+XqK0UsQ1vNvG+Ax6nN7bYBN8GPW0HVRZL44h+VqdW2cafcOYYUW9jZAAZb3uHiWxPcfZQae7Wdgmw7wYuEk5r8a8MPNBGa+OIMVGpBRfyu9rI/bL/+OAU/Sy2azOS06m81xgzItoRkmm3l7G2gGr7gwGR8LU+JbLAcvEQ29bIi8L4Li0bEBunR4TK9v2r81QCIDwiQSblwNzifYAMkNW+Dil6A2x/9ogGQvtg8HQn0wS2mxIY5LlV98pRqNRnfG4/HtXcD/CrfM9Fq1at1kOc4vVSG2+aaGzOwAAAAASUVORK5CYII=",
-            light: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPcSURBVFhH3ZdLSNRRFMbn4fuZmtmYZpn0gCx6YbQokBZRq6hVL6xWUdCmICIoIYjaWBDRu3WShhUJLSKIIKISgqBWao9NlIsUwlKn33fnzDij/1HHsU0fHM693z333HPOffxnfNNBMBjcgRpCVjjiX6GwsHAJKhDpjYIAdqLCyEpHxKG8vLwgJyen2rrTR25uboPf7/+Ns31GxTBRAJmZmc2BQKC/rKys0qhpAz+Bt8inUCiUZ5xDsgAIeh5BDzCnzaj0kJ2d3YjDcFZW1imjHJIFkJGRcQf7waKiojqj0gdOH5DRz7y8vLlGeQZA6Vex+DBjLUalhtLS0iJrJoDsl+os4PiGUVqsHu48zVCEcYE+JdAfZF9qVAKS+XfgoM1nch+LnK2oqMg3OgYWvIhcsu44VFVV5RLAXYI9alQMBQUFsxm7prPk5dtBhwejdu03hr04Uonj4TftKy4ursVmP/bH0LvZmlgVQMwOBDlDh/D53bbmWklJSbGNeYMJW3D6kWaYBZ4Q/bLIiM+nM8BYG85G6Gr/ndD/owy5doWyE6joBmzf0Ayz8EsSXBsZmRqycHgCx/1MPieCyKtpdyNhgnTCluh2hHGuIFS519EgsGul/w27g3THPWRTAoemyg6OH2fPtLgWoz9OqI4CUNVu0Ve1QmxVidppgywaUUkXjwplVyWGsF9If+ZA5i3Knuw8F46KApCmEkfQKaEH+ewhWxG9xw+13zQnFJ0DBYl2DxHzDqO8/D5HRsGEVuTeWGFovcZx1D6VAKJVQl+gr8pt9/KLXNb4lIGjMzpgkwWhmyGN3V70zMHeguGJDqECtEP4k9M/Cy59cMe3ktUCtcnqKs7D+fn5bq+hEhYXrzZzjqN1DdcQcIPaKcOe2g6aKqfbr5qamhy4TnHKVA+QSh4V8ez/dbR7iml3Eugw+ibBzRE3KfRBYb+bmfhLwuLNY36IBFn4KGO6NfEVeI/tLhlEoS8ivq5gO8R4H4HoagYjox7AwXIMu5mgTDrIqtaGHOwTG31S/aoSduv0RBvnqhT/PRDYitX4fUFTt6NL35PIyBhoIkE8J8NtRiWAxR4x/tS642DV+4BcNCoefhJqYv5j2ql/F5i8GaV9PxlhXECbUM+QRY4AcLep4CC/pBcbNSMIUsIupFdZGuf5k4xTX0kAAwRy36j0QdkO6Fyg9xjl4BWAwOKnUSPcFFUoPegPBpl/RV7RTdi7ZAHoJxf2Xxh/TXd6vwOiIOt6HPWQzUajYkgWgMC8JsbfJT3xqaCuri7bmgmYKACgzDMizX+EuFswc39A/kfE/0RPAp/vL7M1A0/aWSCCAAAAAElFTkSuQmCC"
-        };
-        //只有编辑模式可以执行，编辑相机
-        var Gizmo = (function (_super) {
-            __extends(Gizmo, _super);
-            function Gizmo() {
-                return _super !== null && _super.apply(this, arguments) || this;
-            }
-            Gizmo_1 = Gizmo;
-            Gizmo.prototype.onStart = function () {
-                this.nrLine = 100;
-                this._oldTransform = egret3d.Vector3.getLength(this.gameObject.transform.getLocalPosition());
-            };
-            Gizmo.Enabled = function () {
-                this.webgl = egret3d.WebGLCapabilities.webgl;
-                this.camera = paper.Application.sceneManager.editorScene.find("EditorCamera").getComponent(egret3d.Camera);
-                this.initPrg();
-                this.lineVertexBuffer = this.webgl.createBuffer();
-                this.setVertices();
-                this.initIconTexture();
-                this.camera.gameObject.addComponent(Gizmo_1);
-            };
-            Gizmo.setGameObj = function (obj) {
-                this.gameObj = obj;
-            };
-            Gizmo.DrawStroke = function () {
-                if (!this.enabled)
-                    return;
-                if (!this.gameObj)
-                    return;
-                var obj = this.gameObj;
-                var gl = this.webgl;
-                var prg = this.glProgram_stroke;
-                var mesh = obj.getComponent(egret3d.MeshFilter).mesh;
-                var position = mesh.getAttributes('POSITION');
-                var normal = mesh.getAttributes('NORMAL');
-                var indices = mesh.getIndices();
-                var vertexCount = position.length / 3;
-                var vertexBuffer = gl.createBuffer();
-                var normalBuffer = gl.createBuffer();
-                var indiceBuffer = gl.createBuffer();
-                gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-                gl.bufferData(gl.ARRAY_BUFFER, position, gl.STATIC_DRAW);
-                gl.vertexAttribPointer(gl.getAttribLocation(prg.prg, 'aPosition'), 3, gl.FLOAT, false, 0, 0);
-                gl.enableVertexAttribArray(gl.getAttribLocation(prg.prg, 'aPosition'));
-                gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
-                gl.bufferData(gl.ARRAY_BUFFER, normal, gl.STATIC_DRAW);
-                gl.vertexAttribPointer(gl.getAttribLocation(prg.prg, 'aNormal'), 3, gl.FLOAT, false, 0, 0);
-                gl.enableVertexAttribArray(gl.getAttribLocation(prg.prg, 'aNormal'));
-                this.setMVPMatrix();
-                prg.setMatrix("mvpMat", this.mvpMatrix);
-                prg.setColor("lineColor", [1, 1, 1, 1]);
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indiceBuffer);
-                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-                gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
-                console.log(position, normal);
-            };
-            Gizmo.DrawIcon = function (path, pos, size, color) {
-                if (!this.enabled)
-                    return;
-                var gl = this.webgl;
-                var prg = this.glProgram_icon;
-                this.verticesLine = [pos.x, pos.y, pos.z];
-                prg.use();
-                var prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.lineVertexBuffer);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.verticesLine), gl.STATIC_DRAW);
-                gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
-                gl.enableVertexAttribArray(prgVertexPosition);
-                gl.activeTexture(gl.TEXTURE0);
-                gl.bindTexture(gl.TEXTURE_2D, this.textures[path]);
-                if (color) {
-                    prg.setBool("hasColor", true);
-                    prg.setColor("iconColor", [color.r, color.g, color.b, color.a]);
-                }
-                else {
-                    prg.setBool("hasColor", false);
-                    prg.setColor("iconColor", [1, 0, 0, 1]);
-                }
-                prg.setTexture("PointTexture", 0);
-                this.setMVPMatrix();
-                prg.setMatrix("mvpMat", this.mvpMatrix);
-                prg.setFloat("pointSize", size);
-                gl.drawArrays(gl.POINTS, 0, 1);
-            };
-            Gizmo.DrawCoord = function () {
-                var gl = Gizmo_1.webgl;
-                var prg = Gizmo_1.glProgram_line;
-                var nrLine = this.nrLine;
-                if (!this.enabled)
-                    return;
-                gl.enable(gl.DEPTH_TEST);
-                prg.use();
-                var prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
-                gl.bindBuffer(gl.ARRAY_BUFFER, Gizmo_1.coordVertexBuffer);
-                gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
-                gl.enableVertexAttribArray(prgVertexPosition);
-                Gizmo_1.setMVPMatrix();
-                prg.setMatrix("mvpMat", Gizmo_1.mvpMatrix);
-                prg.setColor("lineColor", [0.7, 0.7, 0.7, 1]);
-                gl.drawArrays(gl.LINES, 0, (2 * nrLine + 1) * 4 + 2);
-            };
-            Gizmo.setVertices = function () {
-                var gl = this.webgl;
-                var nrLine = this.nrLine = 100;
-                this.verticesCoord = [];
-                this.cameraVertexBuffer = gl.createBuffer();
-                this.cameraIndexBuffer = gl.createBuffer();
-                this.coordVertexBuffer = gl.createBuffer();
-                this.cylinderVertexBuffer = gl.createBuffer();
-                this.arrowVertexBuffer = gl.createBuffer();
-                var bia = -0.05;
-                for (var i = 0, len = 2 * nrLine + 1; i < len; i++) {
-                    this.verticesCoord[6 * i] = -nrLine + i;
-                    this.verticesCoord[6 * i + 1] = bia;
-                    this.verticesCoord[6 * i + 2] = -nrLine;
-                    this.verticesCoord[6 * i + 3] = -nrLine + i;
-                    this.verticesCoord[6 * i + 4] = bia;
-                    this.verticesCoord[6 * i + 5] = nrLine;
-                    this.verticesCoord[6 * len + 6 * i] = -nrLine;
-                    this.verticesCoord[6 * len + 6 * i + 1] = bia;
-                    this.verticesCoord[6 * len + 6 * i + 2] = -nrLine + i;
-                    this.verticesCoord[6 * len + 6 * i + 3] = nrLine;
-                    this.verticesCoord[6 * len + 6 * i + 4] = bia;
-                    this.verticesCoord[6 * len + 6 * i + 5] = -nrLine + i;
-                }
-                this.verticesCylinder = [
-                    0.5, 0, 0, 0.5, 0, 2,
-                    0.433, 0.25, 0, 0.433, 0.25, 2,
-                    0.25, 0.433, 0, 0.25, 0.433, 2,
-                    -0.5, 0, 0, -0.5, 0, 2,
-                    -0.433, 0.25, 0, -0.433, 0.25, 2,
-                    -0.25, 0.433, 0, -0.25, 0.433, 2,
-                    -0.5, 0, 0, -0.5, 0, 2,
-                    -0.433, -0.25, 0, -0.433, -0.25, 2,
-                    -0.25, -0.433, 0, -0.25, -0.433, 2,
-                    0.5, 0, 0, 0.5, 0, 2,
-                    0.433, -0.25, 0, 0.433, -0.25, 2,
-                    0.25, -0.433, 0, 0.25, -0.433, 2,
-                ];
-                for (var i = 0; i < this.verticesCylinder.length; i++) {
-                    this.verticesCylinder[i] *= 0.5;
-                }
-                this.verticesArrow = [
-                    0.7, 0.0, 0.0, 0.0, 0.0, 0.0,
-                    0.7, 0.0, 0.0, 0.7, 0.0, 0.1, 0.7, 0.1, 0.0,
-                    0.7, 0.0, 0.0, 0.7, 0.1, 0.0, 0.7, 0.0, -0.1,
-                    0.7, 0.0, 0.0, 0.7, 0.0, -0.1, 0.7, -0.1, 0.0,
-                    0.7, 0.0, 0.0, 0.7, -0.1, 0.0, 0.7, 0.0, 0.1,
-                    1.0, 0.0, 0.0, 0.7, 0.0, 0.1, 0.7, 0.1, 0.0,
-                    1.0, 0.0, 0.0, 0.7, 0.1, 0.0, 0.7, 0.0, -0.1,
-                    1.0, 0.0, 0.0, 0.7, 0.0, -0.1, 0.7, -0.1, 0.0,
-                    1.0, 0.0, 0.0, 0.7, -0.1, 0.0, 0.7, 0.0, 0.1
-                ];
-                this.verticesCoord = this.verticesCoord.concat([0, -this.nrLine, 0, 0, this.nrLine, 0]);
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.coordVertexBuffer);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.verticesCoord), gl.STATIC_DRAW);
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.cylinderVertexBuffer);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.verticesCylinder), gl.STATIC_DRAW);
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.arrowVertexBuffer);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.verticesArrow), gl.STATIC_DRAW);
-                gl.bindBuffer(gl.ARRAY_BUFFER, null);
-            };
-            Gizmo.setMVPMatrix = function (m) {
-                var asp = this.camera.context.viewPortPixel.w / this.camera.context.viewPortPixel.h;
-                this.vMatrix.inverse(this.camera.gameObject.transform.getWorldMatrix());
-                this.camera.calcProjectMatrix(asp, this.pMatrix);
-                this.mvpMatrix.multiply(this.pMatrix, this.vMatrix);
-                m = m || new egret3d.Matrix4();
-                this.mMatrix.copy(m);
-                this.mvpMatrix.multiply(this.mMatrix);
-            };
-            Gizmo.initPrg = function () {
-                this.glProgram_line = new editor.GizmoShader(this.webgl, editor.line_vert, editor.line_frag);
-                this.glProgram_icon = new editor.GizmoShader(this.webgl, editor.icon_vert, editor.icon_frag);
-                this.glProgram_stroke = new editor.GizmoShader(this.webgl, editor.stroke_vert, editor.line_frag);
-            };
-            // const cameras = Application.sceneManager.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
-            Gizmo.DrawLights = function () {
-                if (!this.enabled)
-                    return;
-                var camerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
-                for (var _i = 0, _a = camerasAndLights.lights; _i < _a.length; _i++) {
-                    var light = _a[_i];
-                    Gizmo_1.DrawIcon("light", light.gameObject.transform.getPosition(), 30, light.color);
-                    Gizmo_1.DrawCylinder(light.gameObject.transform, light.color);
-                }
-            };
-            Gizmo.DrawCylinder = function (transform, color) {
-                if (!this.enabled)
-                    return;
-                var gl = this.webgl;
-                var prg = this.glProgram_line;
-                gl.enable(gl.DEPTH_TEST);
-                prg.use();
-                var prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.cylinderVertexBuffer);
-                gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
-                gl.enableVertexAttribArray(prgVertexPosition);
-                var m = this.helpMat;
-                this.getWorldMatrixWithoutScale(transform, 15, m);
-                this.setMVPMatrix(m);
-                prg.setMatrix("mvpMat", this.mvpMatrix);
-                prg.setColor("lineColor", [color.r, color.g, color.b, color.a]);
-                gl.drawArrays(gl.LINES, 0, 24);
-            };
-            Gizmo.DrawCameras = function () {
-                if (!this.enabled)
-                    return;
-                var camerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
-                for (var _i = 0, _a = camerasAndLights.cameras; _i < _a.length; _i++) {
-                    var camera = _a[_i];
-                    // if (!camera.gameObject.getComponent(egret3d.MeshFilter) && camera.gameObject.name != "EditorCamera") {
-                    //     let obj = camera.gameObject
-                    //     let mesh = obj.addComponent(egret3d.MeshFilter)
-                    //     mesh.mesh = egret3d.DefaultMeshes.CUBE
-                    //     // let renderer = obj.addComponent(egret3d.MeshRenderer);
-                    //     // let mat = new egret3d.Material(egret3d.DefaultShaders.GIZMOS_COLOR);
-                    //     // mat.setVector4v("_Color", [1, 0, 0, 1]);
-                    //     // renderer.materials = [mat];
-                    //     // obj.transform.setScale(0.6, 0.4, 0.4)
-                    // }
-                    Gizmo_1.DrawIcon("camera", camera.gameObject.transform.getPosition(), 30);
-                    Gizmo_1.DrawCameraSquare(camera.gameObject, [1, 0, 0, 1]);
-                    //Gizmo.DrawCameraSquare(this.cameraPool[i], [1.0, 0.0, 1.0, 1.0]);
-                }
-            };
-            Gizmo.DrawCameraSquare = function (obj, color) {
-                if (!this.enabled)
-                    return;
-                var gl = this.webgl;
-                var prg = this.glProgram_line;
-                gl.enable(gl.DEPTH_TEST);
-                this.getCameraSquare(obj);
-                prg.use();
-                var prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
-                gl.bindBuffer(gl.ARRAY_BUFFER, this.cameraVertexBuffer);
-                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.verticesCameraSquare), gl.STATIC_DRAW);
-                gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
-                gl.enableVertexAttribArray(prgVertexPosition);
-                this.setMVPMatrix();
-                prg.setMatrix("mvpMat", this.mvpMatrix);
-                prg.setColor("lineColor", color);
-                var indices = [1, 0, 1, 2, 2, 3, 3, 0, 4, 5, 5, 6, 6, 7, 7, 4, 0, 4, 1, 5, 2, 6, 3, 7];
-                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.cameraIndexBuffer);
-                gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
-                gl.drawElements(gl.LINES, indices.length, gl.UNSIGNED_SHORT, 0);
-                //sconsole.log(this.verticesCameraSquare);
-                //gl.drawArrays(gl.LINES, 0, 24);
-            };
-            Gizmo.getCameraSquare = function (obj) {
-                this.verticesCameraSquare = [];
-                var t = obj.transform;
-                var camera = obj.getComponent(egret3d.Camera);
-                var forward = this.helpVec31;
-                var up = this.helpVec32;
-                var right = this.helpVec33;
-                var nearCenter = this.helpVec34;
-                var farCenter = this.helpVec35;
-                t.getForward(forward);
-                t.getUp(up);
-                t.getRight(right);
-                var cameraPos = t.getPosition();
-                egret3d.Vector3.add(egret3d.Vector3.scale(forward, camera.near), cameraPos, nearCenter);
-                t.getForward(forward);
-                egret3d.Vector3.add(egret3d.Vector3.scale(forward, camera.far), cameraPos, farCenter);
-                var asp = this.camera.context.viewPortPixel.w / this.camera.context.viewPortPixel.h;
-                var nearH = camera.opvalue > 0 ? camera.near * Math.tan(camera.fov * 0.5) : camera.size * 0.5;
-                var nearW = nearH * asp;
-                var farH = camera.opvalue > 0 ? camera.far * Math.tan(camera.fov * 0.5) : camera.size * 0.5;
-                var farW = farH * asp;
-                var point = this.helpVec36;
-                //0
-                t.getUp(up);
-                t.getRight(right);
-                egret3d.Vector3.add(nearCenter, egret3d.Vector3.scale(up, nearH), point);
-                egret3d.Vector3.add(point, egret3d.Vector3.scale(right, nearW), point);
-                this.verticesCameraSquare = this.verticesCameraSquare.concat([point.x, point.y, point.z]);
-                //1
-                t.getUp(up);
-                t.getRight(right);
-                egret3d.Vector3.add(nearCenter, egret3d.Vector3.scale(up, nearH), point);
-                egret3d.Vector3.add(point, egret3d.Vector3.scale(right, -nearW), point);
-                this.verticesCameraSquare = this.verticesCameraSquare.concat([point.x, point.y, point.z]);
-                //2
-                t.getUp(up);
-                t.getRight(right);
-                egret3d.Vector3.add(nearCenter, egret3d.Vector3.scale(up, -nearH), point);
-                egret3d.Vector3.add(point, egret3d.Vector3.scale(right, -nearW), point);
-                this.verticesCameraSquare = this.verticesCameraSquare.concat([point.x, point.y, point.z]);
-                //3
-                t.getUp(up);
-                t.getRight(right);
-                egret3d.Vector3.add(nearCenter, egret3d.Vector3.scale(up, -nearH), point);
-                egret3d.Vector3.add(point, egret3d.Vector3.scale(right, nearW), point);
-                this.verticesCameraSquare = this.verticesCameraSquare.concat([point.x, point.y, point.z]);
-                //4
-                t.getUp(up);
-                t.getRight(right);
-                egret3d.Vector3.add(farCenter, egret3d.Vector3.scale(up, farH), point);
-                egret3d.Vector3.add(point, egret3d.Vector3.scale(right, farW), point);
-                this.verticesCameraSquare = this.verticesCameraSquare.concat([point.x, point.y, point.z]);
-                //5
-                t.getUp(up);
-                t.getRight(right);
-                egret3d.Vector3.add(farCenter, egret3d.Vector3.scale(up, farH), point);
-                egret3d.Vector3.add(point, egret3d.Vector3.scale(right, -farW), point);
-                this.verticesCameraSquare = this.verticesCameraSquare.concat([point.x, point.y, point.z]);
-                //6
-                t.getUp(up);
-                t.getRight(right);
-                egret3d.Vector3.add(farCenter, egret3d.Vector3.scale(up, -farH), point);
-                egret3d.Vector3.add(point, egret3d.Vector3.scale(right, -farW), point);
-                this.verticesCameraSquare = this.verticesCameraSquare.concat([point.x, point.y, point.z]);
-                //7
-                t.getUp(up);
-                t.getRight(right);
-                egret3d.Vector3.add(farCenter, egret3d.Vector3.scale(up, -farH), point);
-                egret3d.Vector3.add(point, egret3d.Vector3.scale(right, farW), point);
-                this.verticesCameraSquare = this.verticesCameraSquare.concat([point.x, point.y, point.z]);
-            };
-            // public static DrawArrowXYZ(transform: egret3d.Transform) {
-            //     console.log("now drawXYZ", transform)
-            //     let worldMat = Gizmo.helpMat;
-            //     Gizmo.getWorldMatrixWithoutScale(transform, 10, worldMat);
-            //     worldMat.multiply(this.xArrowMMatrix);
-            //     Gizmo.DrawArrow(worldMat, [1.0, 0.0, 0.0, 1.0], true);
-            //     worldMat.multiply(this.yArrowMMatrix);
-            //     Gizmo.DrawArrow(worldMat, [0.0, 1.0, 0.0, 1.0], true);
-            //     worldMat.multiply(this.zArrowMMatrix);
-            //     Gizmo.DrawArrow(worldMat, [0.0, 0.0, 1.0, 1.0], true);
-            // }
-            Gizmo.getWorldMatrixWithoutScale = function (transform, fixScale, out) {
-                out.identity();
-                var p = transform.getPosition();
-                var r = transform.getRotation();
-                var p_c = this.camera.gameObject.transform.getPosition();
-                egret3d.Vector3.subtract(p, p_c, p_c);
-                var sca = egret3d.Vector3.getLength(p_c) / fixScale;
-                var matS = this.helpMat1;
-                // egret3d.Quaternion.toMatrix(r, out);
-                out.fromRotation(r);
-                matS.fromScale(sca, sca, sca);
-                out.multiply(matS);
-                out.rawData[12] = p.x;
-                out.rawData[13] = p.y;
-                out.rawData[14] = p.z;
-            };
-            Gizmo.initIconTexture = function () {
-                for (var key in editor.icons) {
-                    var image = new Image();
-                    this._imageLoadCount++;
-                    image.setAttribute('src', editor.icons[key]);
-                    image.onload = this.loadIconTexture.bind(this, image, key);
-                }
-            };
-            Gizmo.loadIconTexture = function (image, key) {
-                var webgl = egret3d.WebGLCapabilities.webgl;
-                var texture = webgl.createTexture();
-                webgl.bindTexture(webgl.TEXTURE_2D, texture);
-                webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, webgl.RGBA, webgl.UNSIGNED_BYTE, image);
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
-                this._imageLoadCount--;
-                this.textures[key] = texture;
-                if (this._imageLoadCount === 0) {
-                    this.enabled = true;
-                }
-            };
-            Gizmo.enabled = false;
-            Gizmo.mvpMatrix = new egret3d.Matrix4();
-            Gizmo.mMatrix = new egret3d.Matrix4();
-            Gizmo.vMatrix = new egret3d.Matrix4();
-            Gizmo.pMatrix = new egret3d.Matrix4();
-            Gizmo.helpVec31 = new egret3d.Vector3();
-            Gizmo.helpVec32 = new egret3d.Vector3();
-            Gizmo.helpVec33 = new egret3d.Vector3();
-            Gizmo.helpVec34 = new egret3d.Vector3();
-            Gizmo.helpVec35 = new egret3d.Vector3();
-            Gizmo.helpVec36 = new egret3d.Vector3();
-            // public static DrawArrow(m: egret3d.Matrix4, color: number[], fixSize?: boolean) {
-            //     if (!this.enabled) return;
-            //     let gl = this.webgl;
-            //     let prg = this.glProgram_line;
-            //     gl.disable(gl.DEPTH_TEST);
-            //     prg.use();
-            //     let prgVertexPosition = gl.getAttribLocation(prg.prg, "aVertexPosition");
-            //     gl.bindBuffer(gl.ARRAY_BUFFER, this.arrowVertexBuffer);
-            //     gl.vertexAttribPointer(prgVertexPosition, 3, gl.FLOAT, false, 0, 0);
-            //     gl.enableVertexAttribArray(prgVertexPosition);
-            //     this.setMVPMatrix(m);
-            //     prg.setMatrix("mvpMat", this.mvpMatrix);
-            //     prg.setColor("lineColor", color);
-            //     gl.drawArrays(gl.LINES, 0, 2);
-            //     gl.drawArrays(gl.TRIANGLES, 2, 24);
-            // }
-            // private static xArrowMMatrix = new egret3d.Matrix4();
-            // private static yArrowMMatrix = egret3d.Matrix4.create([
-            //     0, 1, 0, 0,
-            //     -1, 0, 0, 0,
-            //     0, 0, 1, 0,
-            //     0, 0, 0, 1
-            // ]);
-            // private static zArrowMMatrix = egret3d.Matrix4.create([
-            //     0, 0, 1, 0,
-            //     0, 1, 0, 0,
-            //     -1, 0, 0, 0,
-            //     0, 0, 0, 1
-            // ]);
-            Gizmo.helpMat = new egret3d.Matrix4();
-            Gizmo.helpMat1 = new egret3d.Matrix4();
-            Gizmo._imageLoadCount = 0;
-            Gizmo.textures = {};
-            Gizmo = Gizmo_1 = __decorate([
-                paper.executeInEditMode
-            ], Gizmo);
-            return Gizmo;
-            var Gizmo_1;
-        }(paper.Behaviour));
-        editor.Gizmo = Gizmo;
-        __reflect(Gizmo.prototype, "paper.editor.Gizmo");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        var GizmoShader = (function () {
-            function GizmoShader(gl, vshader, fshader) {
-                this.gl = gl;
-                this.prg = this.createProgram(vshader, fshader);
-            }
-            GizmoShader.prototype.createProgram = function (vshader, fshader) {
-                var gl = this.gl;
-                var prg = gl.createProgram();
-                var vertexShader = this.createShader(gl.VERTEX_SHADER, vshader);
-                var fragmentShader = this.createShader(gl.FRAGMENT_SHADER, fshader);
-                gl.attachShader(prg, vertexShader);
-                gl.attachShader(prg, fragmentShader);
-                gl.linkProgram(prg);
-                if (!gl.getProgramParameter(prg, gl.LINK_STATUS)) {
-                    alert("Could not initialise shaders");
-                }
-                return prg;
-            };
-            GizmoShader.prototype.createShader = function (type, str) {
-                var gl = this.gl;
-                var shader = gl.createShader(type);
-                gl.shaderSource(shader, str);
-                gl.compileShader(shader);
-                var parameter = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
-                if (!parameter) {
-                    if (confirm("shader compile:" + gl.getShaderInfoLog(shader) + "\n")) {
-                        gl.deleteShader(shader);
-                    }
-                    return null;
-                }
-                return shader;
-            };
-            GizmoShader.prototype.use = function () {
-                this.gl.useProgram(this.prg);
-            };
-            GizmoShader.prototype.setFloat = function (name, value) {
-                var gl = this.gl;
-                gl.uniform1f(gl.getUniformLocation(this.prg, name), value);
-            };
-            GizmoShader.prototype.setInt = function (name, value) {
-                var gl = this.gl;
-                gl.uniform1i(gl.getUniformLocation(this.prg, name), value);
-            };
-            GizmoShader.prototype.setBool = function (name, value) {
-                var gl = this.gl;
-                gl.uniform1i(gl.getUniformLocation(this.prg, name), value ? 1 : 0);
-            };
-            GizmoShader.prototype.setVec3 = function (name, value) {
-                var gl = this.gl;
-                gl.uniform3f(gl.getUniformLocation(this.prg, name), value.x, value.y, value.z);
-            };
-            GizmoShader.prototype.setVec4 = function (name, value) {
-                var gl = this.gl;
-                gl.uniform4f(gl.getUniformLocation(this.prg, name), value.x, value.y, value.z, value.w);
-            };
-            GizmoShader.prototype.setColor = function (name, value) {
-                var gl = this.gl;
-                gl.uniform4f(gl.getUniformLocation(this.prg, name), value[0], value[1], value[2], value[3]);
-            };
-            // public setColor(name: string, value: egret3d.Color) {
-            //     let gl = this.gl;
-            //     gl.uniform4f(gl.getUniformLocation(this.prg, name), value.r, value.g, value.b, value.a);
-            // }
-            GizmoShader.prototype.setMatrix = function (name, value) {
-                var gl = this.gl;
-                gl.uniformMatrix4fv(gl.getUniformLocation(this.prg, name), false, value.rawData);
-            };
-            GizmoShader.prototype.setTexture = function (name, value) {
-                var gl = this.gl;
-                gl.uniform1i(gl.getUniformLocation(this.prg, name), value);
-            };
-            return GizmoShader;
-        }());
-        editor.GizmoShader = GizmoShader;
-        __reflect(GizmoShader.prototype, "paper.editor.GizmoShader");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        editor.icon_frag = "\n        #ifdef GL_ES\n        precision highp float;\n        #endif\n        uniform sampler2D PointTexture;\n        uniform bool hasColor;\n        uniform vec4 iconColor;\n        void main(void) {\n            vec4 tex = texture2D(PointTexture, gl_PointCoord);\n            gl_FragColor = tex;\n            if (hasColor) {\n                if (gl_FragColor.a >= 0.1) {\n                    gl_FragColor = iconColor;\n                } else {\n                    gl_FragColor.a = 0.0;\n                }\n            }\n        }";
-        editor.icon_vert = "\n        attribute vec3 aVertexPosition; \n        uniform mat4 mvpMat;\n        uniform float pointSize;\n        void main(void) {\n            gl_Position = mvpMat * vec4(aVertexPosition,1.0);\n            gl_PointSize = pointSize; \n        }";
-        editor.line_frag = "\n        #ifdef GL_ES\n        precision highp float;\n        #endif\n        uniform vec4 lineColor;\n        void main(void) {\n            gl_FragColor = lineColor;\n        }";
-        editor.line_vert = "\n        attribute vec3 aVertexPosition; \n        uniform mat4 mvpMat;\n        void main(void) {\n            gl_Position = mvpMat * vec4(aVertexPosition,1.0);\n        }";
-        editor.stroke_vert = "\n        uniform mat4 uMVPMatrix;                            //\u603B\u53D8\u6362\u77E9\u9635\n        attribute  vec3 aPosition;                                   //\u9876\u70B9\u4F4D\u7F6E\n        attribute vec3 aNormal;                                   //\u9876\u70B9\u6CD5\u5411\u91CF\n        void main(){\n            vec3 position=aPosition;                     //\u83B7\u53D6\u6B64\u9876\u70B9\u4F4D\u7F6E\n            position.xyz+=aNormal*0.4;                //\u5C06\u9876\u70B9\u4F4D\u7F6E\u6CBF\u6CD5\u7EBF\u65B9\u5411\u6324\u51FA\n            gl_Position = uMVPMatrix * vec4(position.xyz,1);//\u6839\u636E\u603B\u53D8\u6362\u77E9\u9635\u8BA1\u7B97\u6B64\u6B21\u7ED8\u5236\u6B64\u9876\u70B9\u4F4D\u7F6E\n        }";
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    var GizmoRenderSystem = (function (_super) {
-        __extends(GizmoRenderSystem, _super);
-        function GizmoRenderSystem() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._renderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.WebGLRenderState);
-            return _this;
-        }
-        GizmoRenderSystem.prototype.onUpdate = function () {
-            this._renderState.clearState(); //编辑器走自己的渲染流程，状态需要清除一下
-            // paper.editor.Gizmo.DrawCoord();
-            paper.editor.Gizmo.DrawLights();
-            paper.editor.Gizmo.DrawCameras();
-        };
-        return GizmoRenderSystem;
-    }(paper.BaseSystem));
-    egret3d.GizmoRenderSystem = GizmoRenderSystem;
-    __reflect(GizmoRenderSystem.prototype, "egret3d.GizmoRenderSystem");
-})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -27964,408 +25196,55 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    var particle;
-    (function (particle) {
-        //
-        var positionHelper = new egret3d.Vector3();
-        var velocityHelper = new egret3d.Vector3();
-        var startSizeHelper = new egret3d.Vector3();
-        var startColorHelper = egret3d.Color.create();
-        var startRotationHelper = new egret3d.Vector3();
-        var GRAVITY = new egret3d.Vector3(0, -9.81, 0); //TODO没有物理系统，暂时先放到这里
-        /**
-         * @internal
-         */
-        var ParticleBatcher = (function () {
-            function ParticleBatcher() {
-                this._dirty = false;
-                this._time = 0.0;
-                this._emittsionTime = 0;
-                this._frameRateTime = 0;
-                //最新存活位置
-                this._firstAliveCursor = 0;
-                this._lastFrameFirstCursor = 0;
-                //最后存活位置
-                this._lastAliveCursor = 0;
-                this._forceUpdate = false;
-                //原始顶点数量
-                this._vertexStride = 0;
-                //当前爆发的索引
-                this._burstIndex = 0;
-                //
-                this._readEmitCount = 0;
-                //最终重力
-                this._finalGravity = new egret3d.Vector3();
-            }
-            /**
-            * 计算粒子爆发数量
-            * @param startTime
-            * @param endTime
-            */
-            ParticleBatcher.prototype._getBurstCount = function (startTime, endTime) {
-                var totalEmitCount = 0;
-                var bursts = this._comp.emission.bursts;
-                for (var l = bursts.length; this._burstIndex < l; this._burstIndex++) {
-                    var burst = bursts[this._burstIndex];
-                    if (burst.time >= startTime && burst.time < endTime) {
-                        // totalEmitCount += numberLerp(burst.minCount, burst.maxCount, Math.random());
-                        totalEmitCount += burst.maxCount;
-                    }
-                    else {
-                        break;
-                    }
-                }
-                return totalEmitCount;
-            };
-            /**
-             * 判断粒子是否已经过期
-             * @param particleIndex
-             */
-            ParticleBatcher.prototype._isParticleExpired = function (particleIndex) {
-                var startTimeOffset = particleIndex * this._vertexStride * 2;
-                return this._time - this._startTimeBuffer[startTimeOffset + 1] + 0.0001 > this._startTimeBuffer[startTimeOffset];
-            };
+    var _targets = [
+        new egret3d.Vector3(-1, 0, 0), new egret3d.Vector3(1, 0, 0), new egret3d.Vector3(0, 1, 0),
+        new egret3d.Vector3(0, -1, 0), new egret3d.Vector3(0, 0, 1), new egret3d.Vector3(0, 0, -1)
+    ];
+    var _ups = [
+        new egret3d.Vector3(0, -1, 0), new egret3d.Vector3(0, -1, 0), new egret3d.Vector3(0, 0, 1),
+        new egret3d.Vector3(0, 0, -1), new egret3d.Vector3(0, -1, 0), new egret3d.Vector3(0, -1, 0)
+    ];
+    /**
+     *
+     */
+    var PointLight = (function (_super) {
+        __extends(PointLight, _super);
+        function PointLight() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
              *
-             * @param time 批量增加粒子
-             * @param startCursor
-             * @param endCursor
              */
-            ParticleBatcher.prototype._addParticles = function (time, startCursor, count, lastEmittsionTime) {
-                var comp = this._comp;
-                var main = comp.main;
-                var velocityModule = comp.velocityOverLifetime;
-                var colorModule = comp.colorOverLifetime;
-                var sizeModule = comp.sizeOverLifetime;
-                var rotationModule = comp.rotationOverLifetime;
-                var textureSheetModule = comp.textureSheetAnimation;
-                var isVelocityRandom = velocityModule.enable && (velocityModule._mode === 3 /* TwoConstants */ || velocityModule._mode === 2 /* TwoCurves */);
-                var isColorRandom = colorModule.enable && colorModule._color.mode === 3 /* TwoGradients */;
-                var isSizeRandom = sizeModule.enable && (sizeModule._size.mode === 3 /* TwoConstants */ || sizeModule._size.mode === 2 /* TwoCurves */);
-                var isRotationRandom = rotationModule.enable && (rotationModule._x.mode === 3 /* TwoConstants */ || rotationModule._x.mode === 2 /* TwoCurves */);
-                var isTextureRandom = textureSheetModule.enable && (textureSheetModule._startFrame.mode === 3 /* TwoConstants */ || textureSheetModule._startFrame.mode === 2 /* TwoCurves */);
-                var needRandom0 = isColorRandom || isSizeRandom || isRotationRandom || isTextureRandom;
-                var worldPosition = this._worldPostionCache;
-                var worldRotation = this._worldRotationCache;
-                var isWorldSpace = main._simulationSpace === 1 /* World */;
-                var startPositionBuffer = this._startPositionBuffer;
-                var startVelocityBuffer = this._startVelocityBuffer;
-                var startColorBuffer = this._startColorBuffer;
-                var startSizeBuffer = this._startSizeBuffer;
-                var startRotationBuffer = this._startRotationBuffer;
-                var startTimeBuffer = this._startTimeBuffer;
-                var random0Buffer = this._random0Buffer;
-                var random1Buffer = this._random1Buffer;
-                var worldPostionBuffer = this._worldPostionBuffer;
-                var worldRoationBuffer = this._worldRoationBuffer;
-                var age = Math.min(lastEmittsionTime / main.duration, 1.0);
-                var vertexStride = this._vertexStride;
-                var addCount = 0, startIndex = 0, endIndex = 0;
-                var lifetime = 0.0;
-                var startSpeed = 0.0;
-                var randomVelocityX = 0.0, randomVelocityY = 0.0, randomVelocityZ = 0.0;
-                var randomColor = 0.0, randomSize = 0.0, randomRotation = 0.0, randomTextureAnimation = 0.0;
-                var vector2Offset = 0, vector3Offset = 0, vector4Offset = 0;
-                while (addCount !== count) {
-                    comp.shape.generatePositionAndDirection(positionHelper, velocityHelper);
-                    main.startColor.evaluate(age, startColorHelper);
-                    lifetime = main.startLifetime.evaluate(age);
-                    startSpeed = main.startSpeed.evaluate(age);
-                    velocityHelper.x *= startSpeed;
-                    velocityHelper.y *= startSpeed;
-                    velocityHelper.z *= startSpeed;
-                    startSizeHelper.x = main.startSizeX.evaluate(age);
-                    startSizeHelper.y = main.startSizeY.evaluate(age);
-                    startSizeHelper.z = main.startSizeZ.evaluate(age);
-                    startRotationHelper.x = main.startRotationX.evaluate(age);
-                    startRotationHelper.y = main.startRotationY.evaluate(age);
-                    startRotationHelper.z = main.startRotationZ.evaluate(age);
-                    randomVelocityX = isVelocityRandom ? Math.random() : 0.0;
-                    randomVelocityY = isVelocityRandom ? Math.random() : 0.0;
-                    randomVelocityZ = isVelocityRandom ? Math.random() : 0.0;
-                    randomColor = isColorRandom ? Math.random() : 0.0;
-                    randomSize = isSizeRandom ? Math.random() : 0.0;
-                    randomRotation = isRotationRandom ? Math.random() : 0.0;
-                    randomTextureAnimation = isTextureRandom ? Math.random() : 0.0;
-                    for (startIndex = startCursor * vertexStride, endIndex = startIndex + vertexStride; startIndex < endIndex; startIndex++) {
-                        vector2Offset = startIndex * 2;
-                        vector3Offset = startIndex * 3;
-                        vector4Offset = startIndex * 4;
-                        //
-                        startPositionBuffer[vector3Offset] = positionHelper.x;
-                        startPositionBuffer[vector3Offset + 1] = positionHelper.y;
-                        startPositionBuffer[vector3Offset + 2] = positionHelper.z;
-                        startVelocityBuffer[vector3Offset] = velocityHelper.x;
-                        startVelocityBuffer[vector3Offset + 1] = velocityHelper.y;
-                        startVelocityBuffer[vector3Offset + 2] = velocityHelper.z;
-                        startColorBuffer[vector4Offset] = startColorHelper.r;
-                        startColorBuffer[vector4Offset + 1] = startColorHelper.g;
-                        startColorBuffer[vector4Offset + 2] = startColorHelper.b;
-                        startColorBuffer[vector4Offset + 3] = startColorHelper.a;
-                        startSizeBuffer[vector3Offset] = startSizeHelper.x;
-                        startSizeBuffer[vector3Offset + 1] = startSizeHelper.y;
-                        startSizeBuffer[vector3Offset + 2] = startSizeHelper.z;
-                        startRotationBuffer[vector3Offset] = startRotationHelper.x;
-                        startRotationBuffer[vector3Offset + 1] = startRotationHelper.y;
-                        startRotationBuffer[vector3Offset + 2] = startRotationHelper.z;
-                        startTimeBuffer[vector2Offset] = lifetime;
-                        startTimeBuffer[vector2Offset + 1] = time;
-                        //
-                        if (needRandom0) {
-                            random0Buffer[vector4Offset] = randomColor;
-                            random0Buffer[vector4Offset + 1] = randomSize;
-                            random0Buffer[vector4Offset + 2] = randomRotation;
-                            random0Buffer[vector4Offset + 3] = randomTextureAnimation;
-                        }
-                        if (isVelocityRandom) {
-                            random1Buffer[vector4Offset] = randomVelocityX;
-                            random1Buffer[vector4Offset + 1] = randomVelocityY;
-                            random1Buffer[vector4Offset + 2] = randomVelocityZ;
-                            random1Buffer[vector4Offset + 3] = 0;
-                        }
-                        if (isWorldSpace) {
-                            worldPostionBuffer[vector3Offset] = worldPosition.x;
-                            worldPostionBuffer[vector3Offset + 1] = worldPosition.y;
-                            worldPostionBuffer[vector3Offset + 2] = worldPosition.z;
-                            worldRoationBuffer[vector4Offset] = worldRotation.x;
-                            worldRoationBuffer[vector4Offset + 1] = worldRotation.y;
-                            worldRoationBuffer[vector4Offset + 2] = worldRotation.z;
-                            worldRoationBuffer[vector4Offset + 3] = worldRotation.w;
-                        }
-                    }
-                    ;
-                    startCursor++;
-                    if (startCursor >= main._maxParticles) {
-                        startCursor = 0;
-                    }
-                    addCount++;
-                }
-                //TODO理论上应该是每帧更新，不过现在没有物理系统，先放到这里
-                var gravityModifier = main.gravityModifier.constant;
-                this._finalGravity.x = GRAVITY.x * gravityModifier;
-                this._finalGravity.y = GRAVITY.y * gravityModifier;
-                this._finalGravity.z = GRAVITY.z * gravityModifier;
-            };
-            ParticleBatcher.prototype._tryEmit = function () {
-                if (!this._isParticleExpired(this._firstAliveCursor)) {
-                    return false;
-                }
-                //
-                var maxParticles = this._comp.main._maxParticles;
-                var nextCursor = this._firstAliveCursor + 1 >= maxParticles ? 0 : this._firstAliveCursor + 1;
-                //
-                if (nextCursor === this._lastAliveCursor) {
-                    this._forceUpdate = true;
-                }
-                this._firstAliveCursor = nextCursor;
-                return true;
-            };
-            ParticleBatcher.prototype.clean = function () {
-                this._time = 0.0;
-                this._dirty = false;
-                this._emittsionTime = 0.0;
-                this._frameRateTime = 0.0;
-                this._firstAliveCursor = 0;
-                this._lastFrameFirstCursor = 0;
-                this._lastAliveCursor = 0;
-                this._forceUpdate = false;
-                this._vertexStride = 0;
-                this._vertexAttributes = null;
-                this._burstIndex = 0;
-                this._readEmitCount = 0;
-                this._startPositionBuffer = null;
-                this._startVelocityBuffer = null;
-                this._startColorBuffer = null;
-                this._startSizeBuffer = null;
-                this._startRotationBuffer = null;
-                this._startTimeBuffer = null;
-                this._random0Buffer = null;
-                this._random1Buffer = null;
-                this._worldPostionBuffer = null;
-                this._worldRoationBuffer = null;
-                this._worldPostionCache = null;
-                this._worldRotationCache = null;
-                this._comp = null;
-                this._renderer = null;
-            };
-            ParticleBatcher.prototype.resetTime = function () {
-                this._burstIndex = 0;
-                this._emittsionTime = 0;
-                this._readEmitCount = 0;
-            };
-            ParticleBatcher.prototype.init = function (comp, renderer) {
-                this._comp = comp;
-                this._renderer = renderer;
-                var mesh = particle.createBatchMesh(renderer, comp.main._maxParticles);
-                this._vertexStride = renderer._renderMode === 4 /* Mesh */ ? renderer.mesh.vertexCount : 4;
-                this._startPositionBuffer = mesh.getAttributes("_START_POSITION" /* _START_POSITION */);
-                this._startVelocityBuffer = mesh.getAttributes("_START_VELOCITY" /* _START_VELOCITY */);
-                this._startColorBuffer = mesh.getAttributes("_START_COLOR" /* _START_COLOR */);
-                this._startSizeBuffer = mesh.getAttributes("_START_SIZE" /* _START_SIZE */);
-                this._startRotationBuffer = mesh.getAttributes("_START_ROTATION" /* _START_ROTATION */);
-                this._startTimeBuffer = mesh.getAttributes("_TIME" /* _TIME */);
-                this._random0Buffer = mesh.getAttributes("_RANDOM0" /* _RANDOM0 */);
-                this._random1Buffer = mesh.getAttributes("_RANDOM1" /* _RANDOM1 */);
-                this._worldPostionBuffer = mesh.getAttributes("_WORLD_POSITION" /* _WORLD_POSITION */);
-                this._worldRoationBuffer = mesh.getAttributes("_WORLD_ROTATION" /* _WORLD_ROTATION */);
-                var primitive = mesh.glTFMesh.primitives[0];
-                this._vertexAttributes = [];
-                for (var k in primitive.attributes) {
-                    this._vertexAttributes.push(k);
-                }
-                renderer.batchMesh = mesh;
-                renderer.batchMaterial = renderer.materials[0].clone();
-                mesh.uploadSubIndexBuffer();
-            };
-            ParticleBatcher.prototype.update = function (elapsedTime) {
-                if (!this._comp || this._comp.isPaused) {
-                    return;
-                }
-                //
-                this._time += elapsedTime;
-                var comp = this._comp;
-                var mainModule = comp.main;
-                //
-                while (this._lastAliveCursor !== this._firstAliveCursor || this._forceUpdate) {
-                    if (!this._isParticleExpired(this._lastAliveCursor)) {
-                        break;
-                    }
-                    this._forceUpdate = false;
-                    this._lastAliveCursor++;
-                    if (this._lastAliveCursor >= mainModule._maxParticles) {
-                        this._lastAliveCursor = 0;
-                    }
-                }
-                var transform = comp.gameObject.transform;
-                this._worldPostionCache = transform.getPosition();
-                this._worldRotationCache = transform.getRotation();
-                if (comp._isPlaying && this._time >= mainModule.startDelay.constant && comp.emission.enable) {
-                    this._updateEmission(elapsedTime);
-                }
-                this._updateRender();
-            };
-            ParticleBatcher.prototype._updateEmission = function (elapsedTime) {
-                var comp = this._comp;
-                var mainModule = comp.main;
-                var lastEmittsionTime = this._emittsionTime;
-                this._emittsionTime += elapsedTime;
-                var isOver = this._emittsionTime > mainModule.duration;
-                var aliveParticleCount = this.aliveParticleCount;
-                var totalEmitCount = 0;
-                if (!isOver) {
-                    if (comp.emission.bursts.length > 0) {
-                        this._readEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
-                    }
-                }
-                else {
-                    if (mainModule.loop) {
-                        this._readEmitCount = 0;
-                        this._readEmitCount += this._getBurstCount(lastEmittsionTime, this._emittsionTime);
-                        this._emittsionTime -= mainModule.duration;
-                        this._burstIndex = 0;
-                        this._readEmitCount += this._getBurstCount(0, this._emittsionTime);
-                    }
-                    else {
-                        comp.stop(false);
-                    }
-                }
-                //
-                for (var i = 0; i < this._readEmitCount; i++) {
-                    if (this._tryEmit()) {
-                        totalEmitCount++;
-                        this._readEmitCount--;
-                    }
-                }
-                var rateOverTime = comp.emission.rateOverTime.constant;
-                if (rateOverTime > 0) {
-                    var minEmissionTime = 1 / rateOverTime;
-                    this._frameRateTime += elapsedTime;
-                    while (this._frameRateTime > minEmissionTime) {
-                        if (!this._tryEmit()) {
-                            break;
-                        }
-                        totalEmitCount++;
-                        this._frameRateTime -= minEmissionTime;
-                    }
-                }
-                totalEmitCount = Math.min(mainModule._maxParticles - aliveParticleCount, totalEmitCount);
-                if (totalEmitCount > 0) {
-                    this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount, lastEmittsionTime);
-                    this._dirty = true;
-                }
-            };
-            ParticleBatcher.prototype._updateRender = function () {
-                var renderer = this._renderer;
-                var comp = this._comp;
-                var mainModule = comp.main;
-                //
-                if (this._dirty) {
-                    renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes);
-                    // const bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
-                    // const bufferOffset = this._lastFrameFirstCursor;
-                    // if (this._firstAliveCursor > this._lastFrameFirstCursor) {
-                    //     const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
-                    //     // const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor);
-                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
-                    // }
-                    // else {
-                    //     const addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
-                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
-                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
-                    //     // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount);
-                    //     // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor);
-                    // }
-                    this._lastFrameFirstCursor = this._firstAliveCursor;
-                    this._dirty = false;
-                }
-                var transform = comp.gameObject.transform;
-                var material = renderer.batchMaterial;
-                if (mainModule._simulationSpace === 0 /* Local */) {
-                    material.setVector3("u_worldPosition" /* WORLD_POSITION */, this._worldPostionCache);
-                    material.setVector4("u_worldRotation" /* WORLD_ROTATION */, this._worldRotationCache);
-                }
-                //
-                switch (mainModule._scaleMode) {
-                    case 1 /* Local */:
-                        {
-                            var scale = transform.getLocalScale();
-                            material.setVector3("u_positionScale" /* POSITION_SCALE */, scale);
-                            material.setVector3("u_sizeScale" /* SIZE_SCALE */, scale);
-                        }
-                        break;
-                    case 2 /* Shape */:
-                        {
-                            var scale = transform.getScale();
-                            material.setVector3("u_positionScale" /* POSITION_SCALE */, scale);
-                            material.setVector3("u_sizeScale" /* SIZE_SCALE */, egret3d.Vector3.ONE);
-                        }
-                        break;
-                    case 0 /* Hierarchy */:
-                        {
-                            var scale = transform.getScale();
-                            material.setVector3("u_positionScale" /* POSITION_SCALE */, scale);
-                            material.setVector3("u_sizeScale" /* SIZE_SCALE */, scale);
-                        }
-                        break;
-                }
-                material.setFloat("u_currentTime" /* CURRENTTIME */, this._time);
-                material.setVector3("u_gravity" /* GRAVIT */, this._finalGravity);
-            };
-            Object.defineProperty(ParticleBatcher.prototype, "aliveParticleCount", {
-                get: function () {
-                    if (this._firstAliveCursor >= this._lastAliveCursor) {
-                        return this._firstAliveCursor - this._lastAliveCursor;
-                    }
-                    else {
-                        return this._comp.main._maxParticles - this._lastAliveCursor + this._firstAliveCursor;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            return ParticleBatcher;
-        }());
-        particle.ParticleBatcher = ParticleBatcher;
-        __reflect(ParticleBatcher.prototype, "egret3d.particle.ParticleBatcher");
-    })(particle = egret3d.particle || (egret3d.particle = {}));
+            _this.decay = 2.0;
+            /**
+             *
+             */
+            _this.distance = 0.0;
+            _this.renderTarget = new egret3d.GlRenderTarget("PointLight", 1024, 1024, true); // TODO
+            return _this;
+        }
+        PointLight.prototype.update = function (camera, faceIndex) {
+            var position = this.gameObject.transform.getPosition();
+            egret3d.helpVector3A.set(position.x + _targets[faceIndex].x, position.y + _targets[faceIndex].y, position.z + _targets[faceIndex].z);
+            camera.near = this.shadowCameraNear;
+            camera.far = this.shadowCameraFar;
+            camera.size = this.shadowCameraSize;
+            camera.fov = Math.PI * 0.5;
+            camera.opvalue = 1.0;
+            camera.gameObject.transform.setPosition(position); // TODO support copy matrix.
+            camera.gameObject.transform.setRotation(this.gameObject.transform.getRotation());
+            camera.gameObject.transform.lookAt(egret3d.helpVector3A, _ups[faceIndex]);
+            _super.prototype.update.call(this, camera, faceIndex);
+        };
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+        ], PointLight.prototype, "decay", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+        ], PointLight.prototype, "distance", void 0);
+        return PointLight;
+    }(egret3d.BaseLight));
+    egret3d.PointLight = PointLight;
+    __reflect(PointLight.prototype, "egret3d.PointLight");
 })(egret3d || (egret3d = {}));

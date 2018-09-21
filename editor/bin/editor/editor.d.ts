@@ -1,4 +1,12 @@
 declare namespace paper.debug {
+    /**
+     * TODO 临时的
+     */
+    class Bootstrap extends paper.Behaviour {
+        initialize(): void;
+    }
+}
+declare namespace paper.debug {
     class GizmoPickComponent extends Behaviour {
         pickTarget: GameObject | null;
         onDestroy(): void;
@@ -18,8 +26,6 @@ declare namespace paper.debug {
      *
      */
     class GUIComponent extends SingletonComponent {
-        readonly inspector: dat.GUI;
-        readonly hierarchy: dat.GUI;
         /**
          * 所有选中的实体。
          */
