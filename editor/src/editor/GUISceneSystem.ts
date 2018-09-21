@@ -360,6 +360,10 @@ namespace paper.debug {
         private _onGameObjectHovered = (_c: any, value: GameObject) => {
             if (value) {
                 this._hoverBox.activeSelf = true;
+                if(this._hoverBox.scene !== value.scene){//TODO
+                    this._hoverBox.dontDestroy = true;
+                    this._hoverBox.dontDestroy = false;
+                }
                 this._hoverBox.parent = value;
             }
             else {

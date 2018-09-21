@@ -4,7 +4,7 @@ namespace paper.debug {
      */
     export class Bootstrap extends paper.Behaviour {
         public initialize() {
-            GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
+            // GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
         }
 
         // public bootstrap() {
@@ -12,8 +12,8 @@ namespace paper.debug {
         // }
     }
 
-    setTimeout(() => {
-        paper.GameObject.globalGameObject.getOrAddComponent(debug.Bootstrap);
-    }, 1000);
+    // setTimeout(() => {
+    //     paper.GameObject.globalGameObject.getOrAddComponent(debug.Bootstrap);
+    // }, 1000);
 
 }
