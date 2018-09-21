@@ -804,7 +804,7 @@ declare namespace gltf {
         WEIGHTS_0 = "WEIGHTS_0",
     }
 
-    export type MeshAttribute = MeshAttributeType | string;
+    export type MeshAttribute = AttributeSemanticType | string;
     /**
      * Indices of those attributes that deviate from their initialization value.
      */

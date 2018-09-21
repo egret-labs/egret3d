@@ -46,7 +46,7 @@ namespace egret3d {
          */
         @paper.editor.property(paper.editor.EditType.UINT)
         public get lightCount() {
-            return this.lightCount.length;
+            return this.lights.length;
         }
     }
 }

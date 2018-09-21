@@ -14,7 +14,6 @@ namespace paper.debug {
     export class GUIComponent extends SingletonComponent {
         public readonly inspector: dat.GUI = new dat.GUI({ closeOnTop: true, width: 330 });
         public readonly hierarchy: dat.GUI = new dat.GUI({ closeOnTop: true, width: 330 });
-
         /**
          * 所有选中的实体。
          */
@@ -67,6 +66,9 @@ namespace paper.debug {
                     Application.playerMode = PlayerMode.Player;
                     guiSceneSystem.enabled = false;
                     guiSystem.enabled = false;
+                    this.selectedGameObjects.length = 0;
+                    this.selectedScene = null;
+                    this.selectedGameObject = null;
                 }
             });
             this.hierarchy.add(sceneOptions, "assets");

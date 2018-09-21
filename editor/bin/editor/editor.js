@@ -2642,6 +2642,7 @@ var paper;
                 return _this;
             }
             GUIComponent.prototype.initialize = function () {
+                var _this = this;
                 _super.prototype.initialize.call(this);
                 var sceneOptions = {
                     debug: false,
@@ -2673,6 +2674,9 @@ var paper;
                         paper.Application.playerMode = 0 /* Player */;
                         guiSceneSystem.enabled = false;
                         guiSystem.enabled = false;
+                        _this.selectedGameObjects.length = 0;
+                        _this.selectedScene = null;
+                        _this.selectedGameObject = null;
                     }
                 });
                 this.hierarchy.add(sceneOptions, "assets");
@@ -3694,6 +3698,7 @@ var paper;
                 paper.EventPool.addEventListener("SceneUnselected" /* SceneUnselected */, debug.GUIComponent, this._sceneUnselectedHandler);
                 paper.EventPool.addEventListener("GameObjectSelected" /* GameObjectSelected */, debug.GUIComponent, this._gameObjectSelectedHandler);
                 paper.EventPool.addEventListener("GameObjectUnselected" /* GameObjectUnselected */, debug.GUIComponent, this._gameObjectUnselectedHandler);
+                this._guiComponent.select(paper.Scene.activeScene);
                 this._bufferedGameObjects.push(paper.GameObject.globalGameObject);
                 for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
                     var gameObject = _a[_i];
@@ -3773,6 +3778,7 @@ var paper;
                 paper.EventPool.removeEventListener("SceneUnselected" /* SceneUnselected */, debug.GUIComponent, this._sceneUnselectedHandler);
                 paper.EventPool.removeEventListener("GameObjectSelected" /* GameObjectSelected */, debug.GUIComponent, this._gameObjectSelectedHandler);
                 paper.EventPool.removeEventListener("GameObjectUnselected" /* GameObjectUnselected */, debug.GUIComponent, this._gameObjectUnselectedHandler);
+                this._selectSceneOrGameObject(null);
                 for (var k in this._hierarchyFolders) {
                     var folder = this._hierarchyFolders[k];
                     delete this._hierarchyFolders[k];
@@ -3785,15 +3791,7 @@ var paper;
                     }
                 }
                 for (var k in this._inspectorFolders) {
-                    var folder = this._inspectorFolders[k];
                     delete this._inspectorFolders[k];
-                    if (folder && folder.parent) {
-                        try {
-                            folder.parent.removeFolder(folder);
-                        }
-                        catch (e) {
-                        }
-                    }
                 }
                 this._bufferedGameObjects.length = 0;
                 this._selectFolder = null;

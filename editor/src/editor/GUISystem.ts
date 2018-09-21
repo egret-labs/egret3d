@@ -316,6 +316,7 @@ namespace paper.debug {
             EventPool.addEventListener(GUIComponentEvent.GameObjectSelected, GUIComponent, this._gameObjectSelectedHandler);
             EventPool.addEventListener(GUIComponentEvent.GameObjectUnselected, GUIComponent, this._gameObjectUnselectedHandler);
 
+            this._guiComponent.select(paper.Scene.activeScene);
             this._bufferedGameObjects.push(paper.GameObject.globalGameObject);
 
             for (const gameObject of this._groups[0].gameObjects) {
