@@ -16,24 +16,30 @@ namespace RaycastTest {
         }
 
         {
-            await RES.getResAsync("Assets/pp1.prefab.json");
-            const gameObject = paper.Prefab.create("Assets/pp1.prefab.json");
-            gameObject.transform.setLocalPosition(2.0, 0.0, 0.0);
+            const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.PLANE, "Plane");
+            gameObject.transform.setLocalPosition(15.0, 0.0, 0.0);
 
             const line = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "Line");
-            line.transform.setLocalPosition(2.0, 5.0, -5.0);
-            line.addComponent(behaviors.RotateComponent).target = gameObject.getComponentInChildren(egret3d.Animation)!.gameObject;
-            line.addComponent(RendererRaycast).target = gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.gameObject;
+            line.transform.setLocalPosition(15.0, 5.0, -5.0);
+            line.addComponent(behaviors.RotateComponent).target = gameObject;
+            line.addComponent(RaycastPlane).target = gameObject;
         }
+
+        // {
+        //     await RES.getResAsync("Assets/pp1.prefab.json");
+        //     const gameObject = paper.Prefab.create("Assets/pp1.prefab.json");
+        //     gameObject.transform.setLocalPosition(2.0, 0.0, 0.0);
+
+        //     const line = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "Line");
+        //     line.transform.setLocalPosition(2.0, 5.0, -5.0);
+        //     line.addComponent(behaviors.RotateComponent).target = gameObject.getComponentInChildren(egret3d.Animation)!.gameObject;
+        //     line.addComponent(RendererRaycast).target = gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.gameObject;
+        // }
     }
 
-    class RendererRaycast extends paper.Behaviour {
-        @paper.editor.property(paper.editor.EditType.CHECKBOX)
-        public raycastMesh: boolean = false;
-        public target: paper.GameObject | null = null;
-
-        private readonly _ray: egret3d.Ray = egret3d.Ray.create();
-        private _lineMesh: egret3d.Mesh | null = null;
+    abstract class BaseRaycast extends paper.Behaviour {
+        protected static readonly _ray: egret3d.Ray = egret3d.Ray.create();
+        protected _lineMesh: egret3d.Mesh | null = null;
 
         public onStart() {
             const meshFilter = this.gameObject.getComponent(egret3d.MeshFilter)!;
@@ -54,18 +60,30 @@ namespace RaycastTest {
             ];
         }
 
+        protected _updateAngGetRay() {
+            const transform = this.gameObject.transform;
+            const ray = BaseRaycast._ray;
+            ray.origin.copy(transform.position);
+            transform.getForward(ray.direction);
+
+            return ray;
+        }
+    }
+
+    class RendererRaycast extends BaseRaycast {
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        public raycastMesh: boolean = false;
+        public target: paper.GameObject | null = null;
+
         public onUpdate() {
             const transform = this.gameObject.transform;
             transform.setLocalScale(1.0);
 
             if (this.target && this.target.renderer) {
-                // Update ray to world space.
-                this._ray.origin.copy(transform.position);
-                transform.getForward(this._ray.direction);
-
+                const ray = this._updateAngGetRay();
                 const raycastInfo = egret3d.RaycastInfo.create();
-                if (this.target.renderer.raycast(this._ray, raycastInfo, this.raycastMesh)) {
-                    this.transform.setLocalScale(1.0, 1.0, raycastInfo.distance);
+                if (this.target.renderer.raycast(ray, raycastInfo, this.raycastMesh)) {
+                    transform.setLocalScale(1.0, 1.0, raycastInfo.distance);
                 }
 
                 raycastInfo.release();
@@ -73,10 +91,8 @@ namespace RaycastTest {
         }
     }
 
-    class RaycastSphere extends paper.Behaviour {
+    class RaycastSphere extends BaseRaycast {
         public target: paper.GameObject | null = null;
-
-        private readonly _ray: egret3d.Ray = egret3d.Ray.create();
 
         public onUpdate() {
             // if (this.target && this.target.renderer) {
@@ -90,6 +106,29 @@ namespace RaycastTest {
             // }
 
             // this.transform.setScale(100.0);
+        }
+    }
+
+    class RaycastPlane extends BaseRaycast {
+        public target: paper.GameObject | null = null;
+
+        private readonly _plane: egret3d.Plane = egret3d.Plane.create();
+
+        public onUpdate() {
+            const transform = this.gameObject.transform;
+            transform.setLocalScale(1.0);
+
+            if (this.target) {
+                const ray = this._updateAngGetRay();
+                const raycastInfo = egret3d.RaycastInfo.create();
+                const plane = this._plane.fromPoint(this.target.transform.position, this.target.transform.getForward().release());
+
+                if (plane.raycast(ray, raycastInfo)) {
+                    transform.setLocalScale(1.0, 1.0, raycastInfo.distance);
+                }
+
+                raycastInfo.release();
+            }
         }
     }
 }

@@ -203,19 +203,23 @@ namespace egret3d {
         public clone(): Material {
             return new Material(this._shader).copy(this);
         }
-
-        public addDefine(key: string) {
-            if (this._defines.indexOf(key) < 0) {
-                this._defines.push(key);
+        /**
+         * 
+         */
+        public addDefine(value: string) {
+            if (this._defines.indexOf(value) < 0) {
+                this._defines.push(value);
                 this._defines.sort();
                 this._version++;
             }
 
             return this;
         }
-
-        public removeDefine(key: string) {
-            const delIndex = this._defines.indexOf(key);
+        /**
+         * 
+         */
+        public removeDefine(value: string) {
+            const delIndex = this._defines.indexOf(value);
             if (delIndex >= 0) {
                 this._defines.splice(delIndex, 1);
                 this._version++;
@@ -438,17 +442,35 @@ namespace egret3d {
             return this;
         }
         /**
-         * 
+         * 获取指定贴图。
          */
-        public getTexture(id: string) {
+        public getTexture(id?: string) {
+            if (!id) {
+                id = egret3d.ShaderUniformName.Map;
+            }
+
             let uniform = this._glTFTechnique.uniforms[id];
             return uniform ? uniform.value || null : null;
         }
         /**
          * 
          */
-        public setTexture(id: string, value: egret3d.Texture | null) {
-            value = value || egret3d.DefaultTextures.WHITE;
+        public setTexture(value: egret3d.Texture | null): this;
+        public setTexture(id: string, value: egret3d.Texture | null): this;
+        public setTexture(idOrValue: egret3d.Texture | null | string, value?: egret3d.Texture | null) {
+            let id: string;
+            if (idOrValue === null || idOrValue instanceof egret3d.Texture) {
+                id = egret3d.ShaderUniformName.Map;
+                value = idOrValue as egret3d.Texture | null;
+            }
+            else {
+                id = idOrValue;
+            }
+
+            if (!value) {
+                value = egret3d.DefaultTextures.WHITE;
+            }
+
             //兼容老键值
             if (id === "_MainTex" && this._glTFTechnique.uniforms[ShaderUniformName.Map]) {
                 id = ShaderUniformName.Map;
@@ -484,7 +506,18 @@ namespace egret3d {
         /**
          * 
          */
-        public setColor(id: string, value: Readonly<Color>) {
+        public setColor(value: Readonly<IColor>): this;
+        public setColor(id: string, value: Readonly<IColor>): this;
+        public setColor(idOrValue: Readonly<IColor> | string, value?: Readonly<IColor>) {
+            let id: string;
+            if (idOrValue.hasOwnProperty("r")) {
+                id = egret3d.ShaderUniformName.Diffuse;
+                value = idOrValue as Readonly<IColor>;
+            }
+            else {
+                id = idOrValue as string;
+            }
+
             this.setVector3(id, Vector3.create(value.r, value.g, value.b).release());
 
             return this;
@@ -615,6 +648,29 @@ namespace egret3d {
         /**
          * 
          */
+        public setOpacity(value: number) {
+            return this.setFloat(egret3d.ShaderUniformName.Opacity, value);
+        }
+        /**
+         * 
+         */
+        public setShader(value: Shader) {
+            if (!value) {
+                console.warn("Set shader error.");
+                value = egret3d.DefaultShaders.MESH_BASIC;
+            }
+
+            if (this._shader === value) {
+                return;
+            }
+
+            this._reset(value);
+
+            return this;
+        }
+        /**
+         * 
+         */
         public clearStates() {
             if (this._glTFTechnique.states) {
                 delete this._glTFTechnique.states;
@@ -634,7 +690,19 @@ namespace egret3d {
 
             return this._cacheDefines;
         }
-
+        /**
+         * 
+         */
+        public get opacity() {
+            const uniform = this._glTFTechnique.uniforms[egret3d.ShaderUniformName.Opacity];
+            return (!uniform || uniform.value !== uniform.value) ? 1.0 : uniform.value;
+        }
+        public set opacity(value: number) {
+            this.setFloat(egret3d.ShaderUniformName.Opacity, value);
+        }
+        /**
+         * 
+         */
         public get shader() {
             return this._shader;
         }
@@ -650,7 +718,9 @@ namespace egret3d {
 
             this._reset(value);
         }
-
+        /**
+         * 
+         */
         public get glTFTechnique() {
             return this._glTFTechnique;
         }

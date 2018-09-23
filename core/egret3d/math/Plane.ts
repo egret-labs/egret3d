@@ -2,7 +2,7 @@ namespace egret3d {
     /**
      * 
      */
-    export class Plane implements paper.IRelease<Plane>, paper.ISerializable {
+    export class Plane implements paper.IRelease<Plane>, paper.ISerializable, IRaycast {
 
         private static readonly _instances: Plane[] = [];
         /**
@@ -102,6 +102,20 @@ namespace egret3d {
 
         public getDistance(value: Readonly<IVector3>) {
             return this.normal.dot(value) + this.constant;
+        }
+
+        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+            const t = ray.getDistanceToPlane(this);
+            if (t > 0.0) {
+                if (raycastInfo) {
+                    raycastInfo.distance = t;
+                    ray.at(t, raycastInfo.position);
+                }
+
+                return true;
+            }
+
+            return false;
         }
     }
 }

@@ -796,30 +796,13 @@ declare namespace egret3d {
         applyMatrix(value: Readonly<Matrix4>, ray?: Readonly<Ray>): this;
         getSquaredDistance(value: Readonly<IVector3>): number;
         getDistance(value: Readonly<IVector3>): number;
+        getDistanceToPlane(value: Readonly<Plane>): number;
         at(value: number, out?: Vector3): Vector3;
         /**
-         * 与三角形相交检测。
-         * TODO
+         * @deprecated
          */
         intersectTriangle(triangle: Readonly<Triangle>, backfaceCulling?: boolean, raycastInfo?: RaycastInfo): boolean;
         intersectTriangle(p1: Readonly<Vector3>, p2: Readonly<Vector3>, p3: Readonly<Vector3>, backfaceCulling?: boolean, raycastInfo?: RaycastInfo): boolean;
-        intersectPlane(planePoint: Vector3, planeNormal: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        intersectAABB(aabb: Readonly<AABB>, raycastInfo?: RaycastInfo): boolean;
-        intersectAABB(minimum: Readonly<IVector3>, maximum: Readonly<IVector3>, raycastInfo?: RaycastInfo): boolean;
-        /**
-         * @deprecated
-         */
-        static raycast(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): RaycastInfo | null;
-        /**
-         * @deprecated
-         */
-        static raycastAll(ray: Ray, isPickMesh?: boolean, maxDistance?: number, layerMask?: paper.Layer): RaycastInfo[] | null;
-        private static _doPick(ray, maxDistance, layerMask, pickAll?, isPickMesh?);
-        private static _pickMesh(ray, transform, pickInfos);
-        private static _pickCollider(ray, transform, pickInfos);
     }
     /**
      * 射线投射信息。
@@ -2200,8 +2183,17 @@ declare namespace paper {
         private static _instance;
         static getInstance(): SystemManager;
         private constructor();
+        private readonly _preSystems;
         private readonly _systems;
-        private _preRegister<T>(systemClass);
+        private _checkRegister<T>(systemClass);
+        /**
+         * 在系统框架启动前预注册系统。
+         */
+        preRegister<T extends BaseSystem>(systemClass: {
+            new (): T;
+        }, after?: {
+            new (): BaseSystem;
+        } | null): this;
         /**
          * 注册一个系统到管理器中。
          */
@@ -2771,13 +2763,22 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    class Color implements paper.IRelease<Color>, paper.ISerializable {
-        static readonly WHITE: Readonly<Color>;
+    interface IColor {
+        r: number;
+        g: number;
+        b: number;
+        a: number;
+    }
+    class Color implements IColor, paper.IRelease<Color>, paper.ISerializable {
         static readonly BLACK: Readonly<Color>;
+        static readonly GRAY: Readonly<Color>;
+        static readonly WHITE: Readonly<Color>;
         static readonly RED: Readonly<Color>;
         static readonly GREEN: Readonly<Color>;
         static readonly BLUE: Readonly<Color>;
         static readonly YELLOW: Readonly<Color>;
+        static readonly INDIGO: Readonly<Color>;
+        static readonly PURPLE: Readonly<Color>;
         private static readonly _instances;
         static create(r?: number, g?: number, b?: number, a?: number): Color;
         release(): this;
@@ -3740,11 +3741,11 @@ declare namespace egret3d {
         static QUAD: Mesh;
         static QUAD_PARTICLE: Mesh;
         static PLANE: Mesh;
-        static TORUS: Mesh;
         static CUBE: Mesh;
         static PYRAMID: Mesh;
         static CONE: Mesh;
         static CYLINDER: Mesh;
+        static TORUS: Mesh;
         static SPHERE: Mesh;
         static LINE_X: Mesh;
         static LINE_Y: Mesh;
@@ -3771,7 +3772,7 @@ declare namespace egret3d {
         /**
          * 创建圆形网格。
          */
-        static createCircle(radius: number, arc: number, axis?: number): Mesh;
+        static createCircle(radius?: number, arc?: number, axis?: number): Mesh;
         /**
          * 创建圆环网格。
          */
@@ -3859,15 +3860,19 @@ declare namespace egret3d {
         /**
          *
          */
+        static MESH_BASIC_DOUBLESIDE: Material;
+        /**
+         *
+         */
         static MESH_LAMBERT: Material;
         /**
          *
          */
-        static LINEDASHED_COLOR: Material;
+        static MESH_LAMBERT_DOUBLESIDE: Material;
         /**
          *
          */
-        static LINEDASHED_COLOR_OVERLAY: Material;
+        static LINEDASHED_COLOR: Material;
         /**
          *
          */
@@ -4438,9 +4443,6 @@ declare namespace paper {
          * 销毁场景。
          */
         destroy(): void;
-        private _raycast(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
-        private _sortRaycastInfo(a, b);
-        raycast(ray: Readonly<egret3d.Ray>, maxDistance?: number, cullingMask?: CullingMask, raycastMesh?: boolean): egret3d.RaycastInfo[];
         /**
          *
          */
@@ -4486,6 +4488,9 @@ declare namespace paper {
          * 创建 GameObject，并添加到当前场景中。
          */
         static create(name?: string, tag?: string, scene?: Scene | null): GameObject;
+        private static _raycast(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+        private static _sortRaycastInfo(a, b);
+        static raycast(ray: Readonly<egret3d.Ray>, gameObjectOrTransforms: ReadonlyArray<GameObject | egret3d.Transform>, maxDistance?: number, cullingMask?: CullingMask, raycastMesh?: boolean): egret3d.RaycastInfo[];
         /**
          *
          */
@@ -5477,7 +5482,7 @@ declare namespace egret3d {
     /**
      *
      */
-    class Plane implements paper.IRelease<Plane>, paper.ISerializable {
+    class Plane implements paper.IRelease<Plane>, paper.ISerializable, IRaycast {
         private static readonly _instances;
         /**
          *
@@ -5507,6 +5512,7 @@ declare namespace egret3d {
         normalize(source?: Readonly<Plane>): this;
         negate(source?: Readonly<Plane>): this;
         getDistance(value: Readonly<IVector3>): number;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
 }
 declare namespace paper {
@@ -5695,8 +5701,14 @@ declare namespace egret3d {
          * 克隆材质资源。
          */
         clone(): Material;
-        addDefine(key: string): this;
-        removeDefine(key: string): this;
+        /**
+         *
+         */
+        addDefine(value: string): this;
+        /**
+         *
+         */
+        removeDefine(value: string): this;
         setBoolean(id: string, value: boolean): this;
         setInt(id: string, value: number): this;
         setIntv(id: string, value: Float32Array): this;
@@ -5711,17 +5723,19 @@ declare namespace egret3d {
         setMatrix(id: string, value: Readonly<Matrix4>): this;
         setMatrixv(id: string, value: Float32Array): this;
         /**
-         *
+         * 获取指定贴图。
          */
-        getTexture(id: string): any;
+        getTexture(id?: string): any;
         /**
          *
          */
+        setTexture(value: egret3d.Texture | null): this;
         setTexture(id: string, value: egret3d.Texture | null): this;
         /**
          *
          */
-        setColor(id: string, value: Readonly<Color>): this;
+        setColor(value: Readonly<IColor>): this;
+        setColor(id: string, value: Readonly<IColor>): this;
         /**
          *
          * @param blend
@@ -5742,8 +5756,26 @@ declare namespace egret3d {
         /**
          *
          */
+        setOpacity(value: number): this;
+        /**
+         *
+         */
+        setShader(value: Shader): this;
+        /**
+         *
+         */
         clearStates(): this;
+        /**
+         *
+         */
+        opacity: number;
+        /**
+         *
+         */
         shader: Shader;
+        /**
+         *
+         */
         readonly glTFTechnique: gltf.Technique;
     }
 }

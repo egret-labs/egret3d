@@ -1,22 +1,115 @@
-declare namespace paper.debug {
+// Type definitions for dat.GUI 0.6
+// Project: https://github.com/dataarts/dat.gui
+// Definitions by: Satoru Kimura <https://github.com/gyohk>, ZongJing Lu <https://github.com/sonic3d>, Richard Roylance <https://github.com/rroylance>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+
+declare namespace dat {
+    class GUI {
+        instance?: any; // Modify add instance.
+        onClick?: (gui: GUI) => void; // Modify add onClick.
+
+        constructor(option?: GUIParams);
+
+        __controllers: GUIController[];
+        __folders: GUI[];
+        domElement: HTMLElement;
+
+        add(target: Object, propName: string): GUIController;
+        add(target: Object, propName: string, min: number, max: number): GUIController;
+        add(target: Object, propName: string, status: boolean): GUIController;
+        add(target: Object, propName: string, items: string[]): GUIController;
+        add(target: Object, propName: string, items: number[]): GUIController;
+        add(target: Object, propName: string, items: Object): GUIController;
+
+        addColor(target: Object, propName: string): GUIController;
+        addColor(target: Object, propName: string, color: string): GUIController;
+        addColor(target: Object, propName: string, rgba: number[]): GUIController; // rgb or rgba
+        addColor(target: Object, propName: string, hsv: { h: number; s: number; v: number }): GUIController;
+
+        remove(controller: GUIController): void;
+        destroy(): void;
+
+        addFolder(propName: string, label?: string): GUI; // Modify add label.
+        removeFolder(value: GUI): void;
+
+        open(): void;
+        close(): void;
+
+        remember(target: Object, ...additionalTargets: Object[]): void;
+        getRoot(): GUI;
+
+        getSaveObject(): Object;
+        save(): void;
+        saveAs(presetName: string): void;
+        revert(gui: GUI): void;
+
+        listen(controller: GUIController): void;
+        updateDisplay(): void;
+
+        // gui properties in dat/gui/GUI.js
+        readonly parent: GUI;
+        readonly scrollable: boolean;
+        readonly autoPlace: boolean;
+        preset: string;
+        width: number;
+        name: string;
+        closed: boolean;
+        selected: boolean;
+        readonly load: Object;
+        useLocalStorage: boolean;
+    }
+
+    interface GUIParams {
+        autoPlace?: boolean;
+        closed?: boolean;
+        closeOnTop?: boolean;
+        load?: any;
+        name?: string;
+        preset?: string;
+        width?: number;
+    }
+
+    class GUIController {
+        destroy(): void;
+
+        // Controller
+        onChange: (value?: any) => void;
+        onFinishChange: (value?: any) => void;
+
+        setValue(value: any): GUIController;
+        getValue(): any;
+        updateDisplay(): void;
+        isModified(): boolean;
+
+        // NumberController
+        min(n: number): GUIController;
+        max(n: number): GUIController;
+        step(n: number): GUIController;
+
+        // FunctionController
+        fire(): GUIController;
+
+        // augmentController in dat/gui/GUI.js
+        options(option: any): GUIController;
+        name(s: string): GUIController;
+        listen(): GUIController;
+        remove(): GUIController;
+    }
+}declare namespace paper.debug {
     /**
-     * TODO 临时的
+     *
      */
-    class Bootstrap extends paper.Behaviour {
-        initialize(): void;
+    class EditorSystem extends BaseSystem {
+        onAwake(): void;
     }
 }
 declare namespace paper.debug {
-    class GizmoPickComponent extends Behaviour {
-        pickTarget: GameObject | null;
-        onDestroy(): void;
-    }
 }
 declare namespace paper.debug {
     /**
      *
      */
-    const enum GUIComponentEvent {
+    const enum ModelComponentEvent {
         SceneSelected = "SceneSelected",
         SceneUnselected = "SceneUnselected",
         GameObjectHovered = "GameObjectHovered",
@@ -26,7 +119,7 @@ declare namespace paper.debug {
     /**
      *
      */
-    class GUIComponent extends SingletonComponent {
+    class ModelComponent extends SingletonComponent {
         /**
          * 所有选中的实体。
          */
@@ -38,97 +131,14 @@ declare namespace paper.debug {
         /**
          *
          */
-        hoverGameObject: GameObject | null;
+        hoveredGameObject: GameObject | null;
         /**
          * 最后一个选中的实体。
          */
         selectedGameObject: GameObject | null;
-        initialize(): void;
         select(value: Scene | GameObject | null, isReplace?: boolean): void;
         unselect(value: Scene | GameObject): void;
         hover(value: GameObject | null): void;
-    }
-}
-declare namespace paper.debug {
-    class GUISceneSystem extends paper.BaseSystem {
-        protected readonly _interests: {
-            componentClass: typeof egret3d.Transform;
-        }[][];
-        private readonly _camerasAndLights;
-        private readonly _guiComponent;
-        private _orbitControls;
-        private readonly _mouseStart;
-        private readonly _startPoint;
-        private readonly _endPoint;
-        private _axises;
-        private _hoverBox;
-        private _grids;
-        private _touchPlane;
-        private _cameraViewFrustum;
-        private _transformMode;
-        private _transformAxis;
-        private readonly _pickableSelected;
-        private readonly _boxes;
-        private readonly _pickableTool;
-        private readonly _gizomsMap;
-        private _positionStart;
-        private _startWorldPosition;
-        private _startWorldQuaternion;
-        private _startWorldScale;
-        private _selectedWorldPostion;
-        private _selectedWorldQuaternion;
-        private _cameraPosition;
-        private _eye;
-        private _selectGameObject(value, selected);
-        private _onMouseDown;
-        private _onMouseMove;
-        private _onMouseUp;
-        private _onKeyUp;
-        private _onKeyDown;
-        private _onGameObjectSelected;
-        private _onGameObjectHovered;
-        private _onGameObjectUnselected;
-        private _transformModeHandler(value);
-        private _setPoint(cameraProject, positions, x, y, z, points);
-        private _updateAxises();
-        private _updateBoxes();
-        private _updateCameras();
-        private _updateLights();
-        private _updateTouchPlane();
-        onAwake(): void;
-        onEnable(): void;
-        onDisable(): void;
-        onUpdate(dt: number): void;
-    }
-}
-declare namespace paper.debug {
-    class GUISystem extends BaseSystem {
-        protected readonly _interests: {
-            componentClass: typeof egret3d.Transform;
-        }[][];
-        private readonly _disposeCollecter;
-        private readonly _guiComponent;
-        private readonly _bufferedGameObjects;
-        private readonly _hierarchyFolders;
-        private readonly _inspectorFolders;
-        private _selectFolder;
-        private _sceneSelectedHandler;
-        private _sceneUnselectedHandler;
-        private _gameObjectSelectedHandler;
-        private _gameObjectUnselectedHandler;
-        private _createGameObject;
-        private _destroySceneOrGameObject;
-        private _nodeClickHandler;
-        private _openFolder(folder);
-        private _selectSceneOrGameObject(sceneOrGameObject);
-        private _addToHierarchy(gameObject);
-        private _addToInspector(gui);
-        onAwake(): void;
-        onEnable(): void;
-        onAddGameObject(gameObject: GameObject, _group: GameObjectGroup): void;
-        onUpdate(dt: number): void;
-        onRemoveGameObject(gameObject: GameObject, _group: GameObjectGroup): void;
-        onDisable(): void;
     }
 }
 declare namespace paper.debug {
@@ -175,12 +185,123 @@ declare namespace paper.debug {
     }
 }
 declare namespace paper.debug {
+    /**
+     * 变换控制器。
+     */
+    class TransfromController extends BaseComponent {
+        isWorldSpace: boolean;
+        readonly eye: egret3d.Vector3;
+        readonly translate: GameObject;
+        readonly rotate: GameObject;
+        readonly scale: GameObject;
+        private _controlling;
+        private readonly _positionStart;
+        private readonly _rotationStart;
+        private readonly _scaleStart;
+        private readonly _localPositionStart;
+        private readonly _localRotationStart;
+        private readonly _localScaleStart;
+        private readonly _offsetStart;
+        private readonly _offsetEnd;
+        private readonly _plane;
+        private readonly _quad;
+        private readonly _highlights;
+        private _mode;
+        private _hovered;
+        initialize(): void;
+        private _updateTransform(selected, mousePosition);
+        private _updateSelf(selected);
+        private _updatePlane();
+        start(selected: GameObject, mousePosition: Readonly<egret3d.IVector3>): void;
+        end(): void;
+        update(selected: GameObject, mousePosition: Readonly<egret3d.IVector3>): void;
+        mode: GameObject;
+        hovered: GameObject | null;
+    }
+}
+declare namespace paper.debug {
+    /**
+     *
+     */
+    class GUIComponent extends SingletonComponent {
+        readonly inspector: dat.GUI;
+        readonly hierarchy: dat.GUI;
+    }
+}
+declare namespace paper.debug {
+    class GUISystem extends BaseSystem {
+        protected readonly _interests: {
+            componentClass: typeof egret3d.Transform;
+        }[][];
+        private readonly _disposeCollecter;
+        private readonly _modelComponent;
+        private readonly _guiComponent;
+        private readonly _bufferedGameObjects;
+        private readonly _hierarchyFolders;
+        private readonly _inspectorFolders;
+        private _selectFolder;
+        private _sceneSelectedHandler;
+        private _sceneUnselectedHandler;
+        private _gameObjectSelectedHandler;
+        private _gameObjectUnselectedHandler;
+        private _createGameObject;
+        private _destroySceneOrGameObject;
+        private _nodeClickHandler;
+        private _openFolder(folder);
+        private _selectSceneOrGameObject(sceneOrGameObject);
+        private _addToHierarchy(gameObject);
+        private _addToInspector(gui);
+        private _debug(value);
+        onAwake(): void;
+        onEnable(): void;
+        onDisable(): void;
+        onAddGameObject(gameObject: GameObject, _group: GameObjectGroup): void;
+        onRemoveGameObject(gameObject: GameObject, _group: GameObjectGroup): void;
+        onUpdate(dt: number): void;
+    }
+}
+declare namespace paper.debug {
+    class SceneSystem extends paper.BaseSystem {
+        protected readonly _interests: {
+            componentClass: typeof egret3d.Transform;
+        }[][];
+        private readonly _camerasAndLights;
+        private readonly _modelComponent;
+        private _orbitControls;
+        private _transformController;
+        private _hoverBox;
+        private _grids;
+        private _cameraViewFrustum;
+        private readonly _pointerStartPosition;
+        private readonly _pointerPosition;
+        private readonly _pickableSelected;
+        private readonly _boxes;
+        private _selectedWorldPostion;
+        private _selectedWorldQuaternion;
+        private _contextmenuHandler;
+        private _onMouseDown;
+        private _onMouseUp;
+        private _onMouseMove;
+        private _onKeyUp;
+        private _onKeyDown;
+        private _onGameObjectSelected;
+        private _onGameObjectHovered;
+        private _onGameObjectUnselected;
+        private _selectGameObject(value, selected);
+        private _setPoint(cameraProject, positions, x, y, z, points);
+        private _updateBoxes();
+        private _updateCameras();
+        private _updateLights();
+        onEnable(): void;
+        onDisable(): void;
+        onUpdate(): void;
+    }
+}
+declare namespace paper.debug {
     class EditorMeshHelper {
         static createGameObject(name: string, mesh?: egret3d.Mesh, material?: egret3d.Material, tag?: string, scene?: paper.Scene): GameObject;
         static createGrid(name: string, size?: number, divisions?: number, color1?: egret3d.Color, color2?: egret3d.Color): GameObject;
-        static createTouchPlane(name: string, width?: number, height?: number): GameObject;
-        static createAxises(name: string): GameObject;
-        static createBox(name: string, color: egret3d.Color, scene: Scene): GameObject;
+        static createBox(name: string, color: egret3d.Color, opacity: number, scene: Scene): GameObject;
         static createCameraIcon(name: string, parent: paper.GameObject): GameObject;
         static createLightIcon(name: string, parent: paper.GameObject): GameObject;
         static createCameraWireframed(name: string, colorFrustum?: egret3d.Color, colorCone?: egret3d.Color, colorUp?: egret3d.Color, colorTarget?: egret3d.Color, colorCross?: egret3d.Color): GameObject;
@@ -188,8 +309,8 @@ declare namespace paper.debug {
 }
 declare namespace paper.debug {
     class Helper {
-        private static _raycast(ray, gameObject, raycastInfos);
-        static raycast(gameObjects: paper.GameObject[], mousePositionX: number, mousePositionY: number): egret3d.RaycastInfo[];
+        static raycast(targets: ReadonlyArray<paper.GameObject | egret3d.Transform>, mousePositionX: number, mousePositionY: number): egret3d.RaycastInfo[];
+        static raycastB(raycastAble: egret3d.IRaycast, mousePositionX: number, mousePositionY: number): egret3d.RaycastInfo;
     }
 }
 declare namespace helper {

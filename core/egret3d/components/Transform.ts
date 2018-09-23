@@ -441,7 +441,7 @@ namespace egret3d {
          */
         public getLocalEulerAngles(order?: EulerOrder): Readonly<Vector3> {
             if (this._localDirty & TransformDirty.Euler) {
-                this._updateEuler(false);
+                this._updateEuler(false, order);
             }
 
             return this._localEulerAngles;

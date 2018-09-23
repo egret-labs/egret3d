@@ -16,7 +16,7 @@ namespace egret3d {
             super.uninitialize();
 
             if (this._mesh) {
-                // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
+                // this._mesh.dispose(); //TODO shaderdMesh暂时没法dispose
             }
 
             this._mesh = null;

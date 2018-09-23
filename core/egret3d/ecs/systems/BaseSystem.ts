@@ -121,7 +121,7 @@ namespace paper {
          * 系统内部更新。
          * @internal
          */
-        public update() {
+        public _update() {
             if (!this._enabled) {
                 return;
             }
@@ -154,7 +154,7 @@ namespace paper {
          * 系统内部更新。
          * @internal
          */
-        public lateUpdate() {
+        public _lateUpdate() {
             if (!this._enabled) {
                 return;
             }

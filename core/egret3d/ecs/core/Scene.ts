@@ -198,50 +198,6 @@ namespace paper {
 
             GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).scenes.push(this);
         }
-
-        private _raycast(ray: Readonly<egret3d.Ray>, gameObject: GameObject, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false, raycastInfos: egret3d.RaycastInfo[]) {
-            if (
-                (
-                    gameObject.hideFlags === paper.HideFlags.HideAndDontSave && gameObject.tag === paper.DefaultTags.EditorOnly
-                ) ? gameObject.activeInHierarchy : !gameObject.activeInHierarchy
-            ) {
-                return;
-            }
-
-            const raycastInfo = egret3d.RaycastInfo.create();
-            if ((gameObject.layer & cullingMask) && gameObject.renderer && gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
-                if (maxDistance <= 0.0 || raycastInfo.distance <= maxDistance) {
-                    raycastInfo.transform = gameObject.transform;
-                    raycastInfos.push(raycastInfo);
-                }
-                else {
-                    raycastInfo.release();
-                }
-            }
-            else {
-                raycastInfo.release();
-
-                for (const child of gameObject.transform.children) {
-                    this._raycast(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
-                }
-            }
-        }
-
-        private _sortRaycastInfo(a: egret3d.RaycastInfo, b: egret3d.RaycastInfo) {
-            return b.distance - a.distance;
-        }
-
-        public raycast(ray: Readonly<egret3d.Ray>, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false) {
-            const raycastInfos = [] as egret3d.RaycastInfo[];
-
-            for (const gameObject of this.getRootGameObjects()) {
-                this._raycast(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
-            }
-
-            raycastInfos.sort(this._sortRaycastInfo);
-
-            return raycastInfos;
-        }
         /**
          * 
          */

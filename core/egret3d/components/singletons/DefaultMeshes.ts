@@ -12,11 +12,11 @@ namespace egret3d {
         public static QUAD: Mesh;
         public static QUAD_PARTICLE: Mesh;
         public static PLANE: Mesh;
-        public static TORUS: Mesh;
         public static CUBE: Mesh;
         public static PYRAMID: Mesh;
         public static CONE: Mesh;
         public static CYLINDER: Mesh;
+        public static TORUS: Mesh;
         public static SPHERE: Mesh;
 
         public static LINE_X: Mesh;
@@ -61,14 +61,6 @@ namespace egret3d {
                 DefaultMeshes.CUBE = mesh;
             }
 
-            { // TORUS.
-                const mesh = DefaultMeshes.createTorus();
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/torus.mesh.bin";
-                paper.Asset.register(mesh);
-                DefaultMeshes.TORUS = mesh;
-            }
-
             { // PYRAMID.
                 const mesh = new Mesh(16, 18);
                 mesh._isBuiltin = true;
@@ -76,22 +68,22 @@ namespace egret3d {
                 paper.Asset.register(mesh);
                 DefaultMeshes.PYRAMID = mesh;
                 mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    -0.5, 0.0, -0.5,
-                    0.0, 1.0, 0.0,
-                    0.5, 0.0, -0.5,
-                    0.5, 0.0, -0.5,
-                    0.0, 1.0, 0.0,
-                    0.5, 0.0, 0.5,
-                    0.5, 0.0, 0.5,
-                    0.0, 1.0, 0.0,
-                    -0.5, 0.0, 0.5,
-                    -0.5, 0.0, 0.5,
-                    0.0, 1.0, 0.0,
-                    -0.5, 0.0, -0.5,
-                    -0.5, 0.0, -0.5,
-                    0.5, 0.0, -0.5,
-                    0.5, 0.0, 0.5,
-                    -0.5, 0.0, 0.5,
+                    -0.5, -0.5, -0.5,
+                    0.0, 0.5, 0.0,
+                    0.5, -0.5, -0.5,
+                    0.5, -0.5, -0.5,
+                    0.0, 0.5, 0.0,
+                    0.5, -0.5, 0.5,
+                    0.5, -0.5, 0.5,
+                    0.0, 0.5, 0.0,
+                    -0.5, -0.5, 0.5,
+                    -0.5, -0.5, 0.5,
+                    0.0, 0.5, 0.0,
+                    -0.5, -0.5, -0.5,
+                    -0.5, -0.5, -0.5,
+                    0.5, -0.5, -0.5,
+                    0.5, -0.5, 0.5,
+                    -0.5, -0.5, 0.5,
                 ]);
                 mesh.setAttributes(gltf.MeshAttributeType.NORMAL, [
                     0, 0, 0,
@@ -168,6 +160,14 @@ namespace egret3d {
                 mesh.name = "builtin/cylinder.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CYLINDER = mesh;
+            }
+
+            { // TORUS.
+                const mesh = DefaultMeshes.createTorus();
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/torus.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.TORUS = mesh;
             }
 
             { // SPHERE.
@@ -251,7 +251,7 @@ namespace egret3d {
             }
 
             { // CIRCLE_LINE
-                const mesh = DefaultMeshes.createCircle(1, 0.5);
+                const mesh = DefaultMeshes.createCircle();
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/circle_line.mesh.bin";
                 paper.Asset.register(mesh);
@@ -308,9 +308,16 @@ namespace egret3d {
             meshFilter.mesh = mesh;
 
             switch (mesh) {
+                case this.QUAD:
+                case this.QUAD_PARTICLE:
+                case this.PLANE:
+                    renderer.material = DefaultMaterials.MESH_BASIC_DOUBLESIDE;
+
+                    break;
                 case this.LINE_X:
                 case this.LINE_Y:
                 case this.LINE_Z:
+                case this.CIRCLE_LINE:
                 case this.CUBE_LINE:
                     renderer.material = DefaultMaterials.LINEDASHED_COLOR;
                     break;
@@ -701,7 +708,7 @@ namespace egret3d {
         /**
          * 创建圆形网格。
          */
-        public static createCircle(radius: number, arc: number, axis: number = 1) {
+        public static createCircle(radius: number = 0.5, arc: number = 1.0, axis: number = 1) {
             const vertices: number[] = [];
             for (var i = 0; i <= 64 * arc; ++i) {
                 switch (axis) {
@@ -726,7 +733,7 @@ namespace egret3d {
         /**
          * 创建圆环网格。
          */
-        public static createTorus(radius: number = 1, tube: number = 0.1, radialSegments: number = 4, tubularSegments: number = 14, arc: number = Math.PI * 2) {
+        public static createTorus(radius: number = 0.5, tube: number = 0.1, radialSegments: number = 4, tubularSegments: number = 12, arc: number = 1.0) {
             const indices: number[] = [];
             const vertices: number[] = [];
             const normals: number[] = [];
@@ -744,7 +751,7 @@ namespace egret3d {
 
                 for (i = 0; i <= tubularSegments; i++) {
 
-                    var u = i / tubularSegments * arc;
+                    var u = i / tubularSegments * Math.PI * 2 * arc;
                     var v = j / radialSegments * Math.PI * 2;
 
                     // vertex

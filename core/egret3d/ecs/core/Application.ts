@@ -58,7 +58,7 @@ namespace paper {
 
             Time && Time.update();
             GameObjectGroup.update();
-            this.systemManager.update();
+            this.systemManager._update();
         }
 
         private _updatePlayerMode() {
@@ -76,6 +76,8 @@ namespace paper {
                     this.systemManager.register(systemClass, null);
                 }
             }
+
+            this.systemManager._preRegisterSystems();
 
             this._updatePlayerMode();
             this.resume();

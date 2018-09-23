@@ -10,15 +10,19 @@ namespace egret3d {
         /**
          * 
          */
+        public static MESH_BASIC_DOUBLESIDE: Material;
+        /**
+         * 
+         */
         public static MESH_LAMBERT: Material;
         /**
          * 
          */
-        public static LINEDASHED_COLOR: Material;
+        public static MESH_LAMBERT_DOUBLESIDE: Material;
         /**
          * 
          */
-        public static LINEDASHED_COLOR_OVERLAY: Material;
+        public static LINEDASHED_COLOR: Material;
         /**
          * 
          */
@@ -46,16 +50,24 @@ namespace egret3d {
             super.initialize();
 
             DefaultMaterials.MESH_BASIC = this._createMaterial("builtin/meshbasic.mat.json", DefaultShaders.MESH_BASIC)
-                .setTexture(ShaderUniformName.Map, DefaultTextures.WHITE);
+                .setTexture(DefaultTextures.WHITE);
+
+            DefaultMaterials.MESH_BASIC_DOUBLESIDE = this._createMaterial("builtin/meshbasic_doubleside.mat.json", DefaultShaders.MESH_BASIC)
+                .setTexture(DefaultTextures.WHITE)
+                .setCullFace(false);
 
             DefaultMaterials.MESH_LAMBERT = this._createMaterial("builtin/meshlambert.mat.json", DefaultShaders.MESH_LAMBERT)
-                .setTexture(ShaderUniformName.Map, DefaultTextures.WHITE);
+                .setTexture(DefaultTextures.WHITE);
+
+            DefaultMaterials.MESH_LAMBERT_DOUBLESIDE = this._createMaterial("builtin/meshlambert_doubleside.mat.json", DefaultShaders.MESH_BASIC)
+                .setTexture(DefaultTextures.WHITE)
+                .setCullFace(false);
 
             DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", DefaultShaders.LINEDASHED)
                 .addDefine(ShaderDefine.USE_COLOR);
 
             DefaultMaterials.MISSING = this._createMaterial("builtin/missing.mat.json", DefaultShaders.MESH_BASIC)
-                .setColor(ShaderUniformName.Diffuse, Color.create(1.0, 0.0, 1.0).release());
+                .setColor(Color.PURPLE);
 
             DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/shadow_depth.mat.json", DefaultShaders.DEPTH)
                 .addDefine(ShaderDefine.DEPTH_PACKING_3201);

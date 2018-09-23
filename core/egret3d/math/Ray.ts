@@ -14,7 +14,6 @@ namespace egret3d {
      * 射线
      */
     export class Ray implements paper.IRelease<Ray>, paper.ISerializable {
-
         private static readonly _instances: Ray[] = [];
 
         public static create(origin: Readonly<IVector3> = Vector3.ZERO, direction: Readonly<IVector3> = Vector3.FORWARD) {
@@ -98,6 +97,24 @@ namespace egret3d {
             return Math.sqrt(this.getSquaredDistance(value));
         }
 
+        public getDistanceToPlane(value: Readonly<Plane>) {
+            const denominator = value.normal.dot(this.direction);
+            if (denominator === 0.0) {
+                // line is coplanar, return origin
+                if (value.getDistance(this.origin) === 0.0) {
+                    return 0.0;
+                }
+
+                // Null is preferable to undefined since undefined means.... it is undefined
+                return -1.0;
+            }
+
+            const t = -(this.origin.dot(value.normal) + value.constant) / denominator;
+
+            // Return if the ray never intersects the plane
+            return t >= 0.0 ? t : -1.0;
+        }
+
         public at(value: number, out?: Vector3) {
             if (!out) {
                 out = Vector3.create();
@@ -108,8 +125,7 @@ namespace egret3d {
             return out;
         }
         /**
-         * 与三角形相交检测。
-         * TODO
+         * @deprecated
          */
         public intersectTriangle(triangle: Readonly<Triangle>, backfaceCulling?: boolean, raycastInfo?: RaycastInfo): boolean;
         public intersectTriangle(p1: Readonly<Vector3>, p2: Readonly<Vector3>, p3: Readonly<Vector3>, backfaceCulling?: boolean, raycastInfo?: RaycastInfo): boolean;
@@ -217,226 +233,9 @@ namespace egret3d {
                 this.at(raycastInfo.distance = qvec.dot(edge2) * invdet, raycastInfo.position);
             }
 
-
             return true;
-        }
-
-        public intersectPlane(planePoint: Vector3, planeNormal: Vector3) {
-            let vp1 = planeNormal.x;
-            let vp2 = planeNormal.y;
-            let vp3 = planeNormal.z;
-            let n1 = planePoint.x;
-            let n2 = planePoint.y;
-            let n3 = planePoint.z;
-            let v1 = this.direction.x;
-            let v2 = this.direction.y;
-            let v3 = this.direction.z;
-            let m1 = this.origin.x;
-            let m2 = this.origin.y;
-            let m3 = this.origin.z;
-            let vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
-            if (vpt === 0) {
-                return null;
-            } else {
-                let t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
-                return new Vector3(m1 + v1 * t, m2 + v2 * t, m3 + v3 * t);
-            }
-        }
-        // TODO
-        // public intersectPlane(plane: Readonly<Plane>): RaycastInfo | null;
-        // public intersectPlane(plane: Readonly<IVector3>, normal: Readonly<IVector3>): RaycastInfo | null;
-        // public intersectPlane(p1: Readonly<Plane | IVector3>, p2?: Readonly<IVector3>) {
-        //     if (p1 instanceof Plane) {
-        //         // TODO
-        //         return null;
-        //     }
-        //     else {
-        //         let vp1 = (p2 as Readonly<IVector3>).x;
-        //         let vp2 = (p2 as Readonly<IVector3>).y;
-        //         let vp3 = (p2 as Readonly<IVector3>).z;
-        //         let n1 = (p1 as Readonly<IVector3>).x;
-        //         let n2 = (p1 as Readonly<IVector3>).y;
-        //         let n3 = (p1 as Readonly<IVector3>).z;
-        //         let v1 = this.direction.x;
-        //         let v2 = this.direction.y;
-        //         let v3 = this.direction.z;
-        //         let m1 = this.origin.x;
-        //         let m2 = this.origin.y;
-        //         let m3 = this.origin.z;
-        //         let vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
-
-        //         if (vpt === 0) {
-        //             return null;
-        //         }
-        //         else {
-        //             const raycastInfo = RaycastInfo.create();
-        //             raycastInfo.distance = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
-        //             raycastInfo.position.multiplyScalar(raycastInfo.distance, this.direction).add(this.origin);
-        //             return raycastInfo;
-        //         }
-        //     }
-        // }
-        /**
-         * @deprecated
-         */
-        public intersectAABB(aabb: Readonly<AABB>, raycastInfo?: RaycastInfo): boolean;
-        public intersectAABB(minimum: Readonly<IVector3>, maximum: Readonly<IVector3>, raycastInfo?: RaycastInfo): boolean;
-        public intersectAABB(p1: Readonly<AABB> | Readonly<IVector3>, p2?: RaycastInfo | Readonly<IVector3>, p3?: RaycastInfo) {
-            const isA = p1 instanceof AABB;
-            const minimum = isA ? (p1 as Readonly<AABB>).minimum : p1 as Readonly<IVector3>;
-            const maximum = isA ? (p1 as Readonly<AABB>).maximum : p2 as Readonly<IVector3>;
-
-            let tmin: number, tmax: number, tymin: number, tymax: number, tzmin: number, tzmax: number;
-            const invdirx = 1.0 / this.direction.x,
-                invdiry = 1.0 / this.direction.y,
-                invdirz = 1.0 / this.direction.z;
-            const origin = this.origin;
-
-            if (invdirx >= 0.0) {
-                tmin = (minimum.x - origin.x) * invdirx;
-                tmax = (maximum.x - origin.x) * invdirx;
-            }
-            else {
-                tmin = (maximum.x - origin.x) * invdirx;
-                tmax = (minimum.x - origin.x) * invdirx;
-            }
-
-            if (invdiry >= 0.0) {
-                tymin = (minimum.y - origin.y) * invdiry;
-                tymax = (maximum.y - origin.y) * invdiry;
-            }
-            else {
-                tymin = (maximum.y - origin.y) * invdiry;
-                tymax = (minimum.y - origin.y) * invdiry;
-            }
-
-            if ((tmin > tymax) || (tymin > tmax)) return false;
-
-            // These lines also handle the case where tmin or tmax is NaN
-            // (result of 0 * Infinity). x !== x returns true if x is NaN
-
-            if (tymin > tmin || tmin !== tmin) tmin = tymin;
-
-            if (tymax < tmax || tmax !== tmax) tmax = tymax;
-
-            if (invdirz >= 0.0) {
-                tzmin = (minimum.z - origin.z) * invdirz;
-                tzmax = (maximum.z - origin.z) * invdirz;
-            }
-            else {
-                tzmin = (maximum.z - origin.z) * invdirz;
-                tzmax = (minimum.z - origin.z) * invdirz;
-            }
-
-            if ((tmin > tzmax) || (tzmin > tmax)) return false;
-
-            if (tzmin > tmin || tmin !== tmin) tmin = tzmin;
-
-            if (tzmax < tmax || tmax !== tmax) tmax = tzmax;
-
-            // return point closest to the ray (positive side)
-
-            if (tmax < 0.0) return false;
-
-            const raycastInfo = isA ? p2 as RaycastInfo | undefined : p3;
-            if (raycastInfo) {
-                this.at(raycastInfo.distance = tmin >= 0.0 ? tmin : tmax, raycastInfo.position);
-            }
-
-            return true;
-        }
-        /**
-         * @deprecated
-         */
-        public static raycast(ray: Ray, isPickMesh: boolean = false, maxDistance: number = Number.MAX_VALUE, layerMask: paper.Layer = paper.Layer.Default | paper.Layer.UI): RaycastInfo | null {
-            return this._doPick(ray, maxDistance, layerMask, false, isPickMesh) as RaycastInfo | null;
-        }
-
-        /**
-         * @deprecated
-         */
-        public static raycastAll(ray: Ray, isPickMesh: boolean = false, maxDistance: number = Number.MAX_VALUE, layerMask: paper.Layer = paper.Layer.Default | paper.Layer.UI): RaycastInfo[] | null {
-            return this._doPick(ray, maxDistance, layerMask, true, isPickMesh) as RaycastInfo[] | null;
-        }
-
-        private static _doPick(ray: Ray, maxDistance: number = Number.MAX_VALUE, layerMask: paper.Layer, pickAll: boolean = false, isPickMesh: boolean = false) {
-            const pickedList: RaycastInfo[] = [];
-
-            for (const gameObject of paper.Application.sceneManager.activeScene.getRootGameObjects()) {
-                if (gameObject.layer & layerMask) {
-                    if (isPickMesh) {
-                        this._pickMesh(ray, gameObject.transform, pickedList);
-                    }
-                    else {
-                        this._pickCollider(ray, gameObject.transform, pickedList);
-                    }
-                }
-            }
-
-            if (pickedList.length === 0) {
-                return null;
-            }
-
-            if (pickAll) {
-                return pickedList;
-            }
-
-            let index = 0;
-            for (let i = 1; i < pickedList.length; i++) {
-                if (pickedList[i].distance < pickedList[index].distance) {
-                    index = i;
-                }
-            }
-
-            return pickedList[index];
-
-        }
-
-        private static _pickMesh(ray: Ray, transform: Transform, pickInfos: RaycastInfo[]) {
-            // if (transform.gameObject.activeInHierarchy) {
-            //     const meshFilter = transform.gameObject.getComponent(MeshFilter);
-            //     if (meshFilter) {
-            //         const mesh = meshFilter.mesh;
-            //         if (mesh) {
-            //             const pickinfo = mesh.raycast(ray, transform.getWorldMatrix());
-            //             if (pickinfo) {
-            //                 pickInfos.push(pickinfo);
-            //                 pickinfo.transform = transform;
-            //             }
-            //         }
-            //     }
-            //     else {
-            //         const skinmesh = transform.gameObject.getComponent(SkinnedMeshRenderer);
-            //         if (skinmesh && skinmesh.mesh) {
-            //             const pickinfo = skinmesh.mesh.raycast(ray, transform.getWorldMatrix());
-            //             if (pickinfo) {
-            //                 pickInfos.push(pickinfo);
-            //                 pickinfo.transform = transform;
-            //             }
-            //         }
-            //     }
-            // }
-
-            // for (const child of transform.children) {
-            //     this._pickMesh(ray, child, pickInfos);
-            // }
-        }
-
-        private static _pickCollider(ray: Ray, transform: Transform, pickInfos: RaycastInfo[]) {
-            if (transform.gameObject.activeInHierarchy) {
-                // const pickInfo = ray.intersectCollider(transform);
-                // if (pickInfo) {
-                //     pickInfos.push(pickInfo);
-                //     pickInfo.transform = transform;
-                // }
-            }
-
-            for (const child of transform.children) {
-                this._pickCollider(ray, child, pickInfos);
-            }
         }
     }
-
     /**
      * 射线投射信息。
      */

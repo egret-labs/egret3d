@@ -33,6 +33,56 @@ namespace paper {
 
             return gameObect;
         }
+
+        private static _raycast(ray: Readonly<egret3d.Ray>, gameObject: GameObject, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false, raycastInfos: egret3d.RaycastInfo[]) {
+            if (
+                (
+                    gameObject.hideFlags === paper.HideFlags.HideAndDontSave && gameObject.tag === paper.DefaultTags.EditorOnly &&
+                    (!gameObject.transform.parent || gameObject.transform.parent.gameObject.activeInHierarchy)
+                ) ? gameObject.activeSelf : !gameObject.activeInHierarchy
+            ) {
+                return;
+            }
+
+            const raycastInfo = egret3d.RaycastInfo.create();
+            if ((gameObject.layer & cullingMask) && gameObject.renderer && gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
+                if (maxDistance <= 0.0 || raycastInfo.distance <= maxDistance) {
+                    raycastInfo.transform = gameObject.transform;
+                    raycastInfos.push(raycastInfo);
+                }
+                else {
+                    raycastInfo.release();
+                }
+            }
+            else {
+                raycastInfo.release();
+
+                for (const child of gameObject.transform.children) {
+                    this._raycast(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+                }
+            }
+        }
+
+        private static _sortRaycastInfo(a: egret3d.RaycastInfo, b: egret3d.RaycastInfo) {
+            // TODO renderQueue.
+            return b.distance - a.distance;
+        }
+
+        public static raycast(ray: Readonly<egret3d.Ray>, gameObjectOrTransforms: ReadonlyArray<GameObject | egret3d.Transform>, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false) {
+            const raycastInfos = [] as egret3d.RaycastInfo[];
+
+            for (const gameObjectOrTransform of gameObjectOrTransforms) {
+                this._raycast(
+                    ray,
+                    gameObjectOrTransform instanceof GameObject ? gameObjectOrTransform : gameObjectOrTransform.gameObject,
+                    maxDistance, cullingMask, raycastMesh, raycastInfos
+                );
+            }
+
+            raycastInfos.sort(this._sortRaycastInfo);
+
+            return raycastInfos;
+        }
         /**
          * 
          */
