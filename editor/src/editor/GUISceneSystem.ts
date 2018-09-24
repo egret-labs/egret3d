@@ -11,6 +11,7 @@ namespace paper.debug {
         Y,
         Z,
         E,
+        XYZE,
     }
 
     export class GUISceneSystem extends paper.BaseSystem {
@@ -177,6 +178,11 @@ namespace paper.debug {
                             rotationAxis.copy(this._eye);
                             rotationAngle = this._endPoint.getAngle(this._startPoint) * (tempVector.dot(this._eye) < 0 ? 1 : -1);
                         }
+                        else if (this._transformAxis === TransformAxis.XYZE) {
+                            tempVector.copy(this._endPoint).subtract(this._startPoint, tempVector).cross(this._eye).normalize();
+                            rotationAxis.copy(tempVector);
+                            rotationAngle = this._endPoint.subtract(this._startPoint, this._endPoint).dot(tempVector.cross(this._eye)) * ROTATION_SPEED;
+                        }
                         else {
                             switch (this._transformAxis) {
                                 case TransformAxis.X:
@@ -245,6 +251,10 @@ namespace paper.debug {
 
                             case "pickE":
                                 this._transformAxis = TransformAxis.E;
+                                break;
+
+                            case "pickXYZE":
+                                this._transformAxis = TransformAxis.XYZE;
                                 break;
 
                             default:
@@ -355,7 +365,7 @@ namespace paper.debug {
         private _onGameObjectHovered = (_c: any, value: GameObject) => {
             if (value) {
                 this._hoverBox.activeSelf = true;
-                if(this._hoverBox.scene !== value.scene){//TODO
+                if (this._hoverBox.scene !== value.scene) {//TODO
                     this._hoverBox.dontDestroy = true;
                     this._hoverBox.dontDestroy = false;
                 }
@@ -424,6 +434,13 @@ namespace paper.debug {
                         tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                         axisE.setRotation(tempQuaternion2);
                         pickE.setRotation(tempQuaternion2);
+                    }
+                    {
+                        const axisXYZE = rotateObj.find("axisXYZE");
+                        // const pickE = rotateObj.find("pickE");
+                        tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
+                        axisXYZE.setRotation(tempQuaternion2);
+                        // pickE.setRotation(tempQuaternion2);
                     }
                     {
                         const axisX = rotateObj.find("axisX");
@@ -495,8 +512,12 @@ namespace paper.debug {
                 let __editor = camera.transform.find("__editor") as egret3d.Transform;
                 if (__editor) {
                     var eyeDistance = this._selectedWorldPostion.getDistance(this._cameraPosition);
+                    const eye = this._cameraPosition.clone();
+                    eye.subtract(camera.transform.getPosition());
                     const tempQuaternion2 = egret3d.Quaternion.create();
-                    tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
+                    tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._cameraPosition, camera.transform.getPosition(), egret3d.Vector3.UP).release());
+                    // tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._cameraPosition, camera.transform.getPosition(), egret3d.Vector3.UP).release());
+                    tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                     __editor.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
                     __editor.transform.setRotation(tempQuaternion2);
                 }
@@ -714,6 +735,7 @@ namespace paper.debug {
             this._pickableTool[TransformMode.ROTATE].push(this._axises.transform.find("rotate").find("pickY").gameObject);
             this._pickableTool[TransformMode.ROTATE].push(this._axises.transform.find("rotate").find("pickZ").gameObject);
             this._pickableTool[TransformMode.ROTATE].push(this._axises.transform.find("rotate").find("pickE").gameObject);
+            this._pickableTool[TransformMode.ROTATE].push(this._axises.transform.find("rotate").find("pickXYZE").gameObject);
             //
             this._pickableTool[TransformMode.SCALE] = [];
             this._pickableTool[TransformMode.SCALE].push(this._axises.transform.find("scale").find("pickX").gameObject);

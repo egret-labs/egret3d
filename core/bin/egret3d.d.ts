@@ -2778,6 +2778,7 @@ declare namespace egret3d {
         static readonly GREEN: Readonly<Color>;
         static readonly BLUE: Readonly<Color>;
         static readonly YELLOW: Readonly<Color>;
+        static readonly GRAY: Readonly<Color>;
         private static readonly _instances;
         static create(r?: number, g?: number, b?: number, a?: number): Color;
         release(): this;
@@ -3829,6 +3830,7 @@ declare namespace egret3d {
         static TRANSPARENT_DOUBLESIDE: Shader;
         static TRANSPARENT_ADDITIVE: Shader;
         static TRANSPARENT_ADDITIVE_DOUBLESIDE: Shader;
+        static TRANSPARENT_LAMBERT: Shader;
         static PARTICLE: Shader;
         static PARTICLE_BLEND: Shader;
         static PARTICLE_BLEND1: Shader;

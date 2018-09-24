@@ -13,8 +13,8 @@ namespace paper.debug {
      * 
      */
     export class GUIComponent extends SingletonComponent {
-        // public readonly inspector: dat.GUI = new dat.GUI({ closeOnTop: true, width: 330 });
-        // public readonly hierarchy: dat.GUI = new dat.GUI({ closeOnTop: true, width: 330 });
+        public readonly inspector: dat.GUI = new dat.GUI({ closeOnTop: true, width: 330 });
+        public readonly hierarchy: dat.GUI = new dat.GUI({ closeOnTop: true, width: 330 });
         /**
          * 所有选中的实体。
          */
@@ -35,54 +35,54 @@ namespace paper.debug {
         public initialize() {
             super.initialize();
 
-            const guiSceneSystem = Application.systemManager.getOrRegisterSystem(debug.GUISceneSystem);
-            // const sceneOptions = {
-                //     debug: false,
-                //     assets: () => {
-                //         const assets = paper.Asset["_assets"] as any;
-                //         const assetNames = [];
+            // const guiSceneSystem = Application.systemManager.getOrRegisterSystem(debug.GUISceneSystem);
+            const sceneOptions = {
+                    debug: false,
+                    assets: () => {
+                        const assets = paper.Asset["_assets"] as any;
+                        const assetNames = [];
 
-                //         for (const k in assets) {
-                //             if (k.indexOf("builtin") >= 0) {
-                //                 continue;
-                //             }
+                        for (const k in assets) {
+                            if (k.indexOf("builtin") >= 0) {
+                                continue;
+                            }
 
-                //             assetNames.push(k);
+                            assetNames.push(k);
 
-                //             if (assets[k] instanceof egret3d.Texture) {
-                //                 assetNames.push(k.replace(".image.json", ".png"));
-                //                 assetNames.push(k.replace(".image.json", ".jpg"));
-                //             }
-                //         }
+                            if (assets[k] instanceof egret3d.Texture) {
+                                assetNames.push(k.replace(".image.json", ".png"));
+                                assetNames.push(k.replace(".image.json", ".jpg"));
+                            }
+                        }
 
-                //         console.info(JSON.stringify(assetNames));
-                //     }
-                // };
+                        console.info(JSON.stringify(assetNames));
+                    }
+                };
 
-                // this.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
-                //     const guiSceneSystem = Application.systemManager.getOrRegisterSystem(debug.GUISceneSystem);
-                //     const guiSystem = Application.systemManager.getOrRegisterSystem(debug.GUISystem);
+                this.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
+                    const guiSceneSystem = Application.systemManager.getOrRegisterSystem(debug.GUISceneSystem);
+                    const guiSystem = Application.systemManager.getOrRegisterSystem(debug.GUISystem);
 
-                //     if (v) {
-                //         Application.playerMode = PlayerMode.DebugPlayer;
-                //         guiSceneSystem.enabled = true;
-                //         guiSystem.enabled = true;
-                //     }
-                //     else {
-                //         this.select(null);
+                    if (v) {
+                        Application.playerMode = PlayerMode.DebugPlayer;
+                        guiSceneSystem.enabled = true;
+                        guiSystem.enabled = true;
+                    }
+                    else {
+                        this.select(null);
 
-                //         Application.playerMode = PlayerMode.Player;
-                //         guiSceneSystem.enabled = false;
-                //         guiSystem.enabled = false;
+                        Application.playerMode = PlayerMode.Player;
+                        guiSceneSystem.enabled = false;
+                        guiSystem.enabled = false;
 
-                //         this.selectedGameObjects.length = 0;
-                //         this.selectedScene = null;
-                //         this.hoverGameObject = null;
-                //         this.selectedGameObject = null;
-                //     }
-                // });
-                // this.hierarchy.add(sceneOptions, "assets");
-                // this.hierarchy.close();
+                        this.selectedGameObjects.length = 0;
+                        this.selectedScene = null;
+                        this.hoverGameObject = null;
+                        this.selectedGameObject = null;
+                    }
+                });
+                this.hierarchy.add(sceneOptions, "assets");
+                this.hierarchy.close();
         }
 
         public select(value: Scene | GameObject | null, isReplace?: boolean) {
@@ -166,10 +166,10 @@ namespace paper.debug {
         }
     }
     // 
-    // if (dat) {
-        setTimeout(() => {
-            GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
-        }, 1000);
-        
-    // }
+    // setTimeout(() => {
+    //     GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
+    // }, 1000);
+    if (dat) {
+        GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);        
+    }
 }
