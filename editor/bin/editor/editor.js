@@ -2857,13 +2857,12 @@ var paper;
                 _this._cameraViewFrustum = null;
                 _this._transformMode = 0 /* TRANSLATE */;
                 _this._transformAxis = 0 /* None */;
+                _this._transformLocal = false;
                 _this._pickableSelected = []; //可被选中的 camera
                 _this._boxes = {};
                 _this._pickableTool = {}; //可拾取的_axises
                 _this._gizomsMap = {}; //
                 //
-                //
-                _this._positionStart = egret3d.Vector3.create();
                 //
                 _this._startWorldPosition = egret3d.Vector3.create();
                 _this._startWorldQuaternion = egret3d.Quaternion.create();
@@ -2886,7 +2885,11 @@ var paper;
                             selectedGameObject.transform.getWorldMatrix().decompose(_this._startWorldPosition, _this._startWorldQuaternion, _this._startWorldScale);
                             var raycastInfosPos = raycastInfos[0].position;
                             _this._startPoint.copy(raycastInfosPos).subtract(_this._startWorldPosition, _this._startPoint);
-                            _this._positionStart.copy(selectedGameObject.transform.getPosition()); // TODO
+                            var isLocalSpace = _this._transformLocal || _this._transformMode === 2 /* SCALE */;
+                            isLocalSpace = isLocalSpace && _this._transformAxis !== 4 /* E */ && _this._transformAxis !== 5 /* XYZE */;
+                            if (isLocalSpace) {
+                                _this._startPoint.applyQuaternion(_this._startWorldQuaternion.clone().inverse());
+                            }
                         }
                     }
                     else if (event.button === 1) {
@@ -2920,10 +2923,16 @@ var paper;
                             if (raycastInfos.length == 0) {
                                 return;
                             }
+                            //
+                            var isLocalSpace = _this._transformLocal || _this._transformMode === 2 /* SCALE */;
+                            isLocalSpace = isLocalSpace && _this._transformAxis !== 4 /* E */ && _this._transformAxis !== 5 /* XYZE */;
                             var selected = _this._guiComponent.selectedGameObject;
                             var intersectObject = raycastInfos[0];
                             var intersectObjectPos = intersectObject.position;
                             _this._endPoint.copy(intersectObjectPos).subtract(_this._startWorldPosition, _this._endPoint);
+                            if (isLocalSpace) {
+                                _this._endPoint.applyQuaternion(_this._startWorldQuaternion.clone().inverse());
+                            }
                             if (_this._transformMode === 0 /* TRANSLATE */) {
                                 switch (_this._transformAxis) {
                                     case 1 /* X */:
@@ -2939,13 +2948,20 @@ var paper;
                                         _this._endPoint.y = _this._startPoint.y;
                                         break;
                                 }
-                                _this._endPoint.subtract(_this._startPoint, _this._endPoint).add(_this._positionStart);
+                                if (isLocalSpace) {
+                                    _this._endPoint.subtract(_this._startPoint, _this._endPoint).applyQuaternion(_this._startWorldQuaternion).add(_this._startWorldPosition);
+                                }
+                                else {
+                                    _this._endPoint.subtract(_this._startPoint, _this._endPoint).add(_this._startWorldPosition);
+                                }
                                 selected.transform.setPosition(_this._endPoint);
                             }
                             else if (_this._transformMode === 1 /* ROTATE */) {
                                 var camera = egret3d.Camera.editor;
                                 var tempVector = egret3d.Vector3.create();
+                                var tempVector2 = egret3d.Vector3.create();
                                 var rotationAxis = egret3d.Vector3.create();
+                                var quaternion = isLocalSpace ? selected.transform.getRotation() : egret3d.Quaternion.IDENTITY.clone();
                                 var tempQuaternion = egret3d.Quaternion.create();
                                 var unit = egret3d.Vector3.create();
                                 var ROTATION_SPEED = 20 / _this._selectedWorldPostion.getDistance(tempVector.applyMatrix(camera.gameObject.transform.getWorldMatrix()));
@@ -2972,13 +2988,19 @@ var paper;
                                             unit.set(0, 0, 1);
                                             break;
                                     }
-                                    rotationAxis.copy(unit);
-                                    _this._endPoint.subtract(_this._startPoint, _this._endPoint);
-                                    rotationAngle = _this._endPoint.dot(unit.cross(_this._eye).normalize()) * ROTATION_SPEED;
+                                    rotationAxis.copy(unit).applyQuaternion(quaternion);
+                                    tempVector.copy(unit);
+                                    tempVector2.copy(_this._endPoint).subtract(_this._startPoint, tempVector2);
+                                    if (isLocalSpace) {
+                                        tempVector.applyQuaternion(quaternion);
+                                        tempVector2.applyQuaternion(_this._startWorldQuaternion);
+                                    }
+                                    rotationAngle = tempVector2.dot(tempVector.cross(_this._eye).normalize()) * ROTATION_SPEED;
                                 }
                                 tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(_this._startWorldQuaternion);
                                 selected.transform.setRotation(tempQuaternion);
                                 tempVector.release();
+                                tempVector2.release();
                                 rotationAxis.release();
                                 tempQuaternion.release();
                                 unit.release();
@@ -3095,6 +3117,10 @@ var paper;
                                 _this._orbitControls.lookAtOffset.set(0, 0, 0);
                             }
                             break;
+                        case "q": {
+                            _this._transformLocal = !_this._transformLocal;
+                            break;
+                        }
                         case "w": {
                             _this._transformModeHandler(0 /* TRANSLATE */);
                             break;
@@ -3177,54 +3203,59 @@ var paper;
             };
             GUISceneSystem.prototype._updateAxises = function () {
                 if (this._axises.activeSelf) {
+                    var isLocalSpace = this._transformMode === 2 /* SCALE */ ? true : this._transformLocal;
                     this._axises.transform.position = this._selectedWorldPostion;
                     var eyeDistance = this._selectedWorldPostion.getDistance(this._cameraPosition);
                     var translateObj = this._axises.transform.find("translate");
                     var rotateObj = this._axises.transform.find("rotate");
                     var scaleObj = this._axises.transform.find("scale");
+                    var quaternion = isLocalSpace ? this._selectedWorldQuaternion : egret3d.Quaternion.IDENTITY; //TODO local
                     //
                     this._axises.transform.setScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10).release());
                     if (this._transformMode === 0 /* TRANSLATE */ || this._transformMode === 2 /* SCALE */) {
-                        // translateObj.rotation = this._selectedWorldQuaternion;
-                        // scaleObj.rotation = this._selectedWorldQuaternion;
+                        translateObj.rotation = quaternion;
+                        scaleObj.rotation = quaternion;
                     }
                     else if (this._transformMode === 1 /* ROTATE */) {
-                        var quaternion = egret3d.Quaternion.IDENTITY; //TODO local
                         var tempQuaternion = quaternion.clone();
-                        var tempQuaternion2 = egret3d.Quaternion.create();
-                        var alignVector = this._eye.clone();
-                        alignVector.applyQuaternion(tempQuaternion.inverse());
+                        var tempQuaternion2 = quaternion.clone();
+                        var alignVector = egret3d.Vector3.create();
+                        alignVector.copy(this._eye).applyQuaternion(tempQuaternion.inverse());
                         {
+                            tempQuaternion.fromAxis(egret3d.Vector3.RIGHT, Math.atan2(-alignVector.y, alignVector.z));
+                            tempQuaternion.multiply(tempQuaternion2, tempQuaternion);
+                            var axisX = rotateObj.find("axisX");
+                            var pickX = rotateObj.find("pickX");
+                            axisX.setRotation(tempQuaternion);
+                            pickX.setRotation(tempQuaternion);
+                        }
+                        {
+                            tempQuaternion.fromAxis(egret3d.Vector3.UP, Math.atan2(alignVector.x, alignVector.z));
+                            tempQuaternion.multiply(tempQuaternion2, tempQuaternion);
+                            var axisY = rotateObj.find("axisY");
+                            var pickY = rotateObj.find("pickY");
+                            axisY.setRotation(tempQuaternion);
+                            pickY.setRotation(tempQuaternion);
+                        }
+                        {
+                            tempQuaternion.fromAxis(egret3d.Vector3.FORWARD, Math.atan2(-alignVector.x, alignVector.y));
+                            tempQuaternion.multiply(tempQuaternion2, tempQuaternion);
+                            var axisZ = rotateObj.find("axisZ");
+                            var pickZ = rotateObj.find("pickZ");
+                            axisZ.setRotation(tempQuaternion);
+                            pickZ.setRotation(tempQuaternion);
+                        }
+                        {
+                            tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                             var axisE = rotateObj.find("axisE");
                             var pickE = rotateObj.find("pickE");
-                            tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                             axisE.setRotation(tempQuaternion2);
                             pickE.setRotation(tempQuaternion2);
                         }
                         {
-                            var axisXYZE = rotateObj.find("axisXYZE");
-                            // const pickE = rotateObj.find("pickE");
                             tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
+                            var axisXYZE = rotateObj.find("axisXYZE");
                             axisXYZE.setRotation(tempQuaternion2);
-                            // pickE.setRotation(tempQuaternion2);
-                        }
-                        {
-                            var axisX = rotateObj.find("axisX");
-                            tempQuaternion2.copy(tempQuaternion).fromAxis(egret3d.Vector3.RIGHT, Math.atan2(-alignVector.y, alignVector.z));
-                            tempQuaternion2.multiply(quaternion);
-                            axisX.setRotation(tempQuaternion2);
-                        }
-                        {
-                            var axisY = rotateObj.find("axisY");
-                            tempQuaternion2.copy(tempQuaternion).fromAxis(egret3d.Vector3.UP, Math.atan2(alignVector.x, alignVector.z));
-                            tempQuaternion2.multiply(quaternion);
-                            axisY.setRotation(tempQuaternion2);
-                        }
-                        {
-                            var axisZ = rotateObj.find("axisZ");
-                            tempQuaternion2.copy(tempQuaternion).fromAxis(egret3d.Vector3.FORWARD, Math.atan2(alignVector.y, alignVector.x));
-                            tempQuaternion2.multiply(quaternion);
-                            axisZ.setRotation(tempQuaternion2);
                         }
                         tempQuaternion.release();
                         tempQuaternion2.release();
@@ -3275,11 +3306,12 @@ var paper;
                         var eye = this._cameraPosition.clone();
                         eye.subtract(camera.transform.getPosition());
                         var tempQuaternion2 = egret3d.Quaternion.create();
-                        tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(camera.transform.getPosition(), this._cameraPosition, egret3d.Vector3.UP).release());
+                        tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._cameraPosition, camera.transform.getPosition(), egret3d.Vector3.UP).release());
                         // tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._cameraPosition, camera.transform.getPosition(), egret3d.Vector3.UP).release());
                         // tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                         __editor.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
                         __editor.transform.setRotation(tempQuaternion2);
+                        __editor.transform.getRotation();
                     }
                     else {
                         __editor = debug.EditorMeshHelper.createCameraIcon("__editor", camera.gameObject).transform;
@@ -4274,21 +4306,26 @@ var paper;
                     var axisZ = this.createGameObject("axisZ", egret3d.DefaultMeshes.createCircle(1, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var axisE = this.createGameObject("axisE", egret3d.DefaultMeshes.createCircle(1.25, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var axisXYZE = this.createGameObject("axisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickX = this.createGameObject("pickX", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickY = this.createGameObject("pickY", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickZ = this.createGameObject("pickZ", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickE = this.createGameObject("pickE", egret3d.DefaultMeshes.createTorus(1.25, 0.1, 2, 24), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickX = this.createGameObject("pickX", egret3d.DefaultMeshes.createTorus(1, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickY = this.createGameObject("pickY", egret3d.DefaultMeshes.createTorus(1, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickZ = this.createGameObject("pickZ", egret3d.DefaultMeshes.createTorus(1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickE = this.createGameObject("pickE", egret3d.DefaultMeshes.createTorus(1.25, 3, 0.1, 2, 24), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickXYZE = this.createGameObject("pickXYZE", egret3d.DefaultMeshes.createSphere(0.7, 10, 8), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     axisX.transform.setParent(rotate.transform);
                     axisY.transform.setParent(rotate.transform);
                     axisZ.transform.setParent(rotate.transform);
                     axisE.transform.setParent(rotate.transform);
                     axisXYZE.transform.setParent(rotate.transform);
-                    pickX.transform.setParent(rotate.transform).setLocalEuler(0, -Math.PI * 0.5, -Math.PI * 0.5);
-                    pickY.transform.setParent(rotate.transform).setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
-                    pickZ.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
-                    pickE.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, 0.0);
-                    pickXYZE.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, 0.0);
+                    pickX.transform.setParent(rotate.transform);
+                    pickY.transform.setParent(rotate.transform);
+                    pickZ.transform.setParent(rotate.transform);
+                    pickE.transform.setParent(rotate.transform);
+                    pickXYZE.transform.setParent(rotate.transform);
+                    // pickX.transform.setParent(rotate.transform).setLocalEuler(0, -Math.PI * 0.5, -Math.PI * 0.5);
+                    // pickY.transform.setParent(rotate.transform).setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
+                    // pickZ.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
+                    // pickE.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, 0.0);
+                    // pickXYZE.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, 0.0);
                     pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = pickE.activeSelf = pickXYZE.activeSelf = false;
                     axisX.renderer.material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(4000 /* Overlay */);
                     axisY.renderer.material.setColor("diffuse", egret3d.Color.GREEN).setDepth(false, false).setRenderQueue(4000 /* Overlay */);

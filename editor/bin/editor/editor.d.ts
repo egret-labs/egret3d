@@ -166,11 +166,11 @@ declare namespace paper.debug {
         private _cameraViewFrustum;
         private _transformMode;
         private _transformAxis;
+        private _transformLocal;
         private readonly _pickableSelected;
         private readonly _boxes;
         private readonly _pickableTool;
         private readonly _gizomsMap;
-        private _positionStart;
         private _startWorldPosition;
         private _startWorldQuaternion;
         private _startWorldScale;

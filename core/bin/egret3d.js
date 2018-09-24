@@ -9156,8 +9156,9 @@ var egret3d;
         /**
          * 创建圆环网格。
          */
-        DefaultMeshes.createTorus = function (radius, tube, radialSegments, tubularSegments, arc) {
+        DefaultMeshes.createTorus = function (radius, axis, tube, radialSegments, tubularSegments, arc) {
             if (radius === void 0) { radius = 1; }
+            if (axis === void 0) { axis = 1; }
             if (tube === void 0) { tube = 0.1; }
             if (radialSegments === void 0) { radialSegments = 4; }
             if (tubularSegments === void 0) { tubularSegments = 14; }
@@ -9177,9 +9178,22 @@ var egret3d;
                     var u = i / tubularSegments * arc;
                     var v = j / radialSegments * Math.PI * 2;
                     // vertex
-                    vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
-                    vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
-                    vertex.z = tube * Math.sin(v);
+                    switch (axis) {
+                        case 1:
+                            vertex.x = tube * Math.sin(v);
+                            vertex.y = (radius + tube * Math.cos(v)) * Math.cos(u);
+                            vertex.z = (radius + tube * Math.cos(v)) * Math.sin(u);
+                            break;
+                        case 2:
+                            vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
+                            vertex.y = tube * Math.sin(v);
+                            vertex.z = (radius + tube * Math.cos(v)) * Math.sin(u);
+                            break;
+                        default:
+                            vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
+                            vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
+                            vertex.z = tube * Math.sin(v);
+                    }
                     vertices.push(vertex.x, vertex.y, vertex.z);
                     // normal
                     center.x = radius * Math.cos(u);
@@ -9409,8 +9423,6 @@ var egret3d;
             DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, false).setBlend(3 /* Add */);
             DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(1 /* Blend */);
-            DefaultShaders.TRANSPARENT_LAMBERT = this._createShader("builtin/transparent_lambert.shader.json", egret3d.ShaderLib.meshlambert, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */);
             DefaultShaders.LINEDASHED = this._createShader("builtin/linedashed.shader.json", egret3d.ShaderLib.linedashed, 2000 /* Geometry */, helpMaterial.glTFTechnique.states);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */);

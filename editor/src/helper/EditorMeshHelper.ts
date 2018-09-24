@@ -110,10 +110,10 @@ namespace paper.debug {
                 const axisE = this.createGameObject("axisE", egret3d.DefaultMeshes.createCircle(1.25, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const axisXYZE = this.createGameObject("axisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
 
-                const pickX = this.createGameObject("pickX", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickY = this.createGameObject("pickY", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickZ = this.createGameObject("pickZ", egret3d.DefaultMeshes.TORUS, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickE = this.createGameObject("pickE", egret3d.DefaultMeshes.createTorus(1.25, 0.1, 2, 24), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickX = this.createGameObject("pickX", egret3d.DefaultMeshes.createTorus(1, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickY = this.createGameObject("pickY", egret3d.DefaultMeshes.createTorus(1, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickZ = this.createGameObject("pickZ", egret3d.DefaultMeshes.createTorus(1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickE = this.createGameObject("pickE", egret3d.DefaultMeshes.createTorus(1.25, 3, 0.1, 2, 24), egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const pickXYZE = this.createGameObject("pickXYZE", egret3d.DefaultMeshes.createSphere(0.7, 10, 8), egret3d.DefaultMaterials.MESH_BASIC.clone());
 
                 axisX.transform.setParent(rotate.transform);
@@ -122,11 +122,11 @@ namespace paper.debug {
                 axisE.transform.setParent(rotate.transform);
                 axisXYZE.transform.setParent(rotate.transform);
 
-                pickX.transform.setParent(rotate.transform).setLocalEuler(0, -Math.PI * 0.5, -Math.PI * 0.5);
-                pickY.transform.setParent(rotate.transform).setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
-                pickZ.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
-                pickE.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, 0.0);
-                pickXYZE.transform.setParent(rotate.transform).setLocalEuler(0.0, 0.0, 0.0);
+                pickX.transform.setParent(rotate.transform);
+                pickY.transform.setParent(rotate.transform);
+                pickZ.transform.setParent(rotate.transform);
+                pickE.transform.setParent(rotate.transform);
+                pickXYZE.transform.setParent(rotate.transform);
                 pickX.activeSelf = pickY.activeSelf = pickZ.activeSelf = pickE.activeSelf = pickXYZE.activeSelf = false;
 
                 (axisX.renderer as egret3d.MeshRenderer).material.setColor("diffuse", egret3d.Color.RED).setDepth(false, false).setRenderQueue(paper.RenderQueue.Overlay);

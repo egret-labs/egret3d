@@ -38,14 +38,13 @@ namespace paper.debug {
 
         private _transformMode: TransformMode = TransformMode.TRANSLATE;
         private _transformAxis: TransformAxis = TransformAxis.None;
+        private _transformLocal: boolean = false;
 
         private readonly _pickableSelected: GameObject[] = [];   //可被选中的 camera
         private readonly _boxes: { [key: string]: GameObject } = {};
         private readonly _pickableTool: { [key: string]: GameObject[] } = {};  //可拾取的_axises
         private readonly _gizomsMap: { [key: string]: GameObject[] } = {};   //
         //
-        //
-        private _positionStart: egret3d.Vector3 = egret3d.Vector3.create();
         //
         private _startWorldPosition: egret3d.Vector3 = egret3d.Vector3.create();
         private _startWorldQuaternion: egret3d.Quaternion = egret3d.Quaternion.create();
@@ -97,9 +96,11 @@ namespace paper.debug {
                     const raycastInfosPos = raycastInfos[0].position;
                     this._startPoint.copy(raycastInfosPos).subtract(this._startWorldPosition, this._startPoint);
 
-
-
-                    this._positionStart.copy(selectedGameObject.transform.getPosition()); // TODO
+                    let isLocalSpace = this._transformLocal || this._transformMode === TransformMode.SCALE;
+                    isLocalSpace = isLocalSpace && this._transformAxis !== TransformAxis.E && this._transformAxis !== TransformAxis.XYZE;
+                    if (isLocalSpace) {
+                        this._startPoint.applyQuaternion(this._startWorldQuaternion.clone().inverse());
+                    }
                 }
             }
             else if (event.button === 1) {
@@ -142,10 +143,17 @@ namespace paper.debug {
                         return;
                     }
 
+                    //
+                    let isLocalSpace = this._transformLocal || this._transformMode === TransformMode.SCALE;
+                    isLocalSpace = isLocalSpace && this._transformAxis !== TransformAxis.E && this._transformAxis !== TransformAxis.XYZE;
+
                     const selected = this._guiComponent.selectedGameObject;
                     const intersectObject = raycastInfos[0];
                     const intersectObjectPos = intersectObject.position;
                     this._endPoint.copy(intersectObjectPos).subtract(this._startWorldPosition, this._endPoint);
+                    if (isLocalSpace) {
+                        this._endPoint.applyQuaternion(this._startWorldQuaternion.clone().inverse());
+                    }
 
                     if (this._transformMode === TransformMode.TRANSLATE) {
                         switch (this._transformAxis) {
@@ -162,13 +170,21 @@ namespace paper.debug {
                                 this._endPoint.y = this._startPoint.y;
                                 break;
                         }
-                        this._endPoint.subtract(this._startPoint, this._endPoint).add(this._positionStart);
+                        if (isLocalSpace) {
+                            this._endPoint.subtract(this._startPoint, this._endPoint).applyQuaternion(this._startWorldQuaternion).add(this._startWorldPosition);
+                        }
+                        else {
+                            this._endPoint.subtract(this._startPoint, this._endPoint).add(this._startWorldPosition);
+                        }
+
                         selected.transform.setPosition(this._endPoint);
                     }
                     else if (this._transformMode === TransformMode.ROTATE) {
                         const camera = egret3d.Camera.editor;
                         const tempVector = egret3d.Vector3.create();
+                        const tempVector2 = egret3d.Vector3.create();
                         const rotationAxis = egret3d.Vector3.create();
+                        const quaternion = isLocalSpace ? selected.transform.getRotation() : egret3d.Quaternion.IDENTITY.clone();
                         const tempQuaternion = egret3d.Quaternion.create();
                         const unit = egret3d.Vector3.create();
                         const ROTATION_SPEED = 20 / this._selectedWorldPostion.getDistance(tempVector.applyMatrix(camera.gameObject.transform.getWorldMatrix()));
@@ -196,16 +212,23 @@ namespace paper.debug {
                                     break;
                             }
 
-                            rotationAxis.copy(unit);
+                            rotationAxis.copy(unit).applyQuaternion(quaternion);
 
-                            this._endPoint.subtract(this._startPoint, this._endPoint);
-                            rotationAngle = this._endPoint.dot(unit.cross(this._eye).normalize()) * ROTATION_SPEED;
+                            tempVector.copy(unit);
+                            tempVector2.copy(this._endPoint).subtract(this._startPoint, tempVector2);
+
+                            if (isLocalSpace) {
+                                tempVector.applyQuaternion(quaternion);
+                                tempVector2.applyQuaternion(this._startWorldQuaternion);
+                            }
+                            rotationAngle = tempVector2.dot(tempVector.cross(this._eye).normalize()) * ROTATION_SPEED;
                         }
 
                         tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(this._startWorldQuaternion);
                         selected.transform.setRotation(tempQuaternion);
 
                         tempVector.release();
+                        tempVector2.release();
                         rotationAxis.release();
                         tempQuaternion.release();
                         unit.release();
@@ -337,6 +360,11 @@ namespace paper.debug {
                     }
                     break;
 
+                case "q": {
+                    this._transformLocal = !this._transformLocal;
+                    break;
+                }
+
                 case "w": {
                     this._transformModeHandler(TransformMode.TRANSLATE);
                     break;
@@ -408,6 +436,7 @@ namespace paper.debug {
 
         private _updateAxises() {
             if (this._axises.activeSelf) {
+                const isLocalSpace = this._transformMode === TransformMode.SCALE ? true : this._transformLocal;
                 this._axises.transform.position = this._selectedWorldPostion;
 
                 var eyeDistance = this._selectedWorldPostion.getDistance(this._cameraPosition);
@@ -415,52 +444,57 @@ namespace paper.debug {
                 const translateObj = this._axises.transform.find("translate");
                 const rotateObj = this._axises.transform.find("rotate");
                 const scaleObj = this._axises.transform.find("scale");
+                const quaternion = isLocalSpace ? this._selectedWorldQuaternion : egret3d.Quaternion.IDENTITY;//TODO local
                 //
                 this._axises.transform.setScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10).release());
                 if (this._transformMode === TransformMode.TRANSLATE || this._transformMode === TransformMode.SCALE) {
-                    // translateObj.rotation = this._selectedWorldQuaternion;
-                    // scaleObj.rotation = this._selectedWorldQuaternion;
+                    translateObj.rotation = quaternion;
+                    scaleObj.rotation = quaternion;
                 }
                 else if (this._transformMode === TransformMode.ROTATE) {
-                    const quaternion = egret3d.Quaternion.IDENTITY;//TODO local
 
                     const tempQuaternion = quaternion.clone();
-                    const tempQuaternion2 = egret3d.Quaternion.create();
-                    const alignVector = this._eye.clone();
-                    alignVector.applyQuaternion(tempQuaternion.inverse());
+                    const tempQuaternion2 = quaternion.clone();
+                    const alignVector = egret3d.Vector3.create();
+                    alignVector.copy(this._eye).applyQuaternion(tempQuaternion.inverse());
+                    
                     {
+                        tempQuaternion.fromAxis(egret3d.Vector3.RIGHT, Math.atan2(-alignVector.y, alignVector.z));
+                        tempQuaternion.multiply(tempQuaternion2, tempQuaternion);
+                        const axisX = rotateObj.find("axisX");
+                        const pickX = rotateObj.find("pickX");
+                        axisX.setRotation(tempQuaternion);
+                        pickX.setRotation(tempQuaternion);
+                    }
+
+                    {
+                        tempQuaternion.fromAxis(egret3d.Vector3.UP, Math.atan2(alignVector.x, alignVector.z));
+                        tempQuaternion.multiply(tempQuaternion2, tempQuaternion);
+                        const axisY = rotateObj.find("axisY");
+                        const pickY = rotateObj.find("pickY");
+                        axisY.setRotation(tempQuaternion);
+                        pickY.setRotation(tempQuaternion);
+                    }
+
+                    {
+                        tempQuaternion.fromAxis(egret3d.Vector3.FORWARD, Math.atan2(-alignVector.x, alignVector.y));
+                        tempQuaternion.multiply(tempQuaternion2, tempQuaternion);
+                        const axisZ = rotateObj.find("axisZ");
+                        const pickZ = rotateObj.find("pickZ");
+                        axisZ.setRotation(tempQuaternion);
+                        pickZ.setRotation(tempQuaternion);
+                    }
+                    {
+                        tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                         const axisE = rotateObj.find("axisE");
                         const pickE = rotateObj.find("pickE");
-                        tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                         axisE.setRotation(tempQuaternion2);
                         pickE.setRotation(tempQuaternion2);
                     }
                     {
-                        const axisXYZE = rotateObj.find("axisXYZE");
-                        // const pickE = rotateObj.find("pickE");
                         tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
+                        const axisXYZE = rotateObj.find("axisXYZE");
                         axisXYZE.setRotation(tempQuaternion2);
-                        // pickE.setRotation(tempQuaternion2);
-                    }
-                    {
-                        const axisX = rotateObj.find("axisX");
-                        tempQuaternion2.copy(tempQuaternion).fromAxis(egret3d.Vector3.RIGHT, Math.atan2(-alignVector.y, alignVector.z));
-                        tempQuaternion2.multiply(quaternion);
-                        axisX.setRotation(tempQuaternion2);
-                    }
-
-                    {
-                        const axisY = rotateObj.find("axisY");
-                        tempQuaternion2.copy(tempQuaternion).fromAxis(egret3d.Vector3.UP, Math.atan2(alignVector.x, alignVector.z));
-                        tempQuaternion2.multiply(quaternion);
-                        axisY.setRotation(tempQuaternion2);
-                    }
-
-                    {
-                        const axisZ = rotateObj.find("axisZ");
-                        tempQuaternion2.copy(tempQuaternion).fromAxis(egret3d.Vector3.FORWARD, Math.atan2(alignVector.y, alignVector.x));
-                        tempQuaternion2.multiply(quaternion);
-                        axisZ.setRotation(tempQuaternion2);
                     }
                     tempQuaternion.release();
                     tempQuaternion2.release();
@@ -517,7 +551,7 @@ namespace paper.debug {
                     const tempQuaternion2 = egret3d.Quaternion.create();
                     tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._cameraPosition, camera.transform.getPosition(), egret3d.Vector3.UP).release());
                     // tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._cameraPosition, camera.transform.getPosition(), egret3d.Vector3.UP).release());
-                    tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
+                    // tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                     __editor.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
                     __editor.transform.setRotation(tempQuaternion2);
                 }

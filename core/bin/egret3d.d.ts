@@ -3776,7 +3776,7 @@ declare namespace egret3d {
         /**
          * 创建圆环网格。
          */
-        static createTorus(radius?: number, tube?: number, radialSegments?: number, tubularSegments?: number, arc?: number): Mesh;
+        static createTorus(radius?: number, axis?: number, tube?: number, radialSegments?: number, tubularSegments?: number, arc?: number): Mesh;
         /**
          * 创建球体网格。
          * TODO
@@ -3830,7 +3830,6 @@ declare namespace egret3d {
         static TRANSPARENT_DOUBLESIDE: Shader;
         static TRANSPARENT_ADDITIVE: Shader;
         static TRANSPARENT_ADDITIVE_DOUBLESIDE: Shader;
-        static TRANSPARENT_LAMBERT: Shader;
         static PARTICLE: Shader;
         static PARTICLE_BLEND: Shader;
         static PARTICLE_BLEND1: Shader;
