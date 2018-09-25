@@ -35,7 +35,7 @@ namespace paper.debug {
                 }
                 const transformController = this._transformController;
                 if (transformController && transformController.isActiveAndEnabled && transformController.hovered) {
-                    transformController.start(this._modelComponent.selectedGameObject!, this._pointerPosition);
+                    transformController.start(this._pointerPosition);
                 }
             }
             else if (event.button === 1) {
@@ -508,7 +508,7 @@ namespace paper.debug {
 
             const transformController = this._transformController;
             if (transformController && transformController.isActiveAndEnabled) {
-                transformController.update(this._modelComponent.selectedGameObject!, this._pointerPosition);
+                transformController.update(this._pointerPosition);
             }
 
             const gridController = this._gridController;
