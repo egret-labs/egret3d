@@ -4,7 +4,7 @@ namespace paper {
      */
     export class Prefab extends BaseObjectAsset {
         /**
-         * 
+         * 通过预置体资源创建一个实体实例。
          */
         public static create(name: string): GameObject | null;
         public static create(name: string, x: number, y: number, z: number): GameObject | null;

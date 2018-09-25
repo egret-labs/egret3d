@@ -2,11 +2,11 @@ namespace egret3d {
     //TODO 运行时DrawCall排序优化使用
     let _hashCode: number = 0;
     /**
-     * 材质资源
+     * 材质资源。
      */
     export class Material extends GLTFAsset {
         /**
-         * 
+         * 创建一个材质实例。
          */
         public static create(shader?: Shader | string): Material;
         public static create(config: GLTF, name: string): Material;

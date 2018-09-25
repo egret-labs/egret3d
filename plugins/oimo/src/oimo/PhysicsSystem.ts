@@ -276,4 +276,6 @@ namespace egret3d.oimo {
             this._oimoWorld.setGravity(this._gravity as any);
         }
     }
+    //
+    paper.Application.systemManager.preRegister(PhysicsSystem, paper.UpdateSystem, true);
 }

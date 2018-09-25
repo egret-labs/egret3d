@@ -37,9 +37,7 @@ namespace paper {
 
             return true;
         }
-        /**
-         * 
-         */
+        
         @paper.serializedField
         public uuid: string = createUUID();
     }

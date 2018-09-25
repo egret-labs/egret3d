@@ -1,6 +1,6 @@
 namespace paper {
     /**
-     * 
+     * 关心组件的类型。
      */
     export const enum InterestType {
         /**
@@ -25,7 +25,7 @@ namespace paper {
          */
         componentClass: ComponentClass<BaseComponent>[] | ComponentClass<BaseComponent>;
         /**
-         * 
+         * 关心组件的类型。
          */
         type?: InterestType;
         /**
@@ -43,7 +43,8 @@ namespace paper {
         }[];
     };
     /**
-     * 
+     * 实体组。
+     * - 收集符合指定特征的实体。
      */
     export class GameObjectGroup {
         private static readonly _groups: GameObjectGroup[] = [];
@@ -99,7 +100,7 @@ namespace paper {
             }
         }
         /**
-         * 
+         * @internal
          */
         public locked: boolean = false;
         public readonly name: string = "";
@@ -380,19 +381,19 @@ namespace paper {
             }
         }
         /**
-         * 判断实体是否被收集。
+         * 该组是否已收集指定的实体。
          */
         public hasGameObject(gameObject: GameObject) {
             return this._gameObjects.indexOf(gameObject) >= 0;
         }
         /**
-         * 所有收集的实体。
+         * 该组已收集的全部实体。
          */
         public get gameObjects(): ReadonlyArray<GameObject> {
             return this._gameObjects;
         }
         /**
-         * 所有收集的组件。
+         * 该组已收集的全部组件。
          */
         public get components(): ReadonlyArray<BaseComponent> {
             return this._behaviourComponents;

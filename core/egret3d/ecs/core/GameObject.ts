@@ -1,6 +1,6 @@
 namespace paper {
     /**
-     * 可以挂载Component的实体类。
+     * 实体。
      */
     export class GameObject extends BaseObject {
         /**
@@ -67,7 +67,14 @@ namespace paper {
             // TODO renderQueue.
             return b.distance - a.distance;
         }
-
+        /**
+         * 用射线检测指定的实体列表。
+         * @param ray 射线。
+         * @param gameObjectOrTransforms 实体列表。
+         * @param maxDistance 最大相交点检测距离。
+         * @param cullingMask 只对特定层的实体检测。
+         * @param raycastMesh 是否检测网格。
+         */
         public static raycast(ray: Readonly<egret3d.Ray>, gameObjectOrTransforms: ReadonlyArray<GameObject | egret3d.Transform>, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false) {
             const raycastInfos = [] as egret3d.RaycastInfo[];
 
@@ -84,7 +91,9 @@ namespace paper {
             return raycastInfos;
         }
         /**
-         * 
+         * 全局实体。
+         * - 全局实体不可被销毁。
+         * - 静态组件都会添加到全局实体上。
          */
         public static get globalGameObject() {
             if (!this._globalGameObject) {
@@ -94,9 +103,8 @@ namespace paper {
 
             return this._globalGameObject;
         }
-
         /**
-         * 是否是静态，启用这个属性可以提升性能
+         * 是否是静态模式。
          */
         @serializedField
         @editor.property(editor.EditType.CHECKBOX)
@@ -107,29 +115,31 @@ namespace paper {
         @serializedField
         public hideFlags: HideFlags = HideFlags.None;
         /**
-         * 层级
+         * 层级。
+         * - 用于各种层遮罩。
          */
         @serializedField
         @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.Layer) })
         public layer: Layer = Layer.Default;
         /**
-         * 名称
+         * 名称。
          */
         @serializedField
         @editor.property(editor.EditType.TEXT)
         public name: string = "";
         /**
-         * 标签
+         * 标签。
          */
         @serializedField
         @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.DefaultTags) })
         public tag: string = "";
         /**
-         * 变换组件
+         * 变换组件。
          * @readonly
          */
         public transform: egret3d.Transform = null!;
         /**
+         * 渲染组件。
          * @readonly
          */
         public renderer: BaseRenderer | null = null;
@@ -153,6 +163,8 @@ namespace paper {
         private readonly _cachedComponents: BaseComponent[] = [];
         private _scene: Scene | null = null;
         /**
+         * 请使用 `paper.GameObject.create()` 创建实例。
+         * @see paper.GameObject.create()
          * @deprecated
          */
         public constructor(name: string = DefaultNames.NoName, tag: string = DefaultTags.Untagged, scene: Scene | null = null) {
@@ -332,7 +344,9 @@ namespace paper {
             this._destroy();
         }
         /**
-         * 添加组件。
+         * 添加一个指定组件实例。
+         * @param componentClass 组件类。
+         * @param config Behaviour 组件 `onAwake(config?: any)` 的可选参数。
          */
         public addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T {
             registerClass(componentClass);
@@ -396,7 +410,9 @@ namespace paper {
             return component;
         }
         /**
-         * 移除组件。
+         * 移除一个指定组件实例。
+         * @param componentInstanceOrClass 组件类或组件实例。
+         * @param isExtends 是否尝试移除全部派生自此组件的实例。
          */
         public removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends: boolean = false): void {
             if (componentInstanceOrClass instanceof BaseComponent) {
@@ -475,7 +491,10 @@ namespace paper {
             }
         }
         /**
-         * 移除所有组件。
+         * 移除全部指定组件的实例。
+         * - 通常只有该组件类允许同一个实体添加多个组件实例时才需要此操作。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试移除全部派生自此组件的实例。
          */
         public removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends: boolean = false) {
             if (componentClass) {
@@ -537,7 +556,9 @@ namespace paper {
             }
         }
         /**
-         * 获取组件。
+         * 获取一个指定组件实例。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         public getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false): T | null {
             // SingletonComponent.
@@ -582,7 +603,9 @@ namespace paper {
             return component as T;
         }
         /**
-         * 
+         * 获取全部指定组件实例。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         public getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false): T[] {
             // SingletonComponent.
@@ -625,7 +648,9 @@ namespace paper {
             return components;
         }
         /**
-         * 搜索自己和父节点中所有特定类型的组件
+         * 获取一个自己或父级中指定的组件实例。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         public getComponentInParent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
             let result: T | null = null;
@@ -639,7 +664,9 @@ namespace paper {
             return result;
         }
         /**
-         * 
+         * 获取一个自己或子（孙）级中指定的组件实例。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         public getComponentInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false): T | null {
             let component = this.getComponent(componentClass, isExtends);
@@ -655,7 +682,9 @@ namespace paper {
             return component;
         }
         /**
-         * 搜索自己和子节点中所有特定类型的组件
+         * 获取全部自己和子（孙）级中指定的组件实例。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         public getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false, components: T[] | null = null) {
             components = components || [];
@@ -685,15 +714,17 @@ namespace paper {
             return components;
         }
         /**
-         * 获取组件，如果未添加该组件，则添加该组件。
+         * 从该实体已注册的全部组件中获取一个指定组件实例，如果未添加该组件，则添加该组件。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         public getOrAddComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
             return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, isExtends);
         }
         /**
-         * 针对同级的组件发送消息
+         * 向该实体已激活的全部 Behaviour 组件发送消息。
          * @param methodName 
-         * @param parameter``
+         * @param parameter
          */
         public sendMessage(methodName: string, parameter?: any, requireReceiver: boolean = true) {
             for (const component of this._components) {
@@ -708,7 +739,7 @@ namespace paper {
             }
         }
         /**
-         * 针对直接父级发送消息
+         * 向该实体和其父级的 Behaviour 组件发送消息。
          * @param methodName 
          * @param parameter 
          */
@@ -721,7 +752,7 @@ namespace paper {
             }
         }
         /**
-         * 群发消息
+         * 向该实体和的其子（孙）级的 Behaviour 组件发送消息。
          * @param methodName 
          * @param parameter 
          */
@@ -735,13 +766,15 @@ namespace paper {
             }
         }
         /**
-         * 
+         * 该实体是否已经被销毁。
          */
         public get isDestroyed() {
             return !this._scene;
         }
         /**
-         * 
+         * 该实体是否可以被销毁。
+         * - 当此值为 `true` 时，将会被添加到全局场景，反之将被添加到激活场景。
+         * - 设置此属性时，可能改变该实体的父级。
          */
         public get dontDestroy() {
             return this._scene === Application.sceneManager.globalScene;
@@ -771,9 +804,8 @@ namespace paper {
                 child.gameObject.dontDestroy = value;
             }
         }
-
         /**
-         * 当前GameObject对象自身激活状态
+         * 该实体自身的激活状态。
          */
         @editor.property(editor.EditType.CHECKBOX)
         public get activeSelf() {
@@ -794,10 +826,8 @@ namespace paper {
                 this._activeSelf = value;//TODO
             }
         }
-
         /**
-         * 获取当前GameObject对象在场景中激活状态。
-         * 如果当前对象父级的activeSelf为false，那么当前GameObject对象在场景中为禁用状态。
+         * 该实体在场景中的激活状态。
          */
         public get activeInHierarchy() {
             if (this._activeDirty) {
@@ -815,7 +845,9 @@ namespace paper {
 
             return this._activeInHierarchy;
         }
-
+        /**
+         * 该实体的路径。
+         */
         public get path(): string {
             let path = this.name;
 
@@ -832,7 +864,7 @@ namespace paper {
             return path;
         }
         /**
-         * 
+         * 该实体已添加的全部组件。
          */
         @serializedField
         @deserializedIgnore
@@ -857,7 +889,7 @@ namespace paper {
             return this._cachedComponents;
         }
         /**
-         * 
+         * 该实体的父级。
          */
         public get parent() {
             return this.transform.parent ? this.transform.parent.gameObject : null;
@@ -866,13 +898,15 @@ namespace paper {
             this.transform.parent = gameObject ? gameObject.transform : null;
         }
         /**
-         * 获取物体所在场景实例。
+         * 该实体所属的场景。
          */
         public get scene() {
             return this._scene!;
         }
         /**
-         * 
+         * 全局实体。
+         * - 全局实体不可被销毁。
+         * - 静态组件都会添加到全局实体上。
          */
         public get globalGameObject() {
             return GameObject.globalGameObject;

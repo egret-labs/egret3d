@@ -88,7 +88,7 @@ namespace paper {
          */
         public onCollisionExit?(collider: any): void;
         /**
-         * 
+         * 程序每帧调用。
          */
         public onUpdate?(deltaTime: number): void;
         /**
@@ -96,7 +96,7 @@ namespace paper {
          */
         public onAnimationEvent?(type: string, animationState: egret3d.AnimationState, eventObject: any): void;
         /**
-         * 
+         * 程序每帧调用。
          */
         public onLateUpdate?(deltaTime: number): void;
         /**

@@ -4,7 +4,12 @@ namespace egret3d {
      */
     export class Mesh extends BaseMesh {
         /**
-         * 
+         *  
+         * @param vertexCount 
+         * @param indexCount 
+         * @param attributeNames 
+         * @param attributeTypes 
+         * @param drawMode 
          */
         public static create(
             vertexCount: number, indexCount: number,
@@ -102,9 +107,7 @@ namespace egret3d {
                 console.error("Create webgl buffer error.");
             }
         }
-        /**
-         * 
-         */
+
         public uploadVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]) | null = null, offset: number = 0, count: number = 0) {
             const webgl = WebGLCapabilities.webgl;
             if (!this._vbo || !webgl) {
@@ -148,9 +151,7 @@ namespace egret3d {
                 }
             }
         }
-        /**
-         * 
-         */
+
         public uploadSubIndexBuffer(subMeshIndex: number = 0) {
             const webgl = WebGLCapabilities.webgl;
             if (!this._vbo || !webgl) {

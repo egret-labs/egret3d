@@ -1,6 +1,6 @@
 namespace paper {
     /**
-     * 
+     * 全局时间信息组件。
      */
     export class Clock extends SingletonComponent {
         public maxFixedSubSteps: number = 3;
@@ -48,23 +48,33 @@ namespace paper {
         public get frameCount() {
             return this._frameCount;
         }
-
+        /**
+         * 从程序开始运行时的累计时间。（以秒为单位）
+         */
         public get time() {
             return this._unscaledTime * this.timeScale;
         }
-
+        /**
+         * 
+         */
         public get fixedTime() {
             return this._fixedTime;
         }
-
+        /**
+         * 上一帧到当前帧流逝的时间。
+         */
         public get deltaTime() {
             return this._unscaledDeltaTime * this.timeScale;
         }
-
+        /**
+         * 
+         */
         public get unscaledTime() {
             return this._unscaledTime;
         }
-
+        /**
+         * 
+         */
         public get unscaledDeltaTime() {
             return this._unscaledDeltaTime;
         }

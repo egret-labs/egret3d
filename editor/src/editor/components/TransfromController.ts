@@ -391,8 +391,7 @@ namespace paper.debug {
 
             if (dirVector.length === 0.0) {
                 // If in rotate mode, make the plane parallel to camera
-                // this._quad.transform.rotation = egret3d.Camera.editor.transform.rotation;
-                this._quad.transform.lookAt(egret3d.Camera.editor.transform.position);
+                this._quad.transform.rotation = egret3d.Camera.editor.transform.rotation;
             }
             else {
                 this._quad.transform.rotation = egret3d.Quaternion.create().fromMatrix(

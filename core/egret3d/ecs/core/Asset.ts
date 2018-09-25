@@ -1,16 +1,6 @@
 namespace paper {
-
     /**
-     * Base Class for Asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 资源基类，扩展资源类型需要继承此抽象类
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * 资源基类。
      */
     export abstract class Asset extends BaseObject {
         /**
@@ -30,7 +20,7 @@ namespace paper {
             }
         }
         /**
-         * @internal
+         * 查找已加载的指定资源。
          */
         public static find<T extends Asset>(name: string) {
             const result = this._assets[name];
@@ -55,29 +45,11 @@ namespace paper {
             this.name = name;
         }
         /**
-         * asset byte length
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 计算资源字节大小。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @internal
          */
         public abstract caclByteLength(): number;
         /**
-         * dispose asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 释放资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         public dispose(disposeChildren?: boolean) {
             if (this._isBuiltin) {
