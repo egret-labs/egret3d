@@ -65,7 +65,7 @@ namespace paper {
 
         private static _sortRaycastInfo(a: egret3d.RaycastInfo, b: egret3d.RaycastInfo) {
             // TODO renderQueue.
-            return b.distance - a.distance;
+            return a.distance - b.distance;
         }
 
         public static raycast(ray: Readonly<egret3d.Ray>, gameObjectOrTransforms: ReadonlyArray<GameObject | egret3d.Transform>, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false) {

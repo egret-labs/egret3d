@@ -3436,7 +3436,6 @@ var egret3d;
             this.x = source.x * -1;
             this.y = source.y * -1;
             this.z = source.z * -1;
-            this.normalize();
             return this;
         };
         Quaternion.prototype.dot = function (value) {
@@ -9047,12 +9046,13 @@ var egret3d;
         /**
          * 创建圆环网格。
          */
-        DefaultMeshes.createTorus = function (radius, tube, radialSegments, tubularSegments, arc) {
+        DefaultMeshes.createTorus = function (radius, tube, radialSegments, tubularSegments, arc, axis) {
             if (radius === void 0) { radius = 0.5; }
             if (tube === void 0) { tube = 0.1; }
             if (radialSegments === void 0) { radialSegments = 4; }
             if (tubularSegments === void 0) { tubularSegments = 12; }
             if (arc === void 0) { arc = 1.0; }
+            if (axis === void 0) { axis = 1; }
             var indices = [];
             var vertices = [];
             var normals = [];
@@ -9068,9 +9068,22 @@ var egret3d;
                     var u = i / tubularSegments * Math.PI * 2 * arc;
                     var v = j / radialSegments * Math.PI * 2;
                     // vertex
-                    vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
-                    vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
-                    vertex.z = tube * Math.sin(v);
+                    switch (axis) {
+                        case 1:
+                            vertex.x = tube * Math.sin(v);
+                            vertex.y = (radius + tube * Math.cos(v)) * Math.cos(u);
+                            vertex.z = (radius + tube * Math.cos(v)) * Math.sin(u);
+                            break;
+                        case 2:
+                            vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
+                            vertex.y = tube * Math.sin(v);
+                            vertex.z = (radius + tube * Math.cos(v)) * Math.sin(u);
+                            break;
+                        default:
+                            vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
+                            vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
+                            vertex.z = tube * Math.sin(v);
+                    }
                     vertices.push(vertex.x, vertex.y, vertex.z);
                     // normal
                     center.x = radius * Math.cos(u);
@@ -11747,7 +11760,7 @@ var paper;
         };
         GameObject._sortRaycastInfo = function (a, b) {
             // TODO renderQueue.
-            return b.distance - a.distance;
+            return a.distance - b.distance;
         };
         GameObject.raycast = function (ray, gameObjectOrTransforms, maxDistance, cullingMask, raycastMesh) {
             if (maxDistance === void 0) { maxDistance = 0.0; }
