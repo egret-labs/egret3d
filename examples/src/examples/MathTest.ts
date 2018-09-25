@@ -15,13 +15,13 @@ namespace MathTest {
         public onAwake() {
             {
                 const material = egret3d.Material.create(egret3d.DefaultShaders.MATERIAL_COLOR);
-                material.setCullFace(false).setBlend(gltf.BlendMode.Blend).setFloat(egret3d.ShaderUniformName.Opacity, 0.7);
+                material.setCullFace(false).setDepth(true, false).setBlend(gltf.BlendMode.Blend).setOpacity(0.7);
                 (this._planeObject.renderer as egret3d.MeshRenderer).material = material;
             }
 
             {
                 const material = egret3d.Material.create(egret3d.DefaultShaders.MATERIAL_COLOR);
-                material.setBlend(gltf.BlendMode.Blend).setFloat(egret3d.ShaderUniformName.Opacity, 0.7);
+                material.setDepth(true, true).setBlend(gltf.BlendMode.Blend).setOpacity(0.7);
                 (this._sphereObject.renderer as egret3d.MeshRenderer).material = material;
             }
         }

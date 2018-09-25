@@ -10,12 +10,7 @@ namespace paper.debug {
         public readonly scale: GameObject = EditorMeshHelper.createGameObject("Scale");
 
         private _controlling: boolean = false;
-        private readonly _positionStart: egret3d.Vector3 = egret3d.Vector3.create();
-        private readonly _rotationStart: egret3d.Quaternion = egret3d.Quaternion.create();
-        private readonly _scaleStart: egret3d.Vector3 = egret3d.Vector3.create();
-        private readonly _localPositionStart: egret3d.Vector3 = egret3d.Vector3.create();
-        private readonly _localRotationStart: egret3d.Quaternion = egret3d.Quaternion.create();
-        private readonly _localScaleStart: egret3d.Vector3 = egret3d.Vector3.create();
+        private readonly _prsStarts: { [key: string]: [egret3d.Vector3, egret3d.Quaternion, egret3d.Vector3, egret3d.Vector3, egret3d.Quaternion, egret3d.Vector3] } = {};
         private readonly _offsetStart: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _offsetEnd: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _plane: egret3d.Plane = egret3d.Plane.create();
@@ -42,9 +37,9 @@ namespace paper.debug {
                 const pickYZ = EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
                 const pickZX = EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
 
-                this._highlights[pickX.uuid] = [axisX, arrowX];
-                this._highlights[pickY.uuid] = [axisY, arrowY];
-                this._highlights[pickZ.uuid] = [axisZ, arrowZ];
+                this._highlights[pickX.uuid] = [pickX, axisX, arrowX];
+                this._highlights[pickY.uuid] = [pickY, axisY, arrowY];
+                this._highlights[pickZ.uuid] = [pickZ, axisZ, arrowZ];
 
                 translate.transform.setParent(this.gameObject.transform);
                 axisX.transform.setParent(translate.transform).setLocalPosition(0.001, 0.0, 0.0);
@@ -133,9 +128,9 @@ namespace paper.debug {
                 const pickYZ = EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
                 const pickZX = EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
 
-                this._highlights[pickX.uuid] = [axisX, arrowX];
-                this._highlights[pickY.uuid] = [axisY, arrowY];
-                this._highlights[pickZ.uuid] = [axisZ, arrowZ];
+                this._highlights[pickX.uuid] = [pickX, axisX, arrowX];
+                this._highlights[pickY.uuid] = [pickX, axisY, arrowY];
+                this._highlights[pickZ.uuid] = [pickX, axisZ, arrowZ];
 
                 scale.transform.setParent(this.gameObject.transform);
                 axisX.transform.setParent(scale.transform).setLocalPosition(0.001, 0.0, 0.0);
@@ -167,14 +162,18 @@ namespace paper.debug {
 
             this.mode = this.translate;
             this._quad.parent = this.gameObject;
-            // this._quad.activeSelf = false;
+            this._quad.activeSelf = false;
         }
 
-        private _updateTransform(selected: GameObject, mousePosition: Readonly<egret3d.IVector3>) {
+        private _updateTransform(mousePosition: Readonly<egret3d.IVector3>) {
             let isWorldSpace = this.isWorldSpace;
             const hoveredName = this._hovered!.name;
             const raycastInfo = Helper.raycastB(this._plane, mousePosition.x, mousePosition.y)!;
-            this._offsetEnd.subtract(this._positionStart, raycastInfo.position);
+            const modelComponent = this.gameObject.getComponent(ModelComponent)!;
+            const currentSelected = modelComponent.selectedGameObject!;
+            const currentSelectedPRS = this._prsStarts[currentSelected.uuid];
+
+            this._offsetEnd.subtract(currentSelectedPRS[3], raycastInfo.position);
 
             if (this._mode === this.scale) {
                 isWorldSpace = false;
@@ -190,7 +189,7 @@ namespace paper.debug {
             }
 
             if (!isWorldSpace) {
-                this._offsetEnd.applyQuaternion(this._rotationStart.clone().inverse().release());
+                this._offsetEnd.applyQuaternion(currentSelectedPRS[4].clone().inverse().release());
             }
 
             if (this._mode === this.translate) {
@@ -206,28 +205,40 @@ namespace paper.debug {
                     this._offsetEnd.z = this._offsetStart.z;
                 }
 
-                if (isWorldSpace) {
-                    this._offsetEnd.subtract(this._offsetStart, this._offsetEnd);
+                const position = egret3d.Vector3.create();
+
+                for (const gameObject of modelComponent.selectedGameObjects) {
+                    if (modelComponent.selectedGameObjects.indexOf(gameObject.parent) >= 0) {
+                        continue;
+                    }
+
+                    const selectedPRS = this._prsStarts[gameObject.uuid];
+                    position.subtract(this._offsetStart, this._offsetEnd);
+
+                    if (isWorldSpace) {
+                        position.add(selectedPRS[3]);
+                        // TODO translationSnap
+                        gameObject.transform.position = position;
+                    }
+                    else {
+                        position.applyQuaternion(selectedPRS[1]);
+                        position.add(selectedPRS[0]);
+                        // TODO translationSnap
+                        gameObject.transform.localPosition = position;
+                    }
                 }
-                else {
-                    this._offsetEnd.subtract(this._offsetStart, this._offsetEnd).applyQuaternion(this._localRotationStart);
-                }
 
-                this._offsetEnd.add(this._localPositionStart);
-
-                // TODO translationSnap
-
-                selected.transform.localPosition = this._offsetEnd;
+                position.release();
             }
             else if (this._mode === this.rotate) {
                 const camera = egret3d.Camera.editor;
                 const tempVector = egret3d.Vector3.create();
                 const tempVector2 = egret3d.Vector3.create();
                 const rotationAxis = egret3d.Vector3.create();
-                const quaternion = !isWorldSpace ? selected.transform.getRotation() : egret3d.Quaternion.IDENTITY.clone();
+                const quaternion = !isWorldSpace ? currentSelected.transform.getRotation() : egret3d.Quaternion.IDENTITY.clone();
                 const tempQuaternion = egret3d.Quaternion.create();
                 const unit = egret3d.Vector3.create();
-                const ROTATION_SPEED = 20 / selected.transform.getPosition().getDistance(tempVector.applyMatrix(camera.gameObject.transform.getWorldMatrix()));
+                const ROTATION_SPEED = 20 / currentSelected.transform.getPosition().getDistance(tempVector.applyMatrix(camera.gameObject.transform.getWorldMatrix()));
                 let rotationAngle = 0;
 
                 if (hoveredName.indexOf("XYZE") >= 0) {
@@ -260,24 +271,24 @@ namespace paper.debug {
 
                     if (!isWorldSpace) {
                         tempVector.applyQuaternion(quaternion);
-                        tempVector2.applyQuaternion(this._rotationStart);
+                        tempVector2.applyQuaternion(currentSelectedPRS[4]);
                     }
                     rotationAngle = tempVector2.dot(tempVector.cross(this.eye).normalize()) * ROTATION_SPEED;
                     // rotationAngle = Helper.angle(tempVector, tempVector2, this.eye);
                 }
-
+                const selectedPRS = this._prsStarts[currentSelected.uuid];
                 if (isWorldSpace) {
-                    tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(this._rotationStart).normalize();
-                    selected.transform.rotation = tempQuaternion;
+                    tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(selectedPRS[4]).normalize();
+                    currentSelected.transform.rotation = tempQuaternion;
                 }
                 else {
                     // const temp = this._localRotationStart.clone();
                     // temp.multiply(tempQuaternion.fromAxis(rotationAxis, rotationAngle));
-                    tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(this._localRotationStart).normalize();
-                    console.log("前 x:" + tempQuaternion.x + " y:" + tempQuaternion.y + " z:" + tempQuaternion.z + " w:" + tempQuaternion.w);
-                    selected.transform.localRotation = tempQuaternion;
-                    const tt = selected.transform.rotation;
-                    console.log("后 x:" + tt.x + " y:" + tt.y + " z:" + tt.z + " w:" + tt.w);
+                    tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(selectedPRS[1]).normalize();
+                    // console.log("前 x:" + tempQuaternion.x + " y:" + tempQuaternion.y + " z:" + tempQuaternion.z + " w:" + tempQuaternion.w);
+                    currentSelected.transform.localRotation = tempQuaternion;
+                    // const tt = currentSelected.transform.rotation;
+                    // console.log("后 x:" + tt.x + " y:" + tt.y + " z:" + tt.z + " w:" + tt.w);
                 }
 
                 tempVector.release();
@@ -287,9 +298,10 @@ namespace paper.debug {
                 unit.release();
 
                 // TODO
-                selected.transform.localEulerAngles;
+                currentSelected.transform.localEulerAngles;
             }
             else if (this._mode === this.scale) {
+
                 if (hoveredName.indexOf("XYZ") >= 0) {
                     let d = this._offsetEnd.length / this._offsetStart.length;
 
@@ -315,24 +327,37 @@ namespace paper.debug {
 
                 // TODO this._offsetEnd scale aabb size
 
-                selected.transform.localScale = this._offsetEnd.multiply(this._localScaleStart);
+                const scale = egret3d.Vector3.create();
+
+                for (const gameObject of modelComponent.selectedGameObjects) {
+                    if (modelComponent.selectedGameObjects.indexOf(gameObject.parent) >= 0) {
+                        continue;
+                    }
+
+                    const selectedPRS = this._prsStarts[gameObject.uuid];
+                    gameObject.transform.localScale = scale.multiply(this._offsetEnd, selectedPRS[2]);
+                }
+
+                scale.release();
             }
         }
 
-        private _updateSelf(selected: GameObject) {
+        private _updateSelf() {
             const isWorldSpace = this._mode === this.scale ? false : this.isWorldSpace; // scale always oriented to local rotation
             const camera = egret3d.Camera.editor;
+            const modelComponent = this.gameObject.getComponent(ModelComponent)!;
+            const currentSelected = modelComponent.selectedGameObject!;
             const eye = this.eye.copy(camera.transform.position);
-            const eyeDistance = eye.getDistance(selected.transform.position);
+            const eyeDistance = eye.getDistance(currentSelected.transform.position);
 
             if (camera.opvalue > 0.0) {
-                eye.subtract(selected.transform.position);
+                eye.subtract(currentSelected.transform.position);
             }
 
             eye.normalize();
 
-            const quaternion = isWorldSpace ? egret3d.Quaternion.IDENTITY : selected.transform.getRotation();
-            this.transform.position = selected.transform.position;
+            const quaternion = isWorldSpace ? egret3d.Quaternion.IDENTITY : currentSelected.transform.getRotation();
+            this.transform.position = currentSelected.transform.position;
             this.transform.rotation = quaternion;
             this.transform.scale = egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10.0).release();
 
@@ -368,6 +393,7 @@ namespace paper.debug {
                     axisZ.setRotation(tempQuaternion);
                     pickZ.setRotation(tempQuaternion);
                 }
+
                 {
                     tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this.eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                     const axisE = this.rotate.transform.find("AxisE");
@@ -375,11 +401,13 @@ namespace paper.debug {
                     axisE.setRotation(tempQuaternion2);
                     pickE.setRotation(tempQuaternion2);
                 }
+
                 {
                     tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this.eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                     const axisXYZE = this.rotate.transform.find("AxisXYZE");
                     axisXYZE.setRotation(tempQuaternion2);
                 }
+
                 tempQuaternion.release();
                 tempQuaternion2.release();
                 alignVector.release();
@@ -432,7 +460,6 @@ namespace paper.debug {
             if (dirVector.length === 0.0) {
                 // If in rotate mode, make the plane parallel to camera
                 this._quad.transform.rotation = egret3d.Camera.editor.transform.rotation;
-                // this._quad.transform.lookAt(egret3d.Camera.editor.transform.position);
             }
             else {
                 this._quad.transform.rotation = egret3d.Quaternion.create().fromMatrix(
@@ -455,15 +482,26 @@ namespace paper.debug {
             dirVector.release();
         }
 
-        public start(selected: GameObject, mousePosition: Readonly<egret3d.IVector3>) {
+        public start(mousePosition: Readonly<egret3d.IVector3>) {
             let isWorldSpace = this.isWorldSpace;
             const hoveredName = this._hovered!.name;
             const raycastInfo = Helper.raycastB(this._plane, mousePosition.x, mousePosition.y)!;
-            selected.transform.worldMatrix.decompose(this._positionStart, this._rotationStart, this._scaleStart);
-            this._localPositionStart.copy(selected.transform.localPosition);
-            this._localRotationStart.copy(selected.transform.localRotation);
-            this._localScaleStart.copy(selected.transform.localScale);
-            this._offsetStart.subtract(this._positionStart, raycastInfo.position);
+            const modelComponent = this.gameObject.getComponent(ModelComponent)!;
+
+            for (const gameObject of modelComponent.selectedGameObjects) {
+                const transform = gameObject.transform;
+                this._prsStarts[gameObject.uuid] = [
+                    egret3d.Vector3.create().copy(transform.localPosition),
+                    egret3d.Quaternion.create().copy(transform.localRotation),
+                    egret3d.Vector3.create().copy(transform.localScale),
+                    egret3d.Vector3.create().copy(transform.position),
+                    egret3d.Quaternion.create().copy(transform.rotation),
+                    egret3d.Vector3.create().copy(transform.scale),
+                ];
+            }
+
+            const currentSelectedPRS = this._prsStarts[modelComponent.selectedGameObject!.uuid];
+            this._offsetStart.subtract(currentSelectedPRS[3], raycastInfo.position);
             this._controlling = true;
 
             if (this._mode === this.scale) {
@@ -480,20 +518,28 @@ namespace paper.debug {
             }
 
             if (!isWorldSpace) {
-                this._offsetStart.applyQuaternion(this._rotationStart.clone().inverse().release());
+                this._offsetStart.applyQuaternion(currentSelectedPRS[4].clone().inverse().release());
             }
         }
 
         public end() {
+            for (const k in this._prsStarts) {
+                for (const v of this._prsStarts[k]) {
+                    v.release();
+                }
+
+                delete this._prsStarts[k];
+            }
+
             this._controlling = false;
         }
 
-        public update(selected: GameObject, mousePosition: Readonly<egret3d.IVector3>) {
+        public update(mousePosition: Readonly<egret3d.IVector3>) {
             if (this._hovered && this._controlling) {
-                this._updateTransform(selected, mousePosition);
+                this._updateTransform(mousePosition);
             }
 
-            this._updateSelf(selected);
+            this._updateSelf();
             this._updatePlane();
         }
 

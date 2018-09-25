@@ -1,6 +1,6 @@
 namespace paper {
     /**
-     * 
+     * 更新系统。
      */
     export class UpdateSystem extends BaseSystem {
         protected readonly _interests = [

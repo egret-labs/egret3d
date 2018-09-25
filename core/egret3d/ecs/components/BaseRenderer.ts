@@ -1,6 +1,6 @@
 namespace paper {
     /**
-     * 
+     * @internal
      */
     export const enum RendererEventType {
         Materials = "materials",
@@ -9,6 +9,9 @@ namespace paper {
      * 基础渲染器。
      */
     export abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
+        /**
+         * 是否开启视锥剔除。
+         */
         @serializedField
         @editor.property(editor.EditType.CHECKBOX)
         public frustumCulled: boolean = true;
@@ -46,7 +49,7 @@ namespace paper {
         public abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
         public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
         /**
-         * 
+         * 该渲染器是否接收投影。
          */
         @editor.property(editor.EditType.CHECKBOX)
         public get receiveShadows() {
@@ -60,7 +63,7 @@ namespace paper {
             this._receiveShadows = value;
         }
         /**
-         * 
+         * 该渲染器是否产生投影。
          */
         @editor.property(editor.EditType.CHECKBOX)
         public get castShadows() {
@@ -74,7 +77,7 @@ namespace paper {
             this._castShadows = value;
         }
         /**
-         * 
+         * 该渲染器的光照图的索引。
          */
         @editor.property(editor.EditType.INT, { minimum: -1 })
         public get lightmapIndex() {

@@ -14,7 +14,7 @@ namespace egret3d {
         public frustumCulled: boolean = false;
         public stage: egret.Stage;
 
-        private renderer: egret.web.Renderer;
+        private _renderer: egret.web.Renderer;
 
         private _screenAdapter: IScreenAdapter = new ConstantAdapter();
         public set screenAdapter(adapter: IScreenAdapter) {
@@ -35,8 +35,8 @@ namespace egret3d {
             this.root = new egret.DisplayObjectContainer();
             this.stage.addChild(this.root);
 
-            if (!this.renderer) {
-                this.renderer = egret.web.Renderer.getInstance(WebGLCapabilities.webgl);
+            if (!this._renderer) {
+                this._renderer = egret.web.Renderer.getInstance(WebGLCapabilities.webgl);
             }
 
             let stage = this.stage;
@@ -180,7 +180,7 @@ namespace egret3d {
          * @internal
          */
         public render(context: RenderContext, camera: egret3d.Camera) {
-            this.renderer.beforeRender();
+            this._renderer.beforeRender();
             this.stage.drawToSurface();
             // WebGLRenderUtils.resetState(); // 清除3D渲染器中的标脏
         }

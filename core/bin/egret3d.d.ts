@@ -1,10 +1,11 @@
 declare namespace paper {
     /**
-     *
+     * @private
      */
     interface IUUID {
         /**
-         *
+         * 唯一标识。
+         * @readonly
          */
         readonly uuid: string;
     }
@@ -302,34 +303,31 @@ declare namespace paper {
      * 基础对象。
      */
     abstract class BaseObject implements IUUID {
-        /**
-         *
-         */
         uuid: string;
     }
 }
 declare namespace paper {
     /**
-     * 组件基类
+     * 组件基类。
      */
     abstract class BaseComponent extends BaseObject {
         /**
-         * 是否在编辑模式拥有生命周期。
+         * 该组件的实例是否在编辑模式拥有生命周期。
          */
         static executeInEditMode: boolean;
         /**
-         * 是否允许在同一实体上添加多个实例。
+         * 是否允许在同一实体上添加多个该组件的实例。
          */
         static allowMultiple: boolean;
         /**
-         * 依赖的其他组件。
+         * 该组件实例依赖的其他前置组件。
          */
         static requireComponents: ComponentClass<BaseComponent>[] | null;
         private static readonly _allComponents;
         private static readonly _allSingletonComponents;
         private static _createEnabled;
         /**
-         * 组件挂载的 GameObject
+         * 该组件的实体。
          */
         readonly gameObject: GameObject;
         /**
@@ -353,35 +351,30 @@ declare namespace paper {
          */
         uninitialize(): void;
         /**
-         *
+         * 该组件是否已被销毁。
          */
         readonly isDestroyed: boolean;
         /**
-         * 组件的激活状态。
+         * 该组件自身的激活状态。
          */
         enabled: boolean;
         /**
-         * 组件在场景的激活状态。
+         * 该组件在场景的激活状态。
          */
         readonly isActiveAndEnabled: boolean;
         /**
-         *
+         * 该组件实体的变换组件。
          */
         readonly transform: egret3d.Transform;
+        /**
+         * 该组件实体的渲染组件。
+         */
+        readonly renderer: BaseRenderer;
     }
 }
 declare namespace paper {
     /**
-     * Base Class for Asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 资源基类，扩展资源类型需要继承此抽象类
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * 资源基类。
      */
     abstract class Asset extends BaseObject {
         /**
@@ -389,34 +382,16 @@ declare namespace paper {
          */
         static register(asset: Asset): void;
         /**
+         * 查找已加载的指定资源。
+         */
+        static find<T extends Asset>(name: string): T;
+        /**
          * @readonly
          */
         name: string;
         constructor(name?: string);
         /**
-         * asset byte length
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 计算资源字节大小。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        abstract caclByteLength(): number;
-        /**
-         * dispose asset
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
          * 释放资源。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
          */
         dispose(disposeChildren?: boolean): boolean;
     }
@@ -618,15 +593,12 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
-     *
-     */
-    const enum RendererEventType {
-        Materials = "materials",
-    }
-    /**
      * 基础渲染器。
      */
     abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
+        /**
+         * 是否开启视锥剔除。
+         */
         frustumCulled: boolean;
         protected _receiveShadows: boolean;
         protected _castShadows: boolean;
@@ -641,15 +613,15 @@ declare namespace paper {
         abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
         abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
         /**
-         *
+         * 该渲染器是否接收投影。
          */
         receiveShadows: boolean;
         /**
-         *
+         * 该渲染器是否产生投影。
          */
         castShadows: boolean;
         /**
-         *
+         * 该渲染器的光照图的索引。
          */
         lightmapIndex: number;
         /**
@@ -965,7 +937,7 @@ declare namespace egret3d {
          */
         private static _createConfig();
         /**
-         *
+         * 从二进制数据中解析。
          */
         static parseFromBinary(array: Uint32Array): {
             config: GLTF;
@@ -2177,25 +2149,29 @@ declare namespace paper {
 }
 declare namespace paper {
     /**
-     * SystemManager 是ecs内部的系统管理者，负责每帧循环时轮询每个系统。
+     * 程序系统管理器。
      */
     class SystemManager {
         private static _instance;
+        /**
+         * 程序系统管理器单例。
+         */
         static getInstance(): SystemManager;
         private constructor();
         private readonly _preSystems;
+        private readonly _preBeforeSystems;
         private readonly _systems;
         private _checkRegister<T>(systemClass);
         /**
-         * 在系统框架启动前预注册系统。
+         * 在程序启动之前预注册一个指定的系统。
          */
         preRegister<T extends BaseSystem>(systemClass: {
             new (): T;
-        }, after?: {
+        }, afterOrBefore?: {
             new (): BaseSystem;
-        } | null): this;
+        } | null, isBefore?: boolean): this;
         /**
-         * 注册一个系统到管理器中。
+         * 为程序注册一个指定的系统。
          */
         register<T extends BaseSystem>(systemClass: {
             new (): T;
@@ -2203,7 +2179,7 @@ declare namespace paper {
             new (): BaseSystem;
         } | null): T;
         /**
-         * 注册一个系统到管理器中。
+         * 为程序注册一个指定的系统。
          */
         registerBefore<T extends BaseSystem>(systemClass: {
             new (): T;
@@ -2211,52 +2187,58 @@ declare namespace paper {
             new (): BaseSystem;
         } | null): T;
         /**
-         * 获取一个管理器中指定的系统实例。
+         * 从程序已注册的全部系统中获取一个指定的系统。
          */
         getSystem<T extends BaseSystem>(systemClass: {
             new (): T;
         }): T;
         /**
-         * 获取一个管理器中指定的系统实例。
+         *  从程序已注册的全部系统中获取一个指定的系统，如果尚未注册，则注册该系统。
          */
         getOrRegisterSystem<T extends BaseSystem>(systemClass: {
             new (): T;
         }): T;
         /**
-         *
+         * 程序已注册的全部系统。
          */
         readonly systems: ReadonlyArray<BaseSystem>;
     }
 }
 declare namespace paper {
     /**
-     * 场景管理器
+     * 程序场景管理器。
      */
     class SceneManager {
         private static _instance;
+        /**
+         * 场景管理器单例。
+         */
         static getInstance(): SceneManager;
         private constructor();
         private readonly _scenes;
         private _globalScene;
         private _editorScene;
         /**
-         * 卸载所有场景。
+         * 卸载程序中的全部场景。
+         * - 不包含全局场景。
          */
         unloadAllScene(excludes?: ReadonlyArray<Scene>): void;
         /**
-         *
+         * 从程序已创建的全部场景中获取指定名称的场景。
          */
-        getSceneByName(name: string): Scene;
+        getScene(name: string): Scene;
         /**
-         *
+         * 程序已创建的全部场景。
+         * - 不包含全局场景。
          */
         readonly scenes: ReadonlyArray<Scene>;
         /**
-         *
+         * 全局场景。
+         * - 全局场景无法被销毁。
          */
         readonly globalScene: Scene;
         /**
-         * 当前激活的场景。
+         * 当前程序激活的场景。
          */
         activeScene: Scene;
         /**
@@ -2503,7 +2485,7 @@ declare namespace paper {
          */
         onCollisionExit?(collider: any): void;
         /**
-         *
+         * 程序每帧调用。
          */
         onUpdate?(deltaTime: number): void;
         /**
@@ -2511,7 +2493,7 @@ declare namespace paper {
          */
         onAnimationEvent?(type: string, animationState: egret3d.AnimationState, eventObject: any): void;
         /**
-         *
+         * 程序每帧调用。
          */
         onLateUpdate?(deltaTime: number): void;
         /**
@@ -2559,20 +2541,20 @@ declare namespace paper {
          */
         constructor();
         /**
-         * 系统初始化时调用。
+         * 该系统初始化时调用。
          */
         onAwake?(): void;
         /**
-         * 系统被激活时调用。
+         * 该系统被激活时调用。
          * @see paper.BaseSystem#enabled
          */
         onEnable?(): void;
         /**
-         * 系统开始运行时调用。
+         * 该系统开始运行时调用。
          */
         onStart?(): void;
         /**
-         * 实体被添加到组时调用。
+         * 实体被添加到系统时调用。
          * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
          * @see paper.GameObject#addComponent()
          */
@@ -2594,20 +2576,20 @@ declare namespace paper {
          */
         onRemoveGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
         /**
-         * 系统更新时调用。
+         * 该系统更新时调用。
          */
         onUpdate?(deltaTime?: number): void;
         /**
-         *
+         * 该系统更新时调用。
          */
         onLateUpdate?(deltaTime?: number): void;
         /**
-         * 系统被禁用时调用。
+         * 该系统被禁用时调用。
          * @see paper.BaseSystem#enabled
          */
         onDisable?(): void;
         /**
-         * 系统被注销时调用。
+         * 该系统被注销时调用。
          * @see paper.SystemManager#unregister()
          * @see paper.Application#systemManager
          */
@@ -2617,7 +2599,7 @@ declare namespace paper {
          */
         enabled: boolean;
         /**
-         *
+         * 该系统的实体组。
          */
         readonly groups: ReadonlyArray<GameObjectGroup>;
     }
@@ -2830,7 +2812,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     *
+     * 网格基类。
      */
     abstract class BaseMesh extends GLTFAsset implements egret3d.IRaycast {
         protected _drawMode: gltf.DrawMode;
@@ -2854,77 +2836,108 @@ declare namespace egret3d {
          *
          */
         clone(): Mesh;
+        /**
+         * TODO applyMatrix
+         */
+        /**
+         *
+         */
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo, boneMatrices?: Float32Array | null): boolean;
         /**
          *
          */
         addSubMesh(indexCount: number, materialIndex?: number, randerMode?: gltf.MeshPrimitiveMode): number;
         /**
-         *
+         * 获取该网格顶点的位置属性数据。
+         * - x0, y0, z0, x1, y1, z1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
          */
         getVertices(offset?: number, count?: number): Float32Array;
         /**
-         *
+         * 获取该网格顶点的 UV 属性数据。
+         * - u0, v0, u1, v1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
          */
         getUVs(offset?: number, count?: number): Float32Array;
         /**
-         *
+         * 获取该网格顶点的颜色属性数据。
+         * - r0, g0, b0, a0, r1, g1, b1, a1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
          */
         getColors(offset?: number, count?: number): Float32Array;
         /**
-         *
+         * 获取该网格顶点的法线属性数据。
+         * - x0, y0, z0, x1, y1, z1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
          */
         getNormals(offset?: number, count?: number): Float32Array;
         /**
-         *
+         * 获取该网格顶点的切线属性数据。
+         * - x0, y0, z0, w0,  x1, y1, z1, w1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
          */
         getTangents(offset?: number, count?: number): Float32Array;
         /**
-         *
+         * 获取该网格顶点的指定属性数据。
+         * @param attributeType 属性名。
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点总数。（默认全部顶点）
          */
         getAttributes(attributeType: gltf.MeshAttribute, offset?: number, count?: number): Float32Array;
         /**
-         *
+         * 设置该网格指定的顶点属性数据。
+         * @param attributeType 属性名。
+         * @param value 属性数据。
+         * @param offset 顶点偏移。（默认从第一个点开始）
          */
         setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset?: number): Float32Array;
         /**
-         *
+         * 获取该网格的顶点索引数据。
+         * @param subMeshIndex 子网格索引。（默认第一个子网格）
          */
         getIndices(subMeshIndex?: number): Uint16Array;
         /**
-         *
+         * 设置该网格的顶点索引数据。
+         * @param value 顶点索引数据。
+         * @param subMeshIndex 子网格索引。（默认第一个子网格）
+         * @param offset 索引偏移。（默认不偏移）
          */
         setIndices(value: Readonly<ArrayLike<number>>, subMeshIndex?: number, offset?: number): Uint16Array;
         /**
-         * 绑定显存。
-         */
-        abstract _createBuffer(): void;
-        /**
-         *
+         * 当修改该网格的顶点属性后，调用此方法来更新顶点属性的缓冲区。
+         * @param uploadAttributes
+         * @param offset 顶点偏移。（默认不偏移）
+         * @param count 顶点总数。（默认全部顶点）
          */
         abstract uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: number, count?: number): void;
         /**
-         *
+         * 当修改该网格的顶点索引后，调用此方法来更新顶点索引的缓冲区。
+         * @param subMeshIndex 子网格索引。（默认第一个子网格）
          */
-        abstract uploadSubIndexBuffer(subMeshIndex: number): void;
+        abstract uploadSubIndexBuffer(subMeshIndex?: number): void;
         /**
-         *
+         * 该网格的渲染模式。
          */
         drawMode: gltf.DrawMode;
         /**
-         * 获取子网格数量。
+         * 该网格的子网格总数。
          */
         readonly subMeshCount: number;
         /**
-         *
+         * 该网格的顶点总数。
          */
         readonly vertexCount: number;
         /**
-         *
+         * 该网格的全部顶点属性名称。
          */
         readonly attributeNames: ReadonlyArray<string>;
         /**
-         * 获取 glTFMesh 数据。
+         * 获取该网格的 glTF mesh 数据。
          */
         readonly glTFMesh: gltf.Mesh;
     }
@@ -2968,7 +2981,7 @@ declare namespace paper {
      */
     class Prefab extends BaseObjectAsset {
         /**
-         *
+         * 通过预置体资源创建一个实体实例。
          */
         static create(name: string): GameObject | null;
         static create(name: string, x: number, y: number, z: number): GameObject | null;
@@ -2997,7 +3010,7 @@ declare namespace paper.editor {
 }
 declare namespace paper {
     /**
-     *
+     * 全局时间信息组件。
      */
     class Clock extends SingletonComponent {
         maxFixedSubSteps: number;
@@ -3012,47 +3025,62 @@ declare namespace paper {
         private _fixedTime;
         initialize(): void;
         readonly frameCount: number;
+        /**
+         * 从程序开始运行时的累计时间。（以秒为单位）
+         */
         readonly time: number;
+        /**
+         *
+         */
         readonly fixedTime: number;
+        /**
+         * 上一帧到当前帧流逝的时间。
+         */
         readonly deltaTime: number;
+        /**
+         *
+         */
         readonly unscaledTime: number;
+        /**
+         *
+         */
         readonly unscaledDeltaTime: number;
     }
 }
 declare namespace paper {
     /**
-     *
+     * 全局碰撞信息收集组件。
      */
     class ContactColliders extends SingletonComponent {
         /**
-         *
+         * 当前帧开始碰撞的。
          */
         readonly begin: any[];
         /**
-         *
+         * 当前帧维持碰撞的。
          */
         readonly stay: any[];
         /**
-         *
+         * 当前帧结束碰撞的。
          */
         readonly end: any[];
     }
 }
 declare namespace paper {
     /**
-     *
+     * 全局销毁信息收集组件。
      */
     class DisposeCollecter extends SingletonComponent {
         /**
-         * 移除的场景数组。
+         * 当前帧销毁的全部场景。
          */
         readonly scenes: Scene[];
         /**
-         * 移除的实体数组。
+         * 当前帧销毁的全部实体。
          */
         readonly gameObjects: GameObject[];
         /**
-         * 移除的组件数组。
+         * 当前帧销毁的全部组件。
          */
         readonly components: BaseComponent[];
     }
@@ -3136,7 +3164,7 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
-     *
+     * 关心组件的类型。
      */
     const enum InterestType {
         /**
@@ -3161,7 +3189,7 @@ declare namespace paper {
          */
         componentClass: ComponentClass<BaseComponent>[] | ComponentClass<BaseComponent>;
         /**
-         *
+         * 关心组件的类型。
          */
         type?: InterestType;
         /**
@@ -3179,14 +3207,11 @@ declare namespace paper {
         }[];
     };
     /**
-     *
+     * 实体组。
+     * - 收集符合指定特征的实体。
      */
     class GameObjectGroup {
         private static readonly _groups;
-        /**
-         *
-         */
-        locked: boolean;
         readonly name: string;
         private _isRemoved;
         private readonly _isBehaviour;
@@ -3204,15 +3229,15 @@ declare namespace paper {
         private _removeGameObject(gameObject);
         private _update();
         /**
-         * 判断实体是否被收集。
+         * 该组是否已收集指定的实体。
          */
         hasGameObject(gameObject: GameObject): boolean;
         /**
-         * 所有收集的实体。
+         * 该组已收集的全部实体。
          */
         readonly gameObjects: ReadonlyArray<GameObject>;
         /**
-         * 所有收集的组件。
+         * 该组已收集的全部组件。
          */
         readonly components: ReadonlyArray<BaseComponent>;
     }
@@ -3328,7 +3353,7 @@ declare namespace paper {
 }
 declare namespace paper {
     /**
-     *
+     * 更新系统。
      */
     class UpdateSystem extends BaseSystem {
         protected readonly _interests: {
@@ -3341,7 +3366,7 @@ declare namespace paper {
 }
 declare namespace paper {
     /**
-     *
+     * 更新系统。
      */
     class LateUpdateSystem extends BaseSystem {
         protected readonly _interests: {
@@ -3472,263 +3497,284 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * Transform 组件。
-     * - 存储实体之间的父子关系。
-     * - 存储实体 3D 空间坐标系。
+     * 变换组件。
+     * - 实现实体之间的父子关系。
+     * - 实现 3D 空间坐标系。
      */
     class Transform extends paper.BaseComponent {
         private _localDirty;
         private _worldDirty;
-        private readonly _localMatrix;
-        /**
-         * TODO inverse world matrix.
-         */
-        private readonly _worldMatrix;
         private readonly _localPosition;
         private readonly _localRotation;
         private readonly _localEuler;
         private readonly _localEulerAngles;
         private readonly _localScale;
+        private readonly _localMatrix;
         private readonly _position;
         private readonly _rotation;
         private readonly _euler;
         private readonly _eulerAngles;
         private readonly _scale;
+        /**
+         * TODO inverse world matrix.
+         */
+        private readonly _worldMatrix;
         private _removeFromChildren(value);
         private _dirtify(isLocalDirty, dirty);
         private _updateMatrix(isWorldSpace);
         private _updateEuler(isWorldSpace, order?);
-        /**
-         * 父节点发生改变的回调方法
-         * 子类可通过重载此方法进行标脏状态传递
-         */
         protected _onParentChange(newParent: Transform | null, oldParent: Transform | null): void;
         /**
-         * 销毁所有子 Transform 组件。
+         * 销毁所有子（孙）级变换组件。
          */
         destroyChildren(): void;
         /**
-         * 是否包含指定的子 Transform 组件。
+         * 该组件是否包含指定的子（孙）级变换组件。
          */
         contains(value: Transform): boolean;
         /**
-         * 设置指定的父 Transform 组件。
+         * 设置该组件实体的父级变换组件。
+         * @param value 父级变换组件。
+         * @param worldPositionStays 是否保留当前世界空间坐标系的位置。
          */
         setParent(value: Transform | null, worldPositionStays?: boolean): this;
+        /**
+         *
+         */
         getChildIndex(value: Transform): number;
+        /**
+         *
+         */
         setChildIndex(value: Transform, index: number): void;
         /**
          *
          */
         getChildAt(index: number): Transform;
         /**
-         * Finds a child by name or path and returns it.
-         * @param nameOrPath
+         * 通过指定的名称或路径获取该组件实体的子级（孙级）变换组件。
+         * @param nameOrPath 名称或路径。
          */
         find(nameOrPath: string): Transform;
         /**
-         * 本地位置。
+         * 该物体的本地位置。
          */
         getLocalPosition(): Readonly<Vector3>;
         /**
-         * 本地位置。
+         * 该物体的本地位置。
          */
         setLocalPosition(position: Readonly<IVector3>): this;
         setLocalPosition(x: number, y: number, z: number): this;
         /**
-         * 本地位置。
+         * 该物体的本地位置。
          */
         localPosition: Readonly<Vector3 | IVector3>;
         /**
-         * 本地旋转。
+         * 该物体的本地旋转。
          */
         getLocalRotation(): Readonly<Quaternion>;
         /**
-         * 本地旋转。
+         * 该物体的本地旋转。
          */
         setLocalRotation(rotation: Readonly<IVector4>): this;
         setLocalRotation(x: number, y: number, z: number, w: number): this;
         /**
-         * 本地旋转。
+         * 该物体的本地旋转。
          */
         localRotation: Readonly<Quaternion | IVector4>;
         /**
-         * 本地欧拉弧度。
+         * 该物体的本地欧拉弧度。
          */
         getLocalEuler(order?: EulerOrder): Readonly<Vector3>;
         /**
-         * 本地欧拉弧度。
+         * 该物体的本地欧拉弧度。
          */
         setLocalEuler(value: Readonly<IVector3>, order?: EulerOrder): this;
         setLocalEuler(x: number, y: number, z: number, order?: EulerOrder): this;
         /**
-         * 本地欧拉弧度。
+         * 该物体的本地欧拉弧度。
          */
         localEuler: Readonly<Vector3 | IVector3>;
         /**
-         * 本地欧拉角度。
+         * 该物体的本地欧拉角度。
          */
         getLocalEulerAngles(order?: EulerOrder): Readonly<Vector3>;
         /**
-         * 本地欧拉角度。
+         * 该物体的本地欧拉角度。
          */
         setLocalEulerAngles(value: Readonly<IVector3>, order?: EulerOrder): this;
         setLocalEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
         /**
-         * 本地欧拉角度。
+         * 该物体的本地欧拉角度。
          */
         localEulerAngles: Readonly<Vector3 | IVector3>;
         /**
-         * 本地缩放。
+         * 该物体的本地缩放。
          */
         getLocalScale(): Readonly<Vector3>;
         /**
-         * 本地缩放。
+         * 该物体的本地缩放。
          */
         setLocalScale(v: Readonly<IVector3>): this;
         setLocalScale(x: number, y?: number, z?: number): this;
         /**
-         * 本地缩放。
+         * 该物体的本地缩放。
          */
         localScale: Readonly<Vector3 | IVector3>;
         /**
-         * 本地矩阵。
+         * 该物体的本地矩阵。
          */
         getLocalMatrix(): Readonly<Matrix4>;
         /**
-         * 本地矩阵。
+         * 该物体的本地矩阵。
          */
         readonly localMatrix: Readonly<Matrix4>;
         /**
-         * 世界位置。
+         * 该物体的世界位置。
          */
         getPosition(): Readonly<Vector3>;
         /**
-         * 世界位置。
+         * 该物体的世界位置。
          */
         setPosition(position: Readonly<IVector3>): this;
         setPosition(x: number, y: number, z: number): this;
         /**
-         * 世界位置。
+         * 该物体的世界位置。
          */
         position: Readonly<Vector3 | IVector3>;
         /**
-         * 世界旋转。
+         * 该物体的世界旋转。
          */
         getRotation(): Readonly<Quaternion>;
         /**
-         * 世界旋转。
+         * 该物体的世界旋转。
          */
         setRotation(v: Readonly<IVector4>): this;
         setRotation(x: number, y: number, z: number, w: number): this;
         /**
-         * 世界旋转。
+         * 该物体的世界旋转。
          */
         rotation: Readonly<Quaternion | IVector4>;
         /**
-         * 世界欧拉弧度。
+         * 该物体的世界欧拉弧度。
          */
         getEuler(order?: EulerOrder): Readonly<Vector3>;
         /**
-         * 世界欧拉弧度。
+         * 该物体的世界欧拉弧度。
          */
         setEuler(v: Readonly<IVector3>, order?: EulerOrder): this;
         setEuler(x: number, y: number, z: number, order?: EulerOrder): this;
         /**
-         * 世界欧拉弧度。
+         * 该物体的世界欧拉弧度。
          */
         euler: Readonly<Vector3 | IVector3>;
         /**
-         * 世界欧拉角度。
+         * 该物体的世界欧拉角度。
          */
         getEulerAngles(order?: EulerOrder): Readonly<Vector3>;
         /**
-         * 世界欧拉角度。
+         * 该物体的世界欧拉角度。
          */
         setEulerAngles(v: Readonly<IVector3>, order?: EulerOrder): this;
         setEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
         /**
-         * 世界欧拉角度。
+         * 该物体的世界欧拉角度。
          */
         eulerAngles: Readonly<Vector3 | IVector3>;
         /**
-         * 世界缩放。
+         * 该物体的世界缩放。
          */
         getScale(): Readonly<Vector3>;
         /**
-         * 世界缩放。
+         * 该物体的世界缩放。
          */
         setScale(v: Readonly<IVector3>): this;
         setScale(x: number, y?: number, z?: number): this;
         /**
-         * 世界缩放。
+         * 该物体的世界缩放。
          */
         scale: Readonly<Vector3 | IVector3>;
         /**
-         * 世界矩阵。
+         * 该物体的世界矩阵。
          */
         getWorldMatrix(): Readonly<Matrix4>;
         /**
-         * 世界矩阵。
+         * 该物体的世界矩阵。
          */
         readonly worldMatrix: Readonly<Matrix4>;
         /**
-         * 位移指定距离。
+         * 将该物体位移指定距离。
+         * @param isWorldSpace 是否是世界坐标系。
          */
         translate(value: Readonly<IVector3>, isWorldSpace?: boolean): this;
         translate(x: number, y: number, z: number, isWorldSpace?: boolean): this;
         /**
-         * 旋转指定欧拉弧度。
+         * 将该物体旋转指定的欧拉弧度。
+         * @param isWorldSpace 是否是世界坐标系。
          */
         rotate(value: Readonly<IVector3>, isWorldSpace?: boolean, order?: EulerOrder): this;
         rotate(x: number, y: number, z: number, isWorldSpace?: boolean, order?: EulerOrder): this;
         /**
-         * 绕轴旋转弧度。
+         * 将该物体绕指定轴旋转指定弧度。
+         * @param axis 指定轴。
+         * @param radian 指定弧度。
+         * @param isWorldSpace 是否是世界坐标系。
          */
         rotateOnAxis(axis: Readonly<IVector3>, radian: number, isWorldSpace?: boolean): this;
         /**
-         *
+         * 将该物体绕世界指定点和世界指定轴旋转指定弧度。
+         * @param worldPosition 世界指定点。
+         * @param worldAxis 世界指定轴。
+         * @param radian 指定弧度。
          */
-        rotateAround(position: Readonly<IVector3>, axis: Readonly<IVector3>, radian: number): this;
+        rotateAround(worldPosition: Readonly<IVector3>, worldAxis: Readonly<IVector3>, radian: number): this;
         /**
-         * 旋转指定欧拉角度。
+         * 将该物体旋转指定的欧拉角度。
+         * @param isWorldSpace 是否是世界坐标系。
          */
         rotateAngle(value: Readonly<IVector3>, isWorldSpace?: boolean, order?: EulerOrder): this;
         rotateAngle(x: number, y: number, z: number, isWorldSpace?: boolean, order?: EulerOrder): this;
         /**
-         * 绕轴旋转角度。
+         * 将该物体绕指定轴旋转指定角度。
+         * @param axis 指定轴。
+         * @param angle 指定角度。
+         * @param isWorldSpace 是否是世界坐标系。
          */
         rotateAngleOnAxis(axis: Readonly<IVector3>, angle: number, isWorldSpace?: boolean): this;
         /**
-         *
+         * 将该物体绕世界指定点和世界指定轴旋转指定角度。
+         * @param worldPosition 世界指定点。
+         * @param worldAxis 世界指定轴。
+         * @param angle 指定角度。
          */
-        rotateAngleAround(position: Readonly<IVector3>, axis: Readonly<IVector3>, angle: number): this;
+        rotateAngleAround(worldPosition: Readonly<IVector3>, worldAxis: Readonly<IVector3>, angle: number): this;
         /**
-         * 获取世界坐标系下当前 X 轴的正方向。
+         * 获取该物体在世界空间坐标系下描述的 X 轴正方向。
          */
         getRight(out?: Vector3): Vector3;
         /**
-         * 获取世界坐标系下当前 Y 轴的正方向。
+         * 获取该物体在世界空间坐标系下描述的 Y 轴正方向。
          */
         getUp(out?: Vector3): Vector3;
         /**
-         * 获取世界坐标系下当前 Z 轴的正方向。
+         * 获取该物体在世界空间坐标系下描述的 Z 轴正方向。
          */
         getForward(out?: Vector3): Vector3;
         /**
-         * 旋转 Z 轴，使其正方向指向目标位置。
+         * 通过旋转使得该物体的 Z 轴正方向指向目标。
+         * @param target 目标。
+         * @param up 旋转后，该物体在世界空间坐标系下描述的 Y 轴正方向。
          */
         lookAt(target: Readonly<Transform> | Readonly<IVector3>, up?: Readonly<IVector3>): this;
         /**
-         * 所有子 Transform 组件的总数。
+         * 该组件实体的全部子级变换组件总数。
          */
         readonly childCount: number;
         /**
-         * 所有子 Transform 组件。
+         * 该组件实体的全部子级变换组件。
          */
         readonly children: ReadonlyArray<Transform>;
         /**
-         * 父 Transform 组件。
+         * 该组件实体的父级变换组件。
          */
         parent: Transform | null;
     }
@@ -4131,7 +4177,7 @@ declare namespace egret3d {
          */
         frustumCulled: boolean;
         stage: egret.Stage;
-        private renderer;
+        private _renderer;
         private _screenAdapter;
         screenAdapter: IScreenAdapter;
         root: egret.DisplayObjectContainer;
@@ -4360,13 +4406,16 @@ declare namespace egret3d {
     }
 }
 declare namespace paper {
+    /**
+     * 雾的模式。
+     */
     const enum FogMode {
         NONE = 0,
         FOG = 1,
         FOG_EXP2 = 2,
     }
     /**
-     * 场景类
+     * 场景。
      */
     class Scene extends BaseObject {
         /**
@@ -4374,7 +4423,7 @@ declare namespace paper {
          */
         static createEmpty(name?: string, isActive?: boolean): Scene;
         /**
-         * 通过 Asset name 创建指定场景。
+         * 通过创建资源创建指定场景。
          */
         static create(name: string, combineStaticObjects?: boolean): Scene;
         /**
@@ -4390,11 +4439,11 @@ declare namespace paper {
          */
         static activeScene: Scene;
         /**
-         * lightmap 表现的光照强度。
+         * Light map 表现的光照强度。
          */
         lightmapIntensity: number;
         /**
-         * 场景名称。
+         * 名称。
          */
         readonly name: string;
         /**
@@ -4402,15 +4451,15 @@ declare namespace paper {
          */
         readonly ambientColor: egret3d.Color;
         /**
-         * 场景的 lightmap 列表。
+         * Light map 列表。
          */
         readonly lightmaps: egret3d.Texture[];
         /**
-         *
+         * 雾的模式。
          */
         fogMode: FogMode;
         /**
-         *
+         * 雾的颜色。
          */
         readonly fogColor: egret3d.Color;
         /**
@@ -4436,35 +4485,34 @@ declare namespace paper {
          */
         private constructor();
         /**
-         *
-         */
-        uninitialize(): void;
-        /**
-         * 销毁场景。
+         * 销毁该场景和场景中的全部实体。
          */
         destroy(): void;
         /**
-         *
+         * 获取该场景指定名称或路径的实体。
+         * - 只返回第一个符合的实体。
          */
         find(nameOrPath: string): GameObject;
         /**
-         *
+         * 获取指定该场景标识的实体。
+         * - 只返回第一个符合的实体。
          */
         findWithTag(tag: string): GameObject;
         /**
-         *
+         * 获取该场景指定标识的实体。
+         * - 返回全部符合的实体。
          */
         findGameObjectsWithTag(tag: string): GameObject[];
         /**
-         * 所有根实体。
+         * 该场景当前的全部根实体。
          */
         getRootGameObjects(): GameObject[];
         /**
-         *
+         * 该场景当前的实体总数。
          */
         readonly gameObjectCount: number;
         /**
-         * 所有实体。
+         * 该场景当前的全部实体。
          */
         readonly gameObjects: ReadonlyArray<GameObject>;
     }
@@ -4480,7 +4528,7 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
-     * 可以挂载Component的实体类。
+     * 实体。
      */
     class GameObject extends BaseObject {
         private static _globalGameObject;
@@ -4490,13 +4538,23 @@ declare namespace paper {
         static create(name?: string, tag?: string, scene?: Scene | null): GameObject;
         private static _raycast(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
         private static _sortRaycastInfo(a, b);
+        /**
+         * 用射线检测指定的实体列表。
+         * @param ray 射线。
+         * @param gameObjectOrTransforms 实体列表。
+         * @param maxDistance 最大相交点检测距离。
+         * @param cullingMask 只对特定层的实体检测。
+         * @param raycastMesh 是否检测网格。
+         */
         static raycast(ray: Readonly<egret3d.Ray>, gameObjectOrTransforms: ReadonlyArray<GameObject | egret3d.Transform>, maxDistance?: number, cullingMask?: CullingMask, raycastMesh?: boolean): egret3d.RaycastInfo[];
         /**
-         *
+         * 全局实体。
+         * - 全局实体不可被销毁。
+         * - 静态组件都会添加到全局实体上。
          */
         static readonly globalGameObject: GameObject;
         /**
-         * 是否是静态，启用这个属性可以提升性能
+         * 是否是静态模式。
          */
         isStatic: boolean;
         /**
@@ -4504,23 +4562,25 @@ declare namespace paper {
          */
         hideFlags: HideFlags;
         /**
-         * 层级
+         * 层级。
+         * - 用于各种层遮罩。
          */
         layer: Layer;
         /**
-         * 名称
+         * 名称。
          */
         name: string;
         /**
-         * 标签
+         * 标签。
          */
         tag: string;
         /**
-         * 变换组件
+         * 变换组件。
          * @readonly
          */
         transform: egret3d.Transform;
         /**
+         * 渲染组件。
          * @readonly
          */
         renderer: BaseRenderer | null;
@@ -4533,6 +4593,8 @@ declare namespace paper {
         private readonly _cachedComponents;
         private _scene;
         /**
+         * 请使用 `paper.GameObject.create()` 创建实例。
+         * @see paper.GameObject.create()
          * @deprecated
          */
         constructor(name?: string, tag?: string, scene?: Scene | null);
@@ -4550,91 +4612,116 @@ declare namespace paper {
          */
         destroy(): void;
         /**
-         * 添加组件。
+         * 添加一个指定组件实例。
+         * @param componentClass 组件类。
+         * @param config Behaviour 组件 `onAwake(config?: any)` 的可选参数。
          */
         addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T;
         /**
-         * 移除组件。
+         * 移除一个指定组件实例。
+         * @param componentInstanceOrClass 组件类或组件实例。
+         * @param isExtends 是否尝试移除全部派生自此组件的实例。
          */
         removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends?: boolean): void;
         /**
-         * 移除所有组件。
+         * 移除全部指定组件的实例。
+         * - 通常只有该组件类允许同一个实体添加多个组件实例时才需要此操作。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试移除全部派生自此组件的实例。
          */
         removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends?: boolean): void;
         /**
-         * 获取组件。
+         * 获取一个指定组件实例。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T | null;
         /**
-         *
+         * 获取全部指定组件实例。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
         /**
-         * 搜索自己和父节点中所有特定类型的组件
+         * 获取一个自己或父级中指定的组件实例。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         getComponentInParent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
         /**
-         *
+         * 获取一个自己或子（孙）级中指定的组件实例。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         getComponentInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T | null;
         /**
-         * 搜索自己和子节点中所有特定类型的组件
+         * 获取全部自己和子（孙）级中指定的组件实例。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean, components?: T[] | null): T[];
         /**
-         * 获取组件，如果未添加该组件，则添加该组件。
+         * 从该实体已注册的全部组件中获取一个指定组件实例，如果未添加该组件，则添加该组件。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         getOrAddComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
         /**
-         * 针对同级的组件发送消息
+         * 向该实体已激活的全部 Behaviour 组件发送消息。
          * @param methodName
-         * @param parameter``
+         * @param parameter
          */
         sendMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
         /**
-         * 针对直接父级发送消息
+         * 向该实体和其父级的 Behaviour 组件发送消息。
          * @param methodName
          * @param parameter
          */
         sendMessageUpwards(methodName: string, parameter?: any, requireReceiver?: boolean): void;
         /**
-         * 群发消息
+         * 向该实体和的其子（孙）级的 Behaviour 组件发送消息。
          * @param methodName
          * @param parameter
          */
         broadcastMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
         /**
-         *
+         * 该实体是否已经被销毁。
          */
         readonly isDestroyed: boolean;
         /**
-         *
+         * 该实体是否可以被销毁。
+         * - 当此值为 `true` 时，将会被添加到全局场景，反之将被添加到激活场景。
+         * - 设置此属性时，可能改变该实体的父级。
          */
         dontDestroy: boolean;
         /**
-         * 当前GameObject对象自身激活状态
+         * 该实体自身的激活状态。
          */
         activeSelf: boolean;
         /**
-         * 获取当前GameObject对象在场景中激活状态。
-         * 如果当前对象父级的activeSelf为false，那么当前GameObject对象在场景中为禁用状态。
+         * 该实体在场景中的激活状态。
          */
         readonly activeInHierarchy: boolean;
+        /**
+         * 该实体的路径。
+         */
         readonly path: string;
         /**
-         *
+         * 该实体已添加的全部组件。
          */
         readonly components: ReadonlyArray<BaseComponent>;
         /**
-         *
+         * 该实体的父级。
          */
         parent: GameObject | null;
         /**
-         * 获取物体所在场景实例。
+         * 该实体所属的场景。
          */
         readonly scene: Scene;
         /**
-         *
+         * 全局实体。
+         * - 全局实体不可被销毁。
+         * - 静态组件都会添加到全局实体上。
          */
         readonly globalGameObject: GameObject;
         /**
@@ -5544,11 +5631,9 @@ declare namespace paper {
         function dispatchEvent<T extends BaseComponent>(type: string, component: T, extend?: any): void;
     }
 }
-declare type int = number;
-declare type uint = number;
 declare namespace paper {
     /**
-     *
+     * 应用程序运行模式。
      */
     const enum PlayerMode {
         Player = 0,
@@ -5556,20 +5641,20 @@ declare namespace paper {
         Editor = 2,
     }
     /**
-     *
+     * 时间组件。
      */
     let Time: Clock;
     /**
-     *
+     * 应用程序单例。
      */
     let Application: ECS;
     /**
-     *
+     * 应用程序。
      */
     class ECS {
         private static _instance;
         /**
-         *
+         * 应用程序单例。
          */
         static getInstance(): ECS;
         private constructor();
@@ -5587,19 +5672,8 @@ declare namespace paper {
         private _bindUpdate;
         private _update();
         private _updatePlayerMode();
-        init(options: egret3d.RunEgretOptions): void;
         /**
-         *
-         */
-        pause(): void;
-        /**
-         *
-         */
-        resume(): void;
-        readonly isFocused: boolean;
-        readonly isRunning: boolean;
-        /**
-         *
+         * 运行模式。
          */
         playerMode: PlayerMode;
     }
@@ -5673,11 +5747,11 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 材质资源
+     * 材质资源。
      */
     class Material extends GLTFAsset {
         /**
-         *
+         * 创建一个材质实例。
          */
         static create(shader?: Shader | string): Material;
         static create(config: GLTF, name: string): Material;
@@ -9259,6 +9333,11 @@ declare namespace egret3d {
     class Mesh extends BaseMesh {
         /**
          *
+         * @param vertexCount
+         * @param indexCount
+         * @param attributeNames
+         * @param attributeTypes
+         * @param drawMode
          */
         static create(vertexCount: number, indexCount: number, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
             [key: string]: gltf.AccessorType;
@@ -9266,13 +9345,7 @@ declare namespace egret3d {
         static create(config: GLTF, buffers: Uint32Array[], name: string): Mesh;
         dispose(): boolean;
         _createBuffer(): void;
-        /**
-         *
-         */
         uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]) | null, offset?: number, count?: number): void;
-        /**
-         *
-         */
         uploadSubIndexBuffer(subMeshIndex?: number): void;
     }
 }
@@ -9780,7 +9853,7 @@ declare namespace paper.editor {
 }
 declare namespace paper {
     /**
-     *
+     * 已丢失或不支持的组件数据备份。
      */
     class MissingComponent extends BaseComponent {
         missingObject: any | null;

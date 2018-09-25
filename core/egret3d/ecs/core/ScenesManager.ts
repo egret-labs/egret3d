@@ -1,10 +1,12 @@
 namespace paper {
     /**
-     * 场景管理器
+     * 程序场景管理器。
      */
     export class SceneManager {
         private static _instance: SceneManager | null = null;
-
+        /**
+         * 场景管理器单例。
+         */
         public static getInstance() {
             if (!this._instance) {
                 this._instance = new SceneManager();
@@ -57,7 +59,8 @@ namespace paper {
             return true;
         }
         /**
-         * 卸载所有场景。
+         * 卸载程序中的全部场景。
+         * - 不包含全局场景。
          */
         public unloadAllScene(excludes?: ReadonlyArray<Scene>) {
             let i = this._scenes.length;
@@ -72,9 +75,9 @@ namespace paper {
             }
         }
         /**
-         * 
+         * 从程序已创建的全部场景中获取指定名称的场景。
          */
-        public getSceneByName(name: string) {
+        public getScene(name: string) {
             for (const scene of this._scenes) {
                 if (scene.name === name) {
                     return scene;
@@ -84,13 +87,15 @@ namespace paper {
             return null;
         }
         /**
-         * 
+         * 程序已创建的全部场景。
+         * - 不包含全局场景。
          */
         public get scenes(): ReadonlyArray<Scene> {
             return this._scenes;
         }
         /**
-         * 
+         * 全局场景。
+         * - 全局场景无法被销毁。
          */
         public get globalScene() {
             if (!this._globalScene) {
@@ -101,7 +106,7 @@ namespace paper {
             return this._globalScene;
         }
         /**
-         * 当前激活的场景。
+         * 当前程序激活的场景。
          */
         public get activeScene() {
             if (this._scenes.length === 0) {

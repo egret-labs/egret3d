@@ -1,18 +1,18 @@
 namespace paper {
     /**
-     * 
+     * 全局销毁信息收集组件。
      */
     export class DisposeCollecter extends SingletonComponent {
         /**
-         * 移除的场景数组。
+         * 当前帧销毁的全部场景。
          */
         public readonly scenes: Scene[] = [];
         /**
-         * 移除的实体数组。
+         * 当前帧销毁的全部实体。
          */
         public readonly gameObjects: GameObject[] = [];
         /**
-         * 移除的组件数组。
+         * 当前帧销毁的全部组件。
          */
         public readonly components: BaseComponent[] = [];
         /**

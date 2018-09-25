@@ -21,6 +21,7 @@ namespace paper.debug {
         }
 
         private _gameObjectSelectedHandler = (_c: any, value: GameObject) => {
+            this._selectSceneOrGameObject(null);
             this._selectSceneOrGameObject(value);
         }
 
