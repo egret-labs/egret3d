@@ -3224,15 +3224,27 @@ var paper;
                         }
                         rotationAxis.copy(unit).applyQuaternion(quaternion);
                         tempVector.copy(unit);
-                        tempVector2.copy(this._offsetEnd).subtract(this._offsetStart, tempVector2);
+                        tempVector2.subtract(this._offsetStart, this._offsetEnd);
                         if (!isWorldSpace) {
                             tempVector.applyQuaternion(quaternion);
                             tempVector2.applyQuaternion(this._rotationStart);
                         }
                         rotationAngle = tempVector2.dot(tempVector.cross(this.eye).normalize()) * ROTATION_SPEED;
+                        // rotationAngle = Helper.angle(tempVector, tempVector2, this.eye);
                     }
-                    tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(this._rotationStart);
-                    selected.transform.setRotation(tempQuaternion);
+                    if (isWorldSpace) {
+                        tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(this._rotationStart).normalize();
+                        selected.transform.rotation = tempQuaternion;
+                    }
+                    else {
+                        // const temp = this._localRotationStart.clone();
+                        // temp.multiply(tempQuaternion.fromAxis(rotationAxis, rotationAngle));
+                        tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(this._localRotationStart).normalize();
+                        console.log("前 x:" + tempQuaternion.x + " y:" + tempQuaternion.y + " z:" + tempQuaternion.z + " w:" + tempQuaternion.w);
+                        selected.transform.localRotation = tempQuaternion;
+                        var tt = selected.transform.rotation;
+                        console.log("后 x:" + tt.x + " y:" + tt.y + " z:" + tt.z + " w:" + tt.w);
+                    }
                     tempVector.release();
                     tempVector2.release();
                     rotationAxis.release();
@@ -4538,6 +4550,19 @@ var paper;
                 var ray = camera.createRayByScreen(mousePositionX, mousePositionY);
                 var raycastInfo = egret3d.RaycastInfo.create();
                 return raycastAble.raycast(ray, raycastInfo) ? raycastInfo : null;
+            };
+            Helper.angle = function (line1, line2, direction) {
+                line1.normalize();
+                line2.normalize();
+                var temp = line1.dot(line2);
+                // 1和-1时为0和180°	
+                if (Math.abs(Math.abs(temp) - 1) < egret3d.EPSILON) {
+                    return temp > 0 ? 0 : Math.PI;
+                }
+                var angle = Math.acos(temp);
+                // 两个向量的叉乘结果与屏幕方向是否一致来判断角度是否超过180°	
+                var axis = line1.cross(line2);
+                return axis.dot(direction) > 0 ? angle : 2 * Math.PI - angle;
             };
             return Helper;
         }());

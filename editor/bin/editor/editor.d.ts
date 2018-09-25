@@ -237,6 +237,7 @@ declare namespace paper.debug {
     class Helper {
         static raycast(targets: ReadonlyArray<paper.GameObject | egret3d.Transform>, mousePositionX: number, mousePositionY: number): egret3d.RaycastInfo[];
         static raycastB(raycastAble: egret3d.IRaycast, mousePositionX: number, mousePositionY: number): egret3d.RaycastInfo;
+        static angle(line1: egret3d.Vector3, line2: egret3d.Vector3, direction: egret3d.Vector3): number;
     }
 }
 declare namespace helper {

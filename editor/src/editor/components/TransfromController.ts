@@ -81,7 +81,7 @@ namespace paper.debug {
                 const axisY = EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const axisZ = EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const axisE = EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createCircle(1.25, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const axisXYZE  = EditorMeshHelper.createGameObject("AxisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisXYZE = EditorMeshHelper.createGameObject("AxisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const pickX = EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone(), paper.DefaultTags.Untagged);
                 const pickY = EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone(), paper.DefaultTags.Untagged);
                 const pickZ = EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone(), paper.DefaultTags.Untagged);
@@ -256,17 +256,29 @@ namespace paper.debug {
                     rotationAxis.copy(unit).applyQuaternion(quaternion);
 
                     tempVector.copy(unit);
-                    tempVector2.copy(this._offsetEnd).subtract(this._offsetStart, tempVector2);
+                    tempVector2.subtract(this._offsetStart, this._offsetEnd);
 
                     if (!isWorldSpace) {
                         tempVector.applyQuaternion(quaternion);
                         tempVector2.applyQuaternion(this._rotationStart);
                     }
                     rotationAngle = tempVector2.dot(tempVector.cross(this.eye).normalize()) * ROTATION_SPEED;
+                    // rotationAngle = Helper.angle(tempVector, tempVector2, this.eye);
                 }
 
-                tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(this._rotationStart);
-                selected.transform.setRotation(tempQuaternion);
+                if (isWorldSpace) {
+                    tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(this._rotationStart).normalize();
+                    selected.transform.rotation = tempQuaternion;
+                }
+                else {
+                    // const temp = this._localRotationStart.clone();
+                    // temp.multiply(tempQuaternion.fromAxis(rotationAxis, rotationAngle));
+                    tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(this._localRotationStart).normalize();
+                    console.log("前 x:" + tempQuaternion.x + " y:" + tempQuaternion.y + " z:" + tempQuaternion.z + " w:" + tempQuaternion.w);
+                    selected.transform.localRotation = tempQuaternion;
+                    const tt = selected.transform.rotation;
+                    console.log("后 x:" + tt.x + " y:" + tt.y + " z:" + tt.z + " w:" + tt.w);
+                }
 
                 tempVector.release();
                 tempVector2.release();
