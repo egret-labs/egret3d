@@ -37,9 +37,9 @@ namespace paper.debug {
                 const pickYZ = EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
                 const pickZX = EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
 
-                this._highlights[pickX.uuid] = [axisX, arrowX];
-                this._highlights[pickY.uuid] = [axisY, arrowY];
-                this._highlights[pickZ.uuid] = [axisZ, arrowZ];
+                this._highlights[pickX.uuid] = [pickX, axisX, arrowX];
+                this._highlights[pickY.uuid] = [pickY, axisY, arrowY];
+                this._highlights[pickZ.uuid] = [pickZ, axisZ, arrowZ];
 
                 translate.transform.setParent(this.gameObject.transform);
                 axisX.transform.setParent(translate.transform).setLocalPosition(0.001, 0.0, 0.0);
@@ -128,9 +128,9 @@ namespace paper.debug {
                 const pickYZ = EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
                 const pickZX = EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
 
-                this._highlights[pickX.uuid] = [axisX, arrowX];
-                this._highlights[pickY.uuid] = [axisY, arrowY];
-                this._highlights[pickZ.uuid] = [axisZ, arrowZ];
+                this._highlights[pickX.uuid] = [pickX, axisX, arrowX];
+                this._highlights[pickY.uuid] = [pickX, axisY, arrowY];
+                this._highlights[pickZ.uuid] = [pickX, axisZ, arrowZ];
 
                 scale.transform.setParent(this.gameObject.transform);
                 axisX.transform.setParent(scale.transform).setLocalPosition(0.001, 0.0, 0.0);
