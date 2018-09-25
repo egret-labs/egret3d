@@ -165,6 +165,7 @@ namespace egret3d {
             this.x = source.x * -1;
             this.y = source.y * -1;
             this.z = source.z * -1;
+            this.w = source.w;
 
             return this;
         }
