@@ -1,13 +1,9 @@
 namespace paper.debug {
-    let hVec2_1 = new egret3d.Vector2();
-    let hVec2_2 = new egret3d.Vector2();
     /**
-     * 
+     * @internal
      */
     export class OrbitControls extends paper.Behaviour {
-
         public lookAtPoint: egret3d.Vector3 = egret3d.Vector3.create(0.0, 0.0, 0.0);
-        public lookAtTarget: egret3d.Transform;
         public lookAtOffset: egret3d.Vector3 = egret3d.Vector3.create();
         public distance: number = 30;
 
@@ -129,7 +125,7 @@ namespace paper.debug {
             const move = egret3d.Vector3.create(event.x - this._lastMouseX, event.y - this._lastMouseY, 0);
             if (event.ctrlKey) {
                 move.x = -move.x;
-                const center = this.lookAtTarget ? this.lookAtTarget.getPosition() : this.lookAtPoint;
+                const center = this.lookAtPoint;
                 const dis = this.gameObject.transform.getPosition().getDistance(center);
                 const normalMat = egret3d.Matrix3.create();
                 move.multiplyScalar(dis * this.moveSpped).applyMatrix3(normalMat.getNormalMatrix(this.gameObject.transform.getLocalMatrix()));
@@ -160,13 +156,7 @@ namespace paper.debug {
             let distanceZ = this.distance * Math.cos(this._panRad) * Math.cos(this._tiltRad);
 
             let target: egret3d.Vector3 = egret3d.Vector3.create();
-            if (this.lookAtTarget) {
-                target.copy(this.lookAtTarget.getPosition());
-            }
-            else {
-                target.copy(this.lookAtPoint);
-            }
-
+            target.copy(this.lookAtPoint);
             target.add(this.lookAtOffset);
 
             this.gameObject.transform.setPosition(target.x + distanceX, target.y + distanceY, target.z + distanceZ);

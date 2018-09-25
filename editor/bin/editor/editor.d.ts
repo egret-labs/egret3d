@@ -109,6 +109,15 @@ declare namespace paper.debug {
     /**
      *
      */
+    class GUIComponent extends SingletonComponent {
+        readonly inspector: dat.GUI;
+        readonly hierarchy: dat.GUI;
+    }
+}
+declare namespace paper.debug {
+    /**
+     *
+     */
     const enum ModelComponentEvent {
         SceneSelected = "SceneSelected",
         SceneUnselected = "SceneUnselected",
@@ -142,91 +151,10 @@ declare namespace paper.debug {
     }
 }
 declare namespace paper.debug {
-    /**
-     *
-     */
-    class OrbitControls extends paper.Behaviour {
-        lookAtPoint: egret3d.Vector3;
-        lookAtTarget: egret3d.Transform;
-        lookAtOffset: egret3d.Vector3;
-        distance: number;
-        minPanAngle: number;
-        maxPanAngle: number;
-        minTileAngle: number;
-        maxTileAngle: number;
-        moveSpped: number;
-        scaleSpeed: number;
-        private _enableMove;
-        private bindTouch;
-        private bindMouse;
-        private _lastMouseX;
-        private _lastMouseY;
-        private _mouseDown;
-        private _lastTouchX;
-        private _lastTouchY;
-        private _fingerTwo;
-        private _lastDistance;
-        private _panAngle;
-        private _panRad;
-        private _tiltAngle;
-        private _tiltRad;
-        panAngle: number;
-        tiltAngle: number;
-        enableMove: boolean;
-        onStart(): any;
-        onEnable(): void;
-        onDisable(): void;
-        onUpdate(delta: number): any;
-        private _mouseDownHandler;
-        private _mouseUpHandler;
-        private _mouseMoveHandler;
-        private _mouseWheelHandler;
-        private move();
-    }
 }
 declare namespace paper.debug {
-    /**
-     * 变换控制器。
-     */
-    class TransfromController extends BaseComponent {
-        isWorldSpace: boolean;
-        readonly eye: egret3d.Vector3;
-        readonly translate: GameObject;
-        readonly rotate: GameObject;
-        readonly scale: GameObject;
-        private _controlling;
-        private readonly _positionStart;
-        private readonly _rotationStart;
-        private readonly _scaleStart;
-        private readonly _localPositionStart;
-        private readonly _localRotationStart;
-        private readonly _localScaleStart;
-        private readonly _offsetStart;
-        private readonly _offsetEnd;
-        private readonly _plane;
-        private readonly _quad;
-        private readonly _highlights;
-        private _mode;
-        private _hovered;
-        initialize(): void;
-        private _updateTransform(selected, mousePosition);
-        private _updateSelf(selected);
-        private _updatePlane();
-        start(selected: GameObject, mousePosition: Readonly<egret3d.IVector3>): void;
-        end(): void;
-        update(selected: GameObject, mousePosition: Readonly<egret3d.IVector3>): void;
-        mode: GameObject;
-        hovered: GameObject | null;
-    }
 }
 declare namespace paper.debug {
-    /**
-     *
-     */
-    class GUIComponent extends SingletonComponent {
-        readonly inspector: dat.GUI;
-        readonly hierarchy: dat.GUI;
-    }
 }
 declare namespace paper.debug {
     class GUISystem extends BaseSystem {
@@ -269,6 +197,7 @@ declare namespace paper.debug {
         private readonly _modelComponent;
         private _orbitControls;
         private _transformController;
+        private _gridController;
         private _hoverBox;
         private _grids;
         private _cameraViewFrustum;
@@ -276,8 +205,6 @@ declare namespace paper.debug {
         private readonly _pointerPosition;
         private readonly _pickableSelected;
         private readonly _boxes;
-        private _selectedWorldPostion;
-        private _selectedWorldQuaternion;
         private _contextmenuHandler;
         private _onMouseDown;
         private _onMouseUp;
@@ -300,7 +227,6 @@ declare namespace paper.debug {
 declare namespace paper.debug {
     class EditorMeshHelper {
         static createGameObject(name: string, mesh?: egret3d.Mesh, material?: egret3d.Material, tag?: string, scene?: paper.Scene): GameObject;
-        static createGrid(name: string, size?: number, divisions?: number, color1?: egret3d.Color, color2?: egret3d.Color): GameObject;
         static createBox(name: string, color: egret3d.Color, opacity: number, scene: Scene): GameObject;
         static createCameraIcon(name: string, parent: paper.GameObject): GameObject;
         static createLightIcon(name: string, parent: paper.GameObject): GameObject;

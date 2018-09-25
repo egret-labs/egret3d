@@ -72,7 +72,11 @@ namespace egret3d {
                 this._localDirty |= dirty | TransformDirty.Matrix;
 
                 if (dirty & TransformDirty.Rotation) {
+                    this._localDirty |= TransformDirty.Scale;
                     this._localDirty |= TransformDirty.Euler;
+                }
+                else if (dirty & TransformDirty.Scale) {
+                    this._localDirty |= TransformDirty.Rotation;
                 }
             }
 
@@ -80,7 +84,11 @@ namespace egret3d {
                 this._worldDirty |= dirty | TransformDirty.Matrix;
 
                 if (dirty & TransformDirty.Rotation) {
+                    this._worldDirty |= TransformDirty.Scale;
                     this._worldDirty |= TransformDirty.Euler;
+                }
+                else if (dirty & TransformDirty.Scale) {
+                    this._worldDirty |= TransformDirty.Rotation;
                 }
 
                 for (const child of this._children) {
@@ -363,7 +371,7 @@ namespace egret3d {
                 this._localRotation.w = p4 !== undefined ? p4 : 1.0;
             }
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Rotation);
 
             return this;
         }
@@ -379,7 +387,7 @@ namespace egret3d {
             this._localRotation.z = value.z;
             this._localRotation.w = value.w;
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Rotation);
         }
         /**
          * 本地欧拉弧度。
@@ -412,7 +420,7 @@ namespace egret3d {
                 this._localRotation.fromEuler(this._localEuler, p4 as EulerOrder);
             }
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Rotation);
             this._localDirty &= ~TransformDirty.Euler;
 
             return this;
@@ -433,7 +441,7 @@ namespace egret3d {
             this._localEuler.z = value.z;
             this._localEulerAngles.multiplyScalar(RAD_DEG, this._localEuler);
             this._localRotation.fromEuler(this._localEuler);
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Rotation);
             this._localDirty &= ~TransformDirty.Euler;
         }
         /**
@@ -467,7 +475,7 @@ namespace egret3d {
                 this._localRotation.fromEuler(this._localEuler, p4 as EulerOrder);
             }
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Rotation);
             this._localDirty &= ~TransformDirty.Euler;
 
             return this;
@@ -489,7 +497,7 @@ namespace egret3d {
             this._localEulerAngles.z = value.z;
             this._localEuler.multiplyScalar(DEG_RAD, this._localEulerAngles);
             this._localRotation.fromEuler(this._localEuler);
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Rotation);
             this._localDirty &= ~TransformDirty.Euler;
         }
         /**
@@ -515,7 +523,7 @@ namespace egret3d {
                 this._localScale.z = p3 !== undefined ? p3 : p1 as number;
             }
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Scale);
 
             return this;
         }
@@ -531,7 +539,7 @@ namespace egret3d {
             this._localScale.y = value.y;
             this._localScale.z = value.z;
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Scale);
         }
         /**
          * 本地矩阵。
@@ -642,10 +650,10 @@ namespace egret3d {
             }
 
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
             }
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Rotation);
 
             return this;
         }
@@ -667,10 +675,10 @@ namespace egret3d {
             this._localRotation.w = value.w;
 
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
             }
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Rotation);
         }
         /**
          * 世界欧拉弧度。
@@ -697,10 +705,10 @@ namespace egret3d {
             }
 
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
             }
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Rotation);
 
             return this;
         }
@@ -718,10 +726,10 @@ namespace egret3d {
             this._localRotation.fromEuler(value);
 
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
             }
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Rotation);
         }
         /**
          * 世界欧拉角度。
@@ -749,10 +757,10 @@ namespace egret3d {
             }
 
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
             }
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Rotation);
 
             return this;
         }
@@ -771,10 +779,10 @@ namespace egret3d {
             this._localRotation.fromEuler(_helpVector3);
 
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
             }
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Rotation);
         }
         /**
          * 世界缩放。
@@ -808,7 +816,7 @@ namespace egret3d {
                 this._localScale.applyDirection(_helpMatrix.inverse(this._parent.worldMatrix));
             }
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Scale);
 
             return this;
         }
@@ -832,7 +840,7 @@ namespace egret3d {
                 this._localScale.applyDirection(_helpMatrix.inverse(this._parent.worldMatrix));
             }
 
-            this._dirtify(true, TransformDirty.Rotation | TransformDirty.Scale);
+            this._dirtify(true, TransformDirty.Scale);
         }
         /**
          * 世界矩阵。
@@ -917,10 +925,10 @@ namespace egret3d {
             _helpRotation.fromAxis(axis, radian);
 
             if (isWorldSpace) {
-                this.localRotation = this._localRotation.premultiply(_helpRotation);
+                this.localRotation = this._localRotation.premultiply(_helpRotation).normalize();
             }
             else {
-                this.localRotation = this._localRotation.multiply(_helpRotation);
+                this.localRotation = this._localRotation.multiply(_helpRotation).normalize();
             }
 
             return this;

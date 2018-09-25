@@ -3436,6 +3436,7 @@ var egret3d;
             this.x = source.x * -1;
             this.y = source.y * -1;
             this.z = source.z * -1;
+            this.normalize();
             return this;
         };
         Quaternion.prototype.dot = function (value) {
@@ -4164,7 +4165,7 @@ var egret3d;
         };
         MeshRenderer.prototype.raycast = function (p1, p2, p3) {
             var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
-            if (!meshFilter || !meshFilter.mesh) {
+            if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh) {
                 return false;
             }
             var raycastMesh = false;
@@ -7519,13 +7520,21 @@ var egret3d;
             if (isLocalDirty) {
                 this._localDirty |= dirty | 16 /* Matrix */;
                 if (dirty & 2 /* Rotation */) {
+                    this._localDirty |= 4 /* Scale */;
                     this._localDirty |= 8 /* Euler */;
+                }
+                else if (dirty & 4 /* Scale */) {
+                    this._localDirty |= 2 /* Rotation */;
                 }
             }
             if (!(this._worldDirty & dirty) || !(this._worldDirty & 16 /* Matrix */)) {
                 this._worldDirty |= dirty | 16 /* Matrix */;
                 if (dirty & 2 /* Rotation */) {
+                    this._worldDirty |= 4 /* Scale */;
                     this._worldDirty |= 8 /* Euler */;
+                }
+                else if (dirty & 4 /* Scale */) {
+                    this._worldDirty |= 2 /* Rotation */;
                 }
                 for (var _i = 0, _a = this._children; _i < _a.length; _i++) {
                     var child = _a[_i];
@@ -7772,7 +7781,7 @@ var egret3d;
                 this._localRotation.z = p3 || 0.0;
                 this._localRotation.w = p4 !== undefined ? p4 : 1.0;
             }
-            this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+            this._dirtify(true, 2 /* Rotation */);
             return this;
         };
         Object.defineProperty(Transform.prototype, "localRotation", {
@@ -7787,7 +7796,7 @@ var egret3d;
                 this._localRotation.y = value.y;
                 this._localRotation.z = value.z;
                 this._localRotation.w = value.w;
-                this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+                this._dirtify(true, 2 /* Rotation */);
             },
             enumerable: true,
             configurable: true
@@ -7816,7 +7825,7 @@ var egret3d;
                 this._localEulerAngles.multiplyScalar(egret3d.RAD_DEG, this._localEuler);
                 this._localRotation.fromEuler(this._localEuler, p4);
             }
-            this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+            this._dirtify(true, 2 /* Rotation */);
             this._localDirty &= ~8 /* Euler */;
             return this;
         };
@@ -7836,7 +7845,7 @@ var egret3d;
                 this._localEuler.z = value.z;
                 this._localEulerAngles.multiplyScalar(egret3d.RAD_DEG, this._localEuler);
                 this._localRotation.fromEuler(this._localEuler);
-                this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+                this._dirtify(true, 2 /* Rotation */);
                 this._localDirty &= ~8 /* Euler */;
             },
             enumerable: true,
@@ -7847,7 +7856,7 @@ var egret3d;
          */
         Transform.prototype.getLocalEulerAngles = function (order) {
             if (this._localDirty & 8 /* Euler */) {
-                this._updateEuler(false);
+                this._updateEuler(false, order);
             }
             return this._localEulerAngles;
         };
@@ -7866,7 +7875,7 @@ var egret3d;
                 this._localEuler.multiplyScalar(egret3d.DEG_RAD, this._localEulerAngles);
                 this._localRotation.fromEuler(this._localEuler, p4);
             }
-            this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+            this._dirtify(true, 2 /* Rotation */);
             this._localDirty &= ~8 /* Euler */;
             return this;
         };
@@ -7886,7 +7895,7 @@ var egret3d;
                 this._localEulerAngles.z = value.z;
                 this._localEuler.multiplyScalar(egret3d.DEG_RAD, this._localEulerAngles);
                 this._localRotation.fromEuler(this._localEuler);
-                this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+                this._dirtify(true, 2 /* Rotation */);
                 this._localDirty &= ~8 /* Euler */;
             },
             enumerable: true,
@@ -7909,7 +7918,7 @@ var egret3d;
                 this._localScale.y = p2 !== undefined ? p2 : p1;
                 this._localScale.z = p3 !== undefined ? p3 : p1;
             }
-            this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+            this._dirtify(true, 4 /* Scale */);
             return this;
         };
         Object.defineProperty(Transform.prototype, "localScale", {
@@ -7923,7 +7932,7 @@ var egret3d;
                 this._localScale.x = value.x;
                 this._localScale.y = value.y;
                 this._localScale.z = value.z;
-                this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+                this._dirtify(true, 4 /* Scale */);
             },
             enumerable: true,
             configurable: true
@@ -8024,9 +8033,9 @@ var egret3d;
                 this._localRotation.w = p4 !== undefined ? p4 : 1.0;
             }
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
             }
-            this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+            this._dirtify(true, 2 /* Rotation */);
             return this;
         };
         Object.defineProperty(Transform.prototype, "rotation", {
@@ -8046,9 +8055,9 @@ var egret3d;
                 this._localRotation.z = value.z;
                 this._localRotation.w = value.w;
                 if (this._parent) {
-                    this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
+                    this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
                 }
-                this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+                this._dirtify(true, 2 /* Rotation */);
             },
             enumerable: true,
             configurable: true
@@ -8071,9 +8080,9 @@ var egret3d;
                 this._localRotation.fromEuler(_helpVector3, q4);
             }
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
             }
-            this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+            this._dirtify(true, 2 /* Rotation */);
             return this;
         };
         Object.defineProperty(Transform.prototype, "euler", {
@@ -8089,9 +8098,9 @@ var egret3d;
             set: function (value) {
                 this._localRotation.fromEuler(value);
                 if (this._parent) {
-                    this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
+                    this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
                 }
-                this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+                this._dirtify(true, 2 /* Rotation */);
             },
             enumerable: true,
             configurable: true
@@ -8115,9 +8124,9 @@ var egret3d;
                 this._localRotation.fromEuler(_helpVector3, q4);
             }
             if (this._parent) {
-                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
+                this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
             }
-            this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+            this._dirtify(true, 2 /* Rotation */);
             return this;
         };
         Object.defineProperty(Transform.prototype, "eulerAngles", {
@@ -8134,9 +8143,9 @@ var egret3d;
                 _helpVector3.multiplyScalar(egret3d.DEG_RAD, value);
                 this._localRotation.fromEuler(_helpVector3);
                 if (this._parent) {
-                    this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation));
+                    this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
                 }
-                this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+                this._dirtify(true, 2 /* Rotation */);
             },
             enumerable: true,
             configurable: true
@@ -8165,7 +8174,7 @@ var egret3d;
             if (this._parent) {
                 this._localScale.applyDirection(_helpMatrix.inverse(this._parent.worldMatrix));
             }
-            this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+            this._dirtify(true, 4 /* Scale */);
             return this;
         };
         Object.defineProperty(Transform.prototype, "scale", {
@@ -8186,7 +8195,7 @@ var egret3d;
                 if (this._parent) {
                     this._localScale.applyDirection(_helpMatrix.inverse(this._parent.worldMatrix));
                 }
-                this._dirtify(true, 2 /* Rotation */ | 4 /* Scale */);
+                this._dirtify(true, 4 /* Scale */);
             },
             enumerable: true,
             configurable: true
@@ -8261,10 +8270,10 @@ var egret3d;
         Transform.prototype.rotateOnAxis = function (axis, radian, isWorldSpace) {
             _helpRotation.fromAxis(axis, radian);
             if (isWorldSpace) {
-                this.localRotation = this._localRotation.premultiply(_helpRotation);
+                this.localRotation = this._localRotation.premultiply(_helpRotation).normalize();
             }
             else {
-                this.localRotation = this._localRotation.multiply(_helpRotation);
+                this.localRotation = this._localRotation.multiply(_helpRotation).normalize();
             }
             return this;
         };
@@ -11719,7 +11728,7 @@ var paper;
                 return;
             }
             var raycastInfo = egret3d.RaycastInfo.create();
-            if ((gameObject.layer & cullingMask) && gameObject.renderer && gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
+            if ((gameObject.layer & cullingMask) && gameObject.renderer && gameObject.renderer.enabled && gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
                 if (maxDistance <= 0.0 || raycastInfo.distance <= maxDistance) {
                     raycastInfo.transform = gameObject.transform;
                     raycastInfos.push(raycastInfo);

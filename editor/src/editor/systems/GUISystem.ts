@@ -313,12 +313,13 @@ namespace paper.debug {
                 EventPool.addEventListener(ModelComponentEvent.GameObjectSelected, ModelComponent, this._gameObjectSelectedHandler);
                 EventPool.addEventListener(ModelComponentEvent.GameObjectUnselected, ModelComponent, this._gameObjectUnselectedHandler);
 
-                this._modelComponent.select(paper.Scene.activeScene);
                 this._bufferedGameObjects.push(paper.GameObject.globalGameObject);
 
                 for (const gameObject of this._groups[0].gameObjects) {
                     this._bufferedGameObjects.push(gameObject);
                 }
+                
+                this._modelComponent.select(paper.Scene.activeScene);
             }
             else {
                 EventPool.removeEventListener(ModelComponentEvent.SceneSelected, ModelComponent, this._sceneSelectedHandler);

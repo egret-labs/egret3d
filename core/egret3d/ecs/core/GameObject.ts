@@ -45,7 +45,7 @@ namespace paper {
             }
 
             const raycastInfo = egret3d.RaycastInfo.create();
-            if ((gameObject.layer & cullingMask) && gameObject.renderer && gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
+            if ((gameObject.layer & cullingMask) && gameObject.renderer && gameObject.renderer.enabled && gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
                 if (maxDistance <= 0.0 || raycastInfo.distance <= maxDistance) {
                     raycastInfo.transform = gameObject.transform;
                     raycastInfos.push(raycastInfo);

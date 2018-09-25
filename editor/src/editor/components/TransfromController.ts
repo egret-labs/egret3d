@@ -1,6 +1,6 @@
 namespace paper.debug {
     /**
-     * 变换控制器。
+     * @internal
      */
     export class TransfromController extends BaseComponent {
         public isWorldSpace: boolean = true;
@@ -391,7 +391,8 @@ namespace paper.debug {
 
             if (dirVector.length === 0.0) {
                 // If in rotate mode, make the plane parallel to camera
-                this._quad.transform.rotation = egret3d.Camera.editor.transform.rotation;
+                // this._quad.transform.rotation = egret3d.Camera.editor.transform.rotation;
+                this._quad.transform.lookAt(egret3d.Camera.editor.transform.position);
             }
             else {
                 this._quad.transform.rotation = egret3d.Quaternion.create().fromMatrix(

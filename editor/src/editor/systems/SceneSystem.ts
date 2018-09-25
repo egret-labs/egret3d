@@ -12,7 +12,8 @@ namespace paper.debug {
 
         private _orbitControls: OrbitControls | null = null;
         private _transformController: TransfromController | null = null;
-        private _hoverBox: paper.GameObject = null!;
+        private _gridController: GridController | null = null;
+        private _hoverBox: paper.GameObject | null = null;
         private _grids: paper.GameObject | null = null;
         private _cameraViewFrustum: paper.GameObject | null = null;
 
@@ -20,9 +21,6 @@ namespace paper.debug {
         private readonly _pointerPosition: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _pickableSelected: GameObject[] = [];   //可被选中的 camera
         private readonly _boxes: { [key: string]: GameObject } = {};
-        //
-        private _selectedWorldPostion: egret3d.Vector3 = egret3d.Vector3.create();
-        private _selectedWorldQuaternion: egret3d.Quaternion = egret3d.Quaternion.create();
 
         private _contextmenuHandler = (event: Event) => {
             event.preventDefault();
@@ -416,18 +414,19 @@ namespace paper.debug {
                 window.addEventListener("keydown", this._onKeyDown);
             }
 
+            this._orbitControls = egret3d.Camera.editor.gameObject.getOrAddComponent(OrbitControls);
+
             this._transformController = EditorMeshHelper.createGameObject("Axises").addComponent(TransfromController);
             this._transformController.gameObject.activeSelf = false;
+
+            this._gridController = EditorMeshHelper.createGameObject("Grid").addComponent(GridController);
 
             this._hoverBox = EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.activeScene);
             this._hoverBox.activeSelf = false;
 
-            this._orbitControls = egret3d.Camera.editor.gameObject.getOrAddComponent(OrbitControls);
-
-            this._grids = EditorMeshHelper.createGrid("Grid");
-
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera");
             this._cameraViewFrustum.activeSelf = false;
+
             this._pickableSelected.length = 0;
         }
 
@@ -449,6 +448,26 @@ namespace paper.debug {
             egret3d.Camera.editor.gameObject.removeComponent(OrbitControls);
             this._orbitControls = null;
 
+            if (this._transformController) {
+                this._transformController.gameObject.destroy();
+                this._transformController = null;
+            }
+
+            if (this._gridController) {
+                this._gridController.gameObject.destroy();
+                this._gridController = null;
+            }
+
+            if (this._hoverBox) {
+                this._hoverBox.destroy();
+                this._hoverBox = null;
+            }
+
+            if (this._grids) {
+                this._grids.destroy();
+                this._grids = null;
+            }
+
             //
             for (const camera of this._camerasAndLights.cameras) {
                 if (camera.gameObject.tag === paper.DefaultTags.EditorOnly) {
@@ -460,9 +479,6 @@ namespace paper.debug {
                     __editor.gameObject.destroy();
                 }
             }
-
-            this._grids.destroy();
-            this._grids = null;
 
             if (this._cameraViewFrustum && !this._cameraViewFrustum.isDestroyed) {
                 this._cameraViewFrustum.destroy();
@@ -479,12 +495,6 @@ namespace paper.debug {
                 }
             }
 
-            const selectedGameObject = this._modelComponent.selectedGameObject;
-            if (selectedGameObject) {
-                this._selectedWorldPostion.copy(selectedGameObject.transform.getPosition());
-                this._selectedWorldQuaternion.copy(selectedGameObject.transform.getRotation());
-            }
-
             this._pickableSelected.length = 0;
 
             if (this._cameraViewFrustum) {
@@ -492,13 +502,18 @@ namespace paper.debug {
                     this._cameraViewFrustum = null;
                 }
                 else {
-                    this._cameraViewFrustum.activeSelf = selectedGameObject ? true : false;
+                    this._cameraViewFrustum.activeSelf = this._modelComponent.selectedGameObject ? true : false;
                 }
             }
 
             const transformController = this._transformController;
             if (transformController && transformController.isActiveAndEnabled) {
                 transformController.update(this._modelComponent.selectedGameObject!, this._pointerPosition);
+            }
+
+            const gridController = this._gridController;
+            if (gridController && gridController.isActiveAndEnabled) {
+                gridController.update();
             }
 
             this._updateBoxes();

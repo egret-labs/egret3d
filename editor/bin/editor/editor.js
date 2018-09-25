@@ -2662,6 +2662,27 @@ var paper;
         /**
          *
          */
+        var GUIComponent = (function (_super) {
+            __extends(GUIComponent, _super);
+            function GUIComponent() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.inspector = new dat.GUI({ closeOnTop: true, width: 330 });
+                _this.hierarchy = new dat.GUI({ closeOnTop: true, width: 330 });
+                return _this;
+            }
+            return GUIComponent;
+        }(paper.SingletonComponent));
+        debug.GUIComponent = GUIComponent;
+        __reflect(GUIComponent.prototype, "paper.debug.GUIComponent");
+    })(debug = paper.debug || (paper.debug = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var debug;
+    (function (debug) {
+        /**
+         *
+         */
         var ModelComponentEvent;
         (function (ModelComponentEvent) {
             ModelComponentEvent["SceneSelected"] = "SceneSelected";
@@ -2774,10 +2795,8 @@ var paper;
 (function (paper) {
     var debug;
     (function (debug) {
-        var hVec2_1 = new egret3d.Vector2();
-        var hVec2_2 = new egret3d.Vector2();
         /**
-         *
+         * @internal
          */
         var OrbitControls = (function (_super) {
             __extends(OrbitControls, _super);
@@ -2820,7 +2839,7 @@ var paper;
                     var move = egret3d.Vector3.create(event.x - _this._lastMouseX, event.y - _this._lastMouseY, 0);
                     if (event.ctrlKey) {
                         move.x = -move.x;
-                        var center = _this.lookAtTarget ? _this.lookAtTarget.getPosition() : _this.lookAtPoint;
+                        var center = _this.lookAtPoint;
                         var dis = _this.gameObject.transform.getPosition().getDistance(center);
                         var normalMat = egret3d.Matrix3.create();
                         move.multiplyScalar(dis * _this.moveSpped).applyMatrix3(normalMat.getNormalMatrix(_this.gameObject.transform.getLocalMatrix()));
@@ -2956,12 +2975,7 @@ var paper;
                 var distanceY = this.distance * (this._tiltRad === 0 ? 0 : Math.sin(this._tiltRad));
                 var distanceZ = this.distance * Math.cos(this._panRad) * Math.cos(this._tiltRad);
                 var target = egret3d.Vector3.create();
-                if (this.lookAtTarget) {
-                    target.copy(this.lookAtTarget.getPosition());
-                }
-                else {
-                    target.copy(this.lookAtPoint);
-                }
+                target.copy(this.lookAtPoint);
                 target.add(this.lookAtOffset);
                 this.gameObject.transform.setPosition(target.x + distanceX, target.y + distanceY, target.z + distanceZ);
                 this.gameObject.transform.lookAt(target);
@@ -2978,7 +2992,7 @@ var paper;
     var debug;
     (function (debug) {
         /**
-         * 变换控制器。
+         * @internal
          */
         var TransfromController = (function (_super) {
             __extends(TransfromController, _super);
@@ -3290,40 +3304,36 @@ var paper;
                 // Align the plane for current transform mode, axis and space.
                 var alignVector = unitY.clone();
                 var dirVector = egret3d.Vector3.create();
-                if (this._hovered) {
-                    switch (this._mode) {
-                        case this.translate:
-                        case this.scale:
-                            switch (this._hovered.name) {
-                                case "X":
-                                    alignVector.cross(this.eye, unitX);
-                                    dirVector.cross(unitX, alignVector);
-                                    break;
-                                case "Y":
-                                    alignVector.cross(this.eye, unitY);
-                                    dirVector.cross(unitY, alignVector);
-                                    break;
-                                case "Z":
-                                    alignVector.cross(this.eye, unitZ);
-                                    dirVector.cross(unitZ, alignVector);
-                                    break;
-                                case "XY":
-                                    dirVector.copy(unitZ);
-                                    break;
-                                case "YZ":
-                                    dirVector.copy(unitX);
-                                    break;
-                                case "ZX":
-                                    alignVector.copy(unitZ);
-                                    dirVector.copy(unitY);
-                                    break;
-                            }
+                if (this._hovered && this._mode !== this.rotate) {
+                    switch (this._hovered.name) {
+                        case "X":
+                            alignVector.cross(this.eye, unitX);
+                            dirVector.cross(unitX, alignVector);
+                            break;
+                        case "Y":
+                            alignVector.cross(this.eye, unitY);
+                            dirVector.cross(unitY, alignVector);
+                            break;
+                        case "Z":
+                            alignVector.cross(this.eye, unitZ);
+                            dirVector.cross(unitZ, alignVector);
+                            break;
+                        case "XY":
+                            dirVector.copy(unitZ);
+                            break;
+                        case "YZ":
+                            dirVector.copy(unitX);
+                            break;
+                        case "ZX":
+                            alignVector.copy(unitZ);
+                            dirVector.copy(unitY);
                             break;
                     }
                 }
                 if (dirVector.length === 0.0) {
                     // If in rotate mode, make the plane parallel to camera
-                    this._quad.transform.rotation = egret3d.Camera.editor.transform.rotation;
+                    // this._quad.transform.rotation = egret3d.Camera.editor.transform.rotation;
+                    this._quad.transform.lookAt(egret3d.Camera.editor.transform.position);
                 }
                 else {
                     this._quad.transform.rotation = egret3d.Quaternion.create().fromMatrix(egret3d.Matrix4.create().lookAt(egret3d.Vector3.ZERO, dirVector, alignVector).release()).release();
@@ -3438,21 +3448,63 @@ var paper;
 (function (paper) {
     var debug;
     (function (debug) {
+        var _step = 5;
         /**
-         *
+         * @internal
          */
-        var GUIComponent = (function (_super) {
-            __extends(GUIComponent, _super);
-            function GUIComponent() {
+        var GridController = (function (_super) {
+            __extends(GridController, _super);
+            function GridController() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.inspector = new dat.GUI({ closeOnTop: true, width: 330 });
-                _this.hierarchy = new dat.GUI({ closeOnTop: true, width: 330 });
+                _this._gridA = _this._createGrid("GridA");
+                _this._gridB = _this._createGrid("GridB", 100.0 * _step, 100 * _step);
                 return _this;
             }
-            return GUIComponent;
-        }(paper.SingletonComponent));
-        debug.GUIComponent = GUIComponent;
-        __reflect(GUIComponent.prototype, "paper.debug.GUIComponent");
+            GridController.prototype._createGrid = function (name, size, divisions) {
+                if (size === void 0) { size = 100.0; }
+                if (divisions === void 0) { divisions = 100; }
+                var step = size / divisions;
+                var halfSize = size / 2;
+                var vertices = [];
+                for (var i = 0, k = -halfSize; i <= divisions; i++, k += step) {
+                    vertices.push(-halfSize, 0, k);
+                    vertices.push(halfSize, 0, k);
+                    vertices.push(k, 0, -halfSize);
+                    vertices.push(k, 0, halfSize);
+                }
+                var mesh = new egret3d.Mesh(vertices.length, 0, ["POSITION" /* POSITION */]);
+                mesh.setAttributes("POSITION" /* POSITION */, vertices);
+                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
+                var gameObject = debug.EditorMeshHelper.createGameObject(name, mesh, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                return gameObject;
+            };
+            GridController.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this._gridA.parent = this.gameObject;
+                this._gridB.parent = this.gameObject;
+                var mA = this._gridA.renderer.material;
+                var mB = this._gridB.renderer.material;
+                mA.setBlend(1 /* Blend */);
+                mB.setBlend(1 /* Blend */);
+            };
+            GridController.prototype.update = function () {
+                var camera = egret3d.Camera.editor;
+                var aaa = camera.gameObject.getComponent(debug.OrbitControls);
+                var target = aaa.lookAtPoint.clone().add(aaa.lookAtOffset);
+                var eyeDistance = target.getDistance(camera.transform.position) * 0.01;
+                var d = (eyeDistance % 1.0);
+                var s = d * (_step - 1) + 1.0;
+                this._gridA.transform.setScale(s * _step, 0.0, s * _step);
+                this._gridB.transform.setScale(s, 0.0, s);
+                var mA = this._gridA.renderer.material;
+                var mB = this._gridB.renderer.material;
+                mA.setOpacity(1.0 * 0.3);
+                mB.setOpacity(d * 0.3);
+            };
+            return GridController;
+        }(paper.BaseComponent));
+        debug.GridController = GridController;
+        __reflect(GridController.prototype, "paper.debug.GridController");
     })(debug = paper.debug || (paper.debug = {}));
 })(paper || (paper = {}));
 var paper;
@@ -3737,12 +3789,12 @@ var paper;
                     paper.EventPool.addEventListener("SceneUnselected" /* SceneUnselected */, debug.ModelComponent, this._sceneUnselectedHandler);
                     paper.EventPool.addEventListener("GameObjectSelected" /* GameObjectSelected */, debug.ModelComponent, this._gameObjectSelectedHandler);
                     paper.EventPool.addEventListener("GameObjectUnselected" /* GameObjectUnselected */, debug.ModelComponent, this._gameObjectUnselectedHandler);
-                    this._modelComponent.select(paper.Scene.activeScene);
                     this._bufferedGameObjects.push(paper.GameObject.globalGameObject);
                     for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
                         var gameObject = _a[_i];
                         this._bufferedGameObjects.push(gameObject);
                     }
+                    this._modelComponent.select(paper.Scene.activeScene);
                 }
                 else {
                     paper.EventPool.removeEventListener("SceneSelected" /* SceneSelected */, debug.ModelComponent, this._sceneSelectedHandler);
@@ -3899,6 +3951,7 @@ var paper;
                 _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(debug.ModelComponent);
                 _this._orbitControls = null;
                 _this._transformController = null;
+                _this._gridController = null;
                 _this._hoverBox = null;
                 _this._grids = null;
                 _this._cameraViewFrustum = null;
@@ -3906,9 +3959,6 @@ var paper;
                 _this._pointerPosition = egret3d.Vector3.create();
                 _this._pickableSelected = []; //可被选中的 camera
                 _this._boxes = {};
-                //
-                _this._selectedWorldPostion = egret3d.Vector3.create();
-                _this._selectedWorldQuaternion = egret3d.Quaternion.create();
                 _this._contextmenuHandler = function (event) {
                     event.preventDefault();
                 };
@@ -4253,12 +4303,12 @@ var paper;
                     window.addEventListener("keyup", this._onKeyUp);
                     window.addEventListener("keydown", this._onKeyDown);
                 }
+                this._orbitControls = egret3d.Camera.editor.gameObject.getOrAddComponent(debug.OrbitControls);
                 this._transformController = debug.EditorMeshHelper.createGameObject("Axises").addComponent(debug.TransfromController);
                 this._transformController.gameObject.activeSelf = false;
+                this._gridController = debug.EditorMeshHelper.createGameObject("Grid").addComponent(debug.GridController);
                 this._hoverBox = debug.EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.activeScene);
                 this._hoverBox.activeSelf = false;
-                this._orbitControls = egret3d.Camera.editor.gameObject.getOrAddComponent(debug.OrbitControls);
-                this._grids = debug.EditorMeshHelper.createGrid("Grid");
                 this._cameraViewFrustum = debug.EditorMeshHelper.createCameraWireframed("Camera");
                 this._cameraViewFrustum.activeSelf = false;
                 this._pickableSelected.length = 0;
@@ -4278,6 +4328,22 @@ var paper;
                 }
                 egret3d.Camera.editor.gameObject.removeComponent(debug.OrbitControls);
                 this._orbitControls = null;
+                if (this._transformController) {
+                    this._transformController.gameObject.destroy();
+                    this._transformController = null;
+                }
+                if (this._gridController) {
+                    this._gridController.gameObject.destroy();
+                    this._gridController = null;
+                }
+                if (this._hoverBox) {
+                    this._hoverBox.destroy();
+                    this._hoverBox = null;
+                }
+                if (this._grids) {
+                    this._grids.destroy();
+                    this._grids = null;
+                }
                 //
                 for (var _i = 0, _a = this._camerasAndLights.cameras; _i < _a.length; _i++) {
                     var camera = _a[_i];
@@ -4289,8 +4355,6 @@ var paper;
                         __editor.gameObject.destroy();
                     }
                 }
-                this._grids.destroy();
-                this._grids = null;
                 if (this._cameraViewFrustum && !this._cameraViewFrustum.isDestroyed) {
                     this._cameraViewFrustum.destroy();
                     this._cameraViewFrustum = null;
@@ -4304,23 +4368,22 @@ var paper;
                         this._modelComponent.select(null);
                     }
                 }
-                var selectedGameObject = this._modelComponent.selectedGameObject;
-                if (selectedGameObject) {
-                    this._selectedWorldPostion.copy(selectedGameObject.transform.getPosition());
-                    this._selectedWorldQuaternion.copy(selectedGameObject.transform.getRotation());
-                }
                 this._pickableSelected.length = 0;
                 if (this._cameraViewFrustum) {
                     if (this._cameraViewFrustum.isDestroyed) {
                         this._cameraViewFrustum = null;
                     }
                     else {
-                        this._cameraViewFrustum.activeSelf = selectedGameObject ? true : false;
+                        this._cameraViewFrustum.activeSelf = this._modelComponent.selectedGameObject ? true : false;
                     }
                 }
                 var transformController = this._transformController;
                 if (transformController && transformController.isActiveAndEnabled) {
                     transformController.update(this._modelComponent.selectedGameObject, this._pointerPosition);
+                }
+                var gridController = this._gridController;
+                if (gridController && gridController.isActiveAndEnabled) {
+                    gridController.update();
                 }
                 this._updateBoxes();
                 // this._updateCameras();
@@ -4353,39 +4416,6 @@ var paper;
                 if (material) {
                     gameObject.addComponent(egret3d.MeshRenderer).material = material;
                 }
-                return gameObject;
-            };
-            EditorMeshHelper.createGrid = function (name, size, divisions, color1, color2) {
-                if (size === void 0) { size = 50; }
-                if (divisions === void 0) { divisions = 50; }
-                if (color1 === void 0) { color1 = egret3d.Color.create(0.26, 0.26, 0.26); }
-                if (color2 === void 0) { color2 = egret3d.Color.create(0.53, 0.53, 0.53); }
-                //
-                var center = divisions / 2;
-                var step = size / divisions;
-                var halfSize = size / 2;
-                var vertices = [], colors = [];
-                for (var i_1 = 0, k = -halfSize; i_1 <= divisions; i_1++, k += step) {
-                    vertices.push(-halfSize, 0, k);
-                    vertices.push(halfSize, 0, k);
-                    vertices.push(k, 0, -halfSize);
-                    vertices.push(k, 0, halfSize);
-                    var color = i_1 === center ? color1 : color2;
-                    colors.push(color.r, color.g, color.b, color.a);
-                    colors.push(color.r, color.g, color.b, color.a);
-                    colors.push(color.r, color.g, color.b, color.a);
-                    colors.push(color.r, color.g, color.b, color.a);
-                }
-                for (var i = 0; i < colors.length; i += 80) {
-                    for (var j = 0; j < 16; j++) {
-                        colors[i + j] = 0.26;
-                    }
-                }
-                var mesh = new egret3d.Mesh(vertices.length, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
-                mesh.setAttributes("POSITION" /* POSITION */, vertices);
-                mesh.setAttributes("COLOR_0" /* COLOR_0 */, colors);
-                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
-                var gameObject = this.createGameObject(name, mesh, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone());
                 return gameObject;
             };
             EditorMeshHelper.createBox = function (name, color, opacity, scene) {

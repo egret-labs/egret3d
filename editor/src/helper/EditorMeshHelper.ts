@@ -14,43 +14,6 @@ namespace paper.debug {
             return gameObject;
         }
 
-        public static createGrid(name: string, size: number = 50, divisions: number = 50,
-            color1: egret3d.Color = egret3d.Color.create(0.26, 0.26, 0.26), color2: egret3d.Color = egret3d.Color.create(0.53, 0.53, 0.53)) {
-            //
-            const center = divisions / 2;
-            const step = size / divisions;
-            const halfSize = size / 2;
-            const vertices: number[] = [], colors: number[] = [];
-
-            for (let i = 0, k = - halfSize; i <= divisions; i++ , k += step) {
-                vertices.push(- halfSize, 0, k);
-                vertices.push(halfSize, 0, k);
-                vertices.push(k, 0, - halfSize);
-                vertices.push(k, 0, halfSize);
-
-                const color = i === center ? color1 : color2;
-
-                colors.push(color.r, color.g, color.b, color.a);
-                colors.push(color.r, color.g, color.b, color.a);
-                colors.push(color.r, color.g, color.b, color.a);
-                colors.push(color.r, color.g, color.b, color.a);
-            }
-
-            for (var i = 0; i < colors.length; i += 80) {
-                for (var j = 0; j < 16; j++) {
-                    colors[i + j] = 0.26;
-                }
-            }
-
-            const mesh = new egret3d.Mesh(vertices.length, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-            mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, colors);
-
-            mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
-            const gameObject = this.createGameObject(name, mesh, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone());
-            return gameObject;
-        }
-
         public static createBox(name: string, color: egret3d.Color, opacity: number, scene: Scene) {
             const box = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone(), paper.DefaultTags.EditorOnly, scene);
             box.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend).opacity = opacity;
