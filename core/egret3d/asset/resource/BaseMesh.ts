@@ -12,7 +12,7 @@ namespace egret3d {
         gltf.MeshAttributeType.TEXCOORD_0,
     ];
     /**
-     * 
+     * 网格基类。
      */
     export abstract class BaseMesh extends GLTFAsset implements egret3d.IRaycast {
         protected _drawMode: gltf.DrawMode = gltf.DrawMode.Static;
@@ -128,7 +128,12 @@ namespace egret3d {
 
             return value;
         }
-
+        /**
+         * TODO applyMatrix
+         */
+        /**
+         * 
+         */
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo, boneMatrices?: Float32Array | null) {
             let subMeshIndex = 0;
             const p0 = _helpVector3A;
@@ -288,37 +293,55 @@ namespace egret3d {
             return primitives.length - 1;
         }
         /**
-         * 
+         * 获取该网格顶点的位置属性数据。
+         * - x0, y0, z0, x1, y1, z1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
          */
         public getVertices(offset: number = 0, count: number = 0) {
             return this.getAttributes(gltf.MeshAttributeType.POSITION, offset, count) as Float32Array | null;
         }
         /**
-         * 
+         * 获取该网格顶点的 UV 属性数据。
+         * - u0, v0, u1, v1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
          */
         public getUVs(offset: number = 0, count: number = 0) {
             return this.getAttributes(gltf.MeshAttributeType.TEXCOORD_0, offset, count) as Float32Array | null;
         }
         /**
-         * 
+         * 获取该网格顶点的颜色属性数据。
+         * - r0, g0, b0, a0, r1, g1, b1, a1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
          */
         public getColors(offset: number = 0, count: number = 0) {
             return this.getAttributes(gltf.MeshAttributeType.COLOR_0, offset, count) as Float32Array | null;
         }
         /**
-         * 
+         * 获取该网格顶点的法线属性数据。
+         * - x0, y0, z0, x1, y1, z1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
          */
         public getNormals(offset: number = 0, count: number = 0) {
             return this.getAttributes(gltf.MeshAttributeType.NORMAL, offset, count) as Float32Array | null;
         }
         /**
-         * 
+         * 获取该网格顶点的切线属性数据。
+         * - x0, y0, z0, w0,  x1, y1, z1, w1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
          */
         public getTangents(offset: number = 0, count: number = 0) {
             return this.getAttributes(gltf.MeshAttributeType.TANGENT, offset, count) as Float32Array | null;
         }
         /**
-         * 
+         * 获取该网格顶点的指定属性数据。
+         * @param attributeType 属性名。
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点总数。（默认全部顶点）
          */
         public getAttributes(attributeType: gltf.MeshAttribute, offset: number = 0, count: number = 0) {
             const accessorIndex = this._glTFMesh!.primitives[0].attributes[attributeType];
@@ -329,7 +352,10 @@ namespace egret3d {
             return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex), offset, count);
         }
         /**
-         * 
+         * 设置该网格指定的顶点属性数据。
+         * @param attributeType 属性名。
+         * @param value 属性数据。
+         * @param offset 顶点偏移。（默认从第一个点开始）
          */
         public setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset: number = 0) {
             const target = this.getAttributes(attributeType, offset);
@@ -342,7 +368,8 @@ namespace egret3d {
             return target;
         }
         /**
-         * 
+         * 获取该网格的顶点索引数据。
+         * @param subMeshIndex 子网格索引。（默认第一个子网格）
          */
         public getIndices(subMeshIndex: number = 0) {
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh!.primitives.length) {
@@ -359,7 +386,10 @@ namespace egret3d {
             return null;
         }
         /**
-         * 
+         * 设置该网格的顶点索引数据。
+         * @param value 顶点索引数据。
+         * @param subMeshIndex 子网格索引。（默认第一个子网格）
+         * @param offset 索引偏移。（默认不偏移）
          */
         public setIndices(value: Readonly<ArrayLike<number>>, subMeshIndex: number = 0, offset: number = 0) {
             const target = this.getIndices(subMeshIndex);
@@ -372,19 +402,24 @@ namespace egret3d {
             return target;
         }
         /**
-         * 绑定显存。
+         * 创建顶点和顶点索引缓冲区。
+         * @internal TODO 应是引擎层可见。
          */
         public abstract _createBuffer(): void;
         /**
-         * 
+         * 当修改该网格的顶点属性后，调用此方法来更新顶点属性的缓冲区。
+         * @param uploadAttributes 
+         * @param offset 顶点偏移。（默认不偏移）
+         * @param count 顶点总数。（默认全部顶点）
          */
         public abstract uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: number, count?: number): void;
         /**
-         * 
+         * 当修改该网格的顶点索引后，调用此方法来更新顶点索引的缓冲区。
+         * @param subMeshIndex 子网格索引。（默认第一个子网格）
          */
-        public abstract uploadSubIndexBuffer(subMeshIndex: number): void;
+        public abstract uploadSubIndexBuffer(subMeshIndex?: number): void;
         /**
-         * 
+         * 该网格的渲染模式。
          */
         public get drawMode() {
             return this._drawMode;
@@ -393,25 +428,25 @@ namespace egret3d {
             this._drawMode = value;
         }
         /**
-         * 获取子网格数量。
+         * 该网格的子网格总数。
          */
         public get subMeshCount() {
             return this._glTFMesh!.primitives.length;
         }
         /**
-         * 
+         * 该网格的顶点总数。
          */
         public get vertexCount() {
             return this._vertexCount;
         }
         /**
-         * 
+         * 该网格的全部顶点属性名称。
          */
         public get attributeNames(): ReadonlyArray<string> {
             return this._attributeNames;
         }
         /**
-         * 获取 glTFMesh 数据。
+         * 获取该网格的 glTF mesh 数据。
          */
         public get glTFMesh() {
             return this._glTFMesh!;

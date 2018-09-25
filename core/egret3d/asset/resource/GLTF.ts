@@ -155,7 +155,7 @@ namespace egret3d {
             return config;
         }
         /**
-         * 
+         * 从二进制数据中解析。
          */
         public static parseFromBinary(array: Uint32Array) {
             let index = 0;

@@ -27,6 +27,7 @@ namespace DefaultMeshes {
             "PYRAMID",
             "CONE",
             "CYLINDER",
+            "TORUS",
             "SPHERE",
         ]).onChange((v: string) => {
             meshFilter.mesh = egret3d.DefaultMeshes[v];

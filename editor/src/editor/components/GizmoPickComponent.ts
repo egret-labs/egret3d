@@ -1,4 +1,7 @@
 namespace paper.debug {
+    /**
+     * @internal
+     */
     export class GizmoPickComponent extends Behaviour {
         public pickTarget: GameObject | null = null;
 

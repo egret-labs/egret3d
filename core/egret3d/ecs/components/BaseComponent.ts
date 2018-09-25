@@ -1,22 +1,22 @@
 namespace paper {
     /**
-     * 组件基类
+     * 组件基类。
      */
     export abstract class BaseComponent extends BaseObject {
         /**
-         * 是否在编辑模式拥有生命周期。
+         * 该组件的实例是否在编辑模式拥有生命周期。
          */
         public static executeInEditMode: boolean = false;
         /**
-         * 是否允许在同一实体上添加多个实例。
+         * 是否允许在同一实体上添加多个该组件的实例。
          */
         public static allowMultiple: boolean = false;
         /**
-         * 依赖的其他组件。
+         * 该组件实例依赖的其他前置组件。
          */
         public static requireComponents: ComponentClass<BaseComponent>[] | null = null;
+        // TODO 基类标记，以阻止注册基类。
         /**
-         * // TODO 基类标记，以阻止注册基类。
          * @internal
          */
         public static readonly __isSingleton: boolean = false;
@@ -67,7 +67,7 @@ namespace paper {
             return new componentClass();
         }
         /**
-         * 组件挂载的 GameObject
+         * 该组件的实体。
          */
         public readonly gameObject: GameObject = null!;
         /**
@@ -106,13 +106,13 @@ namespace paper {
         public uninitialize() {
         }
         /**
-         * 
+         * 该组件是否已被销毁。
          */
         public get isDestroyed() {
             return !this.gameObject;
         }
         /**
-         * 组件的激活状态。
+         * 该组件自身的激活状态。
          */
         @editor.property(editor.EditType.CHECKBOX)
         public get enabled() {
@@ -137,17 +137,23 @@ namespace paper {
             }
         }
         /**
-         * 组件在场景的激活状态。
+         * 该组件在场景的激活状态。
          */
         public get isActiveAndEnabled() {
             // return this._enabled && this.gameObject.activeInHierarchy;
             return this._enabled && (this.gameObject._activeDirty ? this.gameObject.activeInHierarchy : this.gameObject._activeInHierarchy);
         }
         /**
-         * 
+         * 该组件实体的变换组件。
          */
         public get transform() {
             return this.gameObject.transform;
+        }
+        /**
+         * 该组件实体的渲染组件。
+         */
+        public get renderer() {
+            return this.gameObject.renderer;
         }
     }
 }

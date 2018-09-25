@@ -44,7 +44,7 @@ namespace paper {
          * 系统内部初始化。
          * @internal
          */
-        public initialize() {
+        public _initialize() {
             if (this._interests.length > 0) {
                 let interests: ReadonlyArray<ReadonlyArray<InterestConfig>>;
 
@@ -84,7 +84,7 @@ namespace paper {
          * 系统内部卸载。
          * @internal
          */
-        public uninitialize() {
+        public _uninitialize() {
             this.onDestroy && this.onDestroy();
 
             if (this._interests.length > 0) {
@@ -121,7 +121,7 @@ namespace paper {
          * 系统内部更新。
          * @internal
          */
-        public update() {
+        public _update() {
             if (!this._enabled) {
                 return;
             }
@@ -154,7 +154,7 @@ namespace paper {
          * 系统内部更新。
          * @internal
          */
-        public lateUpdate() {
+        public _lateUpdate() {
             if (!this._enabled) {
                 return;
             }
@@ -164,20 +164,20 @@ namespace paper {
             this._locked = false;
         }
         /**
-         * 系统初始化时调用。
+         * 该系统初始化时调用。
          */
         public onAwake?(): void;
         /**
-         * 系统被激活时调用。
+         * 该系统被激活时调用。
          * @see paper.BaseSystem#enabled
          */
         public onEnable?(): void;
         /**
-         * 系统开始运行时调用。
+         * 该系统开始运行时调用。
          */
         public onStart?(): void;
         /**
-         * 实体被添加到组时调用。
+         * 实体被添加到系统时调用。
          * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
          * @see paper.GameObject#addComponent()
          */
@@ -199,25 +199,24 @@ namespace paper {
          */
         public onRemoveGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
         /**
-         * 系统更新时调用。
+         * 该系统更新时调用。
          */
         public onUpdate?(deltaTime?: number): void;
         /**
-         * 
+         * 该系统更新时调用。
          */
         public onLateUpdate?(deltaTime?: number): void;
         /**
-         * 系统被禁用时调用。
+         * 该系统被禁用时调用。
          * @see paper.BaseSystem#enabled
          */
         public onDisable?(): void;
         /**
-         * 系统被注销时调用。
+         * 该系统被注销时调用。
          * @see paper.SystemManager#unregister()
          * @see paper.Application#systemManager
          */
         public onDestroy?(): void;
-
         /**
          * 该系统是否被激活。
          */
@@ -244,7 +243,7 @@ namespace paper {
             }
         }
         /**
-         * 
+         * 该系统的实体组。
          */
         public get groups(): ReadonlyArray<GameObjectGroup> {
             return this._groups;

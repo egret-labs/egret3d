@@ -1,11 +1,14 @@
 namespace paper {
+    /**
+     * 雾的模式。
+     */
     export const enum FogMode {
         NONE,
         FOG,
         FOG_EXP2
     }
     /**
-     * 场景类
+     * 场景。
      */
     export class Scene extends BaseObject {
         /**
@@ -24,10 +27,10 @@ namespace paper {
             return scene;
         }
         /**
-         * 通过 Asset name 创建指定场景。
+         * 通过创建资源创建指定场景。
          */
         public static create(name: string, combineStaticObjects: boolean = true) {
-            const exScene = Application.sceneManager.getSceneByName(name);
+            const exScene = Application.sceneManager.getScene(name);
             if (exScene) {
                 console.warn("The scene with the same name already exists.");
                 return exScene;
@@ -73,13 +76,13 @@ namespace paper {
             Application.sceneManager.activeScene = value;
         }
         /**
-         * lightmap 表现的光照强度。
+         * Light map 表现的光照强度。
          */
         @serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public lightmapIntensity: number = 1.0;
         /**
-         * 场景名称。
+         * 名称。
          */
         @serializedField
         public readonly name: string = "";
@@ -90,18 +93,18 @@ namespace paper {
         @paper.editor.property(paper.editor.EditType.COLOR)
         public readonly ambientColor: egret3d.Color = egret3d.Color.create(0.20, 0.20, 0.25, 1);
         /**
-         * 场景的 lightmap 列表。
+         * Light map 列表。
          */
         @serializedField
         public readonly lightmaps: egret3d.Texture[] = [];
         /**
-         * 
+         * 雾的模式。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.FogMode) })
         public fogMode: FogMode = FogMode.NONE;
         /**
-         * 
+         * 雾的颜色。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.COLOR)
@@ -167,7 +170,7 @@ namespace paper {
             this._gameObjects.splice(index, 1);
         }
         /**
-         * 
+         * @internal
          */
         public uninitialize() {
             this.lightmapIntensity = 1.0;
@@ -177,7 +180,7 @@ namespace paper {
             // this.extras
         }
         /**
-         * 销毁场景。
+         * 销毁该场景和场景中的全部实体。
          */
         public destroy() {
             if (!Application.sceneManager._removeScene(this)) {
@@ -198,52 +201,9 @@ namespace paper {
 
             GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).scenes.push(this);
         }
-
-        private _raycast(ray: Readonly<egret3d.Ray>, gameObject: GameObject, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false, raycastInfos: egret3d.RaycastInfo[]) {
-            if (
-                (
-                    gameObject.hideFlags === paper.HideFlags.HideAndDontSave && gameObject.tag === paper.DefaultTags.EditorOnly
-                ) ? gameObject.activeInHierarchy : !gameObject.activeInHierarchy
-            ) {
-                return;
-            }
-
-            const raycastInfo = egret3d.RaycastInfo.create();
-            if ((gameObject.layer & cullingMask) && gameObject.renderer && gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
-                if (maxDistance <= 0.0 || raycastInfo.distance <= maxDistance) {
-                    raycastInfo.transform = gameObject.transform;
-                    raycastInfos.push(raycastInfo);
-                }
-                else {
-                    raycastInfo.release();
-                }
-            }
-            else {
-                raycastInfo.release();
-
-                for (const child of gameObject.transform.children) {
-                    this._raycast(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
-                }
-            }
-        }
-
-        private _sortRaycastInfo(a: egret3d.RaycastInfo, b: egret3d.RaycastInfo) {
-            return b.distance - a.distance;
-        }
-
-        public raycast(ray: Readonly<egret3d.Ray>, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false) {
-            const raycastInfos = [] as egret3d.RaycastInfo[];
-
-            for (const gameObject of this.getRootGameObjects()) {
-                this._raycast(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
-            }
-
-            raycastInfos.sort(this._sortRaycastInfo);
-
-            return raycastInfos;
-        }
         /**
-         * 
+         * 获取该场景指定名称或路径的实体。
+         * - 只返回第一个符合的实体。
          */
         public find(nameOrPath: string) {
             const index = nameOrPath.indexOf("/");
@@ -267,7 +227,8 @@ namespace paper {
             return null;
         }
         /**
-         * 
+         * 获取指定该场景标识的实体。
+         * - 只返回第一个符合的实体。
          */
         public findWithTag(tag: string) {
             for (const gameObject of this._gameObjects) {
@@ -279,7 +240,8 @@ namespace paper {
             return null;
         }
         /**
-         * 
+         * 获取该场景指定标识的实体。
+         * - 返回全部符合的实体。
          */
         public findGameObjectsWithTag(tag: string) {
             const gameObjects: GameObject[] = [];
@@ -292,7 +254,7 @@ namespace paper {
             return gameObjects;
         }
         /**
-         * 所有根实体。
+         * 该场景当前的全部根实体。
          */
         public getRootGameObjects() {
             const gameObjects: GameObject[] = [];
@@ -305,13 +267,13 @@ namespace paper {
             return gameObjects;
         }
         /**
-         * 
+         * 该场景当前的实体总数。
          */
         public get gameObjectCount() {
             return this._gameObjects.length;
         }
         /**
-         * 所有实体。
+         * 该场景当前的全部实体。
          */
         @serializedField
         @deserializedIgnore

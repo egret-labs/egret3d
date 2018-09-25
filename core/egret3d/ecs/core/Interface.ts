@@ -1,10 +1,14 @@
+// type int = number;
+// type uint = number;
+
 namespace paper {
     /**
-     * 
+     * @private
      */
     export interface IUUID {
         /**
-         * 
+         * 唯一标识。
+         * @readonly
          */
         readonly uuid: string;
     }

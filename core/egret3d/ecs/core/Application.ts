@@ -1,9 +1,6 @@
-type int = number;
-type uint = number;
-
 namespace paper {
     /**
-     * 
+     * 应用程序运行模式。
      */
     export const enum PlayerMode {
         Player,
@@ -11,20 +8,20 @@ namespace paper {
         Editor,
     }
     /**
-     * 
+     * 时间组件。
      */
     export let Time: Clock;
     /**
-     * 
+     * 应用程序单例。
      */
     export let Application: ECS;
     /**
-     * 
+     * 应用程序。
      */
     export class ECS {
         private static _instance: ECS | null = null;
         /**
-         * 
+         * 应用程序单例。
          */
         public static getInstance() {
             if (!this._instance) {
@@ -36,7 +33,6 @@ namespace paper {
 
         private constructor() {
         }
-
         /**
          * 系统管理器。
          */
@@ -58,7 +54,7 @@ namespace paper {
 
             Time && Time.update();
             GameObjectGroup.update();
-            this.systemManager.update();
+            this.systemManager._update();
         }
 
         private _updatePlayerMode() {
@@ -67,7 +63,9 @@ namespace paper {
             }
 
         }
-
+        /**
+         * @internal
+         */
         public init(options: egret3d.RunEgretOptions) {
             this._playerMode = options.playerMode || PlayerMode.Player;
 
@@ -77,17 +75,21 @@ namespace paper {
                 }
             }
 
+            this.systemManager._preRegisterSystems();
+
             this._updatePlayerMode();
             this.resume();
         }
         /**
-         * 
+         * TODO
+         * @internal
          */
         public pause() {
             this._isRunning = false;
         }
         /**
-         * 
+         * TODO
+         * @internal
          */
         public resume() {
             if (this._isRunning) {
@@ -102,16 +104,22 @@ namespace paper {
 
             this._update();
         }
-
+        /**
+         * TODO
+         * @internal
+         */
         public get isFocused() {
             return this._isFocused;
         }
-
+        /**
+         * TODO
+         * @internal
+         */
         public get isRunning() {
             return this._isRunning;
         }
         /**
-         * 
+         * 运行模式。
          */
         public get playerMode() {
             return this._playerMode;
@@ -125,6 +133,6 @@ namespace paper {
             this._updatePlayerMode();
         }
     }
-
+    //
     Application = ECS.getInstance();
 }
