@@ -9,7 +9,7 @@ namespace egret3d {
     /**
      * 
      */
-    export class Vector2 implements IVector2, paper.ISerializable {
+    export class Vector2 extends paper.BaseRelease<Vector2> implements IVector2, paper.ICCS<Vector2>, paper.ISerializable {
         public static readonly ZERO: Readonly<IVector2> & { clone: () => Vector2 } = new Vector2(0.0, 0.0);
         public static readonly ONE: Readonly<IVector2> & { clone: () => Vector2 } = new Vector2(1.0, 1.0);
 
@@ -17,18 +17,12 @@ namespace egret3d {
 
         public static create(x: number = 0.0, y: number = 0.0) {
             if (this._instances.length > 0) {
-                return this._instances.pop()!.set(x, y);
+                const instance = this._instances.pop()!.set(x, y);
+                instance._released = false;
+                return instance;
             }
 
             return new Vector2().set(x, y);
-        }
-
-        public release() {
-            if (Vector2._instances.indexOf(this) < 0) {
-                Vector2._instances.push(this);
-            }
-
-            return this;
         }
 
         public x: number;
@@ -41,6 +35,7 @@ namespace egret3d {
          * @private
          */
         public constructor(x: number = 0.0, y: number = 0.0) {
+            super();
             this.x = x;
             this.y = y;
         }

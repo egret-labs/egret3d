@@ -2,39 +2,24 @@ namespace egret3d {
     /**
      * 
      */
-    export interface IRectangle {
-
-        x: number;
-
-        y: number;
-
+    export interface ISize {
         w: number;
-
         h: number;
+    }
+    /**
+     * 
+     */
+    export interface IRectangle extends IVector2, ISize {
     }
     /**
      * 矩形可序列化对象
      */
     export class Rectangle implements IRectangle, paper.ISerializable {
-        /**
-         * 
-         */
         public x: number;
-        /**
-         * 
-         */
         public y: number;
-        /**
-         * 
-         */
         public w: number;
-        /**
-         * 
-         */
         public h: number;
-        /**
-         * 
-         */
+        
         public constructor(x: number = 0.0, y: number = 0.0, w: number = 0.0, h: number = 0.0) {
             this.x = x;
             this.y = y;

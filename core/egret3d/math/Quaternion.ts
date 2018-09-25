@@ -4,24 +4,16 @@ namespace egret3d {
      */
     export class Quaternion extends Vector4 {
         public static readonly IDENTITY: Readonly<Quaternion> = new Quaternion();
-        private static readonly _instancesQ: Quaternion[] = [];
+        protected static readonly _instances: Quaternion[] = [];
         /**
          * 
          */
         public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
-            if (this._instancesQ.length > 0) {
-                return this._instancesQ.pop()!.set(x, y, z, w);
+            if (this._instances.length > 0) {
+                return this._instances.pop()!.set(x, y, z, w);
             }
 
             return new Quaternion().set(x, y, z, w);
-        }
-
-        public release() {
-            if (Quaternion._instancesQ.indexOf(this) < 0) {
-                Quaternion._instancesQ.push(this);
-            }
-
-            return this;
         }
 
         public clone() {

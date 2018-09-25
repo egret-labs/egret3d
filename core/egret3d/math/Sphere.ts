@@ -2,7 +2,7 @@ namespace egret3d {
     /**
      * 
      */
-    export class Sphere implements paper.IRelease<Sphere>, paper.ISerializable, IRaycast {
+    export class Sphere extends paper.BaseRelease<Sphere> implements paper.ICCS<Sphere>, paper.ISerializable, IRaycast {
 
         private static readonly _instances: Sphere[] = [];
         /**
@@ -12,18 +12,12 @@ namespace egret3d {
          */
         public static create(center: Readonly<IVector3> = Vector3.ZERO, radius: number = 0.0) {
             if (this._instances.length > 0) {
-                return this._instances.pop()!.set(center, radius);
+                const instance = this._instances.pop()!.set(center, radius);
+                instance._released = false;
+                return instance;
             }
 
             return new Sphere().set(center, radius);
-        }
-
-        public release() {
-            if (Sphere._instances.indexOf(this) < 0) {
-                Sphere._instances.push(this);
-            }
-
-            return this;
         }
         /**
          * 球半径。
@@ -37,7 +31,9 @@ namespace egret3d {
          * 请使用 `egret3d.Sphere.create()` 创建实例。
          * @see egret3d.Sphere.create()
          */
-        private constructor() { }
+        private constructor() {
+            super();
+        }
 
         public serialize() {
             return [this.center.x, this.center.y, this.center.z, this.radius];

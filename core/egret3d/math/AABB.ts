@@ -21,23 +21,21 @@ namespace egret3d {
      * @platform Web
      * @language zh_CN
      */
-    export class AABB implements paper.IRelease<AABB>, paper.ISerializable, IRaycast {
+    export class AABB extends paper.BaseRelease<AABB> implements paper.ICCS<AABB>, paper.ISerializable, IRaycast {
         private static readonly _instances: AABB[] = [];
-
+        /**
+         * 
+         * @param minimum 
+         * @param maximum 
+         */
         public static create(minimum: Readonly<IVector3> | null = null, maximum: Readonly<IVector3> | null = null) {
             if (this._instances.length > 0) {
-                return this._instances.pop()!.set(minimum, maximum);
+                const instance = this._instances.pop()!.set(minimum, maximum);
+                instance._released = false;
+                return instance;
             }
 
             return new AABB().set(minimum, maximum);
-        }
-
-        public release() {
-            if (AABB._instances.indexOf(this) < 0) {
-                AABB._instances.push(this);
-            }
-
-            return this;
         }
 
         private _dirtyRadius: boolean = true;
@@ -52,7 +50,9 @@ namespace egret3d {
          * 请使用 `egret3d.AABB.create()` 创建实例。
          * @see egret3d.AABB.create()
          */
-        private constructor() { }
+        private constructor() {
+            super();
+        }
 
         public serialize() {
             return [this._minimum.x, this._minimum.y, this._minimum.z, this._maximum.x, this._maximum.y, this._maximum.z];

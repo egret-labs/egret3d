@@ -60,6 +60,11 @@ namespace paper {
                 component.uninitialize();
             }
 
+            for (const instance of this._disposeCollecter.releases) {
+                const instances = (instance.constructor as any)._instances as BaseRelease<any>[]; // TODO
+                instances.push(instance);
+            }
+
             this._contactColliders.clear();
             this._disposeCollecter.clear();
         }
