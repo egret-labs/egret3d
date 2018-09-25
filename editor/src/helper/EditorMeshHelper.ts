@@ -21,35 +21,21 @@ namespace paper.debug {
             return box;
         }
 
-        public static createCameraIcon(name: string, parent: paper.GameObject) {
+        public static createIcon(name: string, parent: paper.GameObject, icon: egret3d.Texture) {
             const material = new egret3d.Material(egret3d.DefaultShaders.TRANSPARENT);
             material.renderQueue = paper.RenderQueue.Overlay;
-            material.setTexture(egret3d.ShaderUniformName.Map, egret3d.DefaultTextures.CAMERA_ICON);
-            const gameObject = this.createGameObject(name, null, null, parent.tag, parent.scene);
-            const pick = this.createGameObject("pick", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone(), parent.tag, parent.scene);
-            pick.transform.setParent(gameObject.transform);
-            const icon = this.createGameObject("icon", egret3d.DefaultMeshes.QUAD, material, parent.tag, parent.scene);
-            icon.transform.setParent(gameObject.transform);
-            pick.activeSelf = false;
-            pick.addComponent(GizmoPickComponent).pickTarget = parent;
-            gameObject.transform.setParent(parent.transform);
-            return gameObject;
-        }
-
-        public static createLightIcon(name: string, parent: paper.GameObject) {
-            const material = new egret3d.Material(egret3d.DefaultShaders.TRANSPARENT);
-            material.renderQueue = paper.RenderQueue.Overlay;
-            material.setTexture(egret3d.ShaderUniformName.Map, egret3d.DefaultTextures.LIGHT_ICON);
+            material.setTexture(egret3d.ShaderUniformName.Map, icon);
             material.setColor(egret3d.ShaderUniformName.Diffuse, egret3d.Color.RED);
-            const gameObject = this.createGameObject(name, null, null, parent.tag, parent.scene);
-            const pick = this.createGameObject("pick", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone(), parent.tag, parent.scene);
-            pick.transform.setParent(gameObject.transform);
-            const icon = this.createGameObject("icon", egret3d.DefaultMeshes.QUAD, material, parent.tag, parent.scene);
-            icon.transform.setParent(gameObject.transform);
-            pick.activeSelf = false;
-            pick.addComponent(GizmoPickComponent).pickTarget = parent;
-            gameObject.transform.setParent(parent.transform);
-            return gameObject;
+            // const gameObject = this.createGameObject(name, null, null, parent.tag, parent.scene);
+            // const pick = this.createGameObject("pick", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone(), parent.tag, parent.scene);
+            // pick.transform.setParent(gameObject.transform);
+            // pick.activeSelf = false;
+            // pick.addComponent(GizmoPickComponent).pickTarget = parent;
+            const iconObj = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material, parent.tag, parent.scene);
+            iconObj.transform.setParent(parent.transform);
+            iconObj.addComponent(GizmoPickComponent).pickTarget = parent;
+            // gameObject.transform.setParent(parent.transform);
+            return iconObj;
         }
 
         public static createCameraWireframed(name: string,

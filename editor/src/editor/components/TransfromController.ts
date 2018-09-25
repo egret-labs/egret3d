@@ -78,11 +78,11 @@ namespace paper.debug {
                 const axisZ = EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const axisE = EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createCircle(1.25, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const axisXYZE = EditorMeshHelper.createGameObject("AxisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickX = EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone(), paper.DefaultTags.Untagged);
-                const pickY = EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone(), paper.DefaultTags.Untagged);
-                const pickZ = EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone(), paper.DefaultTags.Untagged);
-                const pickE = EditorMeshHelper.createGameObject("E", egret3d.DefaultMeshes.createTorus(1.25, 0.1, 4, 24, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone(), paper.DefaultTags.Untagged);
-                const pickXYZE = EditorMeshHelper.createGameObject("XYZE", egret3d.DefaultMeshes.createSphere(0.7, 10, 8), egret3d.DefaultMaterials.MESH_BASIC.clone(), paper.DefaultTags.Untagged);
+                const pickX = EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickY = EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickZ = EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickE = EditorMeshHelper.createGameObject("E", egret3d.DefaultMeshes.createTorus(1.25, 0.1, 4, 24, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickXYZE = EditorMeshHelper.createGameObject("XYZE", egret3d.DefaultMeshes.createSphere(0.7, 10, 8), egret3d.DefaultMaterials.MESH_BASIC.clone());
 
                 this._highlights[pickX.uuid] = [axisX];
                 this._highlights[pickY.uuid] = [axisY];
@@ -96,11 +96,11 @@ namespace paper.debug {
                 axisZ.transform.setParent(rotate.transform);
                 axisE.transform.setParent(rotate.transform);
                 axisXYZE.transform.setParent(rotate.transform);
-                pickX.transform.setParent(rotate.transform).gameObject.activeSelf = true;
-                pickY.transform.setParent(rotate.transform).gameObject.activeSelf = true;
-                pickZ.transform.setParent(rotate.transform).gameObject.activeSelf = true;
-                pickE.transform.setParent(rotate.transform).gameObject.activeSelf = true;
-                pickXYZE.transform.setParent(rotate.transform).gameObject.activeSelf = true;
+                pickX.transform.setParent(rotate.transform).gameObject.activeSelf = false;
+                pickY.transform.setParent(rotate.transform).gameObject.activeSelf = false;
+                pickZ.transform.setParent(rotate.transform).gameObject.activeSelf = false;
+                pickE.transform.setParent(rotate.transform).gameObject.activeSelf = false;
+                pickXYZE.transform.setParent(rotate.transform).gameObject.activeSelf = false;
 
                 (axisX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.RED);
                 (axisY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.GREEN);

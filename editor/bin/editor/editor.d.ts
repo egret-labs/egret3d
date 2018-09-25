@@ -203,7 +203,6 @@ declare namespace paper.debug {
         private _cameraViewFrustum;
         private readonly _pointerStartPosition;
         private readonly _pointerPosition;
-        private readonly _pickableSelected;
         private readonly _boxes;
         private _contextmenuHandler;
         private _onMouseDown;
@@ -215,7 +214,6 @@ declare namespace paper.debug {
         private _onGameObjectHovered;
         private _onGameObjectUnselected;
         private _selectGameObject(value, selected);
-        private _setPoint(cameraProject, positions, x, y, z, points);
         private _updateBoxes();
         private _updateCameras();
         private _updateLights();
@@ -228,8 +226,7 @@ declare namespace paper.debug {
     class EditorMeshHelper {
         static createGameObject(name: string, mesh?: egret3d.Mesh, material?: egret3d.Material, tag?: string, scene?: paper.Scene): GameObject;
         static createBox(name: string, color: egret3d.Color, opacity: number, scene: Scene): GameObject;
-        static createCameraIcon(name: string, parent: paper.GameObject): GameObject;
-        static createLightIcon(name: string, parent: paper.GameObject): GameObject;
+        static createIcon(name: string, parent: paper.GameObject, icon: egret3d.Texture): GameObject;
         static createCameraWireframed(name: string, colorFrustum?: egret3d.Color, colorCone?: egret3d.Color, colorUp?: egret3d.Color, colorTarget?: egret3d.Color, colorCross?: egret3d.Color): GameObject;
     }
 }
