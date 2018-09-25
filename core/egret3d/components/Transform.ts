@@ -81,14 +81,11 @@ namespace egret3d {
             }
 
             if (!(this._worldDirty & dirty) || !(this._worldDirty & TransformDirty.Matrix)) {
-                this._worldDirty |= dirty | TransformDirty.Matrix;
-
-                if (dirty & TransformDirty.Rotation) {
-                    this._worldDirty |= TransformDirty.Scale;
-                    this._worldDirty |= TransformDirty.Euler;
+                if (dirty & TransformDirty.Position) {
+                    this._worldDirty |= dirty | TransformDirty.Matrix;
                 }
-                else if (dirty & TransformDirty.Scale) {
-                    this._worldDirty |= TransformDirty.Rotation;
+                else {
+                    this._worldDirty |= TransformDirty.PRS | TransformDirty.Euler | TransformDirty.Matrix;
                 }
 
                 for (const child of this._children) {

@@ -65,7 +65,7 @@ namespace paper {
 
         private static _sortRaycastInfo(a: egret3d.RaycastInfo, b: egret3d.RaycastInfo) {
             // TODO renderQueue.
-            return b.distance - a.distance;
+            return a.distance - b.distance;
         }
         /**
          * 用射线检测指定的实体列表。

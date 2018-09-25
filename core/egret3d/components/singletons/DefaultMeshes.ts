@@ -733,7 +733,7 @@ namespace egret3d {
         /**
          * 创建圆环网格。
          */
-        public static createTorus(radius: number = 0.5, tube: number = 0.1, radialSegments: number = 4, tubularSegments: number = 12, arc: number = 1.0) {
+        public static createTorus(radius: number = 0.5, tube: number = 0.1, radialSegments: number = 4, tubularSegments: number = 12, arc: number = 1.0, axis: number = 1) {
             const indices: number[] = [];
             const vertices: number[] = [];
             const normals: number[] = [];
@@ -755,9 +755,22 @@ namespace egret3d {
                     var v = j / radialSegments * Math.PI * 2;
 
                     // vertex
-                    vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
-                    vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
-                    vertex.z = tube * Math.sin(v);
+                    switch (axis) {
+                        case 1:
+                            vertex.x = tube * Math.sin(v);
+                            vertex.y = (radius + tube * Math.cos(v)) * Math.cos(u);
+                            vertex.z = (radius + tube * Math.cos(v)) * Math.sin(u);
+                            break;
+                        case 2:
+                            vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
+                            vertex.y = tube * Math.sin(v);
+                            vertex.z = (radius + tube * Math.cos(v)) * Math.sin(u);
+                            break;
+                        default:
+                            vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
+                            vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
+                            vertex.z = tube * Math.sin(v);
+                    }
 
                     vertices.push(vertex.x, vertex.y, vertex.z);
 
