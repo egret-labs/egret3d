@@ -1010,13 +1010,37 @@ var egret3d;
     egret3d.Vector3 = Vector3;
     __reflect(Vector3.prototype, "egret3d.Vector3", ["egret3d.IVector3", "egret3d.IVector2", "paper.ICCS", "paper.ISerializable"]);
     var helpVector = Vector3.create();
+    /**
+     * @internal
+     */
     egret3d.helpVector3A = Vector3.create();
+    /**
+     * @internal
+     */
     egret3d.helpVector3B = Vector3.create();
+    /**
+     * @internal
+     */
     egret3d.helpVector3C = Vector3.create();
+    /**
+     * @internal
+     */
     egret3d.helpVector3D = Vector3.create();
+    /**
+     * @internal
+     */
     egret3d.helpVector3E = Vector3.create();
+    /**
+     * @internal
+     */
     egret3d.helpVector3F = Vector3.create();
+    /**
+     * @internal
+     */
     egret3d.helpVector3G = Vector3.create();
+    /**
+     * @internal
+     */
     egret3d.helpVector3H = Vector3.create();
 })(egret3d || (egret3d = {}));
 var paper;
@@ -2035,9 +2059,21 @@ var egret3d;
     var _helpVector3B = egret3d.Vector3.create();
     var _helpVector3C = egret3d.Vector3.create();
     var _helpMatrix = Matrix4.create();
+    /**
+     * @internal
+     */
     egret3d.helpMatrixA = Matrix4.create();
+    /**
+     * @internal
+     */
     egret3d.helpMatrixB = Matrix4.create();
+    /**
+     * @internal
+     */
     egret3d.helpMatrixC = Matrix4.create();
+    /**
+     * @internal
+     */
     egret3d.helpMatrixD = Matrix4.create();
 })(egret3d || (egret3d = {}));
 var paper;
@@ -8880,12 +8916,12 @@ var egret3d;
                             vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
                             vertex.z = tube * Math.sin(v);
                     }
-                    vertices.push(vertex.x, vertex.y, vertex.z);
+                    vertices.push(vertex.x, vertex.y, -vertex.z);
                     // normal
                     center.x = radius * Math.cos(u);
                     center.y = radius * Math.sin(u);
                     normal.subtract(vertex, center).normalize();
-                    normals.push(normal.x, normal.y, normal.z);
+                    normals.push(normal.x, normal.y, -normal.z);
                     // uv
                     uvs.push(i / tubularSegments);
                     uvs.push(j / radialSegments);
