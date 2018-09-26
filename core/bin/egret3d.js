@@ -5616,12 +5616,6 @@ var egret3d;
             }
             return new Plane().set(normal, constant);
         };
-        Plane.prototype.release = function () {
-            if (Plane._instances.indexOf(this) < 0) {
-                Plane._instances.push(this);
-            }
-            return this;
-        };
         Plane.prototype.serialize = function () {
             return [this.normal.x, this.normal.y, this.normal.z, this.constant];
         };
@@ -9754,15 +9748,13 @@ var egret3d;
          * 由屏幕坐标发射射线
          */
         Camera.prototype.createRayByScreen = function (screenPosX, screenPosY, ray) {
-            var from = egret3d.Vector3.create(screenPosX, screenPosY, 0.0);
-            var to = egret3d.Vector3.create(screenPosX, screenPosY, 1.0);
+            var from = egret3d.Vector3.create(screenPosX, screenPosY, 0.0).release();
+            var to = egret3d.Vector3.create(screenPosX, screenPosY, 1.0).release();
             this.calcWorldPosFromScreenPos(from, from);
             this.calcWorldPosFromScreenPos(to, to);
             to.subtract(to, from).normalize();
             ray = ray || egret3d.Ray.create();
             ray.set(from, to);
-            from.release();
-            to.release();
             return ray;
         };
         Camera.prototype.testFrustumCulling = function (node) {
@@ -13041,30 +13033,31 @@ var egret3d;
     /**
      *
      */
-    var BlendLayer = (function () {
+    var BlendLayer = (function (_super) {
+        __extends(BlendLayer, _super);
         function BlendLayer() {
-            this.dirty = 0;
-            this.layer = 0;
-            this.leftWeight = 0.0;
-            this.layerWeight = 0.0;
-            this.blendWeight = 0.0;
+            var _this = _super.call(this) || this;
+            _this.dirty = 0;
+            _this.layer = 0;
+            _this.leftWeight = 0.0;
+            _this.layerWeight = 0.0;
+            _this.blendWeight = 0.0;
+            return _this;
         }
         BlendLayer.create = function () {
             if (this._instances.length > 0) {
-                return this._instances.pop();
+                var instance = this._instances.pop();
+                instance._released = false;
+                return instance;
             }
             return new BlendLayer();
         };
-        BlendLayer.prototype.release = function () {
-            if (BlendLayer._instances.indexOf(this) >= 0) {
-                throw new Error();
-            }
+        BlendLayer.prototype.clear = function () {
             this.dirty = 0;
             this.layer = 0;
             this.leftWeight = 0.0;
             this.layerWeight = 0.0;
             this.blendWeight = 0.0;
-            BlendLayer._instances.push(this);
         };
         BlendLayer.prototype.update = function (animationState) {
             var animationLayer = animationState.layer;
@@ -13095,30 +13088,29 @@ var egret3d;
         };
         BlendLayer._instances = [];
         return BlendLayer;
-    }());
+    }(paper.BaseRelease));
     __reflect(BlendLayer.prototype, "BlendLayer");
     /**
      *
      */
-    var AnimationChannel = (function () {
+    var AnimationChannel = (function (_super) {
+        __extends(AnimationChannel, _super);
         function AnimationChannel() {
-            this.update = null;
+            var _this = _super.call(this) || this;
+            _this.update = null;
+            return _this;
         }
         AnimationChannel.create = function () {
             if (this._instances.length > 0) {
-                return this._instances.pop();
+                var instance = this._instances.pop();
+                instance._released = false;
+                return instance;
             }
             return new AnimationChannel();
         };
-        AnimationChannel.prototype.release = function () {
-            if (AnimationChannel._instances.indexOf(this) >= 0) {
-                throw new Error();
-            }
-            AnimationChannel._instances.push(this);
-        };
         AnimationChannel._instances = [];
         return AnimationChannel;
-    }());
+    }(paper.BaseRelease));
     __reflect(AnimationChannel.prototype, "AnimationChannel");
     var _animationChannels = [];
     /**

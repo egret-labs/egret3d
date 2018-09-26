@@ -54,9 +54,9 @@ namespace paper.debug {
                     const hoveredGameObject = this._modelComponent.hoveredGameObject;
                     if (hoveredGameObject) {
                         const selectedGameObject = this._modelComponent.selectedGameObject;
-                        if (hoveredGameObject === selectedGameObject) {
+                        if (this._modelComponent.selectedGameObjects.indexOf(hoveredGameObject) >= 0) {
                             if (event.ctrlKey) {
-                                this._modelComponent.unselect(selectedGameObject);
+                                this._modelComponent.unselect(hoveredGameObject);
                             }
                         }
                         else {
@@ -228,7 +228,7 @@ namespace paper.debug {
                 }
 
                 { // Create box.
-                    const box = EditorMeshHelper.createBox("Box", egret3d.Color.WHITE, 0.8, value.scene);
+                    const box = EditorMeshHelper.createBox("Box", egret3d.Color.INDIGO, 0.8, value.scene);
                     box.activeSelf = false;
                     box.parent = value;
                     this._boxes[value.uuid] = box;

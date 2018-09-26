@@ -950,8 +950,20 @@ namespace egret3d {
     const _helpVector3C = Vector3.create();
     const _helpMatrix = Matrix4.create();
 
+    /**
+     * @internal
+     */
     export const helpMatrixA = Matrix4.create();
+    /**
+     * @internal
+     */
     export const helpMatrixB = Matrix4.create();
+    /**
+     * @internal
+     */
     export const helpMatrixC = Matrix4.create();
+    /**
+     * @internal
+     */
     export const helpMatrixD = Matrix4.create();
 }

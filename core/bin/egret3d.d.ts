@@ -3139,7 +3139,6 @@ declare namespace egret3d {
          *
          */
         static create(normal?: Readonly<IVector3>, constant?: number): Plane;
-        release(): this;
         /**
          *
          */

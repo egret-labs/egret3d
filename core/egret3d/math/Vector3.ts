@@ -638,20 +638,36 @@ namespace egret3d {
     }
 
     const helpVector = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3A = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3B = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3C = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3D = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3E = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3F = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3G = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3H = Vector3.create();
 }

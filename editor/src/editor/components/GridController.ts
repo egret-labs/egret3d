@@ -44,7 +44,7 @@ namespace paper.debug {
             const camera = egret3d.Camera.editor;
             const aaa = camera.gameObject.getComponent(OrbitControls)!;
             const target = aaa.lookAtPoint.clone().add(aaa.lookAtOffset);
-            const eyeDistance = target.getDistance(camera.transform.position) * 0.01; // TODO
+            const eyeDistance = (10000.0 - target.getDistance(camera.transform.position)) * 0.01; // TODO
 
             const d = (eyeDistance % 1.0);
             const s = d * (_step - 1) + 1.0;
@@ -55,8 +55,8 @@ namespace paper.debug {
             const mA = (this._gridA.renderer as egret3d.MeshRenderer).material;
             const mB = (this._gridB.renderer as egret3d.MeshRenderer).material;
 
-            mA.setOpacity(1.0 * 0.3);
-            mB.setOpacity(d * 0.3);
+            mA.setOpacity(1.0 * 0.2);
+            mB.setOpacity(d * 0.2);
         }
     }
 }

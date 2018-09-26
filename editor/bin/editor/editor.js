@@ -3551,15 +3551,15 @@ var paper;
                 var camera = egret3d.Camera.editor;
                 var aaa = camera.gameObject.getComponent(debug.OrbitControls);
                 var target = aaa.lookAtPoint.clone().add(aaa.lookAtOffset);
-                var eyeDistance = target.getDistance(camera.transform.position) * 0.01; // TODO
+                var eyeDistance = (10000.0 - target.getDistance(camera.transform.position)) * 0.01; // TODO
                 var d = (eyeDistance % 1.0);
                 var s = d * (_step - 1) + 1.0;
                 this._gridA.transform.setScale(s * _step, 0.0, s * _step);
                 this._gridB.transform.setScale(s, 0.0, s);
                 var mA = this._gridA.renderer.material;
                 var mB = this._gridB.renderer.material;
-                mA.setOpacity(1.0 * 0.3);
-                mB.setOpacity(d * 0.3);
+                mA.setOpacity(1.0 * 0.2);
+                mB.setOpacity(d * 0.2);
             };
             return GridController;
         }(paper.BaseComponent));
@@ -4048,9 +4048,9 @@ var paper;
                             var hoveredGameObject = _this._modelComponent.hoveredGameObject;
                             if (hoveredGameObject) {
                                 var selectedGameObject = _this._modelComponent.selectedGameObject;
-                                if (hoveredGameObject === selectedGameObject) {
+                                if (_this._modelComponent.selectedGameObjects.indexOf(hoveredGameObject) >= 0) {
                                     if (event.ctrlKey) {
-                                        _this._modelComponent.unselect(selectedGameObject);
+                                        _this._modelComponent.unselect(hoveredGameObject);
                                     }
                                 }
                                 else {
@@ -4200,7 +4200,7 @@ var paper;
                         transformController.gameObject.activeSelf = true;
                     }
                     {
-                        var box = debug.EditorMeshHelper.createBox("Box", egret3d.Color.WHITE, 0.8, value.scene);
+                        var box = debug.EditorMeshHelper.createBox("Box", egret3d.Color.INDIGO, 0.8, value.scene);
                         box.activeSelf = false;
                         box.parent = value;
                         this._boxes[value.uuid] = box;
@@ -4228,7 +4228,10 @@ var paper;
                     if (gameObject.renderer) {
                         box.activeSelf = true;
                         box.transform.localPosition = gameObject.renderer.aabb.center;
-                        box.transform.localScale = gameObject.renderer.aabb.size;
+                        // box.transform.localScale = gameObject.renderer.aabb.size;
+                        var size = gameObject.renderer.aabb.size;
+                        ; // TODO
+                        box.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
                     }
                     else {
                         box.activeSelf = false;
@@ -4238,7 +4241,9 @@ var paper;
                     var parentRenderer = this._hoverBox.parent.renderer;
                     if (parentRenderer) {
                         this._hoverBox.transform.localPosition = parentRenderer.aabb.center;
-                        this._hoverBox.transform.localScale = parentRenderer.aabb.size;
+                        // this._hoverBox.transform.localScale = parentRenderer.aabb.size;
+                        var size = parentRenderer.aabb.size; // TODO
+                        this._hoverBox.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
                     }
                     else {
                         this._hoverBox.activeSelf = false;
