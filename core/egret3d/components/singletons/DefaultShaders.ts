@@ -12,6 +12,7 @@ namespace egret3d {
         public static MESH_PHYSICAL: Shader;
         public static MESH_PHYSICAL_DOUBLESIDE: Shader;
 
+        public static LINE: Shader;
         public static LINEDASHED: Shader;
         public static VERTEX_COLOR: Shader;
         public static MATERIAL_COLOR: Shader;
@@ -102,6 +103,9 @@ namespace egret3d {
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add);
             DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
+
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+            DefaultShaders.LINE = this._createShader("builtin/line.shader.json", egret3d.ShaderLib.line as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);
 
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
             DefaultShaders.LINEDASHED = this._createShader("builtin/linedashed.shader.json", egret3d.ShaderLib.linedashed as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);

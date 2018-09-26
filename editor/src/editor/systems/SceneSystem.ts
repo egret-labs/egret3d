@@ -269,7 +269,7 @@ namespace paper.debug {
             }
 
             if (this._hoverBox.activeSelf) {
-                const parentRenderer = this._hoverBox.parent.renderer;
+                const parentRenderer = this._hoverBox.parent ? this._hoverBox.parent.renderer : null;//TODO
                 if (parentRenderer) {
                     this._hoverBox.transform.localPosition = parentRenderer.aabb.center;
                     // this._hoverBox.transform.localScale = parentRenderer.aabb.size;
@@ -408,6 +408,7 @@ namespace paper.debug {
                 canvas.addEventListener("contextmenu", this._contextmenuHandler);
                 canvas.addEventListener("mousedown", this._onMouseDown);
                 canvas.addEventListener("mouseup", this._onMouseUp);
+                canvas.addEventListener("mouseout", this._onMouseUp);
                 canvas.addEventListener("mousemove", this._onMouseMove);
                 window.addEventListener("keyup", this._onKeyUp);
                 window.addEventListener("keydown", this._onKeyDown);
@@ -426,7 +427,11 @@ namespace paper.debug {
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera");
             this._cameraViewFrustum.activeSelf = false;
 
-            // this._pickableSelected.length = 0;
+            //
+            const editorCamera = egret3d.Camera.editor;
+            const mainCamera = egret3d.Camera.main;
+            editorCamera.transform.position = mainCamera.transform.position;
+            editorCamera.transform.rotation = mainCamera.transform.rotation;
         }
 
         public onDisable() {
@@ -439,6 +444,7 @@ namespace paper.debug {
                 canvas.removeEventListener("contextmenu", this._contextmenuHandler);
                 canvas.removeEventListener("mousedown", this._onMouseDown);
                 canvas.removeEventListener("mouseup", this._onMouseUp);
+                canvas.removeEventListener("mouseout", this._onMouseUp);
                 canvas.removeEventListener("mousemove", this._onMouseMove);
                 window.removeEventListener("keyup", this._onKeyUp);
                 window.removeEventListener("keydown", this._onKeyDown);
