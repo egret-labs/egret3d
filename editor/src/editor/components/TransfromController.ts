@@ -10,7 +10,7 @@ namespace paper.debug {
         public readonly scale: GameObject = EditorMeshHelper.createGameObject("Scale");
 
         private _controlling: boolean = false;
-        private readonly _prsStarts: { [key: string]: [egret3d.Vector3, egret3d.Quaternion, egret3d.Vector3, egret3d.Vector3, egret3d.Quaternion, egret3d.Vector3] } = {};
+        private readonly _prsStarts: { [key: string]: [egret3d.Vector3, egret3d.Quaternion, egret3d.Vector3, egret3d.Vector3, egret3d.Quaternion, egret3d.Vector3, egret3d.Vector3] } = {};
         private readonly _offsetStart: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _offsetEnd: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _plane: egret3d.Plane = egret3d.Plane.create();
@@ -482,6 +482,7 @@ namespace paper.debug {
                     egret3d.Vector3.create().copy(transform.position),
                     egret3d.Quaternion.create().copy(transform.rotation),
                     egret3d.Vector3.create().copy(transform.scale),
+                    egret3d.Vector3.create().copy(transform.localEulerAngles),
                 ];
             }
 
@@ -509,7 +510,20 @@ namespace paper.debug {
 
         public end() {
             //
-            
+            const modelComponent = this.gameObject.getComponent(ModelComponent)!;
+            for (const gameObject of modelComponent.selectedGameObjects) {
+                const transform = gameObject.transform;
+                const currentPro = this._prsStarts[gameObject.uuid];
+                if (this.mode === this.translate) {
+                    modelComponent.changeProperty("localPosition", currentPro[0], transform.localPosition, transform);
+                }
+                else if (this.mode === this.scale) {
+                    modelComponent.changeProperty("localScale", currentPro[2], transform.localScale, transform);
+                }
+                else if (this.mode === this.rotate) {
+                    modelComponent.changeProperty("localEulerAngles", currentPro[6], transform.localEulerAngles, transform);
+                }
+            }
             for (const k in this._prsStarts) {
                 for (const v of this._prsStarts[k]) {
                     v.release();

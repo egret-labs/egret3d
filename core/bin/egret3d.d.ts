@@ -658,6 +658,12 @@ declare namespace paper {
 }
 declare namespace paper {
     /**
+     * @private
+     */
+    const enum RendererEventType {
+        Materials = "materials",
+    }
+    /**
      * 基础渲染器。
      */
     abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
@@ -9678,7 +9684,7 @@ declare namespace paper.editor {
         init(scene: paper.Scene, contentType: 'scene' | 'prefab', contentUrl: string): void;
         addState(state: BaseState | null): void;
         getEditType(propName: string, target: any): editor.EditType | null;
-        setTransformProperty(propName: string, propValue: any, target: BaseComponent): void;
+        setTransformProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void;
         createModifyGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): void;
         createModifyComponent(gameObjectUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): any;
         createPrefabState(prefab: Prefab, parent?: GameObject): void;

@@ -2148,7 +2148,7 @@ var paper;
 var paper;
 (function (paper) {
     /**
-     * @internal
+     * @private
      */
     var RendererEventType;
     (function (RendererEventType) {
@@ -8860,13 +8860,13 @@ var egret3d;
             for (var i = 0; i <= 64 * arc; ++i) {
                 switch (axis) {
                     case 1:
-                        vertices.push(0, Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius);
+                        vertices.push(0.0, Math.cos(i / 32 * Math.PI) * radius, -Math.sin(i / 32 * Math.PI) * radius);
                         break;
                     case 2:
-                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, 0, Math.sin(i / 32 * Math.PI) * radius);
+                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, 0.0, -Math.sin(i / 32 * Math.PI) * radius);
                         break;
                     case 3:
-                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius, 0);
+                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius, -0.0);
                         break;
                 }
             }
@@ -22965,12 +22965,12 @@ var paper;
                 }
                 return null;
             };
-            EditorModel.prototype.setTransformProperty = function (propName, propValue, target) {
+            EditorModel.prototype.setTransformProperty = function (propName, propOldValue, propNewValue, target) {
                 var valueEditType = this.getEditType(propName, target);
                 if (valueEditType != null) {
                     var newPropertyData = {
                         propName: propName,
-                        copyValue: this.serializeProperty(propValue, valueEditType),
+                        copyValue: this.serializeProperty(propNewValue, valueEditType),
                         valueEditType: valueEditType
                     };
                     var prePropertyData = {

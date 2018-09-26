@@ -89,13 +89,13 @@ namespace paper.editor {
             return null;
         }
 
-        public setTransformProperty(propName: string, propValue: any, target: BaseComponent): void {
+        public setTransformProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void {
             let valueEditType: paper.editor.EditType | null = this.getEditType(propName, target);
 
             if (valueEditType != null) {
                 let newPropertyData = {
                     propName,
-                    copyValue: this.serializeProperty(propValue, valueEditType),
+                    copyValue: this.serializeProperty(propNewValue, valueEditType),
                     valueEditType
                 }
 
@@ -218,8 +218,8 @@ namespace paper.editor {
             }
         }
 
-        public createGameObject(parentList: (GameObject | Scene)[], createType: string,mesh:egret3d.Mesh = null) {
-            let state = CreateGameObjectState.create(parentList, createType,mesh);
+        public createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh = null) {
+            let state = CreateGameObjectState.create(parentList, createType, mesh);
             this.addState(state);
         }
 

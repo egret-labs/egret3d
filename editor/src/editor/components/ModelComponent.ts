@@ -69,6 +69,12 @@ namespace paper.debug {
                     case "localRotation":
                         this.selectedGameObject.transform.localRotation = data.propValue;
                         break;
+                    case "scale":
+                        this.selectedGameObject.transform.scale = data.propValue;
+                        break;
+                    case "localScale":
+                        this.selectedGameObject.transform.localScale = data.propValue;
+                        break;
                     default:
                         break;
                 }
@@ -177,9 +183,9 @@ namespace paper.debug {
             }
         }
 
-        public changeProperty(propName: string, propValue: any, target: BaseComponent) {
+        public changeProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent) {
             if (this.editorModel) {
-                this.editorModel.setTransformProperty(propName, propValue, target);
+                this.editorModel.setTransformProperty(propName, propOldValue, propNewValue, target);
             }
         }
 
