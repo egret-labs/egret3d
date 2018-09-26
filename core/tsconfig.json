@@ -20,6 +20,12 @@
     "files": [
         "libs/egret.d.ts",
         "libs/resourcemanager.d.ts",
+        
+        "egret3d/ecs/core/InterFace.ts",
+        "egret3d/ecs/core/Decorators.ts",
+        "egret3d/ecs/core/Layer.ts",
+        "egret3d/ecs/core/BaseObject.ts",
+
         "egret3d/math/Math.ts",
         "egret3d/math/Vector2.ts",
         "egret3d/math/Vector3.ts",
@@ -35,10 +41,7 @@
         "egret3d/math/AABB.ts",
         "egret3d/math/Curve.ts",
         "egret3d/math/Color.ts",
-        "egret3d/ecs/core/InterFace.ts",
-        "egret3d/ecs/core/Decorators.ts",
-        "egret3d/ecs/core/Layer.ts",
-        "egret3d/ecs/core/BaseObject.ts",
+        
         "egret3d/ecs/core/Asset.ts",
         "egret3d/ecs/core/RawScene.ts",
         "egret3d/ecs/core/Prefab.ts",

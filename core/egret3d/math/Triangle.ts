@@ -2,24 +2,18 @@ namespace egret3d {
     /**
      * 
      */
-    export class Triangle implements paper.IRelease<Triangle>, paper.ISerializable {
+    export class Triangle extends paper.BaseRelease<AABB> implements paper.ICCS<Triangle>, paper.ISerializable {
 
         private static readonly _instances: Triangle[] = [];
 
         public static create(a: Readonly<IVector3> = Vector3.ZERO, b: Readonly<IVector3> = Vector3.ZERO, c: Readonly<IVector3> = Vector3.ZERO) {
             if (this._instances.length > 0) {
-                return this._instances.pop()!.set(a, b, c);
+                const instance = this._instances.pop()!.set(a, b, c);
+                instance._released = false;
+                return instance;
             }
 
             return new Triangle().set(a, b, c);
-        }
-
-        public release() {
-            if (Triangle._instances.indexOf(this) < 0) {
-                Triangle._instances.push(this);
-            }
-
-            return this;
         }
 
         public readonly a: Vector3 = Vector3.create();
@@ -29,7 +23,9 @@ namespace egret3d {
          * 请使用 `egret3d.Triangle.create()` 创建实例。
          * @see egret3d.Triangle.create()
          */
-        private constructor() { }
+        private constructor() {
+            super();
+        }
 
         public serialize() {
             return [

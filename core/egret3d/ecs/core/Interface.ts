@@ -33,21 +33,17 @@ namespace paper {
     /**
      * 
      */
-    export interface IRelease<T extends IRelease<T>> {
+    export interface ICCS<T extends ICCS<T>> {
         /**
-         * 
-         */
-        release(): T;
-        /**
-         * 
+         * 克隆。
          */
         clone(): T;
         /**
-         * 
+         * 拷贝。
          */
         copy(value: Readonly<T>): T;
         /**
-         * 
+         * 设置。
          */
         set(...args: any[]): T;
     }
@@ -156,4 +152,21 @@ namespace paper {
      * 
      */
     export type ComponentExtras = { linkedID?: string };
+    /**
+     * 
+     */
+    export abstract class BaseRelease<T extends BaseRelease<T>> {
+        protected _released?: boolean;
+        /**
+         * 在本帧末尾释放。
+         */
+        public release() {
+            if (!this._released) {
+                paper.DisposeCollecter._releases.push(this);
+                this._released = true;
+            }
+
+            return this;
+        }
+    }
 }

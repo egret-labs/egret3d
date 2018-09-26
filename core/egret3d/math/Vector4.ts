@@ -1,45 +1,42 @@
 namespace egret3d {
-
+    /**
+     * 
+     */
     export interface IVector4 extends IVector3 {
         w: number;
     }
+    /**
+     * 
+     */
+    export class Vector4 extends paper.BaseRelease<Vector4> implements IVector4, paper.ICCS<Vector4>, paper.ISerializable {
 
-    export class Vector4 implements IVector4, paper.IRelease<Vector4>, paper.ISerializable {
-
-        private static readonly _instances: Vector4[] = [];
+        protected static readonly _instances: Vector4[] = [];
         /**
          * 
          */
         public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
             if (this._instances.length > 0) {
-                return this._instances.pop()!.set(x, y, z, w);
+                const instance = this._instances.pop()!.set(x, y, z, w);
+                instance._released = false;
+                return instance;
             }
 
             return new Vector4().set(x, y, z, w);
         }
 
-        public release() {
-            if (Vector4._instances.indexOf(this) < 0) {
-                Vector4._instances.push(this);
-            }
-
-            return this;
-        }
-
         public x: number;
-
         public y: number;
-
         public z: number;
-
         public w: number;
         /**
-         * 请使用 `egret3d.Quaternion.create()` 创建实例。
+         * 请使用 `egret3d.Vector4.create(); egret3d.Quaternion.create()` 创建实例。
          * @see egret3d.Quaternion.create()
+         * @see egret3d.Vector4.create()
          * @deprecated
-         * @private
          */
         public constructor(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
+            super();
+
             this.x = x;
             this.y = y;
             this.z = z;
@@ -120,16 +117,4 @@ namespace egret3d {
             return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
         }
     }
-
-    export const helpVector4A = new Vector4();
-
-    export const helpVector4B = new Vector4();
-
-    export const helpVector4C = new Vector4();
-
-    export const helpVector4D = new Vector4();
-
-    export const helpVector4E = new Vector4();
-
-    export const helpVector4F = new Vector4();
 }

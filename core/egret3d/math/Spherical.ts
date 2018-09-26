@@ -2,25 +2,19 @@ namespace egret3d {
     /**
      * 
      */
-    export class Spherical implements paper.IRelease<Spherical>, paper.ISerializable {
+    export class Spherical extends paper.BaseRelease<Spherical> implements paper.ICCS<Spherical>, paper.ISerializable {
         private static readonly _instances: Spherical[] = [];
         /**
          * 
          */
         public static create(radius: number = 1.0, phi: number = 0.0, theta: number = 0.0) {
             if (this._instances.length > 0) {
-                return this._instances.pop()!.set(radius, phi, theta);
+                const instance = this._instances.pop()!.set(radius, phi, theta);
+                instance._released = false;
+                return instance;
             }
 
             return new Spherical().set(radius, phi, theta);
-        }
-
-        public release() {
-            if (Spherical._instances.indexOf(this) < 0) {
-                Spherical._instances.push(this);
-            }
-
-            return this;
         }
         /**
          * 
@@ -38,7 +32,9 @@ namespace egret3d {
          * 请使用 `egret3d.Spherical.create()` 创建实例。
          * @see egret3d.Spherical.create()
          */
-        private constructor() { }
+        private constructor() {
+            super();
+        }
 
         public serialize() {
             return [this.radius, this.phi, this.theta];

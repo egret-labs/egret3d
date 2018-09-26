@@ -2,12 +2,14 @@ namespace egret3d {
     /**
      * 
      */
-    class BlendLayer {
+    class BlendLayer extends paper.BaseRelease<BlendLayer> {
         private static _instances = [] as BlendLayer[];
 
         public static create() {
             if (this._instances.length > 0) {
-                return this._instances.pop()!;
+                const instance = this._instances.pop()!;
+                instance._released = false;
+                return instance;
             }
 
             return new BlendLayer();
@@ -19,20 +21,16 @@ namespace egret3d {
         public layerWeight: number = 0.0;
         public blendWeight: number = 0.0;
 
-        private constructor() { }
+        private constructor() {
+            super();
+        }
 
-        public release() {
-            if (BlendLayer._instances.indexOf(this) >= 0) {
-                throw new Error();
-            }
-
+        public clear() {
             this.dirty = 0;
             this.layer = 0;
             this.leftWeight = 0.0;
             this.layerWeight = 0.0;
             this.blendWeight = 0.0;
-
-            BlendLayer._instances.push(this);
         }
 
         public update(animationState: AnimationState) {
@@ -73,26 +71,21 @@ namespace egret3d {
     /**
      * 
      */
-    class AnimationChannel {
+    class AnimationChannel extends paper.BaseRelease<AnimationChannel> {
         private static _instances = [] as AnimationChannel[];
 
         public static create() {
             if (this._instances.length > 0) {
-                return this._instances.pop()!;
+                const instance = this._instances.pop()!;
+                instance._released = false;
+                return instance;
             }
 
             return new AnimationChannel();
         }
 
-        private constructor() { }
-
-        public release() {
-            if (AnimationChannel._instances.indexOf(this) >= 0) {
-                throw new Error();
-            }
-
-
-            AnimationChannel._instances.push(this);
+        private constructor() {
+            super();
         }
 
         glTFChannel: GLTFAnimationChannel;

@@ -1,29 +1,27 @@
 namespace egret3d {
-    export class Matrix3 implements paper.IRelease<Matrix3>, paper.ISerializable {
+    export class Matrix3 extends paper.BaseRelease<Matrix3> implements paper.ICCS<Matrix3>, paper.ISerializable {
         private static readonly _instances: Matrix3[] = [];
 
         public static create() {
             if (this._instances.length > 0) {
-                return this._instances.pop();
+                const instance = this._instances.pop()!;
+                instance._released = false;
+                return instance;
             }
 
             return new Matrix3();
-        }
-
-        public release() {
-            if (Matrix3._instances.indexOf(this) < 0) {
-                Matrix3._instances.push(this);
-            }
-
-            return this;
         }
 
         /**
          * @readonly
          */
         public rawData: Float32Array = null!;
-
+        /**
+         * @deprecated
+         */
         public constructor(rawData: Float32Array | null = null) {
+            super();
+
             if (rawData) {
                 this.rawData = rawData;
             }
@@ -151,7 +149,7 @@ namespace egret3d {
             return this;
         }
 
-        public setFromMatrix4(m: Matrix4) {
+        public setFromMatrix4(m: Readonly<Matrix4>) {
 
             var me = m.rawData;
             this.set(
