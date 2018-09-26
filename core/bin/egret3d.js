@@ -1363,7 +1363,7 @@ var egret3d;
 var paper;
 (function (paper) {
     /**
-     * @internal
+     * @private
      */
     var RendererEventType;
     (function (RendererEventType) {

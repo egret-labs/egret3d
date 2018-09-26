@@ -593,6 +593,12 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
+     * @private
+     */
+    const enum RendererEventType {
+        Materials = "materials",
+    }
+    /**
      * 基础渲染器。
      */
     abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {

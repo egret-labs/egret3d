@@ -2,6 +2,7 @@ namespace paper.debug {
     /**
      * @internal
      */
+    @paper.executeInEditMode
     export class OrbitControls extends paper.Behaviour {
         public lookAtPoint: egret3d.Vector3 = egret3d.Vector3.create(0.0, 0.0, 0.0);
         public lookAtOffset: egret3d.Vector3 = egret3d.Vector3.create();

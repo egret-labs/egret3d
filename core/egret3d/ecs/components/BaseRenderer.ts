@@ -1,6 +1,6 @@
 namespace paper {
     /**
-     * @internal
+     * @private
      */
     export const enum RendererEventType {
         Materials = "materials",

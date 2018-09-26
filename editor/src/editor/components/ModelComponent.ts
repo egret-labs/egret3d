@@ -30,6 +30,45 @@ namespace paper.debug {
          */
         public selectedGameObject: GameObject | null = null;
 
+        //
+        private editorModel: paper.editor.EditorModel | null = null;
+
+        private _onEditorSelectGameObjects(gameObjs: GameObject[]) {
+            for (const gameObj of gameObjs) {
+                this.select(gameObj);
+            }
+
+            for (const gameObj of this.selectedGameObjects) {
+                if (gameObjs.indexOf(gameObj) < 0) {
+                    this.unselect(gameObj);
+                }
+            }
+        }
+
+        private _onChangeEditMode(mode: string) {
+
+        }
+
+        private _onChangeEditType(type: string) {
+
+        }
+
+        private _onChangeProperty(data: any) {
+
+        }
+
+        public initialize() {
+            setTimeout(() => {
+                if (Application.playerMode === PlayerMode.Editor) {
+                    this.editorModel = paper.editor.Editor.activeEditorModel;
+                    this.editorModel.addEventListener(paper.editor.EditorModelEvent.SELECT_GAMEOBJECTS, e => this._onEditorSelectGameObjects(e.data), this);
+                    this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_MODE, e => this._onChangeEditMode(e.data), this);
+                    this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_TYPE, e => this._onChangeEditType(e.data), this);
+                    this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_PROPERTY, e => this._onChangeProperty(e.data), this);
+                }
+            }, 3000);
+        }
+
         public select(value: Scene | GameObject | null, isReplace?: boolean) {
             if (value) {
                 if (value instanceof Scene) {
