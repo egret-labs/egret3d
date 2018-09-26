@@ -710,16 +710,16 @@ namespace egret3d {
          */
         public static createCircle(radius: number = 0.5, arc: number = 1.0, axis: number = 1) {
             const vertices: number[] = [];
-            for (var i = 0; i <= 64 * arc; ++i) {
+            for (let i = 0; i <= 64 * arc; ++i) {
                 switch (axis) {
                     case 1:
-                        vertices.push(0, Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius);
+                        vertices.push(0.0, Math.cos(i / 32 * Math.PI) * radius, -Math.sin(i / 32 * Math.PI) * radius);
                         break;
                     case 2:
-                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, 0, Math.sin(i / 32 * Math.PI) * radius);
+                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, 0.0, -Math.sin(i / 32 * Math.PI) * radius);
                         break;
                     case 3:
-                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius, 0);
+                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius, -0.0);
                         break;
                 }
 
@@ -751,8 +751,8 @@ namespace egret3d {
 
                 for (i = 0; i <= tubularSegments; i++) {
 
-                    var u = i / tubularSegments * Math.PI * 2 * arc;
-                    var v = j / radialSegments * Math.PI * 2;
+                    let u = i / tubularSegments * Math.PI * 2 * arc;
+                    let v = j / radialSegments * Math.PI * 2;
 
                     // vertex
                     switch (axis) {
@@ -772,14 +772,14 @@ namespace egret3d {
                             vertex.z = tube * Math.sin(v);
                     }
 
-                    vertices.push(vertex.x, vertex.y, vertex.z);
+                    vertices.push(vertex.x, vertex.y, -vertex.z);
 
                     // normal
                     center.x = radius * Math.cos(u);
                     center.y = radius * Math.sin(u);
                     normal.subtract(vertex, center).normalize();
 
-                    normals.push(normal.x, normal.y, normal.z);
+                    normals.push(normal.x, normal.y, -normal.z);
 
                     // uv
                     uvs.push(i / tubularSegments);
