@@ -74,7 +74,7 @@ namespace paper.editor {
     export function custom() {
         return function (target: any) {
             customMap[target.name] = true;
-        }
+        };
     }
     let propertyMap: { [key: string]: { extends: string, propertyList: PropertyInfo[] } } = {};
     /**
@@ -87,7 +87,7 @@ namespace paper.editor {
                 propertyMap[target.constructor.name] = {
                     extends: target.__proto__.constructor.name,
                     propertyList: [],
-                }
+                };
             }
             if (editType !== undefined) {
                 propertyMap[target.constructor.name].propertyList.push(new PropertyInfo(property, editType, option));
@@ -95,7 +95,7 @@ namespace paper.editor {
             else {
                 //TODO:自动分析编辑类型
             }
-        }
+        };
     }
 
     /**

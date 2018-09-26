@@ -71,7 +71,7 @@ namespace paper.editor {
                 let sceneEditorModel = new EditorModel();
                 sceneEditorModel.init(scene, 'scene', sceneUrl);
                 this.setActiveModel(sceneEditorModel);
-                this.currentEditInfo = { url: sceneUrl, type: 'scene' }
+                this.currentEditInfo = { url: sceneUrl, type: 'scene' };
             }
         }
         /**
@@ -92,18 +92,18 @@ namespace paper.editor {
                 //清除自身的预置体信息
                 let clearPrefabInfo = (obj: GameObject): void => {
                     obj.extras={};
-                    for(let comp of obj.components){
-                        comp.extras={};
+                    for (let comp of obj.components) {
+                        comp.extras = {};
                     }
                     for (let i: number = 0; i < obj.transform.children.length; i++) {
                         let child = obj.transform.children[i].gameObject;
                         if (prefabEditorModel.isPrefabChild(child))
                             clearPrefabInfo(child);
                     }
-                }
+                };
                 clearPrefabInfo(prefabInstance);
                 this.setActiveModel(prefabEditorModel);
-                this.currentEditInfo = { url: prefabUrl, type: 'prefab' }
+                this.currentEditInfo = { url: prefabUrl, type: 'prefab' };
             }
         }
         /**
