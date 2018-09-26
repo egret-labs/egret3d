@@ -259,7 +259,9 @@ namespace paper.debug {
                 if (gameObject.renderer) {
                     box.activeSelf = true;
                     box.transform.localPosition = gameObject.renderer.aabb.center;
-                    box.transform.localScale = gameObject.renderer.aabb.size;
+                    // box.transform.localScale = gameObject.renderer.aabb.size;
+                    const size = gameObject.renderer.aabb.size;; // TODO
+                    box.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
                 }
                 else {
                     box.activeSelf = false;
@@ -270,7 +272,9 @@ namespace paper.debug {
                 const parentRenderer = this._hoverBox.parent.renderer;
                 if (parentRenderer) {
                     this._hoverBox.transform.localPosition = parentRenderer.aabb.center;
-                    this._hoverBox.transform.localScale = parentRenderer.aabb.size;
+                    // this._hoverBox.transform.localScale = parentRenderer.aabb.size;
+                    const size = parentRenderer.aabb.size; // TODO
+                    this._hoverBox.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
                 }
                 else {
                     this._hoverBox.activeSelf = false;
