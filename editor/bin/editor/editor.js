@@ -1448,15 +1448,24 @@ var paper;
             GUISystem.prototype.onDisable = function () {
             };
             GUISystem.prototype.onAddGameObject = function (gameObject, _group) {
+                if (paper.Application.playerMode !== 1 /* DebugPlayer */) {
+                    return;
+                }
                 this._bufferedGameObjects.push(gameObject);
             };
             GUISystem.prototype.onRemoveGameObject = function (gameObject, _group) {
+                if (paper.Application.playerMode !== 1 /* DebugPlayer */) {
+                    return;
+                }
                 var index = this._bufferedGameObjects.indexOf(gameObject);
                 if (index >= 0) {
                     this._bufferedGameObjects[index] = null;
                 }
             };
             GUISystem.prototype.onUpdate = function (dt) {
+                if (paper.Application.playerMode !== 1 /* DebugPlayer */) {
+                    return;
+                }
                 var i = 0;
                 while (this._bufferedGameObjects.length > 0 && i++ < 5) {
                     this._addToHierarchy(this._bufferedGameObjects.shift());

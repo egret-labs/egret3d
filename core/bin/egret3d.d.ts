@@ -456,14 +456,6 @@ declare namespace egret3d {
          */
         static getDistance(a: Readonly<IVector3>, b: Readonly<IVector3>): number;
     }
-    const helpVector3A: Vector3;
-    const helpVector3B: Vector3;
-    const helpVector3C: Vector3;
-    const helpVector3D: Vector3;
-    const helpVector3E: Vector3;
-    const helpVector3F: Vector3;
-    const helpVector3G: Vector3;
-    const helpVector3H: Vector3;
 }
 declare namespace paper {
     /**
@@ -639,10 +631,6 @@ declare namespace egret3d {
          */
         static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix4): Matrix4;
     }
-    const helpMatrixA: Matrix4;
-    const helpMatrixB: Matrix4;
-    const helpMatrixC: Matrix4;
-    const helpMatrixD: Matrix4;
 }
 declare namespace paper {
     /**

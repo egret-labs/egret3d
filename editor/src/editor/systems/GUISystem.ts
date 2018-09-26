@@ -402,10 +402,18 @@ namespace paper.debug {
         }
 
         public onAddGameObject(gameObject: GameObject, _group: GameObjectGroup) {
+            if (Application.playerMode !== PlayerMode.DebugPlayer) { 
+                return;
+            }
+
             this._bufferedGameObjects.push(gameObject);
         }
 
         public onRemoveGameObject(gameObject: GameObject, _group: GameObjectGroup) {
+            if (Application.playerMode !== PlayerMode.DebugPlayer) { 
+                return;
+            }
+
             const index = this._bufferedGameObjects.indexOf(gameObject);
             if (index >= 0) {
                 this._bufferedGameObjects[index] = null;
@@ -413,6 +421,10 @@ namespace paper.debug {
         }
 
         public onUpdate(dt: number) {
+            if (Application.playerMode !== PlayerMode.DebugPlayer) { 
+                return;
+            }
+            
             let i = 0;
             while (this._bufferedGameObjects.length > 0 && i++ < 5) {
                 this._addToHierarchy(this._bufferedGameObjects.shift());
