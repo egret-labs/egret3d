@@ -94,7 +94,7 @@ namespace paper.debug {
                     this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_TYPE, e => this._onChangeEditType(e.data), this);
                     this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_PROPERTY, e => this._onChangeProperty(e.data), this);
                 }
-            }, 3000);
+            }, 3000);//TODO
         }
 
         private _select(value: Scene | GameObject | null, isReplace?: boolean) {
