@@ -197,10 +197,6 @@ namespace paper.debug {
 
         }
 
-        private _onGameObjectSelected = (_c: any, value: GameObject) => {
-            this._selectGameObject(value, true);
-        }
-
         private _onGameObjectHovered = (_c: any, value: GameObject) => {
             if (value) {
                 this._hoverBox.activeSelf = true;
@@ -216,17 +212,28 @@ namespace paper.debug {
             }
         }
 
+        private _onGameObjectSelectChanged = (_c: any, value: GameObject) => {
+            const transformController = this._transformController;
+            if (transformController) {
+                if (this._modelComponent.selectedGameObject) {
+                    transformController.gameObject.activeSelf = true;
+                }
+                else {
+                    transformController.gameObject.activeSelf = false;
+                }
+            }
+        }
+
+        private _onGameObjectSelected = (_c: any, value: GameObject) => {
+            this._selectGameObject(value, true);
+        }
+
         private _onGameObjectUnselected = (_c: any, value: GameObject) => {
             this._selectGameObject(value, false);
         }
 
         private _selectGameObject(value: paper.GameObject, selected: boolean) {
-            const transformController = this._transformController;
             if (selected) {
-                if (transformController) {
-                    transformController.gameObject.activeSelf = true;
-                }
-
                 { // Create box.
                     const box = EditorMeshHelper.createBox("Box", egret3d.Color.INDIGO, 0.8, value.scene);
                     box.activeSelf = false;
@@ -235,9 +242,6 @@ namespace paper.debug {
                 }
             }
             else {
-                if (transformController) {
-                    transformController.gameObject.activeSelf = false;
-                }
 
                 const box = this._boxes[value.uuid];
                 if (!box) {
@@ -260,7 +264,7 @@ namespace paper.debug {
                     box.activeSelf = true;
                     box.transform.localPosition = gameObject.renderer.aabb.center;
                     // box.transform.localScale = gameObject.renderer.aabb.size;
-                    const size = gameObject.renderer.aabb.size;; // TODO
+                    const size = gameObject.renderer.aabb.size; // TODO
                     box.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
                 }
                 else {
@@ -297,7 +301,7 @@ namespace paper.debug {
                     __editor.transform.rotation = egret3d.Camera.editor.transform.rotation;
                 }
                 else {
-                    __editor = EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, EditorDefaultTexture.CAMERA_ICON).transform;
+                    // __editor = EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, EditorDefaultTexture.CAMERA_ICON).transform;
                 }
                 // const pick = iconObject;
                 // const pick = __editor.transform.find("__pickTarget").gameObject;
@@ -322,7 +326,7 @@ namespace paper.debug {
 
                 vector.release();
                 matrix.release();
-            }
+            };
 
             const selectedCamera = this._modelComponent.selectedGameObject ? this._modelComponent.selectedGameObject.getComponent(egret3d.Camera) : null;
             if (selectedCamera) {
@@ -388,7 +392,7 @@ namespace paper.debug {
                     __editor.transform.rotation = egret3d.Camera.editor.transform.rotation;
                 }
                 else {
-                    __editor = EditorMeshHelper.createIcon("__pickTarget", light.gameObject, EditorDefaultTexture.LIGHT_ICON).transform;
+                    // __editor = EditorMeshHelper.createIcon("__pickTarget", light.gameObject, EditorDefaultTexture.LIGHT_ICON).transform;
                 }
                 // const pick = iconObject;
                 // const pick = __editor.transform.find("pick").gameObject;
@@ -400,15 +404,16 @@ namespace paper.debug {
 
         public onEnable() {
             EventPool.addEventListener(ModelComponentEvent.GameObjectHovered, ModelComponent, this._onGameObjectHovered);
+            EventPool.addEventListener(ModelComponentEvent.GameObjectSelectChanged, ModelComponent, this._onGameObjectSelectChanged);
             EventPool.addEventListener(ModelComponentEvent.GameObjectSelected, ModelComponent, this._onGameObjectSelected);
             EventPool.addEventListener(ModelComponentEvent.GameObjectUnselected, ModelComponent, this._onGameObjectUnselected);
 
-            {
+            { //
                 const canvas = egret3d.WebGLCapabilities.canvas!;
                 canvas.addEventListener("contextmenu", this._contextmenuHandler);
                 canvas.addEventListener("mousedown", this._onMouseDown);
                 canvas.addEventListener("mouseup", this._onMouseUp);
-                canvas.addEventListener("mouseout", this._onMouseUp);
+                canvas.addEventListener("mouseout", this._onMouseUp); // ??
                 canvas.addEventListener("mousemove", this._onMouseMove);
                 window.addEventListener("keyup", this._onKeyUp);
                 window.addEventListener("keydown", this._onKeyDown);
@@ -436,6 +441,7 @@ namespace paper.debug {
 
         public onDisable() {
             EventPool.removeEventListener(ModelComponentEvent.GameObjectHovered, ModelComponent, this._onGameObjectHovered);
+            EventPool.removeEventListener(ModelComponentEvent.GameObjectSelectChanged, ModelComponent, this._onGameObjectSelectChanged);
             EventPool.removeEventListener(ModelComponentEvent.GameObjectSelected, ModelComponent, this._onGameObjectSelected);
             EventPool.removeEventListener(ModelComponentEvent.GameObjectUnselected, ModelComponent, this._onGameObjectUnselected);
 
@@ -444,7 +450,7 @@ namespace paper.debug {
                 canvas.removeEventListener("contextmenu", this._contextmenuHandler);
                 canvas.removeEventListener("mousedown", this._onMouseDown);
                 canvas.removeEventListener("mouseup", this._onMouseUp);
-                canvas.removeEventListener("mouseout", this._onMouseUp);
+                canvas.removeEventListener("mouseout", this._onMouseUp); // ??
                 canvas.removeEventListener("mousemove", this._onMouseMove);
                 window.removeEventListener("keyup", this._onKeyUp);
                 window.removeEventListener("keydown", this._onKeyDown);

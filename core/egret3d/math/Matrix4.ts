@@ -6,7 +6,7 @@ namespace egret3d {
         0.0, 0.0, 0.0, 1.0
     ];
     /**
-     * 
+     * 4x4 矩阵。
      */
     export class Matrix4 extends paper.BaseRelease<Matrix4> implements paper.ICCS<Matrix4>, paper.ISerializable {
         public static readonly IDENTITY: Readonly<Matrix4> = new Matrix4();

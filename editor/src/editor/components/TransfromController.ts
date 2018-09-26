@@ -253,7 +253,7 @@ namespace paper.debug {
                 else {
                     const unit = this._dir[hoveredName];
                     const tempVector2 = egret3d.Vector3.create();
-                    rotationAxis.copy(unit)
+                    rotationAxis.copy(unit);
 
                     tempVector.copy(unit);
                     tempVector2.subtract(this._offsetStart, this._offsetEnd);

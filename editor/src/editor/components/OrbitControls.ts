@@ -65,12 +65,12 @@ namespace paper.debug {
             return this._enableMove;
         }
 
-        public onStart(): any {
+        public onStart() {
             this.bindTouch = egret3d.InputManager.touch;
             this.bindMouse = egret3d.InputManager.mouse;
             //
             this.bindMouse.disableContextMenu();
-        };
+        }
 
         public onEnable() {
             const canvas = egret3d.WebGLCapabilities.canvas;
@@ -96,12 +96,12 @@ namespace paper.debug {
             }
         }
 
-        public onUpdate(delta: number): any {
+        public onUpdate(delta: number) {
             if (!this._enableMove) {
                 return;
             }
             this.move();
-        };
+        }
 
         private _mouseDownHandler = (event: MouseEvent) => {
             if (event.button === 0b10) {
@@ -110,14 +110,15 @@ namespace paper.debug {
                 this._lastMouseY = event.y;
                 event.preventDefault();
             }
-        };
+        }
 
         private _mouseUpHandler = (event: MouseEvent) => {
             if (event.button === 0b10) {
                 this._mouseDown = false;
                 event.preventDefault();
             }
-        };
+        }
+
         private _mouseMoveHandler = (event: MouseEvent) => {
             if (!this._mouseDown || !this._enableMove) {
                 return;

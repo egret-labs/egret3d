@@ -549,7 +549,7 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     *
+     * 4x4 矩阵。
      */
     class Matrix4 extends paper.BaseRelease<Matrix4> implements paper.ICCS<Matrix4>, paper.ISerializable {
         static readonly IDENTITY: Readonly<Matrix4>;
@@ -2418,7 +2418,7 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     *
+     * 四元数。
      */
     class Quaternion extends Vector4 {
         static readonly IDENTITY: Readonly<Quaternion>;
@@ -3097,6 +3097,9 @@ declare namespace paper {
     }
 }
 declare namespace egret3d {
+    /**
+     *
+     */
     class Matrix3 extends paper.BaseRelease<Matrix3> implements paper.ICCS<Matrix3>, paper.ISerializable {
         private static readonly _instances;
         static create(): Matrix3;
@@ -3125,7 +3128,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     *
+     * 平面。
      */
     class Plane extends paper.BaseRelease<Plane> implements paper.ICCS<Plane>, paper.ISerializable, IRaycast {
         private static readonly _instances;
@@ -3753,8 +3756,6 @@ declare namespace egret3d {
          *
          */
         static MISSING: Texture;
-        static CAMERA_ICON: Texture;
-        static LIGHT_ICON: Texture;
         initialize(): void;
     }
 }
@@ -5595,16 +5596,7 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     * aabb box
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 轴对称包围盒
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * 轴对称包围盒。
      */
     class AABB extends paper.BaseRelease<AABB> implements paper.ICCS<AABB>, paper.ISerializable, IRaycast {
         private static readonly _instances;

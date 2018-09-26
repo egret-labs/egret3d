@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 
+     * 四元数。
      */
     export class Quaternion extends Vector4 {
         public static readonly IDENTITY: Readonly<Quaternion> = new Quaternion();
@@ -10,7 +10,9 @@ namespace egret3d {
          */
         public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
             if (this._instances.length > 0) {
-                return this._instances.pop()!.set(x, y, z, w);
+                const instance = this._instances.pop()!.set(x, y, z, w);
+                instance._released = false;
+                return instance;
             }
 
             return new Quaternion().set(x, y, z, w);

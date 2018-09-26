@@ -96,8 +96,12 @@ declare namespace dat {
         remove(): GUIController;
     }
 }declare namespace paper.debug {
-}
-declare namespace paper.debug {
+    /**
+     *
+     */
+    class EditorSystem extends BaseSystem {
+        onAwake(): void;
+    }
 }
 declare namespace paper.debug {
 }
@@ -118,6 +122,7 @@ declare namespace paper.debug {
         SceneSelected = "SceneSelected",
         SceneUnselected = "SceneUnselected",
         GameObjectHovered = "GameObjectHovered",
+        GameObjectSelectChanged = "GameObjectSelectChanged",
         GameObjectSelected = "GameObjectSelected",
         GameObjectUnselected = "GameObjectUnselected",
     }
@@ -149,10 +154,10 @@ declare namespace paper.debug {
         initialize(): void;
         private _select(value, isReplace?);
         private _unselect(value);
-        select(value: Scene | GameObject | null, isReplace?: boolean): void;
-        unselect(value: Scene | GameObject): void;
-        changeProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void;
         hover(value: GameObject | null): void;
+        select(value: Scene | GameObject | null, isReplace?: boolean): void;
+        unselect(value: GameObject): void;
+        changeProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void;
     }
 }
 declare namespace paper.debug {
@@ -160,12 +165,6 @@ declare namespace paper.debug {
 declare namespace paper.debug {
 }
 declare namespace paper.debug {
-    /**
-     *
-     */
-    class EditorSystem extends BaseSystem {
-        onAwake(): void;
-    }
 }
 declare namespace paper.debug {
     class GUISystem extends BaseSystem {
@@ -179,10 +178,9 @@ declare namespace paper.debug {
         private readonly _hierarchyFolders;
         private readonly _inspectorFolders;
         private _selectFolder;
-        private _sceneSelectedHandler;
-        private _sceneUnselectedHandler;
-        private _gameObjectSelectedHandler;
-        private _gameObjectUnselectedHandler;
+        private _onSceneSelected;
+        private _onSceneUnselected;
+        private _onGameObjectSelectedChange;
         private _createGameObject;
         private _destroySceneOrGameObject;
         private _nodeClickHandler;
@@ -221,8 +219,9 @@ declare namespace paper.debug {
         private _onMouseMove;
         private _onKeyUp;
         private _onKeyDown;
-        private _onGameObjectSelected;
         private _onGameObjectHovered;
+        private _onGameObjectSelectChanged;
+        private _onGameObjectSelected;
         private _onGameObjectUnselected;
         private _selectGameObject(value, selected);
         private _updateBoxes();

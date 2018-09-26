@@ -1,4 +1,7 @@
 namespace egret3d {
+    /**
+     * 
+     */
     export class Matrix3 extends paper.BaseRelease<Matrix3> implements paper.ICCS<Matrix3>, paper.ISerializable {
         private static readonly _instances: Matrix3[] = [];
 

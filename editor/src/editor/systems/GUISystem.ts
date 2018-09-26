@@ -12,21 +12,17 @@ namespace paper.debug {
         private readonly _inspectorFolders: { [key: string]: dat.GUI } = {};
         private _selectFolder: dat.GUI | null = null;
 
-        private _sceneSelectedHandler = (_c: any, value: Scene) => {
+        private _onSceneSelected = (_c: any, value: Scene) => {
             this._selectSceneOrGameObject(value);
         }
 
-        private _sceneUnselectedHandler = (_c: any, value: Scene) => {
+        private _onSceneUnselected = (_c: any, value: Scene) => {
             this._selectSceneOrGameObject(null);
         }
 
-        private _gameObjectSelectedHandler = (_c: any, value: GameObject) => {
+        private _onGameObjectSelectedChange = (_c: any, value: GameObject) => {
             this._selectSceneOrGameObject(null);
-            this._selectSceneOrGameObject(value);
-        }
-
-        private _gameObjectUnselectedHandler = (_c: any, value: GameObject) => {
-            this._selectSceneOrGameObject(null);
+            this._selectSceneOrGameObject(this._modelComponent.selectedGameObject);
         }
 
         private _createGameObject = () => {
@@ -309,24 +305,22 @@ namespace paper.debug {
 
         private _debug(value: boolean) {
             if (value) {
-                EventPool.addEventListener(ModelComponentEvent.SceneSelected, ModelComponent, this._sceneSelectedHandler);
-                EventPool.addEventListener(ModelComponentEvent.SceneUnselected, ModelComponent, this._sceneUnselectedHandler);
-                EventPool.addEventListener(ModelComponentEvent.GameObjectSelected, ModelComponent, this._gameObjectSelectedHandler);
-                EventPool.addEventListener(ModelComponentEvent.GameObjectUnselected, ModelComponent, this._gameObjectUnselectedHandler);
+                EventPool.addEventListener(ModelComponentEvent.SceneSelected, ModelComponent, this._onSceneSelected);
+                EventPool.addEventListener(ModelComponentEvent.SceneUnselected, ModelComponent, this._onSceneUnselected);
+                EventPool.addEventListener(ModelComponentEvent.GameObjectSelectChanged, ModelComponent, this._onGameObjectSelectedChange);
 
                 this._bufferedGameObjects.push(paper.GameObject.globalGameObject);
 
                 for (const gameObject of this._groups[0].gameObjects) {
                     this._bufferedGameObjects.push(gameObject);
                 }
-                
+
                 this._modelComponent.select(paper.Scene.activeScene);
             }
             else {
-                EventPool.removeEventListener(ModelComponentEvent.SceneSelected, ModelComponent, this._sceneSelectedHandler);
-                EventPool.removeEventListener(ModelComponentEvent.SceneUnselected, ModelComponent, this._sceneUnselectedHandler);
-                EventPool.removeEventListener(ModelComponentEvent.GameObjectSelected, ModelComponent, this._gameObjectSelectedHandler);
-                EventPool.removeEventListener(ModelComponentEvent.GameObjectUnselected, ModelComponent, this._gameObjectUnselectedHandler);
+                EventPool.removeEventListener(ModelComponentEvent.SceneSelected, ModelComponent, this._onSceneSelected);
+                EventPool.removeEventListener(ModelComponentEvent.SceneUnselected, ModelComponent, this._onSceneUnselected);
+                EventPool.removeEventListener(ModelComponentEvent.GameObjectSelectChanged, ModelComponent, this._onGameObjectSelectedChange);
 
                 for (const k in this._hierarchyFolders) {
                     const folder = this._hierarchyFolders[k];
@@ -402,7 +396,7 @@ namespace paper.debug {
         }
 
         public onAddGameObject(gameObject: GameObject, _group: GameObjectGroup) {
-            if (Application.playerMode !== PlayerMode.DebugPlayer) { 
+            if (Application.playerMode !== PlayerMode.DebugPlayer) {
                 return;
             }
 
@@ -410,7 +404,7 @@ namespace paper.debug {
         }
 
         public onRemoveGameObject(gameObject: GameObject, _group: GameObjectGroup) {
-            if (Application.playerMode !== PlayerMode.DebugPlayer) { 
+            if (Application.playerMode !== PlayerMode.DebugPlayer) {
                 return;
             }
 
@@ -421,10 +415,10 @@ namespace paper.debug {
         }
 
         public onUpdate(dt: number) {
-            if (Application.playerMode !== PlayerMode.DebugPlayer) { 
+            if (Application.playerMode !== PlayerMode.DebugPlayer) {
                 return;
             }
-            
+
             let i = 0;
             while (this._bufferedGameObjects.length > 0 && i++ < 5) {
                 this._addToHierarchy(this._bufferedGameObjects.shift());

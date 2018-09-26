@@ -10,16 +10,7 @@ namespace egret3d {
         Vector3.create(),
     ];
     /**
-     * aabb box
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 轴对称包围盒
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * 轴对称包围盒。
      */
     export class AABB extends paper.BaseRelease<AABB> implements paper.ICCS<AABB>, paper.ISerializable, IRaycast {
         private static readonly _instances: AABB[] = [];

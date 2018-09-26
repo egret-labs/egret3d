@@ -5,7 +5,9 @@ namespace paper.debug {
     export const enum ModelComponentEvent {
         SceneSelected = "SceneSelected",
         SceneUnselected = "SceneUnselected",
+
         GameObjectHovered = "GameObjectHovered",
+        GameObjectSelectChanged = "GameObjectSelectChanged",
         GameObjectSelected = "GameObjectSelected",
         GameObjectUnselected = "GameObjectUnselected",
     }
@@ -86,15 +88,16 @@ namespace paper.debug {
         }
 
         public initialize() {
-            setTimeout(() => {
-                if (Application.playerMode === PlayerMode.Editor) {
+            if (Application.playerMode === PlayerMode.Editor) {
+                setTimeout(() => {
                     this.editorModel = paper.editor.Editor.activeEditorModel;
                     this.editorModel.addEventListener(paper.editor.EditorModelEvent.SELECT_GAMEOBJECTS, e => this._onEditorSelectGameObjects(e.data), this);
                     this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_MODE, e => this._onChangeEditMode(e.data), this);
                     this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_TYPE, e => this._onChangeEditType(e.data), this);
                     this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_PROPERTY, e => this._onChangeProperty(e.data), this);
-                }
-            }, 3000);//TODO
+
+                }, 3000);//TODO
+            }
         }
 
         private _select(value: Scene | GameObject | null, isReplace?: boolean) {
@@ -104,10 +107,7 @@ namespace paper.debug {
                         return;
                     }
                 }
-                else if (
-                    this.selectedGameObject === value ||
-                    this.selectedGameObjects.indexOf(value) >= 0
-                ) {
+                else if (this.selectedGameObjects.indexOf(value) >= 0) {
                     return;
                 }
             }
@@ -124,8 +124,11 @@ namespace paper.debug {
                 }
                 else if (this.selectedGameObjects.length > 0) {
                     const gameObjects = this.selectedGameObjects.concat();
+                    const selectedGameObject = this.selectedGameObject!;
                     this.selectedGameObjects.length = 0;
                     this.selectedGameObject = null;
+
+                    EventPool.dispatchEvent(ModelComponentEvent.GameObjectSelectChanged, this, selectedGameObject);
 
                     for (const gameObject of gameObjects) {
                         EventPool.dispatchEvent(ModelComponentEvent.GameObjectUnselected, this, gameObject);
@@ -141,6 +144,7 @@ namespace paper.debug {
                 else {
                     this.selectedGameObjects.push(value);
                     this.selectedGameObject = value;
+                    EventPool.dispatchEvent(ModelComponentEvent.GameObjectSelectChanged, this, this.selectedGameObject);
                     EventPool.dispatchEvent(ModelComponentEvent.GameObjectSelected, this, value);
                 }
             }
@@ -148,24 +152,34 @@ namespace paper.debug {
             (global || window)["psgo"] = value; // For quick debug.
         }
 
-        private _unselect(value: Scene | GameObject) {
-            if (value instanceof Scene) {
-                if (this.selectedScene === value) {
-                    this.selectedScene = null;
-                    EventPool.dispatchEvent(ModelComponentEvent.SceneUnselected, this, value);
-                }
+        private _unselect(value: GameObject) {
+            const index = this.selectedGameObjects.indexOf(value);
+            if (index < 0) {
+                throw new Error();
             }
-            else {
-                const index = this.selectedGameObjects.indexOf(value);
-                if (index >= 0) {
-                    if (this.selectedGameObject === value) {
-                        this.selectedGameObject = null;
-                    }
 
-                    this.selectedGameObjects.splice(index, 1);
-                    EventPool.dispatchEvent(ModelComponentEvent.GameObjectUnselected, this, value);
+            if (this.selectedGameObject === value) {
+                if (this.selectedGameObjects.length > 1) {
+                    this.selectedGameObject = this.selectedGameObjects[index - 1];
                 }
+                else {
+                    this.selectedGameObject = null;
+                }
+
+                EventPool.dispatchEvent(ModelComponentEvent.GameObjectSelectChanged, this, value);
             }
+
+            this.selectedGameObjects.splice(index, 1);
+            EventPool.dispatchEvent(ModelComponentEvent.GameObjectUnselected, this, value);
+        }
+
+        public hover(value: GameObject | null) {
+            if (this.hoveredGameObject === value) {
+                return;
+            }
+
+            this.hoveredGameObject = value;
+            EventPool.dispatchEvent(ModelComponentEvent.GameObjectHovered, this, this.hoveredGameObject);
         }
 
         public select(value: Scene | GameObject | null, isReplace?: boolean) {
@@ -176,8 +190,9 @@ namespace paper.debug {
             }
         }
 
-        public unselect(value: Scene | GameObject) {
+        public unselect(value: GameObject) {
             this._unselect(value);
+
             if (this.editorModel !== null) {
                 this.editorModel.selectGameObject(this.selectedGameObjects);
             }
@@ -187,15 +202,6 @@ namespace paper.debug {
             if (this.editorModel) {
                 this.editorModel.setTransformProperty(propName, propOldValue, propNewValue, target);
             }
-        }
-
-        public hover(value: GameObject | null) {
-            if (this.hoveredGameObject === value) {
-                return;
-            }
-
-            this.hoveredGameObject = value;
-            EventPool.dispatchEvent(ModelComponentEvent.GameObjectHovered, this, this.hoveredGameObject);
         }
     }
 }
