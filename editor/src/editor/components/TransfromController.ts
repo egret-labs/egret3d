@@ -265,13 +265,17 @@ namespace paper.debug {
                     tempVector2.release();
                 }
 
-                if (isWorldSpace) {
-                    tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(currentSelectedPRS[4]).normalize();
-                    currentSelected.transform.rotation = tempQuaternion;
-                }
-                else {
-                    tempQuaternion.fromAxis(rotationAxis, rotationAngle).premultiply(currentSelectedPRS[1]).normalize();
-                    currentSelected.transform.localRotation = tempQuaternion;
+                for (const gameObject of modelComponent.selectedGameObjects) {
+
+                    const selectedPRS = this._prsStarts[gameObject.uuid];
+                    if (isWorldSpace) {
+                        tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(selectedPRS[4]).normalize();
+                        gameObject.transform.rotation = tempQuaternion;
+                    }
+                    else {
+                        tempQuaternion.fromAxis(rotationAxis, rotationAngle).premultiply(selectedPRS[1]).normalize();
+                        gameObject.transform.localRotation = tempQuaternion;
+                    }
                 }
 
                 tempVector.release();
@@ -504,6 +508,8 @@ namespace paper.debug {
         }
 
         public end() {
+            //
+            
             for (const k in this._prsStarts) {
                 for (const v of this._prsStarts[k]) {
                     v.release();

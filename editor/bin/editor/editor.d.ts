@@ -54,8 +54,11 @@ declare namespace paper.debug {
         private _onChangeEditType(type);
         private _onChangeProperty(data);
         initialize(): void;
+        private _select(value, isReplace?);
+        private _unselect(value);
         select(value: Scene | GameObject | null, isReplace?: boolean): void;
         unselect(value: Scene | GameObject): void;
+        changeProperty(propName: string, propValue: any, target: BaseComponent): void;
         hover(value: GameObject | null): void;
     }
 }

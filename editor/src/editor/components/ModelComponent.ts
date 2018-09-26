@@ -34,14 +34,14 @@ namespace paper.debug {
         private editorModel: paper.editor.EditorModel | null = null;
 
         private _onEditorSelectGameObjects(gameObjs: GameObject[]) {
-            for (const gameObj of gameObjs) {
-                this.select(gameObj);
-            }
-
             for (const gameObj of this.selectedGameObjects) {
                 if (gameObjs.indexOf(gameObj) < 0) {
-                    this.unselect(gameObj);
+                    this._unselect(gameObj);
                 }
+            }
+
+            for (const gameObj of gameObjs) {
+                this._select(gameObj);
             }
         }
 
@@ -53,8 +53,30 @@ namespace paper.debug {
 
         }
 
-        private _onChangeProperty(data: any) {
-
+        private _onChangeProperty(data: { propName: string, propValue: any, target: any }) {
+            if ((data.target instanceof egret3d.Transform) && data.propName && this.selectedGameObjects.length > 0) {
+                let propName = <string>data.propName;
+                switch (propName) {
+                    case "position":
+                        this.selectedGameObject.transform.position = data.propValue;
+                        break;
+                    case "rotation":
+                        this.selectedGameObject.transform.rotation = data.propValue;
+                        break;
+                    case "localPosition":
+                        this.selectedGameObject.transform.localPosition = data.propValue;
+                        break;
+                    case "localRotation":
+                        this.selectedGameObject.transform.localRotation = data.propValue;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            if (data.target instanceof GameObject) {
+                let propName = <string>data.propName;
+                console.log(propName);
+            }
         }
 
         public initialize() {
@@ -69,7 +91,7 @@ namespace paper.debug {
             }, 3000);
         }
 
-        public select(value: Scene | GameObject | null, isReplace?: boolean) {
+        private _select(value: Scene | GameObject | null, isReplace?: boolean) {
             if (value) {
                 if (value instanceof Scene) {
                     if (this.selectedScene === value) {
@@ -120,7 +142,7 @@ namespace paper.debug {
             (global || window)["psgo"] = value; // For quick debug.
         }
 
-        public unselect(value: Scene | GameObject) {
+        private _unselect(value: Scene | GameObject) {
             if (value instanceof Scene) {
                 if (this.selectedScene === value) {
                     this.selectedScene = null;
@@ -137,6 +159,27 @@ namespace paper.debug {
                     this.selectedGameObjects.splice(index, 1);
                     EventPool.dispatchEvent(ModelComponentEvent.GameObjectUnselected, this, value);
                 }
+            }
+        }
+
+        public select(value: Scene | GameObject | null, isReplace?: boolean) {
+            this._select(value, isReplace);
+
+            if (this.editorModel !== null) {
+                this.editorModel.selectGameObject(this.selectedGameObjects);
+            }
+        }
+
+        public unselect(value: Scene | GameObject) {
+            this._unselect(value);
+            if (this.editorModel !== null) {
+                this.editorModel.selectGameObject(this.selectedGameObjects);
+            }
+        }
+
+        public changeProperty(propName: string, propValue: any, target: BaseComponent) {
+            if (this.editorModel) {
+                this.editorModel.setTransformProperty(propName, propValue, target);
             }
         }
 

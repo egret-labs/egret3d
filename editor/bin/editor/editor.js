@@ -165,15 +165,15 @@ var paper;
                 return _this;
             }
             ModelComponent.prototype._onEditorSelectGameObjects = function (gameObjs) {
-                for (var _i = 0, gameObjs_1 = gameObjs; _i < gameObjs_1.length; _i++) {
-                    var gameObj = gameObjs_1[_i];
-                    this.select(gameObj);
-                }
-                for (var _a = 0, _b = this.selectedGameObjects; _a < _b.length; _a++) {
-                    var gameObj = _b[_a];
+                for (var _i = 0, _a = this.selectedGameObjects; _i < _a.length; _i++) {
+                    var gameObj = _a[_i];
                     if (gameObjs.indexOf(gameObj) < 0) {
-                        this.unselect(gameObj);
+                        this._unselect(gameObj);
                     }
+                }
+                for (var _b = 0, gameObjs_1 = gameObjs; _b < gameObjs_1.length; _b++) {
+                    var gameObj = gameObjs_1[_b];
+                    this._select(gameObj);
                 }
             };
             ModelComponent.prototype._onChangeEditMode = function (mode) {
@@ -181,6 +181,29 @@ var paper;
             ModelComponent.prototype._onChangeEditType = function (type) {
             };
             ModelComponent.prototype._onChangeProperty = function (data) {
+                if ((data.target instanceof egret3d.Transform) && data.propName && this.selectedGameObjects.length > 0) {
+                    var propName = data.propName;
+                    switch (propName) {
+                        case "position":
+                            this.selectedGameObject.transform.position = data.propValue;
+                            break;
+                        case "rotation":
+                            this.selectedGameObject.transform.rotation = data.propValue;
+                            break;
+                        case "localPosition":
+                            this.selectedGameObject.transform.localPosition = data.propValue;
+                            break;
+                        case "localRotation":
+                            this.selectedGameObject.transform.localRotation = data.propValue;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                if (data.target instanceof paper.GameObject) {
+                    var propName = data.propName;
+                    console.log(propName);
+                }
             };
             ModelComponent.prototype.initialize = function () {
                 var _this = this;
@@ -194,7 +217,7 @@ var paper;
                     }
                 }, 3000);
             };
-            ModelComponent.prototype.select = function (value, isReplace) {
+            ModelComponent.prototype._select = function (value, isReplace) {
                 if (value) {
                     if (value instanceof paper.Scene) {
                         if (this.selectedScene === value) {
@@ -238,7 +261,7 @@ var paper;
                 }
                 (global || window)["psgo"] = value; // For quick debug.
             };
-            ModelComponent.prototype.unselect = function (value) {
+            ModelComponent.prototype._unselect = function (value) {
                 if (value instanceof paper.Scene) {
                     if (this.selectedScene === value) {
                         this.selectedScene = null;
@@ -254,6 +277,23 @@ var paper;
                         this.selectedGameObjects.splice(index, 1);
                         paper.EventPool.dispatchEvent("GameObjectUnselected" /* GameObjectUnselected */, this, value);
                     }
+                }
+            };
+            ModelComponent.prototype.select = function (value, isReplace) {
+                this._select(value, isReplace);
+                if (this.editorModel !== null) {
+                    this.editorModel.selectGameObject(this.selectedGameObjects);
+                }
+            };
+            ModelComponent.prototype.unselect = function (value) {
+                this._unselect(value);
+                if (this.editorModel !== null) {
+                    this.editorModel.selectGameObject(this.selectedGameObjects);
+                }
+            };
+            ModelComponent.prototype.changeProperty = function (propName, propValue, target) {
+                if (this.editorModel) {
+                    this.editorModel.setTransformProperty(propName, propValue, target);
                 }
             };
             ModelComponent.prototype.hover = function (value) {
@@ -713,13 +753,17 @@ var paper;
                         rotationAngle = tempVector2.dot(tempVector.cross(this.eye).normalize()) * ROTATION_SPEED;
                         tempVector2.release();
                     }
-                    if (isWorldSpace) {
-                        tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(currentSelectedPRS[4]).normalize();
-                        currentSelected.transform.rotation = tempQuaternion;
-                    }
-                    else {
-                        tempQuaternion.fromAxis(rotationAxis, rotationAngle).premultiply(currentSelectedPRS[1]).normalize();
-                        currentSelected.transform.localRotation = tempQuaternion;
+                    for (var _b = 0, _c = modelComponent.selectedGameObjects; _b < _c.length; _b++) {
+                        var gameObject = _c[_b];
+                        var selectedPRS = this._prsStarts[gameObject.uuid];
+                        if (isWorldSpace) {
+                            tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(selectedPRS[4]).normalize();
+                            gameObject.transform.rotation = tempQuaternion;
+                        }
+                        else {
+                            tempQuaternion.fromAxis(rotationAxis, rotationAngle).premultiply(selectedPRS[1]).normalize();
+                            gameObject.transform.localRotation = tempQuaternion;
+                        }
                     }
                     tempVector.release();
                     rotationAxis.release();
@@ -748,8 +792,8 @@ var paper;
                     }
                     // TODO this._offsetEnd scale aabb size
                     var scale = egret3d.Vector3.create();
-                    for (var _b = 0, _c = modelComponent.selectedGameObjects; _b < _c.length; _b++) {
-                        var gameObject = _c[_b];
+                    for (var _d = 0, _e = modelComponent.selectedGameObjects; _d < _e.length; _d++) {
+                        var gameObject = _e[_d];
                         if (modelComponent.selectedGameObjects.indexOf(gameObject.parent) >= 0) {
                             continue;
                         }
@@ -908,6 +952,7 @@ var paper;
                 }
             };
             TransfromController.prototype.end = function () {
+                //
                 for (var k in this._prsStarts) {
                     for (var _i = 0, _a = this._prsStarts[k]; _i < _a.length; _i++) {
                         var v = _a[_i];
@@ -1531,7 +1576,7 @@ var paper;
                                 var selectedGameObject = _this._modelComponent.selectedGameObject;
                                 if (_this._modelComponent.selectedGameObjects.indexOf(hoveredGameObject) >= 0) {
                                     if (event.ctrlKey) {
-                                        _this._modelComponent.unselect(hoveredGameObject);
+                                        _this._modelComponent._unselect(hoveredGameObject);
                                     }
                                 }
                                 else {
