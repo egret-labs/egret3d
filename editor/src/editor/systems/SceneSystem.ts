@@ -54,9 +54,9 @@ namespace paper.debug {
                     const hoveredGameObject = this._modelComponent.hoveredGameObject;
                     if (hoveredGameObject) {
                         const selectedGameObject = this._modelComponent.selectedGameObject;
-                        if (hoveredGameObject === selectedGameObject) {
+                        if (this._modelComponent.selectedGameObjects.indexOf(hoveredGameObject) >= 0) {
                             if (event.ctrlKey) {
-                                this._modelComponent.unselect(selectedGameObject);
+                                this._modelComponent.unselect(hoveredGameObject);
                             }
                         }
                         else {
@@ -228,7 +228,7 @@ namespace paper.debug {
                 }
 
                 { // Create box.
-                    const box = EditorMeshHelper.createBox("Box", egret3d.Color.WHITE, 0.8, value.scene);
+                    const box = EditorMeshHelper.createBox("Box", egret3d.Color.INDIGO, 0.8, value.scene);
                     box.activeSelf = false;
                     box.parent = value;
                     this._boxes[value.uuid] = box;
@@ -259,7 +259,9 @@ namespace paper.debug {
                 if (gameObject.renderer) {
                     box.activeSelf = true;
                     box.transform.localPosition = gameObject.renderer.aabb.center;
-                    box.transform.localScale = gameObject.renderer.aabb.size;
+                    // box.transform.localScale = gameObject.renderer.aabb.size;
+                    const size = gameObject.renderer.aabb.size;; // TODO
+                    box.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
                 }
                 else {
                     box.activeSelf = false;
@@ -270,7 +272,9 @@ namespace paper.debug {
                 const parentRenderer = this._hoverBox.parent.renderer;
                 if (parentRenderer) {
                     this._hoverBox.transform.localPosition = parentRenderer.aabb.center;
-                    this._hoverBox.transform.localScale = parentRenderer.aabb.size;
+                    // this._hoverBox.transform.localScale = parentRenderer.aabb.size;
+                    const size = parentRenderer.aabb.size; // TODO
+                    this._hoverBox.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
                 }
                 else {
                     this._hoverBox.activeSelf = false;

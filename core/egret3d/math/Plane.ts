@@ -2,7 +2,7 @@ namespace egret3d {
     /**
      * 
      */
-    export class Plane implements paper.IRelease<Plane>, paper.ISerializable, IRaycast {
+    export class Plane extends paper.BaseRelease<Plane> implements paper.ICCS<Plane>, paper.ISerializable, IRaycast {
 
         private static readonly _instances: Plane[] = [];
         /**
@@ -10,18 +10,12 @@ namespace egret3d {
          */
         public static create(normal: Readonly<IVector3> = Vector3.ZERO, constant: number = 0.0) {
             if (this._instances.length > 0) {
-                return this._instances.pop()!.set(normal, constant);
+                const instance = this._instances.pop()!.set(normal, constant);
+                instance._released = false;
+                return instance;
             }
 
             return new Plane().set(normal, constant);
-        }
-
-        public release() {
-            if (Plane._instances.indexOf(this) < 0) {
-                Plane._instances.push(this);
-            }
-
-            return this;
         }
         /**
          * 
@@ -35,7 +29,9 @@ namespace egret3d {
          * 请使用 `egret3d.Plane.create()` 创建实例。
          * @see egret3d.Plane.create()
          */
-        private constructor() { }
+        private constructor() {
+            super();
+        }
 
         public serialize() {
             return [this.normal.x, this.normal.y, this.normal.z, this.constant];

@@ -334,8 +334,8 @@ namespace egret3d {
          * 由屏幕坐标发射射线
          */
         public createRayByScreen(screenPosX: number, screenPosY: number, ray?: Ray): Ray {
-            const from = egret3d.Vector3.create(screenPosX, screenPosY, 0.0);
-            const to = egret3d.Vector3.create(screenPosX, screenPosY, 1.0);
+            const from = egret3d.Vector3.create(screenPosX, screenPosY, 0.0).release();
+            const to = egret3d.Vector3.create(screenPosX, screenPosY, 1.0).release();
 
             this.calcWorldPosFromScreenPos(from, from);
             this.calcWorldPosFromScreenPos(to, to);
@@ -343,9 +343,6 @@ namespace egret3d {
 
             ray = ray || Ray.create();
             ray.set(from, to);
-
-            from.release();
-            to.release();
 
             return ray;
         }

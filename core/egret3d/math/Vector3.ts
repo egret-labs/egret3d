@@ -17,7 +17,7 @@ namespace egret3d {
     /**
      * 
      */
-    export class Vector3 implements IVector3, paper.IRelease<Vector3>, paper.ISerializable {
+    export class Vector3 extends paper.BaseRelease<AABB> implements IVector3, paper.ICCS<Vector3>, paper.ISerializable {
         public static readonly ZERO: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, 0.0);
         public static readonly ONE: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(1.0, 1.0, 1.0);
         public static readonly UP: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 1.0, 0.0);
@@ -31,18 +31,12 @@ namespace egret3d {
 
         public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0) {
             if (this._instances.length > 0) {
-                return this._instances.pop()!.set(x, y, z);
+                const instance = this._instances.pop()!.set(x, y, z);
+                instance._released = false;
+                return instance;
             }
 
             return new Vector3().set(x, y, z);
-        }
-
-        public release() {
-            if (Vector3._instances.indexOf(this) < 0) {
-                Vector3._instances.push(this);
-            }
-
-            return this;
         }
 
         public x: number;
@@ -57,6 +51,8 @@ namespace egret3d {
          * @private
          */
         public constructor(x: number = 0.0, y: number = 0.0, z: number = 0.0) {
+            super();
+
             this.x = x;
             this.y = y;
             this.z = z;
@@ -642,20 +638,36 @@ namespace egret3d {
     }
 
     const helpVector = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3A = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3B = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3C = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3D = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3E = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3F = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3G = Vector3.create();
-
+    /**
+     * @internal
+     */
     export const helpVector3H = Vector3.create();
 }

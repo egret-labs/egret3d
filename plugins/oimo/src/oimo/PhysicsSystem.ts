@@ -1,5 +1,6 @@
 namespace egret3d.oimo {
     const _helpVector3 = Vector3.create();
+    const _helpVector4 = Vector4.create();
     /**
      * 
      */
@@ -128,7 +129,7 @@ namespace egret3d.oimo {
             let fixedTime = this._clock.fixedTime;
             const totalTimes = Math.min(Math.floor(fixedTime / this._clock.fixedDeltaTime), this._clock.maxFixedSubSteps);
             const oimoTransform = PhysicsSystem._helpTransform;
-            const components = this._groups[0].components as ReadonlyArray<Rigidbody>;
+            const gameObjects = this._groups[0].gameObjects;
             const behaviourComponents = this._groups[1].components as ReadonlyArray<paper.Behaviour>;
 
             while (fixedTime >= this._clock.fixedDeltaTime && currentTimes++ < this._clock.maxFixedSubSteps) {
@@ -138,11 +139,12 @@ namespace egret3d.oimo {
                     }
                 }
 
-                for (const component of components) {
-                    const transform = component.gameObject.transform;
-                    const oimoRigidbody = component.oimoRigidbody;
+                for (const gameObject of gameObjects) {
+                    const transform = gameObject.transform;
+                    const rigidbody = gameObject.getComponent(Rigidbody)!;
+                    const oimoRigidbody = rigidbody.oimoRigidbody;
 
-                    switch (component.type) {
+                    switch (rigidbody.type) {
                         case RigidbodyType.KINEMATIC:
                         case RigidbodyType.STATIC:
                             if (oimoRigidbody.isSleeping()) {
@@ -160,20 +162,21 @@ namespace egret3d.oimo {
 
                 this._oimoWorld.step(this._clock.fixedDeltaTime);
 
-                for (const component of components) {
-                    const transform = component.gameObject.transform;
-                    const oimoRigidbody = component.oimoRigidbody;
+                for (const gameObject of gameObjects) {
+                    const transform = gameObject.transform;
+                    const rigidbody = gameObject.getComponent(Rigidbody)!;
+                    const oimoRigidbody = rigidbody.oimoRigidbody;
 
-                    switch (component.type) {
+                    switch (rigidbody.type) {
                         case RigidbodyType.DYNAMIC:
                             if (oimoRigidbody.isSleeping()) {
                             }
                             else {
                                 oimoRigidbody.getTransformTo(oimoTransform);
-                                oimoTransform.getPositionTo(helpVector3A as any);
-                                oimoTransform.getOrientationTo(helpVector4A as any);
-                                transform.setPosition(helpVector3A);
-                                transform.setRotation(helpVector4A);
+                                oimoTransform.getPositionTo(_helpVector3 as any);
+                                oimoTransform.getOrientationTo(_helpVector4 as any);
+                                transform.setPosition(_helpVector3);
+                                transform.setRotation(_helpVector4);
                             }
                             break;
                     }

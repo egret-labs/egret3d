@@ -1,12 +1,29 @@
 namespace egret3d {
+    /**
+     * 颜色接口。
+     */
     export interface IColor {
+        /**
+         * 红色通道。（0.0 ~ 1.0）
+         */
         r: number;
+        /**
+         * 绿色通道。（0.0 ~ 1.0）
+         */
         g: number;
+        /**
+         * 蓝色通道。（0.0 ~ 1.0）
+         */
         b: number;
+        /**
+         * 透明通道。（0.0 ~ 1.0）
+         */
         a: number;
     }
-
-    export class Color implements IColor, paper.IRelease<Color>, paper.ISerializable {
+    /**
+     * 颜色。
+     */
+    export class Color extends paper.BaseRelease<Color> implements IColor, paper.ICCS<Color>, paper.ISerializable {
         public static readonly BLACK: Readonly<Color> = new Color().set(0.0, 0.0, 0.0, 1.0);
         public static readonly GRAY: Readonly<Color> = new Color().set(0.5, 0.5, 0.5, 1.0);
         public static readonly WHITE: Readonly<Color> = new Color().set(1.0, 1.0, 1.0, 1.0);
@@ -18,35 +35,34 @@ namespace egret3d {
         public static readonly PURPLE: Readonly<Color> = new Color().set(1.0, 0.0, 1.0, 1.0);
 
         private static readonly _instances: Color[] = [];
-
+        /**
+         * 
+         * @param r 
+         * @param g 
+         * @param b 
+         * @param a 
+         */
         public static create(r: number = 1.0, g: number = 1.0, b: number = 1.0, a: number = 1.0) {
             if (this._instances.length > 0) {
-                return this._instances.pop()!.set(r, g, b, a);
+                const instance = this._instances.pop()!.set(r, g, b, a);
+                instance._released = false;
+                return instance;
             }
 
             return new Color().set(r, g, b, a);
         }
 
-        public release() {
-            if (Color._instances.indexOf(this) < 0) {
-                Color._instances.push(this);
-            }
-
-            return this;
-        }
-
-        public r: number;
-
-        public g: number;
-
-        public b: number;
-
-        public a: number;
+        public r: number = 1.0;
+        public g: number = 1.0;
+        public b: number = 1.0;
+        public a: number = 1.0;
         /**
          * 请使用 `egret3d.Color.create()` 创建实例。
          * @see egret3d.Color.create()
          */
-        private constructor() { }
+        private constructor() {
+            super();
+        }
 
         public serialize() {
             return [this.r, this.g, this.b, this.a];

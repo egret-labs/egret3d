@@ -11,27 +11,24 @@ namespace egret3d {
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
     /**
-     * 射线
+     * 射线。
      */
-    export class Ray implements paper.IRelease<Ray>, paper.ISerializable {
+    export class Ray extends paper.BaseRelease<Ray> implements paper.ICCS<Ray>, paper.ISerializable {
         private static readonly _instances: Ray[] = [];
-
+        /**
+         * 
+         * @param origin 
+         * @param direction 
+         */
         public static create(origin: Readonly<IVector3> = Vector3.ZERO, direction: Readonly<IVector3> = Vector3.FORWARD) {
             if (this._instances.length > 0) {
-                return this._instances.pop()!.set(origin, direction);
+                const instance = this._instances.pop()!.set(origin, direction);
+                instance._released = false;
+                return instance;
             }
 
             return new Ray().set(origin, direction);
         }
-
-        public release() {
-            if (Ray._instances.indexOf(this) >= 0) {
-                Ray._instances.push(this);
-            }
-
-            return this;
-        }
-
         /**
          * 射线起始点
          */
@@ -44,7 +41,9 @@ namespace egret3d {
          * 请使用 `egret3d.Ray.create()` 创建实例。
          * @see egret3d.Ray.create()
          */
-        private constructor() { }
+        private constructor() {
+            super();
+        }
 
         public serialize() {
             return [this.origin.x, this.origin.y, this.origin.z, this.direction.x, this.direction.y, this.direction.z];
@@ -237,9 +236,9 @@ namespace egret3d {
         }
     }
     /**
-     * 射线投射信息。
+     * 射线检测信息。
      */
-    export class RaycastInfo {
+    export class RaycastInfo extends paper.BaseRelease<RaycastInfo>  {
         private static readonly _instances: RaycastInfo[] = [];
 
         public static create() {
@@ -248,14 +247,6 @@ namespace egret3d {
             }
 
             return new RaycastInfo();
-        }
-
-        public release() {
-            if (RaycastInfo._instances.indexOf(this) >= 0) {
-                RaycastInfo._instances.push(this);
-            }
-
-            return this;
         }
 
         public subMeshIndex: number = -1;

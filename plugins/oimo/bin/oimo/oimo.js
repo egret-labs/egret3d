@@ -43236,6 +43236,7 @@ var egret3d;
     var oimo;
     (function (oimo) {
         var _helpVector3 = egret3d.Vector3.create();
+        var _helpVector4 = egret3d.Vector4.create();
         /**
          *
          */
@@ -43344,7 +43345,7 @@ var egret3d;
                 var fixedTime = this._clock.fixedTime;
                 var totalTimes = Math.min(Math.floor(fixedTime / this._clock.fixedDeltaTime), this._clock.maxFixedSubSteps);
                 var oimoTransform = PhysicsSystem._helpTransform;
-                var components = this._groups[0].components;
+                var gameObjects = this._groups[0].gameObjects;
                 var behaviourComponents = this._groups[1].components;
                 while (fixedTime >= this._clock.fixedDeltaTime && currentTimes++ < this._clock.maxFixedSubSteps) {
                     for (var _i = 0, behaviourComponents_1 = behaviourComponents; _i < behaviourComponents_1.length; _i++) {
@@ -43353,11 +43354,12 @@ var egret3d;
                             component.onFixedUpdate && component.onFixedUpdate(currentTimes, totalTimes);
                         }
                     }
-                    for (var _a = 0, components_1 = components; _a < components_1.length; _a++) {
-                        var component = components_1[_a];
-                        var transform = component.gameObject.transform;
-                        var oimoRigidbody = component.oimoRigidbody;
-                        switch (component.type) {
+                    for (var _a = 0, gameObjects_1 = gameObjects; _a < gameObjects_1.length; _a++) {
+                        var gameObject = gameObjects_1[_a];
+                        var transform = gameObject.transform;
+                        var rigidbody = gameObject.getComponent(oimo.Rigidbody);
+                        var oimoRigidbody = rigidbody.oimoRigidbody;
+                        switch (rigidbody.type) {
                             case 2 /* KINEMATIC */:
                             case 1 /* STATIC */:
                                 if (oimoRigidbody.isSleeping()) {
@@ -43373,20 +43375,21 @@ var egret3d;
                         }
                     }
                     this._oimoWorld.step(this._clock.fixedDeltaTime);
-                    for (var _b = 0, components_2 = components; _b < components_2.length; _b++) {
-                        var component = components_2[_b];
-                        var transform = component.gameObject.transform;
-                        var oimoRigidbody = component.oimoRigidbody;
-                        switch (component.type) {
+                    for (var _b = 0, gameObjects_2 = gameObjects; _b < gameObjects_2.length; _b++) {
+                        var gameObject = gameObjects_2[_b];
+                        var transform = gameObject.transform;
+                        var rigidbody = gameObject.getComponent(oimo.Rigidbody);
+                        var oimoRigidbody = rigidbody.oimoRigidbody;
+                        switch (rigidbody.type) {
                             case 0 /* DYNAMIC */:
                                 if (oimoRigidbody.isSleeping()) {
                                 }
                                 else {
                                     oimoRigidbody.getTransformTo(oimoTransform);
-                                    oimoTransform.getPositionTo(egret3d.helpVector3A);
-                                    oimoTransform.getOrientationTo(egret3d.helpVector4A);
-                                    transform.setPosition(egret3d.helpVector3A);
-                                    transform.setRotation(egret3d.helpVector4A);
+                                    oimoTransform.getPositionTo(_helpVector3);
+                                    oimoTransform.getOrientationTo(_helpVector4);
+                                    transform.setPosition(_helpVector3);
+                                    transform.setRotation(_helpVector4);
                                 }
                                 break;
                         }
@@ -43495,6 +43498,8 @@ var egret3d;
         }(paper.BaseSystem));
         oimo.PhysicsSystem = PhysicsSystem;
         __reflect(PhysicsSystem.prototype, "egret3d.oimo.PhysicsSystem");
+        //
+        paper.Application.systemManager.preRegister(PhysicsSystem, paper.UpdateSystem, true);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;

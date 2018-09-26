@@ -8,7 +8,7 @@ namespace egret3d {
     /**
      * 
      */
-    export class Matrix4 implements paper.IRelease<Matrix4>, paper.ISerializable {
+    export class Matrix4 extends paper.BaseRelease<Matrix4> implements paper.ICCS<Matrix4>, paper.ISerializable {
         public static readonly IDENTITY: Readonly<Matrix4> = new Matrix4();
 
         private static readonly _instances: Matrix4[] = [];
@@ -19,33 +19,25 @@ namespace egret3d {
          */
         public static create(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset: number = 0) {
             if (this._instances.length > 0) {
-                const matrix = this._instances.pop()!;
+                const instance = this._instances.pop()!;
+                instance._released = false;
+
                 if (rawData) {
                     if (rawData instanceof ArrayBuffer) {
-                        matrix.fromBuffer(rawData, offsetOrByteOffset);
+                        instance.fromBuffer(rawData, offsetOrByteOffset);
                     }
                     else {
-                        matrix.fromArray(rawData, offsetOrByteOffset);
+                        instance.fromArray(rawData, offsetOrByteOffset);
                     }
                 }
                 else {
-                    matrix.identity();
+                    instance.identity();
                 }
 
-                return matrix;
+                return instance;
             }
 
             return new Matrix4(rawData, offsetOrByteOffset);
-        }
-        /**
-         * 
-         */
-        public release() {
-            if (Matrix4._instances.indexOf(this) < 0) {
-                Matrix4._instances.push(this);
-            }
-
-            return this;
         }
         /**
          * @readonly
@@ -57,6 +49,8 @@ namespace egret3d {
          * @deprecated
          */
         public constructor(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset: number = 0) {
+            super();
+
             if (rawData && rawData instanceof ArrayBuffer) {
                 this.fromBuffer(rawData, offsetOrByteOffset);
             }
@@ -607,7 +601,7 @@ namespace egret3d {
             rawData[15] = sourceRawData[15] * value;
         }
 
-        public multiply(valueA: Matrix4, valueB?: Matrix4) {
+        public multiply(valueA: Readonly<Matrix4>, valueB?: Readonly<Matrix4>) {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;
@@ -956,8 +950,20 @@ namespace egret3d {
     const _helpVector3C = Vector3.create();
     const _helpMatrix = Matrix4.create();
 
+    /**
+     * @internal
+     */
     export const helpMatrixA = Matrix4.create();
+    /**
+     * @internal
+     */
     export const helpMatrixB = Matrix4.create();
+    /**
+     * @internal
+     */
     export const helpMatrixC = Matrix4.create();
+    /**
+     * @internal
+     */
     export const helpMatrixD = Matrix4.create();
 }
