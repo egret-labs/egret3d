@@ -36,11 +36,14 @@ namespace paper.editor {
 
         private _history: History;
         public get history(): History {
-            return this._history
+            return this._history;
         }
         private _scene: paper.Scene;
         public get scene(): Scene {
             return this._scene;
+        }
+        public set scene(value:Scene){
+            this._scene = value;
         }
         private _contentType: 'scene' | 'prefab';
         public get contentType() {
@@ -92,18 +95,18 @@ namespace paper.editor {
         public setTransformProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void {
             let valueEditType: paper.editor.EditType | null = this.getEditType(propName, target);
 
-            if (valueEditType != null) {
+            if (valueEditType !== null) {
                 let newPropertyData = {
                     propName,
                     copyValue: this.serializeProperty(propNewValue, valueEditType),
                     valueEditType
-                }
+                };
 
                 let prePropertyData = {
                     propName,
                     copyValue: this.serializeProperty(target[propName], valueEditType),
                     valueEditType
-                }
+                };
 
                 this.createModifyComponent(target.gameObject.uuid, target.uuid, [newPropertyData], [prePropertyData]);
             }
@@ -148,7 +151,7 @@ namespace paper.editor {
                 case editor.EditType.MATERIAL_ARRAY:
                     const data = value.map((item) => {
                         return { name: item.name, url: item.name };
-                    })
+                    });
                     return data;
                 case editor.EditType.MESH:
                     if (!value)
@@ -161,7 +164,7 @@ namespace paper.editor {
                 case editor.EditType.SOUND:
                 case editor.EditType.ARRAY:
                     //TODO
-                    console.error("not supported!")
+                    console.error("not supported!");
                     break;
                 default:
                     break;
@@ -211,7 +214,7 @@ namespace paper.editor {
                 case editor.EditType.SOUND:
                 case editor.EditType.ARRAY:
                     //TODO
-                    console.error("not supported!")
+                    console.error("not supported!");
                     return null;
                 default:
                     break;
@@ -227,7 +230,8 @@ namespace paper.editor {
             let data = {
                 gameObjectUUid: gameObjectUUid,
                 compClzName: compClzName
-            }
+            };
+
             let state = AddComponentState.create(gameObjectUUid, compClzName);
             this.addState(state);
         }
@@ -265,7 +269,7 @@ namespace paper.editor {
                     return comp;
                 }
             }
-            return null;;
+            return null;
         }
 
         /**
@@ -284,7 +288,7 @@ namespace paper.editor {
                 content.push({
                     type: "gameObject",
                     serializeData: serialize(obj)
-                })
+                });
             }
             clipboard.writeText(JSON.stringify(content), "paper");
         }
@@ -293,7 +297,7 @@ namespace paper.editor {
          * @param parent 
          */
         public pasteGameObject(parent: GameObject): void {
-            let clipboard = __global.runtimeModule.getClipborad()
+            let clipboard = __global.runtimeModule.getClipborad();
             let msg = clipboard.readText("paper");
             let content: { type: string, serializeData: any }[] = JSON.parse(msg);
             if (content && content.length > 0) {
@@ -465,12 +469,12 @@ namespace paper.editor {
             let idIndex: number;
             let cloneIds: string[] = uuids.concat();
             for (let i: number = 0; i < objects.length; i++) {
-                if (cloneIds.length == 0) {
+                if (cloneIds.length === 0) {
                     return result;
                 }
                 obj = objects[i];
                 idIndex = cloneIds.indexOf(obj.uuid);
-                if (idIndex != -1) {
+                if (idIndex !== -1) {
                     result.push(obj);
                     cloneIds.splice(idIndex, 1);
                 }
@@ -479,10 +483,10 @@ namespace paper.editor {
         }
 
         public setTargetProperty(propName: string, target: any, value: any, editType: paper.editor.EditType): void {
-            if (editType != paper.editor.EditType.VECTOR2 &&
-                editType != paper.editor.EditType.VECTOR3 &&
-                editType != paper.editor.EditType.VECTOR4 &&
-                editType != paper.editor.EditType.COLOR) {
+            if (editType !== paper.editor.EditType.VECTOR2 &&
+                editType !== paper.editor.EditType.VECTOR3 &&
+                editType !== paper.editor.EditType.VECTOR4 &&
+                editType !== paper.editor.EditType.COLOR) {
                 target[propName] = value;
                 return;
             }
