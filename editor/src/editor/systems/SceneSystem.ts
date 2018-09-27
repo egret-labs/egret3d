@@ -337,7 +337,7 @@ namespace paper.debug {
                     __editor.transform.rotation = egret3d.Camera.editor.transform.rotation;
                 }
                 else {
-                    // __editor = EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, EditorDefaultTexture.CAMERA_ICON).transform;
+                    __editor = EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, EditorDefaultTexture.CAMERA_ICON).transform;
                 }
                 // const pick = iconObject;
                 // const pick = __editor.transform.find("__pickTarget").gameObject;
@@ -428,7 +428,7 @@ namespace paper.debug {
                     __editor.transform.rotation = egret3d.Camera.editor.transform.rotation;
                 }
                 else {
-                    // __editor = EditorMeshHelper.createIcon("__pickTarget", light.gameObject, EditorDefaultTexture.LIGHT_ICON).transform;
+                    __editor = EditorMeshHelper.createIcon("__pickTarget", light.gameObject, EditorDefaultTexture.LIGHT_ICON).transform;
                 }
                 // const pick = iconObject;
                 // const pick = __editor.transform.find("pick").gameObject;
