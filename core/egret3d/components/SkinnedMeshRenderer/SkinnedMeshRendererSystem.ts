@@ -57,7 +57,7 @@ namespace egret3d {
                 };
 
                 if (!renderer.forceCPUSkin) {
-                    material.addDefine(ShaderDefine.USE_SKINNING).addDefine(`${ShaderDefine.MAX_BONES} ${SkinnedMeshRendererSystem.maxBoneCount}`);
+                    material.addDefine(ShaderDefine.USE_SKINNING).addDefine(`${ShaderDefine.MAX_BONES} ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, renderer.bones.length)}`);
                 }
                 this._drawCalls.drawCalls.push(drawCall);
             }

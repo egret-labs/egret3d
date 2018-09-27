@@ -229,7 +229,7 @@ namespace egret3d {
             //TODO
             WebGLCapabilities.commonDefines = getConstDefines(this.maxPrecision);
 
-            SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4 / 16);
+            SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
 
             console.info("WebGL version:", this.version);
             console.info("Maximum shader precision:", this.maxPrecision);

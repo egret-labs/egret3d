@@ -3,16 +3,16 @@ namespace paper.debug {
      * 
      */
     export class SkeletonDrawer extends paper.BaseComponent {
-        private readonly _skeletonMesh: egret3d.Mesh = egret3d.Mesh.create(128, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0], null, gltf.DrawMode.Dynamic);
+        private readonly _skeletonMesh: egret3d.Mesh = egret3d.Mesh.create(128, 0, [gltf.MeshAttributeType.POSITION], null, gltf.DrawMode.Dynamic);
 
         public initialize() {
             super.initialize();
 
             const mesh = this._skeletonMesh;
-            const material = egret3d.DefaultMaterials.LINEDASHED_COLOR.clone();
+            const material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
             material
-                .setColor(egret3d.Color.create(0.0, 1.0, 1.0).release())
+                .setColor(egret3d.Color.YELLOW)
                 .setDepth(false, false)
                 .renderQueue = paper.RenderQueue.Overlay;
 

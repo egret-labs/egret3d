@@ -48,6 +48,12 @@ namespace paper.debug {
         }
 
         private _onMouseUp = (event: MouseEvent) => {
+            const canvas = egret3d.WebGLCapabilities.canvas!;
+
+            if (event.target !== canvas && (event.target as HTMLElement).tagName.toLowerCase() !== "html") {
+                return;
+            }
+
             if (event.button === 0) {
                 const transformController = this._transformController;
                 if (transformController.isActiveAndEnabled && transformController.hovered) {
@@ -113,7 +119,7 @@ namespace paper.debug {
             else if (event.buttons & 0b01) {
 
             }
-            else { // Update hovered.
+            else if (event.target === canvas) { // Update hovered.
                 const transformController = this._transformController;
                 if (transformController && transformController.isActiveAndEnabled) {
                     if (event.shiftKey || event.ctrlKey) {
