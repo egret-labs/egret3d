@@ -170,12 +170,6 @@ declare namespace paper.debug {
     }
 }
 declare namespace paper.debug {
-    /**
-     *
-     */
-    class EditorSystem extends BaseSystem {
-        onAwake(): void;
-    }
 }
 declare namespace paper.debug {
     /**
