@@ -96,12 +96,8 @@ declare namespace dat {
         remove(): GUIController;
     }
 }declare namespace paper.debug {
-    /**
-     *
-     */
-    class EditorSystem extends BaseSystem {
-        onAwake(): void;
-    }
+}
+declare namespace paper.debug {
 }
 declare namespace paper.debug {
 }
@@ -165,6 +161,12 @@ declare namespace paper.debug {
 declare namespace paper.debug {
 }
 declare namespace paper.debug {
+    /**
+     *
+     */
+    class EditorSystem extends BaseSystem {
+        onAwake(): void;
+    }
 }
 declare namespace paper.debug {
     class GUISystem extends BaseSystem {

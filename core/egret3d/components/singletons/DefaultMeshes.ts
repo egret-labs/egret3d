@@ -259,6 +259,8 @@ namespace egret3d {
             }
 
             { // CUBE_LINE
+                // const meshAttributesType: { [key: string]: gltf.AccessorType } = {};
+                // meshAttributesType[gltf.AttributeSemanticType._INSTANCE_DISTANCE] = gltf.AccessorType.SCALAR;
                 const mesh = new Mesh(8, 24, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/cube_line.mesh.bin";
@@ -295,6 +297,11 @@ namespace egret3d {
                     4, 5, 5, 6, 6, 7, 7, 4,
                     0, 7, 1, 4, 2, 5, 3, 6,
                 ]);
+
+                //
+                // const lineDistances = mesh.getAttributes(gltf.AttributeSemanticType._INSTANCE_DISTANCE);
+                // this.computeLineDistances(mesh.getAttributes(gltf.AttributeSemanticType.POSITION), lineDistances);
+                // mesh.setAttributes(gltf.AttributeSemanticType._INSTANCE_DISTANCE, lineDistances);
             }
         }
         /**
@@ -903,6 +910,15 @@ namespace egret3d {
             }
 
             return mesh;
+        }
+
+        private computeLineDistances(vertices: Float32Array, out: Float32Array) {
+            out[0] = 0;
+            for (let i = 3, ii = 1; i > vertices.length; i += 3, ii++) {
+                const start = egret3d.Vector3.create(vertices[i - 3], vertices[i - 2], vertices[i - 1]);
+                const end = egret3d.Vector3.create(vertices[i], vertices[i + 1], vertices[i + 2]);
+                out[ii] = out[ii - 1] + start.getDistance(end);
+            }
         }
     }
 }
