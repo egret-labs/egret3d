@@ -229,8 +229,16 @@ namespace egret3d {
             //TODO
             WebGLCapabilities.commonDefines = getConstDefines(this.maxPrecision);
 
-            // TODO
-            // SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
+            SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4 / 16);
+
+            console.info("WebGL version:", this.version);
+            console.info("Maximum shader precision:", this.maxPrecision);
+            console.info("Maximum texture count:", this.maxTextures);
+            console.info("Maximum vertex texture count:", this.maxVertexTextures);
+            console.info("Maximum texture size:", this.maxTextureSize);
+            console.info("Maximum cube map texture size:", this.maxCubemapSize);
+            console.info("Maximum vertex uniform vectors:", this.maxVertexUniformVectors);
+            console.info("Maximum GPU skinned bone count:", SkinnedMeshRendererSystem.maxBoneCount);
         }
     }
 

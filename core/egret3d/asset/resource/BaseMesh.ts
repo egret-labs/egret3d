@@ -158,7 +158,7 @@ namespace egret3d {
                     if (indices) {
                         for (const index of <any>indices as number[]) {
                             const vertexIndex = index * 3;
-                            const jointIndex = index * 3;
+                            const jointIndex = index * 4;
                             p0.fromArray(vertices, vertexIndex);
                             p1
                                 .set(0.0, 0.0, 0.0)

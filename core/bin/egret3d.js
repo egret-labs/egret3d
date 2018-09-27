@@ -4636,7 +4636,7 @@ var egret3d;
                         for (var _b = 0, _c = indices; _b < _c.length; _b++) {
                             var index = _c[_b];
                             var vertexIndex = index * 3;
-                            var jointIndex = index * 3;
+                            var jointIndex = index * 4;
                             p0.fromArray(vertices, vertexIndex);
                             p1
                                 .set(0.0, 0.0, 0.0)
@@ -7142,6 +7142,7 @@ var egret3d;
      */
     function runEgret(options) {
         if (options === void 0) { options = { antialias: false }; }
+        console.info("Egret start.");
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
         egret.Capabilities["renderMode" + ""] = "webgl";
         var requiredOptions = getOptions(options);
@@ -7180,6 +7181,7 @@ var egret3d;
             ];
         }
         paper.Application.init(options);
+        console.info("Egret start complete.");
     }
     egret3d.runEgret = runEgret;
     function getMainCanvas(options) {
@@ -12756,6 +12758,9 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    var _helpVector3A = egret3d.Vector3.create();
+    var _helpVector3B = egret3d.Vector3.create();
+    var _helpVector3C = egret3d.Vector3.create();
     var _helpMatrix = egret3d.Matrix4.create();
     /**
      * Skinned Mesh Renderer Component
@@ -12774,6 +12779,11 @@ var egret3d;
         function SkinnedMeshRenderer() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
+             * 强制使用 cpu 蒙皮。
+             * - 骨骼数超过硬件支持的最大骨骼数量，或顶点权重大于 4 个，需要使用 CPU 蒙皮。
+             */
+            _this.forceCPUSkin = false;
+            /**
              *
              */
             _this.boneMatrices = null;
@@ -12785,6 +12795,7 @@ var egret3d;
              */
             _this._retargetBoneNames = null;
             _this._mesh = null;
+            _this._rawVertices = null;
             return _this;
         }
         /**
@@ -12800,33 +12811,33 @@ var egret3d;
                 var matrix = bone ? bone.getWorldMatrix() : egret3d.Matrix4.IDENTITY;
                 _helpMatrix.fromArray(inverseBindMatrices, offset).premultiply(matrix).toArray(boneMatrices, offset);
             }
-            // {
-            //     const vA = Vector3.create();
-            //     const vB = Vector3.create();
-            //     const vC = Vector3.create();
-            //     const mA = Matrix4.create();
-            //     const indices = this._mesh.getIndices()!;
-            //     const vertices = this._mesh.getVertices()!;
-            //     const joints = this._mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array;
-            //     const weights = this._mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)! as Float32Array;
-            //     if (!this._rawVertices) {
-            //         this._rawVertices = new Float32Array(vertices.length);
-            //         this._rawVertices.set(vertices);
-            //     }
-            //     for (const index of <any>indices as number[]) {
-            //         vA.fromArray(this._rawVertices, index * 3);
-            //         vB.set(0.0, 0.0, 0.0).add(
-            //             vC.applyMatrix(mA.fromArray(boneMatrices, joints[index * 4 + 0] * 16), vA).multiplyScalar(weights[index * 4 + 0])
-            //         ).add(
-            //             vC.applyMatrix(mA.fromArray(boneMatrices, joints[index * 4 + 1] * 16), vA).multiplyScalar(weights[index * 4 + 1])
-            //         ).add(
-            //             vC.applyMatrix(mA.fromArray(boneMatrices, joints[index * 4 + 2] * 16), vA).multiplyScalar(weights[index * 4 + 2])
-            //         ).add(
-            //             vC.applyMatrix(mA.fromArray(boneMatrices, joints[index * 4 + 3] * 16), vA).multiplyScalar(weights[index * 4 + 3])
-            //         ).toArray(vertices, index * 3);
-            //     }
-            //     this._mesh.uploadVertexBuffer();
-            // }
+            if (this.forceCPUSkin) {
+                var vA = _helpVector3A;
+                var vB = _helpVector3A;
+                var vC = _helpVector3C;
+                var mA = _helpMatrix;
+                var indices = this._mesh.getIndices();
+                var vertices = this._mesh.getVertices();
+                var joints = this._mesh.getAttributes("JOINTS_0" /* JOINTS_0 */);
+                var weights = this._mesh.getAttributes("WEIGHTS_0" /* WEIGHTS_0 */);
+                if (!this._rawVertices) {
+                    this._rawVertices = new Float32Array(vertices.length);
+                    this._rawVertices.set(vertices);
+                }
+                for (var _i = 0, _a = indices; _i < _a.length; _i++) {
+                    var index = _a[_i];
+                    var vertexIndex = index * 3;
+                    var jointIndex = index * 4;
+                    vA.fromArray(this._rawVertices, vertexIndex);
+                    vB.set(0.0, 0.0, 0.0)
+                        .add(vC.applyMatrix(mA.fromArray(boneMatrices, joints[jointIndex + 0] * 16), vA).multiplyScalar(weights[jointIndex + 0]))
+                        .add(vC.applyMatrix(mA.fromArray(boneMatrices, joints[jointIndex + 1] * 16), vA).multiplyScalar(weights[jointIndex + 1]))
+                        .add(vC.applyMatrix(mA.fromArray(boneMatrices, joints[jointIndex + 2] * 16), vA).multiplyScalar(weights[jointIndex + 2]))
+                        .add(vC.applyMatrix(mA.fromArray(boneMatrices, joints[jointIndex + 3] * 16), vA).multiplyScalar(weights[jointIndex + 3]))
+                        .toArray(vertices, vertexIndex);
+                }
+                this._mesh.uploadVertexBuffer();
+            }
         };
         SkinnedMeshRenderer.prototype.initialize = function (reset) {
             _super.prototype.initialize.call(this, reset);
@@ -12863,6 +12874,8 @@ var egret3d;
                 this.boneMatrices = new Float32Array(this._bones.length * 16);
                 if (this._bones.length > egret3d.SkinnedMeshRendererSystem.maxBoneCount) {
                     // TODO
+                    this.forceCPUSkin = true;
+                    console.warn("");
                 }
                 // this._update(); TODO
             }
@@ -12911,7 +12924,7 @@ var egret3d;
                 }
             }
             if (raycastMesh) {
-                return aabb.raycast(localRay) && this._mesh.raycast(p1, raycastInfo, this.boneMatrices);
+                return aabb.raycast(localRay) && this._mesh.raycast(p1, raycastInfo, this.forceCPUSkin ? null : this.boneMatrices);
             }
             else if (aabb.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) {
@@ -13020,7 +13033,9 @@ var egret3d;
                     material: material || egret3d.DefaultMaterials.MISSING,
                     zdist: -1,
                 };
-                material.addDefine("USE_SKINNING" /* USE_SKINNING */).addDefine("MAX_BONES" /* MAX_BONES */ + " " + SkinnedMeshRendererSystem.maxBoneCount);
+                if (!renderer.forceCPUSkin) {
+                    material.addDefine("USE_SKINNING" /* USE_SKINNING */).addDefine("MAX_BONES" /* MAX_BONES */ + " " + SkinnedMeshRendererSystem.maxBoneCount);
+                }
                 this._drawCalls.drawCalls.push(drawCall);
             }
         };
@@ -13055,7 +13070,7 @@ var egret3d;
         /**
          *
          */
-        SkinnedMeshRendererSystem.maxBoneCount = 24;
+        SkinnedMeshRendererSystem.maxBoneCount = 36;
         return SkinnedMeshRendererSystem;
     }(paper.BaseSystem));
     egret3d.SkinnedMeshRendererSystem = SkinnedMeshRendererSystem;
@@ -13614,6 +13629,20 @@ var egret3d;
             this._fadeState = 1;
             this._subFadeState = -1;
         };
+        Object.defineProperty(AnimationState.prototype, "isPlaying", {
+            get: function () {
+                return this._isPlaying && this._playState !== 1;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(AnimationState.prototype, "isCompleted", {
+            get: function () {
+                return this._playState !== 1;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(AnimationState.prototype, "totalTime", {
             get: function () {
                 return this.animationClip.duration;
@@ -13838,6 +13867,13 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Animation.prototype, "lastAnimationState", {
+            get: function () {
+                return this._lastAnimationState;
+            },
+            enumerable: true,
+            configurable: true
+        });
         __decorate([
             paper.serializedField
         ], Animation.prototype, "autoPlay", void 0);
@@ -13870,7 +13906,7 @@ var egret3d;
             return _this;
         }
         AnimationSystem.prototype.onAddComponent = function (component) {
-            if (component.autoPlay) {
+            if (component.autoPlay && (!component.lastAnimationState || !component.lastAnimationState.isPlaying)) {
                 component.play();
             }
         };
@@ -17233,8 +17269,15 @@ var egret3d;
             getExtension(webgl, "GL_OES_standard_derivatives");
             //TODO
             WebGLCapabilities.commonDefines = getConstDefines(this.maxPrecision);
-            // TODO
-            // SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
+            egret3d.SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4 / 16);
+            console.info("WebGL version:", this.version);
+            console.info("Maximum shader precision:", this.maxPrecision);
+            console.info("Maximum texture count:", this.maxTextures);
+            console.info("Maximum vertex texture count:", this.maxVertexTextures);
+            console.info("Maximum texture size:", this.maxTextureSize);
+            console.info("Maximum cube map texture size:", this.maxCubemapSize);
+            console.info("Maximum vertex uniform vectors:", this.maxVertexUniformVectors);
+            console.info("Maximum GPU skinned bone count:", egret3d.SkinnedMeshRendererSystem.maxBoneCount);
         };
         WebGLCapabilities.canvas = null;
         WebGLCapabilities.webgl = null;

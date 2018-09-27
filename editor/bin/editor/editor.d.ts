@@ -159,6 +159,22 @@ declare namespace paper.debug {
 declare namespace paper.debug {
 }
 declare namespace paper.debug {
+    /**
+     *
+     */
+    class SkeletonDrawer extends paper.BaseComponent {
+        private readonly _skeletonMesh;
+        initialize(): void;
+        update(): void;
+    }
+}
+declare namespace paper.debug {
+    /**
+     *
+     */
+    class EditorSystem extends BaseSystem {
+        onAwake(): void;
+    }
 }
 declare namespace paper.debug {
     /**
@@ -206,15 +222,16 @@ declare namespace paper.debug {
         }[][];
         private readonly _camerasAndLights;
         private readonly _modelComponent;
+        private readonly _pointerStartPosition;
+        private readonly _pointerPosition;
+        private readonly _boxes;
         private _orbitControls;
         private _transformController;
+        private _skeletonDrawer;
         private _gridController;
         private _hoverBox;
         private _grids;
         private _cameraViewFrustum;
-        private readonly _pointerStartPosition;
-        private readonly _pointerPosition;
-        private readonly _boxes;
         private _contextmenuHandler;
         private _onMouseDown;
         private _onMouseUp;

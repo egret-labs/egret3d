@@ -21,6 +21,8 @@ namespace egret3d {
      * 引擎启动入口
      */
     export function runEgret(options: RunEgretOptions = { antialias: false }) {
+        console.info("Egret start.");
+
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
         egret.Capabilities["renderMode" + ""] = "webgl";
 
@@ -63,6 +65,8 @@ namespace egret3d {
         }
 
         paper.Application.init(options);
+
+        console.info("Egret start complete.");
     }
 
     function getMainCanvas(options: RunEgretOptions) {

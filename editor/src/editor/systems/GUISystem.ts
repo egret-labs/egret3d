@@ -347,24 +347,14 @@ namespace paper.debug {
         public onAwake() {
             const sceneOptions = {
                 debug: false,
-                assets: () => {
-                    const assets = Asset["_assets"] as any;
-                    const assetNames = [];
-
-                    for (const k in assets) {
-                        if (k.indexOf("builtin") >= 0) {
-                            continue;
-                        }
-
-                        assetNames.push(k);
-
-                        if (assets[k] instanceof egret3d.Texture) {
-                            assetNames.push(k.replace(".image.json", ".png"));
-                            assetNames.push(k.replace(".image.json", ".jpg"));
-                        }
+                save: () => {
+                    if (this._modelComponent.selectedScene) {
+                        const sceneJSON = JSON.stringify(paper.serialize(this._modelComponent.selectedScene));
+                        console.info(sceneJSON);
                     }
+                    else if (this._modelComponent.selectedGameObjects.length > 0) {
 
-                    console.info(JSON.stringify(assetNames));
+                    }
                 }
             };
 
@@ -385,7 +375,7 @@ namespace paper.debug {
 
                 this._debug(v);
             });
-            this._guiComponent.hierarchy.add(sceneOptions, "assets");
+            this._guiComponent.hierarchy.add(sceneOptions, "save");
             this._guiComponent.hierarchy.close();
         }
 
