@@ -201,6 +201,9 @@ namespace paper.debug {
 
         private _onGameObjectHovered = (_c: any, value: GameObject) => {
             if (value) {
+                if (!this._hoverBox) {
+                    this._hoverBox = EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.activeScene);
+                }
                 this._hoverBox.activeSelf = true;
                 if (this._hoverBox.scene !== value.scene) {//TODO
                     this._hoverBox.dontDestroy = true;

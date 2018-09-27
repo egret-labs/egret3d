@@ -2685,10 +2685,15 @@ var paper;
                 }
                 {
                     var rotate = this.rotate;
-                    var axisX = debug.EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisY = debug.EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisZ = debug.EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisE = debug.EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createCircle(1.25, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    // const axisX = EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    // const axisY = EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    // const axisZ = EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    // const axisE = EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createCircle(1.25, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    // const axisXYZE = EditorMeshHelper.createGameObject("AxisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisX = debug.EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisY = debug.EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisZ = debug.EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisE = debug.EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createTorus(1.25, 0.03, 4, 48, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var axisXYZE = debug.EditorMeshHelper.createGameObject("AxisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickX = debug.EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickY = debug.EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
@@ -2926,7 +2931,7 @@ var paper;
                     var alignVector = egret3d.Vector3.create();
                     alignVector.copy(this.eye).applyQuaternion(tempQuaternion.inverse());
                     {
-                        tempQuaternion.fromAxis(egret3d.Vector3.RIGHT, Math.atan2(-alignVector.y, alignVector.z));
+                        tempQuaternion.fromAxis(egret3d.Vector3.RIGHT, Math.atan2(alignVector.y, -alignVector.z));
                         tempQuaternion.multiply(tempQuaternion2, tempQuaternion);
                         var axisX = this.rotate.transform.find("AxisX");
                         var pickX = this.rotate.transform.find("X");
@@ -2934,7 +2939,7 @@ var paper;
                         pickX.setRotation(tempQuaternion);
                     }
                     {
-                        tempQuaternion.fromAxis(egret3d.Vector3.UP, Math.atan2(alignVector.x, alignVector.z));
+                        tempQuaternion.fromAxis(egret3d.Vector3.UP, Math.atan2(-alignVector.x, -alignVector.z));
                         tempQuaternion.multiply(tempQuaternion2, tempQuaternion);
                         var axisY = this.rotate.transform.find("AxisY");
                         var pickY = this.rotate.transform.find("Y");
@@ -4411,6 +4416,9 @@ var paper;
                 };
                 _this._onGameObjectHovered = function (_c, value) {
                     if (value) {
+                        if (!_this._hoverBox) {
+                            _this._hoverBox = debug.EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.activeScene);
+                        }
                         _this._hoverBox.activeSelf = true;
                         if (_this._hoverBox.scene !== value.scene) {
                             _this._hoverBox.dontDestroy = true;
@@ -4468,7 +4476,9 @@ var paper;
                         throw new Error(); // Never.
                     }
                     delete this._boxes[value.uuid];
-                    box.destroy();
+                    if (!box.isDestroyed) {
+                        box.destroy();
+                    }
                 }
             };
             SceneSystem.prototype._updateBoxes = function () {
@@ -4489,16 +4499,21 @@ var paper;
                         box.activeSelf = false;
                     }
                 }
-                if (this._hoverBox.activeSelf) {
-                    var parentRenderer = this._hoverBox.parent ? this._hoverBox.parent.renderer : null; //TODO
-                    if (parentRenderer) {
-                        this._hoverBox.transform.localPosition = parentRenderer.aabb.center;
-                        // this._hoverBox.transform.localScale = parentRenderer.aabb.size;
-                        var size = parentRenderer.aabb.size; // TODO
-                        this._hoverBox.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
+                if (this._hoverBox) {
+                    if (this._hoverBox.isDestroyed) {
+                        this._hoverBox = null; // TODO
                     }
-                    else {
-                        this._hoverBox.activeSelf = false;
+                    else if (this._hoverBox.activeSelf) {
+                        var parentRenderer = this._hoverBox.parent ? this._hoverBox.parent.renderer : null; //TODO
+                        if (parentRenderer) {
+                            this._hoverBox.transform.localPosition = parentRenderer.aabb.center;
+                            // this._hoverBox.transform.localScale = parentRenderer.aabb.size;
+                            var size = parentRenderer.aabb.size; // TODO
+                            this._hoverBox.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
+                        }
+                        else {
+                            this._hoverBox.activeSelf = false;
+                        }
                     }
                 }
             };
