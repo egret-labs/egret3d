@@ -13,5 +13,7 @@ namespace Cube {
         cubeB.name = "cubeB";
         cubeB.transform.translate(2.0, 0.0, 0.0);
         (cubeB.renderer as egret3d.MeshRenderer).material = egret3d.Material.create().setTexture(egret3d.ShaderUniformName.Map, await RES.getResAsync("logo.png"));
+
+        
     }
 }

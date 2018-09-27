@@ -17257,7 +17257,7 @@ var egret3d;
             WebGLCapabilities.commonDefines = getConstDefines(this.maxPrecision);
             egret3d.SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4 / 16);
             console.info("WebGL version:", this.version);
-            console.info("Shader precision:", this.maxPrecision);
+            console.info("Maximum shader precision:", this.maxPrecision);
             console.info("Maximum texture count:", this.maxTextures);
             console.info("Maximum vertex texture count:", this.maxVertexTextures);
             console.info("Maximum texture size:", this.maxTextureSize);

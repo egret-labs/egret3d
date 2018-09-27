@@ -100,6 +100,8 @@ declare namespace dat {
 declare namespace paper.debug {
 }
 declare namespace paper.debug {
+}
+declare namespace paper.debug {
     /**
      *
      */
