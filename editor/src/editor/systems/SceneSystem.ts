@@ -291,18 +291,24 @@ namespace paper.debug {
                 }
             }
 
-            if (this._hoverBox.activeSelf) {
-                const parentRenderer = this._hoverBox.parent ? this._hoverBox.parent.renderer : null;//TODO
-                if (parentRenderer) {
-                    this._hoverBox.transform.localPosition = parentRenderer.aabb.center;
-                    // this._hoverBox.transform.localScale = parentRenderer.aabb.size;
-                    const size = parentRenderer.aabb.size; // TODO
-                    this._hoverBox.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
+            if (this._hoverBox) {
+                if (this._hoverBox.isDestroyed) {
+                    this._hoverBox = null; // TODO
                 }
-                else {
-                    this._hoverBox.activeSelf = false;
+                else if (this._hoverBox.activeSelf) {
+                    const parentRenderer = this._hoverBox.parent ? this._hoverBox.parent.renderer : null;//TODO
+                    if (parentRenderer) {
+                        this._hoverBox.transform.localPosition = parentRenderer.aabb.center;
+                        // this._hoverBox.transform.localScale = parentRenderer.aabb.size;
+                        const size = parentRenderer.aabb.size; // TODO
+                        this._hoverBox.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
+                    }
+                    else {
+                        this._hoverBox.activeSelf = false;
+                    }
                 }
             }
+
         }
 
         private _updateCameras() {
