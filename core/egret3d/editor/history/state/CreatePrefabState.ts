@@ -29,7 +29,7 @@ namespace paper.editor{
                     let gameObj = this.editorModel.getGameObjectByUUid(deleteUUid);
                     if (gameObj) {
                         gameObj.destroy();
-                        this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS);
+                        this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,[deleteUUid]);
                     }
                 }
                 return true;
