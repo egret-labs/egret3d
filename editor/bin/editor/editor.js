@@ -3332,18 +3332,6 @@ var paper;
                     this._select(gameObj);
                 }
             };
-            ModelComponent.prototype._onEditorDeleteGameObjects = function (gameObjs) {
-                for (var _i = 0, _a = this.selectedGameObjects; _i < _a.length; _i++) {
-                    var gameObj = _a[_i];
-                    if (gameObjs.indexOf(gameObj) < 0) {
-                        this._unselect(gameObj);
-                    }
-                }
-                for (var _b = 0, gameObjs_2 = gameObjs; _b < gameObjs_2.length; _b++) {
-                    var gameObj = gameObjs_2[_b];
-                    this._select(gameObj);
-                }
-            };
             ModelComponent.prototype._onChangeEditMode = function (mode) {
             };
             ModelComponent.prototype._onChangeEditType = function (type) {
@@ -3385,7 +3373,6 @@ var paper;
                     setTimeout(function () {
                         _this.editorModel = paper.editor.Editor.activeEditorModel;
                         _this.editorModel.addEventListener(paper.editor.EditorModelEvent.SELECT_GAMEOBJECTS, function (e) { return _this._onEditorSelectGameObjects(e.data); }, _this);
-                        _this.editorModel.addEventListener(paper.editor.EditorModelEvent.DELETE_GAMEOBJECTS, function (e) { return _this._onEditorDeleteGameObjects(e.data); }, _this);
                         _this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_PROPERTY, function (e) { return _this._onChangeProperty(e.data); }, _this);
                         _this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_MODE, function (e) { return _this._onChangeEditMode(e.data); }, _this);
                         _this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_TYPE, function (e) { return _this._onChangeEditType(e.data); }, _this);
@@ -4417,6 +4404,9 @@ var paper;
                 };
                 _this._onGameObjectHovered = function (_c, value) {
                     if (value) {
+                        if (!_this._hoverBox) {
+                            _this._hoverBox = debug.EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.activeScene);
+                        }
                         _this._hoverBox.activeSelf = true;
                         if (_this._hoverBox.scene !== value.scene) {
                             _this._hoverBox.dontDestroy = true;
