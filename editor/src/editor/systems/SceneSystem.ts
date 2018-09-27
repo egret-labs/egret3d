@@ -10,17 +10,19 @@ namespace paper.debug {
         private readonly _camerasAndLights: egret3d.CamerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
         private readonly _modelComponent: ModelComponent = paper.GameObject.globalGameObject.getOrAddComponent(ModelComponent);
 
-        private _orbitControls: OrbitControls | null = null;
-        private _transformController: TransfromController | null = null;
-        private _gridController: GridController | null = null;
-        private _hoverBox: paper.GameObject | null = null;
-        private _grids: paper.GameObject | null = null;
-        private _cameraViewFrustum: paper.GameObject | null = null;//TODO封装一下
-
         private readonly _pointerStartPosition: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _pointerPosition: egret3d.Vector3 = egret3d.Vector3.create();
         // private readonly _pickableSelected: GameObject[] = [];   //可被选中的 camera
         private readonly _boxes: { [key: string]: GameObject } = {};
+
+        private _orbitControls: OrbitControls | null = null;
+        private _transformController: TransfromController | null = null;
+        private _skeletonDrawer: SkeletonDrawer | null = null;
+        private _gridController: GridController | null = null;
+
+        private _hoverBox: paper.GameObject | null = null;
+        private _grids: paper.GameObject | null = null;
+        private _cameraViewFrustum: paper.GameObject | null = null; // TODO封装一下
 
         private _contextmenuHandler = (event: Event) => {
             event.preventDefault();
@@ -194,7 +196,6 @@ namespace paper.debug {
         }
 
         private _onKeyDown = (event: KeyboardEvent) => {
-
         }
 
         private _onGameObjectHovered = (_c: any, value: GameObject) => {
@@ -213,15 +214,31 @@ namespace paper.debug {
         }
 
         private _onGameObjectSelectChanged = (_c: any, value: GameObject) => {
+            const selectedGameObject = this._modelComponent.selectedGameObject;
+
             const transformController = this._transformController;
             if (transformController) {
-                if (this._modelComponent.selectedGameObject) {
+                if (selectedGameObject) {
                     transformController.gameObject.activeSelf = true;
                 }
                 else {
                     transformController.gameObject.activeSelf = false;
                 }
             }
+
+            const skeletonDrawer = this._skeletonDrawer;
+            if (skeletonDrawer) {
+                if (
+                    selectedGameObject &&
+                    selectedGameObject.renderer instanceof egret3d.SkinnedMeshRenderer
+                ) {
+                    skeletonDrawer.gameObject.activeSelf = true;
+                }
+                else {
+                    skeletonDrawer.gameObject.activeSelf = false;
+                }
+            }
+
         }
 
         private _onGameObjectSelected = (_c: any, value: GameObject) => {
@@ -413,7 +430,7 @@ namespace paper.debug {
                 canvas.addEventListener("contextmenu", this._contextmenuHandler);
                 canvas.addEventListener("mousedown", this._onMouseDown);
                 canvas.addEventListener("mouseup", this._onMouseUp);
-                canvas.addEventListener("mouseout", this._onMouseUp); // ??
+                // canvas.addEventListener("mouseout", this._onMouseUp); // ??
                 canvas.addEventListener("mousemove", this._onMouseMove);
                 window.addEventListener("keyup", this._onKeyUp);
                 window.addEventListener("keydown", this._onKeyDown);
@@ -423,6 +440,9 @@ namespace paper.debug {
 
             this._transformController = EditorMeshHelper.createGameObject("Axises").addComponent(TransfromController);
             this._transformController.gameObject.activeSelf = false;
+
+            this._skeletonDrawer = EditorMeshHelper.createGameObject("SkeletonDrawer").addComponent(SkeletonDrawer);
+            this._skeletonDrawer.gameObject.activeSelf = false;
 
             this._gridController = EditorMeshHelper.createGameObject("Grid").addComponent(GridController);
 
@@ -450,7 +470,7 @@ namespace paper.debug {
                 canvas.removeEventListener("contextmenu", this._contextmenuHandler);
                 canvas.removeEventListener("mousedown", this._onMouseDown);
                 canvas.removeEventListener("mouseup", this._onMouseUp);
-                canvas.removeEventListener("mouseout", this._onMouseUp); // ??
+                // canvas.removeEventListener("mouseout", this._onMouseUp); // ??
                 canvas.removeEventListener("mousemove", this._onMouseMove);
                 window.removeEventListener("keyup", this._onKeyUp);
                 window.removeEventListener("keydown", this._onKeyDown);
@@ -462,6 +482,11 @@ namespace paper.debug {
             if (this._transformController) {
                 this._transformController.gameObject.destroy();
                 this._transformController = null;
+            }
+
+            if (this._skeletonDrawer) {
+                this._skeletonDrawer.gameObject.destroy();
+                this._skeletonDrawer = null;
             }
 
             if (this._gridController) {
@@ -520,6 +545,11 @@ namespace paper.debug {
             const transformController = this._transformController;
             if (transformController && transformController.isActiveAndEnabled) {
                 transformController.update(this._pointerPosition);
+            }
+
+            const skeletonDrawer = this._skeletonDrawer;
+            if (skeletonDrawer && skeletonDrawer.isActiveAndEnabled) {
+                skeletonDrawer.update();
             }
 
             const gridController = this._gridController;

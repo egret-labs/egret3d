@@ -302,7 +302,6 @@ namespace egret3d {
          */
         public static createObject(mesh: Mesh, name?: string, tag?: string, scene?: paper.Scene) {
             const gameObject = paper.GameObject.create(name, tag, scene);
-
             const meshFilter = gameObject.addComponent(MeshFilter);
             const renderer = gameObject.addComponent(MeshRenderer);
             meshFilter.mesh = mesh;

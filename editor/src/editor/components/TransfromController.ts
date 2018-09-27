@@ -16,9 +16,9 @@ namespace paper.debug {
         private readonly _plane: egret3d.Plane = egret3d.Plane.create();
         private readonly _quad: GameObject = EditorMeshHelper.createGameObject("Plane", egret3d.DefaultMeshes.QUAD, egret3d.DefaultMaterials.MESH_BASIC_DOUBLESIDE.clone().setBlend(gltf.BlendMode.Blend).setOpacity(0.5));
         private readonly _highlights: { [key: string]: GameObject[] } = {};
+        private readonly _dir: { [key: string]: egret3d.IVector3 } = { "X": egret3d.Vector3.RIGHT, "Y": egret3d.Vector3.UP, "Z": egret3d.Vector3.FORWARD };
         private _mode: GameObject | null = null;
         private _hovered: GameObject | null = null;
-        private readonly _dir: { [key: string]: egret3d.IVector3 } = { "X": egret3d.Vector3.RIGHT, "Y": egret3d.Vector3.UP, "Z": egret3d.Vector3.FORWARD };
 
         public initialize() {
             super.initialize();
@@ -171,8 +171,8 @@ namespace paper.debug {
             const hoveredName = this._hovered!.name;
             const raycastInfo = Helper.raycastB(this._plane, mousePosition.x, mousePosition.y)!;
             const modelComponent = this.gameObject.getComponent(ModelComponent)!;
-            const currentSelected = modelComponent.selectedGameObject!;
-            const currentSelectedPRS = this._prsStarts[currentSelected.uuid];
+            const selectedGameObject = modelComponent.selectedGameObject!;
+            const currentSelectedPRS = this._prsStarts[selectedGameObject.uuid];
 
             this._offsetEnd.subtract(currentSelectedPRS[3], raycastInfo.position);
 
@@ -235,9 +235,9 @@ namespace paper.debug {
                 const camera = egret3d.Camera.editor;
                 const tempVector = egret3d.Vector3.create();
                 const rotationAxis = egret3d.Vector3.create();
-                const quaternion = !isWorldSpace ? currentSelected.transform.getRotation() : egret3d.Quaternion.IDENTITY.clone();
+                const quaternion = !isWorldSpace ? selectedGameObject.transform.getRotation() : egret3d.Quaternion.IDENTITY.clone();
                 const tempQuaternion = egret3d.Quaternion.create();
-                const ROTATION_SPEED = 20 / currentSelected.transform.getPosition().getDistance(tempVector.applyMatrix(camera.transform.getWorldMatrix()));
+                const ROTATION_SPEED = 20 / selectedGameObject.transform.getPosition().getDistance(tempVector.applyMatrix(camera.transform.getWorldMatrix()));
                 let rotationAngle = 0;
 
                 if (hoveredName.indexOf("XYZE") >= 0) {
@@ -283,7 +283,7 @@ namespace paper.debug {
                 tempQuaternion.release();
 
                 // TODO
-                currentSelected.transform.localEulerAngles;
+                selectedGameObject.transform.localEulerAngles;
             }
             else if (this._mode === this.scale) {
 
@@ -331,18 +331,18 @@ namespace paper.debug {
             const isWorldSpace = this._mode === this.scale ? false : this.isWorldSpace; // scale always oriented to local rotation
             const camera = egret3d.Camera.editor;
             const modelComponent = this.gameObject.getComponent(ModelComponent)!;
-            const currentSelected = modelComponent.selectedGameObject!;
+            const selectedGameObject = modelComponent.selectedGameObject!;
             const eye = this.eye.copy(camera.transform.position);
-            const eyeDistance = eye.getDistance(currentSelected.transform.position);
+            const eyeDistance = eye.getDistance(selectedGameObject.transform.position);
 
             if (camera.opvalue > 0.0) {
-                eye.subtract(currentSelected.transform.position);
+                eye.subtract(selectedGameObject.transform.position);
             }
 
             eye.normalize();
 
-            const quaternion = isWorldSpace ? egret3d.Quaternion.IDENTITY : currentSelected.transform.getRotation();
-            this.transform.position = currentSelected.transform.position;
+            const quaternion = isWorldSpace ? egret3d.Quaternion.IDENTITY : selectedGameObject.transform.getRotation();
+            this.transform.position = selectedGameObject.transform.position;
             this.transform.rotation = quaternion;
             this.transform.scale = egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10.0).release();
 
