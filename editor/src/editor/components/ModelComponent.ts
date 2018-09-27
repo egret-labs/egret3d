@@ -47,6 +47,18 @@ namespace paper.debug {
             }
         }
 
+        private _onEditorDeleteGameObjects(gameObjs: GameObject[]) {
+            for (const gameObj of this.selectedGameObjects) {
+                if (gameObjs.indexOf(gameObj) < 0) {
+                    this._unselect(gameObj);
+                }
+            }
+
+            for (const gameObj of gameObjs) {
+                this._select(gameObj);
+            }
+        }
+
         private _onChangeEditMode(mode: string) {
 
         }
@@ -92,10 +104,11 @@ namespace paper.debug {
                 setTimeout(() => {
                     this.editorModel = paper.editor.Editor.activeEditorModel;
                     this.editorModel.addEventListener(paper.editor.EditorModelEvent.SELECT_GAMEOBJECTS, e => this._onEditorSelectGameObjects(e.data), this);
-                    this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_MODE, e => this._onChangeEditMode(e.data), this);
-                    this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_TYPE, e => this._onChangeEditType(e.data), this);
+                    this.editorModel.addEventListener(paper.editor.EditorModelEvent.DELETE_GAMEOBJECTS, e => this._onEditorDeleteGameObjects(e.data), this);
                     this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_PROPERTY, e => this._onChangeProperty(e.data), this);
 
+                    this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_MODE, e => this._onChangeEditMode(e.data), this);
+                    this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_TYPE, e => this._onChangeEditType(e.data), this);
                 }, 3000);//TODO
             }
         }

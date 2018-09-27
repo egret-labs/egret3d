@@ -7106,6 +7106,9 @@ var paper;
                         if (source.constructor === paper.GameObject && source.hideFlags === 3 /* HideAndDontSave */) {
                             return undefined; // Pass.
                         }
+                        else if (source.constructor === egret3d.Transform && source.gameObject.hideFlags === 3 /* HideAndDontSave */) {
+                            return undefined; // Pass.
+                        }
                         if (parent) {
                             if (parent.constructor === paper.Scene) {
                                 if (key === KEY_GAMEOBJECTS) {
@@ -11754,7 +11757,7 @@ var paper;
          */
         GameObject.prototype.destroy = function () {
             if (this.isDestroyed) {
-                console.warn("The game object (" + this.path + ") has been destroyed.");
+                console.warn("The game object has been destroyed.");
                 return;
             }
             if (this === GameObject._globalGameObject) {

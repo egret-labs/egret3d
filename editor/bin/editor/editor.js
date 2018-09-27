@@ -3327,6 +3327,18 @@ var paper;
                     this._select(gameObj);
                 }
             };
+            ModelComponent.prototype._onEditorDeleteGameObjects = function (gameObjs) {
+                for (var _i = 0, _a = this.selectedGameObjects; _i < _a.length; _i++) {
+                    var gameObj = _a[_i];
+                    if (gameObjs.indexOf(gameObj) < 0) {
+                        this._unselect(gameObj);
+                    }
+                }
+                for (var _b = 0, gameObjs_2 = gameObjs; _b < gameObjs_2.length; _b++) {
+                    var gameObj = gameObjs_2[_b];
+                    this._select(gameObj);
+                }
+            };
             ModelComponent.prototype._onChangeEditMode = function (mode) {
             };
             ModelComponent.prototype._onChangeEditType = function (type) {
@@ -3368,9 +3380,10 @@ var paper;
                     setTimeout(function () {
                         _this.editorModel = paper.editor.Editor.activeEditorModel;
                         _this.editorModel.addEventListener(paper.editor.EditorModelEvent.SELECT_GAMEOBJECTS, function (e) { return _this._onEditorSelectGameObjects(e.data); }, _this);
+                        _this.editorModel.addEventListener(paper.editor.EditorModelEvent.DELETE_GAMEOBJECTS, function (e) { return _this._onEditorDeleteGameObjects(e.data); }, _this);
+                        _this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_PROPERTY, function (e) { return _this._onChangeProperty(e.data); }, _this);
                         _this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_MODE, function (e) { return _this._onChangeEditMode(e.data); }, _this);
                         _this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_TYPE, function (e) { return _this._onChangeEditType(e.data); }, _this);
-                        _this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_PROPERTY, function (e) { return _this._onChangeProperty(e.data); }, _this);
                     }, 3000); //TODO
                 }
             };
@@ -3835,7 +3848,6 @@ var paper;
                 _this._destroySceneOrGameObject = function () {
                     var selectedSceneOrGameObject = _this._guiComponent.inspector.instance;
                     if (selectedSceneOrGameObject) {
-                        _this._modelComponent.select(null); // TODO 
                         (selectedSceneOrGameObject).destroy();
                     }
                 };
@@ -4106,9 +4118,11 @@ var paper;
                 var sceneOptions = {
                     debug: false,
                     save: function () {
+                        var sceneJSON = JSON.stringify(paper.serialize(paper.Application.sceneManager.activeScene));
+                        console.info(sceneJSON);
                         if (_this._modelComponent.selectedScene) {
-                            var sceneJSON = JSON.stringify(paper.serialize(_this._modelComponent.selectedScene));
-                            console.info(sceneJSON);
+                            // const sceneJSON = JSON.stringify(paper.serialize(this._modelComponent.selectedScene));
+                            // console.info(sceneJSON);
                         }
                         else if (_this._modelComponent.selectedGameObjects.length > 0) {
                         }

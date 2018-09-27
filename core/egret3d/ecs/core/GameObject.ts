@@ -327,7 +327,7 @@ namespace paper {
          */
         public destroy() {
             if (this.isDestroyed) {
-                console.warn(`The game object (${this.path}) has been destroyed.`);
+                console.warn(`The game object has been destroyed.`);
                 return;
             }
 

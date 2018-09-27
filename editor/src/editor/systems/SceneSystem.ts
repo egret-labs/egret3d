@@ -35,6 +35,7 @@ namespace paper.debug {
                 if (event.buttons & 0b10) { // 正在控制摄像机。
                     return;
                 }
+
                 const transformController = this._transformController;
                 if (transformController && transformController.isActiveAndEnabled && transformController.hovered) {
                     transformController.start(this._pointerPosition);
@@ -238,7 +239,6 @@ namespace paper.debug {
                     skeletonDrawer.gameObject.activeSelf = false;
                 }
             }
-
         }
 
         private _onGameObjectSelected = (_c: any, value: GameObject) => {
@@ -259,14 +259,16 @@ namespace paper.debug {
                 }
             }
             else {
-
                 const box = this._boxes[value.uuid];
                 if (!box) {
                     throw new Error(); // Never.
                 }
 
                 delete this._boxes[value.uuid];
-                box.destroy();
+
+                if (!box.isDestroyed) {
+                    box.destroy();
+                }
             }
         }
 

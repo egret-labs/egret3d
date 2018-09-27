@@ -40,7 +40,6 @@ namespace paper.debug {
         private _destroySceneOrGameObject = () => {
             const selectedSceneOrGameObject = this._guiComponent.inspector.instance as Scene | GameObject;
             if (selectedSceneOrGameObject) {
-                this._modelComponent.select(null); // TODO 
                 (selectedSceneOrGameObject).destroy();
             }
         }
@@ -348,9 +347,12 @@ namespace paper.debug {
             const sceneOptions = {
                 debug: false,
                 save: () => {
+
+                    const sceneJSON = JSON.stringify(paper.serialize(paper.Application.sceneManager.activeScene));
+                    console.info(sceneJSON);
                     if (this._modelComponent.selectedScene) {
-                        const sceneJSON = JSON.stringify(paper.serialize(this._modelComponent.selectedScene));
-                        console.info(sceneJSON);
+                        // const sceneJSON = JSON.stringify(paper.serialize(this._modelComponent.selectedScene));
+                        // console.info(sceneJSON);
                     }
                     else if (this._modelComponent.selectedGameObjects.length > 0) {
 

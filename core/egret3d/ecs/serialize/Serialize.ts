@@ -358,6 +358,9 @@ namespace paper {
                         if (source.constructor === GameObject && (source as GameObject).hideFlags === paper.HideFlags.HideAndDontSave) {
                             return undefined; // Pass.
                         }
+                        else if (source.constructor === egret3d.Transform && (source as egret3d.Transform).gameObject.hideFlags === paper.HideFlags.HideAndDontSave) {
+                            return undefined; // Pass.
+                        }
 
                         if (parent) {
                             if (parent.constructor === Scene) {
