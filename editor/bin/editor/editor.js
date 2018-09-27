@@ -4332,7 +4332,8 @@ var paper;
                     event.preventDefault();
                 };
                 _this._onMouseMove = function (event) {
-                    _this._pointerPosition.set(event.clientX, event.clientY, 0.0);
+                    var canvas = egret3d.WebGLCapabilities.canvas;
+                    _this._pointerPosition.set(event.clientX - canvas.clientLeft, event.clientY - canvas.clientTop, 0.0);
                     egret3d.InputManager.mouse.convertPosition(_this._pointerPosition, _this._pointerPosition);
                     if (event.buttons & 2) {
                     }
@@ -4628,11 +4629,10 @@ var paper;
                 paper.EventPool.addEventListener("GameObjectUnselected" /* GameObjectUnselected */, debug.ModelComponent, this._onGameObjectUnselected);
                 {
                     var canvas = egret3d.WebGLCapabilities.canvas;
-                    canvas.addEventListener("contextmenu", this._contextmenuHandler);
+                    window.addEventListener("contextmenu", this._contextmenuHandler);
                     canvas.addEventListener("mousedown", this._onMouseDown);
-                    canvas.addEventListener("mouseup", this._onMouseUp);
-                    // canvas.addEventListener("mouseout", this._onMouseUp); // ??
-                    canvas.addEventListener("mousemove", this._onMouseMove);
+                    window.addEventListener("mouseup", this._onMouseUp);
+                    window.addEventListener("mousemove", this._onMouseMove);
                     window.addEventListener("keyup", this._onKeyUp);
                     window.addEventListener("keydown", this._onKeyDown);
                 }
@@ -4659,11 +4659,10 @@ var paper;
                 paper.EventPool.removeEventListener("GameObjectUnselected" /* GameObjectUnselected */, debug.ModelComponent, this._onGameObjectUnselected);
                 {
                     var canvas = egret3d.WebGLCapabilities.canvas;
-                    canvas.removeEventListener("contextmenu", this._contextmenuHandler);
+                    window.removeEventListener("contextmenu", this._contextmenuHandler);
                     canvas.removeEventListener("mousedown", this._onMouseDown);
-                    canvas.removeEventListener("mouseup", this._onMouseUp);
-                    // canvas.removeEventListener("mouseout", this._onMouseUp); // ??
-                    canvas.removeEventListener("mousemove", this._onMouseMove);
+                    window.removeEventListener("mouseup", this._onMouseUp);
+                    window.removeEventListener("mousemove", this._onMouseMove);
                     window.removeEventListener("keyup", this._onKeyUp);
                     window.removeEventListener("keydown", this._onKeyDown);
                 }

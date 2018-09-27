@@ -102,7 +102,9 @@ namespace paper.debug {
         }
 
         private _onMouseMove = (event: MouseEvent) => {
-            this._pointerPosition.set(event.clientX, event.clientY, 0.0);
+            const canvas = egret3d.WebGLCapabilities.canvas!;
+
+            this._pointerPosition.set(event.clientX - canvas.clientLeft, event.clientY - canvas.clientTop, 0.0);
             egret3d.InputManager.mouse.convertPosition(this._pointerPosition, this._pointerPosition);
 
             if (event.buttons & 0b10) { // 正在控制摄像机。
@@ -438,11 +440,10 @@ namespace paper.debug {
 
             { //
                 const canvas = egret3d.WebGLCapabilities.canvas!;
-                canvas.addEventListener("contextmenu", this._contextmenuHandler);
+                window.addEventListener("contextmenu", this._contextmenuHandler);
                 canvas.addEventListener("mousedown", this._onMouseDown);
-                canvas.addEventListener("mouseup", this._onMouseUp);
-                // canvas.addEventListener("mouseout", this._onMouseUp); // ??
-                canvas.addEventListener("mousemove", this._onMouseMove);
+                window.addEventListener("mouseup", this._onMouseUp);
+                window.addEventListener("mousemove", this._onMouseMove);
                 window.addEventListener("keyup", this._onKeyUp);
                 window.addEventListener("keydown", this._onKeyDown);
             }
@@ -478,11 +479,10 @@ namespace paper.debug {
 
             { //
                 const canvas = egret3d.WebGLCapabilities.canvas!;
-                canvas.removeEventListener("contextmenu", this._contextmenuHandler);
+                window.removeEventListener("contextmenu", this._contextmenuHandler);
                 canvas.removeEventListener("mousedown", this._onMouseDown);
-                canvas.removeEventListener("mouseup", this._onMouseUp);
-                // canvas.removeEventListener("mouseout", this._onMouseUp); // ??
-                canvas.removeEventListener("mousemove", this._onMouseMove);
+                window.removeEventListener("mouseup", this._onMouseUp);
+                window.removeEventListener("mousemove", this._onMouseMove);
                 window.removeEventListener("keyup", this._onKeyUp);
                 window.removeEventListener("keydown", this._onKeyDown);
             }

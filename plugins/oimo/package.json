@@ -5,7 +5,7 @@
   "description": "egret 3d oimo",
   "main": "bin/oimo/oimo.js",
   "scripts": {
-    "build": "egret build & node ./script/build.js"
+    "build": "egret build && node ./script/build.js"
   },
   "author": "egret",
   "license": "ISC",
