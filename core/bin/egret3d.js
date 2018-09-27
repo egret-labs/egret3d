@@ -23013,7 +23013,7 @@ var paper;
                     };
                     var prePropertyData = {
                         propName: propName,
-                        copyValue: this.serializeProperty(target[propName], valueEditType),
+                        copyValue: this.serializeProperty(propOldValue, valueEditType),
                         valueEditType: valueEditType
                     };
                     this.createModifyComponent(target.gameObject.uuid, target.uuid, [newPropertyData], [prePropertyData]);
@@ -23311,7 +23311,7 @@ var paper;
                         }
                     }
                     else {
-                        var all = paper.Application.sceneManager.activeScene.gameObjects;
+                        var all = this.scene.gameObjects;
                         for (var i = 0; i < objects.length; i++) {
                             all.splice(all.indexOf(objects[i]), 1);
                         }
@@ -23359,7 +23359,7 @@ var paper;
                 }
             };
             EditorModel.prototype.getGameObjectByUUid = function (uuid) {
-                var objects = paper.Application.sceneManager.activeScene.gameObjects;
+                var objects = this.scene.gameObjects;
                 for (var i = 0; i < objects.length; i++) {
                     if (objects[i].uuid === uuid) {
                         return objects[i];
@@ -23368,7 +23368,7 @@ var paper;
                 return null;
             };
             EditorModel.prototype.getGameObjectsByUUids = function (uuids) {
-                var objects = paper.Application.sceneManager.activeScene.gameObjects;
+                var objects = this.scene.gameObjects;
                 var obj;
                 var result = [];
                 var idIndex;
@@ -23476,6 +23476,7 @@ var paper;
             /**将对象按照层级进行排序
              */
             EditorModel.prototype.sortGameObjectsForHierarchy = function (gameobjects) {
+                var _this = this;
                 gameobjects = gameobjects.concat();
                 if (gameobjects.length < 2) {
                     return gameobjects;
@@ -23490,7 +23491,7 @@ var paper;
                         currentObj = currentObj.transform.parent.gameObject;
                     }
                     //追加一个根部索引
-                    result.unshift(paper.Application.sceneManager.activeScene.gameObjects.indexOf(currentObj));
+                    result.unshift(_this.scene.gameObjects.indexOf(currentObj));
                     displayPathList.push({ gameObject: obj, path: result });
                 });
                 function getPath(gameObject) {
@@ -23563,7 +23564,7 @@ var paper;
             };
             EditorModel.prototype.updateAsset = function (asset, prefabInstance) {
                 if (prefabInstance === void 0) { prefabInstance = null; }
-                var refs = this.findAssetRefs(paper.Application.sceneManager.activeScene, asset);
+                var refs = this.findAssetRefs(this.scene, asset);
                 var serializeData;
                 if (asset instanceof paper.Prefab) {
                     serializeData = paper.serialize(prefabInstance);
@@ -24841,7 +24842,7 @@ var paper;
                         var gameObj = this.editorModel.getGameObjectByUUid(deleteUUid);
                         if (gameObj) {
                             gameObj.destroy();
-                            this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS);
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, [deleteUUid]);
                         }
                     }
                     return true;
@@ -25562,7 +25563,7 @@ var paper;
                     }
                     var gameObjs = editor.Editor.activeEditorModel.getGameObjectsByUUids(removeGameObjIds_1);
                     gameObjs.forEach(function (element) { return element.destroy(); });
-                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS);
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, removeGameObjIds_1);
                     return true;
                 }
                 return false;
