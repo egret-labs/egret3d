@@ -1187,6 +1187,13 @@ declare namespace gltf {
         MORPHNORMAL_1 = "MORPHNORMAL_1",
         MORPHNORMAL_2 = "MORPHNORMAL_2",
         MORPHNORMAL_3 = "MORPHNORMAL_3",
+        _INSTANCE_DISTANCE = "_INSTANCE_DISTANCE",
+        _INSTANCE_START = "_INSTANCE_START",
+        _INSTANCE_END = "_INSTANCE_END",
+        _INSTANCE_COLOR_START = "_INSTANCE_COLOR_START",
+        _INSTANCE_COLOR_END = "_INSTANCE_COLOR_END",
+        _INSTANCE_DISTANCE_START = "_INSTANCE_DISTANCE_START",
+        _INSTANCE_DISTANCE_END = "_INSTANCE_DISTANCE_END",
         _CORNER = "_CORNER",
         _START_POSITION = "_START_POSITION",
         _START_VELOCITY = "_START_VELOCITY",
@@ -1215,6 +1222,7 @@ declare namespace gltf {
         MODELVIEWINVERSETRANSPOSE = "MODELVIEWINVERSETRANSPOSE",
         VIEWPORT = "VIEWPORT",
         JOINTMATRIX = "JOINTMATRIX",
+        _RESOLUTION = "_RESOLUTION",
         _VIEWPROJECTION = "_VIEWPROJECTION",
         _CAMERA_POS = "_CAMERA_POS",
         _CAMERA_UP = "CAMERA_UP",
@@ -3733,6 +3741,7 @@ declare namespace egret3d {
          * TODO
          */
         static createSphere(radius?: number, widthSegments?: number, heightSegments?: number): Mesh;
+        private computeLineDistances(vertices, out);
     }
 }
 declare namespace egret3d {
@@ -6382,6 +6391,181 @@ declare namespace egret3d.ShaderLib {
         "extensionsRequired": string[];
         "extensionsUsed": string[];
     };
+    const linebasic: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                        "instanceStart": {
+                            "semantic": string;
+                        };
+                        "instanceEnd": {
+                            "semantic": string;
+                        };
+                        "instanceColorStart": {
+                            "semantic": string;
+                        };
+                        "instanceColorEnd": {
+                            "semantic": string;
+                        };
+                        "instanceDistanceStart": {
+                            "semantic": string;
+                        };
+                        "instanceDistanceEnd": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                        };
+                        "linewidth": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "resolution": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "dashScale": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "dashSize": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "gapSize": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "fogColor": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "fogDensity": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "fogNear": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "fogFar": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+    };
     const linedashed: {
         "version": string;
         "asset": {
@@ -6482,6 +6666,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "scale": {
                             "type": number;
+                            "value": number;
                         };
                         "logDepthBufFC": {
                             "type": number;
@@ -6496,9 +6681,11 @@ declare namespace egret3d.ShaderLib {
                         };
                         "dashSize": {
                             "type": number;
+                            "value": number;
                         };
                         "totalSize": {
                             "type": number;
+                            "value": number;
                         };
                         "fogColor": {
                             "type": number;
@@ -8171,6 +8358,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "scale": {
                             "type": number;
+                            "value": number;
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
