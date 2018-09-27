@@ -8,7 +8,7 @@ namespace egret3d {
         ];
 
         public onAddComponent(component: Animation) {
-            if (component.autoPlay) {
+            if (component.autoPlay && (!component.lastAnimationState || !component.lastAnimationState.isPlaying)) {
                 component.play();
             }
         }

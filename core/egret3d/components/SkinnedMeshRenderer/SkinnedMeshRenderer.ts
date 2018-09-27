@@ -1,4 +1,7 @@
 namespace egret3d {
+    const _helpVector3A = Vector3.create();
+    const _helpVector3B = Vector3.create();
+    const _helpVector3C = Vector3.create();
     const _helpMatrix = Matrix4.create();
     /**
      * Skinned Mesh Renderer Component
@@ -14,6 +17,11 @@ namespace egret3d {
      */
     export class SkinnedMeshRenderer extends MeshRenderer {
         /**
+         * 强制使用 cpu 蒙皮。
+         * - 骨骼数超过硬件支持的最大骨骼数量，或顶点权重大于 4 个，需要使用 CPU 蒙皮。
+         */
+        public forceCPUSkin: boolean = false;
+        /**
          * 
          */
         public boneMatrices: Float32Array | null = null;
@@ -27,6 +35,7 @@ namespace egret3d {
         public _retargetBoneNames: string[] | null = null;
         @paper.serializedField
         private _mesh: Mesh | null = null;
+        private _rawVertices: Float32Array | null = null;
         /**
          * @internal
          */
@@ -42,37 +51,36 @@ namespace egret3d {
                 _helpMatrix.fromArray(inverseBindMatrices, offset).premultiply(matrix).toArray(boneMatrices, offset);
             }
 
-            // {
-            //     const vA = Vector3.create();
-            //     const vB = Vector3.create();
-            //     const vC = Vector3.create();
-            //     const mA = Matrix4.create();
+            if (this.forceCPUSkin) {
+                const vA = _helpVector3A;
+                const vB = _helpVector3A;
+                const vC = _helpVector3C;
+                const mA = _helpMatrix;
 
-            //     const indices = this._mesh.getIndices()!;
-            //     const vertices = this._mesh.getVertices()!;
-            //     const joints = this._mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array;
-            //     const weights = this._mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)! as Float32Array;
+                const indices = this._mesh.getIndices()!;
+                const vertices = this._mesh.getVertices()!;
+                const joints = this._mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array;
+                const weights = this._mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)! as Float32Array;
 
-            //     if (!this._rawVertices) {
-            //         this._rawVertices = new Float32Array(vertices.length);
-            //         this._rawVertices.set(vertices);
-            //     }
+                if (!this._rawVertices) {
+                    this._rawVertices = new Float32Array(vertices.length);
+                    this._rawVertices.set(vertices);
+                }
 
-            //     for (const index of <any>indices as number[]) {
-            //         vA.fromArray(this._rawVertices, index * 3);
-            //         vB.set(0.0, 0.0, 0.0).add(
-            //             vC.applyMatrix(mA.fromArray(boneMatrices, joints[index * 4 + 0] * 16), vA).multiplyScalar(weights[index * 4 + 0])
-            //         ).add(
-            //             vC.applyMatrix(mA.fromArray(boneMatrices, joints[index * 4 + 1] * 16), vA).multiplyScalar(weights[index * 4 + 1])
-            //         ).add(
-            //             vC.applyMatrix(mA.fromArray(boneMatrices, joints[index * 4 + 2] * 16), vA).multiplyScalar(weights[index * 4 + 2])
-            //         ).add(
-            //             vC.applyMatrix(mA.fromArray(boneMatrices, joints[index * 4 + 3] * 16), vA).multiplyScalar(weights[index * 4 + 3])
-            //         ).toArray(vertices, index * 3);
-            //     }
+                for (const index of <any>indices as number[]) {
+                    const vertexIndex = index * 3;
+                    const jointIndex = index * 4;
+                    vA.fromArray(this._rawVertices, vertexIndex);
+                    vB.set(0.0, 0.0, 0.0)
+                        .add(vC.applyMatrix(mA.fromArray(boneMatrices, joints[jointIndex + 0] * 16), vA).multiplyScalar(weights[jointIndex + 0]))
+                        .add(vC.applyMatrix(mA.fromArray(boneMatrices, joints[jointIndex + 1] * 16), vA).multiplyScalar(weights[jointIndex + 1]))
+                        .add(vC.applyMatrix(mA.fromArray(boneMatrices, joints[jointIndex + 2] * 16), vA).multiplyScalar(weights[jointIndex + 2]))
+                        .add(vC.applyMatrix(mA.fromArray(boneMatrices, joints[jointIndex + 3] * 16), vA).multiplyScalar(weights[jointIndex + 3]))
+                        .toArray(vertices, vertexIndex);
+                }
 
-            //     this._mesh.uploadVertexBuffer();
-            // }
+                this._mesh.uploadVertexBuffer();
+            }
         }
 
         public initialize(reset?: boolean) {
@@ -117,6 +125,8 @@ namespace egret3d {
 
                 if (this._bones.length > SkinnedMeshRendererSystem.maxBoneCount) {
                     // TODO
+                    this.forceCPUSkin = true;
+                    console.warn("");
                 }
                 // this._update(); TODO
             }
@@ -175,7 +185,7 @@ namespace egret3d {
             }
 
             if (raycastMesh) {
-                return aabb.raycast(localRay) && this._mesh.raycast(p1, raycastInfo, this.boneMatrices);
+                return aabb.raycast(localRay) && this._mesh.raycast(p1, raycastInfo, this.forceCPUSkin ? null : this.boneMatrices);
             }
             else if (aabb.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) { // Update local raycast info to world.

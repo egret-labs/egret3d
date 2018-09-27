@@ -147,7 +147,6 @@ namespace egret3d {
         protected _fadeTime: number = 0.0;
 
         protected _onFadeStateChange() {
-
         }
         /**
          * @internal
@@ -603,6 +602,14 @@ namespace egret3d {
             this._subFadeState = -1;
         }
 
+        public get isPlaying() {
+            return this._isPlaying && this._playState !== 1;
+        }
+
+        public get isCompleted() {
+            return this._playState !== 1;
+        }
+
         public get totalTime() {
             return this.animationClip.duration;
         }
@@ -828,6 +835,9 @@ namespace egret3d {
         }
         public get animations(): ReadonlyArray<GLTFAsset> {
             return this._animations;
+        }
+        public get lastAnimationState() {
+            return this._lastAnimationState;
         }
     }
 }

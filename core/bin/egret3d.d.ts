@@ -4766,6 +4766,11 @@ declare namespace egret3d {
      */
     class SkinnedMeshRenderer extends MeshRenderer {
         /**
+         * 强制使用 cpu 蒙皮。
+         * - 骨骼数超过硬件支持的最大骨骼数量，或顶点权重大于 4 个，需要使用 CPU 蒙皮。
+         */
+        forceCPUSkin: boolean;
+        /**
          *
          */
         boneMatrices: Float32Array | null;
@@ -4773,6 +4778,7 @@ declare namespace egret3d {
         private _rootBone;
         private _inverseBindMatrices;
         private _mesh;
+        private _rawVertices;
         initialize(reset?: boolean): void;
         uninitialize(): void;
         recalculateAABB(): void;
@@ -4909,6 +4915,8 @@ declare namespace egret3d {
         play(): void;
         stop(): void;
         fateOut(): void;
+        readonly isPlaying: boolean;
+        readonly isCompleted: boolean;
         readonly totalTime: number;
         readonly currentTime: number;
     }
@@ -4946,6 +4954,7 @@ declare namespace egret3d {
          * 动画数据列表。
          */
         animations: ReadonlyArray<GLTFAsset>;
+        readonly lastAnimationState: AnimationState;
     }
 }
 declare namespace egret3d {
