@@ -144,7 +144,6 @@ declare namespace paper.debug {
         selectedGameObject: GameObject | null;
         private editorModel;
         private _onEditorSelectGameObjects(gameObjs);
-        private _onEditorDeleteGameObjects(gameObjs);
         private _onChangeEditMode(mode);
         private _onChangeEditType(type);
         private _onChangeProperty(data);
