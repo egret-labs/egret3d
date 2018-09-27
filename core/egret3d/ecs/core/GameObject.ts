@@ -45,18 +45,48 @@ namespace paper {
             }
 
             const raycastInfo = egret3d.RaycastInfo.create();
-            if ((gameObject.layer & cullingMask) && gameObject.renderer && gameObject.renderer.enabled && gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
+            raycastInfo.transform = null;
+            raycastInfo.collider = null;
+
+            if (gameObject.layer & cullingMask) {
+                const boxCollider = gameObject.getComponent(egret3d.BoxCollider);
+                if (boxCollider) {
+                    if (boxCollider.enabled && boxCollider.raycast(ray, raycastInfo)) {
+                        raycastInfo.transform = gameObject.transform;
+                        raycastInfo.collider = boxCollider;
+                    }
+                }
+                else {
+                    const sphereCollider = gameObject.getComponent(egret3d.SphereCollider);
+                    if (sphereCollider) {
+                        if (sphereCollider.enabled && sphereCollider.raycast(ray, raycastInfo)) {
+                            raycastInfo.transform = gameObject.transform;
+                            raycastInfo.collider = sphereCollider;
+                        }
+                    }
+                    else if (gameObject.renderer) {
+                        if (gameObject.renderer.enabled && gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
+                            raycastInfo.transform = gameObject.transform;
+                        }
+                    }
+                }
+            }
+
+            if (raycastInfo.transform) {
                 if (maxDistance <= 0.0 || raycastInfo.distance <= maxDistance) {
-                    raycastInfo.transform = gameObject.transform;
                     raycastInfos.push(raycastInfo);
                 }
                 else {
+                    raycastInfo.transform = null;
                     raycastInfo.release();
                 }
             }
             else {
+                raycastInfo.transform = null;
                 raycastInfo.release();
+            }
 
+            if (!raycastInfo.transform) {
                 for (const child of gameObject.transform.children) {
                     this._raycast(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
                 }

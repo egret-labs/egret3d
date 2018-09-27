@@ -73,6 +73,7 @@
         "egret3d/EventDispatcher.ts",
         "egret3d/systems/BeginSystem.ts",
         "egret3d/systems/EndSystem.ts",
+
         "egret3d/components/Transform.ts",
         "egret3d/components/singletons/DefaultMeshes.ts",
         "egret3d/components/singletons/DefaultTextures.ts",
@@ -80,6 +81,10 @@
         "egret3d/components/singletons/DefaultMaterials.ts",
         "egret3d/components/singletons/Cameras.ts",
         "egret3d/components/singletons/DrawCalls.ts",
+        
+        "egret3d/components/colliders/BaseCollider.ts",
+        "egret3d/components/colliders/BaseCollider.ts",
+
         "egret3d/components/Camera/CameraSystem.ts",
         "egret3d/components/Camera/Camera.ts",
         "egret3d/components/Camera/CameraPostQueue.ts",
