@@ -70,6 +70,7 @@
         "egret3d/ecs/serialize/SerializeClassMap.ts",
         "egret3d/ecs/serialize/Deserialize.ts",
         "egret3d/ecs/serialize/Serialize.ts",
+
         "egret3d/EventDispatcher.ts",
         "egret3d/systems/BeginSystem.ts",
         "egret3d/systems/EndSystem.ts",
@@ -82,8 +83,9 @@
         "egret3d/components/singletons/Cameras.ts",
         "egret3d/components/singletons/DrawCalls.ts",
         
-        "egret3d/components/colliders/BaseCollider.ts",
-        "egret3d/components/colliders/BaseCollider.ts",
+        "egret3d/components/collision/BaseCollider.ts",
+        "egret3d/components/collision/BoxCollider.ts",
+        "egret3d/components/collision/SphereCollider.ts",
 
         "egret3d/components/Camera/CameraSystem.ts",
         "egret3d/components/Camera/Camera.ts",

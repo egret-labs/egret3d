@@ -11,7 +11,8 @@ namespace egret3d.oimo {
 
         protected _createShape() {
             const config = this._updateConfig();
-            config.geometry = new OIMO.BoxGeometry(helpVector3A.multiplyScalar(0.5, this._size) as any);
+            const halfSize = Vector3.create().multiplyScalar(0.5, this._size).release();
+            config.geometry = new OIMO.BoxGeometry(halfSize as any);
 
             const shape = new OIMO.Shape(config);
             shape.userData = this;

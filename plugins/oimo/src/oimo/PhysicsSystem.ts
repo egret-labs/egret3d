@@ -242,7 +242,11 @@ namespace egret3d.oimo {
 
             if (component instanceof Collider) {
                 const rigidbody = component.gameObject.getComponent(Rigidbody) as Rigidbody;
-                rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                if ((component.oimoShape as any)._rigidBody) {
+                    component.oimoShape.setContactCallback(null);
+                    rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                }
+
                 // rigidbody._updateMass(rigidbody.oimoRigidbody);
             }
             else if (component instanceof Joint) {
@@ -253,13 +257,8 @@ namespace egret3d.oimo {
         public onRemoveGameObject(gameObject: paper.GameObject, group: paper.GameObjectGroup) {
             const rigidbody = gameObject.getComponent(Rigidbody) as Rigidbody;
 
-            for (const joint of gameObject.getComponents(Joint as any, true) as Joint<any>[]) {
+            for (const joint of gameObject.getComponents(Joint as any, true) as Joint<any>[]) { // TODO
                 this._oimoWorld.removeJoint(joint.oimoJoint);
-            }
-
-            for (const shape of gameObject.getComponents(Collider as any, true) as Collider[]) {
-                rigidbody.oimoRigidbody.removeShape(shape.oimoShape);
-                // rigidbody._updateMass(rigidbody.oimoRigidbody);
             }
 
             this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
