@@ -23013,7 +23013,7 @@ var paper;
                     };
                     var prePropertyData = {
                         propName: propName,
-                        copyValue: this.serializeProperty(target[propName], valueEditType),
+                        copyValue: this.serializeProperty(propOldValue, valueEditType),
                         valueEditType: valueEditType
                     };
                     this.createModifyComponent(target.gameObject.uuid, target.uuid, [newPropertyData], [prePropertyData]);
@@ -24773,7 +24773,6 @@ var paper;
                         var info = tmpList[index];
                         var obj = this.editorModel.getGameObjectByUUid(info.UUID);
                         var oldTarget = this.editorModel.getGameObjectByUUid(info.oldTargetUUID);
-                        ;
                         var oldDir = info.oldDir;
                         if (info.oldTargetUUID === 'scene') {
                             var all = paper.Application.sceneManager.activeScene.gameObjects;
@@ -25083,8 +25082,9 @@ var paper;
                         }
                     }
                     //reset prefab serrializedata,save prefab
-                    this.stateData.prefab._raw = this.stateData.cachePrefabSerializedData;
-                    this.dispatchEditorModelEvent(editor.EditorModelEvent.SAVE_ASSET, this.stateData.prefab.name);
+                    // (this.stateData.prefab as any)._raw = this.stateData.cachePrefabSerializedData;
+                    var prefabJson = this.stateData.cachePrefabSerializedData;
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefab.name, raw: prefabJson });
                     tempPrefabObject.destroy();
                     tempPrefabObject = null;
                     return true;
@@ -25188,7 +25188,7 @@ var paper;
                 }
             };
             ApplyPrefabInstanceState.prototype.setGameObjectPrefabRootId = function (gameObj, rootID) {
-                if (gameObj.extras.prefab == undefined) {
+                if (gameObj.extras.prefab === undefined) {
                     gameObj.extras.rootID = rootID;
                 }
                 for (var index = 0; index < gameObj.transform.children.length; index++) {
@@ -25202,7 +25202,7 @@ var paper;
                 var result = [];
                 for (var _i = 0, objects_1 = objects; _i < objects_1.length; _i++) {
                     var obj = objects_1[_i];
-                    if ((obj.extras && obj.extras.linkedID && obj.extras.linkedID == linkedId) && (obj.extras.prefab || (obj.extras.rootID && obj.extras.rootID != filterApplyRootId)) && obj.uuid != filterApplyRootId) {
+                    if ((obj.extras && obj.extras.linkedID && obj.extras.linkedID === linkedId) && (obj.extras.prefab || (obj.extras.rootID && obj.extras.rootID !== filterApplyRootId)) && obj.uuid !== filterApplyRootId) {
                         result.push(obj);
                     }
                 }
@@ -25361,8 +25361,9 @@ var paper;
                         }
                     }
                     this.clearGameObjectExtrasInfo(tempPrefabObject);
-                    this.stateData.prefab._raw = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
-                    this.dispatchEditorModelEvent(editor.EditorModelEvent.SAVE_ASSET, this.stateData.prefab.name);
+                    // (this.stateData.prefab as any)._raw = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
+                    var prefabJson = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefab.name, raw: prefabJson });
                     tempPrefabObject.destroy();
                     this.firstRedo = false;
                     return true;

@@ -68,7 +68,7 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                let ids = this.deleteInfo.map(info => { return info.UUID });
+                let ids = this.deleteInfo.map(info => { return info.UUID; });
                 let objs = this.editorModel.getGameObjectsByUUids(ids);
                 for (let index = 0; index < objs.length; index++) {
                     const element = objs[index];

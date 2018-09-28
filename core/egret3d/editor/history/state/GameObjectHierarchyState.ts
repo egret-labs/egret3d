@@ -61,7 +61,7 @@ namespace paper.editor {
                 for (let index = 0; index < tmpList.length; index++) {
                     let info=tmpList[index];
                     let obj = this.editorModel.getGameObjectByUUid(info.UUID);
-                    let oldTarget=this.editorModel.getGameObjectByUUid(info.oldTargetUUID);;
+                    let oldTarget=this.editorModel.getGameObjectByUUid(info.oldTargetUUID);
                     let oldDir=info.oldDir;
                     if(info.oldTargetUUID==='scene'){
                         let all=paper.Application.sceneManager.activeScene.gameObjects;
@@ -78,7 +78,7 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                let gameObjectUUids = this.gameObjectsInfo.map(v => { return v.UUID });
+                let gameObjectUUids = this.gameObjectsInfo.map(v => { return v.UUID; });
                 let gameObjs = this.editorModel.getGameObjectsByUUids(gameObjectUUids);
                 let targetGameObj = this.editorModel.getGameObjectByUUid(this.targetObject);
                 gameObjs = this.editorModel.sortGameObjectsForHierarchy(gameObjs);
