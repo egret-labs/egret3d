@@ -12,7 +12,7 @@ namespace DefaultMeshes {
         meshRenderer.material = egret3d.Material.create();
 
         // GUI.
-        const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.debug.GUIComponent);
+        const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
         const options = {
             mesh: "CUBE",
             texture: false,

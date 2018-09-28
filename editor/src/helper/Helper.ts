@@ -1,4 +1,7 @@
-namespace paper.debug {
+namespace paper.editor {
+    /**
+     * @internal
+     */
     export class Helper {
 
         public static raycast(targets: ReadonlyArray<paper.GameObject | egret3d.Transform>, mousePositionX: number, mousePositionY: number) {

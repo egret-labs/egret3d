@@ -95,13 +95,13 @@ declare namespace dat {
         listen(): GUIController;
         remove(): GUIController;
     }
-}declare namespace paper.debug {
+}declare namespace paper.editor {
 }
-declare namespace paper.debug {
+declare namespace paper.editor {
 }
-declare namespace paper.debug {
+declare namespace paper.editor {
 }
-declare namespace paper.debug {
+declare namespace paper.editor {
     /**
      *
      */
@@ -110,7 +110,7 @@ declare namespace paper.debug {
         readonly hierarchy: dat.GUI;
     }
 }
-declare namespace paper.debug {
+declare namespace paper.editor {
     /**
      *
      */
@@ -142,11 +142,11 @@ declare namespace paper.debug {
          * 最后一个选中的实体。
          */
         selectedGameObject: GameObject | null;
-        private editorModel;
-        private _onEditorSelectGameObjects(gameObjs);
+        private _editorModel;
+        private _onEditorSelectGameObjects(event);
+        private _onChangeProperty(data);
         private _onChangeEditMode(mode);
         private _onChangeEditType(type);
-        private _onChangeProperty(data);
         initialize(): void;
         private _select(value, isReplace?);
         private _unselect(value);
@@ -156,21 +156,21 @@ declare namespace paper.debug {
         changeProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void;
     }
 }
-declare namespace paper.debug {
+declare namespace paper.editor {
 }
-declare namespace paper.debug {
+declare namespace paper.editor {
     /**
      *
      */
-    class SkeletonDrawer extends paper.BaseComponent {
+    class SkeletonDrawer extends BaseComponent {
         private readonly _skeletonMesh;
         initialize(): void;
         update(): void;
     }
 }
-declare namespace paper.debug {
+declare namespace paper.editor {
 }
-declare namespace paper.debug {
+declare namespace paper.editor {
     /**
      *
      */
@@ -178,7 +178,7 @@ declare namespace paper.debug {
         onAwake(): void;
     }
 }
-declare namespace paper.debug {
+declare namespace paper.editor {
     class GUISystem extends BaseSystem {
         protected readonly _interests: {
             componentClass: typeof egret3d.Transform;
@@ -209,8 +209,8 @@ declare namespace paper.debug {
         onUpdate(dt: number): void;
     }
 }
-declare namespace paper.debug {
-    class SceneSystem extends paper.BaseSystem {
+declare namespace paper.editor {
+    class SceneSystem extends BaseSystem {
         protected readonly _interests: {
             componentClass: typeof egret3d.Transform;
         }[][];
@@ -240,12 +240,13 @@ declare namespace paper.debug {
         private _updateBoxes();
         private _updateCameras();
         private _updateLights();
+        onAwake(): void;
         onEnable(): void;
         onDisable(): void;
         onUpdate(): void;
     }
 }
-declare namespace paper.debug {
+declare namespace paper.editor {
     class EditorMeshHelper {
         static createGameObject(name: string, mesh?: egret3d.Mesh, material?: egret3d.Material, tag?: string, scene?: paper.Scene): GameObject;
         static createBox(name: string, color: egret3d.Color, opacity: number, scene: Scene): GameObject;
@@ -253,7 +254,7 @@ declare namespace paper.debug {
         static createCameraWireframed(name: string, colorFrustum?: egret3d.Color, colorCone?: egret3d.Color, colorUp?: egret3d.Color, colorTarget?: egret3d.Color, colorCross?: egret3d.Color): GameObject;
     }
 }
-declare namespace paper.debug {
+declare namespace paper.editor {
     class Helper {
         static raycast(targets: ReadonlyArray<paper.GameObject | egret3d.Transform>, mousePositionX: number, mousePositionY: number): egret3d.RaycastInfo[];
         static raycastB(raycastAble: egret3d.IRaycast, mousePositionX: number, mousePositionY: number): egret3d.RaycastInfo;

@@ -2612,8 +2612,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var paper;
 (function (paper) {
-    var debug;
-    (function (debug) {
+    var editor;
+    (function (editor) {
         /**
          * @internal
          */
@@ -2623,15 +2623,15 @@ var paper;
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.isWorldSpace = true;
                 _this.eye = egret3d.Vector3.create();
-                _this.translate = debug.EditorMeshHelper.createGameObject("Translate");
-                _this.rotate = debug.EditorMeshHelper.createGameObject("Rotate");
-                _this.scale = debug.EditorMeshHelper.createGameObject("Scale");
+                _this.translate = editor.EditorMeshHelper.createGameObject("Translate");
+                _this.rotate = editor.EditorMeshHelper.createGameObject("Rotate");
+                _this.scale = editor.EditorMeshHelper.createGameObject("Scale");
                 _this._controlling = false;
                 _this._prsStarts = {};
                 _this._offsetStart = egret3d.Vector3.create();
                 _this._offsetEnd = egret3d.Vector3.create();
                 _this._plane = egret3d.Plane.create();
-                _this._quad = debug.EditorMeshHelper.createGameObject("Plane", egret3d.DefaultMeshes.QUAD, egret3d.DefaultMaterials.MESH_BASIC_DOUBLESIDE.clone().setBlend(1 /* Blend */).setOpacity(0.5));
+                _this._quad = editor.EditorMeshHelper.createGameObject("Plane", egret3d.DefaultMeshes.QUAD, egret3d.DefaultMaterials.MESH_BASIC_DOUBLESIDE.clone().setBlend(1 /* Blend */).setOpacity(0.5));
                 _this._highlights = {};
                 _this._dir = { "X": egret3d.Vector3.RIGHT, "Y": egret3d.Vector3.UP, "Z": egret3d.Vector3.FORWARD };
                 _this._mode = null;
@@ -2642,18 +2642,18 @@ var paper;
                 _super.prototype.initialize.call(this);
                 {
                     var translate = this.translate;
-                    var axisX = debug.EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisY = debug.EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisZ = debug.EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.LINE_Z, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var arrowX = debug.EditorMeshHelper.createGameObject("ArrowX", egret3d.DefaultMeshes.PYRAMID, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var arrowY = debug.EditorMeshHelper.createGameObject("ArrowY", egret3d.DefaultMeshes.PYRAMID, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var arrowZ = debug.EditorMeshHelper.createGameObject("ArrowZ", egret3d.DefaultMeshes.PYRAMID, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickX = debug.EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickY = debug.EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickZ = debug.EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickXY = debug.EditorMeshHelper.createGameObject("XY", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "" /* Untagged */);
-                    var pickYZ = debug.EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "" /* Untagged */);
-                    var pickZX = debug.EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "" /* Untagged */);
+                    var axisX = editor.EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisY = editor.EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisZ = editor.EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.LINE_Z, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var arrowX = editor.EditorMeshHelper.createGameObject("ArrowX", egret3d.DefaultMeshes.PYRAMID, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var arrowY = editor.EditorMeshHelper.createGameObject("ArrowY", egret3d.DefaultMeshes.PYRAMID, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var arrowZ = editor.EditorMeshHelper.createGameObject("ArrowZ", egret3d.DefaultMeshes.PYRAMID, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickX = editor.EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickY = editor.EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickZ = editor.EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickXY = editor.EditorMeshHelper.createGameObject("XY", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "" /* Untagged */);
+                    var pickYZ = editor.EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "" /* Untagged */);
+                    var pickZX = editor.EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "" /* Untagged */);
                     this._highlights[pickX.uuid] = [pickX, axisX, arrowX];
                     this._highlights[pickY.uuid] = [pickY, axisY, arrowY];
                     this._highlights[pickZ.uuid] = [pickZ, axisZ, arrowZ];
@@ -2690,16 +2690,16 @@ var paper;
                     // const axisZ = EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     // const axisE = EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createCircle(1.25, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     // const axisXYZE = EditorMeshHelper.createGameObject("AxisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisX = debug.EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisY = debug.EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisZ = debug.EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisE = debug.EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createTorus(1.25, 0.03, 4, 48, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisXYZE = debug.EditorMeshHelper.createGameObject("AxisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickX = debug.EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickY = debug.EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickZ = debug.EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickE = debug.EditorMeshHelper.createGameObject("E", egret3d.DefaultMeshes.createTorus(1.25, 0.1, 4, 24, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickXYZE = debug.EditorMeshHelper.createGameObject("XYZE", egret3d.DefaultMeshes.createSphere(0.7, 10, 8), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisX = editor.EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisY = editor.EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisZ = editor.EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisE = editor.EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createTorus(1.25, 0.03, 4, 48, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisXYZE = editor.EditorMeshHelper.createGameObject("AxisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickX = editor.EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickY = editor.EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickZ = editor.EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickE = editor.EditorMeshHelper.createGameObject("E", egret3d.DefaultMeshes.createTorus(1.25, 0.1, 4, 24, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickXYZE = editor.EditorMeshHelper.createGameObject("XYZE", egret3d.DefaultMeshes.createSphere(0.7, 10, 8), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     this._highlights[pickX.uuid] = [axisX];
                     this._highlights[pickY.uuid] = [axisY];
                     this._highlights[pickZ.uuid] = [axisZ];
@@ -2729,18 +2729,18 @@ var paper;
                 }
                 {
                     var scale = this.scale;
-                    var axisX = debug.EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisY = debug.EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisZ = debug.EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.LINE_Z, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var arrowX = debug.EditorMeshHelper.createGameObject("ArrowX", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var arrowY = debug.EditorMeshHelper.createGameObject("ArrowY", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var arrowZ = debug.EditorMeshHelper.createGameObject("ArrowZ", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickX = debug.EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickY = debug.EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickZ = debug.EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickXY = debug.EditorMeshHelper.createGameObject("XY", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "" /* Untagged */);
-                    var pickYZ = debug.EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "" /* Untagged */);
-                    var pickZX = debug.EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "" /* Untagged */);
+                    var axisX = editor.EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.LINE_X, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisY = editor.EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisZ = editor.EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.LINE_Z, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var arrowX = editor.EditorMeshHelper.createGameObject("ArrowX", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var arrowY = editor.EditorMeshHelper.createGameObject("ArrowY", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var arrowZ = editor.EditorMeshHelper.createGameObject("ArrowZ", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickX = editor.EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickY = editor.EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickZ = editor.EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickXY = editor.EditorMeshHelper.createGameObject("XY", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "" /* Untagged */);
+                    var pickYZ = editor.EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "" /* Untagged */);
+                    var pickZX = editor.EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "" /* Untagged */);
                     this._highlights[pickX.uuid] = [pickX, axisX, arrowX];
                     this._highlights[pickY.uuid] = [pickX, axisY, arrowY];
                     this._highlights[pickZ.uuid] = [pickX, axisZ, arrowZ];
@@ -2777,8 +2777,8 @@ var paper;
             TransfromController.prototype._updateTransform = function (mousePosition) {
                 var isWorldSpace = this.isWorldSpace;
                 var hoveredName = this._hovered.name;
-                var raycastInfo = debug.Helper.raycastB(this._plane, mousePosition.x, mousePosition.y);
-                var modelComponent = this.gameObject.getComponent(debug.ModelComponent);
+                var raycastInfo = editor.Helper.raycastB(this._plane, mousePosition.x, mousePosition.y);
+                var modelComponent = this.gameObject.getComponent(editor.ModelComponent);
                 var selectedGameObject = modelComponent.selectedGameObject;
                 var currentSelectedPRS = this._prsStarts[selectedGameObject.uuid];
                 this._offsetEnd.subtract(currentSelectedPRS[3], raycastInfo.position);
@@ -2913,7 +2913,7 @@ var paper;
             TransfromController.prototype._updateSelf = function () {
                 var isWorldSpace = this._mode === this.scale ? false : this.isWorldSpace; // scale always oriented to local rotation
                 var camera = egret3d.Camera.editor;
-                var modelComponent = this.gameObject.getComponent(debug.ModelComponent);
+                var modelComponent = this.gameObject.getComponent(editor.ModelComponent);
                 var selectedGameObject = modelComponent.selectedGameObject;
                 var eye = this.eye.copy(camera.transform.position);
                 var eyeDistance = eye.getDistance(selectedGameObject.transform.position);
@@ -3025,8 +3025,8 @@ var paper;
             TransfromController.prototype.start = function (mousePosition) {
                 var isWorldSpace = this.isWorldSpace;
                 var hoveredName = this._hovered.name;
-                var raycastInfo = debug.Helper.raycastB(this._plane, mousePosition.x, mousePosition.y);
-                var modelComponent = this.gameObject.getComponent(debug.ModelComponent);
+                var raycastInfo = editor.Helper.raycastB(this._plane, mousePosition.x, mousePosition.y);
+                var modelComponent = this.gameObject.getComponent(editor.ModelComponent);
                 for (var _i = 0, _a = modelComponent.selectedGameObjects; _i < _a.length; _i++) {
                     var gameObject = _a[_i];
                     var transform = gameObject.transform;
@@ -3061,7 +3061,7 @@ var paper;
             };
             TransfromController.prototype.end = function () {
                 //
-                var modelComponent = this.gameObject.getComponent(debug.ModelComponent);
+                var modelComponent = this.gameObject.getComponent(editor.ModelComponent);
                 for (var _i = 0, _a = modelComponent.selectedGameObjects; _i < _a.length; _i++) {
                     var gameObject = _a[_i];
                     var transform = gameObject.transform;
@@ -3149,14 +3149,14 @@ var paper;
             });
             return TransfromController;
         }(paper.BaseComponent));
-        debug.TransfromController = TransfromController;
-        __reflect(TransfromController.prototype, "paper.debug.TransfromController");
-    })(debug = paper.debug || (paper.debug = {}));
+        editor.TransfromController = TransfromController;
+        __reflect(TransfromController.prototype, "paper.editor.TransfromController");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    var debug;
-    (function (debug) {
+    var editor;
+    (function (editor) {
         var icons = {
             camera: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIcSURBVFhH7ZbPjtMwEMYj7vAACCFg28Rx4oQmtGnLQo/7Du1pK3Hk2BtSHwYkXoA34C34I7Fozxxoy+6yaocZx9M6u4WkFaA95JN+qu0Z21/riVOnVq1a/0oiaoMXPdlCBxpxG0xaNXlB+vHqIl7Utfo5Jl3LxU2uxpkmmjNp1RTEGfg4kZhOp/eRe8xwOHzqmnjSPXxnpjhBlIEIM5BRb40f96Ch2jCZTO6atGryVQeESjVmqCA/zGNy15/2xuv4xcuBK1N4KBNw445FZugauG/ndKr9GlJRYWBBxcn7LHveHAyOHtC4iJKLbQW0C0IlBRNemH6jTzpSQqouOFQ89iSdibLHcrKKbObYBqhGaC9qc/yaAdnKdMKjoLUe08QpvH7zFsp08fOyMI8N0DHRPqUGRJhXsWr112ME5SwWM73Jp5NTzecvFtg/+XqK0UsQ1vNvG+Ax6nN7bYBN8GPW0HVRZL44h+VqdW2cafcOYYUW9jZAAZb3uHiWxPcfZQae7Wdgmw7wYuEk5r8a8MPNBGa+OIMVGpBRfyu9rI/bL/+OAU/Sy2azOS06m81xgzItoRkmm3l7G2gGr7gwGR8LU+JbLAcvEQ29bIi8L4Li0bEBunR4TK9v2r81QCIDwiQSblwNzifYAMkNW+Dil6A2x/9ogGQvtg8HQn0wS2mxIY5LlV98pRqNRnfG4/HtXcD/CrfM9Fq1at1kOc4vVSG2+aaGzOwAAAAASUVORK5CYII=",
             light: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPcSURBVFhH3ZdLSNRRFMbn4fuZmtmYZpn0gCx6YbQokBZRq6hVL6xWUdCmICIoIYjaWBDRu3WShhUJLSKIIKISgqBWao9NlIsUwlKn33fnzDij/1HHsU0fHM693z333HPOffxnfNNBMBjcgRpCVjjiX6GwsHAJKhDpjYIAdqLCyEpHxKG8vLwgJyen2rrTR25uboPf7/+Ns31GxTBRAJmZmc2BQKC/rKys0qhpAz+Bt8inUCiUZ5xDsgAIeh5BDzCnzaj0kJ2d3YjDcFZW1imjHJIFkJGRcQf7waKiojqj0gdOH5DRz7y8vLlGeQZA6Vex+DBjLUalhtLS0iJrJoDsl+os4PiGUVqsHu48zVCEcYE+JdAfZF9qVAKS+XfgoM1nch+LnK2oqMg3OgYWvIhcsu44VFVV5RLAXYI9alQMBQUFsxm7prPk5dtBhwejdu03hr04Uonj4TftKy4ursVmP/bH0LvZmlgVQMwOBDlDh/D53bbmWklJSbGNeYMJW3D6kWaYBZ4Q/bLIiM+nM8BYG85G6Gr/ndD/owy5doWyE6joBmzf0Ayz8EsSXBsZmRqycHgCx/1MPieCyKtpdyNhgnTCluh2hHGuIFS519EgsGul/w27g3THPWRTAoemyg6OH2fPtLgWoz9OqI4CUNVu0Ve1QmxVidppgywaUUkXjwplVyWGsF9If+ZA5i3Knuw8F46KApCmEkfQKaEH+ewhWxG9xw+13zQnFJ0DBYl2DxHzDqO8/D5HRsGEVuTeWGFovcZx1D6VAKJVQl+gr8pt9/KLXNb4lIGjMzpgkwWhmyGN3V70zMHeguGJDqECtEP4k9M/Cy59cMe3ktUCtcnqKs7D+fn5bq+hEhYXrzZzjqN1DdcQcIPaKcOe2g6aKqfbr5qamhy4TnHKVA+QSh4V8ez/dbR7iml3Eugw+ibBzRE3KfRBYb+bmfhLwuLNY36IBFn4KGO6NfEVeI/tLhlEoS8ivq5gO8R4H4HoagYjox7AwXIMu5mgTDrIqtaGHOwTG31S/aoSduv0RBvnqhT/PRDYitX4fUFTt6NL35PIyBhoIkE8J8NtRiWAxR4x/tS642DV+4BcNCoefhJqYv5j2ql/F5i8GaV9PxlhXECbUM+QRY4AcLep4CC/pBcbNSMIUsIupFdZGuf5k4xTX0kAAwRy36j0QdkO6Fyg9xjl4BWAwOKnUSPcFFUoPegPBpl/RV7RTdi7ZAHoJxf2Xxh/TXd6vwOiIOt6HPWQzUajYkgWgMC8JsbfJT3xqaCuri7bmgmYKACgzDMizX+EuFswc39A/kfE/0RPAp/vL7M1A0/aWSCCAAAAAElFTkSuQmCC"
@@ -3189,14 +3189,14 @@ var paper;
             };
             return EditorDefaultTexture;
         }(paper.SingletonComponent));
-        debug.EditorDefaultTexture = EditorDefaultTexture;
-        __reflect(EditorDefaultTexture.prototype, "paper.debug.EditorDefaultTexture");
-    })(debug = paper.debug || (paper.debug = {}));
+        editor.EditorDefaultTexture = EditorDefaultTexture;
+        __reflect(EditorDefaultTexture.prototype, "paper.editor.EditorDefaultTexture");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    var debug;
-    (function (debug) {
+    var editor;
+    (function (editor) {
         var _step = 5;
         /**
          * @internal
@@ -3224,7 +3224,7 @@ var paper;
                 var mesh = new egret3d.Mesh(vertices.length, 0, ["POSITION" /* POSITION */]);
                 mesh.setAttributes("POSITION" /* POSITION */, vertices);
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
-                var gameObject = debug.EditorMeshHelper.createGameObject(name, mesh, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                var gameObject = editor.EditorMeshHelper.createGameObject(name, mesh, egret3d.DefaultMaterials.MESH_BASIC.clone());
                 return gameObject;
             };
             GridController.prototype.initialize = function () {
@@ -3238,7 +3238,7 @@ var paper;
             };
             GridController.prototype.update = function () {
                 var camera = egret3d.Camera.editor;
-                var aaa = camera.gameObject.getComponent(debug.OrbitControls);
+                var aaa = camera.gameObject.getComponent(editor.OrbitControls);
                 var target = aaa.lookAtPoint.clone().add(aaa.lookAtOffset);
                 var eyeDistance = (10000.0 - target.getDistance(camera.transform.position)) * 0.01; // TODO
                 var d = (eyeDistance % 1.0);
@@ -3252,14 +3252,14 @@ var paper;
             };
             return GridController;
         }(paper.BaseComponent));
-        debug.GridController = GridController;
-        __reflect(GridController.prototype, "paper.debug.GridController");
-    })(debug = paper.debug || (paper.debug = {}));
+        editor.GridController = GridController;
+        __reflect(GridController.prototype, "paper.editor.GridController");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    var debug;
-    (function (debug) {
+    var editor;
+    (function (editor) {
         /**
          *
          */
@@ -3273,14 +3273,14 @@ var paper;
             }
             return GUIComponent;
         }(paper.SingletonComponent));
-        debug.GUIComponent = GUIComponent;
-        __reflect(GUIComponent.prototype, "paper.debug.GUIComponent");
-    })(debug = paper.debug || (paper.debug = {}));
+        editor.GUIComponent = GUIComponent;
+        __reflect(GUIComponent.prototype, "paper.editor.GUIComponent");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    var debug;
-    (function (debug) {
+    var editor;
+    (function (editor) {
         /**
          *
          */
@@ -3292,7 +3292,7 @@ var paper;
             ModelComponentEvent["GameObjectSelectChanged"] = "GameObjectSelectChanged";
             ModelComponentEvent["GameObjectSelected"] = "GameObjectSelected";
             ModelComponentEvent["GameObjectUnselected"] = "GameObjectUnselected";
-        })(ModelComponentEvent = debug.ModelComponentEvent || (debug.ModelComponentEvent = {}));
+        })(ModelComponentEvent = editor.ModelComponentEvent || (editor.ModelComponentEvent = {}));
         /**
          *
          */
@@ -3317,24 +3317,20 @@ var paper;
                  */
                 _this.selectedGameObject = null;
                 //
-                _this.editorModel = null;
+                _this._editorModel = null;
                 return _this;
             }
-            ModelComponent.prototype._onEditorSelectGameObjects = function (gameObjs) {
+            ModelComponent.prototype._onEditorSelectGameObjects = function (event) {
                 for (var _i = 0, _a = this.selectedGameObjects; _i < _a.length; _i++) {
-                    var gameObj = _a[_i];
-                    if (gameObjs.indexOf(gameObj) < 0) {
-                        this._unselect(gameObj);
+                    var gameObject = _a[_i];
+                    if (event.data.indexOf(gameObject) < 0) {
+                        this._unselect(gameObject);
                     }
                 }
-                for (var _b = 0, gameObjs_1 = gameObjs; _b < gameObjs_1.length; _b++) {
-                    var gameObj = gameObjs_1[_b];
-                    this._select(gameObj);
+                for (var _b = 0, _c = event.data; _b < _c.length; _b++) {
+                    var gameObject = _c[_b];
+                    this._select(gameObject);
                 }
-            };
-            ModelComponent.prototype._onChangeEditMode = function (mode) {
-            };
-            ModelComponent.prototype._onChangeEditType = function (type) {
             };
             ModelComponent.prototype._onChangeProperty = function (data) {
                 if ((data.target instanceof egret3d.Transform) && data.propName && this.selectedGameObjects.length > 0) {
@@ -3367,16 +3363,26 @@ var paper;
                     console.log(propName);
                 }
             };
+            ModelComponent.prototype._onChangeEditMode = function (mode) {
+            };
+            ModelComponent.prototype._onChangeEditType = function (type) {
+            };
             ModelComponent.prototype.initialize = function () {
                 var _this = this;
                 if (paper.Application.playerMode === 2 /* Editor */) {
-                    setTimeout(function () {
-                        _this.editorModel = paper.editor.Editor.activeEditorModel;
-                        _this.editorModel.addEventListener(paper.editor.EditorModelEvent.SELECT_GAMEOBJECTS, function (e) { return _this._onEditorSelectGameObjects(e.data); }, _this);
-                        _this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_PROPERTY, function (e) { return _this._onChangeProperty(e.data); }, _this);
-                        _this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_MODE, function (e) { return _this._onChangeEditMode(e.data); }, _this);
-                        _this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_TYPE, function (e) { return _this._onChangeEditType(e.data); }, _this);
-                    }, 3000); //TODO
+                    editor.Editor.addEventListener(editor.EditorEvent.CHANGE_SCENE, function () {
+                        if (_this._editorModel) {
+                            _this._editorModel.removeEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, _this._onEditorSelectGameObjects, _this);
+                            _this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_PROPERTY, _this._onChangeProperty, _this);
+                            _this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_EDIT_MODE, _this._onChangeEditMode, _this);
+                            _this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, _this._onChangeEditType, _this);
+                        }
+                        _this._editorModel = editor.Editor.activeEditorModel;
+                        _this._editorModel.addEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, _this._onEditorSelectGameObjects, _this);
+                        _this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_PROPERTY, _this._onChangeProperty, _this);
+                        _this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_MODE, _this._onChangeEditMode, _this);
+                        _this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, _this._onChangeEditType, _this);
+                    }, this);
                 }
             };
             ModelComponent.prototype._select = function (value, isReplace) {
@@ -3451,31 +3457,31 @@ var paper;
             };
             ModelComponent.prototype.select = function (value, isReplace) {
                 this._select(value, isReplace);
-                if (this.editorModel !== null) {
-                    this.editorModel.selectGameObject(this.selectedGameObjects);
+                if (this._editorModel !== null) {
+                    this._editorModel.selectGameObject(this.selectedGameObjects);
                 }
             };
             ModelComponent.prototype.unselect = function (value) {
                 this._unselect(value);
-                if (this.editorModel !== null) {
-                    this.editorModel.selectGameObject(this.selectedGameObjects);
+                if (this._editorModel !== null) {
+                    this._editorModel.selectGameObject(this.selectedGameObjects);
                 }
             };
             ModelComponent.prototype.changeProperty = function (propName, propOldValue, propNewValue, target) {
-                if (this.editorModel) {
-                    this.editorModel.setTransformProperty(propName, propOldValue, propNewValue, target);
+                if (this._editorModel) {
+                    this._editorModel.setTransformProperty(propName, propOldValue, propNewValue, target);
                 }
             };
             return ModelComponent;
         }(paper.SingletonComponent));
-        debug.ModelComponent = ModelComponent;
-        __reflect(ModelComponent.prototype, "paper.debug.ModelComponent");
-    })(debug = paper.debug || (paper.debug = {}));
+        editor.ModelComponent = ModelComponent;
+        __reflect(ModelComponent.prototype, "paper.editor.ModelComponent");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    var debug;
-    (function (debug) {
+    var editor;
+    (function (editor) {
         /**
          * @internal
          */
@@ -3665,14 +3671,14 @@ var paper;
             ], OrbitControls);
             return OrbitControls;
         }(paper.Behaviour));
-        debug.OrbitControls = OrbitControls;
-        __reflect(OrbitControls.prototype, "paper.debug.OrbitControls");
-    })(debug = paper.debug || (paper.debug = {}));
+        editor.OrbitControls = OrbitControls;
+        __reflect(OrbitControls.prototype, "paper.editor.OrbitControls");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    var debug;
-    (function (debug) {
+    var editor;
+    (function (editor) {
         /**
          *
          */
@@ -3699,11 +3705,11 @@ var paper;
             // const bones = skinnedMeshRenderer.bones;
             // for (const bone of bones) {
             //     const box = egret3d.Primitive.create(egret3d.Primitive.Type.Cube).transform.setLocalScale(0.1, 0.1, 0.1);
-            //     box.gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
+            //     box.gameObject.hideFlags = HideFlags.HideAndDontSave;
             //     box.transform.parent = bone;
             // }
             SkeletonDrawer.prototype.update = function () {
-                var modelComponent = this.gameObject.getComponent(debug.ModelComponent);
+                var modelComponent = this.gameObject.getComponent(editor.ModelComponent);
                 var selectedGameObject = modelComponent.selectedGameObject;
                 var skinnedMeshRenderer = selectedGameObject.getComponent(egret3d.SkinnedMeshRenderer);
                 var mesh = this._skeletonMesh;
@@ -3741,14 +3747,14 @@ var paper;
             };
             return SkeletonDrawer;
         }(paper.BaseComponent));
-        debug.SkeletonDrawer = SkeletonDrawer;
-        __reflect(SkeletonDrawer.prototype, "paper.debug.SkeletonDrawer");
-    })(debug = paper.debug || (paper.debug = {}));
+        editor.SkeletonDrawer = SkeletonDrawer;
+        __reflect(SkeletonDrawer.prototype, "paper.editor.SkeletonDrawer");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    var debug;
-    (function (debug) {
+    var editor;
+    (function (editor) {
         /**
          * @internal
          */
@@ -3764,14 +3770,14 @@ var paper;
             };
             return GizmoPickComponent;
         }(paper.Behaviour));
-        debug.GizmoPickComponent = GizmoPickComponent;
-        __reflect(GizmoPickComponent.prototype, "paper.debug.GizmoPickComponent");
-    })(debug = paper.debug || (paper.debug = {}));
+        editor.GizmoPickComponent = GizmoPickComponent;
+        __reflect(GizmoPickComponent.prototype, "paper.editor.GizmoPickComponent");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    var debug;
-    (function (debug) {
+    var editor;
+    (function (editor) {
         /**
          *
          */
@@ -3784,24 +3790,24 @@ var paper;
                 // GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
                 //
                 if (paper.Application.playerMode === 2 /* Editor */) {
-                    paper.Application.systemManager.getOrRegisterSystem(debug.SceneSystem);
+                    paper.Application.systemManager.getOrRegisterSystem(editor.SceneSystem);
                 }
                 else {
-                    paper.Application.systemManager.getOrRegisterSystem(debug.GUISystem);
+                    paper.Application.systemManager.getOrRegisterSystem(editor.GUISystem);
                 }
             };
             return EditorSystem;
         }(paper.BaseSystem));
-        debug.EditorSystem = EditorSystem;
-        __reflect(EditorSystem.prototype, "paper.debug.EditorSystem");
+        editor.EditorSystem = EditorSystem;
+        __reflect(EditorSystem.prototype, "paper.editor.EditorSystem");
         // 
         paper.Application.systemManager.preRegister(EditorSystem, paper.LateUpdateSystem);
-    })(debug = paper.debug || (paper.debug = {}));
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    var debug;
-    (function (debug) {
+    var editor;
+    (function (editor) {
         var GUISystem = (function (_super) {
             __extends(GUISystem, _super);
             function GUISystem() {
@@ -3810,8 +3816,8 @@ var paper;
                     [{ componentClass: egret3d.Transform }]
                 ];
                 _this._disposeCollecter = paper.GameObject.globalGameObject.getOrAddComponent(paper.DisposeCollecter);
-                _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(debug.ModelComponent);
-                _this._guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(debug.GUIComponent);
+                _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
+                _this._guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.GUIComponent);
                 _this._bufferedGameObjects = [];
                 _this._hierarchyFolders = {};
                 _this._inspectorFolders = {};
@@ -3923,7 +3929,7 @@ var paper;
                 this._hierarchyFolders[gameObject.uuid] = folder;
             };
             GUISystem.prototype._addToInspector = function (gui) {
-                var infos = paper.editor.getEditInfo(gui.instance);
+                var infos = editor.getEditInfo(gui.instance);
                 var guiControllerA;
                 var guiControllerB;
                 var guiControllerC;
@@ -4073,9 +4079,9 @@ var paper;
             };
             GUISystem.prototype._debug = function (value) {
                 if (value) {
-                    paper.EventPool.addEventListener("SceneSelected" /* SceneSelected */, debug.ModelComponent, this._onSceneSelected);
-                    paper.EventPool.addEventListener("SceneUnselected" /* SceneUnselected */, debug.ModelComponent, this._onSceneUnselected);
-                    paper.EventPool.addEventListener("GameObjectSelectChanged" /* GameObjectSelectChanged */, debug.ModelComponent, this._onGameObjectSelectedChange);
+                    paper.EventPool.addEventListener("SceneSelected" /* SceneSelected */, editor.ModelComponent, this._onSceneSelected);
+                    paper.EventPool.addEventListener("SceneUnselected" /* SceneUnselected */, editor.ModelComponent, this._onSceneUnselected);
+                    paper.EventPool.addEventListener("GameObjectSelectChanged" /* GameObjectSelectChanged */, editor.ModelComponent, this._onGameObjectSelectedChange);
                     this._bufferedGameObjects.push(paper.GameObject.globalGameObject);
                     for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
                         var gameObject = _a[_i];
@@ -4084,9 +4090,9 @@ var paper;
                     this._modelComponent.select(paper.Scene.activeScene);
                 }
                 else {
-                    paper.EventPool.removeEventListener("SceneSelected" /* SceneSelected */, debug.ModelComponent, this._onSceneSelected);
-                    paper.EventPool.removeEventListener("SceneUnselected" /* SceneUnselected */, debug.ModelComponent, this._onSceneUnselected);
-                    paper.EventPool.removeEventListener("GameObjectSelectChanged" /* GameObjectSelectChanged */, debug.ModelComponent, this._onGameObjectSelectedChange);
+                    paper.EventPool.removeEventListener("SceneSelected" /* SceneSelected */, editor.ModelComponent, this._onSceneSelected);
+                    paper.EventPool.removeEventListener("SceneUnselected" /* SceneUnselected */, editor.ModelComponent, this._onSceneUnselected);
+                    paper.EventPool.removeEventListener("GameObjectSelectChanged" /* GameObjectSelectChanged */, editor.ModelComponent, this._onGameObjectSelectedChange);
                     for (var k in this._hierarchyFolders) {
                         var folder = this._hierarchyFolders[k];
                         delete this._hierarchyFolders[k];
@@ -4113,7 +4119,7 @@ var paper;
                         var sceneJSON = JSON.stringify(paper.serialize(paper.Application.sceneManager.activeScene));
                         console.info(sceneJSON);
                         if (_this._modelComponent.selectedScene) {
-                            // const sceneJSON = JSON.stringify(paper.serialize(this._modelComponent.selectedScene));
+                            // const sceneJSON = JSON.stringify(serialize(this._modelComponent.selectedScene));
                             // console.info(sceneJSON);
                         }
                         else if (_this._modelComponent.selectedGameObjects.length > 0) {
@@ -4121,7 +4127,7 @@ var paper;
                     }
                 };
                 this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
-                    var guiSceneSystem = paper.Application.systemManager.getOrRegisterSystem(debug.SceneSystem);
+                    var guiSceneSystem = paper.Application.systemManager.getOrRegisterSystem(editor.SceneSystem);
                     if (v) {
                         paper.Application.playerMode = 1 /* DebugPlayer */;
                         guiSceneSystem.enabled = true;
@@ -4220,14 +4226,14 @@ var paper;
             };
             return GUISystem;
         }(paper.BaseSystem));
-        debug.GUISystem = GUISystem;
-        __reflect(GUISystem.prototype, "paper.debug.GUISystem");
-    })(debug = paper.debug || (paper.debug = {}));
+        editor.GUISystem = GUISystem;
+        __reflect(GUISystem.prototype, "paper.editor.GUISystem");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    var debug;
-    (function (debug) {
+    var editor;
+    (function (editor) {
         var SceneSystem = (function (_super) {
             __extends(SceneSystem, _super);
             function SceneSystem() {
@@ -4238,7 +4244,7 @@ var paper;
                     ]
                 ];
                 _this._camerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
-                _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(debug.ModelComponent);
+                _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
                 _this._pointerStartPosition = egret3d.Vector3.create();
                 _this._pointerPosition = egret3d.Vector3.create();
                 // private readonly _pickableSelected: GameObject[] = [];   //可被选中的 camera
@@ -4292,14 +4298,14 @@ var paper;
                                         if (hoveredGameObject.renderer instanceof egret3d.SkinnedMeshRenderer && !hoveredGameObject.transform.find("__pickTarget")) {
                                             var animation = hoveredGameObject.getComponentInParent(egret3d.Animation);
                                             if (animation) {
-                                                var pickGameObject = debug.EditorMeshHelper.createGameObject("__pickTarget", null, null, "Editor Only" /* EditorOnly */, hoveredGameObject.scene);
+                                                var pickGameObject = editor.EditorMeshHelper.createGameObject("__pickTarget", null, null, "Editor Only" /* EditorOnly */, hoveredGameObject.scene);
                                                 pickGameObject.transform.parent = hoveredGameObject.transform;
-                                                pickGameObject.addComponent(debug.GizmoPickComponent).pickTarget = animation.gameObject;
+                                                pickGameObject.addComponent(editor.GizmoPickComponent).pickTarget = animation.gameObject;
                                             }
                                         }
                                         var pickHelper = hoveredGameObject.name === "__pickTarget" ? hoveredGameObject.transform : hoveredGameObject.transform.find("__pickTarget");
                                         if (pickHelper) {
-                                            _this._modelComponent.select(pickHelper.gameObject.getComponent(debug.GizmoPickComponent).pickTarget, !(event.ctrlKey));
+                                            _this._modelComponent.select(pickHelper.gameObject.getComponent(editor.GizmoPickComponent).pickTarget, !(event.ctrlKey));
                                         }
                                         else {
                                             _this._modelComponent.select(hoveredGameObject, !event.ctrlKey);
@@ -4337,7 +4343,7 @@ var paper;
                                 transformController.hovered = null;
                             }
                             else {
-                                var raycastInfos = debug.Helper.raycast(transformController.mode.transform.children, _this._pointerPosition.x, _this._pointerPosition.y);
+                                var raycastInfos = editor.Helper.raycast(transformController.mode.transform.children, _this._pointerPosition.x, _this._pointerPosition.y);
                                 if (raycastInfos.length > 0) {
                                     transformController.hovered = raycastInfos[0].transform.gameObject;
                                 }
@@ -4350,7 +4356,7 @@ var paper;
                             transformController.hovered = null;
                         }
                         if (!transformController || !transformController.isActiveAndEnabled || !transformController.hovered) {
-                            var raycastInfos = debug.Helper.raycast(paper.Scene.activeScene.getRootGameObjects(), _this._pointerPosition.x, _this._pointerPosition.y);
+                            var raycastInfos = editor.Helper.raycast(paper.Scene.activeScene.getRootGameObjects(), _this._pointerPosition.x, _this._pointerPosition.y);
                             if (raycastInfos.length > 0) {
                                 _this._modelComponent.hover(raycastInfos[0].transform.gameObject);
                             }
@@ -4409,7 +4415,7 @@ var paper;
                 _this._onGameObjectHovered = function (_c, value) {
                     if (value) {
                         if (!_this._hoverBox) {
-                            _this._hoverBox = debug.EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.activeScene);
+                            _this._hoverBox = editor.EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.activeScene);
                         }
                         _this._hoverBox.activeSelf = true;
                         if (_this._hoverBox.scene !== value.scene) {
@@ -4456,7 +4462,7 @@ var paper;
             SceneSystem.prototype._selectGameObject = function (value, selected) {
                 if (selected) {
                     {
-                        var box = debug.EditorMeshHelper.createBox("Box", egret3d.Color.INDIGO, 0.8, value.scene);
+                        var box = editor.EditorMeshHelper.createBox("Box", egret3d.Color.INDIGO, 0.8, value.scene);
                         box.activeSelf = false;
                         box.parent = value;
                         this._boxes[value.uuid] = box;
@@ -4523,7 +4529,7 @@ var paper;
                         __editor.transform.rotation = egret3d.Camera.editor.transform.rotation;
                     }
                     else {
-                        __editor = debug.EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, debug.EditorDefaultTexture.CAMERA_ICON).transform;
+                        __editor = editor.EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, editor.EditorDefaultTexture.CAMERA_ICON).transform;
                     }
                     // const pick = iconObject;
                     // const pick = __editor.transform.find("__pickTarget").gameObject;
@@ -4604,7 +4610,7 @@ var paper;
                         __editor.transform.rotation = egret3d.Camera.editor.transform.rotation;
                     }
                     else {
-                        __editor = debug.EditorMeshHelper.createIcon("__pickTarget", light.gameObject, debug.EditorDefaultTexture.LIGHT_ICON).transform;
+                        __editor = editor.EditorMeshHelper.createIcon("__pickTarget", light.gameObject, editor.EditorDefaultTexture.LIGHT_ICON).transform;
                     }
                     // const pick = iconObject;
                     // const pick = __editor.transform.find("pick").gameObject;
@@ -4613,11 +4619,14 @@ var paper;
                     // }
                 }
             };
+            SceneSystem.prototype.onAwake = function () {
+                paper.GameObject.globalGameObject.getOrAddComponent(editor.EditorDefaultTexture);
+            };
             SceneSystem.prototype.onEnable = function () {
-                paper.EventPool.addEventListener("GameObjectHovered" /* GameObjectHovered */, debug.ModelComponent, this._onGameObjectHovered);
-                paper.EventPool.addEventListener("GameObjectSelectChanged" /* GameObjectSelectChanged */, debug.ModelComponent, this._onGameObjectSelectChanged);
-                paper.EventPool.addEventListener("GameObjectSelected" /* GameObjectSelected */, debug.ModelComponent, this._onGameObjectSelected);
-                paper.EventPool.addEventListener("GameObjectUnselected" /* GameObjectUnselected */, debug.ModelComponent, this._onGameObjectUnselected);
+                paper.EventPool.addEventListener("GameObjectHovered" /* GameObjectHovered */, editor.ModelComponent, this._onGameObjectHovered);
+                paper.EventPool.addEventListener("GameObjectSelectChanged" /* GameObjectSelectChanged */, editor.ModelComponent, this._onGameObjectSelectChanged);
+                paper.EventPool.addEventListener("GameObjectSelected" /* GameObjectSelected */, editor.ModelComponent, this._onGameObjectSelected);
+                paper.EventPool.addEventListener("GameObjectUnselected" /* GameObjectUnselected */, editor.ModelComponent, this._onGameObjectUnselected);
                 {
                     var canvas = egret3d.WebGLCapabilities.canvas;
                     window.addEventListener("contextmenu", this._contextmenuHandler);
@@ -4627,15 +4636,15 @@ var paper;
                     window.addEventListener("keyup", this._onKeyUp);
                     window.addEventListener("keydown", this._onKeyDown);
                 }
-                this._orbitControls = egret3d.Camera.editor.gameObject.getOrAddComponent(debug.OrbitControls);
-                this._transformController = debug.EditorMeshHelper.createGameObject("Axises").addComponent(debug.TransfromController);
+                this._orbitControls = egret3d.Camera.editor.gameObject.getOrAddComponent(editor.OrbitControls);
+                this._transformController = editor.EditorMeshHelper.createGameObject("Axises").addComponent(editor.TransfromController);
                 this._transformController.gameObject.activeSelf = false;
-                this._skeletonDrawer = debug.EditorMeshHelper.createGameObject("SkeletonDrawer").addComponent(debug.SkeletonDrawer);
+                this._skeletonDrawer = editor.EditorMeshHelper.createGameObject("SkeletonDrawer").addComponent(editor.SkeletonDrawer);
                 this._skeletonDrawer.gameObject.activeSelf = false;
-                this._gridController = debug.EditorMeshHelper.createGameObject("Grid").addComponent(debug.GridController);
-                this._hoverBox = debug.EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.activeScene);
+                this._gridController = editor.EditorMeshHelper.createGameObject("Grid").addComponent(editor.GridController);
+                this._hoverBox = editor.EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.activeScene);
                 this._hoverBox.activeSelf = false;
-                this._cameraViewFrustum = debug.EditorMeshHelper.createCameraWireframed("Camera");
+                this._cameraViewFrustum = editor.EditorMeshHelper.createCameraWireframed("Camera");
                 this._cameraViewFrustum.activeSelf = false;
                 //
                 var editorCamera = egret3d.Camera.editor;
@@ -4644,10 +4653,10 @@ var paper;
                 editorCamera.transform.rotation = mainCamera.transform.rotation;
             };
             SceneSystem.prototype.onDisable = function () {
-                paper.EventPool.removeEventListener("GameObjectHovered" /* GameObjectHovered */, debug.ModelComponent, this._onGameObjectHovered);
-                paper.EventPool.removeEventListener("GameObjectSelectChanged" /* GameObjectSelectChanged */, debug.ModelComponent, this._onGameObjectSelectChanged);
-                paper.EventPool.removeEventListener("GameObjectSelected" /* GameObjectSelected */, debug.ModelComponent, this._onGameObjectSelected);
-                paper.EventPool.removeEventListener("GameObjectUnselected" /* GameObjectUnselected */, debug.ModelComponent, this._onGameObjectUnselected);
+                paper.EventPool.removeEventListener("GameObjectHovered" /* GameObjectHovered */, editor.ModelComponent, this._onGameObjectHovered);
+                paper.EventPool.removeEventListener("GameObjectSelectChanged" /* GameObjectSelectChanged */, editor.ModelComponent, this._onGameObjectSelectChanged);
+                paper.EventPool.removeEventListener("GameObjectSelected" /* GameObjectSelected */, editor.ModelComponent, this._onGameObjectSelected);
+                paper.EventPool.removeEventListener("GameObjectUnselected" /* GameObjectUnselected */, editor.ModelComponent, this._onGameObjectUnselected);
                 {
                     var canvas = egret3d.WebGLCapabilities.canvas;
                     window.removeEventListener("contextmenu", this._contextmenuHandler);
@@ -4657,7 +4666,7 @@ var paper;
                     window.removeEventListener("keyup", this._onKeyUp);
                     window.removeEventListener("keydown", this._onKeyDown);
                 }
-                egret3d.Camera.editor.gameObject.removeComponent(debug.OrbitControls);
+                egret3d.Camera.editor.gameObject.removeComponent(editor.OrbitControls);
                 this._orbitControls = null;
                 if (this._transformController) {
                     this._transformController.gameObject.destroy();
@@ -4730,14 +4739,14 @@ var paper;
             };
             return SceneSystem;
         }(paper.BaseSystem));
-        debug.SceneSystem = SceneSystem;
-        __reflect(SceneSystem.prototype, "paper.debug.SceneSystem");
-    })(debug = paper.debug || (paper.debug = {}));
+        editor.SceneSystem = SceneSystem;
+        __reflect(SceneSystem.prototype, "paper.editor.SceneSystem");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    var debug;
-    (function (debug) {
+    var editor;
+    (function (editor) {
         var EditorMeshHelper = (function () {
             function EditorMeshHelper() {
             }
@@ -4774,7 +4783,7 @@ var paper;
                 // pick.addComponent(GizmoPickComponent).pickTarget = parent;
                 var iconObj = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material, parent.tag, parent.scene);
                 iconObj.transform.setParent(parent.transform);
-                iconObj.addComponent(debug.GizmoPickComponent).pickTarget = parent;
+                iconObj.addComponent(editor.GizmoPickComponent).pickTarget = parent;
                 // gameObject.transform.setParent(parent.transform);
                 return iconObj;
             };
@@ -4813,14 +4822,14 @@ var paper;
             };
             return EditorMeshHelper;
         }());
-        debug.EditorMeshHelper = EditorMeshHelper;
-        __reflect(EditorMeshHelper.prototype, "paper.debug.EditorMeshHelper");
-    })(debug = paper.debug || (paper.debug = {}));
+        editor.EditorMeshHelper = EditorMeshHelper;
+        __reflect(EditorMeshHelper.prototype, "paper.editor.EditorMeshHelper");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    var debug;
-    (function (debug) {
+    var editor;
+    (function (editor) {
         var Helper = (function () {
             function Helper() {
             }
@@ -4839,9 +4848,9 @@ var paper;
             };
             return Helper;
         }());
-        debug.Helper = Helper;
-        __reflect(Helper.prototype, "paper.debug.Helper");
-    })(debug = paper.debug || (paper.debug = {}));
+        editor.Helper = Helper;
+        __reflect(Helper.prototype, "paper.editor.Helper");
+    })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var helper;
 (function (helper) {

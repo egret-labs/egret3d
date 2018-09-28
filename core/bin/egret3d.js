@@ -4402,10 +4402,10 @@ var paper;
                 return this;
             }
             if (isBefore) {
-                this._preSystems.push(systemClass, afterOrBefore);
+                this._preBeforeSystems.push(systemClass, afterOrBefore);
             }
             else {
-                this._preBeforeSystems.push(systemClass, afterOrBefore);
+                this._preSystems.push(systemClass, afterOrBefore);
             }
             return this;
         };

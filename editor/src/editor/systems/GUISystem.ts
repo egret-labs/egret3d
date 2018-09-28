@@ -1,4 +1,7 @@
-namespace paper.debug {
+namespace paper.editor {
+    /**
+     * @internal
+     */
     export class GUISystem extends BaseSystem {
         protected readonly _interests = [
             [{ componentClass: egret3d.Transform }]
@@ -7,7 +10,7 @@ namespace paper.debug {
         private readonly _disposeCollecter: DisposeCollecter = GameObject.globalGameObject.getOrAddComponent(DisposeCollecter);
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
         private readonly _guiComponent: GUIComponent = GameObject.globalGameObject.getOrAddComponent(GUIComponent);
-        private readonly _bufferedGameObjects: (paper.GameObject | null)[] = [];
+        private readonly _bufferedGameObjects: (GameObject | null)[] = [];
         private readonly _hierarchyFolders: { [key: string]: dat.GUI } = {};
         private readonly _inspectorFolders: { [key: string]: dat.GUI } = {};
         private _selectFolder: dat.GUI | null = null;
@@ -109,9 +112,9 @@ namespace paper.debug {
         private _addToHierarchy(gameObject: GameObject) {
             if (
                 gameObject.uuid in this._hierarchyFolders ||
-                gameObject.tag === paper.DefaultTags.EditorOnly ||
-                gameObject.hideFlags === paper.HideFlags.Hide ||
-                gameObject.hideFlags === paper.HideFlags.HideAndDontSave
+                gameObject.tag === DefaultTags.EditorOnly ||
+                gameObject.hideFlags === HideFlags.Hide ||
+                gameObject.hideFlags === HideFlags.HideAndDontSave
             ) {
                 return;
             }
@@ -308,13 +311,13 @@ namespace paper.debug {
                 EventPool.addEventListener(ModelComponentEvent.SceneUnselected, ModelComponent, this._onSceneUnselected);
                 EventPool.addEventListener(ModelComponentEvent.GameObjectSelectChanged, ModelComponent, this._onGameObjectSelectedChange);
 
-                this._bufferedGameObjects.push(paper.GameObject.globalGameObject);
+                this._bufferedGameObjects.push(GameObject.globalGameObject);
 
                 for (const gameObject of this._groups[0].gameObjects) {
                     this._bufferedGameObjects.push(gameObject);
                 }
 
-                this._modelComponent.select(paper.Scene.activeScene);
+                this._modelComponent.select(Scene.activeScene);
             }
             else {
                 EventPool.removeEventListener(ModelComponentEvent.SceneSelected, ModelComponent, this._onSceneSelected);
@@ -348,10 +351,10 @@ namespace paper.debug {
                 debug: false,
                 save: () => {
 
-                    const sceneJSON = JSON.stringify(paper.serialize(paper.Application.sceneManager.activeScene));
+                    const sceneJSON = JSON.stringify(serialize(Application.sceneManager.activeScene));
                     console.info(sceneJSON);
                     if (this._modelComponent.selectedScene) {
-                        // const sceneJSON = JSON.stringify(paper.serialize(this._modelComponent.selectedScene));
+                        // const sceneJSON = JSON.stringify(serialize(this._modelComponent.selectedScene));
                         // console.info(sceneJSON);
                     }
                     else if (this._modelComponent.selectedGameObjects.length > 0) {
@@ -361,7 +364,7 @@ namespace paper.debug {
             };
 
             this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
-                const guiSceneSystem = Application.systemManager.getOrRegisterSystem(debug.SceneSystem);
+                const guiSceneSystem = Application.systemManager.getOrRegisterSystem(editor.SceneSystem);
 
                 if (v) {
                     Application.playerMode = PlayerMode.DebugPlayer;
