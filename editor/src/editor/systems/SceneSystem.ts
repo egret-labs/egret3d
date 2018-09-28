@@ -438,6 +438,10 @@ namespace paper.debug {
             }
         }
 
+        public onAwake() {
+            GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
+        }
+
         public onEnable() {
             EventPool.addEventListener(ModelComponentEvent.GameObjectHovered, ModelComponent, this._onGameObjectHovered);
             EventPool.addEventListener(ModelComponentEvent.GameObjectSelectChanged, ModelComponent, this._onGameObjectSelectChanged);

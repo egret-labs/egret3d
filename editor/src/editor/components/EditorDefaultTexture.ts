@@ -10,6 +10,7 @@ namespace paper.debug {
 
         public static CAMERA_ICON: egret3d.Texture;
         public static LIGHT_ICON: egret3d.Texture;
+
         public initialize() {
             {//TODO
                 const texture = new egret3d.GLTexture2D("builtin/camera_icon.image.json");
