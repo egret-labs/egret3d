@@ -80,10 +80,10 @@ namespace paper {
             }
 
             if (isBefore) {
-                this._preSystems.push(systemClass, afterOrBefore);
+                this._preBeforeSystems.push(systemClass, afterOrBefore);
             }
             else {
-                this._preBeforeSystems.push(systemClass, afterOrBefore);
+                this._preSystems.push(systemClass, afterOrBefore);
             }
 
             return this;
