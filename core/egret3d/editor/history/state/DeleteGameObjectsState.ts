@@ -23,7 +23,7 @@ namespace paper.editor {
                 }
                 else {
                     oldParentUUID = undefined;
-                    oldIndex = paper.Application.sceneManager.activeScene.gameObjects.indexOf(obj);
+                    oldIndex = editorModel.scene.gameObjects.indexOf(obj);
 
                 }
                 infos.push({ UUID: obj.uuid, oldParentUUID: oldParentUUID, oldIndex: oldIndex, serializeData: serializeData });
@@ -39,7 +39,7 @@ namespace paper.editor {
             if (super.undo()) {
                 for (let i: number = 0; i < this.deleteInfo.length; i++) {
                     let info = this.deleteInfo[i];
-                    let obj: GameObject = new Deserializer().deserialize(info.serializeData,true);
+                    let obj: GameObject = new Deserializer().deserialize(info.serializeData,true,false,this.editorModel.scene);
                     let oldParentObj = this.editorModel.getGameObjectByUUid(info.oldParentUUID);
                     if (oldParentObj) {
                         let oldTargetTransform = oldParentObj.transform.children[info.oldIndex];
@@ -52,7 +52,7 @@ namespace paper.editor {
                     }
                     else {
                         obj.transform.parent = null;
-                        let all = paper.Application.sceneManager.activeScene.gameObjects as Array<GameObject>;
+                        let all = this.editorModel.scene.gameObjects as Array<GameObject>;
                         let currentIndex = all.indexOf(obj);
                         all.splice(currentIndex, 1);
                         all.splice(info.oldIndex, 0, obj);

@@ -35,7 +35,7 @@ namespace paper.editor {
                     }
                 }
                 else {
-                    let all = paper.Application.sceneManager.activeScene.gameObjects;
+                    let all = editorModel.scene.gameObjects;
                     let index = all.indexOf(obj);
                     if (++index < all.length) {
                         oldTargetUUID = all[index].uuid;
@@ -64,7 +64,7 @@ namespace paper.editor {
                     let oldTarget=this.editorModel.getGameObjectByUUid(info.oldTargetUUID);;
                     let oldDir=info.oldDir;
                     if(info.oldTargetUUID==='scene'){
-                        let all=paper.Application.sceneManager.activeScene.gameObjects;
+                        let all=this.editorModel.scene.gameObjects;
                         oldTarget=all[all.length-1];
                         oldDir='bottom';
                     }

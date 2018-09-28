@@ -38,7 +38,7 @@ namespace paper.editor {
                     if (revertData.revertGameObjects && revertData.revertGameObjects.length > 0) {
                         for (const obj of revertData.revertGameObjects) {
                             const {serializeData} = obj;
-                            const newObj:GameObject | null = new Deserializer().deserialize(serializeData,true);
+                            const newObj:GameObject | null = new Deserializer().deserialize(serializeData,true,false,this.editorModel.scene);
                             newObj.parent = gameObj;
                         }
 

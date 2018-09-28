@@ -35,7 +35,7 @@ namespace paper.editor {
                 let keepUID = this.cacheSerializeData ? true : false;
                 for (let i: number = 0; i < serializeDataList.length; i++) {
                     let info = serializeDataList[i];
-                    let obj: GameObject | null = new Deserializer().deserialize(info, keepUID);
+                    let obj: GameObject | null = new Deserializer().deserialize(info, keepUID,false,this.editorModel.scene);
                     if (obj && parent) {
                         obj.transform.parent = parent.transform;
                     }
