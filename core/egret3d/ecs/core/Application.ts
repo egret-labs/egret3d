@@ -34,6 +34,10 @@ namespace paper {
         private constructor() {
         }
         /**
+         * 
+         */
+        public readonly version: string = "1.1.0.001";
+        /**
          * 系统管理器。
          */
         public readonly systemManager: SystemManager = SystemManager.getInstance();

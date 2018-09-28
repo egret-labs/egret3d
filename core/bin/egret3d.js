@@ -7145,6 +7145,7 @@ var egret3d;
      */
     function runEgret(options) {
         if (options === void 0) { options = { antialias: false }; }
+        console.info("Egret version:", paper.Application.version);
         console.info("Egret start.");
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
         egret.Capabilities["renderMode" + ""] = "webgl";
@@ -13037,7 +13038,7 @@ var egret3d;
                     zdist: -1,
                 };
                 if (!renderer.forceCPUSkin) {
-                    material.addDefine("USE_SKINNING" /* USE_SKINNING */).addDefine("MAX_BONES" /* MAX_BONES */ + " " + SkinnedMeshRendererSystem.maxBoneCount);
+                    material.addDefine("USE_SKINNING" /* USE_SKINNING */).addDefine("MAX_BONES" /* MAX_BONES */ + " " + Math.min(SkinnedMeshRendererSystem.maxBoneCount, renderer.bones.length));
                 }
                 this._drawCalls.drawCalls.push(drawCall);
             }
@@ -17272,7 +17273,7 @@ var egret3d;
             getExtension(webgl, "GL_OES_standard_derivatives");
             //TODO
             WebGLCapabilities.commonDefines = getConstDefines(this.maxPrecision);
-            egret3d.SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4 / 16);
+            egret3d.SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
             console.info("WebGL version:", this.version);
             console.info("Maximum shader precision:", this.maxPrecision);
             console.info("Maximum texture count:", this.maxTextures);
@@ -17649,6 +17650,10 @@ var paper;
      */
     var ECS = (function () {
         function ECS() {
+            /**
+             *
+             */
+            this.version = "1.1.0.001";
             /**
              * 系统管理器。
              */

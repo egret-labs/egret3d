@@ -5593,6 +5593,10 @@ declare namespace paper {
         static getInstance(): ECS;
         private constructor();
         /**
+         *
+         */
+        readonly version: string;
+        /**
          * 系统管理器。
          */
         readonly systemManager: SystemManager;
