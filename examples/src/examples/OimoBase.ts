@@ -46,7 +46,7 @@ namespace OimoBase {
                 const boxCollider = cube.addComponent(egret3d.oimo.BoxCollider);
 
                 boxCollider.size = cubeSize;
-                rigidbody.mass = 0.1;
+                rigidbody.mass = 1.1;
             }
         }
     }

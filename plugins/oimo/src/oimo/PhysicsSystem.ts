@@ -73,14 +73,46 @@ namespace egret3d.oimo {
 
                 // }
                 // while (contact.getNext());
+
+                //TODO
                 this._contactColliders.begin.push(contact);
+                this._contactColliders.stay.push(contact);
+
+                const colliderA = contact.getShape1().userData as Collider;
+                const colliderB = contact.getShape2().userData as Collider;
+
+                for (const behaviour of colliderA.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                    behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderB);
+                }
+
+                for (const behaviour of colliderB.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                    behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderA);
+                }
             };
             this._contactCallback.preSolve = (contact: OIMO.Contact) => {
             };
             this._contactCallback.postSolve = (contact: OIMO.Contact) => {
             };
             this._contactCallback.endContact = (contact: OIMO.Contact) => {
+                //TODO
                 this._contactColliders.end.push(contact);
+
+                const stay = this._contactColliders.stay;
+                const index = stay.indexOf(contact);
+                if (index >= 0) {
+                    stay.splice(index, 1);
+                }
+
+                const colliderA = contact.getShape1().userData as Collider;
+                const colliderB = contact.getShape2().userData as Collider;
+
+                for (const behaviour of colliderA.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                    behaviour.onCollisionExit && behaviour.onCollisionExit(colliderB);
+                }
+
+                for (const behaviour of colliderB.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                    behaviour.onCollisionExit && behaviour.onCollisionExit(colliderA);
+                }
             };
         }
 
@@ -182,39 +214,9 @@ namespace egret3d.oimo {
                     }
                 }
                 //
-                const begin = this._contactColliders.begin as OIMO.Contact[];
+                // const begin = this._contactColliders.begin as OIMO.Contact[];
                 const stay = this._contactColliders.stay as OIMO.Contact[];
-                const end = this._contactColliders.end as OIMO.Contact[];
-
-                if (begin.length > 0) {
-                    for (const contact of begin) {
-                        const colliderA = contact.getShape1().userData as Collider;
-                        const colliderB = contact.getShape2().userData as Collider;
-
-                        for (const behaviour of colliderA.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
-                            behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderB);
-                        }
-
-                        for (const behaviour of colliderB.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
-                            behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderA);
-                        }
-                    }
-                }
-
-                if (end.length > 0) {
-                    for (const contact of end) {
-                        const colliderA = contact.getShape1().userData as Collider;
-                        const colliderB = contact.getShape2().userData as Collider;
-
-                        for (const behaviour of colliderA.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
-                            behaviour.onCollisionExit && behaviour.onCollisionExit(colliderB);
-                        }
-
-                        for (const behaviour of colliderB.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
-                            behaviour.onCollisionExit && behaviour.onCollisionExit(colliderA);
-                        }
-                    }
-                }
+                // const end = this._contactColliders.end as OIMO.Contact[];
 
                 if (stay.length > 0) {
                     for (const contact of stay) {

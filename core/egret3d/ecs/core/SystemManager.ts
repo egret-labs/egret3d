@@ -41,7 +41,7 @@ namespace paper {
             }
 
             for (let i = 0, l = this._preBeforeSystems.length; i < l; i += 2) {
-                this.register(this._preBeforeSystems[i], this._preBeforeSystems[i + 1]);
+                this.registerBefore(this._preBeforeSystems[i], this._preBeforeSystems[i + 1]);
             }
 
             this._preSystems.length = 0;

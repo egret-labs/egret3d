@@ -41884,7 +41884,11 @@ var egret3d;
                  * [Type, Mass, LinearDamping, AngularDamping];
                  */
                 _this._values = new Float32Array([
-                    16777215 /* Everything */, 16777215 /* Everything */, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
+                    16777215 /* Everything */,
+                    16777215 /* Everything */,
+                    OIMO.Setting.defaultFriction,
+                    OIMO.Setting.defaultRestitution,
+                    OIMO.Setting.defaultDensity,
                 ]);
                 _this._oimoShape = null;
                 return _this;
@@ -42282,7 +42286,8 @@ var egret3d;
             }
             BoxCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
-                config.geometry = new OIMO.BoxGeometry(egret3d.helpVector3A.multiplyScalar(0.5, this._size));
+                var halfSize = egret3d.Vector3.create().multiplyScalar(0.5, this._size).release();
+                config.geometry = new OIMO.BoxGeometry(halfSize);
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
@@ -42454,7 +42459,7 @@ var egret3d;
                 var transform = this.gameObject.transform;
                 var matrix = transform.getWorldMatrix();
                 var from = transform.getPosition();
-                var to = matrix.transformVector3(egret3d.helpVector3A.set(this.distance, 0.0, 0.0));
+                var to = egret3d.Vector3.create(this.distance, 0.0, 0.0).applyMatrix(matrix).release();
                 var raycastInfo = oimo.PhysicsSystem.getInstance().rayCast(from, to, this.collisionMask);
                 if (raycastInfo) {
                     this._hitted = true;
@@ -43295,14 +43300,42 @@ var egret3d;
                     // do {
                     // }
                     // while (contact.getNext());
+                    //TODO
                     _this._contactColliders.begin.push(contact);
+                    _this._contactColliders.stay.push(contact);
+                    var colliderA = contact.getShape1().userData;
+                    var colliderB = contact.getShape2().userData;
+                    for (var _i = 0, _a = colliderA.gameObject.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
+                        var behaviour = _a[_i];
+                        behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderB);
+                    }
+                    for (var _b = 0, _c = colliderB.gameObject.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
+                        var behaviour = _c[_b];
+                        behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderA);
+                    }
                 };
                 this._contactCallback.preSolve = function (contact) {
                 };
                 this._contactCallback.postSolve = function (contact) {
                 };
                 this._contactCallback.endContact = function (contact) {
+                    //TODO
                     _this._contactColliders.end.push(contact);
+                    var stay = _this._contactColliders.stay;
+                    var index = stay.indexOf(contact);
+                    if (index >= 0) {
+                        stay.splice(index, 1);
+                    }
+                    var colliderA = contact.getShape1().userData;
+                    var colliderB = contact.getShape2().userData;
+                    for (var _i = 0, _a = colliderA.gameObject.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
+                        var behaviour = _a[_i];
+                        behaviour.onCollisionExit && behaviour.onCollisionExit(colliderB);
+                    }
+                    for (var _b = 0, _c = colliderB.gameObject.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
+                        var behaviour = _c[_b];
+                        behaviour.onCollisionExit && behaviour.onCollisionExit(colliderA);
+                    }
                 };
             };
             PhysicsSystem.prototype.onAddGameObject = function (gameObject, group) {
@@ -43395,50 +43428,20 @@ var egret3d;
                         }
                     }
                     //
-                    var begin = this._contactColliders.begin;
+                    // const begin = this._contactColliders.begin as OIMO.Contact[];
                     var stay = this._contactColliders.stay;
-                    var end = this._contactColliders.end;
-                    if (begin.length > 0) {
-                        for (var _c = 0, begin_1 = begin; _c < begin_1.length; _c++) {
-                            var contact = begin_1[_c];
+                    // const end = this._contactColliders.end as OIMO.Contact[];
+                    if (stay.length > 0) {
+                        for (var _c = 0, stay_1 = stay; _c < stay_1.length; _c++) {
+                            var contact = stay_1[_c];
                             var colliderA = contact.getShape1().userData;
                             var colliderB = contact.getShape2().userData;
                             for (var _d = 0, _e = colliderA.gameObject.getComponents(paper.Behaviour, true); _d < _e.length; _d++) {
                                 var behaviour = _e[_d];
-                                behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderB);
+                                behaviour.onCollisionStay && behaviour.onCollisionStay(colliderB);
                             }
                             for (var _f = 0, _g = colliderB.gameObject.getComponents(paper.Behaviour, true); _f < _g.length; _f++) {
                                 var behaviour = _g[_f];
-                                behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderA);
-                            }
-                        }
-                    }
-                    if (end.length > 0) {
-                        for (var _h = 0, end_1 = end; _h < end_1.length; _h++) {
-                            var contact = end_1[_h];
-                            var colliderA = contact.getShape1().userData;
-                            var colliderB = contact.getShape2().userData;
-                            for (var _j = 0, _k = colliderA.gameObject.getComponents(paper.Behaviour, true); _j < _k.length; _j++) {
-                                var behaviour = _k[_j];
-                                behaviour.onCollisionExit && behaviour.onCollisionExit(colliderB);
-                            }
-                            for (var _l = 0, _m = colliderB.gameObject.getComponents(paper.Behaviour, true); _l < _m.length; _l++) {
-                                var behaviour = _m[_l];
-                                behaviour.onCollisionExit && behaviour.onCollisionExit(colliderA);
-                            }
-                        }
-                    }
-                    if (stay.length > 0) {
-                        for (var _o = 0, stay_1 = stay; _o < stay_1.length; _o++) {
-                            var contact = stay_1[_o];
-                            var colliderA = contact.getShape1().userData;
-                            var colliderB = contact.getShape2().userData;
-                            for (var _p = 0, _q = colliderA.gameObject.getComponents(paper.Behaviour, true); _p < _q.length; _p++) {
-                                var behaviour = _q[_p];
-                                behaviour.onCollisionStay && behaviour.onCollisionStay(colliderB);
-                            }
-                            for (var _r = 0, _s = colliderB.gameObject.getComponents(paper.Behaviour, true); _r < _s.length; _r++) {
-                                var behaviour = _s[_r];
                                 behaviour.onCollisionStay && behaviour.onCollisionStay(colliderA);
                             }
                         }
@@ -43452,7 +43455,10 @@ var egret3d;
                 }
                 if (component instanceof oimo.Collider) {
                     var rigidbody = component.gameObject.getComponent(oimo.Rigidbody);
-                    rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                    if (component.oimoShape._rigidBody) {
+                        component.oimoShape.setContactCallback(null);
+                        rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                    }
                     // rigidbody._updateMass(rigidbody.oimoRigidbody);
                 }
                 else if (component instanceof oimo.Joint) {
@@ -43464,11 +43470,6 @@ var egret3d;
                 for (var _i = 0, _a = gameObject.getComponents(oimo.Joint, true); _i < _a.length; _i++) {
                     var joint = _a[_i];
                     this._oimoWorld.removeJoint(joint.oimoJoint);
-                }
-                for (var _b = 0, _c = gameObject.getComponents(oimo.Collider, true); _b < _c.length; _b++) {
-                    var shape = _c[_b];
-                    rigidbody.oimoRigidbody.removeShape(shape.oimoShape);
-                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
                 }
                 this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
             };
