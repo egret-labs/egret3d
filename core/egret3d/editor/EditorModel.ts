@@ -104,7 +104,7 @@ namespace paper.editor {
 
                 let prePropertyData = {
                     propName,
-                    copyValue: this.serializeProperty(target[propName], valueEditType),
+                    copyValue: this.serializeProperty(propOldValue, valueEditType),
                     valueEditType
                 };
 
@@ -408,7 +408,7 @@ namespace paper.editor {
                     }
                 }
                 else {
-                    let all = paper.Application.sceneManager.activeScene.gameObjects as Array<paper.GameObject>;
+                    let all = this.scene.gameObjects as Array<paper.GameObject>;
                     for (let i: number = 0; i < objects.length; i++) {
                         all.splice(all.indexOf(objects[i]), 1);
                     }
@@ -453,7 +453,7 @@ namespace paper.editor {
         }
 
         public getGameObjectByUUid(uuid: string): GameObject | null {
-            let objects = paper.Application.sceneManager.activeScene.gameObjects;
+            let objects = this.scene.gameObjects;
             for (let i: number = 0; i < objects.length; i++) {
                 if (objects[i].uuid === uuid) {
                     return objects[i];
@@ -463,7 +463,7 @@ namespace paper.editor {
         }
 
         public getGameObjectsByUUids(uuids: string[]): GameObject[] {
-            let objects = Application.sceneManager.activeScene.gameObjects;
+            let objects = this.scene.gameObjects;
             let obj: GameObject;
             let result: GameObject[] = [];
             let idIndex: number;
@@ -596,7 +596,7 @@ namespace paper.editor {
                     currentObj = currentObj.transform.parent.gameObject;
                 }
                 //追加一个根部索引
-                result.unshift(paper.Application.sceneManager.activeScene.gameObjects.indexOf(currentObj));
+                result.unshift(this.scene.gameObjects.indexOf(currentObj));
                 displayPathList.push({ gameObject: obj, path: result });
             });
             function getPath(gameObject: paper.GameObject): number[] {
@@ -671,7 +671,7 @@ namespace paper.editor {
         }
 
         public updateAsset(asset: Asset, prefabInstance: GameObject | null = null) {
-            const refs = this.findAssetRefs(Application.sceneManager.activeScene, asset);
+            const refs = this.findAssetRefs(this.scene, asset);
 
             let serializeData: ISerializedData;
             if (asset instanceof Prefab) {

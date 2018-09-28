@@ -3680,16 +3680,16 @@ var paper;
             __extends(SkeletonDrawer, _super);
             function SkeletonDrawer() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._skeletonMesh = egret3d.Mesh.create(128, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */], null, 35048 /* Dynamic */);
+                _this._skeletonMesh = egret3d.Mesh.create(128, 0, ["POSITION" /* POSITION */], null, 35048 /* Dynamic */);
                 return _this;
             }
             SkeletonDrawer.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
                 var mesh = this._skeletonMesh;
-                var material = egret3d.DefaultMaterials.LINEDASHED_COLOR.clone();
+                var material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
                 material
-                    .setColor(egret3d.Color.create(0.0, 1.0, 1.0).release())
+                    .setColor(egret3d.Color.YELLOW)
                     .setDepth(false, false)
                     .renderQueue = 4000 /* Overlay */;
                 this.gameObject.getOrAddComponent(egret3d.MeshFilter).mesh = mesh;
@@ -4269,6 +4269,10 @@ var paper;
                     event.preventDefault();
                 };
                 _this._onMouseUp = function (event) {
+                    var canvas = egret3d.WebGLCapabilities.canvas;
+                    if (event.target !== canvas && event.target.tagName.toLowerCase() !== "html") {
+                        return;
+                    }
                     if (event.button === 0) {
                         var transformController = _this._transformController;
                         if (transformController.isActiveAndEnabled && transformController.hovered) {
@@ -4326,7 +4330,7 @@ var paper;
                     }
                     else if (event.buttons & 1) {
                     }
-                    else {
+                    else if (event.target === canvas) {
                         var transformController = _this._transformController;
                         if (transformController && transformController.isActiveAndEnabled) {
                             if (event.shiftKey || event.ctrlKey) {
@@ -4519,7 +4523,7 @@ var paper;
                         __editor.transform.rotation = egret3d.Camera.editor.transform.rotation;
                     }
                     else {
-                        // __editor = EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, EditorDefaultTexture.CAMERA_ICON).transform;
+                        __editor = debug.EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, debug.EditorDefaultTexture.CAMERA_ICON).transform;
                     }
                     // const pick = iconObject;
                     // const pick = __editor.transform.find("__pickTarget").gameObject;
@@ -4600,7 +4604,7 @@ var paper;
                         __editor.transform.rotation = egret3d.Camera.editor.transform.rotation;
                     }
                     else {
-                        // __editor = EditorMeshHelper.createIcon("__pickTarget", light.gameObject, EditorDefaultTexture.LIGHT_ICON).transform;
+                        __editor = debug.EditorMeshHelper.createIcon("__pickTarget", light.gameObject, debug.EditorDefaultTexture.LIGHT_ICON).transform;
                     }
                     // const pick = iconObject;
                     // const pick = __editor.transform.find("pick").gameObject;
