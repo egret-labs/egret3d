@@ -1,6 +1,6 @@
-namespace paper.debug {
+namespace paper.editor {
     /**
-     * 
+     * @internal
      */
     export const enum ModelComponentEvent {
         SceneSelected = "SceneSelected",
@@ -12,7 +12,7 @@ namespace paper.debug {
         GameObjectUnselected = "GameObjectUnselected",
     }
     /**
-     * 
+     * @internal
      */
     export class ModelComponent extends SingletonComponent {
         /**
@@ -33,7 +33,7 @@ namespace paper.debug {
         public selectedGameObject: GameObject | null = null;
 
         //
-        private editorModel: paper.editor.EditorModel | null = null;
+        private _editorModel: editor.EditorModel | null = null;
 
         private _onEditorSelectGameObjects(event: { data: GameObject[] }) {
             for (const gameObject of this.selectedGameObjects) {
@@ -88,22 +88,24 @@ namespace paper.debug {
         }
 
         public initialize() {
-            editor.Editor.addEventListener(editor.EditorEvent.CHANGE_SCENE, () => {
-                if (this.editorModel) {
-                    this.editorModel.removeEventListener(paper.editor.EditorModelEvent.SELECT_GAMEOBJECTS, this._onEditorSelectGameObjects, this);
-                    this.editorModel.removeEventListener(paper.editor.EditorModelEvent.CHANGE_PROPERTY, this._onChangeProperty, this);
+            if (Application.playerMode === PlayerMode.Editor) {
+                editor.Editor.addEventListener(editor.EditorEvent.CHANGE_SCENE, () => {
+                    if (this._editorModel) {
+                        this._editorModel.removeEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, this._onEditorSelectGameObjects, this);
+                        this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_PROPERTY, this._onChangeProperty, this);
 
-                    this.editorModel.removeEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_MODE, this._onChangeEditMode, this);
-                    this.editorModel.removeEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_TYPE, this._onChangeEditType, this);
-                }
+                        this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_EDIT_MODE, this._onChangeEditMode, this);
+                        this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, this._onChangeEditType, this);
+                    }
 
-                this.editorModel = paper.editor.Editor.activeEditorModel;
-                this.editorModel.addEventListener(paper.editor.EditorModelEvent.SELECT_GAMEOBJECTS, this._onEditorSelectGameObjects, this);
-                this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_PROPERTY, this._onChangeProperty, this);
+                    this._editorModel = editor.Editor.activeEditorModel;
+                    this._editorModel.addEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, this._onEditorSelectGameObjects, this);
+                    this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_PROPERTY, this._onChangeProperty, this);
 
-                this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_MODE, this._onChangeEditMode, this);
-                this.editorModel.addEventListener(paper.editor.EditorModelEvent.CHANGE_EDIT_TYPE, this._onChangeEditType, this);
-            }, this);
+                    this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_MODE, this._onChangeEditMode, this);
+                    this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, this._onChangeEditType, this);
+                }, this);
+            }
         }
 
         private _select(value: Scene | GameObject | null, isReplace?: boolean) {
@@ -191,22 +193,22 @@ namespace paper.debug {
         public select(value: Scene | GameObject | null, isReplace?: boolean) {
             this._select(value, isReplace);
 
-            if (this.editorModel !== null) {
-                this.editorModel.selectGameObject(this.selectedGameObjects);
+            if (this._editorModel !== null) {
+                this._editorModel.selectGameObject(this.selectedGameObjects);
             }
         }
 
         public unselect(value: GameObject) {
             this._unselect(value);
 
-            if (this.editorModel !== null) {
-                this.editorModel.selectGameObject(this.selectedGameObjects);
+            if (this._editorModel !== null) {
+                this._editorModel.selectGameObject(this.selectedGameObjects);
             }
         }
 
         public changeProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent) {
-            if (this.editorModel) {
-                this.editorModel.setTransformProperty(propName, propOldValue, propNewValue, target);
+            if (this._editorModel) {
+                this._editorModel.setTransformProperty(propName, propOldValue, propNewValue, target);
             }
         }
     }

@@ -1,8 +1,8 @@
-namespace paper.debug {
+namespace paper.editor {
     /**
-     * 
+     * @internal
      */
-    export class SkeletonDrawer extends paper.BaseComponent {
+    export class SkeletonDrawer extends BaseComponent {
         private readonly _skeletonMesh: egret3d.Mesh = egret3d.Mesh.create(128, 0, [gltf.MeshAttributeType.POSITION], null, gltf.DrawMode.Dynamic);
 
         public initialize() {
@@ -14,7 +14,7 @@ namespace paper.debug {
             material
                 .setColor(egret3d.Color.YELLOW)
                 .setDepth(false, false)
-                .renderQueue = paper.RenderQueue.Overlay;
+                .renderQueue = RenderQueue.Overlay;
 
             this.gameObject.getOrAddComponent(egret3d.MeshFilter).mesh = mesh;
             this.gameObject.getOrAddComponent(egret3d.MeshRenderer).material = material;
@@ -24,7 +24,7 @@ namespace paper.debug {
         // const bones = skinnedMeshRenderer.bones;
         // for (const bone of bones) {
         //     const box = egret3d.Primitive.create(egret3d.Primitive.Type.Cube).transform.setLocalScale(0.1, 0.1, 0.1);
-        //     box.gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
+        //     box.gameObject.hideFlags = HideFlags.HideAndDontSave;
         //     box.transform.parent = bone;
         // }
 

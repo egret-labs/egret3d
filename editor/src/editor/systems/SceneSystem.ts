@@ -1,14 +1,16 @@
-namespace paper.debug {
-
-    export class SceneSystem extends paper.BaseSystem {
+namespace paper.editor {
+    /**
+     * @internal
+     */
+    export class SceneSystem extends BaseSystem {
         protected readonly _interests = [
             [
                 { componentClass: egret3d.Transform }
             ]
         ];
 
-        private readonly _camerasAndLights: egret3d.CamerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
-        private readonly _modelComponent: ModelComponent = paper.GameObject.globalGameObject.getOrAddComponent(ModelComponent);
+        private readonly _camerasAndLights: egret3d.CamerasAndLights = GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+        private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
 
         private readonly _pointerStartPosition: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _pointerPosition: egret3d.Vector3 = egret3d.Vector3.create();
@@ -20,9 +22,9 @@ namespace paper.debug {
         private _skeletonDrawer: SkeletonDrawer | null = null;
         private _gridController: GridController | null = null;
 
-        private _hoverBox: paper.GameObject | null = null;
-        private _grids: paper.GameObject | null = null;
-        private _cameraViewFrustum: paper.GameObject | null = null; // TODO封装一下
+        private _hoverBox: GameObject | null = null;
+        private _grids: GameObject | null = null;
+        private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
 
         private _contextmenuHandler = (event: Event) => {
             event.preventDefault();
@@ -73,7 +75,7 @@ namespace paper.debug {
                                 if (hoveredGameObject.renderer instanceof egret3d.SkinnedMeshRenderer && !hoveredGameObject.transform.find("__pickTarget")) { //
                                     const animation = hoveredGameObject.getComponentInParent(egret3d.Animation);
                                     if (animation) {
-                                        const pickGameObject = EditorMeshHelper.createGameObject("__pickTarget", null, null, paper.DefaultTags.EditorOnly, hoveredGameObject.scene);
+                                        const pickGameObject = EditorMeshHelper.createGameObject("__pickTarget", null, null, DefaultTags.EditorOnly, hoveredGameObject.scene);
                                         pickGameObject.transform.parent = hoveredGameObject.transform;
                                         pickGameObject.addComponent(GizmoPickComponent).pickTarget = animation.gameObject;
                                     }
@@ -140,7 +142,7 @@ namespace paper.debug {
                 }
 
                 if (!transformController || !transformController.isActiveAndEnabled || !transformController.hovered) {
-                    const raycastInfos = Helper.raycast(paper.Scene.activeScene.getRootGameObjects(), this._pointerPosition.x, this._pointerPosition.y);
+                    const raycastInfos = Helper.raycast(Scene.activeScene.getRootGameObjects(), this._pointerPosition.x, this._pointerPosition.y);
                     if (raycastInfos.length > 0) {
                         this._modelComponent.hover(raycastInfos[0].transform.gameObject);
                     }
@@ -210,7 +212,7 @@ namespace paper.debug {
         private _onGameObjectHovered = (_c: any, value: GameObject) => {
             if (value) {
                 if (!this._hoverBox) {
-                    this._hoverBox = EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.activeScene);
+                    this._hoverBox = EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, Scene.activeScene);
                 }
                 this._hoverBox.activeSelf = true;
                 if (this._hoverBox.scene !== value.scene) {//TODO
@@ -260,7 +262,7 @@ namespace paper.debug {
             this._selectGameObject(value, false);
         }
 
-        private _selectGameObject(value: paper.GameObject, selected: boolean) {
+        private _selectGameObject(value: GameObject, selected: boolean) {
             if (selected) {
                 { // Create box.
                     const box = EditorMeshHelper.createBox("Box", egret3d.Color.INDIGO, 0.8, value.scene);
@@ -324,7 +326,7 @@ namespace paper.debug {
 
         private _updateCameras() {
             for (const camera of this._camerasAndLights.cameras) {
-                if (camera.gameObject.tag === paper.DefaultTags.EditorOnly) {
+                if (camera.gameObject.tag === DefaultTags.EditorOnly) {
                     continue;
                 }
 
@@ -416,7 +418,7 @@ namespace paper.debug {
 
         private _updateLights() {
             for (const light of this._camerasAndLights.lights) {
-                if (light.gameObject.tag === paper.DefaultTags.EditorOnly) {
+                if (light.gameObject.tag === DefaultTags.EditorOnly) {
                     continue;
                 }
 
@@ -468,7 +470,7 @@ namespace paper.debug {
 
             this._gridController = EditorMeshHelper.createGameObject("Grid").addComponent(GridController);
 
-            this._hoverBox = EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.activeScene);
+            this._hoverBox = EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, Scene.activeScene);
             this._hoverBox.activeSelf = false;
 
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera");
@@ -527,7 +529,7 @@ namespace paper.debug {
 
             //
             for (const camera of this._camerasAndLights.cameras) {
-                if (camera.gameObject.tag === paper.DefaultTags.EditorOnly) {
+                if (camera.gameObject.tag === DefaultTags.EditorOnly) {
                     continue;
                 }
 

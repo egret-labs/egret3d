@@ -1,6 +1,6 @@
-namespace paper.debug {
+namespace paper.editor {
     /**
-     * 
+     * @internal
      */
     export class EditorSystem extends BaseSystem {
         public onAwake() {
