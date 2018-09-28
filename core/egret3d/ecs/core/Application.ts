@@ -34,6 +34,10 @@ namespace paper {
         private constructor() {
         }
         /**
+         * 
+         */
+        public readonly version: string = "1.1.0.001";
+        /**
          * 系统管理器。
          */
         public readonly systemManager: SystemManager = SystemManager.getInstance();
@@ -68,15 +72,13 @@ namespace paper {
          */
         public init(options: egret3d.RunEgretOptions) {
             this._playerMode = options.playerMode || PlayerMode.Player;
-
-            if (options.systems) {
-                for (const systemClass of options.systems) {
-                    this.systemManager.register(systemClass, null);
-                }
-            }
-
+            this.systemManager.register(paper.EnableSystem, paper.SystemOrder.Enable);
+            this.systemManager.register(paper.StartSystem, paper.SystemOrder.Start);
+            this.systemManager.register(paper.FixedUpdateSystem, paper.SystemOrder.FixedUpdate);
+            this.systemManager.register(paper.UpdateSystem, paper.SystemOrder.Update);
+            this.systemManager.register(paper.LateUpdateSystem, paper.SystemOrder.LaterUpdate);
+            this.systemManager.register(paper.DisableSystem, paper.SystemOrder.Disable);
             this.systemManager._preRegisterSystems();
-
             this._updatePlayerMode();
             this.resume();
         }

@@ -2345,7 +2345,23 @@ declare namespace paper {
         Global = "Global",
     }
     /**
-     * 渲染排序
+     * 系统排序。
+     */
+    const enum SystemOrder {
+        Begin = 0,
+        Enable = 1000,
+        Start = 2000,
+        FixedUpdate = 3000,
+        Update = 4000,
+        Animation = 5000,
+        LaterUpdate = 6000,
+        Renderer = 7000,
+        Draw = 8000,
+        Disable = 9000,
+        End = 10000,
+    }
+    /**
+     * 渲染排序。
      */
     const enum RenderQueue {
         Background = 1000,
@@ -2404,18 +2420,6 @@ declare namespace paper {
         UserLayer10 = 2048,
         UserLayer11 = 3840,
     }
-    /**
-     *
-     * @param cullingMask
-     * @param layer
-     */
-    function layerTest(cullingMask: CullingMask, layer: Layer): boolean;
-    /**
-     *
-     * @param cullingMask
-     * @param layer
-     */
-    function removeLayer(cullingMask: CullingMask, layer: Layer): number;
 }
 declare namespace paper {
     /**
@@ -2772,33 +2776,21 @@ declare namespace paper {
         static getInstance(): SystemManager;
         private constructor();
         private readonly _preSystems;
-        private readonly _preBeforeSystems;
         private readonly _systems;
+        private _getSystemInsertIndex(order);
         private _checkRegister<T>(systemClass);
         /**
          * 在程序启动之前预注册一个指定的系统。
          */
         preRegister<T extends BaseSystem>(systemClass: {
             new (): T;
-        }, afterOrBefore?: {
-            new (): BaseSystem;
-        } | null, isBefore?: boolean): this;
+        }, order?: SystemOrder): this;
         /**
          * 为程序注册一个指定的系统。
          */
         register<T extends BaseSystem>(systemClass: {
             new (): T;
-        }, after?: {
-            new (): BaseSystem;
-        } | null): T;
-        /**
-         * 为程序注册一个指定的系统。
-         */
-        registerBefore<T extends BaseSystem>(systemClass: {
-            new (): T;
-        }, before?: {
-            new (): BaseSystem;
-        } | null): T;
+        }, order?: SystemOrder): T;
         /**
          * 从程序已注册的全部系统中获取一个指定的系统。
          */
@@ -2806,11 +2798,11 @@ declare namespace paper {
             new (): T;
         }): T;
         /**
-         *  从程序已注册的全部系统中获取一个指定的系统，如果尚未注册，则注册该系统。
+         * 从程序已注册的全部系统中获取一个指定的系统，如果尚未注册，则注册该系统。
          */
         getOrRegisterSystem<T extends BaseSystem>(systemClass: {
             new (): T;
-        }): T;
+        }, order?: SystemOrder): T;
         /**
          * 程序已注册的全部系统。
          */
@@ -3282,6 +3274,19 @@ declare namespace paper {
 }
 declare namespace paper {
     /**
+     * 固定更新系统。
+     */
+    class FixedUpdateSystem extends BaseSystem {
+        protected readonly _interests: {
+            componentClass: any;
+            type: number;
+            isBehaviour: boolean;
+        }[];
+        onUpdate(): void;
+    }
+}
+declare namespace paper {
+    /**
      * 更新系统。
      */
     class UpdateSystem extends BaseSystem {
@@ -3387,7 +3392,6 @@ declare namespace egret3d {
         webgl?: WebGLRenderingContext;
         playerMode?: paper.PlayerMode;
         isPlaying?: boolean;
-        systems?: any[];
     };
     type RequiredRuntimeOptions = {
         antialias: boolean;
@@ -3930,20 +3934,6 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    /**
-     * 摄像机和灯光系统。
-     */
-    class CameraAndLightSystem extends paper.BaseSystem {
-        protected readonly _interests: ({
-            componentClass: typeof Camera;
-        }[] | {
-            componentClass: typeof DirectionalLight[];
-        }[])[];
-        protected readonly _camerasAndLights: CamerasAndLights;
-        onAddGameObject(_gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
-        onRemoveGameObject(_gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
-        onUpdate(deltaTime: number): void;
-    }
 }
 declare namespace egret3d {
     /**
@@ -4429,15 +4419,6 @@ declare namespace paper {
         readonly gameObjects: ReadonlyArray<GameObject>;
     }
 }
-declare namespace egret3d {
-    /**
-     *
-     */
-    class DirectionalLight extends BaseLight {
-        renderTarget: BaseRenderTarget;
-        update(camera: Camera, faceIndex: number): void;
-    }
-}
 declare namespace paper {
     /**
      * 实体。
@@ -4651,6 +4632,23 @@ declare namespace paper {
          * @see paper.Scene#findGameObjectsWithTag()
          */
         static findGameObjectsWithTag(tag: string, scene?: Scene | null): GameObject[];
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    class PointLight extends BaseLight {
+        /**
+         *
+         */
+        decay: number;
+        /**
+         *
+         */
+        distance: number;
+        renderTarget: BaseRenderTarget;
+        update(camera: Camera, faceIndex: number): void;
     }
 }
 declare namespace egret3d {
@@ -5592,6 +5590,10 @@ declare namespace paper {
          */
         static getInstance(): ECS;
         private constructor();
+        /**
+         *
+         */
+        readonly version: string;
         /**
          * 系统管理器。
          */
@@ -10292,15 +10294,7 @@ declare namespace egret3d {
     /**
      *
      */
-    class PointLight extends BaseLight {
-        /**
-         *
-         */
-        decay: number;
-        /**
-         *
-         */
-        distance: number;
+    class DirectionalLight extends BaseLight {
         renderTarget: BaseRenderTarget;
         update(camera: Camera, faceIndex: number): void;
     }

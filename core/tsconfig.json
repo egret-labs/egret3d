@@ -64,6 +64,7 @@
         "egret3d/ecs/systems/BaseSystem.ts",
         "egret3d/ecs/systems/EnableSystem.ts",
         "egret3d/ecs/systems/StartSystem.ts",
+        "egret3d/ecs/systems/FixedUpdateSystem.ts",
         "egret3d/ecs/systems/UpdateSystem.ts",
         "egret3d/ecs/systems/LateUpdateSystem.ts",
         "egret3d/ecs/systems/DisableSystem.ts",

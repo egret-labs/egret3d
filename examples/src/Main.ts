@@ -1,16 +1,16 @@
 function main() {
-    // ArrowIO.start();
-    startExamples();
-
     // if ((window || global).dat) {
     //     // fps TODO
     //     const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
     //     Stats.show(div);
     // }
+
+    startExamples();
+    // Or your progject start.
 }
 
 function startExamples() {
-    const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.debug.GUIComponent);
+    const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
     const allScripts = window["allScripts"] as string[];
     const examples = [] as string[];
 

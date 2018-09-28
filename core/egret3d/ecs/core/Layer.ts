@@ -44,7 +44,23 @@ namespace paper {
         Global = "Global",
     }
     /**
-     * 渲染排序
+     * 系统排序。
+     */
+    export const enum SystemOrder {
+        Begin = 0,
+        Enable = 1000,
+        Start = 2000,
+        FixedUpdate = 3000,
+        Update = 4000,
+        Animation = 5000,
+        LaterUpdate = 6000,
+        Renderer = 7000,
+        Draw = 8000,
+        Disable = 9000,
+        End = 10000,
+    }
+    /**
+     * 渲染排序。
      */
     export const enum RenderQueue {
         Background = 1000,
@@ -103,20 +119,20 @@ namespace paper {
         UserLayer10 = 0x000800,
         UserLayer11 = 0x000f00,
     }
-    /**
-     * 
-     * @param cullingMask 
-     * @param layer 
-     */
-    export function layerTest(cullingMask: CullingMask, layer: Layer) {
-        return (cullingMask & layer) !== 0;
-    }
-    /**
-     * 
-     * @param cullingMask 
-     * @param layer 
-     */
-    export function removeLayer(cullingMask: CullingMask, layer: Layer) {
-        return cullingMask & ~layer;
-    }
+    // /**
+    //  * 
+    //  * @param cullingMask 
+    //  * @param layer 
+    //  */
+    // export function layerTest(cullingMask: CullingMask, layer: Layer) {
+    //     return (cullingMask & layer) !== 0;
+    // }
+    // /**
+    //  * 
+    //  * @param cullingMask 
+    //  * @param layer 
+    //  */
+    // export function removeLayer(cullingMask: CullingMask, layer: Layer) {
+    //     return cullingMask & ~layer;
+    // }
 }

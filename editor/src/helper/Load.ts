@@ -53,7 +53,9 @@ namespace helper {
 
         return "Unknown";
     }
-    
+    /**
+     * @internal
+     */
     export async function getResAsync(uri: string, root: string = "resource/") {
         if (!resLoaded) {
             await RES.loadConfig("resource/default.res.json", root);

@@ -1,9 +1,9 @@
-namespace paper.debug {
+namespace paper.editor {
     /**
      * @internal
      */
     export class TransfromController extends BaseComponent {
-        public isWorldSpace: boolean = true;
+        public isWorldSpace: boolean = false;
         public readonly eye: egret3d.Vector3 = egret3d.Vector3.create();
         public readonly translate: GameObject = EditorMeshHelper.createGameObject("Translate");
         public readonly rotate: GameObject = EditorMeshHelper.createGameObject("Rotate");
@@ -34,9 +34,9 @@ namespace paper.debug {
                 const pickX = EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const pickY = EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const pickZ = EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickXY = EditorMeshHelper.createGameObject("XY", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
-                const pickYZ = EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
-                const pickZX = EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
+                const pickXY = EditorMeshHelper.createGameObject("XY", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), DefaultTags.Untagged);
+                const pickYZ = EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), DefaultTags.Untagged);
+                const pickZX = EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), DefaultTags.Untagged);
 
                 this._highlights[pickX.uuid] = [pickX, axisX, arrowX];
                 this._highlights[pickY.uuid] = [pickY, axisY, arrowY];
@@ -57,18 +57,18 @@ namespace paper.debug {
                 pickYZ.transform.setParent(translate.transform).setLocalPosition(0.0, 0.15, 0.15).setLocalEuler(0.0, Math.PI * 0.5, 0.0).setLocalScale(0.3);
                 pickZX.transform.setParent(translate.transform).setLocalPosition(0.15, 0.0, 0.15).setLocalEuler(Math.PI * 0.5, 0.0, 0.0).setLocalScale(0.3);
 
-                (axisX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.RED);
-                (axisY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
-                (axisZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
-                (arrowX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.RED);
-                (arrowY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
-                (arrowZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
-                (pickX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.RED);
-                (pickY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
-                (pickZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
-                (pickXY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.YELLOW);
-                (pickYZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.INDIGO);
-                (pickZX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.PURPLE);
+                (axisX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.RED);
+                (axisY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
+                (axisZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
+                (arrowX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.RED);
+                (arrowY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
+                (arrowZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
+                (pickX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.RED);
+                (pickY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
+                (pickZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
+                (pickXY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.YELLOW);
+                (pickYZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.INDIGO);
+                (pickZX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.PURPLE);
             }
 
             { // Rotate.
@@ -107,16 +107,16 @@ namespace paper.debug {
                 pickE.transform.setParent(rotate.transform).gameObject.activeSelf = false;
                 pickXYZE.transform.setParent(rotate.transform).gameObject.activeSelf = false;
 
-                (axisX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.RED);
-                (axisY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
-                (axisZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
-                (axisE.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.YELLOW);
-                (axisXYZE.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay - 1).setColor(egret3d.Color.GRAY);
-                (pickX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.RED);
-                (pickY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
-                (pickZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
-                (pickE.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.YELLOW);
-                (pickXYZE.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay - 1).setColor(egret3d.Color.GRAY);
+                (axisX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.RED);
+                (axisY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
+                (axisZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
+                (axisE.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.YELLOW);
+                (axisXYZE.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay - 1).setColor(egret3d.Color.GRAY);
+                (pickX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.RED);
+                (pickY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
+                (pickZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
+                (pickE.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.YELLOW);
+                (pickXYZE.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay - 1).setColor(egret3d.Color.GRAY);
             }
 
             { // Scale.
@@ -130,9 +130,9 @@ namespace paper.debug {
                 const pickX = EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const pickY = EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const pickZ = EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickXY = EditorMeshHelper.createGameObject("XY", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
-                const pickYZ = EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
-                const pickZX = EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), paper.DefaultTags.Untagged);
+                const pickXY = EditorMeshHelper.createGameObject("XY", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), DefaultTags.Untagged);
+                const pickYZ = EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), DefaultTags.Untagged);
+                const pickZX = EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), DefaultTags.Untagged);
 
                 this._highlights[pickX.uuid] = [pickX, axisX, arrowX];
                 this._highlights[pickY.uuid] = [pickX, axisY, arrowY];
@@ -152,18 +152,18 @@ namespace paper.debug {
                 pickYZ.transform.setParent(scale.transform).setLocalPosition(0.0, 0.15, 0.15).setLocalEuler(0.0, Math.PI * 0.5, 0.0).setLocalScale(0.3);
                 pickZX.transform.setParent(scale.transform).setLocalPosition(0.15, 0.0, 0.15).setLocalEuler(Math.PI * 0.5, 0.0, 0.0).setLocalScale(0.3);
 
-                (axisX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.RED);
-                (axisY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
-                (axisZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
-                (arrowX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.RED);
-                (arrowY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
-                (arrowZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
-                (pickX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.RED);
-                (pickY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
-                (pickZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
-                (pickXY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.YELLOW);
-                (pickYZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.INDIGO);
-                (pickZX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Overlay).setColor(egret3d.Color.PURPLE);
+                (axisX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.RED);
+                (axisY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
+                (axisZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
+                (arrowX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.RED);
+                (arrowY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
+                (arrowZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
+                (pickX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.RED);
+                (pickY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.GREEN);
+                (pickZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.BLUE);
+                (pickXY.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.YELLOW);
+                (pickYZ.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.INDIGO);
+                (pickZX.renderer as egret3d.MeshRenderer).material.setOpacity(0.8).setDepth(false, false).setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Overlay).setColor(egret3d.Color.PURPLE);
             }
 
             this.mode = this.translate;

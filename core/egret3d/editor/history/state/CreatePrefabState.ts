@@ -29,7 +29,7 @@ namespace paper.editor{
                     let gameObj = this.editorModel.getGameObjectByUUid(deleteUUid);
                     if (gameObj) {
                         gameObj.destroy();
-                        this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS);
+                        this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,[deleteUUid]);
                     }
                 }
                 return true;
@@ -41,7 +41,7 @@ namespace paper.editor{
             if (super.redo()) {
                 const prefab = this.stateData.prefab;
                 if (prefab) {
-                    let instance:GameObject = this.stateData.prefab.createInstance();
+                    let instance:GameObject = this.stateData.prefab.createInstance(this.editorModel.scene);
                     this.stateData.cachePrefabUUid = instance.uuid;
                     let parent=this.editorModel.getGameObjectByUUid(this.stateData.parentUUID);
                     if(parent){

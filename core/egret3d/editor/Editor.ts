@@ -91,7 +91,7 @@ namespace paper.editor {
                 prefabEditorModel.init(scene, 'prefab', prefabUrl);
                 //清除自身的预置体信息
                 let clearPrefabInfo = (obj: GameObject): void => {
-                    obj.extras={};
+                    obj.extras = {};
                     for (let comp of obj.components) {
                         comp.extras = {};
                     }
@@ -157,28 +157,6 @@ namespace paper.editor {
             egret3d.runEgret({
                 antialias: false,
                 playerMode: PlayerMode.Editor,
-                systems: [
-                    egret3d.BeginSystem,
-                    paper.EnableSystem,
-                    paper.StartSystem,
-                    //
-                    paper.UpdateSystem,
-                    //
-                    egret3d.AnimationSystem,
-                    //
-                    paper.LateUpdateSystem,
-                    //
-                    egret3d.MeshRendererSystem,
-                    egret3d.SkinnedMeshRendererSystem,
-                    egret3d.particle.ParticleSystem,
-                    egret3d.Egret2DRendererSystem,
-                    //
-                    egret3d.CameraAndLightSystem,
-                    egret3d.WebGLRenderSystem,
-                    //
-                    paper.DisableSystem,
-                    egret3d.EndSystem
-                ]
             });
         }
     }

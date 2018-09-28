@@ -1,4 +1,4 @@
-namespace paper.debug {
+namespace paper.editor {
     const _step = 5;
     /**
      * @internal

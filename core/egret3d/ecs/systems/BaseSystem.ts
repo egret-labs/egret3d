@@ -7,10 +7,19 @@ namespace paper {
         /**
          * @internal
          */
-        public static create(systemClass: { new(): BaseSystem }) {
+        public static create(systemClass: { new(): BaseSystem }, order: SystemOrder = SystemOrder.Update) {
             this._createEnabled = true;
-            return new systemClass();
+            const system = new systemClass();
+            if (system._order < 0) {
+                system._order = order;
+            }
+
+            return system;
         }
+        /**
+         * @internal
+         */
+        public _order: SystemOrder = -1;
         /**
          * @internal
          */

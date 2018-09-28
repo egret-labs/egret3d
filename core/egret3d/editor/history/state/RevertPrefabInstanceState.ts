@@ -156,7 +156,7 @@ namespace paper.editor {
 
                 let gameObjs:GameObject[] = Editor.activeEditorModel.getGameObjectsByUUids(removeGameObjIds);
                 gameObjs.forEach(element => element.destroy());
-                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS);
+                this.dispatchEditorModelEvent(EditorModelEvent.DELETE_GAMEOBJECTS,removeGameObjIds);
 
                 return true;
             }
