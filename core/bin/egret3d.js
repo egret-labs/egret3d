@@ -7145,6 +7145,7 @@ var egret3d;
      */
     function runEgret(options) {
         if (options === void 0) { options = { antialias: false }; }
+        console.info("Egret version:", paper.Application.version);
         console.info("Egret start.");
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
         egret.Capabilities["renderMode" + ""] = "webgl";
@@ -17649,6 +17650,10 @@ var paper;
      */
     var ECS = (function () {
         function ECS() {
+            /**
+             *
+             */
+            this.version = "1.1.0.001";
             /**
              * 系统管理器。
              */
