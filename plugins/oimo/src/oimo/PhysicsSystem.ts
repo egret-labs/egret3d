@@ -280,5 +280,5 @@ namespace egret3d.oimo {
         }
     }
     //
-    paper.Application.systemManager.preRegister(PhysicsSystem, paper.UpdateSystem, true);
+    paper.Application.systemManager.preRegister(PhysicsSystem, paper.SystemOrder.FixedUpdate);
 }

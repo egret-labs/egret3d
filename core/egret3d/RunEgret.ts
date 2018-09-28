@@ -12,7 +12,6 @@ namespace egret3d {
 
         playerMode?: paper.PlayerMode;
         isPlaying?: boolean;
-        systems?: any[];
     };
 
     export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number }
@@ -37,34 +36,18 @@ namespace egret3d {
         WebGLCapabilities.webgl = options.webgl;
 
         InputManager.init(canvas);
-        // DefaultTechnique.init();
         stage.init(canvas, requiredOptions);
 
-        if (!options.systems) {
-            options.systems = [
-                BeginSystem,
-                paper.EnableSystem,
-                paper.StartSystem,
-                //
-                paper.UpdateSystem,
-                //
-                AnimationSystem,
-                //
-                paper.LateUpdateSystem,
-                //
-                MeshRendererSystem,
-                SkinnedMeshRendererSystem,
-                particle.ParticleSystem,
-                Egret2DRendererSystem,
-                //
-                CameraAndLightSystem,
-                WebGLRenderSystem,
-                //
-                paper.DisableSystem,
-                EndSystem,
-            ];
-        }
-
+        const systemManager = paper.Application.systemManager;
+        systemManager.preRegister(BeginSystem, paper.SystemOrder.Begin);
+        systemManager.preRegister(AnimationSystem, paper.SystemOrder.Animation);
+        systemManager.preRegister(MeshRendererSystem, paper.SystemOrder.Renderer);
+        systemManager.preRegister(SkinnedMeshRendererSystem, paper.SystemOrder.Renderer);
+        systemManager.preRegister(particle.ParticleSystem, paper.SystemOrder.Renderer);
+        systemManager.preRegister(Egret2DRendererSystem, paper.SystemOrder.Renderer);
+        systemManager.preRegister(CameraAndLightSystem, paper.SystemOrder.Draw - 1);
+        systemManager.preRegister(WebGLRenderSystem, paper.SystemOrder.Draw);
+        systemManager.preRegister(EndSystem, paper.SystemOrder.End);
         paper.Application.init(options);
 
         console.info("Egret start complete.");

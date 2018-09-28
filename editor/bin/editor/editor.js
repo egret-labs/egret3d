@@ -2621,7 +2621,7 @@ var paper;
             __extends(TransfromController, _super);
             function TransfromController() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.isWorldSpace = true;
+                _this.isWorldSpace = false;
                 _this.eye = egret3d.Vector3.create();
                 _this.translate = editor.EditorMeshHelper.createGameObject("Translate");
                 _this.rotate = editor.EditorMeshHelper.createGameObject("Rotate");
@@ -3282,7 +3282,7 @@ var paper;
     var editor;
     (function (editor) {
         /**
-         *
+         * @internal
          */
         var ModelComponentEvent;
         (function (ModelComponentEvent) {
@@ -3294,7 +3294,7 @@ var paper;
             ModelComponentEvent["GameObjectUnselected"] = "GameObjectUnselected";
         })(ModelComponentEvent = editor.ModelComponentEvent || (editor.ModelComponentEvent = {}));
         /**
-         *
+         * @internal
          */
         var ModelComponent = (function (_super) {
             __extends(ModelComponent, _super);
@@ -3680,7 +3680,7 @@ var paper;
     var editor;
     (function (editor) {
         /**
-         *
+         * @internal
          */
         var SkeletonDrawer = (function (_super) {
             __extends(SkeletonDrawer, _super);
@@ -3779,7 +3779,7 @@ var paper;
     var editor;
     (function (editor) {
         /**
-         *
+         * @internal
          */
         var EditorSystem = (function (_super) {
             __extends(EditorSystem, _super);
@@ -3790,10 +3790,10 @@ var paper;
                 // GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
                 //
                 if (paper.Application.playerMode === 2 /* Editor */) {
-                    paper.Application.systemManager.getOrRegisterSystem(editor.SceneSystem);
+                    paper.Application.systemManager.register(editor.SceneSystem, 6000 /* LaterUpdate */);
                 }
                 else {
-                    paper.Application.systemManager.getOrRegisterSystem(editor.GUISystem);
+                    paper.Application.systemManager.register(editor.GUISystem, 6000 /* LaterUpdate */);
                 }
             };
             return EditorSystem;
@@ -3801,13 +3801,16 @@ var paper;
         editor.EditorSystem = EditorSystem;
         __reflect(EditorSystem.prototype, "paper.editor.EditorSystem");
         // 
-        paper.Application.systemManager.preRegister(EditorSystem, paper.LateUpdateSystem);
+        paper.Application.systemManager.preRegister(EditorSystem, 6000 /* LaterUpdate */);
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
     var editor;
     (function (editor) {
+        /**
+         * @internal
+         */
         var GUISystem = (function (_super) {
             __extends(GUISystem, _super);
             function GUISystem() {
@@ -4127,7 +4130,7 @@ var paper;
                     }
                 };
                 this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
-                    var guiSceneSystem = paper.Application.systemManager.getOrRegisterSystem(editor.SceneSystem);
+                    var guiSceneSystem = paper.Application.systemManager.getOrRegisterSystem(editor.SceneSystem, 6000 /* LaterUpdate */);
                     if (v) {
                         paper.Application.playerMode = 1 /* DebugPlayer */;
                         guiSceneSystem.enabled = true;
@@ -4234,6 +4237,9 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
+        /**
+         * @internal
+         */
         var SceneSystem = (function (_super) {
             __extends(SceneSystem, _super);
             function SceneSystem() {
@@ -4747,6 +4753,9 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
+        /**
+         * @internal
+         */
         var EditorMeshHelper = (function () {
             function EditorMeshHelper() {
             }
@@ -4830,6 +4839,9 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
+        /**
+         * @internal
+         */
         var Helper = (function () {
             function Helper() {
             }
@@ -4922,6 +4934,9 @@ var helper;
         }
         return "Unknown";
     }
+    /**
+     * @internal
+     */
     function getResAsync(uri, root) {
         if (root === void 0) { root = "resource/"; }
         return __awaiter(this, void 0, void 0, function () {

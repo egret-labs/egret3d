@@ -364,7 +364,7 @@ namespace paper.editor {
             };
 
             this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
-                const guiSceneSystem = Application.systemManager.getOrRegisterSystem(editor.SceneSystem);
+                const guiSceneSystem = Application.systemManager.getOrRegisterSystem(editor.SceneSystem, SystemOrder.LaterUpdate);
 
                 if (v) {
                     Application.playerMode = PlayerMode.DebugPlayer;

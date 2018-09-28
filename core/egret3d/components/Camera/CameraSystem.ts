@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 摄像机和灯光系统。
+     * @internal
      */
     export class CameraAndLightSystem extends paper.BaseSystem {
         protected readonly _interests = [
