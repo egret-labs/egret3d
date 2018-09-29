@@ -71,7 +71,7 @@ namespace paper.editor {
             return true;
         }
         public undo(): boolean {
-            let all = Application.sceneManager.activeScene.gameObjects;
+            let all = this.editorModel.scene.gameObjects;
             for (let i: number = 0; i < all.length; i++) {
                 let obj = all[i];
                 b: for (let k: number = 0; k < this.prefabInfos.length; k++) {

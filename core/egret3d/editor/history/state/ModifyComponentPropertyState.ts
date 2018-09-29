@@ -14,7 +14,7 @@ namespace paper.editor{
                 componentUUid,
                 newValueList,
                 preValueCopylist,
-            }
+            };
             state.data = data;
             return state;
         }
@@ -44,7 +44,7 @@ namespace paper.editor{
                         const { propName, copyValue, valueEditType } = propertyValue;
                         let newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
                         this.editorModel.setTargetProperty(propName, modifyObj, newValue,valueEditType);
-                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
+                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
                     });
                 }
             }

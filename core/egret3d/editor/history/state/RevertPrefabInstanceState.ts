@@ -38,7 +38,7 @@ namespace paper.editor {
                     if (revertData.revertGameObjects && revertData.revertGameObjects.length > 0) {
                         for (const obj of revertData.revertGameObjects) {
                             const {serializeData} = obj;
-                            const newObj:GameObject | null = new Deserializer().deserialize(serializeData,true);
+                            const newObj:GameObject | null = new Deserializer().deserialize(serializeData,true,false,this.editorModel.scene);
                             newObj.parent = gameObj;
                         }
 
@@ -76,7 +76,7 @@ namespace paper.editor {
         }
 
         protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any) {
-            this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
+            this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
         }
 
         private modifyPrefabGameObjectPropertyValues(gameObj: GameObject, valueList: any[]) {
@@ -97,7 +97,7 @@ namespace paper.editor {
                         let newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
                         this.editorModel.setTargetProperty(propName, prefabComp, newValue,valueEditType);
                         this.dispathPropertyEvent(prefabComp, propName, newValue);
-                    })
+                    });
                 }
             }
         }

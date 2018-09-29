@@ -41,7 +41,7 @@ namespace paper.editor{
             if (super.redo()) {
                 const prefab = this.stateData.prefab;
                 if (prefab) {
-                    let instance:GameObject = this.stateData.prefab.createInstance();
+                    let instance:GameObject = this.stateData.prefab.createInstance(this.editorModel.scene);
                     this.stateData.cachePrefabUUid = instance.uuid;
                     let parent=this.editorModel.getGameObjectByUUid(this.stateData.parentUUID);
                     if(parent){

@@ -47,7 +47,7 @@ namespace paper.editor {
                 this.addList = [];
                 for (let i: number = 0; i < this.duplicateInfo.length; i++) {
                     let info = this.duplicateInfo[i];
-                    let obj: GameObject = new Deserializer().deserialize(info.serializeData,!this.firstDo);
+                    let obj: GameObject = new Deserializer().deserialize(info.serializeData,!this.firstDo,false,this.editorModel.scene);
                     let parent = this.editorModel.getGameObjectByUUid(info.parentUUID);
                     if (parent) {
                         obj.transform.parent = parent.transform;
