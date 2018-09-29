@@ -4,7 +4,7 @@ namespace paper.editor {
      */
     export class EditorSystem extends BaseSystem {
         public onAwake() {
-            // GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
+            GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
             //
             if (Application.playerMode === PlayerMode.Editor) {
                 Application.systemManager.register(SceneSystem, SystemOrder.LaterUpdate);

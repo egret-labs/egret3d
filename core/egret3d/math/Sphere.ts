@@ -3,7 +3,6 @@ namespace egret3d {
      * 
      */
     export class Sphere extends paper.BaseRelease<Sphere> implements paper.ICCS<Sphere>, paper.ISerializable, IRaycast {
-
         private static readonly _instances: Sphere[] = [];
         /**
          * 

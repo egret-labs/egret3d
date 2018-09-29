@@ -18,19 +18,17 @@ namespace egret3d {
         location: WebGLUniformLocation;
         textureUnits?: number[];
     }
-
-    //TODO 运行时DrawCall排序优化使用
-    let _hashCode: number = 0;//
+    // 运行时 draw call 排序优化使用。
+    let _hashCode: number = 0;
     /**
      * @internal
-     * WebGLProgram的包装类
      */
     export class GlProgram {
-        public id = _hashCode++;
-        public program: WebGLProgram;
-        public attributes: WebGLActiveAttribute[] = [];
-        public contextUniforms:WebGLActiveUniform[] = [];
-        public uniforms: WebGLActiveUniform[] = [];
+        public readonly id: number = _hashCode++;
+        public readonly attributes: WebGLActiveAttribute[] = [];
+        public readonly contextUniforms: WebGLActiveUniform[] = [];
+        public readonly uniforms: WebGLActiveUniform[] = [];
+        public readonly program: WebGLProgram;
 
         public constructor(webglProgram: WebGLProgram) {
             this.program = webglProgram;

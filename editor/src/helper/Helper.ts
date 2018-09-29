@@ -6,9 +6,8 @@ namespace paper.editor {
 
         public static raycast(targets: ReadonlyArray<paper.GameObject | egret3d.Transform>, mousePositionX: number, mousePositionY: number) {
             const camera = egret3d.Camera.editor;
-            const ray = camera.createRayByScreen(mousePositionX, mousePositionY);
+            const ray = camera.createRayByScreen(mousePositionX, mousePositionY).release();
             const raycastInfos = GameObject.raycast(ray, targets, 0.0, paper.CullingMask.Everything, true);
-            ray.release();
 
             return raycastInfos;
         }

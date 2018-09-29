@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 
+     * 动画系统。
      */
     export class AnimationSystem extends paper.BaseSystem {
         protected readonly _interests = [

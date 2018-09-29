@@ -22,9 +22,6 @@ namespace egret3d.oimo {
                 { componentClass: Rigidbody },
                 { componentClass: [BoxCollider, SphereCollider], type: paper.InterestType.Unessential },
                 { componentClass: [SphericalJoint, HingeJoint, ConeTwistJoint], type: paper.InterestType.Unessential }
-            ],
-            [
-                { componentClass: paper.Behaviour as any, type: paper.InterestType.Extends | paper.InterestType.Unessential, isBehaviour: true, }
             ]
         ];
         private readonly _gravity = Vector3.create(0.0, -9.80665, 0.0);
@@ -33,8 +30,8 @@ namespace egret3d.oimo {
         private readonly _contactColliders: paper.ContactColliders = paper.GameObject.globalGameObject.getOrAddComponent(paper.ContactColliders);
         private _oimoWorld: OIMO.World = null!;
 
-        public rayCast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null
-        public rayCast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null
+        public rayCast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        public rayCast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
         public rayCast(rayOrFrom: Ray | Readonly<IVector3>, distanceOrTo: number | Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo) {
             const rayCastClosest = this._rayCastClosest;
             rayCastClosest.clear(); // TODO mask.
@@ -73,14 +70,46 @@ namespace egret3d.oimo {
 
                 // }
                 // while (contact.getNext());
+
+                //TODO
                 this._contactColliders.begin.push(contact);
+                this._contactColliders.stay.push(contact);
+
+                const colliderA = contact.getShape1().userData as Collider;
+                const colliderB = contact.getShape2().userData as Collider;
+
+                for (const behaviour of colliderA.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                    behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderB);
+                }
+
+                for (const behaviour of colliderB.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                    behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderA);
+                }
             };
             this._contactCallback.preSolve = (contact: OIMO.Contact) => {
             };
             this._contactCallback.postSolve = (contact: OIMO.Contact) => {
             };
             this._contactCallback.endContact = (contact: OIMO.Contact) => {
+                //TODO
                 this._contactColliders.end.push(contact);
+
+                const stay = this._contactColliders.stay;
+                const index = stay.indexOf(contact);
+                if (index >= 0) {
+                    stay.splice(index, 1);
+                }
+
+                const colliderA = contact.getShape1().userData as Collider;
+                const colliderB = contact.getShape2().userData as Collider;
+
+                for (const behaviour of colliderA.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                    behaviour.onCollisionExit && behaviour.onCollisionExit(colliderB);
+                }
+
+                for (const behaviour of colliderB.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
+                    behaviour.onCollisionExit && behaviour.onCollisionExit(colliderA);
+                }
             };
         }
 
@@ -130,15 +159,8 @@ namespace egret3d.oimo {
             const totalTimes = Math.min(Math.floor(fixedTime / this._clock.fixedDeltaTime), this._clock.maxFixedSubSteps);
             const oimoTransform = PhysicsSystem._helpTransform;
             const gameObjects = this._groups[0].gameObjects;
-            const behaviourComponents = this._groups[1].components as ReadonlyArray<paper.Behaviour>;
 
             while (fixedTime >= this._clock.fixedDeltaTime && currentTimes++ < this._clock.maxFixedSubSteps) {
-                for (const component of behaviourComponents) {
-                    if (component) {
-                        component.onFixedUpdate && component.onFixedUpdate(currentTimes, totalTimes);
-                    }
-                }
-
                 for (const gameObject of gameObjects) {
                     const transform = gameObject.transform;
                     const rigidbody = gameObject.getComponent(Rigidbody)!;
@@ -182,39 +204,7 @@ namespace egret3d.oimo {
                     }
                 }
                 //
-                const begin = this._contactColliders.begin as OIMO.Contact[];
                 const stay = this._contactColliders.stay as OIMO.Contact[];
-                const end = this._contactColliders.end as OIMO.Contact[];
-
-                if (begin.length > 0) {
-                    for (const contact of begin) {
-                        const colliderA = contact.getShape1().userData as Collider;
-                        const colliderB = contact.getShape2().userData as Collider;
-
-                        for (const behaviour of colliderA.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
-                            behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderB);
-                        }
-
-                        for (const behaviour of colliderB.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
-                            behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderA);
-                        }
-                    }
-                }
-
-                if (end.length > 0) {
-                    for (const contact of end) {
-                        const colliderA = contact.getShape1().userData as Collider;
-                        const colliderB = contact.getShape2().userData as Collider;
-
-                        for (const behaviour of colliderA.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
-                            behaviour.onCollisionExit && behaviour.onCollisionExit(colliderB);
-                        }
-
-                        for (const behaviour of colliderB.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
-                            behaviour.onCollisionExit && behaviour.onCollisionExit(colliderA);
-                        }
-                    }
-                }
 
                 if (stay.length > 0) {
                     for (const contact of stay) {
@@ -242,7 +232,9 @@ namespace egret3d.oimo {
 
             if (component instanceof Collider) {
                 const rigidbody = component.gameObject.getComponent(Rigidbody) as Rigidbody;
-                rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                if ((component.oimoShape as any)._rigidBody) {
+                    rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                }
                 // rigidbody._updateMass(rigidbody.oimoRigidbody);
             }
             else if (component instanceof Joint) {
@@ -255,11 +247,6 @@ namespace egret3d.oimo {
 
             for (const joint of gameObject.getComponents(Joint as any, true) as Joint<any>[]) {
                 this._oimoWorld.removeJoint(joint.oimoJoint);
-            }
-
-            for (const shape of gameObject.getComponents(Collider as any, true) as Collider[]) {
-                rigidbody.oimoRigidbody.removeShape(shape.oimoShape);
-                // rigidbody._updateMass(rigidbody.oimoRigidbody);
             }
 
             this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);

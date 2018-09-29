@@ -1,87 +1,128 @@
 namespace egret3d {
-    function parseIncludes(string: string): string {
-        const pattern = /#include +<([\w\d.]+)>/g;
-        //
-        function replace(_match: string, include: string) {
-            const replace = (egret3d.ShaderChunk as any)[include];
-            if (replace === undefined) {
-                throw new Error('Can not resolve #include <' + include + '>');
-            }
+    const _pattern = /#include +<([\w\d.]+)>/g;
+    const _browserPrefixes = [
+        "",
+        "MOZ_",
+        "OP_",
+        "WEBKIT_",
+    ];
 
-            return parseIncludes(replace);
+    function _getExtension(gl: WebGLRenderingContext, name: string) {
+        for (const prefixedName of _browserPrefixes) {
+            const extension = gl.getExtension(prefixedName + name);
+            if (extension) {
+                return extension;
+            }
         }
-        //
-        return string.replace(pattern, replace);
+
+        return null;
     }
 
-    function getWebGLShader(type: number, gl: WebGLRenderingContext, info: gltf.Shader, defines: string): WebGLShader {
-        let shader = gl.createShader(type);
-        //
-        gl.shaderSource(shader, defines + parseIncludes(info.uri!));
-        gl.compileShader(shader);
-        let parameter = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
+    function _getMaxShaderPrecision(gl: WebGLRenderingContext, precision: string = "highp") {
+        if (precision === "highp") {
+            if (
+                gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT)!.precision > 0 &&
+                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT)!.precision > 0
+            ) {
+                return "highp";
+            }
+
+            precision = "mediump";
+        }
+
+        if (precision === "mediump") {
+            if (
+                gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT)!.precision > 0 &&
+                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT)!.precision > 0
+            ) {
+                return "mediump";
+            }
+        }
+
+        return "lowp";
+    }
+
+    function _getConstDefines(maxPrecision: string) {
+        let defines = "precision " + maxPrecision + " float; \n";
+        defines += "precision " + maxPrecision + " int; \n";
+        // defines += "#extension GL_OES_standard_derivatives : enable \n";
+
+        return defines;
+    }
+
+    function _replace(_match: string, include: string) {
+        if (!(include in egret3d.ShaderChunk)) {
+            throw new Error(`Can not resolve #include <${include}>`);
+        }
+
+        return _parseIncludes((egret3d.ShaderChunk as any)[include]);
+    }
+
+    function _parseIncludes(string: string): string {
+        return string.replace(_pattern, _replace);
+    }
+
+    function _getWebGLShader(type: number, webgl: WebGLRenderingContext, gltfShader: gltf.Shader, defines: string) {
+        const shader = webgl.createShader(type);
+        webgl.shaderSource(shader, defines + _parseIncludes(gltfShader.uri!));
+        webgl.compileShader(shader);
+
+        const parameter = webgl.getShaderParameter(shader, webgl.COMPILE_STATUS);
         if (!parameter) {
-            if (confirm("shader compile:" + info.name + " " + type + " error! ->" + gl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
-                gl.deleteShader(shader);
-                alert(info.uri);
+            if (confirm("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
+                alert(gltfShader.uri);
             }
-            return null!;
+
+            webgl.deleteShader(shader);
+
+            return null;
         }
 
-        return shader!;
+        return shader;
     }
-    /**
-     * extract attributes
-     */
-    function extractAttributes(gl: WebGLRenderingContext, program: GlProgram) {
+
+    function _extractAttributes(webgl: WebGLRenderingContext, program: GlProgram) {
         const webglProgram = program.program;
-        const totalAttributes = gl.getProgramParameter(webglProgram, gl.ACTIVE_ATTRIBUTES);
-        //
-        const attributes: WebGLActiveAttribute[] = [];
+        const attributes = program.attributes;
+        const totalAttributes = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_ATTRIBUTES);
+
         for (let i = 0; i < totalAttributes; i++) {
-            const attribData = gl.getActiveAttrib(webglProgram, i)!;
-            const location = gl.getAttribLocation(webglProgram, attribData.name);
+            const attribData = webgl.getActiveAttrib(webglProgram, i)!;
+            const location = webgl.getAttribLocation(webglProgram, attribData.name);
             attributes.push({ name: attribData.name, type: attribData.type, size: attribData.size, location });
         }
-        program.attributes = attributes;
     }
-    /**
-     * extract uniforms
-     */
-    function extractUniforms(gl: WebGLRenderingContext, program: GlProgram, technique: gltf.Technique) {
+
+    function _extractUniforms(webgl: WebGLRenderingContext, program: GlProgram, technique: gltf.Technique) {
         const webglProgram = program.program;
-        const totalUniforms = gl.getProgramParameter(webglProgram, gl.ACTIVE_UNIFORMS);
-        //
-        const contextUniforms: WebGLActiveUniform[] = [];
-        const uniforms: WebGLActiveUniform[] = [];
+        const contextUniforms = program.contextUniforms;
+        const uniforms = program.uniforms;
+        const totalUniforms = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_UNIFORMS);
+
         for (let i = 0; i < totalUniforms; i++) {
-            const uniformData = gl.getActiveUniform(webglProgram, i)!;
-            const tUniform = technique.uniforms[uniformData.name];
-            if (!tUniform) {
+            const uniformData = webgl.getActiveUniform(webglProgram, i)!;
+            const techniqueUniform = technique.uniforms[uniformData.name];
+            const location = webgl.getUniformLocation(webglProgram, uniformData.name)!;
+
+            if (!techniqueUniform) {
                 console.error("缺少Uniform定义：" + uniformData.name);
             }
-            const location = gl.getUniformLocation(webglProgram, uniformData!.name)!;
 
-            if (tUniform.semantic) {
+            if (techniqueUniform.semantic) {
                 contextUniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, location });
             }
             else {
                 uniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, location });
             }
         }
-
-        program.contextUniforms = contextUniforms;
-        program.uniforms = uniforms;
     }
-    /**
-     * extract texUnits
-     */
-    function extractTexUnits(program: GlProgram) {
-        const activeUniforms: WebGLActiveUniform[] = program.contextUniforms.concat(program.uniforms);
+
+    function _extractTextureUnits(program: GlProgram) {
+        const activeUniforms = program.contextUniforms.concat(program.uniforms);
         const samplerArrayKeys: string[] = [];
         const samplerKeys: string[] = [];
         //排序
-        for (let uniform of activeUniforms) {
+        for (const uniform of activeUniforms) {
             const key = uniform.name;
             if (uniform.type === gltf.UniformType.SAMPLER_2D || uniform.type === gltf.UniformType.SAMPLER_CUBE) {
                 if (key.indexOf("[") > -1) {
@@ -93,8 +134,9 @@ namespace egret3d {
             }
         }
 
-        let allKeys = samplerKeys.concat(samplerArrayKeys);
-        let unitNumber: number = 0;
+        let textureUint = 0;
+        const allKeys = samplerKeys.concat(samplerArrayKeys);
+
         for (let uniform of activeUniforms) {
             if (allKeys.indexOf(uniform.name) < 0) {
                 continue;
@@ -103,60 +145,17 @@ namespace egret3d {
             if (!uniform.textureUnits) {
                 uniform.textureUnits = [];
             }
+
             uniform.textureUnits.length = uniform.size;
+
             for (let i = 0; i < uniform.size; i++) {
-                uniform.textureUnits[i] = unitNumber++;
+                uniform.textureUnits[i] = textureUint++;
             }
         }
     }
-
     /**
-     * get max precision
-     * @param gl
-     * @param precision {string} the expect precision, can be: "highp"|"mediump"|"lowp"
+     * @internal
      */
-    function getMaxPrecision(gl: WebGLRenderingContext, precision: string = "highp") {
-        if (precision === 'highp') {
-            if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT)!.precision > 0 &&
-                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT)!.precision > 0) {
-                return 'highp';
-            }
-            precision = 'mediump';
-        }
-        if (precision === 'mediump') {
-            if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT)!.precision > 0 &&
-                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT)!.precision > 0) {
-                return 'mediump';
-            }
-        }
-        return 'lowp';
-    }
-
-    function getExtension(gl: WebGLRenderingContext, name: string) {
-        let browserPrefixes = [
-            "",
-            "MOZ_",
-            "OP_",
-            "WEBKIT_"
-        ];
-        for (let ii = 0; ii < browserPrefixes.length; ++ii) {
-            let prefixedName = browserPrefixes[ii] + name;
-            let ext = gl.getExtension(prefixedName);
-            if (ext) {
-                return ext;
-            }
-        }
-        return null;
-    }
-
-    function getConstDefines(maxPrecision: string): string {
-        let defines = "precision " + maxPrecision + " float; \n";
-        defines += "precision " + maxPrecision + " int; \n";
-        // defines += '#extension GL_OES_standard_derivatives : enable \n';
-
-        return defines;
-    }
-
     export class WebGLCapabilities extends paper.SingletonComponent {
         public static canvas: HTMLCanvasElement | null = null;
         public static webgl: WebGLRenderingContext | null = null;
@@ -202,7 +201,7 @@ namespace egret3d {
 
             this.version = parseFloat(/^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION))![1]);
 
-            this.maxPrecision = getMaxPrecision(webgl, this.precision);
+            this.maxPrecision = _getMaxShaderPrecision(webgl, this.precision);
 
             this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
 
@@ -213,21 +212,21 @@ namespace egret3d {
 
             this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
 
-            this.floatTextures = !!getExtension(webgl, 'OES_texture_float');
+            this.floatTextures = !!_getExtension(webgl, "OES_texture_float");
 
-            this.anisotropyExt = getExtension(webgl, 'EXT_texture_filter_anisotropic');
+            this.anisotropyExt = _getExtension(webgl, "EXT_texture_filter_anisotropic");
 
-            this.shaderTextureLOD = getExtension(webgl, 'EXT_shader_texture_lod');
+            this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
 
             this.maxAnisotropy = (this.anisotropyExt !== null) ? webgl.getParameter(this.anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
 
             // use dfdx and dfdy must enable OES_standard_derivatives
-            getExtension(webgl, "OES_standard_derivatives");
+            _getExtension(webgl, "OES_standard_derivatives");
             // GL_OES_standard_derivatives
-            getExtension(webgl, "GL_OES_standard_derivatives");
+            _getExtension(webgl, "GL_OES_standard_derivatives");
 
             //TODO
-            WebGLCapabilities.commonDefines = getConstDefines(this.maxPrecision);
+            WebGLCapabilities.commonDefines = _getConstDefines(this.maxPrecision);
 
             SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
 
@@ -241,7 +240,6 @@ namespace egret3d {
             console.info("Maximum GPU skinned bone count:", SkinnedMeshRendererSystem.maxBoneCount);
         }
     }
-
     /**
      * @internal
      */
@@ -254,36 +252,37 @@ namespace egret3d {
         private _cacheProgram: GlProgram | null = null;
         private _cacheState: gltf.States | null = null;
 
-        private _getWebGLProgram(gl: WebGLRenderingContext, vs: gltf.Shader, fs: gltf.Shader, customDefines: string): WebGLProgram {
-            let program = gl.createProgram();
+        private _getWebGLProgram(vs: gltf.Shader, fs: gltf.Shader, customDefines: string) {
+            const webgl = WebGLCapabilities.webgl!;
+            const program = webgl.createProgram();
 
             let key = vs.name + customDefines;
             let vertexShader = this._vsShaders[key];
             if (!vertexShader) {
-                vertexShader = getWebGLShader(gl.VERTEX_SHADER, gl, vs, WebGLCapabilities.commonDefines + customDefines + ShaderChunk.common_vert_def);
+                vertexShader = _getWebGLShader(webgl.VERTEX_SHADER, webgl, vs, WebGLCapabilities.commonDefines + customDefines + ShaderChunk.common_vert_def)!;
                 this._vsShaders[key] = vertexShader;
             }
 
             key = fs.name + customDefines;
             let fragmentShader = this._fsShaders[key];
             if (!fragmentShader) {
-                fragmentShader = getWebGLShader(gl.FRAGMENT_SHADER, gl, fs, WebGLCapabilities.commonDefines + customDefines + ShaderChunk.common_frag_def);
+                fragmentShader = _getWebGLShader(webgl.FRAGMENT_SHADER, webgl, fs, WebGLCapabilities.commonDefines + customDefines + ShaderChunk.common_frag_def)!;
                 this._fsShaders[key] = fragmentShader;
             }
 
-            gl.attachShader(program, vertexShader);
-            gl.attachShader(program, fragmentShader);
+            webgl.attachShader(program, vertexShader);
+            webgl.attachShader(program, fragmentShader);
+            webgl.linkProgram(program);
 
-            gl.linkProgram(program);
-
-            let parameter = gl.getProgramParameter(program, gl.LINK_STATUS);
+            const parameter = webgl.getProgramParameter(program, webgl.LINK_STATUS);
             if (!parameter) {
-                alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + gl.getProgramInfoLog(program));
-                gl.deleteProgram(program);
-                return null as any;
+                alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
+                webgl.deleteProgram(program);
+
+                return null;
             }
 
-            return program!;
+            return program;
         }
 
         public clearState() {
@@ -344,14 +343,16 @@ namespace egret3d {
             let program = this._programs[name];
 
             if (!program) {
-                const webglProgram = this._getWebGLProgram(webgl, vertexShader, fragShader, defines);
-                program = new GlProgram(webglProgram);
-                this._programs[name] = program;
-                extractAttributes(webgl, program);
-                extractUniforms(webgl, program, technique);
-                extractTexUnits(program);
+                const webglProgram = this._getWebGLProgram(vertexShader, fragShader, defines);
+                if (webglProgram) {
+                    program = new GlProgram(webglProgram);
+                    this._programs[name] = program;
+                    _extractAttributes(webgl, program);
+                    _extractUniforms(webgl, program, technique);
+                    _extractTextureUnits(program);
+                }
             }
-            //
+
             if (technique.program !== program.id) {
                 technique.program = program.id;
             }
@@ -359,11 +360,6 @@ namespace egret3d {
             return program;
         }
 
-        /**
-         * 设置render target与viewport
-         * @param target render target
-         * 
-         */
         public targetAndViewport(viewport: Rectangle, target: BaseRenderTarget | null) {
             const webgl = WebGLCapabilities.webgl!;
 
@@ -383,12 +379,10 @@ namespace egret3d {
             webgl.viewport(w * viewport.x, h * viewport.y, w * viewport.w, h * viewport.h);
             webgl.depthRange(0, 1);
         }
-        /**
-         * 清除缓存
-         * @param camera 
-         */
-        public cleanBuffer(clearOptColor: boolean, clearOptDepath: boolean, clearColor: Color) {
+
+        public clear(clearOptColor: boolean, clearOptDepath: boolean, clearColor: Color) {
             const webgl = WebGLCapabilities.webgl!;
+
             if (clearOptColor && clearOptDepath) {
                 webgl.depthMask(true);
                 webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);

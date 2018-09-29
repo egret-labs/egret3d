@@ -219,7 +219,7 @@ namespace egret3d {
                 return this;
             }
 
-            if (this === value || this.contains(value)) {
+            if (this === value || (value && this.contains(value))) {
                 console.error("Set the parent error.");
                 return this;
             }

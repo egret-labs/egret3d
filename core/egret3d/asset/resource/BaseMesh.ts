@@ -8,7 +8,6 @@ namespace egret3d {
     const _attributeNames: gltf.MeshAttributeType[] = [
         gltf.MeshAttributeType.POSITION,
         gltf.MeshAttributeType.NORMAL,
-        gltf.MeshAttributeType.COLOR_0,
         gltf.MeshAttributeType.TEXCOORD_0,
     ];
     /**

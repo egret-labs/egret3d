@@ -14,13 +14,13 @@ namespace egret3d.oimo {
         public collisionMask: paper.CullingMask = paper.CullingMask.Everything;
 
         private _hitted: boolean = false;
-        private _mesh: egret3d.Mesh = null!;
+        private _mesh: Mesh = null!;
 
         public onStart() {
-            const meshFilter = this.gameObject.getOrAddComponent(egret3d.MeshFilter);
-            const meshRender = this.gameObject.getOrAddComponent(egret3d.MeshRenderer);
+            const meshFilter = this.gameObject.getOrAddComponent(MeshFilter);
+            const meshRender = this.gameObject.getOrAddComponent(MeshRenderer);
 
-            this._mesh = new egret3d.Mesh(4, 0, _attributes);
+            this._mesh = new Mesh(4, 0, _attributes);
             const vertices = this._mesh.getVertices()!;
             const colors = this._mesh.getColors()!;
 
@@ -47,7 +47,7 @@ namespace egret3d.oimo {
             this._mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
 
             if (!_material) {
-                _material = new Material(egret3d.DefaultShaders.LINEDASHED);
+                _material = new Material(DefaultShaders.LINEDASHED);
             }
 
             meshRender.materials = [_material];
@@ -58,7 +58,7 @@ namespace egret3d.oimo {
             const transform = this.gameObject.transform;
             const matrix = transform.getWorldMatrix();
             const from = transform.getPosition();
-            const to = matrix.transformVector3(helpVector3A.set(this.distance, 0.0, 0.0));
+            const to = matrix.transformVector3(Vector3.create(this.distance, 0.0, 0.0).release());
             const raycastInfo = PhysicsSystem.getInstance().rayCast(from, to, this.collisionMask);
 
             if (raycastInfo) {

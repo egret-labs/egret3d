@@ -256,6 +256,7 @@ namespace egret3d {
         public readonly textureCoordA: Vector2 = new Vector2();
         public readonly textureCoordB: Vector2 = new Vector2();
         public transform: Transform | null = null;
+        public collider: BaseCollider | null = null;
 
         public clear() {
             this.subMeshIndex = -1;
@@ -263,6 +264,11 @@ namespace egret3d {
             this.distance = 0.0;
             // TODO
             this.transform = null;
+            this.collider = null;
         }
     }
+    /**
+     * @internal
+     */
+    export const helpRay = Ray.create();
 }

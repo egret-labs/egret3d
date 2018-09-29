@@ -645,7 +645,8 @@ namespace egret3d {
         }
 
         public premultiply(value: Readonly<Matrix4>) {
-            return this.multiply(value, this);
+            this.multiply(value, this);
+            return this;
         }
 
         public lerp(t: number, value: Matrix4, source?: Matrix4) {

@@ -25,26 +25,6 @@ namespace paper {
         }
 
         public onUpdate() {
-            //
-            const begin = this._contactColliders.begin;
-            const stay = this._contactColliders.stay;
-            const end = this._contactColliders.end;
-
-            if (begin.length > 0) {
-                for (const contact of begin) {
-                    stay.push(contact);
-                }
-            }
-
-            if (end.length > 0) {
-                for (const contact of end) {
-                    const index = stay.indexOf(contact);
-                    if (index >= 0) {
-                        stay.splice(index, 1);
-                    }
-                }
-            }
-            //
             const gameObjectPool = GameObject._instances;
 
             for (const scene of this._disposeCollecter.scenes) {

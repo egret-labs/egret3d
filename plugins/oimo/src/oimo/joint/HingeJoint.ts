@@ -64,9 +64,9 @@ namespace egret3d.oimo {
             config.springDamper.frequency = this.frequency;
             config.springDamper.dampingRatio = this.dampingRatio;
             config.springDamper.useSymplecticEuler = this.useSymplecticEuler;
-            config.limitMotor.lowerLimit = this.lowerLimit * egret3d.DEG_RAD;
-            config.limitMotor.upperLimit = this.upperLimit * egret3d.DEG_RAD;
-            config.limitMotor.motorSpeed = this.motorSpeed * egret3d.DEG_RAD;
+            config.limitMotor.lowerLimit = this.lowerLimit * DEG_RAD;
+            config.limitMotor.upperLimit = this.upperLimit * DEG_RAD;
+            config.limitMotor.motorSpeed = this.motorSpeed * DEG_RAD;
             config.limitMotor.motorTorque = this.motorTorque;
 
             const joint = new OIMO.RevoluteJoint(config);

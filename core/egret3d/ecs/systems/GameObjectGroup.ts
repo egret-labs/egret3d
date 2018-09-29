@@ -103,10 +103,10 @@ namespace paper {
          * @internal
          */
         public locked: boolean = false;
-        public readonly name: string = "";
 
         private _isRemoved: boolean = false;
         private readonly _isBehaviour: boolean = false;
+        // TODO add systems
         private readonly _bufferedGameObjects: (GameObject)[] = [];
         /**
          * @internal

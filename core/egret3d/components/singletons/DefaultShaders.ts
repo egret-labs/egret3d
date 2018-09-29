@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 
+     * 默认的 shader。
      */
     export class DefaultShaders extends paper.SingletonComponent {
         public static MESH_BASIC: Shader;

@@ -85,15 +85,15 @@ namespace paper {
         readonly components?: ISerializedObject[];
     }
     /**
-     * 自定义序列化接口。
+     * 序列化接口。
      */
     export interface ISerializable {
         /**
-         * 
+         * 序列化。
          */
         serialize(): any;
         /**
-         * 
+         * 反序列化。
          */
         deserialize(element: any, data?: Deserializer): any;
     }

@@ -38,7 +38,7 @@ namespace egret3d {
             let raycastMesh = false;
             let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
             const worldMatrix = this.gameObject.transform.worldMatrix;
-            const localRay = MeshRenderer._helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
+            const localRay = helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
             const aabb = this.aabb;
 
             if (p2) {

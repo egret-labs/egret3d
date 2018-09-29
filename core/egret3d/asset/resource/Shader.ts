@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 通用宏定义
+     * Shader 通用宏定义。
      */
     export const enum ShaderDefine {
         USE_COLOR = "USE_COLOR",
@@ -25,7 +25,7 @@ namespace egret3d {
         FOG_EXP2 = "FOG_EXP2",
     }
     /**
-     * 通用Uniform名字
+     * Shader 通用 Uniform 名称。
      */
     export const enum ShaderUniformName {
         Diffuse = "diffuse",
@@ -37,7 +37,7 @@ namespace egret3d {
         UVTransform = "uvTransform",
     }
     /**
-     * 
+     * Shader 资源。
      */
     export class Shader extends GLTFAsset {
         /**

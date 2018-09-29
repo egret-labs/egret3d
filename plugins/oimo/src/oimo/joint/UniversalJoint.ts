@@ -87,13 +87,13 @@ namespace egret3d.oimo {
             config.springDamper2.frequency = this.frequencyZ;
             config.springDamper2.dampingRatio = this.dampingRatioZ;
             config.springDamper2.useSymplecticEuler = this.useSymplecticEulerZ;
-            config.limitMotor1.lowerLimit = this.lowerLimitY * egret3d.DEG_RAD;
-            config.limitMotor1.upperLimit = this.upperLimitY * egret3d.DEG_RAD;
-            config.limitMotor1.motorSpeed = this.motorSpeedY * egret3d.DEG_RAD;
+            config.limitMotor1.lowerLimit = this.lowerLimitY * DEG_RAD;
+            config.limitMotor1.upperLimit = this.upperLimitY * DEG_RAD;
+            config.limitMotor1.motorSpeed = this.motorSpeedY * DEG_RAD;
             config.limitMotor1.motorTorque = this.motorTorqueY;
-            config.limitMotor2.lowerLimit = this.lowerLimitZ * egret3d.DEG_RAD;
-            config.limitMotor2.upperLimit = this.upperLimitZ * egret3d.DEG_RAD;
-            config.limitMotor2.motorSpeed = this.motorSpeedZ * egret3d.DEG_RAD;
+            config.limitMotor2.lowerLimit = this.lowerLimitZ * DEG_RAD;
+            config.limitMotor2.upperLimit = this.upperLimitZ * DEG_RAD;
+            config.limitMotor2.motorSpeed = this.motorSpeedZ * DEG_RAD;
             config.limitMotor2.motorTorque = this.motorTorqueZ;
 
             const joint = new OIMO.UniversalJoint(config);

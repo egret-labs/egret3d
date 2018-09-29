@@ -83,13 +83,13 @@ namespace egret3d.oimo {
             config.swingSpringDamper.frequency = this.swingFrequency;
             config.swingSpringDamper.dampingRatio = this.swingDampingRatio;
             config.swingSpringDamper.useSymplecticEuler = this.swingUseSymplecticEuler;
-            config.twistLimitMotor.lowerLimit = this.lowerLimit * egret3d.DEG_RAD;
-            config.twistLimitMotor.upperLimit = this.upperLimit * egret3d.DEG_RAD;
-            config.twistLimitMotor.motorSpeed = this.motorSpeed * egret3d.DEG_RAD;
+            config.twistLimitMotor.lowerLimit = this.lowerLimit * DEG_RAD;
+            config.twistLimitMotor.upperLimit = this.upperLimit * DEG_RAD;
+            config.twistLimitMotor.motorSpeed = this.motorSpeed * DEG_RAD;
             config.twistLimitMotor.motorTorque = this.motorTorque;
 
-            config.maxSwingAngle1 = this.maxSwingAngleZ * egret3d.DEG_RAD;
-            config.maxSwingAngle2 = this.maxSwingAngleX * egret3d.DEG_RAD;
+            config.maxSwingAngle1 = this.maxSwingAngleZ * DEG_RAD;
+            config.maxSwingAngle2 = this.maxSwingAngleX * DEG_RAD;
 
             const joint = new OIMO.RagdollJoint(config);
             joint.userData = this;

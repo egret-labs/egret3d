@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 
+     * 默认的贴图。
      */
     export class DefaultTextures extends paper.SingletonComponent {
         /**

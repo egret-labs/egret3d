@@ -13,6 +13,13 @@ namespace egret3d {
      * 轴对称包围盒。
      */
     export class AABB extends paper.BaseRelease<AABB> implements paper.ICCS<AABB>, paper.ISerializable, IRaycast {
+        /**
+         * 
+         */
+        public static readonly ONE: Readonly<AABB> = new AABB().set(
+            Vector3.MINUS_ONE.clone().multiplyScalar(0.5).release(),
+            Vector3.ONE.clone().multiplyScalar(0.5).release()
+        );
         private static readonly _instances: AABB[] = [];
         /**
          * 
@@ -397,6 +404,8 @@ namespace egret3d {
             this._dirtyRadius = true;
         }
     }
-
+    /**
+     * @internal
+     */
     export const helpAABBA = AABB.create();
 }

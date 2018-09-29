@@ -205,7 +205,7 @@ namespace paper.editor {
                         break;
 
                     case editor.EditType.LIST:
-                        this._guiComponent.inspector.add(gui.instance, info.name, info.option.listItems).listen();
+                        this._guiComponent.inspector.add(gui.instance, info.name, info.option.listItems!).listen();
                         break;
 
                     case editor.EditType.VECTOR2: {
@@ -416,7 +416,7 @@ namespace paper.editor {
 
             let i = 0;
             while (this._bufferedGameObjects.length > 0 && i++ < 5) {
-                this._addToHierarchy(this._bufferedGameObjects.shift());
+                this._addToHierarchy(this._bufferedGameObjects.shift()!);
             }
 
             // Open and select folder.

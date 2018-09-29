@@ -3,17 +3,18 @@ namespace paper.editor {
      * @internal
      */
     export class EditorMeshHelper {
-        //
-        public static createGameObject(name: string, mesh: egret3d.Mesh = null, material: egret3d.Material = null, tag: string = paper.DefaultTags.EditorOnly, scene: paper.Scene = paper.Scene.editorScene) {
+        public static createGameObject(name: string, mesh: egret3d.Mesh | null = null, material: egret3d.Material | null = null, tag: string = paper.DefaultTags.EditorOnly, scene: paper.Scene = paper.Scene.editorScene) {
             const gameObject = paper.GameObject.create(name, tag, scene);
             gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
 
             if (mesh) {
                 gameObject.addComponent(egret3d.MeshFilter).mesh = mesh;
             }
+
             if (material) {
                 gameObject.addComponent(egret3d.MeshRenderer).material = material;
             }
+
             return gameObject;
         }
 

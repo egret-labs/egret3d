@@ -6,7 +6,7 @@ namespace egret3d {
         gltf.MeshAttributeType.TEXCOORD_0,
     ];
     /**
-     * 
+     * 提供默认的几何网格，以及创建几何网格的方式。
      */
     export class DefaultMeshes extends paper.SingletonComponent {
         public static QUAD: Mesh;

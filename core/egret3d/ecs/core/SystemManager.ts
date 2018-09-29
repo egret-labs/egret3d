@@ -18,7 +18,7 @@ namespace paper {
         private constructor() {
         }
 
-        private readonly _preSystems: BaseSystem[] = [];
+        private readonly _preSystems: any[] = [];
         private readonly _systems: BaseSystem[] = [];
 
         private _getSystemInsertIndex(order: SystemOrder) {
@@ -58,9 +58,8 @@ namespace paper {
          * @internal
          */
         public _preRegisterSystems() {
-            for (const system of this._preSystems) {
-                this._systems.splice(this._getSystemInsertIndex(system._order), 0, system);
-                system._initialize();
+            for (let i = 0, l = this._preSystems.length; i < l; ++i) {
+                this.register(this._preSystems[i], this._preSystems[i + 1]);
             }
 
             this._preSystems.length = 0;
@@ -97,7 +96,7 @@ namespace paper {
                 return this;
             }
 
-            this._preSystems.push(BaseSystem.create(systemClass, order));
+            this._preSystems.push(systemClass, order);
 
             return this;
         }

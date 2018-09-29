@@ -33,8 +33,8 @@ namespace paper.editor {
             this._gridA.parent = this.gameObject;
             this._gridB.parent = this.gameObject;
 
-            const mA = (this._gridA.renderer as egret3d.MeshRenderer).material;
-            const mB = (this._gridB.renderer as egret3d.MeshRenderer).material;
+            const mA = (this._gridA.renderer as egret3d.MeshRenderer).material!;
+            const mB = (this._gridB.renderer as egret3d.MeshRenderer).material!;
 
             mA.setBlend(gltf.BlendMode.Blend);
             mB.setBlend(gltf.BlendMode.Blend);
@@ -52,8 +52,8 @@ namespace paper.editor {
             this._gridA.transform.setScale(s * _step, 0.0, s * _step);
             this._gridB.transform.setScale(s, 0.0, s);
 
-            const mA = (this._gridA.renderer as egret3d.MeshRenderer).material;
-            const mB = (this._gridB.renderer as egret3d.MeshRenderer).material;
+            const mA = (this._gridA.renderer as egret3d.MeshRenderer).material!;
+            const mB = (this._gridB.renderer as egret3d.MeshRenderer).material!;
 
             mA.setOpacity(1.0 * 0.2);
             mB.setOpacity(d * 0.2);

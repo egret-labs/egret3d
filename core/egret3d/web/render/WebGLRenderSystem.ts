@@ -40,7 +40,7 @@ namespace egret3d {
 
                 (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
                 renderState.targetAndViewport(camera.viewport, light.renderTarget);
-                renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                renderState.clear(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                 drawCalls.shadowFrustumCulling(camera);
 
                 for (const drawCall of shadowCalls) {
@@ -448,7 +448,7 @@ namespace egret3d {
                     if (camera.postQueues.length === 0) {
                         if (renderEnabled) {
                             renderState.targetAndViewport(camera.viewport, camera.renderTarget);
-                            renderState.cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                            renderState.clear(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                         }
 
                         this._renderCamera(camera, renderEnabled);
@@ -467,7 +467,7 @@ namespace egret3d {
                 }
             }
             else {
-                renderState.cleanBuffer(true, true, Color.BLACK);
+                renderState.clear(true, true, Color.BLACK);
             }
 
             Performance.endCounter("render");

@@ -38,8 +38,8 @@ namespace paper.editor {
                     return;
                 }
 
-                const transformController = this._transformController;
-                if (transformController && transformController.isActiveAndEnabled && transformController.hovered) {
+                const transformController = this._transformController!;
+                if (transformController.isActiveAndEnabled && transformController.hovered) {
                     transformController.start(this._pointerPosition);
                 }
             }
@@ -57,7 +57,7 @@ namespace paper.editor {
             }
 
             if (event.button === 0) {
-                const transformController = this._transformController;
+                const transformController = this._transformController!;
                 if (transformController.isActiveAndEnabled && transformController.hovered) {
                     transformController.end();
                 }
@@ -122,8 +122,8 @@ namespace paper.editor {
 
             }
             else if (event.target === canvas) { // Update hovered.
-                const transformController = this._transformController;
-                if (transformController && transformController.isActiveAndEnabled) {
+                const transformController = this._transformController!;
+                if (transformController.isActiveAndEnabled) {
                     if (event.shiftKey || event.ctrlKey) {
                         transformController.hovered = null;
                     }
@@ -144,7 +144,7 @@ namespace paper.editor {
                 if (!transformController || !transformController.isActiveAndEnabled || !transformController.hovered) {
                     const raycastInfos = Helper.raycast(Scene.activeScene.getRootGameObjects(), this._pointerPosition.x, this._pointerPosition.y);
                     if (raycastInfos.length > 0) {
-                        this._modelComponent.hover(raycastInfos[0].transform.gameObject);
+                        this._modelComponent.hover(raycastInfos[0].transform!.gameObject);
                     }
                     else {
                         this._modelComponent.hover(null);
@@ -159,7 +159,7 @@ namespace paper.editor {
         }
 
         private _onKeyUp = (event: KeyboardEvent) => {
-            const transformController = this._transformController;
+            const transformController = this._transformController!;
 
             if (!event.altKey && !event.ctrlKey && !event.shiftKey) {
                 switch (event.key.toLowerCase()) {
@@ -168,39 +168,31 @@ namespace paper.editor {
                         break;
 
                     case "f":
-                        this._orbitControls.distance = 10.0;
-                        this._orbitControls.lookAtOffset.set(0.0, 0.0, 0.0);
+                        this._orbitControls!.distance = 10.0;
+                        this._orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);
 
                         if (this._modelComponent.selectedGameObject) {
-                            this._orbitControls.lookAtPoint.copy(this._modelComponent.selectedGameObject.transform.position);
+                            this._orbitControls!.lookAtPoint.copy(this._modelComponent.selectedGameObject.transform.position);
                         }
                         else {
-                            this._orbitControls.lookAtPoint.copy(egret3d.Vector3.ZERO);
+                            this._orbitControls!.lookAtPoint.copy(egret3d.Vector3.ZERO);
                         }
                         break;
 
                     case "w":
-                        if (transformController) {
-                            transformController.mode = transformController.translate;
-                        }
+                        transformController.mode = transformController.translate;
                         break;
 
                     case "e":
-                        if (transformController) {
-                            transformController.mode = transformController.rotate;
-                        }
+                        transformController.mode = transformController.rotate;
                         break;
 
                     case "r":
-                        if (transformController) {
-                            transformController.mode = transformController.scale;
-                        }
+                        transformController.mode = transformController.scale;
                         break;
 
                     case "x":
-                        if (transformController) {
-                            transformController.isWorldSpace = !transformController.isWorldSpace;
-                        }
+                        transformController.isWorldSpace = !transformController.isWorldSpace;
                         break;
                 }
             }
@@ -221,7 +213,7 @@ namespace paper.editor {
                 }
                 this._hoverBox.parent = value;
             }
-            else {
+            else if (this._hoverBox) {
                 this._hoverBox.activeSelf = false;
                 this._hoverBox.parent = null;
             }
@@ -230,14 +222,12 @@ namespace paper.editor {
         private _onGameObjectSelectChanged = (_c: any, value: GameObject) => {
             const selectedGameObject = this._modelComponent.selectedGameObject;
 
-            const transformController = this._transformController;
-            if (transformController) {
-                if (selectedGameObject) {
-                    transformController.gameObject.activeSelf = true;
-                }
-                else {
-                    transformController.gameObject.activeSelf = false;
-                }
+            const transformController = this._transformController!;
+            if (selectedGameObject) {
+                transformController.gameObject.activeSelf = true;
+            }
+            else {
+                transformController.gameObject.activeSelf = false;
             }
 
             const skeletonDrawer = this._skeletonDrawer;
@@ -366,19 +356,21 @@ namespace paper.editor {
                 matrix.release();
             };
 
+            const cameraViewFrustum = this._cameraViewFrustum!;
             const selectedCamera = this._modelComponent.selectedGameObject ? this._modelComponent.selectedGameObject.getComponent(egret3d.Camera) : null;
-            if (selectedCamera) {
-                this._cameraViewFrustum.transform.position = selectedCamera.gameObject.transform.position;
-                this._cameraViewFrustum.transform.rotation = selectedCamera.gameObject.transform.rotation;
-                this._cameraViewFrustum.activeSelf = true;
 
-                const mesh = this._cameraViewFrustum.getComponent(egret3d.MeshFilter).mesh;
+            if (selectedCamera) {
+                cameraViewFrustum.transform.position = selectedCamera.gameObject.transform.position;
+                cameraViewFrustum.transform.rotation = selectedCamera.gameObject.transform.rotation;
+                cameraViewFrustum.activeSelf = true;
+
+                const mesh = cameraViewFrustum.getComponent(egret3d.MeshFilter)!.mesh!;
                 const cameraProject = egret3d.Matrix4.create();
                 const viewPortPixel: egret3d.IRectangle = { x: 0, y: 0, w: 0, h: 0 };
                 selectedCamera.calcViewPortPixel(viewPortPixel); // update viewport
                 selectedCamera.calcProjectMatrix(viewPortPixel.w / viewPortPixel.h, cameraProject);
 
-                const positions = mesh.getVertices();
+                const positions = mesh.getVertices()!;
                 // center / target
                 setPoint(cameraProject, positions, 0, 0, -1, [38, 41]);
                 setPoint(cameraProject, positions, 0, 0, 1, [39]);
@@ -412,7 +404,7 @@ namespace paper.editor {
                 cameraProject.release();
             }
             else {
-                this._cameraViewFrustum.activeSelf = false;
+                cameraViewFrustum.activeSelf = false;
             }
         }
 
@@ -438,10 +430,6 @@ namespace paper.editor {
                 //     this._pickableSelected.push(pick);
                 // }
             }
-        }
-
-        public onAwake() {
-            GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
         }
 
         public onEnable() {
@@ -565,8 +553,8 @@ namespace paper.editor {
                 }
             }
 
-            const transformController = this._transformController;
-            if (transformController && transformController.isActiveAndEnabled) {
+            const transformController = this._transformController!;
+            if (transformController.isActiveAndEnabled) {
                 transformController.update(this._pointerPosition);
             }
 

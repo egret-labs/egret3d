@@ -48,33 +48,33 @@ namespace paper.editor {
         }
 
         private _onChangeProperty(data: { propName: string, propValue: any, target: any }) {
-            if ((data.target instanceof egret3d.Transform) && data.propName && this.selectedGameObjects.length > 0) {
-                let propName = <string>data.propName;
+            const selectedGameObject = this.selectedGameObject;
+            if (selectedGameObject && (data.target instanceof egret3d.Transform) && data.propName) {
+                const propName = <string>data.propName;
                 switch (propName) {
-                    case "position":
-                        this.selectedGameObject.transform.position = data.propValue;
-                        break;
-                    case "rotation":
-                        this.selectedGameObject.transform.rotation = data.propValue;
-                        break;
                     case "localPosition":
-                        this.selectedGameObject.transform.localPosition = data.propValue;
+                        selectedGameObject.transform.localPosition = data.propValue;
                         break;
                     case "localRotation":
-                        this.selectedGameObject.transform.localRotation = data.propValue;
-                        break;
-                    case "scale":
-                        this.selectedGameObject.transform.scale = data.propValue;
+                        selectedGameObject.transform.localRotation = data.propValue;
                         break;
                     case "localScale":
-                        this.selectedGameObject.transform.localScale = data.propValue;
+                        selectedGameObject.transform.localScale = data.propValue;
                         break;
-                    default:
+                    case "position":
+                        selectedGameObject.transform.position = data.propValue;
+                        break;
+                    case "rotation":
+                        selectedGameObject.transform.rotation = data.propValue;
+                        break;
+                    case "scale":
+                        selectedGameObject.transform.scale = data.propValue;
                         break;
                 }
             }
+
             if (data.target instanceof GameObject) {
-                let propName = <string>data.propName;
+                const propName = <string>data.propName;
                 console.log(propName);
             }
         }

@@ -42,7 +42,7 @@ namespace paper.editor {
             const helpVertex3A = egret3d.Vector3.create().release();
             const helpVertex3B = egret3d.Vector3.create().release();
             const helpMatrixA = egret3d.Matrix4.create().release();
-            const vertices = mesh.getVertices();
+            const vertices = mesh.getVertices()!;
             const bones = skinnedMeshRenderer.bones;
 
             this.transform.position = selectedGameObject.transform.position;

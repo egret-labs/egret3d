@@ -1,10 +1,10 @@
 namespace egret3d {
     /**
-     * 
+     * 网格。
      */
     export class Mesh extends BaseMesh {
         /**
-         *  
+         * 创建一个网格。
          * @param vertexCount 
          * @param indexCount 
          * @param attributeNames 

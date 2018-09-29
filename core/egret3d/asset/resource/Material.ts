@@ -518,7 +518,7 @@ namespace egret3d {
                 id = idOrValue as string;
             }
 
-            this.setVector3(id, Vector3.create(value.r, value.g, value.b).release());
+            this.setVector3(id, Vector3.create(value!.r, value!.g, value!.b).release());
 
             return this;
         }

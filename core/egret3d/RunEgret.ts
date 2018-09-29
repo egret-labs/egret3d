@@ -14,7 +14,7 @@ namespace egret3d {
         isPlaying?: boolean;
     };
 
-    export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number }
+    export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number };
 
     /**
      * 引擎启动入口

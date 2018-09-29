@@ -36,7 +36,7 @@ namespace paper {
         /**
          * 
          */
-        public readonly version: string = "1.1.0.001";
+        public readonly version: string = "1.1.9.003";
         /**
          * 系统管理器。
          */
