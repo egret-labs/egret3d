@@ -58,7 +58,7 @@ namespace paper {
          * @internal
          */
         public _preRegisterSystems() {
-            for (let i = 0, l = this._preSystems.length; i < l; ++i) {
+            for (let i = 0, l = this._preSystems.length; i < l; i += 2) {
                 this.register(this._preSystems[i], this._preSystems[i + 1]);
             }
 
