@@ -241,7 +241,7 @@ namespace egret3d {
         }
     }
     /**
-     * @internal
+     * @private
      */
     export class WebGLRenderState extends paper.SingletonComponent {
         private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST]; // TODO

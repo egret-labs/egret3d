@@ -167,6 +167,12 @@ namespace paper.editor {
                         this._modelComponent.select(null);
                         break;
 
+                    case "delete":
+                        for (const gameObject of this._modelComponent.selectedGameObjects) {
+                            gameObject.destroy();
+                        }
+                        break;
+
                     case "f":
                         this._orbitControls!.distance = 10.0;
                         this._orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);

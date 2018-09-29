@@ -12,18 +12,22 @@ namespace behaviors {
         private _radian: number = 0.0;
 
         public onAwake() {
-            console.log("onAwake");
+            console.info("onAwake");
         }
 
         public onEnable() {
-            console.log("onEnable");
+            console.info("onEnable");
         }
 
         public onStart() {
-            console.log("onStart");
+            console.info("onStart");
         }
 
-        public onUpdate(delta: number): any {
+        public onFixedUpdate(ct: number, tt: number) {
+            // console.info("onFixedUpdate", ct, tt);
+        }
+
+        public onUpdate(deltaTime: number): any {
             const transform = this.gameObject.transform;
             const position = transform.position;
             const target = this.lookAtPoint;
@@ -44,7 +48,7 @@ namespace behaviors {
                     this._radian = radian;
                 }
 
-                this._radian += delta * this.rotateSpeed * 0.5;
+                this._radian += deltaTime * this.rotateSpeed * 0.5;
                 transform.setLocalPosition(
                     target.x + Math.cos(this._radian) * this._radius,
                     position.y,
@@ -55,12 +59,16 @@ namespace behaviors {
             transform.lookAt(target);
         }
 
+        public onLateUpdate(deltaTime: number) {
+            // console.info("onLateUpdate");
+        }
+
         public onDisable() {
-            console.log("onDisable");
+            console.info("onDisable");
         }
 
         public onDestroy() {
-            console.log("onDestroy");
+            console.info("onDestroy");
         }
     }
 }
