@@ -62,9 +62,9 @@ namespace paper {
         }
 
         private _updatePlayerMode() {
-            if (this._playerMode !== PlayerMode.Player) {
-                egret3d.Camera.editor; // Active editor camera.
-            }
+            // if (this._playerMode !== PlayerMode.Player) { TODO
+            //     egret3d.Camera.editor; // Active editor camera.
+            // }
 
         }
         /**
@@ -72,13 +72,12 @@ namespace paper {
          */
         public init(options: egret3d.RunEgretOptions) {
             this._playerMode = options.playerMode || PlayerMode.Player;
-            this.systemManager.preRegister(paper.EnableSystem, paper.SystemOrder.Enable);
-            this.systemManager.preRegister(paper.StartSystem, paper.SystemOrder.Start);
-            this.systemManager.preRegister(paper.FixedUpdateSystem, paper.SystemOrder.FixedUpdate);
-            this.systemManager.preRegister(paper.UpdateSystem, paper.SystemOrder.Update);
-            this.systemManager.preRegister(paper.LateUpdateSystem, paper.SystemOrder.LaterUpdate);
-            this.systemManager.preRegister(paper.DisableSystem, paper.SystemOrder.Disable);
-            this.systemManager._preRegisterSystems();
+            this.systemManager.register(paper.EnableSystem, paper.SystemOrder.Enable);
+            this.systemManager.register(paper.StartSystem, paper.SystemOrder.Start);
+            this.systemManager.register(paper.FixedUpdateSystem, paper.SystemOrder.FixedUpdate);
+            this.systemManager.register(paper.UpdateSystem, paper.SystemOrder.Update);
+            this.systemManager.register(paper.LateUpdateSystem, paper.SystemOrder.LaterUpdate);
+            this.systemManager.register(paper.DisableSystem, paper.SystemOrder.Disable);
             this._updatePlayerMode();
             this.resume();
         }
@@ -132,7 +131,6 @@ namespace paper {
             }
 
             this._playerMode = value;
-            this._updatePlayerMode();
         }
     }
     //

@@ -98,7 +98,7 @@ namespace paper {
                 return this;
             }
 
-            this._preSystems.push({ systemClass, order });
+            this._preSystems.unshift({ systemClass, order });
 
             return this;
         }

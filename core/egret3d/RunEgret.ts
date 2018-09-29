@@ -38,17 +38,19 @@ namespace egret3d {
         InputManager.init(canvas);
         stage.init(canvas, requiredOptions);
 
-        const systemManager = paper.Application.systemManager;
-        systemManager.preRegister(BeginSystem, paper.SystemOrder.Begin);
-        systemManager.preRegister(AnimationSystem, paper.SystemOrder.Animation);
-        systemManager.preRegister(MeshRendererSystem, paper.SystemOrder.Renderer);
-        systemManager.preRegister(SkinnedMeshRendererSystem, paper.SystemOrder.Renderer);
-        systemManager.preRegister(particle.ParticleSystem, paper.SystemOrder.Renderer);
-        systemManager.preRegister(Egret2DRendererSystem, paper.SystemOrder.Renderer);
-        systemManager.preRegister(CameraAndLightSystem, paper.SystemOrder.Draw - 1);
-        systemManager.preRegister(WebGLRenderSystem, paper.SystemOrder.Draw);
-        systemManager.preRegister(EndSystem, paper.SystemOrder.End);
         paper.Application.init(options);
+        
+        const systemManager = paper.Application.systemManager;
+        systemManager.register(BeginSystem, paper.SystemOrder.Begin);
+        systemManager.register(AnimationSystem, paper.SystemOrder.Animation);
+        systemManager.register(MeshRendererSystem, paper.SystemOrder.Renderer);
+        systemManager.register(SkinnedMeshRendererSystem, paper.SystemOrder.Renderer);
+        systemManager.register(particle.ParticleSystem, paper.SystemOrder.Renderer);
+        systemManager.register(Egret2DRendererSystem, paper.SystemOrder.Renderer);
+        systemManager.register(CameraAndLightSystem, paper.SystemOrder.Draw - 1);
+        systemManager.register(WebGLRenderSystem, paper.SystemOrder.Draw);
+        systemManager.register(EndSystem, paper.SystemOrder.End);
+        systemManager._preRegisterSystems();
 
         console.info("Egret start complete.");
     }

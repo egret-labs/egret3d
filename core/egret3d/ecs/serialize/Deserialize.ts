@@ -134,7 +134,7 @@ namespace paper {
                     // }
                 }
 
-                if (!hasLink && this._makeLink && componentTarget) {
+                if (!hasLink && this._makeLink && componentTarget) { // TODO
                     componentTarget.extras!.linkedID = componentSource.uuid;
                 }
             }

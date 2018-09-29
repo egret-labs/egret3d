@@ -224,9 +224,8 @@ namespace paper {
             }
 
             GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).gameObjects.push(this);
-            //
+            // 销毁的第一时间就将组件和场景清除，场景的有无来判断实体是否已经销毁。
             this._components.length = 0;
-            // set isDestroyed.
             this._scene = null;
         }
 
@@ -331,6 +330,7 @@ namespace paper {
         }
         /**
          * 实体被销毁后，内部卸载。
+         * @internal
          */
         public uninitialize() {
             this.isStatic = false;
@@ -341,7 +341,7 @@ namespace paper {
             this.transform = null!;
             this.renderer = null;
 
-            if (this.extras) { // Editor.
+            if (this.extras) { // Editor. TODO
                 this.extras = {};
             }
 

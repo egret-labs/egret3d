@@ -4484,10 +4484,6 @@ declare namespace paper {
         private _removeComponent(value, groupComponent);
         private _getComponent(componentClass);
         /**
-         * 实体被销毁后，内部卸载。
-         */
-        uninitialize(): void;
-        /**
          * 销毁实体。
          */
         destroy(): void;

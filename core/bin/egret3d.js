@@ -4645,7 +4645,7 @@ var paper;
                 this.register(systemClass, order);
                 return this;
             }
-            this._preSystems.push({ systemClass: systemClass, order: order });
+            this._preSystems.unshift({ systemClass: systemClass, order: order });
             return this;
         };
         /**
@@ -7460,22 +7460,21 @@ var paper;
             this.systemManager._update();
         };
         ECS.prototype._updatePlayerMode = function () {
-            if (this._playerMode !== 0 /* Player */) {
-                egret3d.Camera.editor; // Active editor camera.
-            }
+            // if (this._playerMode !== PlayerMode.Player) { TODO
+            //     egret3d.Camera.editor; // Active editor camera.
+            // }
         };
         /**
          * @internal
          */
         ECS.prototype.init = function (options) {
             this._playerMode = options.playerMode || 0 /* Player */;
-            this.systemManager.preRegister(paper.EnableSystem, 1000 /* Enable */);
-            this.systemManager.preRegister(paper.StartSystem, 2000 /* Start */);
-            this.systemManager.preRegister(paper.FixedUpdateSystem, 3000 /* FixedUpdate */);
-            this.systemManager.preRegister(paper.UpdateSystem, 4000 /* Update */);
-            this.systemManager.preRegister(paper.LateUpdateSystem, 6000 /* LaterUpdate */);
-            this.systemManager.preRegister(paper.DisableSystem, 9000 /* Disable */);
-            this.systemManager._preRegisterSystems();
+            this.systemManager.register(paper.EnableSystem, 1000 /* Enable */);
+            this.systemManager.register(paper.StartSystem, 2000 /* Start */);
+            this.systemManager.register(paper.FixedUpdateSystem, 3000 /* FixedUpdate */);
+            this.systemManager.register(paper.UpdateSystem, 4000 /* Update */);
+            this.systemManager.register(paper.LateUpdateSystem, 6000 /* LaterUpdate */);
+            this.systemManager.register(paper.DisableSystem, 9000 /* Disable */);
             this._updatePlayerMode();
             this.resume();
         };
@@ -7534,7 +7533,6 @@ var paper;
                     return;
                 }
                 this._playerMode = value;
-                this._updatePlayerMode();
             },
             enumerable: true,
             configurable: true
@@ -11821,9 +11819,8 @@ var paper;
                 this._removeComponent(component, null);
             }
             GameObject.globalGameObject.getOrAddComponent(paper.DisposeCollecter).gameObjects.push(this);
-            //
+            // 销毁的第一时间就将组件和场景清除，场景的有无来判断实体是否已经销毁。
             this._components.length = 0;
-            // set isDestroyed.
             this._scene = null;
         };
         GameObject.prototype._addToScene = function (value) {
@@ -11915,6 +11912,7 @@ var paper;
         };
         /**
          * 实体被销毁后，内部卸载。
+         * @internal
          */
         GameObject.prototype.uninitialize = function () {
             this.isStatic = false;
@@ -25829,17 +25827,18 @@ var egret3d;
         egret3d.WebGLCapabilities.webgl = options.webgl;
         egret3d.InputManager.init(canvas);
         egret3d.stage.init(canvas, requiredOptions);
-        var systemManager = paper.Application.systemManager;
-        systemManager.preRegister(egret3d.BeginSystem, 0 /* Begin */);
-        systemManager.preRegister(egret3d.AnimationSystem, 5000 /* Animation */);
-        systemManager.preRegister(egret3d.MeshRendererSystem, 7000 /* Renderer */);
-        systemManager.preRegister(egret3d.SkinnedMeshRendererSystem, 7000 /* Renderer */);
-        systemManager.preRegister(egret3d.particle.ParticleSystem, 7000 /* Renderer */);
-        systemManager.preRegister(egret3d.Egret2DRendererSystem, 7000 /* Renderer */);
-        systemManager.preRegister(egret3d.CameraAndLightSystem, 8000 /* Draw */ - 1);
-        systemManager.preRegister(egret3d.WebGLRenderSystem, 8000 /* Draw */);
-        systemManager.preRegister(egret3d.EndSystem, 10000 /* End */);
         paper.Application.init(options);
+        var systemManager = paper.Application.systemManager;
+        systemManager.register(egret3d.BeginSystem, 0 /* Begin */);
+        systemManager.register(egret3d.AnimationSystem, 5000 /* Animation */);
+        systemManager.register(egret3d.MeshRendererSystem, 7000 /* Renderer */);
+        systemManager.register(egret3d.SkinnedMeshRendererSystem, 7000 /* Renderer */);
+        systemManager.register(egret3d.particle.ParticleSystem, 7000 /* Renderer */);
+        systemManager.register(egret3d.Egret2DRendererSystem, 7000 /* Renderer */);
+        systemManager.register(egret3d.CameraAndLightSystem, 8000 /* Draw */ - 1);
+        systemManager.register(egret3d.WebGLRenderSystem, 8000 /* Draw */);
+        systemManager.register(egret3d.EndSystem, 10000 /* End */);
+        systemManager._preRegisterSystems();
         console.info("Egret start complete.");
     }
     egret3d.runEgret = runEgret;
