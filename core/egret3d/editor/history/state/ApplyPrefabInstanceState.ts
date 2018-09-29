@@ -8,7 +8,6 @@ namespace paper.editor {
         cacheComponentsIds?: { [gameobjId: string]: string[] }
     };
 
-    //添加组件
     export class ApplyPrefabInstanceState extends BaseState {
         private firstRedo: boolean = true;
 
@@ -84,11 +83,11 @@ namespace paper.editor {
                         this.dispatchEditorModelEvent(EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
                     }
 
-                    if (applyData.addComponent && applyData.addComponents.length > 0) {
+                    if (applyData.addComponents && applyData.addComponents.length > 0) {
                         for (let index = 0; index < applyData.addComponents.length; index++) {
                             const element = applyData.addComponents[index];
                             const { id, gameObjId } = element;
-                            let originalObj = this.getGameObjectByUUid(applyGameObject, gameObjId.id);
+                            let originalObj = this.getGameObjectByUUid(applyGameObject, gameObjId);
                             if (originalObj) {
                                 let originalComponent = Editor.activeEditorModel.getComponentById(originalObj, id);
                                 if (originalComponent) {
@@ -116,6 +115,7 @@ namespace paper.editor {
                 //reset prefab serrializedata,save prefab
                 // (this.stateData.prefab as any)._raw = this.stateData.cachePrefabSerializedData;
                 const prefabJson = this.stateData.cachePrefabSerializedData;
+                (this.stateData.prefab as any)._raw = prefabJson;
                 this.dispatchEditorModelEvent(EditorModelEvent.SAVE_ASSET, {name:this.stateData.prefab.name,raw:prefabJson});
 
                 tempPrefabObject.destroy();
@@ -166,6 +166,9 @@ namespace paper.editor {
                 for (let index = 0; index < gameObj.transform.children.length; index++) {
                     const element = gameObj.transform.children[index];
                     const obj: paper.GameObject = element.gameObject;
+                    if (obj.hideFlags === paper.HideFlags.HideAndDontSave) {
+                        continue;
+                    }
                     this.setLinkedId(obj, ids);
                 }
             }
@@ -311,12 +314,11 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-
                 let tempPrefabObject = this.stateData.prefab.createInstance(Application.sceneManager.globalScene, true);
-                let allGameObjects = Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(tempPrefabObject);
+                let tempGameObjects = Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(tempPrefabObject);
                 let applyGameObject = Editor.activeEditorModel.getGameObjectByUUid(this.stateData.applyPrefabRootId);
 
-                for (const gameObj of allGameObjects!) {
+                for (const gameObj of tempGameObjects!) {
                     if (!(this.stateData.applyData[gameObj!.extras!.linkedID!])) {
                         continue;
                     }
@@ -335,7 +337,6 @@ namespace paper.editor {
                                 ids = this.getAllUUidFromGameObject(newObj);
                                 obj.cacheSerializeData = Object.create(null);
                                 obj.cacheSerializeData[gameObj.uuid] = [];
-                                
                                 obj.cacheSerializeData[gameObj.uuid][index] = paper.serialize(newObj);
                             } else {
                                 let cacheData = obj.cacheSerializeData[gameObj.uuid][index];
@@ -395,17 +396,17 @@ namespace paper.editor {
 
                             let linkedId = gameObj!.extras!.linkedID!;
                             let instanceGameObjects: GameObject[] = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
-
                             for (const instanceGameObject of instanceGameObjects) {
                                 let addComponent: BaseComponent;
 
                                 if (this.firstRedo) {
                                     addComponent = new Deserializer().deserialize(obj.serializeData, false, false, instanceGameObject);
                                     addComponent.extras!.linkedID = newComponent.uuid;
-                                    obj.cacheSerializeData[instanceGameObject.uuid] = paper.serialize(addComponent);
+                                    obj.cacheSerializeData[instanceGameObject.uuid] = this.clearExtrasFromSerilizeData(paper.serialize(addComponent));
                                 } else {
                                     let cacheData = obj.cacheSerializeData[instanceGameObject.uuid];
                                     addComponent = new Deserializer().deserialize(cacheData, true, false, instanceGameObject);
+                                    addComponent.extras!.linkedID = newComponent.uuid;
                                 }
 
                                 this.stateData.cacheComponentsIds[instanceGameObject.uuid] = this.stateData.cacheComponentsIds[instanceGameObject.uuid] || [];
@@ -441,6 +442,7 @@ namespace paper.editor {
                 this.clearGameObjectExtrasInfo(tempPrefabObject);
                 // (this.stateData.prefab as any)._raw = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
                 const prefabJson = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
+                (this.stateData.prefab as any)._raw = prefabJson;
                 this.dispatchEditorModelEvent(EditorModelEvent.SAVE_ASSET, {name:this.stateData.prefab.name,raw:prefabJson});
 
                 tempPrefabObject.destroy();
