@@ -197,6 +197,11 @@ namespace paper.editor {
                 this._editorModel.selectGameObject(this.selectedGameObjects);
             }
         }
+        public remove(value:GameObject){
+            if (this._editorModel !== null) {
+                this._editorModel.deleteGameObject(this.selectedGameObjects)
+            }
+        }
 
         public unselect(value: GameObject) {
             this._unselect(value);

@@ -168,8 +168,10 @@ namespace paper.editor {
                         break;
 
                     case "delete":
-                        for (const gameObject of this._modelComponent.selectedGameObjects) {
-                            gameObject.destroy();
+                        if (Application.playerMode !== PlayerMode.Editor) {
+                            for (const gameObject of this._modelComponent.selectedGameObjects) {
+                                gameObject.destroy();
+                            }
                         }
                         break;
 
