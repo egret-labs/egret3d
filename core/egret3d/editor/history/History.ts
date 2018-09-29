@@ -17,7 +17,7 @@ namespace paper.editor {
             modifyGameObjectPropertyList?: { newValueList: any[], preValueCopylist: any[] }[],
             modifyComponentPropertyList?: { componentId: string, newValueList: any[], preValueCopylist: any[] }[]
         }
-    }
+    };
 
     export const EventType = {
         HistoryState: "HistoryState",
@@ -198,7 +198,7 @@ namespace paper.editor {
                     data: (element as Object).hasOwnProperty('deserialize') ? element['serialize']() : element.data,
                     autoClear: element.autoClear,
                     isDone: element.isDone,
-                }
+                };
                 statesData.push(data);
             }
             const serializeHistory = {
@@ -206,7 +206,7 @@ namespace paper.editor {
                 batchIndex: this.batchIndex,
                 locked: this.locked,
                 statesData,
-            }
+            };
             return serializeHistory;
         }
 
@@ -231,7 +231,7 @@ namespace paper.editor {
                 index: serializeHistory.index,
                 batchIndex: serializeHistory.batchIndex,
                 locked: serializeHistory.locked,
-            }
+            };
             this._index = initData ? initData.index : -1;
             this._locked = initData ? initData.locked : 0;
             this._batchIndex = initData ? initData.batchIndex : 0;

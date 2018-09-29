@@ -175,6 +175,11 @@ namespace paper.editor {
             if (gameObj) {
                 gameObj.extras = {};
 
+                for (let index = 0; index < gameObj.components.length; index++) {
+                    const element = gameObj.components[index];
+                    element.extras = {};
+                }
+
                 for (let index = 0; index < gameObj.transform.children.length; index++) {
                     const element = gameObj.transform.children[index];
                     const obj: paper.GameObject = element.gameObject;
@@ -330,6 +335,7 @@ namespace paper.editor {
                                 ids = this.getAllUUidFromGameObject(newObj);
                                 obj.cacheSerializeData = Object.create(null);
                                 obj.cacheSerializeData[gameObj.uuid] = [];
+                                
                                 obj.cacheSerializeData[gameObj.uuid][index] = paper.serialize(newObj);
                             } else {
                                 let cacheData = obj.cacheSerializeData[gameObj.uuid][index];
@@ -350,11 +356,14 @@ namespace paper.editor {
                                     this.setGameObjectPrefabRootId(addObj, rootId);
                                     this.setLinkedId(addObj, ids.concat());
                                     obj.cacheSerializeData[instanceGameObject.uuid] = [];
-                                    obj.cacheSerializeData[instanceGameObject.uuid][index] = paper.serialize(addObj);
+                                    obj.cacheSerializeData[instanceGameObject.uuid][index] = this.clearExtrasFromSerilizeData(paper.serialize(addObj));
                                 } else {
                                     let cacheData = obj.cacheSerializeData[instanceGameObject.uuid][index];
                                     addObj = new Deserializer().deserialize(cacheData, true,false,this.editorModel.scene);
                                     addObj.parent = instanceGameObject;
+                                    let rootId: string = instanceGameObject.extras!.prefab ? instanceGameObject.uuid : instanceGameObject.extras!.rootID!;
+                                    this.setGameObjectPrefabRootId(addObj, rootId);
+                                    this.setLinkedId(addObj, ids.concat());
                                 }
 
                                 if (addObj) {
@@ -427,7 +436,6 @@ namespace paper.editor {
                             this.modifyPrefabComponentPropertyValues(gameObj.extras!.linkedID!, obj.componentId, tempPrefabObject, obj.newValueList);
                         }
                     }
-
                 }
 
                 this.clearGameObjectExtrasInfo(tempPrefabObject);
