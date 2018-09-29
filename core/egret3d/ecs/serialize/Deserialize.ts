@@ -7,7 +7,6 @@ namespace paper {
     const KEY_EXTRAS: keyof GameObject = "extras";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
 
-
     function _getDeserializedKeys(serializedClass: BaseClass, keys: { [key: string]: string } | null = null) {
         const serializeKeys = serializedClass.__serializeKeys;
         if (serializeKeys) {
@@ -27,6 +26,7 @@ namespace paper {
 
         return keys;
     }
+
     function _getDeserializedIgnoreKeys(serializedClass: BaseClass, keys: string[] | null = null) {
         if (serializedClass.__deserializeIgnore) {
             keys = keys || [];
@@ -66,7 +66,7 @@ namespace paper {
         private _keepUUID: boolean;
         private _makeLink: boolean;
         private readonly _deserializers: { [key: string]: Deserializer } = {};
-        private _target: Scene | GameObject | null = null;
+        private _rootTarget: Scene | GameObject | null = null;
 
         private _deserializeObject(source: ISerializedObject, target: BaseObject) {
             const deserializedKeys = _getDeserializedKeys(<any>target.constructor as BaseClass);
@@ -107,10 +107,10 @@ namespace paper {
                 if (clazz === egret3d.Transform) {
                     componentTarget = this.components[componentSource.uuid] as egret3d.Transform;
 
-                    if (KEY_CHILDREN in componentSource) {
+                    if (KEY_CHILDREN in componentSource) { // Link transform children.
                         for (const childUUID of componentSource[KEY_CHILDREN] as IUUID[]) {
-                            const child = this.components[childUUID.uuid] as egret3d.Transform;
-                            if (child._parent !== componentTarget) {
+                            const child = this.components[childUUID.uuid] as egret3d.Transform | null;
+                            if (child && child._parent !== componentTarget) {
                                 child._parent = componentTarget as egret3d.Transform;
                                 (componentTarget as egret3d.Transform)._children.push(child);
                             }
@@ -118,20 +118,15 @@ namespace paper {
                     }
                 }
                 else {
-                    if (hasLink && source) {
+                    if (hasLink) {
                         const componentExtras = componentSource[KEY_EXTRAS] as ComponentExtras;
-                        const extras = source[KEY_EXTRAS] as GameObjectExtras;
+                        const extras = source![KEY_EXTRAS] as GameObjectExtras;
                         const linkedID = componentExtras.linkedID!;
-                        const prefabDeserializer = this._deserializers[extras.prefab ? source.uuid : extras.rootID!];
+                        const prefabDeserializer = this._deserializers[extras.prefab ? source!.uuid : extras.rootID!];
                         componentTarget = prefabDeserializer.components[linkedID];
-
-                        if (!componentTarget) {
-                            console.error("Deserialize prefab error.");
-                        }
                     }
-
-                    if (!hasLink || !componentTarget) {
-                        componentTarget = (target || this._target as GameObject).addComponent(clazz);
+                    else {
+                        componentTarget = (target || this._rootTarget as GameObject).addComponent(clazz);
                     }
 
                     // if (clazz === Behaviour) { TODO
@@ -139,12 +134,12 @@ namespace paper {
                     // }
                 }
 
-                if (!hasLink && this._makeLink) {
+                if (!hasLink && this._makeLink && componentTarget) {
                     componentTarget.extras!.linkedID = componentSource.uuid;
                 }
             }
             else {
-                componentTarget = (target || this._target as GameObject).addComponent(MissingComponent);
+                componentTarget = (target || this._rootTarget as GameObject).addComponent(MissingComponent);
                 (componentTarget as MissingComponent).missingObject = componentSource;
 
                 console.warn(`Class ${className} is not defined.`);
@@ -184,7 +179,7 @@ namespace paper {
                             return (target as ISerializable).deserialize(source, this);
                         }
                         else {
-                            // console.info("Deserialize can be optimized.");
+                            // console.info("Deserialize can be optimized."); TODO
                         }
                     }
 
@@ -218,7 +213,7 @@ namespace paper {
                             return this.components[uuid];
                         }
                         else if (classCodeOrName) { // Link expand objects and components.
-                            const scene = this._target instanceof GameObject ? this._target.scene : this._target!;
+                            const scene = this._rootTarget instanceof GameObject ? this._rootTarget.scene : this._rootTarget!;
 
                             if ((serializeClassMap[classCodeOrName] || classCodeOrName) === egret.getQualifiedClassName(GameObject)) { // GameObject.
                                 for (const gameObject of scene.gameObjects) {
@@ -286,7 +281,7 @@ namespace paper {
         public deserialize<T extends (Scene | GameObject | BaseComponent)>(
             data: ISerializedData,
             keepUUID: boolean = false, makeLink: boolean = false,
-            target: Scene | GameObject | null = null,
+            rootTarget: Scene | GameObject | null = null,
         ): T | null {
             if (data.assets) {
                 for (const assetName of data.assets) {
@@ -296,7 +291,7 @@ namespace paper {
 
             this._keepUUID = keepUUID;
             this._makeLink = makeLink;
-            this._target = target;
+            this._rootTarget = rootTarget;
 
             const sceneClassName = egret.getQualifiedClassName(Scene);
             const transformClassName = egret.getQualifiedClassName(egret3d.Transform);
@@ -316,11 +311,11 @@ namespace paper {
 
                     if (className === sceneClassName) {
                         target = Scene.createEmpty((<any>source as { name: string }).name);
-                        this._target = target;
+                        this._rootTarget = target;
                     }
                     else {
-                        if (!this._target) {
-                            this._target = paper.Application.sceneManager.activeScene;
+                        if (!this._rootTarget) {
+                            this._rootTarget = paper.Application.sceneManager.activeScene; // TODO
                         }
 
                         const hasLink = KEY_EXTRAS in source && (source[KEY_EXTRAS] as GameObjectExtras).linkedID;
@@ -329,39 +324,40 @@ namespace paper {
                             const linkedID = extras.linkedID!;
                             const prefab = extras.prefab;
 
-                            if (prefab) {
+                            if (prefab) { // Prefab root.
                                 const assetIndex = ((<any>prefab) as IAssetReference).asset;
                                 if (assetIndex >= 0) {
                                     const assetName = this.assets[assetIndex];
-                                    target = Prefab.create(assetName, this._target as Scene);
+                                    target = Prefab.create(assetName, this._rootTarget as Scene);
 
-                                    if (target) {
+                                    if (target) { // Cache.
                                         this._deserializers[source.uuid] = Deserializer._lastDeserializer;
+                                    }
+                                    else { // Missing prefab.
+                                        target = GameObject.create(DefaultNames.MissingPrefab, DefaultTags.Untagged, this._rootTarget as Scene);
                                     }
                                 }
                             }
-                            else {
+                            else { // Prefab node.
                                 const prefabDeserializer = this._deserializers[extras.rootID!];
                                 target = prefabDeserializer.objects[linkedID];
-                            }
-
-                            if (!target) {
-                                console.error("Deserialize prefab error.");
+                                if (!target) {
+                                    // Delete node.
+                                }
                             }
                         }
+                        else {
+                            target = GameObject.create(DefaultNames.NoName, DefaultTags.Untagged, this._rootTarget as Scene);
 
-                        if (!hasLink || !target) {
-                            target = GameObject.create(DefaultNames.NoName, DefaultTags.Untagged, this._target as Scene);
-                        }
-
-                        if (!hasLink && this._makeLink) {
-                            (target as GameObject).extras!.linkedID = source.uuid;
-                            if (root) {
-                                (target as GameObject).extras!.rootID = (root as GameObject).uuid;
+                            if (this._makeLink) { // TODO
+                                (target as GameObject).extras!.linkedID = source.uuid;
+                                if (root) {
+                                    (target as GameObject).extras!.rootID = (root as GameObject).uuid;
+                                }
                             }
                         }
 
-                        if (KEY_COMPONENTS in source) { // Mapping transfrom components.
+                        if (target && KEY_COMPONENTS in source) { // Mapping transfrom components.
                             for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
                                 const uuid = componentUUID.uuid;
                                 const componentSource = components[uuid];
@@ -371,22 +367,26 @@ namespace paper {
                                 }
                             }
                         }
-
                     }
 
-                    this.objects[source.uuid] = target;
-                    root = root || target;
+                    if (target) {
+                        this.objects[source.uuid] = target;
+                        root = root || target;
+                    }
                 }
 
                 let i = data.objects.length;
-                while (i--) { // 组件实例化。
+                while (i--) {
                     const source = data.objects[i];
                     const target = this.objects[source.uuid];
-                    this._deserializeObject(source, target); // 场景或实体属性反序列化。
 
-                    if (target.constructor === GameObject && KEY_COMPONENTS in source) {
-                        for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
-                            this._createComponent(components[componentUUID.uuid], source, target as GameObject);
+                    if (target) {
+                        this._deserializeObject(source, target); // 场景或实体属性反序列化。
+
+                        if (target.constructor === GameObject && KEY_COMPONENTS in source) { // 组件实例化。
+                            for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
+                                this._createComponent(components[componentUUID.uuid], source, target as GameObject);
+                            }
                         }
                     }
                 }
@@ -404,7 +404,7 @@ namespace paper {
 
                         this._deserializeObject(componentSource, component);
                     }
-                    else if (target) {
+                    else if (rootTarget && rootTarget.constructor === GameObject) { // 整个反序列化过程只反序列化组件。
                         component = this._createComponent(componentSource);
                         root = root || component;
                         this._deserializeObject(componentSource, component);

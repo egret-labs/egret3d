@@ -7436,10 +7436,6 @@ declare namespace egret3d.oimo {
         private readonly _values;
         private _oimoRigidbody;
         protected _createRigidbody(): OIMO.RigidBody;
-        /**
-         * @internal
-         */
-        _updateMass(rigidbody: OIMO.RigidBody): void;
         private _addShapes();
         /**
          *
@@ -7878,11 +7874,7 @@ declare namespace egret3d.oimo {
          *
          */
         static getInstance(): PhysicsSystem;
-        /**
-         * @internal
-         */
-        static readonly _helpTransform: OIMO.Transform;
-        protected readonly _interests: (({
+        protected readonly _interests: ({
             componentClass: typeof Rigidbody;
         } | {
             componentClass: (typeof BoxCollider | typeof SphereCollider)[];
@@ -7890,11 +7882,7 @@ declare namespace egret3d.oimo {
         } | {
             componentClass: (typeof ConeTwistJoint | typeof HingeJoint | typeof SphericalJoint)[];
             type: paper.InterestType;
-        })[] | {
-            componentClass: any;
-            type: number;
-            isBehaviour: boolean;
-        }[])[];
+        })[][];
         private readonly _gravity;
         private readonly _rayCastClosest;
         private readonly _contactCallback;

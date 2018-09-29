@@ -249,6 +249,23 @@ namespace egret3d {
             this.y = (y * ratioA + this.y * ratioB);
             this.z = (z * ratioA + this.z * ratioB);
         }
+        /**
+         * 
+         * @param eye 
+         * @param target 
+         * @param up 
+         */
+        public lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>) {
+            return this.fromMatrix(helpMatrixA.lookAt(eye, target, up));
+        }
+        /**
+         * 
+         * @param value 
+         * @param up 
+         */
+        public lookRotation(value: Readonly<IVector3>, up: Readonly<IVector3>) {
+            return this.fromMatrix(helpMatrixA.lookRotation(value, up));
+        }
 
         public toEuler(value: Vector3, order: EulerOrder = EulerOrder.YXZ) {
             return _helpMatrix.fromRotation(this).toEuler(value, order);

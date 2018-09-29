@@ -30,7 +30,6 @@ namespace paper {
         @serializedField
         protected _lightmapIndex: number = -1;
         protected readonly _boundingSphere: egret3d.Sphere = egret3d.Sphere.create();
-        @serializedField
         protected readonly _aabb: egret3d.AABB = egret3d.AABB.create();
 
         protected _recalculateSphere() {

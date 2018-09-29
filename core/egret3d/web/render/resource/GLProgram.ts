@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * @internal
+     * @private
      */
     export interface WebGLActiveAttribute {
         name: string;
@@ -9,7 +9,7 @@ namespace egret3d {
         location: number;
     }
     /**
-     * @internal
+     * @private
      */
     export interface WebGLActiveUniform {
         name: string;
@@ -21,7 +21,7 @@ namespace egret3d {
     // 运行时 draw call 排序优化使用。
     let _hashCode: number = 0;
     /**
-     * @internal
+     * @private
      */
     export class GlProgram {
         public readonly id: number = _hashCode++;

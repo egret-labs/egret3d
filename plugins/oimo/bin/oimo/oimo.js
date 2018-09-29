@@ -41520,6 +41520,7 @@ oimo_dynamics_rigidbody_Shape.prototype["getPrev"] = oimo_dynamics_rigidbody_Sha
 oimo_dynamics_rigidbody_Shape.prototype["getNext"] = oimo_dynamics_rigidbody_Shape.prototype.getNext;
 window["OIMO"]["ShapeConfig"] = oimo_dynamics_rigidbody_ShapeConfig;
 })(window);
+"use strict";
 var __reflect = (this && this.__reflect) || function (p, c, t) {
     p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
 };
@@ -41540,6 +41541,32 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
+        /**
+         * 刚体类型。
+         */
+        var RigidbodyType;
+        (function (RigidbodyType) {
+            /**
+             * 动态。
+             */
+            RigidbodyType[RigidbodyType["DYNAMIC"] = 0] = "DYNAMIC";
+            /**
+             * 静态。
+             */
+            RigidbodyType[RigidbodyType["STATIC"] = 1] = "STATIC";
+            /**
+             * 动力学。
+             */
+            RigidbodyType[RigidbodyType["KINEMATIC"] = 2] = "KINEMATIC";
+        })(RigidbodyType = oimo.RigidbodyType || (oimo.RigidbodyType = {}));
+        var ValueType;
+        (function (ValueType) {
+            ValueType[ValueType["Type"] = 0] = "Type";
+            ValueType[ValueType["Mass"] = 1] = "Mass";
+            ValueType[ValueType["GravityScale"] = 2] = "GravityScale";
+            ValueType[ValueType["LinearDamping"] = 3] = "LinearDamping";
+            ValueType[ValueType["AngularDamping"] = 4] = "AngularDamping";
+        })(ValueType || (ValueType = {}));
         /**
          * 刚体。
          */
@@ -41869,6 +41896,14 @@ var egret3d;
              */
             GeometryType[GeometryType["ConvexHull"] = OIMO.GeometryType.CONVEX_HULL] = "ConvexHull";
         })(GeometryType = oimo.GeometryType || (oimo.GeometryType = {}));
+        var ValueType;
+        (function (ValueType) {
+            ValueType[ValueType["CollisionGroup"] = 0] = "CollisionGroup";
+            ValueType[ValueType["CollisionMask"] = 1] = "CollisionMask";
+            ValueType[ValueType["Friction"] = 2] = "Friction";
+            ValueType[ValueType["Restitution"] = 3] = "Restitution";
+            ValueType[ValueType["Density"] = 4] = "Density";
+        })(ValueType || (ValueType = {}));
         /**
          * 碰撞体基类。
          */
@@ -42032,6 +42067,11 @@ var egret3d;
             JointType[JointType["ConeTwist"] = OIMO.JointType.RAGDOLL] = "ConeTwist";
             JointType[JointType["Universal"] = OIMO.JointType.UNIVERSAL] = "Universal";
         })(JointType = oimo.JointType || (oimo.JointType = {}));
+        var ValueType;
+        (function (ValueType) {
+            ValueType[ValueType["CollisionEnabled"] = 0] = "CollisionEnabled";
+            ValueType[ValueType["UseGlobalAnchor"] = 1] = "UseGlobalAnchor";
+        })(ValueType || (ValueType = {}));
         /**
          * 关节基类。
          */
@@ -42282,7 +42322,7 @@ var egret3d;
             }
             BoxCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
-                config.geometry = new OIMO.BoxGeometry(egret3d.helpVector3A.multiplyScalar(0.5, this._size));
+                config.geometry = new OIMO.BoxGeometry(egret3d.Vector3.create().multiplyScalar(0.5, this._size).release());
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
@@ -42454,7 +42494,7 @@ var egret3d;
                 var transform = this.gameObject.transform;
                 var matrix = transform.getWorldMatrix();
                 var from = transform.getPosition();
-                var to = matrix.transformVector3(egret3d.helpVector3A.set(this.distance, 0.0, 0.0));
+                var to = matrix.transformVector3(egret3d.Vector3.create(this.distance, 0.0, 0.0).release());
                 var raycastInfo = oimo.PhysicsSystem.getInstance().rayCast(from, to, this.collisionMask);
                 if (raycastInfo) {
                     this._hitted = true;
@@ -42691,6 +42731,25 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
+        var ValueType;
+        (function (ValueType) {
+            // Swing SpringDamper
+            ValueType[ValueType["SWFrequency"] = 0] = "SWFrequency";
+            ValueType[ValueType["SWDampingRatio"] = 1] = "SWDampingRatio";
+            ValueType[ValueType["SWUseSymplecticEuler"] = 2] = "SWUseSymplecticEuler";
+            // Twist SpringDamper
+            ValueType[ValueType["TWFrequency"] = 3] = "TWFrequency";
+            ValueType[ValueType["TWDampingRatio"] = 4] = "TWDampingRatio";
+            ValueType[ValueType["TWUseSymplecticEuler"] = 5] = "TWUseSymplecticEuler";
+            // RotationalLimitMotor
+            ValueType[ValueType["LowerLimit"] = 6] = "LowerLimit";
+            ValueType[ValueType["UpperLimit"] = 7] = "UpperLimit";
+            ValueType[ValueType["MotorSpeed"] = 8] = "MotorSpeed";
+            ValueType[ValueType["MotorTorque"] = 9] = "MotorTorque";
+            //
+            ValueType[ValueType["MaxSwingAngleX"] = 10] = "MaxSwingAngleX";
+            ValueType[ValueType["MaxSwingAngleZ"] = 11] = "MaxSwingAngleZ";
+        })(ValueType || (ValueType = {}));
         /**
          *
          */
@@ -43026,6 +43085,18 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
+        var ValueType;
+        (function (ValueType) {
+            // SpringDamper
+            ValueType[ValueType["Frequency"] = 0] = "Frequency";
+            ValueType[ValueType["DampingRatio"] = 1] = "DampingRatio";
+            ValueType[ValueType["UseSymplecticEuler"] = 2] = "UseSymplecticEuler";
+            // LimitMotor
+            ValueType[ValueType["LowerLimit"] = 3] = "LowerLimit";
+            ValueType[ValueType["UpperLimit"] = 4] = "UpperLimit";
+            ValueType[ValueType["MotorSpeed"] = 5] = "MotorSpeed";
+            ValueType[ValueType["MotorTorque"] = 6] = "MotorTorque";
+        })(ValueType || (ValueType = {}));
         /**
          *
          */
@@ -43249,9 +43320,6 @@ var egret3d;
                         { componentClass: oimo.Rigidbody },
                         { componentClass: [oimo.BoxCollider, oimo.SphereCollider], type: 4 /* Unessential */ },
                         { componentClass: [oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint], type: 4 /* Unessential */ }
-                    ],
-                    [
-                        { componentClass: paper.Behaviour, type: 1 /* Extends */ | 4 /* Unessential */, isBehaviour: true, }
                     ]
                 ];
                 _this._gravity = egret3d.Vector3.create(0.0, -9.80665, 0.0);
@@ -43295,14 +43363,42 @@ var egret3d;
                     // do {
                     // }
                     // while (contact.getNext());
+                    //TODO
                     _this._contactColliders.begin.push(contact);
+                    _this._contactColliders.stay.push(contact);
+                    var colliderA = contact.getShape1().userData;
+                    var colliderB = contact.getShape2().userData;
+                    for (var _i = 0, _a = colliderA.gameObject.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
+                        var behaviour = _a[_i];
+                        behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderB);
+                    }
+                    for (var _b = 0, _c = colliderB.gameObject.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
+                        var behaviour = _c[_b];
+                        behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderA);
+                    }
                 };
                 this._contactCallback.preSolve = function (contact) {
                 };
                 this._contactCallback.postSolve = function (contact) {
                 };
                 this._contactCallback.endContact = function (contact) {
+                    //TODO
                     _this._contactColliders.end.push(contact);
+                    var stay = _this._contactColliders.stay;
+                    var index = stay.indexOf(contact);
+                    if (index >= 0) {
+                        stay.splice(index, 1);
+                    }
+                    var colliderA = contact.getShape1().userData;
+                    var colliderB = contact.getShape2().userData;
+                    for (var _i = 0, _a = colliderA.gameObject.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
+                        var behaviour = _a[_i];
+                        behaviour.onCollisionExit && behaviour.onCollisionExit(colliderB);
+                    }
+                    for (var _b = 0, _c = colliderB.gameObject.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
+                        var behaviour = _c[_b];
+                        behaviour.onCollisionExit && behaviour.onCollisionExit(colliderA);
+                    }
                 };
             };
             PhysicsSystem.prototype.onAddGameObject = function (gameObject, group) {
@@ -43346,16 +43442,9 @@ var egret3d;
                 var totalTimes = Math.min(Math.floor(fixedTime / this._clock.fixedDeltaTime), this._clock.maxFixedSubSteps);
                 var oimoTransform = PhysicsSystem._helpTransform;
                 var gameObjects = this._groups[0].gameObjects;
-                var behaviourComponents = this._groups[1].components;
                 while (fixedTime >= this._clock.fixedDeltaTime && currentTimes++ < this._clock.maxFixedSubSteps) {
-                    for (var _i = 0, behaviourComponents_1 = behaviourComponents; _i < behaviourComponents_1.length; _i++) {
-                        var component = behaviourComponents_1[_i];
-                        if (component) {
-                            component.onFixedUpdate && component.onFixedUpdate(currentTimes, totalTimes);
-                        }
-                    }
-                    for (var _a = 0, gameObjects_1 = gameObjects; _a < gameObjects_1.length; _a++) {
-                        var gameObject = gameObjects_1[_a];
+                    for (var _i = 0, gameObjects_1 = gameObjects; _i < gameObjects_1.length; _i++) {
+                        var gameObject = gameObjects_1[_i];
                         var transform = gameObject.transform;
                         var rigidbody = gameObject.getComponent(oimo.Rigidbody);
                         var oimoRigidbody = rigidbody.oimoRigidbody;
@@ -43375,8 +43464,8 @@ var egret3d;
                         }
                     }
                     this._oimoWorld.step(this._clock.fixedDeltaTime);
-                    for (var _b = 0, gameObjects_2 = gameObjects; _b < gameObjects_2.length; _b++) {
-                        var gameObject = gameObjects_2[_b];
+                    for (var _a = 0, gameObjects_2 = gameObjects; _a < gameObjects_2.length; _a++) {
+                        var gameObject = gameObjects_2[_a];
                         var transform = gameObject.transform;
                         var rigidbody = gameObject.getComponent(oimo.Rigidbody);
                         var oimoRigidbody = rigidbody.oimoRigidbody;
@@ -43395,50 +43484,18 @@ var egret3d;
                         }
                     }
                     //
-                    var begin = this._contactColliders.begin;
                     var stay = this._contactColliders.stay;
-                    var end = this._contactColliders.end;
-                    if (begin.length > 0) {
-                        for (var _c = 0, begin_1 = begin; _c < begin_1.length; _c++) {
-                            var contact = begin_1[_c];
-                            var colliderA = contact.getShape1().userData;
-                            var colliderB = contact.getShape2().userData;
-                            for (var _d = 0, _e = colliderA.gameObject.getComponents(paper.Behaviour, true); _d < _e.length; _d++) {
-                                var behaviour = _e[_d];
-                                behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderB);
-                            }
-                            for (var _f = 0, _g = colliderB.gameObject.getComponents(paper.Behaviour, true); _f < _g.length; _f++) {
-                                var behaviour = _g[_f];
-                                behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderA);
-                            }
-                        }
-                    }
-                    if (end.length > 0) {
-                        for (var _h = 0, end_1 = end; _h < end_1.length; _h++) {
-                            var contact = end_1[_h];
-                            var colliderA = contact.getShape1().userData;
-                            var colliderB = contact.getShape2().userData;
-                            for (var _j = 0, _k = colliderA.gameObject.getComponents(paper.Behaviour, true); _j < _k.length; _j++) {
-                                var behaviour = _k[_j];
-                                behaviour.onCollisionExit && behaviour.onCollisionExit(colliderB);
-                            }
-                            for (var _l = 0, _m = colliderB.gameObject.getComponents(paper.Behaviour, true); _l < _m.length; _l++) {
-                                var behaviour = _m[_l];
-                                behaviour.onCollisionExit && behaviour.onCollisionExit(colliderA);
-                            }
-                        }
-                    }
                     if (stay.length > 0) {
-                        for (var _o = 0, stay_1 = stay; _o < stay_1.length; _o++) {
-                            var contact = stay_1[_o];
+                        for (var _b = 0, stay_1 = stay; _b < stay_1.length; _b++) {
+                            var contact = stay_1[_b];
                             var colliderA = contact.getShape1().userData;
                             var colliderB = contact.getShape2().userData;
-                            for (var _p = 0, _q = colliderA.gameObject.getComponents(paper.Behaviour, true); _p < _q.length; _p++) {
-                                var behaviour = _q[_p];
+                            for (var _c = 0, _d = colliderA.gameObject.getComponents(paper.Behaviour, true); _c < _d.length; _c++) {
+                                var behaviour = _d[_c];
                                 behaviour.onCollisionStay && behaviour.onCollisionStay(colliderB);
                             }
-                            for (var _r = 0, _s = colliderB.gameObject.getComponents(paper.Behaviour, true); _r < _s.length; _r++) {
-                                var behaviour = _s[_r];
+                            for (var _e = 0, _f = colliderB.gameObject.getComponents(paper.Behaviour, true); _e < _f.length; _e++) {
+                                var behaviour = _f[_e];
                                 behaviour.onCollisionStay && behaviour.onCollisionStay(colliderA);
                             }
                         }
@@ -43452,7 +43509,9 @@ var egret3d;
                 }
                 if (component instanceof oimo.Collider) {
                     var rigidbody = component.gameObject.getComponent(oimo.Rigidbody);
-                    rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                    if (component.oimoShape._rigidBody) {
+                        rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                    }
                     // rigidbody._updateMass(rigidbody.oimoRigidbody);
                 }
                 else if (component instanceof oimo.Joint) {
@@ -43464,11 +43523,6 @@ var egret3d;
                 for (var _i = 0, _a = gameObject.getComponents(oimo.Joint, true); _i < _a.length; _i++) {
                     var joint = _a[_i];
                     this._oimoWorld.removeJoint(joint.oimoJoint);
-                }
-                for (var _b = 0, _c = gameObject.getComponents(oimo.Collider, true); _b < _c.length; _b++) {
-                    var shape = _c[_b];
-                    rigidbody.oimoRigidbody.removeShape(shape.oimoShape);
-                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
                 }
                 this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
             };
@@ -43499,13 +43553,20 @@ var egret3d;
         oimo.PhysicsSystem = PhysicsSystem;
         __reflect(PhysicsSystem.prototype, "egret3d.oimo.PhysicsSystem");
         //
-        paper.Application.systemManager.preRegister(PhysicsSystem, paper.UpdateSystem, true);
+        paper.Application.systemManager.preRegister(PhysicsSystem, 3000 /* FixedUpdate */);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
+        var ValueType;
+        (function (ValueType) {
+            // SpringDamper
+            ValueType[ValueType["Frequency"] = 0] = "Frequency";
+            ValueType[ValueType["DampingRatio"] = 1] = "DampingRatio";
+            ValueType[ValueType["UseSymplecticEuler"] = 2] = "UseSymplecticEuler";
+        })(ValueType || (ValueType = {}));
         /**
          *
          */
@@ -43616,6 +43677,27 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
+        var ValueType;
+        (function (ValueType) {
+            // AxisY SpringDamper
+            ValueType[ValueType["FrequencyY"] = 0] = "FrequencyY";
+            ValueType[ValueType["DampingRatioY"] = 1] = "DampingRatioY";
+            ValueType[ValueType["UseSymplecticEulerY"] = 2] = "UseSymplecticEulerY";
+            // AxisZ SpringDamper
+            ValueType[ValueType["FrequencyZ"] = 3] = "FrequencyZ";
+            ValueType[ValueType["DampingRatioZ"] = 4] = "DampingRatioZ";
+            ValueType[ValueType["UseSymplecticEulerZ"] = 5] = "UseSymplecticEulerZ";
+            // AxisY RotationalLimitMotor
+            ValueType[ValueType["LowerLimitY"] = 6] = "LowerLimitY";
+            ValueType[ValueType["UpperLimitY"] = 7] = "UpperLimitY";
+            ValueType[ValueType["MotorSpeedY"] = 8] = "MotorSpeedY";
+            ValueType[ValueType["MotorTorqueY"] = 9] = "MotorTorqueY";
+            // AxisZ RotationalLimitMotor
+            ValueType[ValueType["LowerLimitZ"] = 10] = "LowerLimitZ";
+            ValueType[ValueType["UpperLimitZ"] = 11] = "UpperLimitZ";
+            ValueType[ValueType["MotorSpeedZ"] = 12] = "MotorSpeedZ";
+            ValueType[ValueType["MotorTorqueZ"] = 13] = "MotorTorqueZ";
+        })(ValueType || (ValueType = {}));
         /**
          *
          */

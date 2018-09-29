@@ -662,20 +662,28 @@ namespace egret3d {
             return this;
         }
         /**
+         * 
          * - 两点位置不重合。
          * @param eye 
          * @param target 
          * @param up 
          */
         public lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>) {
-            const z = _helpVector3C.subtract(target, eye).normalize();  // left-hand coordinates system.
-            const x = _helpVector3A.cross(up, z).normalize(undefined, Vector3.RIGHT);
-            const y = _helpVector3B.cross(z, x);
+            this.lookRotation(_helpVector3C.subtract(target, eye).normalize(), up); // left-hand coordinates system.
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public lookRotation(value: Readonly<IVector3>, up: Readonly<IVector3>) {
+            const x = _helpVector3A.cross(up, value).normalize(undefined, Vector3.RIGHT);
+            const y = _helpVector3B.cross(value, x);
             const rawData = this.rawData;
 
-            rawData[0] = x.x; rawData[4] = y.x; rawData[8] = z.x;
-            rawData[1] = x.y; rawData[5] = y.y; rawData[9] = z.y;
-            rawData[2] = x.z; rawData[6] = y.z; rawData[10] = z.z;
+            rawData[0] = x.x; rawData[4] = y.x; rawData[8] = value.x;
+            rawData[1] = x.y; rawData[5] = y.y; rawData[9] = value.y;
+            rawData[2] = x.z; rawData[6] = y.z; rawData[10] = value.z;
 
             return this;
         }

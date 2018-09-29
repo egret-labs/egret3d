@@ -290,7 +290,10 @@ namespace egret3d {
                 return host.load(r);
             }
             else {
-                console.error("加载不存在的资源", item);
+                if (item.indexOf("builtin/") !== 0) {
+                    console.error("加载不存在的资源", item);
+                }
+
                 return Promise.resolve();
             }
         })));

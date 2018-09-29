@@ -36,7 +36,7 @@ namespace paper {
         /**
          * 
          */
-        public readonly version: string = "1.1.9.003";
+        public readonly version: string = "1.1.9.006";
         /**
          * 系统管理器。
          */
@@ -72,12 +72,12 @@ namespace paper {
          */
         public init(options: egret3d.RunEgretOptions) {
             this._playerMode = options.playerMode || PlayerMode.Player;
-            this.systemManager.register(paper.EnableSystem, paper.SystemOrder.Enable);
-            this.systemManager.register(paper.StartSystem, paper.SystemOrder.Start);
-            this.systemManager.register(paper.FixedUpdateSystem, paper.SystemOrder.FixedUpdate);
-            this.systemManager.register(paper.UpdateSystem, paper.SystemOrder.Update);
-            this.systemManager.register(paper.LateUpdateSystem, paper.SystemOrder.LaterUpdate);
-            this.systemManager.register(paper.DisableSystem, paper.SystemOrder.Disable);
+            this.systemManager.preRegister(paper.EnableSystem, paper.SystemOrder.Enable);
+            this.systemManager.preRegister(paper.StartSystem, paper.SystemOrder.Start);
+            this.systemManager.preRegister(paper.FixedUpdateSystem, paper.SystemOrder.FixedUpdate);
+            this.systemManager.preRegister(paper.UpdateSystem, paper.SystemOrder.Update);
+            this.systemManager.preRegister(paper.LateUpdateSystem, paper.SystemOrder.LaterUpdate);
+            this.systemManager.preRegister(paper.DisableSystem, paper.SystemOrder.Disable);
             this.systemManager._preRegisterSystems();
             this._updatePlayerMode();
             this.resume();

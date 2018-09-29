@@ -2575,41 +2575,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [0, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 var paper;
 (function (paper) {
     var editor;
@@ -2770,7 +2735,7 @@ var paper;
                     pickYZ.renderer.material.setOpacity(0.8).setDepth(false, false).setBlend(1 /* Blend */).setRenderQueue(4000 /* Overlay */).setColor(egret3d.Color.INDIGO);
                     pickZX.renderer.material.setOpacity(0.8).setDepth(false, false).setBlend(1 /* Blend */).setRenderQueue(4000 /* Overlay */).setColor(egret3d.Color.PURPLE);
                 }
-                this.mode = this.translate;
+                this.mode = this.translate; // Update mode.
                 this._quad.parent = this.gameObject;
                 this._quad.activeSelf = false;
             };
@@ -2810,7 +2775,7 @@ var paper;
                     var position = egret3d.Vector3.create();
                     for (var _i = 0, _a = modelComponent.selectedGameObjects; _i < _a.length; _i++) {
                         var gameObject = _a[_i];
-                        if (modelComponent.selectedGameObjects.indexOf(gameObject.parent) >= 0) {
+                        if (gameObject.parent && modelComponent.selectedGameObjects.indexOf(gameObject.parent) >= 0) {
                             continue;
                         }
                         var selectedPRS = this._prsStarts[gameObject.uuid];
@@ -2901,7 +2866,7 @@ var paper;
                     var scale = egret3d.Vector3.create();
                     for (var _d = 0, _e = modelComponent.selectedGameObjects; _d < _e.length; _d++) {
                         var gameObject = _e[_d];
-                        if (modelComponent.selectedGameObjects.indexOf(gameObject.parent) >= 0) {
+                        if (gameObject.parent && modelComponent.selectedGameObjects.indexOf(gameObject.parent) >= 0) {
                             continue;
                         }
                         var selectedPRS = this._prsStarts[gameObject.uuid];
@@ -3333,28 +3298,27 @@ var paper;
                 }
             };
             ModelComponent.prototype._onChangeProperty = function (data) {
-                if ((data.target instanceof egret3d.Transform) && data.propName && this.selectedGameObjects.length > 0) {
+                var selectedGameObject = this.selectedGameObject;
+                if (selectedGameObject && (data.target instanceof egret3d.Transform) && data.propName) {
                     var propName = data.propName;
                     switch (propName) {
-                        case "position":
-                            this.selectedGameObject.transform.position = data.propValue;
-                            break;
-                        case "rotation":
-                            this.selectedGameObject.transform.rotation = data.propValue;
-                            break;
                         case "localPosition":
-                            this.selectedGameObject.transform.localPosition = data.propValue;
+                            selectedGameObject.transform.localPosition = data.propValue;
                             break;
                         case "localRotation":
-                            this.selectedGameObject.transform.localRotation = data.propValue;
-                            break;
-                        case "scale":
-                            this.selectedGameObject.transform.scale = data.propValue;
+                            selectedGameObject.transform.localRotation = data.propValue;
                             break;
                         case "localScale":
-                            this.selectedGameObject.transform.localScale = data.propValue;
+                            selectedGameObject.transform.localScale = data.propValue;
                             break;
-                        default:
+                        case "position":
+                            selectedGameObject.transform.position = data.propValue;
+                            break;
+                        case "rotation":
+                            selectedGameObject.transform.rotation = data.propValue;
+                            break;
+                        case "scale":
+                            selectedGameObject.transform.scale = data.propValue;
                             break;
                     }
                 }
@@ -3787,7 +3751,7 @@ var paper;
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             EditorSystem.prototype.onAwake = function () {
-                // GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
+                paper.GameObject.globalGameObject.getOrAddComponent(editor.EditorDefaultTexture);
                 //
                 if (paper.Application.playerMode === 2 /* Editor */) {
                     paper.Application.systemManager.register(editor.SceneSystem, 6000 /* LaterUpdate */);
@@ -4272,7 +4236,7 @@ var paper;
                             return;
                         }
                         var transformController = _this._transformController;
-                        if (transformController && transformController.isActiveAndEnabled && transformController.hovered) {
+                        if (transformController.isActiveAndEnabled && transformController.hovered) {
                             transformController.start(_this._pointerPosition);
                         }
                     }
@@ -4344,7 +4308,7 @@ var paper;
                     }
                     else if (event.target === canvas) {
                         var transformController = _this._transformController;
-                        if (transformController && transformController.isActiveAndEnabled) {
+                        if (transformController.isActiveAndEnabled) {
                             if (event.shiftKey || event.ctrlKey) {
                                 transformController.hovered = null;
                             }
@@ -4383,6 +4347,12 @@ var paper;
                             case "escape":
                                 _this._modelComponent.select(null);
                                 break;
+                            case "delete":
+                                for (var _i = 0, _a = _this._modelComponent.selectedGameObjects; _i < _a.length; _i++) {
+                                    var gameObject = _a[_i];
+                                    gameObject.destroy();
+                                }
+                                break;
                             case "f":
                                 _this._orbitControls.distance = 10.0;
                                 _this._orbitControls.lookAtOffset.set(0.0, 0.0, 0.0);
@@ -4394,24 +4364,16 @@ var paper;
                                 }
                                 break;
                             case "w":
-                                if (transformController) {
-                                    transformController.mode = transformController.translate;
-                                }
+                                transformController.mode = transformController.translate;
                                 break;
                             case "e":
-                                if (transformController) {
-                                    transformController.mode = transformController.rotate;
-                                }
+                                transformController.mode = transformController.rotate;
                                 break;
                             case "r":
-                                if (transformController) {
-                                    transformController.mode = transformController.scale;
-                                }
+                                transformController.mode = transformController.scale;
                                 break;
                             case "x":
-                                if (transformController) {
-                                    transformController.isWorldSpace = !transformController.isWorldSpace;
-                                }
+                                transformController.isWorldSpace = !transformController.isWorldSpace;
                                 break;
                         }
                     }
@@ -4430,7 +4392,7 @@ var paper;
                         }
                         _this._hoverBox.parent = value;
                     }
-                    else {
+                    else if (_this._hoverBox) {
                         _this._hoverBox.activeSelf = false;
                         _this._hoverBox.parent = null;
                     }
@@ -4438,13 +4400,11 @@ var paper;
                 _this._onGameObjectSelectChanged = function (_c, value) {
                     var selectedGameObject = _this._modelComponent.selectedGameObject;
                     var transformController = _this._transformController;
-                    if (transformController) {
-                        if (selectedGameObject) {
-                            transformController.gameObject.activeSelf = true;
-                        }
-                        else {
-                            transformController.gameObject.activeSelf = false;
-                        }
+                    if (selectedGameObject) {
+                        transformController.gameObject.activeSelf = true;
+                    }
+                    else {
+                        transformController.gameObject.activeSelf = false;
                     }
                     var skeletonDrawer = _this._skeletonDrawer;
                     if (skeletonDrawer) {
@@ -4558,12 +4518,13 @@ var paper;
                     vector.release();
                     matrix.release();
                 };
+                var cameraViewFrustum = this._cameraViewFrustum;
                 var selectedCamera = this._modelComponent.selectedGameObject ? this._modelComponent.selectedGameObject.getComponent(egret3d.Camera) : null;
                 if (selectedCamera) {
-                    this._cameraViewFrustum.transform.position = selectedCamera.gameObject.transform.position;
-                    this._cameraViewFrustum.transform.rotation = selectedCamera.gameObject.transform.rotation;
-                    this._cameraViewFrustum.activeSelf = true;
-                    var mesh = this._cameraViewFrustum.getComponent(egret3d.MeshFilter).mesh;
+                    cameraViewFrustum.transform.position = selectedCamera.gameObject.transform.position;
+                    cameraViewFrustum.transform.rotation = selectedCamera.gameObject.transform.rotation;
+                    cameraViewFrustum.activeSelf = true;
+                    var mesh = cameraViewFrustum.getComponent(egret3d.MeshFilter).mesh;
                     var cameraProject = egret3d.Matrix4.create();
                     var viewPortPixel = { x: 0, y: 0, w: 0, h: 0 };
                     selectedCamera.calcViewPortPixel(viewPortPixel); // update viewport
@@ -4599,7 +4560,7 @@ var paper;
                     cameraProject.release();
                 }
                 else {
-                    this._cameraViewFrustum.activeSelf = false;
+                    cameraViewFrustum.activeSelf = false;
                 }
             };
             SceneSystem.prototype._updateLights = function () {
@@ -4624,9 +4585,6 @@ var paper;
                     //     this._pickableSelected.push(pick);
                     // }
                 }
-            };
-            SceneSystem.prototype.onAwake = function () {
-                paper.GameObject.globalGameObject.getOrAddComponent(editor.EditorDefaultTexture);
             };
             SceneSystem.prototype.onEnable = function () {
                 paper.EventPool.addEventListener("GameObjectHovered" /* GameObjectHovered */, editor.ModelComponent, this._onGameObjectHovered);
@@ -4728,7 +4686,7 @@ var paper;
                     }
                 }
                 var transformController = this._transformController;
-                if (transformController && transformController.isActiveAndEnabled) {
+                if (transformController.isActiveAndEnabled) {
                     transformController.update(this._pointerPosition);
                 }
                 var skeletonDrawer = this._skeletonDrawer;
@@ -4759,7 +4717,6 @@ var paper;
         var EditorMeshHelper = (function () {
             function EditorMeshHelper() {
             }
-            //
             EditorMeshHelper.createGameObject = function (name, mesh, material, tag, scene) {
                 if (mesh === void 0) { mesh = null; }
                 if (material === void 0) { material = null; }
@@ -4847,9 +4804,8 @@ var paper;
             }
             Helper.raycast = function (targets, mousePositionX, mousePositionY) {
                 var camera = egret3d.Camera.editor;
-                var ray = camera.createRayByScreen(mousePositionX, mousePositionY);
+                var ray = camera.createRayByScreen(mousePositionX, mousePositionY).release();
                 var raycastInfos = paper.GameObject.raycast(ray, targets, 0.0, 16777215 /* Everything */, true);
-                ray.release();
                 return raycastInfos;
             };
             Helper.raycastB = function (raycastAble, mousePositionX, mousePositionY) {
@@ -4864,100 +4820,3 @@ var paper;
         __reflect(Helper.prototype, "paper.editor.Helper");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
-var helper;
-(function (helper) {
-    var resLoaded = false;
-    function getResType(uri) {
-        var file = uri.substr(uri.lastIndexOf("/") + 1);
-        var i = file.indexOf(".", 0);
-        var extname = "";
-        while (i >= 0) {
-            extname = file.substr(i);
-            if (extname == ".vs.glsl") {
-                return 'GLVertexShader';
-            }
-            else if (extname == ".assetbundle.json") {
-                return 'Bundle';
-            }
-            else if (extname == ".fs.glsl") {
-                return 'GLFragmentShader';
-            }
-            else if (extname == ".png" || extname == ".jpg") {
-                return 'Texture';
-            }
-            else if (extname == ".pvr.bin" || extname == ".pvr") {
-                return 'PVR';
-            }
-            else if (extname == ".prefab.json") {
-                return 'Prefab';
-            }
-            else if (extname == ".scene.json") {
-                return 'Scene';
-            }
-            else if (extname == ".atlas.json") {
-                return 'Atlas';
-            }
-            else if (extname == ".font.json") {
-                return 'Font';
-            }
-            else if (extname == ".json" || extname == ".txt" || extname == ".effect.json") {
-                return 'TextAsset';
-            }
-            else if (extname == ".packs.bin") {
-                return 'PackBin';
-            }
-            else if (extname == ".packs.txt") {
-                return 'PackTxt';
-            }
-            else if (extname == ".path.json") {
-                return 'pathAsset';
-            }
-            else if (extname == ".mp3" || extname == ".ogg") {
-                return 'Sound';
-            }
-            else if (extname == ".shader.json") {
-                return 'Shader';
-            }
-            else if (extname == ".image.json") {
-                return 'TextureDesc';
-            }
-            else if (extname == ".mat.json") {
-                return 'Material';
-            }
-            else if (extname == ".mesh.bin") {
-                return 'Mesh';
-            }
-            else if (extname == ".ani.bin") {
-                return 'Animation';
-            }
-            i = file.indexOf(".", i + 1);
-        }
-        return "Unknown";
-    }
-    /**
-     * @internal
-     */
-    function getResAsync(uri, root) {
-        if (root === void 0) { root = "resource/"; }
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!!resLoaded) return [3 /*break*/, 2];
-                        return [4 /*yield*/, RES.loadConfig("resource/default.res.json", root)];
-                    case 1:
-                        _a.sent();
-                        resLoaded = true;
-                        _a.label = 2;
-                    case 2: return [2 /*return*/, new Promise(function (r) {
-                            RES.getResByUrl(root + uri, function (data) {
-                                paper.Asset.register(data);
-                                r();
-                            }, RES, getResType(uri));
-                        })];
-                }
-            });
-        });
-    }
-    helper.getResAsync = getResAsync;
-})(helper || (helper = {}));

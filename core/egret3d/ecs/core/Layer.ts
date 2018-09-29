@@ -29,6 +29,7 @@ namespace paper {
         MainCamera = "Main Camera",
         EditorCamera = "Editor Camera",
         EditorOnly = "Editor Only",
+        MissingPrefab = "Missing Prefab",
     }
     /**
      * 
