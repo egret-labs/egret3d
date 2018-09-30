@@ -7,7 +7,7 @@ namespace paper.editor {
         }
 
         public static create(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh): CreateGameObjectState | null {
-            let infos = parentList.map((obj) => { return { parentUUID: obj.uuid, serializeData: null } });
+            let infos = parentList.map((obj) => { return { parentUUID: obj.uuid, serializeData: null }; });
             let state = new CreateGameObjectState();
             state.infos = infos;
             state.createType = createType;

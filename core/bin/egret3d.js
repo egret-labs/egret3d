@@ -23796,9 +23796,11 @@ var paper;
             History.prototype._doState = function (state, isUndo) {
                 if (isUndo) {
                     state.undo();
+                    console.log("undo state:", state);
                 }
                 else {
                     state.redo();
+                    console.log("redo state:", state);
                 }
                 var d = isUndo ? "undo" : "redo";
                 if (this.dispatcher) {
@@ -25095,7 +25097,6 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
-        //添加组件
         var ApplyPrefabInstanceState = (function (_super) {
             __extends(ApplyPrefabInstanceState, _super);
             function ApplyPrefabInstanceState() {
@@ -25169,11 +25170,11 @@ var paper;
                             }
                             this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
                         }
-                        if (applyData.addComponent && applyData.addComponents.length > 0) {
+                        if (applyData.addComponents && applyData.addComponents.length > 0) {
                             for (var index = 0; index < applyData.addComponents.length; index++) {
                                 var element = applyData.addComponents[index];
                                 var id = element.id, gameObjId = element.gameObjId;
-                                var originalObj = this.getGameObjectByUUid(applyGameObject, gameObjId.id);
+                                var originalObj = this.getGameObjectByUUid(applyGameObject, gameObjId);
                                 if (originalObj) {
                                     var originalComponent = editor.Editor.activeEditorModel.getComponentById(originalObj, id);
                                     if (originalComponent) {
@@ -25199,6 +25200,7 @@ var paper;
                     //reset prefab serrializedata,save prefab
                     // (this.stateData.prefab as any)._raw = this.stateData.cachePrefabSerializedData;
                     var prefabJson = this.stateData.cachePrefabSerializedData;
+                    this.stateData.prefab._raw = prefabJson;
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefab.name, raw: prefabJson });
                     tempPrefabObject.destroy();
                     tempPrefabObject = null;
@@ -25248,6 +25250,10 @@ var paper;
             ApplyPrefabInstanceState.prototype.clearLinkedId = function (gameObj) {
                 if (gameObj) {
                     gameObj.extras = {};
+                    for (var index = 0; index < gameObj.components.length; index++) {
+                        var element = gameObj.components[index];
+                        element.extras = {};
+                    }
                     for (var index = 0; index < gameObj.transform.children.length; index++) {
                         var element = gameObj.transform.children[index];
                         var obj = element.gameObject;
@@ -25364,9 +25370,9 @@ var paper;
             ApplyPrefabInstanceState.prototype.redo = function () {
                 if (_super.prototype.redo.call(this)) {
                     var tempPrefabObject = this.stateData.prefab.createInstance(paper.Application.sceneManager.globalScene, true);
-                    var allGameObjects = editor.Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(tempPrefabObject);
+                    var tempGameObjects = editor.Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(tempPrefabObject);
                     var applyGameObject = editor.Editor.activeEditorModel.getGameObjectByUUid(this.stateData.applyPrefabRootId);
-                    for (var _i = 0, _a = allGameObjects; _i < _a.length; _i++) {
+                    for (var _i = 0, _a = tempGameObjects; _i < _a.length; _i++) {
                         var gameObj = _a[_i];
                         if (!(this.stateData.applyData[gameObj.extras.linkedID])) {
                             continue;
@@ -25403,12 +25409,15 @@ var paper;
                                         this.setGameObjectPrefabRootId(addObj, rootId);
                                         this.setLinkedId(addObj, ids.concat());
                                         obj.cacheSerializeData[instanceGameObject.uuid] = [];
-                                        obj.cacheSerializeData[instanceGameObject.uuid][index] = paper.serialize(addObj);
+                                        obj.cacheSerializeData[instanceGameObject.uuid][index] = this.clearExtrasFromSerilizeData(paper.serialize(addObj));
                                     }
                                     else {
                                         var cacheData = obj.cacheSerializeData[instanceGameObject.uuid][index];
                                         addObj = new paper.Deserializer().deserialize(cacheData, true, false, this.editorModel.scene);
                                         addObj.parent = instanceGameObject;
+                                        var rootId = instanceGameObject.extras.prefab ? instanceGameObject.uuid : instanceGameObject.extras.rootID;
+                                        this.setGameObjectPrefabRootId(addObj, rootId);
+                                        this.setLinkedId(addObj, ids.concat());
                                     }
                                     if (addObj) {
                                         this.stateData.cacheGameObjetsIds.push(addObj.uuid);
@@ -25443,11 +25452,12 @@ var paper;
                                     if (this.firstRedo) {
                                         addComponent = new paper.Deserializer().deserialize(obj.serializeData, false, false, instanceGameObject);
                                         addComponent.extras.linkedID = newComponent.uuid;
-                                        obj.cacheSerializeData[instanceGameObject.uuid] = paper.serialize(addComponent);
+                                        obj.cacheSerializeData[instanceGameObject.uuid] = this.clearExtrasFromSerilizeData(paper.serialize(addComponent));
                                     }
                                     else {
                                         var cacheData = obj.cacheSerializeData[instanceGameObject.uuid];
                                         addComponent = new paper.Deserializer().deserialize(cacheData, true, false, instanceGameObject);
+                                        addComponent.extras.linkedID = newComponent.uuid;
                                     }
                                     this.stateData.cacheComponentsIds[instanceGameObject.uuid] = this.stateData.cacheComponentsIds[instanceGameObject.uuid] || [];
                                     if (addComponent) {
@@ -25478,6 +25488,7 @@ var paper;
                     this.clearGameObjectExtrasInfo(tempPrefabObject);
                     // (this.stateData.prefab as any)._raw = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
                     var prefabJson = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
+                    this.stateData.prefab._raw = prefabJson;
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefab.name, raw: prefabJson });
                     tempPrefabObject.destroy();
                     this.firstRedo = false;
