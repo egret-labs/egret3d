@@ -59,7 +59,7 @@ namespace egret3d.oimo {
             const matrix = transform.getWorldMatrix();
             const from = transform.getPosition();
             const to = matrix.transformVector3(Vector3.create(this.distance, 0.0, 0.0).release());
-            const raycastInfo = PhysicsSystem.getInstance().rayCast(from, to, this.collisionMask);
+            const raycastInfo = PhysicsSystem.getInstance().raycast(from, to, this.collisionMask);
 
             if (raycastInfo) {
                 this._hitted = true;

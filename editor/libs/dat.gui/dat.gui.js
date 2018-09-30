@@ -986,7 +986,7 @@ var OptionController = function (_Controller) {
     });
     _this2.updateDisplay();
     dom.bind(_this2.__select, 'change', function () {
-      var desiredValue = this.options[this.selectedIndex].value;
+      var desiredValue = options[this.options[this.selectedIndex].innerHTML];
       _this.setValue(desiredValue);
     });
     _this2.domElement.appendChild(_this2.__select);

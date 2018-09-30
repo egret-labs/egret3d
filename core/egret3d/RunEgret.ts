@@ -53,10 +53,6 @@ namespace egret3d {
         systemManager._preRegisterSystems();
 
         console.info("Egret start complete.");
-
-        if ((window as any).main) {
-            (window as any).main();
-        }
     }
 
     function getMainCanvas(options: RunEgretOptions) {

@@ -986,7 +986,7 @@ var OptionController = function (_Controller) {
     });
     _this2.updateDisplay();
     dom.bind(_this2.__select, 'change', function () {
-      var desiredValue = this.options[this.selectedIndex].value;
+      var desiredValue = options[this.options[this.selectedIndex].innerHTML];
       _this.setValue(desiredValue);
     });
     _this2.domElement.appendChild(_this2.__select);
@@ -4112,7 +4112,7 @@ var paper;
                     }
                     _this._debug(v);
                 });
-                this._guiComponent.hierarchy.add(sceneOptions, "save");
+                // this._guiComponent.hierarchy.add(sceneOptions, "save");
                 this._guiComponent.hierarchy.close();
             };
             GUISystem.prototype.onEnable = function () {
@@ -4229,6 +4229,7 @@ var paper;
                 _this._skeletonDrawer = null;
                 _this._hoverBox = null;
                 _this._boxColliderDrawer = null;
+                // private _sphereColliderDrawer: GameObject | null = null;
                 _this._cameraViewFrustum = null; // TODO封装一下
                 _this._contextmenuHandler = function (event) {
                     event.preventDefault();
@@ -4261,7 +4262,6 @@ var paper;
                         else {
                             var hoveredGameObject = _this._modelComponent.hoveredGameObject;
                             if (hoveredGameObject) {
-                                var selectedGameObject = _this._modelComponent.selectedGameObject;
                                 if (_this._modelComponent.selectedGameObjects.indexOf(hoveredGameObject) >= 0) {
                                     if (event.ctrlKey) {
                                         _this._modelComponent.unselect(hoveredGameObject);
@@ -4294,7 +4294,7 @@ var paper;
                                 }
                             }
                             else if (!event.ctrlKey && !event.shiftKey) {
-                                _this._modelComponent.select(null);
+                                _this._modelComponent.select(paper.Scene.activeScene);
                             }
                         }
                     }
@@ -4396,6 +4396,8 @@ var paper;
                         selectedGameObject ? true : false;
                     _this._boxColliderDrawer.activeSelf =
                         selectedGameObject && selectedGameObject.getComponent(egret3d.BoxCollider) ? true : false;
+                    // this._sphereColliderDrawer!.activeSelf =
+                    //     selectedGameObject && selectedGameObject.getComponent(egret3d.SphereCollider) ? true : false;
                     _this._skeletonDrawer.gameObject.activeSelf =
                         selectedGameObject && selectedGameObject.renderer && selectedGameObject.renderer instanceof egret3d.SkinnedMeshRenderer ? true : false;
                     _this._cameraViewFrustum.activeSelf =
@@ -4560,6 +4562,8 @@ var paper;
                 this._hoverBox.activeSelf = false;
                 this._boxColliderDrawer = editor.EditorMeshHelper.createBox("BoxColliderDrawer", egret3d.Color.YELLOW, 0.8, paper.GameObject.globalGameObject.scene);
                 this._boxColliderDrawer.activeSelf = false;
+                // this._sphereColliderDrawer = EditorMeshHelper.createBox("SphereColliderDrawer", egret3d.Color.YELLOW, 0.8, GameObject.globalGameObject.scene);
+                // this._sphereColliderDrawer.activeSelf = false;
                 this._cameraViewFrustum = editor.EditorMeshHelper.createCameraWireframed("Camera");
                 this._cameraViewFrustum.activeSelf = false;
                 // TODO
@@ -4588,9 +4592,19 @@ var paper;
                     if (camera.gameObject.tag === "Editor Only" /* EditorOnly */) {
                         continue;
                     }
-                    var __editor = camera.transform.find("__editor");
-                    if (__editor) {
-                        __editor.gameObject.destroy();
+                    var icon = camera.transform.find("__pickTarget");
+                    if (icon) {
+                        icon.gameObject.destroy();
+                    }
+                }
+                for (var _b = 0, _d = this._camerasAndLights.lights; _b < _d.length; _b++) {
+                    var light = _d[_b];
+                    if (light.gameObject.tag === "Editor Only" /* EditorOnly */) {
+                        continue;
+                    }
+                    var icon = light.transform.find("__pickTarget");
+                    if (icon) {
+                        icon.gameObject.destroy();
                     }
                 }
                 egret3d.Camera.editor.gameObject.removeComponent(editor.OrbitControls);
@@ -4605,6 +4619,8 @@ var paper;
                 this._hoverBox = null;
                 this._boxColliderDrawer.destroy();
                 this._boxColliderDrawer = null;
+                // this._sphereColliderDrawer!.destroy();
+                // this._sphereColliderDrawer = null;
                 this._cameraViewFrustum.destroy();
                 this._cameraViewFrustum = null;
             };

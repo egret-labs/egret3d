@@ -126,7 +126,7 @@ namespace paper {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.001, step: 1.0 })
-        public fogFar: number = 300.0;
+        public fogFar: number = 100.0;
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */

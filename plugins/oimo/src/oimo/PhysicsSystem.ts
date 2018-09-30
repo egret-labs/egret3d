@@ -1,3 +1,4 @@
+
 namespace egret3d.oimo {
     const _helpVector3 = Vector3.create();
     const _helpVector4 = Vector4.create();
@@ -30,9 +31,9 @@ namespace egret3d.oimo {
         private readonly _contactColliders: paper.ContactColliders = paper.GameObject.globalGameObject.getOrAddComponent(paper.ContactColliders);
         private _oimoWorld: OIMO.World = null!;
 
-        public rayCast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        public rayCast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        public rayCast(rayOrFrom: Ray | Readonly<IVector3>, distanceOrTo: number | Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        public raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        public raycast(rayOrFrom: Ray | Readonly<IVector3>, distanceOrTo: number | Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo) {
             const rayCastClosest = this._rayCastClosest;
             rayCastClosest.clear(); // TODO mask.
 
@@ -264,6 +265,10 @@ namespace egret3d.oimo {
         public set gravity(value: Readonly<IVector3>) {
             this._gravity.copy(value);
             this._oimoWorld.setGravity(this._gravity as any);
+        }
+
+        public get oimoWorld() {
+            return this._oimoWorld;
         }
     }
     //

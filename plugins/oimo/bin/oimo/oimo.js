@@ -42495,7 +42495,7 @@ var egret3d;
                 var matrix = transform.getWorldMatrix();
                 var from = transform.getPosition();
                 var to = matrix.transformVector3(egret3d.Vector3.create(this.distance, 0.0, 0.0).release());
-                var raycastInfo = oimo.PhysicsSystem.getInstance().rayCast(from, to, this.collisionMask);
+                var raycastInfo = oimo.PhysicsSystem.getInstance().raycast(from, to, this.collisionMask);
                 if (raycastInfo) {
                     this._hitted = true;
                     var inverseMatrix = matrix.clone().inverse();
@@ -43335,7 +43335,7 @@ var egret3d;
             PhysicsSystem.getInstance = function () {
                 return this._instance;
             };
-            PhysicsSystem.prototype.rayCast = function (rayOrFrom, distanceOrTo, mask, raycastInfo) {
+            PhysicsSystem.prototype.raycast = function (rayOrFrom, distanceOrTo, mask, raycastInfo) {
                 var rayCastClosest = this._rayCastClosest;
                 rayCastClosest.clear(); // TODO mask.
                 if (rayOrFrom instanceof egret3d.Ray) {
@@ -43539,6 +43539,13 @@ var egret3d;
                 set: function (value) {
                     this._gravity.copy(value);
                     this._oimoWorld.setGravity(this._gravity);
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(PhysicsSystem.prototype, "oimoWorld", {
+                get: function () {
+                    return this._oimoWorld;
                 },
                 enumerable: true,
                 configurable: true

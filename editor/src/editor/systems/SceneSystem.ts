@@ -64,7 +64,6 @@ namespace paper.editor {
                 else { // Update selected.
                     const hoveredGameObject = this._modelComponent.hoveredGameObject;
                     if (hoveredGameObject) {
-                        const selectedGameObject = this._modelComponent.selectedGameObject;
                         if (this._modelComponent.selectedGameObjects.indexOf(hoveredGameObject) >= 0) {
                             if (event.ctrlKey) {
                                 this._modelComponent.unselect(hoveredGameObject);
@@ -98,7 +97,7 @@ namespace paper.editor {
                         }
                     }
                     else if (!event.ctrlKey && !event.shiftKey) {
-                        this._modelComponent.select(null);
+                        this._modelComponent.select(paper.Scene.activeScene);
                     }
                 }
             }
@@ -453,9 +452,20 @@ namespace paper.editor {
                     continue;
                 }
 
-                const __editor = camera.transform.find("__editor") as egret3d.Transform;
-                if (__editor) {
-                    __editor.gameObject.destroy();
+                const icon = camera.transform.find("__pickTarget");
+                if (icon) {
+                    icon.gameObject.destroy();
+                }
+            }
+
+            for (const light of this._camerasAndLights.lights) {
+                if (light.gameObject.tag === DefaultTags.EditorOnly) {
+                    continue;
+                }
+
+                const icon = light.transform.find("__pickTarget");
+                if (icon) {
+                    icon.gameObject.destroy();
                 }
             }
 

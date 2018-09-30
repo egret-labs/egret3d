@@ -7888,8 +7888,8 @@ declare namespace egret3d.oimo {
         private readonly _contactCallback;
         private readonly _contactColliders;
         private _oimoWorld;
-        rayCast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        rayCast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        raycast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
         onAwake(): void;
         onAddGameObject(gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
         onAddComponent(component: Collider | Joint<any>, group: paper.GameObjectGroup): void;
@@ -7901,6 +7901,7 @@ declare namespace egret3d.oimo {
          *
          */
         gravity: Readonly<IVector3>;
+        readonly oimoWorld: OIMO.World;
     }
 }
 declare namespace egret3d.oimo {

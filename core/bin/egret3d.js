@@ -12842,7 +12842,7 @@ var paper;
             /**
              *
              */
-            _this.fogFar = 300.0;
+            _this.fogFar = 100.0;
             /**
              * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
              */
@@ -23796,11 +23796,9 @@ var paper;
             History.prototype._doState = function (state, isUndo) {
                 if (isUndo) {
                     state.undo();
-                    console.log("undo state:", state);
                 }
                 else {
                     state.redo();
-                    console.log("redo state:", state);
                 }
                 var d = isUndo ? "undo" : "redo";
                 if (this.dispatcher) {
@@ -25243,6 +25241,9 @@ var paper;
                     for (var index = 0; index < gameObj.transform.children.length; index++) {
                         var element = gameObj.transform.children[index];
                         var obj = element.gameObject;
+                        if (obj.hideFlags === 3 /* HideAndDontSave */) {
+                            continue;
+                        }
                         this.setLinkedId(obj, ids);
                     }
                 }
@@ -25847,9 +25848,6 @@ var egret3d;
         systemManager.register(egret3d.EndSystem, 10000 /* End */);
         systemManager._preRegisterSystems();
         console.info("Egret start complete.");
-        if (window.main) {
-            window.main();
-        }
     }
     egret3d.runEgret = runEgret;
     function getMainCanvas(options) {
