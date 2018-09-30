@@ -34,9 +34,9 @@ namespace paper {
         private constructor() {
         }
         /**
-         * 
+         * 引擎版本。
          */
-        public readonly version: string = "1.1.9.006";
+        public readonly version: string = "1.2.0.001";
         /**
          * 系统管理器。
          */

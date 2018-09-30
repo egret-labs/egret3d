@@ -7429,7 +7429,7 @@ var paper;
             /**
              *
              */
-            this.version = "1.1.9.006";
+            this.version = "1.2.0.001";
             /**
              * 系统管理器。
              */

@@ -416,7 +416,10 @@ namespace paper.editor {
 
             let i = 0;
             while (this._bufferedGameObjects.length > 0 && i++ < 5) {
-                this._addToHierarchy(this._bufferedGameObjects.shift()!);
+                const gameObject = this._bufferedGameObjects.shift();
+                if (gameObject) {
+                    this._addToHierarchy(gameObject);
+                }
             }
 
             // Open and select folder.
