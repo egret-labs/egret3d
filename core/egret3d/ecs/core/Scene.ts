@@ -184,7 +184,7 @@ namespace paper {
          */
         public destroy() {
             if (!Application.sceneManager._removeScene(this)) {
-                return;
+                return false;
             }
 
             let i = this._gameObjects.length;
@@ -200,6 +200,8 @@ namespace paper {
             this._gameObjects.length = 0;
 
             GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).scenes.push(this);
+
+            return true;
         }
         /**
          * 获取该场景指定名称或路径的实体。

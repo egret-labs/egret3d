@@ -370,12 +370,12 @@ namespace paper {
         public destroy() {
             if (this.isDestroyed) {
                 console.warn(`The game object has been destroyed.`);
-                return;
+                return false;
             }
 
             if (this === GameObject._globalGameObject) {
                 console.warn("Cannot destroy global game object.");
-                return;
+                return false;
             }
 
             const parent = this.transform.parent;
@@ -384,6 +384,8 @@ namespace paper {
             }
 
             this._destroy();
+            
+            return true;
         }
         /**
          * 添加一个指定组件实例。

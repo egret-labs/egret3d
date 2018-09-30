@@ -2593,7 +2593,6 @@ declare namespace egret3d {
      * Mesh 渲染组件。
      */
     class MeshRenderer extends paper.BaseRenderer {
-        protected static readonly _helpRay: Ray;
         protected readonly _materials: Material[];
         uninitialize(): void;
         recalculateAABB(): void;
@@ -4486,7 +4485,7 @@ declare namespace paper {
         /**
          * 销毁实体。
          */
-        destroy(): void;
+        destroy(): boolean;
         /**
          * 添加一个指定组件实例。
          * @param componentClass 组件类。
@@ -4768,7 +4767,7 @@ declare namespace paper {
         /**
          * 销毁该场景和场景中的全部实体。
          */
-        destroy(): void;
+        destroy(): boolean;
         /**
          * 获取该场景指定名称或路径的实体。
          * - 只返回第一个符合的实体。

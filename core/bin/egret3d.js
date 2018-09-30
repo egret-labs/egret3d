@@ -4406,7 +4406,6 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
-        MeshRenderer._helpRay = egret3d.Ray.create();
         __decorate([
             paper.serializedField
         ], MeshRenderer.prototype, "_materials", void 0);
@@ -11941,17 +11940,18 @@ var paper;
         GameObject.prototype.destroy = function () {
             if (this.isDestroyed) {
                 console.warn("The game object has been destroyed.");
-                return;
+                return false;
             }
             if (this === GameObject._globalGameObject) {
                 console.warn("Cannot destroy global game object.");
-                return;
+                return false;
             }
             var parent = this.transform.parent;
             if (parent) {
                 parent._children.splice(parent._children.indexOf(this.transform), 1);
             }
             this._destroy();
+            return true;
         };
         /**
          * 添加一个指定组件实例。
@@ -12962,7 +12962,7 @@ var paper;
          */
         Scene.prototype.destroy = function () {
             if (!paper.Application.sceneManager._removeScene(this)) {
-                return;
+                return false;
             }
             var i = this._gameObjects.length;
             while (i--) {
@@ -12975,6 +12975,7 @@ var paper;
             //
             this._gameObjects.length = 0;
             paper.GameObject.globalGameObject.getOrAddComponent(paper.DisposeCollecter).scenes.push(this);
+            return true;
         };
         /**
          * 获取该场景指定名称或路径的实体。
@@ -16699,6 +16700,7 @@ var egret3d;
 (function (egret3d) {
     var particle;
     (function (particle) {
+        var _helpMatrix = egret3d.Matrix4.create();
         var ParticleRendererEventType;
         (function (ParticleRendererEventType) {
             ParticleRendererEventType["Mesh"] = "mesh";
@@ -16826,11 +16828,30 @@ var egret3d;
                 this.lengthScale = 1.0;
             };
             ParticleRenderer.prototype.recalculateAABB = function () {
-                this._aabb.clear();
-                // TODO
+                this._aabb.copy(egret3d.AABB.ONE);
             };
             ParticleRenderer.prototype.raycast = function (p1, p2, p3) {
-                // TODO
+                var raycastMesh = false;
+                var raycastInfo = undefined;
+                var worldMatrix = this.gameObject.transform.worldMatrix;
+                var localRay = egret3d.helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
+                var aabb = this.aabb;
+                if (p2) {
+                    if (p2 === true) {
+                        raycastMesh = true;
+                    }
+                    else {
+                        raycastMesh = p3 || false;
+                        raycastInfo = p2;
+                    }
+                }
+                if (aabb.raycast(localRay, raycastInfo)) {
+                    if (raycastInfo) {
+                        raycastInfo.position.applyMatrix(worldMatrix);
+                        raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
+                    }
+                    return true;
+                }
                 return false;
             };
             Object.defineProperty(ParticleRenderer.prototype, "renderMode", {

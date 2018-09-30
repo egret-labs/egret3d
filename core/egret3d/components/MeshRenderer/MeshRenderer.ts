@@ -4,7 +4,6 @@ namespace egret3d {
      * Mesh 渲染组件。
      */
     export class MeshRenderer extends paper.BaseRenderer {
-        protected static readonly _helpRay: Ray = Ray.create();
         @paper.serializedField
         protected readonly _materials: Material[] = [DefaultMaterials.MESH_BASIC];
 

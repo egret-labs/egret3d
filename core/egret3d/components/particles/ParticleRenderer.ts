@@ -1,4 +1,6 @@
 namespace egret3d.particle {
+    const _helpMatrix = Matrix4.create();
+
     export const enum ParticleRendererEventType {
         Mesh = "mesh",
         Materials = "materials",
@@ -138,12 +140,35 @@ namespace egret3d.particle {
         }
 
         public recalculateAABB() {
-            this._aabb.clear();
-            // TODO
+            this._aabb.copy(AABB.ONE);
         }
 
         public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
-            // TODO
+            let raycastMesh = false;
+            let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
+            const worldMatrix = this.gameObject.transform.worldMatrix;
+            const localRay = helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
+            const aabb = this.aabb;
+
+            if (p2) {
+                if (p2 === true) {
+                    raycastMesh = true;
+                }
+                else {
+                    raycastMesh = p3 || false;
+                    raycastInfo = p2;
+                }
+            }
+
+            if (aabb.raycast(localRay, raycastInfo)) {
+                if (raycastInfo) { // Update local raycast info to world.
+                    raycastInfo.position.applyMatrix(worldMatrix);
+                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
+                }
+
+                return true;
+            }
+
             return false;
         }
 
