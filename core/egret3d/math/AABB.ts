@@ -383,7 +383,7 @@ namespace egret3d {
 
             const halfSize = helpVector3A.copy(size).multiplyScalar(0.5);
             this._minimum.copy(center).subtract(halfSize);
-            this._maximum.copy(center).subtract(halfSize);
+            this._maximum.copy(center).add(halfSize);
         }
 
         public get size(): Readonly<IVector3> {

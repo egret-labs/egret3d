@@ -7427,7 +7427,7 @@ var paper;
     var ECS = (function () {
         function ECS() {
             /**
-             *
+             * 引擎版本。
              */
             this.version = "1.2.0.001";
             /**
@@ -17845,7 +17845,7 @@ var egret3d;
                 var center = this._center.copy(value);
                 var halfSize = egret3d.helpVector3A.copy(size).multiplyScalar(0.5);
                 this._minimum.copy(center).subtract(halfSize);
-                this._maximum.copy(center).subtract(halfSize);
+                this._maximum.copy(center).add(halfSize);
             },
             enumerable: true,
             configurable: true

@@ -1,5 +1,6 @@
 namespace RaycastTest {
     export async function start() {
+        // Load resource config.
         await RES.loadConfig("resource/default.res.json", "resource/");
 
         // Create camera.
@@ -19,6 +20,7 @@ namespace RaycastTest {
             const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.PYRAMID, "BoxCollider");
             gameObject.transform.setLocalPosition(5.0, 0.0, 0.0);
             gameObject.addComponent(egret3d.BoxCollider).aabb.size = egret3d.Vector3.create(2.0, 2.0, 2.0).release();
+            gameObject.addComponent(egret3d.BoxCollider).aabb.center = egret3d.Vector3.create(0.0, 1.0, 0.0).release();
 
             const line = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "Line");
             line.transform.setLocalPosition(5.0, 5.0, -5.0);

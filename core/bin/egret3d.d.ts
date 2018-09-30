@@ -3435,7 +3435,7 @@ declare namespace paper {
         static getInstance(): ECS;
         private constructor();
         /**
-         *
+         * 引擎版本。
          */
         readonly version: string;
         /**

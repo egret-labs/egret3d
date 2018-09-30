@@ -381,7 +381,7 @@ namespace paper.editor {
                 this._debug(v);
             });
             // this._guiComponent.hierarchy.add(sceneOptions, "save");
-            this._guiComponent.hierarchy.close();
+            // this._guiComponent.hierarchy.close();
         }
 
         public onEnable() {

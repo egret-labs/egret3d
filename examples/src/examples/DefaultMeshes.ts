@@ -1,5 +1,6 @@
 namespace DefaultMeshes {
     export async function start() {
+        // Load resource config.
         await RES.loadConfig("resource/default.res.json", "resource/");
         // Create camera.
         egret3d.Camera.main;
@@ -34,10 +35,10 @@ namespace DefaultMeshes {
         });
         gui.add(options, "texture").onChange(async (v: boolean) => {
             if (v) {
-                meshRenderer.material.setTexture(egret3d.ShaderUniformName.Map, await RES.getResAsync("logo.png"));
+                meshRenderer.material.setTexture(await RES.getResAsync("logo.png"));
             }
             else {
-                meshRenderer.material.setTexture(egret3d.ShaderUniformName.Map, null);
+                meshRenderer.material.setTexture(null);
             }
         });
     }

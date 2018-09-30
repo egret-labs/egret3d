@@ -516,7 +516,7 @@ namespace paper.editor {
 
             const hoverBox = this._hoverBox!;
             if (hoverBox.activeSelf) {
-                hoverBox.transform.localPosition = hoveredGameObject!.transform.position;
+                hoverBox.transform.localPosition = egret3d.Vector3.create().copy(hoveredGameObject!.renderer!.aabb.center).applyMatrix(hoveredGameObject!.transform.worldMatrix).release();
                 hoverBox.transform.localRotation = hoveredGameObject!.transform.rotation;
                 hoverBox.transform.localScale = egret3d.Vector3.create().multiply(hoveredGameObject!.renderer!.aabb.size, hoveredGameObject!.transform.scale);
             }
@@ -529,9 +529,9 @@ namespace paper.editor {
             const boxColliderDrawer = this._boxColliderDrawer!;
             if (boxColliderDrawer.activeSelf) {
                 const boxCollider = selectedGameObject!.getComponent(egret3d.BoxCollider)!;
-                boxColliderDrawer.transform.localPosition = selectedGameObject!.transform.position;
+                boxColliderDrawer.transform.localPosition = egret3d.Vector3.create().copy(boxCollider.aabb.center).applyMatrix(selectedGameObject!.transform.worldMatrix).release();
                 boxColliderDrawer.transform.localRotation = selectedGameObject!.transform.rotation;
-                boxColliderDrawer.transform.localScale = egret3d.Vector3.create().multiply(boxCollider.aabb.size, selectedGameObject!.transform.scale);
+                boxColliderDrawer.transform.localScale = egret3d.Vector3.create().multiply(boxCollider.aabb.size, selectedGameObject!.transform.scale).release();
             }
 
             const skeletonDrawer = this._skeletonDrawer!;
