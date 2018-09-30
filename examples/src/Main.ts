@@ -5,8 +5,8 @@ function main() {
     //     Stats.show(div);
     // }
 
+    // Your progject start here.
     startExamples();
-    // Or your progject start.
 }
 
 function startExamples() {
@@ -17,7 +17,8 @@ function startExamples() {
     for (const example of allScripts) {
         const index = example.indexOf("examples");
         if (index > 0) {
-            examples.push(example.substr(index + "examples/".length).split(".")[0]);
+            // examples.push(example.substr(index + "examples/".length).split(".")[0]);
+            examples.push(example.split("/").pop().split(".")[0]);
         }
     }
 

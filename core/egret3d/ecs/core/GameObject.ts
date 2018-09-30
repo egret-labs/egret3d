@@ -34,7 +34,11 @@ namespace paper {
             return gameObect;
         }
 
-        private static _raycast(ray: Readonly<egret3d.Ray>, gameObject: GameObject, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false, raycastInfos: egret3d.RaycastInfo[]) {
+        private static _raycast(
+            ray: Readonly<egret3d.Ray>, gameObject: GameObject,
+            maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false,
+            raycastInfos: egret3d.RaycastInfo[]
+        ) {
             if (
                 (
                     gameObject.hideFlags === paper.HideFlags.HideAndDontSave && gameObject.tag === paper.DefaultTags.EditorOnly &&
@@ -49,24 +53,29 @@ namespace paper {
             raycastInfo.collider = null;
 
             if (gameObject.layer & cullingMask) {
-                const boxCollider = gameObject.getComponent(egret3d.BoxCollider);
-                if (boxCollider) {
-                    if (boxCollider.enabled && boxCollider.raycast(ray, raycastInfo)) {
+                if (raycastMesh) {
+                    if (
+                        gameObject.renderer && gameObject.renderer.enabled &&
+                        gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)
+                    ) {
                         raycastInfo.transform = gameObject.transform;
-                        raycastInfo.collider = boxCollider;
                     }
                 }
                 else {
-                    const sphereCollider = gameObject.getComponent(egret3d.SphereCollider);
-                    if (sphereCollider) {
-                        if (sphereCollider.enabled && sphereCollider.raycast(ray, raycastInfo)) {
+                    const boxCollider = gameObject.getComponent(egret3d.BoxCollider); // TODO 支持多碰撞区域
+                    if (boxCollider) {
+                        if (boxCollider.enabled && boxCollider.raycast(ray, raycastInfo)) {
                             raycastInfo.transform = gameObject.transform;
-                            raycastInfo.collider = sphereCollider;
+                            raycastInfo.collider = boxCollider;
                         }
                     }
-                    else if (gameObject.renderer) {
-                        if (gameObject.renderer.enabled && gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
-                            raycastInfo.transform = gameObject.transform;
+                    else {
+                        const sphereCollider = gameObject.getComponent(egret3d.SphereCollider); // TODO 支持多碰撞区域
+                        if (sphereCollider) {
+                            if (sphereCollider.enabled && sphereCollider.raycast(ray, raycastInfo)) {
+                                raycastInfo.transform = gameObject.transform;
+                                raycastInfo.collider = sphereCollider;
+                            }
                         }
                     }
                 }
@@ -98,17 +107,20 @@ namespace paper {
             return a.distance - b.distance;
         }
         /**
-         * 用射线检测指定的实体列表。
-         * @param ray 射线。
-         * @param gameObjectOrTransforms 实体列表。
-         * @param maxDistance 最大相交点检测距离。
+         * 用世界空间坐标系的射线检测指定的实体或变换组件列表。
+         * @param ray 世界空间坐标系的射线。
+         * @param gameObjectsOrTransforms 实体或变换组件列表。
+         * @param maxDistance 最大相交点检测距离。（）
          * @param cullingMask 只对特定层的实体检测。
          * @param raycastMesh 是否检测网格。
          */
-        public static raycast(ray: Readonly<egret3d.Ray>, gameObjectOrTransforms: ReadonlyArray<GameObject | egret3d.Transform>, maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false) {
+        public static raycast(
+            ray: Readonly<egret3d.Ray>, gameObjectsOrTransforms: ReadonlyArray<GameObject | egret3d.Transform>,
+            maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false
+        ) {
             const raycastInfos = [] as egret3d.RaycastInfo[];
 
-            for (const gameObjectOrTransform of gameObjectOrTransforms) {
+            for (const gameObjectOrTransform of gameObjectsOrTransforms) {
                 this._raycast(
                     ray,
                     gameObjectOrTransform instanceof GameObject ? gameObjectOrTransform : gameObjectOrTransform.gameObject,

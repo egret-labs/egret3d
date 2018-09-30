@@ -4,6 +4,7 @@ namespace egret3d {
      */
     export class SphereCollider extends BaseCollider {
         public readonly colliderType: ColliderType = ColliderType.Sphere;
+
         @paper.serializedField
         public readonly sphere: Sphere = Sphere.create(Vector3.ZERO, 0.5);
 

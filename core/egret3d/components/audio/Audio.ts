@@ -1,8 +1,8 @@
-namespace egret3d {
+// namespace egret3d {
 
 
-    export class Audio extends paper.BaseComponent {
+//     export class Audio extends paper.BaseComponent {
 
-    }
+//     }
 
-}
+// }

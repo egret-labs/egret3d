@@ -53,21 +53,19 @@ namespace behaviors {
         }
     }
 
-    export class RaycastAABB extends BaseRaycast {
+    export class RaycastBoxCollider extends BaseRaycast {
         public target: paper.GameObject | null = null;
-
-        private readonly _aabb: egret3d.AABB = egret3d.AABB.create();
 
         public onUpdate() {
             const transform = this.gameObject.transform;
             transform.setLocalScale(1.0);
 
             if (this.target) {
+                const boxCollider = this.target.getComponent(egret3d.BoxCollider)!;
                 const ray = this._updateAngGetRay();
                 const raycastInfo = egret3d.RaycastInfo.create();
-                const aabb = this._aabb.applyMatrix(this.target.transform.worldMatrix, this.target.renderer!.aabb);
 
-                if (aabb.raycast(ray, raycastInfo)) {
+                if (boxCollider.raycast(ray, raycastInfo)) {
                     transform.setLocalScale(1.0, 1.0, raycastInfo.distance);
                 }
 
@@ -86,9 +84,9 @@ namespace behaviors {
             transform.setLocalScale(1.0);
 
             if (this.target) {
+                const plane = this._plane.fromPoint(this.target.transform.position, this.target.transform.getForward().release());
                 const ray = this._updateAngGetRay();
                 const raycastInfo = egret3d.RaycastInfo.create();
-                const plane = this._plane.fromPoint(this.target.transform.position, this.target.transform.getForward().release());
 
                 if (plane.raycast(ray, raycastInfo)) {
                     transform.setLocalScale(1.0, 1.0, raycastInfo.distance);

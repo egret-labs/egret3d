@@ -4419,14 +4419,14 @@ declare namespace paper {
         private static _raycast(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
         private static _sortRaycastInfo(a, b);
         /**
-         * 用射线检测指定的实体列表。
-         * @param ray 射线。
-         * @param gameObjectOrTransforms 实体列表。
-         * @param maxDistance 最大相交点检测距离。
+         * 用世界空间坐标系的射线检测指定的实体或变换组件列表。
+         * @param ray 世界空间坐标系的射线。
+         * @param gameObjectsOrTransforms 实体或变换组件列表。
+         * @param maxDistance 最大相交点检测距离。（）
          * @param cullingMask 只对特定层的实体检测。
          * @param raycastMesh 是否检测网格。
          */
-        static raycast(ray: Readonly<egret3d.Ray>, gameObjectOrTransforms: ReadonlyArray<GameObject | egret3d.Transform>, maxDistance?: number, cullingMask?: CullingMask, raycastMesh?: boolean): egret3d.RaycastInfo[];
+        static raycast(ray: Readonly<egret3d.Ray>, gameObjectsOrTransforms: ReadonlyArray<GameObject | egret3d.Transform>, maxDistance?: number, cullingMask?: CullingMask, raycastMesh?: boolean): egret3d.RaycastInfo[];
         /**
          * 全局实体。
          * - 全局实体不可被销毁。
@@ -5474,10 +5474,6 @@ declare namespace paper {
     }
 }
 declare namespace egret3d {
-    class Audio extends paper.BaseComponent {
-    }
-}
-declare namespace egret3d {
     /**
      * WebGL窗口信息
      */
@@ -5498,6 +5494,32 @@ declare namespace egret3d {
     const stage: Stage3D;
 }
 declare namespace egret3d {
+    /**
+     * @private
+     */
+    class WebGLCapabilities extends paper.SingletonComponent {
+        static canvas: HTMLCanvasElement | null;
+        static webgl: WebGLRenderingContext | null;
+        static commonDefines: string;
+        version: number;
+        precision: string;
+        maxPrecision: string;
+        maxTextures: number;
+        maxVertexTextures: number;
+        maxTextureSize: number;
+        maxCubemapSize: number;
+        maxVertexUniformVectors: number;
+        floatTextures: boolean;
+        anisotropyExt: EXT_texture_filter_anisotropic;
+        shaderTextureLOD: any;
+        maxAnisotropy: number;
+        maxRenderTextureSize: number;
+        standardDerivatives: boolean;
+        s3tc: WEBGL_compressed_texture_s3tc;
+        textureFloat: boolean;
+        textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
+        initialize(): void;
+    }
     /**
      * @private
      */

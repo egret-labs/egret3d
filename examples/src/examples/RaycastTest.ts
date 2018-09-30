@@ -15,25 +15,15 @@ namespace RaycastTest {
             line.addComponent(behaviors.RendererRaycast).target = gameObject;
         }
 
-        // {
-        //     await RES.getResAsync("Assets/pp1.prefab.json");
-        //     const gameObject = paper.Prefab.create("Assets/pp1.prefab.json");
-        //     gameObject.transform.setLocalPosition(2.0, 0.0, 0.0);
-
-        //     const line = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "Line");
-        //     line.transform.setLocalPosition(2.0, 5.0, -5.0);
-        //     line.addComponent(behaviors.RotateComponent).target = gameObject.getComponentInChildren(egret3d.Animation)!.gameObject;
-        //     line.addComponent(RendererRaycast).target = gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.gameObject;
-        // }
-
         {
-            const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.PYRAMID, "AABB");
+            const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.PYRAMID, "BoxCollider");
             gameObject.transform.setLocalPosition(5.0, 0.0, 0.0);
+            gameObject.addComponent(egret3d.BoxCollider).aabb.size = egret3d.Vector3.create(2.0, 2.0, 2.0).release();
 
             const line = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "Line");
             line.transform.setLocalPosition(5.0, 5.0, -5.0);
             line.addComponent(behaviors.RotateComponent).target = gameObject;
-            line.addComponent(behaviors.RaycastAABB).target = gameObject;
+            line.addComponent(behaviors.RaycastBoxCollider).target = gameObject;
         }
 
         {

@@ -3425,6 +3425,11 @@ var paper;
                     this._editorModel.selectGameObject(this.selectedGameObjects);
                 }
             };
+            ModelComponent.prototype.remove = function (value) {
+                if (this._editorModel !== null) {
+                    this._editorModel.deleteGameObject(this.selectedGameObjects);
+                }
+            };
             ModelComponent.prototype.unselect = function (value) {
                 this._unselect(value);
                 if (this._editorModel !== null) {
@@ -4217,14 +4222,13 @@ var paper;
                 _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
                 _this._pointerStartPosition = egret3d.Vector3.create();
                 _this._pointerPosition = egret3d.Vector3.create();
-                // private readonly _pickableSelected: GameObject[] = [];   //可被选中的 camera
                 _this._boxes = {};
                 _this._orbitControls = null;
+                _this._gridController = null;
                 _this._transformController = null;
                 _this._skeletonDrawer = null;
-                _this._gridController = null;
                 _this._hoverBox = null;
-                _this._grids = null;
+                _this._boxColliderDrawer = null;
                 _this._cameraViewFrustum = null; // TODO封装一下
                 _this._contextmenuHandler = function (event) {
                     event.preventDefault();
@@ -4348,9 +4352,11 @@ var paper;
                                 _this._modelComponent.select(null);
                                 break;
                             case "delete":
-                                for (var _i = 0, _a = _this._modelComponent.selectedGameObjects; _i < _a.length; _i++) {
-                                    var gameObject = _a[_i];
-                                    gameObject.destroy();
+                                if (paper.Application.playerMode !== 2 /* Editor */) {
+                                    for (var _i = 0, _a = _this._modelComponent.selectedGameObjects; _i < _a.length; _i++) {
+                                        var gameObject = _a[_i];
+                                        gameObject.destroy();
+                                    }
                                 }
                                 break;
                             case "f":
@@ -4381,41 +4387,19 @@ var paper;
                 _this._onKeyDown = function (event) {
                 };
                 _this._onGameObjectHovered = function (_c, value) {
-                    if (value) {
-                        if (!_this._hoverBox) {
-                            _this._hoverBox = editor.EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.activeScene);
-                        }
-                        _this._hoverBox.activeSelf = true;
-                        if (_this._hoverBox.scene !== value.scene) {
-                            _this._hoverBox.dontDestroy = true;
-                            _this._hoverBox.dontDestroy = false;
-                        }
-                        _this._hoverBox.parent = value;
-                    }
-                    else if (_this._hoverBox) {
-                        _this._hoverBox.activeSelf = false;
-                        _this._hoverBox.parent = null;
-                    }
+                    _this._hoverBox.activeSelf =
+                        value && value.renderer ? true : false;
                 };
                 _this._onGameObjectSelectChanged = function (_c, value) {
                     var selectedGameObject = _this._modelComponent.selectedGameObject;
-                    var transformController = _this._transformController;
-                    if (selectedGameObject) {
-                        transformController.gameObject.activeSelf = true;
-                    }
-                    else {
-                        transformController.gameObject.activeSelf = false;
-                    }
-                    var skeletonDrawer = _this._skeletonDrawer;
-                    if (skeletonDrawer) {
-                        if (selectedGameObject &&
-                            selectedGameObject.renderer instanceof egret3d.SkinnedMeshRenderer) {
-                            skeletonDrawer.gameObject.activeSelf = true;
-                        }
-                        else {
-                            skeletonDrawer.gameObject.activeSelf = false;
-                        }
-                    }
+                    _this._transformController.gameObject.activeSelf =
+                        selectedGameObject ? true : false;
+                    _this._boxColliderDrawer.activeSelf =
+                        selectedGameObject && selectedGameObject.getComponent(egret3d.BoxCollider) ? true : false;
+                    _this._skeletonDrawer.gameObject.activeSelf =
+                        selectedGameObject && selectedGameObject.renderer && selectedGameObject.renderer instanceof egret3d.SkinnedMeshRenderer ? true : false;
+                    _this._cameraViewFrustum.activeSelf =
+                        selectedGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
                 };
                 _this._onGameObjectSelected = function (_c, value) {
                     _this._selectGameObject(value, true);
@@ -4445,63 +4429,21 @@ var paper;
                     }
                 }
             };
-            SceneSystem.prototype._updateBoxes = function () {
-                for (var _i = 0, _a = this._modelComponent.selectedGameObjects; _i < _a.length; _i++) {
-                    var gameObject = _a[_i];
-                    var box = this._boxes[gameObject.uuid];
-                    if (!box) {
-                        throw new Error(); // Never.
-                    }
-                    if (gameObject.renderer) {
-                        box.activeSelf = true;
-                        box.transform.localPosition = gameObject.renderer.aabb.center;
-                        // box.transform.localScale = gameObject.renderer.aabb.size;
-                        var size = gameObject.renderer.aabb.size; // TODO
-                        box.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
-                    }
-                    else {
-                        box.activeSelf = false;
-                    }
-                }
-                if (this._hoverBox) {
-                    if (this._hoverBox.isDestroyed) {
-                        this._hoverBox = null; // TODO
-                    }
-                    else if (this._hoverBox.activeSelf) {
-                        var parentRenderer = this._hoverBox.parent ? this._hoverBox.parent.renderer : null; //TODO
-                        if (parentRenderer) {
-                            this._hoverBox.transform.localPosition = parentRenderer.aabb.center;
-                            // this._hoverBox.transform.localScale = parentRenderer.aabb.size;
-                            var size = parentRenderer.aabb.size; // TODO
-                            this._hoverBox.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
-                        }
-                        else {
-                            this._hoverBox.activeSelf = false;
-                        }
-                    }
-                }
-            };
             SceneSystem.prototype._updateCameras = function () {
+                var editorCamera = egret3d.Camera.editor;
                 for (var _i = 0, _a = this._camerasAndLights.cameras; _i < _a.length; _i++) {
                     var camera = _a[_i];
-                    if (camera.gameObject.tag === "Editor Only" /* EditorOnly */) {
+                    if (camera === editorCamera) {
                         continue;
                     }
-                    var __editor = camera.transform.find("__pickTarget");
-                    if (__editor) {
-                        var cameraPosition = egret3d.Camera.editor.transform.getPosition();
-                        var eyeDistance = cameraPosition.getDistance(camera.transform.position);
-                        __editor.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
-                        __editor.transform.rotation = egret3d.Camera.editor.transform.rotation;
+                    var icon = camera.transform.find("__pickTarget");
+                    if (!icon) {
+                        icon = editor.EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, editor.EditorDefaultTexture.CAMERA_ICON).transform;
                     }
-                    else {
-                        __editor = editor.EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, editor.EditorDefaultTexture.CAMERA_ICON).transform;
-                    }
-                    // const pick = iconObject;
-                    // const pick = __editor.transform.find("__pickTarget").gameObject;
-                    // if (this._pickableSelected.indexOf(pick) < 0) {
-                    //     this._pickableSelected.push(pick);
-                    // }
+                    var cameraPosition = egret3d.Camera.editor.transform.getPosition();
+                    var eyeDistance = cameraPosition.getDistance(camera.transform.position);
+                    icon.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
+                    icon.transform.rotation = egret3d.Camera.editor.transform.rotation;
                 }
                 var setPoint = function (cameraProject, positions, x, y, z, points) {
                     var vector = egret3d.Vector3.create();
@@ -4519,11 +4461,10 @@ var paper;
                     matrix.release();
                 };
                 var cameraViewFrustum = this._cameraViewFrustum;
-                var selectedCamera = this._modelComponent.selectedGameObject ? this._modelComponent.selectedGameObject.getComponent(egret3d.Camera) : null;
-                if (selectedCamera) {
+                if (cameraViewFrustum.activeSelf) {
+                    var selectedCamera = this._modelComponent.selectedGameObject.getComponent(egret3d.Camera);
                     cameraViewFrustum.transform.position = selectedCamera.gameObject.transform.position;
                     cameraViewFrustum.transform.rotation = selectedCamera.gameObject.transform.rotation;
-                    cameraViewFrustum.activeSelf = true;
                     var mesh = cameraViewFrustum.getComponent(egret3d.MeshFilter).mesh;
                     var cameraProject = egret3d.Matrix4.create();
                     var viewPortPixel = { x: 0, y: 0, w: 0, h: 0 };
@@ -4559,9 +4500,6 @@ var paper;
                     mesh.uploadVertexBuffer("POSITION" /* POSITION */);
                     cameraProject.release();
                 }
-                else {
-                    cameraViewFrustum.activeSelf = false;
-                }
             };
             SceneSystem.prototype._updateLights = function () {
                 for (var _i = 0, _a = this._camerasAndLights.lights; _i < _a.length; _i++) {
@@ -4569,21 +4507,33 @@ var paper;
                     if (light.gameObject.tag === "Editor Only" /* EditorOnly */) {
                         continue;
                     }
-                    var __editor = light.transform.find("__pickTarget");
-                    if (__editor) {
-                        var cameraPosition = egret3d.Camera.editor.transform.getPosition();
-                        var eyeDistance = cameraPosition.getDistance(light.transform.position);
-                        __editor.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
-                        __editor.transform.rotation = egret3d.Camera.editor.transform.rotation;
+                    var icon = light.transform.find("__pickTarget");
+                    if (!icon) {
+                        icon = editor.EditorMeshHelper.createIcon("__pickTarget", light.gameObject, editor.EditorDefaultTexture.LIGHT_ICON).transform;
+                    }
+                    var cameraPosition = egret3d.Camera.editor.transform.getPosition();
+                    var eyeDistance = cameraPosition.getDistance(light.transform.position);
+                    icon.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
+                    icon.transform.rotation = egret3d.Camera.editor.transform.rotation;
+                }
+            };
+            SceneSystem.prototype._updateBoxes = function () {
+                for (var _i = 0, _a = this._modelComponent.selectedGameObjects; _i < _a.length; _i++) {
+                    var gameObject = _a[_i];
+                    var box = this._boxes[gameObject.uuid];
+                    if (!box) {
+                        throw new Error(); // Never.
+                    }
+                    if (gameObject.renderer) {
+                        box.activeSelf = true;
+                        box.transform.localPosition = gameObject.renderer.aabb.center;
+                        // box.transform.localScale = gameObject.renderer.aabb.size;
+                        var size = gameObject.renderer.aabb.size; // TODO
+                        box.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
                     }
                     else {
-                        __editor = editor.EditorMeshHelper.createIcon("__pickTarget", light.gameObject, editor.EditorDefaultTexture.LIGHT_ICON).transform;
+                        box.activeSelf = false;
                     }
-                    // const pick = iconObject;
-                    // const pick = __editor.transform.find("pick").gameObject;
-                    // if (this._pickableSelected.indexOf(pick) < 0) {
-                    //     this._pickableSelected.push(pick);
-                    // }
                 }
             };
             SceneSystem.prototype.onEnable = function () {
@@ -4606,15 +4556,17 @@ var paper;
                 this._skeletonDrawer = editor.EditorMeshHelper.createGameObject("SkeletonDrawer").addComponent(editor.SkeletonDrawer);
                 this._skeletonDrawer.gameObject.activeSelf = false;
                 this._gridController = editor.EditorMeshHelper.createGameObject("Grid").addComponent(editor.GridController);
-                this._hoverBox = editor.EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.activeScene);
+                this._hoverBox = editor.EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.GameObject.globalGameObject.scene);
                 this._hoverBox.activeSelf = false;
+                this._boxColliderDrawer = editor.EditorMeshHelper.createBox("BoxColliderDrawer", egret3d.Color.YELLOW, 0.8, paper.GameObject.globalGameObject.scene);
+                this._boxColliderDrawer.activeSelf = false;
                 this._cameraViewFrustum = editor.EditorMeshHelper.createCameraWireframed("Camera");
                 this._cameraViewFrustum.activeSelf = false;
-                //
-                var editorCamera = egret3d.Camera.editor;
-                var mainCamera = egret3d.Camera.main;
-                editorCamera.transform.position = mainCamera.transform.position;
-                editorCamera.transform.rotation = mainCamera.transform.rotation;
+                // TODO
+                // const editorCamera = egret3d.Camera.editor;
+                // const mainCamera = egret3d.Camera.main;
+                // editorCamera.transform.position = mainCamera.transform.position;
+                // editorCamera.transform.rotation = mainCamera.transform.rotation;
             };
             SceneSystem.prototype.onDisable = function () {
                 paper.EventPool.removeEventListener("GameObjectHovered" /* GameObjectHovered */, editor.ModelComponent, this._onGameObjectHovered);
@@ -4630,28 +4582,6 @@ var paper;
                     window.removeEventListener("keyup", this._onKeyUp);
                     window.removeEventListener("keydown", this._onKeyDown);
                 }
-                egret3d.Camera.editor.gameObject.removeComponent(editor.OrbitControls);
-                this._orbitControls = null;
-                if (this._transformController) {
-                    this._transformController.gameObject.destroy();
-                    this._transformController = null;
-                }
-                if (this._skeletonDrawer) {
-                    this._skeletonDrawer.gameObject.destroy();
-                    this._skeletonDrawer = null;
-                }
-                if (this._gridController) {
-                    this._gridController.gameObject.destroy();
-                    this._gridController = null;
-                }
-                if (this._hoverBox) {
-                    this._hoverBox.destroy();
-                    this._hoverBox = null;
-                }
-                if (this._grids) {
-                    this._grids.destroy();
-                    this._grids = null;
-                }
                 //
                 for (var _i = 0, _a = this._camerasAndLights.cameras; _i < _a.length; _i++) {
                     var camera = _a[_i];
@@ -4663,43 +4593,62 @@ var paper;
                         __editor.gameObject.destroy();
                     }
                 }
-                if (this._cameraViewFrustum && !this._cameraViewFrustum.isDestroyed) {
-                    this._cameraViewFrustum.destroy();
-                    this._cameraViewFrustum = null;
-                }
-                // this._pickableSelected.length = 0;
+                egret3d.Camera.editor.gameObject.removeComponent(editor.OrbitControls);
+                this._orbitControls = null;
+                this._gridController.gameObject.destroy();
+                this._gridController = null;
+                this._transformController.gameObject.destroy();
+                this._transformController = null;
+                this._skeletonDrawer.gameObject.destroy();
+                this._skeletonDrawer = null;
+                this._hoverBox.destroy();
+                this._hoverBox = null;
+                this._boxColliderDrawer.destroy();
+                this._boxColliderDrawer = null;
+                this._cameraViewFrustum.destroy();
+                this._cameraViewFrustum = null;
             };
             SceneSystem.prototype.onUpdate = function () {
+                // Update model gameObjects.
+                if (this._modelComponent.hoveredGameObject && this._modelComponent.hoveredGameObject.isDestroyed) {
+                    this._modelComponent.hover(null);
+                }
                 for (var _i = 0, _a = this._modelComponent.selectedGameObjects; _i < _a.length; _i++) {
                     var gameObject = _a[_i];
                     if (gameObject.isDestroyed) {
-                        this._modelComponent.select(null);
+                        this._modelComponent.unselect(gameObject);
                     }
                 }
-                // this._pickableSelected.length = 0;
-                if (this._cameraViewFrustum) {
-                    if (this._cameraViewFrustum.isDestroyed) {
-                        this._cameraViewFrustum = null;
-                    }
-                    else {
-                        this._cameraViewFrustum.activeSelf = this._modelComponent.selectedGameObject ? true : false;
-                    }
+                var hoveredGameObject = this._modelComponent.hoveredGameObject;
+                var selectedGameObject = this._modelComponent.selectedGameObject;
+                var gridController = this._gridController;
+                if (gridController.isActiveAndEnabled) {
+                    gridController.update();
+                }
+                var hoverBox = this._hoverBox;
+                if (hoverBox.activeSelf) {
+                    hoverBox.transform.localPosition = hoveredGameObject.transform.position;
+                    hoverBox.transform.localRotation = hoveredGameObject.transform.rotation;
+                    hoverBox.transform.localScale = egret3d.Vector3.create().multiply(hoveredGameObject.renderer.aabb.size, hoveredGameObject.transform.scale);
                 }
                 var transformController = this._transformController;
                 if (transformController.isActiveAndEnabled) {
                     transformController.update(this._pointerPosition);
                 }
+                var boxColliderDrawer = this._boxColliderDrawer;
+                if (boxColliderDrawer.activeSelf) {
+                    var boxCollider = selectedGameObject.getComponent(egret3d.BoxCollider);
+                    boxColliderDrawer.transform.localPosition = selectedGameObject.transform.position;
+                    boxColliderDrawer.transform.localRotation = selectedGameObject.transform.rotation;
+                    boxColliderDrawer.transform.localScale = egret3d.Vector3.create().multiply(boxCollider.aabb.size, selectedGameObject.transform.scale);
+                }
                 var skeletonDrawer = this._skeletonDrawer;
-                if (skeletonDrawer && skeletonDrawer.isActiveAndEnabled) {
+                if (skeletonDrawer.isActiveAndEnabled) {
                     skeletonDrawer.update();
                 }
-                var gridController = this._gridController;
-                if (gridController && gridController.isActiveAndEnabled) {
-                    gridController.update();
-                }
-                this._updateBoxes();
                 this._updateCameras();
                 this._updateLights();
+                this._updateBoxes();
             };
             return SceneSystem;
         }(paper.BaseSystem));

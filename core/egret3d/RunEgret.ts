@@ -39,7 +39,7 @@ namespace egret3d {
         stage.init(canvas, requiredOptions);
 
         paper.Application.init(options);
-        
+
         const systemManager = paper.Application.systemManager;
         systemManager.register(BeginSystem, paper.SystemOrder.Begin);
         systemManager.register(AnimationSystem, paper.SystemOrder.Animation);
@@ -53,6 +53,10 @@ namespace egret3d {
         systemManager._preRegisterSystems();
 
         console.info("Egret start complete.");
+
+        if ((window as any).main) {
+            (window as any).main();
+        }
     }
 
     function getMainCanvas(options: RunEgretOptions) {

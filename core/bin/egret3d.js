@@ -7116,6 +7116,7 @@ var paper;
             delete _deserializers[k];
         }
         _defaultGameObject.transform.destroyChildren();
+        _defaultGameObject.removeAllComponents();
         var serializeData = _serializeData;
         _serializeData = null;
         return serializeData;
@@ -11723,24 +11724,27 @@ var paper;
             raycastInfo.transform = null;
             raycastInfo.collider = null;
             if (gameObject.layer & cullingMask) {
-                var boxCollider = gameObject.getComponent(egret3d.BoxCollider);
-                if (boxCollider) {
-                    if (boxCollider.enabled && boxCollider.raycast(ray, raycastInfo)) {
+                if (raycastMesh) {
+                    if (gameObject.renderer && gameObject.renderer.enabled &&
+                        gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
                         raycastInfo.transform = gameObject.transform;
-                        raycastInfo.collider = boxCollider;
                     }
                 }
                 else {
-                    var sphereCollider = gameObject.getComponent(egret3d.SphereCollider);
-                    if (sphereCollider) {
-                        if (sphereCollider.enabled && sphereCollider.raycast(ray, raycastInfo)) {
+                    var boxCollider = gameObject.getComponent(egret3d.BoxCollider); // TODO 支持多碰撞区域
+                    if (boxCollider) {
+                        if (boxCollider.enabled && boxCollider.raycast(ray, raycastInfo)) {
                             raycastInfo.transform = gameObject.transform;
-                            raycastInfo.collider = sphereCollider;
+                            raycastInfo.collider = boxCollider;
                         }
                     }
-                    else if (gameObject.renderer) {
-                        if (gameObject.renderer.enabled && gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
-                            raycastInfo.transform = gameObject.transform;
+                    else {
+                        var sphereCollider = gameObject.getComponent(egret3d.SphereCollider); // TODO 支持多碰撞区域
+                        if (sphereCollider) {
+                            if (sphereCollider.enabled && sphereCollider.raycast(ray, raycastInfo)) {
+                                raycastInfo.transform = gameObject.transform;
+                                raycastInfo.collider = sphereCollider;
+                            }
                         }
                     }
                 }
@@ -11770,20 +11774,20 @@ var paper;
             return a.distance - b.distance;
         };
         /**
-         * 用射线检测指定的实体列表。
-         * @param ray 射线。
-         * @param gameObjectOrTransforms 实体列表。
-         * @param maxDistance 最大相交点检测距离。
+         * 用世界空间坐标系的射线检测指定的实体或变换组件列表。
+         * @param ray 世界空间坐标系的射线。
+         * @param gameObjectsOrTransforms 实体或变换组件列表。
+         * @param maxDistance 最大相交点检测距离。（）
          * @param cullingMask 只对特定层的实体检测。
          * @param raycastMesh 是否检测网格。
          */
-        GameObject.raycast = function (ray, gameObjectOrTransforms, maxDistance, cullingMask, raycastMesh) {
+        GameObject.raycast = function (ray, gameObjectsOrTransforms, maxDistance, cullingMask, raycastMesh) {
             if (maxDistance === void 0) { maxDistance = 0.0; }
             if (cullingMask === void 0) { cullingMask = 16777215 /* Everything */; }
             if (raycastMesh === void 0) { raycastMesh = false; }
             var raycastInfos = [];
-            for (var _i = 0, gameObjectOrTransforms_1 = gameObjectOrTransforms; _i < gameObjectOrTransforms_1.length; _i++) {
-                var gameObjectOrTransform = gameObjectOrTransforms_1[_i];
+            for (var _i = 0, gameObjectsOrTransforms_1 = gameObjectsOrTransforms; _i < gameObjectsOrTransforms_1.length; _i++) {
+                var gameObjectOrTransform = gameObjectsOrTransforms_1[_i];
                 this._raycast(ray, gameObjectOrTransform instanceof GameObject ? gameObjectOrTransform : gameObjectOrTransform.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
             }
             raycastInfos.sort(this._sortRaycastInfo);
@@ -16971,18 +16975,10 @@ var paper;
     paper.DisposeCollecter = DisposeCollecter;
     __reflect(DisposeCollecter.prototype, "paper.DisposeCollecter");
 })(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    var Audio = (function (_super) {
-        __extends(Audio, _super);
-        function Audio() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        return Audio;
-    }(paper.BaseComponent));
-    egret3d.Audio = Audio;
-    __reflect(Audio.prototype, "egret3d.Audio");
-})(egret3d || (egret3d = {}));
+// namespace egret3d {
+//     export class Audio extends paper.BaseComponent {
+//     }
+// } 
 var egret3d;
 (function (egret3d) {
     /**
@@ -17208,7 +17204,7 @@ var egret3d;
         }
     }
     /**
-     * @internal
+     * @private
      */
     var WebGLCapabilities = (function (_super) {
         __extends(WebGLCapabilities, _super);
@@ -17867,7 +17863,7 @@ var egret3d;
                 var size = this._size.copy(value);
                 var halfSize = egret3d.helpVector3A.copy(size).multiplyScalar(0.5);
                 this._minimum.copy(center).subtract(halfSize);
-                this._maximum.copy(center).subtract(halfSize);
+                this._maximum.copy(center).add(halfSize);
                 this._dirtyRadius = true;
             },
             enumerable: true,
@@ -25840,6 +25836,9 @@ var egret3d;
         systemManager.register(egret3d.EndSystem, 10000 /* End */);
         systemManager._preRegisterSystems();
         console.info("Egret start complete.");
+        if (window.main) {
+            window.main();
+        }
     }
     egret3d.runEgret = runEgret;
     function getMainCanvas(options) {
