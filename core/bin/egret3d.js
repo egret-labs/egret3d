@@ -474,7 +474,7 @@ var egret3d;
         EulerOrder[EulerOrder["ZYX"] = 5] = "ZYX";
     })(EulerOrder = egret3d.EulerOrder || (egret3d.EulerOrder = {}));
     /**
-     *
+     * 三维向量
      */
     var Vector3 = (function (_super) {
         __extends(Vector3, _super);
@@ -996,14 +996,41 @@ var egret3d;
         Vector3.getDistance = function (a, b) {
             return this.getLength(this.subtract(a, b, helpVector));
         };
+        /**
+         * 零
+         */
         Vector3.ZERO = new Vector3(0.0, 0.0, 0.0);
+        /**
+         * 三方向均为一的向量
+         */
         Vector3.ONE = new Vector3(1.0, 1.0, 1.0);
+        /**
+         * 三方向均为负一的向量
+         */
         Vector3.MINUS_ONE = new Vector3(-1.0, -1.0, -1.0);
+        /**
+         * 上
+         */
         Vector3.UP = new Vector3(0.0, 1.0, 0.0);
+        /**
+         * 下
+         */
         Vector3.DOWN = new Vector3(0.0, -1.0, 0.0);
+        /**
+         * 左
+         */
         Vector3.LEFT = new Vector3(-1.0, 0.0, 0.0);
+        /**
+         * 右
+         */
         Vector3.RIGHT = new Vector3(1.0, 0.0, 0.0);
+        /**
+         * 前
+         */
         Vector3.FORWARD = new Vector3(0.0, 0.0, 1.0);
+        /**
+         * 后
+         */
         Vector3.BACK = new Vector3(0.0, 0.0, -1.0);
         Vector3._instances = [];
         return Vector3;
@@ -1542,6 +1569,7 @@ var egret3d;
             if (offsetOrByteOffset === void 0) { offsetOrByteOffset = 0; }
             var _this = _super.call(this) || this;
             /**
+             * 矩阵原始数据
              * @readonly
              */
             _this.rawData = null;
@@ -1579,9 +1607,17 @@ var egret3d;
             }
             return new Matrix4(rawData, offsetOrByteOffset);
         };
+        /**
+         * 序列化
+         * @returns 序列化后的数据
+         */
         Matrix4.prototype.serialize = function () {
             return this.rawData;
         };
+        /**
+         * 反序列化
+         * @param value 序列化后的数据
+         */
         Matrix4.prototype.deserialize = function (value) {
             return this.fromArray(value);
         };
@@ -3732,18 +3768,30 @@ var egret3d;
          */
         function Color() {
             var _this = _super.call(this) || this;
+            /**
+             * 红色通道
+             */
             _this.r = 1.0;
+            /**
+             * 绿色通道
+             */
             _this.g = 1.0;
+            /**
+             * 蓝色通道
+             */
             _this.b = 1.0;
+            /**
+             * 透明通道
+             */
             _this.a = 1.0;
             return _this;
         }
         /**
-         *
-         * @param r
-         * @param g
-         * @param b
-         * @param a
+         * 创建一个新的颜色对象实例
+         * @param r 红色通道
+         * @param g 绿色通道
+         * @param b 蓝色通道
+         * @param a 透明通道
          */
         Color.create = function (r, g, b, a) {
             if (r === void 0) { r = 1.0; }
@@ -3757,18 +3805,42 @@ var egret3d;
             }
             return new Color().set(r, g, b, a);
         };
+        /**
+         * 序列化
+         * @returns 序列化后的数据
+         */
         Color.prototype.serialize = function () {
             return [this.r, this.g, this.b, this.a];
         };
+        /**
+         * 反序列化
+         * @param value 需要反序列化的数据
+         */
         Color.prototype.deserialize = function (value) {
             return this.fromArray(value);
         };
+        /**
+         * 复制一个颜色对象
+         * @returns 一个复制后的新的颜色对象
+         */
         Color.prototype.clone = function () {
             return Color.create(this.r, this.g, this.b, this.a);
         };
+        /**
+         * 拷贝一个颜色对象的值
+         * @param value 要拷贝的颜色对象
+         */
         Color.prototype.copy = function (value) {
             return this.set(value.r, value.g, value.b, value.a);
         };
+        /**
+         * 设置一个颜色对象的rgba
+         * @param r 红色通道
+         * @param g 绿色通道
+         * @param b 蓝色通道
+         * @param a 透明通道
+         * @returns 该对象本身
+         */
         Color.prototype.set = function (r, g, b, a) {
             this.r = r;
             this.g = g;
@@ -3816,14 +3888,41 @@ var egret3d;
             this.a = t * (valueB.a - valueA.a) + valueA.a;
             return this;
         };
+        /**
+         * 黑色
+         */
         Color.BLACK = new Color().set(0.0, 0.0, 0.0, 1.0);
+        /**
+         * 灰色
+         */
         Color.GRAY = new Color().set(0.5, 0.5, 0.5, 1.0);
+        /**
+         * 白色
+         */
         Color.WHITE = new Color().set(1.0, 1.0, 1.0, 1.0);
+        /**
+         * 红色
+         */
         Color.RED = new Color().set(1.0, 0.0, 0.0, 1.0);
+        /**
+         * 绿色
+         */
         Color.GREEN = new Color().set(0.0, 1.0, 0.0, 1.0);
+        /**
+         * 蓝色
+         */
         Color.BLUE = new Color().set(0.0, 0.0, 1.0, 1.0);
+        /**
+         * 黄色
+         */
         Color.YELLOW = new Color().set(1.0, 1.0, 0.0, 1.0);
+        /**
+         * 靛蓝色
+         */
         Color.INDIGO = new Color().set(0.0, 1.0, 1.0, 1.0);
+        /**
+         * 紫色
+         */
         Color.PURPLE = new Color().set(1.0, 0.0, 1.0, 1.0);
         Color._instances = [];
         return Color;
@@ -24029,7 +24128,7 @@ var paper;
 var egret3d;
 (function (egret3d) {
     /**
-     *
+     * 3×3矩阵
      */
     var Matrix3 = (function (_super) {
         __extends(Matrix3, _super);
@@ -24040,6 +24139,7 @@ var egret3d;
             if (rawData === void 0) { rawData = null; }
             var _this = _super.call(this) || this;
             /**
+             * 矩阵原始数据
              * @readonly
              */
             _this.rawData = null;
@@ -24063,9 +24163,17 @@ var egret3d;
             }
             return new Matrix3();
         };
+        /**
+         * 序列化
+         * @returns 序列化后的数据
+         */
         Matrix3.prototype.serialize = function () {
             return this.rawData;
         };
+        /**
+         * 反序列化
+         * @param value 序列化后的数据
+         */
         Matrix3.prototype.deserialize = function (value) {
             return this.fromArray(value);
         };
@@ -24162,7 +24270,6 @@ var egret3d;
     }(paper.BaseRelease));
     egret3d.Matrix3 = Matrix3;
     __reflect(Matrix3.prototype, "egret3d.Matrix3", ["paper.ICCS", "paper.ISerializable"]);
-    var helpMat_1 = new Matrix3();
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {

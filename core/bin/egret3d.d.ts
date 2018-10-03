@@ -327,40 +327,76 @@ declare namespace egret3d {
         ZYX = 5,
     }
     /**
-     *
+     * 三维向量
      */
     class Vector3 extends paper.BaseRelease<AABB> implements IVector3, paper.ICCS<Vector3>, paper.ISerializable {
+        /**
+         * 零
+         */
         static readonly ZERO: Readonly<IVector3> & {
             clone: () => Vector3;
         };
+        /**
+         * 三方向均为一的向量
+         */
         static readonly ONE: Readonly<IVector3> & {
             clone: () => Vector3;
         };
+        /**
+         * 三方向均为负一的向量
+         */
         static readonly MINUS_ONE: Readonly<IVector3> & {
             clone: () => Vector3;
         };
+        /**
+         * 上
+         */
         static readonly UP: Readonly<IVector3> & {
             clone: () => Vector3;
         };
+        /**
+         * 下
+         */
         static readonly DOWN: Readonly<IVector3> & {
             clone: () => Vector3;
         };
+        /**
+         * 左
+         */
         static readonly LEFT: Readonly<IVector3> & {
             clone: () => Vector3;
         };
+        /**
+         * 右
+         */
         static readonly RIGHT: Readonly<IVector3> & {
             clone: () => Vector3;
         };
+        /**
+         * 前
+         */
         static readonly FORWARD: Readonly<IVector3> & {
             clone: () => Vector3;
         };
+        /**
+         * 后
+         */
         static readonly BACK: Readonly<IVector3> & {
             clone: () => Vector3;
         };
         private static readonly _instances;
         static create(x?: number, y?: number, z?: number): Vector3;
+        /**
+         * X轴分量
+         */
         x: number;
+        /**
+         * Y轴分量
+         */
         y: number;
+        /**
+         * Z轴分量
+         */
         z: number;
         /**
          * 请使用 `egret3d.Vector3.create()` 创建实例。
@@ -634,6 +670,7 @@ declare namespace egret3d {
          */
         static create(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset?: number): Matrix4;
         /**
+         * 矩阵原始数据
          * @readonly
          */
         rawData: Float32Array;
@@ -643,32 +680,40 @@ declare namespace egret3d {
          * @deprecated
          */
         constructor(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset?: number);
+        /**
+         * 序列化
+         * @returns 序列化后的数据
+         */
         serialize(): Float32Array;
-        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): this;
+        /**
+         * 反序列化
+         * @param value 序列化后的数据
+         */
+        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): Matrix4;
         copy(value: Readonly<Matrix4>): this;
         clone(): Matrix4;
-        identity(): this;
-        set(n11: number, n12: number, n13: number, n14: number, n21: number, n22: number, n23: number, n24: number, n31: number, n32: number, n33: number, n34: number, n41: number, n42: number, n43: number, n44: number): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        fromBuffer(value: ArrayBuffer, byteOffset?: number): this;
-        fromTranslate(value: Readonly<IVector3>, rotationAndScaleStays?: boolean): this;
-        fromRotation(rotation: Quaternion, translateStays?: boolean): this;
+        identity(): Matrix4;
+        set(n11: number, n12: number, n13: number, n14: number, n21: number, n22: number, n23: number, n24: number, n31: number, n32: number, n33: number, n34: number, n41: number, n42: number, n43: number, n44: number): Matrix4;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): Matrix4;
+        fromBuffer(value: ArrayBuffer, byteOffset?: number): Matrix4;
+        fromTranslate(value: Readonly<IVector3>, rotationAndScaleStays?: boolean): Matrix4;
+        fromRotation(rotation: Quaternion, translateStays?: boolean): Matrix4;
         fromEuler(value: Readonly<IVector3>, order?: EulerOrder, translateStays?: boolean): this;
-        fromScale(x: number, y: number, z: number, translateStays?: boolean): this;
-        fromAxis(axis: Readonly<IVector3>, radian?: number): this;
-        fromAxises(axisX: Readonly<IVector3>, axisY: Readonly<IVector3>, axisZ: Readonly<IVector3>): this;
-        fromRotationX(radian: number): this;
-        fromRotationY(radian: number): this;
-        fromRotationZ(radian: number): this;
+        fromScale(x: number, y: number, z: number, translateStays?: boolean): Matrix4;
+        fromAxis(axis: Readonly<IVector3>, radian?: number): Matrix4;
+        fromAxises(axisX: Readonly<IVector3>, axisY: Readonly<IVector3>, axisZ: Readonly<IVector3>): Matrix4;
+        fromRotationX(radian: number): Matrix4;
+        fromRotationY(radian: number): Matrix4;
+        fromRotationZ(radian: number): Matrix4;
         determinant(): number;
-        compose(translation: Readonly<IVector3>, rotation: Readonly<IVector4>, scale: Readonly<IVector3>): this;
-        decompose(translation?: Vector3 | null, rotation?: Quaternion | null, scale?: Vector3 | null): this;
-        transpose(source?: Readonly<Matrix4>): this;
-        inverse(source?: Readonly<Matrix4>): this;
+        compose(translation: Readonly<IVector3>, rotation: Readonly<IVector4>, scale: Readonly<IVector3>): Matrix4;
+        decompose(translation?: Vector3 | null, rotation?: Quaternion | null, scale?: Vector3 | null): Matrix4;
+        transpose(source?: Readonly<Matrix4>): Matrix4;
+        inverse(source?: Readonly<Matrix4>): Matrix4;
         multiplyScalar(value: number, source?: Readonly<Matrix4>): void;
-        multiply(valueA: Readonly<Matrix4>, valueB?: Readonly<Matrix4>): this;
-        premultiply(value: Readonly<Matrix4>): this;
-        lerp(t: number, value: Matrix4, source?: Matrix4): this;
+        multiply(valueA: Readonly<Matrix4>, valueB?: Readonly<Matrix4>): Matrix4;
+        premultiply(value: Readonly<Matrix4>): Matrix4;
+        lerp(t: number, value: Matrix4, source?: Matrix4): Matrix4;
         /**
          *
          * - 两点位置不重合。
@@ -676,11 +721,11 @@ declare namespace egret3d {
          * @param target
          * @param up
          */
-        lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): this;
+        lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4;
         /**
          *
          */
-        lookRotation(value: Readonly<IVector3>, up: Readonly<IVector3>): this;
+        lookRotation(value: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4;
         getMaxScaleOnAxis(): number;
         toArray(value?: number[] | Float32Array, offset?: number): number[] | Float32Array;
         toEuler(value: Vector3, order?: EulerOrder): Vector3;
@@ -2367,42 +2412,105 @@ declare namespace egret3d {
      * 颜色。
      */
     class Color extends paper.BaseRelease<Color> implements IColor, paper.ICCS<Color>, paper.ISerializable {
+        /**
+         * 黑色
+         */
         static readonly BLACK: Readonly<Color>;
+        /**
+         * 灰色
+         */
         static readonly GRAY: Readonly<Color>;
+        /**
+         * 白色
+         */
         static readonly WHITE: Readonly<Color>;
+        /**
+         * 红色
+         */
         static readonly RED: Readonly<Color>;
+        /**
+         * 绿色
+         */
         static readonly GREEN: Readonly<Color>;
+        /**
+         * 蓝色
+         */
         static readonly BLUE: Readonly<Color>;
+        /**
+         * 黄色
+         */
         static readonly YELLOW: Readonly<Color>;
+        /**
+         * 靛蓝色
+         */
         static readonly INDIGO: Readonly<Color>;
+        /**
+         * 紫色
+         */
         static readonly PURPLE: Readonly<Color>;
         private static readonly _instances;
         /**
-         *
-         * @param r
-         * @param g
-         * @param b
-         * @param a
+         * 创建一个新的颜色对象实例
+         * @param r 红色通道
+         * @param g 绿色通道
+         * @param b 蓝色通道
+         * @param a 透明通道
          */
         static create(r?: number, g?: number, b?: number, a?: number): Color;
+        /**
+         * 红色通道
+         */
         r: number;
+        /**
+         * 绿色通道
+         */
         g: number;
+        /**
+         * 蓝色通道
+         */
         b: number;
+        /**
+         * 透明通道
+         */
         a: number;
         /**
          * 请使用 `egret3d.Color.create()` 创建实例。
          * @see egret3d.Color.create()
          */
         private constructor();
+        /**
+         * 序列化
+         * @returns 序列化后的数据
+         */
         serialize(): number[];
-        deserialize(value: Readonly<[number, number, number, number]>): this;
+        /**
+         * 反序列化
+         * @param value 需要反序列化的数据
+         */
+        deserialize(value: Readonly<[number, number, number, number]>): Color;
+        /**
+         * 复制一个颜色对象
+         * @returns 一个复制后的新的颜色对象
+         */
         clone(): Color;
-        copy(value: Readonly<Color>): this;
-        set(r: number, g: number, b: number, a: number): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
-        scale(value: number, source?: Readonly<Color>): this;
-        lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
+        /**
+         * 拷贝一个颜色对象的值
+         * @param value 要拷贝的颜色对象
+         */
+        copy(value: Readonly<Color>): Color;
+        /**
+         * 设置一个颜色对象的rgba
+         * @param r 红色通道
+         * @param g 绿色通道
+         * @param b 蓝色通道
+         * @param a 透明通道
+         * @returns 该对象本身
+         */
+        set(r: number, g: number, b: number, a: number): Color;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): Color;
+        multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>): Color;
+        scale(value: number, source?: Readonly<Color>): Color;
+        lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>): Color;
     }
 }
 declare namespace paper {
@@ -10150,12 +10258,13 @@ declare namespace paper.editor {
 }
 declare namespace egret3d {
     /**
-     *
+     * 3×3矩阵
      */
     class Matrix3 extends paper.BaseRelease<Matrix3> implements paper.ICCS<Matrix3>, paper.ISerializable {
         private static readonly _instances;
         static create(): Matrix3;
         /**
+         * 矩阵原始数据
          * @readonly
          */
         rawData: Float32Array;
@@ -10163,19 +10272,27 @@ declare namespace egret3d {
          * @deprecated
          */
         constructor(rawData?: Float32Array | null);
+        /**
+         * 序列化
+         * @returns 序列化后的数据
+         */
         serialize(): Float32Array;
-        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): this;
+        /**
+         * 反序列化
+         * @param value 序列化后的数据
+         */
+        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): Matrix3;
         copy(value: Readonly<Matrix3>): this;
         clone(): Matrix3;
-        set(n11: number, n12: number, n13: number, n21: number, n22: number, n23: number, n31: number, n32: number, n33: number): this;
-        identity(): this;
-        inverse(matrix: Matrix3): this;
-        getNormalMatrix(matrix4: Readonly<Matrix4>): this;
+        set(n11: number, n12: number, n13: number, n21: number, n22: number, n23: number, n31: number, n32: number, n33: number): Matrix3;
+        identity(): Matrix3;
+        inverse(matrix: Matrix3): Matrix3;
+        getNormalMatrix(matrix4: Readonly<Matrix4>): Matrix3;
         transpose(): this;
         setFromMatrix4(m: Readonly<Matrix4>): this;
         determinant(): number;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        fromBuffer(value: ArrayBuffer, byteOffset?: number): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): Matrix3;
+        fromBuffer(value: ArrayBuffer, byteOffset?: number): Matrix3;
     }
 }
 declare namespace paper.editor {

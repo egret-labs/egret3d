@@ -9,5 +9,6 @@ script
 tests*
 .gitignore
 tsconfig.json
+tslint.json
 devconfig
 TODO
