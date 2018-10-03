@@ -15,17 +15,51 @@ namespace egret3d {
         ZYX,
     }
     /**
-     * 
+     * 三维向量
      */
     export class Vector3 extends paper.BaseRelease<AABB> implements IVector3, paper.ICCS<Vector3>, paper.ISerializable {
+        /**
+         * 零
+         */
         public static readonly ZERO: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, 0.0);
+
+        /**
+         * 三方向均为一的向量
+         */
         public static readonly ONE: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(1.0, 1.0, 1.0);
+        /**
+         * 三方向均为负一的向量
+         */
         public static readonly MINUS_ONE: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(-1.0, -1.0, -1.0);
+
+        /**
+         * 上
+         */
         public static readonly UP: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 1.0, 0.0);
+
+        /**
+         * 下
+         */
         public static readonly DOWN: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, -1.0, 0.0);
+
+        /**
+         * 左
+         */
         public static readonly LEFT: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(-1.0, 0.0, 0.0);
+
+        /**
+         * 右
+         */
         public static readonly RIGHT: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(1.0, 0.0, 0.0);
+
+        /**
+         * 前
+         */
         public static readonly FORWARD: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, 1.0);
+
+        /**
+         * 后
+         */
         public static readonly BACK: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, -1.0);
 
         private static readonly _instances: Vector3[] = [];
@@ -40,10 +74,19 @@ namespace egret3d {
             return new Vector3().set(x, y, z);
         }
 
+        /**
+         * X轴分量
+         */
         public x: number;
 
+        /**
+         * Y轴分量
+         */
         public y: number;
 
+        /**
+         * Z轴分量
+         */
         public z: number;
         /**
          * 请使用 `egret3d.Vector3.create()` 创建实例。
