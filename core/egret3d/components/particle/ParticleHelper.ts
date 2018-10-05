@@ -43,7 +43,7 @@ namespace egret3d.particle {
     export function createBatchMesh(renderer: ParticleRenderer, maxParticleCount: number) {
         const meshAttributes: string[] = [];
         const meshAttributesType: { [key: string]: gltf.AccessorType } = {};
-        if (renderer._renderMode === ParticleRenderMode.Mesh) {
+        if (renderer.renderMode === ParticleRenderMode.Mesh) {
             const mesh = renderer.mesh!;
             const orginIndexBuffer = mesh.getIndices()!;
             const orginIndexBufferCount = orginIndexBuffer.length;

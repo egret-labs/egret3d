@@ -123,6 +123,7 @@ namespace egret3d {
             Vector3.create(),
             Vector3.create()
         ];
+        private _stage: Stage = null!;
 
         // private readonly _frustumPlanes: Plane[] = [
         //     Plane.create(),
@@ -220,6 +221,8 @@ namespace egret3d {
             super.initialize();
 
             this.context = new RenderContext();
+
+            this._stage = paper.GameObject.globalGameObject.getComponent(Stage)!;
         }
         /**
          * 计算相机的 project matrix（投影矩阵）
@@ -259,8 +262,9 @@ namespace egret3d {
                 h = renderTarget.height;
             }
             else {
-                w = stage.screenViewport.w;
-                h = stage.screenViewport.h;
+                const stageViewPort = this._stage.viewport;
+                w = stageViewPort.w;
+                h = stageViewPort.h;
             }
 
             viewPortPixel.x = w * viewport.x;

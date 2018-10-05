@@ -1,18 +1,22 @@
 namespace egret3d {
-
+    /**
+     * TODO 平台无关。
+     */
     export interface ICameraPostQueue {
 
         renderTarget: GlRenderTarget;
 
-        render(camera: Camera, renderSystem: WebGLRenderSystem): void;
+        render(camera: Camera, renderSystem: web.WebGLRenderSystem): void;
     }
 
-
+    /**
+     * TODO 平台无关。
+     */
     export class CameraPostQueueDepth implements ICameraPostQueue {
 
         public renderTarget: GlRenderTarget = null as any;
 
-        public render(camera: Camera, renderSystem: WebGLRenderSystem) {
+        public render(camera: Camera, renderSystem: web.WebGLRenderSystem) {
             // camera.context.drawtype = "_depth";
             // renderSystem._targetAndViewport(camera.viewport, this.renderTarget);
             // renderSystem._cleanBuffer(true, true, Color.BLACK);
@@ -53,8 +57,7 @@ namespace egret3d {
     // }
 
     /**
-     * 颜色绘制通道
-     * 
+     * TODO 平台无关。
      */
     export class CameraPostQueueColor implements ICameraPostQueue {
         /**
@@ -64,7 +67,7 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        public render(camera: Camera, renderSystem: WebGLRenderSystem) {
+        public render(camera: Camera, renderSystem: web.WebGLRenderSystem) {
             // renderSystem._targetAndViewport(camera.viewport, this.renderTarget);
             // renderSystem._cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
             // renderSystem._renderCamera(camera);

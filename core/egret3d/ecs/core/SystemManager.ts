@@ -58,7 +58,7 @@ namespace paper {
          * @internal
          */
         public _preRegisterSystems() {
-            this._preSystems.sort((a, b) => { return a.order - b.order });
+            this._preSystems.sort((a, b) => { return a.order - b.order; });
 
             for (const pair of this._preSystems) {
                 this.register(pair.systemClass, pair.order);
@@ -105,7 +105,7 @@ namespace paper {
         /**
          * 为程序注册一个指定的系统。
          */
-        public register<T extends BaseSystem>(systemClass: { new(): T }, order: SystemOrder = SystemOrder.Update) {
+        public register<T extends BaseSystem>(systemClass: { new(): T }, order: SystemOrder = SystemOrder.Update, config?: any) {
             let system = this._checkRegister(systemClass);
             if (system) {
                 return system;
@@ -113,7 +113,7 @@ namespace paper {
 
             system = BaseSystem.create(systemClass, order) as T;
             this._systems.splice(this._getSystemInsertIndex(order), 0, system);
-            system._initialize();
+            system._initialize(config);
 
             return system;
         }

@@ -1,6 +1,6 @@
-namespace egret3d {
+namespace egret3d.web {
     /**
-     * WebGL 渲染系统
+     * @internal
      */
     export class WebGLRenderSystem extends paper.BaseSystem {
         protected readonly _interests = [
@@ -14,6 +14,7 @@ namespace egret3d {
                 { componentClass: [DirectionalLight, SpotLight, PointLight] }
             ]
         ];
+        private readonly _stage: Stage = paper.GameObject.globalGameObject.getOrAddComponent(Stage);
         private readonly _drawCalls: DrawCalls = paper.GameObject.globalGameObject.getOrAddComponent(DrawCalls);
         private readonly _camerasAndLights: CamerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(CamerasAndLights);
         private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
@@ -39,7 +40,7 @@ namespace egret3d {
                 light.update(camera, i);
 
                 (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
-                renderState.targetAndViewport(camera.viewport, light.renderTarget);
+                this._viewport(camera.viewport, light.renderTarget);
                 renderState.clear(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                 drawCalls.shadowFrustumCulling(camera);
 
@@ -403,6 +404,27 @@ namespace egret3d {
             }
         }
 
+        private _viewport(viewport: Rectangle, target: BaseRenderTarget | null) {
+            const webgl = WebGLCapabilities.webgl!;
+
+            let w: number;
+            let h: number;
+            if (!target) {
+                const stageViewport = this._stage.viewport;
+                w = stageViewport.w;
+                h = stageViewport.h;
+                webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+            }
+            else {
+                w = target.width;
+                h = target.height;
+                target.use();
+            }
+
+            webgl.viewport(w * viewport.x, h * viewport.y, w * viewport.w, h * viewport.h);
+            webgl.depthRange(0, 1);
+        }
+
         public onUpdate() {
             const webgl = WebGLCapabilities.webgl;
             if (!webgl) {
@@ -447,7 +469,7 @@ namespace egret3d {
 
                     if (camera.postQueues.length === 0) {
                         if (renderEnabled) {
-                            renderState.targetAndViewport(camera.viewport, camera.renderTarget);
+                            this._viewport(camera.viewport, camera.renderTarget);
                             renderState.clear(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                         }
 

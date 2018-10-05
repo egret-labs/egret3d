@@ -286,7 +286,7 @@ namespace paper {
             GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).components.push(value);
 
             if (groupComponent) {
-                groupComponent._removeComponent(value);
+                groupComponent.removeComponent(value);
 
                 if (groupComponent.components.length === 0) {
                     this._removeComponent(groupComponent, null);
@@ -323,13 +323,23 @@ namespace paper {
                     }
 
                     if (component.enabled) {
-                        EventPool.dispatchEvent(currentActive ? EventPool.EventType.Enabled : EventPool.EventType.Disabled, component);
+                        if (currentActive) {
+                            BaseComponent.onComponentEnabled.dispatch(component);
+                        }
+                        else {
+                            BaseComponent.onComponentDisabled.dispatch(component);
+                        }
                     }
 
                     if (component.constructor === GroupComponent) {
                         for (const componentInGroup of (component as GroupComponent).components) {
                             if (componentInGroup.enabled) {
-                                EventPool.dispatchEvent(currentActive ? EventPool.EventType.Enabled : EventPool.EventType.Disabled, componentInGroup);
+                                if (currentActive) {
+                                    BaseComponent.onComponentEnabled.dispatch(componentInGroup);
+                                }
+                                else {
+                                    BaseComponent.onComponentDisabled.dispatch(componentInGroup);
+                                }
                             }
                         }
                     }
@@ -384,7 +394,7 @@ namespace paper {
             }
 
             this._destroy();
-            
+
             return true;
         }
         /**
@@ -423,7 +433,7 @@ namespace paper {
             // Add component.
             if (existedComponent) {
                 if (existedComponent.constructor === GroupComponent) {
-                    (existedComponent as GroupComponent)._addComponent(component);
+                    (existedComponent as GroupComponent).addComponent(component);
                 }
                 else {
                     registerClass(GroupComponent);
@@ -431,8 +441,8 @@ namespace paper {
                     groupComponent.initialize();
                     groupComponent.componentIndex = componentIndex;
                     groupComponent.componentClass = componentClass;
-                    groupComponent._addComponent(existedComponent);
-                    groupComponent._addComponent(component);
+                    groupComponent.addComponent(existedComponent);
+                    groupComponent.addComponent(component);
                     this._components[componentIndex] = groupComponent;
                 }
             }
@@ -448,7 +458,7 @@ namespace paper {
             }
 
             if (component.isActiveAndEnabled) {
-                EventPool.dispatchEvent(EventPool.EventType.Enabled, component);
+                BaseComponent.onComponentEnabled.dispatch(component);
             }
 
             return component;

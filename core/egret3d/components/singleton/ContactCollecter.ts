@@ -1,8 +1,8 @@
-namespace paper {
+namespace egret3d {
     /**
      * 全局碰撞信息收集组件。
      */
-    export class ContactColliders extends SingletonComponent {
+    export class ContactCollecter extends paper.SingletonComponent {
         /**
          * 当前帧开始碰撞的。
          */
@@ -18,9 +18,14 @@ namespace paper {
         /**
          * @internal
          */
-        public clear() {
-            this.begin.length = 0;
-            this.end.length = 0;
+        public update(deltaTime: number) {
+            if (this.begin.length > 0) {
+                this.begin.length = 0;
+            }
+
+            if (this.end.length > 0) {
+                this.end.length = 0;
+            }
         }
     }
 }

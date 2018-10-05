@@ -11,14 +11,14 @@ function main() {
 
 function startExamples() {
     const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
-    const allScripts = window["allScripts"] as string[];
+    const allScripts = (window as any)["allScripts"] as string[];
     const examples = [] as string[];
 
     for (const example of allScripts) {
         const index = example.indexOf("examples");
         if (index > 0) {
             // examples.push(example.substr(index + "examples/".length).split(".")[0]);
-            examples.push(example.split("/").pop().split(".")[0]);
+            examples.push(example.split("/").pop()!.split(".")[0]);
         }
     }
 
@@ -41,10 +41,10 @@ function startExamples() {
         location.href = url;
     });
 
-    window[current].start();
+    (window as any)[current].start();
 
     function getCurrentTest() {
-        var appFile;
+        var appFile: string = "";
         var hasTest = false;
         var str = location.search;
         str = str.slice(1, str.length);

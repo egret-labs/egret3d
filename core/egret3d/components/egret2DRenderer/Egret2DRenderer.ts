@@ -27,6 +27,8 @@ namespace egret3d {
 
         public root: egret.DisplayObjectContainer;
 
+        private _stage: Stage;
+
         public initialize() {
             super.initialize();
 
@@ -58,6 +60,8 @@ namespace egret3d {
             InputManager.mouse.addEventListener("mousedown", this._onTouchStart, this);
             InputManager.mouse.addEventListener("mouseup", this._onTouchEnd, this);
             InputManager.mouse.addEventListener("mousemove", this._onTouchMove, this);
+
+            this._stage = paper.GameObject.globalGameObject.getComponent(Stage)!;
         }
 
         public uninitialize() {
@@ -147,7 +151,7 @@ namespace egret3d {
          */
         public update(delta: number) {
             let stage2d = this.stage;
-            const { w, h } = stage.screenViewport;
+            const { w, h } = this._stage.viewport;
 
             if (this._stageWidth !== w || this._stageHeight !== h || this.screenAdapter.$dirty) {
                 let result = { w: 0, h: 0, s: 0 };

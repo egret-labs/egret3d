@@ -6,23 +6,23 @@ namespace egret3d {
         protected readonly _interests = [
             {
                 componentClass: MeshFilter,
-                listeners: [
-                    {
-                        type: MeshFilterEventType.Mesh, listener: (component: MeshFilter) => {
-                            this._updateDrawCalls(component.gameObject);
+                listeners: [{
+                    type: MeshFilter.onMeshChanged, listener: (component: MeshFilter) => {
+                        this._updateDrawCalls(component.gameObject);
 
-                            if (component.gameObject.renderer) {
-                                component.gameObject.renderer._aabbDirty = true;
-                            }
+                        if (component.gameObject.renderer) {
+                            component.gameObject.renderer._aabbDirty = true;
                         }
                     }
-                ]
+                }]
             },
             {
                 componentClass: MeshRenderer,
-                listeners: [
-                    { type: paper.RendererEventType.Materials, listener: (component: MeshRenderer) => { this._updateDrawCalls(component.gameObject); } }
-                ]
+                listeners: [{
+                    type: MeshRenderer.onMaterialsChanged, listener: (component: MeshRenderer) => {
+                        this._updateDrawCalls(component.gameObject);
+                    }
+                }]
             },
         ];
         private readonly _drawCalls: DrawCalls = paper.GameObject.globalGameObject.getOrAddComponent(DrawCalls);

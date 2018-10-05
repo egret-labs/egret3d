@@ -1,5 +1,5 @@
-// type int = number;
-// type uint = number;
+type int = number;
+type uint = number;
 
 namespace paper {
     /**

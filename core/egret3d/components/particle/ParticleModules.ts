@@ -1,15 +1,27 @@
 namespace egret3d.particle {
-
-    const colorHelper1: Color = Color.create();
-    const colorHelper2: Color = Color.create();
-
+    export const onMainChanged: signals.Signal = new signals.Signal();
+    export const onColorChanged: signals.Signal = new signals.Signal();
+    export const onVelocityChanged: signals.Signal = new signals.Signal();
+    export const onSizeChanged: signals.Signal = new signals.Signal();
+    export const onRotationChanged: signals.Signal = new signals.Signal();
+    export const onTextureSheetChanged: signals.Signal = new signals.Signal();
+    export const onShapeChanged: signals.Signal = new signals.Signal();
+    export const onStartRotation3DChanged: signals.Signal = new signals.Signal();
+    export const onSimulationSpaceChanged: signals.Signal = new signals.Signal();
+    export const onScaleModeChanged: signals.Signal = new signals.Signal();
+    export const onMaxParticlesChanged: signals.Signal = new signals.Signal();
+    /**
+     * 
+     */
     export const enum CurveMode {
         Constant = 0,
         Curve = 1,
         TwoCurves = 2,
         TwoConstants = 3
     }
-
+    /**
+     * 
+     */
     export const enum ColorGradientMode {
         Color = 0,
         Gradient = 1,
@@ -17,19 +29,25 @@ namespace egret3d.particle {
         TwoGradients = 3,
         RandomColor = 4
     }
-
+    /**
+     * 
+     */
     export const enum SimulationSpace {
         Local = 0,
         World = 1,
         Custom = 2
     }
-
+    /**
+     * 
+     */
     export const enum ScalingMode {
         Hierarchy = 0,
         Local = 1,
         Shape = 2
     }
-
+    /**
+     * 
+     */
     export const enum ShapeType {
         None = -1,
         Sphere = 0,
@@ -50,31 +68,44 @@ namespace egret3d.particle {
         BoxShell = 15,
         BoxEdge = 16
     }
-
+    /**
+     * 
+     */
     export const enum ShapeMultiModeValue {
         Random = 0,
         Loop = 1,
         PingPong = 2,
         BurstSpread = 3
     }
-
+    /**
+     * 
+     */
     export const enum AnimationType {
         WholeSheet = 0,
         SingleRow = 1
     }
-
+    /**
+     * 
+     */
     export const enum UVChannelFlags {
         UV0 = 1,
         UV1 = 2,
         UV2 = 4,
         UV3 = 8
     }
-
+    /**
+     * 
+     */
     export const enum GradientMode {
         Blend = 0,
         Fixed = 1
     }
 
+    const _helpColorA: Color = Color.create();
+    const _helpColorB: Color = Color.create();
+    /**
+     * TODO
+     */
     export class Keyframe implements paper.ISerializable {
         public time: number;
         public value: number;
@@ -83,18 +114,21 @@ namespace egret3d.particle {
             return [this.time, this.value];
         }
 
-        public deserialize(element: any) {
+        public deserialize(element: Readonly<[number, number]>) {
             this.time = element[0];
             this.value = element[1];
 
             return this;
         }
-        public clone(source: Keyframe) {
+
+        public copy(source: Readonly<Keyframe>) {
             this.time = source.time;
             this.value = source.value;
         }
     }
-
+    /**
+     * TODO
+     */
     export class AnimationCurve implements paper.ISerializable {
         /**
          * 功能与效率平衡长度取4
@@ -144,7 +178,7 @@ namespace egret3d.particle {
             return res;
         }
 
-        public clone(source: AnimationCurve) {
+        public copy(source: AnimationCurve) {
             this._keys.length = 0;
 
             const sourceKeys = source._keys;
@@ -156,7 +190,9 @@ namespace egret3d.particle {
             }
         }
     }
-
+    /**
+     * TODO
+     */
     export class GradientColorKey extends paper.BaseObject {
         @paper.serializedField
         public time: number;
@@ -170,7 +206,9 @@ namespace egret3d.particle {
             return this;
         }
     }
-
+    /**
+     * TODO
+     */
     export class GradientAlphaKey extends paper.BaseObject {
         @paper.serializedField
         public alpha: number;
@@ -184,7 +222,9 @@ namespace egret3d.particle {
             return this;
         }
     }
-
+    /**
+     * TODO
+     */
     export class Gradient extends paper.BaseObject {
         @paper.serializedField
         public mode: GradientMode = GradientMode.Blend;
@@ -266,7 +306,9 @@ namespace egret3d.particle {
             return res;
         }
     }
-
+    /**
+     * TODO create
+     */
     export class MinMaxCurve extends paper.BaseObject {
         @paper.serializedField
         public mode: CurveMode = CurveMode.Constant;
@@ -309,17 +351,19 @@ namespace egret3d.particle {
             }
         }
 
-        public clone(source: MinMaxCurve) {
+        public copy(source: Readonly<MinMaxCurve>) {
             this.mode = source.mode;
             this.constant = source.constant;
             this.constantMin = source.constantMin;
             this.constantMax = source.constantMax;
-            this.curve.clone(source.curve);
-            this.curveMin.clone(source.curveMin);
-            this.curveMax.clone(source.curveMax);
+            this.curve.copy(source.curve);
+            this.curveMin.copy(source.curveMin);
+            this.curveMax.copy(source.curveMax);
         }
     }
-
+    /**
+     * TODO create
+     */
     export class MinMaxGradient extends paper.BaseObject {
         @paper.serializedField
         public mode: ColorGradientMode = ColorGradientMode.Gradient;
@@ -375,12 +419,12 @@ namespace egret3d.particle {
             } else if (this.mode === ColorGradientMode.Gradient) {
                 return this.gradient.evaluate(t, out);
             } else if (this.mode === ColorGradientMode.TwoGradients) {
-                this.gradientMin.evaluate(t, colorHelper1);
-                this.gradientMax.evaluate(t, colorHelper2);
-                out.r = (Math.random() * (colorHelper1.r - colorHelper2.r) + colorHelper1.r);
-                out.g = (Math.random() * (colorHelper1.g - colorHelper2.g) + colorHelper1.g);
-                out.b = (Math.random() * (colorHelper1.b - colorHelper2.b) + colorHelper1.b);
-                out.a = (Math.random() * (colorHelper1.a - colorHelper2.a) + colorHelper1.a);
+                this.gradientMin.evaluate(t, _helpColorA);
+                this.gradientMax.evaluate(t, _helpColorB);
+                out.r = (Math.random() * (_helpColorA.r - _helpColorB.r) + _helpColorA.r);
+                out.g = (Math.random() * (_helpColorA.g - _helpColorB.g) + _helpColorA.g);
+                out.b = (Math.random() * (_helpColorA.b - _helpColorB.b) + _helpColorA.b);
+                out.a = (Math.random() * (_helpColorA.a - _helpColorB.a) + _helpColorA.a);
             } else {
                 out.r = Math.random();
                 out.g = Math.random();
@@ -391,7 +435,9 @@ namespace egret3d.particle {
             return out;
         }
     }
-
+    /**
+     * 
+     */
     export class Burst implements paper.ISerializable {
         public time: number;
         public minCount: number;
@@ -403,7 +449,7 @@ namespace egret3d.particle {
             return [this.time, this.minCount, this.maxCount, this.cycleCount, this.repeatInterval];
         }
 
-        public deserialize(element: any) {
+        public deserialize(element: Readonly<[number, number, number, number, number]>) {
             this.time = element[0];
             this.minCount = element[1];
             this.maxCount = element[2];
@@ -413,87 +459,112 @@ namespace egret3d.particle {
             return this;
         }
     }
-
-    export abstract class ParticleSystemModule extends paper.BaseObject {
+    /**
+     * 粒子模块基类。
+     */
+    export abstract class ParticleModule extends paper.BaseObject {
         @paper.serializedField
         public enable: boolean = false;
 
-        protected _comp: ParticleComponent;
-        public constructor(comp: ParticleComponent) {
+        protected readonly _component: ParticleComponent;
+
+        public constructor(component: ParticleComponent) {
             super();
 
-            this._comp = comp;
+            this._component = component;
         }
-        /**
-         * @internal
-         */
-        public initialize(): void { }
 
-        public deserialize(element: any) {
+        public deserialize(element: any) { // TODO
             this.enable = true;
 
             return this;
         }
     }
-
-    export class MainModule extends ParticleSystemModule {
-        @paper.serializedField
-        public duration: number = 0.0;
+    /**
+     * 
+     */
+    export class MainModule extends ParticleModule {
+        /**
+         * 
+         */
         @paper.serializedField
         public loop: boolean = false;
-        //
-        @paper.serializedField
-        public readonly startDelay: MinMaxCurve = new MinMaxCurve();
-        //
-        @paper.serializedField
-        public readonly startLifetime: MinMaxCurve = new MinMaxCurve();
-        //
-        @paper.serializedField
-        public readonly startSpeed: MinMaxCurve = new MinMaxCurve();
-        //
-        @paper.serializedField
-        public readonly startSizeX: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
-        public readonly startSizeY: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
-        public readonly startSizeZ: MinMaxCurve = new MinMaxCurve();
         /**
-         * @internal
+         * 
          */
-        @paper.serializedField
-        public _startRotation3D: boolean = false;
-        @paper.serializedField
-        public readonly startRotationX: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
-        public readonly startRotationY: MinMaxCurve = new MinMaxCurve();
-        @paper.serializedField
-        public readonly startRotationZ: MinMaxCurve = new MinMaxCurve();
-        //
-        @paper.serializedField
-        public readonly startColor: MinMaxGradient = new MinMaxGradient();
-        //
-        @paper.serializedField
-        public readonly gravityModifier: MinMaxCurve = new MinMaxCurve(); //TODO
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public _simulationSpace: SimulationSpace = SimulationSpace.Local;
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public _scaleMode: ScalingMode = ScalingMode.Hierarchy;
-        //
         @paper.serializedField
         public playOnAwake: boolean = false;
         /**
-         * @internal
+         * 
          */
         @paper.serializedField
-        public _maxParticles: number = 0;
+        public duration: number = 0.0;
+        /**
+         * 
+         */
+        @paper.serializedField
+        public readonly startDelay: MinMaxCurve = new MinMaxCurve();
+        /**
+         * 
+         */
+        @paper.serializedField
+        public readonly startLifetime: MinMaxCurve = new MinMaxCurve();
+        /**
+         * 
+         */
+        @paper.serializedField
+        public readonly startSpeed: MinMaxCurve = new MinMaxCurve();
+        /**
+         * 
+         */
+        @paper.serializedField
+        public readonly startSizeX: MinMaxCurve = new MinMaxCurve();
+        /**
+         * 
+         */
+        @paper.serializedField
+        public readonly startSizeY: MinMaxCurve = new MinMaxCurve();
+        /**
+         * 
+         */
+        @paper.serializedField
+        public readonly startSizeZ: MinMaxCurve = new MinMaxCurve();
+        /**
+         * 
+         */
+        @paper.serializedField
+        public readonly startRotationX: MinMaxCurve = new MinMaxCurve();
+        /**
+         * 
+         */
+        @paper.serializedField
+        public readonly startRotationY: MinMaxCurve = new MinMaxCurve();
+        /**
+         * 
+         */
+        @paper.serializedField
+        public readonly startRotationZ: MinMaxCurve = new MinMaxCurve();
+        /**
+         * 
+         */
+        @paper.serializedField
+        public readonly startColor: MinMaxGradient = new MinMaxGradient();
+        /**
+         * 
+         */
+        @paper.serializedField
+        public readonly gravityModifier: MinMaxCurve = new MinMaxCurve(); //TODO
 
-        public deserialize(element: any) {
+        @paper.serializedField
+        private _startRotation3D: boolean = false;
+        @paper.serializedField
+        private _simulationSpace: SimulationSpace = SimulationSpace.Local;
+        @paper.serializedField
+        private _scaleMode: ScalingMode = ScalingMode.Hierarchy;
+        @paper.serializedField
+        private _maxParticles: number = 0;
+
+        public deserialize(element: any) { // TODO
             super.deserialize(element);
             this.duration = element.duration;
             this.loop = element.loop || element.looping; // TODO 兼容代码 looping。
@@ -516,52 +587,79 @@ namespace egret3d.particle {
 
             return this;
         }
-
-        public set startRotation3D(value: boolean) {
-            if (this._startRotation3D !== value) {
-                this._startRotation3D = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.StartRotation3DChanged, this._comp);
-            }
-        }
+        /**
+         * 
+         */
         public get startRotation3D() {
             return this._startRotation3D;
         }
-        public set simulationSpace(value: SimulationSpace) {
-            if (this._simulationSpace !== value) {
-                this._simulationSpace = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.SimulationSpaceChanged, this._comp);
+        public set startRotation3D(value: boolean) {
+            if (this._startRotation3D === value) {
+                return;
             }
+
+            this._startRotation3D = value;
+            onStartRotation3DChanged.dispatch(this._component);
         }
+        /**
+         * 
+         */
         public get simulationSpace() {
             return this._simulationSpace;
         }
-        public set scaleMode(value: ScalingMode) {
-            if (this._scaleMode !== value) {
-                this._scaleMode = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.ScaleModeChanged, this._comp);
+        public set simulationSpace(value: SimulationSpace) {
+            if (this._simulationSpace === value) {
+                return;
             }
+
+            this._simulationSpace = value;
+            onSimulationSpaceChanged.dispatch(this._component);
         }
+        /**
+         * 
+         */
         public get scaleMode() {
             return this._scaleMode;
         }
-        public set maxParticles(value: number) {
-            if (this._maxParticles !== value) {
-                this._maxParticles = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.MaxParticlesChanged, this._comp);
+        public set scaleMode(value: ScalingMode) {
+            if (this._scaleMode === value) {
+                return;
             }
+
+            this._scaleMode = value;
+            onScaleModeChanged.dispatch(this._component);
         }
+        /**
+         * 
+         */
         public get maxParticles() {
             return this._maxParticles;
         }
-    }
+        public set maxParticles(value: number) {
+            if (this._maxParticles === value) {
+                return;
+            }
 
-    export class EmissionModule extends ParticleSystemModule {
+            this._maxParticles = value;
+            onMaxParticlesChanged.dispatch(this._component);
+        }
+    }
+    /**
+     * 
+     */
+    export class EmissionModule extends ParticleModule {
+        /**
+         * 
+         */
         @paper.serializedField
         public readonly rateOverTime: MinMaxCurve = new MinMaxCurve();
+        /**
+         * 
+         */
         @paper.serializedField
-        public readonly bursts: Array<Burst> = new Array<Burst>();
+        public readonly bursts: Burst[] = [];
 
-        public deserialize(element: any) {
+        public deserialize(element: any) { // TODO
             super.deserialize(element);
             this.rateOverTime.deserialize(element.rateOverTime);
             if (element.bursts) {
@@ -576,32 +674,67 @@ namespace egret3d.particle {
             return this;
         }
     }
-
-    export class ShapeModule extends ParticleSystemModule {
+    /**
+     * 
+     */
+    export class ShapeModule extends ParticleModule {
+        /**
+         * 
+         */
         @paper.serializedField
         public shapeType: ShapeType = ShapeType.Sphere;
+        /**
+         * 
+         */
         @paper.serializedField
         public radius: number = 0.0;
+        /**
+         * 
+         */
         @paper.serializedField
         public angle: number = 0.0;
+        /**
+         * 
+         */
         @paper.serializedField
         public length: number = 0.0;
+        /**
+         * 
+         */
         @paper.serializedField
         public readonly arcSpeed: MinMaxCurve = new MinMaxCurve();
+        /**
+         * 
+         */
         @paper.serializedField
         public arcMode: ShapeMultiModeValue = ShapeMultiModeValue.Random;
+        /**
+         * 
+         */
         @paper.serializedField
         public radiusSpread: number;
+        /**
+         * 
+         */
         @paper.serializedField
         public radiusMode: ShapeMultiModeValue = ShapeMultiModeValue.Random;
+        /**
+         * 
+         */
         @paper.serializedField
-        public readonly box: egret3d.Vector3 = new egret3d.Vector3();
+        public readonly box: egret3d.Vector3 = Vector3.create();
+        /**
+         * 
+         */
         @paper.serializedField
         public randomDirection: boolean = false;
+        /**
+         * 
+         */
         @paper.serializedField
         public spherizeDirection: boolean = false;
 
-        public deserialize(element: any) {
+        public deserialize(element: any) { // TODO
             super.deserialize(element);
             this.shapeType = element.shapeType;
             this.radius = element.radius;
@@ -617,43 +750,35 @@ namespace egret3d.particle {
 
             return this;
         }
+        /**
+         * @internal
+         */
         public invalidUpdate(): void {
-            paper.EventPool.dispatchEvent(ParticleCompEventType.ShapeChanged, this._comp);
+            onShapeChanged.dispatch(this._component);
         }
-
+        /**
+         * @internal
+         */
         public generatePositionAndDirection(position: Vector3, direction: Vector3) {
             generatePositionAndDirection(position, direction, this);
         }
     }
+    /**
+     * 
+     */
+    export class VelocityOverLifetimeModule extends ParticleModule {
+        @paper.serializedField
+        private _mode: CurveMode = CurveMode.Constant;
+        @paper.serializedField
+        private _space: SimulationSpace = SimulationSpace.Local;
+        @paper.serializedField
+        private readonly _x: MinMaxCurve = new MinMaxCurve();
+        @paper.serializedField
+        private readonly _y: MinMaxCurve = new MinMaxCurve();
+        @paper.serializedField
+        private readonly _z: MinMaxCurve = new MinMaxCurve();
 
-    export class VelocityOverLifetimeModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public _mode: CurveMode = CurveMode.Constant;
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public _space: SimulationSpace = SimulationSpace.Local;
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public readonly _x: MinMaxCurve = new MinMaxCurve();
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public readonly _y: MinMaxCurve = new MinMaxCurve();
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public readonly _z: MinMaxCurve = new MinMaxCurve();
-
-        public deserialize(element: any) {
+        public deserialize(element: any) { // TODO
             super.deserialize(element);
             this._mode = (element._mode || element.mode) || CurveMode.Constant;
             this._space = (element._space || element.space) || SimulationSpace.Local;
@@ -663,106 +788,105 @@ namespace egret3d.particle {
 
             return this;
         }
-
-        public set mode(value: CurveMode) {
-            if (this._mode !== value) {
-                this._mode = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.VelocityChanged, this._comp);
-            }
-        }
+        /**
+         * 
+         */
         public get mode() {
             return this._mode;
         }
-        public set space(value: SimulationSpace) {
-            if (this._space !== value) {
-                this._space = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.VelocityChanged, this._comp);
+        public set mode(value: CurveMode) {
+            if (this._mode === value) {
+                return;
             }
+
+            this._mode = value;
+            onVelocityChanged.dispatch(this._component);
         }
+        /**
+         * 
+         */
         public get space() {
             return this._space;
         }
-        public set x(value: Readonly<MinMaxCurve>) {
-            if (this._x !== value) {
-                this._x.clone(value);
-                paper.EventPool.dispatchEvent(ParticleCompEventType.VelocityChanged, this._comp);
+        public set space(value: SimulationSpace) {
+            if (this._space === value) {
+                return;
             }
+
+            this._space = value;
+            onVelocityChanged.dispatch(this._component);
         }
-        public get x() {
+        /**
+         * 
+         */
+        public get x(): Readonly<MinMaxCurve> {
             return this._x;
         }
-        public set y(value: Readonly<MinMaxCurve>) {
-            if (this._y !== value) {
-                this._y.clone(value);
-                paper.EventPool.dispatchEvent(ParticleCompEventType.VelocityChanged, this._comp);
-            }
+        public set x(value: Readonly<MinMaxCurve>) {
+            this._x.copy(value);
+            onVelocityChanged.dispatch(this._component);
         }
-        public get y() {
+        /**
+         * 
+         */
+        public get y(): Readonly<MinMaxCurve> {
             return this._y;
         }
-        public set z(value: Readonly<MinMaxCurve>) {
-            if (this._z !== value) {
-                this._z.clone(value);
-                paper.EventPool.dispatchEvent(ParticleCompEventType.VelocityChanged, this._comp);
-            }
+        public set y(value: Readonly<MinMaxCurve>) {
+            this._y.copy(value);
+            onVelocityChanged.dispatch(this._component);
         }
-        public get z() {
+        /**
+         * 
+         */
+        public get z(): Readonly<MinMaxCurve> {
             return this._z;
         }
+        public set z(value: Readonly<MinMaxCurve>) {
+            this._z.copy(value);
+            onVelocityChanged.dispatch(this._component);
+        }
     }
-
-    export class ColorOverLifetimeModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
+    /**
+     * 
+     */
+    export class ColorOverLifetimeModule extends ParticleModule {
         @paper.serializedField
-        public _color: MinMaxGradient = new MinMaxGradient();
+        private _color: MinMaxGradient = new MinMaxGradient(); // TODO readonly
 
-        public deserialize(element: any) {
+        public deserialize(element: any) { // TODO
             super.deserialize(element);
             this._color.deserialize(element._color || element.color);
 
             return this;
         }
-        public set color(value: Readonly<MinMaxGradient>) {
-            if (this._color !== value) {
-                this._color = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.ColorChanged, this._comp);
-            }
-        }
-        public get color() {
+        /**
+         * 
+         */
+        public get color(): Readonly<MinMaxGradient> {
             return this._color;
         }
+        public set color(value: Readonly<MinMaxGradient>) {
+            this._color = value; // TODO copy
+            onColorChanged.dispatch(this._component);
+        }
     }
+    /**
+     * 
+     */
+    export class SizeOverLifetimeModule extends ParticleModule {
+        @paper.serializedField
+        private _separateAxes: boolean = false;
+        @paper.serializedField
+        private readonly _size: MinMaxCurve = new MinMaxCurve();
+        @paper.serializedField
+        private readonly _x: MinMaxCurve = new MinMaxCurve();
+        @paper.serializedField
+        private readonly _y: MinMaxCurve = new MinMaxCurve();
+        @paper.serializedField
+        private readonly _z: MinMaxCurve = new MinMaxCurve();
 
-    export class SizeOverLifetimeModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public _separateAxes: boolean = false;
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public readonly _size: MinMaxCurve = new MinMaxCurve();
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public readonly _x: MinMaxCurve = new MinMaxCurve();
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public readonly _y: MinMaxCurve = new MinMaxCurve();
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public readonly _z: MinMaxCurve = new MinMaxCurve();
-
-        public deserialize(element: any) {
+        public deserialize(element: any) { // TODO
             super.deserialize(element);
             this._separateAxes = (element._separateAxes || element.separateAxes) || false;
             this._size.deserialize(element._size || element.size);
@@ -772,76 +896,75 @@ namespace egret3d.particle {
 
             return this;
         }
-        public set separateAxes(value: boolean) {
-            if (this._separateAxes !== value) {
-                this._separateAxes = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.SizeChanged, this._comp);
-            }
-        }
+        /**
+         * 
+         */
         public get separateAxes() {
             return this._separateAxes;
         }
-        public set size(value: Readonly<MinMaxCurve>) {
-            if (this._size !== value) {
-                this._size.clone(value);
-                paper.EventPool.dispatchEvent(ParticleCompEventType.SizeChanged, this._comp);
+        public set separateAxes(value: boolean) {
+            if (this._separateAxes === value) {
+                return;
             }
+
+            this._separateAxes = value;
+            onSizeChanged.dispatch(this._component);
         }
-        public get size() {
+        /**
+         * 
+         */
+        public get size(): Readonly<MinMaxCurve> {
             return this._size;
         }
-        public set x(value: Readonly<MinMaxCurve>) {
-            if (this._x !== value) {
-                this._x.clone(value);
-                paper.EventPool.dispatchEvent(ParticleCompEventType.SizeChanged, this._comp);
-            }
+        public set size(value: Readonly<MinMaxCurve>) {
+            this._size.copy(value);
+            onSizeChanged.dispatch(this._component);
         }
-        public get x() {
+        /**
+         * 
+         */
+        public get x(): Readonly<MinMaxCurve> {
             return this._x;
         }
-        public set y(value: Readonly<MinMaxCurve>) {
-            if (this._y !== value) {
-                this._y.clone(value);
-                paper.EventPool.dispatchEvent(ParticleCompEventType.SizeChanged, this._comp);
-            }
+        public set x(value: Readonly<MinMaxCurve>) {
+            this._x.copy(value);
+            onSizeChanged.dispatch(this._component);
         }
-        public get y() {
+        /**
+         * 
+         */
+        public get y(): Readonly<MinMaxCurve> {
             return this._y;
         }
-        public set z(value: Readonly<MinMaxCurve>) {
-            if (this._z !== value) {
-                this._z.clone(value);
-                paper.EventPool.dispatchEvent(ParticleCompEventType.SizeChanged, this._comp);
-            }
+        public set y(value: Readonly<MinMaxCurve>) {
+            this._y.copy(value);
+            onSizeChanged.dispatch(this._component);
         }
-        public get z() {
+        /**
+         * 
+         */
+        public get z(): Readonly<MinMaxCurve> {
             return this._z;
         }
+        public set z(value: Readonly<MinMaxCurve>) {
+            this._z.copy(value);
+            onSizeChanged.dispatch(this._component);
+        }
     }
+    /**
+     * 
+     */
+    export class RotationOverLifetimeModule extends ParticleModule {
+        @paper.serializedField
+        private _separateAxes: boolean;
+        @paper.serializedField
+        private readonly _x: MinMaxCurve = new MinMaxCurve();
+        @paper.serializedField
+        private readonly _y: MinMaxCurve = new MinMaxCurve();
+        @paper.serializedField
+        private readonly _z: MinMaxCurve = new MinMaxCurve();
 
-    export class RotationOverLifetimeModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public _separateAxes: boolean;
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public readonly _x: MinMaxCurve = new MinMaxCurve();
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public readonly _y: MinMaxCurve = new MinMaxCurve();
-        /**
-         * @internal
-         */
-        @paper.serializedField
-        public readonly _z: MinMaxCurve = new MinMaxCurve();
-
-        public deserialize(element: any) {
+        public deserialize(element: any) { // TODO
             super.deserialize(element);
             this._separateAxes = (element._separateAxes || element.separateAxes) || false;
             this._x.deserialize(element._x || element.x);
@@ -850,89 +973,74 @@ namespace egret3d.particle {
 
             return this;
         }
-        public set separateAxes(value: boolean) {
-            if (this._separateAxes !== value) {
-                this._separateAxes = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.RotationChanged, this._comp);
-            }
-        }
+        /**
+         * 
+         */
         public get separateAxes() {
             return this._separateAxes;
         }
-        public set x(value: Readonly<MinMaxCurve>) {
-            if (this._x !== value) {
-                this._x.clone(value);
-                paper.EventPool.dispatchEvent(ParticleCompEventType.RotationChanged, this._comp);
+        public set separateAxes(value: boolean) {
+            if (this._separateAxes === value) {
+                return;
             }
+
+            this._separateAxes = value;
+            onRotationChanged.dispatch(this._component);
         }
-        public get x() {
+        /**
+         * 
+         */
+        public get x(): Readonly<MinMaxCurve> {
             return this._x;
         }
-        public set y(value: Readonly<MinMaxCurve>) {
-            if (this._y !== value) {
-                this._y.clone(value);
-                paper.EventPool.dispatchEvent(ParticleCompEventType.RotationChanged, this._comp);
-            }
+        public set x(value: Readonly<MinMaxCurve>) {
+            this._x.copy(value);
+            onRotationChanged.dispatch(this._component);
         }
-        public get y() {
+        /**
+         * 
+         */
+        public get y(): Readonly<MinMaxCurve> {
             return this._y;
         }
-        public set z(value: Readonly<MinMaxCurve>) {
-            if (this._z !== value) {
-                this._z.clone(value);
-                paper.EventPool.dispatchEvent(ParticleCompEventType.RotationChanged, this._comp);
-            }
+        public set y(value: Readonly<MinMaxCurve>) {
+            this._y.copy(value);
+            onRotationChanged.dispatch(this._component);
         }
-        public get z() {
+        /**
+         * 
+         */
+        public get z(): Readonly<MinMaxCurve> {
             return this._z;
         }
+        public set z(value: Readonly<MinMaxCurve>) {
+            this._z.copy(value);
+            onRotationChanged.dispatch(this._component);
+        }
     }
-
-    export class TextureSheetAnimationModule extends ParticleSystemModule {
-        /**
-         * @internal
-         */
+    /**
+     * 
+     */
+    export class TextureSheetAnimationModule extends ParticleModule {
         @paper.serializedField
-        public _numTilesX: number;
-        /**
-         * @internal
-         */
+        private _useRandomRow: boolean;
         @paper.serializedField
-        public _numTilesY: number;
-        /**
-         * @internal
-         */
+        private _animation: AnimationType = AnimationType.WholeSheet;
         @paper.serializedField
-        public _animation: AnimationType = AnimationType.WholeSheet;
-        /**
-         * @internal
-         */
+        private _numTilesX: number;
         @paper.serializedField
-        public _useRandomRow: boolean;
-        /**
-         * @internal
-         */
+        private _numTilesY: number;
         @paper.serializedField
-        public readonly _frameOverTime: MinMaxCurve = new MinMaxCurve();
-        /**
-         * @internal
-         */
+        private _cycleCount: number;
         @paper.serializedField
-        public readonly _startFrame: MinMaxCurve = new MinMaxCurve();
-        /**
-         * @internal
-         */
+        private _rowIndex: number;
         @paper.serializedField
-        public _cycleCount: number;
-        /**
-         * @internal
-         */
+        private readonly _frameOverTime: MinMaxCurve = new MinMaxCurve();
         @paper.serializedField
-        public _rowIndex: number;
-
+        private readonly _startFrame: MinMaxCurve = new MinMaxCurve();
         private readonly _floatValues: Float32Array = new Float32Array(4);
 
-        public deserialize(element: any) {
+        public deserialize(element: any) { // TODO
             super.deserialize(element);
             this._numTilesX = (element._numTilesX || element.numTilesX) || 0;
             this._numTilesY = (element._numTilesY || element.numTilesY) || 0;
@@ -945,78 +1053,109 @@ namespace egret3d.particle {
 
             return this;
         }
-
-        public set numTilesX(value: number) {
-            if (this._numTilesX !== value) {
-                this._numTilesX = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
-            }
-        }
+        /**
+         * 
+         */
         public get numTilesX() {
             return this._numTilesX;
         }
-        public set numTilesY(value: number) {
-            if (this._numTilesY !== value) {
-                this._numTilesY = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
+        public set numTilesX(value: number) {
+            if (this._numTilesX === value) {
+                return;
             }
+
+            this._numTilesX = value;
+            onTextureSheetChanged.dispatch(this._component);
         }
+        /**
+         * 
+         */
         public get numTilesY() {
             return this._numTilesY;
         }
-        public set animation(value: AnimationType) {
-            if (this._animation !== value) {
-                this._animation = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
+        public set numTilesY(value: number) {
+            if (this._numTilesY === value) {
+                return;
             }
+
+            this._numTilesY = value;
+            onTextureSheetChanged.dispatch(this._component);
         }
+        /**
+         * 
+         */
         public get animation() {
             return this._animation;
         }
-        public set useRandomRow(value: boolean) {
-            if (this._useRandomRow !== value) {
-                this._useRandomRow = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
+        public set animation(value: AnimationType) {
+            if (this._animation === value) {
+                return;
             }
+
+            this._animation = value;
+            onTextureSheetChanged.dispatch(this._component);
         }
+        /**
+         * 
+         */
         public get useRandomRow() {
             return this._useRandomRow;
         }
-        public set frameOverTime(value: Readonly<MinMaxCurve>) {
-            if (this._frameOverTime !== value) {
-                this._frameOverTime.clone(value);
-                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
+        public set useRandomRow(value: boolean) {
+            if (this._useRandomRow === value) {
+                return;
             }
+
+            this._useRandomRow = value;
+            onTextureSheetChanged.dispatch(this._component);
         }
-        public get frameOverTime() {
+        /**
+         * 
+         */
+        public get frameOverTime(): Readonly<MinMaxCurve> {
             return this._frameOverTime;
         }
-        public set startFrame(value: Readonly<MinMaxCurve>) {
-            if (this._startFrame !== value) {
-                this._startFrame.clone(value);
-                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
-            }
+        public set frameOverTime(value: Readonly<MinMaxCurve>) {
+            this._frameOverTime.copy(value);
+            onTextureSheetChanged.dispatch(this._component);
         }
-        public get startFrame() {
+        /**
+         * 
+         */
+        public get startFrame(): Readonly<MinMaxCurve> {
             return this._startFrame;
         }
-        public set cycleCount(value: number) {
-            if (this._cycleCount !== value) {
-                this._cycleCount = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
-            }
+        public set startFrame(value: Readonly<MinMaxCurve>) {
+            this._startFrame.copy(value);
+            onTextureSheetChanged.dispatch(this._component);
         }
+        /**
+         * 
+         */
         public get cycleCount() {
             return this._cycleCount;
         }
-        public set rowIndex(value: number) {
-            if (this._rowIndex !== value) {
-                this._rowIndex = value;
-                paper.EventPool.dispatchEvent(ParticleCompEventType.TextureSheetChanged, this._comp);
+        public set cycleCount(value: number) {
+            if (this._cycleCount === value) {
+                return;
             }
+
+            this._cycleCount = value;
+            onTextureSheetChanged.dispatch(this._component);
         }
+        /**
+         * 
+         */
         public get rowIndex() {
             return this._rowIndex;
+        }
+        public set rowIndex(value: number) {
+            if (this._rowIndex === value) {
+                return;
+            }
+
+            this._rowIndex = value;
+            onTextureSheetChanged.dispatch(this._component);
         }
 
         public get floatValues(): Readonly<Float32Array> {

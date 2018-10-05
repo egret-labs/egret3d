@@ -31,14 +31,14 @@ namespace DefaultMeshes {
             "TORUS",
             "SPHERE",
         ]).onChange((v: string) => {
-            meshFilter.mesh = egret3d.DefaultMeshes[v];
+            meshFilter.mesh = (egret3d.DefaultMeshes as any)[v];
         });
         gui.add(options, "texture").onChange(async (v: boolean) => {
             if (v) {
-                meshRenderer.material.setTexture(await RES.getResAsync("logo.png"));
+                meshRenderer.material!.setTexture(await RES.getResAsync("logo.png"));
             }
             else {
-                meshRenderer.material.setTexture(null);
+                meshRenderer.material!.setTexture(null);
             }
         });
     }

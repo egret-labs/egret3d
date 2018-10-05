@@ -1,15 +1,6 @@
 namespace egret3d {
     /**
-     * mouse input
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 鼠标输入
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * @deprecated
      */
     export class MouseDevice extends EventDispatcher {
 
@@ -45,31 +36,10 @@ namespace egret3d {
         }
 
         /**
-         * mouse position
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 当前鼠标位置
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public position: Vector2 = new Vector2();
 
-        /**
-         * mouse wheel value
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 当前鼠标滚轮值
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
         public wheel: number = 0;
 
         private _buttons: boolean[] = [false, false, false];
@@ -93,16 +63,7 @@ namespace egret3d {
         }
 
         /**
-         * disable right key menu
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 禁用右键菜单
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public disableContextMenu() {
             if (!this._element) return;
@@ -110,16 +71,7 @@ namespace egret3d {
         }
 
         /**
-         * enable right key menu
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 启用右键菜单
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public enableContextMenu() {
             if (!this._element) return;
@@ -148,9 +100,6 @@ namespace egret3d {
             this._element = null;
         }
 
-        /**
-         *  
-         */
         public update() {
             // Copy current button state
             this._lastbuttons[0] = this._buttons[0];
@@ -160,56 +109,14 @@ namespace egret3d {
             this.wheel = 0;
         }
 
-        /**
-         * is pressed
-         * @param key key value. 0: left key; 1: middle key; 2: right key.
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 按键是否在按下状态
-         * @param key 按键。0: 左键；1: 中键；2: 右键。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
         public isPressed(button: number): boolean {
             return this._buttons[button];
         }
 
-        /**
-         * was pressed
-         * @param key key value. 0: left key; 1: middle key; 2: right key.
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 按键被按下一次
-         * @param key 按键。0: 左键；1: 中键；2: 右键。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
         public wasPressed(button: number): boolean {
             return (this._buttons[button] && !this._lastbuttons[button]);
         }
 
-        /**
-         * was released
-         * @param key key value. 0: left key; 1: middle key; 2: right key.
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 按键被抬起一次
-         * @param key 按键。0: 左键；1: 中键；2: 右键。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
         public wasReleased(button: number): boolean {
             return (!this._buttons[button] && this._lastbuttons[button]);
         }

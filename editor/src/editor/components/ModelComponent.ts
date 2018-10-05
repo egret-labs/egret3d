@@ -2,19 +2,14 @@ namespace paper.editor {
     /**
      * @internal
      */
-    export const enum ModelComponentEvent {
-        SceneSelected = "SceneSelected",
-        SceneUnselected = "SceneUnselected",
-
-        GameObjectHovered = "GameObjectHovered",
-        GameObjectSelectChanged = "GameObjectSelectChanged",
-        GameObjectSelected = "GameObjectSelected",
-        GameObjectUnselected = "GameObjectUnselected",
-    }
-    /**
-     * @internal
-     */
     export class ModelComponent extends SingletonComponent {
+        public static readonly onSceneSelected: signals.Signal = new signals.Signal();
+        public static readonly onSceneUnselected: signals.Signal = new signals.Signal();
+
+        public static readonly onGameObjectHovered: signals.Signal = new signals.Signal();
+        public static readonly onGameObjectSelectChanged: signals.Signal = new signals.Signal();
+        public static readonly onGameObjectSelected: signals.Signal = new signals.Signal();
+        public static readonly onGameObjectUnselected: signals.Signal = new signals.Signal();
         /**
          * 所有选中的实体。
          */
@@ -128,7 +123,7 @@ namespace paper.editor {
                 if (this.selectedScene) {
                     const selectedScene = this.selectedScene;
                     this.selectedScene = null;
-                    EventPool.dispatchEvent(ModelComponentEvent.SceneUnselected, this, selectedScene);
+                    ModelComponent.onSceneUnselected.dispatch(this, selectedScene);
                 }
                 else if (this.selectedGameObjects.length > 0) {
                     const gameObjects = this.selectedGameObjects.concat();
@@ -136,10 +131,10 @@ namespace paper.editor {
                     this.selectedGameObjects.length = 0;
                     this.selectedGameObject = null;
 
-                    EventPool.dispatchEvent(ModelComponentEvent.GameObjectSelectChanged, this, selectedGameObject);
+                    ModelComponent.onGameObjectSelectChanged.dispatch(this, selectedGameObject);
 
                     for (const gameObject of gameObjects) {
-                        EventPool.dispatchEvent(ModelComponentEvent.GameObjectUnselected, this, gameObject);
+                        ModelComponent.onGameObjectUnselected.dispatch(this, gameObject);
                     }
                 }
             }
@@ -147,13 +142,13 @@ namespace paper.editor {
             if (value) {
                 if (value instanceof Scene) {
                     this.selectedScene = value;
-                    EventPool.dispatchEvent(ModelComponentEvent.SceneSelected, this, value);
+                    ModelComponent.onSceneSelected.dispatch(this, value);
                 }
                 else {
                     this.selectedGameObjects.push(value);
                     this.selectedGameObject = value;
-                    EventPool.dispatchEvent(ModelComponentEvent.GameObjectSelectChanged, this, this.selectedGameObject);
-                    EventPool.dispatchEvent(ModelComponentEvent.GameObjectSelected, this, value);
+                    ModelComponent.onGameObjectSelectChanged.dispatch(this, this.selectedGameObject);
+                    ModelComponent.onGameObjectSelected.dispatch(this, value);
                 }
             }
 
@@ -174,11 +169,11 @@ namespace paper.editor {
                     this.selectedGameObject = null;
                 }
 
-                EventPool.dispatchEvent(ModelComponentEvent.GameObjectSelectChanged, this, value);
+                ModelComponent.onGameObjectSelectChanged.dispatch(this, value);
             }
 
             this.selectedGameObjects.splice(index, 1);
-            EventPool.dispatchEvent(ModelComponentEvent.GameObjectUnselected, this, value);
+            ModelComponent.onGameObjectUnselected.dispatch(this, value);
         }
 
         public hover(value: GameObject | null) {
@@ -187,7 +182,7 @@ namespace paper.editor {
             }
 
             this.hoveredGameObject = value;
-            EventPool.dispatchEvent(ModelComponentEvent.GameObjectHovered, this, this.hoveredGameObject);
+            ModelComponent.onGameObjectHovered.dispatch(this, this.hoveredGameObject);
         }
 
         public select(value: Scene | GameObject | null, isReplace?: boolean) {
@@ -197,9 +192,9 @@ namespace paper.editor {
                 this._editorModel.selectGameObject(this.selectedGameObjects);
             }
         }
-        public remove(value:GameObject){
+        public remove(value: GameObject) {
             if (this._editorModel !== null) {
-                this._editorModel.deleteGameObject(this.selectedGameObjects)
+                this._editorModel.deleteGameObject(this.selectedGameObjects);
             }
         }
 

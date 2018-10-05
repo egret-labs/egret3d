@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * TODO 需要完善
+     * 蒙皮网格渲染器。
      */
     export class SkinnedMeshRendererSystem extends paper.BaseSystem {
         /**
@@ -13,7 +13,7 @@ namespace egret3d {
                 componentClass: SkinnedMeshRenderer,
                 listeners: [
                     {
-                        type: MeshFilterEventType.Mesh, listener: (component: SkinnedMeshRenderer) => {
+                        type: SkinnedMeshRenderer.onMeshChanged, listener: (component: SkinnedMeshRenderer) => {
                             this._updateDrawCalls(component.gameObject);
 
                             if (component.gameObject.renderer) {
@@ -21,7 +21,11 @@ namespace egret3d {
                             }
                         }
                     },
-                    { type: paper.RendererEventType.Materials, listener: (component: SkinnedMeshRenderer) => { this._updateDrawCalls(component.gameObject); } },
+                    {
+                        type: SkinnedMeshRenderer.onMaterialsChanged, listener: (component: SkinnedMeshRenderer) => {
+                            this._updateDrawCalls(component.gameObject);
+                        }
+                    },
                 ]
             }
         ];
@@ -59,6 +63,7 @@ namespace egret3d {
                 if (!renderer.forceCPUSkin) {
                     material.addDefine(ShaderDefine.USE_SKINNING).addDefine(`${ShaderDefine.MAX_BONES} ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, renderer.bones.length)}`);
                 }
+
                 this._drawCalls.drawCalls.push(drawCall);
             }
         }

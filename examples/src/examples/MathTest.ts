@@ -30,7 +30,7 @@ namespace MathTest {
             this._plane.fromPoint(this._planeObject.transform.position, this._planeObject.transform.getForward().negate().release());
             this._sphere.set(this._sphereObject.transform.position, 0.5);
 
-            const material = (this._sphereObject.renderer as egret3d.MeshRenderer).material;
+            const material = (this._sphereObject.renderer as egret3d.MeshRenderer).material!;
 
             if (egret3d.planeIntersectsSphere(this._plane, this._sphere)) {
                 material.setColor(egret3d.ShaderUniformName.Diffuse, egret3d.Color.RED);

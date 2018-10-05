@@ -307,9 +307,9 @@ namespace paper.editor {
 
         private _debug(value: boolean) {
             if (value) {
-                EventPool.addEventListener(ModelComponentEvent.SceneSelected, ModelComponent, this._onSceneSelected);
-                EventPool.addEventListener(ModelComponentEvent.SceneUnselected, ModelComponent, this._onSceneUnselected);
-                EventPool.addEventListener(ModelComponentEvent.GameObjectSelectChanged, ModelComponent, this._onGameObjectSelectedChange);
+                ModelComponent.onSceneSelected.add(this._onSceneSelected, this);
+                ModelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
+                ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectedChange, this);
 
                 this._bufferedGameObjects.push(GameObject.globalGameObject);
 
@@ -320,9 +320,9 @@ namespace paper.editor {
                 this._modelComponent.select(Scene.activeScene);
             }
             else {
-                EventPool.removeEventListener(ModelComponentEvent.SceneSelected, ModelComponent, this._onSceneSelected);
-                EventPool.removeEventListener(ModelComponentEvent.SceneUnselected, ModelComponent, this._onSceneUnselected);
-                EventPool.removeEventListener(ModelComponentEvent.GameObjectSelectChanged, ModelComponent, this._onGameObjectSelectedChange);
+                ModelComponent.onSceneSelected.remove(this._onSceneSelected, this);
+                ModelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
+                ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectedChange, this);
 
                 for (const k in this._hierarchyFolders) {
                     const folder = this._hierarchyFolders[k];

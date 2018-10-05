@@ -35,7 +35,7 @@ namespace paper {
             /**
              * 事件类型。
              */
-            type: string;
+            type: signals.Signal;
             /**
              * 事件监听。
              */
@@ -124,36 +124,21 @@ namespace paper {
         private constructor(interestConfig: ReadonlyArray<InterestConfig>) {
             this._isBehaviour = interestConfig.length === 1 && interestConfig[0].type !== undefined && (interestConfig[0].type as InterestType & InterestType.Unessential) !== 0;
             this._interestConfig = interestConfig;
-            this._onAddComponent = this._onAddComponent.bind(this);
-            this._onRemoveComponent = this._onRemoveComponent.bind(this);
-            this._onAddUnessentialComponent = this._onAddUnessentialComponent.bind(this);
-            this._onRemoveUnessentialComponent = this._onRemoveUnessentialComponent.bind(this);
+            // this._onAddComponent = this._onAddComponent.bind(this);
+            // this._onRemoveComponent = this._onRemoveComponent.bind(this);
+            // this._onAddUnessentialComponent = this._onAddUnessentialComponent.bind(this);
+            // this._onRemoveUnessentialComponent = this._onRemoveUnessentialComponent.bind(this);
 
             for (const config of this._interestConfig) {
                 const isUnessential = config.type && (config.type & InterestType.Unessential);
+                BaseComponent.onComponentDisabled.add(this._onRemoveUnessentialComponent, this);
 
-                if (Array.isArray(config.componentClass)) {
-                    for (const componentClass of config.componentClass) {
-                        EventPool.addEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveUnessentialComponent);
-
-                        if (!isUnessential) {
-                            EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddComponent);
-                            EventPool.addEventListener(EventPool.EventType.Disabled, componentClass, this._onRemoveComponent);
-                        }
-
-                        EventPool.addEventListener(EventPool.EventType.Enabled, componentClass, this._onAddUnessentialComponent);
-                    }
+                if (!isUnessential) {
+                    BaseComponent.onComponentEnabled.add(this._onAddComponent, this);
+                    BaseComponent.onComponentDisabled.add(this._onRemoveComponent, this);
                 }
-                else {
-                    EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveUnessentialComponent);
 
-                    if (!isUnessential) {
-                        EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddComponent);
-                        EventPool.addEventListener(EventPool.EventType.Disabled, config.componentClass, this._onRemoveComponent);
-                    }
-
-                    EventPool.addEventListener(EventPool.EventType.Enabled, config.componentClass, this._onAddUnessentialComponent);
-                }
+                BaseComponent.onComponentEnabled.add(this._onAddUnessentialComponent, this);
             }
 
             for (const scene of paper.Application.sceneManager.scenes) {

@@ -43325,7 +43325,7 @@ var egret3d;
                 _this._gravity = egret3d.Vector3.create(0.0, -9.80665, 0.0);
                 _this._rayCastClosest = new OIMO.RayCastClosest();
                 _this._contactCallback = new OIMO.ContactCallback();
-                _this._contactColliders = paper.GameObject.globalGameObject.getOrAddComponent(paper.ContactColliders);
+                _this._contactColliders = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.ContactCollecter);
                 _this._oimoWorld = null;
                 return _this;
             }

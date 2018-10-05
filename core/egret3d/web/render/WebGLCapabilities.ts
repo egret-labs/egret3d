@@ -360,26 +360,6 @@ namespace egret3d {
             return program;
         }
 
-        public targetAndViewport(viewport: Rectangle, target: BaseRenderTarget | null) {
-            const webgl = WebGLCapabilities.webgl!;
-
-            let w: number;
-            let h: number;
-            if (!target) {
-                w = stage.screenViewport.w;
-                h = stage.screenViewport.h;
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-            }
-            else {
-                w = target.width;
-                h = target.height;
-                target.use();
-            }
-
-            webgl.viewport(w * viewport.x, h * viewport.y, w * viewport.w, h * viewport.h);
-            webgl.depthRange(0, 1);
-        }
-
         public clear(clearOptColor: boolean, clearOptDepath: boolean, clearColor: Color) {
             const webgl = WebGLCapabilities.webgl!;
 

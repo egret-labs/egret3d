@@ -4,25 +4,20 @@ namespace egret3d {
     const _helpVector3C = Vector3.create();
     const _helpMatrix = Matrix4.create();
     /**
-     * Skinned Mesh Renderer Component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 蒙皮网格的渲染组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
+     * 蒙皮网格渲染器。
      */
     export class SkinnedMeshRenderer extends MeshRenderer {
+        /**
+         * 
+         */
+        public static readonly onMeshChanged: signals.Signal = new signals.Signal();
         /**
          * 强制使用 cpu 蒙皮。
          * - 骨骼数超过硬件支持的最大骨骼数量，或顶点权重大于 4 个，需要使用 CPU 蒙皮。
          */
         public forceCPUSkin: boolean = false;
         /**
-         * 
+         * @internal
          */
         public boneMatrices: Float32Array | null = null;
 
@@ -53,7 +48,7 @@ namespace egret3d {
 
             if (this.forceCPUSkin) {
                 const vA = _helpVector3A;
-                const vB = _helpVector3A;
+                const vB = _helpVector3B;
                 const vC = _helpVector3C;
                 const mA = _helpMatrix;
 
@@ -171,7 +166,7 @@ namespace egret3d {
             let raycastMesh = false;
             let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
             const worldMatrix = this.gameObject.transform.worldMatrix;
-            const localRay = MeshRenderer._helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
+            const localRay = helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
             const aabb = this.aabb;
 
             if (p2) {
@@ -198,11 +193,15 @@ namespace egret3d {
 
             return false;
         }
-
+        /**
+         * 该渲染器的骨骼列表。
+         */
         public get bones(): ReadonlyArray<Transform | null> {
             return this._bones;
         }
-
+        /**
+         * 该渲染器的根骨骼。
+         */
         public get rootBone() {
             return this._rootBone;
         }
@@ -227,7 +226,7 @@ namespace egret3d {
             }
 
             this._mesh = mesh;
-            paper.EventPool.dispatchEvent(MeshFilterEventType.Mesh, this);
+            SkinnedMeshRenderer.onMeshChanged.dispatch(this);
         }
     }
 }

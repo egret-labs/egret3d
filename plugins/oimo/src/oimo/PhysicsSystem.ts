@@ -28,7 +28,7 @@ namespace egret3d.oimo {
         private readonly _gravity = Vector3.create(0.0, -9.80665, 0.0);
         private readonly _rayCastClosest: OIMO.RayCastClosest = new OIMO.RayCastClosest();
         private readonly _contactCallback: OIMO.ContactCallback = new OIMO.ContactCallback();
-        private readonly _contactColliders: paper.ContactColliders = paper.GameObject.globalGameObject.getOrAddComponent(paper.ContactColliders);
+        private readonly _contactColliders: ContactCollecter = paper.GameObject.globalGameObject.getOrAddComponent(ContactCollecter);
         private _oimoWorld: OIMO.World = null!;
 
         public raycast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;

@@ -1,41 +1,46 @@
 namespace egret3d.particle {
-    export const enum ParticleCompEventType {
-        MainChanged = "mainChanged",
-        ColorChanged = "colorChanged",
-        VelocityChanged = "velocityChanged",
-        SizeChanged = "sizeChanged",
-        RotationChanged = "rotationChanged",
-        TextureSheetChanged = "textureSheetChanged",
-        ShapeChanged = "shapeChanged",
-        StartRotation3DChanged = "rotation3DChanged",
-        SimulationSpaceChanged = "simulationSpace",
-        ScaleModeChanged = "scaleMode",
-        MaxParticlesChanged = "maxParticles"
-    }
-
+    /**
+     * 粒子组件。
+     */
     export class ParticleComponent extends paper.BaseComponent {
-        //主模块
+        /**
+         * 主模块。 
+         */
         @paper.serializedField
         public readonly main: MainModule = new MainModule(this);
-        //发射模块
+        /**
+         * 发射模块。 
+         */
         @paper.serializedField
         public readonly emission: EmissionModule = new EmissionModule(this);
-        //发射形状模块
+        /**
+         * 发射形状模块。 
+         */
         @paper.serializedField
         public readonly shape: ShapeModule = new ShapeModule(this);
-        //速率变换模块
+        /**
+         * 速率变换模块。 
+         */
         @paper.serializedField
         public readonly velocityOverLifetime: VelocityOverLifetimeModule = new VelocityOverLifetimeModule(this);
-        //旋转变换模块
+        /**
+         * 旋转变换模块。 
+         */
         @paper.serializedField
         public readonly rotationOverLifetime: RotationOverLifetimeModule = new RotationOverLifetimeModule(this);
-        //尺寸变化模块
+        /**
+         * 尺寸变化模块。 
+         */
         @paper.serializedField
         public readonly sizeOverLifetime: SizeOverLifetimeModule = new SizeOverLifetimeModule(this);
-        //颜色变化模块
+        /**
+         * 颜色变化模块。 
+         */
         @paper.serializedField
         public readonly colorOverLifetime: ColorOverLifetimeModule = new ColorOverLifetimeModule(this);
-        //序列帧变化模块
+        /**
+         * 序列帧变化模块。 
+         */
         @paper.serializedField
         public readonly textureSheetAnimation: TextureSheetAnimationModule = new TextureSheetAnimationModule(this);
         /**
@@ -47,27 +52,20 @@ namespace egret3d.particle {
          */
         public _isPaused: boolean = false;
         private readonly _batcher: ParticleBatcher = new ParticleBatcher();
-        /**
-         * @internal
-         */
-        public _clean() {
-            //
-            this._batcher.clean();
+
+        private _clean() {
             this._isPlaying = false;
             this._isPaused = false;
+            this._batcher.clean();
         }
-        /**
-         * @internal 
-         */
-        public uninitialize() {
-            super.uninitialize();
-            this._clean();
-        }
-        /**
-         * @internal 
-         */
+
         public initialize() {
             super.initialize();
+            this._clean();
+        }
+
+        public uninitialize() {
+            super.uninitialize();
             this._clean();
         }
         /**
@@ -84,7 +82,7 @@ namespace egret3d.particle {
             this._batcher.update(elapsedTime);
         }
 
-        public play(withChildren: boolean = true): void {
+        public play(withChildren: boolean = true) {
             if (this._isPaused) {
                 this._isPaused = false;
             } else {
@@ -145,17 +143,20 @@ namespace egret3d.particle {
             }
         }
 
-        public get loop(): boolean {
-            return this.main.loop;
-        }
-        public get isPlaying(): boolean {
+        public get isPlaying() {
             return this._isPlaying;
         }
-        public get isPaused(): boolean {
+
+        public get isPaused() {
             return this._isPaused;
         }
-        public get isAlive(): boolean {
+
+        public get isAlive() {
             return this._batcher.aliveParticleCount > 0 || this._isPlaying;
+        }
+
+        public get loop() {
+            return this.main.loop;
         }
     }
 }

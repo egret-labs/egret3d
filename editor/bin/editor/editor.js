@@ -3249,18 +3249,6 @@ var paper;
         /**
          * @internal
          */
-        var ModelComponentEvent;
-        (function (ModelComponentEvent) {
-            ModelComponentEvent["SceneSelected"] = "SceneSelected";
-            ModelComponentEvent["SceneUnselected"] = "SceneUnselected";
-            ModelComponentEvent["GameObjectHovered"] = "GameObjectHovered";
-            ModelComponentEvent["GameObjectSelectChanged"] = "GameObjectSelectChanged";
-            ModelComponentEvent["GameObjectSelected"] = "GameObjectSelected";
-            ModelComponentEvent["GameObjectUnselected"] = "GameObjectUnselected";
-        })(ModelComponentEvent = editor.ModelComponentEvent || (editor.ModelComponentEvent = {}));
-        /**
-         * @internal
-         */
         var ModelComponent = (function (_super) {
             __extends(ModelComponent, _super);
             function ModelComponent() {
@@ -3367,30 +3355,30 @@ var paper;
                     if (this.selectedScene) {
                         var selectedScene = this.selectedScene;
                         this.selectedScene = null;
-                        paper.EventPool.dispatchEvent("SceneUnselected" /* SceneUnselected */, this, selectedScene);
+                        ModelComponent.onSceneUnselected.dispatch(this, selectedScene);
                     }
                     else if (this.selectedGameObjects.length > 0) {
                         var gameObjects = this.selectedGameObjects.concat();
                         var selectedGameObject = this.selectedGameObject;
                         this.selectedGameObjects.length = 0;
                         this.selectedGameObject = null;
-                        paper.EventPool.dispatchEvent("GameObjectSelectChanged" /* GameObjectSelectChanged */, this, selectedGameObject);
+                        ModelComponent.onGameObjectSelectChanged.dispatch(this, selectedGameObject);
                         for (var _i = 0, gameObjects_1 = gameObjects; _i < gameObjects_1.length; _i++) {
                             var gameObject = gameObjects_1[_i];
-                            paper.EventPool.dispatchEvent("GameObjectUnselected" /* GameObjectUnselected */, this, gameObject);
+                            ModelComponent.onGameObjectUnselected.dispatch(this, gameObject);
                         }
                     }
                 }
                 if (value) {
                     if (value instanceof paper.Scene) {
                         this.selectedScene = value;
-                        paper.EventPool.dispatchEvent("SceneSelected" /* SceneSelected */, this, value);
+                        ModelComponent.onSceneSelected.dispatch(this, value);
                     }
                     else {
                         this.selectedGameObjects.push(value);
                         this.selectedGameObject = value;
-                        paper.EventPool.dispatchEvent("GameObjectSelectChanged" /* GameObjectSelectChanged */, this, this.selectedGameObject);
-                        paper.EventPool.dispatchEvent("GameObjectSelected" /* GameObjectSelected */, this, value);
+                        ModelComponent.onGameObjectSelectChanged.dispatch(this, this.selectedGameObject);
+                        ModelComponent.onGameObjectSelected.dispatch(this, value);
                     }
                 }
                 (global || window)["psgo"] = value; // For quick debug.
@@ -3407,17 +3395,17 @@ var paper;
                     else {
                         this.selectedGameObject = null;
                     }
-                    paper.EventPool.dispatchEvent("GameObjectSelectChanged" /* GameObjectSelectChanged */, this, value);
+                    ModelComponent.onGameObjectSelectChanged.dispatch(this, value);
                 }
                 this.selectedGameObjects.splice(index, 1);
-                paper.EventPool.dispatchEvent("GameObjectUnselected" /* GameObjectUnselected */, this, value);
+                ModelComponent.onGameObjectUnselected.dispatch(this, value);
             };
             ModelComponent.prototype.hover = function (value) {
                 if (this.hoveredGameObject === value) {
                     return;
                 }
                 this.hoveredGameObject = value;
-                paper.EventPool.dispatchEvent("GameObjectHovered" /* GameObjectHovered */, this, this.hoveredGameObject);
+                ModelComponent.onGameObjectHovered.dispatch(this, this.hoveredGameObject);
             };
             ModelComponent.prototype.select = function (value, isReplace) {
                 this._select(value, isReplace);
@@ -3441,6 +3429,12 @@ var paper;
                     this._editorModel.setTransformProperty(propName, propOldValue, propNewValue, target);
                 }
             };
+            ModelComponent.onSceneSelected = new signals.Signal();
+            ModelComponent.onSceneUnselected = new signals.Signal();
+            ModelComponent.onGameObjectHovered = new signals.Signal();
+            ModelComponent.onGameObjectSelectChanged = new signals.Signal();
+            ModelComponent.onGameObjectSelected = new signals.Signal();
+            ModelComponent.onGameObjectUnselected = new signals.Signal();
             return ModelComponent;
         }(paper.SingletonComponent));
         editor.ModelComponent = ModelComponent;
@@ -4051,9 +4045,9 @@ var paper;
             };
             GUISystem.prototype._debug = function (value) {
                 if (value) {
-                    paper.EventPool.addEventListener("SceneSelected" /* SceneSelected */, editor.ModelComponent, this._onSceneSelected);
-                    paper.EventPool.addEventListener("SceneUnselected" /* SceneUnselected */, editor.ModelComponent, this._onSceneUnselected);
-                    paper.EventPool.addEventListener("GameObjectSelectChanged" /* GameObjectSelectChanged */, editor.ModelComponent, this._onGameObjectSelectedChange);
+                    editor.ModelComponent.onSceneSelected.add(this._onSceneSelected, this);
+                    editor.ModelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
+                    editor.ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectedChange, this);
                     this._bufferedGameObjects.push(paper.GameObject.globalGameObject);
                     for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
                         var gameObject = _a[_i];
@@ -4062,9 +4056,9 @@ var paper;
                     this._modelComponent.select(paper.Scene.activeScene);
                 }
                 else {
-                    paper.EventPool.removeEventListener("SceneSelected" /* SceneSelected */, editor.ModelComponent, this._onSceneSelected);
-                    paper.EventPool.removeEventListener("SceneUnselected" /* SceneUnselected */, editor.ModelComponent, this._onSceneUnselected);
-                    paper.EventPool.removeEventListener("GameObjectSelectChanged" /* GameObjectSelectChanged */, editor.ModelComponent, this._onGameObjectSelectedChange);
+                    editor.ModelComponent.onSceneSelected.remove(this._onSceneSelected, this);
+                    editor.ModelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
+                    editor.ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectedChange, this);
                     for (var k in this._hierarchyFolders) {
                         var folder = this._hierarchyFolders[k];
                         delete this._hierarchyFolders[k];
@@ -4234,9 +4228,6 @@ var paper;
                 _this._boxColliderDrawer = null;
                 // private _sphereColliderDrawer: GameObject | null = null;
                 _this._cameraViewFrustum = null; // TODO封装一下
-                _this._contextmenuHandler = function (event) {
-                    event.preventDefault();
-                };
                 _this._onMouseDown = function (event) {
                     _this._pointerStartPosition.copy(_this._pointerPosition);
                     if (event.button === 0) {
@@ -4346,48 +4337,6 @@ var paper;
                         }
                     }
                     event.preventDefault();
-                };
-                _this._onKeyUp = function (event) {
-                    var transformController = _this._transformController;
-                    if (!event.altKey && !event.ctrlKey && !event.shiftKey) {
-                        switch (event.key.toLowerCase()) {
-                            case "escape":
-                                _this._modelComponent.select(null);
-                                break;
-                            case "delete":
-                                if (paper.Application.playerMode !== 2 /* Editor */) {
-                                    for (var _i = 0, _a = _this._modelComponent.selectedGameObjects; _i < _a.length; _i++) {
-                                        var gameObject = _a[_i];
-                                        gameObject.destroy();
-                                    }
-                                }
-                                break;
-                            case "f":
-                                _this._orbitControls.distance = 10.0;
-                                _this._orbitControls.lookAtOffset.set(0.0, 0.0, 0.0);
-                                if (_this._modelComponent.selectedGameObject) {
-                                    _this._orbitControls.lookAtPoint.copy(_this._modelComponent.selectedGameObject.transform.position);
-                                }
-                                else {
-                                    _this._orbitControls.lookAtPoint.copy(egret3d.Vector3.ZERO);
-                                }
-                                break;
-                            case "w":
-                                transformController.mode = transformController.translate;
-                                break;
-                            case "e":
-                                transformController.mode = transformController.rotate;
-                                break;
-                            case "r":
-                                transformController.mode = transformController.scale;
-                                break;
-                            case "x":
-                                transformController.isWorldSpace = !transformController.isWorldSpace;
-                                break;
-                        }
-                    }
-                };
-                _this._onKeyDown = function (event) {
                 };
                 _this._onGameObjectHovered = function (_c, value) {
                     _this._hoverBox.activeSelf =
@@ -4542,18 +4491,16 @@ var paper;
                 }
             };
             SceneSystem.prototype.onEnable = function () {
-                paper.EventPool.addEventListener("GameObjectHovered" /* GameObjectHovered */, editor.ModelComponent, this._onGameObjectHovered);
-                paper.EventPool.addEventListener("GameObjectSelectChanged" /* GameObjectSelectChanged */, editor.ModelComponent, this._onGameObjectSelectChanged);
-                paper.EventPool.addEventListener("GameObjectSelected" /* GameObjectSelected */, editor.ModelComponent, this._onGameObjectSelected);
-                paper.EventPool.addEventListener("GameObjectUnselected" /* GameObjectUnselected */, editor.ModelComponent, this._onGameObjectUnselected);
+                editor.ModelComponent.onGameObjectHovered.add(this._onGameObjectHovered, this);
+                editor.ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectChanged, this);
+                editor.ModelComponent.onGameObjectSelected.add(this._onGameObjectSelected, this);
+                editor.ModelComponent.onGameObjectUnselected.add(this._onGameObjectUnselected, this);
                 {
+                    var inputCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.InputCollecter);
                     var canvas = egret3d.WebGLCapabilities.canvas;
-                    window.addEventListener("contextmenu", this._contextmenuHandler);
                     canvas.addEventListener("mousedown", this._onMouseDown);
                     window.addEventListener("mouseup", this._onMouseUp);
                     window.addEventListener("mousemove", this._onMouseMove);
-                    window.addEventListener("keyup", this._onKeyUp);
-                    window.addEventListener("keydown", this._onKeyDown);
                 }
                 this._orbitControls = egret3d.Camera.editor.gameObject.getOrAddComponent(editor.OrbitControls);
                 this._transformController = editor.EditorMeshHelper.createGameObject("Axises").addComponent(editor.TransfromController);
@@ -4576,18 +4523,16 @@ var paper;
                 // editorCamera.transform.rotation = mainCamera.transform.rotation;
             };
             SceneSystem.prototype.onDisable = function () {
-                paper.EventPool.removeEventListener("GameObjectHovered" /* GameObjectHovered */, editor.ModelComponent, this._onGameObjectHovered);
-                paper.EventPool.removeEventListener("GameObjectSelectChanged" /* GameObjectSelectChanged */, editor.ModelComponent, this._onGameObjectSelectChanged);
-                paper.EventPool.removeEventListener("GameObjectSelected" /* GameObjectSelected */, editor.ModelComponent, this._onGameObjectSelected);
-                paper.EventPool.removeEventListener("GameObjectUnselected" /* GameObjectUnselected */, editor.ModelComponent, this._onGameObjectUnselected);
+                editor.ModelComponent.onGameObjectHovered.remove(this._onGameObjectHovered, this);
+                editor.ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectChanged, this);
+                editor.ModelComponent.onGameObjectSelected.remove(this._onGameObjectSelected, this);
+                editor.ModelComponent.onGameObjectUnselected.remove(this._onGameObjectUnselected, this);
                 {
+                    var inputCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.InputCollecter);
                     var canvas = egret3d.WebGLCapabilities.canvas;
-                    window.removeEventListener("contextmenu", this._contextmenuHandler);
                     canvas.removeEventListener("mousedown", this._onMouseDown);
                     window.removeEventListener("mouseup", this._onMouseUp);
                     window.removeEventListener("mousemove", this._onMouseMove);
-                    window.removeEventListener("keyup", this._onKeyUp);
-                    window.removeEventListener("keydown", this._onKeyDown);
                 }
                 //
                 for (var _i = 0, _a = this._camerasAndLights.cameras; _i < _a.length; _i++) {
@@ -4628,33 +4573,68 @@ var paper;
                 this._cameraViewFrustum = null;
             };
             SceneSystem.prototype.onUpdate = function () {
+                var inputCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.InputCollecter);
+                var gridController = this._gridController;
+                var hoverBox = this._hoverBox;
+                var transformController = this._transformController;
+                var boxColliderDrawer = this._boxColliderDrawer;
+                var key = null;
+                if ((key = inputCollecter.isKeyUp("Escape", false)) && !key.event.altKey && !key.event.ctrlKey && !key.event.shiftKey) {
+                    this._modelComponent.select(null);
+                }
+                else if (inputCollecter.isKeyUp("Delete", false)) {
+                    if (paper.Application.playerMode !== 2 /* Editor */) {
+                        for (var _i = 0, _a = this._modelComponent.selectedGameObjects; _i < _a.length; _i++) {
+                            var gameObject = _a[_i];
+                            gameObject.destroy();
+                        }
+                    }
+                }
+                else if ((key = inputCollecter.isKeyUp("KeyW", false)) && !key.event.altKey && !key.event.ctrlKey && !key.event.shiftKey) {
+                    transformController.mode = transformController.translate;
+                }
+                else if ((key = inputCollecter.isKeyHold("KeyE", false)) && !key.event.altKey && !key.event.ctrlKey && !key.event.shiftKey) {
+                    transformController.mode = transformController.rotate;
+                }
+                else if ((key = inputCollecter.isKeyUp("KeyR", false)) && !key.event.altKey && !key.event.ctrlKey && !key.event.shiftKey) {
+                    transformController.mode = transformController.scale;
+                }
+                else if ((key = inputCollecter.isKeyUp("KeyX", false)) && !key.event.altKey && !key.event.ctrlKey && !key.event.shiftKey) {
+                    transformController.isWorldSpace = !transformController.isWorldSpace;
+                }
+                else if ((key = inputCollecter.isKeyUp("KeyF", false)) && !key.event.altKey && !key.event.ctrlKey && !key.event.shiftKey) {
+                    this._orbitControls.distance = 10.0;
+                    this._orbitControls.lookAtOffset.set(0.0, 0.0, 0.0);
+                    if (this._modelComponent.selectedGameObject) {
+                        this._orbitControls.lookAtPoint.copy(this._modelComponent.selectedGameObject.transform.position);
+                    }
+                    else {
+                        this._orbitControls.lookAtPoint.copy(egret3d.Vector3.ZERO);
+                    }
+                }
                 // Update model gameObjects.
                 if (this._modelComponent.hoveredGameObject && this._modelComponent.hoveredGameObject.isDestroyed) {
                     this._modelComponent.hover(null);
                 }
-                for (var _i = 0, _a = this._modelComponent.selectedGameObjects; _i < _a.length; _i++) {
-                    var gameObject = _a[_i];
+                for (var _b = 0, _d = this._modelComponent.selectedGameObjects; _b < _d.length; _b++) {
+                    var gameObject = _d[_b];
                     if (gameObject.isDestroyed) {
                         this._modelComponent.unselect(gameObject);
                     }
                 }
                 var hoveredGameObject = this._modelComponent.hoveredGameObject;
                 var selectedGameObject = this._modelComponent.selectedGameObject;
-                var gridController = this._gridController;
                 if (gridController.isActiveAndEnabled) {
                     gridController.update();
                 }
-                var hoverBox = this._hoverBox;
                 if (hoverBox.activeSelf) {
                     hoverBox.transform.localPosition = egret3d.Vector3.create().copy(hoveredGameObject.renderer.aabb.center).applyMatrix(hoveredGameObject.transform.worldMatrix).release();
                     hoverBox.transform.localRotation = hoveredGameObject.transform.rotation;
                     hoverBox.transform.localScale = egret3d.Vector3.create().multiply(hoveredGameObject.renderer.aabb.size, hoveredGameObject.transform.scale);
                 }
-                var transformController = this._transformController;
                 if (transformController.isActiveAndEnabled) {
                     transformController.update(this._pointerPosition);
                 }
-                var boxColliderDrawer = this._boxColliderDrawer;
                 if (boxColliderDrawer.activeSelf) {
                     var boxCollider = selectedGameObject.getComponent(egret3d.BoxCollider);
                     boxColliderDrawer.transform.localPosition = egret3d.Vector3.create().copy(boxCollider.aabb.center).applyMatrix(selectedGameObject.transform.worldMatrix).release();

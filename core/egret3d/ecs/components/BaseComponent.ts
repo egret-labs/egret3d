@@ -15,6 +15,14 @@ namespace paper {
          * 该组件实例依赖的其他前置组件。
          */
         public static requireComponents: ComponentClass<BaseComponent>[] | null = null;
+        /**
+         * 
+         */
+        public static readonly onComponentEnabled: signals.Signal = new signals.Signal();
+        /**
+         * 
+         */
+        public static readonly onComponentDisabled: signals.Signal = new signals.Signal();
         // TODO 基类标记，以阻止注册基类。
         /**
          * @internal
@@ -133,7 +141,12 @@ namespace paper {
             const currentEnabled = this.isActiveAndEnabled;
 
             if (currentEnabled !== prevEnabled) {
-                EventPool.dispatchEvent(currentEnabled ? EventPool.EventType.Enabled : EventPool.EventType.Disabled, this);
+                if (currentEnabled) {
+                    BaseComponent.onComponentEnabled.dispatch(this);
+                }
+                else {
+                    BaseComponent.onComponentDisabled.dispatch(this);
+                }
             }
         }
         /**

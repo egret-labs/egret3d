@@ -92,17 +92,17 @@ namespace egret3d.particle {
             const rotationModule = comp.rotationOverLifetime;
             const textureSheetModule = comp.textureSheetAnimation;
 
-            const isVelocityRandom = velocityModule.enable && (velocityModule._mode === CurveMode.TwoConstants || velocityModule._mode === CurveMode.TwoCurves);
-            const isColorRandom = colorModule.enable && colorModule._color.mode === ColorGradientMode.TwoGradients;
-            const isSizeRandom = sizeModule.enable && (sizeModule._size.mode === CurveMode.TwoConstants || sizeModule._size.mode === CurveMode.TwoCurves);
-            const isRotationRandom = rotationModule.enable && (rotationModule._x.mode === CurveMode.TwoConstants || rotationModule._x.mode === CurveMode.TwoCurves);
-            const isTextureRandom = textureSheetModule.enable && (textureSheetModule._startFrame.mode === CurveMode.TwoConstants || textureSheetModule._startFrame.mode === CurveMode.TwoCurves);
+            const isVelocityRandom = velocityModule.enable && (velocityModule.mode === CurveMode.TwoConstants || velocityModule.mode === CurveMode.TwoCurves);
+            const isColorRandom = colorModule.enable && colorModule.color.mode === ColorGradientMode.TwoGradients;
+            const isSizeRandom = sizeModule.enable && (sizeModule.size.mode === CurveMode.TwoConstants || sizeModule.size.mode === CurveMode.TwoCurves);
+            const isRotationRandom = rotationModule.enable && (rotationModule.x.mode === CurveMode.TwoConstants || rotationModule.x.mode === CurveMode.TwoCurves);
+            const isTextureRandom = textureSheetModule.enable && (textureSheetModule.startFrame.mode === CurveMode.TwoConstants || textureSheetModule.startFrame.mode === CurveMode.TwoCurves);
 
             const needRandom0 = isColorRandom || isSizeRandom || isRotationRandom || isTextureRandom;
 
             const worldPosition = this._worldPostionCache;
             const worldRotation = this._worldRotationCache;
-            const isWorldSpace = main._simulationSpace === SimulationSpace.World;
+            const isWorldSpace = main.simulationSpace === SimulationSpace.World;
 
             const startPositionBuffer = this._startPositionBuffer;
             const startVelocityBuffer = this._startVelocityBuffer;
@@ -202,9 +202,9 @@ namespace egret3d.particle {
                         worldRoationBuffer[vector4Offset + 2] = worldRotation.z;
                         worldRoationBuffer[vector4Offset + 3] = worldRotation.w;
                     }
-                };
+                }
                 startCursor++;
-                if (startCursor >= main._maxParticles) {
+                if (startCursor >= main.maxParticles) {
                     startCursor = 0;
                 }
                 addCount++;
@@ -222,7 +222,7 @@ namespace egret3d.particle {
                 return false;
             }
             //
-            const maxParticles = this._comp.main._maxParticles;
+            const maxParticles = this._comp.main.maxParticles;
             var nextCursor = this._firstAliveCursor + 1 >= maxParticles ? 0 : this._firstAliveCursor + 1;
             //
             if (nextCursor === this._lastAliveCursor) {
@@ -273,8 +273,8 @@ namespace egret3d.particle {
             this._comp = comp;
             this._renderer = renderer;
 
-            const mesh = createBatchMesh(renderer, comp.main._maxParticles);
-            this._vertexStride = renderer._renderMode === ParticleRenderMode.Mesh ? renderer.mesh!.vertexCount : 4;
+            const mesh = createBatchMesh(renderer, comp.main.maxParticles);
+            this._vertexStride = renderer.renderMode === ParticleRenderMode.Mesh ? renderer.mesh!.vertexCount : 4;
 
             this._startPositionBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_POSITION)!;
             this._startVelocityBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_VELOCITY)!;
@@ -314,7 +314,7 @@ namespace egret3d.particle {
                 }
                 this._forceUpdate = false;
                 this._lastAliveCursor++;
-                if (this._lastAliveCursor >= mainModule._maxParticles) {
+                if (this._lastAliveCursor >= mainModule.maxParticles) {
                     this._lastAliveCursor = 0;
                 }
             }
@@ -374,7 +374,7 @@ namespace egret3d.particle {
                 }
             }
 
-            totalEmitCount = Math.min(mainModule._maxParticles - aliveParticleCount, totalEmitCount);
+            totalEmitCount = Math.min(mainModule.maxParticles - aliveParticleCount, totalEmitCount);
             if (totalEmitCount > 0) {
                 this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount, lastEmittsionTime);
                 this._dirty = true;
@@ -408,12 +408,12 @@ namespace egret3d.particle {
 
             const transform = comp.gameObject.transform;
             const material = renderer.batchMaterial;
-            if (mainModule._simulationSpace === SimulationSpace.Local) {
+            if (mainModule.simulationSpace === SimulationSpace.Local) {
                 material.setVector3(ParticleMaterialUniform.WORLD_POSITION, this._worldPostionCache);
                 material.setVector4(ParticleMaterialUniform.WORLD_ROTATION, this._worldRotationCache);
             }
             //
-            switch (mainModule._scaleMode) {
+            switch (mainModule.scaleMode) {
                 case ScalingMode.Local:
                     {
                         const scale = transform.getLocalScale();
@@ -445,7 +445,7 @@ namespace egret3d.particle {
             if (this._firstAliveCursor >= this._lastAliveCursor) {
                 return this._firstAliveCursor - this._lastAliveCursor;
             } else {
-                return this._comp.main._maxParticles - this._lastAliveCursor + this._firstAliveCursor;
+                return this._comp.main.maxParticles - this._lastAliveCursor + this._firstAliveCursor;
             }
         }
     }

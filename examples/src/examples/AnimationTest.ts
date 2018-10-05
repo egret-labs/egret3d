@@ -7,7 +7,7 @@ namespace AnimationTest {
         // Load prefab resource.
         await RES.getResAsync("Assets/C_xiaohuangren_D_01_ANIM.prefab.json");
         // Create prefab.
-        const gameObject = paper.Prefab.create("Assets/C_xiaohuangren_D_01_ANIM.prefab.json");
+        const gameObject = paper.Prefab.create("Assets/C_xiaohuangren_D_01_ANIM.prefab.json")!;
         gameObject.getComponentInChildren(egret3d.Animation)!.play("run01");
 
         //

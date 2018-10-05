@@ -36,20 +36,21 @@ namespace egret3d {
         WebGLCapabilities.webgl = options.webgl;
 
         InputManager.init(canvas);
-        stage.init(canvas, requiredOptions);
 
         paper.Application.init(options);
 
         const systemManager = paper.Application.systemManager;
-        systemManager.register(BeginSystem, paper.SystemOrder.Begin);
+        systemManager.register(web.BeginSystem, paper.SystemOrder.Begin, options);
+
         systemManager.register(AnimationSystem, paper.SystemOrder.Animation);
         systemManager.register(MeshRendererSystem, paper.SystemOrder.Renderer);
         systemManager.register(SkinnedMeshRendererSystem, paper.SystemOrder.Renderer);
         systemManager.register(particle.ParticleSystem, paper.SystemOrder.Renderer);
         systemManager.register(Egret2DRendererSystem, paper.SystemOrder.Renderer);
-        systemManager.register(CameraAndLightSystem, paper.SystemOrder.Draw - 1);
-        systemManager.register(WebGLRenderSystem, paper.SystemOrder.Draw);
-        systemManager.register(EndSystem, paper.SystemOrder.End);
+        systemManager.register(CameraAndLightSystem, paper.SystemOrder.Draw);
+
+        systemManager.register(web.WebGLRenderSystem, paper.SystemOrder.Draw, options);
+        systemManager.register(web.EndSystem, paper.SystemOrder.End, options);
         systemManager._preRegisterSystems();
 
         console.info("Egret start complete.");

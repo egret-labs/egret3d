@@ -1,96 +1,16 @@
 namespace egret3d {
-
     /**
-     * touch phase type
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 触摸状态
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * @deprecated
      */
     export enum TouchPhase {
-        /**
-         * touch began
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 触摸开始
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
         BEGAN,
-        /**
-         * touch moved
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 触摸移动
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
         MOVED,
-        /**
-         * touch stationary
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 触摸静止
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
         STATIONARY,
-        /**
-         * touch ended
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 触摸结束
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
         ENDED,
-        /**
-         * touch canceled
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 触摸取消
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
         CANCELED
     }
-
     /**
-     * touch point
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 触摸点信息
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * @deprecated
      */
     export class TouchPoint {
 
@@ -156,16 +76,7 @@ namespace egret3d {
     }
 
     /**
-     * touch input
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 触摸输入
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * @deprecated
      */
     export class TouchDevice extends EventDispatcher {
 
@@ -203,16 +114,7 @@ namespace egret3d {
         private _touches: TouchPoint[] = [];
 
         /**
-         * touch count
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 当前触摸点的数量
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public touchCount = 0;
 
@@ -284,18 +186,7 @@ namespace egret3d {
         }
 
         /**
-         * get touch point
-         * @param index touch index
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取触摸点
-         * @param index 触摸点的索引
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public getTouch(index: number): TouchPoint {
             return this._touches[index];
@@ -387,7 +278,7 @@ namespace egret3d {
             if (this.preventDefault && event["isScroll"] != true && !this._element['userTyping']) {
                 event.preventDefault();
             }
-            
+
             if (this.stopPropagation) {
                 event.stopPropagation();
             }

@@ -53,7 +53,7 @@ namespace paper {
          * 系统内部初始化。
          * @internal
          */
-        public _initialize() {
+        public _initialize(config?: any) {
             if (this._interests.length > 0) {
                 let interests: ReadonlyArray<ReadonlyArray<InterestConfig>>;
 
@@ -66,18 +66,9 @@ namespace paper {
 
                 for (const interest of interests) {
                     for (const config of interest) {
-                        if (!config.listeners) {
-                            continue;
-                        }
-
-                        for (const listenerConfig of config.listeners) {
-                            if (Array.isArray(config.componentClass)) {
-                                for (const componentClass of config.componentClass) {
-                                    EventPool.addEventListener(listenerConfig.type, componentClass, listenerConfig.listener);
-                                }
-                            }
-                            else {
-                                EventPool.addEventListener(listenerConfig.type, config.componentClass, listenerConfig.listener);
+                        if (config.listeners) {
+                            for (const listenerConfig of config.listeners) {
+                                listenerConfig.type.add(listenerConfig.listener, this);
                             }
                         }
                     }
@@ -86,7 +77,7 @@ namespace paper {
                 }
             }
 
-            this.onAwake && this.onAwake();
+            this.onAwake && this.onAwake(config);
             this.onEnable && this.onEnable();
         }
         /**
@@ -108,18 +99,9 @@ namespace paper {
 
                 for (const interest of interests) {
                     for (const config of interest) {
-                        if (!config.listeners) {
-                            continue;
-                        }
-
-                        for (const listenerConfig of config.listeners) {
-                            if (Array.isArray(config.componentClass)) {
-                                for (const componentClass of config.componentClass) {
-                                    EventPool.removeEventListener(listenerConfig.type, componentClass, listenerConfig.listener);
-                                }
-                            }
-                            else {
-                                EventPool.removeEventListener(listenerConfig.type, config.componentClass, listenerConfig.listener);
+                        if (config.listeners) {
+                            for (const listenerConfig of config.listeners) {
+                                listenerConfig.type.remove(listenerConfig.listener);
                             }
                         }
                     }
@@ -175,7 +157,7 @@ namespace paper {
         /**
          * 该系统初始化时调用。
          */
-        public onAwake?(): void;
+        public onAwake?(config?: any): void;
         /**
          * 该系统被激活时调用。
          * @see paper.BaseSystem#enabled

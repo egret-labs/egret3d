@@ -1,57 +1,18 @@
 namespace egret3d {
     /**
-     * device input manager
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 用户输入设备管理器
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * @deprecated
      */
     export class InputManager {
-
         /**
-         * keyboard input
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 键盘输入
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public static keyboard: KeyboardDevice;
-
         /**
-         * mouse input
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 鼠标输入
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public static mouse: MouseDevice;
-
         /**
-         * touch input
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 鼠标输入
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public static touch: TouchDevice;
 
@@ -79,19 +40,8 @@ namespace egret3d {
             this.mouse.update();
             this.touch.update();
         }
-
         /**
-         * is pressed
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 是否正在被点击或者触摸
-         * 只有单点触摸才被触发，多点触摸请使用 MouseDivice
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public static isPressed(): boolean {
             if (this.mouse.isPressed(0)) {
@@ -106,19 +56,8 @@ namespace egret3d {
             }
             return false;
         }
-
         /**
-         * was pressed
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 是否完成一次点击或触摸
-         * 只有单点触摸才被触发，多点触摸请使用 MouseDivice
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public static wasPressed(): boolean {
             if (this.mouse.wasPressed(0)) {
@@ -133,19 +72,8 @@ namespace egret3d {
             }
             return false;
         }
-
         /**
-         * was released
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 是否完成一次鼠标或触摸释放。
-         * 只有单点触摸才被触发，多点触摸请使用 MouseDivice
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public static wasReleased(): boolean {
             if (this.mouse.wasReleased(0)) {
@@ -162,18 +90,8 @@ namespace egret3d {
         }
 
         private static _touchPoint: Vector2 = new Vector2();
-
         /**
-         * get touch point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 获取点击或触摸位置
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public static getTouchPoint(): Vector2 {
             let t = this.touch.getTouch(0);

@@ -19,16 +19,7 @@ namespace egret3d {
     };
 
     /**
-     * keyboard input
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 键盘输入
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
+     * @deprecated
      */
     export class KeyboardDevice {
 
@@ -158,56 +149,21 @@ namespace egret3d {
         }
 
         /**
-         * is pressed
-         * @param key key code or char string
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 按键是否在按下状态
-         * @param key 按键，可以为健值或者字符。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public isPressed(key: number | string): boolean {
             let id = this._toKeyIdentifier(key);
             return this._keymap[id];
         }
-
         /**
-         * was pressed
-         * @param key key code or char string
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 按键被按下一次
-         * @param key 按键，可以为健值或者字符。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public wasPressed(key: number | string): boolean {
             let id = this._toKeyIdentifier(key);
             return (this._keymap[id] && !this._lastmap[id]);
         }
-
         /**
-         * was released
-         * @param key key code or char string
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 按键被抬起一次
-         * @param key 按键，可以为健值或者字符。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * @deprecated
          */
         public wasReleased(key: number | string): boolean {
             let id = this._toKeyIdentifier(key);

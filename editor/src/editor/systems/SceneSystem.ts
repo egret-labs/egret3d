@@ -26,10 +26,6 @@ namespace paper.editor {
         // private _sphereColliderDrawer: GameObject | null = null;
         private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
 
-        private _contextmenuHandler = (event: Event) => {
-            event.preventDefault();
-        }
-
         private _onMouseDown = (event: MouseEvent) => {
             this._pointerStartPosition.copy(this._pointerPosition);
 
@@ -155,57 +151,6 @@ namespace paper.editor {
             }
 
             event.preventDefault();
-        }
-
-        private _onKeyUp = (event: KeyboardEvent) => {
-            const transformController = this._transformController!;
-
-            if (!event.altKey && !event.ctrlKey && !event.shiftKey) {
-                switch (event.key.toLowerCase()) {
-                    case "escape":
-                        this._modelComponent.select(null);
-                        break;
-
-                    case "delete":
-                        if (Application.playerMode !== PlayerMode.Editor) {
-                            for (const gameObject of this._modelComponent.selectedGameObjects) {
-                                gameObject.destroy();
-                            }
-                        }
-                        break;
-
-                    case "f":
-                        this._orbitControls!.distance = 10.0;
-                        this._orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);
-
-                        if (this._modelComponent.selectedGameObject) {
-                            this._orbitControls!.lookAtPoint.copy(this._modelComponent.selectedGameObject.transform.position);
-                        }
-                        else {
-                            this._orbitControls!.lookAtPoint.copy(egret3d.Vector3.ZERO);
-                        }
-                        break;
-
-                    case "w":
-                        transformController.mode = transformController.translate;
-                        break;
-
-                    case "e":
-                        transformController.mode = transformController.rotate;
-                        break;
-
-                    case "r":
-                        transformController.mode = transformController.scale;
-                        break;
-
-                    case "x":
-                        transformController.isWorldSpace = !transformController.isWorldSpace;
-                        break;
-                }
-            }
-        }
-
-        private _onKeyDown = (event: KeyboardEvent) => {
         }
 
         private _onGameObjectHovered = (_c: any, value: GameObject | null) => {
@@ -386,19 +331,17 @@ namespace paper.editor {
         }
 
         public onEnable() {
-            EventPool.addEventListener(ModelComponentEvent.GameObjectHovered, ModelComponent, this._onGameObjectHovered);
-            EventPool.addEventListener(ModelComponentEvent.GameObjectSelectChanged, ModelComponent, this._onGameObjectSelectChanged);
-            EventPool.addEventListener(ModelComponentEvent.GameObjectSelected, ModelComponent, this._onGameObjectSelected);
-            EventPool.addEventListener(ModelComponentEvent.GameObjectUnselected, ModelComponent, this._onGameObjectUnselected);
+            ModelComponent.onGameObjectHovered.add(this._onGameObjectHovered, this);
+            ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectChanged, this);
+            ModelComponent.onGameObjectSelected.add(this._onGameObjectSelected, this);
+            ModelComponent.onGameObjectUnselected.add(this._onGameObjectUnselected, this);
 
             { //
+                const inputCollecter = GameObject.globalGameObject.getComponent(egret3d.InputCollecter)!;
                 const canvas = egret3d.WebGLCapabilities.canvas!;
-                window.addEventListener("contextmenu", this._contextmenuHandler);
                 canvas.addEventListener("mousedown", this._onMouseDown);
                 window.addEventListener("mouseup", this._onMouseUp);
                 window.addEventListener("mousemove", this._onMouseMove);
-                window.addEventListener("keyup", this._onKeyUp);
-                window.addEventListener("keydown", this._onKeyDown);
             }
 
             this._orbitControls = egret3d.Camera.editor.gameObject.getOrAddComponent(OrbitControls);
@@ -431,19 +374,17 @@ namespace paper.editor {
         }
 
         public onDisable() {
-            EventPool.removeEventListener(ModelComponentEvent.GameObjectHovered, ModelComponent, this._onGameObjectHovered);
-            EventPool.removeEventListener(ModelComponentEvent.GameObjectSelectChanged, ModelComponent, this._onGameObjectSelectChanged);
-            EventPool.removeEventListener(ModelComponentEvent.GameObjectSelected, ModelComponent, this._onGameObjectSelected);
-            EventPool.removeEventListener(ModelComponentEvent.GameObjectUnselected, ModelComponent, this._onGameObjectUnselected);
+            ModelComponent.onGameObjectHovered.remove(this._onGameObjectHovered, this);
+            ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectChanged, this);
+            ModelComponent.onGameObjectSelected.remove(this._onGameObjectSelected, this);
+            ModelComponent.onGameObjectUnselected.remove(this._onGameObjectUnselected, this);
 
             { //
+                const inputCollecter = GameObject.globalGameObject.getComponent(egret3d.InputCollecter)!;
                 const canvas = egret3d.WebGLCapabilities.canvas!;
-                window.removeEventListener("contextmenu", this._contextmenuHandler);
                 canvas.removeEventListener("mousedown", this._onMouseDown);
                 window.removeEventListener("mouseup", this._onMouseUp);
                 window.removeEventListener("mousemove", this._onMouseMove);
-                window.removeEventListener("keyup", this._onKeyUp);
-                window.removeEventListener("keydown", this._onKeyDown);
             }
 
             //
@@ -495,6 +436,47 @@ namespace paper.editor {
         }
 
         public onUpdate() {
+            const inputCollecter = GameObject.globalGameObject.getComponent(egret3d.InputCollecter)!;
+            const gridController = this._gridController!;
+            const hoverBox = this._hoverBox!;
+            const transformController = this._transformController!;
+            const boxColliderDrawer = this._boxColliderDrawer!;
+            let key: egret3d.Key | null = null;
+
+            if ((key = inputCollecter.isKeyUp("Escape", false)) && !key.event!.altKey && !key.event!.ctrlKey && !key.event!.shiftKey) {
+                this._modelComponent.select(null);
+            }
+            else if (inputCollecter.isKeyUp("Delete", false)) {
+                if (Application.playerMode !== PlayerMode.Editor) {
+                    for (const gameObject of this._modelComponent.selectedGameObjects) {
+                        gameObject.destroy();
+                    }
+                }
+            }
+            else if ((key = inputCollecter.isKeyUp("KeyW", false)) && !key.event!.altKey && !key.event!.ctrlKey && !key.event!.shiftKey) {
+                transformController.mode = transformController.translate;
+            }
+            else if ((key = inputCollecter.isKeyHold("KeyE", false)) && !key.event!.altKey && !key.event!.ctrlKey && !key.event!.shiftKey) {
+                transformController.mode = transformController.rotate;
+            }
+            else if ((key = inputCollecter.isKeyUp("KeyR", false)) && !key.event!.altKey && !key.event!.ctrlKey && !key.event!.shiftKey) {
+                transformController.mode = transformController.scale;
+            }
+            else if ((key = inputCollecter.isKeyUp("KeyX", false)) && !key.event!.altKey && !key.event!.ctrlKey && !key.event!.shiftKey) {
+                transformController.isWorldSpace = !transformController.isWorldSpace;
+            }
+            else if ((key = inputCollecter.isKeyUp("KeyF", false)) && !key.event!.altKey && !key.event!.ctrlKey && !key.event!.shiftKey) {
+                this._orbitControls!.distance = 10.0;
+                this._orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);
+
+                if (this._modelComponent.selectedGameObject) {
+                    this._orbitControls!.lookAtPoint.copy(this._modelComponent.selectedGameObject.transform.position);
+                }
+                else {
+                    this._orbitControls!.lookAtPoint.copy(egret3d.Vector3.ZERO);
+                }
+            }
+
             // Update model gameObjects.
             if (this._modelComponent.hoveredGameObject && this._modelComponent.hoveredGameObject.isDestroyed) {
                 this._modelComponent.hover(null);
@@ -509,24 +491,20 @@ namespace paper.editor {
             const hoveredGameObject = this._modelComponent.hoveredGameObject;
             const selectedGameObject = this._modelComponent.selectedGameObject;
 
-            const gridController = this._gridController!;
             if (gridController.isActiveAndEnabled) {
                 gridController.update();
             }
 
-            const hoverBox = this._hoverBox!;
             if (hoverBox.activeSelf) {
                 hoverBox.transform.localPosition = egret3d.Vector3.create().copy(hoveredGameObject!.renderer!.aabb.center).applyMatrix(hoveredGameObject!.transform.worldMatrix).release();
                 hoverBox.transform.localRotation = hoveredGameObject!.transform.rotation;
                 hoverBox.transform.localScale = egret3d.Vector3.create().multiply(hoveredGameObject!.renderer!.aabb.size, hoveredGameObject!.transform.scale);
             }
 
-            const transformController = this._transformController!;
             if (transformController.isActiveAndEnabled) {
                 transformController.update(this._pointerPosition);
             }
 
-            const boxColliderDrawer = this._boxColliderDrawer!;
             if (boxColliderDrawer.activeSelf) {
                 const boxCollider = selectedGameObject!.getComponent(egret3d.BoxCollider)!;
                 boxColliderDrawer.transform.localPosition = egret3d.Vector3.create().copy(boxCollider.aabb.center).applyMatrix(selectedGameObject!.transform.worldMatrix).release();

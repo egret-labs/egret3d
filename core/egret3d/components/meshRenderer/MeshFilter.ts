@@ -1,14 +1,13 @@
 namespace egret3d {
     /**
-     * 
-     */
-    export const enum MeshFilterEventType {
-        Mesh = "mesh",
-    }
-    /**
      * MeshFilter 组件
      */
     export class MeshFilter extends paper.BaseComponent {
+        /**
+         * 
+         */
+        public static readonly onMeshChanged: signals.Signal = new signals.Signal();
+
         @paper.serializedField
         private _mesh: Mesh | null = null;
 
@@ -38,7 +37,7 @@ namespace egret3d {
             }
 
             this._mesh = value;
-            paper.EventPool.dispatchEvent(MeshFilterEventType.Mesh, this);
+            MeshFilter.onMeshChanged.dispatch(this);
         }
     }
 }

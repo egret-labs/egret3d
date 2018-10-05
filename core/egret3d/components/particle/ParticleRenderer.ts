@@ -1,14 +1,8 @@
 namespace egret3d.particle {
     const _helpMatrix = Matrix4.create();
-
-    export const enum ParticleRendererEventType {
-        Mesh = "mesh",
-        Materials = "materials",
-        RenderMode = "renderMode",
-        LengthScaleChanged = "lengthScale",
-        VelocityScaleChanged = "velocityScale",
-
-    }
+    /**
+     * 粒子渲染模式。
+     */
     export const enum ParticleRenderMode {
         Billboard = 0,
         Stretch = 1,
@@ -18,7 +12,8 @@ namespace egret3d.particle {
         None = 5
     }
     /**
-     * 粒子着色器用到的变量
+     * 粒子着色器的变量名。
+     * @internal
      */
     export const enum ParticleMaterialUniform {
         WORLD_POSITION = 'u_worldPosition',
@@ -73,7 +68,8 @@ namespace egret3d.particle {
         SPEED_SCALE = 'u_speeaScale',
     }
     /**
-     * 粒子着色器用到的宏定义
+     * 粒子着色器的宏定义。
+     * @internal
      */
     export const enum ParticleMaterialDefine {
         SPHERHBILLBOARD = "SPHERHBILLBOARD",
@@ -102,24 +98,30 @@ namespace egret3d.particle {
         SHAPE = "SHAPE",
     }
     /**
-     * 
+     * 粒子渲染器。
      */
     export class ParticleRenderer extends paper.BaseRenderer {
+        /**
+         * 
+         */
+        public static readonly onRenderModeChanged: signals.Signal = new signals.Signal();
+        /**
+         * 
+         */
+        public static readonly onMeshChanged: signals.Signal = new signals.Signal();
         /**
          * TODO
          */
         public frustumCulled: boolean = false;
-
-        @paper.serializedField
-        private _mesh: egret3d.Mesh | null;
-        @paper.serializedField
-        private readonly _materials: Material[] = [];
         @paper.serializedField
         public velocityScale: number;
         @paper.serializedField
-        public _renderMode: ParticleRenderMode = ParticleRenderMode.Billboard;
-        @paper.serializedField
         public lengthScale: number;
+
+        @paper.serializedField
+        private _renderMode: ParticleRenderMode = ParticleRenderMode.Billboard;
+        @paper.serializedField
+        private _mesh: egret3d.Mesh | null;
         /**
          * @internal
          */
@@ -133,7 +135,6 @@ namespace egret3d.particle {
             super.uninitialize();
 
             this._mesh = null;
-            this._materials.length = 0;
             this._renderMode = ParticleRenderMode.Billboard;
             this.velocityScale = 1.0;
             this.lengthScale = 1.0;
@@ -171,7 +172,9 @@ namespace egret3d.particle {
 
             return false;
         }
-
+        /**
+         * 
+         */
         public get renderMode(): ParticleRenderMode {
             return this._renderMode;
         }
@@ -181,19 +184,10 @@ namespace egret3d.particle {
             }
 
             this._renderMode = value;
-            paper.EventPool.dispatchEvent(ParticleRendererEventType.RenderMode, this);
+            ParticleRenderer.onRenderModeChanged.dispatch(this);
         }
         /**
-         * mesh model
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 组件挂载的 mesh 模型
-         * @version paper 1.0
-         * @platform Web
-         * @language
+         * 
          */
         @paper.editor.property(paper.editor.EditType.MESH)
         public get mesh() {
@@ -205,35 +199,7 @@ namespace egret3d.particle {
             }
 
             this._mesh = mesh;
-            paper.EventPool.dispatchEvent(ParticleRendererEventType.Mesh, this);
-        }
-        /**
-         * material list
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 材质数组
-         * @version paper 1.0
-         * @platform Web
-         * @language
-         */
-        @paper.editor.property(paper.editor.EditType.ARRAY)
-        public get materials(): ReadonlyArray<Material> {
-            return this._materials;
-        }
-        public set materials(value: ReadonlyArray<Material>) {
-            if (value === this._materials) {
-                return;
-            }
-
-            this._materials.length = 0;
-            for (const material of value) {
-                this._materials.push(material);
-            }
-
-            paper.EventPool.dispatchEvent(ParticleRendererEventType.Materials, this);
+            ParticleRenderer.onMeshChanged.dispatch(this);
         }
     }
 }
