@@ -23,22 +23,15 @@ namespace egret3d.web {
             }
 
             const inputCollecter = this._inputCollecter;
-            const downPointers = inputCollecter.downPointers;
             const holdPointers = inputCollecter.holdPointers;
             const upPointers = inputCollecter.upPointers;
-
-            let index = downPointers.indexOf(pointer);
+            const index = holdPointers.indexOf(pointer);
+            
             if (index >= 0) {
-                downPointers.splice(index, 1);
-            }
-            else {
-                index = holdPointers.indexOf(pointer);
-                if (index >= 0) {
-                    holdPointers.splice(index, 1);
-                }
+                holdPointers.splice(index, 1);
             }
 
-            if (index >= 0 && upPointers.indexOf(pointer) < 0) {
+            if (upPointers.indexOf(pointer) < 0) {
                 upPointers.push(pointer);
                 inputCollecter.onPointerUp.dispatch(pointer);
             }

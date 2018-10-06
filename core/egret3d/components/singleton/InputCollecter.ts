@@ -183,6 +183,10 @@ namespace egret3d {
             }
 
             for (const pointer of this.downPointers) {
+                if (this.upPointers.indexOf(pointer) >= 0){
+                    continue;
+                }
+
                 pointer.holdedTime = 0.0;
                 this.holdPointers.push(pointer);
             }
@@ -192,6 +196,10 @@ namespace egret3d {
             }
 
             for (const key of this.downKeys) {
+                if (this.holdKeys.indexOf(key) >= 0){
+                    continue;
+                }
+
                 key.holdedTime = 0.0;
                 this.holdKeys.push(key);
             }
