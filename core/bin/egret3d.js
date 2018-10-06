@@ -17527,34 +17527,17 @@ var egret3d;
      * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
      */
     var Curve3 = (function () {
-        function Curve3(points, nbPoints) {
-            this._beizerPoints = points;
-            this._bezierPointNum = nbPoints;
+        /**
+         * @internal
+         */
+        function Curve3(beizerPoints, bezierPointNum) {
+            this.beizerPoints = beizerPoints;
+            this.bezierPointNum = bezierPointNum;
         }
-        Object.defineProperty(Curve3.prototype, "beizerPoints", {
-            get: function () {
-                return this._beizerPoints;
-            },
-            set: function (value) {
-                this._beizerPoints = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Curve3.prototype, "bezierPointNum", {
-            get: function () {
-                return this._bezierPointNum;
-            },
-            set: function (value) {
-                this._bezierPointNum = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
         /**
          * 线性贝塞尔曲线
          */
-        Curve3.CreateLinearBezier = function (start, end, indices) {
+        Curve3.createLinearBezier = function (start, end, indices) {
             indices = indices > 2 ? indices : 3;
             var bez = new Array();
             var equation = function (t, va10, va11) {
@@ -17572,9 +17555,10 @@ var egret3d;
          * @param v0 起始点
          * @param v1 选中的节点
          * @param v2 结尾点
-         * @param nbPoints 将贝塞尔曲线拆分nbPoints段，一共有nbPoints + 1个点
+         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
+         * @returns 贝塞尔曲线对象
          */
-        Curve3.CreateQuadraticBezier = function (v0, v1, v2, bezierPointNum) {
+        Curve3.createQuadraticBezier = function (v0, v1, v2, bezierPointNum) {
             bezierPointNum = bezierPointNum > 2 ? bezierPointNum : 3;
             var beizerPoint = new Array();
             var equation = function (t, val0, val1, val2) {
@@ -17588,13 +17572,14 @@ var egret3d;
         };
         /**
          * 三次方贝塞尔曲线路径
-         * @param v0
-         * @param v1
-         * @param v2
-         * @param v3
-         * @param nbPoints
+         * @param v0 起始点
+         * @param v1 第一个插值点
+         * @param v2 第二个插值点
+         * @param v3 终点
+         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
+         * @returns 贝塞尔曲线对象
          */
-        Curve3.CreateCubicBezier = function (v0, v1, v2, v3, bezierPointNum) {
+        Curve3.createCubicBezier = function (v0, v1, v2, v3, bezierPointNum) {
             bezierPointNum = bezierPointNum > 3 ? bezierPointNum : 4;
             var beizerPoint = new Array();
             var equation = function (t, val0, val1, val2, val3) {
@@ -17605,12 +17590,6 @@ var egret3d;
                 beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x, v3.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y, v3.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z, v3.z)));
             }
             return new Curve3(beizerPoint, bezierPointNum);
-        };
-        /**
-         * 贝塞尔曲线上的点
-         */
-        Curve3.prototype.getPoints = function () {
-            return this._beizerPoints;
         };
         return Curve3;
     }());
