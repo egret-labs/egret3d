@@ -2,7 +2,6 @@ const fs = require("fs");
 const path = require("path");
 
 const libs = [
-    // "./libs/pep/pep",
     "./libs/signals/signals",
 ];
 

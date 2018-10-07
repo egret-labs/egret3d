@@ -6,6 +6,7 @@ namespace egret3d.web {
         private _updateCanvas(canvas: HTMLCanvasElement, stage: Stage) {
             const screenSize = stage.screenSize;
             const viewport = stage.viewport;
+            
             canvas.width = viewport.w;
             canvas.height = viewport.h;
             canvas.style.top = 0 + "px";
@@ -27,26 +28,26 @@ namespace egret3d.web {
                 const transform = `matrix(${screenSize.w / canvas.width},0,0,${screenSize.h / canvas.height},0,0)`;
                 canvas.style[egret.web.getPrefixStyleName("transform")] = transform;
             }
-
             
-            let touchScaleX;
-            let touchScaleY;
-            if (stage.rotated) {
-                touchScaleX = viewport.w / screenSize.h;
-                touchScaleY = viewport.h / screenSize.w;
-            }
-            else {
-                touchScaleX = viewport.w / screenSize.w;
-                touchScaleY = viewport.h / screenSize.h;
-            }
-            egret3d.InputManager.touch.updateOffsetAndScale(0, 0, touchScaleX, touchScaleY, stage.rotated);
-            egret3d.InputManager.mouse.updateOffsetAndScale(0, 0, touchScaleX, touchScaleY, stage.rotated);
-
             // TODO
             // const webInput = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput;
             // if (webInput) {
             //     webInput.$updateSize();
             // }
+
+            // let touchScaleX;
+            // let touchScaleY;
+            // if (stage.rotated) {
+            //     touchScaleX = viewport.w / screenSize.h;
+            //     touchScaleY = viewport.h / screenSize.w;
+            // }
+            // else {
+            //     touchScaleX = viewport.w / screenSize.w;
+            //     touchScaleY = viewport.h / screenSize.h;
+            // }
+            // egret3d.InputManager.touch.updateOffsetAndScale(0, 0, touchScaleX, touchScaleY, stage.rotated);
+            // egret3d.InputManager.mouse.updateOffsetAndScale(0, 0, touchScaleX, touchScaleY, stage.rotated);
+
         }
 
         public onAwake(config: RunEgretOptions) {

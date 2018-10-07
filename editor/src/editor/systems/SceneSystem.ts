@@ -10,6 +10,7 @@ namespace paper.editor {
         ];
 
         private readonly _camerasAndLights: egret3d.CamerasAndLights = GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+        private readonly _inputCollecter: egret3d.InputCollecter = GameObject.globalGameObject.getOrAddComponent(egret3d.InputCollecter);
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
 
         private readonly _pointerStartPosition: egret3d.Vector3 = egret3d.Vector3.create();
@@ -25,6 +26,14 @@ namespace paper.editor {
         private _boxColliderDrawer: GameObject | null = null;
         // private _sphereColliderDrawer: GameObject | null = null;
         private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
+
+        private readonly _keyEscape: egret3d.Key = this._inputCollecter.getKey("Escape");
+        private readonly _keyDelete: egret3d.Key = this._inputCollecter.getKey("Delete");
+        private readonly _keyE: egret3d.Key = this._inputCollecter.getKey("KeyE");
+        private readonly _keyW: egret3d.Key = this._inputCollecter.getKey("KeyW");
+        private readonly _keyR: egret3d.Key = this._inputCollecter.getKey("KeyR");
+        private readonly _keyX: egret3d.Key = this._inputCollecter.getKey("KeyX");
+        private readonly _keyF: egret3d.Key = this._inputCollecter.getKey("KeyF");
 
         private _onMouseDown = (event: MouseEvent) => {
             this._pointerStartPosition.copy(this._pointerPosition);
@@ -108,7 +117,7 @@ namespace paper.editor {
             const canvas = egret3d.WebGLCapabilities.canvas!;
 
             this._pointerPosition.set(event.clientX - canvas.clientLeft, event.clientY - canvas.clientTop, 0.0);
-            egret3d.InputManager.mouse.convertPosition(this._pointerPosition, this._pointerPosition);
+            this._inputCollecter.screenToStage(this._pointerPosition, this._pointerPosition);
 
             if (event.buttons & 0b10) { // 正在控制摄像机。
 
@@ -436,36 +445,40 @@ namespace paper.editor {
         }
 
         public onUpdate() {
-            const inputCollecter = GameObject.globalGameObject.getComponent(egret3d.InputCollecter)!;
             const gridController = this._gridController!;
             const hoverBox = this._hoverBox!;
             const transformController = this._transformController!;
             const boxColliderDrawer = this._boxColliderDrawer!;
-            let key: egret3d.Key | null = null;
 
-            if ((key = inputCollecter.isKeyUp("Escape", false)) && !key.event!.altKey && !key.event!.ctrlKey && !key.event!.shiftKey) {
+            if (this._keyEscape.isUp(false) && !this._keyEscape.event!.altKey && !this._keyEscape.event!.ctrlKey && !this._keyEscape.event!.shiftKey) {
                 this._modelComponent.select(null);
             }
-            else if (inputCollecter.isKeyUp("Delete", false)) {
+
+            if (this._keyDelete.isUp(false) && !this._keyDelete.event!.altKey && !this._keyDelete.event!.ctrlKey && !this._keyDelete.event!.shiftKey) {
                 if (Application.playerMode !== PlayerMode.Editor) {
                     for (const gameObject of this._modelComponent.selectedGameObjects) {
                         gameObject.destroy();
                     }
                 }
             }
-            else if ((key = inputCollecter.isKeyUp("KeyW", false)) && !key.event!.altKey && !key.event!.ctrlKey && !key.event!.shiftKey) {
+
+            if (this._keyW.isUp(false) && !this._keyW.event!.altKey && !this._keyW.event!.ctrlKey && !this._keyW.event!.shiftKey) {
                 transformController.mode = transformController.translate;
             }
-            else if ((key = inputCollecter.isKeyHold("KeyE", false)) && !key.event!.altKey && !key.event!.ctrlKey && !key.event!.shiftKey) {
+
+            if (this._keyE.isUp(false) && !this._keyE.event!.altKey && !this._keyE.event!.ctrlKey && !this._keyE.event!.shiftKey) {
                 transformController.mode = transformController.rotate;
             }
-            else if ((key = inputCollecter.isKeyUp("KeyR", false)) && !key.event!.altKey && !key.event!.ctrlKey && !key.event!.shiftKey) {
+
+            if (this._keyR.isUp(false) && !this._keyR.event!.altKey && !this._keyR.event!.ctrlKey && !this._keyR.event!.shiftKey) {
                 transformController.mode = transformController.scale;
             }
-            else if ((key = inputCollecter.isKeyUp("KeyX", false)) && !key.event!.altKey && !key.event!.ctrlKey && !key.event!.shiftKey) {
+
+            if (this._keyX.isUp(false) && !this._keyX.event!.altKey && !this._keyX.event!.ctrlKey && !this._keyX.event!.shiftKey) {
                 transformController.isWorldSpace = !transformController.isWorldSpace;
             }
-            else if ((key = inputCollecter.isKeyUp("KeyF", false)) && !key.event!.altKey && !key.event!.ctrlKey && !key.event!.shiftKey) {
+
+            if (this._keyF.isUp(false) && !this._keyF.event!.altKey && !this._keyF.event!.ctrlKey && !this._keyF.event!.shiftKey) {
                 this._orbitControls!.distance = 10.0;
                 this._orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);
 

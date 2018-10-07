@@ -3585,10 +3585,6 @@ var paper;
                 configurable: true
             });
             OrbitControls.prototype.onStart = function () {
-                this.bindTouch = egret3d.InputManager.touch;
-                this.bindMouse = egret3d.InputManager.mouse;
-                //
-                this.bindMouse.disableContextMenu();
             };
             OrbitControls.prototype.onEnable = function () {
                 var canvas = egret3d.WebGLCapabilities.canvas;
@@ -4090,6 +4086,20 @@ var paper;
                         }
                         else if (_this._modelComponent.selectedGameObjects.length > 0) {
                         }
+                    },
+                    showConsole: function () {
+                        // const loadScript = (url: string, callback: any) => {
+                        //     const script = document.createElement('script');
+                        //     script.onload = () => callback();
+                        //     script.src = url;
+                        //     document.body.appendChild(script);
+                        // };
+                        // loadScript(
+                        //     'https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js',
+                        //     () => {
+                        //         // eslint-disable-next-line
+                        //         new VConsole();
+                        //     });
                     }
                 };
                 this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
@@ -4216,6 +4226,7 @@ var paper;
                     ]
                 ];
                 _this._camerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+                _this._inputCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.InputCollecter);
                 _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
                 _this._pointerStartPosition = egret3d.Vector3.create();
                 _this._pointerPosition = egret3d.Vector3.create();
@@ -4228,6 +4239,13 @@ var paper;
                 _this._boxColliderDrawer = null;
                 // private _sphereColliderDrawer: GameObject | null = null;
                 _this._cameraViewFrustum = null; // TODO封装一下
+                _this._keyEscape = _this._inputCollecter.getKey("Escape");
+                _this._keyDelete = _this._inputCollecter.getKey("Delete");
+                _this._keyE = _this._inputCollecter.getKey("KeyE");
+                _this._keyW = _this._inputCollecter.getKey("KeyW");
+                _this._keyR = _this._inputCollecter.getKey("KeyR");
+                _this._keyX = _this._inputCollecter.getKey("KeyX");
+                _this._keyF = _this._inputCollecter.getKey("KeyF");
                 _this._onMouseDown = function (event) {
                     _this._pointerStartPosition.copy(_this._pointerPosition);
                     if (event.button === 0) {
@@ -4299,7 +4317,7 @@ var paper;
                 _this._onMouseMove = function (event) {
                     var canvas = egret3d.WebGLCapabilities.canvas;
                     _this._pointerPosition.set(event.clientX - canvas.clientLeft, event.clientY - canvas.clientTop, 0.0);
-                    egret3d.InputManager.mouse.convertPosition(_this._pointerPosition, _this._pointerPosition);
+                    _this._inputCollecter.screenToStage(_this._pointerPosition, _this._pointerPosition);
                     if (event.buttons & 2) {
                     }
                     else if (event.buttons & 1) {
@@ -4573,16 +4591,14 @@ var paper;
                 this._cameraViewFrustum = null;
             };
             SceneSystem.prototype.onUpdate = function () {
-                var inputCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.InputCollecter);
                 var gridController = this._gridController;
                 var hoverBox = this._hoverBox;
                 var transformController = this._transformController;
                 var boxColliderDrawer = this._boxColliderDrawer;
-                var key = null;
-                if ((key = inputCollecter.isKeyUp("Escape", false)) && !key.event.altKey && !key.event.ctrlKey && !key.event.shiftKey) {
+                if (this._keyEscape.isUp(false) && !this._keyEscape.event.altKey && !this._keyEscape.event.ctrlKey && !this._keyEscape.event.shiftKey) {
                     this._modelComponent.select(null);
                 }
-                else if (inputCollecter.isKeyUp("Delete", false)) {
+                if (this._keyDelete.isUp(false) && !this._keyDelete.event.altKey && !this._keyDelete.event.ctrlKey && !this._keyDelete.event.shiftKey) {
                     if (paper.Application.playerMode !== 2 /* Editor */) {
                         for (var _i = 0, _a = this._modelComponent.selectedGameObjects; _i < _a.length; _i++) {
                             var gameObject = _a[_i];
@@ -4590,19 +4606,19 @@ var paper;
                         }
                     }
                 }
-                else if ((key = inputCollecter.isKeyUp("KeyW", false)) && !key.event.altKey && !key.event.ctrlKey && !key.event.shiftKey) {
+                if (this._keyW.isUp(false) && !this._keyW.event.altKey && !this._keyW.event.ctrlKey && !this._keyW.event.shiftKey) {
                     transformController.mode = transformController.translate;
                 }
-                else if ((key = inputCollecter.isKeyHold("KeyE", false)) && !key.event.altKey && !key.event.ctrlKey && !key.event.shiftKey) {
+                if (this._keyE.isUp(false) && !this._keyE.event.altKey && !this._keyE.event.ctrlKey && !this._keyE.event.shiftKey) {
                     transformController.mode = transformController.rotate;
                 }
-                else if ((key = inputCollecter.isKeyUp("KeyR", false)) && !key.event.altKey && !key.event.ctrlKey && !key.event.shiftKey) {
+                if (this._keyR.isUp(false) && !this._keyR.event.altKey && !this._keyR.event.ctrlKey && !this._keyR.event.shiftKey) {
                     transformController.mode = transformController.scale;
                 }
-                else if ((key = inputCollecter.isKeyUp("KeyX", false)) && !key.event.altKey && !key.event.ctrlKey && !key.event.shiftKey) {
+                if (this._keyX.isUp(false) && !this._keyX.event.altKey && !this._keyX.event.ctrlKey && !this._keyX.event.shiftKey) {
                     transformController.isWorldSpace = !transformController.isWorldSpace;
                 }
-                else if ((key = inputCollecter.isKeyUp("KeyF", false)) && !key.event.altKey && !key.event.ctrlKey && !key.event.shiftKey) {
+                if (this._keyF.isUp(false) && !this._keyF.event.altKey && !this._keyF.event.ctrlKey && !this._keyF.event.shiftKey) {
                     this._orbitControls.distance = 10.0;
                     this._orbitControls.lookAtOffset.set(0.0, 0.0, 0.0);
                     if (this._modelComponent.selectedGameObject) {

@@ -35,10 +35,23 @@ namespace egret3d {
         X2 = 0b010000,
         PenEraser = 0b100000,
     }
+
+    let _inputCollecter: InputCollecter = null!;
     /**
      * 鼠标、笔、触控等的信息。
      */
-    export class Pointer {
+    export class Pointer extends paper.BaseRelease<Pointer> {
+        private static readonly _instances: Pointer[] = [];
+
+        public static create() {
+            if (this._instances.length > 0) {
+                const instance = this._instances.pop()!;
+                instance._released = false;
+                return instance;
+            }
+
+            return new Pointer();
+        }
         /**
          * 该 Pointer 持续按下的时间。
          */
@@ -68,6 +81,51 @@ namespace egret3d {
          * @internal
          */
         public readonly _prevPosition: egret3d.Vector3 = egret3d.Vector3.create();
+
+        /**
+         * 该 Pointer 此帧按下的状态。
+         * @param value 
+         */
+        public isDown(value: PointerButtonsType = PointerButtonsType.TouchContact, isPlayerMode: boolean = true) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
+                return false;
+            }
+
+            return (this.event.buttons & value) !== 0 && (this._prevButtons & value) === 0;
+        }
+        /**
+         * 该 Pointer 此帧持续按下的状态。
+         * @param value 
+         */
+        public isHold(value: PointerButtonsType = PointerButtonsType.TouchContact, isPlayerMode: boolean = true) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
+                return false;
+            }
+
+            return (this.event.buttons & value) !== 0 && (this._prevButtons & value) !== 0;
+        }
+        /**
+         * 该 Pointer 此帧抬起的状态。
+         * @param value 
+         */
+        public isUp(value: PointerButtonsType = PointerButtonsType.TouchContact, isPlayerMode: boolean = true) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
+                return false;
+            }
+
+            return (this.event.buttons & value) === 0 && (this._prevButtons & value) !== 0;
+        }
+        /**
+         * 该 Pointer 此帧移动的状态。
+         * @param value 
+         */
+        public isMove(distance: number = 5, isPlayerMode: boolean = true) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
+                return null;
+            }
+
+            return Math.abs(this.speed.x) > distance || Math.abs(this.speed.y) > distance;
+        }
     }
     /**
      * 按键的信息。
@@ -81,6 +139,39 @@ namespace egret3d {
          * 该按键最近的事件。
          */
         public event: KeyboardEvent | null = null;
+        /**
+         * 该按键此帧按下的状态。
+         * @param value 
+         */
+        public isDown(isPlayerMode: boolean = true) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
+                return false;
+            }
+
+            return _inputCollecter.downKeys.indexOf(this) >= 0;
+        }
+        /**
+         * 该按键此帧持续按下的状态。
+         * @param value 
+         */
+        public isHold(isPlayerMode: boolean = true) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
+                return false;
+            }
+
+            return _inputCollecter.holdKeys.indexOf(this) >= 0;
+        }
+        /**
+         * 该按键此帧抬起的状态。
+         * @param value 
+         */
+        public isUp(isPlayerMode: boolean = true) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
+                return false;
+            }
+
+            return _inputCollecter.upKeys.indexOf(this) >= 0;
+        }
     }
     /**
      * 全局输入信息收集组件。
@@ -92,7 +183,7 @@ namespace egret3d {
         /**
          * 滚轮当前值。
          */
-        public wheel: number = 0;
+        public mouseWheel: number = 0;
         /**
          * 通常不需要使用该事件。
          */
@@ -128,14 +219,6 @@ namespace egret3d {
         /**
          * 通常不需要使用该事件。
          */
-        public readonly onGotPointerCapture: signals.Signal = new signals.Signal();
-        /**
-         * 通常不需要使用该事件。
-         */
-        public readonly onLostPointerCapture: signals.Signal = new signals.Signal();
-        /**
-         * 通常不需要使用该事件。
-         */
         public readonly onKeyDown: signals.Signal = new signals.Signal();
         /**
          * 通常不需要使用该事件。
@@ -168,22 +251,17 @@ namespace egret3d {
 
         private readonly _pointers: { [key: string]: Pointer } = {};
         private readonly _keys: { [key: string]: Key } = {};
+
+        /**
+         * 
+         */
+        public readonly mousePointer: Pointer = this.getPointer(1);
         /**
          * @internal
          */
         public update(deltaTime: number) {
-            const pointers = this._pointers;
-            for (const k in pointers) {
-                const pointer = pointers[k];
-                if (pointer.event) {
-                    pointer.speed.subtract(pointer.position, pointer._prevPosition);
-                    pointer._prevButtons = pointer.event.buttons;
-                    pointer._prevPosition.copy(pointer.position);
-                }
-            }
-
             for (const pointer of this.downPointers) {
-                if (this.upPointers.indexOf(pointer) >= 0){
+                if (this.upPointers.indexOf(pointer) >= 0) {
                     continue;
                 }
 
@@ -193,10 +271,12 @@ namespace egret3d {
 
             for (const pointer of this.holdPointers) {
                 pointer.holdedTime += deltaTime;
+                pointer.speed.subtract(pointer.position, pointer._prevPosition);
+                pointer._prevPosition.copy(pointer.position);
             }
 
             for (const key of this.downKeys) {
-                if (this.holdKeys.indexOf(key) >= 0){
+                if (this.holdKeys.indexOf(key) >= 0) {
                     continue;
                 }
 
@@ -208,7 +288,22 @@ namespace egret3d {
                 key.holdedTime += deltaTime;
             }
 
-            this.wheel = 0;
+            return this;
+        }
+        /**
+         * @internal
+         */
+        public clear() {
+            this.mouseWheel = 0;
+
+            for (const k in this._pointers) {
+                const pointer = this._pointers[k];
+                if (pointer.event) {
+                    pointer.speed.subtract(pointer.position, pointer._prevPosition);
+                    pointer._prevButtons = pointer.event.buttons;
+                    pointer._prevPosition.copy(pointer.position);
+                }
+            }
 
             if (this.upPointers.length > 0) {
                 this.upPointers.length = 0;
@@ -225,6 +320,14 @@ namespace egret3d {
             if (this.downKeys.length > 0) {
                 this.downKeys.length = 0;
             }
+
+            return this;
+        }
+
+        public initialize() {
+            super.initialize();
+
+            _inputCollecter = this;
         }
         /**
          * 屏幕到舞台坐标的转换。
@@ -255,100 +358,25 @@ namespace egret3d {
             return this;
         }
         /**
-         * 该 Pointer 此帧按下的状态。
-         * @param value 
+         * @internal
          */
-        public isPointerDown(pointerID: uint = 1, value: PointerButtonsType = PointerButtonsType.TouchContact, isPlayerMode: boolean = true) {
-            const pointer = this.getPointer(pointerID);
-            if (!pointer.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
-                return null;
-            }
-
-            return (pointer.event.buttons & value) !== 0 && (pointer._prevButtons & value) === 0 ? pointer : null;
-        }
-        /**
-         * 该 Pointer 此帧持续按下的状态。
-         * @param value 
-         */
-        public isPointerHold(pointerID: uint = 1, value: PointerButtonsType = PointerButtonsType.TouchContact, isPlayerMode: boolean = true) {
-            const pointer = this.getPointer(pointerID);
-            if (!pointer.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
-                return null;
-            }
-
-            return (pointer.event.buttons & value) !== 0 && (pointer._prevButtons & value) !== 0 ? pointer : null;
-        }
-        /**
-         * 该 Pointer 此帧移动的状态。
-         * @param value 
-         */
-        public isPointerMove(pointerID: uint = 1, isPlayerMode: boolean = true) {
-            const pointer = this.getPointer(pointerID);
-            if (!pointer.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
-                return null;
-            }
-
-            return Math.abs(pointer.event.movementX) > 5 || Math.abs(pointer.event.movementY) > 5 ? pointer : null;
-        }
-        /**
-         * 该 Pointer 此帧抬起的状态。
-         * @param value 
-         */
-        public isPointerUp(pointerID: uint = 1, value: PointerButtonsType = PointerButtonsType.TouchContact, isPlayerMode: boolean = true) {
-            const pointer = this.getPointer(pointerID);
-            if (!pointer.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
-                return null;
-            }
-
-            return (pointer.event.buttons & value) === 0 && (pointer._prevButtons & value) !== 0 ? pointer : null;
-        }
-        /**
-         * 该按键此帧按下的状态。
-         * @param value 
-         */
-        public isKeyDown(code: string, isPlayerMode: boolean = true) {
-            const key = this.getKey(code);
-            if (!key.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
-                return null;
-            }
-
-            return this.downKeys.indexOf(key) >= 0 ? key : null;
-        }
-        /**
-         * 该按键此帧持续按下的状态。
-         * @param value 
-         */
-        public isKeyHold(code: string, isPlayerMode: boolean = true) {
-            const key = this.getKey(code);
-            if (!key.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
-                return null;
-            }
-
-            return this.holdKeys.indexOf(key) >= 0 ? key : null;
-        }
-        /**
-         * 该按键此帧抬起的状态。
-         * @param value 
-         */
-        public isKeyUp(code: string, isPlayerMode: boolean = true) {
-            const key = this.getKey(code);
-            if (!key.event || (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player)) {
-                return null;
-            }
-
-            return this.upKeys.indexOf(key) >= 0 ? key : null;
-        }
-        /**
-         * 通过 pointerID 创建或获取一个 Pointer 实例。
-         * - 默认获取鼠标或笔的 Pointer 实例。
-         */
-        public getPointer(pointerID: uint = 1) {
+        public getPointer(pointerID: uint) {
             const pointers = this._pointers;
             if (!(pointerID in pointers)) {
-                pointers[pointerID] = new Pointer();
+                pointers[pointerID] = Pointer.create();
             }
 
             return pointers[pointerID];
+        }
+        /**
+         * @internal
+         */
+        public removePointer(pointerID: uint) {
+            const pointers = this._pointers;
+            if (pointerID in pointers) {
+                pointers[pointerID].release();
+                delete pointers[pointerID];
+            }
         }
         /**
          * 通过键名称创建或获取一个按键实例。

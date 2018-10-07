@@ -35,10 +35,7 @@ namespace egret3d {
         WebGLCapabilities.canvas = options.canvas;
         WebGLCapabilities.webgl = options.webgl;
 
-        InputManager.init(canvas);
-
         paper.Application.init(options);
-
         const systemManager = paper.Application.systemManager;
         systemManager.register(web.BeginSystem, paper.SystemOrder.Begin, options);
 
@@ -50,6 +47,7 @@ namespace egret3d {
         systemManager.register(CameraAndLightSystem, paper.SystemOrder.Draw);
 
         systemManager.register(web.WebGLRenderSystem, paper.SystemOrder.Draw, options);
+        systemManager.register(web.InputSystem, paper.SystemOrder.End, options);
         systemManager.register(web.EndSystem, paper.SystemOrder.End, options);
         systemManager._preRegisterSystems();
 
