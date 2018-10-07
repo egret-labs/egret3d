@@ -36,13 +36,12 @@ namespace paper.editor {
         private readonly _keyF: egret3d.Key = this._inputCollecter.getKey("KeyF");
 
         private _onMouseDown = (event: MouseEvent) => {
-            this._pointerStartPosition.copy(this._pointerPosition);
-
             if (event.button === 0) {
                 if (event.buttons & 0b10) { // 正在控制摄像机。
                     return;
                 }
 
+                this._pointerStartPosition.copy(this._pointerPosition);
                 const transformController = this._transformController!;
                 if (transformController.isActiveAndEnabled && transformController.hovered) {
                     transformController.start(this._pointerPosition);
@@ -345,8 +344,7 @@ namespace paper.editor {
             ModelComponent.onGameObjectSelected.add(this._onGameObjectSelected, this);
             ModelComponent.onGameObjectUnselected.add(this._onGameObjectUnselected, this);
 
-            { //
-                const inputCollecter = GameObject.globalGameObject.getComponent(egret3d.InputCollecter)!;
+            { // TODO remove
                 const canvas = egret3d.WebGLCapabilities.canvas!;
                 canvas.addEventListener("mousedown", this._onMouseDown);
                 window.addEventListener("mouseup", this._onMouseUp);
@@ -388,8 +386,7 @@ namespace paper.editor {
             ModelComponent.onGameObjectSelected.remove(this._onGameObjectSelected, this);
             ModelComponent.onGameObjectUnselected.remove(this._onGameObjectUnselected, this);
 
-            { //
-                const inputCollecter = GameObject.globalGameObject.getComponent(egret3d.InputCollecter)!;
+            { // TODO remove
                 const canvas = egret3d.WebGLCapabilities.canvas!;
                 canvas.removeEventListener("mousedown", this._onMouseDown);
                 window.removeEventListener("mouseup", this._onMouseUp);

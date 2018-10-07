@@ -621,7 +621,6 @@ namespace egret3d {
     /**
      * 动画组件。
      */
-    @paper.allowMultiple
     export class Animation extends paper.BaseComponent {
         /**
          * @private

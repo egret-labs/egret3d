@@ -4087,19 +4087,16 @@ var paper;
                         else if (_this._modelComponent.selectedGameObjects.length > 0) {
                         }
                     },
-                    showConsole: function () {
-                        // const loadScript = (url: string, callback: any) => {
-                        //     const script = document.createElement('script');
-                        //     script.onload = () => callback();
-                        //     script.src = url;
-                        //     document.body.appendChild(script);
-                        // };
-                        // loadScript(
-                        //     'https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js',
-                        //     () => {
-                        //         // eslint-disable-next-line
-                        //         new VConsole();
-                        //     });
+                    console: function () {
+                        var loadScript = function (url, callback) {
+                            var script = document.createElement("script");
+                            script.onload = function () { return callback(); };
+                            script.src = url;
+                            document.body.appendChild(script);
+                        };
+                        loadScript("https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js", function () {
+                            new VConsole();
+                        });
                     }
                 };
                 this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
@@ -4117,6 +4114,7 @@ var paper;
                     _this._debug(v);
                 });
                 // this._guiComponent.hierarchy.add(sceneOptions, "save");
+                this._guiComponent.hierarchy.add(sceneOptions, "console");
                 // this._guiComponent.hierarchy.close();
             };
             GUISystem.prototype.onEnable = function () {
@@ -4247,11 +4245,11 @@ var paper;
                 _this._keyX = _this._inputCollecter.getKey("KeyX");
                 _this._keyF = _this._inputCollecter.getKey("KeyF");
                 _this._onMouseDown = function (event) {
-                    _this._pointerStartPosition.copy(_this._pointerPosition);
                     if (event.button === 0) {
                         if (event.buttons & 2) {
                             return;
                         }
+                        _this._pointerStartPosition.copy(_this._pointerPosition);
                         var transformController = _this._transformController;
                         if (transformController.isActiveAndEnabled && transformController.hovered) {
                             transformController.start(_this._pointerPosition);
@@ -4514,7 +4512,6 @@ var paper;
                 editor.ModelComponent.onGameObjectSelected.add(this._onGameObjectSelected, this);
                 editor.ModelComponent.onGameObjectUnselected.add(this._onGameObjectUnselected, this);
                 {
-                    var inputCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.InputCollecter);
                     var canvas = egret3d.WebGLCapabilities.canvas;
                     canvas.addEventListener("mousedown", this._onMouseDown);
                     window.addEventListener("mouseup", this._onMouseUp);
@@ -4546,7 +4543,6 @@ var paper;
                 editor.ModelComponent.onGameObjectSelected.remove(this._onGameObjectSelected, this);
                 editor.ModelComponent.onGameObjectUnselected.remove(this._onGameObjectUnselected, this);
                 {
-                    var inputCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.InputCollecter);
                     var canvas = egret3d.WebGLCapabilities.canvas;
                     canvas.removeEventListener("mousedown", this._onMouseDown);
                     window.removeEventListener("mouseup", this._onMouseUp);

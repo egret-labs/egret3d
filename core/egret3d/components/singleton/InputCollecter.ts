@@ -248,14 +248,13 @@ namespace egret3d {
          * 此帧抬起的全部按键。
          */
         public readonly upKeys: Key[] = [];
-
-        private readonly _pointers: { [key: string]: Pointer } = {};
-        private readonly _keys: { [key: string]: Key } = {};
-
         /**
          * 
          */
-        public readonly mousePointer: Pointer = this.getPointer(1);
+        public readonly defaultPointer: Pointer = Pointer.create();
+
+        private readonly _pointers: { [key: string]: Pointer } = {};
+        private readonly _keys: { [key: string]: Key } = {};
         /**
          * @internal
          */
@@ -328,6 +327,7 @@ namespace egret3d {
             super.initialize();
 
             _inputCollecter = this;
+            this._pointers[1] = this.defaultPointer;
         }
         /**
          * 屏幕到舞台坐标的转换。
@@ -363,7 +363,12 @@ namespace egret3d {
         public getPointer(pointerID: uint) {
             const pointers = this._pointers;
             if (!(pointerID in pointers)) {
-                pointers[pointerID] = Pointer.create();
+                if (this.downPointers.length === 0 && this.holdPointers.length === 0) {
+                    pointers[pointerID] = this.defaultPointer;
+                }
+                else {
+                    pointers[pointerID] = Pointer.create();
+                }
             }
 
             return pointers[pointerID];
@@ -372,9 +377,17 @@ namespace egret3d {
          * @internal
          */
         public removePointer(pointerID: uint) {
+            if (pointerID === 1) {
+                return;
+            }
+
             const pointers = this._pointers;
             if (pointerID in pointers) {
-                pointers[pointerID].release();
+                const pointer = pointers[pointerID];
+                if (pointer !== this.defaultPointer) {
+                    pointer.release();
+                }
+
                 delete pointers[pointerID];
             }
         }

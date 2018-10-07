@@ -3,6 +3,7 @@ namespace egret3d.web {
      * @internal
      */
     export class InputSystem extends paper.BaseSystem {
+        private _hasTouch: boolean = false;
         private readonly _inputCollecter: InputCollecter = paper.GameObject.globalGameObject.getOrAddComponent(InputCollecter);
         private _canvas: HTMLCanvasElement = null!;
 
@@ -25,9 +26,18 @@ namespace egret3d.web {
                 inputCollecter.onPointerUp.dispatch(pointer);
             }
 
-            if (pointer.event!.pointerId !== 1) {
-                inputCollecter.removePointer(pointer.event!.pointerId);
-            }
+            inputCollecter.removePointer(pointer.event!.pointerId);
+        }
+
+        private _removeMouseEvent() {
+            const canvas = this._canvas;
+            canvas.removeEventListener("mouseover", this._onMouseEvent);
+            canvas.removeEventListener("mouseenter", this._onMouseEvent);
+            canvas.removeEventListener("mousedown", this._onMouseEvent);
+            window.removeEventListener("mousemove", this._onMouseEvent);
+            window.removeEventListener("mouseup", this._onMouseEvent);
+            canvas.removeEventListener("mouseout", this._onMouseEvent);
+            canvas.removeEventListener("mouseleave", this._onMouseEvent);
         }
 
         private _onPointerEvent = (event: PointerEvent) => {
@@ -209,6 +219,11 @@ namespace egret3d.web {
                 return;
             }
 
+            if (!this._hasTouch) {
+                this._hasTouch = true;
+                this._removeMouseEvent();
+            }
+
             const touch = event.changedTouches[0];
 
             (event as any).isPrimary = true; // TODO
@@ -280,14 +295,14 @@ namespace egret3d.web {
                                 (eachPointerEvent as any).screenX = eachTouch.screenX;
                                 (eachPointerEvent as any).screenY = eachTouch.screenY;
                                 (eachPointerEvent as any).type = "pointermove";
-                                
+
                                 if (event.target === canvas) {
                                     eachPointer.position.set(eachPointerEvent.clientX, eachPointerEvent.clientY, 0.0);
                                 }
                                 else {
                                     eachPointer.position.set(eachPointerEvent.clientX - canvas.clientLeft, eachPointerEvent.clientY - canvas.clientTop, 0.0);
                                 }
-                    
+
                                 inputCollecter.screenToStage(eachPointer.position, eachPointer.position);
                                 inputCollecter.onPointerMove.dispatch(eachPointer);
                             }
@@ -380,13 +395,15 @@ namespace egret3d.web {
             }
             else {
                 // Mouse events.
-                canvas.addEventListener("mouseover", this._onMouseEvent);
-                canvas.addEventListener("mouseenter", this._onMouseEvent);
-                canvas.addEventListener("mousedown", this._onMouseEvent);
-                window.addEventListener("mousemove", this._onMouseEvent);
-                window.addEventListener("mouseup", this._onMouseEvent);
-                canvas.addEventListener("mouseout", this._onMouseEvent);
-                canvas.addEventListener("mouseleave", this._onMouseEvent);
+                if (!this._hasTouch) {
+                    canvas.addEventListener("mousedown", this._onMouseEvent);
+                    canvas.addEventListener("mouseover", this._onMouseEvent);
+                    canvas.addEventListener("mouseenter", this._onMouseEvent);
+                    window.addEventListener("mousemove", this._onMouseEvent);
+                    window.addEventListener("mouseup", this._onMouseEvent);
+                    canvas.addEventListener("mouseout", this._onMouseEvent);
+                    canvas.addEventListener("mouseleave", this._onMouseEvent);
+                }
                 // Touch events.
                 canvas.addEventListener("touchstart", this._onTouchEvent);
                 canvas.addEventListener("touchmove", this._onTouchEvent);
@@ -418,13 +435,7 @@ namespace egret3d.web {
             }
             else {
                 // Mouse events.
-                canvas.removeEventListener("mouseover", this._onMouseEvent);
-                canvas.removeEventListener("mouseenter", this._onMouseEvent);
-                canvas.removeEventListener("mousedown", this._onMouseEvent);
-                window.removeEventListener("mousemove", this._onMouseEvent);
-                window.removeEventListener("mouseup", this._onMouseEvent);
-                canvas.removeEventListener("mouseout", this._onMouseEvent);
-                canvas.removeEventListener("mouseleave", this._onMouseEvent);
+                this._removeMouseEvent();
                 // Touch events.
                 canvas.removeEventListener("touchstart", this._onTouchEvent);
                 canvas.removeEventListener("touchmove", this._onTouchEvent);

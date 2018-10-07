@@ -4241,12 +4241,12 @@ declare namespace egret3d {
          * 此帧抬起的全部按键。
          */
         readonly upKeys: Key[];
-        private readonly _pointers;
-        private readonly _keys;
         /**
          *
          */
-        readonly mousePointer: Pointer;
+        readonly defaultPointer: Pointer;
+        private readonly _pointers;
+        private readonly _keys;
         initialize(): void;
         /**
          * 屏幕到舞台坐标的转换。

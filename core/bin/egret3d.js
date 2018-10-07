@@ -9961,12 +9961,12 @@ var egret3d;
              * 此帧抬起的全部按键。
              */
             _this.upKeys = [];
-            _this._pointers = {};
-            _this._keys = {};
             /**
              *
              */
-            _this.mousePointer = _this.getPointer(1);
+            _this.defaultPointer = Pointer.create();
+            _this._pointers = {};
+            _this._keys = {};
             return _this;
         }
         /**
@@ -10031,6 +10031,7 @@ var egret3d;
         InputCollecter.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             _inputCollecter = this;
+            this._pointers[1] = this.defaultPointer;
         };
         /**
          * 屏幕到舞台坐标的转换。
@@ -10063,7 +10064,12 @@ var egret3d;
         InputCollecter.prototype.getPointer = function (pointerID) {
             var pointers = this._pointers;
             if (!(pointerID in pointers)) {
-                pointers[pointerID] = Pointer.create();
+                if (this.downPointers.length === 0 && this.holdPointers.length === 0) {
+                    pointers[pointerID] = this.defaultPointer;
+                }
+                else {
+                    pointers[pointerID] = Pointer.create();
+                }
             }
             return pointers[pointerID];
         };
@@ -10071,9 +10077,15 @@ var egret3d;
          * @internal
          */
         InputCollecter.prototype.removePointer = function (pointerID) {
+            if (pointerID === 1) {
+                return;
+            }
             var pointers = this._pointers;
             if (pointerID in pointers) {
-                pointers[pointerID].release();
+                var pointer = pointers[pointerID];
+                if (pointer !== this.defaultPointer) {
+                    pointer.release();
+                }
                 delete pointers[pointerID];
             }
         };
@@ -14505,9 +14517,6 @@ var egret3d;
         __decorate([
             paper.serializedField
         ], Animation.prototype, "_animations", void 0);
-        Animation = __decorate([
-            paper.allowMultiple
-        ], Animation);
         return Animation;
     }(paper.BaseComponent));
     egret3d.Animation = Animation;
@@ -14535,10 +14544,7 @@ var egret3d;
         AnimationSystem.prototype.onUpdate = function (deltaTime) {
             for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
                 var gameObject = _a[_i];
-                for (var _b = 0, _c = gameObject.getComponents(egret3d.Animation); _b < _c.length; _b++) {
-                    var animation = _c[_b];
-                    animation._update(deltaTime);
-                }
+                gameObject.getComponent(egret3d.Animation)._update(deltaTime);
             }
         };
         return AnimationSystem;
@@ -21310,6 +21316,7 @@ var egret3d;
             __extends(InputSystem, _super);
             function InputSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._hasTouch = false;
                 _this._inputCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.InputCollecter);
                 _this._canvas = null;
                 _this._onPointerEvent = function (event) {
@@ -21462,6 +21469,10 @@ var egret3d;
                     if (!inputCollecter.isActiveAndEnabled) {
                         return;
                     }
+                    if (!_this._hasTouch) {
+                        _this._hasTouch = true;
+                        _this._removeMouseEvent();
+                    }
                     var touch = event.changedTouches[0];
                     event.isPrimary = true; // TODO
                     event.pointerId = touch.identifier + 2;
@@ -21497,6 +21508,7 @@ var egret3d;
                     switch (event.type) {
                         case "touchstart":
                             if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) {
+                                console.log(pointer.event.pointerId);
                                 pointer.downPosition.copy(pointer.position);
                                 downPointers.push(pointer);
                                 event.type = "pointerdown";
@@ -21606,9 +21618,17 @@ var egret3d;
                     upPointers.push(pointer);
                     inputCollecter.onPointerUp.dispatch(pointer);
                 }
-                if (pointer.event.pointerId !== 1) {
-                    inputCollecter.removePointer(pointer.event.pointerId);
-                }
+                inputCollecter.removePointer(pointer.event.pointerId);
+            };
+            InputSystem.prototype._removeMouseEvent = function () {
+                var canvas = this._canvas;
+                canvas.removeEventListener("mouseover", this._onMouseEvent);
+                canvas.removeEventListener("mouseenter", this._onMouseEvent);
+                canvas.removeEventListener("mousedown", this._onMouseEvent);
+                window.removeEventListener("mousemove", this._onMouseEvent);
+                window.removeEventListener("mouseup", this._onMouseEvent);
+                canvas.removeEventListener("mouseout", this._onMouseEvent);
+                canvas.removeEventListener("mouseleave", this._onMouseEvent);
             };
             InputSystem.prototype.onAwake = function (config) {
                 this._canvas = config.canvas;
@@ -21628,13 +21648,15 @@ var egret3d;
                 }
                 else {
                     // Mouse events.
-                    canvas.addEventListener("mouseover", this._onMouseEvent);
-                    canvas.addEventListener("mouseenter", this._onMouseEvent);
-                    canvas.addEventListener("mousedown", this._onMouseEvent);
-                    window.addEventListener("mousemove", this._onMouseEvent);
-                    window.addEventListener("mouseup", this._onMouseEvent);
-                    canvas.addEventListener("mouseout", this._onMouseEvent);
-                    canvas.addEventListener("mouseleave", this._onMouseEvent);
+                    if (!this._hasTouch) {
+                        canvas.addEventListener("mousedown", this._onMouseEvent);
+                        canvas.addEventListener("mouseover", this._onMouseEvent);
+                        canvas.addEventListener("mouseenter", this._onMouseEvent);
+                        window.addEventListener("mousemove", this._onMouseEvent);
+                        window.addEventListener("mouseup", this._onMouseEvent);
+                        canvas.addEventListener("mouseout", this._onMouseEvent);
+                        canvas.addEventListener("mouseleave", this._onMouseEvent);
+                    }
                     // Touch events.
                     canvas.addEventListener("touchstart", this._onTouchEvent);
                     canvas.addEventListener("touchmove", this._onTouchEvent);
@@ -21664,13 +21686,7 @@ var egret3d;
                 }
                 else {
                     // Mouse events.
-                    canvas.removeEventListener("mouseover", this._onMouseEvent);
-                    canvas.removeEventListener("mouseenter", this._onMouseEvent);
-                    canvas.removeEventListener("mousedown", this._onMouseEvent);
-                    window.removeEventListener("mousemove", this._onMouseEvent);
-                    window.removeEventListener("mouseup", this._onMouseEvent);
-                    canvas.removeEventListener("mouseout", this._onMouseEvent);
-                    canvas.removeEventListener("mouseleave", this._onMouseEvent);
+                    this._removeMouseEvent();
                     // Touch events.
                     canvas.removeEventListener("touchstart", this._onTouchEvent);
                     canvas.removeEventListener("touchmove", this._onTouchEvent);

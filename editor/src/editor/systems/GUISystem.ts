@@ -1,3 +1,8 @@
+/**
+ * @internal
+ */
+declare var VConsole: any;
+
 namespace paper.editor {
     /**
      * @internal
@@ -14,6 +19,7 @@ namespace paper.editor {
         private readonly _hierarchyFolders: { [key: string]: dat.GUI } = {};
         private readonly _inspectorFolders: { [key: string]: dat.GUI } = {};
         private _selectFolder: dat.GUI | null = null;
+        private _vConsole: any = null;
 
         private _onSceneSelected = (_c: any, value: Scene) => {
             this._selectSceneOrGameObject(value);
@@ -349,6 +355,7 @@ namespace paper.editor {
         public onAwake() {
             const sceneOptions = {
                 debug: false,
+                console: false,
                 save: () => {
 
                     const sceneJSON = JSON.stringify(serialize(Application.sceneManager.activeScene));
@@ -361,20 +368,6 @@ namespace paper.editor {
 
                     }
                 },
-                showConsole: () => {
-                    // const loadScript = (url: string, callback: any) => {
-                    //     const script = document.createElement('script');
-                    //     script.onload = () => callback();
-                    //     script.src = url;
-                    //     document.body.appendChild(script);
-                    // };
-                    // loadScript(
-                    //     'https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js',
-                    //     () => {
-                    //         // eslint-disable-next-line
-                    //         new VConsole();
-                    //     });
-                }
             };
 
             this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
@@ -393,6 +386,31 @@ namespace paper.editor {
                 }
 
                 this._debug(v);
+            });
+            this._guiComponent.hierarchy.add(sceneOptions, "console").onChange((v: boolean) => {
+                if (v) {
+                    if (!this._vConsole) {
+                        this._vConsole = true;
+
+                        const loadScript = (url: string, callback: any) => {
+                            const script = document.createElement("script");
+                            script.onload = () => callback();
+                            script.src = url;
+                            document.body.appendChild(script);
+                        };
+                        loadScript(
+                            "https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js",
+                            () => {
+                                this._vConsole = new VConsole();
+                            }
+                        );
+                    }
+                }
+                else {
+                    if (this._vConsole) {
+                        // TODO
+                    }
+                }
             });
             // this._guiComponent.hierarchy.add(sceneOptions, "save");
             // this._guiComponent.hierarchy.close();
