@@ -1,0 +1,36 @@
+{
+  "native": {
+    "path_ignore": []
+  },
+  "publish": {
+    "web": 0,
+    "native": 1,
+    "path": "bin-release"
+  },
+  "compilerVersion": "5.3.1",
+  "engineVersion": "5.3.1",
+  "eui": {},
+  "modules": [
+    {
+      "name": "egret"
+    },
+    {
+      "name": "assetsmanager"
+    },
+    {
+      "name": "promise"
+    },
+    {
+      "name": "egret3d",
+      "path": "../core/bin"
+    },
+    {
+      "name": "editor",
+      "path": "../editor/bin/editor"
+    },
+    {
+      "name": "oimo",
+      "path": "../plugins/oimo/bin/oimo"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "stripInternal": true,
+		"skipLibCheck": true,
+		"experimentalDecorators": true,
+        "preserveConstEnums": true,
+		"strict": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+		"target": "es5",
+		"lib": [
+			"es5",
+			"dom",
+			"es2015.promise"
+		]
+    },
+    "include": [
+        "src",
+        "libs"
+    ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@egret/egret3d_editor",
+  "version": "1.1.0",
+  "compilerVersion": "5.3.1",
+  "description": "egret 3d editor lib",
+  "main": "bin/editor/editor.js",
+  "bin": {},
+  "scripts": {
+    "build": "egret build && node ./script/build.js",
+    "build-examples": "egret build && node ./script/build.js && cd .. && cd examples && egret clean && cd .. && cd editor"
+  },
+  "author": "egret",
+  "license": "ISC"
+}

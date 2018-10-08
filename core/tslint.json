@@ -1,0 +1,14 @@
+{
+    "rules": {
+        "no-unreachable": true,
+        "no-duplicate-variable": true,
+        "no-duplicate-key": true,
+        "no-unused-variable": false,
+        "curly": false,
+        "class-name": true,
+        "semicolon": [
+            true
+        ],
+        "triple-equals": true
+    }
+}
