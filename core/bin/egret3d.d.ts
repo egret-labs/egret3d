@@ -5630,10 +5630,16 @@ declare namespace egret3d.particle {
      */
     class ParticleRenderer extends paper.BaseRenderer {
         /**
-         *
+         * 渲染模式改变
          */
         static readonly onRenderModeChanged: signals.Signal;
+        /**
+         * TODO
+         */
         static readonly onVelocityScaleChanged: signals.Signal;
+        /**
+         * TODO
+         */
         static readonly onLengthScaleChanged: signals.Signal;
         /**
          *
