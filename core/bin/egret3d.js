@@ -19324,7 +19324,7 @@ var egret3d;
                 if (wrap.indexOf("Repeat") >= 0) {
                     _repeat = true;
                 }
-                var _premultiply = false;
+                var _premultiply = true;
                 if (data["premultiply"] !== undefined) {
                     _premultiply = data["premultiply"] > 0;
                 }
@@ -20366,7 +20366,7 @@ var egret3d;
                 return;
             }
             webgl.bindTexture(webgl.TEXTURE_2D, this._texture);
-            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply);
+            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
             var formatGL = webgl.RGBA;
             if (this._format === 2 /* RGB */) {

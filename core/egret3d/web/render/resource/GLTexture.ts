@@ -100,7 +100,7 @@ namespace egret3d {
             }
 
             webgl.bindTexture(webgl.TEXTURE_2D, this._texture);
-            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply);
+            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
             let formatGL = webgl.RGBA;
             if (this._format === TextureFormatEnum.RGB) {

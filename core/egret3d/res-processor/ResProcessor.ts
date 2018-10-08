@@ -118,7 +118,7 @@ namespace egret3d {
                     _repeat = true;
                 }
 
-                let _premultiply: boolean = false;
+                let _premultiply: boolean = true;
                 if (data["premultiply"] !== undefined) {
                     _premultiply = data["premultiply"] > 0;
                 }
