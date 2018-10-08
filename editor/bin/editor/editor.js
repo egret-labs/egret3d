@@ -3784,6 +3784,7 @@ var paper;
                 _this._hierarchyFolders = {};
                 _this._inspectorFolders = {};
                 _this._selectFolder = null;
+                _this._vConsole = null;
                 _this._onSceneSelected = function (_c, value) {
                     _this._selectSceneOrGameObject(value);
                 };
@@ -4077,6 +4078,7 @@ var paper;
                 var _this = this;
                 var sceneOptions = {
                     debug: false,
+                    console: false,
                     save: function () {
                         var sceneJSON = JSON.stringify(paper.serialize(paper.Application.sceneManager.activeScene));
                         console.info(sceneJSON);
@@ -4087,17 +4089,6 @@ var paper;
                         else if (_this._modelComponent.selectedGameObjects.length > 0) {
                         }
                     },
-                    console: function () {
-                        var loadScript = function (url, callback) {
-                            var script = document.createElement("script");
-                            script.onload = function () { return callback(); };
-                            script.src = url;
-                            document.body.appendChild(script);
-                        };
-                        loadScript("https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js", function () {
-                            new VConsole();
-                        });
-                    }
                 };
                 this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
                     var guiSceneSystem = paper.Application.systemManager.getOrRegisterSystem(editor.SceneSystem, 6000 /* LaterUpdate */);
@@ -4113,8 +4104,28 @@ var paper;
                     }
                     _this._debug(v);
                 });
+                this._guiComponent.hierarchy.add(sceneOptions, "console").onChange(function (v) {
+                    if (v) {
+                        if (!_this._vConsole) {
+                            _this._vConsole = true;
+                            var loadScript = function (url, callback) {
+                                var script = document.createElement("script");
+                                script.onload = function () { return callback(); };
+                                script.src = url;
+                                document.body.appendChild(script);
+                            };
+                            loadScript("https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js", function () {
+                                _this._vConsole = new VConsole();
+                            });
+                        }
+                    }
+                    else {
+                        if (_this._vConsole) {
+                            // TODO
+                        }
+                    }
+                });
                 // this._guiComponent.hierarchy.add(sceneOptions, "save");
-                this._guiComponent.hierarchy.add(sceneOptions, "console");
                 // this._guiComponent.hierarchy.close();
             };
             GUISystem.prototype.onEnable = function () {

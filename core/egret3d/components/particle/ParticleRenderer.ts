@@ -102,9 +102,17 @@ namespace egret3d.particle {
      */
     export class ParticleRenderer extends paper.BaseRenderer {
         /**
-         * 
+         * 渲染模式改变
          */
         public static readonly onRenderModeChanged: signals.Signal = new signals.Signal();
+        /**
+         * TODO
+         */
+        public static readonly onVelocityScaleChanged: signals.Signal = new signals.Signal();
+        /**
+         * TODO
+         */
+        public static readonly onLengthScaleChanged: signals.Signal = new signals.Signal();
         /**
          * 
          */
