@@ -156,17 +156,5 @@ namespace paper {
             // return this._enabled && this.gameObject.activeInHierarchy;
             return this._enabled && (this.gameObject._activeDirty ? this.gameObject.activeInHierarchy : this.gameObject._activeInHierarchy);
         }
-        /**
-         * 该组件实体的变换组件。
-         */
-        public get transform() {
-            return this.gameObject.transform;
-        }
-        /**
-         * 该组件实体的渲染组件。
-         */
-        public get renderer() {
-            return this.gameObject.renderer;
-        }
     }
 }

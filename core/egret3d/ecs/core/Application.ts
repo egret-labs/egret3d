@@ -8,10 +8,6 @@ namespace paper {
         Editor,
     }
     /**
-     * 时间组件。
-     */
-    export let Time: Clock;
-    /**
      * 应用程序单例。
      */
     export let Application: ECS;

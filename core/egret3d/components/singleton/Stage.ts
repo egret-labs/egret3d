@@ -3,6 +3,8 @@ namespace egret3d {
      * 舞台组件。
      */
     export class Stage extends paper.SingletonComponent {
+        public static onResize: signals.Signal = new signals.Signal();
+
         public rotated: boolean = false;
 
         private readonly _screenSize: egret3d.ISize = { w: 1024, h: 1024 };
@@ -22,6 +24,18 @@ namespace egret3d {
                 viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
             }
         }
+
+        public initialize(config: { size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
+            super.initialize();
+
+            stage = this;
+
+            this._size.w = config.size.w;
+            this._size.h = config.size.h;
+            this._screenSize.w = config.screenSize.w;
+            this._screenSize.h = config.screenSize.h;
+            this._updateViewport();
+        }
         /**
          * 屏幕尺寸。
          */
@@ -32,6 +46,8 @@ namespace egret3d {
             this._screenSize.w = value.w;
             this._screenSize.h = value.h;
             this._updateViewport();
+
+            Stage.onResize.dispatch(this);
         }
         /**
          * 渲染尺寸。
@@ -43,6 +59,8 @@ namespace egret3d {
             this._size.w = value.w;
             this._size.h = value.h;
             this._updateViewport();
+
+            Stage.onResize.dispatch(this);
         }
         /**
          * 渲染视口。
@@ -50,5 +68,16 @@ namespace egret3d {
         public get viewport(): Readonly<egret3d.IRectangle> {
             return this._viewport;
         }
+
+        /**
+         * @deprecated
+         */
+        public get screenViewport() {
+            return this._viewport;
+        }
     }
+    /**
+     * @deprecated
+     */
+    export let stage: Stage = null!;
 }

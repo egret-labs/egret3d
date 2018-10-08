@@ -17,7 +17,7 @@ namespace paper {
 
         public initialize() {
             super.initialize();
-
+            Time = this;
             this._beginTime = Date.now() * 0.001;
         }
         /**
@@ -79,4 +79,8 @@ namespace paper {
             return this._unscaledDeltaTime;
         }
     }
+    /**
+     * 全局时间信息组件实例。
+     */
+    export let Time: Clock;
 }

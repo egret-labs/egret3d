@@ -7501,43 +7501,11 @@ declare namespace egret3d.oimo {
 }
 declare namespace egret3d.oimo {
     /**
-     * 碰撞体类型。
-     */
-    enum GeometryType {
-        /**
-         * 立方体。
-         */
-        Box,
-        /**
-         * 球体。
-         */
-        Sphere,
-        /**
-         * 圆柱体。
-         */
-        Cylinder,
-        /**
-         * 圆锥体。
-         */
-        Cone,
-        /**
-         * 胶囊体。
-         */
-        Capsule,
-        /**
-         * TODO
-         */
-        ConvexHull,
-    }
-    /**
      * 碰撞体基类。
      */
-    abstract class Collider extends paper.BaseComponent {
+    abstract class BaseCollider extends paper.BaseComponent implements egret3d.ICollider {
         protected static readonly _config: OIMO.ShapeConfig;
-        /**
-         * 碰撞体类型。
-         */
-        readonly geometryType: GeometryType;
+        readonly colliderType: egret3d.ColliderType;
         /**
          * [Type, Mass, LinearDamping, AngularDamping];
          */
@@ -7638,8 +7606,8 @@ declare namespace egret3d.oimo {
     /**
      *
      */
-    class ConeCollider extends Collider {
-        readonly geometryType: GeometryType;
+    class CylinderCollider extends BaseCollider {
+        readonly colliderType: ColliderType;
         private _radius;
         private _height;
         protected _createShape(): OIMO.Shape;
@@ -7657,8 +7625,8 @@ declare namespace egret3d.oimo {
     /**
      *
      */
-    class BoxCollider extends Collider {
-        readonly geometryType: GeometryType;
+    class BoxCollider extends BaseCollider {
+        readonly colliderType: ColliderType;
         protected readonly _size: Vector3;
         protected _createShape(): OIMO.Shape;
         /**
@@ -7671,8 +7639,27 @@ declare namespace egret3d.oimo {
     /**
      *
      */
-    class CapsuleCollider extends Collider {
-        readonly geometryType: GeometryType;
+    class CapsuleCollider extends BaseCollider {
+        readonly colliderType: ColliderType;
+        private _radius;
+        private _height;
+        protected _createShape(): OIMO.Shape;
+        /**
+         *
+         */
+        radius: number;
+        /**
+         *
+         */
+        height: number;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     *
+     */
+    class ConeCollider extends BaseCollider {
+        readonly colliderType: ColliderType;
         private _radius;
         private _height;
         protected _createShape(): OIMO.Shape;
@@ -7700,44 +7687,11 @@ declare namespace egret3d.oimo {
     }
 }
 declare namespace egret3d.oimo {
-    class RaycastInfo {
-        private static readonly _instances;
-        static create(): RaycastInfo;
-        distance: number;
-        readonly position: Vector3;
-        readonly normal: Vector3;
-        rigidbody: Rigidbody | null;
-        collider: Collider | null;
-        private constructor();
-        release(): this;
-        private _clear();
-    }
-}
-declare namespace egret3d.oimo {
     /**
      *
      */
-    class CylinderCollider extends Collider {
-        readonly geometryType: GeometryType;
-        private _radius;
-        private _height;
-        protected _createShape(): OIMO.Shape;
-        /**
-         *
-         */
-        radius: number;
-        /**
-         *
-         */
-        height: number;
-    }
-}
-declare namespace egret3d.oimo {
-    /**
-     *
-     */
-    class SphereCollider extends Collider {
-        readonly geometryType: GeometryType;
+    class SphereCollider extends BaseCollider {
+        readonly colliderType: ColliderType;
         private _radius;
         protected _createShape(): OIMO.Shape;
         /**
@@ -7892,9 +7846,9 @@ declare namespace egret3d.oimo {
         raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
         onAwake(): void;
         onAddGameObject(gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
-        onAddComponent(component: Collider | Joint<any>, group: paper.GameObjectGroup): void;
+        onAddComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup): void;
         onUpdate(deltaTime: number): void;
-        onRemoveComponent(component: Collider | Joint<any>, group: paper.GameObjectGroup): void;
+        onRemoveComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup): void;
         onRemoveGameObject(gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
         onDestroy(): void;
         /**

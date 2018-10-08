@@ -1,34 +1,4 @@
 namespace egret3d.oimo {
-    /**
-     * 碰撞体类型。
-     */
-    export enum GeometryType {
-        /**
-         * 立方体。
-         */
-        Box = OIMO.GeometryType.BOX,
-        /**
-         * 球体。
-         */
-        Sphere = OIMO.GeometryType.SPHERE,
-        /**
-         * 圆柱体。
-         */
-        Cylinder = OIMO.GeometryType.CYLINDER,
-        /**
-         * 圆锥体。
-         */
-        Cone = OIMO.GeometryType.CONE,
-        /**
-         * 胶囊体。
-         */
-        Capsule = OIMO.GeometryType.CAPSULE,
-        /**
-         * TODO
-         */
-        ConvexHull = OIMO.GeometryType.CONVEX_HULL,
-    }
-
     const enum ValueType {
         CollisionGroup,
         CollisionMask,
@@ -39,12 +9,10 @@ namespace egret3d.oimo {
     /**
      * 碰撞体基类。
      */
-    export abstract class Collider extends paper.BaseComponent {
+    export abstract class BaseCollider extends paper.BaseComponent implements egret3d.ICollider {
         protected static readonly _config: OIMO.ShapeConfig = new OIMO.ShapeConfig();
-        /**
-         * 碰撞体类型。
-         */
-        public readonly geometryType: GeometryType = -1;
+
+        public readonly colliderType: egret3d.ColliderType = -1;
         /**
          * [Type, Mass, LinearDamping, AngularDamping];
          */
@@ -57,7 +25,7 @@ namespace egret3d.oimo {
         protected abstract _createShape(): OIMO.Shape;
 
         protected _updateConfig() {
-            const config = Collider._config;
+            const config = BaseCollider._config;
             config.collisionGroup = this.collisionGroup;
             config.collisionMask = this.collisionMask;
             config.friction = this.friction;

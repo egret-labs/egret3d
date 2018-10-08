@@ -242,7 +242,7 @@ namespace paper.editor {
                 const rotationAxis = egret3d.Vector3.create();
                 const quaternion = !isWorldSpace ? selectedGameObject.transform.getRotation() : egret3d.Quaternion.IDENTITY.clone();
                 const tempQuaternion = egret3d.Quaternion.create();
-                const ROTATION_SPEED = 20 / selectedGameObject.transform.getPosition().getDistance(tempVector.applyMatrix(camera.transform.getWorldMatrix()));
+                const ROTATION_SPEED = 20 / selectedGameObject.transform.getPosition().getDistance(tempVector.applyMatrix(camera.gameObject.transform.getWorldMatrix()));
                 let rotationAngle = 0;
 
                 if (hoveredName.indexOf("XYZE") >= 0) {
@@ -337,7 +337,7 @@ namespace paper.editor {
             const camera = egret3d.Camera.editor;
             const modelComponent = this.gameObject.getComponent(ModelComponent)!;
             const selectedGameObject = modelComponent.selectedGameObject!;
-            const eye = this.eye.copy(camera.transform.position);
+            const eye = this.eye.copy(camera.gameObject.transform.position);
             const eyeDistance = eye.getDistance(selectedGameObject.transform.position);
 
             if (camera.opvalue > 0.0) {
@@ -347,9 +347,9 @@ namespace paper.editor {
             eye.normalize();
 
             const quaternion = isWorldSpace ? egret3d.Quaternion.IDENTITY : selectedGameObject.transform.getRotation();
-            this.transform.position = selectedGameObject.transform.position;
-            this.transform.rotation = quaternion;
-            this.transform.scale = egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10.0).release();
+            this.gameObject.transform.position = selectedGameObject.transform.position;
+            this.gameObject.transform.rotation = quaternion;
+            this.gameObject.transform.scale = egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10.0).release();
 
             if (this._mode === this.rotate) {
                 const tempQuaternion = quaternion.clone();
@@ -406,7 +406,7 @@ namespace paper.editor {
 
         private _updatePlane() {
             const isWorldSpace = this._mode === this.scale ? false : this.isWorldSpace; // scale always oriented to local rotation
-            const rotation = isWorldSpace ? egret3d.Quaternion.IDENTITY : this.transform.rotation;
+            const rotation = isWorldSpace ? egret3d.Quaternion.IDENTITY : this.gameObject.transform.rotation;
             const unitX = egret3d.Vector3.RIGHT.clone().applyQuaternion(rotation);
             const unitY = egret3d.Vector3.UP.clone().applyQuaternion(rotation);
             const unitZ = egret3d.Vector3.FORWARD.clone().applyQuaternion(rotation);
@@ -449,7 +449,7 @@ namespace paper.editor {
 
             if (dirVector.length === 0.0) {
                 // If in rotate mode, make the plane parallel to camera
-                this._quad.transform.rotation = egret3d.Camera.editor.transform.rotation;
+                this._quad.transform.rotation = egret3d.Camera.editor.gameObject.transform.rotation;
             }
             else {
                 this._quad.transform.rotation = egret3d.Quaternion.create().fromMatrix(

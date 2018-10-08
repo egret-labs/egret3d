@@ -58,7 +58,6 @@ namespace egret3d {
         public holdedTime: number = 0.0;
         /**
          * 该 Pointer 的舞台坐标。
-         * TODO
          */
         public readonly position: egret3d.Vector3 = egret3d.Vector3.create();
         /**
@@ -81,7 +80,6 @@ namespace egret3d {
          * @internal
          */
         public readonly _prevPosition: egret3d.Vector3 = egret3d.Vector3.create();
-
         /**
          * 该 Pointer 此帧按下的状态。
          * @param value 

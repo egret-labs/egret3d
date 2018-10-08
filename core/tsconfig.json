@@ -141,6 +141,8 @@
         "egret3d/web/systems/WebGLRenderSystem.ts",
         "egret3d/web/systems/InputSystem.ts",
         "egret3d/web/systems/EndSystem.ts",
+        "egret3d/web/RunEgret.ts",
+
         "egret3d/components/StaticBatchingUtility.ts",
         "egret3d/Performance.ts",
         "egret3d/Profile.ts",
@@ -166,7 +168,6 @@
         "egret3d/editor/history/state/ApplyPrefabInstanceState.ts",
         "egret3d/editor/history/state/RevertPrefabInstanceState.ts",
         "egret3d/editor/uuid.ts",
-        "egret3d/Deprecated.ts",
-        "egret3d/RunEgret.ts"
+        "egret3d/Deprecated.ts"
     ]
 }

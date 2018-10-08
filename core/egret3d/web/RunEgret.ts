@@ -43,7 +43,7 @@ namespace egret3d {
         systemManager.register(MeshRendererSystem, paper.SystemOrder.Renderer);
         systemManager.register(SkinnedMeshRendererSystem, paper.SystemOrder.Renderer);
         systemManager.register(particle.ParticleSystem, paper.SystemOrder.Renderer);
-        systemManager.register(Egret2DRendererSystem, paper.SystemOrder.Renderer);
+        systemManager.register(Egret2DRendererSystem, paper.SystemOrder.Renderer, options);
         systemManager.register(CameraAndLightSystem, paper.SystemOrder.Draw);
 
         systemManager.register(web.WebGLRenderSystem, paper.SystemOrder.Draw, options);

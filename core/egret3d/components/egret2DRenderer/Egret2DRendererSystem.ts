@@ -12,9 +12,13 @@ namespace egret3d {
          */
         public readonly webInput = egret.Capabilities.runtimeType === egret.RuntimeType.WEB ? new (egret as any)["web"].HTMLInput() : null;
 
-        public onAwake() {
-            if (this.webInput) {
-                this.webInput._initStageDelegateDiv(WebGLCapabilities.canvas.parentNode as HTMLDivElement, WebGLCapabilities.canvas);
+        public onAwake(config: RunEgretOptions) {
+            const webInput = this.webInput;
+
+            if (webInput) {
+                const canvas = config.canvas!;
+                webInput._initStageDelegateDiv(canvas.parentNode as HTMLDivElement, canvas);
+                webInput.$updateSize();
             }
         }
 

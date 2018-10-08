@@ -3,8 +3,8 @@ namespace egret3d.oimo {
      * 
      */
     @paper.requireComponent(Rigidbody)
-    export class ConeCollider extends Collider {
-        public readonly geometryType: GeometryType = GeometryType.Cone;
+    export class ConeCollider extends BaseCollider {
+        public readonly colliderType: ColliderType = ColliderType.Cone;
 
         @paper.serializedField
         private _radius: number = 1.0;

@@ -3,8 +3,8 @@ namespace egret3d.oimo {
      * 
      */
     @paper.requireComponent(Rigidbody)
-    export class CapsuleCollider extends Collider {
-        public readonly geometryType: GeometryType = GeometryType.Capsule;
+    export class CapsuleCollider extends BaseCollider {
+        public readonly colliderType: ColliderType = ColliderType.Capsule;
 
         @paper.serializedField
         private _radius: number = 1.0;

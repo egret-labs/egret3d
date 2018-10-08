@@ -3,8 +3,8 @@ namespace egret3d.oimo {
      * 
      */
     @paper.requireComponent(Rigidbody)
-    export class BoxCollider extends Collider {
-        public readonly geometryType: GeometryType = GeometryType.Box;
+    export class BoxCollider extends BaseCollider {
+        public readonly colliderType: ColliderType = ColliderType.Box;
 
         @paper.serializedField
         protected readonly _size: Vector3 = Vector3.ONE.clone();

@@ -44,7 +44,7 @@ namespace paper.editor {
             const camera = egret3d.Camera.editor;
             const aaa = camera.gameObject.getComponent(OrbitControls)!;
             const target = aaa.lookAtPoint.clone().add(aaa.lookAtOffset);
-            const eyeDistance = (10000.0 - target.getDistance(camera.transform.position)) * 0.01; // TODO
+            const eyeDistance = (10000.0 - target.getDistance(camera.gameObject.transform.position)) * 0.01; // TODO
 
             const d = (eyeDistance % 1.0);
             const s = d * (_step - 1) + 1.0;

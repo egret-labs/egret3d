@@ -224,15 +224,15 @@ namespace paper.editor {
                     continue;
                 }
 
-                let icon = camera.transform.find("__pickTarget") as egret3d.Transform;
+                let icon = camera.gameObject.transform.find("__pickTarget") as egret3d.Transform;
                 if (!icon) {
                     icon = EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, EditorDefaultTexture.CAMERA_ICON).transform;
                 }
 
-                const cameraPosition = egret3d.Camera.editor.transform.getPosition();
-                const eyeDistance = cameraPosition.getDistance(camera.transform.position);
-                icon.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
-                icon.transform.rotation = egret3d.Camera.editor.transform.rotation;
+                const cameraPosition = egret3d.Camera.editor.gameObject.transform.getPosition();
+                const eyeDistance = cameraPosition.getDistance(camera.gameObject.transform.position);
+                icon.gameObject.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
+                icon.gameObject.transform.rotation = egret3d.Camera.editor.gameObject.transform.rotation;
             }
 
             const setPoint = (cameraProject: egret3d.Matrix, positions: Float32Array, x: number, y: number, z: number, points: number[]) => {
@@ -306,15 +306,15 @@ namespace paper.editor {
                     continue;
                 }
 
-                let icon = light.transform.find("__pickTarget") as egret3d.Transform;
+                let icon = light.gameObject.transform.find("__pickTarget") as egret3d.Transform;
                 if (!icon) {
                     icon = EditorMeshHelper.createIcon("__pickTarget", light.gameObject, EditorDefaultTexture.LIGHT_ICON).transform;
                 }
 
-                const cameraPosition = egret3d.Camera.editor.transform.getPosition();
-                const eyeDistance = cameraPosition.getDistance(light.transform.position);
-                icon.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
-                icon.transform.rotation = egret3d.Camera.editor.transform.rotation;
+                const cameraPosition = egret3d.Camera.editor.gameObject.transform.getPosition();
+                const eyeDistance = cameraPosition.getDistance(light.gameObject.transform.position);
+                icon.gameObject.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
+                icon.gameObject.transform.rotation = egret3d.Camera.editor.gameObject.transform.rotation;
             }
         }
 
@@ -399,7 +399,7 @@ namespace paper.editor {
                     continue;
                 }
 
-                const icon = camera.transform.find("__pickTarget");
+                const icon = camera.gameObject.transform.find("__pickTarget");
                 if (icon) {
                     icon.gameObject.destroy();
                 }
@@ -410,7 +410,7 @@ namespace paper.editor {
                     continue;
                 }
 
-                const icon = light.transform.find("__pickTarget");
+                const icon = light.gameObject.transform.find("__pickTarget");
                 if (icon) {
                     icon.gameObject.destroy();
                 }

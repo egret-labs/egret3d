@@ -29,12 +29,18 @@ namespace egret3d {
         ConvexHull,
     }
     /**
-     * 
+     * 碰撞体接口。
      */
-    export abstract class BaseCollider extends paper.BaseComponent implements IRaycast {
+    export interface ICollider {
         /**
          * 碰撞体类型。
          */
+        readonly colliderType: ColliderType;
+    }
+    /**
+     * 
+     */
+    export abstract class BaseCollider extends paper.BaseComponent implements ICollider, IRaycast {
         public readonly colliderType: ColliderType = -1;
         /**
          * 

@@ -252,11 +252,13 @@ namespace egret3d {
         public subMeshIndex: number = -1;
         public triangleIndex: number = -1;
         public distance: number = 0.0;
-        public readonly position: Vector3 = new Vector3();
-        public readonly textureCoordA: Vector2 = new Vector2();
-        public readonly textureCoordB: Vector2 = new Vector2();
+        public readonly position: Vector3 = Vector3.create();
+        public readonly normal: Vector3 = Vector3.FORWARD.clone();
+        public readonly textureCoordA: Vector2 = Vector2.create();
+        public readonly textureCoordB: Vector2 = Vector2.create();
         public transform: Transform | null = null;
-        public collider: BaseCollider | null = null;
+        public collider: ICollider | null = null;
+        public rigidbody: any | null = null;
 
         public clear() {
             this.subMeshIndex = -1;
@@ -265,6 +267,7 @@ namespace egret3d {
             // TODO
             this.transform = null;
             this.collider = null;
+            this.rigidbody = null;
         }
     }
     /**

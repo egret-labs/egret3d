@@ -3,17 +3,15 @@ namespace egret3d.oimo {
      * 
      */
     @paper.requireComponent(Rigidbody)
-    export class CylinderCollider extends Collider {
-        public readonly geometryType: GeometryType = GeometryType.Cylinder;
+    export class SphereCollider extends BaseCollider {
+        public readonly colliderType: ColliderType = ColliderType.Sphere;
 
         @paper.serializedField
         private _radius: number = 1.0;
-        @paper.serializedField
-        private _height: number = 1.0;
 
         protected _createShape() {
             const config = this._updateConfig();
-            config.geometry = new OIMO.CylinderGeometry(this._radius, this._height * 0.5);
+            config.geometry = new OIMO.SphereGeometry(this._radius);
 
             const shape = new OIMO.Shape(config);
             shape.userData = this;
@@ -36,24 +34,6 @@ namespace egret3d.oimo {
             }
             else {
                 this._radius = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get height(): number {
-            return this._height;
-        }
-        public set height(value: number) {
-            if (this._height === value) {
-                return;
-            }
-
-            if (this._oimoShape) {
-                console.warn("Cannot change the height after the collider has been created.");
-            }
-            else {
-                this._height = value;
             }
         }
     }

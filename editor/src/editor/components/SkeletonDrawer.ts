@@ -45,8 +45,8 @@ namespace paper.editor {
             const vertices = mesh.getVertices()!;
             const bones = skinnedMeshRenderer.bones;
 
-            this.transform.position = selectedGameObject.transform.position;
-            helpMatrixA.inverse(this.transform.worldMatrix);
+            this.gameObject.transform.position = selectedGameObject.transform.position;
+            helpMatrixA.inverse(this.gameObject.transform.worldMatrix);
 
             for (const bone of bones) {
                 if (bone) {

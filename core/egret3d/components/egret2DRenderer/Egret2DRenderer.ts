@@ -47,19 +47,16 @@ namespace egret3d {
             stage.$displayList = displayList;
 
             // TODO
-            const webInput = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput;
+            const webInput = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem)!.webInput;
             if (webInput) {
                 egret.web.$cacheTextAdapter(webInput, stage, WebGLCapabilities.canvas.parentNode as HTMLDivElement, WebGLCapabilities.canvas);
             }
 
-            // InputManager.touch.addEventListener("touchstart", this._onTouchStart, this);
-            // InputManager.touch.addEventListener("touchend", this._onTouchEnd, this);
-            // InputManager.touch.addEventListener("touchcancel", this._onTouchEnd, this);
-            // InputManager.touch.addEventListener("touchmove", this._onTouchMove, this);
-
-            // InputManager.mouse.addEventListener("mousedown", this._onTouchStart, this);
-            // InputManager.mouse.addEventListener("mouseup", this._onTouchEnd, this);
-            // InputManager.mouse.addEventListener("mousemove", this._onTouchMove, this);
+            const inputCollecter = this.gameObject.getComponent(InputCollecter)!;
+            inputCollecter.onPointerDown.add(this._onTouchStart, this);
+            inputCollecter.onPointerCancel.add(this._onTouchEnd, this);
+            inputCollecter.onPointerUp.add(this._onTouchEnd, this);
+            inputCollecter.onPointerMove.add(this._onTouchMove, this);
 
             this._stage = paper.GameObject.globalGameObject.getComponent(Stage)!;
         }
@@ -67,15 +64,13 @@ namespace egret3d {
         public uninitialize() {
             super.uninitialize();
 
-            // InputManager.touch.removeEventListener("touchstart", this._onTouchStart, this);
-            // InputManager.touch.removeEventListener("touchend", this._onTouchEnd, this);
-            // InputManager.touch.removeEventListener("touchcancel", this._onTouchEnd, this);
-            // InputManager.touch.removeEventListener("touchmove", this._onTouchMove, this);
-            // InputManager.mouse.removeEventListener("mousedown", this._onTouchStart, this);
-            // InputManager.mouse.removeEventListener("mouseup", this._onTouchEnd, this);
-            // InputManager.mouse.removeEventListener("mousemove", this._onTouchMove, this);
+            const inputCollecter = this.gameObject.getComponent(InputCollecter)!;
+            inputCollecter.onPointerDown.remove(this._onTouchStart, this);
+            inputCollecter.onPointerCancel.remove(this._onTouchEnd, this);
+            inputCollecter.onPointerUp.remove(this._onTouchEnd, this);
+            inputCollecter.onPointerMove.remove(this._onTouchMove, this);
 
-            // this.stage.removeChild(this.root);
+            this.stage.removeChild(this.root);
         }
 
         public recalculateAABB() {
@@ -87,35 +82,26 @@ namespace egret3d {
             return false;
         }
 
-        // /**
-        //  * 检查屏幕接触事件是否能够穿透此2D层
-        //  */
-        // public checkEventThrough(x: number, y: number): boolean {
-        //     return !!this._catchedEvent[x + "_" + y];
-        // }
+        private _onTouchStart(pointer: Pointer, signal: signals.Signal) {
+            const event = pointer.event!;
+            if (this.stage.$onTouchBegin(event.clientX / this._scaler, event.clientY / this._scaler, event.pointerId)) {
+                signal.halt();
+            }
+        }
 
-        // private _catchedEvent = {};
+        private _onTouchMove(pointer: Pointer, signal: signals.Signal) {
+            const event = pointer.event!;
+            if (this.stage.$onTouchMove(event.clientX / this._scaler, event.clientY / this._scaler, event.pointerId)) {
+                signal.halt();
+            }
+        }
 
-        // private _onTouchStart(event: any) {
-        //     // console.log(event);
-        //     if (this.stage.$onTouchBegin(event.x / this._scaler, event.y / this._scaler, event.identifier)) {
-        //         this._catchedEvent[event.x + "_" + event.y] = true;
-        //     }
-        // }
-
-        // private _onTouchMove(event: any) {
-        //     // console.log(event);
-        //     if (this.stage.$onTouchMove(event.x / this._scaler, event.y / this._scaler, event.identifier)) {
-        //         this._catchedEvent[event.x + "_" + event.y] = true;
-        //     }
-        // }
-
-        // private _onTouchEnd(event: any) {
-        //     // console.log(event);
-        //     if (this.stage.$onTouchEnd(event.x / this._scaler, event.y / this._scaler, event.identifier)) {
-        //         this._catchedEvent[event.x + "_" + event.y] = true;
-        //     }
-        // }
+        private _onTouchEnd(pointer: Pointer, signal: signals.Signal) {
+            const event = pointer.event!;
+            if (this.stage.$onTouchEnd(event.clientX / this._scaler, event.clientY / this._scaler, event.pointerId)) {
+                signal.halt();
+            }
+        }
 
         /**
          * screen position to ui position
