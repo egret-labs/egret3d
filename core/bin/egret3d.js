@@ -11290,7 +11290,7 @@ var egret3d;
      * 引擎启动入口
      */
     function runEgret(options) {
-        if (options === void 0) { options = { antialias: false }; }
+        if (options === void 0) { options = { antialias: false, alpha: false }; }
         console.info("Egret version:", paper.Application.version);
         console.info("Egret start.");
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
@@ -18913,6 +18913,22 @@ var egret3d;
                     functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
                     functions.blendFuncSeparate = [1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */, 1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */];
                     break;
+                case 5 /* Subtractive */:
+                    functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                    functions.blendFuncSeparate = [0 /* ZERO */, 769 /* ONE_MINUS_SRC_COLOR */, 0 /* ZERO */, 769 /* ONE_MINUS_SRC_COLOR */];
+                    break;
+                case 6 /* Subtractive_PreMultiply */:
+                    functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                    functions.blendFuncSeparate = [0 /* ZERO */, 0 /* ZERO */, 769 /* ONE_MINUS_SRC_COLOR */, 771 /* ONE_MINUS_SRC_ALPHA */];
+                    break;
+                case 7 /* Multiply */:
+                    functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                    functions.blendFuncSeparate = [0 /* ZERO */, 768 /* SRC_COLOR */, 0 /* ZERO */, 768 /* SRC_COLOR */];
+                    break;
+                case 8 /* Multiply_PreMultiply */:
+                    functions.blendEquationSeparate = [32774 /* FUNC_ADD */, 32774 /* FUNC_ADD */];
+                    functions.blendFuncSeparate = [0 /* ZERO */, 768 /* SRC_COLOR */, 0 /* ZERO */, 770 /* SRC_ALPHA */];
+                    break;
                 default:
                     delete functions.blendEquationSeparate;
                     delete functions.blendFuncSeparate;
@@ -19324,7 +19340,7 @@ var egret3d;
                 if (wrap.indexOf("Repeat") >= 0) {
                     _repeat = true;
                 }
-                var _premultiply = true;
+                var _premultiply = false;
                 if (data["premultiply"] !== undefined) {
                     _premultiply = data["premultiply"] > 0;
                 }
@@ -19347,7 +19363,7 @@ var egret3d;
         onLoadStart: function (host, resource) {
             return host.load(resource, egret3d.BitmapDataProcessor).then(function (bitmapData) {
                 var texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, 1 /* RGBA */);
-                texture.uploadImage(bitmapData.source, true, true, true, true);
+                texture.uploadImage(bitmapData.source, true, true, false, true);
                 paper.Asset.register(texture);
                 return texture;
             });
@@ -22655,6 +22671,7 @@ var paper;
             Editor.initEditEnvironment = function () {
                 egret3d.runEgret({
                     antialias: false,
+                    alpha: false,
                     playerMode: 2 /* Editor */,
                 });
             };

@@ -1127,6 +1127,10 @@ declare namespace gltf {
         Blend_PreMultiply = 2,
         Add = 3,
         Add_PreMultiply = 4,
+        Subtractive = 5,
+        Subtractive_PreMultiply = 6,
+        Multiply = 7,
+        Multiply_PreMultiply = 8,
     }
     const enum BlendEquation {
         FUNC_ADD = 32774,
@@ -4405,6 +4409,7 @@ declare module egret.web {
 declare namespace egret3d {
     type RunEgretOptions = {
         antialias: boolean;
+        alpha: boolean;
         defaultScene?: string;
         contentWidth?: number;
         contentHeight?: number;

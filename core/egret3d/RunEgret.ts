@@ -2,6 +2,7 @@ namespace egret3d {
 
     export type RunEgretOptions = {
         antialias: boolean;
+        alpha: boolean;//webgl默认会和Canvas进行混合
         defaultScene?: string;
         contentWidth?: number;
         contentHeight?: number;
@@ -19,7 +20,7 @@ namespace egret3d {
     /**
      * 引擎启动入口
      */
-    export function runEgret(options: RunEgretOptions = { antialias: false }) {
+    export function runEgret(options: RunEgretOptions = { antialias: false, alpha: false }) {
         console.info("Egret version:", paper.Application.version);
         console.info("Egret start.");
 

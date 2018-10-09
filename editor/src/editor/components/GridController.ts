@@ -36,8 +36,8 @@ namespace paper.editor {
             const mA = (this._gridA.renderer as egret3d.MeshRenderer).material!;
             const mB = (this._gridB.renderer as egret3d.MeshRenderer).material!;
 
-            mA.setBlend(gltf.BlendMode.Blend);
-            mB.setBlend(gltf.BlendMode.Blend);
+            mA.setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Transparent);
+            mB.setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Transparent);
         }
 
         public update() {
