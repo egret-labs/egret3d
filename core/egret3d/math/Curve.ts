@@ -5,35 +5,19 @@ namespace egret3d {
      */
     export class Curve3 {
         /**
-        * 贝塞尔曲线上的，不包含第一个点
+        * 贝塞尔曲线上的点，不包含第一个点
         */
-        private _beizerPoints: egret3d.Vector3[];
+        beizerPoints: egret3d.Vector3[];
 
         /**
         * 贝塞尔曲线上所有的个数
         */
-        private _bezierPointNum: number;
-
-        public get beizerPoints() {
-            return this._beizerPoints;
-        }
-
-        public set beizerPoints(value: egret3d.Vector3[]) {
-            this._beizerPoints = value;
-        }
-
-        public get bezierPointNum() {
-            return this._bezierPointNum;
-        }
-
-        public set bezierPointNum(value: number) {
-            this._bezierPointNum = value;
-        }
+        bezierPointNum: number;
 
         /**
          * 线性贝塞尔曲线
          */
-        public static CreateLinearBezier(start: egret3d.Vector3, end: egret3d.Vector3, indices: number): Curve3 {
+        public static createLinearBezier(start: egret3d.Vector3, end: egret3d.Vector3, indices: number): Curve3 {
             indices = indices > 2 ? indices : 3;
             let bez = new Array<egret3d.Vector3>();
             let equation = (t: number, va10: number, va11: number) => {
@@ -54,9 +38,10 @@ namespace egret3d {
          * @param v0 起始点
          * @param v1 选中的节点
          * @param v2 结尾点
-         * @param nbPoints 将贝塞尔曲线拆分nbPoints段，一共有nbPoints + 1个点
+         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
+         * @returns 贝塞尔曲线对象
          */
-        public static CreateQuadraticBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, bezierPointNum: number): Curve3 {
+        public static createQuadraticBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, bezierPointNum: number): Curve3 {
             bezierPointNum = bezierPointNum > 2 ? bezierPointNum : 3;
             let beizerPoint = new Array<egret3d.Vector3>();
             let equation = (t: number, val0: number, val1: number, val2: number) => {
@@ -72,13 +57,14 @@ namespace egret3d {
 
         /**
          * 三次方贝塞尔曲线路径
-         * @param v0
-         * @param v1
-         * @param v2
-         * @param v3
-         * @param nbPoints
+         * @param v0 起始点
+         * @param v1 第一个插值点
+         * @param v2 第二个插值点
+         * @param v3 终点
+         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
+         * @returns 贝塞尔曲线对象
          */
-        public static CreateCubicBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, v3: egret3d.Vector3, bezierPointNum: number): Curve3 {
+        public static createCubicBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, v3: egret3d.Vector3, bezierPointNum: number): Curve3 {
             bezierPointNum = bezierPointNum > 3 ? bezierPointNum : 4;
             let beizerPoint = new Array<egret3d.Vector3>();
             let equation = (t: number, val0: number, val1: number, val2: number, val3: number) => {
@@ -91,16 +77,12 @@ namespace egret3d {
             return new Curve3(beizerPoint, bezierPointNum);
         }
 
-        constructor(points: egret3d.Vector3[], nbPoints: number) {
-            this._beizerPoints = points;
-            this._bezierPointNum = nbPoints;
-        }
-
         /**
-         * 贝塞尔曲线上的点
+         * @internal
          */
-        public getPoints() {
-            return this._beizerPoints;
+        constructor(beizerPoints: egret3d.Vector3[], bezierPointNum: number) {
+            this.beizerPoints = beizerPoints;
+            this.bezierPointNum = bezierPointNum;
         }
     }
 }

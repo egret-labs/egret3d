@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 
+     * 3×3矩阵
      */
     export class Matrix3 extends paper.BaseRelease<Matrix3> implements paper.ICCS<Matrix3>, paper.ISerializable {
         private static readonly _instances: Matrix3[] = [];
@@ -16,6 +16,7 @@ namespace egret3d {
         }
 
         /**
+         * 矩阵原始数据
          * @readonly
          */
         public rawData: Float32Array = null!;
@@ -39,16 +40,24 @@ namespace egret3d {
             }
         }
 
+        /**
+         * 序列化
+         * @returns 序列化后的数据
+         */
         public serialize() {
             return this.rawData;
         }
 
+        /**
+         * 反序列化
+         * @param value 序列化后的数据
+         */
         public deserialize(value: Readonly<[
             number, number, number, number,
             number, number, number, number,
             number, number, number, number,
             number, number, number, number
-        ]>) {
+        ]>): Matrix3 {
             return this.fromArray(value);
         }
 
@@ -69,7 +78,7 @@ namespace egret3d {
             n11: number, n12: number, n13: number,
             n21: number, n22: number, n23: number,
             n31: number, n32: number, n33: number,
-        ) {
+        ): Matrix3 {
             this.rawData[0] = n11;
             this.rawData[3] = n12;
             this.rawData[6] = n13;
@@ -85,7 +94,7 @@ namespace egret3d {
             return this;
         }
 
-        public identity() {
+        public identity(): Matrix3 {
             this.set(
                 1, 0, 0,
                 0, 1, 0,
@@ -95,7 +104,7 @@ namespace egret3d {
             return this;
         }
 
-        public inverse(matrix: Matrix3) {
+        public inverse(matrix: Matrix3): Matrix3 {
             var me = matrix.rawData,
                 te = this.rawData,
 
@@ -179,7 +188,7 @@ namespace egret3d {
             return a * e * i - a * f * h - b * d * i + b * f * g + c * d * h - c * e * g;
         }
 
-        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0): Matrix3 {
             for (let i = 0; i < 9; ++i) {
                 this.rawData[i] = value[i + offset];
             }
@@ -187,12 +196,11 @@ namespace egret3d {
             return this;
         }
 
-        public fromBuffer(value: ArrayBuffer, byteOffset: number = 0) {
+        public fromBuffer(value: ArrayBuffer, byteOffset: number = 0): Matrix3 {
             this.rawData = new Float32Array(value, byteOffset, 9);
 
             return this;
         }
     }
 
-    let helpMat_1: Matrix3 = new Matrix3();
 }

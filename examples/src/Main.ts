@@ -1,34 +1,25 @@
-function main() {
-    // if ((window || global).dat) {
-    //     // fps TODO
-    //     const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
-    //     Stats.show(div);
-    // }
+function main(allScripts: string[]) {
 
-    // Your progject start here.
-    startExamples();
-}
 
-function startExamples() {
-    const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
-    const allScripts = (window as any)["allScripts"] as string[];
-    const examples = [] as string[];
-
-    for (const example of allScripts) {
-        const index = example.indexOf("examples");
-        if (index > 0) {
-            // examples.push(example.substr(index + "examples/".length).split(".")[0]);
-            examples.push(example.split("/").pop()!.split(".")[0]);
-        }
-    }
+    const examples = allScripts
+        .filter(item => item.indexOf("examples") >= 0)
+        .map(item => item.split("/").pop().split(".")[0]);
 
     const current = getCurrentTest();
+    const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
+    const gui = guiComponent.hierarchy.addFolder("Examples");
+    gui.open();
     const options = {
         example: current,
     };
-    const gui = guiComponent.hierarchy.addFolder("Examples");
-    gui.open();
-    gui.add(options, "example", examples).onChange((v: string) => {
+    gui.add(options, "example", examples).onChange((example: string) => {
+
+        location.href = getNewUrl(example);
+    });
+
+    window[current].start();
+
+    function getNewUrl(example: string) {
         let url = location.href;
         const index = url.indexOf("?");
         if (index !== -1) {
@@ -37,14 +28,12 @@ function startExamples() {
         if (url.indexOf(".html") === -1) {
             url += "index.html";
         }
-        url += "?example=" + v;
-        location.href = url;
-    });
-
-    (window as any)[current].start();
+        url += "?example=" + example;
+        return url;
+    }
 
     function getCurrentTest() {
-        var appFile: string = "";
+        var appFile;
         var hasTest = false;
         var str = location.search;
         str = str.slice(1, str.length);

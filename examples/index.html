@@ -64,10 +64,9 @@
         xhr.addEventListener("load", function () {
             var manifest = JSON.parse(xhr.response);
             var list = manifest.initial.concat(manifest.game);
-            window["allScripts"] = list;
             loadScript(list, function () {
                 egret3d.runEgret({});
-                main(); // 临时入口
+                main(manifest.game);
             });
         });
         xhr.send(null);
