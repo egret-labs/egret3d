@@ -1,10 +1,12 @@
 namespace egret3d {
-
+    /**
+     * 三维向量接口。
+     */
     export interface IVector3 extends IVector2 {
         z: number;
     }
     /**
-     * 
+     * 欧拉角旋转顺序。
      */
     export const enum EulerOrder {
         XYZ,
@@ -15,7 +17,7 @@ namespace egret3d {
         ZYX,
     }
     /**
-     * 三维向量
+     * 三维向量。
      */
     export class Vector3 extends paper.BaseRelease<AABB> implements IVector3, paper.ICCS<Vector3>, paper.ISerializable {
         /**
@@ -63,7 +65,12 @@ namespace egret3d {
         public static readonly BACK: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, -1.0);
 
         private static readonly _instances: Vector3[] = [];
-
+        /**
+         * 创建一个三维向量实例。
+         * @param x X 轴分量。
+         * @param y Y 轴分量。
+         * @param z Z 轴分量。
+         */
         public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0) {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!.set(x, y, z);
@@ -75,17 +82,17 @@ namespace egret3d {
         }
 
         /**
-         * X轴分量
+         * X 轴分量。
          */
         public x: number;
 
         /**
-         * Y轴分量
+         * Y 轴分量。
          */
         public y: number;
 
         /**
-         * Z轴分量
+         * Z 轴分量。
          */
         public z: number;
         /**
@@ -118,6 +125,14 @@ namespace egret3d {
             return Vector3.create(this.x, this.y, this.z);
         }
 
+        public set(x: number, y: number, z: number) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+
+            return this;
+        }
+
         public equal(value: Readonly<IVector3>, threshold: number = 0.000001) {
             if (Math.abs(this.x - value.x) > threshold) {
                 return false;
@@ -132,14 +147,6 @@ namespace egret3d {
             }
 
             return true;
-        }
-
-        public set(x: number, y: number, z: number) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-
-            return this;
         }
 
         public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
@@ -442,11 +449,11 @@ namespace egret3d {
         }
 
         public getSquaredDistance(value: Readonly<IVector3>): number {
-            return helpVector.subtract(value, this).squaredLength;
+            return helpVector3.subtract(value, this).squaredLength;
         }
 
         public getDistance(value: Readonly<IVector3>): number {
-            return helpVector.subtract(value, this).length;
+            return helpVector3.subtract(value, this).length;
         }
 
         public closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>) {
@@ -677,11 +684,11 @@ namespace egret3d {
          * @deprecated
          */
         public static getDistance(a: Readonly<IVector3>, b: Readonly<IVector3>) {
-            return this.getLength(this.subtract(a, b, helpVector));
+            return this.getLength(this.subtract(a, b, helpVector3));
         }
     }
 
-    const helpVector = Vector3.create();
+    const helpVector3 = Vector3.create();
     /**
      * @internal
      */

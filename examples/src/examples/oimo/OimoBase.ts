@@ -4,7 +4,7 @@ namespace OimoBase {
         egret3d.Camera.main;
 
         { // Create light.
-            const gameObject = paper.GameObject.create("light");
+            const gameObject = paper.GameObject.create("Light");
             gameObject.transform.setLocalPosition(1.0, 10.0, -1.0);
             gameObject.transform.lookAt(egret3d.Vector3.ZERO);
 
@@ -14,7 +14,7 @@ namespace OimoBase {
 
         { // Create ground.
             const groundSize = egret3d.Vector3.create(10.0, 0.1, 10.0);
-            const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "ground");
+            const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "Ground");
             gameObject.transform.setLocalScale(groundSize);
 
             const renderer = gameObject.getComponent(egret3d.MeshRenderer)!;
@@ -31,7 +31,7 @@ namespace OimoBase {
             const cubeSize = egret3d.Vector3.create(1.0, 1.0, 1.0);
 
             for (let i = 0; i < 100; i++) {
-                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, `cube_${i}`);
+                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, `Cube_${i}`);
                 gameObject.transform.setLocalPosition(
                     Math.random() * 8.0 - 4.0,
                     Math.random() * 8.0 + 4.0,

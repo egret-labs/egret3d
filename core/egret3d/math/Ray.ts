@@ -1,16 +1,5 @@
 namespace egret3d {
     /**
-     * 射线检测接口。
-     */
-    export interface IRaycast {
-        /**
-         * 射线检测。
-         * @param ray 射线。
-         * @param raycastInfo 是否将检测的详细数据写入 raycastInfo。
-         */
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
-    }
-    /**
      * 射线。
      */
     export class Ray extends paper.BaseRelease<Ray> implements paper.ICCS<Ray>, paper.ISerializable {
@@ -81,7 +70,10 @@ namespace egret3d {
 
             return this;
         }
-
+        /**
+         * 获取点到该射线的最近距离的平方。
+         * @param value 点。
+         */
         public getSquaredDistance(value: Readonly<IVector3>) {
             const directionDistance = helpVector3A.subtract(value, this.origin).dot(this.direction);
             // point behind the ray
@@ -91,7 +83,10 @@ namespace egret3d {
 
             return this.at(directionDistance, helpVector3A).getSquaredDistance(value);
         }
-
+        /**
+         * 获取点到该射线的最近距离。
+         * @param value 点。
+         */
         public getDistance(value: Readonly<IVector3>) {
             return Math.sqrt(this.getSquaredDistance(value));
         }
@@ -123,127 +118,31 @@ namespace egret3d {
 
             return out;
         }
+    }
+    /**
+     * 射线检测接口。
+     */
+    export interface IRaycast {
         /**
-         * @deprecated
+         * 射线检测。
+         * @param ray 射线。
+         * @param raycastInfo 是否将检测的详细数据写入 raycastInfo。
          */
-        public intersectTriangle(triangle: Readonly<Triangle>, backfaceCulling?: boolean, raycastInfo?: RaycastInfo): boolean;
-        public intersectTriangle(p1: Readonly<Vector3>, p2: Readonly<Vector3>, p3: Readonly<Vector3>, backfaceCulling?: boolean, raycastInfo?: RaycastInfo): boolean;
-        public intersectTriangle(p1: Readonly<Triangle | Vector3>, p2?: boolean | Readonly<Vector3>, p3?: RaycastInfo | Readonly<Vector3>, p4?: boolean, p5?: RaycastInfo) {
-            // // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
-            // const edge1 = helpVector3A;
-            // const edge2 = helpVector3B;
-            // const diff = helpVector3C;
-            // const normal = helpVector3D;
-
-            // edge1.subtract(p2, p1);
-            // edge2.subtract(p3, p1);
-            // normal.cross(edge1, edge2);
-
-            // // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
-            // // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
-            // //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
-            // //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
-            // //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
-            // let DdN = this.direction.dot(normal);
-            // let sign = 1.0;
-
-            // if (DdN > 0.0) {
-            //     if (backfaceCulling) return null;
-            // }
-            // else if (DdN < 0.0) {
-            //     sign = -1.0;
-            //     DdN = -DdN;
-            // }
-            // else {
-            //     return null;
-            // }
-
-            // diff.subtract(this.origin, p1);
-            // const DdQxE2 = sign * this.direction.dot(edge2.cross(diff, edge2));
-            // // b1 < 0, no intersection
-            // if (DdQxE2 < 0.0) {
-            //     return null;
-            // }
-
-            // const DdE1xQ = sign * this.direction.dot(edge1.cross(diff));
-            // // b2 < 0, no intersection
-            // if (DdE1xQ < 0.0) {
-            //     return null;
-            // }
-            // // b1+b2 > 1, no intersection
-            // if (DdQxE2 + DdE1xQ > DdN) {
-            //     return null;
-            // }
-            // // Line intersects triangle, check if ray does.
-            // const QdN = - sign * diff.dot(normal);
-            // // t < 0, no intersection
-            // if (QdN < 0) {
-            //     return null;
-            // }
-
-            // const pickInfo = new PickInfo();
-            // pickInfo.distance = QdN / DdN;
-            // pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
-            // pickInfo.textureCoordA.x = DdQxE2;
-            // pickInfo.textureCoordA.y = DdE1xQ;
-
-            // return pickInfo;
-            // TODO
-            const isA = p1 instanceof Triangle;
-            const edge1 = helpVector3A;
-            const edge2 = helpVector3B;
-            const pvec = helpVector3C;
-            const tvec = helpVector3D;
-            const qvec = helpVector3E;
-            const pA = isA ? (p1 as Readonly<Triangle>).a : p1 as Readonly<IVector3>;
-            const pB = isA ? (p1 as Readonly<Triangle>).b : p2 as Readonly<IVector3>;
-            const pC = isA ? (p1 as Readonly<Triangle>).c : p3 as Readonly<IVector3>;
-
-            edge1.subtract(pB, pA);
-            edge2.subtract(pC, pA);
-            pvec.cross(this.direction, edge2);
-
-            const det = pvec.dot(edge1);
-            if (det === 0.0) {
-                return false;
-            }
-
-            const invdet = 1.0 / det;
-
-            tvec.subtract(this.origin, pA);
-
-            const bu = pvec.dot(tvec) * invdet;
-            if (bu < 0.0 || bu > 1.0) {
-                return false;
-            }
-
-            qvec.cross(tvec, edge1);
-
-            const bv = qvec.dot(this.direction) * invdet;
-
-            if (bv < 0.0 || bu + bv > 1.0) {
-                return false;
-            }
-
-            const raycastInfo = isA ? p3 as RaycastInfo | undefined : p5;
-            if (raycastInfo) {
-                raycastInfo.textureCoordA.x = bu;
-                raycastInfo.textureCoordA.y = bv;
-                this.at(raycastInfo.distance = qvec.dot(edge2) * invdet, raycastInfo.position);
-            }
-
-            return true;
-        }
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
     /**
      * 射线检测信息。
      */
     export class RaycastInfo extends paper.BaseRelease<RaycastInfo>  {
         private static readonly _instances: RaycastInfo[] = [];
-
+        /**
+         * 创建一个射线检测信息实例。
+         */
         public static create() {
             if (this._instances.length > 0) {
-                return this._instances.pop()!;
+                const instance = this._instances.pop()!;
+                instance._released = false;
+                return instance;
             }
 
             return new RaycastInfo();
@@ -251,20 +150,46 @@ namespace egret3d {
 
         public subMeshIndex: number = -1;
         public triangleIndex: number = -1;
+        /**
+         * 交点到射线起始点的距离。
+         */
         public distance: number = 0.0;
+        /**
+         * 相交的点。
+         */
         public readonly position: Vector3 = Vector3.create();
-        public readonly normal: Vector3 = Vector3.FORWARD.clone();
         public readonly textureCoordA: Vector2 = Vector2.create();
         public readonly textureCoordB: Vector2 = Vector2.create();
+        /**
+         * 相交的法线。
+         * - 提供法线向量将计算法线。
+         */
+        public normal: Vector3 | null = null;
+        /**
+         * 相交的变换组件。（如果有的话）
+         */
         public transform: Transform | null = null;
+        /**
+         * 相交的碰撞组件。（如果有的话）
+         */
         public collider: ICollider | null = null;
+        /**
+         * 相交的刚体组件。（如果有的话）
+         */
         public rigidbody: any | null = null;
 
-        public clear() {
+        private constructor() {
+            super();
+        }
+
+        public onClear() {
             this.subMeshIndex = -1;
             this.triangleIndex = -1;
             this.distance = 0.0;
-            // TODO
+            this.position.set(0.0, 0.0, 0.0);
+            this.textureCoordA.set(0.0, 0.0);
+            this.textureCoordB.set(0.0, 0.0);
+            this.normal = null;
             this.transform = null;
             this.collider = null;
             this.rigidbody = null;

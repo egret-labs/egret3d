@@ -42,7 +42,9 @@ namespace egret3d {
      */
     export class Pointer extends paper.BaseRelease<Pointer> {
         private static readonly _instances: Pointer[] = [];
-
+        /**
+         * 创建一个 Pointer 实例。
+         */
         public static create() {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!;
@@ -80,6 +82,10 @@ namespace egret3d {
          * @internal
          */
         public readonly _prevPosition: egret3d.Vector3 = egret3d.Vector3.create();
+
+        private constructor() {
+            super();
+        }
         /**
          * 该 Pointer 此帧按下的状态。
          * @param value 

@@ -62,88 +62,11 @@ namespace egret3d {
             }
 
             { // PYRAMID.
-                const mesh = new Mesh(16, 18);
+                const mesh = DefaultMeshes.createCylinder(0.0, Math.sqrt(0.5), 1.0, 0.0, 0.0, 0.0, 4, 1, false, Math.PI * 0.25);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/pyramid.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PYRAMID = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    -0.5, -0.5, -0.5,
-                    0.0, 0.5, 0.0,
-                    0.5, -0.5, -0.5,
-                    0.5, -0.5, -0.5,
-                    0.0, 0.5, 0.0,
-                    0.5, -0.5, 0.5,
-                    0.5, -0.5, 0.5,
-                    0.0, 0.5, 0.0,
-                    -0.5, -0.5, 0.5,
-                    -0.5, -0.5, 0.5,
-                    0.0, 0.5, 0.0,
-                    -0.5, -0.5, -0.5,
-                    -0.5, -0.5, -0.5,
-                    0.5, -0.5, -0.5,
-                    0.5, -0.5, 0.5,
-                    -0.5, -0.5, 0.5,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, [
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, 0, 0,
-                    0, -1, 0,
-                    0, -1, 0,
-                    0, -1, 0,
-                    0, -1, 0,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, [
-                    0, 0,
-                    0.5, 0.5,
-                    0, 1,
-                    0, 1,
-                    0.5, 0.5,
-                    1, 1,
-                    1, 1,
-                    0.5, 0.5,
-                    1, 0,
-                    1, 0,
-                    0.5, 0.5,
-                    0, 0,
-                    0, 0,
-                    1, 0,
-                    1, 1,
-                    0, 1,
-                ]);
-                mesh.setIndices([
-                    0, 2, 1, 3, 5, 4,
-                    6, 8, 7, 9, 11, 10,
-                    12, 14, 13, 15, 14, 12
-                ]);
             }
 
             { // CONE.
@@ -530,6 +453,7 @@ namespace egret3d {
             let index = 0;
             let groupStart = 0;
             const halfHeight = height / 2;
+            const vector3 = _helpVector3;
             const indexArray = [] as number[][];
             const subIndices = [] as number[];
 
@@ -585,14 +509,16 @@ namespace egret3d {
                         const cosTheta = Math.cos(theta);
 
                         // vertex
-                        _helpVector3.x = radius * sinTheta;
-                        _helpVector3.y = -v * height + halfHeight;
-                        _helpVector3.z = -radius * cosTheta;
-                        vertices.push(_helpVector3.x + centerOffsetX, _helpVector3.y + centerOffsetY, _helpVector3.z + centerOffsetZ);
+                        vector3.x = radius * sinTheta;
+                        vector3.y = -v * height + halfHeight;
+                        // vertex.z = radius * cosTheta; // Right-hand coordinates system.
+                        vector3.z = -radius * cosTheta; // Left-hand coordinates system.
+                        vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, vector3.z + centerOffsetZ);
 
                         // normal
-                        _helpVector3.set(sinTheta, slope, cosTheta).normalize();
-                        normals.push(_helpVector3.x, _helpVector3.y, _helpVector3.z);
+                        // vertex.set(sinTheta, slope, cosTheta).normalize(); // Right-hand coordinates system.
+                        vector3.set(-sinTheta, -slope, -cosTheta).normalize(); // Left-hand coordinates system.
+                        normals.push(vector3.x, vector3.y, vector3.z);
 
                         // uv
                         uvs.push(u, v);
@@ -668,10 +594,11 @@ namespace egret3d {
                     const sinTheta = Math.sin(theta);
 
                     // vertex
-                    _helpVector3.x = radius * sinTheta;
-                    _helpVector3.y = halfHeight * sign;
-                    _helpVector3.z = -radius * cosTheta;
-                    vertices.push(_helpVector3.x + centerOffsetX, _helpVector3.y + centerOffsetY, _helpVector3.z + centerOffsetZ);
+                    vector3.x = radius * sinTheta;
+                    vector3.y = halfHeight * sign;
+                    // vector3.z = radius * cosTheta; // Right-hand coordinates system.
+                    vector3.z = -radius * cosTheta; // Left-hand coordinates system.
+                    vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, vector3.z + centerOffsetZ);
 
                     // normal
                     normals.push(0.0, sign, 0.0);

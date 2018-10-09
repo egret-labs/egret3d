@@ -94,8 +94,10 @@ namespace paper {
         serialize(): any;
         /**
          * 反序列化。
+         * @param data 反序列化数据。
+         * @param deserializer Deserializer。
          */
-        deserialize(element: any, data?: Deserializer): any;
+        deserialize(data: any, deserializer?: Deserializer): any;
     }
     /**
      * 
@@ -152,21 +154,4 @@ namespace paper {
      * 
      */
     export type ComponentExtras = { linkedID?: string };
-    /**
-     * 
-     */
-    export abstract class BaseRelease<T extends BaseRelease<T>> {
-        protected _released?: boolean;
-        /**
-         * 在本帧末尾释放。
-         */
-        public release() {
-            if (!this._released) {
-                paper.DisposeCollecter._releases.push(this);
-                this._released = true;
-            }
-
-            return this;
-        }
-    }
 }

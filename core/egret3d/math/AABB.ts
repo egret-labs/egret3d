@@ -17,8 +17,8 @@ namespace egret3d {
          * 
          */
         public static readonly ONE: Readonly<AABB> = new AABB().set(
-            Vector3.MINUS_ONE.clone().multiplyScalar(0.5).release(),
-            Vector3.ONE.clone().multiplyScalar(0.5).release()
+            Vector3.MINUS_ONE.clone().multiplyScalar(0.5),
+            Vector3.ONE.clone().multiplyScalar(0.5)
         );
         private static readonly _instances: AABB[] = [];
         /**
