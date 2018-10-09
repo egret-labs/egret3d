@@ -3198,8 +3198,8 @@ var paper;
                 this._gridB.parent = this.gameObject;
                 var mA = this._gridA.renderer.material;
                 var mB = this._gridB.renderer.material;
-                mA.setBlend(1 /* Blend */);
-                mB.setBlend(1 /* Blend */);
+                mA.setBlend(1 /* Blend */).setRenderQueue(3000 /* Transparent */);
+                mB.setBlend(1 /* Blend */).setRenderQueue(3000 /* Transparent */);
             };
             GridController.prototype.update = function () {
                 var camera = egret3d.Camera.editor;
@@ -4705,7 +4705,7 @@ var paper;
             };
             EditorMeshHelper.createBox = function (name, color, opacity, scene) {
                 var box = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone(), "Editor Only" /* EditorOnly */, scene);
-                box.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(1 /* Blend */).opacity = opacity;
+                box.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(1 /* Blend */).setRenderQueue(3000 /* Transparent */).opacity = opacity;
                 return box;
             };
             EditorMeshHelper.createIcon = function (name, parent, icon) {
@@ -4713,15 +4713,9 @@ var paper;
                 material.renderQueue = 4000 /* Overlay */;
                 material.setTexture("map" /* Map */, icon);
                 material.setColor("diffuse" /* Diffuse */, egret3d.Color.RED);
-                // const gameObject = this.createGameObject(name, null, null, parent.tag, parent.scene);
-                // const pick = this.createGameObject("pick", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone(), parent.tag, parent.scene);
-                // pick.transform.setParent(gameObject.transform);
-                // pick.activeSelf = false;
-                // pick.addComponent(GizmoPickComponent).pickTarget = parent;
                 var iconObj = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material, parent.tag, parent.scene);
                 iconObj.transform.setParent(parent.transform);
                 iconObj.addComponent(editor.GizmoPickComponent).pickTarget = parent;
-                // gameObject.transform.setParent(parent.transform);
                 return iconObj;
             };
             EditorMeshHelper.createCameraWireframed = function (name, colorFrustum, colorCone, colorUp, colorTarget, colorCross) {
