@@ -1,6 +1,6 @@
 namespace paper {
     /**
-     * 全局时间信息组件。
+     * 全局时钟信息组件。
      */
     export class Clock extends SingletonComponent {
         public maxFixedSubSteps: number = 3;
@@ -61,7 +61,7 @@ namespace paper {
             return this._fixedTime;
         }
         /**
-         * 上一帧到当前帧流逝的时间。
+         * 上一帧到此帧流逝的时间。（以秒为单位）
          */
         public get deltaTime() {
             return this._unscaledDeltaTime * this.timeScale;
@@ -80,7 +80,8 @@ namespace paper {
         }
     }
     /**
-     * 全局时间信息组件实例。
+     * @deprecated 
+     * 请使用 gameObject.getComponent(Clock)!;
      */
     export let Time: Clock;
 }

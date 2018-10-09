@@ -15,8 +15,8 @@ namespace egret3d.web {
             ]
         ];
         private readonly _stage: Stage = paper.GameObject.globalGameObject.getOrAddComponent(Stage);
-        private readonly _drawCalls: DrawCalls = paper.GameObject.globalGameObject.getOrAddComponent(DrawCalls);
-        private readonly _camerasAndLights: CamerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(CamerasAndLights);
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
+        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
         private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
         private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
         //
@@ -32,7 +32,7 @@ namespace egret3d.web {
             const camera = this._lightCamera;
             const renderState = this._renderState;
             const shadowMaterial = light.constructor === PointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
-            const drawCalls = this._drawCalls;
+            const drawCalls = this._drawCallCollecter;
             const shadowCalls = drawCalls.shadowCalls;
 
             for (let i = 0, l = light.constructor === PointLight ? 6 : 1; i < l; ++i) {
@@ -56,7 +56,7 @@ namespace egret3d.web {
         private _renderCamera(camera: Camera, renderEnabled: boolean) {
             if (renderEnabled) {
                 //在这里先剔除，然后排序，最后绘制
-                const drawCalls = this._drawCalls;
+                const drawCalls = this._drawCallCollecter;
                 drawCalls.frustumCulling(camera);
                 //
                 const opaqueCalls = drawCalls.opaqueCalls;
@@ -435,10 +435,10 @@ namespace egret3d.web {
             let lightCountDirty = false;
             const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
             const renderState = this._renderState;
-            const cameras = this._camerasAndLights.cameras;
-            const lights = this._camerasAndLights.lights;
+            const cameras = this._cameraAndLightCollecter.cameras;
+            const lights = this._cameraAndLightCollecter.lights;
             const editorScene = paper.Application.sceneManager.editorScene;
-            this._drawCalls.drawCallCount = 0;
+            this._drawCallCollecter.drawCallCount = 0;
             // Render lights.
             if (lights.length > 0) {
                 lightCountDirty = true;

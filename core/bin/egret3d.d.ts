@@ -1,3 +1,114 @@
+// Type definitions for JS-Signals 1.0
+// Project: http://millermedeiros.github.io/js-signals/
+// Definitions by: Diullei Gomes <https://github.com/diullei>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.3
+
+declare var signals: signals.SignalWrapper;
+
+declare namespace signals {
+    interface SignalWrapper<T = any> {
+        Signal: Signal<T>;
+    }
+
+    interface SignalBinding<T = any> {
+        active: boolean;
+        context: any;
+        params: any;
+        detach(): Function;
+        execute(paramsArr?: any[]): any;
+        getListener(): (...params: T[]) => void;
+        getSignal(): Signal<T>;
+        isBound(): boolean;
+        isOnce(): boolean;
+    }
+
+    interface Signal<T = any> {
+        /**
+         * Custom event broadcaster
+         * <br />- inspired by Robert Penner's AS3 Signals.
+         * @author Miller Medeiros
+         */
+        new (): Signal<T>;
+
+        /**
+         * If Signal is active and should broadcast events.
+         */
+        active: boolean;
+
+        /**
+         * If Signal should keep record of previously dispatched parameters and automatically
+         * execute listener during add()/addOnce() if Signal was already dispatched before.
+         */
+        memorize: boolean;
+
+        /**
+         * Signals Version Number
+         */
+        VERSION: string;
+
+        /**
+         * Add a listener to the signal.
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *        Listeners with higher priority will be executed before listeners with lower priority.
+         *        Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        add(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Add listener to the signal that should be removed after first execution (will be executed only once).
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *                 Listeners with higher priority will be executed before listeners with lower priority.
+         *                 Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        addOnce(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Dispatch/Broadcast Signal to all listeners added to the queue.
+         *
+         * @param params Parameters that should be passed to each handler.
+         */
+        dispatch(...params: T[]): void;
+
+        /**
+         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
+         */
+        dispose(): void;
+
+        /**
+         * Forget memorized arguments.
+         */
+        forget(): void;
+
+        /**
+         * Returns a number of listeners attached to the Signal.
+         */
+        getNumListeners(): number;
+
+        /**
+         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
+         */
+        halt(): void;
+
+        /**
+         * Check if listener was attached to Signal.
+         */
+        has(listener: (...params: T[]) => void, context?: any): boolean;
+
+        /**
+         * Remove a single listener from the dispatch queue.
+         */
+        remove(listener: (...params: T[]) => void, context?: any): Function;
+
+        removeAll(): void;
+    }
+}
 declare type int = number;
 declare type uint = number;
 declare namespace paper {
@@ -488,7 +599,8 @@ declare namespace paper {
 }
 declare namespace paper {
     /**
-     * 组件基类。
+     * 基础组件。
+     * - 所有组件的基类。
      */
     abstract class BaseComponent extends BaseObject {
         /**
@@ -529,13 +641,14 @@ declare namespace paper {
          */
         constructor();
         /**
-         * 添加组件后，组件内部初始化。
-         * - 重载此方法时，必须调用 `super.initialize()`。
+         * 添加组件后，组件内部初始化时执行。
+         * - 重写此方法时，必须调用 `super.initialize()`。
+         * @param config 实体添加该组件时可以传递的初始化数据。
          */
         initialize(config?: any): void;
         /**
-         * 移除组件后，组件内部卸载。
-         * - 重载此方法时，必须调用 `super.uninitialize()`。
+         * 移除组件后，组件内部卸载时执行。
+         * - 重写此方法时，必须调用 `super.uninitialize()`。
          */
         uninitialize(): void;
         /**
@@ -559,8 +672,8 @@ declare namespace egret3d {
     interface IRaycast {
         /**
          * 射线检测。
-         * @param ray
-         * @param raycastInfo 是否将检测的详细数据写入 RaycastInfo。
+         * @param ray 射线。
+         * @param raycastInfo 是否将检测的详细数据写入 raycastInfo。
          */
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
@@ -570,17 +683,17 @@ declare namespace egret3d {
     class Ray extends paper.BaseRelease<Ray> implements paper.ICCS<Ray>, paper.ISerializable {
         private static readonly _instances;
         /**
-         *
-         * @param origin
-         * @param direction
+         * 创建一个射线。
+         * @param origin 射线的起始点。
+         * @param direction 射线的方向向量。
          */
         static create(origin?: Readonly<IVector3>, direction?: Readonly<IVector3>): Ray;
         /**
-         * 射线起始点
+         * 射线的起始点。
          */
         readonly origin: Vector3;
         /**
-         * 射线的方向向量
+         * 射线的方向向量。
          */
         readonly direction: Vector3;
         /**
@@ -740,11 +853,11 @@ declare namespace paper {
 }
 declare namespace paper {
     /**
-     * 基础渲染器。
+     * 基础渲染组件。
      */
     abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
         /**
-         *
+         * 当渲染组件的材质列表改变时派发事件。
          */
         static readonly onMaterialsChanged: signals.Signal;
         /**
@@ -766,31 +879,31 @@ declare namespace paper {
         abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
         abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
         /**
-         * 该渲染器是否接收投影。
+         * 该渲染组件是否接收投影。
          */
         receiveShadows: boolean;
         /**
-         * 该渲染器是否产生投影。
+         * 该渲染组件是否产生投影。
          */
         castShadows: boolean;
         /**
-         * 该渲染器的光照图的索引。
+         * 该渲染组件的光照图索引。
          */
         lightmapIndex: number;
         /**
-         *
+         * 该渲染组件的本地包围盒。
          */
         readonly aabb: Readonly<egret3d.AABB>;
         /**
-         *
+         * 该渲染组件的世界包围球。
          */
         readonly boundingSphere: Readonly<egret3d.Sphere>;
         /**
-         * 该渲染器的材质数组。
+         * 该渲染组件的材质列表。
          */
         materials: ReadonlyArray<egret3d.Material>;
         /**
-         * 该渲染器材质数组中的第一个材质。
+         * 该渲染组件材质列表中的第一个材质。
          */
         material: egret3d.Material | null;
     }
@@ -2602,7 +2715,8 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     * 网格渲染器。
+     * 网格渲染组件。
+     * - 渲染网格筛选组件提供的网格资源。
      */
     class MeshRenderer extends paper.BaseRenderer {
         recalculateAABB(): void;
@@ -2611,16 +2725,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * light component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 灯光组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
+     * 灯光组件。
      */
     abstract class BaseLight extends paper.BaseComponent {
         /**
@@ -2628,15 +2733,15 @@ declare namespace egret3d {
          */
         cullingMask: paper.CullingMask;
         /**
-         *
+         * 该灯光的强度。
          */
         intensity: number;
         /**
-         *
+         * 该灯光的颜色。
          */
         readonly color: Color;
         /**
-         *
+         * 该灯光是否投射阴影。
          */
         castShadows: boolean;
         /**
@@ -2667,10 +2772,6 @@ declare namespace egret3d {
         readonly matrix: Matrix4;
         renderTarget: BaseRenderTarget;
         protected _updateMatrix(camera: Camera): void;
-        /**
-         *
-         */
-        power: number;
     }
 }
 declare namespace paper {
@@ -2777,89 +2878,6 @@ declare namespace paper {
         getActiveScene(): Scene;
     }
 }
-declare namespace egret3d {
-    /**
-     * 碰撞体类型。
-     */
-    enum ColliderType {
-        /**
-         * 立方体。
-         */
-        Box = 0,
-        /**
-         * 球体。
-         */
-        Sphere = 1,
-        /**
-         * 圆柱体。
-         */
-        Cylinder = 2,
-        /**
-         * 圆锥体。
-         */
-        Cone = 3,
-        /**
-         * 胶囊体。
-         */
-        Capsule = 4,
-        /**
-         * TODO
-         */
-        ConvexHull = 5,
-    }
-    /**
-     * 碰撞体接口。
-     */
-    interface ICollider {
-        /**
-         * 碰撞体类型。
-         */
-        readonly colliderType: ColliderType;
-    }
-    /**
-     *
-     */
-    abstract class BaseCollider extends paper.BaseComponent implements ICollider, IRaycast {
-        readonly colliderType: ColliderType;
-        /**
-         *
-         */
-        protected _physicsData: any | null;
-        abstract raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
-    }
-}
-declare namespace paper.editor {
-    interface IEventDispatcher {
-        addEventListener(type: string, fun: Function, thisObj: any): void;
-        removeEventListener(type: string, fun: Function, thisObj: any): void;
-        dispatchEvent(event: BaseEvent): void;
-    }
-    /**
-     * 事件派发器
-     */
-    class EventDispatcher implements IEventDispatcher {
-        __z_e_listeners: any;
-        constructor();
-        addEventListener(type: string, fun: Function, thisObj: any, level?: number): void;
-        removeEventListener(type: string, fun: Function, thisObj: any): void;
-        dispatchEvent(event: BaseEvent): void;
-    }
-    /**
-     * 事件
-     */
-    class BaseEvent {
-        type: string;
-        data: any;
-        constructor(type: string, data?: any);
-    }
-}
-declare namespace paper {
-    /**
-     * 单例组件基类。
-     */
-    abstract class SingletonComponent extends BaseComponent {
-    }
-}
 declare namespace paper {
     /**
      * 系统基类。
@@ -2867,6 +2885,9 @@ declare namespace paper {
     abstract class BaseSystem {
         private static _createEnabled;
         private _locked;
+        /**
+         * 系统是否激活。
+         */
         protected _enabled: boolean;
         /**
          *
@@ -2877,7 +2898,7 @@ declare namespace paper {
          */
         protected readonly _groups: GameObjectGroup[];
         /**
-         *
+         * 全局时钟信息组件实例。
          */
         protected readonly _clock: Clock;
         /**
@@ -2949,6 +2970,39 @@ declare namespace paper {
         readonly groups: ReadonlyArray<GameObjectGroup>;
     }
 }
+declare namespace paper.editor {
+    interface IEventDispatcher {
+        addEventListener(type: string, fun: Function, thisObj: any): void;
+        removeEventListener(type: string, fun: Function, thisObj: any): void;
+        dispatchEvent(event: BaseEvent): void;
+    }
+    /**
+     * 事件派发器
+     */
+    class EventDispatcher implements IEventDispatcher {
+        __z_e_listeners: any;
+        constructor();
+        addEventListener(type: string, fun: Function, thisObj: any, level?: number): void;
+        removeEventListener(type: string, fun: Function, thisObj: any): void;
+        dispatchEvent(event: BaseEvent): void;
+    }
+    /**
+     * 事件
+     */
+    class BaseEvent {
+        type: string;
+        data: any;
+        constructor(type: string, data?: any);
+    }
+}
+declare namespace paper {
+    /**
+     * 基础单例组件。
+     * - 全部单例组件的基类。
+     */
+    abstract class SingletonComponent extends BaseComponent {
+    }
+}
 declare namespace egret3d {
     /**
      *
@@ -2992,9 +3046,17 @@ declare namespace egret3d.particle {
      */
     class ParticleRenderer extends paper.BaseRenderer {
         /**
-         *
+         * 渲染模式改变
          */
         static readonly onRenderModeChanged: signals.Signal;
+        /**
+         * TODO
+         */
+        static readonly onVelocityScaleChanged: signals.Signal;
+        /**
+         * TODO
+         */
+        static readonly onLengthScaleChanged: signals.Signal;
         /**
          *
          */
@@ -3021,16 +3083,107 @@ declare namespace egret3d.particle {
     }
 }
 declare namespace paper {
+}
+declare namespace paper {
     /**
-     * 已丢失或不支持的组件数据备份。
+     * 脚本组件。
+     * - 生命周期的顺序。
+     * - onAwake();
+     * - onReset();
+     * - onEnable();
+     * - onStart();
+     * - onFixedUpdate();
+     * - onUpdate();
+     * - onLateUpdate();
+     * - onDisable();
+     * - onDestroy();
      */
-    class MissingComponent extends BaseComponent {
-        missingObject: any | null;
+    abstract class Behaviour extends BaseComponent {
+        /**
+         * 该组件被初始化时执行。
+         * - 在该组件的整个生命周期中只执行一次。
+         * @param config 实体添加该组件时可以传递的初始化数据。
+         * @see paper.GameObject#addComponent()
+         */
+        onAwake?(config: any): void;
+        /**
+         * TODO
+         */
+        onReset?(): void;
+        /**
+         * 该组件或所属的实体被激活时调用。
+         * @see paper.BaseComponent#enabled
+         * @see paper.GameObject#activeSelf
+         */
+        onEnable?(): void;
+        /**
+         * 该组件开始运行时执行。
+         * - 在该组件的整个生命周期中只执行一次。
+         */
+        onStart?(): void;
+        /**
+         * 程序运行时以固定间隔被执行。
+         * @param currentTimes 本帧被执行的计数。
+         * @param totalTimes 本帧被执行的总数。
+         * @see paper.Clock
+         */
+        onFixedUpdate?(currentTimes: number, totalTimes: number): void;
+        /**
+         *
+         */
+        onTriggerEnter?(collider: any): void;
+        /**
+         *
+         */
+        onTriggerStay?(collider: any): void;
+        /**
+         *
+         */
+        onTriggerExit?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionEnter?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionStay?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionExit?(collider: any): void;
+        /**
+         * 程序运行时每帧执行。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        onUpdate?(deltaTime: number): void;
+        /**
+         *
+         */
+        onAnimationEvent?(type: string, animationState: egret3d.AnimationState, eventObject: any): void;
+        /**
+         * 程序运行时每帧执行。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        onLateUpdate?(deltaTime: number): void;
+        /**
+         * 该组件或所属的实体被禁用时执行。
+         * @see paper.BaseComponent#enabled
+         * @see paper.GameObject#activeSelf
+         */
+        onDisable?(): void;
+        /**
+         * 该组件或所属的实体被销毁时执行。
+         * - 在该组件的整个生命周期中只执行一次。
+         * @see paper.GameObject#removeComponent()
+         * @see paper.GameObject#destroy()
+         */
+        onDestroy?(): void;
     }
 }
 declare namespace paper {
     /**
-     * 全局时间信息组件。
+     * 全局时钟信息组件。
      */
     class Clock extends SingletonComponent {
         maxFixedSubSteps: number;
@@ -3054,7 +3207,7 @@ declare namespace paper {
          */
         readonly fixedTime: number;
         /**
-         * 上一帧到当前帧流逝的时间。
+         * 上一帧到此帧流逝的时间。（以秒为单位）
          */
         readonly deltaTime: number;
         /**
@@ -3067,7 +3220,8 @@ declare namespace paper {
         readonly unscaledDeltaTime: number;
     }
     /**
-     * 全局时间信息组件实例。
+     * @deprecated
+     * 请使用 gameObject.getComponent(Clock)!;
      */
     let Time: Clock;
 }
@@ -3174,6 +3328,51 @@ declare namespace paper {
     }
 }
 declare namespace paper {
+    /**
+     * 应用程序运行模式。
+     */
+    const enum PlayerMode {
+        Player = 0,
+        DebugPlayer = 1,
+        Editor = 2,
+    }
+    /**
+     * 应用程序单例。
+     */
+    let Application: ECS;
+    /**
+     * 应用程序。
+     */
+    class ECS {
+        private static _instance;
+        /**
+         * 应用程序单例。
+         */
+        static getInstance(): ECS;
+        private constructor();
+        /**
+         * 引擎版本。
+         */
+        readonly version: string;
+        /**
+         * 系统管理器。
+         */
+        readonly systemManager: SystemManager;
+        /**
+         * 场景管理器。
+         */
+        readonly sceneManager: SceneManager;
+        private _isFocused;
+        private _isRunning;
+        private _playerMode;
+        private _bindUpdate;
+        private _update();
+        private _updatePlayerMode();
+        /**
+         * 运行模式。
+         */
+        playerMode: PlayerMode;
+    }
 }
 declare namespace paper {
 }
@@ -3783,44 +3982,67 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * Draw call 信息。
+     * 绘制信息。
      */
     type DrawCall = {
+        /**
+         * 此次绘制的渲染组件。
+         */
         renderer: paper.BaseRenderer;
+        /**
+         * 此次绘制的世界矩阵，没有则使用渲染组件所属实体的变换世界矩阵。
+         */
         matrix?: Matrix4;
+        /**
+         * 此次绘制的子网格索引。
+         */
         subMeshIndex: number;
+        /**
+         * 此次绘制的网格资源。
+         */
         mesh: Mesh;
+        /**
+         * 此次绘制的材质资源。
+         */
         material: Material;
+        /**
+         *
+         */
         zdist: number;
     };
     /**
-     * 所有 Draw call 信息。
+     * 全局绘制信息收集组件。
      */
-    class DrawCalls extends paper.SingletonComponent {
+    class DrawCallCollecter extends paper.SingletonComponent {
         /**
-         * 每个渲染帧的 Draw call 计数。
+         * 此帧的绘制总数。
          */
         drawCallCount: number;
         /**
-         * 参与渲染的渲染器列表。
+         * 此帧参与渲染的渲染组件列表。
          */
-        readonly renderers: paper.BaseRenderer[];
+        readonly renderers: (paper.BaseRenderer | null)[];
         /**
-         * Draw call 列表。
+         * 此帧的绘制信息列表。
+         * - 未进行视锥剔除的。
          */
-        readonly drawCalls: DrawCall[];
+        readonly drawCalls: (DrawCall | null)[];
         /**
-         * 非透明 Draw call 列表。
+         * 此帧的非透明绘制信息列表。
+         * - 已进行视锥剔除的。
          */
         readonly opaqueCalls: DrawCall[];
         /**
-         * 透明 Draw call 列表。
+         * 此帧的透明绘制信息列表。
+         * - 已进行视锥剔除的。
          */
         readonly transparentCalls: DrawCall[];
         /**
-         * 阴影 Draw call 列表。
+         * 此帧的阴影绘制信息列表。
+         * - 已进行视锥剔除的。
          */
         readonly shadowCalls: DrawCall[];
+        private _isRemoved;
         /**
          * 所有非透明的, 按照从近到远排序
          */
@@ -3830,19 +4052,19 @@ declare namespace egret3d {
          */
         private _sortFromFarToNear(a, b);
         /**
-         *
+         * TODO
          */
         shadowFrustumCulling(camera: Camera): void;
         /**
-         *
+         * TODO
          */
         frustumCulling(camera: Camera): void;
         /**
-         * 移除指定渲染器的 draw call 列表。
+         * 移除指定渲染组件的绘制信息列表。
          */
         removeDrawCalls(renderer: paper.BaseRenderer): void;
         /**
-         * 是否包含指定渲染器的 draw call 列表。
+         * 是否包含指定渲染组件的绘制信息列表。
          */
         hasDrawCalls(renderer: paper.BaseRenderer): boolean;
     }
@@ -4077,69 +4299,70 @@ declare namespace egret3d {
         readonly maxTouchPoints: uint;
     }
 }
-declare namespace paper {
+declare namespace egret3d {
     /**
-     * 应用程序运行模式。
+     * 碰撞体类型。
+     * - 枚举需要支持的全部碰撞体类型。
      */
-    const enum PlayerMode {
-        Player = 0,
-        DebugPlayer = 1,
-        Editor = 2,
+    enum ColliderType {
+        /**
+         * 立方体。
+         */
+        Box = 0,
+        /**
+         * 球体。
+         */
+        Sphere = 1,
+        /**
+         * 圆柱体。
+         */
+        Cylinder = 2,
+        /**
+         * 圆锥体。
+         */
+        Cone = 3,
+        /**
+         * 胶囊体。
+         */
+        Capsule = 4,
+        /**
+         * TODO
+         */
+        ConvexHull = 5,
     }
     /**
-     * 应用程序单例。
+     * 碰撞体接口。
+     * - 为多物理引擎统一接口。
      */
-    let Application: ECS;
-    /**
-     * 应用程序。
-     */
-    class ECS {
-        private static _instance;
+    interface ICollider {
         /**
-         * 应用程序单例。
+         * 碰撞体类型。
          */
-        static getInstance(): ECS;
-        private constructor();
-        /**
-         * 引擎版本。
-         */
-        readonly version: string;
-        /**
-         * 系统管理器。
-         */
-        readonly systemManager: SystemManager;
-        /**
-         * 场景管理器。
-         */
-        readonly sceneManager: SceneManager;
-        private _isFocused;
-        private _isRunning;
-        private _playerMode;
-        private _bindUpdate;
-        private _update();
-        private _updatePlayerMode();
-        /**
-         * 运行模式。
-         */
-        playerMode: PlayerMode;
+        readonly colliderType: ColliderType;
     }
 }
 declare namespace egret3d {
     /**
-     *
+     * 立方体碰撞体。
      */
-    class BoxCollider extends BaseCollider {
+    class BoxCollider extends paper.BaseComponent implements ICollider, IRaycast {
         readonly colliderType: ColliderType;
+        /**
+         * 描述该碰撞体的立方体。
+         */
         readonly aabb: AABB;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
 }
 declare namespace egret3d {
     /**
-     *
+     * 球体碰撞体。
      */
-    class SphereCollider extends BaseCollider {
+    class SphereCollider extends paper.BaseComponent implements ICollider, IRaycast {
         readonly colliderType: ColliderType;
+        /**
+         * 描述该碰撞体的球体。
+         */
         readonly sphere: Sphere;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
@@ -4733,7 +4956,7 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     *
+     * 平行光组件。
      */
     class DirectionalLight extends BaseLight {
         renderTarget: BaseRenderTarget;
@@ -4742,7 +4965,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     *
+     * 点光组件。
      */
     class PointLight extends BaseLight {
         /**
@@ -4759,7 +4982,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     *
+     * 聚光组件。
      */
     class SpotLight extends BaseLight {
         /**
@@ -4783,17 +5006,18 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * MeshFilter 组件
+     * 网格筛选组件。
+     * - 为网格渲染组件提供网格资源。
      */
     class MeshFilter extends paper.BaseComponent {
         /**
-         *
+         * 当网格筛选组件的网格资源改变时派发事件。
          */
         static readonly onMeshChanged: signals.Signal;
         private _mesh;
         uninitialize(): void;
         /**
-         * 组件挂载的 mesh 模型
+         * 该渲染组件的网格资源。
          */
         mesh: Mesh | null;
     }
@@ -4912,7 +5136,8 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     *
+     * 网格渲染组件系统。
+     * - 为网格渲染组件生成绘制信息。
      */
     class MeshRendererSystem extends paper.BaseSystem {
         protected readonly _interests: ({
@@ -4928,8 +5153,8 @@ declare namespace egret3d {
                 listener: (component: MeshRenderer) => void;
             }[];
         })[];
-        private readonly _drawCalls;
-        private _updateDrawCalls(gameObject);
+        private readonly _drawCallCollecter;
+        private _updateDrawCalls(gameObject, pass?);
         onEnable(): void;
         onAddGameObject(gameObject: paper.GameObject): void;
         onRemoveGameObject(gameObject: paper.GameObject): void;
@@ -4938,16 +5163,17 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 蒙皮网格渲染器。
+     * 蒙皮网格渲染组件。
      */
     class SkinnedMeshRenderer extends MeshRenderer {
         /**
-         *
+         * 当蒙皮网格渲染组件的网格资源改变时派发事件。
          */
         static readonly onMeshChanged: signals.Signal;
         /**
          * 强制使用 cpu 蒙皮。
          * - 骨骼数超过硬件支持的最大骨骼数量，或顶点权重大于 4 个，需要使用 CPU 蒙皮。
+         * - CPU 蒙皮性能较低，仅是兼容方案，应合理的控制骨架的最大骨骼数量。
          */
         forceCPUSkin: boolean;
         private readonly _bones;
@@ -4960,15 +5186,15 @@ declare namespace egret3d {
         recalculateAABB(): void;
         raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
         /**
-         * 该渲染器的骨骼列表。
+         * 该渲染组件的骨骼列表。
          */
         readonly bones: ReadonlyArray<Transform | null>;
         /**
-         * 该渲染器的根骨骼。
+         * 该渲染组件的根骨骼。
          */
         readonly rootBone: Transform;
         /**
-         *
+         * 该渲染组件的网格资源。
          */
         mesh: Mesh | null;
     }
@@ -4978,10 +5204,6 @@ declare namespace egret3d {
      * 蒙皮网格渲染器。
      */
     class SkinnedMeshRendererSystem extends paper.BaseSystem {
-        /**
-         *
-         */
-        static maxBoneCount: number;
         protected readonly _interests: {
             componentClass: typeof SkinnedMeshRenderer;
             listeners: {
@@ -4989,7 +5211,7 @@ declare namespace egret3d {
                 listener: (component: SkinnedMeshRenderer) => void;
             }[];
         }[];
-        private readonly _drawCalls;
+        private readonly _drawCallCollecter;
         private _updateDrawCalls(gameObject);
         onEnable(): void;
         onAddGameObject(gameObject: paper.GameObject): void;
@@ -5706,107 +5928,13 @@ declare namespace egret3d.particle {
 }
 declare namespace paper {
     /**
-     * 脚本组件。
-     * 生命周期的顺序。
-     * - onAwake();
-     * - onReset();
-     * - onEnable();
-     * - onStart();
-     * - onFixedUpdate();
-     * - onUpdate();
-     * - onLateUpdate();
-     * - onDisable();
-     * - onDestroy();
+     * 已丢失或不支持的组件数据备份。
      */
-    abstract class Behaviour extends BaseComponent {
-        initialize(config?: any): void;
-        uninitialize(): void;
+    class MissingComponent extends BaseComponent {
         /**
-         * 组件被初始化时调用。
-         * - 在整个生命周期中只执行一次。
-         * @see paper.GameObject#addComponent()
+         * 已丢失或不支持的组件数据。
          */
-        onAwake?(config: any): void;
-        /**
-         * 渲染模式改变
-         */
-        onReset?(): void;
-        /**
-         * 组件被激活或实体被激活时调用。
-         * @see paper.BaseComponent#enabled
-         * @see paper.GameObject#activeSelf
-         */
-        onEnable?(): void;
-        /**
-         * 组件开始运行时调用。
-         * - 在整个生命周期中只执行一次。
-         */
-        onStart?(): void;
-        /**
-         * TODO
-         */
-        static readonly onVelocityScaleChanged: signals.Signal;
-        /**
-         * TODO
-         */
-        static readonly onLengthScaleChanged: signals.Signal;
-        /**
-         *
-         */
-        onFixedUpdate?(currentTimes: number, totalTimes: number): void;
-        /**
-         *
-         */
-        onTriggerEnter?(collider: any): void;
-        /**
-         *
-         */
-        onTriggerStay?(collider: any): void;
-        /**
-         *
-         */
-        onTriggerExit?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionEnter?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionStay?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionExit?(collider: any): void;
-        /**
-         * 程序每帧调用。
-         */
-        onUpdate?(deltaTime: number): void;
-        /**
-         *
-         */
-        onAnimationEvent?(type: string, animationState: egret3d.AnimationState, eventObject: any): void;
-        /**
-         * 程序每帧调用。
-         */
-        onLateUpdate?(deltaTime: number): void;
-        /**
-         * 组件被禁用或实体被禁用时调用。
-         * @see paper.BaseComponent#enabled
-         * @see paper.GameObject#activeSelf
-         */
-        onDisable?(): void;
-        /**
-         * 组件被移除或实体被销毁时调用。
-         * - 在整个生命周期中只执行一次。
-         * @see paper.GameObject#removeComponent()
-         * @see paper.GameObject#destroy()
-         */
-        onDestroy?(): void;
-        /**
-         * @deprecated
-         */
-        onCollide(collider: any): void;
+        missingObject: any | null;
     }
 }
 declare namespace egret3d.particle {
@@ -5827,7 +5955,7 @@ declare namespace egret3d.particle {
                 listener: (comp: ParticleRenderer) => void;
             }[];
         })[];
-        private readonly _drawCalls;
+        private readonly _drawCallCollecter;
         /**
         * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
         */

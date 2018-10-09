@@ -1,10 +1,10 @@
 namespace paper {
     /**
-     * 基础渲染器。
+     * 基础渲染组件。
      */
     export abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
         /**
-         * 
+         * 当渲染组件的材质列表改变时派发事件。
          */
         public static readonly onMaterialsChanged: signals.Signal = new signals.Signal();
         /**
@@ -54,7 +54,7 @@ namespace paper {
         public abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
         public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
         /**
-         * 该渲染器是否接收投影。
+         * 该渲染组件是否接收投影。
          */
         @editor.property(editor.EditType.CHECKBOX)
         public get receiveShadows() {
@@ -68,7 +68,7 @@ namespace paper {
             this._receiveShadows = value;
         }
         /**
-         * 该渲染器是否产生投影。
+         * 该渲染组件是否产生投影。
          */
         @editor.property(editor.EditType.CHECKBOX)
         public get castShadows() {
@@ -82,7 +82,7 @@ namespace paper {
             this._castShadows = value;
         }
         /**
-         * 该渲染器的光照图的索引。
+         * 该渲染组件的光照图索引。
          */
         @editor.property(editor.EditType.INT, { minimum: -1 })
         public get lightmapIndex() {
@@ -96,7 +96,7 @@ namespace paper {
             this._lightmapIndex = value;
         }
         /**
-         * 
+         * 该渲染组件的本地包围盒。
          */
         public get aabb(): Readonly<egret3d.AABB> {
             if (this._aabbDirty) {
@@ -107,7 +107,7 @@ namespace paper {
             return this._aabb;
         }
         /**
-         * 
+         * 该渲染组件的世界包围球。
          */
         public get boundingSphere(): Readonly<egret3d.Sphere> {
             if (this._boundingSphereDirty) {
@@ -118,7 +118,7 @@ namespace paper {
             return this._boundingSphere;
         }
         /**
-         * 该渲染器的材质数组。
+         * 该渲染组件的材质列表。
          */
         @paper.editor.property(paper.editor.EditType.MATERIAL_ARRAY)
         public get materials(): ReadonlyArray<egret3d.Material> {
@@ -142,7 +142,7 @@ namespace paper {
             BaseRenderer.onMaterialsChanged.dispatch(this);
         }
         /**
-         * 该渲染器材质数组中的第一个材质。
+         * 该渲染组件材质列表中的第一个材质。
          */
         public get material(): egret3d.Material | null {
             return this._materials.length > 0 ? this._materials[0] : null;

@@ -8,7 +8,7 @@ namespace egret3d {
         new Vector3(0, 0, -1), new Vector3(0, -1, 0), new Vector3(0, -1, 0)
     ];
     /**
-     * 
+     * 点光组件。
      */
     export class PointLight extends BaseLight {
         /**

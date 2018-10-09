@@ -11,7 +11,8 @@ namespace egret3d {
                 { componentClass: [DirectionalLight, PointLight, SpotLight] }
             ]
         ];
-        protected readonly _camerasAndLights: CamerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(CamerasAndLights);
+        protected readonly _camerasAndLights: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
+        protected readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
 
         public onAddGameObject(_gameObject: paper.GameObject, group: paper.GameObjectGroup) {
             if (group === this._groups[0]) {
@@ -40,6 +41,8 @@ namespace egret3d {
                     component._update(deltaTime);
                 }
             }
+
+            this._drawCallCollecter._update();
         }
     }
 }

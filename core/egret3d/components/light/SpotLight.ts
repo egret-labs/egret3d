@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 
+     * 聚光组件。
      */
     export class SpotLight extends BaseLight {
         /**

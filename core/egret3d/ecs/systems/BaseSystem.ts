@@ -25,6 +25,9 @@ namespace paper {
          */
         public _started: boolean = true;
         private _locked: boolean = false;
+        /**
+         * 系统是否激活。
+         */
         protected _enabled: boolean = true;
         /**
          * 
@@ -35,7 +38,7 @@ namespace paper {
          */
         protected readonly _groups: GameObjectGroup[] = [];
         /**
-         * 
+         * 全局时钟信息组件实例。
          */
         protected readonly _clock: Clock = GameObject.globalGameObject.getOrAddComponent(Clock);
         /**

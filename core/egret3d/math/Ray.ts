@@ -5,8 +5,8 @@ namespace egret3d {
     export interface IRaycast {
         /**
          * 射线检测。
-         * @param ray 
-         * @param raycastInfo 是否将检测的详细数据写入 RaycastInfo。
+         * @param ray 射线。
+         * @param raycastInfo 是否将检测的详细数据写入 raycastInfo。
          */
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
@@ -16,9 +16,9 @@ namespace egret3d {
     export class Ray extends paper.BaseRelease<Ray> implements paper.ICCS<Ray>, paper.ISerializable {
         private static readonly _instances: Ray[] = [];
         /**
-         * 
-         * @param origin 
-         * @param direction 
+         * 创建一个射线。
+         * @param origin 射线的起始点。
+         * @param direction 射线的方向向量。
          */
         public static create(origin: Readonly<IVector3> = Vector3.ZERO, direction: Readonly<IVector3> = Vector3.FORWARD) {
             if (this._instances.length > 0) {
@@ -30,11 +30,11 @@ namespace egret3d {
             return new Ray().set(origin, direction);
         }
         /**
-         * 射线起始点
+         * 射线的起始点。
          */
         public readonly origin: Vector3 = Vector3.create();
         /**
-         * 射线的方向向量
+         * 射线的方向向量。
          */
         public readonly direction: Vector3 = Vector3.create();
         /**

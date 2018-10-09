@@ -74,20 +74,18 @@
         "egret3d/ecs/serialize/Deserialize.ts",
         "egret3d/ecs/serialize/Serialize.ts",
 
-        "egret3d/EventDispatcher.ts",
-
         "egret3d/components/Transform.ts",
         "egret3d/components/singleton/Stage.ts",
         "egret3d/components/singleton/DefaultMeshes.ts",
         "egret3d/components/singleton/DefaultTextures.ts",
         "egret3d/components/singleton/DefaultShaders.ts",
         "egret3d/components/singleton/DefaultMaterials.ts",
-        "egret3d/components/singleton/Cameras.ts",
-        "egret3d/components/singleton/DrawCalls.ts",
+        "egret3d/components/singleton/CameraAndLightCollecter.ts",
+        "egret3d/components/singleton/DrawCallCollecter.ts",
         "egret3d/components/singleton/ContactCollecter.ts",
         "egret3d/components/singleton/InputCollecter.ts",
         
-        "egret3d/components/collision/BaseCollider.ts",
+        "egret3d/components/collision/ICollider.ts",
         "egret3d/components/collision/BoxCollider.ts",
         "egret3d/components/collision/SphereCollider.ts",
 

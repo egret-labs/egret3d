@@ -1,6 +1,7 @@
 namespace egret3d {
     /**
      * 碰撞体类型。
+     * - 枚举需要支持的全部碰撞体类型。
      */
     export enum ColliderType {
         /**
@@ -30,23 +31,12 @@ namespace egret3d {
     }
     /**
      * 碰撞体接口。
+     * - 为多物理引擎统一接口。
      */
     export interface ICollider {
         /**
          * 碰撞体类型。
          */
         readonly colliderType: ColliderType;
-    }
-    /**
-     * 
-     */
-    export abstract class BaseCollider extends paper.BaseComponent implements ICollider, IRaycast {
-        public readonly colliderType: ColliderType = -1;
-        /**
-         * 
-         */
-        protected _physicsData: any | null = null;
-
-        public abstract raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
 }

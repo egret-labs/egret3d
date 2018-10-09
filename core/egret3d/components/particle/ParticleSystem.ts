@@ -28,7 +28,7 @@ namespace egret3d.particle {
                 ]
             }
         ];
-        private readonly _drawCalls: DrawCalls = paper.GameObject.globalGameObject.getOrAddComponent(DrawCalls);
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
         /**
         * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
         */
@@ -434,7 +434,7 @@ namespace egret3d.particle {
             const renderer = gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             //
             this._onUpdateBatchMesh(component);
-            this._drawCalls.removeDrawCalls(renderer);
+            this._drawCallCollecter.removeDrawCalls(renderer);
             if (!renderer.batchMesh || !renderer.batchMaterial) {
                 return;
             }
@@ -444,7 +444,7 @@ namespace egret3d.particle {
             }
 
             renderer.batchMesh._createBuffer();
-            this._drawCalls.renderers.push(renderer);
+            this._drawCallCollecter.renderers.push(renderer);
             //
             let subMeshIndex = 0;
             for (const _primitive of renderer.batchMesh.glTFMesh.primitives) {
@@ -457,7 +457,7 @@ namespace egret3d.particle {
 
                     zdist: -1,
                 };
-                this._drawCalls.drawCalls.push(drawCall);
+                this._drawCallCollecter.drawCalls.push(drawCall);
             }
         }
 
@@ -477,7 +477,7 @@ namespace egret3d.particle {
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCalls.removeDrawCalls(gameObject.renderer as ParticleRenderer);
+            this._drawCallCollecter.removeDrawCalls(gameObject.renderer as ParticleRenderer);
             // component.stop();
         }
 
@@ -489,7 +489,7 @@ namespace egret3d.particle {
 
         public onDisable() {
             for (const gameObject of this._groups[0].gameObjects) {
-                this._drawCalls.removeDrawCalls(gameObject.renderer as ParticleRenderer);
+                this._drawCallCollecter.removeDrawCalls(gameObject.renderer as ParticleRenderer);
             }
         }
     }

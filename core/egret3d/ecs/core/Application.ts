@@ -52,7 +52,7 @@ namespace paper {
                 requestAnimationFrame(this._bindUpdate!);
             }
 
-            Time && Time.update();
+            Time && Time.update(); // TODO
             GameObjectGroup.update();
             this.systemManager._update();
         }

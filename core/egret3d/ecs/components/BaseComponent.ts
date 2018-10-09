@@ -1,6 +1,7 @@
 namespace paper {
     /**
-     * 组件基类。
+     * 基础组件。
+     * - 所有组件的基类。
      */
     export abstract class BaseComponent extends BaseObject {
         /**
@@ -102,14 +103,15 @@ namespace paper {
 
         }
         /**
-         * 添加组件后，组件内部初始化。
-         * - 重载此方法时，必须调用 `super.initialize()`。
+         * 添加组件后，组件内部初始化时执行。
+         * - 重写此方法时，必须调用 `super.initialize()`。
+         * @param config 实体添加该组件时可以传递的初始化数据。
          */
         public initialize(config?: any) {
         }
         /**
-         * 移除组件后，组件内部卸载。
-         * - 重载此方法时，必须调用 `super.uninitialize()`。
+         * 移除组件后，组件内部卸载时执行。
+         * - 重写此方法时，必须调用 `super.uninitialize()`。
          */
         public uninitialize() {
         }

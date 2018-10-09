@@ -2,7 +2,7 @@ namespace egret3d {
     /**
      * 激活的摄像机和灯光。
      */
-    export class CamerasAndLights extends paper.SingletonComponent {
+    export class CameraAndLightCollecter extends paper.SingletonComponent {
         public readonly cameras: Camera[] = [];
         public readonly lights: BaseLight[] = [];
 

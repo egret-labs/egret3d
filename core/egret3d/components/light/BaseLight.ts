@@ -1,15 +1,6 @@
 namespace egret3d {
     /**
-     * light component
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 灯光组件
-     * @version paper 1.0
-     * @platform Web
-     * @language
+     * 灯光组件。
      */
     export abstract class BaseLight extends paper.BaseComponent {
         /**
@@ -18,19 +9,19 @@ namespace egret3d {
         @paper.serializedField
         public cullingMask: paper.CullingMask = paper.CullingMask.Everything;
         /**
-         * 
+         * 该灯光的强度。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public intensity: number = 1.0;
         /**
-         * 
+         * 该灯光的颜色。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.COLOR)
         public readonly color: Color = Color.create(1.0, 1.0, 1.0, 1.0);
         /**
-         * 
+         * 该灯光是否投射阴影。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
@@ -100,15 +91,6 @@ namespace egret3d {
             camera.clearOption_Depth = true;
 
             this._updateMatrix(camera);
-        }
-        /**
-         * 
-         */
-        public get power() {
-            return this.intensity * (Math.PI * 4.0);
-        }
-        public set power(value: number) {
-            this.intensity = value / (Math.PI * 4.0);
         }
     }
 }

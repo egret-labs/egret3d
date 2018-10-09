@@ -4,7 +4,7 @@ namespace egret3d {
      */
     export class SkinnedMeshRendererSystem extends paper.BaseSystem {
         /**
-         * 
+         * @internal
          */
         public static maxBoneCount: number = 36;
 
@@ -29,7 +29,7 @@ namespace egret3d {
                 ]
             }
         ];
-        private readonly _drawCalls: DrawCalls = paper.GameObject.globalGameObject.getOrAddComponent(DrawCalls);
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
 
         private _updateDrawCalls(gameObject: paper.GameObject) {
             if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
@@ -37,14 +37,14 @@ namespace egret3d {
             }
 
             const renderer = gameObject.renderer as SkinnedMeshRenderer;
-            this._drawCalls.removeDrawCalls(renderer);
+            this._drawCallCollecter.removeDrawCalls(renderer);
 
             if (!renderer.mesh || renderer.materials.length === 0) {
                 return;
             }
 
             renderer.mesh._createBuffer();
-            this._drawCalls.renderers.push(renderer);
+            this._drawCallCollecter.renderers.push(renderer);
             //
             let subMeshIndex = 0;
             for (const primitive of renderer.mesh.glTFMesh.primitives) {
@@ -64,7 +64,7 @@ namespace egret3d {
                     material.addDefine(ShaderDefine.USE_SKINNING).addDefine(`${ShaderDefine.MAX_BONES} ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, renderer.bones.length)}`);
                 }
 
-                this._drawCalls.drawCalls.push(drawCall);
+                this._drawCallCollecter.drawCalls.push(drawCall);
             }
         }
 
@@ -84,7 +84,7 @@ namespace egret3d {
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCalls.removeDrawCalls(gameObject.renderer as SkinnedMeshRenderer);
+            this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
         }
 
         public onUpdate() {
@@ -95,7 +95,7 @@ namespace egret3d {
 
         public onDisable() {
             for (const gameObject of this._groups[0].gameObjects) {
-                this._drawCalls.removeDrawCalls(gameObject.renderer as SkinnedMeshRenderer);
+                this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
             }
         }
     }

@@ -1,6 +1,7 @@
 namespace egret3d {
     /**
-     * 
+     * 网格渲染组件系统。
+     * - 为网格渲染组件生成绘制信息。
      */
     export class MeshRendererSystem extends paper.BaseSystem {
         protected readonly _interests = [
@@ -25,25 +26,29 @@ namespace egret3d {
                 }]
             },
         ];
-        private readonly _drawCalls: DrawCalls = paper.GameObject.globalGameObject.getOrAddComponent(DrawCalls);
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
 
-        private _updateDrawCalls(gameObject: paper.GameObject) {
-            if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
+        private _updateDrawCalls(gameObject: paper.GameObject, pass?: boolean) {
+            if (
+                !pass &&
+                (!this._enabled || !this._groups[0].hasGameObject(gameObject))
+            ) {
                 return;
             }
 
-            const filter = gameObject.getComponent(MeshFilter) as MeshFilter;
-            const renderer = gameObject.renderer as MeshRenderer;
+            const drawCallCollecter = this._drawCallCollecter;
+            const filter = gameObject.getComponent(MeshFilter)!;
+            const renderer = gameObject.renderer!;
             const materials = renderer.materials;
 
-            this._drawCalls.removeDrawCalls(renderer);
+            drawCallCollecter.removeDrawCalls(renderer);
             if (!filter.mesh || materials.length === 0) {
                 return;
             }
 
-            filter.mesh._createBuffer();
-            this._drawCalls.renderers.push(renderer);
-            //
+            filter.mesh._createBuffer(); // TODO 更合适的时机。
+            drawCallCollecter.renderers.push(renderer);
+
             let subMeshIndex = 0;
             for (const primitive of filter.mesh.glTFMesh.primitives) {
                 const drawCall: DrawCall = {
@@ -52,30 +57,30 @@ namespace egret3d {
                     subMeshIndex: subMeshIndex++,
                     mesh: filter.mesh,
                     material: materials[primitive.material!] || DefaultMaterials.MISSING,
+
                     zdist: -1,
                 };
-                this._drawCalls.drawCalls.push(drawCall);
+                drawCallCollecter.drawCalls.push(drawCall);
             }
-
         }
 
         public onEnable() {
             for (const gameObject of this._groups[0].gameObjects) {
-                this._updateDrawCalls(gameObject);
+                this._updateDrawCalls(gameObject, true);
             }
         }
 
         public onAddGameObject(gameObject: paper.GameObject) {
-            this._updateDrawCalls(gameObject);
+            this._updateDrawCalls(gameObject, true);
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCalls.removeDrawCalls(gameObject.renderer as MeshRenderer);
+            this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
         }
 
         public onDisable() {
             for (const gameObject of this._groups[0].gameObjects) {
-                this._drawCalls.removeDrawCalls(gameObject.renderer as MeshRenderer);
+                this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
             }
         }
     }

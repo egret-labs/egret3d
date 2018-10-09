@@ -1,46 +1,68 @@
 namespace egret3d {
     /**
-     * Draw call 信息。
+     * 绘制信息。
      */
     export type DrawCall = {
+        /**
+         * 此次绘制的渲染组件。
+         */
         renderer: paper.BaseRenderer,
+        /**
+         * 此次绘制的世界矩阵，没有则使用渲染组件所属实体的变换世界矩阵。
+         */
         matrix?: Matrix4,
-
+        /**
+         * 此次绘制的子网格索引。
+         */
         subMeshIndex: number,
+        /**
+         * 此次绘制的网格资源。
+         */
         mesh: Mesh,
+        /**
+         * 此次绘制的材质资源。
+         */
         material: Material,
-
+        /**
+         * 
+         */
         zdist: number,
     };
     /**
-     * 所有 Draw call 信息。
+     * 全局绘制信息收集组件。
      */
-    export class DrawCalls extends paper.SingletonComponent {
+    export class DrawCallCollecter extends paper.SingletonComponent {
         /**
-         * 每个渲染帧的 Draw call 计数。
+         * 此帧的绘制总数。
          */
         @paper.editor.property(paper.editor.EditType.UINT)
         public drawCallCount: number = 0;
         /**
-         * 参与渲染的渲染器列表。
+         * 此帧参与渲染的渲染组件列表。
          */
-        public readonly renderers: paper.BaseRenderer[] = [];
+        public readonly renderers: (paper.BaseRenderer | null)[] = [];
         /**
-         * Draw call 列表。
+         * 此帧的绘制信息列表。
+         * - 未进行视锥剔除的。
          */
-        public readonly drawCalls: DrawCall[] = [];
+        public readonly drawCalls: (DrawCall | null)[] = [];
         /**
-         * 非透明 Draw call 列表。
+         * 此帧的非透明绘制信息列表。
+         * - 已进行视锥剔除的。
          */
         public readonly opaqueCalls: DrawCall[] = [];
         /**
-         * 透明 Draw call 列表。
+         * 此帧的透明绘制信息列表。
+         * - 已进行视锥剔除的。
          */
         public readonly transparentCalls: DrawCall[] = [];
         /**
-         * 阴影 Draw call 列表。
+         * 此帧的阴影绘制信息列表。
+         * - 已进行视锥剔除的。
          */
         public readonly shadowCalls: DrawCall[] = [];
+
+        private _isRemoved: boolean = false;
         /**
          * 所有非透明的, 按照从近到远排序
          */
@@ -72,7 +94,58 @@ namespace egret3d {
             }
         }
         /**
-         * 
+         * @internal
+         */
+        public _update() {
+            if (this._isRemoved) {
+                let index = 0;
+                let removeCount = 0;
+                const renderers = this.renderers;
+                const drawCalls = this.drawCalls;
+                this._isRemoved = false;
+
+                for (const renderer of renderers) {
+                    if (renderer) {
+                        if (removeCount > 0) {
+                            renderers[index - removeCount] = renderer;
+                            renderers[index] = null;
+                        }
+                    }
+                    else {
+                        removeCount++;
+                    }
+
+                    index++;
+                }
+
+                if (removeCount > 0) {
+                    renderers.length -= removeCount;
+                }
+
+                index = 0;
+                removeCount = 0;
+
+                for (const drawCall of drawCalls) {
+                    if (drawCall) {
+                        if (removeCount > 0) {
+                            drawCalls[index - removeCount] = drawCall;
+                            drawCalls[index] = null;
+                        }
+                    }
+                    else {
+                        removeCount++;
+                    }
+
+                    index++;
+                }
+
+                if (removeCount > 0) {
+                    drawCalls.length -= removeCount;
+                }
+            }
+        }
+        /**
+         * TODO
          */
         public shadowFrustumCulling(camera: Camera) {
             this.shadowCalls.length = 0;
@@ -84,7 +157,7 @@ namespace egret3d {
                     (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
                     (!renderer.frustumCulled || camera.testFrustumCulling(renderer))
                 ) {
-                    this.drawCallCount++;
+                    this.drawCallCount++; // TODO 编辑模式剔除编辑 drawcall
                     this.shadowCalls.push(drawCall);
                 }
             }
@@ -92,7 +165,7 @@ namespace egret3d {
             this.shadowCalls.sort(this._sortFromFarToNear);
         }
         /**
-         * 
+         * TODO
          */
         public frustumCulling(camera: Camera) {
             const cameraPosition = camera.gameObject.transform.position;
@@ -105,7 +178,7 @@ namespace egret3d {
                     (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
                     (!renderer.frustumCulled || camera.testFrustumCulling(renderer))
                 ) {
-                    this.drawCallCount++;
+                    this.drawCallCount++; // TODO 编辑模式剔除编辑 drawcall
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
                     if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent) {
                         this.transparentCalls.push(drawCall);
@@ -113,7 +186,7 @@ namespace egret3d {
                     else {
                         this.opaqueCalls.push(drawCall);
                     }
-                    
+
                     drawCall.zdist = renderer.gameObject.transform.getPosition().getDistance(cameraPosition);
                 }
             }
@@ -122,7 +195,7 @@ namespace egret3d {
             this.transparentCalls.sort(this._sortFromFarToNear);
         }
         /**
-         * 移除指定渲染器的 draw call 列表。
+         * 移除指定渲染组件的绘制信息列表。
          */
         public removeDrawCalls(renderer: paper.BaseRenderer) {
             const index = this.renderers.indexOf(renderer);
@@ -132,15 +205,17 @@ namespace egret3d {
 
             let i = this.drawCalls.length;
             while (i--) {
-                if (this.drawCalls[i].renderer === renderer) {
-                    this.drawCalls.splice(i, 1);
+                const drawCall = this.drawCalls[i];
+                if (drawCall && drawCall.renderer === renderer) {
+                    this.drawCalls[i] = null;
                 }
             }
 
-            this.renderers.splice(index, 1);
+            this.renderers[index] = null;
+            this._isRemoved = true;
         }
         /**
-         * 是否包含指定渲染器的 draw call 列表。
+         * 是否包含指定渲染组件的绘制信息列表。
          */
         public hasDrawCalls(renderer: paper.BaseRenderer) {
             return this.renderers.indexOf(renderer) >= 0;

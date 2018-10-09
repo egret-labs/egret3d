@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 
+     * 平行光组件。
      */
     export class DirectionalLight extends BaseLight {
         public renderTarget: BaseRenderTarget = new GlRenderTarget("DirectionalLight", 1024, 1024, true); // TODO

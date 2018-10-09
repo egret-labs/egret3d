@@ -4,16 +4,17 @@ namespace egret3d {
     const _helpVector3C = Vector3.create();
     const _helpMatrix = Matrix4.create();
     /**
-     * 蒙皮网格渲染器。
+     * 蒙皮网格渲染组件。
      */
     export class SkinnedMeshRenderer extends MeshRenderer {
         /**
-         * 
+         * 当蒙皮网格渲染组件的网格资源改变时派发事件。
          */
         public static readonly onMeshChanged: signals.Signal = new signals.Signal();
         /**
          * 强制使用 cpu 蒙皮。
          * - 骨骼数超过硬件支持的最大骨骼数量，或顶点权重大于 4 个，需要使用 CPU 蒙皮。
+         * - CPU 蒙皮性能较低，仅是兼容方案，应合理的控制骨架的最大骨骼数量。
          */
         public forceCPUSkin: boolean = false;
         /**
@@ -35,6 +36,7 @@ namespace egret3d {
          * @internal
          */
         public _update() {
+            // TODO cache 剔除，脏标记。
             const bones = this._bones;
             const inverseBindMatrices = this._inverseBindMatrices!;
             const boneMatrices = this.boneMatrices!;
@@ -52,10 +54,11 @@ namespace egret3d {
                 const vC = _helpVector3C;
                 const mA = _helpMatrix;
 
-                const indices = this._mesh.getIndices()!;
-                const vertices = this._mesh.getVertices()!;
-                const joints = this._mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array;
-                const weights = this._mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)! as Float32Array;
+                const mesh = this._mesh;
+                const indices = mesh.getIndices()!;
+                const vertices = mesh.getVertices()!;
+                const joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array;
+                const weights = mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)! as Float32Array;
 
                 if (!this._rawVertices) {
                     this._rawVertices = new Float32Array(vertices.length);
@@ -74,7 +77,7 @@ namespace egret3d {
                         .toArray(vertices, vertexIndex);
                 }
 
-                this._mesh.uploadVertexBuffer();
+                mesh.uploadVertexBuffer();
             }
         }
 
@@ -194,19 +197,19 @@ namespace egret3d {
             return false;
         }
         /**
-         * 该渲染器的骨骼列表。
+         * 该渲染组件的骨骼列表。
          */
         public get bones(): ReadonlyArray<Transform | null> {
             return this._bones;
         }
         /**
-         * 该渲染器的根骨骼。
+         * 该渲染组件的根骨骼。
          */
         public get rootBone() {
             return this._rootBone;
         }
         /**
-         * 
+         * 该渲染组件的网格资源。
          */
         public get mesh() {
             return this._mesh;

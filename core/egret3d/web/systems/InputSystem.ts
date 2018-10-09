@@ -104,7 +104,7 @@ namespace egret3d.web {
                     break;
             }
 
-            event.preventDefault();
+            // event.preventDefault();
         }
 
         private _onMouseWheelEvent = (event: PointerEvent) => {
@@ -208,7 +208,7 @@ namespace egret3d.web {
                     break;
             }
 
-            event.preventDefault();
+            // event.preventDefault();
         }
 
         private _onTouchEvent = (event: TouchEvent) => {
@@ -316,7 +316,7 @@ namespace egret3d.web {
                     break;
             }
 
-            event.preventDefault();
+            // event.preventDefault();
         }
 
         private _onContextMenu = (event: Event) => {
