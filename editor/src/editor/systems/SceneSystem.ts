@@ -9,7 +9,7 @@ namespace paper.editor {
             ]
         ];
 
-        private readonly _camerasAndLights: egret3d.CamerasAndLights = GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+        private readonly _cameraAndLightCollecter: egret3d.CameraAndLightCollecter = GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
         private readonly _inputCollecter: egret3d.InputCollecter = GameObject.globalGameObject.getOrAddComponent(egret3d.InputCollecter);
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
 
@@ -219,7 +219,7 @@ namespace paper.editor {
         private _updateCameras() {
             const editorCamera = egret3d.Camera.editor;
 
-            for (const camera of this._camerasAndLights.cameras) {
+            for (const camera of this._cameraAndLightCollecter.cameras) {
                 if (camera === editorCamera) {
                     continue;
                 }
@@ -301,7 +301,7 @@ namespace paper.editor {
         }
 
         private _updateLights() {
-            for (const light of this._camerasAndLights.lights) {
+            for (const light of this._cameraAndLightCollecter.lights) {
                 if (light.gameObject.tag === DefaultTags.EditorOnly) { // TODO
                     continue;
                 }
@@ -394,7 +394,7 @@ namespace paper.editor {
             }
 
             //
-            for (const camera of this._camerasAndLights.cameras) {
+            for (const camera of this._cameraAndLightCollecter.cameras) {
                 if (camera.gameObject.tag === DefaultTags.EditorOnly) {
                     continue;
                 }
@@ -405,7 +405,7 @@ namespace paper.editor {
                 }
             }
 
-            for (const light of this._camerasAndLights.lights) {
+            for (const light of this._cameraAndLightCollecter.lights) {
                 if (light.gameObject.tag === DefaultTags.EditorOnly) {
                     continue;
                 }

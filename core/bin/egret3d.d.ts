@@ -4068,7 +4068,7 @@ declare namespace egret3d {
     /**
      * 激活的摄像机和灯光。
      */
-    class CamerasAndLights extends paper.SingletonComponent {
+    class CameraAndLightCollecter extends paper.SingletonComponent {
         readonly cameras: Camera[];
         readonly lights: BaseLight[];
         private _sortCameras(a, b);

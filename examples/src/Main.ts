@@ -1,9 +1,7 @@
 function main(allScripts: string[]) {
-
-
     const examples = allScripts
         .filter(item => item.indexOf("examples") >= 0)
-        .map(item => item.split("/").pop().split(".")[0]);
+        .map(item => item.split("/").pop()!.split(".")[0]);
 
     const current = getCurrentTest();
     const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
@@ -13,11 +11,10 @@ function main(allScripts: string[]) {
         example: current,
     };
     gui.add(options, "example", examples).onChange((example: string) => {
-
         location.href = getNewUrl(example);
     });
 
-    window[current].start();
+    (window as any)[current].start();
 
     function getNewUrl(example: string) {
         let url = location.href;
@@ -33,7 +30,7 @@ function main(allScripts: string[]) {
     }
 
     function getCurrentTest() {
-        var appFile;
+        var appFile = "";
         var hasTest = false;
         var str = location.search;
         str = str.slice(1, str.length);

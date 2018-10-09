@@ -4234,7 +4234,7 @@ var paper;
                         { componentClass: egret3d.Transform }
                     ]
                 ];
-                _this._camerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+                _this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
                 _this._inputCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.InputCollecter);
                 _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
                 _this._pointerStartPosition = egret3d.Vector3.create();
@@ -4412,7 +4412,7 @@ var paper;
             };
             SceneSystem.prototype._updateCameras = function () {
                 var editorCamera = egret3d.Camera.editor;
-                for (var _i = 0, _a = this._camerasAndLights.cameras; _i < _a.length; _i++) {
+                for (var _i = 0, _a = this._cameraAndLightCollecter.cameras; _i < _a.length; _i++) {
                     var camera = _a[_i];
                     if (camera === editorCamera) {
                         continue;
@@ -4483,7 +4483,7 @@ var paper;
                 }
             };
             SceneSystem.prototype._updateLights = function () {
-                for (var _i = 0, _a = this._camerasAndLights.lights; _i < _a.length; _i++) {
+                for (var _i = 0, _a = this._cameraAndLightCollecter.lights; _i < _a.length; _i++) {
                     var light = _a[_i];
                     if (light.gameObject.tag === "Editor Only" /* EditorOnly */) {
                         continue;
@@ -4560,7 +4560,7 @@ var paper;
                     window.removeEventListener("mousemove", this._onMouseMove);
                 }
                 //
-                for (var _i = 0, _a = this._camerasAndLights.cameras; _i < _a.length; _i++) {
+                for (var _i = 0, _a = this._cameraAndLightCollecter.cameras; _i < _a.length; _i++) {
                     var camera = _a[_i];
                     if (camera.gameObject.tag === "Editor Only" /* EditorOnly */) {
                         continue;
@@ -4570,7 +4570,7 @@ var paper;
                         icon.gameObject.destroy();
                     }
                 }
-                for (var _b = 0, _d = this._camerasAndLights.lights; _b < _d.length; _b++) {
+                for (var _b = 0, _d = this._cameraAndLightCollecter.lights; _b < _d.length; _b++) {
                     var light = _d[_b];
                     if (light.gameObject.tag === "Editor Only" /* EditorOnly */) {
                         continue;

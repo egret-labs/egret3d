@@ -24,10 +24,6 @@
       "name": "promise"
     },
     {
-      "name": "signals",
-      "path": "../core/libs/signals"
-    },
-    {
       "name": "egret3d",
       "path": "../core"
     },

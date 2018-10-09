@@ -917,7 +917,7 @@ var egret3d;
         EulerOrder[EulerOrder["ZYX"] = 5] = "ZYX";
     })(EulerOrder = egret3d.EulerOrder || (egret3d.EulerOrder = {}));
     /**
-     *
+     * 三维向量
      */
     var Vector3 = (function (_super) {
         __extends(Vector3, _super);
@@ -1439,14 +1439,41 @@ var egret3d;
         Vector3.getDistance = function (a, b) {
             return this.getLength(this.subtract(a, b, helpVector));
         };
+        /**
+         * 零
+         */
         Vector3.ZERO = new Vector3(0.0, 0.0, 0.0);
+        /**
+         * 三方向均为一的向量
+         */
         Vector3.ONE = new Vector3(1.0, 1.0, 1.0);
+        /**
+         * 三方向均为负一的向量
+         */
         Vector3.MINUS_ONE = new Vector3(-1.0, -1.0, -1.0);
+        /**
+         * 上
+         */
         Vector3.UP = new Vector3(0.0, 1.0, 0.0);
+        /**
+         * 下
+         */
         Vector3.DOWN = new Vector3(0.0, -1.0, 0.0);
+        /**
+         * 左
+         */
         Vector3.LEFT = new Vector3(-1.0, 0.0, 0.0);
+        /**
+         * 右
+         */
         Vector3.RIGHT = new Vector3(1.0, 0.0, 0.0);
+        /**
+         * 前
+         */
         Vector3.FORWARD = new Vector3(0.0, 0.0, 1.0);
+        /**
+         * 后
+         */
         Vector3.BACK = new Vector3(0.0, 0.0, -1.0);
         Vector3._instances = [];
         return Vector3;
@@ -1983,6 +2010,7 @@ var egret3d;
             if (offsetOrByteOffset === void 0) { offsetOrByteOffset = 0; }
             var _this = _super.call(this) || this;
             /**
+             * 矩阵原始数据
              * @readonly
              */
             _this.rawData = null;
@@ -2020,9 +2048,17 @@ var egret3d;
             }
             return new Matrix4(rawData, offsetOrByteOffset);
         };
+        /**
+         * 序列化
+         * @returns 序列化后的数据
+         */
         Matrix4.prototype.serialize = function () {
             return this.rawData;
         };
+        /**
+         * 反序列化
+         * @param value 序列化后的数据
+         */
         Matrix4.prototype.deserialize = function (value) {
             return this.fromArray(value);
         };
@@ -4238,18 +4274,30 @@ var egret3d;
          */
         function Color() {
             var _this = _super.call(this) || this;
+            /**
+             * 红色通道
+             */
             _this.r = 1.0;
+            /**
+             * 绿色通道
+             */
             _this.g = 1.0;
+            /**
+             * 蓝色通道
+             */
             _this.b = 1.0;
+            /**
+             * 透明通道
+             */
             _this.a = 1.0;
             return _this;
         }
         /**
-         *
-         * @param r
-         * @param g
-         * @param b
-         * @param a
+         * 创建一个新的颜色对象实例
+         * @param r 红色通道
+         * @param g 绿色通道
+         * @param b 蓝色通道
+         * @param a 透明通道
          */
         Color.create = function (r, g, b, a) {
             if (r === void 0) { r = 1.0; }
@@ -4263,18 +4311,42 @@ var egret3d;
             }
             return new Color().set(r, g, b, a);
         };
+        /**
+         * 序列化
+         * @returns 序列化后的数据
+         */
         Color.prototype.serialize = function () {
             return [this.r, this.g, this.b, this.a];
         };
+        /**
+         * 反序列化
+         * @param value 需要反序列化的数据
+         */
         Color.prototype.deserialize = function (value) {
             return this.fromArray(value);
         };
+        /**
+         * 复制一个颜色对象
+         * @returns 一个复制后的新的颜色对象
+         */
         Color.prototype.clone = function () {
             return Color.create(this.r, this.g, this.b, this.a);
         };
+        /**
+         * 拷贝一个颜色对象的值
+         * @param value 要拷贝的颜色对象
+         */
         Color.prototype.copy = function (value) {
             return this.set(value.r, value.g, value.b, value.a);
         };
+        /**
+         * 设置一个颜色对象的rgba
+         * @param r 红色通道
+         * @param g 绿色通道
+         * @param b 蓝色通道
+         * @param a 透明通道
+         * @returns 该对象本身
+         */
         Color.prototype.set = function (r, g, b, a) {
             this.r = r;
             this.g = g;
@@ -4322,14 +4394,41 @@ var egret3d;
             this.a = t * (valueB.a - valueA.a) + valueA.a;
             return this;
         };
+        /**
+         * 黑色
+         */
         Color.BLACK = new Color().set(0.0, 0.0, 0.0, 1.0);
+        /**
+         * 灰色
+         */
         Color.GRAY = new Color().set(0.5, 0.5, 0.5, 1.0);
+        /**
+         * 白色
+         */
         Color.WHITE = new Color().set(1.0, 1.0, 1.0, 1.0);
+        /**
+         * 红色
+         */
         Color.RED = new Color().set(1.0, 0.0, 0.0, 1.0);
+        /**
+         * 绿色
+         */
         Color.GREEN = new Color().set(0.0, 1.0, 0.0, 1.0);
+        /**
+         * 蓝色
+         */
         Color.BLUE = new Color().set(0.0, 0.0, 1.0, 1.0);
+        /**
+         * 黄色
+         */
         Color.YELLOW = new Color().set(1.0, 1.0, 0.0, 1.0);
+        /**
+         * 靛蓝色
+         */
         Color.INDIGO = new Color().set(0.0, 1.0, 1.0, 1.0);
+        /**
+         * 紫色
+         */
         Color.PURPLE = new Color().set(1.0, 0.0, 1.0, 1.0);
         Color._instances = [];
         return Color;
@@ -9614,15 +9713,15 @@ var egret3d;
     /**
      * 激活的摄像机和灯光。
      */
-    var CamerasAndLights = (function (_super) {
-        __extends(CamerasAndLights, _super);
-        function CamerasAndLights() {
+    var CameraAndLightCollecter = (function (_super) {
+        __extends(CameraAndLightCollecter, _super);
+        function CameraAndLightCollecter() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this.cameras = [];
             _this.lights = [];
             return _this;
         }
-        CamerasAndLights.prototype._sortCameras = function (a, b) {
+        CameraAndLightCollecter.prototype._sortCameras = function (a, b) {
             var aOrder = a.renderTarget ? a.order : a.order * 1000 + 1;
             var bOrder = b.renderTarget ? b.order : b.order * 1000 + 1;
             return aOrder - bOrder;
@@ -9630,25 +9729,25 @@ var egret3d;
         /**
          * 更新摄像机。
          */
-        CamerasAndLights.prototype.updateCameras = function (gameObjects) {
+        CameraAndLightCollecter.prototype.updateCameras = function (gameObjects) {
             this.cameras.length = 0;
             for (var _i = 0, gameObjects_1 = gameObjects; _i < gameObjects_1.length; _i++) {
                 var gameObject = gameObjects_1[_i];
                 this.cameras.push(gameObject.getComponent(egret3d.Camera));
             }
         };
-        CamerasAndLights.prototype.updateLights = function (gameObjects) {
+        CameraAndLightCollecter.prototype.updateLights = function (gameObjects) {
             this.lights.length = 0;
             for (var _i = 0, gameObjects_2 = gameObjects; _i < gameObjects_2.length; _i++) {
                 var gameObject = gameObjects_2[_i];
                 this.lights.push(gameObject.getComponent(egret3d.BaseLight, true));
             }
         };
-        CamerasAndLights.prototype.sortCameras = function () {
+        CameraAndLightCollecter.prototype.sortCameras = function () {
             // TODO camera order event.
             this.cameras.sort(this._sortCameras);
         };
-        Object.defineProperty(CamerasAndLights.prototype, "cameraCount", {
+        Object.defineProperty(CameraAndLightCollecter.prototype, "cameraCount", {
             /**
              * 摄像机计数
              */
@@ -9658,7 +9757,7 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(CamerasAndLights.prototype, "lightCount", {
+        Object.defineProperty(CameraAndLightCollecter.prototype, "lightCount", {
             /**
              * 灯光计数。
              */
@@ -9670,14 +9769,14 @@ var egret3d;
         });
         __decorate([
             paper.editor.property(0 /* UINT */)
-        ], CamerasAndLights.prototype, "cameraCount", null);
+        ], CameraAndLightCollecter.prototype, "cameraCount", null);
         __decorate([
             paper.editor.property(0 /* UINT */)
-        ], CamerasAndLights.prototype, "lightCount", null);
-        return CamerasAndLights;
+        ], CameraAndLightCollecter.prototype, "lightCount", null);
+        return CameraAndLightCollecter;
     }(paper.SingletonComponent));
-    egret3d.CamerasAndLights = CamerasAndLights;
-    __reflect(CamerasAndLights.prototype, "egret3d.CamerasAndLights");
+    egret3d.CameraAndLightCollecter = CameraAndLightCollecter;
+    __reflect(CameraAndLightCollecter.prototype, "egret3d.CameraAndLightCollecter");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -10454,7 +10553,7 @@ var egret3d;
                     { componentClass: [egret3d.DirectionalLight, egret3d.PointLight, egret3d.SpotLight] }
                 ]
             ];
-            _this._camerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+            _this._camerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
             _this._drawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.DrawCallCollecter);
             return _this;
         }
@@ -18210,34 +18309,17 @@ var egret3d;
      * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
      */
     var Curve3 = (function () {
-        function Curve3(points, nbPoints) {
-            this._beizerPoints = points;
-            this._bezierPointNum = nbPoints;
+        /**
+         * @internal
+         */
+        function Curve3(beizerPoints, bezierPointNum) {
+            this.beizerPoints = beizerPoints;
+            this.bezierPointNum = bezierPointNum;
         }
-        Object.defineProperty(Curve3.prototype, "beizerPoints", {
-            get: function () {
-                return this._beizerPoints;
-            },
-            set: function (value) {
-                this._beizerPoints = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Curve3.prototype, "bezierPointNum", {
-            get: function () {
-                return this._bezierPointNum;
-            },
-            set: function (value) {
-                this._bezierPointNum = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
         /**
          * 线性贝塞尔曲线
          */
-        Curve3.CreateLinearBezier = function (start, end, indices) {
+        Curve3.createLinearBezier = function (start, end, indices) {
             indices = indices > 2 ? indices : 3;
             var bez = new Array();
             var equation = function (t, va10, va11) {
@@ -18255,9 +18337,10 @@ var egret3d;
          * @param v0 起始点
          * @param v1 选中的节点
          * @param v2 结尾点
-         * @param nbPoints 将贝塞尔曲线拆分nbPoints段，一共有nbPoints + 1个点
+         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
+         * @returns 贝塞尔曲线对象
          */
-        Curve3.CreateQuadraticBezier = function (v0, v1, v2, bezierPointNum) {
+        Curve3.createQuadraticBezier = function (v0, v1, v2, bezierPointNum) {
             bezierPointNum = bezierPointNum > 2 ? bezierPointNum : 3;
             var beizerPoint = new Array();
             var equation = function (t, val0, val1, val2) {
@@ -18271,13 +18354,14 @@ var egret3d;
         };
         /**
          * 三次方贝塞尔曲线路径
-         * @param v0
-         * @param v1
-         * @param v2
-         * @param v3
-         * @param nbPoints
+         * @param v0 起始点
+         * @param v1 第一个插值点
+         * @param v2 第二个插值点
+         * @param v3 终点
+         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
+         * @returns 贝塞尔曲线对象
          */
-        Curve3.CreateCubicBezier = function (v0, v1, v2, v3, bezierPointNum) {
+        Curve3.createCubicBezier = function (v0, v1, v2, v3, bezierPointNum) {
             bezierPointNum = bezierPointNum > 3 ? bezierPointNum : 4;
             var beizerPoint = new Array();
             var equation = function (t, val0, val1, val2, val3) {
@@ -18288,12 +18372,6 @@ var egret3d;
                 beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x, v3.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y, v3.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z, v3.z)));
             }
             return new Curve3(beizerPoint, bezierPointNum);
-        };
-        /**
-         * 贝塞尔曲线上的点
-         */
-        Curve3.prototype.getPoints = function () {
-            return this._beizerPoints;
         };
         return Curve3;
     }());
@@ -21407,7 +21485,7 @@ var egret3d;
                 ];
                 _this._stage = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.Stage);
                 _this._drawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.DrawCallCollecter);
-                _this._camerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CamerasAndLights);
+                _this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
                 _this._renderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.WebGLRenderState);
                 _this._lightCamera = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.Camera);
                 //
@@ -21798,8 +21876,8 @@ var egret3d;
                 var lightCountDirty = false;
                 var isPlayerMode = paper.Application.playerMode === 0 /* Player */;
                 var renderState = this._renderState;
-                var cameras = this._camerasAndLights.cameras;
-                var lights = this._camerasAndLights.lights;
+                var cameras = this._cameraAndLightCollecter.cameras;
+                var lights = this._cameraAndLightCollecter.lights;
                 var editorScene = paper.Application.sceneManager.editorScene;
                 this._drawCallCollecter.drawCallCount = 0;
                 // Render lights.
@@ -21923,7 +22001,7 @@ var egret3d;
                             inputCollecter.onPointerLeave.dispatch(pointer, inputCollecter.onPointerLeave);
                             break;
                     }
-                    event.preventDefault();
+                    // event.preventDefault();
                 };
                 _this._onMouseWheelEvent = function (event) {
                     var inputCollecter = _this._inputCollecter;
@@ -22010,7 +22088,7 @@ var egret3d;
                             inputCollecter.onPointerLeave.dispatch(pointer, inputCollecter.onPointerLeave);
                             break;
                     }
-                    event.preventDefault();
+                    // event.preventDefault();
                 };
                 _this._onTouchEvent = function (event) {
                     var inputCollecter = _this._inputCollecter;
@@ -22099,7 +22177,7 @@ var egret3d;
                             inputCollecter.onPointerCancel.dispatch(pointer, inputCollecter.onPointerCancel);
                             break;
                     }
-                    event.preventDefault();
+                    // event.preventDefault();
                 };
                 _this._onContextMenu = function (event) {
                     if (_this._inputCollecter.downPointers.length > 0 ||
@@ -24462,7 +24540,7 @@ var paper;
 var egret3d;
 (function (egret3d) {
     /**
-     *
+     * 3×3矩阵
      */
     var Matrix3 = (function (_super) {
         __extends(Matrix3, _super);
@@ -24473,6 +24551,7 @@ var egret3d;
             if (rawData === void 0) { rawData = null; }
             var _this = _super.call(this) || this;
             /**
+             * 矩阵原始数据
              * @readonly
              */
             _this.rawData = null;
@@ -24496,9 +24575,17 @@ var egret3d;
             }
             return new Matrix3();
         };
+        /**
+         * 序列化
+         * @returns 序列化后的数据
+         */
         Matrix3.prototype.serialize = function () {
             return this.rawData;
         };
+        /**
+         * 反序列化
+         * @param value 序列化后的数据
+         */
         Matrix3.prototype.deserialize = function (value) {
             return this.fromArray(value);
         };
@@ -24595,7 +24682,6 @@ var egret3d;
     }(paper.BaseRelease));
     egret3d.Matrix3 = Matrix3;
     __reflect(Matrix3.prototype, "egret3d.Matrix3", ["paper.ICCS", "paper.ISerializable"]);
-    var helpMat_1 = new Matrix3();
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
