@@ -555,6 +555,26 @@ namespace egret3d {
                     functions.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA];
                     break;
 
+                case gltf.BlendMode.Subtractive:
+                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.ONE_MINUS_SRC_COLOR, gltf.BlendFactor.ZERO, gltf.BlendFactor.ONE_MINUS_SRC_COLOR];
+                    break;
+
+                case gltf.BlendMode.Subtractive_PreMultiply:
+                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.ZERO, gltf.BlendFactor.ONE_MINUS_SRC_COLOR, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
+                    break;
+
+                case gltf.BlendMode.Multiply:
+                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_COLOR, gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_COLOR];
+                    break;
+
+                case gltf.BlendMode.Multiply_PreMultiply:
+                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_COLOR, gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_ALPHA];
+                    break;
+
                 default:
                     delete functions.blendEquationSeparate;
                     delete functions.blendFuncSeparate;

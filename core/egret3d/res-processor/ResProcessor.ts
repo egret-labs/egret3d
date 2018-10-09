@@ -118,7 +118,7 @@ namespace egret3d {
                     _repeat = true;
                 }
 
-                let _premultiply: boolean = true;
+                let _premultiply: boolean = false;
                 if (data["premultiply"] !== undefined) {
                     _premultiply = data["premultiply"] > 0;
                 }
@@ -145,7 +145,7 @@ namespace egret3d {
 
             return host.load(resource, BitmapDataProcessor).then((bitmapData: egret.BitmapData) => {
                 const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, egret3d.TextureFormatEnum.RGBA);
-                texture.uploadImage(bitmapData.source, true, true, true, true);
+                texture.uploadImage(bitmapData.source, true, true, false, true);
                 paper.Asset.register(texture);
                 return texture;
             })

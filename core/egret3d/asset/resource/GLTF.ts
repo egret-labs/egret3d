@@ -649,6 +649,10 @@ declare namespace gltf {
         Blend_PreMultiply,
         Add,
         Add_PreMultiply,
+        Subtractive,
+        Subtractive_PreMultiply,
+        Multiply,
+        Multiply_PreMultiply,
     }
 
     export const enum BlendEquation {
