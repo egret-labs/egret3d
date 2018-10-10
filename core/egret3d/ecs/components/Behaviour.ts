@@ -45,7 +45,7 @@ namespace paper {
         /**
          * 该组件被初始化时执行。
          * - 在该组件的整个生命周期中只执行一次。
-         * @param config 实体添加该组件时可以传递的初始化数据。
+         * @param config 该组件被添加时可以传递的初始化数据。
          * @see paper.GameObject#addComponent()
          */
         public onAwake?(config: any): void;

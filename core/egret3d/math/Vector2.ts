@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 
+     * 二维向量接口。
      */
     export interface IVector2 {
         x: number;

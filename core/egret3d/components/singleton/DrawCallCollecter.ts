@@ -2,31 +2,57 @@ namespace egret3d {
     /**
      * 绘制信息。
      */
-    export type DrawCall = {
+    export class DrawCall extends paper.BaseRelease<DrawCall> {
+        private static _instances = [] as DrawCall[];
+        /**
+         * 创建一个绘制信息实例。
+         */
+        public static create() {
+            if (this._instances.length > 0) {
+                const instance = this._instances.pop()!;
+                instance._released = false;
+                return instance;
+            }
+
+            return new DrawCall();
+        }
         /**
          * 此次绘制的渲染组件。
          */
-        renderer: paper.BaseRenderer,
+        public renderer: paper.BaseRenderer = null!;
         /**
          * 此次绘制的世界矩阵，没有则使用渲染组件所属实体的变换世界矩阵。
          */
-        matrix?: Matrix4,
+        public matrix: Matrix4 | null = null;
         /**
          * 此次绘制的子网格索引。
          */
-        subMeshIndex: number,
+        public subMeshIndex: number = -1;
         /**
          * 此次绘制的网格资源。
          */
-        mesh: Mesh,
+        public mesh: Mesh = null!;
         /**
          * 此次绘制的材质资源。
          */
-        material: Material,
+        public material: Material = null!;
         /**
          * 
          */
-        zdist: number,
+        public zdist: number = -1;
+
+        private constructor() {
+            super();
+        }
+
+        public onClear() {
+            this.renderer = null!;
+            this.matrix = null!;
+            this.subMeshIndex = -1;
+            this.mesh = null!;
+            this.material = null!;
+            this.zdist = -1;
+        }
     };
     /**
      * 全局绘制信息收集组件。
@@ -208,6 +234,7 @@ namespace egret3d {
                 const drawCall = this.drawCalls[i];
                 if (drawCall && drawCall.renderer === renderer) {
                     this.drawCalls[i] = null;
+                    drawCall.release();
                 }
             }
 

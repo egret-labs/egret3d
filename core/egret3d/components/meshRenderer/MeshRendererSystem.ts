@@ -51,15 +51,11 @@ namespace egret3d {
 
             let subMeshIndex = 0;
             for (const primitive of filter.mesh.glTFMesh.primitives) {
-                const drawCall: DrawCall = {
-                    renderer: renderer,
-
-                    subMeshIndex: subMeshIndex++,
-                    mesh: filter.mesh,
-                    material: materials[primitive.material!] || DefaultMaterials.MISSING,
-
-                    zdist: -1,
-                };
+                const drawCall = DrawCall.create();
+                drawCall.renderer = renderer;
+                drawCall.subMeshIndex = subMeshIndex++;
+                drawCall.mesh = filter.mesh;
+                drawCall.material = materials[primitive.material!] || DefaultMaterials.MISSING;
                 drawCallCollecter.drawCalls.push(drawCall);
             }
         }

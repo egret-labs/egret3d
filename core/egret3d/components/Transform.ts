@@ -1045,6 +1045,16 @@ namespace egret3d {
             return this;
         }
         /**
+         * 通过旋转使得该物体的 Z 轴正方向指向目标方向。
+         * @param target 目标方向。
+         * @param up 旋转后，该物体在世界空间坐标系下描述的 Y 轴正方向。
+         */
+        public lookRotation(direction: Readonly<IVector3>, up: Readonly<IVector3> = Vector3.UP) {
+            this.rotation = this._localRotation.fromMatrix(_helpMatrix.lookRotation(direction, up));
+
+            return this;
+        }
+        /**
          * 该组件实体的全部子级变换组件总数。
          */
         public get childCount(): number {

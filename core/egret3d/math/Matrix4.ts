@@ -678,7 +678,7 @@ namespace egret3d {
          * @param up 
          */
         public lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
-            this.lookRotation(_helpVector3C.subtract(target, eye).normalize(), up); // left-hand coordinates system.
+            this.lookRotation(_helpVector3C.subtract(target, eye).normalize(), up); // Left-hand coordinates system.
 
             return this;
         }

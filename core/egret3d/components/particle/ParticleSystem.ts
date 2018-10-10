@@ -430,11 +430,12 @@ namespace egret3d.particle {
                 return;
             }
 
+            const drawCallCollecter = this._drawCallCollecter;
             const component = gameObject.getComponent(ParticleComponent) as ParticleComponent;
             const renderer = gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             //
             this._onUpdateBatchMesh(component);
-            this._drawCallCollecter.removeDrawCalls(renderer);
+            drawCallCollecter.removeDrawCalls(renderer);
             if (!renderer.batchMesh || !renderer.batchMaterial) {
                 return;
             }
@@ -448,16 +449,12 @@ namespace egret3d.particle {
             //
             let subMeshIndex = 0;
             for (const _primitive of renderer.batchMesh.glTFMesh.primitives) {
-                const drawCall: DrawCall = {
-                    renderer: renderer,
-
-                    subMeshIndex: subMeshIndex++,
-                    mesh: renderer.batchMesh,
-                    material: renderer.batchMaterial || DefaultMaterials.MISSING,
-
-                    zdist: -1,
-                };
-                this._drawCallCollecter.drawCalls.push(drawCall);
+                const drawCall = DrawCall.create();
+                drawCall.renderer = renderer;
+                drawCall.subMeshIndex = subMeshIndex++;
+                drawCall.mesh = renderer.batchMesh;
+                drawCall.material = renderer.batchMaterial || DefaultMaterials.MISSING,
+                drawCallCollecter.drawCalls.push(drawCall);
             }
         }
 

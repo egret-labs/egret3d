@@ -9,6 +9,10 @@ namespace egret3d {
      */
     export class Egret2DRenderer extends paper.BaseRenderer {
         /**
+         * @internal
+         */
+        public _order: number = -1;
+        /**
          * TODO
          */
         public frustumCulled: boolean = false;
@@ -26,8 +30,6 @@ namespace egret3d {
         }
 
         public root: egret.DisplayObjectContainer;
-
-        private _stage: Stage;
 
         public initialize() {
             super.initialize();
@@ -51,24 +53,10 @@ namespace egret3d {
             if (webInput) {
                 egret.web.$cacheTextAdapter(webInput, stage, WebGLCapabilities.canvas.parentNode as HTMLDivElement, WebGLCapabilities.canvas);
             }
-
-            const inputCollecter = this.gameObject.getComponent(InputCollecter)!;
-            inputCollecter.onPointerDown.add(this._onTouchStart, this);
-            inputCollecter.onPointerCancel.add(this._onTouchEnd, this);
-            inputCollecter.onPointerUp.add(this._onTouchEnd, this);
-            inputCollecter.onPointerMove.add(this._onTouchMove, this);
-
-            this._stage = paper.GameObject.globalGameObject.getComponent(Stage)!;
         }
 
         public uninitialize() {
             super.uninitialize();
-
-            const inputCollecter = this.gameObject.getComponent(InputCollecter)!;
-            inputCollecter.onPointerDown.remove(this._onTouchStart, this);
-            inputCollecter.onPointerCancel.remove(this._onTouchEnd, this);
-            inputCollecter.onPointerUp.remove(this._onTouchEnd, this);
-            inputCollecter.onPointerMove.remove(this._onTouchMove, this);
 
             this.stage.removeChild(this.root);
         }
@@ -80,27 +68,6 @@ namespace egret3d {
         public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
             // TODO
             return false;
-        }
-
-        private _onTouchStart(pointer: Pointer, signal: signals.Signal) {
-            const event = pointer.event!;
-            if (this.stage.$onTouchBegin(event.clientX / this._scaler, event.clientY / this._scaler, event.pointerId)) {
-                signal.halt();
-            }
-        }
-
-        private _onTouchMove(pointer: Pointer, signal: signals.Signal) {
-            const event = pointer.event!;
-            if (this.stage.$onTouchMove(event.clientX / this._scaler, event.clientY / this._scaler, event.pointerId)) {
-                signal.halt();
-            }
-        }
-
-        private _onTouchEnd(pointer: Pointer, signal: signals.Signal) {
-            const event = pointer.event!;
-            if (this.stage.$onTouchEnd(event.clientX / this._scaler, event.clientY / this._scaler, event.pointerId)) {
-                signal.halt();
-            }
         }
 
         /**
@@ -135,10 +102,9 @@ namespace egret3d {
         /**
          * 
          */
-        public update(delta: number) {
+        public update(deltaTime: number, w: number, h: number) {
+            this._order = -1;
             let stage2d = this.stage;
-            const { w, h } = this._stage.viewport;
-
             if (this._stageWidth !== w || this._stageHeight !== h || this.screenAdapter.$dirty) {
                 let result = { w: 0, h: 0, s: 0 };
 
@@ -165,14 +131,12 @@ namespace egret3d {
             // // clear catched events
             // this._catchedEvent = {};
         }
-
         /**
          * @internal
          */
-        public render(context: RenderContext, camera: egret3d.Camera) {
+        public _draw() {
             this._renderer.beforeRender();
             this.stage.drawToSurface();
-            // WebGLRenderUtils.resetState(); // 清除3D渲染器中的标脏
         }
     }
 }

@@ -1,6 +1,7 @@
 namespace paper {
     /**
-     * 系统基类。
+     * 基础系统。
+     * - 全部系统的基类。
      */
     export abstract class BaseSystem {
         private static _createEnabled: boolean = false;
@@ -159,6 +160,7 @@ namespace paper {
         }
         /**
          * 该系统初始化时调用。
+         * @param config 该系统被注册时可以传递的初始化数据。
          */
         public onAwake?(config?: any): void;
         /**
@@ -173,31 +175,41 @@ namespace paper {
         /**
          * 实体被添加到系统时调用。
          * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
+         * @param gameObject 收集的实体。
+         * @param group 收集实体的实体组。
          * @see paper.GameObject#addComponent()
          */
         public onAddGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
         /**
          * 充分非必要组件添加到实体时调用。
          * - 注意，该调用并不是立即的，而是等到添加到实体的下一帧才被调用。
+         * @param component 收集的实体组件。
+         * @param group 收集实体组件的实体组。
          * @see paper.GameObject#addComponent()
          */
         public onAddComponent?(component: BaseComponent, group: GameObjectGroup): void;
         /**
          * 充分非必要组件从实体移除时调用。
+         * @param component 移除的实体组件。
+         * @param group 移除实体组件的实体组。
          * @see paper.GameObject#removeComponent()
          */
         public onRemoveComponent?(component: BaseComponent, group: GameObjectGroup): void;
         /**
          * 实体从系统移除时调用。
+         * @param gameObject 移除的实体。
+         * @param group 移除实体的实体组。
          * @see paper.GameObject#removeComponent()
          */
         public onRemoveGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
         /**
          * 该系统更新时调用。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
          */
         public onUpdate?(deltaTime?: number): void;
         /**
          * 该系统更新时调用。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
          */
         public onLateUpdate?(deltaTime?: number): void;
         /**

@@ -46,6 +46,10 @@ namespace egret3d {
                 if (raycastInfo) { // Update local raycast info to world.
                     raycastInfo.position.applyMatrix(worldMatrix);
                     raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
+
+                    if (raycastInfo.normal) {
+                        raycastInfo.normal.applyDirection(worldMatrix).normalize();
+                    }
                 }
 
                 return true;

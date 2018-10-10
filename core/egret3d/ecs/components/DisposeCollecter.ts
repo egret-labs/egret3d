@@ -4,10 +4,6 @@ namespace paper {
      */
     export class DisposeCollecter extends SingletonComponent {
         /**
-         * @internal
-         */
-        public static readonly _releases: BaseRelease<any>[] = [];
-        /**
          * 当前帧销毁的全部场景。
          */
         public readonly scenes: Scene[] = [];
@@ -22,7 +18,13 @@ namespace paper {
         /**
          * 
          */
-        public readonly releases: BaseRelease<any>[] = DisposeCollecter._releases;
+        public readonly releases: BaseRelease<any>[] = [];
+
+        public initialize() {
+            super.initialize();
+
+            disposeCollecter = this;
+        }
         /**
          * @internal
          */
@@ -33,4 +35,8 @@ namespace paper {
             this.releases.length = 0;
         }
     }
+    /**
+     * @internal
+     */
+    export let disposeCollecter: DisposeCollecter = null!;
 }

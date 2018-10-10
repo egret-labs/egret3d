@@ -14,6 +14,7 @@ namespace egret3d.web {
                 { componentClass: [DirectionalLight, SpotLight, PointLight] }
             ]
         ];
+        private _egret2dOrderCount: number = 0;
         private readonly _stage: Stage = paper.GameObject.globalGameObject.getOrAddComponent(Stage);
         private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
@@ -74,8 +75,11 @@ namespace egret3d.web {
             for (const gameObject of this._groups[1].gameObjects) {
                 const egret2DRenderer = gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer;
                 if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
-                    egret2DRenderer.render(camera.context, camera);
-                    //
+                    if (egret2DRenderer._order < 0) {
+                        egret2DRenderer._order = this._egret2dOrderCount++;
+                    }
+
+                    egret2DRenderer._draw();
                     this._renderState.clearState();
                 }
             }
@@ -458,8 +462,11 @@ namespace egret3d.web {
                 lightCountDirty = true;
                 this._cacheLightCount = 0;
             }
+
             // Render cameras.
             if (cameras.length > 0) {
+                this._egret2dOrderCount = 0;
+
                 for (const camera of cameras) {
                     const renderEnabled = isPlayerMode ? camera.gameObject.scene !== editorScene : camera.gameObject.scene === editorScene;
 

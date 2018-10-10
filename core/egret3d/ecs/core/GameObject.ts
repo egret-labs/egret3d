@@ -943,7 +943,7 @@ namespace paper {
             return this._cachedComponents;
         }
         /**
-         * 该实体的父级。
+         * 该实体的父级实体。
          */
         public get parent() {
             return this.transform.parent ? this.transform.parent.gameObject : null;

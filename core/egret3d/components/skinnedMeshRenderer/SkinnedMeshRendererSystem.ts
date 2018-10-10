@@ -36,8 +36,9 @@ namespace egret3d {
                 return;
             }
 
+            const drawCallCollecter = this._drawCallCollecter;
             const renderer = gameObject.renderer as SkinnedMeshRenderer;
-            this._drawCallCollecter.removeDrawCalls(renderer);
+            drawCallCollecter.removeDrawCalls(renderer);
 
             if (!renderer.mesh || renderer.materials.length === 0) {
                 return;
@@ -48,23 +49,18 @@ namespace egret3d {
             //
             let subMeshIndex = 0;
             for (const primitive of renderer.mesh.glTFMesh.primitives) {
-                const material = renderer.materials[primitive.material!];
-                const drawCall: DrawCall = {
-                    renderer: renderer,
-                    matrix: Matrix4.IDENTITY,
+                const material = renderer.materials[primitive.material!]; // TODO miss material
+                const drawCall = DrawCall.create();
+                drawCall.renderer = renderer;
+                drawCall.matrix = Matrix4.IDENTITY;
+                drawCall.subMeshIndex = subMeshIndex++;
+                drawCall.mesh = renderer.mesh;
+                drawCall.material = material || DefaultMaterials.MISSING;
+                drawCallCollecter.drawCalls.push(drawCall);
 
-                    subMeshIndex: subMeshIndex++,
-                    mesh: renderer.mesh,
-                    material: material || DefaultMaterials.MISSING,
-
-                    zdist: -1,
-                };
-
-                if (!renderer.forceCPUSkin) {
+                if (material && !renderer.forceCPUSkin) {
                     material.addDefine(ShaderDefine.USE_SKINNING).addDefine(`${ShaderDefine.MAX_BONES} ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, renderer.bones.length)}`);
                 }
-
-                this._drawCallCollecter.drawCalls.push(drawCall);
             }
         }
 

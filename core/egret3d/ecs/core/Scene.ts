@@ -128,7 +128,7 @@ namespace paper {
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.001, step: 1.0 })
         public fogFar: number = 100.0;
         /**
-         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
+         * 额外数据，仅保存在编辑器环境，项目发布时该数据将被移除。
          */
         @paper.serializedField
         public extras?: any = Application.playerMode === PlayerMode.Editor ? {} : undefined;
@@ -205,7 +205,7 @@ namespace paper {
         }
         /**
          * 获取该场景指定名称或路径的实体。
-         * - 只返回第一个符合的实体。
+         * - 仅返回第一个符合条件的实体。
          */
         public find(nameOrPath: string) {
             const index = nameOrPath.indexOf("/");
@@ -229,8 +229,8 @@ namespace paper {
             return null;
         }
         /**
-         * 获取指定该场景标识的实体。
-         * - 只返回第一个符合的实体。
+         * 获取该场景指定标识的实体。
+         * - 仅返回第一个符合条件的实体。
          */
         public findWithTag(tag: string) {
             for (const gameObject of this._gameObjects) {
@@ -243,7 +243,7 @@ namespace paper {
         }
         /**
          * 获取该场景指定标识的实体。
-         * - 返回全部符合的实体。
+         * - 返回符合条件的全部实体。
          */
         public findGameObjectsWithTag(tag: string) {
             const gameObjects: GameObject[] = [];
@@ -256,7 +256,7 @@ namespace paper {
             return gameObjects;
         }
         /**
-         * 该场景当前的全部根实体。
+         * 该场景全部根实体。
          */
         public getRootGameObjects() {
             const gameObjects: GameObject[] = [];
@@ -269,13 +269,13 @@ namespace paper {
             return gameObjects;
         }
         /**
-         * 该场景当前的实体总数。
+         * 该场景的实体总数。
          */
         public get gameObjectCount() {
             return this._gameObjects.length;
         }
         /**
-         * 该场景当前的全部实体。
+         * 该场景的全部实体。
          */
         @serializedField
         @deserializedIgnore
