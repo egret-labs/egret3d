@@ -260,11 +260,17 @@ namespace egret3d {
         }
         /**
          * 创建平面网格。
+         * @param width 宽度。
+         * @param height 高度。
+         * @param centerOffsetX 中心点偏移 X。
+         * @param centerOffsetY 中心点偏移 Y。
+         * @param widthSegments 宽度分段。
+         * @param heightSegments 高度分段。
          */
         public static createPlane(
             width: number = 1.0, height: number = 1.0,
             centerOffsetX: number = 0.0, centerOffsetY: number = 0.0,
-            widthSegments: number = 1, heightSegments: number = 1,
+            widthSegments: uint = 1, heightSegments: uint = 1,
         ) {
             const widthHalf = width / 2;
             const heightHalf = height / 2;
@@ -276,7 +282,7 @@ namespace egret3d {
             const segmentHeight = height / heightSegments;
 
             // buffers
-            const indices = [] as number[];
+            const indices = [] as uint[];
             const vertices = [] as number[];
             const normals = [] as number[];
             const uvs = [] as number[];
@@ -287,12 +293,11 @@ namespace egret3d {
 
                 for (let ix = 0; ix < gridX1; ix++) {
                     const x = ix * segmentWidth - widthHalf;
-
-                    vertices.push(centerOffsetX + x, centerOffsetY - y, 0.0);
+                    vertices.push(x + centerOffsetX, -y + centerOffsetY, 0.0);
                     normals.push(0.0, 0.0, 1.0);
                     uvs.push(
                         ix / widthSegments,
-                        iy / heightSegments
+                        iy / heightSegments,
                     );
                 }
             }
@@ -304,11 +309,13 @@ namespace egret3d {
                     const b = ix + gridX1 * (iy + 1);
                     const c = (ix + 1) + gridX1 * (iy + 1);
                     const d = (ix + 1) + gridX1 * iy;
-
                     // faces
+                    // a - d
+                    // | / |
+                    // b - c
                     indices.push(
-                        a, b, d,
-                        b, c, d
+                        a, d, b,
+                        b, d, c,
                     );
                 }
             }
@@ -332,6 +339,7 @@ namespace egret3d {
         ) {
             // helper variables
             let meshVertexCount = 0;
+            const vector3 = _helpVector3;
             // buffers
             const indices = [] as number[];
             const vertices = [] as number[];
@@ -390,24 +398,26 @@ namespace egret3d {
                         const x = ix * segmentWidth - widthHalf;
 
                         // set values to correct vector component
-                        _helpVector3[u] = x * udir;
-                        _helpVector3[v] = y * vdir;
-                        _helpVector3[w] = depthHalf;
+                        vector3[u] = x * udir;
+                        vector3[v] = y * vdir;
+                        vector3[w] = depthHalf;
 
                         // now apply vector to vertex buffer
-                        vertices.push(_helpVector3.x + centerOffsetX, _helpVector3.y + centerOffsetY, _helpVector3.z + centerOffsetZ);
+                        vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, vector3.z + centerOffsetZ);
 
                         // set values to correct vector component
-                        _helpVector3[u] = 0.0;
-                        _helpVector3[v] = 0.0;
-                        _helpVector3[w] = depth > 0.0 ? 1.0 : - 1.0;
+                        vector3[u] = 0.0;
+                        vector3[v] = 0.0;
+                        vector3[w] = depth > 0.0 ? 1.0 : - 1.0;
 
                         // now apply vector to normal buffer
-                        normals.push(_helpVector3.x, _helpVector3.y, _helpVector3.z);
+                        normals.push(vector3.x, vector3.y, vector3.z);
 
                         // uvs
-                        uvs.push(ix / gridX);
-                        uvs.push(iy / gridY);
+                        uvs.push(
+                            ix / gridX,
+                            iy / gridY,
+                        );
 
                         // counters
                         vertexCount += 1;
@@ -426,9 +436,12 @@ namespace egret3d {
                         const d = meshVertexCount + (ix + 1) + gridX1 * iy;
 
                         // faces
+                        // a - d
+                        // | / |
+                        // b - c
                         indices.push(
                             a, b, d,
-                            b, c, d
+                            b, c, d,
                         );
                     }
                 }
@@ -520,9 +533,9 @@ namespace egret3d {
                         vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, vector3.z + centerOffsetZ);
 
                         // normal
-                        // vertex.set(sinTheta, slope, cosTheta).normalize(); // Right-hand coordinates system.
-                        vector3.set(-sinTheta, -slope, -cosTheta).normalize(); // Left-hand coordinates system.
-                        normals.push(vector3.x, vector3.y, vector3.z);
+                        vector3.set(sinTheta, slope, cosTheta).normalize();
+                        // normals.push(vector3.x, vector3.y, vector3.z); // Right-hand coordinates system.
+                        normals.push(vector3.x, vector3.y, -vector3.z); // Left-hand coordinates system.
 
                         // uv
                         uvs.push(u, v);

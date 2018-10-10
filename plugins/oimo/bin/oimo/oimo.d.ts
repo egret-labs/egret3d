@@ -7847,9 +7847,9 @@ declare namespace egret3d.oimo {
         onAwake(): void;
         onAddGameObject(gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
         onAddComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup): void;
-        onUpdate(deltaTime: number): void;
         onRemoveComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup): void;
         onRemoveGameObject(gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
+        onUpdate(): void;
         onDestroy(): void;
         /**
          *

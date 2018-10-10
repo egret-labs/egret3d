@@ -265,7 +265,7 @@ declare namespace paper {
 }
 declare namespace paper {
     /**
-     * 可以被 paper.DisposeCollecter 收集，并在本帧末尾释放的基类。
+     * 可以被 paper.DisposeCollecter 收集，并在此帧末尾释放的基础对象。
      */
     abstract class BaseRelease<T extends BaseRelease<T>> {
         /**
@@ -274,12 +274,12 @@ declare namespace paper {
          */
         protected _released?: boolean;
         /**
-         * 在本帧末尾释放。
+         * 在此帧末尾释放该对象。
          * - 不能在静态解释阶段执行。
          */
         release(): this;
         /**
-         * 在本帧末尾释放时调用。
+         * 在此帧末尾释放时调用。
          */
         onClear?(): void;
     }
@@ -1147,7 +1147,6 @@ declare namespace gltf {
         _FOG_DENSITY = "_FOG_DENSITY",
         _FOG_NEAR = "_FOG_NEAR",
         _FOG_FAR = "_FOG_FAR",
-        _LOG_DEPTH_BUFFER = "_LOG_DEPTH_BUFFER",
     }
     const enum AccessorType {
         SCALAR = "SCALAR",
@@ -2305,7 +2304,7 @@ declare namespace paper {
          */
         static readonly onMaterialsChanged: signals.Signal;
         /**
-         * 是否开启视锥剔除。
+         * 该组件是否开启视锥剔除。
          */
         frustumCulled: boolean;
         protected _receiveShadows: boolean;
@@ -3376,8 +3375,12 @@ declare namespace paper {
         readonly unscaledDeltaTime: number;
     }
     /**
+     * 全局时钟信息组件实例。
+     */
+    let clock: Clock;
+    /**
      * @deprecated
-     * 请使用 gameObject.getComponent(Clock)!;
+     * @see paper.clock
      */
     let Time: Clock;
 }
@@ -3897,6 +3900,9 @@ declare namespace egret3d {
      * 全局舞台信息组件。
      */
     class Stage extends paper.SingletonComponent {
+        /**
+         * 当舞台或屏幕尺寸的改变时派发事件。
+         */
         static onResize: signals.Signal;
         /**
          * 是否允许因屏幕尺寸的改变而旋转舞台。
@@ -3939,7 +3945,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 提供默认的几何网格，以及创建几何网格的方式。
+     * 提供默认的几何网格资源，以及创建几何网格或几何网格实体的方式。
      */
     class DefaultMeshes extends paper.SingletonComponent {
         static QUAD: Mesh;
@@ -3958,13 +3964,23 @@ declare namespace egret3d {
         static CUBE_LINE: Mesh;
         initialize(): void;
         /**
-         * 创建带网格的实体。
+         * 创建带有指定网格资源的实体。
+         * @param mesh 网格资源。
+         * @param name 实体的名称。
+         * @param tag 实体的标识。
+         * @param scene 实体的场景。
          */
         static createObject(mesh: Mesh, name?: string, tag?: string, scene?: paper.Scene): paper.GameObject;
         /**
          * 创建平面网格。
+         * @param width 宽度。
+         * @param height 高度。
+         * @param centerOffsetX 中心点偏移 X。
+         * @param centerOffsetY 中心点偏移 Y。
+         * @param widthSegments 宽度分段。
+         * @param heightSegments 高度分段。
          */
-        static createPlane(width?: number, height?: number, centerOffsetX?: number, centerOffsetY?: number, widthSegments?: number, heightSegments?: number): Mesh;
+        static createPlane(width?: number, height?: number, centerOffsetX?: number, centerOffsetY?: number, widthSegments?: uint, heightSegments?: uint): Mesh;
         /**
          * 创建立方体网格。
          */
@@ -4037,10 +4053,11 @@ declare namespace egret3d {
         static TRANSPARENT_MULTIPLY_DOUBLESIDE: Shader;
         static PARTICLE: Shader;
         static PARTICLE_BLEND: Shader;
-        static PARTICLE_BLEND1: Shader;
         static PARTICLE_ADDITIVE: Shader;
+        static PARTICLE_MULTIPLY: Shader;
         static PARTICLE_BLEND_PREMULTIPLY: Shader;
         static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
+        static PARTICLE_MULTIPLY_PREMULTIPLY: Shader;
         static CUBE: Shader;
         static DEPTH: Shader;
         static DISTANCE_RGBA: Shader;
@@ -4117,7 +4134,8 @@ declare namespace egret3d {
     class DrawCall extends paper.BaseRelease<DrawCall> {
         private static _instances;
         /**
-         * 创建一个绘制信息实例。
+         * 创建一个绘制信息。
+         * - 只有在扩展渲染系统时才需要使用此方法。
          */
         static create(): DrawCall;
         /**
@@ -4416,7 +4434,7 @@ declare namespace egret3d {
          */
         readonly upKeys: Key[];
         /**
-         *
+         * 默认的 Pointer 实例。
          */
         readonly defaultPointer: Pointer;
         private readonly _pointers;
@@ -4435,7 +4453,7 @@ declare namespace egret3d {
          */
         getKey(code: string): Key;
         /**
-         * 最大可支持的多点触摸数量。
+         * 设备最大可支持的多点触摸数量。
          */
         readonly maxTouchPoints: uint;
     }
@@ -6186,7 +6204,6 @@ declare namespace egret3d {
         floatTextures: boolean;
         anisotropyExt: EXT_texture_filter_anisotropic;
         shaderTextureLOD: any;
-        fragDepth: any;
         maxAnisotropy: number;
         maxRenderTextureSize: number;
         standardDerivatives: boolean;
@@ -6880,7 +6897,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "opacity": {
                             "type": number;
@@ -7286,7 +7302,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "linewidth": {
                             "type": number;
@@ -7451,7 +7466,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -7621,7 +7635,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -7870,7 +7883,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -8115,7 +8127,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -8411,7 +8422,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -8700,7 +8710,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "opacity": {
                             "type": number;
@@ -9152,7 +9161,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -9493,7 +9501,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;

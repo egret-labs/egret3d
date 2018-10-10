@@ -64,7 +64,7 @@ namespace egret3d.oimo {
             if (raycastInfo) {
                 this._hitted = true;
                 const inverseMatrix = matrix.clone().inverse();
-                const v = raycastInfo.normal.applyMatrix(inverseMatrix).multiplyScalar(1.0);
+                const v = raycastInfo.normal!.applyMatrix(inverseMatrix).multiplyScalar(1.0);
                 const vertices = this._mesh.getVertices()!;
                 const colors = this._mesh.getColors()!;
                 inverseMatrix.release();
