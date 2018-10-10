@@ -1147,6 +1147,7 @@ declare namespace gltf {
         _FOG_DENSITY = "_FOG_DENSITY",
         _FOG_NEAR = "_FOG_NEAR",
         _FOG_FAR = "_FOG_FAR",
+        _LOG_DEPTH_BUFFER = "_LOG_DEPTH_BUFFER",
     }
     const enum AccessorType {
         SCALAR = "SCALAR",
@@ -4032,6 +4033,8 @@ declare namespace egret3d {
         static TRANSPARENT_DOUBLESIDE: Shader;
         static TRANSPARENT_ADDITIVE: Shader;
         static TRANSPARENT_ADDITIVE_DOUBLESIDE: Shader;
+        static TRANSPARENT_MULTIPLY: Shader;
+        static TRANSPARENT_MULTIPLY_DOUBLESIDE: Shader;
         static PARTICLE: Shader;
         static PARTICLE_BLEND: Shader;
         static PARTICLE_BLEND1: Shader;
@@ -6183,6 +6186,7 @@ declare namespace egret3d {
         floatTextures: boolean;
         anisotropyExt: EXT_texture_filter_anisotropic;
         shaderTextureLOD: any;
+        fragDepth: any;
         maxAnisotropy: number;
         maxRenderTextureSize: number;
         standardDerivatives: boolean;
@@ -6876,6 +6880,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
+                            "semantic": string;
                         };
                         "opacity": {
                             "type": number;
@@ -7281,6 +7286,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
+                            "semantic": string;
                         };
                         "linewidth": {
                             "type": number;
@@ -7445,6 +7451,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
+                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -7614,6 +7621,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
+                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -7862,6 +7870,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
+                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -8106,6 +8115,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
+                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -8401,6 +8411,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
+                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -8689,6 +8700,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
+                            "semantic": string;
                         };
                         "opacity": {
                             "type": number;
@@ -9140,6 +9152,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
+                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -9480,6 +9493,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
+                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
