@@ -20,6 +20,8 @@ namespace egret3d {
         public static TRANSPARENT_DOUBLESIDE: Shader;
         public static TRANSPARENT_ADDITIVE: Shader;
         public static TRANSPARENT_ADDITIVE_DOUBLESIDE: Shader;
+        public static TRANSPARENT_MULTIPLY:Shader;
+        public static TRANSPARENT_MULTIPLY_DOUBLESIDE:Shader;
 
         public static PARTICLE: Shader;
         public static PARTICLE_BLEND: Shader;
@@ -102,6 +104,13 @@ namespace egret3d {
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add);
             DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
+
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK).setBlend(gltf.BlendMode.Multiply);
+            DefaultShaders.TRANSPARENT_MULTIPLY = this._createShader("builtin/transparent_multiply.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
+
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply);
+            DefaultShaders.TRANSPARENT_MULTIPLY_DOUBLESIDE = this._createShader("builtin/transparent_multiply_doubleside.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
+
 
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
             DefaultShaders.LINEDASHED = this._createShader("builtin/linedashed.shader.json", egret3d.ShaderLib.linedashed as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);

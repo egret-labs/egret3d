@@ -108,7 +108,7 @@ namespace egret3d {
         public renderTarget: BaseRenderTarget | null = null;
 
         @paper.serializedField
-        private _near: number = 0.001;
+        private _near: number = 0.3;
         @paper.serializedField
         private _far: number = 1000.0;
         private readonly _projectionMatrix: Matrix4 = Matrix4.create();
@@ -365,17 +365,17 @@ namespace egret3d {
         /**
          * 相机到近裁剪面距离。
          */
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.001, step: 1 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, step: 1 })
         public get near(): number {
             return this._near;
         }
         public set near(value: number) {
             if (value >= this.far) {
-                value = this.far - 1.0;
+                value = this.far - 0.01;
             }
 
-            if (value < 0.001) {
-                value = 0.001;
+            if (value < 0.01) {
+                value = 0.01;
             }
 
             this._near = value;
@@ -383,13 +383,13 @@ namespace egret3d {
         /**
          * 相机到远裁剪面距离。
          */
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 3000.0, step: 1 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.02, maximum: 3000.0, step: 1 })
         public get far(): number {
             return this._far;
         }
         public set far(value: number) {
             if (value <= this.near) {
-                value = this.near + 1.0;
+                value = this.near + 0.01;
             }
 
             if (value >= 10000.0) {
