@@ -5,7 +5,8 @@ namespace egret3d {
     export class DrawCall extends paper.BaseRelease<DrawCall> {
         private static _instances = [] as DrawCall[];
         /**
-         * 创建一个绘制信息实例。
+         * 创建一个绘制信息。
+         * - 只有在扩展渲染系统时才需要使用此方法。
          */
         public static create() {
             if (this._instances.length > 0) {

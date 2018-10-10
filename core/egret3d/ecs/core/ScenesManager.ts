@@ -24,7 +24,7 @@ namespace paper {
         /**
          * @internal
          */
-        public _addScene(scene: Scene, isActive: boolean) {
+        public addScene(scene: Scene, isActive: boolean) {
             if (this._scenes.indexOf(scene) >= 0) {
                 console.warn("Add the scene again.", scene.name);
             }
@@ -39,7 +39,7 @@ namespace paper {
         /**
          * @internal
          */
-        public _removeScene(scene: Scene) {
+        public removeScene(scene: Scene) {
             if (
                 scene === this._globalScene ||
                 scene === this._editorScene
@@ -87,14 +87,13 @@ namespace paper {
             return null;
         }
         /**
-         * 程序已创建的全部场景。
-         * - 不包含全局场景。
+         * 程序已创建的全部动态场景。
          */
         public get scenes(): ReadonlyArray<Scene> {
             return this._scenes;
         }
         /**
-         * 全局场景。
+         * 全局静态的场景。
          * - 全局场景无法被销毁。
          */
         public get globalScene() {
@@ -106,7 +105,18 @@ namespace paper {
             return this._globalScene;
         }
         /**
-         * 当前程序激活的场景。
+         * 全局静态编辑器的场景。
+         */
+        public get editorScene() {
+            if (!this._editorScene) {
+                this._editorScene = Scene.createEmpty(DefaultNames.EditorOnly, false);
+                this._scenes.pop(); // Remove editor scene from scenes.
+            }
+
+            return this._editorScene;
+        }
+        /**
+         * 当前激活的场景。
          */
         public get activeScene() {
             if (this._scenes.length === 0) {
@@ -133,17 +143,6 @@ namespace paper {
 
             this._scenes.splice(index, 1);
             this._scenes.unshift(value);
-        }
-        /**
-         * 
-         */
-        public get editorScene() {
-            if (!this._editorScene) {
-                this._editorScene = Scene.createEmpty(DefaultNames.EditorOnly, false);
-                this._scenes.pop(); // Remove editor scene from scenes.
-            }
-
-            return this._editorScene;
         }
 
         /**

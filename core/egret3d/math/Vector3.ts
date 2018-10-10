@@ -66,7 +66,7 @@ namespace egret3d {
 
         private static readonly _instances: Vector3[] = [];
         /**
-         * 创建一个三维向量实例。
+         * 创建一个三维向量。
          * @param x X 轴分量。
          * @param y Y 轴分量。
          * @param z Z 轴分量。
@@ -133,6 +133,14 @@ namespace egret3d {
             return this;
         }
 
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+            this.x = value[offset];
+            this.y = value[offset + 1];
+            this.z = value[offset + 2];
+
+            return this;
+        }
+
         public equal(value: Readonly<IVector3>, threshold: number = 0.000001) {
             if (Math.abs(this.x - value.x) > threshold) {
                 return false;
@@ -147,14 +155,6 @@ namespace egret3d {
             }
 
             return true;
-        }
-
-        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
-            this.x = value[offset];
-            this.y = value[offset + 1];
-            this.z = value[offset + 2];
-
-            return this;
         }
 
         public fromPlaneProjection(plane: Readonly<Plane>, source?: Readonly<IVector3>) {

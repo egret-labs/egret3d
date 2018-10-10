@@ -7,7 +7,7 @@ namespace paper {
     const KEY_EXTRAS: keyof GameObject = "extras";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
 
-    function _getDeserializedKeys(serializedClass: BaseClass, keys: { [key: string]: string } | null = null) {
+    function _getDeserializedKeys(serializedClass: IBaseClass, keys: { [key: string]: string } | null = null) {
         const serializeKeys = serializedClass.__serializeKeys;
         if (serializeKeys) {
             keys = keys || {};
@@ -27,7 +27,7 @@ namespace paper {
         return keys;
     }
 
-    function _getDeserializedIgnoreKeys(serializedClass: BaseClass, keys: string[] | null = null) {
+    function _getDeserializedIgnoreKeys(serializedClass: IBaseClass, keys: string[] | null = null) {
         if (serializedClass.__deserializeIgnore) {
             keys = keys || [];
 
@@ -69,8 +69,8 @@ namespace paper {
         private _rootTarget: Scene | GameObject | null = null;
 
         private _deserializeObject(source: ISerializedObject, target: BaseObject) {
-            const deserializedKeys = _getDeserializedKeys(<any>target.constructor as BaseClass);
-            const deserializedIgnoreKeys = _getDeserializedIgnoreKeys(<any>target.constructor as BaseClass);
+            const deserializedKeys = _getDeserializedKeys(<any>target.constructor as IBaseClass);
+            const deserializedIgnoreKeys = _getDeserializedIgnoreKeys(<any>target.constructor as IBaseClass);
 
             for (const k in source) {
                 if (k === KEY_CLASS) {

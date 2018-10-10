@@ -585,13 +585,13 @@ var paper;
         return (_hashCount++).toString();
     };
     /**
-     * 可以被 paper.DisposeCollecter 收集，并在本帧末尾释放的基类。
+     * 可以被 paper.DisposeCollecter 收集，并在此帧末尾释放的基础对象。
      */
     var BaseRelease = (function () {
         function BaseRelease() {
         }
         /**
-         * 在本帧末尾释放。
+         * 在此帧末尾释放该对象。
          * - 不能在静态解释阶段执行。
          */
         BaseRelease.prototype.release = function () {
@@ -826,6 +826,10 @@ var paper;
             EditType[EditType["SHADER"] = 19] = "SHADER";
             /**数组 */
             EditType[EditType["ARRAY"] = 20] = "ARRAY";
+            /**
+             *
+             */
+            EditType[EditType["NESTED"] = 21] = "NESTED";
         })(EditType = editor.EditType || (editor.EditType = {}));
         var customMap = {};
         /**
@@ -938,7 +942,7 @@ var egret3d;
             return _this;
         }
         /**
-         * 创建一个三维向量实例。
+         * 创建一个三维向量。
          * @param x X 轴分量。
          * @param y Y 轴分量。
          * @param z Z 轴分量。
@@ -972,6 +976,13 @@ var egret3d;
             this.z = z;
             return this;
         };
+        Vector3.prototype.fromArray = function (value, offset) {
+            if (offset === void 0) { offset = 0; }
+            this.x = value[offset];
+            this.y = value[offset + 1];
+            this.z = value[offset + 2];
+            return this;
+        };
         Vector3.prototype.equal = function (value, threshold) {
             if (threshold === void 0) { threshold = 0.000001; }
             if (Math.abs(this.x - value.x) > threshold) {
@@ -984,13 +995,6 @@ var egret3d;
                 return false;
             }
             return true;
-        };
-        Vector3.prototype.fromArray = function (value, offset) {
-            if (offset === void 0) { offset = 0; }
-            this.x = value[offset];
-            this.y = value[offset + 1];
-            this.z = value[offset + 2];
-            return this;
         };
         Vector3.prototype.fromPlaneProjection = function (plane, source) {
             if (!source) {
@@ -1527,10 +1531,16 @@ var paper;
      */
     var Asset = (function (_super) {
         __extends(Asset, _super);
+        /**
+         * TODO
+         * remove
+         * @param name
+         */
         function Asset(name) {
             if (name === void 0) { name = ""; }
             var _this = _super.call(this) || this;
             /**
+             * 资源名称。
              * @readonly
              */
             _this.name = "";
@@ -1586,6 +1596,7 @@ var paper;
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
+    var _createEnabled = null;
     /**
      * 基础组件。
      * - 所有组件的基类。
@@ -1593,7 +1604,7 @@ var paper;
     var BaseComponent = (function (_super) {
         __extends(BaseComponent, _super);
         /**
-         * 禁止实例化组件。
+         * 禁止实例化。
          * @protected
          */
         function BaseComponent() {
@@ -1607,11 +1618,11 @@ var paper;
              */
             _this.extras = paper.Application.playerMode === 2 /* Editor */ ? {} : undefined;
             _this._enabled = true;
-            if (!BaseComponent._createEnabled) {
+            if (!_createEnabled) {
                 throw new Error("Component instantiation through constructor is not allowed.");
             }
-            _this.gameObject = BaseComponent._createEnabled;
-            BaseComponent._createEnabled = null;
+            _this.gameObject = _createEnabled;
+            _createEnabled = null;
             return _this;
         }
         /**
@@ -1631,6 +1642,8 @@ var paper;
             else {
                 this.requireComponents = [];
             }
+            this.onComponentEnabled = new signals.Signal();
+            this.onComponentDisabled = new signals.Signal();
             if (this.__isSingleton) {
                 this.__index = this._allSingletonComponents.length + 300; // This means that a maximum of 300 non-singleton components can be added.
                 this._allSingletonComponents.push(this);
@@ -1645,8 +1658,20 @@ var paper;
          * @internal
          */
         BaseComponent.create = function (componentClass, gameObject) {
-            this._createEnabled = gameObject;
+            _createEnabled = gameObject;
             return new componentClass();
+        };
+        /**
+         * @internal
+         */
+        BaseComponent.prototype._dispatchEnabledEvent = function (value) {
+            var componentClass = this.constructor;
+            if (value) {
+                componentClass.onComponentEnabled.dispatch(this);
+            }
+            else {
+                componentClass.onComponentDisabled.dispatch(this);
+            }
         };
         /**
          * 添加组件后，组件内部初始化时执行。
@@ -1654,6 +1679,8 @@ var paper;
          * @param config 实体添加该组件时可以传递的初始化数据。
          */
         BaseComponent.prototype.initialize = function (config) {
+            if (config) {
+            }
         };
         /**
          * 移除组件后，组件内部卸载时执行。
@@ -1690,12 +1717,7 @@ var paper;
                 this._enabled = value;
                 var currentEnabled = this.isActiveAndEnabled;
                 if (currentEnabled !== prevEnabled) {
-                    if (currentEnabled) {
-                        BaseComponent.onComponentEnabled.dispatch(this);
-                    }
-                    else {
-                        BaseComponent.onComponentDisabled.dispatch(this);
-                    }
+                    this._dispatchEnabledEvent(currentEnabled);
                 }
             },
             enumerable: true,
@@ -1714,36 +1736,48 @@ var paper;
         });
         /**
          * 该组件的实例是否在编辑模式拥有生命周期。
+         * @internal
          */
         BaseComponent.executeInEditMode = false;
         /**
          * 是否允许在同一实体上添加多个该组件的实例。
+         * @internal
          */
         BaseComponent.allowMultiple = false;
         /**
          * 该组件实例依赖的其他前置组件。
+         * @internal
          */
         BaseComponent.requireComponents = null;
         /**
-         *
+         * 当该组件被激活时派发事件。
+         * @internal
          */
-        BaseComponent.onComponentEnabled = new signals.Signal();
+        BaseComponent.onComponentEnabled = null;
         /**
-         *
+         * 当该组件被禁用时派发事件。
+         * @internal
          */
-        BaseComponent.onComponentDisabled = new signals.Signal();
+        BaseComponent.onComponentDisabled = null;
         // TODO 基类标记，以阻止注册基类。
         /**
+         * 该组件实例是否为单例组件。
          * @internal
          */
         BaseComponent.__isSingleton = false;
         /**
+         * 该组件实例索引。
          * @internal
          */
         BaseComponent.__index = -1;
+        /**
+         * 所有已注册的组件类。
+         */
         BaseComponent._allComponents = [];
+        /**
+         * 所有已注册的单例组件类。
+         */
         BaseComponent._allSingletonComponents = [];
-        BaseComponent._createEnabled = null;
         __decorate([
             paper.serializedField
         ], BaseComponent.prototype, "extras", void 0);
@@ -2933,11 +2967,12 @@ var egret3d;
 var paper;
 (function (paper) {
     /**
-     *
+     * 基础预制体资源。
+     * - 预制体资源和场景资源的基类。
      */
-    var BaseObjectAsset = (function (_super) {
-        __extends(BaseObjectAsset, _super);
-        function BaseObjectAsset() {
+    var BasePrefabAsset = (function (_super) {
+        __extends(BasePrefabAsset, _super);
+        function BasePrefabAsset() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this._raw = null;
             return _this;
@@ -2945,59 +2980,84 @@ var paper;
         /**
          * @internal
          */
-        BaseObjectAsset.prototype.$parse = function (json) {
+        BasePrefabAsset.prototype.parse = function (json) {
             this._raw = json;
         };
-        BaseObjectAsset.prototype.dispose = function () {
+        BasePrefabAsset.prototype.dispose = function () {
             if (!_super.prototype.dispose.call(this)) {
                 return false;
             }
             this._raw = null;
             return true;
         };
-        BaseObjectAsset.prototype.caclByteLength = function () {
+        BasePrefabAsset.prototype.caclByteLength = function () {
             return 0;
         };
-        return BaseObjectAsset;
+        return BasePrefabAsset;
     }(paper.Asset));
-    paper.BaseObjectAsset = BaseObjectAsset;
-    __reflect(BaseObjectAsset.prototype, "paper.BaseObjectAsset");
+    paper.BasePrefabAsset = BasePrefabAsset;
+    __reflect(BasePrefabAsset.prototype, "paper.BasePrefabAsset");
     /**
-     * scene asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     * 预制体资源。
      */
-    /**
-     * 场景数据资源
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var RawScene = (function (_super) {
-        __extends(RawScene, _super);
-        function RawScene() {
+    var Prefab = (function (_super) {
+        __extends(Prefab, _super);
+        function Prefab() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
+        Prefab.create = function (name, xOrScene, y, z, scene) {
+            var prefab = paper.Asset.find(name);
+            if (prefab && prefab instanceof Prefab) {
+                if (xOrScene !== undefined && xOrScene !== null) {
+                    if (xOrScene instanceof paper.Scene) {
+                        var gameObject = prefab.createInstance(xOrScene);
+                        if (gameObject) {
+                            gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
+                        }
+                        return gameObject;
+                    }
+                    else {
+                        var gameObject = prefab.createInstance(scene || null);
+                        if (gameObject) {
+                            gameObject.transform.setLocalPosition(xOrScene, y, z);
+                        }
+                        return gameObject;
+                    }
+                }
+                else {
+                    var gameObject = prefab.createInstance();
+                    if (gameObject) {
+                        gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
+                    }
+                    return gameObject;
+                }
+            }
+            else {
+                console.warn("The prefab don't exists.", name);
+            }
+            return null;
+        };
         /**
-         * @internal
+         * @deprecated
          */
-        RawScene.prototype.createInstance = function (keepUUID) {
-            if (keepUUID === void 0) { keepUUID = false; }
+        Prefab.prototype.createInstance = function (scene, keepUUID) {
             if (!this._raw) {
                 return null;
             }
             var isEditor = paper.Application.playerMode === 2 /* Editor */;
             var deserializer = new paper.Deserializer();
-            var scene = deserializer.deserialize(this._raw, keepUUID);
-            if (scene && isEditor) {
+            var gameObject = deserializer.deserialize(this._raw, keepUUID, isEditor, scene);
+            if (gameObject && isEditor) {
+                if (!gameObject.extras.prefab) {
+                    gameObject.extras.prefab = this;
+                }
             }
-            return scene;
+            return gameObject;
         };
-        return RawScene;
-    }(BaseObjectAsset));
-    paper.RawScene = RawScene;
-    __reflect(RawScene.prototype, "paper.RawScene");
+        return Prefab;
+    }(BasePrefabAsset));
+    paper.Prefab = Prefab;
+    __reflect(Prefab.prototype, "paper.Prefab");
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
@@ -3191,7 +3251,7 @@ var paper;
         function BaseRenderer() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
-             * 是否开启视锥剔除。
+             * 该组件是否开启视锥剔除。
              */
             _this.frustumCulled = true;
             /**
@@ -4769,6 +4829,7 @@ var egret3d;
             this.x = (x * ratioA + this.x * ratioB);
             this.y = (y * ratioA + this.y * ratioB);
             this.z = (z * ratioA + this.z * ratioB);
+            return this;
         };
         /**
          *
@@ -4802,66 +4863,32 @@ var egret3d;
 var paper;
 (function (paper) {
     /**
-     * 预制体资源。
+     * 场景资源。
      */
-    var Prefab = (function (_super) {
-        __extends(Prefab, _super);
-        function Prefab() {
+    var RawScene = (function (_super) {
+        __extends(RawScene, _super);
+        function RawScene() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        Prefab.create = function (name, xOrScene, y, z, scene) {
-            var prefab = paper.Asset.find(name);
-            if (prefab && prefab instanceof Prefab) {
-                if (xOrScene !== undefined && xOrScene !== null) {
-                    if (xOrScene instanceof paper.Scene) {
-                        var gameObject = prefab.createInstance(xOrScene);
-                        if (gameObject) {
-                            gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
-                        }
-                        return gameObject;
-                    }
-                    else {
-                        var gameObject = prefab.createInstance(scene || null);
-                        if (gameObject) {
-                            gameObject.transform.setLocalPosition(xOrScene, y, z);
-                        }
-                        return gameObject;
-                    }
-                }
-                else {
-                    var gameObject = prefab.createInstance();
-                    if (gameObject) {
-                        gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
-                    }
-                    return gameObject;
-                }
-            }
-            else {
-                console.warn("The prefab don't exists.", name);
-            }
-            return null;
-        };
         /**
-         * @deprecated
+         * @internal
          */
-        Prefab.prototype.createInstance = function (scene, keepUUID) {
+        RawScene.prototype.createInstance = function (keepUUID) {
+            if (keepUUID === void 0) { keepUUID = false; }
             if (!this._raw) {
                 return null;
             }
             var isEditor = paper.Application.playerMode === 2 /* Editor */;
             var deserializer = new paper.Deserializer();
-            var gameObject = deserializer.deserialize(this._raw, keepUUID, isEditor, scene);
-            if (gameObject && isEditor) {
-                if (!gameObject.extras.prefab) {
-                    gameObject.extras.prefab = this;
-                }
+            var scene = deserializer.deserialize(this._raw, keepUUID);
+            if (scene && isEditor) {
             }
-            return gameObject;
+            return scene;
         };
-        return Prefab;
-    }(paper.BaseObjectAsset));
-    paper.Prefab = Prefab;
-    __reflect(Prefab.prototype, "paper.Prefab");
+        return RawScene;
+    }(paper.BasePrefabAsset));
+    paper.RawScene = RawScene;
+    __reflect(RawScene.prototype, "paper.RawScene");
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
@@ -5061,15 +5088,15 @@ var paper;
             var index = -1;
             var systemCount = this._systems.length;
             if (systemCount > 0) {
-                if (order < this._systems[0]._order) {
+                if (order < this._systems[0].order) {
                     return 0;
                 }
-                else if (order >= this._systems[systemCount - 1]._order) {
+                else if (order >= this._systems[systemCount - 1].order) {
                     return systemCount;
                 }
             }
             for (var i = 0; i < systemCount - 1; ++i) {
-                if (this._systems[i]._order <= order && order < this._systems[i + 1]._order) {
+                if (this._systems[i].order <= order && order < this._systems[i + 1].order) {
                     index = i + 1;
                     break;
                 }
@@ -5085,6 +5112,7 @@ var paper;
             return system;
         };
         /**
+         * TODO
          * @internal
          */
         SystemManager.prototype._preRegisterSystems = function () {
@@ -5098,7 +5126,7 @@ var paper;
         /**
          * @internal
          */
-        SystemManager.prototype._update = function () {
+        SystemManager.prototype.update = function () {
             for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                 var system = _a[_i];
                 if (system && system.enabled && !system._started) {
@@ -5109,13 +5137,13 @@ var paper;
             for (var _b = 0, _c = this._systems; _b < _c.length; _b++) {
                 var system = _c[_b];
                 if (system) {
-                    system._update();
+                    system.update();
                 }
             }
             for (var _d = 0, _e = this._systems; _d < _e.length; _d++) {
                 var system = _e[_d];
                 if (system) {
-                    system._lateUpdate();
+                    system.lateUpdate();
                 }
             }
         };
@@ -5142,7 +5170,7 @@ var paper;
             }
             system = paper.BaseSystem.create(systemClass, order);
             this._systems.splice(this._getSystemInsertIndex(order), 0, system);
-            system._initialize(config);
+            system.initialize(config);
             return system;
         };
         /**
@@ -5207,7 +5235,7 @@ var paper;
         /**
          * @internal
          */
-        SceneManager.prototype._addScene = function (scene, isActive) {
+        SceneManager.prototype.addScene = function (scene, isActive) {
             if (this._scenes.indexOf(scene) >= 0) {
                 console.warn("Add the scene again.", scene.name);
             }
@@ -5221,7 +5249,7 @@ var paper;
         /**
          * @internal
          */
-        SceneManager.prototype._removeScene = function (scene) {
+        SceneManager.prototype.removeScene = function (scene) {
             if (scene === this._globalScene ||
                 scene === this._editorScene) {
                 console.warn("Cannot dispose global scene.");
@@ -5263,8 +5291,7 @@ var paper;
         };
         Object.defineProperty(SceneManager.prototype, "scenes", {
             /**
-             * 程序已创建的全部场景。
-             * - 不包含全局场景。
+             * 程序已创建的全部动态场景。
              */
             get: function () {
                 return this._scenes;
@@ -5274,7 +5301,7 @@ var paper;
         });
         Object.defineProperty(SceneManager.prototype, "globalScene", {
             /**
-             * 全局场景。
+             * 全局静态的场景。
              * - 全局场景无法被销毁。
              */
             get: function () {
@@ -5287,9 +5314,23 @@ var paper;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(SceneManager.prototype, "editorScene", {
+            /**
+             * 全局静态编辑器的场景。
+             */
+            get: function () {
+                if (!this._editorScene) {
+                    this._editorScene = paper.Scene.createEmpty("Editor Only" /* EditorOnly */, false);
+                    this._scenes.pop(); // Remove editor scene from scenes.
+                }
+                return this._editorScene;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(SceneManager.prototype, "activeScene", {
             /**
-             * 当前程序激活的场景。
+             * 当前激活的场景。
              */
             get: function () {
                 if (this._scenes.length === 0) {
@@ -5310,20 +5351,6 @@ var paper;
                 }
                 this._scenes.splice(index, 1);
                 this._scenes.unshift(value);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(SceneManager.prototype, "editorScene", {
-            /**
-             *
-             */
-            get: function () {
-                if (!this._editorScene) {
-                    this._editorScene = paper.Scene.createEmpty("Editor Only" /* EditorOnly */, false);
-                    this._scenes.pop(); // Remove editor scene from scenes.
-                }
-                return this._editorScene;
             },
             enumerable: true,
             configurable: true
@@ -5609,6 +5636,7 @@ var paper;
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
+    var _createEnabled = false;
     /**
      * 基础系统。
      * - 全部系统的基类。
@@ -5618,11 +5646,12 @@ var paper;
          * 禁止实例化系统。
          * @protected
          */
-        function BaseSystem() {
+        function BaseSystem(order) {
+            if (order === void 0) { order = -1; }
             /**
-             * @internal
+             *
              */
-            this._order = -1;
+            this.order = -1;
             /**
              * @internal
              */
@@ -5644,28 +5673,24 @@ var paper;
              * 全局时钟信息组件实例。
              */
             this._clock = paper.GameObject.globalGameObject.getOrAddComponent(paper.Clock);
-            if (!BaseSystem._createEnabled) {
+            if (!_createEnabled) {
                 throw new Error("Create an instance of a system is not allowed.");
             }
-            BaseSystem._createEnabled = false;
+            _createEnabled = false;
+            this.order = order;
         }
         /**
          * @internal
          */
         BaseSystem.create = function (systemClass, order) {
-            if (order === void 0) { order = 4000 /* Update */; }
-            this._createEnabled = true;
-            var system = new systemClass();
-            if (system._order < 0) {
-                system._order = order;
-            }
-            return system;
+            _createEnabled = true;
+            return new systemClass(order);
         };
         /**
          * 系统内部初始化。
          * @internal
          */
-        BaseSystem.prototype._initialize = function (config) {
+        BaseSystem.prototype.initialize = function (config) {
             if (this._interests.length > 0) {
                 var interests = void 0;
                 if (Array.isArray(this._interests[0])) {
@@ -5695,7 +5720,7 @@ var paper;
          * 系统内部卸载。
          * @internal
          */
-        BaseSystem.prototype._uninitialize = function () {
+        BaseSystem.prototype.uninitialize = function () {
             this.onDestroy && this.onDestroy();
             if (this._interests.length > 0) {
                 var interests = void 0;
@@ -5723,7 +5748,7 @@ var paper;
          * 系统内部更新。
          * @internal
          */
-        BaseSystem.prototype._update = function () {
+        BaseSystem.prototype.update = function () {
             if (!this._enabled) {
                 return;
             }
@@ -5754,7 +5779,7 @@ var paper;
          * 系统内部更新。
          * @internal
          */
-        BaseSystem.prototype._lateUpdate = function () {
+        BaseSystem.prototype.lateUpdate = function () {
             if (!this._enabled) {
                 return;
             }
@@ -5798,7 +5823,6 @@ var paper;
             enumerable: true,
             configurable: true
         });
-        BaseSystem._createEnabled = false;
         return BaseSystem;
     }());
     paper.BaseSystem = BaseSystem;
@@ -5894,224 +5918,484 @@ var egret3d;
 (function (egret3d) {
     var particle;
     (function (particle) {
-        var _helpMatrix = egret3d.Matrix4.create();
         /**
-         * 粒子渲染模式。
+         *
          */
-        var ParticleRenderMode;
-        (function (ParticleRenderMode) {
-            ParticleRenderMode[ParticleRenderMode["Billboard"] = 0] = "Billboard";
-            ParticleRenderMode[ParticleRenderMode["Stretch"] = 1] = "Stretch";
-            ParticleRenderMode[ParticleRenderMode["HorizontalBillboard"] = 2] = "HorizontalBillboard";
-            ParticleRenderMode[ParticleRenderMode["VerticalBillboard"] = 3] = "VerticalBillboard";
-            ParticleRenderMode[ParticleRenderMode["Mesh"] = 4] = "Mesh";
-            ParticleRenderMode[ParticleRenderMode["None"] = 5] = "None";
-        })(ParticleRenderMode = particle.ParticleRenderMode || (particle.ParticleRenderMode = {}));
-        /**
-         * 粒子着色器的变量名。
-         * @internal
-         */
-        var ParticleMaterialUniform;
-        (function (ParticleMaterialUniform) {
-            ParticleMaterialUniform["WORLD_POSITION"] = "u_worldPosition";
-            ParticleMaterialUniform["WORLD_ROTATION"] = "u_worldRotation";
-            ParticleMaterialUniform["POSITION_SCALE"] = "u_positionScale";
-            ParticleMaterialUniform["SIZE_SCALE"] = "u_sizeScale";
-            ParticleMaterialUniform["SCALING_MODE"] = "u_scalingMode";
-            ParticleMaterialUniform["GRAVIT"] = "u_gravity";
-            ParticleMaterialUniform["START_ROTATION3D"] = "u_startRotation3D";
-            ParticleMaterialUniform["SIMULATION_SPACE"] = "u_simulationSpace";
-            ParticleMaterialUniform["CURRENTTIME"] = "u_currentTime";
-            ParticleMaterialUniform["ALPHAS_GRADIENT"] = "u_alphaGradient[0]";
-            ParticleMaterialUniform["COLOR_GRADIENT"] = "u_colorGradient[0]";
-            ParticleMaterialUniform["ALPHA_GRADIENT_MAX"] = "u_alphaGradientMax[0]";
-            ParticleMaterialUniform["COLOR_GRADIENT_MAX"] = "u_colorGradientMax[0]";
-            ParticleMaterialUniform["VELOCITY_CONST"] = "u_velocityConst";
-            ParticleMaterialUniform["VELOCITY_CURVE_X"] = "u_velocityCurveX[0]";
-            ParticleMaterialUniform["VELOCITY_CURVE_Y"] = "u_velocityCurveY[0]";
-            ParticleMaterialUniform["VELOCITY_CURVE_Z"] = "u_velocityCurveZ[0]";
-            ParticleMaterialUniform["VELOCITY_CONST_MAX"] = "u_velocityConstMax";
-            ParticleMaterialUniform["VELOCITY_CURVE_MAX_X"] = "u_velocityCurveMaxX[0]";
-            ParticleMaterialUniform["VELOCITY_CURVE_MAX_Y"] = "u_velocityCurveMaxY[0]";
-            ParticleMaterialUniform["VELOCITY_CURVE_MAX_Z"] = "u_velocityCurveMaxZ[0]";
-            ParticleMaterialUniform["SPACE_TYPE"] = "u_spaceType";
-            ParticleMaterialUniform["SIZE_CURVE"] = "u_sizeCurve[0]";
-            ParticleMaterialUniform["SIZE_CURVE_X"] = "u_sizeCurveX[0]";
-            ParticleMaterialUniform["SIZE_CURVE_Y"] = "u_sizeCurveY[0]";
-            ParticleMaterialUniform["SIZE_CURVE_Z"] = "u_sizeCurveZ[0]";
-            ParticleMaterialUniform["SIZE_CURVE_MAX"] = "u_sizeCurveMax[0]";
-            ParticleMaterialUniform["SIZE_CURVE_MAX_X"] = "u_sizeCurveMaxX[0]";
-            ParticleMaterialUniform["SIZE_CURVE_MAX_Y"] = "u_sizeCurveMaxY[0]";
-            ParticleMaterialUniform["SIZE_CURVE_MAX_Z"] = "u_sizeCurveMaxZ[0]";
-            ParticleMaterialUniform["ROTATION_CONST"] = "u_rotationConst";
-            ParticleMaterialUniform["ROTATION_CONST_SEPRARATE"] = "u_rotationConstSeprarate";
-            ParticleMaterialUniform["ROTATION_CURVE"] = "u_rotationCurve[0]";
-            ParticleMaterialUniform["ROTATE_CURVE_X"] = "u_rotationCurveX[0]";
-            ParticleMaterialUniform["ROTATE_CURVE_y"] = "u_rotationCurveY[0]";
-            ParticleMaterialUniform["ROTATE_CURVE_Z"] = "u_rotationCurveZ[0]";
-            ParticleMaterialUniform["ROTATE_CURVE_W"] = "u_rotationCurveW[0]";
-            ParticleMaterialUniform["ROTATION_CONST_MAX"] = "u_rotationConstMax";
-            ParticleMaterialUniform["ROTATION_CONST_MAX_SEPRARATE"] = "u_rotationConstMaxSeprarate";
-            ParticleMaterialUniform["ROTATION_CURVE_MAX"] = "u_rotationCurveMax[0]";
-            ParticleMaterialUniform["ROTATION_CURVE_MAX_X"] = "u_rotationCurveMaxX[0]";
-            ParticleMaterialUniform["ROTATION_CURVE_MAX_Y"] = "u_rotationCurveMaxY[0]";
-            ParticleMaterialUniform["ROTATION_CURVE_MAX_Z"] = "u_rotationCurveMaxZ[0]";
-            ParticleMaterialUniform["ROTATION_CURVE_MAX_W"] = "u_rotationCurveMaxW[0]";
-            ParticleMaterialUniform["CYCLES"] = "u_cycles";
-            ParticleMaterialUniform["SUB_UV"] = "u_subUV";
-            ParticleMaterialUniform["UV_CURVE"] = "u_uvCurve[0]";
-            ParticleMaterialUniform["UV_CURVE_MAX"] = "u_uvCurveMax[0]";
-            ParticleMaterialUniform["LENGTH_SCALE"] = "u_lengthScale";
-            ParticleMaterialUniform["SPEED_SCALE"] = "u_speeaScale";
-        })(ParticleMaterialUniform = particle.ParticleMaterialUniform || (particle.ParticleMaterialUniform = {}));
-        /**
-         * 粒子着色器的宏定义。
-         * @internal
-         */
-        var ParticleMaterialDefine;
-        (function (ParticleMaterialDefine) {
-            ParticleMaterialDefine["SPHERHBILLBOARD"] = "SPHERHBILLBOARD";
-            ParticleMaterialDefine["STRETCHEDBILLBOARD"] = "STRETCHEDBILLBOARD";
-            ParticleMaterialDefine["HORIZONTALBILLBOARD"] = "HORIZONTALBILLBOARD";
-            ParticleMaterialDefine["VERTICALBILLBOARD"] = "VERTICALBILLBOARD";
-            ParticleMaterialDefine["ROTATIONOVERLIFETIME"] = "ROTATIONOVERLIFETIME";
-            ParticleMaterialDefine["ROTATIONCONSTANT"] = "ROTATIONCONSTANT";
-            ParticleMaterialDefine["ROTATIONTWOCONSTANTS"] = "ROTATIONTWOCONSTANTS";
-            ParticleMaterialDefine["ROTATIONSEPERATE"] = "ROTATIONSEPERATE";
-            ParticleMaterialDefine["ROTATIONCURVE"] = "ROTATIONCURVE";
-            ParticleMaterialDefine["ROTATIONTWOCURVES"] = "ROTATIONTWOCURVES";
-            ParticleMaterialDefine["TEXTURESHEETANIMATIONCURVE"] = "TEXTURESHEETANIMATIONCURVE";
-            ParticleMaterialDefine["TEXTURESHEETANIMATIONTWOCURVE"] = "TEXTURESHEETANIMATIONTWOCURVE";
-            ParticleMaterialDefine["VELOCITYCONSTANT"] = "VELOCITYCONSTANT";
-            ParticleMaterialDefine["VELOCITYCURVE"] = "VELOCITYCURVE";
-            ParticleMaterialDefine["VELOCITYTWOCONSTANT"] = "VELOCITYTWOCONSTANT";
-            ParticleMaterialDefine["VELOCITYTWOCURVE"] = "VELOCITYTWOCURVE";
-            ParticleMaterialDefine["COLOROGRADIENT"] = "COLOROGRADIENT";
-            ParticleMaterialDefine["COLORTWOGRADIENTS"] = "COLORTWOGRADIENTS";
-            ParticleMaterialDefine["SIZECURVE"] = "SIZECURVE";
-            ParticleMaterialDefine["SIZETWOCURVES"] = "SIZETWOCURVES";
-            ParticleMaterialDefine["SIZECURVESEPERATE"] = "SIZECURVESEPERATE";
-            ParticleMaterialDefine["SIZETWOCURVESSEPERATE"] = "SIZETWOCURVESSEPERATE";
-            ParticleMaterialDefine["RENDERMESH"] = "RENDERMESH";
-            ParticleMaterialDefine["SHAPE"] = "SHAPE";
-        })(ParticleMaterialDefine = particle.ParticleMaterialDefine || (particle.ParticleMaterialDefine = {}));
-        /**
-         * 粒子渲染器。
-         */
-        var ParticleRenderer = (function (_super) {
-            __extends(ParticleRenderer, _super);
-            function ParticleRenderer() {
+        var ParticleSystem = (function (_super) {
+            __extends(ParticleSystem, _super);
+            function ParticleSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                /**
-                 * TODO
-                 */
-                _this.frustumCulled = false;
-                _this._renderMode = 0 /* Billboard */;
+                _this._interests = [
+                    {
+                        componentClass: particle.ParticleComponent,
+                        listeners: [
+                            { type: particle.onStartRotation3DChanged, listener: function (comp) { _this._onMainUpdate(comp, particle.onStartRotation3DChanged); } },
+                            { type: particle.onSimulationSpaceChanged, listener: function (comp) { _this._onMainUpdate(comp, particle.onSimulationSpaceChanged); } },
+                            { type: particle.onScaleModeChanged, listener: function (comp) { _this._onMainUpdate(comp, particle.onScaleModeChanged); } },
+                            { type: particle.onVelocityChanged, listener: _this._onVelocityOverLifetime.bind(_this) },
+                            { type: particle.onColorChanged, listener: _this._onColorOverLifetime.bind(_this) },
+                            { type: particle.onSizeChanged, listener: _this._onSizeOverLifetime.bind(_this) },
+                            { type: particle.onRotationChanged, listener: _this._onRotationOverLifetime.bind(_this) },
+                            { type: particle.onTextureSheetChanged, listener: _this._onTextureSheetAnimation.bind(_this) },
+                        ]
+                    },
+                    {
+                        componentClass: particle.ParticleRenderer,
+                        listeners: [
+                            { type: particle.ParticleRenderer.onMeshChanged, listener: function (comp) { _this._updateDrawCalls(comp.gameObject); } },
+                            { type: particle.ParticleRenderer.onMaterialsChanged, listener: function (comp) { _this._updateDrawCalls(comp.gameObject); } },
+                            // { type: ParticleRendererEventType.LengthScaleChanged, listener: (comp: ParticleRenderer) => { this._onRenderUpdate(comp, ParticleRendererEventType.LengthScaleChanged); } },
+                            // { type: ParticleRendererEventType.VelocityScaleChanged, listener: (comp: ParticleRenderer) => { this._onRenderUpdate(comp, ParticleRendererEventType.VelocityScaleChanged); } },
+                            { type: particle.ParticleRenderer.onRenderModeChanged, listener: function (comp) { _this._onRenderUpdate(comp, particle.ParticleRenderer.onRenderModeChanged); } },
+                        ]
+                    }
+                ];
+                _this._drawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.DrawCallCollecter);
                 return _this;
             }
-            ParticleRenderer.prototype.uninitialize = function () {
-                _super.prototype.uninitialize.call(this);
-                this._mesh = null;
-                this._renderMode = 0 /* Billboard */;
-                this.velocityScale = 1.0;
-                this.lengthScale = 1.0;
+            /**
+            * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
+            */
+            ParticleSystem.prototype._onUpdateBatchMesh = function (comp) {
+                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
+                comp.initBatcher();
+                //
+                this._onRenderUpdate(renderer, particle.ParticleRenderer.onRenderModeChanged);
+                this._onRenderUpdate(renderer, particle.ParticleRenderer.onVelocityScaleChanged);
+                this._onRenderUpdate(renderer, particle.ParticleRenderer.onLengthScaleChanged);
+                //
+                this._onMainUpdate(comp, particle.onStartRotation3DChanged);
+                this._onMainUpdate(comp, particle.onSimulationSpaceChanged);
+                this._onMainUpdate(comp, particle.onScaleModeChanged);
+                this._onShapeChanged(comp);
+                this._onVelocityOverLifetime(comp);
+                this._onColorOverLifetime(comp);
+                this._onSizeOverLifetime(comp);
+                this._onRotationOverLifetime(comp);
+                this._onTextureSheetAnimation(comp);
             };
-            ParticleRenderer.prototype.recalculateAABB = function () {
-                this._aabb.copy(egret3d.AABB.ONE);
-            };
-            ParticleRenderer.prototype.raycast = function (p1, p2, p3) {
-                var raycastMesh = false;
-                var raycastInfo = undefined;
-                var worldMatrix = this.gameObject.transform.worldMatrix;
-                var localRay = egret3d.helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
-                var aabb = this.aabb;
-                if (p2) {
-                    if (p2 === true) {
-                        raycastMesh = true;
+            ParticleSystem.prototype._onRenderUpdate = function (render, type) {
+                if (!this._enabled || !this._groups[0].hasGameObject(render.gameObject)) {
+                    return;
+                }
+                var material = render.batchMaterial;
+                switch (type) {
+                    case particle.ParticleRenderer.onRenderModeChanged: {
+                        this._onRenderMode(render);
+                        break;
                     }
-                    else {
-                        raycastMesh = p3 || false;
-                        raycastInfo = p2;
+                    case particle.ParticleRenderer.onLengthScaleChanged: {
+                        material.setFloat("u_lengthScale" /* LENGTH_SCALE */, render.lengthScale);
+                        break;
+                    }
+                    case particle.ParticleRenderer.onVelocityScaleChanged: {
+                        material.setFloat("u_speeaScale" /* SPEED_SCALE */, render.velocityScale);
+                        break;
                     }
                 }
-                if (aabb.raycast(localRay, raycastInfo)) {
-                    if (raycastInfo) {
-                        raycastInfo.position.applyMatrix(worldMatrix);
-                        raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
-                    }
-                    return true;
-                }
-                return false;
             };
-            Object.defineProperty(ParticleRenderer.prototype, "renderMode", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._renderMode;
-                },
-                set: function (value) {
-                    if (this._renderMode === value) {
-                        return;
-                    }
-                    this._renderMode = value;
-                    ParticleRenderer.onRenderModeChanged.dispatch(this);
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ParticleRenderer.prototype, "mesh", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._mesh;
-                },
-                set: function (mesh) {
-                    if (this._mesh === mesh) {
-                        return;
-                    }
-                    this._mesh = mesh;
-                    ParticleRenderer.onMeshChanged.dispatch(this);
-                },
-                enumerable: true,
-                configurable: true
-            });
-            /**
-             * 渲染模式改变
-             */
-            ParticleRenderer.onRenderModeChanged = new signals.Signal();
-            /**
-             * TODO
-             */
-            ParticleRenderer.onVelocityScaleChanged = new signals.Signal();
-            /**
-             * TODO
-             */
-            ParticleRenderer.onLengthScaleChanged = new signals.Signal();
             /**
              *
+             * @param render 渲染模式改变
              */
-            ParticleRenderer.onMeshChanged = new signals.Signal();
-            __decorate([
-                paper.serializedField
-            ], ParticleRenderer.prototype, "velocityScale", void 0);
-            __decorate([
-                paper.serializedField
-            ], ParticleRenderer.prototype, "lengthScale", void 0);
-            __decorate([
-                paper.serializedField
-            ], ParticleRenderer.prototype, "_renderMode", void 0);
-            __decorate([
-                paper.serializedField
-            ], ParticleRenderer.prototype, "_mesh", void 0);
-            __decorate([
-                paper.editor.property(18 /* MESH */)
-            ], ParticleRenderer.prototype, "mesh", null);
-            return ParticleRenderer;
-        }(paper.BaseRenderer));
-        particle.ParticleRenderer = ParticleRenderer;
-        __reflect(ParticleRenderer.prototype, "egret3d.particle.ParticleRenderer");
+            ParticleSystem.prototype._onRenderMode = function (render) {
+                var material = render.batchMaterial;
+                material.removeDefine("SPHERHBILLBOARD" /* SPHERHBILLBOARD */);
+                material.removeDefine("STRETCHEDBILLBOARD" /* STRETCHEDBILLBOARD */);
+                material.removeDefine("HORIZONTALBILLBOARD" /* HORIZONTALBILLBOARD */);
+                material.removeDefine("VERTICALBILLBOARD" /* VERTICALBILLBOARD */);
+                material.removeDefine("RENDERMESH" /* RENDERMESH */);
+                var mode = render.renderMode;
+                switch (mode) {
+                    case 0 /* Billboard */: {
+                        material.addDefine("SPHERHBILLBOARD" /* SPHERHBILLBOARD */);
+                        break;
+                    }
+                    case 1 /* Stretch */: {
+                        material.addDefine("STRETCHEDBILLBOARD" /* STRETCHEDBILLBOARD */);
+                        break;
+                    }
+                    case 2 /* HorizontalBillboard */: {
+                        material.addDefine("HORIZONTALBILLBOARD" /* HORIZONTALBILLBOARD */);
+                        break;
+                    }
+                    case 3 /* VerticalBillboard */: {
+                        material.addDefine("VERTICALBILLBOARD" /* VERTICALBILLBOARD */);
+                        break;
+                    }
+                    case 4 /* Mesh */: {
+                        material.addDefine("RENDERMESH" /* RENDERMESH */);
+                        break;
+                    }
+                    default: {
+                        throw "_onRenderMode:invalid renderMode";
+                    }
+                }
+            };
+            ParticleSystem.prototype._onMainUpdate = function (component, type) {
+                if (!this._enabled || !this._groups[0].hasGameObject(component.gameObject)) {
+                    return;
+                }
+                var renderer = component.gameObject.getComponent(particle.ParticleRenderer);
+                var material = renderer.batchMaterial;
+                var mainModule = component.main;
+                switch (type) {
+                    case particle.onStartRotation3DChanged: {
+                        material.setBoolean("u_startRotation3D" /* START_ROTATION3D */, mainModule.startRotation3D);
+                        break;
+                    }
+                    case particle.onSimulationSpaceChanged: {
+                        material.setInt("u_simulationSpace" /* SIMULATION_SPACE */, mainModule.simulationSpace);
+                        break;
+                    }
+                    case particle.onScaleModeChanged: {
+                        material.setInt("u_scalingMode" /* SCALING_MODE */, mainModule.scaleMode);
+                        break;
+                    }
+                }
+            };
+            /**
+             * 更新速率模块
+             * @param component
+             */
+            ParticleSystem.prototype._onShapeChanged = function (comp) {
+                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+                    return;
+                }
+                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
+                var material = renderer.batchMaterial;
+                material.removeDefine("SHAPE" /* SHAPE */);
+                if (comp.shape.enable) {
+                    material.addDefine("SHAPE" /* SHAPE */);
+                }
+            };
+            /**
+             * 更新速率模块
+             * @param component
+             */
+            ParticleSystem.prototype._onVelocityOverLifetime = function (comp) {
+                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+                    return;
+                }
+                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
+                var material = renderer.batchMaterial;
+                material.removeDefine("VELOCITYCONSTANT" /* VELOCITYCONSTANT */);
+                material.removeDefine("VELOCITYCURVE" /* VELOCITYCURVE */);
+                material.removeDefine("VELOCITYTWOCONSTANT" /* VELOCITYTWOCONSTANT */);
+                material.removeDefine("VELOCITYTWOCURVE" /* VELOCITYTWOCURVE */);
+                var velocityModule = comp.velocityOverLifetime;
+                if (velocityModule.enable) {
+                    var mode = velocityModule.mode;
+                    switch (mode) {
+                        case 0 /* Constant */: {
+                            material.addDefine("VELOCITYCONSTANT" /* VELOCITYCONSTANT */);
+                            //
+                            var vec3 = new egret3d.Vector3(velocityModule.x.evaluate(), velocityModule.y.evaluate(), velocityModule.z.evaluate());
+                            material.setVector3("u_velocityConst" /* VELOCITY_CONST */, vec3);
+                            break;
+                        }
+                        case 1 /* Curve */: {
+                            material.addDefine("VELOCITYCURVE" /* VELOCITYCURVE */);
+                            //
+                            material.setVector2v("u_velocityCurveX[0]" /* VELOCITY_CURVE_X */, velocityModule.x.curve.floatValues);
+                            material.setVector2v("u_velocityCurveY[0]" /* VELOCITY_CURVE_Y */, velocityModule.y.curve.floatValues);
+                            material.setVector2v("u_velocityCurveZ[0]" /* VELOCITY_CURVE_Z */, velocityModule.z.curve.floatValues);
+                            break;
+                        }
+                        case 3 /* TwoConstants */: {
+                            material.addDefine("VELOCITYTWOCONSTANT" /* VELOCITYTWOCONSTANT */);
+                            //
+                            var minVec3 = new egret3d.Vector3(velocityModule.x.constantMin, velocityModule.y.constantMin, velocityModule.z.constantMin);
+                            var maxVec3 = new egret3d.Vector3(velocityModule.x.constantMax, velocityModule.y.constantMax, velocityModule.z.constantMax);
+                            material.setVector3("u_velocityConst" /* VELOCITY_CONST */, minVec3);
+                            material.setVector3("u_velocityConstMax" /* VELOCITY_CONST_MAX */, maxVec3);
+                            break;
+                        }
+                        case 2 /* TwoCurves */: {
+                            material.addDefine("VELOCITYTWOCURVE" /* VELOCITYTWOCURVE */);
+                            //
+                            material.setVector2v("u_velocityCurveX[0]" /* VELOCITY_CURVE_X */, velocityModule.x.curveMin.floatValues);
+                            material.setVector2v("u_velocityCurveY[0]" /* VELOCITY_CURVE_Y */, velocityModule.y.curveMin.floatValues);
+                            material.setVector2v("u_velocityCurveZ[0]" /* VELOCITY_CURVE_Z */, velocityModule.z.curveMin.floatValues);
+                            material.setVector2v("u_velocityCurveMaxX[0]" /* VELOCITY_CURVE_MAX_X */, velocityModule.x.curveMax.floatValues);
+                            material.setVector2v("u_velocityCurveMaxY[0]" /* VELOCITY_CURVE_MAX_Y */, velocityModule.y.curveMax.floatValues);
+                            material.setVector2v("u_velocityCurveMaxZ[0]" /* VELOCITY_CURVE_MAX_Z */, velocityModule.z.curveMax.floatValues);
+                            break;
+                        }
+                    }
+                    material.setInt("u_spaceType" /* SPACE_TYPE */, velocityModule.space);
+                }
+            };
+            /**
+             * 更新颜色模块
+             * @param component
+             */
+            ParticleSystem.prototype._onColorOverLifetime = function (comp) {
+                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+                    return;
+                }
+                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
+                var material = renderer.batchMaterial;
+                material.removeDefine("COLOROGRADIENT" /* COLOROGRADIENT */);
+                material.removeDefine("COLORTWOGRADIENTS" /* COLORTWOGRADIENTS */);
+                var colorModule = comp.colorOverLifetime;
+                if (colorModule.enable) {
+                    var color = colorModule.color;
+                    switch (color.mode) {
+                        case 1 /* Gradient */: {
+                            material.addDefine("COLOROGRADIENT" /* COLOROGRADIENT */);
+                            //
+                            material.setVector2v("u_alphaGradient[0]" /* ALPHAS_GRADIENT */, color.gradient.alphaValues);
+                            material.setVector4v("u_colorGradient[0]" /* COLOR_GRADIENT */, color.gradient.colorValues);
+                            break;
+                        }
+                        case 3 /* TwoGradients */: {
+                            material.addDefine("COLORTWOGRADIENTS" /* COLORTWOGRADIENTS */);
+                            //
+                            material.setVector2v("u_alphaGradient[0]" /* ALPHAS_GRADIENT */, color.gradientMin.alphaValues);
+                            material.setVector2v("u_alphaGradientMax[0]" /* ALPHA_GRADIENT_MAX */, color.gradientMax.alphaValues);
+                            material.setVector4v("u_colorGradient[0]" /* COLOR_GRADIENT */, color.gradientMin.colorValues);
+                            material.setVector4v("u_colorGradientMax[0]" /* COLOR_GRADIENT_MAX */, color.gradientMax.colorValues);
+                            break;
+                        }
+                    }
+                }
+            };
+            /**
+             * 更新大小模块
+             * @param component
+             */
+            ParticleSystem.prototype._onSizeOverLifetime = function (comp) {
+                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+                    return;
+                }
+                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
+                var material = renderer.batchMaterial;
+                material.removeDefine("SIZECURVE" /* SIZECURVE */);
+                material.removeDefine("SIZECURVESEPERATE" /* SIZECURVESEPERATE */);
+                material.removeDefine("SIZETWOCURVES" /* SIZETWOCURVES */);
+                material.removeDefine("SIZETWOCURVESSEPERATE" /* SIZETWOCURVESSEPERATE */);
+                var sizeModule = comp.sizeOverLifetime;
+                if (sizeModule.enable) {
+                    var separateAxes = sizeModule.separateAxes;
+                    var mode = sizeModule.x.mode;
+                    switch (mode) {
+                        case 1 /* Curve */: {
+                            if (separateAxes) {
+                                material.addDefine("SIZECURVESEPERATE" /* SIZECURVESEPERATE */);
+                                //
+                                material.setVector2v("u_sizeCurveX[0]" /* SIZE_CURVE_X */, sizeModule.x.curve.floatValues);
+                                material.setVector2v("u_sizeCurveY[0]" /* SIZE_CURVE_Y */, sizeModule.y.curve.floatValues);
+                                material.setVector2v("u_sizeCurveZ[0]" /* SIZE_CURVE_Z */, sizeModule.z.curve.floatValues);
+                            }
+                            else {
+                                material.addDefine("SIZECURVE" /* SIZECURVE */);
+                                //
+                                material.setVector2v("u_sizeCurve[0]" /* SIZE_CURVE */, sizeModule.size.curve.floatValues);
+                            }
+                            break;
+                        }
+                        case 2 /* TwoCurves */: {
+                            if (separateAxes) {
+                                material.addDefine("SIZETWOCURVESSEPERATE" /* SIZETWOCURVESSEPERATE */);
+                                //
+                                material.setVector2v("u_sizeCurveX[0]" /* SIZE_CURVE_X */, sizeModule.x.curveMin.floatValues);
+                                material.setVector2v("u_sizeCurveY[0]" /* SIZE_CURVE_Y */, sizeModule.y.curveMin.floatValues);
+                                material.setVector2v("u_sizeCurveZ[0]" /* SIZE_CURVE_Z */, sizeModule.z.curveMin.floatValues);
+                                material.setVector2v("u_sizeCurveMaxX[0]" /* SIZE_CURVE_MAX_X */, sizeModule.x.curveMax.floatValues);
+                                material.setVector2v("u_sizeCurveMaxY[0]" /* SIZE_CURVE_MAX_Y */, sizeModule.y.curveMax.floatValues);
+                                material.setVector2v("u_sizeCurveMaxZ[0]" /* SIZE_CURVE_MAX_Z */, sizeModule.z.curveMax.floatValues);
+                            }
+                            else {
+                                material.addDefine("SIZETWOCURVES" /* SIZETWOCURVES */);
+                                //
+                                material.setVector2v("u_sizeCurve[0]" /* SIZE_CURVE */, sizeModule.size.curveMin.floatValues);
+                                material.setVector2v("u_sizeCurveMax[0]" /* SIZE_CURVE_MAX */, sizeModule.size.curveMax.floatValues);
+                            }
+                            break;
+                        }
+                    }
+                }
+            };
+            /**
+             * 更新旋转模块
+             * @param comp
+             */
+            ParticleSystem.prototype._onRotationOverLifetime = function (comp) {
+                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+                    return;
+                }
+                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
+                var material = renderer.batchMaterial;
+                material.removeDefine("ROTATIONOVERLIFETIME" /* ROTATIONOVERLIFETIME */);
+                material.removeDefine("ROTATIONCONSTANT" /* ROTATIONCONSTANT */);
+                material.removeDefine("ROTATIONTWOCONSTANTS" /* ROTATIONTWOCONSTANTS */);
+                material.removeDefine("ROTATIONSEPERATE" /* ROTATIONSEPERATE */);
+                material.removeDefine("ROTATIONCURVE" /* ROTATIONCURVE */);
+                material.removeDefine("ROTATIONTWOCURVES" /* ROTATIONTWOCURVES */);
+                var rotationModule = comp.rotationOverLifetime;
+                if (rotationModule.enable) {
+                    var mode = comp.rotationOverLifetime.x.mode;
+                    var separateAxes = rotationModule.separateAxes;
+                    if (separateAxes) {
+                        material.addDefine("ROTATIONSEPERATE" /* ROTATIONSEPERATE */);
+                    }
+                    else {
+                        material.addDefine("ROTATIONOVERLIFETIME" /* ROTATIONOVERLIFETIME */);
+                    }
+                    switch (mode) {
+                        case 0 /* Constant */: {
+                            material.addDefine("ROTATIONCONSTANT" /* ROTATIONCONSTANT */);
+                            //
+                            if (separateAxes) {
+                                material.setVector3("u_rotationConstSeprarate" /* ROTATION_CONST_SEPRARATE */, new egret3d.Vector3(rotationModule.x.constant, rotationModule.y.constant, rotationModule.z.constant));
+                            }
+                            else {
+                                material.setFloat("u_rotationConst" /* ROTATION_CONST */, rotationModule.z.constant);
+                            }
+                            break;
+                        }
+                        case 3 /* TwoConstants */: {
+                            material.addDefine("ROTATIONTWOCONSTANTS" /* ROTATIONTWOCONSTANTS */);
+                            //
+                            if (separateAxes) {
+                                material.setVector3("u_rotationConstSeprarate" /* ROTATION_CONST_SEPRARATE */, new egret3d.Vector3(rotationModule.x.constantMin, rotationModule.y.constantMin, rotationModule.z.constantMin));
+                                material.setVector3("u_rotationConstMaxSeprarate" /* ROTATION_CONST_MAX_SEPRARATE */, new egret3d.Vector3(rotationModule.x.constantMax, rotationModule.y.constantMax, rotationModule.z.constantMax));
+                            }
+                            else {
+                                material.setFloat("u_rotationConst" /* ROTATION_CONST */, rotationModule.z.constantMin);
+                                material.setFloat("u_rotationConstMax" /* ROTATION_CONST_MAX */, rotationModule.z.constantMax);
+                            }
+                            break;
+                        }
+                        case 1 /* Curve */: {
+                            material.addDefine("ROTATIONCURVE" /* ROTATIONCURVE */);
+                            //
+                            if (separateAxes) {
+                                material.setVector2v("u_rotationCurveX[0]" /* ROTATE_CURVE_X */, rotationModule.x.curve.floatValues);
+                                material.setVector2v("u_rotationCurveY[0]" /* ROTATE_CURVE_y */, rotationModule.y.curve.floatValues);
+                                material.setVector2v("u_rotationCurveZ[0]" /* ROTATE_CURVE_Z */, rotationModule.z.curve.floatValues);
+                            }
+                            else {
+                                material.setVector2v("u_rotationCurve[0]" /* ROTATION_CURVE */, rotationModule.z.curve.floatValues);
+                            }
+                            break;
+                        }
+                        case 2 /* TwoCurves */: {
+                            material.addDefine("ROTATIONTWOCURVES" /* ROTATIONTWOCURVES */);
+                            //
+                            if (separateAxes) {
+                                material.setVector2v("u_rotationCurveX[0]" /* ROTATE_CURVE_X */, rotationModule.x.curveMin.floatValues);
+                                material.setVector2v("u_rotationCurveY[0]" /* ROTATE_CURVE_y */, rotationModule.y.curveMin.floatValues);
+                                material.setVector2v("u_rotationCurveZ[0]" /* ROTATE_CURVE_Z */, rotationModule.z.curveMin.floatValues);
+                                material.setVector2v("u_rotationCurveMaxX[0]" /* ROTATION_CURVE_MAX_X */, rotationModule.x.curveMax.floatValues);
+                                material.setVector2v("u_rotationCurveMaxY[0]" /* ROTATION_CURVE_MAX_Y */, rotationModule.y.curveMax.floatValues);
+                                material.setVector2v("u_rotationCurveMaxZ[0]" /* ROTATION_CURVE_MAX_Z */, rotationModule.z.curveMax.floatValues);
+                            }
+                            else {
+                                material.setVector2v("u_rotationCurve[0]" /* ROTATION_CURVE */, rotationModule.z.curveMin.floatValues);
+                                material.setVector2v("u_rotationCurveMax[0]" /* ROTATION_CURVE_MAX */, rotationModule.z.curveMin.floatValues);
+                            }
+                            break;
+                        }
+                    }
+                }
+            };
+            ParticleSystem.prototype._onTextureSheetAnimation = function (comp) {
+                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+                    return;
+                }
+                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
+                var material = renderer.batchMaterial;
+                material.removeDefine("TEXTURESHEETANIMATIONCURVE" /* TEXTURESHEETANIMATIONCURVE */);
+                material.removeDefine("TEXTURESHEETANIMATIONTWOCURVE" /* TEXTURESHEETANIMATIONTWOCURVE */);
+                var module = comp.textureSheetAnimation;
+                if (module.enable) {
+                    var type = module.frameOverTime.mode;
+                    switch (type) {
+                        case 1 /* Curve */: {
+                            material.addDefine("TEXTURESHEETANIMATIONCURVE" /* TEXTURESHEETANIMATIONCURVE */);
+                            //
+                            material.setVector2v("u_uvCurve[0]" /* UV_CURVE */, module.frameOverTime.curve.floatValues);
+                            break;
+                        }
+                        case 2 /* TwoCurves */: {
+                            material.addDefine("TEXTURESHEETANIMATIONTWOCURVE" /* TEXTURESHEETANIMATIONTWOCURVE */);
+                            //
+                            material.setVector2v("u_uvCurve[0]" /* UV_CURVE */, module.frameOverTime.curveMin.floatValues);
+                            material.setVector2v("u_uvCurveMax[0]" /* UV_CURVE_MAX */, module.frameOverTime.curveMax.floatValues);
+                            break;
+                        }
+                    }
+                    if (type === 1 /* Curve */ || type === 2 /* TwoCurves */) {
+                        material.setFloat("u_cycles" /* CYCLES */, module.cycleCount);
+                        material.setVector4v("u_subUV" /* SUB_UV */, module.floatValues);
+                    }
+                }
+            };
+            ParticleSystem.prototype._updateDrawCalls = function (gameObject) {
+                if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
+                    return;
+                }
+                var drawCallCollecter = this._drawCallCollecter;
+                var component = gameObject.getComponent(particle.ParticleComponent);
+                var renderer = gameObject.getComponent(particle.ParticleRenderer);
+                //
+                this._onUpdateBatchMesh(component);
+                drawCallCollecter.removeDrawCalls(renderer);
+                if (!renderer.batchMesh || !renderer.batchMaterial) {
+                    return;
+                }
+                if (renderer.renderMode === 5 /* None */) {
+                    console.error("ParticleSystem : error renderMode");
+                }
+                renderer.batchMesh._createBuffer();
+                this._drawCallCollecter.renderers.push(renderer);
+                //
+                var subMeshIndex = 0;
+                for (var _i = 0, _a = renderer.batchMesh.glTFMesh.primitives; _i < _a.length; _i++) {
+                    var _primitive = _a[_i];
+                    var drawCall = egret3d.DrawCall.create();
+                    drawCall.renderer = renderer;
+                    drawCall.subMeshIndex = subMeshIndex++;
+                    drawCall.mesh = renderer.batchMesh;
+                    drawCall.material = renderer.batchMaterial || egret3d.DefaultMaterials.MISSING,
+                        drawCallCollecter.drawCalls.push(drawCall);
+                }
+            };
+            ParticleSystem.prototype.onEnable = function () {
+                for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
+                    var gameObject = _a[_i];
+                    this._updateDrawCalls(gameObject);
+                }
+            };
+            ParticleSystem.prototype.onAddGameObject = function (gameObject, _group) {
+                this._updateDrawCalls(gameObject);
+                var component = gameObject.getComponent(particle.ParticleComponent);
+                if (component.main.playOnAwake) {
+                    component.play();
+                }
+            };
+            ParticleSystem.prototype.onRemoveGameObject = function (gameObject) {
+                this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
+                // component.stop();
+            };
+            ParticleSystem.prototype.onUpdate = function (deltaTime) {
+                for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
+                    var gameObject = _a[_i];
+                    gameObject.getComponent(particle.ParticleComponent).update(deltaTime);
+                }
+            };
+            ParticleSystem.prototype.onDisable = function () {
+                for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
+                    var gameObject = _a[_i];
+                    this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
+                }
+            };
+            return ParticleSystem;
+        }(paper.BaseSystem));
+        particle.ParticleSystem = ParticleSystem;
+        __reflect(ParticleSystem.prototype, "egret3d.particle.ParticleSystem");
     })(particle = egret3d.particle || (egret3d.particle = {}));
 })(egret3d || (egret3d = {}));
 var paper;
@@ -6160,7 +6444,7 @@ var paper;
         }
         Clock.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
-            paper.Time = this;
+            paper.Time = paper.clock = this;
             this._beginTime = Date.now() * 0.001;
         };
         /**
@@ -6245,6 +6529,15 @@ var paper;
     }(paper.SingletonComponent));
     paper.Clock = Clock;
     __reflect(Clock.prototype, "paper.Clock");
+    /**
+     * 全局时钟信息组件实例。
+     */
+    paper.clock = null;
+    /**
+     * @deprecated
+     * @see paper.clock
+     */
+    paper.Time = null;
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -6256,19 +6549,19 @@ var paper;
         function DisposeCollecter() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
-             * 当前帧销毁的全部场景。
+             * 暂存此帧销毁的全部场景。
              */
             _this.scenes = [];
             /**
-             * 当前帧销毁的全部实体。
+             * 暂存此帧销毁的全部实体。
              */
             _this.gameObjects = [];
             /**
-             * 当前帧销毁的全部组件。
+             * 暂存此帧销毁的全部组件。
              */
             _this.components = [];
             /**
-             *
+             * 暂存需要在此帧结束时释放的对象。
              */
             _this.releases = [];
             return _this;
@@ -6303,7 +6596,7 @@ var paper;
     var InterestType;
     (function (InterestType) {
         /**
-         *
+         * @deprecated
          */
         InterestType[InterestType["Extends"] = 1] = "Extends";
         /**
@@ -6322,6 +6615,7 @@ var paper;
     var GameObjectGroup = (function () {
         function GameObjectGroup(interestConfig) {
             /**
+             * TODO
              * @internal
              */
             this.locked = false;
@@ -6333,34 +6627,33 @@ var paper;
              * @internal
              */
             this._addedGameObjects = [];
-            this._gameObjects = [];
+            this._gameObjects = []; // TODO
             this._bufferedComponents = [];
             /**
              * @internal
              */
             this._addedComponents = [];
-            this._behaviourComponents = [];
+            this._behaviourComponents = []; // TODO
             this._interestConfig = null;
             this._isBehaviour = interestConfig.length === 1 && interestConfig[0].type !== undefined && interestConfig[0].type !== 0;
             this._interestConfig = interestConfig;
-            // this._onAddComponent = this._onAddComponent.bind(this);
-            // this._onRemoveComponent = this._onRemoveComponent.bind(this);
-            // this._onAddUnessentialComponent = this._onAddUnessentialComponent.bind(this);
-            // this._onRemoveUnessentialComponent = this._onRemoveUnessentialComponent.bind(this);
             for (var _i = 0, _a = this._interestConfig; _i < _a.length; _i++) {
                 var config = _a[_i];
-                var isUnessential = config.type && (config.type & 4 /* Unessential */);
-                paper.BaseComponent.onComponentDisabled.add(this._onRemoveUnessentialComponent, this);
-                if (!isUnessential) {
-                    paper.BaseComponent.onComponentEnabled.add(this._onAddComponent, this);
-                    paper.BaseComponent.onComponentDisabled.add(this._onRemoveComponent, this);
+                var isUnessential = config.type && (config.type & 4 /* Unessential */) !== 0;
+                if (Array.isArray(config.componentClass)) {
+                    for (var _b = 0, _c = config.componentClass; _b < _c.length; _b++) {
+                        var componentClass = _c[_b];
+                        this._addListener(componentClass, isUnessential);
+                    }
                 }
-                paper.BaseComponent.onComponentEnabled.add(this._onAddUnessentialComponent, this);
+                else {
+                    this._addListener(config.componentClass, isUnessential);
+                }
             }
-            for (var _b = 0, _c = paper.Application.sceneManager.scenes; _b < _c.length; _b++) {
-                var scene = _c[_b];
-                for (var _d = 0, _e = scene.gameObjects; _d < _e.length; _d++) {
-                    var gameObject = _e[_d];
+            for (var _d = 0, _e = paper.Application.sceneManager.scenes; _d < _e.length; _d++) {
+                var scene = _e[_d];
+                for (var _f = 0, _g = scene.gameObjects; _f < _g.length; _f++) {
+                    var gameObject = _g[_f];
                     this._addGameObject(gameObject);
                 }
             }
@@ -6411,11 +6704,23 @@ var paper;
                 group._update();
             }
         };
+        GameObjectGroup.prototype._addListener = function (componentClass, isUnessential) {
+            paper.registerClass(componentClass);
+            componentClass.onComponentDisabled.add(this._onRemoveUnessentialComponent, this);
+            if (!isUnessential) {
+                componentClass.onComponentEnabled.add(this._onAddComponent, this);
+                componentClass.onComponentDisabled.add(this._onRemoveComponent, this);
+            }
+            componentClass.onComponentEnabled.add(this._onAddUnessentialComponent, this);
+        };
         GameObjectGroup.prototype._onAddComponent = function (component) {
             this._addGameObject(component.gameObject);
         };
         GameObjectGroup.prototype._onAddUnessentialComponent = function (component) {
             var gameObject = component.gameObject;
+            if (!component.isActiveAndEnabled) {
+                return;
+            }
             if (!this._isBehaviour) {
                 if (gameObject === paper.GameObject.globalGameObject) {
                     return;
@@ -6472,6 +6777,9 @@ var paper;
             this._removeGameObject(component.gameObject);
         };
         GameObjectGroup.prototype._addGameObject = function (gameObject) {
+            if (!gameObject.activeInHierarchy) {
+                return;
+            }
             if (!this._isBehaviour && gameObject === paper.GameObject.globalGameObject) {
                 return;
             }
@@ -6491,13 +6799,17 @@ var paper;
                     for (var _b = 0, _c = config.componentClass; _b < _c.length; _b++) {
                         var componentClass = _c[_b];
                         insterestComponent = gameObject.getComponent(componentClass, isExtends);
-                        if (insterestComponent) {
+                        if (insterestComponent && insterestComponent.isActiveAndEnabled) {
                             break;
                         }
+                        insterestComponent = null;
                     }
                 }
                 else {
                     insterestComponent = gameObject.getComponent(config.componentClass, isExtends);
+                    if (insterestComponent && !insterestComponent.isActiveAndEnabled) {
+                        insterestComponent = null;
+                    }
                 }
                 if (isExculde ? insterestComponent : !insterestComponent) {
                     return;
@@ -6791,7 +7103,7 @@ var paper;
 var paper;
 (function (paper) {
     /**
-     * 更新系统。
+     * Late 更新系统。
      */
     var LateUpdateSystem = (function (_super) {
         __extends(LateUpdateSystem, _super);
@@ -6834,7 +7146,8 @@ var paper;
             }
         };
         /**
-         *
+         * 在 `paper.Behaviour.onLateUpdate()` 生命周期之后回调指定方法。
+         * @param callback 需要回调的方法。
          */
         LateUpdateSystem.prototype.callLater = function (callback) {
             this._laterCalls.push(callback);
@@ -6870,14 +7183,12 @@ var paper;
             component.onDisable && component.onDisable();
         };
         DisableSystem.prototype.onUpdate = function () {
-            var gameObjectPool = paper.GameObject._instances;
             for (var _i = 0, _a = this._disposeCollecter.scenes; _i < _a.length; _i++) {
                 var scene = _a[_i];
                 scene.uninitialize();
             }
             for (var _b = 0, _c = this._disposeCollecter.gameObjects; _b < _c.length; _b++) {
                 var gameObject = _c[_b];
-                // gameObjectPool.push(gameObject);
                 gameObject.uninitialize();
             }
             for (var _d = 0, _e = this._disposeCollecter.components; _d < _e.length; _d++) {
@@ -8659,12 +8970,20 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 舞台组件。
+     * 全局舞台信息组件。
      */
     var Stage = (function (_super) {
         __extends(Stage, _super);
         function Stage() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
+            /**
+             * 是否允许因屏幕尺寸的改变而旋转舞台。
+             */
+            _this.rotateEnabled = true;
+            /**
+             * 舞台是否因屏幕尺寸的改变而发生了旋转。
+             * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于渲染尺寸宽度。
+             */
             _this.rotated = false;
             _this._screenSize = { w: 1024, h: 1024 };
             _this._size = { w: 1024, h: 1024 };
@@ -8676,11 +8995,11 @@ var egret3d;
             var size = this._size;
             var viewport = this._viewport;
             viewport.w = Math.ceil(size.w);
-            if (this.rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h) {
-                viewport.h = Math.ceil(viewport.w / screenSize.h * screenSize.w);
+            if (this.rotateEnabled && (this.rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h)) {
+                viewport.h = Math.ceil(size.w / screenSize.h * screenSize.w);
             }
             else {
-                viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
+                viewport.h = Math.ceil(size.w / screenSize.w * screenSize.h);
             }
         };
         Stage.prototype.initialize = function (config) {
@@ -8744,6 +9063,9 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
+        /**
+         * 当舞台或屏幕尺寸的改变时派发事件。
+         */
         Stage.onResize = new signals.Signal();
         return Stage;
     }(paper.SingletonComponent));
@@ -8763,7 +9085,7 @@ var egret3d;
         "TEXCOORD_0" /* TEXCOORD_0 */,
     ];
     /**
-     * 提供默认的几何网格，以及创建几何网格的方式。
+     * 提供默认的几何网格资源，以及创建几何网格或几何网格实体的方式。
      */
     var DefaultMeshes = (function (_super) {
         __extends(DefaultMeshes, _super);
@@ -8950,7 +9272,11 @@ var egret3d;
             }
         };
         /**
-         * 创建带网格的实体。
+         * 创建带有指定网格资源的实体。
+         * @param mesh 网格资源。
+         * @param name 实体的名称。
+         * @param tag 实体的标识。
+         * @param scene 实体的场景。
          */
         DefaultMeshes.createObject = function (mesh, name, tag, scene) {
             var gameObject = paper.GameObject.create(name, tag, scene);
@@ -8975,6 +9301,12 @@ var egret3d;
         };
         /**
          * 创建平面网格。
+         * @param width 宽度。
+         * @param height 高度。
+         * @param centerOffsetX 中心点偏移 X。
+         * @param centerOffsetY 中心点偏移 Y。
+         * @param widthSegments 宽度分段。
+         * @param heightSegments 高度分段。
          */
         DefaultMeshes.createPlane = function (width, height, centerOffsetX, centerOffsetY, widthSegments, heightSegments) {
             if (width === void 0) { width = 1.0; }
@@ -8999,7 +9331,7 @@ var egret3d;
                 var y = iy * segmentHeight - heightHalf;
                 for (var ix = 0; ix < gridX1; ix++) {
                     var x = ix * segmentWidth - widthHalf;
-                    vertices.push(centerOffsetX + x, centerOffsetY - y, 0.0);
+                    vertices.push(x + centerOffsetX, -y + centerOffsetY, 0.0);
                     normals.push(0.0, 0.0, 1.0);
                     uvs.push(ix / widthSegments, iy / heightSegments);
                 }
@@ -9012,7 +9344,10 @@ var egret3d;
                     var c = (ix + 1) + gridX1 * (iy + 1);
                     var d = (ix + 1) + gridX1 * iy;
                     // faces
-                    indices.push(a, b, d, b, c, d);
+                    // a - d
+                    // | / |
+                    // b - c
+                    indices.push(a, d, b, b, d, c);
                 }
             }
             var mesh = egret3d.Mesh.create(vertices.length / 3, indices.length);
@@ -9038,6 +9373,7 @@ var egret3d;
             if (differentFace === void 0) { differentFace = false; }
             // helper variables
             var meshVertexCount = 0;
+            var vector3 = _helpVector3;
             // buffers
             var indices = [];
             var vertices = [];
@@ -9086,20 +9422,19 @@ var egret3d;
                     for (var ix = 0; ix < gridX1; ix++) {
                         var x = ix * segmentWidth - widthHalf;
                         // set values to correct vector component
-                        _helpVector3[u] = x * udir;
-                        _helpVector3[v] = y * vdir;
-                        _helpVector3[w] = depthHalf;
+                        vector3[u] = x * udir;
+                        vector3[v] = y * vdir;
+                        vector3[w] = depthHalf;
                         // now apply vector to vertex buffer
-                        vertices.push(_helpVector3.x + centerOffsetX, _helpVector3.y + centerOffsetY, _helpVector3.z + centerOffsetZ);
+                        vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, vector3.z + centerOffsetZ);
                         // set values to correct vector component
-                        _helpVector3[u] = 0.0;
-                        _helpVector3[v] = 0.0;
-                        _helpVector3[w] = depth > 0.0 ? 1.0 : -1.0;
+                        vector3[u] = 0.0;
+                        vector3[v] = 0.0;
+                        vector3[w] = depth > 0.0 ? 1.0 : -1.0;
                         // now apply vector to normal buffer
-                        normals.push(_helpVector3.x, _helpVector3.y, _helpVector3.z);
+                        normals.push(vector3.x, vector3.y, vector3.z);
                         // uvs
-                        uvs.push(ix / gridX);
-                        uvs.push(iy / gridY);
+                        uvs.push(ix / gridX, iy / gridY);
                         // counters
                         vertexCount += 1;
                     }
@@ -9115,6 +9450,9 @@ var egret3d;
                         var c = meshVertexCount + (ix + 1) + gridX1 * (iy + 1);
                         var d = meshVertexCount + (ix + 1) + gridX1 * iy;
                         // faces
+                        // a - d
+                        // | / |
+                        // b - c
                         indices.push(a, b, d, b, c, d);
                     }
                 }
@@ -9200,9 +9538,9 @@ var egret3d;
                         vector3.z = -radius * cosTheta; // Left-hand coordinates system.
                         vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, vector3.z + centerOffsetZ);
                         // normal
-                        // vertex.set(sinTheta, slope, cosTheta).normalize(); // Right-hand coordinates system.
-                        vector3.set(-sinTheta, -slope, -cosTheta).normalize(); // Left-hand coordinates system.
-                        normals.push(vector3.x, vector3.y, vector3.z);
+                        vector3.set(sinTheta, slope, cosTheta).normalize();
+                        // normals.push(vector3.x, vector3.y, vector3.z); // Right-hand coordinates system.
+                        normals.push(vector3.x, vector3.y, -vector3.z); // Left-hand coordinates system.
                         // uv
                         uvs.push(u, v);
                         // save index of vertex in respective row
@@ -9773,7 +10111,8 @@ var egret3d;
             return _this;
         }
         /**
-         * 创建一个绘制信息实例。
+         * 创建一个绘制信息。
+         * - 只有在扩展渲染系统时才需要使用此方法。
          */
         DrawCall.create = function () {
             if (this._instances.length > 0) {
@@ -10298,7 +10637,7 @@ var egret3d;
              */
             _this.upKeys = [];
             /**
-             *
+             * 默认的 Pointer 实例。
              */
             _this.defaultPointer = Pointer.create();
             _this._pointers = {};
@@ -10437,7 +10776,7 @@ var egret3d;
         };
         Object.defineProperty(InputCollecter.prototype, "maxTouchPoints", {
             /**
-             * 最大可支持的多点触摸数量。
+             * 设备最大可支持的多点触摸数量。
              */
             get: function () {
                 if (window.navigator) {
@@ -11385,18 +11724,19 @@ var egret3d;
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
             }
-            if (scene.fogMode !== 0 /* NONE */) {
-                this.fogColor[0] = scene.fogColor.r;
-                this.fogColor[1] = scene.fogColor.g;
-                this.fogColor[2] = scene.fogColor.b;
+            var fog = scene.fog;
+            if (fog.mode !== 0 /* NONE */) {
+                this.fogColor[0] = fog.color.r;
+                this.fogColor[1] = fog.color.g;
+                this.fogColor[2] = fog.color.b;
                 this.shaderContextDefine += "#define USE_FOG \n";
-                if (scene.fogMode === 2 /* FOG_EXP2 */) {
-                    this.fogDensity = scene.fogDensity;
+                if (fog.mode === 2 /* FOG_EXP2 */) {
+                    this.fogDensity = fog.density;
                     this.shaderContextDefine += "#define FOG_EXP2 \n";
                 }
                 else {
-                    this.fogNear = scene.fogNear;
-                    this.fogFar = scene.fogFar;
+                    this.fogNear = fog.near;
+                    this.fogFar = fog.far;
                 }
             }
         };
@@ -11577,7 +11917,7 @@ var egret3d;
                 var renderer = _a[_i];
                 var event_1 = pointer.event;
                 var scaler = renderer.scaler;
-                if (renderer.stage.$onTouchBegin(event_1.clientX / scaler, event_1.clientY / scaler, event_1.pointerId)) {
+                if (renderer.stage.$onTouchBegin(pointer.position.x / scaler, pointer.position.y / scaler, event_1.pointerId)) {
                     break;
                 }
             }
@@ -11587,7 +11927,7 @@ var egret3d;
                 var renderer = _a[_i];
                 var event_2 = pointer.event;
                 var scaler = renderer.scaler;
-                if (renderer.stage.$onTouchMove(event_2.clientX / scaler, event_2.clientY / scaler, event_2.pointerId)) {
+                if (renderer.stage.$onTouchMove(pointer.position.x / scaler, pointer.position.y / scaler, event_2.pointerId)) {
                     break;
                 }
             }
@@ -11597,7 +11937,7 @@ var egret3d;
                 var renderer = _a[_i];
                 var event_3 = pointer.event;
                 var scaler = renderer.scaler;
-                if (renderer.stage.$onTouchEnd(event_3.clientX / scaler, event_3.clientY / scaler, event_3.pointerId)) {
+                if (renderer.stage.$onTouchEnd(pointer.position.x / scaler, pointer.position.y / scaler, event_3.pointerId)) {
                     break;
                 }
             }
@@ -12330,9 +12670,9 @@ var paper;
             if (this._isRunning) {
                 requestAnimationFrame(this._bindUpdate);
             }
-            paper.Time && paper.Time.update(); // TODO
+            paper.clock && paper.clock.update(); // TODO
             paper.GameObjectGroup.update();
-            this.systemManager._update();
+            this.systemManager.update();
         };
         ECS.prototype._updatePlayerMode = function () {
             // if (this._playerMode !== PlayerMode.Player) { TODO
@@ -12342,7 +12682,7 @@ var paper;
         /**
          * @internal
          */
-        ECS.prototype.init = function (options) {
+        ECS.prototype.initialize = function (options) {
             this._playerMode = options.playerMode || 0 /* Player */;
             this.systemManager.register(paper.EnableSystem, 1000 /* Enable */);
             this.systemManager.register(paper.StartSystem, 2000 /* Start */);
@@ -12806,7 +13146,7 @@ var paper;
             configurable: true
         });
         GameObject.prototype._destroy = function () {
-            this._scene._removeGameObject(this);
+            this._scene.removeGameObject(this);
             for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
                 var child = _a[_i];
                 child.gameObject._destroy();
@@ -12818,17 +13158,17 @@ var paper;
                 }
                 this._removeComponent(component, null);
             }
-            GameObject.globalGameObject.getOrAddComponent(paper.DisposeCollecter).gameObjects.push(this);
             // 销毁的第一时间就将组件和场景清除，场景的有无来判断实体是否已经销毁。
             this._components.length = 0;
             this._scene = null;
+            paper.disposeCollecter.gameObjects.push(this);
         };
         GameObject.prototype._addToScene = function (value) {
             if (this._scene) {
-                this._scene._removeGameObject(this);
+                this._scene.removeGameObject(this);
             }
             this._scene = value;
-            this._scene._addGameObject(this);
+            this._scene.addGameObject(this);
         };
         GameObject.prototype._canRemoveComponent = function (value) {
             if (value === this.transform) {
@@ -12857,7 +13197,7 @@ var paper;
             if (value === this.renderer) {
                 this.renderer = null;
             }
-            GameObject.globalGameObject.getOrAddComponent(paper.DisposeCollecter).components.push(value);
+            paper.disposeCollecter.components.push(value);
             if (groupComponent) {
                 groupComponent.removeComponent(value);
                 if (groupComponent.components.length === 0) {
@@ -12892,24 +13232,15 @@ var paper;
                     if (!component) {
                         continue;
                     }
+                    var componentClass = component.constructor;
                     if (component.enabled) {
-                        if (currentActive) {
-                            paper.BaseComponent.onComponentEnabled.dispatch(component);
-                        }
-                        else {
-                            paper.BaseComponent.onComponentDisabled.dispatch(component);
-                        }
+                        component._dispatchEnabledEvent(currentActive);
                     }
                     if (component.constructor === paper.GroupComponent) {
                         for (var _b = 0, _c = component.components; _b < _c.length; _b++) {
                             var componentInGroup = _c[_b];
                             if (componentInGroup.enabled) {
-                                if (currentActive) {
-                                    paper.BaseComponent.onComponentEnabled.dispatch(componentInGroup);
-                                }
-                                else {
-                                    paper.BaseComponent.onComponentDisabled.dispatch(componentInGroup);
-                                }
+                                componentInGroup._dispatchEnabledEvent(currentActive);
                             }
                         }
                     }
@@ -13019,7 +13350,7 @@ var paper;
                 component.initialize();
             }
             if (component.isActiveAndEnabled) {
-                paper.BaseComponent.onComponentEnabled.dispatch(component);
+                component._dispatchEnabledEvent(true);
             }
             return component;
         };
@@ -17354,6 +17685,230 @@ var egret3d;
         __reflect(ParticleComponent.prototype, "egret3d.particle.ParticleComponent");
     })(particle = egret3d.particle || (egret3d.particle = {}));
 })(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var particle;
+    (function (particle) {
+        var _helpMatrix = egret3d.Matrix4.create();
+        /**
+         * 粒子渲染模式。
+         */
+        var ParticleRenderMode;
+        (function (ParticleRenderMode) {
+            ParticleRenderMode[ParticleRenderMode["Billboard"] = 0] = "Billboard";
+            ParticleRenderMode[ParticleRenderMode["Stretch"] = 1] = "Stretch";
+            ParticleRenderMode[ParticleRenderMode["HorizontalBillboard"] = 2] = "HorizontalBillboard";
+            ParticleRenderMode[ParticleRenderMode["VerticalBillboard"] = 3] = "VerticalBillboard";
+            ParticleRenderMode[ParticleRenderMode["Mesh"] = 4] = "Mesh";
+            ParticleRenderMode[ParticleRenderMode["None"] = 5] = "None";
+        })(ParticleRenderMode = particle.ParticleRenderMode || (particle.ParticleRenderMode = {}));
+        /**
+         * 粒子着色器的变量名。
+         * @internal
+         */
+        var ParticleMaterialUniform;
+        (function (ParticleMaterialUniform) {
+            ParticleMaterialUniform["WORLD_POSITION"] = "u_worldPosition";
+            ParticleMaterialUniform["WORLD_ROTATION"] = "u_worldRotation";
+            ParticleMaterialUniform["POSITION_SCALE"] = "u_positionScale";
+            ParticleMaterialUniform["SIZE_SCALE"] = "u_sizeScale";
+            ParticleMaterialUniform["SCALING_MODE"] = "u_scalingMode";
+            ParticleMaterialUniform["GRAVIT"] = "u_gravity";
+            ParticleMaterialUniform["START_ROTATION3D"] = "u_startRotation3D";
+            ParticleMaterialUniform["SIMULATION_SPACE"] = "u_simulationSpace";
+            ParticleMaterialUniform["CURRENTTIME"] = "u_currentTime";
+            ParticleMaterialUniform["ALPHAS_GRADIENT"] = "u_alphaGradient[0]";
+            ParticleMaterialUniform["COLOR_GRADIENT"] = "u_colorGradient[0]";
+            ParticleMaterialUniform["ALPHA_GRADIENT_MAX"] = "u_alphaGradientMax[0]";
+            ParticleMaterialUniform["COLOR_GRADIENT_MAX"] = "u_colorGradientMax[0]";
+            ParticleMaterialUniform["VELOCITY_CONST"] = "u_velocityConst";
+            ParticleMaterialUniform["VELOCITY_CURVE_X"] = "u_velocityCurveX[0]";
+            ParticleMaterialUniform["VELOCITY_CURVE_Y"] = "u_velocityCurveY[0]";
+            ParticleMaterialUniform["VELOCITY_CURVE_Z"] = "u_velocityCurveZ[0]";
+            ParticleMaterialUniform["VELOCITY_CONST_MAX"] = "u_velocityConstMax";
+            ParticleMaterialUniform["VELOCITY_CURVE_MAX_X"] = "u_velocityCurveMaxX[0]";
+            ParticleMaterialUniform["VELOCITY_CURVE_MAX_Y"] = "u_velocityCurveMaxY[0]";
+            ParticleMaterialUniform["VELOCITY_CURVE_MAX_Z"] = "u_velocityCurveMaxZ[0]";
+            ParticleMaterialUniform["SPACE_TYPE"] = "u_spaceType";
+            ParticleMaterialUniform["SIZE_CURVE"] = "u_sizeCurve[0]";
+            ParticleMaterialUniform["SIZE_CURVE_X"] = "u_sizeCurveX[0]";
+            ParticleMaterialUniform["SIZE_CURVE_Y"] = "u_sizeCurveY[0]";
+            ParticleMaterialUniform["SIZE_CURVE_Z"] = "u_sizeCurveZ[0]";
+            ParticleMaterialUniform["SIZE_CURVE_MAX"] = "u_sizeCurveMax[0]";
+            ParticleMaterialUniform["SIZE_CURVE_MAX_X"] = "u_sizeCurveMaxX[0]";
+            ParticleMaterialUniform["SIZE_CURVE_MAX_Y"] = "u_sizeCurveMaxY[0]";
+            ParticleMaterialUniform["SIZE_CURVE_MAX_Z"] = "u_sizeCurveMaxZ[0]";
+            ParticleMaterialUniform["ROTATION_CONST"] = "u_rotationConst";
+            ParticleMaterialUniform["ROTATION_CONST_SEPRARATE"] = "u_rotationConstSeprarate";
+            ParticleMaterialUniform["ROTATION_CURVE"] = "u_rotationCurve[0]";
+            ParticleMaterialUniform["ROTATE_CURVE_X"] = "u_rotationCurveX[0]";
+            ParticleMaterialUniform["ROTATE_CURVE_y"] = "u_rotationCurveY[0]";
+            ParticleMaterialUniform["ROTATE_CURVE_Z"] = "u_rotationCurveZ[0]";
+            ParticleMaterialUniform["ROTATE_CURVE_W"] = "u_rotationCurveW[0]";
+            ParticleMaterialUniform["ROTATION_CONST_MAX"] = "u_rotationConstMax";
+            ParticleMaterialUniform["ROTATION_CONST_MAX_SEPRARATE"] = "u_rotationConstMaxSeprarate";
+            ParticleMaterialUniform["ROTATION_CURVE_MAX"] = "u_rotationCurveMax[0]";
+            ParticleMaterialUniform["ROTATION_CURVE_MAX_X"] = "u_rotationCurveMaxX[0]";
+            ParticleMaterialUniform["ROTATION_CURVE_MAX_Y"] = "u_rotationCurveMaxY[0]";
+            ParticleMaterialUniform["ROTATION_CURVE_MAX_Z"] = "u_rotationCurveMaxZ[0]";
+            ParticleMaterialUniform["ROTATION_CURVE_MAX_W"] = "u_rotationCurveMaxW[0]";
+            ParticleMaterialUniform["CYCLES"] = "u_cycles";
+            ParticleMaterialUniform["SUB_UV"] = "u_subUV";
+            ParticleMaterialUniform["UV_CURVE"] = "u_uvCurve[0]";
+            ParticleMaterialUniform["UV_CURVE_MAX"] = "u_uvCurveMax[0]";
+            ParticleMaterialUniform["LENGTH_SCALE"] = "u_lengthScale";
+            ParticleMaterialUniform["SPEED_SCALE"] = "u_speeaScale";
+        })(ParticleMaterialUniform = particle.ParticleMaterialUniform || (particle.ParticleMaterialUniform = {}));
+        /**
+         * 粒子着色器的宏定义。
+         * @internal
+         */
+        var ParticleMaterialDefine;
+        (function (ParticleMaterialDefine) {
+            ParticleMaterialDefine["SPHERHBILLBOARD"] = "SPHERHBILLBOARD";
+            ParticleMaterialDefine["STRETCHEDBILLBOARD"] = "STRETCHEDBILLBOARD";
+            ParticleMaterialDefine["HORIZONTALBILLBOARD"] = "HORIZONTALBILLBOARD";
+            ParticleMaterialDefine["VERTICALBILLBOARD"] = "VERTICALBILLBOARD";
+            ParticleMaterialDefine["ROTATIONOVERLIFETIME"] = "ROTATIONOVERLIFETIME";
+            ParticleMaterialDefine["ROTATIONCONSTANT"] = "ROTATIONCONSTANT";
+            ParticleMaterialDefine["ROTATIONTWOCONSTANTS"] = "ROTATIONTWOCONSTANTS";
+            ParticleMaterialDefine["ROTATIONSEPERATE"] = "ROTATIONSEPERATE";
+            ParticleMaterialDefine["ROTATIONCURVE"] = "ROTATIONCURVE";
+            ParticleMaterialDefine["ROTATIONTWOCURVES"] = "ROTATIONTWOCURVES";
+            ParticleMaterialDefine["TEXTURESHEETANIMATIONCURVE"] = "TEXTURESHEETANIMATIONCURVE";
+            ParticleMaterialDefine["TEXTURESHEETANIMATIONTWOCURVE"] = "TEXTURESHEETANIMATIONTWOCURVE";
+            ParticleMaterialDefine["VELOCITYCONSTANT"] = "VELOCITYCONSTANT";
+            ParticleMaterialDefine["VELOCITYCURVE"] = "VELOCITYCURVE";
+            ParticleMaterialDefine["VELOCITYTWOCONSTANT"] = "VELOCITYTWOCONSTANT";
+            ParticleMaterialDefine["VELOCITYTWOCURVE"] = "VELOCITYTWOCURVE";
+            ParticleMaterialDefine["COLOROGRADIENT"] = "COLOROGRADIENT";
+            ParticleMaterialDefine["COLORTWOGRADIENTS"] = "COLORTWOGRADIENTS";
+            ParticleMaterialDefine["SIZECURVE"] = "SIZECURVE";
+            ParticleMaterialDefine["SIZETWOCURVES"] = "SIZETWOCURVES";
+            ParticleMaterialDefine["SIZECURVESEPERATE"] = "SIZECURVESEPERATE";
+            ParticleMaterialDefine["SIZETWOCURVESSEPERATE"] = "SIZETWOCURVESSEPERATE";
+            ParticleMaterialDefine["RENDERMESH"] = "RENDERMESH";
+            ParticleMaterialDefine["SHAPE"] = "SHAPE";
+        })(ParticleMaterialDefine = particle.ParticleMaterialDefine || (particle.ParticleMaterialDefine = {}));
+        /**
+         * 粒子渲染器。
+         */
+        var ParticleRenderer = (function (_super) {
+            __extends(ParticleRenderer, _super);
+            function ParticleRenderer() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                /**
+                 * TODO
+                 */
+                _this.frustumCulled = false;
+                _this._renderMode = 0 /* Billboard */;
+                return _this;
+            }
+            ParticleRenderer.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                this._mesh = null;
+                this._renderMode = 0 /* Billboard */;
+                this.velocityScale = 1.0;
+                this.lengthScale = 1.0;
+            };
+            ParticleRenderer.prototype.recalculateAABB = function () {
+                this._aabb.copy(egret3d.AABB.ONE);
+            };
+            ParticleRenderer.prototype.raycast = function (p1, p2, p3) {
+                var raycastMesh = false;
+                var raycastInfo = undefined;
+                var worldMatrix = this.gameObject.transform.worldMatrix;
+                var localRay = egret3d.helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
+                var aabb = this.aabb;
+                if (p2) {
+                    if (p2 === true) {
+                        raycastMesh = true;
+                    }
+                    else {
+                        raycastMesh = p3 || false;
+                        raycastInfo = p2;
+                    }
+                }
+                if (aabb.raycast(localRay, raycastInfo)) {
+                    if (raycastInfo) {
+                        raycastInfo.position.applyMatrix(worldMatrix);
+                        raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
+                    }
+                    return true;
+                }
+                return false;
+            };
+            Object.defineProperty(ParticleRenderer.prototype, "renderMode", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._renderMode;
+                },
+                set: function (value) {
+                    if (this._renderMode === value) {
+                        return;
+                    }
+                    this._renderMode = value;
+                    ParticleRenderer.onRenderModeChanged.dispatch(this);
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(ParticleRenderer.prototype, "mesh", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._mesh;
+                },
+                set: function (mesh) {
+                    if (this._mesh === mesh) {
+                        return;
+                    }
+                    this._mesh = mesh;
+                    ParticleRenderer.onMeshChanged.dispatch(this);
+                },
+                enumerable: true,
+                configurable: true
+            });
+            /**
+             * 渲染模式改变
+             */
+            ParticleRenderer.onRenderModeChanged = new signals.Signal();
+            /**
+             * TODO
+             */
+            ParticleRenderer.onVelocityScaleChanged = new signals.Signal();
+            /**
+             * TODO
+             */
+            ParticleRenderer.onLengthScaleChanged = new signals.Signal();
+            /**
+             *
+             */
+            ParticleRenderer.onMeshChanged = new signals.Signal();
+            __decorate([
+                paper.serializedField
+            ], ParticleRenderer.prototype, "velocityScale", void 0);
+            __decorate([
+                paper.serializedField
+            ], ParticleRenderer.prototype, "lengthScale", void 0);
+            __decorate([
+                paper.serializedField
+            ], ParticleRenderer.prototype, "_renderMode", void 0);
+            __decorate([
+                paper.serializedField
+            ], ParticleRenderer.prototype, "_mesh", void 0);
+            __decorate([
+                paper.editor.property(18 /* MESH */)
+            ], ParticleRenderer.prototype, "mesh", null);
+            return ParticleRenderer;
+        }(paper.BaseRenderer));
+        particle.ParticleRenderer = ParticleRenderer;
+        __reflect(ParticleRenderer.prototype, "egret3d.particle.ParticleRenderer");
+    })(particle = egret3d.particle || (egret3d.particle = {}));
+})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     /**
@@ -17386,6 +17941,18 @@ var paper;
         /**
          * @internal
          */
+        Behaviour.prototype._dispatchEnabledEvent = function (value) {
+            _super.prototype._dispatchEnabledEvent.call(this, value);
+            if (value) {
+                Behaviour.onComponentEnabled.dispatch(this);
+            }
+            else {
+                Behaviour.onComponentDisabled.dispatch(this);
+            }
+        };
+        /**
+         * @internal
+         */
         Behaviour.prototype.initialize = function (config) {
             _super.prototype.initialize.call(this, config);
             if (paper.Application.playerMode !== 2 /* Editor */ || this.constructor.executeInEditMode) {
@@ -17406,490 +17973,6 @@ var paper;
     paper.Behaviour = Behaviour;
     __reflect(Behaviour.prototype, "paper.Behaviour");
 })(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    var particle;
-    (function (particle) {
-        /**
-         *
-         */
-        var ParticleSystem = (function (_super) {
-            __extends(ParticleSystem, _super);
-            function ParticleSystem() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._interests = [
-                    {
-                        componentClass: particle.ParticleComponent,
-                        listeners: [
-                            { type: particle.onStartRotation3DChanged, listener: function (comp) { _this._onMainUpdate(comp, particle.onStartRotation3DChanged); } },
-                            { type: particle.onSimulationSpaceChanged, listener: function (comp) { _this._onMainUpdate(comp, particle.onSimulationSpaceChanged); } },
-                            { type: particle.onScaleModeChanged, listener: function (comp) { _this._onMainUpdate(comp, particle.onScaleModeChanged); } },
-                            { type: particle.onVelocityChanged, listener: _this._onVelocityOverLifetime.bind(_this) },
-                            { type: particle.onColorChanged, listener: _this._onColorOverLifetime.bind(_this) },
-                            { type: particle.onSizeChanged, listener: _this._onSizeOverLifetime.bind(_this) },
-                            { type: particle.onRotationChanged, listener: _this._onRotationOverLifetime.bind(_this) },
-                            { type: particle.onTextureSheetChanged, listener: _this._onTextureSheetAnimation.bind(_this) },
-                        ]
-                    },
-                    {
-                        componentClass: particle.ParticleRenderer,
-                        listeners: [
-                            { type: particle.ParticleRenderer.onMeshChanged, listener: function (comp) { _this._updateDrawCalls(comp.gameObject); } },
-                            { type: particle.ParticleRenderer.onMaterialsChanged, listener: function (comp) { _this._updateDrawCalls(comp.gameObject); } },
-                            // { type: ParticleRendererEventType.LengthScaleChanged, listener: (comp: ParticleRenderer) => { this._onRenderUpdate(comp, ParticleRendererEventType.LengthScaleChanged); } },
-                            // { type: ParticleRendererEventType.VelocityScaleChanged, listener: (comp: ParticleRenderer) => { this._onRenderUpdate(comp, ParticleRendererEventType.VelocityScaleChanged); } },
-                            { type: particle.ParticleRenderer.onRenderModeChanged, listener: function (comp) { _this._onRenderUpdate(comp, particle.ParticleRenderer.onRenderModeChanged); } },
-                        ]
-                    }
-                ];
-                _this._drawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.DrawCallCollecter);
-                return _this;
-            }
-            /**
-            * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
-            */
-            ParticleSystem.prototype._onUpdateBatchMesh = function (comp) {
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
-                comp.initBatcher();
-                //
-                this._onRenderUpdate(renderer, particle.ParticleRenderer.onRenderModeChanged);
-                this._onRenderUpdate(renderer, particle.ParticleRenderer.onVelocityScaleChanged);
-                this._onRenderUpdate(renderer, particle.ParticleRenderer.onLengthScaleChanged);
-                //
-                this._onMainUpdate(comp, particle.onStartRotation3DChanged);
-                this._onMainUpdate(comp, particle.onSimulationSpaceChanged);
-                this._onMainUpdate(comp, particle.onScaleModeChanged);
-                this._onShapeChanged(comp);
-                this._onVelocityOverLifetime(comp);
-                this._onColorOverLifetime(comp);
-                this._onSizeOverLifetime(comp);
-                this._onRotationOverLifetime(comp);
-                this._onTextureSheetAnimation(comp);
-            };
-            ParticleSystem.prototype._onRenderUpdate = function (render, type) {
-                if (!this._enabled || !this._groups[0].hasGameObject(render.gameObject)) {
-                    return;
-                }
-                var material = render.batchMaterial;
-                switch (type) {
-                    case particle.ParticleRenderer.onRenderModeChanged: {
-                        this._onRenderMode(render);
-                        break;
-                    }
-                    case particle.ParticleRenderer.onLengthScaleChanged: {
-                        material.setFloat("u_lengthScale" /* LENGTH_SCALE */, render.lengthScale);
-                        break;
-                    }
-                    case particle.ParticleRenderer.onVelocityScaleChanged: {
-                        material.setFloat("u_speeaScale" /* SPEED_SCALE */, render.velocityScale);
-                        break;
-                    }
-                }
-            };
-            /**
-             *
-             * @param render 渲染模式改变
-             */
-            ParticleSystem.prototype._onRenderMode = function (render) {
-                var material = render.batchMaterial;
-                material.removeDefine("SPHERHBILLBOARD" /* SPHERHBILLBOARD */);
-                material.removeDefine("STRETCHEDBILLBOARD" /* STRETCHEDBILLBOARD */);
-                material.removeDefine("HORIZONTALBILLBOARD" /* HORIZONTALBILLBOARD */);
-                material.removeDefine("VERTICALBILLBOARD" /* VERTICALBILLBOARD */);
-                material.removeDefine("RENDERMESH" /* RENDERMESH */);
-                var mode = render.renderMode;
-                switch (mode) {
-                    case 0 /* Billboard */: {
-                        material.addDefine("SPHERHBILLBOARD" /* SPHERHBILLBOARD */);
-                        break;
-                    }
-                    case 1 /* Stretch */: {
-                        material.addDefine("STRETCHEDBILLBOARD" /* STRETCHEDBILLBOARD */);
-                        break;
-                    }
-                    case 2 /* HorizontalBillboard */: {
-                        material.addDefine("HORIZONTALBILLBOARD" /* HORIZONTALBILLBOARD */);
-                        break;
-                    }
-                    case 3 /* VerticalBillboard */: {
-                        material.addDefine("VERTICALBILLBOARD" /* VERTICALBILLBOARD */);
-                        break;
-                    }
-                    case 4 /* Mesh */: {
-                        material.addDefine("RENDERMESH" /* RENDERMESH */);
-                        break;
-                    }
-                    default: {
-                        throw "_onRenderMode:invalid renderMode";
-                    }
-                }
-            };
-            ParticleSystem.prototype._onMainUpdate = function (component, type) {
-                if (!this._enabled || !this._groups[0].hasGameObject(component.gameObject)) {
-                    return;
-                }
-                var renderer = component.gameObject.getComponent(particle.ParticleRenderer);
-                var material = renderer.batchMaterial;
-                var mainModule = component.main;
-                switch (type) {
-                    case particle.onStartRotation3DChanged: {
-                        material.setBoolean("u_startRotation3D" /* START_ROTATION3D */, mainModule.startRotation3D);
-                        break;
-                    }
-                    case particle.onSimulationSpaceChanged: {
-                        material.setInt("u_simulationSpace" /* SIMULATION_SPACE */, mainModule.simulationSpace);
-                        break;
-                    }
-                    case particle.onScaleModeChanged: {
-                        material.setInt("u_scalingMode" /* SCALING_MODE */, mainModule.scaleMode);
-                        break;
-                    }
-                }
-            };
-            /**
-             * 更新速率模块
-             * @param component
-             */
-            ParticleSystem.prototype._onShapeChanged = function (comp) {
-                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
-                    return;
-                }
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
-                var material = renderer.batchMaterial;
-                material.removeDefine("SHAPE" /* SHAPE */);
-                if (comp.shape.enable) {
-                    material.addDefine("SHAPE" /* SHAPE */);
-                }
-            };
-            /**
-             * 更新速率模块
-             * @param component
-             */
-            ParticleSystem.prototype._onVelocityOverLifetime = function (comp) {
-                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
-                    return;
-                }
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
-                var material = renderer.batchMaterial;
-                material.removeDefine("VELOCITYCONSTANT" /* VELOCITYCONSTANT */);
-                material.removeDefine("VELOCITYCURVE" /* VELOCITYCURVE */);
-                material.removeDefine("VELOCITYTWOCONSTANT" /* VELOCITYTWOCONSTANT */);
-                material.removeDefine("VELOCITYTWOCURVE" /* VELOCITYTWOCURVE */);
-                var velocityModule = comp.velocityOverLifetime;
-                if (velocityModule.enable) {
-                    var mode = velocityModule.mode;
-                    switch (mode) {
-                        case 0 /* Constant */: {
-                            material.addDefine("VELOCITYCONSTANT" /* VELOCITYCONSTANT */);
-                            //
-                            var vec3 = new egret3d.Vector3(velocityModule.x.evaluate(), velocityModule.y.evaluate(), velocityModule.z.evaluate());
-                            material.setVector3("u_velocityConst" /* VELOCITY_CONST */, vec3);
-                            break;
-                        }
-                        case 1 /* Curve */: {
-                            material.addDefine("VELOCITYCURVE" /* VELOCITYCURVE */);
-                            //
-                            material.setVector2v("u_velocityCurveX[0]" /* VELOCITY_CURVE_X */, velocityModule.x.curve.floatValues);
-                            material.setVector2v("u_velocityCurveY[0]" /* VELOCITY_CURVE_Y */, velocityModule.y.curve.floatValues);
-                            material.setVector2v("u_velocityCurveZ[0]" /* VELOCITY_CURVE_Z */, velocityModule.z.curve.floatValues);
-                            break;
-                        }
-                        case 3 /* TwoConstants */: {
-                            material.addDefine("VELOCITYTWOCONSTANT" /* VELOCITYTWOCONSTANT */);
-                            //
-                            var minVec3 = new egret3d.Vector3(velocityModule.x.constantMin, velocityModule.y.constantMin, velocityModule.z.constantMin);
-                            var maxVec3 = new egret3d.Vector3(velocityModule.x.constantMax, velocityModule.y.constantMax, velocityModule.z.constantMax);
-                            material.setVector3("u_velocityConst" /* VELOCITY_CONST */, minVec3);
-                            material.setVector3("u_velocityConstMax" /* VELOCITY_CONST_MAX */, maxVec3);
-                            break;
-                        }
-                        case 2 /* TwoCurves */: {
-                            material.addDefine("VELOCITYTWOCURVE" /* VELOCITYTWOCURVE */);
-                            //
-                            material.setVector2v("u_velocityCurveX[0]" /* VELOCITY_CURVE_X */, velocityModule.x.curveMin.floatValues);
-                            material.setVector2v("u_velocityCurveY[0]" /* VELOCITY_CURVE_Y */, velocityModule.y.curveMin.floatValues);
-                            material.setVector2v("u_velocityCurveZ[0]" /* VELOCITY_CURVE_Z */, velocityModule.z.curveMin.floatValues);
-                            material.setVector2v("u_velocityCurveMaxX[0]" /* VELOCITY_CURVE_MAX_X */, velocityModule.x.curveMax.floatValues);
-                            material.setVector2v("u_velocityCurveMaxY[0]" /* VELOCITY_CURVE_MAX_Y */, velocityModule.y.curveMax.floatValues);
-                            material.setVector2v("u_velocityCurveMaxZ[0]" /* VELOCITY_CURVE_MAX_Z */, velocityModule.z.curveMax.floatValues);
-                            break;
-                        }
-                    }
-                    material.setInt("u_spaceType" /* SPACE_TYPE */, velocityModule.space);
-                }
-            };
-            /**
-             * 更新颜色模块
-             * @param component
-             */
-            ParticleSystem.prototype._onColorOverLifetime = function (comp) {
-                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
-                    return;
-                }
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
-                var material = renderer.batchMaterial;
-                material.removeDefine("COLOROGRADIENT" /* COLOROGRADIENT */);
-                material.removeDefine("COLORTWOGRADIENTS" /* COLORTWOGRADIENTS */);
-                var colorModule = comp.colorOverLifetime;
-                if (colorModule.enable) {
-                    var color = colorModule.color;
-                    switch (color.mode) {
-                        case 1 /* Gradient */: {
-                            material.addDefine("COLOROGRADIENT" /* COLOROGRADIENT */);
-                            //
-                            material.setVector2v("u_alphaGradient[0]" /* ALPHAS_GRADIENT */, color.gradient.alphaValues);
-                            material.setVector4v("u_colorGradient[0]" /* COLOR_GRADIENT */, color.gradient.colorValues);
-                            break;
-                        }
-                        case 3 /* TwoGradients */: {
-                            material.addDefine("COLORTWOGRADIENTS" /* COLORTWOGRADIENTS */);
-                            //
-                            material.setVector2v("u_alphaGradient[0]" /* ALPHAS_GRADIENT */, color.gradientMin.alphaValues);
-                            material.setVector2v("u_alphaGradientMax[0]" /* ALPHA_GRADIENT_MAX */, color.gradientMax.alphaValues);
-                            material.setVector4v("u_colorGradient[0]" /* COLOR_GRADIENT */, color.gradientMin.colorValues);
-                            material.setVector4v("u_colorGradientMax[0]" /* COLOR_GRADIENT_MAX */, color.gradientMax.colorValues);
-                            break;
-                        }
-                    }
-                }
-            };
-            /**
-             * 更新大小模块
-             * @param component
-             */
-            ParticleSystem.prototype._onSizeOverLifetime = function (comp) {
-                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
-                    return;
-                }
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
-                var material = renderer.batchMaterial;
-                material.removeDefine("SIZECURVE" /* SIZECURVE */);
-                material.removeDefine("SIZECURVESEPERATE" /* SIZECURVESEPERATE */);
-                material.removeDefine("SIZETWOCURVES" /* SIZETWOCURVES */);
-                material.removeDefine("SIZETWOCURVESSEPERATE" /* SIZETWOCURVESSEPERATE */);
-                var sizeModule = comp.sizeOverLifetime;
-                if (sizeModule.enable) {
-                    var separateAxes = sizeModule.separateAxes;
-                    var mode = sizeModule.x.mode;
-                    switch (mode) {
-                        case 1 /* Curve */: {
-                            if (separateAxes) {
-                                material.addDefine("SIZECURVESEPERATE" /* SIZECURVESEPERATE */);
-                                //
-                                material.setVector2v("u_sizeCurveX[0]" /* SIZE_CURVE_X */, sizeModule.x.curve.floatValues);
-                                material.setVector2v("u_sizeCurveY[0]" /* SIZE_CURVE_Y */, sizeModule.y.curve.floatValues);
-                                material.setVector2v("u_sizeCurveZ[0]" /* SIZE_CURVE_Z */, sizeModule.z.curve.floatValues);
-                            }
-                            else {
-                                material.addDefine("SIZECURVE" /* SIZECURVE */);
-                                //
-                                material.setVector2v("u_sizeCurve[0]" /* SIZE_CURVE */, sizeModule.size.curve.floatValues);
-                            }
-                            break;
-                        }
-                        case 2 /* TwoCurves */: {
-                            if (separateAxes) {
-                                material.addDefine("SIZETWOCURVESSEPERATE" /* SIZETWOCURVESSEPERATE */);
-                                //
-                                material.setVector2v("u_sizeCurveX[0]" /* SIZE_CURVE_X */, sizeModule.x.curveMin.floatValues);
-                                material.setVector2v("u_sizeCurveY[0]" /* SIZE_CURVE_Y */, sizeModule.y.curveMin.floatValues);
-                                material.setVector2v("u_sizeCurveZ[0]" /* SIZE_CURVE_Z */, sizeModule.z.curveMin.floatValues);
-                                material.setVector2v("u_sizeCurveMaxX[0]" /* SIZE_CURVE_MAX_X */, sizeModule.x.curveMax.floatValues);
-                                material.setVector2v("u_sizeCurveMaxY[0]" /* SIZE_CURVE_MAX_Y */, sizeModule.y.curveMax.floatValues);
-                                material.setVector2v("u_sizeCurveMaxZ[0]" /* SIZE_CURVE_MAX_Z */, sizeModule.z.curveMax.floatValues);
-                            }
-                            else {
-                                material.addDefine("SIZETWOCURVES" /* SIZETWOCURVES */);
-                                //
-                                material.setVector2v("u_sizeCurve[0]" /* SIZE_CURVE */, sizeModule.size.curveMin.floatValues);
-                                material.setVector2v("u_sizeCurveMax[0]" /* SIZE_CURVE_MAX */, sizeModule.size.curveMax.floatValues);
-                            }
-                            break;
-                        }
-                    }
-                }
-            };
-            /**
-             * 更新旋转模块
-             * @param comp
-             */
-            ParticleSystem.prototype._onRotationOverLifetime = function (comp) {
-                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
-                    return;
-                }
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
-                var material = renderer.batchMaterial;
-                material.removeDefine("ROTATIONOVERLIFETIME" /* ROTATIONOVERLIFETIME */);
-                material.removeDefine("ROTATIONCONSTANT" /* ROTATIONCONSTANT */);
-                material.removeDefine("ROTATIONTWOCONSTANTS" /* ROTATIONTWOCONSTANTS */);
-                material.removeDefine("ROTATIONSEPERATE" /* ROTATIONSEPERATE */);
-                material.removeDefine("ROTATIONCURVE" /* ROTATIONCURVE */);
-                material.removeDefine("ROTATIONTWOCURVES" /* ROTATIONTWOCURVES */);
-                var rotationModule = comp.rotationOverLifetime;
-                if (rotationModule.enable) {
-                    var mode = comp.rotationOverLifetime.x.mode;
-                    var separateAxes = rotationModule.separateAxes;
-                    if (separateAxes) {
-                        material.addDefine("ROTATIONSEPERATE" /* ROTATIONSEPERATE */);
-                    }
-                    else {
-                        material.addDefine("ROTATIONOVERLIFETIME" /* ROTATIONOVERLIFETIME */);
-                    }
-                    switch (mode) {
-                        case 0 /* Constant */: {
-                            material.addDefine("ROTATIONCONSTANT" /* ROTATIONCONSTANT */);
-                            //
-                            if (separateAxes) {
-                                material.setVector3("u_rotationConstSeprarate" /* ROTATION_CONST_SEPRARATE */, new egret3d.Vector3(rotationModule.x.constant, rotationModule.y.constant, rotationModule.z.constant));
-                            }
-                            else {
-                                material.setFloat("u_rotationConst" /* ROTATION_CONST */, rotationModule.z.constant);
-                            }
-                            break;
-                        }
-                        case 3 /* TwoConstants */: {
-                            material.addDefine("ROTATIONTWOCONSTANTS" /* ROTATIONTWOCONSTANTS */);
-                            //
-                            if (separateAxes) {
-                                material.setVector3("u_rotationConstSeprarate" /* ROTATION_CONST_SEPRARATE */, new egret3d.Vector3(rotationModule.x.constantMin, rotationModule.y.constantMin, rotationModule.z.constantMin));
-                                material.setVector3("u_rotationConstMaxSeprarate" /* ROTATION_CONST_MAX_SEPRARATE */, new egret3d.Vector3(rotationModule.x.constantMax, rotationModule.y.constantMax, rotationModule.z.constantMax));
-                            }
-                            else {
-                                material.setFloat("u_rotationConst" /* ROTATION_CONST */, rotationModule.z.constantMin);
-                                material.setFloat("u_rotationConstMax" /* ROTATION_CONST_MAX */, rotationModule.z.constantMax);
-                            }
-                            break;
-                        }
-                        case 1 /* Curve */: {
-                            material.addDefine("ROTATIONCURVE" /* ROTATIONCURVE */);
-                            //
-                            if (separateAxes) {
-                                material.setVector2v("u_rotationCurveX[0]" /* ROTATE_CURVE_X */, rotationModule.x.curve.floatValues);
-                                material.setVector2v("u_rotationCurveY[0]" /* ROTATE_CURVE_y */, rotationModule.y.curve.floatValues);
-                                material.setVector2v("u_rotationCurveZ[0]" /* ROTATE_CURVE_Z */, rotationModule.z.curve.floatValues);
-                            }
-                            else {
-                                material.setVector2v("u_rotationCurve[0]" /* ROTATION_CURVE */, rotationModule.z.curve.floatValues);
-                            }
-                            break;
-                        }
-                        case 2 /* TwoCurves */: {
-                            material.addDefine("ROTATIONTWOCURVES" /* ROTATIONTWOCURVES */);
-                            //
-                            if (separateAxes) {
-                                material.setVector2v("u_rotationCurveX[0]" /* ROTATE_CURVE_X */, rotationModule.x.curveMin.floatValues);
-                                material.setVector2v("u_rotationCurveY[0]" /* ROTATE_CURVE_y */, rotationModule.y.curveMin.floatValues);
-                                material.setVector2v("u_rotationCurveZ[0]" /* ROTATE_CURVE_Z */, rotationModule.z.curveMin.floatValues);
-                                material.setVector2v("u_rotationCurveMaxX[0]" /* ROTATION_CURVE_MAX_X */, rotationModule.x.curveMax.floatValues);
-                                material.setVector2v("u_rotationCurveMaxY[0]" /* ROTATION_CURVE_MAX_Y */, rotationModule.y.curveMax.floatValues);
-                                material.setVector2v("u_rotationCurveMaxZ[0]" /* ROTATION_CURVE_MAX_Z */, rotationModule.z.curveMax.floatValues);
-                            }
-                            else {
-                                material.setVector2v("u_rotationCurve[0]" /* ROTATION_CURVE */, rotationModule.z.curveMin.floatValues);
-                                material.setVector2v("u_rotationCurveMax[0]" /* ROTATION_CURVE_MAX */, rotationModule.z.curveMin.floatValues);
-                            }
-                            break;
-                        }
-                    }
-                }
-            };
-            ParticleSystem.prototype._onTextureSheetAnimation = function (comp) {
-                if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
-                    return;
-                }
-                var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
-                var material = renderer.batchMaterial;
-                material.removeDefine("TEXTURESHEETANIMATIONCURVE" /* TEXTURESHEETANIMATIONCURVE */);
-                material.removeDefine("TEXTURESHEETANIMATIONTWOCURVE" /* TEXTURESHEETANIMATIONTWOCURVE */);
-                var module = comp.textureSheetAnimation;
-                if (module.enable) {
-                    var type = module.frameOverTime.mode;
-                    switch (type) {
-                        case 1 /* Curve */: {
-                            material.addDefine("TEXTURESHEETANIMATIONCURVE" /* TEXTURESHEETANIMATIONCURVE */);
-                            //
-                            material.setVector2v("u_uvCurve[0]" /* UV_CURVE */, module.frameOverTime.curve.floatValues);
-                            break;
-                        }
-                        case 2 /* TwoCurves */: {
-                            material.addDefine("TEXTURESHEETANIMATIONTWOCURVE" /* TEXTURESHEETANIMATIONTWOCURVE */);
-                            //
-                            material.setVector2v("u_uvCurve[0]" /* UV_CURVE */, module.frameOverTime.curveMin.floatValues);
-                            material.setVector2v("u_uvCurveMax[0]" /* UV_CURVE_MAX */, module.frameOverTime.curveMax.floatValues);
-                            break;
-                        }
-                    }
-                    if (type === 1 /* Curve */ || type === 2 /* TwoCurves */) {
-                        material.setFloat("u_cycles" /* CYCLES */, module.cycleCount);
-                        material.setVector4v("u_subUV" /* SUB_UV */, module.floatValues);
-                    }
-                }
-            };
-            ParticleSystem.prototype._updateDrawCalls = function (gameObject) {
-                if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
-                    return;
-                }
-                var drawCallCollecter = this._drawCallCollecter;
-                var component = gameObject.getComponent(particle.ParticleComponent);
-                var renderer = gameObject.getComponent(particle.ParticleRenderer);
-                //
-                this._onUpdateBatchMesh(component);
-                drawCallCollecter.removeDrawCalls(renderer);
-                if (!renderer.batchMesh || !renderer.batchMaterial) {
-                    return;
-                }
-                if (renderer.renderMode === 5 /* None */) {
-                    console.error("ParticleSystem : error renderMode");
-                }
-                renderer.batchMesh._createBuffer();
-                this._drawCallCollecter.renderers.push(renderer);
-                //
-                var subMeshIndex = 0;
-                for (var _i = 0, _a = renderer.batchMesh.glTFMesh.primitives; _i < _a.length; _i++) {
-                    var _primitive = _a[_i];
-                    var drawCall = egret3d.DrawCall.create();
-                    drawCall.renderer = renderer;
-                    drawCall.subMeshIndex = subMeshIndex++;
-                    drawCall.mesh = renderer.batchMesh;
-                    drawCall.material = renderer.batchMaterial || egret3d.DefaultMaterials.MISSING,
-                        drawCallCollecter.drawCalls.push(drawCall);
-                }
-            };
-            ParticleSystem.prototype.onEnable = function () {
-                for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
-                    var gameObject = _a[_i];
-                    this._updateDrawCalls(gameObject);
-                }
-            };
-            ParticleSystem.prototype.onAddGameObject = function (gameObject, _group) {
-                this._updateDrawCalls(gameObject);
-                var component = gameObject.getComponent(particle.ParticleComponent);
-                if (component.main.playOnAwake) {
-                    component.play();
-                }
-            };
-            ParticleSystem.prototype.onRemoveGameObject = function (gameObject) {
-                this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
-                // component.stop();
-            };
-            ParticleSystem.prototype.onUpdate = function (deltaTime) {
-                for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
-                    var gameObject = _a[_i];
-                    gameObject.getComponent(particle.ParticleComponent).update(deltaTime);
-                }
-            };
-            ParticleSystem.prototype.onDisable = function () {
-                for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
-                    var gameObject = _a[_i];
-                    this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
-                }
-            };
-            return ParticleSystem;
-        }(paper.BaseSystem));
-        particle.ParticleSystem = ParticleSystem;
-        __reflect(ParticleSystem.prototype, "egret3d.particle.ParticleSystem");
-    })(particle = egret3d.particle || (egret3d.particle = {}));
-})(egret3d || (egret3d = {}));
 // namespace egret3d {
 //     export class Audio extends paper.BaseComponent {
 //     }
@@ -18211,76 +18294,46 @@ var egret3d;
 var paper;
 (function (paper) {
     /**
-     * 雾的模式。
-     */
-    var FogMode;
-    (function (FogMode) {
-        FogMode[FogMode["NONE"] = 0] = "NONE";
-        FogMode[FogMode["FOG"] = 1] = "FOG";
-        FogMode[FogMode["FOG_EXP2"] = 2] = "FOG_EXP2";
-    })(FogMode = paper.FogMode || (paper.FogMode = {}));
-    /**
      * 场景。
      */
     var Scene = (function (_super) {
         __extends(Scene, _super);
         /**
-         * 请使用 `paper.Scene.createEmpty()` 创建实例。
-         * @see paper.Scene.createEmpty()
-         * @see paper.Scene.create()
+         * 禁止实例化。
          */
         function Scene(name) {
             var _this = _super.call(this) || this;
             /**
-             * Light map 表现的光照强度。
-             */
-            _this.lightmapIntensity = 1.0;
-            /**
-             * 名称。
+             * 该场景的名称。
              */
             _this.name = "";
-            /**
-             * 环境光。
-             */
-            _this.ambientColor = egret3d.Color.create(0.20, 0.20, 0.25, 1);
-            /**
-             * Light map 列表。
-             */
-            _this.lightmaps = [];
-            /**
-             * 雾的模式。
-             */
-            _this.fogMode = 0 /* NONE */;
-            /**
-             * 雾的颜色。
-             */
-            _this.fogColor = egret3d.Color.create(0.5, 0.5, 0.5, 1);
-            /**
-             *
-             */
-            _this.fogDensity = 0.01;
-            /**
-             *
-             */
-            _this.fogNear = 0.001;
-            /**
-             *
-             */
-            _this.fogFar = 100.0;
             /**
              * 额外数据，仅保存在编辑器环境，项目发布时该数据将被移除。
              */
             _this.extras = paper.Application.playerMode === 2 /* Editor */ ? {} : undefined;
             /**
-             * TODO
-             * @internal
+             * 该场景使用光照贴图时的光照强度。
              */
+            _this.lightmapIntensity = 1.0;
+            /**
+             * 该场景的环境光。
+             */
+            _this.ambientColor = egret3d.Color.create(0.20, 0.20, 0.25, 1.0);
+            /**
+             * 该场景的雾。
+             */
+            _this.fog = egret3d.Fog.create();
+            /**
+             * 该场景的光照贴图列表。
+             */
+            _this.lightmaps = [];
             _this._gameObjects = [];
             _this.name = name;
             return _this;
         }
         /**
-         * 创建空场景。
+         * 创建一个空场景。
+         * @param name 场景的名称。
          */
         Scene.createEmpty = function (name, isActive) {
             // const exScene = Application.sceneManager.getSceneByName(name); TODO
@@ -18291,11 +18344,12 @@ var paper;
             if (name === void 0) { name = "NoName" /* NoName */; }
             if (isActive === void 0) { isActive = true; }
             var scene = new Scene(name);
-            paper.Application.sceneManager._addScene(scene, isActive);
+            paper.Application.sceneManager.addScene(scene, isActive);
             return scene;
         };
         /**
-         * 通过创建资源创建指定场景。
+         * 通过指定的场景资源创建一个场景。
+         * @param name 场景资源的名称。
          */
         Scene.create = function (name, combineStaticObjects) {
             if (combineStaticObjects === void 0) { combineStaticObjects = true; }
@@ -18321,7 +18375,8 @@ var paper;
         };
         Object.defineProperty(Scene, "globalScene", {
             /**
-             * 全局静态场景。
+             * 全局静态的场景。
+             * - 全局场景无法被销毁。
              */
             get: function () {
                 return paper.Application.sceneManager.globalScene;
@@ -18331,7 +18386,7 @@ var paper;
         });
         Object.defineProperty(Scene, "editorScene", {
             /**
-             *
+             * 全局静态编辑器的场景。
              */
             get: function () {
                 return paper.Application.sceneManager.editorScene;
@@ -18341,7 +18396,7 @@ var paper;
         });
         Object.defineProperty(Scene, "activeScene", {
             /**
-             * 当前激活场景。
+             * 当前激活的场景。
              */
             get: function () {
                 return paper.Application.sceneManager.activeScene;
@@ -18355,7 +18410,7 @@ var paper;
         /**
          * @internal
          */
-        Scene.prototype._addGameObject = function (gameObject) {
+        Scene.prototype.addGameObject = function (gameObject) {
             if (this._gameObjects.indexOf(gameObject) >= 0) {
                 console.warn("Add game object error.", gameObject.path);
             }
@@ -18364,7 +18419,7 @@ var paper;
         /**
          * @internal
          */
-        Scene.prototype._removeGameObject = function (gameObject) {
+        Scene.prototype.removeGameObject = function (gameObject) {
             var index = this._gameObjects.indexOf(gameObject);
             if (index < 0) {
                 console.warn("Remove game object error.", gameObject.path);
@@ -18372,20 +18427,23 @@ var paper;
             this._gameObjects.splice(index, 1);
         };
         /**
-         * @internal
+         * 场景被销毁后，内部卸载。
+         * @protected
          */
         Scene.prototype.uninitialize = function () {
-            this.lightmapIntensity = 1.0;
+            // TODO
             // this.name = "";
-            this.ambientColor.set(0.20, 0.20, 0.25, 1);
-            this.lightmaps.length = 0;
             // this.extras
+            this.lightmapIntensity = 1.0;
+            this.ambientColor.set(0.20, 0.20, 0.25, 1.0);
+            // this.fog.clear();
+            this.lightmaps.length = 0;
         };
         /**
          * 销毁该场景和场景中的全部实体。
          */
         Scene.prototype.destroy = function () {
-            if (!paper.Application.sceneManager._removeScene(this)) {
+            if (!paper.Application.sceneManager.removeScene(this)) {
                 return false;
             }
             var i = this._gameObjects.length;
@@ -18396,14 +18454,15 @@ var paper;
                 }
                 gameObject.destroy();
             }
-            //
+            // 销毁的第一时间就将实体清除。
             this._gameObjects.length = 0;
-            paper.GameObject.globalGameObject.getOrAddComponent(paper.DisposeCollecter).scenes.push(this);
+            paper.disposeCollecter.scenes.push(this);
             return true;
         };
         /**
-         * 获取该场景指定名称或路径的实体。
+         * 获取该场景指定名称或路径的第一个实体。
          * - 仅返回第一个符合条件的实体。
+         * @param nameOrPath 名称或路径。
          */
         Scene.prototype.find = function (nameOrPath) {
             var index = nameOrPath.indexOf("/");
@@ -18428,8 +18487,9 @@ var paper;
             return null;
         };
         /**
-         * 获取该场景指定标识的实体。
+         * 获取该场景指定标识的第一个实体。
          * - 仅返回第一个符合条件的实体。
+         * @param tag 标识。
          */
         Scene.prototype.findWithTag = function (tag) {
             for (var _i = 0, _a = this._gameObjects; _i < _a.length; _i++) {
@@ -18441,8 +18501,9 @@ var paper;
             return null;
         };
         /**
-         * 获取该场景指定标识的实体。
+         * 获取该场景指定标识的全部实体。
          * - 返回符合条件的全部实体。
+         * @param tag 标识。
          */
         Scene.prototype.findGameObjectsWithTag = function (tag) {
             var gameObjects = [];
@@ -18455,7 +18516,7 @@ var paper;
             return gameObjects;
         };
         /**
-         * 该场景全部根实体。
+         * 该场景的全部根实体。
          */
         Scene.prototype.getRootGameObjects = function () {
             var gameObjects = [];
@@ -18488,42 +18549,26 @@ var paper;
             configurable: true
         });
         __decorate([
+            paper.serializedField
+        ], Scene.prototype, "name", void 0);
+        __decorate([
+            paper.serializedField
+        ], Scene.prototype, "extras", void 0);
+        __decorate([
             paper.serializedField,
             paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
         ], Scene.prototype, "lightmapIntensity", void 0);
-        __decorate([
-            paper.serializedField
-        ], Scene.prototype, "name", void 0);
         __decorate([
             paper.serializedField,
             paper.editor.property(9 /* COLOR */)
         ], Scene.prototype, "ambientColor", void 0);
         __decorate([
+            paper.serializedField,
+            paper.editor.property(21 /* NESTED */)
+        ], Scene.prototype, "fog", void 0);
+        __decorate([
             paper.serializedField
         ], Scene.prototype, "lightmaps", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(10 /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.FogMode) })
-        ], Scene.prototype, "fogMode", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(9 /* COLOR */)
-        ], Scene.prototype, "fogColor", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
-        ], Scene.prototype, "fogDensity", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.001, step: 1.0 })
-        ], Scene.prototype, "fogNear", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.001, step: 1.0 })
-        ], Scene.prototype, "fogFar", void 0);
-        __decorate([
-            paper.serializedField
-        ], Scene.prototype, "extras", void 0);
         __decorate([
             paper.serializedField,
             paper.deserializedIgnore
@@ -19934,6 +19979,85 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    /**
+     * 雾的模式。
+     */
+    var FogMode;
+    (function (FogMode) {
+        FogMode[FogMode["NONE"] = 0] = "NONE";
+        FogMode[FogMode["FOG"] = 1] = "FOG";
+        FogMode[FogMode["FOG_EXP2"] = 2] = "FOG_EXP2";
+    })(FogMode = egret3d.FogMode || (egret3d.FogMode = {}));
+    /**
+     * 雾。
+     */
+    var Fog = (function () {
+        /**
+         * 禁止实例化。
+         */
+        function Fog() {
+            /**
+             * 雾的模式。
+             */
+            this.mode = 0 /* NONE */;
+            /**
+             * 雾的强度。
+             */
+            this.density = 0.01;
+            /**
+             * 雾的近平面。
+             * - 最小值 0.01。
+             */
+            this.near = 0.01;
+            /**
+             * 雾的远平面。
+             * - 最小值 0.02。
+             */
+            this.far = 100.0;
+            /**
+             * 雾的颜色。
+             */
+            this.color = egret3d.Color.create(0.5, 0.5, 0.5, 1);
+        }
+        /**
+         * @internal
+         */
+        Fog.create = function () {
+            return new Fog();
+        };
+        Fog.prototype.serialize = function () {
+            return [this.mode, this.density, this.near, this.far]
+                .concat(this.color.serialize());
+        };
+        Fog.prototype.deserialize = function (data) {
+            this.mode = data[0];
+            this.density = data[1];
+            this.near = data[2];
+            this.far = data[3];
+            this.color.fromArray(data, 4);
+        };
+        __decorate([
+            paper.editor.property(10 /* LIST */, { listItems: paper.editor.getItemsFromEnum(FogMode) })
+        ], Fog.prototype, "mode", void 0);
+        __decorate([
+            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+        ], Fog.prototype, "density", void 0);
+        __decorate([
+            paper.editor.property(2 /* FLOAT */, { minimum: 0.01, step: 1.0 })
+        ], Fog.prototype, "near", void 0);
+        __decorate([
+            paper.editor.property(2 /* FLOAT */, { minimum: 0.02, step: 1.0 })
+        ], Fog.prototype, "far", void 0);
+        __decorate([
+            paper.editor.property(9 /* COLOR */)
+        ], Fog.prototype, "color", void 0);
+        return Fog;
+    }());
+    egret3d.Fog = Fog;
+    __reflect(Fog.prototype, "egret3d.Fog", ["paper.ISerializable"]);
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
     function promisify(loader, resource) {
         var _this = this;
         return new Promise(function (resolve, reject) {
@@ -20191,7 +20315,7 @@ var egret3d;
             return host.load(resource, "json").then(function (data) {
                 var prefab = new paper.Prefab(resource.name);
                 return loadSubAssets(data, resource).then(function () {
-                    prefab.$parse(data);
+                    prefab.parse(data);
                     paper.Asset.register(prefab);
                     return prefab;
                 });
@@ -20208,7 +20332,7 @@ var egret3d;
             return host.load(resource, "json").then(function (data) {
                 var rawScene = new paper.RawScene(resource.name);
                 return loadSubAssets(data, resource).then(function () {
-                    rawScene.$parse(data);
+                    rawScene.parse(data);
                     paper.Asset.register(rawScene);
                     return rawScene;
                 });
@@ -21511,6 +21635,7 @@ var egret3d;
             BeginSystem.prototype._updateCanvas = function (canvas, stage) {
                 var screenSize = stage.screenSize;
                 var viewport = stage.viewport;
+                // Update canvas size and rotate.
                 canvas.width = viewport.w;
                 canvas.height = viewport.h;
                 canvas.style.top = 0 + "px";
@@ -22492,7 +22617,7 @@ var egret3d;
         options.webgl = canvas.getContext('webgl', options) || canvas.getContext("experimental-webgl", options);
         egret3d.WebGLCapabilities.canvas = options.canvas;
         egret3d.WebGLCapabilities.webgl = options.webgl;
-        paper.Application.init(options);
+        paper.Application.initialize(options);
         var systemManager = paper.Application.systemManager;
         systemManager.register(egret3d.web.BeginSystem, 0 /* Begin */, options);
         systemManager.register(egret3d.AnimationSystem, 5000 /* Animation */);

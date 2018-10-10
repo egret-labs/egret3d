@@ -6,7 +6,7 @@ namespace egret3d.web {
         private _updateCanvas(canvas: HTMLCanvasElement, stage: Stage) {
             const screenSize = stage.screenSize;
             const viewport = stage.viewport;
-
+            // Update canvas size and rotate.
             canvas.width = viewport.w;
             canvas.height = viewport.h;
             canvas.style.top = 0 + "px";

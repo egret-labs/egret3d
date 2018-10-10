@@ -178,7 +178,7 @@ namespace paper {
         return target;
     }
 
-    function _getSerializedKeys(serializedClass: BaseClass, keys: string[] | null = null) {
+    function _getSerializedKeys(serializedClass: IBaseClass, keys: string[] | null = null) {
         const serializeKeys = serializedClass.__serializeKeys;
         if (serializeKeys) {
             keys = keys || [];
@@ -278,7 +278,7 @@ namespace paper {
                 }
             }
             else {
-                temp = _defaultGameObject!.getOrAddComponent(source.constructor as ComponentClass<BaseComponent>);
+                temp = _defaultGameObject!.getOrAddComponent(source.constructor as IComponentClass<BaseComponent>);
             }
 
             _serializeData!.components!.push(target as ISerializedObject);
@@ -294,7 +294,7 @@ namespace paper {
     }
 
     function _serializeChildren(source: BaseObject, target: ISerializedObject | ISerializedStruct, temp: GameObject | BaseComponent | null, ignoreKeys: string[] | null) {
-        const serializedKeys = _getSerializedKeys(<any>source.constructor as BaseClass);
+        const serializedKeys = _getSerializedKeys(<any>source.constructor as IBaseClass);
         if (!serializedKeys) {
             return;
         }

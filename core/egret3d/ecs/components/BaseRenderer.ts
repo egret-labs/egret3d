@@ -8,7 +8,7 @@ namespace paper {
          */
         public static readonly onMaterialsChanged: signals.Signal = new signals.Signal();
         /**
-         * 是否开启视锥剔除。
+         * 该组件是否开启视锥剔除。
          */
         @serializedField
         @editor.property(editor.EditType.CHECKBOX)

@@ -520,6 +520,7 @@ namespace paper.editor {
                 boxColliderDrawer.transform.localPosition = egret3d.Vector3.create().copy(boxCollider.aabb.center).applyMatrix(selectedGameObject!.transform.worldMatrix).release();
                 boxColliderDrawer.transform.localRotation = selectedGameObject!.transform.rotation;
                 boxColliderDrawer.transform.localScale = egret3d.Vector3.create().multiply(boxCollider.aabb.size, selectedGameObject!.transform.scale).release();
+                boxColliderDrawer.renderer!.enabled = boxCollider.enabled;
             }
 
             const skeletonDrawer = this._skeletonDrawer!;

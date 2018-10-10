@@ -8,7 +8,7 @@ namespace paper {
         return (_hashCount++).toString();
     };
     /**
-     * 可以被 paper.DisposeCollecter 收集，并在本帧末尾释放的基类。
+     * 可以被 paper.DisposeCollecter 收集，并在此帧末尾释放的基础对象。
      */
     export abstract class BaseRelease<T extends BaseRelease<T>> {
         /**
@@ -17,7 +17,7 @@ namespace paper {
          */
         protected _released?: boolean;
         /**
-         * 在本帧末尾释放。
+         * 在此帧末尾释放该对象。
          * - 不能在静态解释阶段执行。
          */
         public release() {
@@ -32,7 +32,7 @@ namespace paper {
             return this;
         }
         /**
-         * 在本帧末尾释放时调用。
+         * 在此帧末尾释放时调用。
          */
         public onClear?(): void
     }
@@ -43,15 +43,19 @@ namespace paper {
         /**
          * @internal
          */
+        public static __isBase?: boolean;
+        /**
+         * @internal
+         */
+        public static __owner?: IBaseClass;
+        /**
+         * @internal
+         */
         public static __deserializeIgnore?: string[];
         /**
          * @internal
          */
         public static __serializeKeys?: { [key: string]: string | null };
-        /**
-         * @internal
-         */
-        public static __owner?: BaseClass;
         /**
          * @internal
          */
@@ -67,7 +71,7 @@ namespace paper {
             return true;
         }
 
-        @paper.serializedField
+        @serializedField
         public uuid: string = createUUID();
     }
 }

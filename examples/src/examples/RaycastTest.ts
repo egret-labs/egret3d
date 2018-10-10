@@ -16,7 +16,7 @@ namespace RaycastTest {
         }
 
         {
-            const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CYLINDER, "Mesh");
+            const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "Mesh");
             gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
             gameObject.renderer!.material = egret3d.DefaultMaterials.MESH_LAMBERT;
 

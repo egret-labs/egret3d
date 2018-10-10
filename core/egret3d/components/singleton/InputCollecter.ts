@@ -253,7 +253,7 @@ namespace egret3d {
          */
         public readonly upKeys: Key[] = [];
         /**
-         * 
+         * 默认的 Pointer 实例。
          */
         public readonly defaultPointer: Pointer = Pointer.create();
 
@@ -407,7 +407,7 @@ namespace egret3d {
             return keys[code];
         }
         /**
-         * 最大可支持的多点触摸数量。
+         * 设备最大可支持的多点触摸数量。
          */
         public get maxTouchPoints(): uint {
             if (window.navigator) {

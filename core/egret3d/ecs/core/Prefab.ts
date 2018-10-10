@@ -1,17 +1,62 @@
 namespace paper {
     /**
+     * 基础预制体资源。
+     * - 预制体资源和场景资源的基类。
+     */
+    export abstract class BasePrefabAsset extends Asset {
+        protected _raw: ISerializedData = null as any;
+        /**
+         * @internal
+         */
+        public parse(json: ISerializedData) {
+            this._raw = json;
+        }
+
+        public dispose() {
+            if (!super.dispose()) {
+                return false;
+            }
+
+            this._raw = null!;
+
+            return true;
+        }
+
+        public caclByteLength() {
+            return 0;
+        }
+    }
+    /**
      * 预制体资源。
      */
-    export class Prefab extends BaseObjectAsset {
+    export class Prefab extends BasePrefabAsset {
         /**
-         * 通过预置体资源创建一个实体实例。
+         * 通过预置体资源创建一个实体实例到激活或指定的场景。
+         * @param name 资源的名称。
          */
         public static create(name: string): GameObject | null;
+        /**
+         * @param name 资源的名称。
+         * @param x X 坐标。
+         * @param y Y 坐标。
+         * @param z Z 坐标。
+         */
         public static create(name: string, x: number, y: number, z: number): GameObject | null;
+        /**
+         * @param name 资源的名称。
+         * @param scene 指定的场景。
+         */
         public static create(name: string, scene: Scene): GameObject | null;
+        /**
+         * @param name 资源的名称。
+         * @param x X 坐标。
+         * @param y Y 坐标。
+         * @param z Z 坐标。
+         * @param scene 指定的场景。
+         */
         public static create(name: string, x: number, y: number, z: number, scene: Scene): GameObject | null;
         public static create(name: string, xOrScene?: number | Scene, y?: number, z?: number, scene?: Scene) {
-            const prefab = paper.Asset.find<Prefab>(name);
+            const prefab = Asset.find<Prefab>(name);
             if (prefab && prefab instanceof Prefab) {
                 if (xOrScene !== undefined && xOrScene !== null) {
                     if (xOrScene instanceof Scene) {
@@ -46,7 +91,6 @@ namespace paper {
 
             return null;
         }
-
         /**
          * @deprecated
          */
@@ -56,7 +100,7 @@ namespace paper {
             }
 
             const isEditor = Application.playerMode === PlayerMode.Editor;
-            const deserializer = new paper.Deserializer();
+            const deserializer = new Deserializer();
             const gameObject = deserializer.deserialize(this._raw, keepUUID, isEditor, scene) as GameObject | null;
 
             if (gameObject && isEditor) {

@@ -57,7 +57,11 @@ namespace egret3d.oimo {
                 raycastInfo = raycastInfo || RaycastInfo.create();
                 raycastInfo.distance = Vector3.getDistance(rayOrFrom as Readonly<IVector3>, distanceOrTo as Readonly<IVector3>) * rayCastClosest.fraction;
                 raycastInfo.position.copy(rayCastClosest.position);
-                raycastInfo.normal.copy(rayCastClosest.normal);
+
+                if (raycastInfo.normal) {
+                    raycastInfo.normal.copy(rayCastClosest.normal);
+                }
+
                 raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData;
                 raycastInfo.collider = rayCastClosest.shape.userData;
 

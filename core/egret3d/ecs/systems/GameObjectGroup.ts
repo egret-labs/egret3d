@@ -4,7 +4,7 @@ namespace paper {
      */
     export const enum InterestType {
         /**
-         * 
+         * @deprecated
          */
         Extends = 0b000001,
         /**
@@ -23,7 +23,7 @@ namespace paper {
         /**
          * 关心的组件或组件列表。
          */
-        componentClass: ComponentClass<BaseComponent>[] | ComponentClass<BaseComponent>;
+        componentClass: IComponentClass<BaseComponent>[] | IComponentClass<BaseComponent>;
         /**
          * 关心组件的类型。
          */
@@ -100,6 +100,7 @@ namespace paper {
             }
         }
         /**
+         * TODO
          * @internal
          */
         public locked: boolean = false;
@@ -112,33 +113,29 @@ namespace paper {
          * @internal
          */
         public readonly _addedGameObjects: (GameObject | null)[] = [];
-        private _gameObjects: GameObject[] = [];
+        private _gameObjects: GameObject[] = []; // TODO
         private readonly _bufferedComponents: (BaseComponent)[] = [];
         /**
          * @internal
          */
         public readonly _addedComponents: (BaseComponent | null)[] = [];
-        private _behaviourComponents: BaseComponent[] = [];
+        private _behaviourComponents: BaseComponent[] = []; // TODO
         private readonly _interestConfig: ReadonlyArray<InterestConfig> = null as any;
 
         private constructor(interestConfig: ReadonlyArray<InterestConfig>) {
             this._isBehaviour = interestConfig.length === 1 && interestConfig[0].type !== undefined && (interestConfig[0].type as InterestType & InterestType.Unessential) !== 0;
             this._interestConfig = interestConfig;
-            // this._onAddComponent = this._onAddComponent.bind(this);
-            // this._onRemoveComponent = this._onRemoveComponent.bind(this);
-            // this._onAddUnessentialComponent = this._onAddUnessentialComponent.bind(this);
-            // this._onRemoveUnessentialComponent = this._onRemoveUnessentialComponent.bind(this);
 
             for (const config of this._interestConfig) {
-                const isUnessential = config.type && (config.type & InterestType.Unessential);
-                BaseComponent.onComponentDisabled.add(this._onRemoveUnessentialComponent, this);
-
-                if (!isUnessential) {
-                    BaseComponent.onComponentEnabled.add(this._onAddComponent, this);
-                    BaseComponent.onComponentDisabled.add(this._onRemoveComponent, this);
+                const isUnessential = config.type && (config.type & InterestType.Unessential) !== 0;
+                if (Array.isArray(config.componentClass)) {
+                    for (const componentClass of config.componentClass) {
+                        this._addListener(componentClass, isUnessential);
+                    }
                 }
-
-                BaseComponent.onComponentEnabled.add(this._onAddUnessentialComponent, this);
+                else {
+                    this._addListener(config.componentClass, isUnessential);
+                }
             }
 
             for (const scene of paper.Application.sceneManager.scenes) {
@@ -148,12 +145,29 @@ namespace paper {
             }
         }
 
+        private _addListener(componentClass: IComponentClass<BaseComponent>, isUnessential: boolean) {
+            registerClass(componentClass);
+
+            componentClass.onComponentDisabled.add(this._onRemoveUnessentialComponent, this);
+
+            if (!isUnessential) {
+                componentClass.onComponentEnabled.add(this._onAddComponent, this);
+                componentClass.onComponentDisabled.add(this._onRemoveComponent, this);
+            }
+
+            componentClass.onComponentEnabled.add(this._onAddUnessentialComponent, this);
+        }
+
         private _onAddComponent(component: BaseComponent) {
             this._addGameObject(component.gameObject);
         }
 
         private _onAddUnessentialComponent(component: BaseComponent) {
             const gameObject = component.gameObject;
+
+            if (!component.isActiveAndEnabled) {
+                return;
+            }
 
             if (!this._isBehaviour) {
                 if (gameObject === GameObject.globalGameObject) { // Pass global game object.
@@ -224,6 +238,10 @@ namespace paper {
         }
 
         private _addGameObject(gameObject: GameObject) {
+            if (!gameObject.activeInHierarchy) {
+                return;
+            }
+
             if (!this._isBehaviour && gameObject === GameObject.globalGameObject) { // Pass global game object.
                 return;
             }
@@ -247,13 +265,18 @@ namespace paper {
                 if (Array.isArray(config.componentClass)) {
                     for (const componentClass of config.componentClass) {
                         insterestComponent = gameObject.getComponent(componentClass as any, isExtends);
-                        if (insterestComponent) { // Anyone.
+                        if (insterestComponent && insterestComponent.isActiveAndEnabled) { // Anyone.
                             break;
                         }
+
+                        insterestComponent = null;
                     }
                 }
                 else {
                     insterestComponent = gameObject.getComponent(config.componentClass as any, isExtends);
+                    if (insterestComponent && !insterestComponent.isActiveAndEnabled) {
+                        insterestComponent = null;
+                    }
                 }
 
                 if (isExculde ? insterestComponent : !insterestComponent) {

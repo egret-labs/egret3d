@@ -36,7 +36,7 @@ namespace egret3d {
         WebGLCapabilities.canvas = options.canvas;
         WebGLCapabilities.webgl = options.webgl;
 
-        paper.Application.init(options);
+        paper.Application.initialize(options);
         const systemManager = paper.Application.systemManager;
         systemManager.register(web.BeginSystem, paper.SystemOrder.Begin, options);
 

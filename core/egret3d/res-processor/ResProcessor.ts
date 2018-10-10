@@ -251,7 +251,7 @@ namespace egret3d {
             return host.load(resource, "json").then((data: paper.ISerializedData) => {
                 const prefab = new paper.Prefab(resource.name);
                 return loadSubAssets(data, resource).then(() => {
-                    prefab.$parse(data);
+                    prefab.parse(data);
                     paper.Asset.register(prefab);
                     return prefab;
                 });
@@ -269,7 +269,7 @@ namespace egret3d {
             return host.load(resource, "json").then((data: paper.ISerializedData) => {
                 const rawScene = new paper.RawScene(resource.name);
                 return loadSubAssets(data, resource).then(() => {
-                    rawScene.$parse(data);
+                    rawScene.parse(data);
                     paper.Asset.register(rawScene);
                     return rawScene;
                 });

@@ -347,19 +347,21 @@ namespace egret3d {
                 }
             }
 
-            if (scene.fogMode !== paper.FogMode.NONE) {
-                this.fogColor[0] = scene.fogColor.r;
-                this.fogColor[1] = scene.fogColor.g;
-                this.fogColor[2] = scene.fogColor.b;
+            const fog = scene.fog;
+
+            if (fog.mode !== FogMode.NONE) {
+                this.fogColor[0] = fog.color.r;
+                this.fogColor[1] = fog.color.g;
+                this.fogColor[2] = fog.color.b;
 
                 this.shaderContextDefine += "#define USE_FOG \n";
-                if (scene.fogMode === paper.FogMode.FOG_EXP2) {
-                    this.fogDensity = scene.fogDensity;
+                if (fog.mode === FogMode.FOG_EXP2) {
+                    this.fogDensity = fog.density;
                     this.shaderContextDefine += "#define FOG_EXP2 \n";
                 }
                 else {
-                    this.fogNear = scene.fogNear;
-                    this.fogFar = scene.fogFar;
+                    this.fogNear = fog.near;
+                    this.fogFar = fog.far;
                 }
             }
         }

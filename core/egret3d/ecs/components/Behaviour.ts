@@ -25,10 +25,23 @@ namespace paper {
         /**
          * @internal
          */
+        public _dispatchEnabledEvent(value: boolean) {
+            super._dispatchEnabledEvent(value);
+
+            if (value) {
+                Behaviour.onComponentEnabled.dispatch(this);
+            }
+            else {
+                Behaviour.onComponentDisabled.dispatch(this);
+            }
+        }
+        /**
+         * @internal
+         */
         public initialize(config?: any) {
             super.initialize(config);
 
-            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as ComponentClass<Behaviour>).executeInEditMode) {
+            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
                 this.onAwake && this.onAwake(config);
             }
         }
@@ -36,7 +49,7 @@ namespace paper {
          * @internal
          */
         public uninitialize() {
-            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as ComponentClass<Behaviour>).executeInEditMode) {
+            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
                 this.onDestroy && this.onDestroy(); // TODO onDestroy 如果不是 enabled 就不派发
             }
 

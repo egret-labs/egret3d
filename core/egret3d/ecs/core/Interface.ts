@@ -3,11 +3,19 @@ type uint = number;
 
 namespace paper {
     /**
+     * 
+     */
+    export type GameObjectExtras = { linkedID?: string, rootID?: string, prefab?: Prefab };
+    /**
+     * 
+     */
+    export type ComponentExtras = { linkedID?: string };
+    /**
      * @private
      */
     export interface IUUID {
         /**
-         * 唯一标识。
+         * 对象的唯一标识。
          * @readonly
          */
         readonly uuid: string;
@@ -100,9 +108,18 @@ namespace paper {
         deserialize(data: any, deserializer?: Deserializer): any;
     }
     /**
-     * 
+     * 基础对象类接口。
+     * - 仅用于约束基础对象的装饰器。
      */
-    export interface BaseClass extends Function {
+    export interface IBaseClass extends Function {
+        /**
+         * @internal
+         */
+        __isBase?: boolean;
+        /**
+         * @internal
+         */
+        __owner?: IBaseClass;
         /**
          * @internal
          */
@@ -114,44 +131,51 @@ namespace paper {
         /**
          * @internal
          */
-        __owner?: BaseClass;
-        /**
-         * @internal
-         */
         readonly __onRegister: () => boolean;
     }
     /**
-     * 
+     * 组件类接口。
+     * - 仅用于约束组件类传递。
      */
-    export type GameObjectExtras = { linkedID?: string, rootID?: string, prefab?: Prefab };
-    /**
-     * 
-     */
-    export interface ComponentClass<T extends BaseComponent> extends BaseClass {
-        executeInEditMode: boolean;
-        allowMultiple: boolean;
-        requireComponents: ComponentClass<BaseComponent>[] | null;
+    export interface IComponentClass<T extends BaseComponent> extends IBaseClass {
         /**
+         * 该组件的实例是否在编辑模式拥有生命周期。
+         * @internal
+         */
+        executeInEditMode: boolean;
+        /**
+         * 是否允许在同一实体上添加多个该组件的实例。
+         * @internal
+         */
+        allowMultiple: boolean;
+        /**
+         * 该组件实例依赖的其他前置组件。
+         * @internal
+         */
+        requireComponents: IComponentClass<BaseComponent>[] | null;
+        /**
+         * 当该组件被激活时派发事件。
+         * @internal
+         */
+        onComponentEnabled: signals.Signal;
+        /**
+         * 当该组件实例被禁用时派发事件。
+         * @internal
+         */
+        onComponentDisabled: signals.Signal;
+        /**
+         * 该组件实例是否为单例组件。
          * @internal
          */
         readonly __isSingleton: boolean;
         /**
+         * 该组件实例索引。
          * @internal
          */
         __index: number;
-
+        /**
+         * @protected
+         */
         new(): T;
     }
-    /**
-     * 
-     */
-    export type ComponentClassArray = (ComponentClass<BaseComponent> | undefined)[];
-    /**
-     * 
-     */
-    export type ComponentArray = (BaseComponent | undefined)[];
-    /**
-     * 
-     */
-    export type ComponentExtras = { linkedID?: string };
 }

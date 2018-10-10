@@ -1,26 +1,21 @@
 namespace paper {
+    let _createEnabled = false;
     /**
      * 基础系统。
      * - 全部系统的基类。
      */
     export abstract class BaseSystem {
-        private static _createEnabled: boolean = false;
         /**
          * @internal
          */
-        public static create(systemClass: { new(): BaseSystem }, order: SystemOrder = SystemOrder.Update) {
-            this._createEnabled = true;
-            const system = new systemClass();
-            if (system._order < 0) {
-                system._order = order;
-            }
-
-            return system;
+        public static create<T extends BaseSystem>(systemClass: { new(order?: SystemOrder): T }, order: SystemOrder) {
+            _createEnabled = true;
+            return new systemClass(order);
         }
         /**
-         * @internal
+         * 
          */
-        public _order: SystemOrder = -1;
+        public readonly order: SystemOrder = -1;
         /**
          * @internal
          */
@@ -46,18 +41,19 @@ namespace paper {
          * 禁止实例化系统。
          * @protected
          */
-        public constructor() {
-            if (!BaseSystem._createEnabled) {
+        public constructor(order: SystemOrder = -1) {
+            if (!_createEnabled) {
                 throw new Error("Create an instance of a system is not allowed.");
             }
+            _createEnabled = false;
 
-            BaseSystem._createEnabled = false;
+            this.order = order;
         }
         /**
          * 系统内部初始化。
          * @internal
          */
-        public _initialize(config?: any) {
+        public initialize(config?: any) {
             if (this._interests.length > 0) {
                 let interests: ReadonlyArray<ReadonlyArray<InterestConfig>>;
 
@@ -88,7 +84,7 @@ namespace paper {
          * 系统内部卸载。
          * @internal
          */
-        public _uninitialize() {
+        public uninitialize() {
             this.onDestroy && this.onDestroy();
 
             if (this._interests.length > 0) {
@@ -116,7 +112,7 @@ namespace paper {
          * 系统内部更新。
          * @internal
          */
-        public _update() {
+        public update() {
             if (!this._enabled) {
                 return;
             }
@@ -149,7 +145,7 @@ namespace paper {
          * 系统内部更新。
          * @internal
          */
-        public _lateUpdate() {
+        public lateUpdate() {
             if (!this._enabled) {
                 return;
             }
