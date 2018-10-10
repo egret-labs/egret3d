@@ -19163,7 +19163,7 @@ var egret3d;
                     _premultiply = data["premultiply"] > 0;
                 }
                 var imgResource = RES.host.resourceConfig["getResource"](name);
-                return host.load(imgResource, egret3d.BitmapDataProcessor).then(function (bitmapData) {
+                return host.load(imgResource, "bitmapdata").then(function (bitmapData) {
                     var texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, _textureFormat);
                     texture.uploadImage(bitmapData.source, mipmap, _linear, _premultiply, _repeat);
                     paper.Asset.register(texture);
@@ -19179,7 +19179,7 @@ var egret3d;
     };
     egret3d.TextureProcessor = {
         onLoadStart: function (host, resource) {
-            return host.load(resource, egret3d.BitmapDataProcessor).then(function (bitmapData) {
+            return host.load(resource, "bitmapdata").then(function (bitmapData) {
                 var texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, 1 /* RGBA */);
                 texture.uploadImage(bitmapData.source, true, true, true, true);
                 paper.Asset.register(texture);

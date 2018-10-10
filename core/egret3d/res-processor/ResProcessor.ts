@@ -124,7 +124,7 @@ namespace egret3d {
                 }
 
                 const imgResource = (RES.host.resourceConfig as any)["getResource"](name);
-                return host.load(imgResource, BitmapDataProcessor).then((bitmapData: egret.BitmapData) => {
+                return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
                     const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, _textureFormat);
                     texture.uploadImage(bitmapData.source, mipmap, _linear, _premultiply, _repeat);
                     paper.Asset.register(texture);
@@ -143,7 +143,7 @@ namespace egret3d {
     export const TextureProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
 
-            return host.load(resource, BitmapDataProcessor).then((bitmapData: egret.BitmapData) => {
+            return host.load(resource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
                 const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, egret3d.TextureFormatEnum.RGBA);
                 texture.uploadImage(bitmapData.source, true, true, true, true);
                 paper.Asset.register(texture);
