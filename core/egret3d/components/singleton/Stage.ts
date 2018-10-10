@@ -1,10 +1,20 @@
 namespace egret3d {
     /**
-     * 舞台组件。
+     * 全局舞台信息组件。
      */
     export class Stage extends paper.SingletonComponent {
+        /**
+         * 当舞台或屏幕尺寸的改变时派发事件。
+         */
         public static onResize: signals.Signal = new signals.Signal();
-
+        /**
+         * 是否允许因屏幕尺寸的改变而旋转舞台。
+         */
+        public rotateEnabled: boolean = true;
+        /**
+         * 舞台是否因屏幕尺寸的改变而发生了旋转。
+         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于渲染尺寸宽度。
+         */
         public rotated: boolean = false;
 
         private readonly _screenSize: egret3d.ISize = { w: 1024, h: 1024 };
@@ -17,11 +27,11 @@ namespace egret3d {
             const viewport = this._viewport;
             viewport.w = Math.ceil(size.w);
 
-            if (this.rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h) {
-                viewport.h = Math.ceil(viewport.w / screenSize.h * screenSize.w);
+            if (this.rotateEnabled && (this.rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h)) {
+                viewport.h = Math.ceil(size.w / screenSize.h * screenSize.w);
             }
             else {
-                viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
+                viewport.h = Math.ceil(size.w / screenSize.w * screenSize.h);
             }
         }
 

@@ -34,7 +34,7 @@ namespace egret3d {
             for (const renderer of this._sortRenderers()) {
                 const event = pointer.event!;
                 const scaler = renderer.scaler;
-                if (renderer.stage.$onTouchBegin(event.clientX / scaler, event.clientY / scaler, event.pointerId)) {
+                if (renderer.stage.$onTouchBegin(pointer.position.x / scaler, pointer.position.y / scaler, event.pointerId)) {
                     break;
                 }
             }
@@ -44,7 +44,7 @@ namespace egret3d {
             for (const renderer of this._sortRenderers()) {
                 const event = pointer.event!;
                 const scaler = renderer.scaler;
-                if (renderer.stage.$onTouchMove(event.clientX / scaler, event.clientY / scaler, event.pointerId)) {
+                if (renderer.stage.$onTouchMove(pointer.position.x / scaler, pointer.position.y / scaler, event.pointerId)) {
                     break;
                 }
             }
@@ -54,7 +54,7 @@ namespace egret3d {
             for (const renderer of this._sortRenderers()) {
                 const event = pointer.event!;
                 const scaler = renderer.scaler;
-                if (renderer.stage.$onTouchEnd(event.clientX / scaler, event.clientY / scaler, event.pointerId)) {
+                if (renderer.stage.$onTouchEnd(pointer.position.x / scaler, pointer.position.y / scaler, event.pointerId)) {
                     break;
                 }
             }

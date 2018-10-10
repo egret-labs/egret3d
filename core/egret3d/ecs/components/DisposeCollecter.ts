@@ -4,19 +4,19 @@ namespace paper {
      */
     export class DisposeCollecter extends SingletonComponent {
         /**
-         * 当前帧销毁的全部场景。
+         * 暂存此帧销毁的全部场景。
          */
         public readonly scenes: Scene[] = [];
         /**
-         * 当前帧销毁的全部实体。
+         * 暂存此帧销毁的全部实体。
          */
         public readonly gameObjects: GameObject[] = [];
         /**
-         * 当前帧销毁的全部组件。
+         * 暂存此帧销毁的全部组件。
          */
         public readonly components: BaseComponent[] = [];
         /**
-         * 
+         * 暂存需要在此帧结束时释放的对象。
          */
         public readonly releases: BaseRelease<any>[] = [];
 

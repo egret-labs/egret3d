@@ -15,7 +15,7 @@ namespace paper {
 
             if (
                 Application.playerMode === PlayerMode.Editor &&
-                !(component.constructor as ComponentClass<Behaviour>).executeInEditMode
+                !(component.constructor as IComponentClass<Behaviour>).executeInEditMode
             ) {
                 return;
             }
@@ -24,14 +24,11 @@ namespace paper {
         }
 
         public onUpdate() {
-            const gameObjectPool = GameObject._instances;
-
             for (const scene of this._disposeCollecter.scenes) {
                 scene.uninitialize();
             }
 
             for (const gameObject of this._disposeCollecter.gameObjects) {
-                // gameObjectPool.push(gameObject);
                 gameObject.uninitialize();
             }
 

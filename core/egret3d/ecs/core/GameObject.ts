@@ -41,7 +41,7 @@ namespace paper {
         ) {
             if (
                 (
-                    gameObject.hideFlags === paper.HideFlags.HideAndDontSave && gameObject.tag === paper.DefaultTags.EditorOnly &&
+                    gameObject.hideFlags === HideFlags.HideAndDontSave && gameObject.tag === DefaultTags.EditorOnly &&
                     (!gameObject.transform.parent || gameObject.transform.parent.gameObject.activeInHierarchy)
                 ) ? gameObject.activeSelf : !gameObject.activeInHierarchy
             ) {
@@ -161,7 +161,7 @@ namespace paper {
          * - 用于各种层遮罩。
          */
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.Layer) })
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(Layer) })
         public layer: Layer = Layer.Default;
         /**
          * 名称。
@@ -173,7 +173,7 @@ namespace paper {
          * 标签。
          */
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.DefaultTags) })
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(DefaultTags) })
         public tag: string = "";
         /**
          * 变换组件。
@@ -201,7 +201,7 @@ namespace paper {
          * @internal
          */
         public _activeDirty: boolean = true;
-        private readonly _components: ComponentArray = [];
+        private readonly _components: (BaseComponent | undefined)[] = [];
         private readonly _cachedComponents: BaseComponent[] = [];
         private _scene: Scene | null = null;
         /**
@@ -221,7 +221,7 @@ namespace paper {
         }
 
         private _destroy() {
-            this._scene!._removeGameObject(this);
+            this._scene!.removeGameObject(this);
 
             for (const child of this.transform.children) {
                 child.gameObject._destroy();
@@ -235,19 +235,19 @@ namespace paper {
                 this._removeComponent(component, null);
             }
 
-            GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).gameObjects.push(this);
             // 销毁的第一时间就将组件和场景清除，场景的有无来判断实体是否已经销毁。
             this._components.length = 0;
             this._scene = null;
+            disposeCollecter.gameObjects.push(this);
         }
 
         private _addToScene(value: Scene): any {
             if (this._scene) {
-                this._scene._removeGameObject(this);
+                this._scene.removeGameObject(this);
             }
 
             this._scene = value;
-            this._scene._addGameObject(this);
+            this._scene.addGameObject(this);
         }
 
         private _canRemoveComponent(value: BaseComponent) {
@@ -265,8 +265,8 @@ namespace paper {
                     component = (component as GroupComponent).components[0]; // 只检查第一个。
                 }
 
-                const requireComponents = (component.constructor as ComponentClass<BaseComponent>).requireComponents;
-                if (requireComponents && requireComponents.indexOf(value.constructor as ComponentClass<BaseComponent>) >= 0) {
+                const requireComponents = (component.constructor as IComponentClass<BaseComponent>).requireComponents;
+                if (requireComponents && requireComponents.indexOf(value.constructor as IComponentClass<BaseComponent>) >= 0) {
                     console.warn(`Cannot remove the ${egret.getQualifiedClassName(value)} component from the game object (${this.path}), because it is required from the ${egret.getQualifiedClassName(component)} component.`);
                     return false;
                 }
@@ -283,7 +283,7 @@ namespace paper {
                 this.renderer = null;
             }
 
-            GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).components.push(value);
+            disposeCollecter.components.push(value);
 
             if (groupComponent) {
                 groupComponent.removeComponent(value);
@@ -301,11 +301,11 @@ namespace paper {
                 }
             }
             else {
-                delete this._components[(value.constructor as ComponentClass<BaseComponent>).__index];
+                delete this._components[(value.constructor as IComponentClass<BaseComponent>).__index];
             }
         }
 
-        private _getComponent(componentClass: ComponentClass<BaseComponent>) {
+        private _getComponent(componentClass: IComponentClass<BaseComponent>) {
             const componentIndex = componentClass.__index;
             return componentIndex < 0 ? null : this._components[componentIndex];
         }
@@ -322,24 +322,16 @@ namespace paper {
                         continue;
                     }
 
+                    const componentClass = component.constructor as IComponentClass<BaseComponent>;
+
                     if (component.enabled) {
-                        if (currentActive) {
-                            BaseComponent.onComponentEnabled.dispatch(component);
-                        }
-                        else {
-                            BaseComponent.onComponentDisabled.dispatch(component);
-                        }
+                        component._dispatchEnabledEvent(currentActive);
                     }
 
                     if (component.constructor === GroupComponent) {
                         for (const componentInGroup of (component as GroupComponent).components) {
                             if (componentInGroup.enabled) {
-                                if (currentActive) {
-                                    BaseComponent.onComponentEnabled.dispatch(componentInGroup);
-                                }
-                                else {
-                                    BaseComponent.onComponentDisabled.dispatch(componentInGroup);
-                                }
+                                componentInGroup._dispatchEnabledEvent(currentActive);
                             }
                         }
                     }
@@ -402,7 +394,7 @@ namespace paper {
          * @param componentClass 组件类。
          * @param config Behaviour 组件 `onAwake(config?: any)` 的可选参数。
          */
-        public addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T {
+        public addComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, config?: any): T {
             registerClass(componentClass);
             // SingletonComponent.
             if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
@@ -458,7 +450,7 @@ namespace paper {
             }
 
             if (component.isActiveAndEnabled) {
-                BaseComponent.onComponentEnabled.dispatch(component);
+                component._dispatchEnabledEvent(true);
             }
 
             return component;
@@ -468,9 +460,9 @@ namespace paper {
          * @param componentInstanceOrClass 组件类或组件实例。
          * @param isExtends 是否尝试移除全部派生自此组件的实例。
          */
-        public removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends: boolean = false): void {
+        public removeComponent<T extends BaseComponent>(componentInstanceOrClass: IComponentClass<T> | T, isExtends: boolean = false): void {
             if (componentInstanceOrClass instanceof BaseComponent) {
-                const componentClass = componentInstanceOrClass.constructor as ComponentClass<T>;
+                const componentClass = componentInstanceOrClass.constructor as IComponentClass<T>;
                 // SingletonComponent.
                 if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
                     GameObject.globalGameObject.removeComponent(componentInstanceOrClass, isExtends);
@@ -550,7 +542,7 @@ namespace paper {
          * @param componentClass 组件类。
          * @param isExtends 是否尝试移除全部派生自此组件的实例。
          */
-        public removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends: boolean = false) {
+        public removeAllComponents<T extends BaseComponent>(componentClass?: IComponentClass<T>, isExtends: boolean = false) {
             if (componentClass) {
                 // SingletonComponent.
                 if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
@@ -614,7 +606,7 @@ namespace paper {
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        public getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false): T | null {
+        public getComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
             // SingletonComponent.
             if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
                 return GameObject.globalGameObject.getComponent(componentClass, isExtends);
@@ -661,7 +653,7 @@ namespace paper {
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        public getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false): T[] {
+        public getComponents<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T[] {
             // SingletonComponent.
             if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
                 return GameObject.globalGameObject.getComponents(componentClass, isExtends);
@@ -706,7 +698,7 @@ namespace paper {
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        public getComponentInParent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
+        public getComponentInParent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false) {
             let result: T | null = null;
             let parent = this.transform.parent;
 
@@ -722,7 +714,7 @@ namespace paper {
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        public getComponentInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false): T | null {
+        public getComponentInChildren<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
             let component = this.getComponent(componentClass, isExtends);
             if (!component) {
                 for (const child of this.transform.children) {
@@ -740,7 +732,7 @@ namespace paper {
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        public getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false, components: T[] | null = null) {
+        public getComponentsInChildren<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false, components: T[] | null = null) {
             components = components || [];
 
             for (const component of this._components) {
@@ -772,7 +764,7 @@ namespace paper {
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        public getOrAddComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
+        public getOrAddComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false) {
             return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, isExtends);
         }
         /**

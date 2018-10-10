@@ -4,7 +4,7 @@ namespace paper {
      */
     export class GroupComponent extends paper.BaseComponent {
         public componentIndex: number = -1;
-        public componentClass: ComponentClass<BaseComponent> = null as any;
+        public componentClass: IComponentClass<BaseComponent> = null as any;
 
         public readonly components: BaseComponent[] = [];
 

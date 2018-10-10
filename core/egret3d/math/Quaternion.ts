@@ -188,7 +188,7 @@ namespace egret3d {
         public premultiply(value: Readonly<IVector4>) {
             return this.multiply(value, this);
         }
-        
+
         public lerp(t: number, valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>) {
             if (!valueB) {
                 valueB = valueA;
@@ -248,6 +248,8 @@ namespace egret3d {
             this.x = (x * ratioA + this.x * ratioB);
             this.y = (y * ratioA + this.y * ratioB);
             this.z = (z * ratioA + this.z * ratioB);
+
+            return this;
         }
         /**
          * 

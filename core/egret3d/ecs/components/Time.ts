@@ -17,7 +17,7 @@ namespace paper {
 
         public initialize() {
             super.initialize();
-            Time = this;
+            Time = clock = this;
             this._beginTime = Date.now() * 0.001;
         }
         /**
@@ -80,8 +80,13 @@ namespace paper {
         }
     }
     /**
-     * @deprecated 
-     * 请使用 gameObject.getComponent(Clock)!;
+     * 全局时钟信息组件实例。
      */
-    export let Time: Clock;
+    export let clock: Clock = null!;
+
+    /**
+     * @deprecated 
+     * @see paper.clock
+     */
+    export let Time: Clock = null!;
 }

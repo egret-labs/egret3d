@@ -113,11 +113,25 @@ declare type int = number;
 declare type uint = number;
 declare namespace paper {
     /**
+     *
+     */
+    type GameObjectExtras = {
+        linkedID?: string;
+        rootID?: string;
+        prefab?: Prefab;
+    };
+    /**
+     *
+     */
+    type ComponentExtras = {
+        linkedID?: string;
+    };
+    /**
      * @private
      */
     interface IUUID {
         /**
-         * 唯一标识。
+         * 对象的唯一标识。
          * @readonly
          */
         readonly uuid: string;
@@ -210,41 +224,21 @@ declare namespace paper {
         deserialize(data: any, deserializer?: Deserializer): any;
     }
     /**
-     *
+     * 基础对象类接口。
+     * - 仅用于约束基础对象的装饰器。
      */
-    interface BaseClass extends Function {
+    interface IBaseClass extends Function {
     }
     /**
-     *
+     * 组件类接口。
+     * - 仅用于约束组件类传递。
      */
-    type GameObjectExtras = {
-        linkedID?: string;
-        rootID?: string;
-        prefab?: Prefab;
-    };
-    /**
-     *
-     */
-    interface ComponentClass<T extends BaseComponent> extends BaseClass {
-        executeInEditMode: boolean;
-        allowMultiple: boolean;
-        requireComponents: ComponentClass<BaseComponent>[] | null;
+    interface IComponentClass<T extends BaseComponent> extends IBaseClass {
+        /**
+         * @protected
+         */
         new (): T;
     }
-    /**
-     *
-     */
-    type ComponentClassArray = (ComponentClass<BaseComponent> | undefined)[];
-    /**
-     *
-     */
-    type ComponentArray = (BaseComponent | undefined)[];
-    /**
-     *
-     */
-    type ComponentExtras = {
-        linkedID?: string;
-    };
 }
 declare namespace paper {
     /**
@@ -259,15 +253,15 @@ declare namespace paper {
     /**
      * 通过装饰器标记组件是否允许在同一实体上添加多个实例。
      */
-    function allowMultiple(componentClass: ComponentClass<BaseComponent>): void;
+    function allowMultiple(componentClass: IComponentClass<BaseComponent>): void;
     /**
      * 通过装饰器标记组件依赖的其他组件。
      */
-    function requireComponent(requireComponentClass: ComponentClass<BaseComponent>): (componentClass: ComponentClass<BaseComponent>) => void;
+    function requireComponent(requireComponentClass: IComponentClass<BaseComponent>): (componentClass: IComponentClass<BaseComponent>) => void;
     /**
      * 通过装饰器标记脚本组件是否在编辑模式也拥有生命周期。
      */
-    function executeInEditMode(componentClass: ComponentClass<Behaviour>): void;
+    function executeInEditMode(componentClass: IComponentClass<Behaviour>): void;
 }
 declare namespace paper {
     /**
@@ -410,6 +404,10 @@ declare namespace paper.editor {
         SHADER = 19,
         /**数组 */
         ARRAY = 20,
+        /**
+         *
+         */
+        NESTED = 21,
     }
     /**
      * 装饰器:自定义
@@ -513,7 +511,7 @@ declare namespace egret3d {
         };
         private static readonly _instances;
         /**
-         * 创建一个三维向量实例。
+         * 创建一个三维向量。
          * @param x X 轴分量。
          * @param y Y 轴分量。
          * @param z Z 轴分量。
@@ -543,8 +541,8 @@ declare namespace egret3d {
         copy(value: Readonly<IVector3>): this;
         clone(): Vector3;
         set(x: number, y: number, z: number): this;
-        equal(value: Readonly<IVector3>, threshold?: number): boolean;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        equal(value: Readonly<IVector3>, threshold?: number): boolean;
         fromPlaneProjection(plane: Readonly<Plane>, source?: Readonly<IVector3>): this;
         applyMatrix3(matrix: Readonly<Matrix3>, source?: Readonly<IVector3>): this;
         applyMatrix(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
@@ -643,9 +641,15 @@ declare namespace paper {
          */
         static find<T extends Asset>(name: string): T;
         /**
+         * 资源名称。
          * @readonly
          */
         name: string;
+        /**
+         * TODO
+         * remove
+         * @param name
+         */
         constructor(name?: string);
         /**
          * 释放资源。
@@ -660,28 +664,13 @@ declare namespace paper {
      */
     abstract class BaseComponent extends BaseObject {
         /**
-         * 该组件的实例是否在编辑模式拥有生命周期。
+         * 所有已注册的组件类。
          */
-        static executeInEditMode: boolean;
-        /**
-         * 是否允许在同一实体上添加多个该组件的实例。
-         */
-        static allowMultiple: boolean;
-        /**
-         * 该组件实例依赖的其他前置组件。
-         */
-        static requireComponents: ComponentClass<BaseComponent>[] | null;
-        /**
-         *
-         */
-        static readonly onComponentEnabled: signals.Signal;
-        /**
-         *
-         */
-        static readonly onComponentDisabled: signals.Signal;
         private static readonly _allComponents;
+        /**
+         * 所有已注册的单例组件类。
+         */
         private static readonly _allSingletonComponents;
-        private static _createEnabled;
         /**
          * 该组件的实体。
          */
@@ -692,7 +681,7 @@ declare namespace paper {
         extras?: ComponentExtras;
         protected _enabled: boolean;
         /**
-         * 禁止实例化组件。
+         * 禁止实例化。
          * @protected
          */
         constructor();
@@ -2164,26 +2153,47 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
-     *
+     * 基础预制体资源。
+     * - 预制体资源和场景资源的基类。
      */
-    class BaseObjectAsset extends Asset {
+    abstract class BasePrefabAsset extends Asset {
         protected _raw: ISerializedData;
         dispose(): boolean;
         caclByteLength(): number;
     }
     /**
-     * scene asset
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     * 预制体资源。
      */
-    /**
-     * 场景数据资源
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class RawScene extends BaseObjectAsset {
+    class Prefab extends BasePrefabAsset {
+        /**
+         * 通过预置体资源创建一个实体实例到激活或指定的场景。
+         * @param name 资源的名称。
+         */
+        static create(name: string): GameObject | null;
+        /**
+         * @param name 资源的名称。
+         * @param x X 坐标。
+         * @param y Y 坐标。
+         * @param z Z 坐标。
+         */
+        static create(name: string, x: number, y: number, z: number): GameObject | null;
+        /**
+         * @param name 资源的名称。
+         * @param scene 指定的场景。
+         */
+        static create(name: string, scene: Scene): GameObject | null;
+        /**
+         * @param name 资源的名称。
+         * @param x X 坐标。
+         * @param y Y 坐标。
+         * @param z Z 坐标。
+         * @param scene 指定的场景。
+         */
+        static create(name: string, x: number, y: number, z: number, scene: Scene): GameObject | null;
+        /**
+         * @deprecated
+         */
+        createInstance(scene?: Scene | null, keepUUID?: boolean): GameObject;
     }
 }
 declare namespace egret3d {
@@ -2218,7 +2228,15 @@ declare namespace egret3d {
         set(origin: Readonly<IVector3>, direction: Readonly<IVector3>): this;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
         applyMatrix(value: Readonly<Matrix4>, ray?: Readonly<Ray>): this;
+        /**
+         * 获取点到该射线的最近距离的平方。
+         * @param value 点。
+         */
         getSquaredDistance(value: Readonly<IVector3>): number;
+        /**
+         * 获取点到该射线的最近距离。
+         * @param value 点。
+         */
         getDistance(value: Readonly<IVector3>): number;
         getDistanceToPlane(value: Readonly<Plane>): number;
         at(value: number, out?: Vector3): Vector3;
@@ -2883,20 +2901,9 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
-     * 预制体资源。
+     * 场景资源。
      */
-    class Prefab extends BaseObjectAsset {
-        /**
-         * 通过预置体资源创建一个实体实例。
-         */
-        static create(name: string): GameObject | null;
-        static create(name: string, x: number, y: number, z: number): GameObject | null;
-        static create(name: string, scene: Scene): GameObject | null;
-        static create(name: string, x: number, y: number, z: number, scene: Scene): GameObject | null;
-        /**
-         * @deprecated
-         */
-        createInstance(scene?: Scene | null, keepUUID?: boolean): GameObject;
+    class RawScene extends BasePrefabAsset {
     }
 }
 declare namespace egret3d {
@@ -3029,23 +3036,22 @@ declare namespace paper {
          */
         getScene(name: string): Scene;
         /**
-         * 程序已创建的全部场景。
-         * - 不包含全局场景。
+         * 程序已创建的全部动态场景。
          */
         readonly scenes: ReadonlyArray<Scene>;
         /**
-         * 全局场景。
+         * 全局静态的场景。
          * - 全局场景无法被销毁。
          */
         readonly globalScene: Scene;
         /**
-         * 当前程序激活的场景。
-         */
-        activeScene: Scene;
-        /**
-         *
+         * 全局静态编辑器的场景。
          */
         readonly editorScene: Scene;
+        /**
+         * 当前激活的场景。
+         */
+        activeScene: Scene;
         /**
          * @deprecated
          */
@@ -3129,7 +3135,10 @@ declare namespace paper {
      * - 全部系统的基类。
      */
     abstract class BaseSystem {
-        private static _createEnabled;
+        /**
+         *
+         */
+        readonly order: SystemOrder;
         private _locked;
         /**
          * 系统是否激活。
@@ -3151,7 +3160,7 @@ declare namespace paper {
          * 禁止实例化系统。
          * @protected
          */
-        constructor();
+        constructor(order?: SystemOrder);
         /**
          * 该系统初始化时调用。
          * @param config 该系统被注册时可以传递的初始化数据。
@@ -3254,55 +3263,66 @@ declare namespace paper.editor {
 }
 declare namespace egret3d.particle {
     /**
-     * 粒子渲染模式。
+     *
      */
-    const enum ParticleRenderMode {
-        Billboard = 0,
-        Stretch = 1,
-        HorizontalBillboard = 2,
-        VerticalBillboard = 3,
-        Mesh = 4,
-        None = 5,
-    }
-    /**
-     * 粒子渲染器。
-     */
-    class ParticleRenderer extends paper.BaseRenderer {
+    class ParticleSystem extends paper.BaseSystem {
+        protected readonly _interests: ({
+            componentClass: typeof ParticleComponent;
+            listeners: {
+                type: signals.Signal<any>;
+                listener: any;
+            }[];
+        } | {
+            componentClass: typeof ParticleRenderer;
+            listeners: {
+                type: signals.Signal<any>;
+                listener: (comp: ParticleRenderer) => void;
+            }[];
+        })[];
+        private readonly _drawCallCollecter;
         /**
-         * 渲染模式改变
-         */
-        static readonly onRenderModeChanged: signals.Signal;
-        /**
-         * TODO
-         */
-        static readonly onVelocityScaleChanged: signals.Signal;
-        /**
-         * TODO
-         */
-        static readonly onLengthScaleChanged: signals.Signal;
+        * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
+        */
+        private _onUpdateBatchMesh(comp);
+        private _onRenderUpdate(render, type);
         /**
          *
+         * @param render 渲染模式改变
          */
-        static readonly onMeshChanged: signals.Signal;
+        private _onRenderMode(render);
+        private _onMainUpdate(component, type);
         /**
-         * TODO
+         * 更新速率模块
+         * @param component
          */
-        frustumCulled: boolean;
-        velocityScale: number;
-        lengthScale: number;
-        private _renderMode;
-        private _mesh;
-        uninitialize(): void;
-        recalculateAABB(): void;
-        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
+        private _onShapeChanged(comp);
         /**
-         *
+         * 更新速率模块
+         * @param component
          */
-        renderMode: ParticleRenderMode;
+        private _onVelocityOverLifetime(comp);
         /**
-         *
+         * 更新颜色模块
+         * @param component
          */
-        mesh: Mesh | null;
+        private _onColorOverLifetime(comp);
+        /**
+         * 更新大小模块
+         * @param component
+         */
+        private _onSizeOverLifetime(comp);
+        /**
+         * 更新旋转模块
+         * @param comp
+         */
+        private _onRotationOverLifetime(comp);
+        private _onTextureSheetAnimation(comp);
+        private _updateDrawCalls(gameObject);
+        onEnable(): void;
+        onAddGameObject(gameObject: paper.GameObject, _group: paper.GameObjectGroup): void;
+        onRemoveGameObject(gameObject: paper.GameObject): void;
+        onUpdate(deltaTime: number): void;
+        onDisable(): void;
     }
 }
 declare namespace paper {
@@ -3366,19 +3386,19 @@ declare namespace paper {
      */
     class DisposeCollecter extends SingletonComponent {
         /**
-         * 当前帧销毁的全部场景。
+         * 暂存此帧销毁的全部场景。
          */
         readonly scenes: Scene[];
         /**
-         * 当前帧销毁的全部实体。
+         * 暂存此帧销毁的全部实体。
          */
         readonly gameObjects: GameObject[];
         /**
-         * 当前帧销毁的全部组件。
+         * 暂存此帧销毁的全部组件。
          */
         readonly components: BaseComponent[];
         /**
-         *
+         * 暂存需要在此帧结束时释放的对象。
          */
         readonly releases: BaseRelease<any>[];
         initialize(): void;
@@ -3390,7 +3410,7 @@ declare namespace paper {
      */
     const enum InterestType {
         /**
-         *
+         * @deprecated
          */
         Extends = 1,
         /**
@@ -3409,7 +3429,7 @@ declare namespace paper {
         /**
          * 关心的组件或组件列表。
          */
-        componentClass: ComponentClass<BaseComponent>[] | ComponentClass<BaseComponent>;
+        componentClass: IComponentClass<BaseComponent>[] | IComponentClass<BaseComponent>;
         /**
          * 关心组件的类型。
          */
@@ -3442,6 +3462,7 @@ declare namespace paper {
         private _behaviourComponents;
         private readonly _interestConfig;
         private constructor();
+        private _addListener(componentClass, isUnessential);
         private _onAddComponent(component);
         private _onAddUnessentialComponent(component);
         private _onRemoveUnessentialComponent(component);
@@ -3498,7 +3519,7 @@ declare namespace paper {
 }
 declare namespace paper {
     /**
-     * 更新系统。
+     * Late 更新系统。
      */
     class LateUpdateSystem extends BaseSystem {
         protected readonly _interests: {
@@ -3509,7 +3530,8 @@ declare namespace paper {
         private readonly _laterCalls;
         onUpdate(deltaTime: number): void;
         /**
-         *
+         * 在 `paper.Behaviour.onLateUpdate()` 生命周期之后回调指定方法。
+         * @param callback 需要回调的方法。
          */
         callLater(callback: () => void): void;
     }
@@ -3871,10 +3893,18 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 舞台组件。
+     * 全局舞台信息组件。
      */
     class Stage extends paper.SingletonComponent {
         static onResize: signals.Signal;
+        /**
+         * 是否允许因屏幕尺寸的改变而旋转舞台。
+         */
+        rotateEnabled: boolean;
+        /**
+         * 舞台是否因屏幕尺寸的改变而发生了旋转。
+         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于渲染尺寸宽度。
+         */
         rotated: boolean;
         private readonly _screenSize;
         private readonly _size;
@@ -5061,56 +5091,56 @@ declare namespace paper {
          * @param componentClass 组件类。
          * @param config Behaviour 组件 `onAwake(config?: any)` 的可选参数。
          */
-        addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T;
+        addComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, config?: any): T;
         /**
          * 移除一个指定组件实例。
          * @param componentInstanceOrClass 组件类或组件实例。
          * @param isExtends 是否尝试移除全部派生自此组件的实例。
          */
-        removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends?: boolean): void;
+        removeComponent<T extends BaseComponent>(componentInstanceOrClass: IComponentClass<T> | T, isExtends?: boolean): void;
         /**
          * 移除全部指定组件的实例。
          * - 通常只有该组件类允许同一个实体添加多个组件实例时才需要此操作。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试移除全部派生自此组件的实例。
          */
-        removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends?: boolean): void;
+        removeAllComponents<T extends BaseComponent>(componentClass?: IComponentClass<T>, isExtends?: boolean): void;
         /**
          * 获取一个指定组件实例。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T | null;
+        getComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T | null;
         /**
          * 获取全部指定组件实例。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T[];
+        getComponents<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T[];
         /**
          * 获取一个自己或父级中指定的组件实例。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        getComponentInParent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
+        getComponentInParent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T;
         /**
          * 获取一个自己或子（孙）级中指定的组件实例。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        getComponentInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T | null;
+        getComponentInChildren<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T | null;
         /**
          * 获取全部自己和子（孙）级中指定的组件实例。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean, components?: T[] | null): T[];
+        getComponentsInChildren<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends?: boolean, components?: T[] | null): T[];
         /**
          * 从该实体已注册的全部组件中获取一个指定组件实例，如果未添加该组件，则添加该组件。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        getOrAddComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends?: boolean): T;
+        getOrAddComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T;
         /**
          * 向该实体已激活的全部 Behaviour 组件发送消息。
          * @param methodName
@@ -5978,6 +6008,59 @@ declare namespace egret3d.particle {
         readonly loop: boolean;
     }
 }
+declare namespace egret3d.particle {
+    /**
+     * 粒子渲染模式。
+     */
+    const enum ParticleRenderMode {
+        Billboard = 0,
+        Stretch = 1,
+        HorizontalBillboard = 2,
+        VerticalBillboard = 3,
+        Mesh = 4,
+        None = 5,
+    }
+    /**
+     * 粒子渲染器。
+     */
+    class ParticleRenderer extends paper.BaseRenderer {
+        /**
+         * 渲染模式改变
+         */
+        static readonly onRenderModeChanged: signals.Signal;
+        /**
+         * TODO
+         */
+        static readonly onVelocityScaleChanged: signals.Signal;
+        /**
+         * TODO
+         */
+        static readonly onLengthScaleChanged: signals.Signal;
+        /**
+         *
+         */
+        static readonly onMeshChanged: signals.Signal;
+        /**
+         * TODO
+         */
+        frustumCulled: boolean;
+        velocityScale: number;
+        lengthScale: number;
+        private _renderMode;
+        private _mesh;
+        uninitialize(): void;
+        recalculateAABB(): void;
+        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
+        /**
+         *
+         */
+        renderMode: ParticleRenderMode;
+        /**
+         *
+         */
+        mesh: Mesh | null;
+    }
+}
 declare namespace paper {
     /**
      * 脚本组件。
@@ -6075,70 +6158,6 @@ declare namespace paper {
         onDestroy?(): void;
     }
 }
-declare namespace egret3d.particle {
-    /**
-     *
-     */
-    class ParticleSystem extends paper.BaseSystem {
-        protected readonly _interests: ({
-            componentClass: typeof ParticleComponent;
-            listeners: {
-                type: signals.Signal<any>;
-                listener: any;
-            }[];
-        } | {
-            componentClass: typeof ParticleRenderer;
-            listeners: {
-                type: signals.Signal<any>;
-                listener: (comp: ParticleRenderer) => void;
-            }[];
-        })[];
-        private readonly _drawCallCollecter;
-        /**
-        * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
-        */
-        private _onUpdateBatchMesh(comp);
-        private _onRenderUpdate(render, type);
-        /**
-         *
-         * @param render 渲染模式改变
-         */
-        private _onRenderMode(render);
-        private _onMainUpdate(component, type);
-        /**
-         * 更新速率模块
-         * @param component
-         */
-        private _onShapeChanged(comp);
-        /**
-         * 更新速率模块
-         * @param component
-         */
-        private _onVelocityOverLifetime(comp);
-        /**
-         * 更新颜色模块
-         * @param component
-         */
-        private _onColorOverLifetime(comp);
-        /**
-         * 更新大小模块
-         * @param component
-         */
-        private _onSizeOverLifetime(comp);
-        /**
-         * 更新旋转模块
-         * @param comp
-         */
-        private _onRotationOverLifetime(comp);
-        private _onTextureSheetAnimation(comp);
-        private _updateDrawCalls(gameObject);
-        onEnable(): void;
-        onAddGameObject(gameObject: paper.GameObject, _group: paper.GameObjectGroup): void;
-        onRemoveGameObject(gameObject: paper.GameObject): void;
-        onUpdate(deltaTime: number): void;
-        onDisable(): void;
-    }
-}
 declare namespace egret3d {
     /**
      * @private
@@ -6193,104 +6212,90 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
-     * 雾的模式。
-     */
-    const enum FogMode {
-        NONE = 0,
-        FOG = 1,
-        FOG_EXP2 = 2,
-    }
-    /**
      * 场景。
      */
     class Scene extends BaseObject {
         /**
-         * 创建空场景。
+         * 创建一个空场景。
+         * @param name 场景的名称。
          */
         static createEmpty(name?: string, isActive?: boolean): Scene;
         /**
-         * 通过创建资源创建指定场景。
+         * 通过指定的场景资源创建一个场景。
+         * @param name 场景资源的名称。
          */
         static create(name: string, combineStaticObjects?: boolean): Scene;
         /**
-         * 全局静态场景。
+         * 全局静态的场景。
+         * - 全局场景无法被销毁。
          */
         static readonly globalScene: Scene;
         /**
-         *
+         * 全局静态编辑器的场景。
          */
         static readonly editorScene: Scene;
         /**
-         * 当前激活场景。
+         * 当前激活的场景。
          */
         static activeScene: Scene;
         /**
-         * Light map 表现的光照强度。
-         */
-        lightmapIntensity: number;
-        /**
-         * 名称。
+         * 该场景的名称。
          */
         readonly name: string;
-        /**
-         * 环境光。
-         */
-        readonly ambientColor: egret3d.Color;
-        /**
-         * Light map 列表。
-         */
-        readonly lightmaps: egret3d.Texture[];
-        /**
-         * 雾的模式。
-         */
-        fogMode: FogMode;
-        /**
-         * 雾的颜色。
-         */
-        readonly fogColor: egret3d.Color;
-        /**
-         *
-         */
-        fogDensity: number;
-        /**
-         *
-         */
-        fogNear: number;
-        /**
-         *
-         */
-        fogFar: number;
         /**
          * 额外数据，仅保存在编辑器环境，项目发布时该数据将被移除。
          */
         extras?: any;
         /**
-         * 请使用 `paper.Scene.createEmpty()` 创建实例。
-         * @see paper.Scene.createEmpty()
-         * @see paper.Scene.create()
+         * 该场景使用光照贴图时的光照强度。
+         */
+        lightmapIntensity: number;
+        /**
+         * 该场景的环境光。
+         */
+        readonly ambientColor: egret3d.Color;
+        /**
+         * 该场景的雾。
+         */
+        readonly fog: egret3d.Fog;
+        /**
+         * 该场景的光照贴图列表。
+         */
+        readonly lightmaps: egret3d.Texture[];
+        private readonly _gameObjects;
+        /**
+         * 禁止实例化。
          */
         private constructor();
+        /**
+         * 场景被销毁后，内部卸载。
+         * @protected
+         */
+        uninitialize(): void;
         /**
          * 销毁该场景和场景中的全部实体。
          */
         destroy(): boolean;
         /**
-         * 获取该场景指定名称或路径的实体。
+         * 获取该场景指定名称或路径的第一个实体。
          * - 仅返回第一个符合条件的实体。
+         * @param nameOrPath 名称或路径。
          */
         find(nameOrPath: string): GameObject;
         /**
-         * 获取该场景指定标识的实体。
+         * 获取该场景指定标识的第一个实体。
          * - 仅返回第一个符合条件的实体。
+         * @param tag 标识。
          */
         findWithTag(tag: string): GameObject;
         /**
-         * 获取该场景指定标识的实体。
+         * 获取该场景指定标识的全部实体。
          * - 返回符合条件的全部实体。
+         * @param tag 标识。
          */
         findGameObjectsWithTag(tag: string): GameObject[];
         /**
-         * 该场景全部根实体。
+         * 该场景的全部根实体。
          */
         getRootGameObjects(): GameObject[];
         /**
@@ -9615,6 +9620,49 @@ declare namespace egret3d.ShaderChunk {
     const uv_pars_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n uniform mat3 uvTransform;\n\n#endif\n";
     const uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n #if defined FLIP_V \n  vUv = ( uvTransform * vec3( uv.x, 1.0 - uv.y, 1 ) ).xy;//modify egret\n #else\n  vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n #endif\n#endif";
     const worldpos_vertex = "#if defined( USE_ENVMAP ) || defined( DISTANCE ) || defined ( USE_SHADOWMAP )\n\n vec4 worldPosition = modelMatrix * vec4( transformed, 1.0 );\n\n#endif\n";
+}
+declare namespace egret3d {
+    /**
+     * 雾的模式。
+     */
+    const enum FogMode {
+        NONE = 0,
+        FOG = 1,
+        FOG_EXP2 = 2,
+    }
+    /**
+     * 雾。
+     */
+    class Fog implements paper.ISerializable {
+        /**
+         * 雾的模式。
+         */
+        mode: FogMode;
+        /**
+         * 雾的强度。
+         */
+        density: number;
+        /**
+         * 雾的近平面。
+         * - 最小值 0.01。
+         */
+        near: number;
+        /**
+         * 雾的远平面。
+         * - 最小值 0.02。
+         */
+        far: number;
+        /**
+         * 雾的颜色。
+         */
+        readonly color: Color;
+        /**
+         * 禁止实例化。
+         */
+        private constructor();
+        serialize(): number[];
+        deserialize(data: Readonly<[number, number, number, number, number, number, number, number]>): void;
+    }
 }
 declare namespace egret3d {
     const BitmapDataProcessor: RES.processor.Processor;

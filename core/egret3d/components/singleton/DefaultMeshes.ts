@@ -6,7 +6,7 @@ namespace egret3d {
         gltf.MeshAttributeType.TEXCOORD_0,
     ];
     /**
-     * 提供默认的几何网格，以及创建几何网格的方式。
+     * 提供默认的几何网格资源，以及创建几何网格或几何网格实体的方式。
      */
     export class DefaultMeshes extends paper.SingletonComponent {
         public static QUAD: Mesh;
@@ -228,7 +228,11 @@ namespace egret3d {
             }
         }
         /**
-         * 创建带网格的实体。
+         * 创建带有指定网格资源的实体。
+         * @param mesh 网格资源。
+         * @param name 实体的名称。
+         * @param tag 实体的标识。
+         * @param scene 实体的场景。
          */
         public static createObject(mesh: Mesh, name?: string, tag?: string, scene?: paper.Scene) {
             const gameObject = paper.GameObject.create(name, tag, scene);

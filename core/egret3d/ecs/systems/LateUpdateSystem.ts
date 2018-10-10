@@ -1,6 +1,6 @@
 namespace paper {
     /**
-     * 更新系统。
+     * Late 更新系统。
      */
     export class LateUpdateSystem extends BaseSystem {
         protected readonly _interests = [
@@ -14,7 +14,7 @@ namespace paper {
 
             if (Application.playerMode === PlayerMode.Editor) {
                 for (const component of components) {
-                    if (component && (component.constructor as ComponentClass<Behaviour>).executeInEditMode) {
+                    if (component && (component.constructor as IComponentClass<Behaviour>).executeInEditMode) {
                         component.onLateUpdate && component.onLateUpdate(deltaTime);
                     }
                 }
@@ -38,7 +38,8 @@ namespace paper {
             }
         }
         /**
-         * 
+         * 在 `paper.Behaviour.onLateUpdate()` 生命周期之后回调指定方法。
+         * @param callback 需要回调的方法。
          */
         public callLater(callback: () => void): void {
             this._laterCalls.push(callback);
