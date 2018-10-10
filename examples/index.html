@@ -66,7 +66,7 @@
             var list = manifest.initial.concat(manifest.game);
             loadScript(list, function () {
                 egret3d.runEgret({antialias: false, alpha: false});
-                main(manifest.game);
+                main();
             });
         });
         xhr.send(null);

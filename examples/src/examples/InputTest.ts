@@ -1,11 +1,15 @@
-namespace InputTest {
-    export async function start() {
-        // Load resource config.
-        await RES.loadConfig("default.res.json", "resource/");
-        // Create camera.
-        egret3d.Camera.main;
+namespace examples {
 
-        paper.GameObject.globalGameObject.addComponent(Updater);
+
+    export class InputTest {
+        async  start() {
+            // Load resource config.
+            await RES.loadConfig("default.res.json", "resource/");
+            // Create camera.
+            egret3d.Camera.main;
+
+            paper.GameObject.globalGameObject.addComponent(Updater);
+        }
     }
 
     class Updater extends paper.Behaviour {
