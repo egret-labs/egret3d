@@ -20,16 +20,17 @@ namespace egret3d {
         public static TRANSPARENT_DOUBLESIDE: Shader;
         public static TRANSPARENT_ADDITIVE: Shader;
         public static TRANSPARENT_ADDITIVE_DOUBLESIDE: Shader;
-        public static TRANSPARENT_MULTIPLY:Shader;
-        public static TRANSPARENT_MULTIPLY_DOUBLESIDE:Shader;
+        public static TRANSPARENT_MULTIPLY: Shader;
+        public static TRANSPARENT_MULTIPLY_DOUBLESIDE: Shader;
 
         public static PARTICLE: Shader;
         public static PARTICLE_BLEND: Shader;
-        public static PARTICLE_BLEND1: Shader;
         public static PARTICLE_ADDITIVE: Shader;
+        public static PARTICLE_MULTIPLY: Shader;
 
         public static PARTICLE_BLEND_PREMULTIPLY: Shader;
         public static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
+        public static PARTICLE_MULTIPLY_PREMULTIPLY: Shader;
 
         public static CUBE: Shader;
         public static DEPTH: Shader;
@@ -127,18 +128,20 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend);
             DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);
 
-            helpMaterial.clearStates().setDepth(true, true).setBlend(gltf.BlendMode.Blend);
-            helpMaterial.glTFTechnique.states!.functions!.depthFunc = [gltf.DepthFunc.EQUAL];//TODO
-            DefaultShaders.PARTICLE_BLEND1 = this._createShader("builtin/particle_blend1.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);
-
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add);
             DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);
+
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply);
+            DefaultShaders.PARTICLE_MULTIPLY = this._createShader("builtin/particle_multiply.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend_PreMultiply);
             DefaultShaders.PARTICLE_BLEND_PREMULTIPLY = this._createShader("builtin/particle_blend_premultiply.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add_PreMultiply);
             DefaultShaders.PARTICLE_ADDITIVE_PREMULTIPLY = this._createShader("builtin/particle_additive_premultiply.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);
+
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply_PreMultiply);
+            DefaultShaders.PARTICLE_MULTIPLY_PREMULTIPLY = this._createShader("builtin/particle_multiply_premultiply.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.CUBE = this._createShader("builtin/cube.shader.json", egret3d.ShaderLib.cube as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);
