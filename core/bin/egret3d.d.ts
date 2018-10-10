@@ -1158,7 +1158,6 @@ declare namespace gltf {
         _FOG_DENSITY = "_FOG_DENSITY",
         _FOG_NEAR = "_FOG_NEAR",
         _FOG_FAR = "_FOG_FAR",
-        _LOG_DEPTH_BUFFER = "_LOG_DEPTH_BUFFER",
     }
     const enum AccessorType {
         SCALAR = "SCALAR",
@@ -2219,7 +2218,15 @@ declare namespace egret3d {
         set(origin: Readonly<IVector3>, direction: Readonly<IVector3>): this;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
         applyMatrix(value: Readonly<Matrix4>, ray?: Readonly<Ray>): this;
+        /**
+         * 获取点到该射线的最近距离的平方。
+         * @param value 点。
+         */
         getSquaredDistance(value: Readonly<IVector3>): number;
+        /**
+         * 获取点到该射线的最近距离。
+         * @param value 点。
+         */
         getDistance(value: Readonly<IVector3>): number;
         getDistanceToPlane(value: Readonly<Plane>): number;
         at(value: number, out?: Vector3): Vector3;
@@ -4007,10 +4014,11 @@ declare namespace egret3d {
         static TRANSPARENT_MULTIPLY_DOUBLESIDE: Shader;
         static PARTICLE: Shader;
         static PARTICLE_BLEND: Shader;
-        static PARTICLE_BLEND1: Shader;
         static PARTICLE_ADDITIVE: Shader;
+        static PARTICLE_MULTIPLY: Shader;
         static PARTICLE_BLEND_PREMULTIPLY: Shader;
         static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
+        static PARTICLE_MULTIPLY_PREMULTIPLY: Shader;
         static CUBE: Shader;
         static DEPTH: Shader;
         static DISTANCE_RGBA: Shader;
@@ -6167,7 +6175,6 @@ declare namespace egret3d {
         floatTextures: boolean;
         anisotropyExt: EXT_texture_filter_anisotropic;
         shaderTextureLOD: any;
-        fragDepth: any;
         maxAnisotropy: number;
         maxRenderTextureSize: number;
         standardDerivatives: boolean;
@@ -6875,7 +6882,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "opacity": {
                             "type": number;
@@ -7281,7 +7287,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "linewidth": {
                             "type": number;
@@ -7446,7 +7451,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -7616,7 +7620,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -7865,7 +7868,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -8110,7 +8112,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -8406,7 +8407,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -8695,7 +8695,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "opacity": {
                             "type": number;
@@ -9147,7 +9146,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
@@ -9488,7 +9486,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "logDepthBufFC": {
                             "type": number;
-                            "semantic": string;
                         };
                         "diffuse": {
                             "type": number;
