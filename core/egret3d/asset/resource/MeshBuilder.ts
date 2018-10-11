@@ -8,256 +8,9 @@ namespace egret3d {
     /**
      * 提供默认的几何网格资源，以及创建几何网格或几何网格实体的方式。
      */
-    export class DefaultMeshes extends paper.SingletonComponent {
-        public static QUAD: Mesh;
-        public static QUAD_PARTICLE: Mesh;
-        public static PLANE: Mesh;
-        public static CUBE: Mesh;
-        public static PYRAMID: Mesh;
-        public static CONE: Mesh;
-        public static CYLINDER: Mesh;
-        public static TORUS: Mesh;
-        public static SPHERE: Mesh;
+    export class MeshBuilder {
 
-        public static LINE_X: Mesh;
-        public static LINE_Y: Mesh;
-        public static LINE_Z: Mesh;
-        public static CIRCLE_LINE: Mesh;
-        public static CUBE_LINE: Mesh;
 
-        public initialize() {
-            super.initialize();
-            // TODO 颜色切线，球体，更多类型。
-
-            { // QUAD.
-                const mesh = MeshBuilder.createPlane();
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/quad.mesh.bin";
-                paper.Asset.register(mesh);
-                DefaultMeshes.QUAD = mesh;
-            }
-
-            { // QUAD_PARTICLE.
-                const mesh = MeshBuilder.createPlane(1.0, 1.0, -0.5, 0.0);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/quad_particle.mesh.bin";
-                paper.Asset.register(mesh);
-                DefaultMeshes.QUAD_PARTICLE = mesh;
-            }
-
-            { // PLANE.
-                const mesh = MeshBuilder.createPlane(10.0, 10.0);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/plane.mesh.bin";
-                paper.Asset.register(mesh);
-                DefaultMeshes.PLANE = mesh;
-            }
-
-            { // CUBE.
-                const mesh = DefaultMeshes.createCube();
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/cube.mesh.bin";
-                paper.Asset.register(mesh);
-                DefaultMeshes.CUBE = mesh;
-            }
-
-            { // PYRAMID.
-                const mesh = DefaultMeshes.createCylinder(0.0, Math.sqrt(0.5), 1.0, 0.0, 0.0, 0.0, 4, 1, false, Math.PI * 0.25);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/pyramid.mesh.bin";
-                paper.Asset.register(mesh);
-                DefaultMeshes.PYRAMID = mesh;
-            }
-
-            { // CONE.
-                const mesh = DefaultMeshes.createCylinder(0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 16, 1);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/cone.mesh.bin";
-                paper.Asset.register(mesh);
-                DefaultMeshes.CONE = mesh;
-            }
-
-            { // CYLINDER.
-                const mesh = DefaultMeshes.createCylinder();
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/cylinder.mesh.bin";
-                paper.Asset.register(mesh);
-                DefaultMeshes.CYLINDER = mesh;
-            }
-
-            { // TORUS.
-                const mesh = DefaultMeshes.createTorus();
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/torus.mesh.bin";
-                paper.Asset.register(mesh);
-                DefaultMeshes.TORUS = mesh;
-            }
-
-            { // SPHERE.
-                const mesh = DefaultMeshes.createSphere();
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/sphere.mesh.bin";
-                paper.Asset.register(mesh);
-                DefaultMeshes.SPHERE = mesh;
-            }
-
-            { // LINE_X.
-                const mesh = new Mesh(4, 2, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/line_x.mesh.bin";
-                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
-                paper.Asset.register(mesh);
-                DefaultMeshes.LINE_X = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    0.0, 0.0, 0.0, // Line start.
-                    1.0, 0.0, 0.0, // Line end.
-
-                    0.0, 0.0, 0.0, // Point start.
-                    1.0, 0.0, 0.0, // Point end.
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1.0, 1.0, 1.0, 1.0,
-                    1.0, 1.0, 1.0, 1.0,
-
-                    1.0, 1.0, 1.0, 1.0,
-                    1.0, 1.0, 1.0, 1.0,
-                ]);
-                mesh.setIndices([0, 1], 0);
-            }
-
-            { // LINE_Y.
-                const mesh = new Mesh(4, 2, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/line_y.mesh.bin";
-                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
-                paper.Asset.register(mesh);
-                DefaultMeshes.LINE_Y = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    0.0, 0.0, 0.0, // Line start.
-                    0.0, 1.0, 0.0, // Line end.
-
-                    0.0, 0.0, 0.0, // Point start.
-                    0.0, 1.0, 0.0, // Point end.
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1.0, 1.0, 1.0, 1.0,
-                    1.0, 1.0, 1.0, 1.0,
-
-                    1.0, 1.0, 1.0, 1.0,
-                    1.0, 1.0, 1.0, 1.0,
-                ]);
-                mesh.setIndices([0, 1], 0);
-            }
-
-            { // LINE_Z.
-                const mesh = new Mesh(4, 2, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/line_z.mesh.bin";
-                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
-                paper.Asset.register(mesh);
-                DefaultMeshes.LINE_Z = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    0.0, 0.0, 0.0, // Line start.
-                    0.0, 0.0, 1.0, // Line end.
-
-                    0.0, 0.0, 0.0, // Point start.
-                    0.0, 0.0, 1.0, // Point end.
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1.0, 1.0, 1.0, 1.0,
-                    1.0, 1.0, 1.0, 1.0,
-
-                    1.0, 1.0, 1.0, 1.0,
-                    1.0, 1.0, 1.0, 1.0,
-                ]);
-                mesh.setIndices([0, 1], 0);
-            }
-
-            { // CIRCLE_LINE
-                const mesh = DefaultMeshes.createCircle();
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/circle_line.mesh.bin";
-                paper.Asset.register(mesh);
-                DefaultMeshes.CIRCLE_LINE = mesh;
-            }
-
-            { // CUBE_LINE
-                // const meshAttributesType: { [key: string]: gltf.AccessorType } = {};
-                // meshAttributesType[gltf.AttributeSemanticType._INSTANCE_DISTANCE] = gltf.AccessorType.SCALAR;
-                const mesh = new Mesh(8, 24, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-                mesh._isBuiltin = true;
-                mesh.name = "builtin/cube_line.mesh.bin";
-                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
-                paper.Asset.register(mesh);
-                DefaultMeshes.CUBE_LINE = mesh;
-                //
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
-                    // Z-
-                    -0.5, 0.5, -0.5,
-                    0.5, 0.5, -0.5,
-                    0.5, -0.5, -0.5,
-                    -0.5, -0.5, -0.5,
-
-                    // Z+
-                    0.5, 0.5, 0.5,
-                    0.5, -0.5, 0.5,
-                    -0.5, -0.5, 0.5,
-                    -0.5, 0.5, 0.5,
-                ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                    1, 1, 1, 1,
-                ]);
-                mesh.setIndices([
-                    0, 1, 1, 2, 2, 3, 3, 0,
-                    4, 5, 5, 6, 6, 7, 7, 4,
-                    0, 7, 1, 4, 2, 5, 3, 6,
-                ]);
-
-                //
-                // const lineDistances = mesh.getAttributes(gltf.AttributeSemanticType._INSTANCE_DISTANCE);
-                // this.computeLineDistances(mesh.getAttributes(gltf.AttributeSemanticType.POSITION), lineDistances);
-                // mesh.setAttributes(gltf.AttributeSemanticType._INSTANCE_DISTANCE, lineDistances);
-            }
-        }
-        /**
-         * 创建带有指定网格资源的实体。
-         * @param mesh 网格资源。
-         * @param name 实体的名称。
-         * @param tag 实体的标识。
-         * @param scene 实体的场景。
-         */
-        public static createObject(mesh: Mesh, name?: string, tag?: string, scene?: paper.Scene) {
-            const gameObject = paper.GameObject.create(name, tag, scene);
-            const meshFilter = gameObject.addComponent(MeshFilter);
-            const renderer = gameObject.addComponent(MeshRenderer);
-            meshFilter.mesh = mesh;
-
-            switch (mesh) {
-                case this.QUAD:
-                case this.QUAD_PARTICLE:
-                case this.PLANE:
-                    renderer.material = DefaultMaterials.MESH_BASIC_DOUBLESIDE;
-
-                    break;
-                case this.LINE_X:
-                case this.LINE_Y:
-                case this.LINE_Z:
-                case this.CIRCLE_LINE:
-                case this.CUBE_LINE:
-                    renderer.material = DefaultMaterials.LINEDASHED_COLOR;
-                    break;
-            }
-
-            return gameObject;
-        }
         /**
          * 创建平面网格。
          * @param width 宽度。
@@ -267,25 +20,188 @@ namespace egret3d {
          * @param widthSegments 宽度分段。
          * @param heightSegments 高度分段。
          */
-        @paper.deprecated("1.3")
         public static createPlane(
             width: number = 1.0, height: number = 1.0,
             centerOffsetX: number = 0.0, centerOffsetY: number = 0.0,
             widthSegments: uint = 1, heightSegments: uint = 1,
         ) {
-            return MeshBuilder.createPlane(width, height, centerOffsetX, centerOffsetY, widthSegments, heightSegments);
+            const widthHalf = width / 2;
+            const heightHalf = height / 2;
+
+            const gridX1 = widthSegments + 1;
+            const gridY1 = heightSegments + 1;
+
+            const segmentWidth = width / widthSegments;
+            const segmentHeight = height / heightSegments;
+
+            // buffers
+            const indices = [] as uint[];
+            const vertices = [] as number[];
+            const normals = [] as number[];
+            const uvs = [] as number[];
+
+            // generate vertices, normals and uvs
+            for (let iy = 0; iy < gridY1; iy++) {
+                const y = iy * segmentHeight - heightHalf;
+
+                for (let ix = 0; ix < gridX1; ix++) {
+                    const x = ix * segmentWidth - widthHalf;
+                    vertices.push(x + centerOffsetX, -y + centerOffsetY, 0.0);
+                    normals.push(0.0, 0.0, 1.0);
+                    uvs.push(
+                        ix / widthSegments,
+                        iy / heightSegments,
+                    );
+                }
+            }
+
+            // indices
+            for (let iy = 0; iy < heightSegments; iy++) {
+                for (let ix = 0; ix < widthSegments; ix++) {
+                    const a = ix + gridX1 * iy;
+                    const b = ix + gridX1 * (iy + 1);
+                    const c = (ix + 1) + gridX1 * (iy + 1);
+                    const d = (ix + 1) + gridX1 * iy;
+                    // faces
+                    // a - d
+                    // | / |
+                    // b - c
+                    indices.push(
+                        a, d, b,
+                        b, d, c,
+                    );
+                }
+            }
+
+            const mesh = Mesh.create(vertices.length / 3, indices.length);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
+            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+            mesh.setIndices(indices);
+
+            return mesh;
         }
         /**
          * 创建立方体网格。
          */
-        @paper.deprecated("1.3")
         public static createCube(
             width: number = 1.0, height: number = 1.0, depth: number = 1.0,
             centerOffsetX: number = 0.0, centerOffsetY: number = 0.0, centerOffsetZ: number = 0.0,
             widthSegments: number = 1, heightSegments: number = 1, depthSegments: number = 1,
             differentFace: boolean = false
         ) {
-            return MeshBuilder.createCube(width, height, depth, centerOffsetX, centerOffsetY, centerOffsetZ, widthSegments, heightSegments, depthSegments, differentFace);
+            // helper variables
+            let meshVertexCount = 0;
+            const vector3 = _helpVector3;
+            // buffers
+            const indices = [] as number[];
+            const vertices = [] as number[];
+            const normals = [] as number[];
+            const uvs = [] as number[];
+            // build each side of the box geometry
+            buildPlane("z", "y", "x", -1, -1, depth, height, -width, depthSegments, heightSegments); // px
+            buildPlane("z", "y", "x", 1, -1, depth, height, width, depthSegments, heightSegments); // nx
+            buildPlane("x", "z", "y", 1, 1, width, depth, -height, widthSegments, depthSegments); // py
+            buildPlane("x", "z", "y", 1, -1, width, depth, height, widthSegments, depthSegments); // ny
+            buildPlane("x", "y", "z", 1, -1, width, height, -depth, widthSegments, heightSegments); // pz
+            buildPlane("x", "y", "z", -1, -1, width, height, depth, widthSegments, heightSegments); // nz
+
+            // build geometry
+            if (differentFace) {
+                const faceIndexCount = indices.length / 6;
+                const mesh = Mesh.create(vertices.length / 3, 0);
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
+                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+
+                for (let i = 0; i < 6; ++i) {
+                    mesh.addSubMesh(faceIndexCount, i);
+                    mesh.setIndices(indices, i, faceIndexCount * i);
+                }
+
+                return mesh;
+            }
+            else {
+                const mesh = Mesh.create(vertices.length / 3, indices.length);
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
+                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+                mesh.setIndices(indices);
+
+                return mesh;
+            }
+
+            function buildPlane(u: "x" | "y" | "z", v: "x" | "y" | "z", w: "x" | "y" | "z", udir: number, vdir: number, width: number, height: number, depth: number, gridX: number, gridY: number) {
+                const segmentWidth = width / gridX;
+                const segmentHeight = height / gridY;
+
+                const widthHalf = width / 2;
+                const heightHalf = height / 2;
+                const depthHalf = depth / 2;
+
+                const gridX1 = gridX + 1;
+                const gridY1 = gridY + 1;
+
+                let vertexCount = 0;
+
+                // generate vertices, normals and uvs
+                for (let iy = 0; iy < gridY1; iy++) {
+                    const y = iy * segmentHeight - heightHalf;
+                    for (let ix = 0; ix < gridX1; ix++) {
+                        const x = ix * segmentWidth - widthHalf;
+
+                        // set values to correct vector component
+                        vector3[u] = x * udir;
+                        vector3[v] = y * vdir;
+                        vector3[w] = depthHalf;
+
+                        // now apply vector to vertex buffer
+                        vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, vector3.z + centerOffsetZ);
+
+                        // set values to correct vector component
+                        vector3[u] = 0.0;
+                        vector3[v] = 0.0;
+                        vector3[w] = depth > 0.0 ? 1.0 : - 1.0;
+
+                        // now apply vector to normal buffer
+                        normals.push(vector3.x, vector3.y, vector3.z);
+
+                        // uvs
+                        uvs.push(
+                            ix / gridX,
+                            iy / gridY,
+                        );
+
+                        // counters
+                        vertexCount += 1;
+                    }
+                }
+
+                // indices
+                // 1. you need three indices to draw a single face
+                // 2. a single segment consists of two faces
+                // 3. so we need to generate six (2*3) indices per segment
+                for (let iy = 0; iy < gridY; iy++) {
+                    for (let ix = 0; ix < gridX; ix++) {
+                        const a = meshVertexCount + ix + gridX1 * iy;
+                        const b = meshVertexCount + ix + gridX1 * (iy + 1);
+                        const c = meshVertexCount + (ix + 1) + gridX1 * (iy + 1);
+                        const d = meshVertexCount + (ix + 1) + gridX1 * iy;
+
+                        // faces
+                        // a - d
+                        // | / |
+                        // b - c
+                        indices.push(
+                            a, b, d,
+                            b, c, d,
+                        );
+                    }
+                }
+
+                // update total number of vertices
+                meshVertexCount += vertexCount;
+            }
         }
         /**
          * 创建圆柱体网格。

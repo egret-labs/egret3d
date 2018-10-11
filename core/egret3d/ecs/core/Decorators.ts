@@ -41,7 +41,7 @@ namespace paper {
      */
     export function allowMultiple(componentClass: IComponentClass<BaseComponent>) {
         registerClass(componentClass);
-        
+
         if (!componentClass.__isSingleton) {
             componentClass.allowMultiple = true;
         }
@@ -77,5 +77,15 @@ namespace paper {
     export function executeInEditMode(componentClass: IComponentClass<Behaviour>) {
         registerClass(componentClass);
         componentClass.executeInEditMode = true;
+    }
+
+    export function deprecated(version: string) {
+        return (target: any, key: string, descriptor: PropertyDescriptor) => {
+            const method = descriptor.value as Function;
+            descriptor.value = (...arg) => {
+                console.warn(`${target.name}.${key}在${version}版本中已被废弃`)
+                return method.apply(this, arg);
+            }
+        }
     }
 }
