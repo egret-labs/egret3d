@@ -41,7 +41,7 @@ namespace egret3d.web {
                 light.update(camera, i);
 
                 (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
-                this._viewport(camera.viewport, light.renderTarget);
+                this._viewport(light.viewPortPixel, light.renderTarget);
                 renderState.clear(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
                 drawCalls.shadowFrustumCulling(camera);
 
@@ -257,7 +257,7 @@ namespace egret3d.web {
                         break;
 
                     case gltf.UniformSemanticType._REFERENCEPOSITION:
-                        webgl.uniform4fv(location, context.lightPosition);
+                        webgl.uniform3fv(location, context.lightPosition);
                         break;
                     case gltf.UniformSemanticType._NEARDICTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraNear);
