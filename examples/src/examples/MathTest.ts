@@ -1,10 +1,13 @@
-namespace MathTest {
-    export async function start() {
-        // Create camera.
-        egret3d.Camera.main;
+namespace examples {
 
-        paper.GameObject.globalGameObject.addComponent(PlaneIntersectsSphere);
-        paper.GameObject.globalGameObject.addComponent(LerpTest);
+    export class MathTest {
+        async start() {
+            // Create camera.
+            egret3d.Camera.main;
+
+            paper.GameObject.globalGameObject.addComponent(PlaneIntersectsSphere);
+            paper.GameObject.globalGameObject.addComponent(LerpTest);
+        }
     }
 
     class PlaneIntersectsSphere extends paper.Behaviour {

@@ -1,20 +1,34 @@
-function main(allScripts: string[]) {
-    const examples = allScripts
-        .filter(item => item.indexOf("examples") >= 0)
-        .map(item => item.split("/").pop()!.split(".")[0]);
+declare class Examples {
 
-    const current = getCurrentTest();
-    const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
-    const gui = guiComponent.hierarchy.addFolder("Examples");
-    gui.open();
-    const options = {
-        example: current,
-    };
-    gui.add(options, "example", examples).onChange((example: string) => {
-        location.href = getNewUrl(example);
-    });
+    start(): Promise<void>
+}
 
-    (window as any)[current].start();
+
+function main() {
+
+    const example = getCurrentTest();
+    createGUI();
+    const exampleClass = (window as any).examples[example];
+    const exampleObj: Examples = new exampleClass();
+    exampleObj.start();
+
+    function createGUI() {
+
+        const namespaceExamples = (window as any).examples;
+        const examples: string[] = [];
+        for (let exampleClassname in namespaceExamples) {
+            examples.push(exampleClassname);
+        }
+        const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
+        const gui = guiComponent.hierarchy.addFolder("Examples");
+        gui.open();
+        const options = {
+            example,
+        };
+        gui.add(options, "example", examples).onChange((example: string) => {
+            location.href = getNewUrl(example);
+        });
+    }
 
     function getNewUrl(example: string) {
         let url = location.href;
@@ -30,8 +44,8 @@ function main(allScripts: string[]) {
     }
 
     function getCurrentTest() {
-        var appFile = "";
-        var hasTest = false;
+        var appFile = "Test";
+
         var str = location.search;
         str = str.slice(1, str.length);
         var totalArray = str.split("&");
@@ -42,16 +56,10 @@ function main(allScripts: string[]) {
                 var value = itemArray[1];
                 if (key === "example") {
                     appFile = value;
-                    hasTest = true;
                     break;
                 }
             }
         }
-
-        if (!hasTest) {
-            appFile = examples.indexOf("Test") >= 0 ? "Test" : examples[0];
-        }
-
         return appFile;
     }
 }

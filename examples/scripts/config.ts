@@ -1,5 +1,5 @@
 /// 阅读 api.d.ts 查看文档
-///<reference path="api.d.ts"/>
+///<reference path="declaration/api.d.ts"/>
 
 import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlugin, ManifestPlugin, UglifyPlugin } from 'built-in';
 import * as path from 'path';
@@ -48,12 +48,20 @@ const config: ResourceManagerConfig = {
             return {
                 outputDir,
                 commands: [
-                    new CompilePlugin({ libraryType: "release" }),
+                    new CompilePlugin({ libraryType: "debug" }),
                     new ExmlPlugin('default'),
                     new UglifyPlugin([
                         {
-                            sources: ['resource/default.thm.js'],
-                            target: "default.thm.min.js"
+                            sources: [
+                                "libs/modules/egret/egret.js",
+                                "libs/modules/egret/egret.web.js",
+                                "libs/modules/eui/eui.js",
+                                "libs/modules/assetsmanager/assetsmanager.js",
+                                "libs/modules/egret3d/egret3d.js",
+                                "libs/modules/inspector/inspector.js",
+                                "libs/modules/oimo/oimo.js"
+                            ],
+                            target: "lib.min.js"
                         },
                         {
                             sources: ["main.js"],
@@ -107,7 +115,7 @@ const config: ResourceManagerConfig = {
                     ".mat.json": "Material",
                     ".mesh.bin": "Mesh",
                     ".ani.bin": "Animation",
-                    
+
                     ".bin": "bin",
                     ".zipjson": "bin"
                 }
