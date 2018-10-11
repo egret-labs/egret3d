@@ -49,8 +49,6 @@ namespace paper {
             }
 
             const raycastInfo = egret3d.RaycastInfo.create();
-            raycastInfo.transform = null;
-            raycastInfo.collider = null;
 
             if (gameObject.layer & cullingMask) {
                 if (raycastMesh) {

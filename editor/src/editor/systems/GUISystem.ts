@@ -144,6 +144,21 @@ namespace paper.editor {
             this._hierarchyFolders[gameObject.uuid] = folder;
         }
 
+        private _propertyHasGetterSetter(target: any, propName: string) {
+            let prototype = Object.getPrototypeOf(target);
+            let descriptror;
+
+            while (prototype) {
+                descriptror = Object.getOwnPropertyDescriptor(prototype, propName);
+                if (descriptror && descriptror.get && descriptror.set) {
+                    return true;
+                }
+                prototype = Object.getPrototypeOf(prototype);
+            }
+
+            return false;
+        }
+
         private _addToInspector(gui: dat.GUI) {
             const infos = editor.getEditInfo(gui.instance);
             let guiControllerA: dat.GUIController;
@@ -153,7 +168,7 @@ namespace paper.editor {
             for (const info of infos) {
                 switch (info.editType) {
                     case editor.EditType.UINT:
-                        guiControllerA = this._guiComponent.inspector.add(gui.instance, info.name).min(0).step(1).listen();
+                        guiControllerA = gui.add(gui.instance, info.name).min(0).step(1).listen();
 
                         if (info.option) {
                             if (info.option.minimum !== undefined) {
@@ -171,7 +186,7 @@ namespace paper.editor {
                         break;
 
                     case editor.EditType.INT:
-                        guiControllerA = this._guiComponent.inspector.add(gui.instance, info.name).step(1).listen();
+                        guiControllerA = gui.add(gui.instance, info.name).step(1).listen();
 
                         if (info.option) {
                             if (info.option.minimum !== undefined) {
@@ -189,7 +204,7 @@ namespace paper.editor {
                         break;
 
                     case editor.EditType.FLOAT:
-                        guiControllerA = this._guiComponent.inspector.add(gui.instance, info.name).step(0.1).listen();
+                        guiControllerA = gui.add(gui.instance, info.name).step(0.1).listen();
 
                         if (info.option) {
                             if (info.option.minimum !== undefined) {
@@ -208,71 +223,82 @@ namespace paper.editor {
 
                     case editor.EditType.CHECKBOX:
                     case editor.EditType.TEXT:
-                        this._guiComponent.inspector.add(gui.instance, info.name).listen();
+                        gui.add(gui.instance, info.name).listen();
                         break;
 
                     case editor.EditType.LIST:
-                        this._guiComponent.inspector.add(gui.instance, info.name, info.option.listItems!).listen();
+                        gui.add(gui.instance, info.name, info.option.listItems!).listen();
                         break;
 
                     case editor.EditType.VECTOR2: {
-                        const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(gui.instance), info.name);
-                        if (descriptor) {
-                            if (descriptor.get && descriptor.set) {
-                                const onChange = () => {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA = this._guiComponent.inspector.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                                guiControllerB = this._guiComponent.inspector.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
-                                guiControllerA.onChange(onChange);
-                                guiControllerB.onChange(onChange);
+                        if (this._propertyHasGetterSetter(gui.instance, info.name)) {
+                            const onChange = () => {
+                                gui.instance[info.name] = gui.instance[info.name];
+                            };
+                            guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
+                            guiControllerA.onChange(onChange);
+                            guiControllerB.onChange(onChange);
+                        }
+                        else {
+                            guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
+                        }
+
+                        if (info.option) {
+                            if (info.option.minimum !== undefined) {
+                                guiControllerA.min(info.option.minimum);
+                                guiControllerB.min(info.option.minimum);
                             }
-                            else {
-                                guiControllerA = this._guiComponent.inspector.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                                guiControllerB = this._guiComponent.inspector.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
+
+                            if (info.option.maximum !== undefined) {
+                                guiControllerA.max(info.option.maximum);
+                                guiControllerB.max(info.option.maximum);
+                            }
+
+                            if (info.option.step !== undefined) {
+                                guiControllerA.step(info.option.step);
+                                guiControllerB.step(info.option.step);
                             }
                         }
                         break;
                     }
 
                     case editor.EditType.VECTOR3: {
-                        const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(gui.instance), info.name);
-                        if (descriptor) {
-                            if (descriptor.get && descriptor.set) {
-                                const onChange = () => {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA = this._guiComponent.inspector.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                                guiControllerB = this._guiComponent.inspector.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
-                                guiControllerC = this._guiComponent.inspector.add(gui.instance[info.name], "z", `${info.name}: z`).step(0.1).listen();
-                                guiControllerA.onChange(onChange);
-                                guiControllerB.onChange(onChange);
-                                guiControllerC.onChange(onChange);
+                        if (this._propertyHasGetterSetter(gui.instance, info.name)) {
+                            const onChange = () => {
+                                gui.instance[info.name] = gui.instance[info.name];
+                            };
+                            guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
+                            guiControllerC = gui.add(gui.instance[info.name], "z", `${info.name}: z`).step(0.1).listen();
+                            guiControllerA.onChange(onChange);
+                            guiControllerB.onChange(onChange);
+                            guiControllerC.onChange(onChange);
+                        }
+                        else {
+                            guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
+                            guiControllerC = gui.add(gui.instance[info.name], "z", `${info.name}: z`).step(0.1).listen();
+                        }
+
+                        if (info.option) {
+                            if (info.option.minimum !== undefined) {
+                                guiControllerA.min(info.option.minimum);
+                                guiControllerB.min(info.option.minimum);
+                                guiControllerC.min(info.option.minimum);
                             }
-                            else {
-                                guiControllerA = this._guiComponent.inspector.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                                guiControllerB = this._guiComponent.inspector.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
-                                guiControllerC = this._guiComponent.inspector.add(gui.instance[info.name], "z", `${info.name}: z`).step(0.1).listen();
+
+                            if (info.option.maximum !== undefined) {
+                                guiControllerA.max(info.option.maximum);
+                                guiControllerB.max(info.option.maximum);
+                                guiControllerC.max(info.option.maximum);
                             }
 
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                    guiControllerB.min(info.option.minimum);
-                                    guiControllerC.min(info.option.minimum);
-                                }
-
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                    guiControllerB.max(info.option.maximum);
-                                    guiControllerC.max(info.option.maximum);
-                                }
-
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                    guiControllerB.step(info.option.step);
-                                    guiControllerC.step(info.option.step);
-                                }
+                            if (info.option.step !== undefined) {
+                                guiControllerA.step(info.option.step);
+                                guiControllerB.step(info.option.step);
+                                guiControllerC.step(info.option.step);
                             }
                         }
                         break;
@@ -308,6 +334,13 @@ namespace paper.editor {
 
                     case editor.EditType.GAMEOBJECT:
                         break;
+
+                    case editor.EditType.NESTED: {
+                        const folder = gui.addFolder(info.name);
+                        folder.instance = gui.instance[info.name];
+                        this._addToInspector(folder);
+                        break;
+                    }
                 }
             }
         }

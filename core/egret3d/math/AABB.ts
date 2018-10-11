@@ -77,9 +77,7 @@ namespace egret3d {
 
             return this;
         }
-        /**
-         * 
-         */
+
         public set(minimum: Readonly<IVector3> | null = null, maximum: Readonly<IVector3> | null = null) {
             if (minimum && minimum !== this._minimum) {
                 this._minimum.copy(minimum);
@@ -230,18 +228,7 @@ namespace egret3d {
             return this;
         }
         /**
-         * check contains vector
-         * @param value a world point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 检查是否包含点
-         * @param value 世界坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         * 
          */
         public contains(value: Readonly<IVector3 | AABB>) {
             const min = this._minimum;
@@ -358,34 +345,9 @@ namespace egret3d {
             return this._maximum;
         }
         /**
-         * get center
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * 
          */
-        /**
-         * 获取中心点位置
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        public get center(): Readonly<IVector3> {
-            if (this._dirtyCenter) {
-                this._center.add(this._maximum, this._minimum).multiplyScalar(0.5);
-                this._dirtyCenter = false;
-            }
-
-            return this._center;
-        }
-        public set center(value: Readonly<IVector3>) {
-            const size = this.size;
-            const center = this._center.copy(value);
-
-            const halfSize = helpVector3A.copy(size).multiplyScalar(0.5);
-            this._minimum.copy(center).subtract(halfSize);
-            this._maximum.copy(center).add(halfSize);
-        }
-
+        @paper.editor.property(paper.editor.EditType.VECTOR3, { minimum: 0.0 })
         public get size(): Readonly<IVector3> {
             if (this._dirtySize) {
                 this._size.subtract(this._maximum, this._minimum);
@@ -402,6 +364,26 @@ namespace egret3d {
             this._minimum.copy(center).subtract(halfSize);
             this._maximum.copy(center).add(halfSize);
             this._dirtyRadius = true;
+        }
+        /**
+         * 
+         */
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
+        public get center(): Readonly<IVector3> {
+            if (this._dirtyCenter) {
+                this._center.add(this._maximum, this._minimum).multiplyScalar(0.5);
+                this._dirtyCenter = false;
+            }
+
+            return this._center;
+        }
+        public set center(value: Readonly<IVector3>) {
+            const size = this.size;
+            const center = this._center.copy(value);
+
+            const halfSize = helpVector3A.copy(size).multiplyScalar(0.5);
+            this._minimum.copy(center).subtract(halfSize);
+            this._maximum.copy(center).add(halfSize);
         }
     }
     /**

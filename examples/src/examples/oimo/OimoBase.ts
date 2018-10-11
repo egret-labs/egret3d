@@ -1,7 +1,7 @@
 namespace examples {
 
     export class OimoBase {
-        async  start() {
+        async start() {
             // Create camera.
             egret3d.Camera.main;
 

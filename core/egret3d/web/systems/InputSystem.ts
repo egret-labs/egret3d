@@ -50,7 +50,7 @@ namespace egret3d.web {
             const downPointers = inputCollecter.downPointers;
             const holdPointers = inputCollecter.holdPointers;
             const pointer = inputCollecter.getPointer(event.pointerId);
-            pointer.event = event;
+            pointer.event = event; // TODO 有可能是无效事件
 
             if (event.target !== canvas) {
                 (event as any).clientX -= canvas.clientLeft;

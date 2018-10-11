@@ -182,7 +182,7 @@ namespace paper.editor {
                 selectedGameObject && selectedGameObject.renderer && selectedGameObject.renderer instanceof egret3d.SkinnedMeshRenderer ? true : false;
 
             this._cameraViewFrustum!.activeSelf =
-                selectedGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
+                selectedGameObject && selectedGameObject !== paper.GameObject.globalGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
         }
 
         private _onGameObjectSelected = (_c: any, value: GameObject) => {

@@ -3945,7 +3945,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 提供默认的几何网格资源，以及创建几何网格或几何网格实体的方式。
+     * 提供默认的几何网格资源的快速访问方式，以及创建几何网格或几何网格实体的方法。
      */
     class DefaultMeshes extends paper.SingletonComponent {
         static QUAD: Mesh;
@@ -3983,26 +3983,56 @@ declare namespace egret3d {
         static createPlane(width?: number, height?: number, centerOffsetX?: number, centerOffsetY?: number, widthSegments?: uint, heightSegments?: uint): Mesh;
         /**
          * 创建立方体网格。
+         * @param width 宽度。
+         * @param height 高度。
+         * @param depth 深度。
+         * @param centerOffsetX 中心点偏移 X。
+         * @param centerOffsetY 中心点偏移 Y。
+         * @param centerOffsetZ 中心点偏移 Z。
+         * @param widthSegments 宽度分段。
+         * @param heightSegments 高度分段。
+         * @param depthSegments 深度分段。
+         * @param differentFace 是否使用不同材质。
          */
-        static createCube(width?: number, height?: number, depth?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, widthSegments?: number, heightSegments?: number, depthSegments?: number, differentFace?: boolean): Mesh;
+        static createCube(width?: number, height?: number, depth?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, widthSegments?: uint, heightSegments?: uint, depthSegments?: uint, differentFace?: boolean): Mesh;
         /**
          * 创建圆柱体网格。
+         * @param radiusTop 顶部半径。
+         * @param radiusBottom 底部半径。
+         * @param height 高度。
+         * @param centerOffsetX 中心点偏移 X。
+         * @param centerOffsetY 中心点偏移 Y。
+         * @param centerOffsetZ 中心点偏移 Z。
+         * @param radialSegments 径向分段。
+         * @param heightSegments 高度分段。
+         * @param openEnded 是否开口。
+         * @param thetaStart 起始弧度。
+         * @param thetaLength 覆盖弧度。
+         * @param differentFace 是否使用不同材质。
          */
-        static createCylinder(radiusTop?: number, radiusBottom?: number, height?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, radialSegments?: number, heightSegments?: number, openEnded?: boolean, thetaStart?: number, thetaLength?: number, differentFace?: boolean): Mesh;
+        static createCylinder(radiusTop?: number, radiusBottom?: number, height?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, radialSegments?: uint, heightSegments?: uint, openEnded?: boolean, thetaStart?: number, thetaLength?: number, differentFace?: boolean): Mesh;
         /**
          * 创建圆形网格。
          */
-        static createCircle(radius?: number, arc?: number, axis?: number): Mesh;
+        static createCircle(radius?: number, arc?: number, axis?: 1 | 2 | 3): Mesh;
         /**
          * 创建圆环网格。
          */
-        static createTorus(radius?: number, tube?: number, radialSegments?: number, tubularSegments?: number, arc?: number, axis?: number): Mesh;
+        static createTorus(radius?: number, tube?: number, radialSegments?: number, tubularSegments?: number, arc?: number, axis?: 1 | 2 | 3): Mesh;
         /**
          * 创建球体网格。
-         * TODO
+         * @param radius 半径。
+         * @param centerOffsetX 中心点偏移 X。
+         * @param centerOffsetY 中心点偏移 Y。
+         * @param centerOffsetZ 中心点偏移 Z。
+         * @param widthSegments 宽度分段。
+         * @param heightSegments 高度分段。
+         * @param phiStart 水平起始弧度。
+         * @param phiLength 水平覆盖弧度。
+         * @param thetaStart 垂直起始弧度。
+         * @param thetaLength 垂直覆盖弧度。
          */
-        static createSphere(radius?: number, widthSegments?: number, heightSegments?: number): Mesh;
-        private computeLineDistances(vertices, out);
+        static createSphere(radius?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, widthSegments?: uint, heightSegments?: uint, phiStart?: number, phiLength?: number, thetaStart?: number, thetaLength?: number): Mesh;
     }
 }
 declare namespace egret3d {
@@ -4502,7 +4532,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 立方体碰撞体。
+     * 立方体碰撞体组件。
      */
     class BoxCollider extends paper.BaseComponent implements ICollider, IRaycast {
         readonly colliderType: ColliderType;
@@ -6402,9 +6432,6 @@ declare namespace egret3d {
         clone(): AABB;
         copy(value: Readonly<AABB>): this;
         clear(): this;
-        /**
-         *
-         */
         set(minimum?: Readonly<IVector3> | null, maximum?: Readonly<IVector3> | null): this;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
         /**
@@ -6425,18 +6452,7 @@ declare namespace egret3d {
          */
         offset(value: number | Readonly<IVector3>, source?: Readonly<AABB>): this;
         /**
-         * check contains vector
-         * @param value a world point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 检查是否包含点
-         * @param value 世界坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         *
          */
         contains(value: Readonly<IVector3 | AABB>): boolean;
         getDistance(value: Readonly<IVector3>): number;
@@ -6456,19 +6472,13 @@ declare namespace egret3d {
          */
         readonly maximum: Readonly<IVector3>;
         /**
-         * get center
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         *
          */
+        size: Readonly<IVector3>;
         /**
-         * 获取中心点位置
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         *
          */
         center: Readonly<IVector3>;
-        size: Readonly<IVector3>;
     }
 }
 declare namespace egret3d {

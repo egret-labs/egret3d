@@ -9079,13 +9079,8 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     var _helpVector3 = egret3d.Vector3.create();
-    var _attributesB = [
-        "POSITION" /* POSITION */,
-        "NORMAL" /* NORMAL */,
-        "TEXCOORD_0" /* TEXCOORD_0 */,
-    ];
     /**
-     * 提供默认的几何网格资源，以及创建几何网格或几何网格实体的方式。
+     * 提供默认的几何网格资源的快速访问方式，以及创建几何网格或几何网格实体的方法。
      */
     var DefaultMeshes = (function (_super) {
         __extends(DefaultMeshes, _super);
@@ -9229,8 +9224,6 @@ var egret3d;
                 DefaultMeshes.CIRCLE_LINE = mesh;
             }
             {
-                // const meshAttributesType: { [key: string]: gltf.AccessorType } = {};
-                // meshAttributesType[gltf.AttributeSemanticType._INSTANCE_DISTANCE] = gltf.AccessorType.SCALAR;
                 var mesh = new egret3d.Mesh(8, 24, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/cube_line.mesh.bin";
@@ -9265,10 +9258,6 @@ var egret3d;
                     4, 5, 5, 6, 6, 7, 7, 4,
                     0, 7, 1, 4, 2, 5, 3, 6,
                 ]);
-                //
-                // const lineDistances = mesh.getAttributes(gltf.AttributeSemanticType._INSTANCE_DISTANCE);
-                // this.computeLineDistances(mesh.getAttributes(gltf.AttributeSemanticType.POSITION), lineDistances);
-                // mesh.setAttributes(gltf.AttributeSemanticType._INSTANCE_DISTANCE, lineDistances);
             }
         };
         /**
@@ -9332,7 +9321,7 @@ var egret3d;
                 for (var ix = 0; ix < gridX1; ix++) {
                     var x = ix * segmentWidth - widthHalf;
                     vertices.push(x + centerOffsetX, -y + centerOffsetY, 0.0);
-                    normals.push(0.0, 0.0, 1.0);
+                    normals.push(0.0, 0.0, -1.0);
                     uvs.push(ix / widthSegments, iy / heightSegments);
                 }
             }
@@ -9347,7 +9336,7 @@ var egret3d;
                     // a - d
                     // | / |
                     // b - c
-                    indices.push(a, d, b, b, d, c);
+                    indices.push(a, b, d, d, b, c);
                 }
             }
             var mesh = egret3d.Mesh.create(vertices.length / 3, indices.length);
@@ -9359,6 +9348,16 @@ var egret3d;
         };
         /**
          * 创建立方体网格。
+         * @param width 宽度。
+         * @param height 高度。
+         * @param depth 深度。
+         * @param centerOffsetX 中心点偏移 X。
+         * @param centerOffsetY 中心点偏移 Y。
+         * @param centerOffsetZ 中心点偏移 Z。
+         * @param widthSegments 宽度分段。
+         * @param heightSegments 高度分段。
+         * @param depthSegments 深度分段。
+         * @param differentFace 是否使用不同材质。
          */
         DefaultMeshes.createCube = function (width, height, depth, centerOffsetX, centerOffsetY, centerOffsetZ, widthSegments, heightSegments, depthSegments, differentFace) {
             if (width === void 0) { width = 1.0; }
@@ -9462,6 +9461,18 @@ var egret3d;
         };
         /**
          * 创建圆柱体网格。
+         * @param radiusTop 顶部半径。
+         * @param radiusBottom 底部半径。
+         * @param height 高度。
+         * @param centerOffsetX 中心点偏移 X。
+         * @param centerOffsetY 中心点偏移 Y。
+         * @param centerOffsetZ 中心点偏移 Z。
+         * @param radialSegments 径向分段。
+         * @param heightSegments 高度分段。
+         * @param openEnded 是否开口。
+         * @param thetaStart 起始弧度。
+         * @param thetaLength 覆盖弧度。
+         * @param differentFace 是否使用不同材质。
          */
         DefaultMeshes.createCylinder = function (radiusTop, radiusBottom, height, centerOffsetX, centerOffsetY, centerOffsetZ, radialSegments, heightSegments, openEnded, thetaStart, thetaLength, differentFace) {
             if (radiusTop === void 0) { radiusTop = 0.5; }
@@ -9530,17 +9541,15 @@ var egret3d;
                         var u = iX / radialSegments;
                         var theta = u * thetaLength + thetaStart;
                         var sinTheta = Math.sin(theta);
-                        var cosTheta = Math.cos(theta);
+                        var cosTheta = -Math.cos(theta);
                         // vertex
                         vector3.x = radius * sinTheta;
                         vector3.y = -v * height + halfHeight;
-                        // vertex.z = radius * cosTheta; // Right-hand coordinates system.
-                        vector3.z = -radius * cosTheta; // Left-hand coordinates system.
+                        vector3.z = radius * cosTheta;
                         vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, vector3.z + centerOffsetZ);
                         // normal
                         vector3.set(sinTheta, slope, cosTheta).normalize();
-                        // normals.push(vector3.x, vector3.y, vector3.z); // Right-hand coordinates system.
-                        normals.push(vector3.x, vector3.y, -vector3.z); // Left-hand coordinates system.
+                        normals.push(vector3.x, vector3.y, vector3.z);
                         // uv
                         uvs.push(u, v);
                         // save index of vertex in respective row
@@ -9558,6 +9567,9 @@ var egret3d;
                         var c = indexArray[iY + 1][iX + 1];
                         var d = indexArray[iY][iX + 1];
                         // faces
+                        // a - d
+                        // | / |
+                        // b - c
                         indices.push(a, b, d, b, c, d);
                         // update group counter
                         groupCount += 6;
@@ -9650,6 +9662,7 @@ var egret3d;
                         break;
                 }
             }
+            // build geometry
             var mesh = egret3d.Mesh.create(vertices.length / 3, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
             mesh.setAttributes("POSITION" /* POSITION */, vertices);
             mesh.glTFMesh.primitives[0].mode = 3 /* LineStrip */;
@@ -9670,9 +9683,8 @@ var egret3d;
             var normals = [];
             var uvs = [];
             // helper variables
-            var center = egret3d.Vector3.create();
-            var vertex = egret3d.Vector3.create();
-            var normal = egret3d.Vector3.create();
+            var vector3 = _helpVector3;
+            var center = egret3d.Vector3.create().release();
             var j, i;
             // generate vertices, normals and uvs
             for (j = 0; j <= radialSegments; j++) {
@@ -9682,26 +9694,26 @@ var egret3d;
                     // vertex
                     switch (axis) {
                         case 1:
-                            vertex.x = tube * Math.sin(v);
-                            vertex.y = (radius + tube * Math.cos(v)) * Math.cos(u);
-                            vertex.z = (radius + tube * Math.cos(v)) * Math.sin(u);
+                            vector3.x = tube * Math.sin(v);
+                            vector3.y = (radius + tube * Math.cos(v)) * Math.cos(u);
+                            vector3.z = (radius + tube * Math.cos(v)) * Math.sin(u);
                             break;
                         case 2:
-                            vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
-                            vertex.y = tube * Math.sin(v);
-                            vertex.z = (radius + tube * Math.cos(v)) * Math.sin(u);
+                            vector3.x = (radius + tube * Math.cos(v)) * Math.cos(u);
+                            vector3.y = tube * Math.sin(v);
+                            vector3.z = (radius + tube * Math.cos(v)) * Math.sin(u);
                             break;
                         default:
-                            vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
-                            vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
-                            vertex.z = tube * Math.sin(v);
+                            vector3.x = (radius + tube * Math.cos(v)) * Math.cos(u);
+                            vector3.y = (radius + tube * Math.cos(v)) * Math.sin(u);
+                            vector3.z = tube * Math.sin(v);
                     }
-                    vertices.push(vertex.x, vertex.y, -vertex.z);
+                    vertices.push(vector3.x, vector3.y, -vector3.z);
                     // normal
                     center.x = radius * Math.cos(u);
                     center.y = radius * Math.sin(u);
-                    normal.subtract(vertex, center).normalize();
-                    normals.push(normal.x, normal.y, -normal.z);
+                    vector3.subtract(center).normalize();
+                    normals.push(vector3.x, vector3.y, -vector3.z);
                     // uv
                     uvs.push(i / tubularSegments);
                     uvs.push(j / radialSegments);
@@ -9716,12 +9728,12 @@ var egret3d;
                     var c = (tubularSegments + 1) * (j - 1) + i;
                     var d = (tubularSegments + 1) * j + i;
                     // faces
+                    // a - d
+                    // | / |
+                    // b - c
                     indices.push(a, b, d, b, c, d);
                 }
             }
-            center.release();
-            vertex.release();
-            normal.release();
             // build geometry
             var mesh = egret3d.Mesh.create(vertices.length / 3, indices.length, ["POSITION" /* POSITION */, "NORMAL" /* NORMAL */, "TEXCOORD_0" /* TEXCOORD_0 */]);
             mesh.setAttributes("POSITION" /* POSITION */, vertices);
@@ -9732,81 +9744,79 @@ var egret3d;
         };
         /**
          * 创建球体网格。
-         * TODO
+         * @param radius 半径。
+         * @param centerOffsetX 中心点偏移 X。
+         * @param centerOffsetY 中心点偏移 Y。
+         * @param centerOffsetZ 中心点偏移 Z。
+         * @param widthSegments 宽度分段。
+         * @param heightSegments 高度分段。
+         * @param phiStart 水平起始弧度。
+         * @param phiLength 水平覆盖弧度。
+         * @param thetaStart 垂直起始弧度。
+         * @param thetaLength 垂直覆盖弧度。
          */
-        DefaultMeshes.createSphere = function (radius, widthSegments, heightSegments) {
+        DefaultMeshes.createSphere = function (radius, centerOffsetX, centerOffsetY, centerOffsetZ, widthSegments, heightSegments, phiStart, phiLength, thetaStart, thetaLength) {
             if (radius === void 0) { radius = 0.5; }
+            if (centerOffsetX === void 0) { centerOffsetX = 0.0; }
+            if (centerOffsetY === void 0) { centerOffsetY = 0.0; }
+            if (centerOffsetZ === void 0) { centerOffsetZ = 0.0; }
             if (widthSegments === void 0) { widthSegments = 24; }
             if (heightSegments === void 0) { heightSegments = 12; }
+            if (phiStart === void 0) { phiStart = 0.0; }
+            if (phiLength === void 0) { phiLength = Math.PI * 2.0; }
+            if (thetaStart === void 0) { thetaStart = 0.0; }
+            if (thetaLength === void 0) { thetaLength = Math.PI; }
             widthSegments = Math.max(3, Math.floor(widthSegments));
             heightSegments = Math.max(2, Math.floor(heightSegments));
-            var mesh = new egret3d.Mesh((widthSegments + 1) * (heightSegments + 1), widthSegments * heightSegments * 6 - 6, _attributesB);
-            //
+            var thetaEnd = thetaStart + thetaLength;
             var index = 0;
-            var vertex = new egret3d.Vector3();
-            var normal = new egret3d.Vector3();
-            var grid = new Array();
+            var grid = [];
+            var vector3 = _helpVector3;
+            // buffers
+            var indices = [];
             var vertices = [];
             var normals = [];
             var uvs = [];
-            for (var iy = 0; iy <= heightSegments; iy++) {
-                var verticesRow = new Array();
-                var v = iy / heightSegments;
-                for (var ix = 0; ix <= widthSegments; ix++) {
-                    var u = ix / widthSegments;
-                    // Vertex.
-                    vertex.x = -radius * Math.cos(u * Math.PI * 2) * Math.sin(v * Math.PI);
-                    vertex.y = radius * Math.cos(v * Math.PI);
-                    vertex.z = radius * Math.sin(u * Math.PI * 2) * Math.sin(v * Math.PI);
-                    vertices.push(vertex.x, vertex.y, vertex.z);
-                    // Normal.
-                    normal.x = vertex.x;
-                    normal.y = vertex.y;
-                    normal.z = vertex.z;
-                    var num = Math.sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
-                    if (num > Number.MIN_VALUE) {
-                        normals.push(normal.x / num, normal.y / num, normal.z / num);
-                    }
-                    else {
-                        normals.push(0.0, 0.0, 0.0);
-                    }
-                    uvs.push(0, 1.0 - u, v);
+            // generate vertices, normals and uvs
+            for (var iY = 0; iY <= heightSegments; iY++) {
+                var verticesRow = [];
+                var v = iY / heightSegments;
+                for (var iX = 0; iX <= widthSegments; iX++) {
+                    var u = iX / widthSegments;
+                    // vertex
+                    vector3.x = -radius * Math.cos(phiStart + u * phiLength) * Math.sin(thetaStart + v * thetaLength);
+                    vector3.y = radius * Math.cos(thetaStart + v * thetaLength);
+                    vector3.z = radius * Math.sin(phiStart + u * phiLength) * Math.sin(thetaStart + v * thetaLength);
+                    vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, -vector3.z + centerOffsetZ);
+                    // normal
+                    vector3.normalize();
+                    normals.push(vector3.x, vector3.y, -vector3.z);
+                    // uv
+                    uvs.push(u, v);
                     verticesRow.push(index++);
                 }
                 grid.push(verticesRow);
             }
-            mesh.setAttributes("POSITION" /* POSITION */, vertices);
-            mesh.setAttributes("NORMAL" /* NORMAL */, normals);
-            mesh.setAttributes("TEXCOORD_0" /* TEXCOORD_0 */, uvs);
-            // Indices.
-            var tris = new Array();
+            // indices
             for (var iy = 0; iy < heightSegments; iy++) {
                 for (var ix = 0; ix < widthSegments; ix++) {
                     var a = grid[iy][ix + 1];
                     var b = grid[iy][ix];
                     var c = grid[iy + 1][ix];
                     var d = grid[iy + 1][ix + 1];
-                    if (iy !== 0) {
-                        tris.push(a, d, b);
-                    }
-                    if (iy !== heightSegments - 1) {
-                        tris.push(b, d, c);
-                    }
+                    if (iy !== 0 || thetaStart > 0)
+                        indices.push(a, b, d);
+                    if (iy !== heightSegments - 1 || thetaEnd < Math.PI)
+                        indices.push(b, c, d);
                 }
             }
-            var indices = mesh.getIndices();
-            for (var i = 0, l = tris.length; i < l; i++) {
-                indices[i] = tris[i];
-            }
+            // build geometry
+            var mesh = egret3d.Mesh.create(vertices.length / 3, indices.length, ["POSITION" /* POSITION */, "NORMAL" /* NORMAL */, "TEXCOORD_0" /* TEXCOORD_0 */]);
+            mesh.setAttributes("POSITION" /* POSITION */, vertices);
+            mesh.setAttributes("NORMAL" /* NORMAL */, normals);
+            mesh.setAttributes("TEXCOORD_0" /* TEXCOORD_0 */, uvs);
+            mesh.setIndices(indices);
             return mesh;
-        };
-        DefaultMeshes.prototype.computeLineDistances = function (vertices, out) {
-            out[0] = 0;
-            for (var i = 3, ii = 1; i > vertices.length; i += 3, ii++) {
-                var start = egret3d.Vector3.create(vertices[i - 3], vertices[i - 2], vertices[i - 1]);
-                var end = egret3d.Vector3.create(vertices[i], vertices[i + 1], vertices[i + 2]);
-                out[ii] = out[ii - 1] + start.getDistance(end);
-            }
         };
         return DefaultMeshes;
     }(paper.SingletonComponent));
@@ -10829,7 +10839,7 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 立方体碰撞体。
+     * 立方体碰撞体组件。
      */
     var BoxCollider = (function (_super) {
         __extends(BoxCollider, _super);
@@ -10854,7 +10864,8 @@ var egret3d;
             return false;
         };
         __decorate([
-            paper.serializedField
+            paper.serializedField,
+            paper.editor.property(21 /* NESTED */)
         ], BoxCollider.prototype, "aabb", void 0);
         return BoxCollider;
     }(paper.BaseComponent));
@@ -10913,30 +10924,30 @@ var egret3d;
                     { componentClass: [egret3d.DirectionalLight, egret3d.PointLight, egret3d.SpotLight] }
                 ]
             ];
-            _this._camerasAndLights = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
+            _this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
             _this._drawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.DrawCallCollecter);
             return _this;
         }
         CameraAndLightSystem.prototype.onAddGameObject = function (_gameObject, group) {
             if (group === this._groups[0]) {
-                this._camerasAndLights.updateCameras(this._groups[0].gameObjects);
+                this._cameraAndLightCollecter.updateCameras(this._groups[0].gameObjects);
             }
             else if (group === this._groups[1]) {
-                this._camerasAndLights.updateLights(this._groups[1].gameObjects);
+                this._cameraAndLightCollecter.updateLights(this._groups[1].gameObjects);
             }
         };
         CameraAndLightSystem.prototype.onRemoveGameObject = function (_gameObject, group) {
             if (group === this._groups[0]) {
-                this._camerasAndLights.updateCameras(this._groups[0].gameObjects);
+                this._cameraAndLightCollecter.updateCameras(this._groups[0].gameObjects);
             }
             else if (group === this._groups[1]) {
-                this._camerasAndLights.updateLights(this._groups[1].gameObjects);
+                this._cameraAndLightCollecter.updateLights(this._groups[1].gameObjects);
             }
         };
         CameraAndLightSystem.prototype.onUpdate = function (deltaTime) {
-            var cameras = this._camerasAndLights.cameras;
+            var cameras = this._cameraAndLightCollecter.cameras;
             if (cameras.length > 0) {
-                this._camerasAndLights.sortCameras();
+                this._cameraAndLightCollecter.sortCameras();
                 for (var _i = 0, cameras_1 = cameras; _i < cameras_1.length; _i++) {
                     var component = cameras_1[_i];
                     component._update(deltaTime);
@@ -13057,8 +13068,6 @@ var paper;
                 return;
             }
             var raycastInfo = egret3d.RaycastInfo.create();
-            raycastInfo.transform = null;
-            raycastInfo.collider = null;
             if (gameObject.layer & cullingMask) {
                 if (raycastMesh) {
                     if (gameObject.renderer && gameObject.renderer.enabled &&
@@ -18722,9 +18731,6 @@ var egret3d;
             this._dirtySize = true;
             return this;
         };
-        /**
-         *
-         */
         AABB.prototype.set = function (minimum, maximum) {
             if (minimum === void 0) { minimum = null; }
             if (maximum === void 0) { maximum = null; }
@@ -18851,18 +18857,7 @@ var egret3d;
             return this;
         };
         /**
-         * check contains vector
-         * @param value a world point
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 检查是否包含点
-         * @param value 世界坐标
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
+         *
          */
         AABB.prototype.contains = function (value) {
             var min = this._minimum;
@@ -18977,37 +18972,10 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(AABB.prototype, "center", {
-            /**
-             * get center
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 获取中心点位置
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            get: function () {
-                if (this._dirtyCenter) {
-                    this._center.add(this._maximum, this._minimum).multiplyScalar(0.5);
-                    this._dirtyCenter = false;
-                }
-                return this._center;
-            },
-            set: function (value) {
-                var size = this.size;
-                var center = this._center.copy(value);
-                var halfSize = egret3d.helpVector3A.copy(size).multiplyScalar(0.5);
-                this._minimum.copy(center).subtract(halfSize);
-                this._maximum.copy(center).add(halfSize);
-            },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(AABB.prototype, "size", {
+            /**
+             *
+             */
             get: function () {
                 if (this._dirtySize) {
                     this._size.subtract(this._maximum, this._minimum);
@@ -19026,11 +18994,38 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(AABB.prototype, "center", {
+            /**
+             *
+             */
+            get: function () {
+                if (this._dirtyCenter) {
+                    this._center.add(this._maximum, this._minimum).multiplyScalar(0.5);
+                    this._dirtyCenter = false;
+                }
+                return this._center;
+            },
+            set: function (value) {
+                var size = this.size;
+                var center = this._center.copy(value);
+                var halfSize = egret3d.helpVector3A.copy(size).multiplyScalar(0.5);
+                this._minimum.copy(center).subtract(halfSize);
+                this._maximum.copy(center).add(halfSize);
+            },
+            enumerable: true,
+            configurable: true
+        });
         /**
          *
          */
         AABB.ONE = new AABB().set(egret3d.Vector3.MINUS_ONE.clone().multiplyScalar(0.5), egret3d.Vector3.ONE.clone().multiplyScalar(0.5));
         AABB._instances = [];
+        __decorate([
+            paper.editor.property(6 /* VECTOR3 */, { minimum: 0.0 })
+        ], AABB.prototype, "size", null);
+        __decorate([
+            paper.editor.property(6 /* VECTOR3 */)
+        ], AABB.prototype, "center", null);
         return AABB;
     }(paper.BaseRelease));
     egret3d.AABB = AABB;
