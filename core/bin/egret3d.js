@@ -13447,7 +13447,7 @@ var egret3d;
             var raycastMesh = false;
             var raycastInfo = undefined;
             var worldMatrix = this.gameObject.transform.worldMatrix;
-            var localRay = egret3d.MeshRenderer._helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
+            var localRay = egret3d.helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
             var aabb = this.aabb;
             if (p2) {
                 if (p2 === true) {
