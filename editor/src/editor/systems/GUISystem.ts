@@ -58,11 +58,12 @@ namespace paper.editor {
         }
 
         private _openFolder(folder: dat.GUI) {
-            folder.open();
-
-            if (folder.parent && folder.parent !== this._guiComponent.hierarchy) {
-                this._openFolder(folder.parent);
+            if (!folder.parent || folder.parent === this._guiComponent.hierarchy) {
+                return;
             }
+
+            folder.parent.open();
+            this._openFolder(folder.parent);
         }
 
         private _selectSceneOrGameObject(sceneOrGameObject: Scene | GameObject | null) {
@@ -460,7 +461,7 @@ namespace paper.editor {
                 if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
                     this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
                     this._selectFolder.selected = true;
-                    this._openFolder(this._selectFolder.parent);
+                    this._openFolder(this._selectFolder);
                 }
             }
 

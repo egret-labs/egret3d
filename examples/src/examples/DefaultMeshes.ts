@@ -1,6 +1,6 @@
 namespace examples {
     export class DefaultMeshes {
-        async  start() {
+        async start() {
             // Load resource config.
             await RES.loadConfig("resource/default.res.json", "resource/");
             // Create camera.
@@ -52,5 +52,4 @@ namespace examples {
             });
         }
     }
-
 }
