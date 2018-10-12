@@ -54,7 +54,7 @@ namespace egret3d {
             this.material = null!;
             this.zdist = -1;
         }
-    };
+    }
     /**
      * 全局绘制信息收集组件。
      */

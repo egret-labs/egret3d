@@ -3,34 +3,51 @@ declare class Examples {
     start(): Promise<void>
 }
 
-
 function main() {
+    const exampleString = getCurrentExampleString();
+    let exampleClass: any;
 
-    const example = getCurrentTest();
-    createGUI();
-    const exampleClass = (window as any).examples[example];
+    if (exampleString.indexOf(".") > 0) { // Package
+        const params = exampleString.split(".");
+        exampleClass = (window as any).examples[params[0]][params[1]];
+    }
+    else {
+        exampleClass = (window as any).examples[exampleString];
+    }
+
     const exampleObj: Examples = new exampleClass();
     exampleObj.start();
 
-    function createGUI() {
+    createGUI(exampleString);
 
+    function createGUI(exampleString: string) {
         const namespaceExamples = (window as any).examples;
         const examples: string[] = [];
-        for (let exampleClassname in namespaceExamples) {
-            examples.push(exampleClassname);
+
+        for (const k in namespaceExamples) {
+            const element = namespaceExamples[k];
+            if (element.constructor === Object) { // Package
+                for (const kB in element) {
+                    examples.push([k, kB].join("."));
+                }
+            }
+            else {
+                examples.push(k);
+            }
         }
+
         const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
         const gui = guiComponent.hierarchy.addFolder("Examples");
-        gui.open();
         const options = {
-            example,
+            example: exampleString
         };
         gui.add(options, "example", examples).onChange((example: string) => {
             location.href = getNewUrl(example);
         });
+        gui.open();
     }
 
-    function getNewUrl(example: string) {
+    function getNewUrl(exampleString: string[] | string) {
         let url = location.href;
         const index = url.indexOf("?");
         if (index !== -1) {
@@ -39,11 +56,11 @@ function main() {
         if (url.indexOf(".html") === -1) {
             url += "index.html";
         }
-        url += "?example=" + example;
+        url += "?example=" + exampleString;
         return url;
     }
 
-    function getCurrentTest() {
+    function getCurrentExampleString() {
         var appFile = "Test";
 
         var str = location.search;

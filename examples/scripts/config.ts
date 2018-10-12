@@ -4,6 +4,8 @@
 import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlugin, ManifestPlugin, UglifyPlugin } from 'built-in';
 import * as path from 'path';
 
+
+
 const config: ResourceManagerConfig = {
 
     buildConfig: (params) => {
@@ -14,23 +16,50 @@ const config: ResourceManagerConfig = {
         const version = params.version;
 
         if (command == 'bake') {
-            const outputDir = '.';
-            return {
-                outputDir,
-                commands: [
-                    new EmitResConfigFilePlugin({
-                        output: "resource/default.res.json",
-                        typeSelector: config.typeSelector,
-                        nameSelector: p => {
-                            if (p.indexOf("2d/") > 0) {
-                                return path.basename(p).replace(/\./gi, "_")
-                            }
+            const params = process.argv.splice(3);
+            switch (params[0]) {
+                case "--folder":
+                case "-f": {
+                    const outputDir = '.';
+                    return {
+                        outputDir,
+                        commands: [
+                            new EmitResConfigFilePlugin({
+                                output: `resource/${params[1]}/default.res.json`,
+                                typeSelector: config.typeSelector,
+                                nameSelector: p => {
+                                    if (p.indexOf("2d/") > 0) {
+                                        return path.basename(p).replace(/\./gi, "_")
+                                    }
 
-                            return p;
-                        },
-                        groupSelector: p => null
-                    })
-                ]
+                                    return p.replace(params[1] + "/", "");
+                                },
+                                groupSelector: p => null
+                            })
+                        ]
+                    }
+                }
+
+                default: {
+                    const outputDir = '.';
+                    return {
+                        outputDir,
+                        commands: [
+                            new EmitResConfigFilePlugin({
+                                output: "resource/default.res.json",
+                                typeSelector: config.typeSelector,
+                                nameSelector: p => {
+                                    if (p.indexOf("2d/") > 0) {
+                                        return path.basename(p).replace(/\./gi, "_")
+                                    }
+
+                                    return p;
+                                },
+                                groupSelector: p => null
+                            })
+                        ]
+                    }
+                }
             }
         }
         else if (command == 'build') {
