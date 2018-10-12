@@ -18,11 +18,12 @@ namespace egret3d {
         public readonly sphere: Sphere = Sphere.create(Vector3.ZERO, 0.5);
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
-            const localRay = helpRay.applyMatrix(helpMatrixA.inverse(this.gameObject.transform.worldMatrix), ray); // TODO transform inverse world matrix.
+            const transform = this.gameObject.transform;
+            const localRay = helpRay.applyMatrix(helpMatrixA.inverse(transform.worldMatrix), ray);
 
             if (this.sphere.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) {
-                    raycastInfo.position.applyMatrix(this.gameObject.transform.worldMatrix);
+                    raycastInfo.position.applyMatrix(transform.worldMatrix);
                     raycastInfo.distance = ray.origin.getDistance(raycastInfo.position);
                 }
 

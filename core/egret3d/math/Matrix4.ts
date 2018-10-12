@@ -678,15 +678,15 @@ namespace egret3d {
          * @param up 
          */
         public lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
-            this.lookRotation(_helpVector3C.subtract(target, eye).normalize(), up); // Left-hand coordinates system.
+            this.lookRotation(_helpVector3C.subtract(target, eye), up); // Left-hand coordinates system.
 
             return this;
         }
         /**
          * 
          */
-        public lookRotation(value: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
-            const x = _helpVector3A.cross(up, value).normalize(undefined, Vector3.RIGHT);
+        public lookRotation(value: Readonly<Vector3>, up: Readonly<IVector3>): Matrix4 {
+            const x = _helpVector3A.cross(up, value.normalize()).normalize(undefined, Vector3.RIGHT);
             const y = _helpVector3B.cross(value, x);
             const rawData = this.rawData;
 
