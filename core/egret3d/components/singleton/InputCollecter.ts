@@ -35,8 +35,6 @@ namespace egret3d {
         X2 = 0b010000,
         PenEraser = 0b100000,
     }
-
-    let _inputCollecter: InputCollecter = null!;
     /**
      * 鼠标、笔、触控等的信息。
      */
@@ -152,7 +150,7 @@ namespace egret3d {
                 return false;
             }
 
-            return _inputCollecter.downKeys.indexOf(this) >= 0;
+            return inputCollecter.downKeys.indexOf(this) >= 0;
         }
         /**
          * 该按键此帧持续按下的状态。
@@ -163,7 +161,7 @@ namespace egret3d {
                 return false;
             }
 
-            return _inputCollecter.holdKeys.indexOf(this) >= 0;
+            return inputCollecter.holdKeys.indexOf(this) >= 0;
         }
         /**
          * 该按键此帧抬起的状态。
@@ -174,7 +172,7 @@ namespace egret3d {
                 return false;
             }
 
-            return _inputCollecter.upKeys.indexOf(this) >= 0;
+            return inputCollecter.upKeys.indexOf(this) >= 0;
         }
     }
     /**
@@ -330,7 +328,7 @@ namespace egret3d {
         public initialize() {
             super.initialize();
 
-            _inputCollecter = this;
+            inputCollecter = this;
             this._pointers[1] = this.defaultPointer;
         }
         /**
@@ -417,4 +415,8 @@ namespace egret3d {
             return 0;
         }
     }
+    /**
+     * 
+     */
+    export let inputCollecter: InputCollecter = null!;
 }
