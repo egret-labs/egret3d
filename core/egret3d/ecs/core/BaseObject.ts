@@ -34,7 +34,7 @@ namespace paper {
         /**
          * 在此帧末尾释放时调用。
          */
-        public onClear?(): void
+        public onClear?(): void;
     }
     /**
      * 基础对象。
