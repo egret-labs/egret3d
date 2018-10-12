@@ -83,6 +83,16 @@ namespace egret3d {
         }
         /**
          * 创建立方体网格。
+         * @param width 宽度。
+         * @param height 高度。
+         * @param depth 深度。
+         * @param centerOffsetX 中心点偏移 X。
+         * @param centerOffsetY 中心点偏移 Y。
+         * @param centerOffsetZ 中心点偏移 Z。
+         * @param widthSegments 宽度分段。
+         * @param heightSegments 高度分段。
+         * @param depthSegments 深度分段。
+         * @param differentFace 是否使用不同材质。
          */
         public static createCube(
             width: number = 1.0, height: number = 1.0, depth: number = 1.0,
@@ -205,6 +215,18 @@ namespace egret3d {
         }
         /**
          * 创建圆柱体网格。
+         * @param radiusTop 顶部半径。
+         * @param radiusBottom 底部半径。
+         * @param height 高度。
+         * @param centerOffsetX 中心点偏移 X。
+         * @param centerOffsetY 中心点偏移 Y。
+         * @param centerOffsetZ 中心点偏移 Z。
+         * @param radialSegments 径向分段。
+         * @param heightSegments 高度分段。
+         * @param openEnded 是否开口。
+         * @param thetaStart 起始弧度。
+         * @param thetaLength 覆盖弧度。
+         * @param differentFace 是否使用不同材质。
          */
         public static createCylinder(
             radiusTop: number = 0.5, radiusBottom: number = 0.5, height: number = 1.0,
@@ -528,82 +550,99 @@ namespace egret3d {
             return mesh;
         }
         /**
-         * 创建球体网格。
-         * TODO
-         */
+        * 创建球体网格。
+        * @param radius 半径。
+        * @param centerOffsetX 中心点偏移 X。
+        * @param centerOffsetY 中心点偏移 Y。
+        * @param centerOffsetZ 中心点偏移 Z。
+        * @param widthSegments 宽度分段。
+        * @param heightSegments 高度分段。
+        * @param phiStart 水平起始弧度。
+        * @param phiLength 水平覆盖弧度。
+        * @param thetaStart 垂直起始弧度。
+        * @param thetaLength 垂直覆盖弧度。
+        */
         public static createSphere(
             radius: number = 0.5,
-            widthSegments: number = 24,
-            heightSegments: number = 12
+            centerOffsetX: number = 0.0, centerOffsetY: number = 0.0, centerOffsetZ: number = 0.0,
+            widthSegments: uint = 24, heightSegments: uint = 12,
+            phiStart: number = 0.0, phiLength: number = Math.PI * 2.0,
+            thetaStart: number = 0.0, thetaLength: number = Math.PI
         ) {
             widthSegments = Math.max(3, Math.floor(widthSegments));
             heightSegments = Math.max(2, Math.floor(heightSegments));
-            const mesh = new Mesh((widthSegments + 1) * (heightSegments + 1), widthSegments * heightSegments * 6 - 6, _attributesB);
-            //
+
+            const thetaEnd = thetaStart + thetaLength;
+
             let index = 0;
-            const vertex = new Vector3();
-            const normal = new Vector3();
-            const grid = new Array<number[]>();
-            const vertices: number[] = [];
-            const normals: number[] = [];
-            const uvs: number[] = [];
+            const grid = [] as number[][];
 
-            for (let iy = 0; iy <= heightSegments; iy++) {
-                const verticesRow = new Array<number>();
-                const v = iy / heightSegments;
+            const vector3 = _helpVector3;
+            // buffers
+            const indices = [] as number[];
+            const vertices = [] as number[];
+            const normals = [] as number[];
+            const uvs = [] as number[];
 
-                for (let ix = 0; ix <= widthSegments; ix++) {
-                    const u = ix / widthSegments;
-                    // Vertex.
-                    vertex.x = -radius * Math.cos(u * Math.PI * 2) * Math.sin(v * Math.PI);
-                    vertex.y = radius * Math.cos(v * Math.PI);
-                    vertex.z = radius * Math.sin(u * Math.PI * 2) * Math.sin(v * Math.PI);
-                    vertices.push(vertex.x, vertex.y, vertex.z);
+            // generate vertices, normals and uvs
 
-                    // Normal.
-                    normal.x = vertex.x;
-                    normal.y = vertex.y;
-                    normal.z = vertex.z;
-                    const num = Math.sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+            for (let iY = 0; iY <= heightSegments; iY++) {
 
-                    if (num > Number.MIN_VALUE) {
-                        normals.push(normal.x / num, normal.y / num, normal.z / num);
-                    }
-                    else {
-                        normals.push(0.0, 0.0, 0.0);
-                    }
-                    uvs.push(0, 1.0 - u, v);
+                const verticesRow = [] as number[];
+
+                const v = iY / heightSegments;
+
+                for (let iX = 0; iX <= widthSegments; iX++) {
+
+                    const u = iX / widthSegments;
+
+                    // vertex
+
+                    vector3.x = - radius * Math.cos(phiStart + u * phiLength) * Math.sin(thetaStart + v * thetaLength);
+                    vector3.y = radius * Math.cos(thetaStart + v * thetaLength);
+                    vector3.z = radius * Math.sin(phiStart + u * phiLength) * Math.sin(thetaStart + v * thetaLength);
+
+                    vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, -vector3.z + centerOffsetZ);
+
+                    // normal
+
+                    vector3.normalize();
+                    normals.push(vector3.x, vector3.y, -vector3.z);
+
+                    // uv
+
+                    uvs.push(u, v);
+
                     verticesRow.push(index++);
+
                 }
 
                 grid.push(verticesRow);
+
             }
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
-            // Indices.
-            const tris = new Array<number>();
+
+            // indices
+
             for (let iy = 0; iy < heightSegments; iy++) {
+
                 for (let ix = 0; ix < widthSegments; ix++) {
+
                     const a = grid[iy][ix + 1];
                     const b = grid[iy][ix];
                     const c = grid[iy + 1][ix];
                     const d = grid[iy + 1][ix + 1];
 
-                    if (iy !== 0) {
-                        tris.push(a, d, b);
-                    }
-
-                    if (iy !== heightSegments - 1) {
-                        tris.push(b, d, c);
-                    }
+                    if (iy !== 0 || thetaStart > 0) indices.push(a, b, d);
+                    if (iy !== heightSegments - 1 || thetaEnd < Math.PI) indices.push(b, c, d);
                 }
             }
 
-            const indices = mesh.getIndices() as Uint16Array;
-            for (let i = 0, l = tris.length; i < l; i++) {
-                indices[i] = tris[i];
-            }
+            // build geometry
+            const mesh = Mesh.create(vertices.length / 3, indices.length, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.NORMAL, gltf.MeshAttributeType.TEXCOORD_0]);
+            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
+            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+            mesh.setIndices(indices);
 
             return mesh;
         }
