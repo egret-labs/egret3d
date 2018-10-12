@@ -35,11 +35,12 @@ namespace egret3d {
             }
         }
 
-        public initialize(config: { size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
+        public initialize(config: { rotateEnabled:boolean, size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
             super.initialize();
 
             stage = this;
 
+            this.rotateEnabled = config.rotateEnabled;
             this._size.w = config.size.w;
             this._size.h = config.size.h;
             this._screenSize.w = config.screenSize.w;
@@ -87,7 +88,7 @@ namespace egret3d {
         }
     }
     /**
-     * @deprecated
+     * 全局舞台信息组件实例。
      */
     export let stage: Stage = null!;
 }

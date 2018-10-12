@@ -65,7 +65,11 @@
             var manifest = JSON.parse(xhr.response);
             var list = manifest.initial.concat(manifest.game);
             loadScript(list, function () {
-                egret3d.runEgret({antialias: true, alpha: false});
+                egret3d.runEgret({
+                    rotateEnabled: false,
+                    antialias: true, 
+                    alpha: false
+                });
                 main();
             });
         });

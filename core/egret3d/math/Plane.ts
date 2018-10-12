@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 平面。
+     * 几何平面。
      */
     export class Plane extends paper.BaseRelease<Plane> implements paper.ICCS<Plane>, paper.ISerializable, IRaycast {
 

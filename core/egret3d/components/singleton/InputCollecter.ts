@@ -176,7 +176,7 @@ namespace egret3d {
         }
     }
     /**
-     * 全局输入信息收集组件。
+     * 全局输入信息组件。
      * - https://www.w3.org/TR/pointerevents/
      * - https://github.com/millermedeiros/js-signals/
      */
@@ -416,7 +416,7 @@ namespace egret3d {
         }
     }
     /**
-     * 
+     * 全局输入信息组件实例。
      */
     export let inputCollecter: InputCollecter = null!;
 }
