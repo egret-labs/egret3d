@@ -35,14 +35,16 @@ namespace egret3d.web {
             const shadowMaterial = light.constructor === PointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
             const drawCalls = this._drawCallCollecter;
             const shadowCalls = drawCalls.shadowCalls;
+            const webgl = WebGLCapabilities.webgl!;
 
+            light.renderTarget.use();
+            renderState.clear(true, true, egret3d.Color.WHITE);
             for (let i = 0, l = light.constructor === PointLight ? 6 : 1; i < l; ++i) {
                 const context = camera.context;
                 light.update(camera, i);
-
-                (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
-                this._viewport(light.viewPortPixel, light.renderTarget);
-                renderState.clear(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                // this._viewport(light.viewPortPixel, light.renderTarget);
+                webgl.viewport(light.viewPortPixel.x, light.viewPortPixel.y, light.viewPortPixel.w, light.viewPortPixel.h);
+                webgl.depthRange(0, 1);
                 drawCalls.shadowFrustumCulling(camera);
 
                 for (const drawCall of shadowCalls) {
@@ -50,7 +52,6 @@ namespace egret3d.web {
                 }
             }
 
-            const webgl = WebGLCapabilities.webgl!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
 

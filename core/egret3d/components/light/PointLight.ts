@@ -31,18 +31,21 @@ namespace egret3d {
         public renderTarget: BaseRenderTarget = new GlRenderTarget("PointLight", 512 * 4, 512 * 2, true); // TODO
 
         protected _updateMatrix(camera: Camera) {
-            const matrix = this.shadowMatrix;
-            matrix.fromTranslate(this.gameObject.transform.getPosition().clone().multiplyScalar(-1).release());
+            const cameraTransform = camera.gameObject.transform;
+            const shadowMatrix = this.shadowMatrix;
+            shadowMatrix.fromTranslate(cameraTransform.getPosition().clone().multiplyScalar(-1).release());
 
+            const temp = cameraTransform.getWorldMatrix().clone().release();
+            // temp.rawData[12] = -temp.rawData[12];//Left-hand
             const context = camera.context;
-            const temp = this.gameObject.transform.getWorldMatrix().clone().release();
-            temp.rawData[14] = -temp.rawData[14];//Left-hand
-            context.updateCamera(camera, temp);
+            camera.calcProjectMatrix(1.0, context.matrix_p);
+            context.matrix_v.inverse(temp);
+            context.matrix_vp.multiply(context.matrix_p, context.matrix_v);
             context.updateLightDepth(this);
         }
 
         public update(camera: Camera, faceIndex: number) {
-            const position = this.gameObject.transform.getPosition();
+            const position = this.gameObject.transform.getPosition().clone().release();
             helpVector3A.set(
                 position.x + _targets[faceIndex].x,
                 position.y + _targets[faceIndex].y,
@@ -54,12 +57,19 @@ namespace egret3d {
             camera.size = this.shadowCameraSize;
             camera.fov = Math.PI * 0.5;
             camera.opvalue = 1.0;
+            // camera.clearOption_Color = true;
+            // camera.clearOption_Depth = false;
+            camera.renderTarget = this.renderTarget;
             camera.gameObject.transform.setPosition(position); // TODO support copy matrix.
             camera.gameObject.transform.lookAt(helpVector3A, _ups[faceIndex]);
-            this.viewPortPixel.x = _viewPortsScale[faceIndex].x / 4;
-            this.viewPortPixel.y = _viewPortsScale[faceIndex].y / 2;
-            this.viewPortPixel.w = _viewPortsScale[faceIndex].z / 4;
-            this.viewPortPixel.h = _viewPortsScale[faceIndex].w / 2;
+            // this.viewPortPixel.x = _viewPortsScale[faceIndex].x / 4;
+            // this.viewPortPixel.y = _viewPortsScale[faceIndex].y / 2;
+            // this.viewPortPixel.w = _viewPortsScale[faceIndex].z / 4;
+            // this.viewPortPixel.h = _viewPortsScale[faceIndex].w / 2;
+            this.viewPortPixel.x = _viewPortsScale[faceIndex].x * this.shadowSize;
+            this.viewPortPixel.y = _viewPortsScale[faceIndex].y * this.shadowSize;
+            this.viewPortPixel.w = _viewPortsScale[faceIndex].z * this.shadowSize;
+            this.viewPortPixel.h = _viewPortsScale[faceIndex].w * this.shadowSize;
 
             super.update(camera, faceIndex);
         }

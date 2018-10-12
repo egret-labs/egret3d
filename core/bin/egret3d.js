@@ -4934,7 +4934,7 @@ var egret3d;
         BaseLight.prototype.update = function (camera, faceIndex) {
             camera.backgroundColor.set(1.0, 1.0, 1.0, 1.0);
             camera.clearOption_Color = true;
-            camera.clearOption_Depth = true;
+            camera.clearOption_Depth = false;
             this._updateMatrix(camera);
         };
         __decorate([
@@ -4958,7 +4958,7 @@ var egret3d;
         ], BaseLight.prototype, "shadowRadius", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */)
+            paper.editor.property(2 /* FLOAT */, { minimum: 0.01 })
         ], BaseLight.prototype, "shadowBias", void 0);
         __decorate([
             paper.serializedField,
@@ -12479,7 +12479,8 @@ var egret3d;
             camera.size = this.shadowCameraSize;
             camera.fov = Math.PI * 0.25;
             camera.opvalue = 0.0;
-            this.viewPortPixel.copy(camera.viewport);
+            // this.viewPortPixel.copy(camera.viewport);
+            this.viewPortPixel.set(0, 0, 1024, 1024);
             _super.prototype.update.call(this, camera, faceIndex);
         };
         return DirectionalLight;
@@ -12520,28 +12521,38 @@ var egret3d;
             return _this;
         }
         PointLight.prototype._updateMatrix = function (camera) {
-            var matrix = this.shadowMatrix;
-            matrix.fromTranslate(this.gameObject.transform.getPosition().clone().multiplyScalar(-1).release());
+            var cameraTransform = camera.gameObject.transform;
+            var shadowMatrix = this.shadowMatrix;
+            shadowMatrix.fromTranslate(cameraTransform.getPosition().clone().multiplyScalar(-1).release());
+            var temp = cameraTransform.getWorldMatrix().clone().release();
+            temp.rawData[12] = -temp.rawData[12]; //Left-hand
             var context = camera.context;
-            var temp = this.gameObject.transform.getWorldMatrix().clone().release();
-            temp.rawData[14] = -temp.rawData[14]; //Left-hand
-            context.updateCamera(camera, temp);
+            camera.calcProjectMatrix(1.0, context.matrix_p);
+            context.matrix_v.inverse(temp);
+            context.matrix_vp.multiply(context.matrix_p, context.matrix_v);
             context.updateLightDepth(this);
         };
         PointLight.prototype.update = function (camera, faceIndex) {
-            var position = this.gameObject.transform.getPosition();
+            var position = this.gameObject.transform.getPosition().clone().release();
             egret3d.helpVector3A.set(position.x + _targets[faceIndex].x, position.y + _targets[faceIndex].y, position.z + _targets[faceIndex].z);
             camera.near = this.shadowCameraNear;
             camera.far = this.shadowCameraFar;
             camera.size = this.shadowCameraSize;
-            camera.fov = Math.PI * 0.45;
+            camera.fov = Math.PI * 0.5;
             camera.opvalue = 1.0;
+            // camera.clearOption_Color = true;
+            // camera.clearOption_Depth = false;
+            camera.renderTarget = this.renderTarget;
             camera.gameObject.transform.setPosition(position); // TODO support copy matrix.
             camera.gameObject.transform.lookAt(egret3d.helpVector3A, _ups[faceIndex]);
-            this.viewPortPixel.x = _viewPortsScale[faceIndex].x / 4;
-            this.viewPortPixel.y = _viewPortsScale[faceIndex].y / 2;
-            this.viewPortPixel.w = _viewPortsScale[faceIndex].z / 4;
-            this.viewPortPixel.h = _viewPortsScale[faceIndex].w / 2;
+            // this.viewPortPixel.x = _viewPortsScale[faceIndex].x / 4;
+            // this.viewPortPixel.y = _viewPortsScale[faceIndex].y / 2;
+            // this.viewPortPixel.w = _viewPortsScale[faceIndex].z / 4;
+            // this.viewPortPixel.h = _viewPortsScale[faceIndex].w / 2;
+            this.viewPortPixel.x = _viewPortsScale[faceIndex].x * this.shadowSize;
+            this.viewPortPixel.y = _viewPortsScale[faceIndex].y * this.shadowSize;
+            this.viewPortPixel.w = _viewPortsScale[faceIndex].z * this.shadowSize;
+            this.viewPortPixel.h = _viewPortsScale[faceIndex].w * this.shadowSize;
             _super.prototype.update.call(this, camera, faceIndex);
         };
         __decorate([
@@ -21670,19 +21681,21 @@ var egret3d;
                 var shadowMaterial = light.constructor === egret3d.PointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
                 var drawCalls = this._drawCallCollecter;
                 var shadowCalls = drawCalls.shadowCalls;
+                var webgl = egret3d.WebGLCapabilities.webgl;
+                light.renderTarget.use();
+                renderState.clear(true, true, egret3d.Color.WHITE);
                 for (var i = 0, l = light.constructor === egret3d.PointLight ? 6 : 1; i < l; ++i) {
                     var context = camera.context;
                     light.update(camera, i);
-                    light.renderTarget.activeCubeFace = i; // TODO 创建接口。
-                    this._viewport(light.viewPortPixel, light.renderTarget);
-                    renderState.clear(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                    // this._viewport(light.viewPortPixel, light.renderTarget);
+                    webgl.viewport(light.viewPortPixel.x, light.viewPortPixel.y, light.viewPortPixel.w, light.viewPortPixel.h);
+                    webgl.depthRange(0, 1);
                     drawCalls.shadowFrustumCulling(camera);
                     for (var _i = 0, shadowCalls_1 = shadowCalls; _i < shadowCalls_1.length; _i++) {
                         var drawCall = shadowCalls_1[_i];
                         this._draw(context, drawCall, shadowMaterial);
                     }
                 }
-                var webgl = egret3d.WebGLCapabilities.webgl;
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
             };
             WebGLRenderSystem.prototype._renderCamera = function (camera, renderEnabled) {
