@@ -3818,10 +3818,11 @@ var paper;
                 return _this;
             }
             GUISystem.prototype._openFolder = function (folder) {
-                folder.open();
-                if (folder.parent && folder.parent !== this._guiComponent.hierarchy) {
-                    this._openFolder(folder.parent);
+                if (!folder.parent || folder.parent === this._guiComponent.hierarchy) {
+                    return;
                 }
+                folder.parent.open();
+                this._openFolder(folder.parent);
             };
             GUISystem.prototype._selectSceneOrGameObject = function (sceneOrGameObject) {
                 // Unselect prev folder.
@@ -3891,6 +3892,18 @@ var paper;
                 folder.onClick = this._nodeClickHandler;
                 this._hierarchyFolders[gameObject.uuid] = folder;
             };
+            GUISystem.prototype._propertyHasGetterSetter = function (target, propName) {
+                var prototype = Object.getPrototypeOf(target);
+                var descriptror;
+                while (prototype) {
+                    descriptror = Object.getOwnPropertyDescriptor(prototype, propName);
+                    if (descriptror && descriptror.get && descriptror.set) {
+                        return true;
+                    }
+                    prototype = Object.getPrototypeOf(prototype);
+                }
+                return false;
+            };
             GUISystem.prototype._addToInspector = function (gui) {
                 var infos = editor.getEditInfo(gui.instance);
                 var guiControllerA;
@@ -3899,7 +3912,7 @@ var paper;
                 var _loop_1 = function (info) {
                     switch (info.editType) {
                         case 0 /* UINT */:
-                            guiControllerA = this_1._guiComponent.inspector.add(gui.instance, info.name).min(0).step(1).listen();
+                            guiControllerA = gui.add(gui.instance, info.name).min(0).step(1).listen();
                             if (info.option) {
                                 if (info.option.minimum !== undefined) {
                                     guiControllerA.min(info.option.minimum);
@@ -3913,7 +3926,7 @@ var paper;
                             }
                             break;
                         case 1 /* INT */:
-                            guiControllerA = this_1._guiComponent.inspector.add(gui.instance, info.name).step(1).listen();
+                            guiControllerA = gui.add(gui.instance, info.name).step(1).listen();
                             if (info.option) {
                                 if (info.option.minimum !== undefined) {
                                     guiControllerA.min(info.option.minimum);
@@ -3927,7 +3940,7 @@ var paper;
                             }
                             break;
                         case 2 /* FLOAT */:
-                            guiControllerA = this_1._guiComponent.inspector.add(gui.instance, info.name).step(0.1).listen();
+                            guiControllerA = gui.add(gui.instance, info.name).step(0.1).listen();
                             if (info.option) {
                                 if (info.option.minimum !== undefined) {
                                     guiControllerA.min(info.option.minimum);
@@ -3942,65 +3955,73 @@ var paper;
                             break;
                         case 4 /* CHECKBOX */:
                         case 3 /* TEXT */:
-                            this_1._guiComponent.inspector.add(gui.instance, info.name).listen();
+                            gui.add(gui.instance, info.name).listen();
                             break;
                         case 10 /* LIST */:
-                            this_1._guiComponent.inspector.add(gui.instance, info.name, info.option.listItems).listen();
+                            gui.add(gui.instance, info.name, info.option.listItems).listen();
                             break;
                         case 5 /* VECTOR2 */: {
-                            var descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(gui.instance), info.name);
-                            if (descriptor) {
-                                if (descriptor.get && descriptor.set) {
-                                    var onChange = function () {
-                                        gui.instance[info.name] = gui.instance[info.name];
-                                    };
-                                    guiControllerA = this_1._guiComponent.inspector.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
-                                    guiControllerB = this_1._guiComponent.inspector.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
-                                    guiControllerA.onChange(onChange);
-                                    guiControllerB.onChange(onChange);
+                            if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
+                                var onChange = function () {
+                                    gui.instance[info.name] = gui.instance[info.name];
+                                };
+                                guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
+                                guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
+                                guiControllerA.onChange(onChange);
+                                guiControllerB.onChange(onChange);
+                            }
+                            else {
+                                guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
+                                guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
+                            }
+                            if (info.option) {
+                                if (info.option.minimum !== undefined) {
+                                    guiControllerA.min(info.option.minimum);
+                                    guiControllerB.min(info.option.minimum);
                                 }
-                                else {
-                                    guiControllerA = this_1._guiComponent.inspector.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
-                                    guiControllerB = this_1._guiComponent.inspector.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
+                                if (info.option.maximum !== undefined) {
+                                    guiControllerA.max(info.option.maximum);
+                                    guiControllerB.max(info.option.maximum);
+                                }
+                                if (info.option.step !== undefined) {
+                                    guiControllerA.step(info.option.step);
+                                    guiControllerB.step(info.option.step);
                                 }
                             }
                             break;
                         }
                         case 6 /* VECTOR3 */: {
-                            var descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(gui.instance), info.name);
-                            if (descriptor) {
-                                if (descriptor.get && descriptor.set) {
-                                    var onChange = function () {
-                                        gui.instance[info.name] = gui.instance[info.name];
-                                    };
-                                    guiControllerA = this_1._guiComponent.inspector.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
-                                    guiControllerB = this_1._guiComponent.inspector.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
-                                    guiControllerC = this_1._guiComponent.inspector.add(gui.instance[info.name], "z", info.name + ": z").step(0.1).listen();
-                                    guiControllerA.onChange(onChange);
-                                    guiControllerB.onChange(onChange);
-                                    guiControllerC.onChange(onChange);
+                            if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
+                                var onChange = function () {
+                                    gui.instance[info.name] = gui.instance[info.name];
+                                };
+                                guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
+                                guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
+                                guiControllerC = gui.add(gui.instance[info.name], "z", info.name + ": z").step(0.1).listen();
+                                guiControllerA.onChange(onChange);
+                                guiControllerB.onChange(onChange);
+                                guiControllerC.onChange(onChange);
+                            }
+                            else {
+                                guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
+                                guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
+                                guiControllerC = gui.add(gui.instance[info.name], "z", info.name + ": z").step(0.1).listen();
+                            }
+                            if (info.option) {
+                                if (info.option.minimum !== undefined) {
+                                    guiControllerA.min(info.option.minimum);
+                                    guiControllerB.min(info.option.minimum);
+                                    guiControllerC.min(info.option.minimum);
                                 }
-                                else {
-                                    guiControllerA = this_1._guiComponent.inspector.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
-                                    guiControllerB = this_1._guiComponent.inspector.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
-                                    guiControllerC = this_1._guiComponent.inspector.add(gui.instance[info.name], "z", info.name + ": z").step(0.1).listen();
+                                if (info.option.maximum !== undefined) {
+                                    guiControllerA.max(info.option.maximum);
+                                    guiControllerB.max(info.option.maximum);
+                                    guiControllerC.max(info.option.maximum);
                                 }
-                                if (info.option) {
-                                    if (info.option.minimum !== undefined) {
-                                        guiControllerA.min(info.option.minimum);
-                                        guiControllerB.min(info.option.minimum);
-                                        guiControllerC.min(info.option.minimum);
-                                    }
-                                    if (info.option.maximum !== undefined) {
-                                        guiControllerA.max(info.option.maximum);
-                                        guiControllerB.max(info.option.maximum);
-                                        guiControllerC.max(info.option.maximum);
-                                    }
-                                    if (info.option.step !== undefined) {
-                                        guiControllerA.step(info.option.step);
-                                        guiControllerB.step(info.option.step);
-                                        guiControllerC.step(info.option.step);
-                                    }
+                                if (info.option.step !== undefined) {
+                                    guiControllerA.step(info.option.step);
+                                    guiControllerB.step(info.option.step);
+                                    guiControllerC.step(info.option.step);
                                 }
                             }
                             break;
@@ -4032,6 +4053,12 @@ var paper;
                             break;
                         case 14 /* GAMEOBJECT */:
                             break;
+                        case 21 /* NESTED */: {
+                            var folder = gui.addFolder(info.name);
+                            folder.instance = gui.instance[info.name];
+                            this_1._addToInspector(folder);
+                            break;
+                        }
                     }
                 };
                 var this_1 = this;
@@ -4164,7 +4191,7 @@ var paper;
                     if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
                         this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
                         this._selectFolder.selected = true;
-                        this._openFolder(this._selectFolder.parent);
+                        this._openFolder(this._selectFolder);
                     }
                 }
                 this._guiComponent.inspector.updateDisplay();
@@ -4380,7 +4407,7 @@ var paper;
                     _this._skeletonDrawer.gameObject.activeSelf =
                         selectedGameObject && selectedGameObject.renderer && selectedGameObject.renderer instanceof egret3d.SkinnedMeshRenderer ? true : false;
                     _this._cameraViewFrustum.activeSelf =
-                        selectedGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
+                        selectedGameObject && selectedGameObject !== paper.GameObject.globalGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
                 };
                 _this._onGameObjectSelected = function (_c, value) {
                     _this._selectGameObject(value, true);

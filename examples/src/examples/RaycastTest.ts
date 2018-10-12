@@ -2,7 +2,7 @@ namespace examples {
 
     export class RaycastTest {
 
-        async  start() {
+        async start() {
             // Load resource config.
             await RES.loadConfig("resource/default.res.json", "resource/");
 
@@ -19,7 +19,7 @@ namespace examples {
             }
 
             {
-                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "Mesh");
+                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CYLINDER, "Mesh");
                 gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
                 gameObject.renderer!.material = egret3d.DefaultMaterials.MESH_LAMBERT;
 

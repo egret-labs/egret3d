@@ -1,7 +1,7 @@
 namespace examples {
 
     export class MathTest {
-        async  start() {
+        async start() {
             // Create camera.
             egret3d.Camera.main;
 

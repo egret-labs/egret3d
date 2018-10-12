@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 立方体碰撞体。
+     * 立方体碰撞体组件。
      */
     export class BoxCollider extends paper.BaseComponent implements ICollider, IRaycast {
         public readonly colliderType: ColliderType = ColliderType.Box;
@@ -8,6 +8,7 @@ namespace egret3d {
          * 描述该碰撞体的立方体。
          */
         @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.NESTED)
         public readonly aabb: AABB = AABB.ONE.clone();
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {

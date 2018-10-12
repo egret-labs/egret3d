@@ -13,4 +13,4 @@
 ## 如何添加一个例子
 
 * 在 [src/examples/](src/examples/) 文件夹下添加一个新的 `TypeScript` 例子文件即可，可以参考 [src/examples/Test.ts](src/examples/Test.ts)
-* 新增加的 `TypeScript` 例子文件中，命名空间需要与该文件名保持一致。
+* 新增加的 `TypeScript` 例子文件中，命名空间一定要是 `examples`，并且导出的 Class 名需要和该文件名保持一致。（这是示例文件可以在 GUI 选择器中被自动筛选的规则）

@@ -47,7 +47,7 @@ namespace egret3d {
                 for (let ix = 0; ix < gridX1; ix++) {
                     const x = ix * segmentWidth - widthHalf;
                     vertices.push(x + centerOffsetX, -y + centerOffsetY, 0.0);
-                    normals.push(0.0, 0.0, 1.0);
+                    normals.push(0.0, 0.0, -1.0);
                     uvs.push(
                         ix / widthSegments,
                         iy / heightSegments,
@@ -67,8 +67,8 @@ namespace egret3d {
                     // | / |
                     // b - c
                     indices.push(
-                        a, d, b,
-                        b, d, c,
+                        a, b, d,
+                        d, b, c,
                     );
                 }
             }
