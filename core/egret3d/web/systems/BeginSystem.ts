@@ -36,9 +36,11 @@ namespace egret3d.web {
             // Add stage, set stage, update canvas.
             const canvas = config.canvas!;
             const stage = globalGameObject.addComponent(Stage, {
+                rotateEnabled: !(config.rotateEnabled === false),
                 size: { w: config.option!.contentWidth, h: config.option!.contentHeight },
                 screenSize: { w: canvas.parentElement!.clientWidth, h: canvas.parentElement!.clientHeight },
             });
+
             this._updateCanvas(canvas, stage);
 
             globalGameObject.getOrAddComponent(DefaultTextures);

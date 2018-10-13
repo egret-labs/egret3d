@@ -28,8 +28,8 @@ namespace egret3d {
 
             let raycastMesh = false;
             let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
-            const worldMatrix = this.gameObject.transform.worldMatrix;
-            const localRay = helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
+            const transform = this.gameObject.transform;
+            const localRay = helpRay.applyMatrix(transform.inverseWorldMatrix, p1);
             const aabb = this.aabb;
 
             if (p2) {
@@ -43,6 +43,8 @@ namespace egret3d {
             }
 
             if (raycastMesh ? aabb.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo) : aabb.raycast(localRay, raycastInfo)) {
+                const worldMatrix = transform.worldMatrix;
+
                 if (raycastInfo) { // Update local raycast info to world.
                     raycastInfo.position.applyMatrix(worldMatrix);
                     raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);

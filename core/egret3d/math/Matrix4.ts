@@ -671,28 +671,31 @@ namespace egret3d {
             return this;
         }
         /**
-         * 
-         * - 两点位置不重合。
-         * @param eye 
-         * @param target 
-         * @param up 
+         * 设置该矩阵，使得其 Z 轴正方向指向目标点。
+         * @param eye 起始点。
+         * @param target 目标点。
+         * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
          */
         public lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
-            this.lookRotation(_helpVector3C.subtract(target, eye).normalize(), up); // Left-hand coordinates system.
+            this.lookRotation(_helpVector3C.subtract(target, eye).normalize(), up);
 
             return this;
         }
         /**
-         * 
+         * 设置该矩阵，使得其 Z 轴正方向指向目标方向。
+         * - 方向必须是已被归一化的。
+         * - 矩阵的缩放值将被覆盖。
+         * @param target 目标方向。
+         * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
          */
-        public lookRotation(value: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
-            const x = _helpVector3A.cross(up, value).normalize(undefined, Vector3.RIGHT);
-            const y = _helpVector3B.cross(value, x);
+        public lookRotation(direction: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
+            const x = _helpVector3A.cross(up, direction).normalize();
+            const y = _helpVector3B.cross(direction, x);
             const rawData = this.rawData;
 
-            rawData[0] = x.x; rawData[4] = y.x; rawData[8] = value.x;
-            rawData[1] = x.y; rawData[5] = y.y; rawData[9] = value.y;
-            rawData[2] = x.z; rawData[6] = y.z; rawData[10] = value.z;
+            rawData[0] = x.x; rawData[4] = y.x; rawData[8] = direction.x;
+            rawData[1] = x.y; rawData[5] = y.y; rawData[9] = direction.y;
+            rawData[2] = x.z; rawData[6] = y.z; rawData[10] = direction.z;
 
             return this;
         }

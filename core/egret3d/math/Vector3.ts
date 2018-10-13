@@ -448,11 +448,11 @@ namespace egret3d {
             return Math.acos(Math.max(- 1, Math.min(1, theta)));
         }
 
-        public getSquaredDistance(value: Readonly<IVector3>): number {
+        public getSquaredDistance(value: Readonly<IVector3>) {
             return helpVector3.subtract(value, this).squaredLength;
         }
 
-        public getDistance(value: Readonly<IVector3>): number {
+        public getDistance(value: Readonly<IVector3>) {
             return helpVector3.subtract(value, this).length;
         }
 

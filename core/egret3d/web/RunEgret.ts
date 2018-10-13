@@ -1,18 +1,30 @@
 namespace egret3d {
-
+    /**
+     * 
+     */
     export type RunEgretOptions = {
-        antialias: boolean;
-        alpha: boolean;//webgl默认会和Canvas进行混合
         defaultScene?: string;
+
         contentWidth?: number;
         contentHeight?: number;
+        /**
+         * 是否允许屏幕旋转，默认允许。
+         */
+        rotateEnabled?: boolean;
+        /**
+         * 是否开启抗锯齿，默认关闭。
+         */
+        antialias: boolean;
+        /**
+         * 是否与画布背景色混合，默认不混合。
+         */
+        alpha: boolean;
 
         option?: RequiredRuntimeOptions;
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
 
         playerMode?: paper.PlayerMode;
-        isPlaying?: boolean;
     };
 
     export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number };

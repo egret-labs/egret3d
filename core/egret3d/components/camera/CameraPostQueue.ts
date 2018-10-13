@@ -6,7 +6,7 @@ namespace egret3d {
 
         renderTarget: GlRenderTarget;
 
-        render(camera: Camera, renderSystem: web.WebGLRenderSystem): void;
+        render(camera: Camera, renderSystem: any): void;
     }
 
     /**
@@ -16,7 +16,7 @@ namespace egret3d {
 
         public renderTarget: GlRenderTarget = null as any;
 
-        public render(camera: Camera, renderSystem: web.WebGLRenderSystem) {
+        public render(camera: Camera, renderSystem: any) {
             // camera.context.drawtype = "_depth";
             // renderSystem._targetAndViewport(camera.viewport, this.renderTarget);
             // renderSystem._cleanBuffer(true, true, Color.BLACK);
@@ -67,7 +67,7 @@ namespace egret3d {
         /**
          * @inheritDoc
          */
-        public render(camera: Camera, renderSystem: web.WebGLRenderSystem) {
+        public render(camera: Camera, renderSystem: any) {
             // renderSystem._targetAndViewport(camera.viewport, this.renderTarget);
             // renderSystem._cleanBuffer(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
             // renderSystem._renderCamera(camera);

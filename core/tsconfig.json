@@ -1,32 +1,30 @@
 {
     "compilerOptions": {
-		"declaration": true,
+        "declaration": true,
         "stripInternal": true,
-		"skipLibCheck": true,
-		"experimentalDecorators": true,
+        "skipLibCheck": true,
+        "experimentalDecorators": true,
         "preserveConstEnums": true,
-		"strict": false,
+        "strict": false,
         "noUnusedLocals": false,
         "noUnusedParameters": false,
-		"strictPropertyInitialization": false,
-		"target": "es5",
-		"lib": [
-			"es5",
-			"dom",
-			"es2015.promise"
-		],
+        "strictPropertyInitialization": false,
+        "target": "es5",
+        "lib": [
+            "es5",
+            "dom",
+            "es2015.promise"
+        ],
         "outFile": "bin/egret3d.js"
     },
     "files": [
         "libs/egret.d.ts",
         "libs/resourcemanager.d.ts",
         "libs/signals/signals.d.ts",
-        
         "egret3d/ecs/core/InterFace.ts",
         "egret3d/ecs/core/Decorators.ts",
         "egret3d/ecs/core/Layer.ts",
         "egret3d/ecs/core/BaseObject.ts",
-
         "egret3d/math/Math.ts",
         "egret3d/math/Vector2.ts",
         "egret3d/math/Vector3.ts",
@@ -42,7 +40,6 @@
         "egret3d/math/AABB.ts",
         "egret3d/math/Curve.ts",
         "egret3d/math/Color.ts",
-        
         "egret3d/ecs/core/Asset.ts",
         "egret3d/ecs/core/Prefab.ts",
         "egret3d/ecs/core/RawScene.ts",
@@ -51,7 +48,6 @@
         "egret3d/ecs/core/SystemManager.ts",
         "egret3d/ecs/core/ScenesManager.ts",
         "egret3d/ecs/core/Application.ts",
-
         "egret3d/ecs/components/BaseComponent.ts",
         "egret3d/ecs/components/SingletonComponent.ts",
         "egret3d/ecs/components/GroupComponent.ts",
@@ -60,7 +56,6 @@
         "egret3d/ecs/components/Behaviour.ts",
         "egret3d/ecs/components/Time.ts",
         "egret3d/ecs/components/DisposeCollecter.ts",
-
         "egret3d/ecs/systems/GameObjectGroup.ts",
         "egret3d/ecs/systems/BaseSystem.ts",
         "egret3d/ecs/systems/EnableSystem.ts",
@@ -69,11 +64,9 @@
         "egret3d/ecs/systems/UpdateSystem.ts",
         "egret3d/ecs/systems/LateUpdateSystem.ts",
         "egret3d/ecs/systems/DisableSystem.ts",
-
         "egret3d/ecs/serialize/SerializeClassMap.ts",
         "egret3d/ecs/serialize/Deserialize.ts",
         "egret3d/ecs/serialize/Serialize.ts",
-
         "egret3d/components/Transform.ts",
         "egret3d/components/singleton/Stage.ts",
         "egret3d/components/singleton/DefaultMeshes.ts",
@@ -84,11 +77,9 @@
         "egret3d/components/singleton/DrawCallCollecter.ts",
         "egret3d/components/singleton/ContactCollecter.ts",
         "egret3d/components/singleton/InputCollecter.ts",
-        
         "egret3d/components/collision/ICollider.ts",
         "egret3d/components/collision/BoxCollider.ts",
         "egret3d/components/collision/SphereCollider.ts",
-
         "egret3d/components/camera/CameraSystem.ts",
         "egret3d/components/camera/Camera.ts",
         "egret3d/components/camera/CameraPostQueue.ts",
@@ -115,19 +106,17 @@
         "egret3d/components/particle/ParticleRenderer.ts",
         "egret3d/components/particle/ParticleSystem.ts",
         "egret3d/components/audio/Audio.ts",
-
         "egret3d/web/render/WebGLCapabilities.ts",
-
         "egret3d/math/Ray.ts",
         "egret3d/asset/resource/GLTF.ts",
         "egret3d/asset/resource/BaseMesh.ts",
+        "egret3d/asset/resource/MeshBuilder.ts",
         "egret3d/asset/resource/Texture.ts",
         "egret3d/asset/resource/Shader.ts",
         "egret3d/asset/resource/Material.ts",
         "egret3d/asset/default/ShaderLib.ts",
         "egret3d/asset/default/ShaderChunk.ts",
         "egret3d/asset/Fog.ts",
-
         "egret3d/res-processor/ResProcessor.ts",
         "egret3d/util/regexputil.ts",
         "egret3d/util/stream.ts",
@@ -142,7 +131,6 @@
         "egret3d/web/systems/InputSystem.ts",
         "egret3d/web/systems/EndSystem.ts",
         "egret3d/web/RunEgret.ts",
-
         "egret3d/components/StaticBatchingUtility.ts",
         "egret3d/Performance.ts",
         "egret3d/Profile.ts",

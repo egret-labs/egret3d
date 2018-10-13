@@ -112,7 +112,6 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply);
             DefaultShaders.TRANSPARENT_MULTIPLY_DOUBLESIDE = this._createShader("builtin/transparent_multiply_doubleside.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
 
-
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
             DefaultShaders.LINEDASHED = this._createShader("builtin/linedashed.shader.json", egret3d.ShaderLib.linedashed as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);
 
