@@ -72,6 +72,11 @@ namespace egret3d {
             return this;
         }
 
+        public clear() {
+            this.x = 0.0;
+            this.y = 0.0;
+        }
+
         public normalize() {
             const l = this.length;
             if (l > Number.MIN_VALUE) {

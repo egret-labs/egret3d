@@ -1,16 +1,9 @@
 namespace egret3d {
     const _helpVector3 = Vector3.create();
-    const _attributesB: gltf.MeshAttributeType[] = [
-        gltf.MeshAttributeType.POSITION,
-        gltf.MeshAttributeType.NORMAL,
-        gltf.MeshAttributeType.TEXCOORD_0,
-    ];
     /**
      * 提供默认的几何网格资源，以及创建几何网格或几何网格实体的方式。
      */
     export class MeshBuilder {
-
-
         /**
          * 创建平面网格。
          * @param width 宽度。
@@ -449,7 +442,8 @@ namespace egret3d {
                 }
 
             }
-            const mesh = egret3d.Mesh.create(vertices.length / 3, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+
+            const mesh = egret3d.Mesh.create(vertices.length / 3, 0, [gltf.MeshAttributeType.POSITION]);
             mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.LineStrip;
 

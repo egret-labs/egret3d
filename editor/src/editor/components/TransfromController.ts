@@ -174,7 +174,7 @@ namespace paper.editor {
         private _updateTransform(mousePosition: Readonly<egret3d.IVector3>) {
             let isWorldSpace = this.isWorldSpace;
             const hoveredName = this._hovered!.name;
-            const raycastInfo = Helper.raycastB(this._plane, mousePosition.x, mousePosition.y)!;
+            const raycastInfo = Helper.raycast(this._plane, mousePosition.x, mousePosition.y)!;
             const modelComponent = this.gameObject.getComponent(ModelComponent)!;
             const selectedGameObject = modelComponent.selectedGameObject!;
             const currentSelectedPRS = this._prsStarts[selectedGameObject.uuid];
@@ -475,7 +475,7 @@ namespace paper.editor {
         public start(mousePosition: Readonly<egret3d.IVector3>) {
             let isWorldSpace = this.isWorldSpace;
             const hoveredName = this._hovered!.name;
-            const raycastInfo = Helper.raycastB(this._plane, mousePosition.x, mousePosition.y)!;
+            const raycastInfo = Helper.raycast(this._plane, mousePosition.x, mousePosition.y)!;
             const modelComponent = this.gameObject.getComponent(ModelComponent)!;
 
             for (const gameObject of modelComponent.selectedGameObjects) {

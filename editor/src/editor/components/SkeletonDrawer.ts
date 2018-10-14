@@ -20,14 +20,6 @@ namespace paper.editor {
             this.gameObject.getOrAddComponent(egret3d.MeshRenderer).material = material;
         }
 
-        // const skinnedMeshRenderer = this.gameObject.getComponentInParent(egret3d.SkinnedMeshRenderer);
-        // const bones = skinnedMeshRenderer.bones;
-        // for (const bone of bones) {
-        //     const box = egret3d.Primitive.create(egret3d.Primitive.Type.Cube).transform.setLocalScale(0.1, 0.1, 0.1);
-        //     box.gameObject.hideFlags = HideFlags.HideAndDontSave;
-        //     box.transform.parent = bone;
-        // }
-
         public update() {
             const modelComponent = this.gameObject.getComponent(ModelComponent)!;
             const selectedGameObject = modelComponent.selectedGameObject!;

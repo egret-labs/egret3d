@@ -20,11 +20,11 @@ namespace paper.editor {
         private _orbitControls: OrbitControls | null = null;
         private _gridController: GridController | null = null;
         private _transformController: TransfromController | null = null;
+        private _boxColliderDrawer: BoxColliderDrawer | null = null;
+        private _sphereColliderDrawer: SphereColliderDrawer | null = null;
         private _skeletonDrawer: SkeletonDrawer | null = null;
 
         private _hoverBox: GameObject | null = null;
-        private _boxColliderDrawer: GameObject | null = null;
-        // private _sphereColliderDrawer: GameObject | null = null;
         private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
 
         private readonly _keyEscape: egret3d.Key = this._inputCollecter.getKey("Escape");
@@ -131,7 +131,7 @@ namespace paper.editor {
                         transformController.hovered = null;
                     }
                     else {
-                        const raycastInfos = Helper.raycast(transformController.mode.transform.children, this._pointerPosition.x, this._pointerPosition.y);
+                        const raycastInfos = Helper.raycastAll(transformController.mode.transform.children, this._pointerPosition.x, this._pointerPosition.y);
                         if (raycastInfos.length > 0) {
                             transformController.hovered = raycastInfos[0].transform!.gameObject;
                         }
@@ -145,7 +145,7 @@ namespace paper.editor {
                 }
 
                 if (!transformController || !transformController.isActiveAndEnabled || !transformController.hovered) {
-                    const raycastInfos = Helper.raycast(Scene.activeScene.getRootGameObjects(), this._pointerPosition.x, this._pointerPosition.y);
+                    const raycastInfos = Helper.raycastAll(Scene.activeScene.getRootGameObjects(), this._pointerPosition.x, this._pointerPosition.y);
                     if (raycastInfos.length > 0) {
                         this._modelComponent.hover(raycastInfos[0].transform!.gameObject);
                     }
@@ -171,9 +171,6 @@ namespace paper.editor {
 
             this._transformController!.gameObject.activeSelf =
                 selectedGameObject ? true : false;
-
-            this._boxColliderDrawer!.activeSelf =
-                selectedGameObject && selectedGameObject.getComponent(egret3d.BoxCollider) ? true : false;
 
             // this._sphereColliderDrawer!.activeSelf =
             //     selectedGameObject && selectedGameObject.getComponent(egret3d.SphereCollider) ? true : false;
@@ -353,9 +350,12 @@ namespace paper.editor {
 
             this._orbitControls = egret3d.Camera.editor.gameObject.getOrAddComponent(OrbitControls);
 
-            this._transformController = EditorMeshHelper.createGameObject("Axises").addComponent(TransfromController);
+            this._transformController = EditorMeshHelper.createGameObject("TransformController").addComponent(TransfromController);
             this._transformController.gameObject.activeSelf = false;
-
+            this._boxColliderDrawer = EditorMeshHelper.createGameObject("BoxColliderDrawer").addComponent(BoxColliderDrawer);
+            this._boxColliderDrawer.gameObject.activeSelf = false;
+            this._sphereColliderDrawer = EditorMeshHelper.createGameObject("SphereColliderDrawer").addComponent(SphereColliderDrawer);
+            this._sphereColliderDrawer.gameObject.activeSelf = false;
             this._skeletonDrawer = EditorMeshHelper.createGameObject("SkeletonDrawer").addComponent(SkeletonDrawer);
             this._skeletonDrawer.gameObject.activeSelf = false;
 
@@ -363,12 +363,6 @@ namespace paper.editor {
 
             this._hoverBox = EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, GameObject.globalGameObject.scene);
             this._hoverBox.activeSelf = false;
-
-            this._boxColliderDrawer = EditorMeshHelper.createBox("BoxColliderDrawer", egret3d.Color.YELLOW, 0.8, GameObject.globalGameObject.scene);
-            this._boxColliderDrawer.activeSelf = false;
-
-            // this._sphereColliderDrawer = EditorMeshHelper.createBox("SphereColliderDrawer", egret3d.Color.YELLOW, 0.8, GameObject.globalGameObject.scene);
-            // this._sphereColliderDrawer.activeSelf = false;
 
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera");
             this._cameraViewFrustum.activeSelf = false;
@@ -425,14 +419,18 @@ namespace paper.editor {
             this._transformController!.gameObject.destroy();
             this._transformController = null;
 
+            this._boxColliderDrawer!.gameObject.destroy();
+            this._boxColliderDrawer = null;
+
+            this._sphereColliderDrawer!.gameObject.destroy();
+            this._sphereColliderDrawer = null;
+
             this._skeletonDrawer!.gameObject.destroy();
             this._skeletonDrawer = null;
 
             this._hoverBox!.destroy();
             this._hoverBox = null;
 
-            this._boxColliderDrawer!.destroy();
-            this._boxColliderDrawer = null;
 
             // this._sphereColliderDrawer!.destroy();
             // this._sphereColliderDrawer = null;
@@ -445,7 +443,8 @@ namespace paper.editor {
             const gridController = this._gridController!;
             const hoverBox = this._hoverBox!;
             const transformController = this._transformController!;
-            const boxColliderDrawer = this._boxColliderDrawer!;
+            // const sphereColliderDrawer = this._sphereColliderDrawer!;
+            const skeletonDrawer = this._skeletonDrawer!;
 
             if (this._keyEscape.isUp(false) && !this._keyEscape.event!.altKey && !this._keyEscape.event!.ctrlKey && !this._keyEscape.event!.shiftKey) {
                 this._modelComponent.select(null);
@@ -515,15 +514,9 @@ namespace paper.editor {
                 transformController.update(this._pointerPosition);
             }
 
-            if (boxColliderDrawer.activeSelf) {
-                const boxCollider = selectedGameObject!.getComponent(egret3d.BoxCollider)!;
-                boxColliderDrawer.transform.localPosition = egret3d.Vector3.create().copy(boxCollider.aabb.center).applyMatrix(selectedGameObject!.transform.worldMatrix).release();
-                boxColliderDrawer.transform.localRotation = selectedGameObject!.transform.rotation;
-                boxColliderDrawer.transform.localScale = egret3d.Vector3.create().multiply(boxCollider.aabb.size, selectedGameObject!.transform.scale).release();
-                boxColliderDrawer.renderer!.enabled = boxCollider.enabled;
-            }
+            this._boxColliderDrawer!.update();
+            this._sphereColliderDrawer!.update();
 
-            const skeletonDrawer = this._skeletonDrawer!;
             if (skeletonDrawer.isActiveAndEnabled) {
                 skeletonDrawer.update();
             }

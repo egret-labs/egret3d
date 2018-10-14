@@ -22,6 +22,10 @@ namespace egret3d {
         /**
          * 
          */
+        public static LINEDASHED: Material;
+        /**
+         * 
+         */
         public static LINEDASHED_COLOR: Material;
         /**
          * 
@@ -62,6 +66,8 @@ namespace egret3d {
             DefaultMaterials.MESH_LAMBERT_DOUBLESIDE = this._createMaterial("builtin/meshlambert_doubleside.mat.json", DefaultShaders.MESH_LAMBERT)
                 .setTexture(DefaultTextures.WHITE)
                 .setCullFace(false);
+
+            DefaultMaterials.LINEDASHED = this._createMaterial("builtin/linedashed.mat.json", DefaultShaders.LINEDASHED);
 
             DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", DefaultShaders.LINEDASHED)
                 .addDefine(ShaderDefine.USE_COLOR);

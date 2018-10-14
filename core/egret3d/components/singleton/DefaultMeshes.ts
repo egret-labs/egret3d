@@ -49,7 +49,7 @@ namespace egret3d {
             }
 
             { // CUBE.
-                const mesh = DefaultMeshes.createCube();
+                const mesh = MeshBuilder.createCube();
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/cube.mesh.bin";
                 paper.Asset.register(mesh);
@@ -57,7 +57,7 @@ namespace egret3d {
             }
 
             { // PYRAMID.
-                const mesh = DefaultMeshes.createCylinder(0.0, Math.sqrt(0.5), 1.0, 0.0, 0.0, 0.0, 4, 1, false, Math.PI * 0.25);
+                const mesh = MeshBuilder.createCylinder(0.0, Math.sqrt(0.5), 1.0, 0.0, 0.0, 0.0, 4, 1, false, Math.PI * 0.25);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/pyramid.mesh.bin";
                 paper.Asset.register(mesh);
@@ -65,7 +65,7 @@ namespace egret3d {
             }
 
             { // CONE.
-                const mesh = DefaultMeshes.createCylinder(0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 16, 1);
+                const mesh = MeshBuilder.createCylinder(0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 16, 1);
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/cone.mesh.bin";
                 paper.Asset.register(mesh);
@@ -73,7 +73,7 @@ namespace egret3d {
             }
 
             { // CYLINDER.
-                const mesh = DefaultMeshes.createCylinder();
+                const mesh = MeshBuilder.createCylinder();
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/cylinder.mesh.bin";
                 paper.Asset.register(mesh);
@@ -81,7 +81,7 @@ namespace egret3d {
             }
 
             { // TORUS.
-                const mesh = DefaultMeshes.createTorus();
+                const mesh = MeshBuilder.createTorus();
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/torus.mesh.bin";
                 paper.Asset.register(mesh);
@@ -89,7 +89,7 @@ namespace egret3d {
             }
 
             { // SPHERE.
-                const mesh = DefaultMeshes.createSphere();
+                const mesh = MeshBuilder.createSphere();
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/sphere.mesh.bin";
                 paper.Asset.register(mesh);
@@ -169,7 +169,7 @@ namespace egret3d {
             }
 
             { // CIRCLE_LINE
-                const mesh = DefaultMeshes.createCircle();
+                const mesh = MeshBuilder.createCircle();
                 mesh._isBuiltin = true;
                 mesh.name = "builtin/circle_line.mesh.bin";
                 paper.Asset.register(mesh);
@@ -238,9 +238,12 @@ namespace egret3d {
                 case this.LINE_X:
                 case this.LINE_Y:
                 case this.LINE_Z:
+                    renderer.material = DefaultMaterials.LINEDASHED_COLOR;
+                    break;
+
                 case this.CIRCLE_LINE:
                 case this.CUBE_LINE:
-                    renderer.material = DefaultMaterials.LINEDASHED_COLOR;
+                    renderer.material = DefaultMaterials.LINEDASHED;
                     break;
             }
 
@@ -277,12 +280,12 @@ namespace egret3d {
             return MeshBuilder.createCylinder(radiusTop, radiusBottom, height,
                 centerOffsetX, centerOffsetY, centerOffsetZ,
                 radialSegments, heightSegments, openEnded, thetaStart, thetaLength, differentFace
-            )
+            );
         }
 
         @paper.deprecated("1.4")
         public static createCircle(radius: number = 0.5, arc: number = 1.0, axis: 1 | 2 | 3 = 1) {
-            return MeshBuilder.createCircle(radius, arc, axis)
+            return MeshBuilder.createCircle(radius, arc, axis);
         }
 
         @paper.deprecated("1.4")
@@ -300,7 +303,7 @@ namespace egret3d {
         ) {
             return MeshBuilder.createSphere(radius, centerOffsetX, centerOffsetY, centerOffsetZ,
                 widthSegments, heightSegments, phiStart, phiLength, thetaStart, thetaLength
-            )
+            );
         }
     }
 }

@@ -1,6 +1,7 @@
 namespace egret3d {
     /**
      * 全局舞台信息组件。
+     * TODO 调整文件结构，标记接口源码链接。
      */
     export class Stage extends paper.SingletonComponent {
         /**

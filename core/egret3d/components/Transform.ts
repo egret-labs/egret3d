@@ -1090,5 +1090,8 @@ namespace egret3d {
         public set parent(value: Transform | null) {
             this.setParent(value, false);
         }
+
+        // public get root{
+        // }
     }
 }

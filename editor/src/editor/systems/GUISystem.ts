@@ -5,6 +5,7 @@ declare var VConsole: any;
 
 namespace paper.editor {
     /**
+     * TODO GUI NEW SAVE LOAD
      * @internal
      */
     export class GUISystem extends BaseSystem {
@@ -164,6 +165,7 @@ namespace paper.editor {
             let guiControllerA: dat.GUIController;
             let guiControllerB: dat.GUIController;
             let guiControllerC: dat.GUIController;
+            let guiControllerD: dat.GUIController;
 
             for (const info of infos) {
                 switch (info.editType) {
@@ -231,18 +233,15 @@ namespace paper.editor {
                         break;
 
                     case editor.EditType.VECTOR2: {
+                        guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
+                        guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
+
                         if (this._propertyHasGetterSetter(gui.instance, info.name)) {
                             const onChange = () => {
                                 gui.instance[info.name] = gui.instance[info.name];
                             };
-                            guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
                             guiControllerA.onChange(onChange);
                             guiControllerB.onChange(onChange);
-                        }
-                        else {
-                            guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
                         }
 
                         if (info.option) {
@@ -265,21 +264,17 @@ namespace paper.editor {
                     }
 
                     case editor.EditType.VECTOR3: {
+                        guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
+                        guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
+                        guiControllerC = gui.add(gui.instance[info.name], "z", `${info.name}: z`).step(0.1).listen();
+
                         if (this._propertyHasGetterSetter(gui.instance, info.name)) {
                             const onChange = () => {
                                 gui.instance[info.name] = gui.instance[info.name];
                             };
-                            guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
-                            guiControllerC = gui.add(gui.instance[info.name], "z", `${info.name}: z`).step(0.1).listen();
                             guiControllerA.onChange(onChange);
                             guiControllerB.onChange(onChange);
                             guiControllerC.onChange(onChange);
-                        }
-                        else {
-                            guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
-                            guiControllerC = gui.add(gui.instance[info.name], "z", `${info.name}: z`).step(0.1).listen();
                         }
 
                         if (info.option) {
@@ -309,23 +304,14 @@ namespace paper.editor {
                         break;
 
                     case editor.EditType.COLOR: {
-                        // TODO
-                        // const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(gui.instance), info.name);
-                        // if (descriptor) {
-                        //     if (descriptor.get && descriptor.set) {
-                        //         const onChange = () => {
-                        //             gui.instance[info.name] = gui.instance[info.name];
-                        //         };
-                        //         // this._gameObject.add(gui.instance[info.name], "r", `${info.name}: x`).onChange(onChange);
-                        //         // this._gameObject.add(gui.instance[info.name], "g", `${info.name}: y`).onChange(onChange);
-                        //         // this._gameObject.add(gui.instance[info.name], "b", `${info.name}: z`).onChange(onChange);
-                        //     }
-                        //     else {
-                        //         // this._gameObject.add(gui.instance[info.name], "x", `${info.name}: x`);
-                        //         // this._gameObject.add(gui.instance[info.name], "y", `${info.name}: y`);
-                        //         // this._gameObject.add(gui.instance[info.name], "z", `${info.name}: z`);
-                        //     }
-                        // }
+                        guiControllerA = gui.addColor(gui.instance, info.name).listen();
+                        
+                        if (this._propertyHasGetterSetter(gui.instance, info.name)) {
+                            const onChange = () => {
+                                gui.instance[info.name] = gui.instance[info.name];
+                            };
+                            guiControllerA.onChange(onChange);
+                        }
                         break;
                     }
 

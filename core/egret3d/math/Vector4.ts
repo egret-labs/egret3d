@@ -77,6 +77,13 @@ namespace egret3d {
             return this;
         }
 
+        public clear() {
+            this.x = 0.0;
+            this.y = 0.0;
+            this.z = 0.0;
+            this.w = 1.0;
+        }
+
         public normalize(source?: Readonly<IVector4>) {
             if (!source) {
                 source = this;

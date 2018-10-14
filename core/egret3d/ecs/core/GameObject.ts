@@ -1,4 +1,5 @@
 namespace paper {
+    const _helpRaycastInfo = egret3d.RaycastInfo.create();
     /**
      * 实体。
      */
@@ -35,7 +36,7 @@ namespace paper {
         }
 
         private static _raycast(
-            ray: Readonly<egret3d.Ray>, gameObject: GameObject,
+            ray: Readonly<egret3d.Ray>, gameObject: Readonly<GameObject>,
             maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false,
             raycastInfos: egret3d.RaycastInfo[]
         ) {
@@ -49,6 +50,7 @@ namespace paper {
             }
 
             const raycastInfo = egret3d.RaycastInfo.create();
+            const helpRaycastInfo = _helpRaycastInfo;
 
             if (gameObject.layer & cullingMask) {
                 if (raycastMesh) {
@@ -60,19 +62,39 @@ namespace paper {
                     }
                 }
                 else {
-                    const boxCollider = gameObject.getComponent(egret3d.BoxCollider); // TODO 支持多碰撞区域
-                    if (boxCollider) {
-                        if (boxCollider.enabled && boxCollider.raycast(ray, raycastInfo)) {
-                            raycastInfo.transform = gameObject.transform;
-                            raycastInfo.collider = boxCollider;
+                    // TODO 更快的查询所有碰撞组件的方式。
+                    const boxColliders = gameObject.getComponents(egret3d.BoxCollider);
+                    if (boxColliders.length > 0) {
+                        let hit = false;
+                        for (const boxCollider of boxColliders) {
+                            if (
+                                boxCollider.enabled && boxCollider.raycast(ray, helpRaycastInfo) &&
+                                (!hit || raycastInfo.distance > helpRaycastInfo.distance)
+                            ) {
+                                raycastInfo.distance = helpRaycastInfo.distance;
+                                raycastInfo.position.copy(helpRaycastInfo.position);
+                                raycastInfo.transform = gameObject.transform;
+                                raycastInfo.collider = boxCollider;
+                                hit = true;
+
+                                // TODO 处理法线。
+                            }
                         }
                     }
-                    else {
-                        const sphereCollider = gameObject.getComponent(egret3d.SphereCollider); // TODO 支持多碰撞区域
-                        if (sphereCollider) {
-                            if (sphereCollider.enabled && sphereCollider.raycast(ray, raycastInfo)) {
+
+                    const sphereColliders = gameObject.getComponents(egret3d.SphereCollider);
+                    if (sphereColliders.length > 0) {
+                        let hit = false;
+                        for (const sphereCollider of sphereColliders) {
+                            if (
+                                sphereCollider.enabled && sphereCollider.raycast(ray, helpRaycastInfo) &&
+                                (!hit || raycastInfo.distance > helpRaycastInfo.distance)
+                            ) {
+                                raycastInfo.distance = helpRaycastInfo.distance;
+                                raycastInfo.position.copy(helpRaycastInfo.position);
                                 raycastInfo.transform = gameObject.transform;
                                 raycastInfo.collider = sphereCollider;
+                                hit = true;
                             }
                         }
                     }
@@ -105,28 +127,37 @@ namespace paper {
             return a.distance - b.distance;
         }
         /**
-         * 用世界空间坐标系的射线检测指定的实体或变换组件列表。
+         * 用世界空间坐标系的射线检测指定的实体或实体列表。
          * @param ray 世界空间坐标系的射线。
-         * @param gameObjectsOrTransforms 实体或变换组件列表。
-         * @param maxDistance 最大相交点检测距离。（）
+         * @param gameObjects 实体或实体列表。
+         * @param maxDistance 最大相交点检测距离。
          * @param cullingMask 只对特定层的实体检测。
-         * @param raycastMesh 是否检测网格。
+         * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
          */
         public static raycast(
-            ray: Readonly<egret3d.Ray>, gameObjectsOrTransforms: ReadonlyArray<GameObject | egret3d.Transform>,
+            ray: Readonly<egret3d.Ray>, gameObjects: Readonly<GameObject> | ReadonlyArray<GameObject>,
             maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false
         ) {
             const raycastInfos = [] as egret3d.RaycastInfo[];
 
-            for (const gameObjectOrTransform of gameObjectsOrTransforms) {
+            if (Array.isArray(gameObjects)) {
+                for (const gameObject of gameObjects) {
+                    this._raycast(
+                        ray,
+                        gameObject,
+                        maxDistance, cullingMask, raycastMesh, raycastInfos
+                    );
+                }
+
+                raycastInfos.sort(this._sortRaycastInfo);
+            }
+            else {
                 this._raycast(
                     ray,
-                    gameObjectOrTransform instanceof GameObject ? gameObjectOrTransform : gameObjectOrTransform.gameObject,
+                    gameObjects as Readonly<GameObject>,
                     maxDistance, cullingMask, raycastMesh, raycastInfos
                 );
             }
-
-            raycastInfos.sort(this._sortRaycastInfo);
 
             return raycastInfos;
         }

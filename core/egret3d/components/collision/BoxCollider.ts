@@ -8,6 +8,7 @@ namespace egret3d {
     /**
      * 立方体碰撞组件。
      */
+    @paper.allowMultiple
     export class BoxCollider extends paper.BaseComponent implements IBoxCollider, IRaycast {
         public readonly colliderType: ColliderType = ColliderType.Box;
         /**
