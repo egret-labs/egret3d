@@ -37,11 +37,12 @@ namespace egret3d.web {
             const shadowCalls = drawCalls.shadowCalls;
             const webgl = WebGLCapabilities.webgl!;
 
+            light.updateShadow(camera);
             light.renderTarget.use();
             renderState.clear(true, true, egret3d.Color.WHITE);
             for (let i = 0, l = light.constructor === PointLight ? 6 : 1; i < l; ++i) {
                 const context = camera.context;
-                light.update(camera, i);
+                light.updateFace(camera, i);
                 // this._viewport(light.viewPortPixel, light.renderTarget);
                 webgl.viewport(light.viewPortPixel.x, light.viewPortPixel.y, light.viewPortPixel.w, light.viewPortPixel.h);
                 webgl.depthRange(0, 1);

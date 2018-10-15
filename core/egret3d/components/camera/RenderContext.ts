@@ -30,7 +30,7 @@ namespace egret3d {
         public directLightArray: Float32Array = new Float32Array(0);
         // 16: x, y, z, colorR, colorG, colorB, distance, decay, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY, shadowCameraNear, shadowCameraFar,
         public pointLightArray: Float32Array = new Float32Array(0);
-        // 18: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, intensity, distance, decay, coneCos, penumbraCos, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
+        // 18: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, distance, decay, coneCos, penumbraCos, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
         public spotLightArray: Float32Array = new Float32Array(0);
         public directShadowMatrix: Float32Array = new Float32Array(0);
         public spotShadowMatrix: Float32Array = new Float32Array(0);
@@ -230,8 +230,9 @@ namespace egret3d {
                         lightArray[index++] = light.color.g * light.intensity;
                         lightArray[index++] = light.color.b * light.intensity;
 
-                        lightArray[index++] = (light as SpotLight).distance;
-                        lightArray[index++] = (light as SpotLight).decay;
+                        const distance = (light as SpotLight).distance;
+                        lightArray[index++] = distance;
+                        lightArray[index++] = distance === 0 ? 0 : (light as SpotLight).decay;
                         lightArray[index++] = Math.cos((light as SpotLight).angle);
                         lightArray[index++] = Math.cos((light as SpotLight).angle * (1 - (light as SpotLight).penumbra));
                         break;
@@ -291,21 +292,13 @@ namespace egret3d {
 
         public updateLightDepth(light: BaseLight) {
             const position = light.gameObject.transform.getPosition();
-            if (this.lightPosition[0] !== position.x ||
-                this.lightPosition[1] !== position.y ||
-                this.lightPosition[2] !== position.z) {
-                //
-                this.lightPosition[0] = position.x;
-                this.lightPosition[1] = position.y;
-                this.lightPosition[2] = position.z;
-            }
-
-            if (this.lightShadowCameraNear !== light.shadowCameraNear ||
-                this.lightShadowCameraNear !== light.shadowCameraFar) {
-                //
-                this.lightShadowCameraNear = light.shadowCameraNear;
-                this.lightShadowCameraFar = light.shadowCameraFar;
-            }
+            //
+            this.lightPosition[0] = position.x;
+            this.lightPosition[1] = position.y;
+            this.lightPosition[2] = position.z;
+            //
+            this.lightShadowCameraNear = light.shadowCameraNear;
+            this.lightShadowCameraFar = light.shadowCameraFar;
         }
 
         public update(drawCall: DrawCall) {

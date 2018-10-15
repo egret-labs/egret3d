@@ -2955,6 +2955,7 @@ declare namespace egret3d {
         readonly viewPortPixel: Rectangle;
         renderTarget: BaseRenderTarget;
         protected _updateMatrix(camera: Camera): void;
+        updateShadow(camera: Camera): void;
     }
 }
 declare namespace egret3d {
@@ -4935,7 +4936,7 @@ declare namespace egret3d {
      */
     class DirectionalLight extends BaseLight {
         renderTarget: BaseRenderTarget;
-        update(camera: Camera, faceIndex: number): void;
+        updateShadow(camera: Camera): void;
     }
 }
 declare namespace egret3d {
@@ -4953,7 +4954,8 @@ declare namespace egret3d {
         distance: number;
         renderTarget: BaseRenderTarget;
         protected _updateMatrix(camera: Camera): void;
-        update(camera: Camera, faceIndex: number): void;
+        updateShadow(camera: Camera): void;
+        updateFace(camera: Camera, faceIndex: number): void;
     }
 }
 declare namespace egret3d {
@@ -4977,7 +4979,8 @@ declare namespace egret3d {
          *
          */
         penumbra: number;
-        update(camera: Camera, faceIndex: number): void;
+        renderTarget: BaseRenderTarget;
+        updateShadow(camera: Camera): void;
     }
 }
 declare namespace egret3d {

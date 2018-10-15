@@ -85,15 +85,14 @@ namespace egret3d {
             context.updateLightDepth(this);
             matrix.multiply(context.matrix_p).multiply(context.matrix_v);
         }
+        public updateShadow(camera: Camera) {
+
+            this._updateMatrix(camera);
+        }
         /**
          * @internal
          */
-        public update(camera: Camera, faceIndex: number) {
-            camera.backgroundColor.set(1.0, 1.0, 1.0, 1.0);
-            camera.clearOption_Color = true;
-            camera.clearOption_Depth = true;
-
-            this._updateMatrix(camera);
+        public updateFace(camera: Camera, faceIndex: number) {
         }
     }
 }
