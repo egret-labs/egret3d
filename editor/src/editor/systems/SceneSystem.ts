@@ -15,7 +15,6 @@ namespace paper.editor {
 
         private readonly _pointerStartPosition: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _pointerPosition: egret3d.Vector3 = egret3d.Vector3.create();
-        private readonly _boxes: { [key: string]: GameObject } = {};
 
         private _orbitControls: OrbitControls | null = null;
         private _gridController: GridController | null = null;
@@ -23,6 +22,7 @@ namespace paper.editor {
         private _boxColliderDrawer: BoxColliderDrawer | null = null;
         private _sphereColliderDrawer: SphereColliderDrawer | null = null;
         private _skeletonDrawer: SkeletonDrawer | null = null;
+        private _boxesDrawer: BoxesDrawer | null = null;
 
         private _hoverBox: GameObject | null = null;
         private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
@@ -172,9 +172,6 @@ namespace paper.editor {
             this._transformController!.gameObject.activeSelf =
                 selectedGameObject ? true : false;
 
-            // this._sphereColliderDrawer!.activeSelf =
-            //     selectedGameObject && selectedGameObject.getComponent(egret3d.SphereCollider) ? true : false;
-
             this._skeletonDrawer!.gameObject.activeSelf =
                 selectedGameObject && selectedGameObject.renderer && selectedGameObject.renderer instanceof egret3d.SkinnedMeshRenderer ? true : false;
 
@@ -183,34 +180,9 @@ namespace paper.editor {
         }
 
         private _onGameObjectSelected = (_c: any, value: GameObject) => {
-            this._selectGameObject(value, true);
         }
 
         private _onGameObjectUnselected = (_c: any, value: GameObject) => {
-            this._selectGameObject(value, false);
-        }
-
-        private _selectGameObject(value: GameObject, selected: boolean) {
-            if (selected) {
-                { // Create box.
-                    const box = EditorMeshHelper.createBox("Box", egret3d.Color.INDIGO, 0.8, value.scene);
-                    box.activeSelf = false;
-                    box.parent = value;
-                    this._boxes[value.uuid] = box;
-                }
-            }
-            else {
-                const box = this._boxes[value.uuid];
-                if (!box) {
-                    throw new Error(); // Never.
-                }
-
-                delete this._boxes[value.uuid];
-
-                if (!box.isDestroyed) {
-                    box.destroy();
-                }
-            }
         }
 
         private _updateCameras() {
@@ -315,26 +287,6 @@ namespace paper.editor {
             }
         }
 
-        private _updateBoxes() {
-            for (const gameObject of this._modelComponent.selectedGameObjects) {
-                const box = this._boxes[gameObject.uuid];
-                if (!box) {
-                    throw new Error(); // Never.
-                }
-
-                if (gameObject.renderer) {
-                    box.activeSelf = true;
-                    box.transform.localPosition = gameObject.renderer.aabb.center;
-                    // box.transform.localScale = gameObject.renderer.aabb.size;
-                    const size = gameObject.renderer.aabb.size; // TODO
-                    box.transform.setLocalScale(size.x || 0.001, size.y || 0.001, size.z || 0.001);
-                }
-                else {
-                    box.activeSelf = false;
-                }
-            }
-        }
-
         public onEnable() {
             ModelComponent.onGameObjectHovered.add(this._onGameObjectHovered, this);
             ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectChanged, this);
@@ -358,10 +310,12 @@ namespace paper.editor {
             this._sphereColliderDrawer.gameObject.activeSelf = false;
             this._skeletonDrawer = EditorMeshHelper.createGameObject("SkeletonDrawer").addComponent(SkeletonDrawer);
             this._skeletonDrawer.gameObject.activeSelf = false;
+            this._boxesDrawer = EditorMeshHelper.createGameObject("BoxesDrawer").addComponent(BoxesDrawer);
+            this._boxesDrawer.gameObject.activeSelf = false;
 
             this._gridController = EditorMeshHelper.createGameObject("Grid").addComponent(GridController);
 
-            this._hoverBox = EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, GameObject.globalGameObject.scene);
+            this._hoverBox = EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.5, GameObject.globalGameObject.scene);
             this._hoverBox.activeSelf = false;
 
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera");
@@ -427,6 +381,9 @@ namespace paper.editor {
 
             this._skeletonDrawer!.gameObject.destroy();
             this._skeletonDrawer = null;
+
+            this._boxesDrawer!.gameObject.destroy();
+            this._boxesDrawer = null;
 
             this._hoverBox!.destroy();
             this._hoverBox = null;
@@ -498,7 +455,6 @@ namespace paper.editor {
             }
 
             const hoveredGameObject = this._modelComponent.hoveredGameObject;
-            const selectedGameObject = this._modelComponent.selectedGameObject;
 
             if (gridController.isActiveAndEnabled) {
                 gridController.update();
@@ -516,6 +472,7 @@ namespace paper.editor {
 
             this._boxColliderDrawer!.update();
             this._sphereColliderDrawer!.update();
+            this._boxesDrawer!.update();
 
             if (skeletonDrawer.isActiveAndEnabled) {
                 skeletonDrawer.update();
@@ -523,7 +480,6 @@ namespace paper.editor {
 
             this._updateCameras();
             this._updateLights();
-            this._updateBoxes();
         }
     }
 }

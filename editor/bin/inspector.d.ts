@@ -136,3 +136,5 @@ declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }
+declare namespace paper.editor {
+}

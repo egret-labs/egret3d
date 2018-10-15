@@ -43,14 +43,14 @@ namespace egret3d {
             }
 
             if (raycastMesh ? aabb.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo) : aabb.raycast(localRay, raycastInfo)) {
-                const worldMatrix = transform.worldMatrix;
-
                 if (raycastInfo) { // Update local raycast info to world.
+                    const worldMatrix = transform.worldMatrix;
                     raycastInfo.position.applyMatrix(worldMatrix);
                     raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
 
-                    if (raycastInfo.normal) {
-                        raycastInfo.normal.applyDirection(worldMatrix).normalize();
+                    const normal = raycastInfo.normal;
+                    if (normal) {
+                        normal.applyDirection(worldMatrix).normalize();
                     }
                 }
 

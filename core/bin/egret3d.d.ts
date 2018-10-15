@@ -214,12 +214,14 @@ declare namespace paper {
     interface ISerializable {
         /**
          * 序列化。
+         * @returns 序列化后的数据。
          */
         serialize(): any;
         /**
          * 反序列化。
          * @param data 反序列化数据。
          * @param deserializer Deserializer。
+         * @returns 反序列化后的数据。
          */
         deserialize(data: any, deserializer?: Deserializer): any;
     }
@@ -2083,15 +2085,7 @@ declare namespace egret3d {
          * @deprecated
          */
         constructor(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset?: number);
-        /**
-         * 序列化
-         * @returns 序列化后的数据
-         */
         serialize(): Float32Array;
-        /**
-         * 反序列化
-         * @param value 序列化后的数据
-         */
         deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): Matrix4;
         copy(value: Readonly<Matrix4>): this;
         clone(): Matrix4;
@@ -2126,7 +2120,6 @@ declare namespace egret3d {
         lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4;
         /**
          * 设置该矩阵，使得其 Z 轴正方向指向目标方向。
-         * - 方向必须是已被归一化的。
          * - 矩阵的缩放值将被覆盖。
          * @param target 目标方向。
          * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
@@ -2143,14 +2136,6 @@ declare namespace egret3d {
          * @deprecated
          */
         transformNormal(value: Vector3, out?: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        scale(scaler: number): this;
-        /**
-         * @deprecated
-         */
-        add(left: Matrix4, right?: Matrix4): this;
         /**
          * @deprecated
          */
@@ -2479,7 +2464,7 @@ declare namespace egret3d {
             [key: string]: gltf.AccessorType;
         };
         protected _glTFMesh: gltf.Mesh | null;
-        private _helpVertices;
+        private _skinnedVertices;
         /**
          * 请使用 `egret3d.Mesh.create()` 创建实例。
          * @see egret3d.Mesh.create()
@@ -3079,15 +3064,15 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     *
+     * TODO 使用枚举常数。
      */
     const RAD_DEG: number;
     /**
-     *
+     * TODO 使用枚举常数。
      */
     const DEG_RAD: number;
     /**
-     *
+     * TODO 使用枚举常数。
      */
     const EPSILON = 2.220446049250313e-16;
     function sign(value: number): number;
@@ -3886,7 +3871,6 @@ declare namespace egret3d {
         lookAt(target: Readonly<Transform> | Readonly<IVector3>, up?: Readonly<IVector3>): this;
         /**
          * 通过旋转使得该物体的 Z 轴正方向指向目标方向。
-         * - 方向必须是已被归一化的。
          * @param target 目标方向。
          * @param up 旋转后，该物体在世界空间坐标系下描述的 Y 轴正方向。
          */
@@ -4469,6 +4453,10 @@ declare namespace paper {
      * 应用程序。
      */
     class ECS {
+        /**
+         * 当应用程序的播放模式改变时派发事件。
+         */
+        static readonly onPlayerModeChange: signals.Signal;
         private static _instance;
         /**
          * 应用程序单例。
@@ -4543,19 +4531,19 @@ declare namespace egret3d {
      * 用世界空间坐标系的射线检测指定的实体。（不包含其子级）
      * @param ray 世界空间坐标系的射线。
      * @param gameObject 实体。
-     * @param raycastMesh
+     * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      * @param raycastInfo
      */
     function raycast(ray: Readonly<Ray>, gameObject: Readonly<paper.GameObject>, raycastMesh?: boolean, raycastInfo?: RaycastInfo): boolean;
     /**
-     *
-     * @param ray
-     * @param gameObjects
-     * @param maxDistance
-     * @param cullingMask
-     * @param raycastMesh
+     * 用世界空间坐标系的射线检测指定的实体或变换组件列表。
+     * @param ray 射线。
+     * @param gameObjectsOrTransforms 实体或变换组件列表。
+     * @param maxDistance 最大相交点检测距离。
+     * @param cullingMask 只对特定层的实体检测。
+     * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      */
-    function raycastAll(ray: Readonly<Ray>, gameObjects: ReadonlyArray<paper.GameObject | Transform>, maxDistance?: number, cullingMask?: paper.CullingMask, raycastMesh?: boolean): RaycastInfo[];
+    function raycastAll(ray: Readonly<Ray>, gameObjectsOrTransforms: ReadonlyArray<paper.GameObject | Transform>, maxDistance?: number, cullingMask?: paper.CullingMask, raycastMesh?: boolean): RaycastInfo[];
 }
 declare namespace egret3d {
 }
@@ -4952,17 +4940,11 @@ declare namespace paper {
          * 创建 GameObject，并添加到当前场景中。
          */
         static create(name?: string, tag?: string, scene?: Scene | null): GameObject;
-        private static _raycast(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
         private static _sortRaycastInfo(a, b);
         /**
-         * 用世界空间坐标系的射线检测指定的实体或实体列表。
-         * @param ray 世界空间坐标系的射线。
-         * @param gameObjects 实体或实体列表。
-         * @param maxDistance 最大相交点检测距离。
-         * @param cullingMask 只对特定层的实体检测。
-         * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
+         * @deprecated
          */
-        static raycast(ray: Readonly<egret3d.Ray>, gameObjects: Readonly<GameObject> | ReadonlyArray<GameObject>, maxDistance?: number, cullingMask?: CullingMask, raycastMesh?: boolean): egret3d.RaycastInfo[];
+        static raycast(ray: Readonly<egret3d.Ray>, gameObjects: ReadonlyArray<GameObject>, maxDistance?: number, cullingMask?: CullingMask, raycastMesh?: boolean): egret3d.RaycastInfo[];
         /**
          * 全局实体。
          * - 全局实体不可被销毁。
@@ -5365,7 +5347,6 @@ declare namespace egret3d {
         private _rootBone;
         private _inverseBindMatrices;
         private _mesh;
-        private _rawVertices;
         initialize(reset?: boolean): void;
         uninitialize(): void;
         recalculateAABB(): void;
@@ -6403,13 +6384,10 @@ declare namespace egret3d {
      * 轴对称包围盒。
      */
     class AABB extends paper.BaseRelease<AABB> implements paper.ICCS<AABB>, paper.ISerializable, IRaycast {
-        /**
-         *
-         */
         static readonly ONE: Readonly<AABB>;
         private static readonly _instances;
         /**
-         *
+         * 创建一个
          * @param minimum
          * @param maximum
          */

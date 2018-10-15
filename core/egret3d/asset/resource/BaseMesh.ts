@@ -22,7 +22,12 @@ namespace egret3d {
         protected readonly _attributeNames: string[] = [];
         protected readonly _customAttributeTypes: { [key: string]: gltf.AccessorType } = {};
         protected _glTFMesh: gltf.Mesh | null = null;
-        private _helpVertices: Float32Array | null = null;
+        /**
+         * Backuped raw vertices when CPU skinned.
+         * @internal
+         */
+        public _rawVertices: Float32Array | null = null;
+        private _skinnedVertices: Float32Array | null = null;
         /**
          * 请使用 `egret3d.Mesh.create()` 创建实例。
          * @see egret3d.Mesh.create()
@@ -154,28 +159,30 @@ namespace egret3d {
                 let castVertices = vertices;
 
                 if (boneMatrices) { // Skinned mesh.
-                    if (!this._helpVertices) { // TODO clean
-                        this._helpVertices = new Float32Array(vertices.length);
-                    }
-
-                    castVertices = this._helpVertices;
-
-                    for (const index of <any>indices! as number[]) {
-                        const vertexIndex = index * 3;
-                        const jointIndex = index * 4;
-                        p0.fromArray(vertices, vertexIndex);
-                        p1.clear();
-
-                        for (let i = 0; i < 4; ++i) {
-                            const weight = weights![jointIndex + i];
-                            if (weight <= 0.0) {
-                                continue;
-                            }
-
-                            p1.add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + i] * 16), p0).multiplyScalar(weight));
+                    if (!this._rawVertices) {
+                        if (!this._skinnedVertices) {
+                            this._skinnedVertices = new Float32Array(vertices.length);
                         }
 
-                        p1.toArray(castVertices, vertexIndex);
+                        castVertices = this._skinnedVertices;
+
+                        for (const index of <any>indices! as number[]) {
+                            const vertexIndex = index * 3;
+                            const jointIndex = index * 4;
+                            p0.fromArray(vertices, vertexIndex);
+                            p1.clear();
+
+                            for (let i = 0; i < 4; ++i) {
+                                const weight = weights![jointIndex + i];
+                                if (weight <= 0.0) {
+                                    continue;
+                                }
+
+                                p1.add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + i] * 16), p0).multiplyScalar(weight));
+                            }
+
+                            p1.toArray(castVertices, vertexIndex);
+                        }
                     }
                 }
 

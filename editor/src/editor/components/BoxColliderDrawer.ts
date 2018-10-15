@@ -15,7 +15,7 @@ namespace paper.editor {
 
             for (let i = 0, l = Math.max(this._drawer.length, colliders ? colliders.length : 0); i < l; ++i) {
                 if (i + 1 > this._drawer.length) {
-                    const gameObject = EditorMeshHelper.createBox(`BoxCollider_${i}`, egret3d.Color.YELLOW, 0.7, paper.Scene.editorScene);
+                    const gameObject = EditorMeshHelper.createBox(`BoxCollider_${i}`, egret3d.Color.YELLOW, 0.5, paper.Scene.editorScene);
                     this._drawer.push(gameObject);
                 }
 

@@ -24,8 +24,14 @@ namespace egret3d {
 
             if (this.aabb.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) {
-                    raycastInfo.position.applyMatrix(transform.worldMatrix);
+                    const worldMatrix = transform.worldMatrix;
+                    raycastInfo.position.applyMatrix(worldMatrix);
                     raycastInfo.distance = ray.origin.getDistance(raycastInfo.position);
+
+                    const normal = raycastInfo.normal;
+                    if (normal) {
+                        normal.applyDirection(worldMatrix).normalize();
+                    }
                 }
 
                 return true;

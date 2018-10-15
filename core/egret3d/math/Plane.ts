@@ -6,7 +6,9 @@ namespace egret3d {
 
         private static readonly _instances: Plane[] = [];
         /**
-         * 
+         * 创建一个几何平面。
+         * @param normal 法线。
+         * @param constant 二维平面离原点的距离。
          */
         public static create(normal: Readonly<IVector3> = Vector3.ZERO, constant: number = 0.0) {
             if (this._instances.length > 0) {
@@ -18,11 +20,11 @@ namespace egret3d {
             return new Plane().set(normal, constant);
         }
         /**
-         * 
+         * 二维平面到原点的距离。
          */
         public constant: number = 0.0;
         /**
-         * 
+         * 平面的法线。
          */
         public readonly normal: Vector3 = Vector3.create();
         /**
@@ -104,8 +106,14 @@ namespace egret3d {
             const t = ray.getDistanceToPlane(this);
             if (t > 0.0) {
                 if (raycastInfo) {
+                    const normal = raycastInfo.normal;
                     raycastInfo.distance = t;
                     ray.at(t, raycastInfo.position);
+
+                    if (normal) {
+                        // TODO
+                        normal.copy(this.normal);
+                    }
                 }
 
                 return true;

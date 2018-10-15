@@ -1087,12 +1087,13 @@ var egret3d;
             if (!source) {
                 source = this;
             }
-            var l = Math.sqrt(source.x * source.x + source.y * source.y + source.z * source.z);
+            var x = source.x, y = source.y, z = source.z;
+            var l = Math.sqrt(x * x + y * y + z * z);
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
-                this.x *= l;
-                this.y *= l;
-                this.z *= l;
+                this.x = x * l;
+                this.y = y * l;
+                this.z = z * l;
             }
             else {
                 if (!defaultAxis) {
@@ -1191,9 +1192,12 @@ var egret3d;
             var x = valueA.x;
             var y = valueA.y;
             var z = valueA.z;
-            this.x = y * valueB.z - z * valueB.y;
-            this.y = z * valueB.x - x * valueB.z;
-            this.z = x * valueB.y - y * valueB.x;
+            var xB = valueB.x;
+            var yB = valueB.y;
+            var zB = valueB.z;
+            this.x = y * zB - z * yB;
+            this.y = z * xB - x * zB;
+            this.z = x * yB - y * xB;
             return this;
         };
         Vector3.prototype.lerp = function (t, valueA, valueB) {
@@ -1252,10 +1256,10 @@ var egret3d;
             return Math.acos(Math.max(-1, Math.min(1, theta)));
         };
         Vector3.prototype.getSquaredDistance = function (value) {
-            return helpVector3.subtract(value, this).squaredLength;
+            return _helpVector3.subtract(value, this).squaredLength;
         };
         Vector3.prototype.getDistance = function (value) {
-            return helpVector3.subtract(value, this).length;
+            return _helpVector3.subtract(value, this).length;
         };
         Vector3.prototype.closestToTriangle = function (triangle, value) {
             if (!value) {
@@ -1471,7 +1475,7 @@ var egret3d;
          * @deprecated
          */
         Vector3.getDistance = function (a, b) {
-            return this.getLength(this.subtract(a, b, helpVector3));
+            return this.getLength(this.subtract(a, b, _helpVector3));
         };
         /**
          * 零
@@ -1514,7 +1518,7 @@ var egret3d;
     }(paper.BaseRelease));
     egret3d.Vector3 = Vector3;
     __reflect(Vector3.prototype, "egret3d.Vector3", ["egret3d.IVector3", "egret3d.IVector2", "paper.ICCS", "paper.ISerializable"]);
-    var helpVector3 = Vector3.create();
+    var _helpVector3 = Vector3.create();
     /**
      * @internal
      */
@@ -2251,17 +2255,9 @@ var egret3d;
             }
             return new Matrix4(rawData, offsetOrByteOffset);
         };
-        /**
-         * 序列化
-         * @returns 序列化后的数据
-         */
         Matrix4.prototype.serialize = function () {
             return this.rawData;
         };
-        /**
-         * 反序列化
-         * @param value 序列化后的数据
-         */
         Matrix4.prototype.deserialize = function (value) {
             return this.fromArray(value);
         };
@@ -2727,29 +2723,29 @@ var egret3d;
          * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
          */
         Matrix4.prototype.lookAt = function (eye, target, up) {
-            this.lookRotation(_helpVector3C.subtract(target, eye).normalize(), up);
+            this.lookRotation(_helpVector3C.subtract(target, eye), up);
             return this;
         };
         /**
          * 设置该矩阵，使得其 Z 轴正方向指向目标方向。
-         * - 方向必须是已被归一化的。
          * - 矩阵的缩放值将被覆盖。
          * @param target 目标方向。
          * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
          */
         Matrix4.prototype.lookRotation = function (direction, up) {
-            var x = _helpVector3A.cross(up, direction).normalize();
-            var y = _helpVector3B.cross(direction, x);
+            _helpVector3C.normalize(direction);
+            var x = _helpVector3A.cross(up, _helpVector3C).normalize();
+            var y = _helpVector3B.cross(_helpVector3C, x);
             var rawData = this.rawData;
             rawData[0] = x.x;
             rawData[4] = y.x;
-            rawData[8] = direction.x;
+            rawData[8] = _helpVector3C.x;
             rawData[1] = x.y;
             rawData[5] = y.y;
-            rawData[9] = direction.y;
+            rawData[9] = _helpVector3C.y;
             rawData[2] = x.z;
             rawData[6] = y.z;
-            rawData[10] = direction.z;
+            rawData[10] = _helpVector3C.z;
             return this;
         };
         Matrix4.prototype.getMaxScaleOnAxis = function () {
@@ -2886,55 +2882,6 @@ var egret3d;
         /**
          * @deprecated
          */
-        Matrix4.prototype.scale = function (scaler) {
-            var rawData = this.rawData;
-            rawData[0] *= scaler;
-            rawData[1] *= scaler;
-            rawData[2] *= scaler;
-            rawData[3] *= scaler;
-            rawData[4] *= scaler;
-            rawData[5] *= scaler;
-            rawData[6] *= scaler;
-            rawData[7] *= scaler;
-            rawData[8] *= scaler;
-            rawData[9] *= scaler;
-            rawData[10] *= scaler;
-            rawData[11] *= scaler;
-            rawData[12] *= scaler;
-            rawData[13] *= scaler;
-            rawData[14] *= scaler;
-            rawData[15] *= scaler;
-            return this;
-        };
-        /**
-         * @deprecated
-         */
-        Matrix4.prototype.add = function (left, right) {
-            if (!right) {
-                right = left;
-                left = this;
-            }
-            this.rawData[0] = left.rawData[0] + right.rawData[0];
-            this.rawData[1] = left.rawData[1] + right.rawData[1];
-            this.rawData[2] = left.rawData[2] + right.rawData[2];
-            this.rawData[3] = left.rawData[3] + right.rawData[3];
-            this.rawData[4] = left.rawData[4] + right.rawData[4];
-            this.rawData[5] = left.rawData[5] + right.rawData[5];
-            this.rawData[6] = left.rawData[6] + right.rawData[6];
-            this.rawData[7] = left.rawData[7] + right.rawData[7];
-            this.rawData[8] = left.rawData[8] + right.rawData[8];
-            this.rawData[9] = left.rawData[9] + right.rawData[9];
-            this.rawData[10] = left.rawData[10] + right.rawData[10];
-            this.rawData[11] = left.rawData[11] + right.rawData[11];
-            this.rawData[12] = left.rawData[12] + right.rawData[12];
-            this.rawData[13] = left.rawData[13] + right.rawData[13];
-            this.rawData[14] = left.rawData[14] + right.rawData[14];
-            this.rawData[15] = left.rawData[15] + right.rawData[15];
-            return this;
-        };
-        /**
-         * @deprecated
-         */
         Matrix4.perspectiveProjectLH = function (fov, aspect, znear, zfar, out) {
             var tan = 1.0 / (Math.tan(fov * 0.5));
             out.rawData[0] = tan / aspect;
@@ -2983,6 +2930,7 @@ var egret3d;
     var _helpVector3A = egret3d.Vector3.create();
     var _helpVector3B = egret3d.Vector3.create();
     var _helpVector3C = egret3d.Vector3.create();
+    var _helpVector3D = egret3d.Vector3.create();
     var _helpMatrix = Matrix4.create();
     /**
      * @internal
@@ -3790,7 +3738,12 @@ var egret3d;
             _this._attributeNames = [];
             _this._customAttributeTypes = {};
             _this._glTFMesh = null;
-            _this._helpVertices = null;
+            /**
+             * Backuped raw vertices when CPU skinned.
+             * @internal
+             */
+            _this._rawVertices = null;
+            _this._skinnedVertices = null;
             if (typeof vertexCountOrConfig === "number") {
                 vertexCountOrConfig = vertexCountOrConfig || 3;
                 indexCountOrBuffers = indexCountOrBuffers || 0;
@@ -3895,24 +3848,26 @@ var egret3d;
                 var indices = primitive.indices !== undefined ? this.getIndices(subMeshIndex) : null;
                 var castVertices = vertices;
                 if (boneMatrices) {
-                    if (!this._helpVertices) {
-                        this._helpVertices = new Float32Array(vertices.length);
-                    }
-                    castVertices = this._helpVertices;
-                    for (var _b = 0, _c = indices; _b < _c.length; _b++) {
-                        var index = _c[_b];
-                        var vertexIndex = index * 3;
-                        var jointIndex = index * 4;
-                        p0.fromArray(vertices, vertexIndex);
-                        p1.clear();
-                        for (var i = 0; i < 4; ++i) {
-                            var weight = weights[jointIndex + i];
-                            if (weight <= 0.0) {
-                                continue;
-                            }
-                            p1.add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + i] * 16), p0).multiplyScalar(weight));
+                    if (!this._rawVertices) {
+                        if (!this._skinnedVertices) {
+                            this._skinnedVertices = new Float32Array(vertices.length);
                         }
-                        p1.toArray(castVertices, vertexIndex);
+                        castVertices = this._skinnedVertices;
+                        for (var _b = 0, _c = indices; _b < _c.length; _b++) {
+                            var index = _c[_b];
+                            var vertexIndex = index * 3;
+                            var jointIndex = index * 4;
+                            p0.fromArray(vertices, vertexIndex);
+                            p1.clear();
+                            for (var i = 0; i < 4; ++i) {
+                                var weight = weights[jointIndex + i];
+                                if (weight <= 0.0) {
+                                    continue;
+                                }
+                                p1.add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + i] * 16), p0).multiplyScalar(weight));
+                            }
+                            p1.toArray(castVertices, vertexIndex);
+                        }
                     }
                 }
                 switch (primitive.mode) {
@@ -4880,12 +4835,13 @@ var egret3d;
                 }
             }
             if (raycastMesh ? aabb.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo) : aabb.raycast(localRay, raycastInfo)) {
-                var worldMatrix = transform.worldMatrix;
                 if (raycastInfo) {
+                    var worldMatrix = transform.worldMatrix;
                     raycastInfo.position.applyMatrix(worldMatrix);
                     raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
-                    if (raycastInfo.normal) {
-                        raycastInfo.normal.applyDirection(worldMatrix).normalize();
+                    var normal = raycastInfo.normal;
+                    if (normal) {
+                        normal.applyDirection(worldMatrix).normalize();
                     }
                 }
                 return true;
@@ -5337,15 +5293,15 @@ var paper;
 var egret3d;
 (function (egret3d) {
     /**
-     *
+     * TODO 使用枚举常数。
      */
     egret3d.RAD_DEG = 180.0 / Math.PI;
     /**
-     *
+     * TODO 使用枚举常数。
      */
     egret3d.DEG_RAD = Math.PI / 180.0;
     /**
-     *
+     * TODO 使用枚举常数。
      */
     egret3d.EPSILON = 2.220446049250313e-16; // Number.EPSILON
     function sign(value) {
@@ -8863,7 +8819,6 @@ var egret3d;
         };
         /**
          * 通过旋转使得该物体的 Z 轴正方向指向目标方向。
-         * - 方向必须是已被归一化的。
          * @param target 目标方向。
          * @param up 旋转后，该物体在世界空间坐标系下描述的 Y 轴正方向。
          */
@@ -10347,7 +10302,7 @@ var paper;
             /**
              * 引擎版本。
              */
-            this.version = "1.2.0.001";
+            this.version = "1.3.0.001";
             /**
              * 系统管理器。
              */
@@ -10452,10 +10407,15 @@ var paper;
                     return;
                 }
                 this._playerMode = value;
+                ECS.onPlayerModeChange.dispatch(this.playerMode);
             },
             enumerable: true,
             configurable: true
         });
+        /**
+         * 当应用程序的播放模式改变时派发事件。
+         */
+        ECS.onPlayerModeChange = new signals.Signal();
         ECS._instance = null;
         return ECS;
     }());
@@ -10485,8 +10445,13 @@ var egret3d;
             var localRay = egret3d.helpRay.applyMatrix(transform.inverseWorldMatrix, ray);
             if (this.aabb.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) {
-                    raycastInfo.position.applyMatrix(transform.worldMatrix);
+                    var worldMatrix = transform.worldMatrix;
+                    raycastInfo.position.applyMatrix(worldMatrix);
                     raycastInfo.distance = ray.origin.getDistance(raycastInfo.position);
+                    var normal = raycastInfo.normal;
+                    if (normal) {
+                        normal.applyDirection(worldMatrix).normalize();
+                    }
                 }
                 return true;
             }
@@ -10525,8 +10490,13 @@ var egret3d;
             var localRay = egret3d.helpRay.applyMatrix(egret3d.helpMatrixA.inverse(transform.worldMatrix), ray);
             if (this.sphere.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) {
-                    raycastInfo.position.applyMatrix(transform.worldMatrix);
+                    var worldMatrix = transform.worldMatrix;
+                    raycastInfo.position.applyMatrix(worldMatrix);
                     raycastInfo.distance = ray.origin.getDistance(raycastInfo.position);
+                    var normal = raycastInfo.normal;
+                    if (normal) {
+                        normal.applyDirection(worldMatrix).normalize();
+                    }
                 }
                 return true;
             }
@@ -10546,21 +10516,27 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    var _helpVector3 = egret3d.Vector3.create();
     var _helpRaycastInfo = egret3d.RaycastInfo.create();
     function _raycastCollider(ray, collider, raycastInfo, hit) {
         var helpRaycastInfo = _helpRaycastInfo;
+        var normal = raycastInfo.normal;
+        helpRaycastInfo.normal = normal ? _helpVector3 : null;
         if (collider.raycast(ray, helpRaycastInfo) &&
             (!hit || raycastInfo.distance > helpRaycastInfo.distance)) {
+            var transform = collider.gameObject.transform;
             raycastInfo.distance = helpRaycastInfo.distance;
             raycastInfo.position.copy(helpRaycastInfo.position);
-            raycastInfo.transform = collider.gameObject.transform;
+            raycastInfo.transform = transform;
             raycastInfo.collider = collider;
+            if (normal) {
+                normal.copy(_helpVector3);
+            }
             return true;
-            // TODO 处理法线。
         }
         return false;
     }
-    function _raycast(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos) {
+    function _raycastAll(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos) {
         if (maxDistance === void 0) { maxDistance = 0.0; }
         if (cullingMask === void 0) { cullingMask = 16777215 /* Everything */; }
         if (raycastMesh === void 0) { raycastMesh = false; }
@@ -10596,7 +10572,7 @@ var egret3d;
         if (!raycastInfo.transform) {
             for (var _i = 0, _a = gameObject.transform.children; _i < _a.length; _i++) {
                 var child = _a[_i];
-                _raycast(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+                _raycastAll(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
             }
         }
         return true;
@@ -10609,7 +10585,7 @@ var egret3d;
      * 用世界空间坐标系的射线检测指定的实体。（不包含其子级）
      * @param ray 世界空间坐标系的射线。
      * @param gameObject 实体。
-     * @param raycastMesh
+     * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      * @param raycastInfo
      */
     function raycast(ray, gameObject, raycastMesh, raycastInfo) {
@@ -10669,21 +10645,21 @@ var egret3d;
     }
     egret3d.raycast = raycast;
     /**
-     *
-     * @param ray
-     * @param gameObjects
-     * @param maxDistance
-     * @param cullingMask
-     * @param raycastMesh
+     * 用世界空间坐标系的射线检测指定的实体或变换组件列表。
+     * @param ray 射线。
+     * @param gameObjectsOrTransforms 实体或变换组件列表。
+     * @param maxDistance 最大相交点检测距离。
+     * @param cullingMask 只对特定层的实体检测。
+     * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      */
-    function raycastAll(ray, gameObjects, maxDistance, cullingMask, raycastMesh) {
+    function raycastAll(ray, gameObjectsOrTransforms, maxDistance, cullingMask, raycastMesh) {
         if (maxDistance === void 0) { maxDistance = 0.0; }
         if (cullingMask === void 0) { cullingMask = 16777215 /* Everything */; }
         if (raycastMesh === void 0) { raycastMesh = false; }
         var raycastInfos = [];
-        for (var _i = 0, gameObjects_3 = gameObjects; _i < gameObjects_3.length; _i++) {
-            var gameObject = gameObjects_3[_i];
-            _raycast(ray, gameObject instanceof egret3d.Transform ? gameObject.gameObject : gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+        for (var _i = 0, gameObjectsOrTransforms_1 = gameObjectsOrTransforms; _i < gameObjectsOrTransforms_1.length; _i++) {
+            var gameObject = gameObjectsOrTransforms_1[_i];
+            _raycastAll(ray, gameObject instanceof egret3d.Transform ? gameObject.gameObject : gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
         }
         raycastInfos.sort(_sortRaycastInfo);
         return raycastInfos;
@@ -11707,6 +11683,9 @@ var egret3d;
             return this._sortedRenderers;
         };
         Egret2DRendererSystem.prototype._onTouchStart = function (pointer, signal) {
+            if (paper.Application.playerMode !== 0 /* Player */) {
+                return;
+            }
             for (var _i = 0, _a = this._sortRenderers(); _i < _a.length; _i++) {
                 var renderer = _a[_i];
                 var event_1 = pointer.event;
@@ -11717,6 +11696,9 @@ var egret3d;
             }
         };
         Egret2DRendererSystem.prototype._onTouchMove = function (pointer, signal) {
+            if (paper.Application.playerMode !== 0 /* Player */) {
+                return;
+            }
             for (var _i = 0, _a = this._sortRenderers(); _i < _a.length; _i++) {
                 var renderer = _a[_i];
                 var event_2 = pointer.event;
@@ -11727,6 +11709,9 @@ var egret3d;
             }
         };
         Egret2DRendererSystem.prototype._onTouchEnd = function (pointer, signal) {
+            if (paper.Application.playerMode !== 0 /* Player */) {
+                return;
+            }
             for (var _i = 0, _a = this._sortRenderers(); _i < _a.length; _i++) {
                 var renderer = _a[_i];
                 var event_3 = pointer.event;
@@ -12420,7 +12405,6 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
-    var _helpRaycastInfo = egret3d.RaycastInfo.create();
     /**
      * 实体。
      */
@@ -12516,106 +12500,18 @@ var paper;
             // gameObect.addComponent(egret3d.Transform);
             return gameObect;
         };
-        GameObject._raycast = function (ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos) {
-            if (maxDistance === void 0) { maxDistance = 0.0; }
-            if (cullingMask === void 0) { cullingMask = 16777215 /* Everything */; }
-            if (raycastMesh === void 0) { raycastMesh = false; }
-            if ((gameObject.hideFlags === 3 /* HideAndDontSave */ && gameObject.tag === "Editor Only" /* EditorOnly */ &&
-                (!gameObject.transform.parent || gameObject.transform.parent.gameObject.activeInHierarchy)) ? gameObject.activeSelf : !gameObject.activeInHierarchy) {
-                return;
-            }
-            var raycastInfo = egret3d.RaycastInfo.create();
-            var helpRaycastInfo = _helpRaycastInfo;
-            if (gameObject.layer & cullingMask) {
-                if (raycastMesh) {
-                    if (gameObject.renderer && gameObject.renderer.enabled &&
-                        gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)) {
-                        raycastInfo.transform = gameObject.transform;
-                    }
-                }
-                else {
-                    // TODO 更快的查询所有碰撞组件的方式。
-                    var boxColliders = gameObject.getComponents(egret3d.BoxCollider);
-                    if (boxColliders.length > 0) {
-                        var hit = false;
-                        for (var _i = 0, boxColliders_2 = boxColliders; _i < boxColliders_2.length; _i++) {
-                            var boxCollider = boxColliders_2[_i];
-                            if (boxCollider.enabled && boxCollider.raycast(ray, helpRaycastInfo) &&
-                                (!hit || raycastInfo.distance > helpRaycastInfo.distance)) {
-                                raycastInfo.distance = helpRaycastInfo.distance;
-                                raycastInfo.position.copy(helpRaycastInfo.position);
-                                raycastInfo.transform = gameObject.transform;
-                                raycastInfo.collider = boxCollider;
-                                hit = true;
-                                // TODO 处理法线。
-                            }
-                        }
-                    }
-                    var sphereColliders = gameObject.getComponents(egret3d.SphereCollider);
-                    if (sphereColliders.length > 0) {
-                        var hit = false;
-                        for (var _a = 0, sphereColliders_2 = sphereColliders; _a < sphereColliders_2.length; _a++) {
-                            var sphereCollider = sphereColliders_2[_a];
-                            if (sphereCollider.enabled && sphereCollider.raycast(ray, helpRaycastInfo) &&
-                                (!hit || raycastInfo.distance > helpRaycastInfo.distance)) {
-                                raycastInfo.distance = helpRaycastInfo.distance;
-                                raycastInfo.position.copy(helpRaycastInfo.position);
-                                raycastInfo.transform = gameObject.transform;
-                                raycastInfo.collider = sphereCollider;
-                                hit = true;
-                            }
-                        }
-                    }
-                }
-            }
-            if (raycastInfo.transform) {
-                if (maxDistance <= 0.0 || raycastInfo.distance <= maxDistance) {
-                    raycastInfos.push(raycastInfo);
-                }
-                else {
-                    raycastInfo.transform = null;
-                    raycastInfo.release();
-                }
-            }
-            else {
-                raycastInfo.transform = null;
-                raycastInfo.release();
-            }
-            if (!raycastInfo.transform) {
-                for (var _b = 0, _c = gameObject.transform.children; _b < _c.length; _b++) {
-                    var child = _c[_b];
-                    this._raycast(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
-                }
-            }
-        };
         GameObject._sortRaycastInfo = function (a, b) {
             // TODO renderQueue.
             return a.distance - b.distance;
         };
         /**
-         * 用世界空间坐标系的射线检测指定的实体或实体列表。
-         * @param ray 世界空间坐标系的射线。
-         * @param gameObjects 实体或实体列表。
-         * @param maxDistance 最大相交点检测距离。
-         * @param cullingMask 只对特定层的实体检测。
-         * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
+         * @deprecated
          */
         GameObject.raycast = function (ray, gameObjects, maxDistance, cullingMask, raycastMesh) {
             if (maxDistance === void 0) { maxDistance = 0.0; }
             if (cullingMask === void 0) { cullingMask = 16777215 /* Everything */; }
             if (raycastMesh === void 0) { raycastMesh = false; }
-            var raycastInfos = [];
-            if (Array.isArray(gameObjects)) {
-                for (var _i = 0, gameObjects_4 = gameObjects; _i < gameObjects_4.length; _i++) {
-                    var gameObject = gameObjects_4[_i];
-                    this._raycast(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
-                }
-                raycastInfos.sort(this._sortRaycastInfo);
-            }
-            else {
-                this._raycast(ray, gameObjects, maxDistance, cullingMask, raycastMesh, raycastInfos);
-            }
-            return raycastInfos;
+            return egret3d.raycastAll(ray, gameObjects, maxDistance, cullingMask, raycastMesh);
         };
         Object.defineProperty(GameObject, "globalGameObject", {
             /**
@@ -14009,7 +13905,6 @@ var egret3d;
              */
             _this._retargetBoneNames = null;
             _this._mesh = null;
-            _this._rawVertices = null;
             return _this;
         }
         /**
@@ -14036,15 +13931,15 @@ var egret3d;
                 var vertices = mesh.getVertices();
                 var joints = mesh.getAttributes("JOINTS_0" /* JOINTS_0 */);
                 var weights = mesh.getAttributes("WEIGHTS_0" /* WEIGHTS_0 */);
-                if (!this._rawVertices) {
-                    this._rawVertices = new Float32Array(vertices.length);
-                    this._rawVertices.set(vertices);
+                if (!mesh._rawVertices) {
+                    mesh._rawVertices = new Float32Array(vertices.length);
+                    mesh._rawVertices.set(vertices);
                 }
                 for (var _i = 0, _a = indices; _i < _a.length; _i++) {
                     var index = _a[_i];
                     var vertexIndex = index * 3;
                     var jointIndex = index * 4;
-                    vA.fromArray(this._rawVertices, vertexIndex);
+                    vA.fromArray(mesh._rawVertices, vertexIndex);
                     vB.clear();
                     for (var i = 0; i < 4; ++i) {
                         var weight = weights[jointIndex + i];
@@ -14092,9 +13987,8 @@ var egret3d;
                 this._inverseBindMatrices = this._mesh.createTypeArrayFromAccessor(this._mesh.getAccessor(skin.inverseBindMatrices));
                 this.boneMatrices = new Float32Array(this._bones.length * 16);
                 if (this._bones.length > egret3d.SkinnedMeshRendererSystem.maxBoneCount) {
-                    // TODO
                     this.forceCPUSkin = true;
-                    console.warn("");
+                    console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", this._mesh.name);
                 }
                 // this._update(); TODO
             }
@@ -14113,10 +14007,10 @@ var egret3d;
             this._mesh = null;
         };
         SkinnedMeshRenderer.prototype.recalculateAABB = function () {
-            // TODO
+            // TODO 蒙皮网格的 aabb 需要能自定义。
             if (this._mesh) {
                 this._aabb.clear();
-                var vertices = this._mesh.getVertices(); // T pose mesh aabb.
+                var vertices = this._mesh._rawVertices || this._mesh.getVertices(); // T pose mesh aabb.
                 var position = egret3d.helpVector3A;
                 for (var i = 0, l = vertices.length; i < l; i += 3) {
                     position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
@@ -15146,6 +15040,7 @@ var egret3d;
             }
         };
         AnimationSystem.prototype.onUpdate = function (deltaTime) {
+            // TODO 应将组件功能尽量移到系统，视野剔除
             for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
                 var gameObject = _a[_i];
                 gameObject.getComponent(egret3d.Animation)._update(deltaTime);
@@ -18486,7 +18381,7 @@ var egret3d;
             return _this;
         }
         /**
-         *
+         * 创建一个
          * @param minimum
          * @param maximum
          */
@@ -18670,51 +18565,73 @@ var egret3d;
         };
         AABB.prototype.raycast = function (ray, raycastInfo) {
             var tmin, tmax, tymin, tymax, tzmin, tzmax;
-            var invdirx = 1.0 / ray.direction.x, invdiry = 1.0 / ray.direction.y, invdirz = 1.0 / ray.direction.z;
+            var hitDirection = 0;
             var origin = ray.origin;
+            var direction = ray.direction;
+            var minimum = this.minimum;
+            var maximum = this.maximum;
+            var invdirx = 1.0 / direction.x, invdiry = 1.0 / direction.y, invdirz = 1.0 / direction.z;
             if (invdirx >= 0.0) {
-                tmin = (this.minimum.x - origin.x) * invdirx;
-                tmax = (this.maximum.x - origin.x) * invdirx;
+                tmin = (minimum.x - origin.x) * invdirx;
+                tmax = (maximum.x - origin.x) * invdirx;
             }
             else {
-                tmin = (this.maximum.x - origin.x) * invdirx;
-                tmax = (this.minimum.x - origin.x) * invdirx;
+                tmin = (maximum.x - origin.x) * invdirx;
+                tmax = (minimum.x - origin.x) * invdirx;
             }
             if (invdiry >= 0.0) {
-                tymin = (this.minimum.y - origin.y) * invdiry;
-                tymax = (this.maximum.y - origin.y) * invdiry;
+                tymin = (minimum.y - origin.y) * invdiry;
+                tymax = (maximum.y - origin.y) * invdiry;
             }
             else {
-                tymin = (this.maximum.y - origin.y) * invdiry;
-                tymax = (this.minimum.y - origin.y) * invdiry;
+                tymin = (maximum.y - origin.y) * invdiry;
+                tymax = (minimum.y - origin.y) * invdiry;
             }
             if ((tmin > tymax) || (tymin > tmax))
                 return false;
             // These lines also handle the case where tmin or tmax is NaN
             // (result of 0 * Infinity). x !== x returns true if x is NaN
-            if (tymin > tmin || tmin !== tmin)
+            if (tymin > tmin || tmin !== tmin) {
                 tmin = tymin;
+                hitDirection = 1;
+            }
             if (tymax < tmax || tmax !== tmax)
                 tmax = tymax;
             if (invdirz >= 0.0) {
-                tzmin = (this.minimum.z - origin.z) * invdirz;
-                tzmax = (this.maximum.z - origin.z) * invdirz;
+                tzmin = (minimum.z - origin.z) * invdirz;
+                tzmax = (maximum.z - origin.z) * invdirz;
             }
             else {
-                tzmin = (this.maximum.z - origin.z) * invdirz;
-                tzmax = (this.minimum.z - origin.z) * invdirz;
+                tzmin = (maximum.z - origin.z) * invdirz;
+                tzmax = (minimum.z - origin.z) * invdirz;
             }
             if ((tmin > tzmax) || (tzmin > tmax))
                 return false;
-            if (tzmin > tmin || tmin !== tmin)
+            if (tzmin > tmin || tmin !== tmin) {
                 tmin = tzmin;
+                hitDirection = 2;
+            }
             if (tzmax < tmax || tmax !== tmax)
                 tmax = tzmax;
             // return point closest to the ray (positive side)
             if (tmax < 0.0)
                 return false;
             if (raycastInfo) {
+                var normal = raycastInfo.normal;
                 ray.at(raycastInfo.distance = tmin >= 0.0 ? tmin : tmax, raycastInfo.position);
+                if (normal) {
+                    switch (hitDirection) {
+                        case 0:
+                            normal.set(invdirx > 0.0 ? -1.0 : 1.0, 0.0, 0.0);
+                            break;
+                        case 1:
+                            normal.set(0.0, invdiry > 0.0 ? -1.0 : 1.0, 0.0);
+                            break;
+                        case 2:
+                            normal.set(0.0, 0.0, invdirz > 0.0 ? -1.0 : 1.0);
+                            break;
+                    }
+                }
             }
             return true;
         };
@@ -18804,9 +18721,6 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
-        /**
-         *
-         */
         AABB.ONE = new AABB().set(egret3d.Vector3.MINUS_ONE.clone().multiplyScalar(0.5), egret3d.Vector3.ONE.clone().multiplyScalar(0.5));
         AABB._instances = [];
         __decorate([
@@ -22473,9 +22387,10 @@ var egret3d;
                     this._egret2dOrderCount = 0;
                     for (var _a = 0, cameras_2 = cameras; _a < cameras_2.length; _a++) {
                         var camera = cameras_2[_a];
-                        var renderEnabled = isPlayerMode ? camera.gameObject.scene !== editorScene : camera.gameObject.scene === editorScene;
+                        var scene = camera.gameObject.scene;
+                        var renderEnabled = isPlayerMode ? scene !== editorScene : scene === editorScene;
                         if (renderEnabled && lightCountDirty) {
-                            camera.context.updateLights(lights, camera.gameObject.scene.ambientColor); // TODO 性能优化
+                            camera.context.updateLights(lights, scene.ambientColor); // TODO 性能优化
                         }
                         if (camera.postQueues.length === 0) {
                             if (renderEnabled) {
@@ -23727,7 +23642,11 @@ var egret3d;
             // in order to always return an intersect point that is in front of the ray.
             // else t0 is in front of the ray, so return the first collision point scaled by t0
             if (raycastInfo) {
-                ray.at(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
+                var normal = raycastInfo.normal;
+                var position = ray.at(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
+                if (normal) {
+                    normal.subtract(position, this.center).normalize();
+                }
             }
             return true;
         };
@@ -26758,8 +26677,8 @@ var paper;
                     var revertRoot = editor.Editor.activeEditorModel.getGameObjectByUUid(this.stateData.revertPrefabRootId);
                     var gameObjects = editor.Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(revertRoot);
                     var removeGameObjIds = [];
-                    for (var _i = 0, gameObjects_5 = gameObjects; _i < gameObjects_5.length; _i++) {
-                        var gameObj = gameObjects_5[_i];
+                    for (var _i = 0, gameObjects_3 = gameObjects; _i < gameObjects_3.length; _i++) {
+                        var gameObj = gameObjects_3[_i];
                         if (!(this.stateData.revertData[gameObj.extras.linkedID])) {
                             continue;
                         }
@@ -26882,8 +26801,8 @@ var paper;
                         }
                     };
                     var this_1 = this;
-                    for (var _i = 0, gameObjects_6 = gameObjects; _i < gameObjects_6.length; _i++) {
-                        var gameObj = gameObjects_6[_i];
+                    for (var _i = 0, gameObjects_4 = gameObjects; _i < gameObjects_4.length; _i++) {
+                        var gameObj = gameObjects_4[_i];
                         _loop_3(gameObj);
                     }
                     var gameObjs = editor.Editor.activeEditorModel.getGameObjectsByUUids(removeGameObjIds_1);

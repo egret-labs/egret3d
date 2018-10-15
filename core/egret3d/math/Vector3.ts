@@ -251,12 +251,14 @@ namespace egret3d {
                 source = this;
             }
 
-            let l = Math.sqrt(source.x * source.x + source.y * source.y + source.z * source.z);
+            const x = source.x, y = source.y, z = source.z;
+            let l = Math.sqrt(x * x + y * y + z * z);
+            
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
-                this.x *= l;
-                this.y *= l;
-                this.z *= l;
+                this.x = x * l;
+                this.y = y * l;
+                this.z = z * l;
             }
             else {
                 if (!defaultAxis) {
@@ -374,10 +376,13 @@ namespace egret3d {
             const x = valueA.x;
             const y = valueA.y;
             const z = valueA.z;
+            const xB = valueB.x;
+            const yB = valueB.y;
+            const zB = valueB.z;
 
-            this.x = y * valueB.z - z * valueB.y;
-            this.y = z * valueB.x - x * valueB.z;
-            this.z = x * valueB.y - y * valueB.x;
+            this.x = y * zB - z * yB;
+            this.y = z * xB - x * zB;
+            this.z = x * yB - y * xB;
 
             return this;
         }
@@ -455,11 +460,11 @@ namespace egret3d {
         }
 
         public getSquaredDistance(value: Readonly<IVector3>) {
-            return helpVector3.subtract(value, this).squaredLength;
+            return _helpVector3.subtract(value, this).squaredLength;
         }
 
         public getDistance(value: Readonly<IVector3>) {
-            return helpVector3.subtract(value, this).length;
+            return _helpVector3.subtract(value, this).length;
         }
 
         public closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>) {
@@ -690,11 +695,11 @@ namespace egret3d {
          * @deprecated
          */
         public static getDistance(a: Readonly<IVector3>, b: Readonly<IVector3>) {
-            return this.getLength(this.subtract(a, b, helpVector3));
+            return this.getLength(this.subtract(a, b, _helpVector3));
         }
     }
 
-    const helpVector3 = Vector3.create();
+    const _helpVector3 = Vector3.create();
     /**
      * @internal
      */

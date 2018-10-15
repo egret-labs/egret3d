@@ -1,14 +1,14 @@
 namespace egret3d {
     /**
-     * 
+     * TODO 使用枚举常数。
      */
     export const RAD_DEG: number = 180.0 / Math.PI;
     /**
-     * 
+     * TODO 使用枚举常数。
      */
     export const DEG_RAD: number = Math.PI / 180.0;
     /**
-     * 
+     * TODO 使用枚举常数。
      */
     export const EPSILON = 2.220446049250313e-16; // Number.EPSILON
 
@@ -17,6 +17,7 @@ namespace egret3d {
             return value;
         }
 
+        
         return value > 0 ? 1 : -1;
     }
 

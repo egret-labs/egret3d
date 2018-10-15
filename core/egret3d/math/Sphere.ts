@@ -158,7 +158,12 @@ namespace egret3d {
             // else t0 is in front of the ray, so return the first collision point scaled by t0
 
             if (raycastInfo) {
-                ray.at(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
+                const normal = raycastInfo.normal;
+                const position = ray.at(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
+
+                if (normal) {
+                    normal.subtract(position, this.center).normalize();
+                }
             }
 
             return true;

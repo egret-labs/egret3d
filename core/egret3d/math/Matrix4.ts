@@ -61,18 +61,10 @@ namespace egret3d {
             }
         }
 
-        /**
-         * 序列化
-         * @returns 序列化后的数据
-         */
         public serialize() {
             return this.rawData;
         }
 
-        /**
-         * 反序列化
-         * @param value 序列化后的数据
-         */
         public deserialize(value: Readonly<[
             number, number, number, number,
             number, number, number, number,
@@ -677,25 +669,26 @@ namespace egret3d {
          * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
          */
         public lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
-            this.lookRotation(_helpVector3C.subtract(target, eye).normalize(), up);
+            this.lookRotation(_helpVector3C.subtract(target, eye), up);
 
             return this;
         }
         /**
          * 设置该矩阵，使得其 Z 轴正方向指向目标方向。
-         * - 方向必须是已被归一化的。
          * - 矩阵的缩放值将被覆盖。
          * @param target 目标方向。
          * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
          */
         public lookRotation(direction: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
-            const x = _helpVector3A.cross(up, direction).normalize();
-            const y = _helpVector3B.cross(direction, x);
+            _helpVector3C.normalize(direction);
+
+            const x = _helpVector3A.cross(up, _helpVector3C).normalize();
+            const y = _helpVector3B.cross(_helpVector3C, x);
             const rawData = this.rawData;
 
-            rawData[0] = x.x; rawData[4] = y.x; rawData[8] = direction.x;
-            rawData[1] = x.y; rawData[5] = y.y; rawData[9] = direction.y;
-            rawData[2] = x.z; rawData[6] = y.z; rawData[10] = direction.z;
+            rawData[0] = x.x; rawData[4] = y.x; rawData[8] = _helpVector3C.x;
+            rawData[1] = x.y; rawData[5] = y.y; rawData[9] = _helpVector3C.y;
+            rawData[2] = x.z; rawData[6] = y.z; rawData[10] = _helpVector3C.z;
 
             return this;
         }
@@ -857,65 +850,6 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public scale(scaler: number) { // TODO
-            const rawData = this.rawData;
-
-            rawData[0] *= scaler;
-            rawData[1] *= scaler;
-            rawData[2] *= scaler;
-            rawData[3] *= scaler;
-
-            rawData[4] *= scaler;
-            rawData[5] *= scaler;
-            rawData[6] *= scaler;
-            rawData[7] *= scaler;
-
-            rawData[8] *= scaler;
-            rawData[9] *= scaler;
-            rawData[10] *= scaler;
-            rawData[11] *= scaler;
-
-            rawData[12] *= scaler;
-            rawData[13] *= scaler;
-            rawData[14] *= scaler;
-            rawData[15] *= scaler;
-
-            return this;
-        }
-        /**
-         * @deprecated
-         */
-        public add(left: Matrix4, right?: Matrix4) { // TODO
-            if (!right) {
-                right = left;
-                left = this;
-            }
-
-            this.rawData[0] = left.rawData[0] + right.rawData[0];
-            this.rawData[1] = left.rawData[1] + right.rawData[1];
-            this.rawData[2] = left.rawData[2] + right.rawData[2];
-            this.rawData[3] = left.rawData[3] + right.rawData[3];
-
-            this.rawData[4] = left.rawData[4] + right.rawData[4];
-            this.rawData[5] = left.rawData[5] + right.rawData[5];
-            this.rawData[6] = left.rawData[6] + right.rawData[6];
-            this.rawData[7] = left.rawData[7] + right.rawData[7];
-
-            this.rawData[8] = left.rawData[8] + right.rawData[8];
-            this.rawData[9] = left.rawData[9] + right.rawData[9];
-            this.rawData[10] = left.rawData[10] + right.rawData[10];
-            this.rawData[11] = left.rawData[11] + right.rawData[11];
-
-            this.rawData[12] = left.rawData[12] + right.rawData[12];
-            this.rawData[13] = left.rawData[13] + right.rawData[13];
-            this.rawData[14] = left.rawData[14] + right.rawData[14];
-            this.rawData[15] = left.rawData[15] + right.rawData[15];
-
-            return this;
-        }
-        /**
-         * @deprecated
-         */
         public static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix4): Matrix4 {
             let tan = 1.0 / (Math.tan(fov * 0.5));
             out.rawData[0] = tan / aspect;
@@ -969,6 +903,7 @@ namespace egret3d {
     const _helpVector3A = Vector3.create();
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
+    const _helpVector3D = Vector3.create();
     const _helpMatrix = Matrix4.create();
 
     /**

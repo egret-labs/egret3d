@@ -31,7 +31,6 @@ namespace egret3d {
         public _retargetBoneNames: string[] | null = null;
         @paper.serializedField
         private _mesh: Mesh | null = null;
-        private _rawVertices: Float32Array | null = null;
         /**
          * @internal
          */
@@ -60,15 +59,15 @@ namespace egret3d {
                 const joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array;
                 const weights = mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)! as Float32Array;
 
-                if (!this._rawVertices) {
-                    this._rawVertices = new Float32Array(vertices.length);
-                    this._rawVertices.set(vertices);
+                if (!mesh._rawVertices) {
+                    mesh._rawVertices = new Float32Array(vertices.length);
+                    mesh._rawVertices.set(vertices);
                 }
 
                 for (const index of <any>indices as number[]) {
                     const vertexIndex = index * 3;
                     const jointIndex = index * 4;
-                    vA.fromArray(this._rawVertices, vertexIndex);
+                    vA.fromArray(mesh._rawVertices, vertexIndex);
                     vB.clear();
 
                     for (let i = 0; i < 4; ++i) {
@@ -128,9 +127,8 @@ namespace egret3d {
                 this.boneMatrices = new Float32Array(this._bones.length * 16);
 
                 if (this._bones.length > SkinnedMeshRendererSystem.maxBoneCount) {
-                    // TODO
                     this.forceCPUSkin = true;
-                    console.warn("");
+                    console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", this._mesh.name);
                 }
                 // this._update(); TODO
             }
@@ -153,11 +151,11 @@ namespace egret3d {
         }
 
         public recalculateAABB() {
-            // TODO
+            // TODO 蒙皮网格的 aabb 需要能自定义。
             if (this._mesh) {
                 this._aabb.clear();
 
-                const vertices = this._mesh.getVertices()!; // T pose mesh aabb.
+                const vertices = this._mesh._rawVertices || this._mesh.getVertices()!; // T pose mesh aabb.
                 const position = helpVector3A;
 
                 for (let i = 0, l = vertices.length; i < l; i += 3) {

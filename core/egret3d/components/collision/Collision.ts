@@ -1,25 +1,32 @@
 namespace egret3d {
+    const _helpVector3 = Vector3.create();
     const _helpRaycastInfo = RaycastInfo.create();
 
     function _raycastCollider(ray: Readonly<Ray>, collider: BoxCollider | SphereCollider, raycastInfo: RaycastInfo, hit: boolean) {
         const helpRaycastInfo = _helpRaycastInfo;
+        const normal = raycastInfo.normal;
+        helpRaycastInfo.normal = normal ? _helpVector3 : null;
+
         if (collider.raycast(ray, helpRaycastInfo) &&
             (!hit || raycastInfo.distance > helpRaycastInfo.distance)
         ) {
+            const transform = collider.gameObject.transform;
             raycastInfo.distance = helpRaycastInfo.distance;
             raycastInfo.position.copy(helpRaycastInfo.position);
-            raycastInfo.transform = collider.gameObject.transform;
+            raycastInfo.transform = transform;
             raycastInfo.collider = collider;
 
-            return true;
+            if (normal) {
+                normal.copy(_helpVector3);
+            }
 
-            // TODO 处理法线。
+            return true;
         }
 
         return false;
     }
 
-    function _raycast(
+    function _raycastAll(
         ray: Readonly<Ray>, gameObject: Readonly<paper.GameObject>,
         maxDistance: number = 0.0, cullingMask: paper.CullingMask = paper.CullingMask.Everything, raycastMesh: boolean = false,
         raycastInfos: RaycastInfo[]
@@ -65,7 +72,7 @@ namespace egret3d {
 
         if (!raycastInfo.transform) {
             for (const child of gameObject.transform.children) {
-                _raycast(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+                _raycastAll(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
             }
         }
 
@@ -80,7 +87,7 @@ namespace egret3d {
      * 用世界空间坐标系的射线检测指定的实体。（不包含其子级）
      * @param ray 世界空间坐标系的射线。
      * @param gameObject 实体。
-     * @param raycastMesh 
+     * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      * @param raycastInfo 
      */
     export function raycast(
@@ -149,21 +156,21 @@ namespace egret3d {
         return false;
     }
     /**
-     * 
-     * @param ray 
-     * @param gameObjects 
-     * @param maxDistance 
-     * @param cullingMask 
-     * @param raycastMesh 
+     * 用世界空间坐标系的射线检测指定的实体或变换组件列表。
+     * @param ray 射线。
+     * @param gameObjectsOrTransforms 实体或变换组件列表。
+     * @param maxDistance 最大相交点检测距离。
+     * @param cullingMask 只对特定层的实体检测。
+     * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      */
     export function raycastAll(
-        ray: Readonly<Ray>, gameObjects: ReadonlyArray<paper.GameObject | Transform>,
+        ray: Readonly<Ray>, gameObjectsOrTransforms: ReadonlyArray<paper.GameObject | Transform>,
         maxDistance: number = 0.0, cullingMask: paper.CullingMask = paper.CullingMask.Everything, raycastMesh: boolean = false
     ) {
         const raycastInfos = [] as RaycastInfo[];
 
-        for (const gameObject of gameObjects) {
-            _raycast(
+        for (const gameObject of gameObjectsOrTransforms) {
+            _raycastAll(
                 ray,
                 gameObject instanceof Transform ? gameObject.gameObject : gameObject,
                 maxDistance, cullingMask, raycastMesh, raycastInfos

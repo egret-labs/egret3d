@@ -13,16 +13,13 @@ namespace egret3d {
      * 轴对称包围盒。
      */
     export class AABB extends paper.BaseRelease<AABB> implements paper.ICCS<AABB>, paper.ISerializable, IRaycast {
-        /**
-         * 
-         */
         public static readonly ONE: Readonly<AABB> = new AABB().set(
             Vector3.MINUS_ONE.clone().multiplyScalar(0.5),
             Vector3.ONE.clone().multiplyScalar(0.5)
         );
         private static readonly _instances: AABB[] = [];
         /**
-         * 
+         * 创建一个
          * @param minimum 
          * @param maximum 
          */
@@ -258,27 +255,31 @@ namespace egret3d {
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
             let tmin: number, tmax: number, tymin: number, tymax: number, tzmin: number, tzmax: number;
-            const invdirx = 1.0 / ray.direction.x,
-                invdiry = 1.0 / ray.direction.y,
-                invdirz = 1.0 / ray.direction.z;
+            let hitDirection: 0 | 1 | 2 = 0;
             const origin = ray.origin;
+            const direction = ray.direction;
+            const minimum = this.minimum;
+            const maximum = this.maximum;
+            const invdirx = 1.0 / direction.x,
+                invdiry = 1.0 / direction.y,
+                invdirz = 1.0 / direction.z;
 
             if (invdirx >= 0.0) {
-                tmin = (this.minimum.x - origin.x) * invdirx;
-                tmax = (this.maximum.x - origin.x) * invdirx;
+                tmin = (minimum.x - origin.x) * invdirx;
+                tmax = (maximum.x - origin.x) * invdirx;
             }
             else {
-                tmin = (this.maximum.x - origin.x) * invdirx;
-                tmax = (this.minimum.x - origin.x) * invdirx;
+                tmin = (maximum.x - origin.x) * invdirx;
+                tmax = (minimum.x - origin.x) * invdirx;
             }
 
             if (invdiry >= 0.0) {
-                tymin = (this.minimum.y - origin.y) * invdiry;
-                tymax = (this.maximum.y - origin.y) * invdiry;
+                tymin = (minimum.y - origin.y) * invdiry;
+                tymax = (maximum.y - origin.y) * invdiry;
             }
             else {
-                tymin = (this.maximum.y - origin.y) * invdiry;
-                tymax = (this.minimum.y - origin.y) * invdiry;
+                tymin = (maximum.y - origin.y) * invdiry;
+                tymax = (minimum.y - origin.y) * invdiry;
             }
 
             if ((tmin > tymax) || (tymin > tmax)) return false;
@@ -286,22 +287,28 @@ namespace egret3d {
             // These lines also handle the case where tmin or tmax is NaN
             // (result of 0 * Infinity). x !== x returns true if x is NaN
 
-            if (tymin > tmin || tmin !== tmin) tmin = tymin;
+            if (tymin > tmin || tmin !== tmin) {
+                tmin = tymin;
+                hitDirection = 1;
+            }
 
             if (tymax < tmax || tmax !== tmax) tmax = tymax;
 
             if (invdirz >= 0.0) {
-                tzmin = (this.minimum.z - origin.z) * invdirz;
-                tzmax = (this.maximum.z - origin.z) * invdirz;
+                tzmin = (minimum.z - origin.z) * invdirz;
+                tzmax = (maximum.z - origin.z) * invdirz;
             }
             else {
-                tzmin = (this.maximum.z - origin.z) * invdirz;
-                tzmax = (this.minimum.z - origin.z) * invdirz;
+                tzmin = (maximum.z - origin.z) * invdirz;
+                tzmax = (minimum.z - origin.z) * invdirz;
             }
 
             if ((tmin > tzmax) || (tzmin > tmax)) return false;
 
-            if (tzmin > tmin || tmin !== tmin) tmin = tzmin;
+            if (tzmin > tmin || tmin !== tmin) {
+                tmin = tzmin;
+                hitDirection = 2;
+            }
 
             if (tzmax < tmax || tmax !== tmax) tmax = tzmax;
 
@@ -310,7 +317,24 @@ namespace egret3d {
             if (tmax < 0.0) return false;
 
             if (raycastInfo) {
+                const normal = raycastInfo.normal;
                 ray.at(raycastInfo.distance = tmin >= 0.0 ? tmin : tmax, raycastInfo.position);
+
+                if (normal) {
+                    switch (hitDirection) {
+                        case 0:
+                            normal.set(invdirx > 0.0 ? -1.0 : 1.0, 0.0, 0.0);
+                            break;
+
+                        case 1:
+                            normal.set(0.0, invdiry > 0.0 ? -1.0 : 1.0, 0.0);
+                            break;
+
+                        case 2:
+                            normal.set(0.0, 0.0, invdirz > 0.0 ? -1.0 : 1.0);
+                            break;
+                    }
+                }
             }
 
             return true;

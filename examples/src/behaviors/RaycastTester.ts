@@ -54,6 +54,7 @@ namespace behaviors {
                 const ray = this._updateAngGetRay();
                 const raycastInfo = egret3d.RaycastInfo.create().release();
                 raycastInfo.normal = egret3d.Vector3.create().release();
+
                 if (this.target.renderer.raycast(ray, raycastInfo, this.raycastMesh)) {
                     lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
                     this._normal.transform.position = raycastInfo.position;
@@ -69,34 +70,17 @@ namespace behaviors {
         public onUpdate() {
             const lineTransform = this._line.transform;
             lineTransform.setLocalScale(1.0);
+            this._normal.activeSelf = true;
 
             if (this.target) {
                 const ray = this._updateAngGetRay();
                 const raycastInfo = egret3d.RaycastInfo.create().release();
+                raycastInfo.normal = egret3d.Vector3.create().release();
 
                 if (egret3d.raycast(ray, this.target, false, raycastInfo)) {
                     lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
-                }
-            }
-        }
-    }
-
-    export class RaycastPlane extends BaseRaycast {
-        public target: paper.GameObject | null = null;
-
-        private readonly _plane: egret3d.Plane = egret3d.Plane.create();
-
-        public onUpdate() {
-            const lineTransform = this._line.transform;
-            lineTransform.setLocalScale(1.0);
-
-            if (this.target) {
-                const plane = this._plane.fromPoint(this.target.transform.position, this.target.transform.getForward().release());
-                const ray = this._updateAngGetRay();
-                const raycastInfo = egret3d.RaycastInfo.create().release();
-
-                if (plane.raycast(ray, raycastInfo)) {
-                    lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
+                    this._normal.transform.position = raycastInfo.position;
+                    this._normal.transform.lookRotation(raycastInfo.normal);
                 }
             }
         }

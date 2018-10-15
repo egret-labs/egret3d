@@ -15,6 +15,11 @@ namespace paper {
      * 应用程序。
      */
     export class ECS {
+        /**
+         * 当应用程序的播放模式改变时派发事件。
+         */
+        public static readonly onPlayerModeChange: signals.Signal = new signals.Signal();
+
         private static _instance: ECS | null = null;
         /**
          * 应用程序单例。
@@ -32,7 +37,7 @@ namespace paper {
         /**
          * 引擎版本。
          */
-        public readonly version: string = "1.2.0.001";
+        public readonly version: string = "1.3.0.001";
         /**
          * 系统管理器。
          */
@@ -61,7 +66,6 @@ namespace paper {
             // if (this._playerMode !== PlayerMode.Player) { TODO
             //     egret3d.Camera.editor; // Active editor camera.
             // }
-
         }
         /**
          * @internal
@@ -127,6 +131,8 @@ namespace paper {
             }
 
             this._playerMode = value;
+
+            ECS.onPlayerModeChange.dispatch(this.playerMode);
         }
     }
     //

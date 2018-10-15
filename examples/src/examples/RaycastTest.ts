@@ -57,17 +57,6 @@ namespace examples {
                 line.addComponent(behaviors.RotateComponent).target = gameObject;
                 line.addComponent(behaviors.ColliderRaycast).target = gameObject;
             }
-
-            {
-                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.PLANE, "Plane");
-                gameObject.transform.setLocalPosition(20.0, 0.0, 0.0);
-                gameObject.renderer!.material = egret3d.DefaultMaterials.MESH_LAMBERT_DOUBLESIDE;
-
-                const line = paper.GameObject.create("RaycastTester");
-                line.transform.setLocalPosition(20.0, 5.0, -5.0);
-                line.addComponent(behaviors.RotateComponent).target = gameObject;
-                line.addComponent(behaviors.RaycastPlane).target = gameObject;
-            }
         }
     }
 }

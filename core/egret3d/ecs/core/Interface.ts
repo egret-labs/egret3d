@@ -98,12 +98,14 @@ namespace paper {
     export interface ISerializable {
         /**
          * 序列化。
+         * @returns 序列化后的数据。
          */
         serialize(): any;
         /**
          * 反序列化。
          * @param data 反序列化数据。
          * @param deserializer Deserializer。
+         * @returns 反序列化后的数据。
          */
         deserialize(data: any, deserializer?: Deserializer): any;
     }

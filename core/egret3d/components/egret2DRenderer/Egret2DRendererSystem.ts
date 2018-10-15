@@ -31,6 +31,10 @@ namespace egret3d {
         }
 
         private _onTouchStart(pointer: Pointer, signal: signals.Signal) {
+            if (paper.Application.playerMode !== paper.PlayerMode.Player) {
+                return;
+            }
+
             for (const renderer of this._sortRenderers()) {
                 const event = pointer.event!;
                 const scaler = renderer.scaler;
@@ -41,6 +45,10 @@ namespace egret3d {
         }
 
         private _onTouchMove(pointer: Pointer, signal: signals.Signal) {
+            if (paper.Application.playerMode !== paper.PlayerMode.Player) {
+                return;
+            }
+
             for (const renderer of this._sortRenderers()) {
                 const event = pointer.event!;
                 const scaler = renderer.scaler;
@@ -51,6 +59,10 @@ namespace egret3d {
         }
 
         private _onTouchEnd(pointer: Pointer, signal: signals.Signal) {
+            if (paper.Application.playerMode !== paper.PlayerMode.Player) {
+                return;
+            }
+
             for (const renderer of this._sortRenderers()) {
                 const event = pointer.event!;
                 const scaler = renderer.scaler;
