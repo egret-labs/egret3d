@@ -22372,12 +22372,13 @@ var egret3d;
                 // Render cameras.
                 if (cameras.length > 0) {
                     this._egret2dOrderCount = 0;
+                    var currenAmbientColor = paper.Scene.activeScene.ambientColor;
                     for (var _a = 0, cameras_2 = cameras; _a < cameras_2.length; _a++) {
                         var camera = cameras_2[_a];
                         var scene = camera.gameObject.scene;
                         var renderEnabled = isPlayerMode ? scene !== editorScene : scene === editorScene;
                         if (renderEnabled && lightCountDirty) {
-                            camera.context.updateLights(lights, scene.ambientColor); // TODO 性能优化
+                            camera.context.updateLights(lights, currenAmbientColor); // TODO 性能优化
                         }
                         if (camera.postQueues.length === 0) {
                             if (renderEnabled) {
