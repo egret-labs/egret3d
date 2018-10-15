@@ -4919,7 +4919,7 @@ var egret3d;
             _this.shadowMatrix = egret3d.Matrix4.create();
             return _this;
         }
-        BaseLight.prototype._updateMatrix = function (camera) {
+        BaseLight.prototype._updateShadowMatrix = function (camera) {
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             var matrix = this.shadowMatrix;
             matrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0);
@@ -4929,7 +4929,6 @@ var egret3d;
             matrix.multiply(context.matrix_p).multiply(context.matrix_v);
         };
         BaseLight.prototype.updateShadow = function (camera) {
-            this._updateMatrix(camera);
         };
         /**
          * @internal
@@ -12465,16 +12464,17 @@ var egret3d;
             return _super !== null && _super.apply(this, arguments) || this;
         }
         DirectionalLight.prototype.updateShadow = function (camera) {
+            if (!this.renderTarget) {
+                this.renderTarget = new egret3d.GlRenderTarget("DirectionalLight", this.shadowSize, this.shadowSize, true); // TODO
+            }
             camera.near = this.shadowCameraNear;
             camera.far = this.shadowCameraFar;
             camera.size = this.shadowCameraSize;
             camera.fov = Math.PI * 0.25;
             camera.opvalue = 0.0;
-            if (!this.renderTarget) {
-                this.renderTarget = new egret3d.GlRenderTarget("DirectionalLight", this.shadowSize, this.shadowSize, true); // TODO
-            }
+            camera.renderTarget = this.renderTarget;
             this.viewPortPixel.set(0, 0, this.shadowSize, this.shadowSize);
-            this._updateMatrix(camera);
+            this._updateShadowMatrix(camera);
         };
         return DirectionalLight;
     }(egret3d.BaseLight));
@@ -12512,24 +12512,14 @@ var egret3d;
             _this.distance = 10.0;
             return _this;
         }
-        PointLight.prototype._updateMatrix = function (camera) {
-            var cameraTransform = camera.gameObject.transform;
-            var temp = cameraTransform.getWorldMatrix().clone().release();
-            // temp.rawData[12] = -temp.rawData[12];//Left-hand
-            var context = camera.context;
-            // camera.calcProjectMatrix(1.0, context.matrix_p);
-            context.matrix_v.inverse(temp);
-            context.matrix_vp.multiply(context.matrix_p, context.matrix_v);
-            context.updateLightDepth(this);
-        };
         PointLight.prototype.updateShadow = function (camera) {
+            if (!this.renderTarget) {
+                this.renderTarget = new egret3d.GlRenderTarget("PointLight", this.shadowSize * 4, this.shadowSize * 2); //   4x2  cube
+            }
             camera.near = this.shadowCameraNear;
             camera.far = this.shadowCameraFar;
             camera.fov = Math.PI * 0.5;
             camera.opvalue = 1.0;
-            if (!this.renderTarget) {
-                this.renderTarget = new egret3d.GlRenderTarget("PointLight", this.shadowSize * 4, this.shadowSize * 2, true); // TODO    4x2  cube
-            }
             camera.renderTarget = this.renderTarget;
             var context = camera.context;
             camera.calcProjectMatrix(1.0, context.matrix_p);
@@ -12539,13 +12529,19 @@ var egret3d;
         PointLight.prototype.updateFace = function (camera, faceIndex) {
             var position = this.gameObject.transform.getPosition().clone().release();
             egret3d.helpVector3A.set(position.x + _targets[faceIndex].x, position.y + _targets[faceIndex].y, position.z + _targets[faceIndex].z);
-            camera.gameObject.transform.setPosition(position); // TODO support copy matrix.
-            camera.gameObject.transform.lookAt(egret3d.helpVector3A, _ups[faceIndex]);
             this.viewPortPixel.x = _viewPortsScale[faceIndex].x * this.shadowSize;
             this.viewPortPixel.y = _viewPortsScale[faceIndex].y * this.shadowSize;
             this.viewPortPixel.w = _viewPortsScale[faceIndex].z * this.shadowSize;
             this.viewPortPixel.h = _viewPortsScale[faceIndex].w * this.shadowSize;
-            this._updateMatrix(camera);
+            var cameraTransform = camera.gameObject.transform;
+            cameraTransform.setPosition(position); // TODO support copy matrix.
+            cameraTransform.lookAt(egret3d.helpVector3A, _ups[faceIndex]);
+            // const temp = cameraTransform.getWorldMatrix().clone().release();
+            // temp.rawData[12] = -temp.rawData[12];//Left-hand
+            var context = camera.context;
+            context.matrix_v.inverse(cameraTransform.getWorldMatrix());
+            context.matrix_vp.multiply(context.matrix_p, context.matrix_v);
+            context.updateLightDepth(this);
         };
         __decorate([
             paper.serializedField,
@@ -12588,17 +12584,17 @@ var egret3d;
             return _this;
         }
         SpotLight.prototype.updateShadow = function (camera) {
+            if (!this.renderTarget) {
+                this.renderTarget = new egret3d.GlRenderTarget("SpotLight", this.shadowSize, this.shadowSize); //
+            }
             camera.near = this.shadowCameraNear;
             camera.far = this.shadowCameraFar;
             camera.fov = this.angle;
             camera.opvalue = 1.0;
-            if (!this.renderTarget) {
-                this.renderTarget = new egret3d.GlRenderTarget("SpotLight", this.shadowSize, this.shadowSize); // TODO
-            }
             camera.renderTarget = this.renderTarget;
             camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
             this.viewPortPixel.set(0, 0, this.shadowSize, this.shadowSize);
-            this._updateMatrix(camera);
+            this._updateShadowMatrix(camera);
         };
         __decorate([
             paper.serializedField,
@@ -21674,17 +21670,19 @@ var egret3d;
             WebGLRenderSystem.prototype._renderLightShadow = function (light) {
                 var camera = this._lightCamera;
                 var renderState = this._renderState;
-                var shadowMaterial = light.constructor === egret3d.PointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
+                var isPointLight = light.constructor === egret3d.PointLight;
+                var shadowMaterial = isPointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
                 var drawCalls = this._drawCallCollecter;
                 var shadowCalls = drawCalls.shadowCalls;
                 var webgl = egret3d.WebGLCapabilities.webgl;
                 light.updateShadow(camera);
                 light.renderTarget.use();
                 renderState.clear(true, true, egret3d.Color.WHITE);
-                for (var i = 0, l = light.constructor === egret3d.PointLight ? 6 : 1; i < l; ++i) {
+                for (var i = 0, l = isPointLight ? 6 : 1; i < l; ++i) {
                     var context = camera.context;
-                    light.updateFace(camera, i);
-                    // this._viewport(light.viewPortPixel, light.renderTarget);
+                    if (isPointLight) {
+                        light.updateFace(camera, i);
+                    }
                     webgl.viewport(light.viewPortPixel.x, light.viewPortPixel.y, light.viewPortPixel.w, light.viewPortPixel.h);
                     webgl.depthRange(0, 1);
                     drawCalls.shadowFrustumCulling(camera);

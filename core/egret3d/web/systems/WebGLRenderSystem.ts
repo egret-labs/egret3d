@@ -32,7 +32,8 @@ namespace egret3d.web {
         private _renderLightShadow(light: BaseLight) {
             const camera = this._lightCamera;
             const renderState = this._renderState;
-            const shadowMaterial = light.constructor === PointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
+            const isPointLight = light.constructor === PointLight;
+            const shadowMaterial = isPointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
             const drawCalls = this._drawCallCollecter;
             const shadowCalls = drawCalls.shadowCalls;
             const webgl = WebGLCapabilities.webgl!;
@@ -40,10 +41,11 @@ namespace egret3d.web {
             light.updateShadow(camera);
             light.renderTarget.use();
             renderState.clear(true, true, egret3d.Color.WHITE);
-            for (let i = 0, l = light.constructor === PointLight ? 6 : 1; i < l; ++i) {
+            for (let i = 0, l = isPointLight ? 6 : 1; i < l; ++i) {
                 const context = camera.context;
-                light.updateFace(camera, i);
-                // this._viewport(light.viewPortPixel, light.renderTarget);
+                if (isPointLight) {
+                    light.updateFace(camera, i);
+                }
                 webgl.viewport(light.viewPortPixel.x, light.viewPortPixel.y, light.viewPortPixel.w, light.viewPortPixel.h);
                 webgl.depthRange(0, 1);
                 drawCalls.shadowFrustumCulling(camera);

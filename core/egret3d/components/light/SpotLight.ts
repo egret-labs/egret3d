@@ -31,18 +31,18 @@ namespace egret3d {
         public renderTarget: BaseRenderTarget;
 
         public updateShadow(camera: Camera) {
+            if (!this.renderTarget) {
+                this.renderTarget = new GlRenderTarget("SpotLight", this.shadowSize, this.shadowSize); //
+            }
             camera.near = this.shadowCameraNear;
             camera.far = this.shadowCameraFar;
             camera.fov = this.angle;
             camera.opvalue = 1.0;
-            if (!this.renderTarget) {
-                this.renderTarget = new GlRenderTarget("SpotLight", this.shadowSize, this.shadowSize); // TODO
-            }
             camera.renderTarget = this.renderTarget;
             camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
 
             this.viewPortPixel.set(0, 0, this.shadowSize, this.shadowSize);
-            this._updateMatrix(camera);
+            this._updateShadowMatrix(camera);
         }
     }
 }

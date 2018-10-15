@@ -2954,7 +2954,7 @@ declare namespace egret3d {
         shadowCameraSize: number;
         readonly viewPortPixel: Rectangle;
         renderTarget: BaseRenderTarget;
-        protected _updateMatrix(camera: Camera): void;
+        protected _updateShadowMatrix(camera: Camera): void;
         updateShadow(camera: Camera): void;
     }
 }
@@ -4953,7 +4953,6 @@ declare namespace egret3d {
          */
         distance: number;
         renderTarget: BaseRenderTarget;
-        protected _updateMatrix(camera: Camera): void;
         updateShadow(camera: Camera): void;
         updateFace(camera: Camera, faceIndex: number): void;
     }

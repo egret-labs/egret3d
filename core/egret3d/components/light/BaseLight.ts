@@ -70,7 +70,7 @@ namespace egret3d {
         public readonly shadowMatrix: Matrix4 = Matrix4.create();
         public renderTarget: BaseRenderTarget;
 
-        protected _updateMatrix(camera: Camera) {
+        protected _updateShadowMatrix(camera: Camera) {
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             const matrix = this.shadowMatrix;
             matrix.set(
@@ -86,8 +86,6 @@ namespace egret3d {
             matrix.multiply(context.matrix_p).multiply(context.matrix_v);
         }
         public updateShadow(camera: Camera) {
-
-            this._updateMatrix(camera);
         }
         /**
          * @internal

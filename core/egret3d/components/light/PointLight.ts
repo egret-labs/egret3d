@@ -30,26 +30,14 @@ namespace egret3d {
 
         public renderTarget: BaseRenderTarget;
 
-        protected _updateMatrix(camera: Camera) {
-            const cameraTransform = camera.gameObject.transform;
-
-            const temp = cameraTransform.getWorldMatrix().clone().release();
-            // temp.rawData[12] = -temp.rawData[12];//Left-hand
-            const context = camera.context;
-            // camera.calcProjectMatrix(1.0, context.matrix_p);
-            context.matrix_v.inverse(temp);
-            context.matrix_vp.multiply(context.matrix_p, context.matrix_v);
-            context.updateLightDepth(this);
-        }
-
         public updateShadow(camera: Camera) {
+            if (!this.renderTarget) {
+                this.renderTarget = new GlRenderTarget("PointLight", this.shadowSize * 4, this.shadowSize * 2); //   4x2  cube
+            }
             camera.near = this.shadowCameraNear;
             camera.far = this.shadowCameraFar;
             camera.fov = Math.PI * 0.5;
             camera.opvalue = 1.0;
-            if (!this.renderTarget) {
-                this.renderTarget = new GlRenderTarget("PointLight", this.shadowSize * 4, this.shadowSize * 2); // TODO    4x2  cube
-            }
             camera.renderTarget = this.renderTarget;
             const context = camera.context;
             camera.calcProjectMatrix(1.0, context.matrix_p);
@@ -64,15 +52,21 @@ namespace egret3d {
                 position.y + _targets[faceIndex].y,
                 position.z + _targets[faceIndex].z,
             );
-
-            camera.gameObject.transform.setPosition(position); // TODO support copy matrix.
-            camera.gameObject.transform.lookAt(helpVector3A, _ups[faceIndex]);
             this.viewPortPixel.x = _viewPortsScale[faceIndex].x * this.shadowSize;
             this.viewPortPixel.y = _viewPortsScale[faceIndex].y * this.shadowSize;
             this.viewPortPixel.w = _viewPortsScale[faceIndex].z * this.shadowSize;
             this.viewPortPixel.h = _viewPortsScale[faceIndex].w * this.shadowSize;
 
-            this._updateMatrix(camera);
+            const cameraTransform = camera.gameObject.transform;
+            cameraTransform.setPosition(position); // TODO support copy matrix.
+            cameraTransform.lookAt(helpVector3A, _ups[faceIndex]);
+
+            // const temp = cameraTransform.getWorldMatrix().clone().release();
+            // temp.rawData[12] = -temp.rawData[12];//Left-hand
+            const context = camera.context;
+            context.matrix_v.inverse(cameraTransform.getWorldMatrix());
+            context.matrix_vp.multiply(context.matrix_p, context.matrix_v);
+            context.updateLightDepth(this);
         }
     }
 }
