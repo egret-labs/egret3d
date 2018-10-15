@@ -1,6 +1,6 @@
 namespace egret3d {
     const enum LightSize {
-        Directional = 12,
+        Directional = 11,
         Point = 15,
         Spot = 18,
     }
@@ -26,11 +26,11 @@ namespace egret3d {
         public lightmapIntensity: number = 1.0;
 
         //TODO
-        // 15: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, intensity, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
+        // 12: dirX, dirY, dirZ, colorR, colorG, colorB, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
         public directLightArray: Float32Array = new Float32Array(0);
-        // 19: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, intensity, distance, decay, shadow, shadowBias, shadowRadius, shadowCameraNear, shadowCameraFar, shadowMapSizeX, shadowMapSizeY
+        // 16: x, y, z, colorR, colorG, colorB, distance, decay, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY, shadowCameraNear, shadowCameraFar,
         public pointLightArray: Float32Array = new Float32Array(0);
-        // 19: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, intensity, distance, decay, coneCos, penumbraCos, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
+        // 18: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, distance, decay, coneCos, penumbraCos, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
         public spotLightArray: Float32Array = new Float32Array(0);
         public directShadowMatrix: Float32Array = new Float32Array(0);
         public spotShadowMatrix: Float32Array = new Float32Array(0);
@@ -60,7 +60,7 @@ namespace egret3d {
 
         public lightShadowCameraNear: number = 0;
         public lightShadowCameraFar: number = 0;
-        public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0, 1.0]);
+        public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0]);
 
         public fogColor: Float32Array = new Float32Array(3);
         public fogDensity: number = 0.0;
@@ -186,7 +186,8 @@ namespace egret3d {
                     }
 
                     case PointLight: {
-                        const position = light.gameObject.transform.getPosition();
+                        const position = light.gameObject.transform.getPosition().clone().release();
+                        position.applyMatrix(this.matrix_v);
                         lightArray = this.pointLightArray;
                         index = pointLightIndex * LightSize.Point;
 
@@ -198,13 +199,15 @@ namespace egret3d {
                         lightArray[index++] = light.color.g * light.intensity;
                         lightArray[index++] = light.color.b * light.intensity;
 
-                        lightArray[index++] = (light as PointLight).distance;
-                        lightArray[index++] = (light as PointLight).decay;
+                        const distance = (light as PointLight).distance;
+                        lightArray[index++] = distance;
+                        lightArray[index++] = distance === 0 ? 0 : (light as PointLight).decay;
                         break;
                     }
 
                     case SpotLight: {
-                        const position = light.gameObject.transform.getPosition();
+                        const position = light.gameObject.transform.getPosition().clone().release();
+                        position.applyMatrix(this.matrix_v);
                         light.gameObject.transform.getForward(_helpVector3);
                         _helpVector3.applyDirection(this.matrix_v).normalize();
 
@@ -227,8 +230,9 @@ namespace egret3d {
                         lightArray[index++] = light.color.g * light.intensity;
                         lightArray[index++] = light.color.b * light.intensity;
 
-                        lightArray[index++] = (light as SpotLight).distance;
-                        lightArray[index++] = (light as SpotLight).decay;
+                        const distance = (light as SpotLight).distance;
+                        lightArray[index++] = distance;
+                        lightArray[index++] = distance === 0 ? 0 : (light as SpotLight).decay;
                         lightArray[index++] = Math.cos((light as SpotLight).angle);
                         lightArray[index++] = Math.cos((light as SpotLight).angle * (1 - (light as SpotLight).penumbra));
                         break;
@@ -237,7 +241,6 @@ namespace egret3d {
 
                 if (light.castShadows) {
                     lightArray[index++] = 1;
-                    // lightArray[index++] = light.shadowBias; // Right-hand.
                     lightArray[index++] = -light.shadowBias; // Left-hand.
                     lightArray[index++] = light.shadowRadius;
                     lightArray[index++] = light.shadowSize;
@@ -245,19 +248,19 @@ namespace egret3d {
 
                     switch (light.constructor) {
                         case DirectionalLight:
-                            this.directShadowMatrix.set(light.matrix.rawData, directLightIndex * 16);
+                            this.directShadowMatrix.set(light.shadowMatrix.rawData, directLightIndex * 16);
                             this.directShadowMaps[directLightIndex++] = light.renderTarget.texture;
                             break;
 
                         case PointLight:
                             lightArray[index++] = light.shadowCameraNear;
                             lightArray[index++] = light.shadowCameraFar;
-                            this.pointShadowMatrix.set(light.matrix.rawData, pointLightIndex * 16);
+                            this.pointShadowMatrix.set(light.shadowMatrix.rawData, pointLightIndex * 16);
                             this.pointShadowMaps[pointLightIndex++] = light.renderTarget.texture;
                             break;
 
                         case SpotLight:
-                            this.spotShadowMatrix.set(light.matrix.rawData, spotLightIndex * 16);
+                            this.spotShadowMatrix.set(light.shadowMatrix.rawData, spotLightIndex * 16);
                             this.spotShadowMaps[spotLightIndex++] = light.renderTarget.texture;
                             break;
                     }
@@ -289,21 +292,13 @@ namespace egret3d {
 
         public updateLightDepth(light: BaseLight) {
             const position = light.gameObject.transform.getPosition();
-            if (this.lightPosition[0] !== position.x ||
-                this.lightPosition[1] !== position.y ||
-                this.lightPosition[2] !== position.z) {
-                //
-                this.lightPosition[0] = position.x;
-                this.lightPosition[1] = position.y;
-                this.lightPosition[2] = position.z;
-            }
-
-            if (this.lightShadowCameraNear !== light.shadowCameraNear ||
-                this.lightShadowCameraNear !== light.shadowCameraFar) {
-                //
-                this.lightShadowCameraNear = light.shadowCameraNear;
-                this.lightShadowCameraFar = light.shadowCameraFar;
-            }
+            //
+            this.lightPosition[0] = position.x;
+            this.lightPosition[1] = position.y;
+            this.lightPosition[2] = position.z;
+            //
+            this.lightShadowCameraNear = light.shadowCameraNear;
+            this.lightShadowCameraFar = light.shadowCameraFar;
         }
 
         public update(drawCall: DrawCall) {

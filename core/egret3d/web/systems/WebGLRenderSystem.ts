@@ -32,17 +32,22 @@ namespace egret3d.web {
         private _renderLightShadow(light: BaseLight) {
             const camera = this._lightCamera;
             const renderState = this._renderState;
-            const shadowMaterial = light.constructor === PointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
+            const isPointLight = light.constructor === PointLight;
+            const shadowMaterial = isPointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
             const drawCalls = this._drawCallCollecter;
             const shadowCalls = drawCalls.shadowCalls;
+            const webgl = WebGLCapabilities.webgl!;
 
-            for (let i = 0, l = light.constructor === PointLight ? 6 : 1; i < l; ++i) {
+            light.updateShadow(camera);
+            light.renderTarget.use();
+            renderState.clear(true, true, egret3d.Color.WHITE);
+            for (let i = 0, l = isPointLight ? 6 : 1; i < l; ++i) {
                 const context = camera.context;
-                light.update(camera, i);
-
-                (light.renderTarget as GlRenderTargetCube).activeCubeFace = i; // TODO 创建接口。
-                this._viewport(camera.viewport, light.renderTarget);
-                renderState.clear(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                if (isPointLight) {
+                    light.updateFace(camera, i);
+                }
+                webgl.viewport(light.viewPortPixel.x, light.viewPortPixel.y, light.viewPortPixel.w, light.viewPortPixel.h);
+                webgl.depthRange(0, 1);
                 drawCalls.shadowFrustumCulling(camera);
 
                 for (const drawCall of shadowCalls) {
@@ -50,7 +55,6 @@ namespace egret3d.web {
                 }
             }
 
-            const webgl = WebGLCapabilities.webgl!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
 
@@ -257,7 +261,7 @@ namespace egret3d.web {
                         break;
 
                     case gltf.UniformSemanticType._REFERENCEPOSITION:
-                        webgl.uniform4fv(location, context.lightPosition);
+                        webgl.uniform3fv(location, context.lightPosition);
                         break;
                     case gltf.UniformSemanticType._NEARDICTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraNear);

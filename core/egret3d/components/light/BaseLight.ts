@@ -63,13 +63,16 @@ namespace egret3d {
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public shadowCameraSize: number = 30;
 
-        public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
-        public readonly matrix: Matrix4 = Matrix4.create();
+        public readonly viewPortPixel: Rectangle = Rectangle.create();
+        /**
+         * @internal
+         */
+        public readonly shadowMatrix: Matrix4 = Matrix4.create();
         public renderTarget: BaseRenderTarget;
 
-        protected _updateMatrix(camera: Camera) {
+        protected _updateShadowMatrix(camera: Camera) {
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
-            const matrix = this.matrix;
+            const matrix = this.shadowMatrix;
             matrix.set(
                 0.5, 0.0, 0.0, 0.5,
                 0.0, 0.5, 0.0, 0.5,
@@ -82,15 +85,12 @@ namespace egret3d {
             context.updateLightDepth(this);
             matrix.multiply(context.matrix_p).multiply(context.matrix_v);
         }
+        public updateShadow(camera: Camera) {
+        }
         /**
          * @internal
          */
-        public update(camera: Camera, faceIndex: number) {
-            camera.backgroundColor.set(1.0, 1.0, 1.0, 1.0);
-            camera.clearOption_Color = true;
-            camera.clearOption_Depth = true;
-
-            this._updateMatrix(camera);
+        public updateFace(camera: Camera, faceIndex: number) {
         }
     }
 }
