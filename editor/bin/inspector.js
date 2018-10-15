@@ -2612,6 +2612,68 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
+        /**
+         * @internal
+         */
+        var BoxesDrawer = (function (_super) {
+            __extends(BoxesDrawer, _super);
+            function BoxesDrawer() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._hoverBox = editor.EditorMeshHelper.createBox("HoverAABB", egret3d.Color.WHITE, 0.6, paper.Scene.editorScene);
+                _this._drawer = [];
+                return _this;
+            }
+            BoxesDrawer.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this._hoverBox.parent = this.gameObject;
+            };
+            BoxesDrawer.prototype.update = function () {
+                var modelComponent = this.gameObject.getComponent(editor.ModelComponent);
+                var selectedGameObjects = modelComponent.selectedGameObjects;
+                var hoveredGameObject = modelComponent.hoveredGameObject;
+                if (hoveredGameObject && hoveredGameObject.renderer) {
+                    this._hoverBox.activeSelf = true;
+                    this._hoverBox.transform.localPosition = egret3d.Vector3.create().copy(hoveredGameObject.renderer.aabb.center).applyMatrix(hoveredGameObject.transform.worldMatrix).release();
+                    this._hoverBox.transform.localRotation = hoveredGameObject.transform.rotation;
+                    this._hoverBox.transform.localScale = egret3d.Vector3.create().multiply(hoveredGameObject.renderer.aabb.size, hoveredGameObject.transform.scale);
+                }
+                else {
+                    this._hoverBox.activeSelf = false;
+                }
+                for (var i = 0, l = Math.max(this._drawer.length, selectedGameObjects ? selectedGameObjects.length : 0); i < l; ++i) {
+                    if (i + 1 > this._drawer.length) {
+                        var gameObject = editor.EditorMeshHelper.createBox("AABB_" + i, egret3d.Color.INDIGO, 0.8, paper.Scene.editorScene);
+                        gameObject.parent = this.gameObject;
+                        this._drawer.push(gameObject);
+                    }
+                    var drawer = this._drawer[i];
+                    if (i + 1 > selectedGameObjects.length) {
+                        drawer.activeSelf = false;
+                    }
+                    else {
+                        var gameObject = selectedGameObjects[i];
+                        if (gameObject.activeSelf && gameObject.renderer) {
+                            drawer.activeSelf = true;
+                            drawer.transform.localPosition = egret3d.Vector3.create().copy(gameObject.renderer.aabb.center).applyMatrix(gameObject.transform.worldMatrix).release();
+                            drawer.transform.localRotation = gameObject.transform.rotation;
+                            drawer.transform.localScale = egret3d.Vector3.create().multiply(gameObject.renderer.aabb.size, gameObject.transform.scale).release();
+                        }
+                        else {
+                            drawer.activeSelf = false;
+                        }
+                    }
+                }
+            };
+            return BoxesDrawer;
+        }(paper.BaseComponent));
+        editor.BoxesDrawer = BoxesDrawer;
+        __reflect(BoxesDrawer.prototype, "paper.editor.BoxesDrawer");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
         var icons = {
             camera: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIcSURBVFhH7ZbPjtMwEMYj7vAACCFg28Rx4oQmtGnLQo/7Du1pK3Hk2BtSHwYkXoA34C34I7Fozxxoy+6yaocZx9M6u4WkFaA95JN+qu0Z21/riVOnVq1a/0oiaoMXPdlCBxpxG0xaNXlB+vHqIl7Utfo5Jl3LxU2uxpkmmjNp1RTEGfg4kZhOp/eRe8xwOHzqmnjSPXxnpjhBlIEIM5BRb40f96Ch2jCZTO6atGryVQeESjVmqCA/zGNy15/2xuv4xcuBK1N4KBNw445FZugauG/ndKr9GlJRYWBBxcn7LHveHAyOHtC4iJKLbQW0C0IlBRNemH6jTzpSQqouOFQ89iSdibLHcrKKbObYBqhGaC9qc/yaAdnKdMKjoLUe08QpvH7zFsp08fOyMI8N0DHRPqUGRJhXsWr112ME5SwWM73Jp5NTzecvFtg/+XqK0UsQ1vNvG+Ax6nN7bYBN8GPW0HVRZL44h+VqdW2cafcOYYUW9jZAAZb3uHiWxPcfZQae7Wdgmw7wYuEk5r8a8MPNBGa+OIMVGpBRfyu9rI/bL/+OAU/Sy2azOS06m81xgzItoRkmm3l7G2gGr7gwGR8LU+JbLAcvEQ29bIi8L4Li0bEBunR4TK9v2r81QCIDwiQSblwNzifYAMkNW+Dil6A2x/9ogGQvtg8HQn0wS2mxIY5LlV98pRqNRnfG4/HtXcD/CrfM9Fq1at1kOc4vVSG2+aaGzOwAAAAASUVORK5CYII=",
             light: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAPcSURBVFhH3ZdLSNRRFMbn4fuZmtmYZpn0gCx6YbQokBZRq6hVL6xWUdCmICIoIYjaWBDRu3WShhUJLSKIIKISgqBWao9NlIsUwlKn33fnzDij/1HHsU0fHM693z333HPOffxnfNNBMBjcgRpCVjjiX6GwsHAJKhDpjYIAdqLCyEpHxKG8vLwgJyen2rrTR25uboPf7/+Ns31GxTBRAJmZmc2BQKC/rKys0qhpAz+Bt8inUCiUZ5xDsgAIeh5BDzCnzaj0kJ2d3YjDcFZW1imjHJIFkJGRcQf7waKiojqj0gdOH5DRz7y8vLlGeQZA6Vex+DBjLUalhtLS0iJrJoDsl+os4PiGUVqsHu48zVCEcYE+JdAfZF9qVAKS+XfgoM1nch+LnK2oqMg3OgYWvIhcsu44VFVV5RLAXYI9alQMBQUFsxm7prPk5dtBhwejdu03hr04Uonj4TftKy4ursVmP/bH0LvZmlgVQMwOBDlDh/D53bbmWklJSbGNeYMJW3D6kWaYBZ4Q/bLIiM+nM8BYG85G6Gr/ndD/owy5doWyE6joBmzf0Ayz8EsSXBsZmRqycHgCx/1MPieCyKtpdyNhgnTCluh2hHGuIFS519EgsGul/w27g3THPWRTAoemyg6OH2fPtLgWoz9OqI4CUNVu0Ve1QmxVidppgywaUUkXjwplVyWGsF9If+ZA5i3Knuw8F46KApCmEkfQKaEH+ewhWxG9xw+13zQnFJ0DBYl2DxHzDqO8/D5HRsGEVuTeWGFovcZx1D6VAKJVQl+gr8pt9/KLXNb4lIGjMzpgkwWhmyGN3V70zMHeguGJDqECtEP4k9M/Cy59cMe3ktUCtcnqKs7D+fn5bq+hEhYXrzZzjqN1DdcQcIPaKcOe2g6aKqfbr5qamhy4TnHKVA+QSh4V8ez/dbR7iml3Eugw+ibBzRE3KfRBYb+bmfhLwuLNY36IBFn4KGO6NfEVeI/tLhlEoS8ivq5gO8R4H4HoagYjox7AwXIMu5mgTDrIqtaGHOwTG31S/aoSduv0RBvnqhT/PRDYitX4fUFTt6NL35PIyBhoIkE8J8NtRiWAxR4x/tS642DV+4BcNCoefhJqYv5j2ql/F5i8GaV9PxlhXECbUM+QRY4AcLep4CC/pBcbNSMIUsIupFdZGuf5k4xTX0kAAwRy36j0QdkO6Fyg9xjl4BWAwOKnUSPcFFUoPegPBpl/RV7RTdi7ZAHoJxf2Xxh/TXd6vwOiIOt6HPWQzUajYkgWgMC8JsbfJT3xqaCuri7bmgmYKACgzDMizX+EuFswc39A/kfE/0RPAp/vL7M1A0/aWSCCAAAAAElFTkSuQmCC"
@@ -2679,15 +2741,15 @@ var paper;
         /**
          * @internal
          */
-        var GridController = (function (_super) {
-            __extends(GridController, _super);
-            function GridController() {
+        var GridDrawer = (function (_super) {
+            __extends(GridDrawer, _super);
+            function GridDrawer() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this._gridA = _this._createGrid("GridA");
                 _this._gridB = _this._createGrid("GridB", 100.0 * _step, 100 * _step);
                 return _this;
             }
-            GridController.prototype._createGrid = function (name, size, divisions) {
+            GridDrawer.prototype._createGrid = function (name, size, divisions) {
                 if (size === void 0) { size = 100.0; }
                 if (divisions === void 0) { divisions = 100; }
                 var step = size / divisions;
@@ -2705,7 +2767,7 @@ var paper;
                 var gameObject = editor.EditorMeshHelper.createGameObject(name, mesh, egret3d.DefaultMaterials.MESH_BASIC.clone());
                 return gameObject;
             };
-            GridController.prototype.initialize = function () {
+            GridDrawer.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
                 this._gridA.parent = this.gameObject;
                 this._gridB.parent = this.gameObject;
@@ -2714,7 +2776,7 @@ var paper;
                 mA.setBlend(1 /* Blend */).setRenderQueue(3000 /* Transparent */);
                 mB.setBlend(1 /* Blend */).setRenderQueue(3000 /* Transparent */);
             };
-            GridController.prototype.update = function () {
+            GridDrawer.prototype.update = function () {
                 var camera = egret3d.Camera.editor;
                 var aaa = camera.gameObject.getComponent(editor.OrbitControls);
                 var target = aaa.lookAtPoint.clone().add(aaa.lookAtOffset);
@@ -2726,12 +2788,12 @@ var paper;
                 var mA = this._gridA.renderer.material;
                 var mB = this._gridB.renderer.material;
                 mA.setOpacity(1.0 * 0.2);
-                mB.setOpacity(d * 0.2);
+                mB.setOpacity(0.2 * 0.2);
             };
-            return GridController;
+            return GridDrawer;
         }(paper.BaseComponent));
-        editor.GridController = GridController;
-        __reflect(GridController.prototype, "paper.editor.GridController");
+        editor.GridDrawer = GridDrawer;
+        __reflect(GridDrawer.prototype, "paper.editor.GridDrawer");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -3154,55 +3216,6 @@ var paper;
         /**
          * @internal
          */
-        var BoxesDrawer = (function (_super) {
-            __extends(BoxesDrawer, _super);
-            function BoxesDrawer() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._drawer = [];
-                return _this;
-            }
-            BoxesDrawer.prototype.initialize = function () {
-                _super.prototype.initialize.call(this);
-            };
-            BoxesDrawer.prototype.update = function () {
-                var modelComponent = this.gameObject.getComponent(editor.ModelComponent);
-                var selectedGameObjects = modelComponent.selectedGameObjects;
-                for (var i = 0, l = Math.max(this._drawer.length, selectedGameObjects ? selectedGameObjects.length : 0); i < l; ++i) {
-                    if (i + 1 > this._drawer.length) {
-                        var gameObject = editor.EditorMeshHelper.createBox("AABB_" + i, egret3d.Color.INDIGO, 0.5, paper.Scene.editorScene);
-                        this._drawer.push(gameObject);
-                    }
-                    var drawer = this._drawer[i];
-                    if (i + 1 > selectedGameObjects.length) {
-                        drawer.activeSelf = false;
-                    }
-                    else {
-                        var gameObject = selectedGameObjects[i];
-                        if (gameObject.activeSelf && gameObject.renderer) {
-                            drawer.activeSelf = true;
-                            drawer.transform.localPosition = egret3d.Vector3.create().copy(gameObject.renderer.aabb.center).applyMatrix(gameObject.transform.worldMatrix).release();
-                            drawer.transform.localRotation = gameObject.transform.rotation;
-                            drawer.transform.localScale = egret3d.Vector3.create().multiply(gameObject.renderer.aabb.size, gameObject.transform.scale).release();
-                        }
-                        else {
-                            drawer.activeSelf = false;
-                        }
-                    }
-                }
-            };
-            return BoxesDrawer;
-        }(paper.BaseComponent));
-        editor.BoxesDrawer = BoxesDrawer;
-        __reflect(BoxesDrawer.prototype, "paper.editor.BoxesDrawer");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        /**
-         * @internal
-         */
         var BoxColliderDrawer = (function (_super) {
             __extends(BoxColliderDrawer, _super);
             function BoxColliderDrawer() {
@@ -3218,7 +3231,8 @@ var paper;
                 var colliders = selectedGameObject ? selectedGameObject.getComponents(egret3d.BoxCollider) : null;
                 for (var i = 0, l = Math.max(this._drawer.length, colliders ? colliders.length : 0); i < l; ++i) {
                     if (i + 1 > this._drawer.length) {
-                        var gameObject = editor.EditorMeshHelper.createBox("BoxCollider_" + i, egret3d.Color.YELLOW, 0.5, paper.Scene.editorScene);
+                        var gameObject = editor.EditorMeshHelper.createBox("BoxCollider_" + i, egret3d.Color.YELLOW, 0.4, paper.Scene.editorScene);
+                        gameObject.parent = this.gameObject;
                         this._drawer.push(gameObject);
                     }
                     var drawer = this._drawer[i];
@@ -3269,11 +3283,12 @@ var paper;
                 for (var i = 0, l = Math.max(this._drawer.length, colliders ? colliders.length : 0); i < l; ++i) {
                     if (i + 1 > this._drawer.length) {
                         var gameObject = editor.EditorMeshHelper.createGameObject("SphereCollider_" + i);
-                        editor.EditorMeshHelper.createCircle("AxisX", egret3d.Color.YELLOW, 0.5, paper.Scene.editorScene).transform
+                        gameObject.parent = this.gameObject;
+                        editor.EditorMeshHelper.createCircle("AxisX", egret3d.Color.YELLOW, 0.4, paper.Scene.editorScene).transform
                             .setParent(gameObject.transform);
-                        editor.EditorMeshHelper.createCircle("AxisY", egret3d.Color.YELLOW, 0.5, paper.Scene.editorScene).transform
+                        editor.EditorMeshHelper.createCircle("AxisY", egret3d.Color.YELLOW, 0.4, paper.Scene.editorScene).transform
                             .setParent(gameObject.transform).setLocalEuler(0.0, 0.0, Math.PI * 0.5);
-                        editor.EditorMeshHelper.createCircle("AxisZ", egret3d.Color.YELLOW, 0.5, paper.Scene.editorScene).transform
+                        editor.EditorMeshHelper.createCircle("AxisZ", egret3d.Color.YELLOW, 0.4, paper.Scene.editorScene).transform
                             .setParent(gameObject.transform).setLocalEuler(0.0, Math.PI * 0.5, 0.0);
                         this._drawer.push(gameObject);
                     }
@@ -3377,15 +3392,14 @@ var paper;
                 }
                 {
                     var rotate = this.rotate;
-                    // const axisX = EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    // const axisY = EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    // const axisZ = EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    // const axisE = EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createCircle(1.25, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    // const axisXYZE = EditorMeshHelper.createGameObject("AxisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisX = editor.EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisY = editor.EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisZ = editor.EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisE = editor.EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createTorus(1.25, 0.03, 4, 48, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisX = editor.EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisY = editor.EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisZ = editor.EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisE = editor.EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createCircle(1.25, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    // const axisX = EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    // const axisY = EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    // const axisZ = EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    // const axisE = EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createTorus(1.25, 0.03, 4, 48, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var axisXYZE = editor.EditorMeshHelper.createGameObject("AxisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickX = editor.EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickY = editor.EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
@@ -3850,6 +3864,47 @@ var paper;
     var editor;
     (function (editor) {
         /**
+         *
+         */
+        var WorldAxisesDrawer = (function (_super) {
+            __extends(WorldAxisesDrawer, _super);
+            function WorldAxisesDrawer() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.cube = editor.EditorMeshHelper.createGameObject("Cube", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC);
+                _this.left = editor.EditorMeshHelper.createGameObject("Left", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
+                _this.right = editor.EditorMeshHelper.createGameObject("Right", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                _this.bottom = editor.EditorMeshHelper.createGameObject("Bottom", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
+                _this.top = editor.EditorMeshHelper.createGameObject("Top", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                _this.back = editor.EditorMeshHelper.createGameObject("Back", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
+                _this.forward = editor.EditorMeshHelper.createGameObject("Forward", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                return _this;
+            }
+            WorldAxisesDrawer.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this.cube.transform.setParent(this.gameObject.transform);
+                this.left.transform.setLocalPosition(-1.5, 0.0, 0.0).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalScale(1.0, 2.0, 1.0).setParent(this.cube.transform);
+                this.right.transform.setLocalPosition(1.5, 0.0, 0.0).setLocalEuler(0.0, 0.0, Math.PI * 0.5).setLocalScale(1.0, 2.0, 1.0).setParent(this.cube.transform);
+                this.bottom.transform.setLocalPosition(0.0, -1.5, 0.0).setLocalEuler(0.0, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(this.cube.transform);
+                this.top.transform.setLocalPosition(0.0, 1.5, 0.0).setLocalEuler(Math.PI, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(this.cube.transform);
+                this.back.transform.setLocalPosition(0.0, 0.0, -1.5).setLocalEuler(Math.PI * 0.5, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(this.cube.transform);
+                this.forward.transform.setLocalPosition(0.0, 0.0, 1.5).setLocalEuler(-Math.PI * 0.5, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(this.cube.transform);
+                this.right.renderer.material.setColor(egret3d.Color.RED);
+                this.top.renderer.material.setColor(egret3d.Color.GREEN);
+                this.forward.renderer.material.setColor(egret3d.Color.BLUE);
+            };
+            WorldAxisesDrawer.prototype.update = function () {
+            };
+            return WorldAxisesDrawer;
+        }(paper.BaseComponent));
+        editor.WorldAxisesDrawer = WorldAxisesDrawer;
+        __reflect(WorldAxisesDrawer.prototype, "paper.editor.WorldAxisesDrawer");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**
          * @internal
          */
         var EditorSystem = (function (_super) {
@@ -3864,7 +3919,7 @@ var paper;
                     paper.Application.systemManager.register(editor.SceneSystem, 6000 /* LaterUpdate */);
                 }
                 else {
-                    paper.Application.systemManager.register(editor.GUISystem, 6000 /* LaterUpdate */);
+                    paper.Application.systemManager.register(editor.GUISystem, 6000 /* LaterUpdate */ + 1); // Make sure the GUISystem update after the SceneSystem.
                 }
             };
             return EditorSystem;
@@ -4362,14 +4417,14 @@ var paper;
                 _this._pointerStartPosition = egret3d.Vector3.create();
                 _this._pointerPosition = egret3d.Vector3.create();
                 _this._orbitControls = null;
-                _this._gridController = null;
                 _this._transformController = null;
+                _this._boxesDrawer = null;
                 _this._boxColliderDrawer = null;
                 _this._sphereColliderDrawer = null;
                 _this._skeletonDrawer = null;
-                _this._boxesDrawer = null;
-                _this._hoverBox = null;
                 _this._cameraViewFrustum = null; // TODO封装一下
+                _this._worldAxisesDrawer = null;
+                _this._gridDrawer = null;
                 _this._keyEscape = _this._inputCollecter.getKey("Escape");
                 _this._keyDelete = _this._inputCollecter.getKey("Delete");
                 _this._keyE = _this._inputCollecter.getKey("KeyE");
@@ -4488,15 +4543,11 @@ var paper;
                     event.preventDefault();
                 };
                 _this._onGameObjectHovered = function (_c, value) {
-                    _this._hoverBox.activeSelf =
-                        value && value.renderer ? true : false;
                 };
                 _this._onGameObjectSelectChanged = function (_c, value) {
                     var selectedGameObject = _this._modelComponent.selectedGameObject;
                     _this._transformController.gameObject.activeSelf =
                         selectedGameObject ? true : false;
-                    _this._skeletonDrawer.gameObject.activeSelf =
-                        selectedGameObject && selectedGameObject.renderer && selectedGameObject.renderer instanceof egret3d.SkinnedMeshRenderer ? true : false;
                     _this._cameraViewFrustum.activeSelf =
                         selectedGameObject && selectedGameObject !== paper.GameObject.globalGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
                 };
@@ -4608,19 +4659,14 @@ var paper;
                 this._orbitControls = egret3d.Camera.editor.gameObject.getOrAddComponent(editor.OrbitControls);
                 this._transformController = editor.EditorMeshHelper.createGameObject("TransformController").addComponent(editor.TransfromController);
                 this._transformController.gameObject.activeSelf = false;
-                this._boxColliderDrawer = editor.EditorMeshHelper.createGameObject("BoxColliderDrawer").addComponent(editor.BoxColliderDrawer);
-                this._boxColliderDrawer.gameObject.activeSelf = false;
-                this._sphereColliderDrawer = editor.EditorMeshHelper.createGameObject("SphereColliderDrawer").addComponent(editor.SphereColliderDrawer);
-                this._sphereColliderDrawer.gameObject.activeSelf = false;
-                this._skeletonDrawer = editor.EditorMeshHelper.createGameObject("SkeletonDrawer").addComponent(editor.SkeletonDrawer);
-                this._skeletonDrawer.gameObject.activeSelf = false;
                 this._boxesDrawer = editor.EditorMeshHelper.createGameObject("BoxesDrawer").addComponent(editor.BoxesDrawer);
-                this._boxesDrawer.gameObject.activeSelf = false;
-                this._gridController = editor.EditorMeshHelper.createGameObject("Grid").addComponent(editor.GridController);
-                this._hoverBox = editor.EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.5, paper.GameObject.globalGameObject.scene);
-                this._hoverBox.activeSelf = false;
+                this._boxColliderDrawer = editor.EditorMeshHelper.createGameObject("BoxColliderDrawer").addComponent(editor.BoxColliderDrawer);
+                this._sphereColliderDrawer = editor.EditorMeshHelper.createGameObject("SphereColliderDrawer").addComponent(editor.SphereColliderDrawer);
+                this._skeletonDrawer = editor.EditorMeshHelper.createGameObject("SkeletonDrawer").addComponent(editor.SkeletonDrawer);
                 this._cameraViewFrustum = editor.EditorMeshHelper.createCameraWireframed("Camera");
                 this._cameraViewFrustum.activeSelf = false;
+                this._worldAxisesDrawer = editor.EditorMeshHelper.createGameObject("WorldAxisesDrawer").addComponent(editor.WorldAxisesDrawer);
+                this._gridDrawer = editor.EditorMeshHelper.createGameObject("GridDrawer").addComponent(editor.GridDrawer);
                 // TODO
                 // const editorCamera = egret3d.Camera.editor;
                 // const mainCamera = egret3d.Camera.main;
@@ -4661,31 +4707,25 @@ var paper;
                 }
                 egret3d.Camera.editor.gameObject.removeComponent(editor.OrbitControls);
                 this._orbitControls = null;
-                this._gridController.gameObject.destroy();
-                this._gridController = null;
                 this._transformController.gameObject.destroy();
                 this._transformController = null;
+                this._boxesDrawer.gameObject.destroy();
+                this._boxesDrawer = null;
                 this._boxColliderDrawer.gameObject.destroy();
                 this._boxColliderDrawer = null;
                 this._sphereColliderDrawer.gameObject.destroy();
                 this._sphereColliderDrawer = null;
                 this._skeletonDrawer.gameObject.destroy();
                 this._skeletonDrawer = null;
-                this._boxesDrawer.gameObject.destroy();
-                this._boxesDrawer = null;
-                this._hoverBox.destroy();
-                this._hoverBox = null;
-                // this._sphereColliderDrawer!.destroy();
-                // this._sphereColliderDrawer = null;
                 this._cameraViewFrustum.destroy();
                 this._cameraViewFrustum = null;
+                this._worldAxisesDrawer.gameObject.destroy();
+                this._worldAxisesDrawer = null;
+                this._gridDrawer.gameObject.destroy();
+                this._gridDrawer = null;
             };
             SceneSystem.prototype.onUpdate = function () {
-                var gridController = this._gridController;
-                var hoverBox = this._hoverBox;
                 var transformController = this._transformController;
-                // const sphereColliderDrawer = this._sphereColliderDrawer!;
-                var skeletonDrawer = this._skeletonDrawer;
                 if (this._keyEscape.isUp(false) && !this._keyEscape.event.altKey && !this._keyEscape.event.ctrlKey && !this._keyEscape.event.shiftKey) {
                     this._modelComponent.select(null);
                 }
@@ -4729,24 +4769,15 @@ var paper;
                         this._modelComponent.unselect(gameObject);
                     }
                 }
-                var hoveredGameObject = this._modelComponent.hoveredGameObject;
-                if (gridController.isActiveAndEnabled) {
-                    gridController.update();
-                }
-                if (hoverBox.activeSelf) {
-                    hoverBox.transform.localPosition = egret3d.Vector3.create().copy(hoveredGameObject.renderer.aabb.center).applyMatrix(hoveredGameObject.transform.worldMatrix).release();
-                    hoverBox.transform.localRotation = hoveredGameObject.transform.rotation;
-                    hoverBox.transform.localScale = egret3d.Vector3.create().multiply(hoveredGameObject.renderer.aabb.size, hoveredGameObject.transform.scale);
-                }
                 if (transformController.isActiveAndEnabled) {
                     transformController.update(this._pointerPosition);
                 }
+                this._boxesDrawer.update();
                 this._boxColliderDrawer.update();
                 this._sphereColliderDrawer.update();
-                this._boxesDrawer.update();
-                if (skeletonDrawer.isActiveAndEnabled) {
-                    skeletonDrawer.update();
-                }
+                this._skeletonDrawer.update();
+                this._worldAxisesDrawer.update();
+                this._gridDrawer.update();
                 this._updateCameras();
                 this._updateLights();
             };
@@ -4895,44 +4926,43 @@ var paper;
                 this.gameObject.getOrAddComponent(egret3d.MeshRenderer).material = material;
             };
             SkeletonDrawer.prototype.update = function () {
-                var modelComponent = this.gameObject.getComponent(editor.ModelComponent);
-                var selectedGameObject = modelComponent.selectedGameObject;
-                var skinnedMeshRenderer = selectedGameObject.getComponent(egret3d.SkinnedMeshRenderer);
-                var mesh = this._skeletonMesh;
-                if (!skinnedMeshRenderer) {
-                    return;
-                }
-                var offset = 0;
-                var helpVertex3A = egret3d.Vector3.create().release();
-                var helpVertex3B = egret3d.Vector3.create().release();
-                var helpMatrixA = egret3d.Matrix4.create().release();
-                var vertices = mesh.getVertices();
-                var bones = skinnedMeshRenderer.bones;
-                this.gameObject.transform.position = selectedGameObject.transform.position;
-                helpMatrixA.inverse(this.gameObject.transform.worldMatrix);
-                for (var _i = 0, bones_1 = bones; _i < bones_1.length; _i++) {
-                    var bone = bones_1[_i];
-                    if (bone) {
-                        if (bone.parent && bones.indexOf(bone.parent) >= 0) {
-                            helpVertex3A.applyMatrix(helpMatrixA, bone.parent.position).toArray(vertices, offset);
-                            helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset + 3);
+                var selectedGameObject = _super.prototype.update.call(this);
+                var skinnedMeshRenderer = selectedGameObject ? selectedGameObject.getComponent(egret3d.SkinnedMeshRenderer) : null;
+                if (selectedGameObject && skinnedMeshRenderer) {
+                    var mesh = this._skeletonMesh;
+                    var offset = 0;
+                    var helpVertex3A = egret3d.Vector3.create().release();
+                    var helpVertex3B = egret3d.Vector3.create().release();
+                    var helpMatrixA = egret3d.Matrix4.create().release();
+                    var vertices = mesh.getVertices();
+                    var bones = skinnedMeshRenderer.bones;
+                    this.gameObject.transform.position = selectedGameObject.transform.position;
+                    helpMatrixA.inverse(this.gameObject.transform.worldMatrix);
+                    for (var _i = 0, bones_1 = bones; _i < bones_1.length; _i++) {
+                        var bone = bones_1[_i];
+                        if (bone) {
+                            if (bone.parent && bones.indexOf(bone.parent) >= 0) {
+                                helpVertex3A.applyMatrix(helpMatrixA, bone.parent.position).toArray(vertices, offset);
+                                helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset + 3);
+                            }
+                            else {
+                                bone.getRight(helpVertex3B).applyDirection(helpMatrixA).multiplyScalar(0.25); // Bone length.
+                                helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset);
+                                helpVertex3A.applyMatrix(helpMatrixA, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
+                            }
                         }
                         else {
-                            bone.getRight(helpVertex3B).applyDirection(helpMatrixA).multiplyScalar(0.25); // Bone length.
-                            helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset);
-                            helpVertex3A.applyMatrix(helpMatrixA, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
+                            egret3d.Vector3.ZERO.toArray(vertices, offset);
+                            egret3d.Vector3.ZERO.toArray(vertices, offset + 3);
                         }
+                        offset += 6;
                     }
-                    else {
-                        egret3d.Vector3.ZERO.toArray(vertices, offset);
-                        egret3d.Vector3.ZERO.toArray(vertices, offset + 3);
-                    }
-                    offset += 6;
+                    mesh.uploadVertexBuffer();
                 }
-                mesh.uploadVertexBuffer();
+                return selectedGameObject;
             };
             return SkeletonDrawer;
-        }(paper.BaseComponent));
+        }(editor.BaseSelectedGOComponent));
         editor.SkeletonDrawer = SkeletonDrawer;
         __reflect(SkeletonDrawer.prototype, "paper.editor.SkeletonDrawer");
     })(editor = paper.editor || (paper.editor = {}));

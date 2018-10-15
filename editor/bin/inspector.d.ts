@@ -106,6 +106,8 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
+}
+declare namespace paper.editor {
     /**
      *
      */
@@ -125,6 +127,20 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
+    /**
+     *
+     */
+    class WorldAxisesDrawer extends BaseComponent {
+        readonly cube: paper.GameObject;
+        readonly left: paper.GameObject;
+        readonly right: paper.GameObject;
+        readonly bottom: paper.GameObject;
+        readonly top: paper.GameObject;
+        readonly back: paper.GameObject;
+        readonly forward: paper.GameObject;
+        initialize(): void;
+        update(): void;
+    }
 }
 declare namespace paper.editor {
 }

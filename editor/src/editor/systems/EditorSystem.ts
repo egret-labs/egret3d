@@ -10,7 +10,7 @@ namespace paper.editor {
                 Application.systemManager.register(SceneSystem, SystemOrder.LaterUpdate);
             }
             else {
-                Application.systemManager.register(GUISystem, SystemOrder.LaterUpdate);
+                Application.systemManager.register(GUISystem, SystemOrder.LaterUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
             }
         }
     }

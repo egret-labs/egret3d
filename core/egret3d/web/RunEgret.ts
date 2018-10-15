@@ -4,8 +4,13 @@ namespace egret3d {
      */
     export type RunEgretOptions = {
         defaultScene?: string;
-
+        /**
+         * 舞台宽。
+         */
         contentWidth?: number;
+        /**
+         * 舞台高。
+         */
         contentHeight?: number;
         /**
          * 是否允许屏幕旋转，默认允许。
