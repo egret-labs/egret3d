@@ -21910,13 +21910,11 @@ var egret3d;
                 globalGameObject.getOrAddComponent(egret3d.InputCollecter);
                 globalGameObject.getOrAddComponent(egret3d.ContactCollecter);
                 globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities);
-                if (egret.Capabilities.runtimeType !== egret.RuntimeType.WXGAME) {
-                    this._updateCanvas(canvas, stage);
-                    // Update canvas when stage resized.
-                    egret3d.Stage.onResize.add(function () {
-                        _this._updateCanvas(canvas, stage);
-                    }, this);
-                }
+                this._updateCanvas(canvas, stage);
+                // Update canvas when stage resized.
+                egret3d.Stage.onResize.add(function () {
+                    _this._updateCanvas(canvas, stage);
+                }, this);
                 // Update stage when window resized.
                 window.addEventListener("resize", function () {
                     stage.screenSize = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement.clientWidth, h: canvas.parentElement.clientHeight };
