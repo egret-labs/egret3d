@@ -141,6 +141,12 @@ namespace egret3d {
             return this;
         }
 
+        public clear() {
+            this.x = 0.0;
+            this.y = 0.0;
+            this.z = 0.0;
+        }
+
         public equal(value: Readonly<IVector3>, threshold: number = 0.000001) {
             if (Math.abs(this.x - value.x) > threshold) {
                 return false;
@@ -448,11 +454,11 @@ namespace egret3d {
             return Math.acos(Math.max(- 1, Math.min(1, theta)));
         }
 
-        public getSquaredDistance(value: Readonly<IVector3>): number {
+        public getSquaredDistance(value: Readonly<IVector3>) {
             return helpVector3.subtract(value, this).squaredLength;
         }
 
-        public getDistance(value: Readonly<IVector3>): number {
+        public getDistance(value: Readonly<IVector3>) {
             return helpVector3.subtract(value, this).length;
         }
 

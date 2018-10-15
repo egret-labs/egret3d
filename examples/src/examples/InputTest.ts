@@ -1,8 +1,6 @@
 namespace examples {
-
-
     export class InputTest {
-        async  start() {
+        async start() {
             // Load resource config.
             await RES.loadConfig("default.res.json", "resource/");
             // Create camera.

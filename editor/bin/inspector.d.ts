@@ -97,6 +97,10 @@ declare namespace dat {
     }
 }declare namespace paper.editor {
 }
+declare namespace helper {
+}
+declare namespace paper.editor {
+}
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
@@ -128,5 +132,7 @@ declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }
-declare namespace helper {
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
 }

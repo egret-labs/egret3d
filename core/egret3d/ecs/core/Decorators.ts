@@ -83,9 +83,9 @@ namespace paper {
         return (target: any, key: string, descriptor: PropertyDescriptor) => {
             const method = descriptor.value as Function;
             descriptor.value = (...arg) => {
-                console.warn(`${target.name}.${key}在${version}版本中已被废弃`)
+                console.warn(`${target.name}.${key}在${version}版本中已被废弃`);
                 return method.apply(this, arg);
-            }
-        }
+            };
+        };
     }
 }

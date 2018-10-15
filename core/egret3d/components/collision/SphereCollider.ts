@@ -1,6 +1,7 @@
 namespace egret3d {
     /**
      * 球体碰撞组件接口。
+     * TODO 使用碰撞接口
      */
     export interface ISphereCollider extends ICollider {
         readonly sphere: Sphere;
@@ -8,6 +9,7 @@ namespace egret3d {
     /**
      * 球体碰撞组件。
      */
+    @paper.allowMultiple
     export class SphereCollider extends paper.BaseComponent implements ISphereCollider, IRaycast {
         public readonly colliderType: ColliderType = ColliderType.Sphere;
         /**

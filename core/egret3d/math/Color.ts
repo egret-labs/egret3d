@@ -1,4 +1,5 @@
 namespace egret3d {
+
     /**
      * 颜色接口。
      */
@@ -7,65 +8,69 @@ namespace egret3d {
          * 红色通道。（0.0 ~ 1.0）
          */
         r: number;
+
         /**
          * 绿色通道。（0.0 ~ 1.0）
          */
         g: number;
+
         /**
          * 蓝色通道。（0.0 ~ 1.0）
          */
         b: number;
+
         /**
          * 透明通道。（0.0 ~ 1.0）
          */
         a: number;
     }
+
     /**
      * 颜色。
      */
     export class Color extends paper.BaseRelease<Color> implements IColor, paper.ICCS<Color>, paper.ISerializable {
         /**
-         * 黑色
+         * 黑色。
          */
         public static readonly BLACK: Readonly<Color> = new Color().set(0.0, 0.0, 0.0, 1.0);
 
         /**
-         * 灰色
+         * 灰色。
          */
         public static readonly GRAY: Readonly<Color> = new Color().set(0.5, 0.5, 0.5, 1.0);
 
         /**
-         * 白色
+         * 白色。
          */
         public static readonly WHITE: Readonly<Color> = new Color().set(1.0, 1.0, 1.0, 1.0);
 
         /**
-         * 红色
+         * 红色。
          */
         public static readonly RED: Readonly<Color> = new Color().set(1.0, 0.0, 0.0, 1.0);
 
         /**
-         * 绿色
+         * 绿色。
          */
         public static readonly GREEN: Readonly<Color> = new Color().set(0.0, 1.0, 0.0, 1.0);
 
         /**
-         * 蓝色
+         * 蓝色。
          */
         public static readonly BLUE: Readonly<Color> = new Color().set(0.0, 0.0, 1.0, 1.0);
 
         /**
-         * 黄色
+         * 黄色。
          */
         public static readonly YELLOW: Readonly<Color> = new Color().set(1.0, 1.0, 0.0, 1.0);
 
         /**
-         * 靛蓝色
+         * 靛蓝色。
          */
         public static readonly INDIGO: Readonly<Color> = new Color().set(0.0, 1.0, 1.0, 1.0);
 
         /**
-         * 紫色
+         * 紫色。
          */
         public static readonly PURPLE: Readonly<Color> = new Color().set(1.0, 0.0, 1.0, 1.0);
 

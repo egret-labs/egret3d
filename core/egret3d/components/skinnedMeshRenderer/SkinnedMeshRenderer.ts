@@ -69,12 +69,18 @@ namespace egret3d {
                     const vertexIndex = index * 3;
                     const jointIndex = index * 4;
                     vA.fromArray(this._rawVertices, vertexIndex);
-                    vB.set(0.0, 0.0, 0.0)
-                        .add(vC.applyMatrix(mA.fromArray(boneMatrices, joints[jointIndex + 0] * 16), vA).multiplyScalar(weights[jointIndex + 0]))
-                        .add(vC.applyMatrix(mA.fromArray(boneMatrices, joints[jointIndex + 1] * 16), vA).multiplyScalar(weights[jointIndex + 1]))
-                        .add(vC.applyMatrix(mA.fromArray(boneMatrices, joints[jointIndex + 2] * 16), vA).multiplyScalar(weights[jointIndex + 2]))
-                        .add(vC.applyMatrix(mA.fromArray(boneMatrices, joints[jointIndex + 3] * 16), vA).multiplyScalar(weights[jointIndex + 3]))
-                        .toArray(vertices, vertexIndex);
+                    vB.clear();
+
+                    for (let i = 0; i < 4; ++i) {
+                        const weight = weights![jointIndex + i];
+                        if (weight <= 0.0) {
+                            continue;
+                        }
+
+                        vB.add(vC.applyMatrix(mA.fromArray(boneMatrices, joints![jointIndex + i] * 16), vA).multiplyScalar(weight));
+                    }
+
+                    vB.toArray(vertices, vertexIndex);
                 }
 
                 mesh.uploadVertexBuffer();

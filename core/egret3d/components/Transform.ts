@@ -1041,8 +1041,8 @@ namespace egret3d {
             return out.applyDirection(this.worldMatrix, Vector3.FORWARD).normalize();
         }
         /**
-         * 通过旋转使得该物体的 Z 轴正方向指向目标。
-         * @param target 目标。
+         * 通过旋转使得该物体的 Z 轴正方向指向目标点。
+         * @param target 目标点。
          * @param up 旋转后，该物体在世界空间坐标系下描述的 Y 轴正方向。
          */
         public lookAt(target: Readonly<Transform> | Readonly<IVector3>, up: Readonly<IVector3> = Vector3.UP) {
@@ -1058,6 +1058,7 @@ namespace egret3d {
         }
         /**
          * 通过旋转使得该物体的 Z 轴正方向指向目标方向。
+         * - 方向必须是已被归一化的。
          * @param target 目标方向。
          * @param up 旋转后，该物体在世界空间坐标系下描述的 Y 轴正方向。
          */
@@ -1089,5 +1090,8 @@ namespace egret3d {
         public set parent(value: Transform | null) {
             this.setParent(value, false);
         }
+
+        // public get root{
+        // }
     }
 }

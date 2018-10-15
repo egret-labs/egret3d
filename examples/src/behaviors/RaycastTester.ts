@@ -63,7 +63,7 @@ namespace behaviors {
         }
     }
 
-    export class RaycastBoxCollider extends BaseRaycast {
+    export class ColliderRaycast extends BaseRaycast {
         public target: paper.GameObject | null = null;
 
         public onUpdate() {
@@ -71,11 +71,10 @@ namespace behaviors {
             lineTransform.setLocalScale(1.0);
 
             if (this.target) {
-                const boxCollider = this.target.getComponent(egret3d.BoxCollider)!;
                 const ray = this._updateAngGetRay();
                 const raycastInfo = egret3d.RaycastInfo.create().release();
 
-                if (boxCollider.raycast(ray, raycastInfo)) {
+                if (egret3d.raycast(ray, this.target, false, raycastInfo)) {
                     lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
                 }
             }

@@ -468,10 +468,11 @@ namespace egret3d.web {
                 this._egret2dOrderCount = 0;
 
                 for (const camera of cameras) {
-                    const renderEnabled = isPlayerMode ? camera.gameObject.scene !== editorScene : camera.gameObject.scene === editorScene;
+                    const scene = camera.gameObject.scene;
+                    const renderEnabled = isPlayerMode ? scene !== editorScene : scene === editorScene;
 
                     if (renderEnabled && lightCountDirty) {
-                        camera.context.updateLights(lights, camera.gameObject.scene.ambientColor); // TODO 性能优化
+                        camera.context.updateLights(lights, scene.ambientColor); // TODO 性能优化
                     }
 
                     if (camera.postQueues.length === 0) {
