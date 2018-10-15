@@ -3981,19 +3981,19 @@ declare namespace egret3d {
      */
     class DefaultTextures extends paper.SingletonComponent {
         /**
-         *
+         * 纯白色纹理
          */
         static WHITE: Texture;
         /**
-         *
+         * 纯灰色纹理
          */
         static GRAY: Texture;
         /**
-         *
+         * 黑白网格纹理
          */
         static GRID: Texture;
         /**
-         *
+         * 用于表示纹理丢失的紫色纹理
          */
         static MISSING: Texture;
         initialize(): void;
