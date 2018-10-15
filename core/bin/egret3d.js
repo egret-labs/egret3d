@@ -21901,9 +21901,8 @@ var egret3d;
                 var stage = globalGameObject.addComponent(egret3d.Stage, {
                     rotateEnabled: !(config.rotateEnabled === false),
                     size: { w: config.option.contentWidth, h: config.option.contentHeight },
-                    screenSize: { w: canvas.parentElement.clientWidth, h: canvas.parentElement.clientHeight },
+                    screenSize: egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement.clientWidth, h: canvas.parentElement.clientHeight },
                 });
-                this._updateCanvas(canvas, stage);
                 globalGameObject.getOrAddComponent(egret3d.DefaultTextures);
                 globalGameObject.getOrAddComponent(egret3d.DefaultMeshes);
                 globalGameObject.getOrAddComponent(egret3d.DefaultShaders);
@@ -21911,13 +21910,16 @@ var egret3d;
                 globalGameObject.getOrAddComponent(egret3d.InputCollecter);
                 globalGameObject.getOrAddComponent(egret3d.ContactCollecter);
                 globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities);
-                // Update canvas when stage resized.
-                egret3d.Stage.onResize.add(function () {
-                    _this._updateCanvas(canvas, stage);
-                }, this);
+                if (egret.Capabilities.runtimeType !== egret.RuntimeType.WXGAME) {
+                    this._updateCanvas(canvas, stage);
+                    // Update canvas when stage resized.
+                    egret3d.Stage.onResize.add(function () {
+                        _this._updateCanvas(canvas, stage);
+                    }, this);
+                }
                 // Update stage when window resized.
                 window.addEventListener("resize", function () {
-                    stage.screenSize = { w: canvas.parentElement.clientWidth, h: canvas.parentElement.clientHeight };
+                    stage.screenSize = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement.clientWidth, h: canvas.parentElement.clientHeight };
                 }, false);
             };
             BeginSystem.prototype.onUpdate = function () {
@@ -23886,17 +23888,19 @@ var egret3d;
         function Plane() {
             var _this = _super.call(this) || this;
             /**
-             *
+             * 二维平面到原点的距离。
              */
             _this.constant = 0.0;
             /**
-             *
+             * 平面的法线。
              */
             _this.normal = egret3d.Vector3.create();
             return _this;
         }
         /**
-         *
+         * 创建一个几何平面。
+         * @param normal 法线。
+         * @param constant 二维平面离原点的距离。
          */
         Plane.create = function (normal, constant) {
             if (normal === void 0) { normal = egret3d.Vector3.ZERO; }
@@ -23962,8 +23966,13 @@ var egret3d;
             var t = ray.getDistanceToPlane(this);
             if (t > 0.0) {
                 if (raycastInfo) {
+                    var normal = raycastInfo.normal;
                     raycastInfo.distance = t;
                     ray.at(t, raycastInfo.position);
+                    if (normal) {
+                        // TODO
+                        normal.copy(this.normal);
+                    }
                 }
                 return true;
             }

@@ -10232,15 +10232,17 @@ declare namespace egret3d {
     class Plane extends paper.BaseRelease<Plane> implements paper.ICCS<Plane>, paper.ISerializable, IRaycast {
         private static readonly _instances;
         /**
-         *
+         * 创建一个几何平面。
+         * @param normal 法线。
+         * @param constant 二维平面离原点的距离。
          */
         static create(normal?: Readonly<IVector3>, constant?: number): Plane;
         /**
-         *
+         * 二维平面到原点的距离。
          */
         constant: number;
         /**
-         *
+         * 平面的法线。
          */
         readonly normal: Vector3;
         /**
