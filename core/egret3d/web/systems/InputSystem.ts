@@ -4,7 +4,6 @@ namespace egret3d.web {
      */
     export class InputSystem extends paper.BaseSystem {
         private _hasTouch: boolean = false;
-        private readonly _inputCollecter: InputCollecter = paper.GameObject.globalGameObject.getOrAddComponent(InputCollecter);
         private _canvas: HTMLCanvasElement = null!;
 
         private _pointerUp(pointer: Pointer, isCancel: boolean) {
@@ -12,7 +11,6 @@ namespace egret3d.web {
                 return false;
             }
 
-            const inputCollecter = this._inputCollecter;
             const holdPointers = inputCollecter.holdPointers;
             const upPointers = inputCollecter.upPointers;
             const index = holdPointers.indexOf(pointer);
@@ -50,7 +48,6 @@ namespace egret3d.web {
         }
 
         private _onPointerEvent = (event: PointerEvent) => {
-            const inputCollecter = this._inputCollecter;
             if (!inputCollecter.isActiveAndEnabled) {
                 return;
             }
@@ -67,7 +64,7 @@ namespace egret3d.web {
             }
 
             pointer.position.set(event.clientX, event.clientY, 0.0);
-            inputCollecter.screenToStage(pointer.position, pointer.position);
+            stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
                 case "pointerover":
@@ -117,7 +114,6 @@ namespace egret3d.web {
         }
 
         private _onMouseWheelEvent = (event: PointerEvent) => {
-            const inputCollecter = this._inputCollecter;
             if (!inputCollecter.isActiveAndEnabled) {
                 return;
             }
@@ -136,7 +132,6 @@ namespace egret3d.web {
         }
 
         private _onMouseEvent = (event: MouseEvent) => {
-            const inputCollecter = this._inputCollecter;
             if (!inputCollecter.isActiveAndEnabled) {
                 return;
             }
@@ -165,7 +160,7 @@ namespace egret3d.web {
             }
 
             pointer.position.set(event.clientX, event.clientY, 0.0);
-            inputCollecter.screenToStage(pointer.position, pointer.position);
+            stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
                 case "mouseover":
@@ -223,7 +218,6 @@ namespace egret3d.web {
         }
 
         private _onTouchEvent = (event: TouchEvent) => {
-            const inputCollecter = this._inputCollecter;
             if (!inputCollecter.isActiveAndEnabled) {
                 return;
             }
@@ -269,7 +263,7 @@ namespace egret3d.web {
             }
 
             pointer.position.set(pointerEvent.clientX, pointerEvent.clientY, 0.0);
-            inputCollecter.screenToStage(pointer.position, pointer.position);
+            stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
                 case "touchstart":
@@ -310,7 +304,7 @@ namespace egret3d.web {
                                 }
 
                                 eachPointer.position.set(eachPointerEvent.clientX, eachPointerEvent.clientY, 0.0);
-                                inputCollecter.screenToStage(eachPointer.position, eachPointer.position);
+                                stage.screenToStage(eachPointer.position, eachPointer.position);
                                 inputCollecter.onPointerMove.dispatch(eachPointer, inputCollecter.onPointerMove);
                             }
                         }
@@ -333,16 +327,15 @@ namespace egret3d.web {
 
         private _onContextMenu = (event: Event) => {
             if (
-                this._inputCollecter.downPointers.length > 0 ||
-                this._inputCollecter.holdPointers.length > 0 ||
-                this._inputCollecter.upPointers.length > 0
+                inputCollecter.downPointers.length > 0 ||
+                inputCollecter.holdPointers.length > 0 ||
+                inputCollecter.upPointers.length > 0
             ) {
                 event.preventDefault();
             }
         }
 
         private _onKeyEvent = (event: KeyboardEvent) => {
-            const inputCollecter = this._inputCollecter;
             if (!inputCollecter.isActiveAndEnabled) {
                 return;
             }
@@ -455,11 +448,10 @@ namespace egret3d.web {
             // Key events.
             window.removeEventListener("keydown", this._onKeyEvent);
             window.removeEventListener("keyup", this._onKeyEvent);
-            this._inputCollecter.clear();
+            inputCollecter.clear();
         }
 
         public onUpdate(deltaTime: number) {
-            const inputCollecter = this._inputCollecter;
             if (inputCollecter.isActiveAndEnabled) {
                 inputCollecter.update(deltaTime).clear();
             }

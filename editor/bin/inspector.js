@@ -3891,8 +3891,16 @@ var paper;
                 this.right.renderer.material.setColor(egret3d.Color.RED);
                 this.top.renderer.material.setColor(egret3d.Color.GREEN);
                 this.forward.renderer.material.setColor(egret3d.Color.BLUE);
+                this.gameObject.transform.setLocalScale(0.01);
             };
             WorldAxisesDrawer.prototype.update = function () {
+                var stage = egret3d.stage;
+                var camera = egret3d.Camera.editor;
+                var scenePosition = egret3d.Vector3.create(stage.screenSize.w - 50.0, 50.0, 0.0);
+                stage.screenToStage(scenePosition, scenePosition);
+                camera.calcWorldPosFromScreenPos(scenePosition, scenePosition);
+                this.gameObject.transform.position = scenePosition;
+                this.gameObject.transform.lookAt(camera.transform);
             };
             return WorldAxisesDrawer;
         }(paper.BaseComponent));
@@ -4412,7 +4420,6 @@ var paper;
                     ]
                 ];
                 _this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
-                _this._inputCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.InputCollecter);
                 _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
                 _this._pointerStartPosition = egret3d.Vector3.create();
                 _this._pointerPosition = egret3d.Vector3.create();
@@ -4425,13 +4432,13 @@ var paper;
                 _this._cameraViewFrustum = null; // TODO封装一下
                 _this._worldAxisesDrawer = null;
                 _this._gridDrawer = null;
-                _this._keyEscape = _this._inputCollecter.getKey("Escape");
-                _this._keyDelete = _this._inputCollecter.getKey("Delete");
-                _this._keyE = _this._inputCollecter.getKey("KeyE");
-                _this._keyW = _this._inputCollecter.getKey("KeyW");
-                _this._keyR = _this._inputCollecter.getKey("KeyR");
-                _this._keyX = _this._inputCollecter.getKey("KeyX");
-                _this._keyF = _this._inputCollecter.getKey("KeyF");
+                _this._keyEscape = egret3d.inputCollecter.getKey("Escape");
+                _this._keyDelete = egret3d.inputCollecter.getKey("Delete");
+                _this._keyE = egret3d.inputCollecter.getKey("KeyE");
+                _this._keyW = egret3d.inputCollecter.getKey("KeyW");
+                _this._keyR = egret3d.inputCollecter.getKey("KeyR");
+                _this._keyX = egret3d.inputCollecter.getKey("KeyX");
+                _this._keyF = egret3d.inputCollecter.getKey("KeyF");
                 _this._onMouseDown = function (event) {
                     if (event.button === 0) {
                         if (event.buttons & 2) {
@@ -4503,7 +4510,7 @@ var paper;
                 _this._onMouseMove = function (event) {
                     var canvas = egret3d.WebGLCapabilities.canvas;
                     _this._pointerPosition.set(event.clientX - canvas.clientLeft, event.clientY - canvas.clientTop, 0.0);
-                    _this._inputCollecter.screenToStage(_this._pointerPosition, _this._pointerPosition);
+                    egret3d.stage.screenToStage(_this._pointerPosition, _this._pointerPosition);
                     if (event.buttons & 2) {
                     }
                     else if (event.buttons & 1) {

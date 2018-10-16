@@ -8890,7 +8890,7 @@ var egret3d;
             _this.rotateEnabled = true;
             /**
              * 舞台是否因屏幕尺寸的改变而发生了旋转。
-             * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于渲染尺寸宽度。
+             * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于舞台尺寸宽度。
              */
             _this.rotated = false;
             _this._screenSize = { w: 1024, h: 1024 };
@@ -8920,6 +8920,30 @@ var egret3d;
             this._screenSize.h = config.screenSize.h;
             this._updateViewport();
         };
+        /**
+         * 屏幕到舞台坐标的转换。
+         */
+        Stage.prototype.screenToStage = function (value, out) {
+            var screenSize = this._screenSize;
+            var viewPort = this._viewport;
+            var x = value.x, y = value.y;
+            if (this.rotated) {
+                out.y = (screenSize.w - (x - viewPort.x)) * (viewPort.w / screenSize.h);
+                out.x = (y - viewPort.y) * (viewPort.h / screenSize.w);
+            }
+            else {
+                out.x = (x - viewPort.x) * (viewPort.w / screenSize.w);
+                out.y = (y - viewPort.y) * (viewPort.h / screenSize.h);
+            }
+            return this;
+        };
+        /**
+         * 舞台到屏幕坐标的转换。
+         */
+        Stage.prototype.stageToScreen = function (value, out) {
+            // TODO
+            return this;
+        };
         Object.defineProperty(Stage.prototype, "screenSize", {
             /**
              * 屏幕尺寸。
@@ -8938,7 +8962,7 @@ var egret3d;
         });
         Object.defineProperty(Stage.prototype, "size", {
             /**
-             * 渲染尺寸。
+             * 舞台尺寸。
              */
             get: function () {
                 return this._size;
@@ -10183,31 +10207,6 @@ var egret3d;
             this._pointers[1] = this.defaultPointer;
         };
         /**
-         * 屏幕到舞台坐标的转换。
-         */
-        InputCollecter.prototype.screenToStage = function (value, out) {
-            var stage = this.gameObject.getComponent(egret3d.Stage);
-            var screenSize = stage.screenSize;
-            var viewPort = stage.viewport;
-            var x = value.x, y = value.y;
-            if (stage.rotated) {
-                out.y = (screenSize.w - (x - viewPort.x)) * (viewPort.w / screenSize.h);
-                out.x = (y - viewPort.y) * (viewPort.h / screenSize.w);
-            }
-            else {
-                out.x = (x - viewPort.x) * (viewPort.w / screenSize.w);
-                out.y = (y - viewPort.y) * (viewPort.h / screenSize.h);
-            }
-            return this;
-        };
-        /**
-         * 舞台到屏幕坐标的转换。
-         */
-        InputCollecter.prototype.stageToScreen = function (value, out) {
-            // TODO
-            return this;
-        };
-        /**
          * @internal
          */
         InputCollecter.prototype.getPointer = function (pointerID) {
@@ -10782,7 +10781,6 @@ var egret3d;
                 egret3d.Vector3.create(),
                 egret3d.Vector3.create()
             ];
-            _this._stage = null;
             return _this;
         }
         Object.defineProperty(Camera, "main", {
@@ -10899,7 +10897,6 @@ var egret3d;
         Camera.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             this.context = new egret3d.RenderContext();
-            this._stage = paper.GameObject.globalGameObject.getComponent(egret3d.Stage);
         };
         /**
          * 计算相机的 project matrix（投影矩阵）
@@ -10935,7 +10932,7 @@ var egret3d;
                 h = renderTarget.height;
             }
             else {
-                var stageViewPort = this._stage.viewport;
+                var stageViewPort = egret3d.stage.viewport;
                 w = stageViewPort.w;
                 h = stageViewPort.h;
             }
@@ -11654,8 +11651,6 @@ var egret3d;
              */
             _this.webInput = egret.Capabilities.runtimeType === egret.RuntimeType.WEB ? new egret["web"].HTMLInput() : null;
             _this._sortedDirty = false;
-            _this._stage = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.Stage);
-            _this._inputCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.InputCollecter);
             _this._sortedRenderers = [];
             return _this;
         }
@@ -11717,11 +11712,10 @@ var egret3d;
             }
         };
         Egret2DRendererSystem.prototype.onEnable = function () {
-            var inputCollecter = this._inputCollecter;
-            inputCollecter.onPointerDown.add(this._onTouchStart, this);
-            inputCollecter.onPointerCancel.add(this._onTouchEnd, this);
-            inputCollecter.onPointerUp.add(this._onTouchEnd, this);
-            inputCollecter.onPointerMove.add(this._onTouchMove, this);
+            egret3d.inputCollecter.onPointerDown.add(this._onTouchStart, this);
+            egret3d.inputCollecter.onPointerCancel.add(this._onTouchEnd, this);
+            egret3d.inputCollecter.onPointerUp.add(this._onTouchEnd, this);
+            egret3d.inputCollecter.onPointerMove.add(this._onTouchMove, this);
         };
         Egret2DRendererSystem.prototype.onAddGameObject = function (gameObject) {
             this._sortedDirty = true;
@@ -11734,18 +11728,17 @@ var egret3d;
             }
         };
         Egret2DRendererSystem.prototype.onUpdate = function (deltaTime) {
-            var _a = this._stage.viewport, w = _a.w, h = _a.h;
+            var _a = egret3d.stage.viewport, w = _a.w, h = _a.h;
             for (var _i = 0, _b = this._groups[0].gameObjects; _i < _b.length; _i++) {
                 var gameObject = _b[_i];
                 gameObject.renderer.update(deltaTime, w, h);
             }
         };
         Egret2DRendererSystem.prototype.onDisable = function () {
-            var inputCollecter = this._inputCollecter;
-            inputCollecter.onPointerDown.remove(this._onTouchStart, this);
-            inputCollecter.onPointerCancel.remove(this._onTouchEnd, this);
-            inputCollecter.onPointerUp.remove(this._onTouchEnd, this);
-            inputCollecter.onPointerMove.remove(this._onTouchMove, this);
+            egret3d.inputCollecter.onPointerDown.remove(this._onTouchStart, this);
+            egret3d.inputCollecter.onPointerCancel.remove(this._onTouchEnd, this);
+            egret3d.inputCollecter.onPointerUp.remove(this._onTouchEnd, this);
+            egret3d.inputCollecter.onPointerMove.remove(this._onTouchMove, this);
         };
         return Egret2DRendererSystem;
     }(paper.BaseSystem));
@@ -21955,7 +21948,6 @@ var egret3d;
                     ]
                 ];
                 _this._egret2dOrderCount = 0;
-                _this._stage = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.Stage);
                 _this._drawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.DrawCallCollecter);
                 _this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
                 _this._renderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.WebGLRenderState);
@@ -22328,7 +22320,7 @@ var egret3d;
                 var w;
                 var h;
                 if (!target) {
-                    var stageViewport = this._stage.viewport;
+                    var stageViewport = egret3d.stage.viewport;
                     w = stageViewport.w;
                     h = stageViewport.h;
                     webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
@@ -22424,44 +22416,42 @@ var egret3d;
             function InputSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this._hasTouch = false;
-                _this._inputCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.InputCollecter);
                 _this._canvas = null;
                 _this._onPointerEvent = function (event) {
-                    var inputCollecter = _this._inputCollecter;
-                    if (!inputCollecter.isActiveAndEnabled) {
+                    if (!egret3d.inputCollecter.isActiveAndEnabled) {
                         return;
                     }
                     var canvas = _this._canvas;
-                    var downPointers = inputCollecter.downPointers;
-                    var holdPointers = inputCollecter.holdPointers;
-                    var pointer = inputCollecter.getPointer(event.pointerId);
+                    var downPointers = egret3d.inputCollecter.downPointers;
+                    var holdPointers = egret3d.inputCollecter.holdPointers;
+                    var pointer = egret3d.inputCollecter.getPointer(event.pointerId);
                     pointer.event = event; // TODO 有可能是无效事件
                     if (event.target !== canvas) {
                         event.clientX -= canvas.clientLeft;
                         event.clientY -= canvas.clientTop;
                     }
                     pointer.position.set(event.clientX, event.clientY, 0.0);
-                    inputCollecter.screenToStage(pointer.position, pointer.position);
+                    egret3d.stage.screenToStage(pointer.position, pointer.position);
                     switch (event.type) {
                         case "pointerover":
                             if (holdPointers.length > 0 && event.buttons === 0 /* None */) {
                                 _this._pointerUp(pointer, true);
                             }
-                            inputCollecter.onPointerOver.dispatch(pointer, inputCollecter.onPointerOver);
+                            egret3d.inputCollecter.onPointerOver.dispatch(pointer, egret3d.inputCollecter.onPointerOver);
                             break;
                         case "pointerenter":
-                            inputCollecter.onPointerEnter.dispatch(pointer, inputCollecter.onPointerEnter);
+                            egret3d.inputCollecter.onPointerEnter.dispatch(pointer, egret3d.inputCollecter.onPointerEnter);
                             break;
                         case "pointerdown":
                             if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) {
                                 pointer.downPosition.copy(pointer.position);
                                 downPointers.push(pointer);
-                                inputCollecter.onPointerDown.dispatch(pointer, inputCollecter.onPointerDown);
+                                egret3d.inputCollecter.onPointerDown.dispatch(pointer, egret3d.inputCollecter.onPointerDown);
                             }
                             break;
                         case "pointermove":
                             if (event.target === canvas || holdPointers.length > 0) {
-                                inputCollecter.onPointerMove.dispatch(pointer, inputCollecter.onPointerMove);
+                                egret3d.inputCollecter.onPointerMove.dispatch(pointer, egret3d.inputCollecter.onPointerMove);
                             }
                             break;
                         case "pointerup":
@@ -22471,33 +22461,31 @@ var egret3d;
                             _this._pointerUp(pointer, true);
                             break;
                         case "pointerout":
-                            inputCollecter.onPointerOut.dispatch(pointer, inputCollecter.onPointerOut);
+                            egret3d.inputCollecter.onPointerOut.dispatch(pointer, egret3d.inputCollecter.onPointerOut);
                             break;
                         case "pointerleave":
-                            inputCollecter.onPointerLeave.dispatch(pointer, inputCollecter.onPointerLeave);
+                            egret3d.inputCollecter.onPointerLeave.dispatch(pointer, egret3d.inputCollecter.onPointerLeave);
                             break;
                     }
                     // event.preventDefault();
                 };
                 _this._onMouseWheelEvent = function (event) {
-                    var inputCollecter = _this._inputCollecter;
-                    if (!inputCollecter.isActiveAndEnabled) {
+                    if (!egret3d.inputCollecter.isActiveAndEnabled) {
                         return;
                     }
                     if (event.detail) {
-                        inputCollecter.mouseWheel = -1 * event.detail;
+                        egret3d.inputCollecter.mouseWheel = -1 * event.detail;
                     }
                     else if (event.wheelDelta) {
-                        inputCollecter.mouseWheel = event.wheelDelta / 120;
+                        egret3d.inputCollecter.mouseWheel = event.wheelDelta / 120;
                     }
                     else {
-                        inputCollecter.mouseWheel = 0;
+                        egret3d.inputCollecter.mouseWheel = 0;
                     }
                     event.preventDefault();
                 };
                 _this._onMouseEvent = function (event) {
-                    var inputCollecter = _this._inputCollecter;
-                    if (!inputCollecter.isActiveAndEnabled) {
+                    if (!egret3d.inputCollecter.isActiveAndEnabled) {
                         return;
                     }
                     event.isPrimary = true;
@@ -22512,16 +22500,16 @@ var egret3d;
                     event.pointerType = "mouse";
                     var pointerEvent = event;
                     var canvas = _this._canvas;
-                    var downPointers = inputCollecter.downPointers;
-                    var holdPointers = inputCollecter.holdPointers;
-                    var pointer = inputCollecter.getPointer(pointerEvent.pointerId);
+                    var downPointers = egret3d.inputCollecter.downPointers;
+                    var holdPointers = egret3d.inputCollecter.holdPointers;
+                    var pointer = egret3d.inputCollecter.getPointer(pointerEvent.pointerId);
                     pointer.event = pointerEvent;
                     if (event.target !== canvas) {
                         pointerEvent.clientX -= canvas.clientLeft;
                         pointerEvent.clientY -= canvas.clientTop;
                     }
                     pointer.position.set(event.clientX, event.clientY, 0.0);
-                    inputCollecter.screenToStage(pointer.position, pointer.position);
+                    egret3d.stage.screenToStage(pointer.position, pointer.position);
                     switch (event.type) {
                         case "mouseover":
                             if (holdPointers.length > 0 && event.buttons === 0 /* None */) {
@@ -22529,24 +22517,24 @@ var egret3d;
                                 _this._pointerUp(pointer, true);
                             }
                             event.type = "pointerover";
-                            inputCollecter.onPointerOver.dispatch(pointer, inputCollecter.onPointerOver);
+                            egret3d.inputCollecter.onPointerOver.dispatch(pointer, egret3d.inputCollecter.onPointerOver);
                             break;
                         case "mouseenter":
                             event.type = "pointerenter";
-                            inputCollecter.onPointerEnter.dispatch(pointer, inputCollecter.onPointerEnter);
+                            egret3d.inputCollecter.onPointerEnter.dispatch(pointer, egret3d.inputCollecter.onPointerEnter);
                             break;
                         case "mousedown":
                             if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) {
                                 pointer.downPosition.copy(pointer.position);
                                 downPointers.push(pointer);
                                 event.type = "pointerdown";
-                                inputCollecter.onPointerDown.dispatch(pointer, inputCollecter.onPointerDown);
+                                egret3d.inputCollecter.onPointerDown.dispatch(pointer, egret3d.inputCollecter.onPointerDown);
                             }
                             break;
                         case "mousemove":
                             if (event.target === canvas || holdPointers.length > 0) {
                                 event.type = "pointermove";
-                                inputCollecter.onPointerMove.dispatch(pointer, inputCollecter.onPointerMove);
+                                egret3d.inputCollecter.onPointerMove.dispatch(pointer, egret3d.inputCollecter.onPointerMove);
                             }
                             break;
                         case "mouseup":
@@ -22559,18 +22547,17 @@ var egret3d;
                             break;
                         case "mouseout":
                             event.type = "pointerout";
-                            inputCollecter.onPointerOut.dispatch(pointer, inputCollecter.onPointerOut);
+                            egret3d.inputCollecter.onPointerOut.dispatch(pointer, egret3d.inputCollecter.onPointerOut);
                             break;
                         case "mouseleave":
                             event.type = "pointerleave";
-                            inputCollecter.onPointerLeave.dispatch(pointer, inputCollecter.onPointerLeave);
+                            egret3d.inputCollecter.onPointerLeave.dispatch(pointer, egret3d.inputCollecter.onPointerLeave);
                             break;
                     }
                     // event.preventDefault();
                 };
                 _this._onTouchEvent = function (event) {
-                    var inputCollecter = _this._inputCollecter;
-                    if (!inputCollecter.isActiveAndEnabled) {
+                    if (!egret3d.inputCollecter.isActiveAndEnabled) {
                         return;
                     }
                     if (!_this._hasTouch) {
@@ -22598,33 +22585,33 @@ var egret3d;
                     event.screenY = touch.screenY;
                     var pointerEvent = event;
                     var canvas = _this._canvas;
-                    var downPointers = inputCollecter.downPointers;
-                    var holdPointers = inputCollecter.holdPointers;
-                    var pointer = inputCollecter.getPointer(pointerEvent.pointerId);
+                    var downPointers = egret3d.inputCollecter.downPointers;
+                    var holdPointers = egret3d.inputCollecter.holdPointers;
+                    var pointer = egret3d.inputCollecter.getPointer(pointerEvent.pointerId);
                     pointer.event = pointerEvent;
                     if (event.target !== canvas) {
                         pointerEvent.clientX -= canvas.clientLeft;
                         pointerEvent.clientY -= canvas.clientTop;
                     }
                     pointer.position.set(pointerEvent.clientX, pointerEvent.clientY, 0.0);
-                    inputCollecter.screenToStage(pointer.position, pointer.position);
+                    egret3d.stage.screenToStage(pointer.position, pointer.position);
                     switch (event.type) {
                         case "touchstart":
                             if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) {
                                 pointer.downPosition.copy(pointer.position);
                                 downPointers.push(pointer);
                                 event.type = "pointerdown";
-                                inputCollecter.onPointerDown.dispatch(pointer, inputCollecter.onPointerDown);
+                                egret3d.inputCollecter.onPointerDown.dispatch(pointer, egret3d.inputCollecter.onPointerDown);
                             }
                             break;
                         case "touchmove":
                             if (event.target === canvas || holdPointers.length > 0) {
                                 event.type = "pointermove";
-                                inputCollecter.onPointerMove.dispatch(pointer, inputCollecter.onPointerMove);
+                                egret3d.inputCollecter.onPointerMove.dispatch(pointer, egret3d.inputCollecter.onPointerMove);
                                 for (var i = 0, l = event.targetTouches.length; i < l; ++i) {
                                     var eachTouch = event.targetTouches[i];
                                     if (eachTouch !== touch) {
-                                        var eachPointer = inputCollecter.getPointer(eachTouch.identifier + 2);
+                                        var eachPointer = egret3d.inputCollecter.getPointer(eachTouch.identifier + 2);
                                         var eachPointerEvent = eachPointer.event;
                                         eachPointerEvent.pressure = eachTouch.force || 0.5;
                                         eachPointerEvent.width = (eachTouch.radiusX || 0) * 2;
@@ -22641,8 +22628,8 @@ var egret3d;
                                             eachPointerEvent.clientY -= canvas.clientTop;
                                         }
                                         eachPointer.position.set(eachPointerEvent.clientX, eachPointerEvent.clientY, 0.0);
-                                        inputCollecter.screenToStage(eachPointer.position, eachPointer.position);
-                                        inputCollecter.onPointerMove.dispatch(eachPointer, inputCollecter.onPointerMove);
+                                        egret3d.stage.screenToStage(eachPointer.position, eachPointer.position);
+                                        egret3d.inputCollecter.onPointerMove.dispatch(eachPointer, egret3d.inputCollecter.onPointerMove);
                                     }
                                 }
                             }
@@ -22659,27 +22646,26 @@ var egret3d;
                     // event.preventDefault();
                 };
                 _this._onContextMenu = function (event) {
-                    if (_this._inputCollecter.downPointers.length > 0 ||
-                        _this._inputCollecter.holdPointers.length > 0 ||
-                        _this._inputCollecter.upPointers.length > 0) {
+                    if (egret3d.inputCollecter.downPointers.length > 0 ||
+                        egret3d.inputCollecter.holdPointers.length > 0 ||
+                        egret3d.inputCollecter.upPointers.length > 0) {
                         event.preventDefault();
                     }
                 };
                 _this._onKeyEvent = function (event) {
-                    var inputCollecter = _this._inputCollecter;
-                    if (!inputCollecter.isActiveAndEnabled) {
+                    if (!egret3d.inputCollecter.isActiveAndEnabled) {
                         return;
                     }
-                    var downKeys = inputCollecter.downKeys;
-                    var holdKeys = inputCollecter.holdKeys;
-                    var upKeys = inputCollecter.upKeys;
-                    var key = inputCollecter.getKey(event.code);
+                    var downKeys = egret3d.inputCollecter.downKeys;
+                    var holdKeys = egret3d.inputCollecter.holdKeys;
+                    var upKeys = egret3d.inputCollecter.upKeys;
+                    var key = egret3d.inputCollecter.getKey(event.code);
                     key.event = event;
                     switch (event.type) {
                         case "keydown":
                             if (downKeys.indexOf(key) < 0 && holdKeys.indexOf(key) < 0) {
                                 downKeys.push(key);
-                                inputCollecter.onKeyDown.dispatch(key, inputCollecter.onKeyDown);
+                                egret3d.inputCollecter.onKeyDown.dispatch(key, egret3d.inputCollecter.onKeyDown);
                             }
                             break;
                         case "keyup":
@@ -22695,7 +22681,7 @@ var egret3d;
                             }
                             if (index >= 0 && upKeys.indexOf(key) < 0) {
                                 upKeys.push(key);
-                                inputCollecter.onKeyUp.dispatch(key, inputCollecter.onKeyUp);
+                                egret3d.inputCollecter.onKeyUp.dispatch(key, egret3d.inputCollecter.onKeyUp);
                             }
                             break;
                     }
@@ -22706,21 +22692,20 @@ var egret3d;
                 if (pointer.event.buttons !== 0 /* None */) {
                     return false;
                 }
-                var inputCollecter = this._inputCollecter;
-                var holdPointers = inputCollecter.holdPointers;
-                var upPointers = inputCollecter.upPointers;
+                var holdPointers = egret3d.inputCollecter.holdPointers;
+                var upPointers = egret3d.inputCollecter.upPointers;
                 var index = holdPointers.indexOf(pointer);
                 if (index >= 0) {
                     holdPointers.splice(index, 1);
                 }
                 if (upPointers.indexOf(pointer) < 0) {
-                    inputCollecter.removePointer(pointer.event.pointerId);
+                    egret3d.inputCollecter.removePointer(pointer.event.pointerId);
                     upPointers.push(pointer);
                     if (isCancel) {
-                        inputCollecter.onPointerCancel.dispatch(pointer, inputCollecter.onPointerCancel);
+                        egret3d.inputCollecter.onPointerCancel.dispatch(pointer, egret3d.inputCollecter.onPointerCancel);
                     }
                     else {
-                        inputCollecter.onPointerUp.dispatch(pointer, inputCollecter.onPointerUp);
+                        egret3d.inputCollecter.onPointerUp.dispatch(pointer, egret3d.inputCollecter.onPointerUp);
                     }
                     return true;
                 }
@@ -22806,12 +22791,11 @@ var egret3d;
                 // Key events.
                 window.removeEventListener("keydown", this._onKeyEvent);
                 window.removeEventListener("keyup", this._onKeyEvent);
-                this._inputCollecter.clear();
+                egret3d.inputCollecter.clear();
             };
             InputSystem.prototype.onUpdate = function (deltaTime) {
-                var inputCollecter = this._inputCollecter;
-                if (inputCollecter.isActiveAndEnabled) {
-                    inputCollecter.update(deltaTime).clear();
+                if (egret3d.inputCollecter.isActiveAndEnabled) {
+                    egret3d.inputCollecter.update(deltaTime).clear();
                 }
             };
             return InputSystem;

@@ -10,7 +10,6 @@ namespace paper.editor {
         ];
 
         private readonly _cameraAndLightCollecter: egret3d.CameraAndLightCollecter = GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
-        private readonly _inputCollecter: egret3d.InputCollecter = GameObject.globalGameObject.getOrAddComponent(egret3d.InputCollecter);
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
 
         private readonly _pointerStartPosition: egret3d.Vector3 = egret3d.Vector3.create();
@@ -26,13 +25,13 @@ namespace paper.editor {
         private _worldAxisesDrawer: WorldAxisesDrawer | null = null;
         private _gridDrawer: GridDrawer | null = null;
 
-        private readonly _keyEscape: egret3d.Key = this._inputCollecter.getKey("Escape");
-        private readonly _keyDelete: egret3d.Key = this._inputCollecter.getKey("Delete");
-        private readonly _keyE: egret3d.Key = this._inputCollecter.getKey("KeyE");
-        private readonly _keyW: egret3d.Key = this._inputCollecter.getKey("KeyW");
-        private readonly _keyR: egret3d.Key = this._inputCollecter.getKey("KeyR");
-        private readonly _keyX: egret3d.Key = this._inputCollecter.getKey("KeyX");
-        private readonly _keyF: egret3d.Key = this._inputCollecter.getKey("KeyF");
+        private readonly _keyEscape: egret3d.Key = egret3d.inputCollecter.getKey("Escape");
+        private readonly _keyDelete: egret3d.Key = egret3d.inputCollecter.getKey("Delete");
+        private readonly _keyE: egret3d.Key = egret3d.inputCollecter.getKey("KeyE");
+        private readonly _keyW: egret3d.Key = egret3d.inputCollecter.getKey("KeyW");
+        private readonly _keyR: egret3d.Key = egret3d.inputCollecter.getKey("KeyR");
+        private readonly _keyX: egret3d.Key = egret3d.inputCollecter.getKey("KeyX");
+        private readonly _keyF: egret3d.Key = egret3d.inputCollecter.getKey("KeyF");
 
         private _onMouseDown = (event: MouseEvent) => {
             if (event.button === 0) {
@@ -115,7 +114,7 @@ namespace paper.editor {
             const canvas = egret3d.WebGLCapabilities.canvas!;
 
             this._pointerPosition.set(event.clientX - canvas.clientLeft, event.clientY - canvas.clientTop, 0.0);
-            this._inputCollecter.screenToStage(this._pointerPosition, this._pointerPosition);
+            egret3d.stage.screenToStage(this._pointerPosition, this._pointerPosition);
 
             if (event.buttons & 0b10) { // 正在控制摄像机。
 
@@ -304,7 +303,7 @@ namespace paper.editor {
             this._skeletonDrawer = EditorMeshHelper.createGameObject("SkeletonDrawer").addComponent(SkeletonDrawer);
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera");
             this._cameraViewFrustum.activeSelf = false;
-            this._worldAxisesDrawer = EditorMeshHelper.createGameObject("WorldAxisesDrawer").addComponent(WorldAxisesDrawer);
+            // this._worldAxisesDrawer = EditorMeshHelper.createGameObject("WorldAxisesDrawer").addComponent(WorldAxisesDrawer);
             this._gridDrawer = EditorMeshHelper.createGameObject("GridDrawer").addComponent(GridDrawer);
 
             // TODO
@@ -371,8 +370,8 @@ namespace paper.editor {
             this._cameraViewFrustum!.destroy();
             this._cameraViewFrustum = null;
 
-            this._worldAxisesDrawer!.gameObject.destroy();
-            this._worldAxisesDrawer = null;
+            // this._worldAxisesDrawer!.gameObject.destroy();
+            // this._worldAxisesDrawer = null;
             this._gridDrawer!.gameObject.destroy();
             this._gridDrawer = null;
         }
@@ -439,7 +438,7 @@ namespace paper.editor {
             this._boxColliderDrawer!.update();
             this._sphereColliderDrawer!.update();
             this._skeletonDrawer!.update();
-            this._worldAxisesDrawer!.update();
+            // this._worldAxisesDrawer!.update();
             this._gridDrawer!.update();
 
             this._updateCameras();

@@ -25,10 +25,19 @@ namespace paper.editor {
             this.right.renderer!.material!.setColor(egret3d.Color.RED);
             this.top.renderer!.material!.setColor(egret3d.Color.GREEN);
             this.forward.renderer!.material!.setColor(egret3d.Color.BLUE);
+
+            this.gameObject.transform.setLocalScale(0.01);
         }
 
         public update() {
+            const stage = egret3d.stage;
+            const camera = egret3d.Camera.editor;
+            const scenePosition = egret3d.Vector3.create(stage.screenSize.w - 50.0, 50.0, 0.0);
+            stage.screenToStage(scenePosition, scenePosition);
+            camera.calcWorldPosFromScreenPos(scenePosition, scenePosition);
 
+            this.gameObject.transform.position = scenePosition;
+            this.gameObject.transform.lookAt(camera.transform);
         }
     }
 }

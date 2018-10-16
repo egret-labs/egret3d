@@ -15,7 +15,6 @@ namespace egret3d.web {
             ]
         ];
         private _egret2dOrderCount: number = 0;
-        private readonly _stage: Stage = paper.GameObject.globalGameObject.getOrAddComponent(Stage);
         private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
         private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
@@ -414,7 +413,7 @@ namespace egret3d.web {
             let w: number;
             let h: number;
             if (!target) {
-                const stageViewport = this._stage.viewport;
+                const stageViewport = stage.viewport;
                 w = stageViewport.w;
                 h = stageViewport.h;
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);

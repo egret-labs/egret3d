@@ -14,7 +14,7 @@ namespace egret3d {
         public rotateEnabled: boolean = true;
         /**
          * 舞台是否因屏幕尺寸的改变而发生了旋转。
-         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于渲染尺寸宽度。
+         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于舞台尺寸宽度。
          */
         public rotated: boolean = false;
 
@@ -36,7 +36,7 @@ namespace egret3d {
             }
         }
 
-        public initialize(config: { rotateEnabled:boolean, size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
+        public initialize(config: { rotateEnabled: boolean, size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
             super.initialize();
 
             stage = this;
@@ -47,6 +47,33 @@ namespace egret3d {
             this._screenSize.w = config.screenSize.w;
             this._screenSize.h = config.screenSize.h;
             this._updateViewport();
+        }
+        /**
+         * 屏幕到舞台坐标的转换。
+         */
+        public screenToStage(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3) {
+            const screenSize = this._screenSize;
+            const viewPort = this._viewport;
+            const { x, y } = value;
+
+            if (this.rotated) {
+                out.y = (screenSize.w - (x - viewPort.x)) * (viewPort.w / screenSize.h);
+                out.x = (y - viewPort.y) * (viewPort.h / screenSize.w);
+            }
+            else {
+                out.x = (x - viewPort.x) * (viewPort.w / screenSize.w);
+                out.y = (y - viewPort.y) * (viewPort.h / screenSize.h);
+            }
+
+            return this;
+        }
+        /**
+         * 舞台到屏幕坐标的转换。
+         */
+        public stageToScreen(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3) {
+            // TODO
+
+            return this;
         }
         /**
          * 屏幕尺寸。
@@ -62,7 +89,7 @@ namespace egret3d {
             Stage.onResize.dispatch(this);
         }
         /**
-         * 渲染尺寸。
+         * 舞台尺寸。
          */
         public get size(): Readonly<egret3d.ISize> {
             return this._size;
