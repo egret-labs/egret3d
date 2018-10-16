@@ -35,11 +35,11 @@ namespace egret3d.web {
             const globalGameObject = paper.GameObject.globalGameObject;
             // Add stage, set stage, update canvas.
             const canvas = config.canvas!;
-
+            const isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || canvas.parentElement === undefined;
             const stage = globalGameObject.addComponent(Stage, {
                 rotateEnabled: !(config.rotateEnabled === false),
                 size: { w: config.option!.contentWidth, h: config.option!.contentHeight },
-                screenSize: egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement!.clientWidth, h: canvas.parentElement!.clientHeight },
+                screenSize: isWX ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement!.clientWidth, h: canvas.parentElement!.clientHeight },
             });
 
             globalGameObject.getOrAddComponent(DefaultTextures);
@@ -58,7 +58,7 @@ namespace egret3d.web {
             }, this);
             // Update stage when window resized.
             window.addEventListener("resize", () => {
-                stage.screenSize = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement!.clientWidth, h: canvas.parentElement!.clientHeight };
+                stage.screenSize = isWX ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement!.clientWidth, h: canvas.parentElement!.clientHeight };
             }, false);
         }
 
