@@ -42,7 +42,7 @@ namespace paper.editor {
         public get scene(): Scene {
             return this._scene;
         }
-        public set scene(value:Scene){
+        public set scene(value: Scene) {
             this._scene = value;
         }
         private _contentType: 'scene' | 'prefab';
@@ -158,8 +158,12 @@ namespace paper.editor {
                         return '';
                     let url = value.name;
                     return url;
-                case editor.EditType.MATERIAL:
                 case editor.EditType.GAMEOBJECT:
+                    if (!value) {
+                        return null;
+                    }
+                    return value.uuid;
+                case editor.EditType.MATERIAL:
                 case editor.EditType.TRANSFROM:
                 case editor.EditType.SOUND:
                 case editor.EditType.ARRAY:
@@ -208,8 +212,12 @@ namespace paper.editor {
                 case editor.EditType.MESH:
                     let meshAsset = paper.Asset.find(serializeData);
                     return meshAsset;
-                case editor.EditType.MATERIAL:
                 case editor.EditType.GAMEOBJECT:
+                    if (!serializeData) {
+                        return null;
+                    }
+                    return this.getGameObjectByUUid(serializeData);
+                case editor.EditType.MATERIAL:
                 case editor.EditType.TRANSFROM:
                 case editor.EditType.SOUND:
                 case editor.EditType.ARRAY:
