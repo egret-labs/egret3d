@@ -51,14 +51,11 @@ namespace egret3d.web {
             globalGameObject.getOrAddComponent(ContactCollecter);
             globalGameObject.getOrAddComponent(WebGLCapabilities);
 
-            if (egret.Capabilities.runtimeType !== egret.RuntimeType.WXGAME) {
+            this._updateCanvas(canvas, stage);
+            // Update canvas when stage resized.
+            Stage.onResize.add(() => {
                 this._updateCanvas(canvas, stage);
-                // Update canvas when stage resized.
-                Stage.onResize.add(() => {
-                    this._updateCanvas(canvas, stage);
-                }, this);
-            }
-
+            }, this);
             // Update stage when window resized.
             window.addEventListener("resize", () => {
                 stage.screenSize = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement!.clientWidth, h: canvas.parentElement!.clientHeight };
