@@ -15,6 +15,9 @@
       "name": "egret"
     },
     {
+      "name": "eui"
+    },
+    {
       "name": "assetsmanager"
     },
     {
@@ -22,15 +25,15 @@
     },
     {
       "name": "egret3d",
-      "path": "../core/bin"
+      "path": "../core"
     },
     {
-      "name": "editor",
-      "path": "../editor/bin/editor"
+      "name": "inspector",
+      "path": "../editor"
     },
     {
       "name": "oimo",
-      "path": "../plugins/oimo/bin/oimo"
+      "path": "../plugins/oimo"
     }
   ]
 }

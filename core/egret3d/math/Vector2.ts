@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 
+     * 二维向量接口。
      */
     export interface IVector2 {
         x: number;
@@ -70,6 +70,11 @@ namespace egret3d {
             this.y = y;
 
             return this;
+        }
+
+        public clear() {
+            this.x = 0.0;
+            this.y = 0.0;
         }
 
         public normalize() {

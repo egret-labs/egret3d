@@ -31,6 +31,7 @@ namespace paper {
             return result as T;
         }
         /**
+         * 资源名称。
          * @readonly
          */
         public name: string = "";
@@ -38,7 +39,11 @@ namespace paper {
          * @internal
          */
         public _isBuiltin: boolean = false;
-
+        /**
+         * TODO
+         * remove
+         * @param name 
+         */
         public constructor(name: string = "") {
             super();
 

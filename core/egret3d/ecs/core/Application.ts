@@ -8,10 +8,6 @@ namespace paper {
         Editor,
     }
     /**
-     * 时间组件。
-     */
-    export let Time: Clock;
-    /**
      * 应用程序单例。
      */
     export let Application: ECS;
@@ -19,6 +15,11 @@ namespace paper {
      * 应用程序。
      */
     export class ECS {
+        /**
+         * 当应用程序的播放模式改变时派发事件。
+         */
+        public static readonly onPlayerModeChange: signals.Signal = new signals.Signal();
+
         private static _instance: ECS | null = null;
         /**
          * 应用程序单例。
@@ -34,9 +35,9 @@ namespace paper {
         private constructor() {
         }
         /**
-         * 
+         * 引擎版本。
          */
-        public readonly version: string = "1.1.9.006";
+        public readonly version: string = "1.3.0.001";
         /**
          * 系统管理器。
          */
@@ -56,28 +57,27 @@ namespace paper {
                 requestAnimationFrame(this._bindUpdate!);
             }
 
-            Time && Time.update();
+            clock && clock.update(); // TODO
             GameObjectGroup.update();
-            this.systemManager._update();
+            this.systemManager.update();
         }
 
         private _updatePlayerMode() {
             // if (this._playerMode !== PlayerMode.Player) { TODO
             //     egret3d.Camera.editor; // Active editor camera.
             // }
-
         }
         /**
          * @internal
          */
-        public init(options: egret3d.RunEgretOptions) {
+        public initialize(options: egret3d.RunEgretOptions) {
             this._playerMode = options.playerMode || PlayerMode.Player;
-            this.systemManager.register(paper.EnableSystem, paper.SystemOrder.Enable);
-            this.systemManager.register(paper.StartSystem, paper.SystemOrder.Start);
-            this.systemManager.register(paper.FixedUpdateSystem, paper.SystemOrder.FixedUpdate);
-            this.systemManager.register(paper.UpdateSystem, paper.SystemOrder.Update);
-            this.systemManager.register(paper.LateUpdateSystem, paper.SystemOrder.LaterUpdate);
-            this.systemManager.register(paper.DisableSystem, paper.SystemOrder.Disable);
+            this.systemManager.register(EnableSystem, SystemOrder.Enable);
+            this.systemManager.register(StartSystem, SystemOrder.Start);
+            this.systemManager.register(FixedUpdateSystem, SystemOrder.FixedUpdate);
+            this.systemManager.register(UpdateSystem, SystemOrder.Update);
+            this.systemManager.register(LateUpdateSystem, SystemOrder.LaterUpdate);
+            this.systemManager.register(DisableSystem, SystemOrder.Disable);
             this._updatePlayerMode();
             this.resume();
         }
@@ -131,6 +131,8 @@ namespace paper {
             }
 
             this._playerMode = value;
+
+            ECS.onPlayerModeChange.dispatch(this.playerMode);
         }
     }
     //

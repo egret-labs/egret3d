@@ -59,12 +59,12 @@ namespace egret3d.oimo {
             const matrix = transform.getWorldMatrix();
             const from = transform.getPosition();
             const to = matrix.transformVector3(Vector3.create(this.distance, 0.0, 0.0).release());
-            const raycastInfo = PhysicsSystem.getInstance().rayCast(from, to, this.collisionMask);
+            const raycastInfo = PhysicsSystem.getInstance().raycast(from, to, this.collisionMask);
 
             if (raycastInfo) {
                 this._hitted = true;
                 const inverseMatrix = matrix.clone().inverse();
-                const v = raycastInfo.normal.applyMatrix(inverseMatrix).multiplyScalar(1.0);
+                const v = raycastInfo.normal!.applyMatrix(inverseMatrix).multiplyScalar(1.0);
                 const vertices = this._mesh.getVertices()!;
                 const colors = this._mesh.getColors()!;
                 inverseMatrix.release();

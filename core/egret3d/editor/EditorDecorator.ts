@@ -64,7 +64,11 @@ namespace paper.editor {
         /**shader */
         SHADER,
         /**数组 */
-        ARRAY
+        ARRAY,
+        /**
+         * 
+         */
+        NESTED,
     }
 
     let customMap: { [key: string]: boolean } = {};

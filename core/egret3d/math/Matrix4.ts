@@ -40,6 +40,7 @@ namespace egret3d {
             return new Matrix4(rawData, offsetOrByteOffset);
         }
         /**
+         * 矩阵原始数据
          * @readonly
          */
         public rawData: Float32Array = null!;
@@ -83,7 +84,7 @@ namespace egret3d {
             return Matrix4.create(this.rawData);
         }
 
-        public identity() {
+        public identity(): Matrix4 {
             this.rawData[0] = 1.0;
             this.rawData[1] = 0.0;
             this.rawData[2] = 0.0;
@@ -112,7 +113,7 @@ namespace egret3d {
             n21: number, n22: number, n23: number, n24: number,
             n31: number, n32: number, n33: number, n34: number,
             n41: number, n42: number, n43: number, n44: number,
-        ) {
+        ): Matrix4 {
             const rawData = this.rawData;
             rawData[0] = n11; rawData[4] = n12; rawData[8] = n13; rawData[12] = n14;
             rawData[1] = n21; rawData[5] = n22; rawData[9] = n23; rawData[13] = n24;
@@ -122,7 +123,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0): Matrix4 {
             for (let i = 0; i < 16; ++i) {
                 this.rawData[i] = value[i + offset];
             }
@@ -130,13 +131,13 @@ namespace egret3d {
             return this;
         }
 
-        public fromBuffer(value: ArrayBuffer, byteOffset: number = 0) {
+        public fromBuffer(value: ArrayBuffer, byteOffset: number = 0): Matrix4 {
             this.rawData = new Float32Array(value, byteOffset, 16);
 
             return this;
         }
 
-        public fromTranslate(value: Readonly<IVector3>, rotationAndScaleStays: boolean = false) {
+        public fromTranslate(value: Readonly<IVector3>, rotationAndScaleStays: boolean = false): Matrix4 {
             if (!rotationAndScaleStays) {
                 this.identity();
             }
@@ -148,7 +149,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromRotation(rotation: Quaternion, translateStays: boolean = false) {
+        public fromRotation(rotation: Quaternion, translateStays: boolean = false): Matrix4 {
             return this.compose(translateStays ? _helpVector3A.fromArray(this.rawData, 12) : Vector3.ZERO, rotation, Vector3.ONE);
         }
 
@@ -287,7 +288,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromScale(x: number, y: number, z: number, translateStays: boolean = false) {
+        public fromScale(x: number, y: number, z: number, translateStays: boolean = false): Matrix4 {
             if (translateStays) {
                 _helpVector3A.fromArray(this.rawData, 12);
             }
@@ -307,7 +308,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromAxis(axis: Readonly<IVector3>, radian: number = 0.0) {
+        public fromAxis(axis: Readonly<IVector3>, radian: number = 0.0): Matrix4 {
             // Based on http://www.gamedev.net/reference/articles/article1199.asp
             const c = Math.cos(radian);
             const s = Math.sin(radian);
@@ -325,7 +326,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromAxises(axisX: Readonly<IVector3>, axisY: Readonly<IVector3>, axisZ: Readonly<IVector3>) {
+        public fromAxises(axisX: Readonly<IVector3>, axisY: Readonly<IVector3>, axisZ: Readonly<IVector3>): Matrix4 {
             this.set(
                 axisX.x, axisY.x, axisZ.x, 0.0,
                 axisX.y, axisY.y, axisZ.y, 0.0,
@@ -336,7 +337,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromRotationX(radian: number) {
+        public fromRotationX(radian: number): Matrix4 {
             const c = Math.cos(radian), s = Math.sin(radian);
             this.set(
                 1, 0, 0, 0,
@@ -348,7 +349,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromRotationY(radian: number) {
+        public fromRotationY(radian: number): Matrix4 {
             const c = Math.cos(radian), s = Math.sin(radian);
             this.set(
                 c, 0, s, 0,
@@ -360,7 +361,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromRotationZ(radian: number) {
+        public fromRotationZ(radian: number): Matrix4 {
             const c = Math.cos(radian), s = Math.sin(radian);
             this.set(
                 c, - s, 0, 0,
@@ -418,7 +419,7 @@ namespace egret3d {
             );
         }
 
-        public compose(translation: Readonly<IVector3>, rotation: Readonly<IVector4>, scale: Readonly<IVector3>) {
+        public compose(translation: Readonly<IVector3>, rotation: Readonly<IVector4>, scale: Readonly<IVector3>): Matrix4 {
             const rawData = this.rawData;
             const x = rotation.x, y = rotation.y, z = rotation.z, w = rotation.w;
             const x2 = x + x, y2 = y + y, z2 = z + z;
@@ -451,7 +452,7 @@ namespace egret3d {
             return this;
         }
 
-        public decompose(translation: Vector3 | null = null, rotation: Quaternion | null = null, scale: Vector3 | null = null) {
+        public decompose(translation: Vector3 | null = null, rotation: Quaternion | null = null, scale: Vector3 | null = null): Matrix4 {
             const rawData = this.rawData;
 
             if (translation) {
@@ -502,7 +503,7 @@ namespace egret3d {
             return this;
         }
 
-        public transpose(source?: Readonly<Matrix4>) {
+        public transpose(source?: Readonly<Matrix4>): Matrix4 {
             if (!source) {
                 source = this;
             }
@@ -522,7 +523,7 @@ namespace egret3d {
             return this;
         }
 
-        public inverse(source?: Readonly<Matrix4>) {
+        public inverse(source?: Readonly<Matrix4>): Matrix4 {
             if (!source) {
                 source = this;
             }
@@ -601,7 +602,7 @@ namespace egret3d {
             rawData[15] = sourceRawData[15] * value;
         }
 
-        public multiply(valueA: Readonly<Matrix4>, valueB?: Readonly<Matrix4>) {
+        public multiply(valueA: Readonly<Matrix4>, valueB?: Readonly<Matrix4>): Matrix4 {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;
@@ -644,12 +645,12 @@ namespace egret3d {
             return this;
         }
 
-        public premultiply(value: Readonly<Matrix4>) {
+        public premultiply(value: Readonly<Matrix4>): Matrix4 {
             this.multiply(value, this);
             return this;
         }
 
-        public lerp(t: number, value: Matrix4, source?: Matrix4) {
+        public lerp(t: number, value: Matrix4, source?: Matrix4): Matrix4 {
             if (!source) {
                 source = this;
             }
@@ -662,28 +663,32 @@ namespace egret3d {
             return this;
         }
         /**
-         * 
-         * - 两点位置不重合。
-         * @param eye 
-         * @param target 
-         * @param up 
+         * 设置该矩阵，使得其 Z 轴正方向指向目标点。
+         * @param eye 起始点。
+         * @param target 目标点。
+         * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
          */
-        public lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>) {
-            this.lookRotation(_helpVector3C.subtract(target, eye).normalize(), up); // left-hand coordinates system.
+        public lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
+            this.lookRotation(_helpVector3C.subtract(target, eye), up);
 
             return this;
         }
         /**
-         * 
+         * 设置该矩阵，使得其 Z 轴正方向指向目标方向。
+         * - 矩阵的缩放值将被覆盖。
+         * @param target 目标方向。
+         * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
          */
-        public lookRotation(value: Readonly<IVector3>, up: Readonly<IVector3>) {
-            const x = _helpVector3A.cross(up, value).normalize(undefined, Vector3.RIGHT);
-            const y = _helpVector3B.cross(value, x);
+        public lookRotation(direction: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
+            _helpVector3C.normalize(direction);
+
+            const x = _helpVector3A.cross(up, _helpVector3C).normalize();
+            const y = _helpVector3B.cross(_helpVector3C, x);
             const rawData = this.rawData;
 
-            rawData[0] = x.x; rawData[4] = y.x; rawData[8] = value.x;
-            rawData[1] = x.y; rawData[5] = y.y; rawData[9] = value.y;
-            rawData[2] = x.z; rawData[6] = y.z; rawData[10] = value.z;
+            rawData[0] = x.x; rawData[4] = y.x; rawData[8] = _helpVector3C.x;
+            rawData[1] = x.y; rawData[5] = y.y; rawData[9] = _helpVector3C.y;
+            rawData[2] = x.z; rawData[6] = y.z; rawData[10] = _helpVector3C.z;
 
             return this;
         }
@@ -845,65 +850,6 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public scale(scaler: number) { // TODO
-            const rawData = this.rawData;
-
-            rawData[0] *= scaler;
-            rawData[1] *= scaler;
-            rawData[2] *= scaler;
-            rawData[3] *= scaler;
-
-            rawData[4] *= scaler;
-            rawData[5] *= scaler;
-            rawData[6] *= scaler;
-            rawData[7] *= scaler;
-
-            rawData[8] *= scaler;
-            rawData[9] *= scaler;
-            rawData[10] *= scaler;
-            rawData[11] *= scaler;
-
-            rawData[12] *= scaler;
-            rawData[13] *= scaler;
-            rawData[14] *= scaler;
-            rawData[15] *= scaler;
-
-            return this;
-        }
-        /**
-         * @deprecated
-         */
-        public add(left: Matrix4, right?: Matrix4) { // TODO
-            if (!right) {
-                right = left;
-                left = this;
-            }
-
-            this.rawData[0] = left.rawData[0] + right.rawData[0];
-            this.rawData[1] = left.rawData[1] + right.rawData[1];
-            this.rawData[2] = left.rawData[2] + right.rawData[2];
-            this.rawData[3] = left.rawData[3] + right.rawData[3];
-
-            this.rawData[4] = left.rawData[4] + right.rawData[4];
-            this.rawData[5] = left.rawData[5] + right.rawData[5];
-            this.rawData[6] = left.rawData[6] + right.rawData[6];
-            this.rawData[7] = left.rawData[7] + right.rawData[7];
-
-            this.rawData[8] = left.rawData[8] + right.rawData[8];
-            this.rawData[9] = left.rawData[9] + right.rawData[9];
-            this.rawData[10] = left.rawData[10] + right.rawData[10];
-            this.rawData[11] = left.rawData[11] + right.rawData[11];
-
-            this.rawData[12] = left.rawData[12] + right.rawData[12];
-            this.rawData[13] = left.rawData[13] + right.rawData[13];
-            this.rawData[14] = left.rawData[14] + right.rawData[14];
-            this.rawData[15] = left.rawData[15] + right.rawData[15];
-
-            return this;
-        }
-        /**
-         * @deprecated
-         */
         public static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix4): Matrix4 {
             let tan = 1.0 / (Math.tan(fov * 0.5));
             out.rawData[0] = tan / aspect;
@@ -957,6 +903,7 @@ namespace egret3d {
     const _helpVector3A = Vector3.create();
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
+    const _helpVector3D = Vector3.create();
     const _helpMatrix = Matrix4.create();
 
     /**

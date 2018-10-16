@@ -1,30 +1,29 @@
 namespace paper {
+    let _createEnabled = false;
     /**
-     * 系统基类。
+     * 基础系统。
+     * - 全部系统的基类。
      */
     export abstract class BaseSystem {
-        private static _createEnabled: boolean = false;
         /**
          * @internal
          */
-        public static create(systemClass: { new(): BaseSystem }, order: SystemOrder = SystemOrder.Update) {
-            this._createEnabled = true;
-            const system = new systemClass();
-            if (system._order < 0) {
-                system._order = order;
-            }
-
-            return system;
+        public static create<T extends BaseSystem>(systemClass: { new(order?: SystemOrder): T }, order: SystemOrder) {
+            _createEnabled = true;
+            return new systemClass(order);
         }
         /**
-         * @internal
+         * 
          */
-        public _order: SystemOrder = -1;
+        public readonly order: SystemOrder = -1;
         /**
          * @internal
          */
         public _started: boolean = true;
         private _locked: boolean = false;
+        /**
+         * 系统是否激活。
+         */
         protected _enabled: boolean = true;
         /**
          * 
@@ -35,25 +34,26 @@ namespace paper {
          */
         protected readonly _groups: GameObjectGroup[] = [];
         /**
-         * 
+         * 全局时钟信息组件实例。
          */
         protected readonly _clock: Clock = GameObject.globalGameObject.getOrAddComponent(Clock);
         /**
          * 禁止实例化系统。
          * @protected
          */
-        public constructor() {
-            if (!BaseSystem._createEnabled) {
+        public constructor(order: SystemOrder = -1) {
+            if (!_createEnabled) {
                 throw new Error("Create an instance of a system is not allowed.");
             }
+            _createEnabled = false;
 
-            BaseSystem._createEnabled = false;
+            this.order = order;
         }
         /**
          * 系统内部初始化。
          * @internal
          */
-        public _initialize() {
+        public initialize(config?: any) {
             if (this._interests.length > 0) {
                 let interests: ReadonlyArray<ReadonlyArray<InterestConfig>>;
 
@@ -66,18 +66,9 @@ namespace paper {
 
                 for (const interest of interests) {
                     for (const config of interest) {
-                        if (!config.listeners) {
-                            continue;
-                        }
-
-                        for (const listenerConfig of config.listeners) {
-                            if (Array.isArray(config.componentClass)) {
-                                for (const componentClass of config.componentClass) {
-                                    EventPool.addEventListener(listenerConfig.type, componentClass, listenerConfig.listener);
-                                }
-                            }
-                            else {
-                                EventPool.addEventListener(listenerConfig.type, config.componentClass, listenerConfig.listener);
+                        if (config.listeners) {
+                            for (const listenerConfig of config.listeners) {
+                                listenerConfig.type.add(listenerConfig.listener, this);
                             }
                         }
                     }
@@ -86,14 +77,14 @@ namespace paper {
                 }
             }
 
-            this.onAwake && this.onAwake();
+            this.onAwake && this.onAwake(config);
             this.onEnable && this.onEnable();
         }
         /**
          * 系统内部卸载。
          * @internal
          */
-        public _uninitialize() {
+        public uninitialize() {
             this.onDestroy && this.onDestroy();
 
             if (this._interests.length > 0) {
@@ -108,18 +99,9 @@ namespace paper {
 
                 for (const interest of interests) {
                     for (const config of interest) {
-                        if (!config.listeners) {
-                            continue;
-                        }
-
-                        for (const listenerConfig of config.listeners) {
-                            if (Array.isArray(config.componentClass)) {
-                                for (const componentClass of config.componentClass) {
-                                    EventPool.removeEventListener(listenerConfig.type, componentClass, listenerConfig.listener);
-                                }
-                            }
-                            else {
-                                EventPool.removeEventListener(listenerConfig.type, config.componentClass, listenerConfig.listener);
+                        if (config.listeners) {
+                            for (const listenerConfig of config.listeners) {
+                                listenerConfig.type.remove(listenerConfig.listener);
                             }
                         }
                     }
@@ -130,7 +112,7 @@ namespace paper {
          * 系统内部更新。
          * @internal
          */
-        public _update() {
+        public update() {
             if (!this._enabled) {
                 return;
             }
@@ -163,7 +145,7 @@ namespace paper {
          * 系统内部更新。
          * @internal
          */
-        public _lateUpdate() {
+        public lateUpdate() {
             if (!this._enabled) {
                 return;
             }
@@ -174,8 +156,9 @@ namespace paper {
         }
         /**
          * 该系统初始化时调用。
+         * @param config 该系统被注册时可以传递的初始化数据。
          */
-        public onAwake?(): void;
+        public onAwake?(config?: any): void;
         /**
          * 该系统被激活时调用。
          * @see paper.BaseSystem#enabled
@@ -188,31 +171,41 @@ namespace paper {
         /**
          * 实体被添加到系统时调用。
          * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
+         * @param gameObject 收集的实体。
+         * @param group 收集实体的实体组。
          * @see paper.GameObject#addComponent()
          */
         public onAddGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
         /**
          * 充分非必要组件添加到实体时调用。
          * - 注意，该调用并不是立即的，而是等到添加到实体的下一帧才被调用。
+         * @param component 收集的实体组件。
+         * @param group 收集实体组件的实体组。
          * @see paper.GameObject#addComponent()
          */
         public onAddComponent?(component: BaseComponent, group: GameObjectGroup): void;
         /**
          * 充分非必要组件从实体移除时调用。
+         * @param component 移除的实体组件。
+         * @param group 移除实体组件的实体组。
          * @see paper.GameObject#removeComponent()
          */
         public onRemoveComponent?(component: BaseComponent, group: GameObjectGroup): void;
         /**
          * 实体从系统移除时调用。
+         * @param gameObject 移除的实体。
+         * @param group 移除实体的实体组。
          * @see paper.GameObject#removeComponent()
          */
         public onRemoveGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
         /**
          * 该系统更新时调用。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
          */
         public onUpdate?(deltaTime?: number): void;
         /**
          * 该系统更新时调用。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
          */
         public onLateUpdate?(deltaTime?: number): void;
         /**

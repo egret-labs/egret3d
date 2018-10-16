@@ -4,14 +4,18 @@ namespace egret3d {
     const _helpMatrix = Matrix4.create();
 
     const enum TransformDirty {
-        PRS = 0b00111,
+        All = 0b111111,
+        EXT = 0b111110,
+        PRS = 0b000111,
+        MIM = 0b110000,
 
-        Position = 0b00001,
-        Rotation = 0b00010,
-        Scale = 0b00100,
+        Position = 0b000001,
+        Rotation = 0b000010,
+        Scale = 0b000100,
 
-        Euler = 0b01000,
-        Matrix = 0b10000,
+        Euler = 0b001000,
+        Matrix = 0b010000,
+        InverseMatrix = 0b100000,
     }
     /**
      * 变换组件。
@@ -19,8 +23,8 @@ namespace egret3d {
      * - 实现 3D 空间坐标系。
      */
     export class Transform extends paper.BaseComponent {
-        private _localDirty: TransformDirty = TransformDirty.PRS | TransformDirty.Euler | TransformDirty.Matrix;
-        private _worldDirty: TransformDirty = TransformDirty.PRS | TransformDirty.Euler | TransformDirty.Matrix;
+        private _localDirty: TransformDirty = TransformDirty.All;
+        private _worldDirty: TransformDirty = TransformDirty.All;
         /**
          * 世界矩阵的行列式，如果小于0，说明进行了反转
          * @internal
@@ -42,9 +46,7 @@ namespace egret3d {
         private readonly _euler: Vector3 = Vector3.create();
         private readonly _eulerAngles: Vector3 = Vector3.create();
         private readonly _scale: Vector3 = Vector3.ONE.clone();
-        /**
-         * TODO inverse world matrix.
-         */
+        private readonly _inverseWorldMatrix: Matrix4 = Matrix4.create();
         private readonly _worldMatrix: Matrix4 = Matrix4.create();
         /**
          * @internal
@@ -69,11 +71,10 @@ namespace egret3d {
 
         private _dirtify(isLocalDirty: ConstrainBoolean, dirty: TransformDirty) {
             if (isLocalDirty) {
-                this._localDirty |= dirty | TransformDirty.Matrix;
+                this._localDirty |= dirty | TransformDirty.MIM;
 
                 if (dirty & TransformDirty.Rotation) {
-                    this._localDirty |= TransformDirty.Scale;
-                    this._localDirty |= TransformDirty.Euler;
+                    this._localDirty |= TransformDirty.Scale | TransformDirty.Euler;
                 }
                 else if (dirty & TransformDirty.Scale) {
                     this._localDirty |= TransformDirty.Rotation;
@@ -82,10 +83,10 @@ namespace egret3d {
 
             if (!(this._worldDirty & dirty) || !(this._worldDirty & TransformDirty.Matrix)) {
                 if (dirty & TransformDirty.Position) {
-                    this._worldDirty |= dirty | TransformDirty.Matrix;
+                    this._worldDirty |= dirty | TransformDirty.MIM;
                 }
                 else {
-                    this._worldDirty |= TransformDirty.PRS | TransformDirty.Euler | TransformDirty.Matrix;
+                    this._worldDirty = TransformDirty.All;
                 }
 
                 for (const child of this._children) {
@@ -863,6 +864,17 @@ namespace egret3d {
             return this._worldMatrix;
         }
         /**
+         * 该物体的世界逆矩阵。
+         */
+        public get inverseWorldMatrix(): Readonly<Matrix4> {
+            if (this._worldDirty & TransformDirty.InverseMatrix) {
+                this._inverseWorldMatrix.inverse(this.worldMatrix);
+                this._worldDirty &= ~TransformDirty.InverseMatrix;
+            }
+
+            return this._inverseWorldMatrix;
+        }
+        /**
          * 将该物体位移指定距离。
          * @param isWorldSpace 是否是世界坐标系。
          */
@@ -1029,8 +1041,8 @@ namespace egret3d {
             return out.applyDirection(this.worldMatrix, Vector3.FORWARD).normalize();
         }
         /**
-         * 通过旋转使得该物体的 Z 轴正方向指向目标。
-         * @param target 目标。
+         * 通过旋转使得该物体的 Z 轴正方向指向目标点。
+         * @param target 目标点。
          * @param up 旋转后，该物体在世界空间坐标系下描述的 Y 轴正方向。
          */
         public lookAt(target: Readonly<Transform> | Readonly<IVector3>, up: Readonly<IVector3> = Vector3.UP) {
@@ -1041,6 +1053,16 @@ namespace egret3d {
                     up
                 )
             );
+
+            return this;
+        }
+        /**
+         * 通过旋转使得该物体的 Z 轴正方向指向目标方向。
+         * @param target 目标方向。
+         * @param up 旋转后，该物体在世界空间坐标系下描述的 Y 轴正方向。
+         */
+        public lookRotation(direction: Readonly<IVector3>, up: Readonly<IVector3> = Vector3.UP) {
+            this.rotation = this._localRotation.fromMatrix(_helpMatrix.lookRotation(direction, up));
 
             return this;
         }
@@ -1067,5 +1089,8 @@ namespace egret3d {
         public set parent(value: Transform | null) {
             this.setParent(value, false);
         }
+
+        // public get root{
+        // }
     }
 }

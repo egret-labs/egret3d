@@ -1,33 +1,53 @@
-function main() {
-    // if ((window || global).dat) {
-    //     // fps TODO
-    //     const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
-    //     Stats.show(div);
-    // }
+declare class Examples {
 
-    startExamples();
-    // Or your progject start.
+    start(): Promise<void>
 }
 
-function startExamples() {
-    const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
-    const allScripts = window["allScripts"] as string[];
-    const examples = [] as string[];
+function main() {
+    const exampleString = getCurrentExampleString();
+    let exampleClass: any;
 
-    for (const example of allScripts) {
-        const index = example.indexOf("examples");
-        if (index > 0) {
-            examples.push(example.substr(index + "examples/".length).split(".")[0]);
-        }
+    if (exampleString.indexOf(".") > 0) { // Package
+        const params = exampleString.split(".");
+        exampleClass = (window as any).examples[params[0]][params[1]];
+    }
+    else {
+        exampleClass = (window as any).examples[exampleString];
     }
 
-    const current = getCurrentTest();
-    const options = {
-        example: current,
-    };
-    const gui = guiComponent.hierarchy.addFolder("Examples");
-    gui.open();
-    gui.add(options, "example", examples).onChange((v: string) => {
+    const exampleObj: Examples = new exampleClass();
+    exampleObj.start();
+
+    createGUI(exampleString);
+
+    function createGUI(exampleString: string) {
+        const namespaceExamples = (window as any).examples;
+        const examples: string[] = [];
+
+        for (const k in namespaceExamples) {
+            const element = namespaceExamples[k];
+            if (element.constructor === Object) { // Package
+                for (const kB in element) {
+                    examples.push([k, kB].join("."));
+                }
+            }
+            else {
+                examples.push(k);
+            }
+        }
+
+        const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
+        const gui = guiComponent.hierarchy.addFolder("Examples");
+        const options = {
+            example: exampleString
+        };
+        gui.add(options, "example", examples).onChange((example: string) => {
+            location.href = getNewUrl(example);
+        });
+        gui.open();
+    }
+
+    function getNewUrl(exampleString: string[] | string) {
         let url = location.href;
         const index = url.indexOf("?");
         if (index !== -1) {
@@ -36,15 +56,13 @@ function startExamples() {
         if (url.indexOf(".html") === -1) {
             url += "index.html";
         }
-        url += "?example=" + v;
-        location.href = url;
-    });
+        url += "?example=" + exampleString;
+        return url;
+    }
 
-    window[current].start();
+    function getCurrentExampleString() {
+        var appFile = "Test";
 
-    function getCurrentTest() {
-        var appFile;
-        var hasTest = false;
         var str = location.search;
         str = str.slice(1, str.length);
         var totalArray = str.split("&");
@@ -55,16 +73,10 @@ function startExamples() {
                 var value = itemArray[1];
                 if (key === "example") {
                     appFile = value;
-                    hasTest = true;
                     break;
                 }
             }
         }
-
-        if (!hasTest) {
-            appFile = examples.indexOf("Test") >= 0 ? "Test" : examples[0];
-        }
-
         return appFile;
     }
 }

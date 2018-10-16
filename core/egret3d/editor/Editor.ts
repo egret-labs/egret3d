@@ -156,6 +156,7 @@ namespace paper.editor {
         private static initEditEnvironment() {
             egret3d.runEgret({
                 antialias: false,
+                alpha: false,
                 playerMode: PlayerMode.Editor,
             });
         }

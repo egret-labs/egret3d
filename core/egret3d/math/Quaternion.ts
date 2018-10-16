@@ -248,6 +248,8 @@ namespace egret3d {
             this.x = (x * ratioA + this.x * ratioB);
             this.y = (y * ratioA + this.y * ratioB);
             this.z = (z * ratioA + this.z * ratioB);
+
+            return this;
         }
         /**
          * 

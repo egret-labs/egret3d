@@ -1,14 +1,14 @@
 namespace egret3d {
     /**
-     * 
+     * TODO 使用枚举常数。
      */
     export const RAD_DEG: number = 180.0 / Math.PI;
     /**
-     * 
+     * TODO 使用枚举常数。
      */
     export const DEG_RAD: number = Math.PI / 180.0;
     /**
-     * 
+     * TODO 使用枚举常数。
      */
     export const EPSILON = 2.220446049250313e-16; // Number.EPSILON
 
@@ -17,6 +17,7 @@ namespace egret3d {
             return value;
         }
 
+        
         return value > 0 ? 1 : -1;
     }
 
@@ -31,19 +32,6 @@ namespace egret3d {
 
     export function numberLerp(fromV: number, toV: number, v: number) {
         return fromV * (1 - v) + toV * v;
-    }
-
-    export function getNormal(a: Readonly<IVector3>, b: Readonly<IVector3>, c: Readonly<IVector3>, out: Vector3) {
-        out.subtract(c, b);
-        helpVector3A.subtract(a, b);
-        out.cross(helpVector3A);
-
-        const squaredLength = out.squaredLength;
-        if (squaredLength > 0.0) {
-            return out.multiplyScalar(1.0 / Math.sqrt(squaredLength));
-        }
-
-        return out.set(0.0, 0.0, 1.0);
     }
 
     export function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3) {

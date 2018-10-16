@@ -3,6 +3,8 @@ namespace egret3d {
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
     const _helpMatrix = Matrix4.create();
+    const _helpTriangleA = Triangle.create();
+    const _helpTriangleB = Triangle.create();
     const _helpRaycastInfo = RaycastInfo.create();
 
     const _attributeNames: gltf.MeshAttributeType[] = [
@@ -11,7 +13,8 @@ namespace egret3d {
         gltf.MeshAttributeType.TEXCOORD_0,
     ];
     /**
-     * 网格基类。
+     * 基础网格。
+     * - 所有网格的基类。
      */
     export abstract class BaseMesh extends GLTFAsset implements egret3d.IRaycast {
         protected _drawMode: gltf.DrawMode = gltf.DrawMode.Static;
@@ -19,7 +22,12 @@ namespace egret3d {
         protected readonly _attributeNames: string[] = [];
         protected readonly _customAttributeTypes: { [key: string]: gltf.AccessorType } = {};
         protected _glTFMesh: gltf.Mesh | null = null;
-        private _helpVertices: Float32Array | null = null;
+        /**
+         * Backuped raw vertices when CPU skinned.
+         * @internal
+         */
+        public _rawVertices: Float32Array | null = null;
+        private _skinnedVertices: Float32Array | null = null;
         /**
          * 请使用 `egret3d.Mesh.create()` 创建实例。
          * @see egret3d.Mesh.create()
@@ -102,7 +110,7 @@ namespace egret3d {
             }
         }
         /**
-         * 
+         * 克隆该网格。
          */
         public clone() {
             const value = new Mesh(this.vertexCount, 0, this._attributeNames, this._customAttributeTypes, this.drawMode);
@@ -138,6 +146,9 @@ namespace egret3d {
             const p0 = _helpVector3A;
             const p1 = _helpVector3B;
             const p2 = _helpVector3C;
+            const helpTriangleA = _helpTriangleA;
+            const helpTriangleB = _helpTriangleB;
+            const helpRaycastInfo = _helpRaycastInfo;
             const vertices = this.getVertices()!;
             const joints = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.JOINTS_0) as Float32Array : null;
             const weights = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.WEIGHTS_0) as Float32Array : null;
@@ -147,39 +158,30 @@ namespace egret3d {
                 const indices = primitive.indices !== undefined ? this.getIndices(subMeshIndex)! : null;
                 let castVertices = vertices;
 
-                if (boneMatrices) {
-                    if (!this._helpVertices) { // TODO clean
-                        this._helpVertices = new Float32Array(vertices.length);
-                    }
+                if (boneMatrices) { // Skinned mesh.
+                    if (!this._rawVertices) {
+                        if (!this._skinnedVertices) {
+                            this._skinnedVertices = new Float32Array(vertices.length);
+                        }
 
-                    castVertices = this._helpVertices;
+                        castVertices = this._skinnedVertices;
 
-                    if (indices) {
-                        for (const index of <any>indices as number[]) {
+                        for (const index of <any>indices! as number[]) {
                             const vertexIndex = index * 3;
                             const jointIndex = index * 4;
                             p0.fromArray(vertices, vertexIndex);
-                            p1
-                                .set(0.0, 0.0, 0.0)
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 0] * 16), p0).multiplyScalar(weights![jointIndex + 0]))
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 1] * 16), p0).multiplyScalar(weights![jointIndex + 1]))
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 2] * 16), p0).multiplyScalar(weights![jointIndex + 2]))
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 3] * 16), p0).multiplyScalar(weights![jointIndex + 3]))
-                                .toArray(castVertices, vertexIndex);
-                        }
-                    }
-                    else {
-                        let index = 0;
-                        for (let i = 0, l = vertices.length; i < l; i += 3) {
-                            const jointIndex = (index++) * 3;
-                            p0.fromArray(vertices, i);
-                            p1
-                                .set(0.0, 0.0, 0.0)
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 0] * 16), p0).multiplyScalar(weights![jointIndex + 0]))
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 1] * 16), p0).multiplyScalar(weights![jointIndex + 1]))
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 2] * 16), p0).multiplyScalar(weights![jointIndex + 2]))
-                                .add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + 3] * 16), p0).multiplyScalar(weights![jointIndex + 3]))
-                                .toArray(castVertices, i);
+                            p1.clear();
+
+                            for (let i = 0; i < 4; ++i) {
+                                const weight = weights![jointIndex + i];
+                                if (weight <= 0.0) {
+                                    continue;
+                                }
+
+                                p1.add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + i] * 16), p0).multiplyScalar(weight));
+                            }
+
+                            p1.toArray(castVertices, vertexIndex);
                         }
                     }
                 }
@@ -207,48 +209,57 @@ namespace egret3d {
                     default:
                         if (indices) {
                             for (let i = 0, l = indices.length; i < l; i += 3) { //
-                                p0.fromArray(castVertices, indices[i] * 3);
-                                p1.fromArray(castVertices, indices[i + 1] * 3);
-                                p2.fromArray(castVertices, indices[i + 2] * 3);
+                                helpTriangleA.fromArray(
+                                    castVertices,
+                                    indices[i] * 3, indices[i + 1] * 3, indices[i + 2] * 3
+                                );
 
                                 if (raycastInfo) {
-                                    if (ray.intersectTriangle(p0, p1, p2, false, _helpRaycastInfo)) {
-                                        if (!hit || raycastInfo.distance > _helpRaycastInfo.distance) {
-                                            raycastInfo.subMeshIndex = subMeshIndex;
-                                            raycastInfo.triangleIndex = i / 3; // TODO
-                                            raycastInfo.distance = _helpRaycastInfo.distance;
-                                            raycastInfo.position.copy(_helpRaycastInfo.position);
-                                            raycastInfo.textureCoordA.copy(_helpRaycastInfo.textureCoordA);
-                                            raycastInfo.textureCoordB.copy(_helpRaycastInfo.textureCoordB);
-                                            hit = true;
+                                    if (
+                                        helpTriangleA.raycast(ray, helpRaycastInfo) &&
+                                        (!hit || raycastInfo.distance > helpRaycastInfo.distance)
+                                    ) {
+                                        raycastInfo.subMeshIndex = subMeshIndex;
+                                        raycastInfo.triangleIndex = i / 3; // TODO
+                                        raycastInfo.distance = helpRaycastInfo.distance;
+                                        raycastInfo.position.copy(helpRaycastInfo.position);
+                                        raycastInfo.textureCoordA.copy(helpRaycastInfo.textureCoordA);
+                                        raycastInfo.textureCoordB.copy(helpRaycastInfo.textureCoordB);
+                                        hit = true;
+
+                                        if (raycastInfo.normal) {
+                                            helpTriangleB.copy(helpTriangleA);
                                         }
+
                                     }
                                 }
-                                else if (ray.intersectTriangle(p0, p1, p2)) {
+                                else if (helpTriangleA.raycast(ray)) {
                                     return true;
                                 }
                             }
                         }
                         else {
                             for (let i = 0, l = castVertices.length; i < l; i += 9) { //
-                                p0.fromArray(castVertices, i);
-                                p1.fromArray(castVertices, i + 3);
-                                p2.fromArray(castVertices, i + 6);
+                                helpTriangleA.fromArray(castVertices, i);
 
                                 if (raycastInfo) {
-                                    if (ray.intersectTriangle(p0, p1, p2, false, _helpRaycastInfo)) {
-                                        if (!hit || raycastInfo.distance > _helpRaycastInfo.distance) {
+                                    if (helpTriangleA.raycast(ray, helpRaycastInfo)) {
+                                        if (!hit || raycastInfo.distance > helpRaycastInfo.distance) {
                                             raycastInfo.subMeshIndex = subMeshIndex;
                                             raycastInfo.triangleIndex = i / 3; // TODO
-                                            raycastInfo.distance = _helpRaycastInfo.distance;
-                                            raycastInfo.position.copy(_helpRaycastInfo.position);
-                                            raycastInfo.textureCoordA.copy(_helpRaycastInfo.textureCoordA);
-                                            raycastInfo.textureCoordB.copy(_helpRaycastInfo.textureCoordB);
+                                            raycastInfo.distance = helpRaycastInfo.distance;
+                                            raycastInfo.position.copy(helpRaycastInfo.position);
+                                            raycastInfo.textureCoordA.copy(helpRaycastInfo.textureCoordA);
+                                            raycastInfo.textureCoordB.copy(helpRaycastInfo.textureCoordB);
                                             hit = true;
+
+                                            if (raycastInfo.normal) {
+                                                helpTriangleB.copy(helpTriangleA);
+                                            }
                                         }
                                     }
                                 }
-                                else if (ray.intersectTriangle(p0, p1, p2)) {
+                                else if (helpTriangleA.raycast(ray)) {
                                     return true;
                                 }
                             }
@@ -257,6 +268,11 @@ namespace egret3d {
                 }
 
                 subMeshIndex++;
+            }
+
+            if (hit && raycastInfo!.normal) {
+                // TODO 差值三个顶点的法线，而不是使用三角形法线。或者可以选择使用使用三角形法线还是顶点法线。
+                helpTriangleB.getNormal(raycastInfo!.normal);
             }
 
             return hit;

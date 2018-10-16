@@ -36,10 +36,10 @@ function ___$insertStyle(css) {
 
 function colorToString (color, forceCSSHex) {
   var colorFormat = color.__state.conversionName.toString();
-  var r = Math.round(color.r);
-  var g = Math.round(color.g);
-  var b = Math.round(color.b);
-  var a = color.a;
+  var r = color.r.toFixed(2);
+  var g = color.g.toFixed(2);
+  var b = color.b.toFixed(2);
+  var a = color.a.toFixed(2);
   var h = Math.round(color.h);
   var s = color.s.toFixed(1);
   var v = color.v.toFixed(1);
@@ -427,12 +427,15 @@ var ColorMath = {
     var t = v * (1.0 - (1.0 - f) * s);
     var c = [[v, t, p], [q, v, p], [p, v, t], [p, q, v], [t, p, v], [v, p, q]][hi];
     return {
-      r: c[0] * 255,
-      g: c[1] * 255,
-      b: c[2] * 255
+      r: c[0],
+      g: c[1],
+      b: c[2]
     };
   },
   rgb_to_hsv: function rgb_to_hsv(r, g, b) {
+    r = Math.round(r * 255);
+    g = Math.round(g * 255);
+    b = Math.round(b * 255);
     var min = Math.min(r, g, b);
     var max = Math.max(r, g, b);
     var delta = max - min;
@@ -465,6 +468,9 @@ var ColorMath = {
     };
   },
   rgb_to_hex: function rgb_to_hex(r, g, b) {
+    r = Math.round(r * 255);
+    g = Math.round(g * 255);
+    b = Math.round(b * 255);
     var hex = this.hex_with_component(0, 2, r);
     hex = this.hex_with_component(hex, 1, g);
     hex = this.hex_with_component(hex, 0, b);
@@ -986,7 +992,7 @@ var OptionController = function (_Controller) {
     });
     _this2.updateDisplay();
     dom.bind(_this2.__select, 'change', function () {
-      var desiredValue = this.options[this.selectedIndex].value;
+      var desiredValue = options[this.options[this.selectedIndex].innerHTML];
       _this.setValue(desiredValue);
     });
     _this2.domElement.appendChild(_this2.__select);
@@ -1090,7 +1096,6 @@ var NumberController = function (_Controller) {
         _v = this.__max;
       }
       if (this.__step !== undefined && _v % this.__step !== 0) {
-        _v = Math.round(_v / this.__step) * this.__step;
       }
       return get(NumberController.prototype.__proto__ || Object.getPrototypeOf(NumberController.prototype), 'setValue', this).call(this, _v);
     }
@@ -1111,7 +1116,7 @@ var NumberController = function (_Controller) {
     value: function step(stepValue) {
       this.__step = stepValue;
       this.__impliedStep = stepValue;
-      this.__precision = numDecimals(stepValue);
+      this.__precision = 2;
       return this;
     }
   }]);

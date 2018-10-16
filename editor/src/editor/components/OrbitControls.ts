@@ -18,9 +18,6 @@ namespace paper.editor {
 
         private _enableMove: boolean = true;
 
-        private bindTouch: egret3d.TouchDevice;
-        private bindMouse: egret3d.MouseDevice;
-
         private _lastMouseX: number;
         private _lastMouseY: number;
         private _mouseDown = false;
@@ -66,10 +63,6 @@ namespace paper.editor {
         }
 
         public onStart() {
-            this.bindTouch = egret3d.InputManager.touch;
-            this.bindMouse = egret3d.InputManager.mouse;
-            //
-            this.bindMouse.disableContextMenu();
         }
 
         public onEnable() {

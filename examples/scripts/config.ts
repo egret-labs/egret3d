@@ -1,8 +1,10 @@
 /// 阅读 api.d.ts 查看文档
-///<reference path="api.d.ts"/>
+///<reference path="declaration/api.d.ts"/>
 
 import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlugin, ManifestPlugin, UglifyPlugin } from 'built-in';
 import * as path from 'path';
+
+
 
 const config: ResourceManagerConfig = {
 
@@ -14,23 +16,50 @@ const config: ResourceManagerConfig = {
         const version = params.version;
 
         if (command == 'bake') {
-            const outputDir = '.';
-            return {
-                outputDir,
-                commands: [
-                    new EmitResConfigFilePlugin({
-                        output: "resource/default.res.json",
-                        typeSelector: config.typeSelector,
-                        nameSelector: p => {
-                            if (p.indexOf("2d/") > 0) {
-                                return path.basename(p).replace(/\./gi, "_")
-                            }
+            const params = process.argv.splice(3);
+            switch (params[0]) {
+                case "--folder":
+                case "-f": {
+                    const outputDir = '.';
+                    return {
+                        outputDir,
+                        commands: [
+                            new EmitResConfigFilePlugin({
+                                output: `resource/${params[1]}/default.res.json`,
+                                typeSelector: config.typeSelector,
+                                nameSelector: p => {
+                                    if (p.indexOf("2d/") > 0) {
+                                        return path.basename(p).replace(/\./gi, "_")
+                                    }
 
-                            return p;
-                        },
-                        groupSelector: p => null
-                    })
-                ]
+                                    return p.replace(params[1] + "/", "");
+                                },
+                                groupSelector: p => null
+                            })
+                        ]
+                    }
+                }
+
+                default: {
+                    const outputDir = '.';
+                    return {
+                        outputDir,
+                        commands: [
+                            new EmitResConfigFilePlugin({
+                                output: "resource/default.res.json",
+                                typeSelector: config.typeSelector,
+                                nameSelector: p => {
+                                    if (p.indexOf("2d/") > 0) {
+                                        return path.basename(p).replace(/\./gi, "_")
+                                    }
+
+                                    return p;
+                                },
+                                groupSelector: p => null
+                            })
+                        ]
+                    }
+                }
             }
         }
         else if (command == 'build') {
@@ -48,12 +77,20 @@ const config: ResourceManagerConfig = {
             return {
                 outputDir,
                 commands: [
-                    new CompilePlugin({ libraryType: "release" }),
+                    new CompilePlugin({ libraryType: "debug" }),
                     new ExmlPlugin('default'),
                     new UglifyPlugin([
                         {
-                            sources: ['resource/default.thm.js'],
-                            target: "default.thm.min.js"
+                            sources: [
+                                "libs/modules/egret/egret.js",
+                                "libs/modules/egret/egret.web.js",
+                                "libs/modules/eui/eui.js",
+                                "libs/modules/assetsmanager/assetsmanager.js",
+                                "libs/modules/egret3d/egret3d.js",
+                                "libs/modules/inspector/inspector.js",
+                                "libs/modules/oimo/oimo.js"
+                            ],
+                            target: "lib.min.js"
                         },
                         {
                             sources: ["main.js"],
@@ -107,7 +144,7 @@ const config: ResourceManagerConfig = {
                     ".mat.json": "Material",
                     ".mesh.bin": "Mesh",
                     ".ani.bin": "Animation",
-                    
+
                     ".bin": "bin",
                     ".zipjson": "bin"
                 }

@@ -12,10 +12,10 @@ float getShadowMask() {
 	for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {
 
 		// directionalLight = directionalLights[ i ];
-		directionalLight.shadow = int(directionalLights[i * 12 + 6]);
-		directionalLight.shadowBias = directionalLights[i * 12 + 7];
-		directionalLight.shadowRadius = directionalLights[i * 12 + 8];
-		directionalLight.shadowMapSize = vec2(directionalLights[i * 12 + 9], directionalLights[i * 12 + 10]);
+		directionalLight.shadow = int(directionalLights[i * 11 + 6]);
+		directionalLight.shadowBias = directionalLights[i * 11 + 7];
+		directionalLight.shadowRadius = directionalLights[i * 11 + 8];
+		directionalLight.shadowMapSize = vec2(directionalLights[i * 11 + 9], directionalLights[i * 11 + 10]);
 		shadow *= bool( directionalLight.shadow ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;
 
 	}
@@ -48,11 +48,11 @@ float getShadowMask() {
 
 		// pointLight = pointLights[ i ];
 		pointLight.shadow = int(pointLights[i * 15 + 8]);
-		pointLight.shadowBias = pointLights[i * 15 * 9];
-		pointLight.shadowRadius = pointLights[i * 15 * 10];
-		pointLight.shadowMapSize = vec2(pointLights[i * 15 * 11],pointLights[i * 15 * 12]);
-		pointLight.shadowCameraNear = pointLights[i * 15 * 13];
-		pointLight.shadowCameraFar = pointLights[i * 15 * 14];
+		pointLight.shadowBias = pointLights[i * 15 + 9];
+		pointLight.shadowRadius = pointLights[i * 15 + 10];
+		pointLight.shadowMapSize = vec2(pointLights[i * 15 + 11],pointLights[i * 15 + 12]);
+		pointLight.shadowCameraNear = pointLights[i * 15 + 13];
+		pointLight.shadowCameraFar = pointLights[i * 15 + 14];
 		shadow *= bool(pointLight.shadow) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;
 
 	}

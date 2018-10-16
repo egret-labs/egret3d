@@ -36,15 +36,15 @@ namespace paper.editor {
             const mA = (this._gridA.renderer as egret3d.MeshRenderer).material!;
             const mB = (this._gridB.renderer as egret3d.MeshRenderer).material!;
 
-            mA.setBlend(gltf.BlendMode.Blend);
-            mB.setBlend(gltf.BlendMode.Blend);
+            mA.setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Transparent);
+            mB.setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Transparent);
         }
 
         public update() {
             const camera = egret3d.Camera.editor;
             const aaa = camera.gameObject.getComponent(OrbitControls)!;
             const target = aaa.lookAtPoint.clone().add(aaa.lookAtOffset);
-            const eyeDistance = (10000.0 - target.getDistance(camera.transform.position)) * 0.01; // TODO
+            const eyeDistance = (10000.0 - target.getDistance(camera.gameObject.transform.position)) * 0.01; // TODO
 
             const d = (eyeDistance % 1.0);
             const s = d * (_step - 1) + 1.0;

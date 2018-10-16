@@ -4,7 +4,9 @@ namespace egret3d {
      */
     class BlendLayer extends paper.BaseRelease<BlendLayer> {
         private static _instances = [] as BlendLayer[];
-
+        /**
+         * @internal
+         */
         public static create() {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!;
@@ -25,7 +27,7 @@ namespace egret3d {
             super();
         }
 
-        public clear() {
+        public onClear() {
             this.dirty = 0;
             this.layer = 0;
             this.leftWeight = 0.0;
@@ -73,7 +75,9 @@ namespace egret3d {
      */
     class AnimationChannel extends paper.BaseRelease<AnimationChannel> {
         private static _instances = [] as AnimationChannel[];
-
+        /**
+         * @internal
+         */
         public static create() {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!;
@@ -621,7 +625,6 @@ namespace egret3d {
     /**
      * 动画组件。
      */
-    @paper.allowMultiple
     export class Animation extends paper.BaseComponent {
         /**
          * @private

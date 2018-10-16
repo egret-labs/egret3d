@@ -1,5 +1,11 @@
+/**
+ * @internal
+ */
+declare var VConsole: any;
+
 namespace paper.editor {
     /**
+     * TODO GUI NEW SAVE LOAD
      * @internal
      */
     export class GUISystem extends BaseSystem {
@@ -14,6 +20,7 @@ namespace paper.editor {
         private readonly _hierarchyFolders: { [key: string]: dat.GUI } = {};
         private readonly _inspectorFolders: { [key: string]: dat.GUI } = {};
         private _selectFolder: dat.GUI | null = null;
+        private _vConsole: any = null;
 
         private _onSceneSelected = (_c: any, value: Scene) => {
             this._selectSceneOrGameObject(value);
@@ -52,11 +59,12 @@ namespace paper.editor {
         }
 
         private _openFolder(folder: dat.GUI) {
-            folder.open();
-
-            if (folder.parent && folder.parent !== this._guiComponent.hierarchy) {
-                this._openFolder(folder.parent);
+            if (!folder.parent || folder.parent === this._guiComponent.hierarchy) {
+                return;
             }
+
+            folder.parent.open();
+            this._openFolder(folder.parent);
         }
 
         private _selectSceneOrGameObject(sceneOrGameObject: Scene | GameObject | null) {
@@ -137,16 +145,32 @@ namespace paper.editor {
             this._hierarchyFolders[gameObject.uuid] = folder;
         }
 
+        private _propertyHasGetterSetter(target: any, propName: string) {
+            let prototype = Object.getPrototypeOf(target);
+            let descriptror;
+
+            while (prototype) {
+                descriptror = Object.getOwnPropertyDescriptor(prototype, propName);
+                if (descriptror && descriptror.get && descriptror.set) {
+                    return true;
+                }
+                prototype = Object.getPrototypeOf(prototype);
+            }
+
+            return false;
+        }
+
         private _addToInspector(gui: dat.GUI) {
             const infos = editor.getEditInfo(gui.instance);
             let guiControllerA: dat.GUIController;
             let guiControllerB: dat.GUIController;
             let guiControllerC: dat.GUIController;
+            let guiControllerD: dat.GUIController;
 
             for (const info of infos) {
                 switch (info.editType) {
                     case editor.EditType.UINT:
-                        guiControllerA = this._guiComponent.inspector.add(gui.instance, info.name).min(0).step(1).listen();
+                        guiControllerA = gui.add(gui.instance, info.name).min(0).step(1).listen();
 
                         if (info.option) {
                             if (info.option.minimum !== undefined) {
@@ -164,7 +188,7 @@ namespace paper.editor {
                         break;
 
                     case editor.EditType.INT:
-                        guiControllerA = this._guiComponent.inspector.add(gui.instance, info.name).step(1).listen();
+                        guiControllerA = gui.add(gui.instance, info.name).step(1).listen();
 
                         if (info.option) {
                             if (info.option.minimum !== undefined) {
@@ -182,7 +206,7 @@ namespace paper.editor {
                         break;
 
                     case editor.EditType.FLOAT:
-                        guiControllerA = this._guiComponent.inspector.add(gui.instance, info.name).step(0.1).listen();
+                        guiControllerA = gui.add(gui.instance, info.name).step(0.1).listen();
 
                         if (info.option) {
                             if (info.option.minimum !== undefined) {
@@ -201,71 +225,75 @@ namespace paper.editor {
 
                     case editor.EditType.CHECKBOX:
                     case editor.EditType.TEXT:
-                        this._guiComponent.inspector.add(gui.instance, info.name).listen();
+                        gui.add(gui.instance, info.name).listen();
                         break;
 
                     case editor.EditType.LIST:
-                        this._guiComponent.inspector.add(gui.instance, info.name, info.option.listItems!).listen();
+                        gui.add(gui.instance, info.name, info.option.listItems!).listen();
                         break;
 
                     case editor.EditType.VECTOR2: {
-                        const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(gui.instance), info.name);
-                        if (descriptor) {
-                            if (descriptor.get && descriptor.set) {
-                                const onChange = () => {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA = this._guiComponent.inspector.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                                guiControllerB = this._guiComponent.inspector.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
-                                guiControllerA.onChange(onChange);
-                                guiControllerB.onChange(onChange);
+                        guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
+                        guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
+
+                        if (this._propertyHasGetterSetter(gui.instance, info.name)) {
+                            const onChange = () => {
+                                gui.instance[info.name] = gui.instance[info.name];
+                            };
+                            guiControllerA.onChange(onChange);
+                            guiControllerB.onChange(onChange);
+                        }
+
+                        if (info.option) {
+                            if (info.option.minimum !== undefined) {
+                                guiControllerA.min(info.option.minimum);
+                                guiControllerB.min(info.option.minimum);
                             }
-                            else {
-                                guiControllerA = this._guiComponent.inspector.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                                guiControllerB = this._guiComponent.inspector.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
+
+                            if (info.option.maximum !== undefined) {
+                                guiControllerA.max(info.option.maximum);
+                                guiControllerB.max(info.option.maximum);
+                            }
+
+                            if (info.option.step !== undefined) {
+                                guiControllerA.step(info.option.step);
+                                guiControllerB.step(info.option.step);
                             }
                         }
                         break;
                     }
 
                     case editor.EditType.VECTOR3: {
-                        const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(gui.instance), info.name);
-                        if (descriptor) {
-                            if (descriptor.get && descriptor.set) {
-                                const onChange = () => {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA = this._guiComponent.inspector.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                                guiControllerB = this._guiComponent.inspector.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
-                                guiControllerC = this._guiComponent.inspector.add(gui.instance[info.name], "z", `${info.name}: z`).step(0.1).listen();
-                                guiControllerA.onChange(onChange);
-                                guiControllerB.onChange(onChange);
-                                guiControllerC.onChange(onChange);
+                        guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
+                        guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
+                        guiControllerC = gui.add(gui.instance[info.name], "z", `${info.name}: z`).step(0.1).listen();
+
+                        if (this._propertyHasGetterSetter(gui.instance, info.name)) {
+                            const onChange = () => {
+                                gui.instance[info.name] = gui.instance[info.name];
+                            };
+                            guiControllerA.onChange(onChange);
+                            guiControllerB.onChange(onChange);
+                            guiControllerC.onChange(onChange);
+                        }
+
+                        if (info.option) {
+                            if (info.option.minimum !== undefined) {
+                                guiControllerA.min(info.option.minimum);
+                                guiControllerB.min(info.option.minimum);
+                                guiControllerC.min(info.option.minimum);
                             }
-                            else {
-                                guiControllerA = this._guiComponent.inspector.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                                guiControllerB = this._guiComponent.inspector.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
-                                guiControllerC = this._guiComponent.inspector.add(gui.instance[info.name], "z", `${info.name}: z`).step(0.1).listen();
+
+                            if (info.option.maximum !== undefined) {
+                                guiControllerA.max(info.option.maximum);
+                                guiControllerB.max(info.option.maximum);
+                                guiControllerC.max(info.option.maximum);
                             }
 
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                    guiControllerB.min(info.option.minimum);
-                                    guiControllerC.min(info.option.minimum);
-                                }
-
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                    guiControllerB.max(info.option.maximum);
-                                    guiControllerC.max(info.option.maximum);
-                                }
-
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                    guiControllerB.step(info.option.step);
-                                    guiControllerC.step(info.option.step);
-                                }
+                            if (info.option.step !== undefined) {
+                                guiControllerA.step(info.option.step);
+                                guiControllerB.step(info.option.step);
+                                guiControllerC.step(info.option.step);
                             }
                         }
                         break;
@@ -276,23 +304,14 @@ namespace paper.editor {
                         break;
 
                     case editor.EditType.COLOR: {
-                        // TODO
-                        // const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(gui.instance), info.name);
-                        // if (descriptor) {
-                        //     if (descriptor.get && descriptor.set) {
-                        //         const onChange = () => {
-                        //             gui.instance[info.name] = gui.instance[info.name];
-                        //         };
-                        //         // this._gameObject.add(gui.instance[info.name], "r", `${info.name}: x`).onChange(onChange);
-                        //         // this._gameObject.add(gui.instance[info.name], "g", `${info.name}: y`).onChange(onChange);
-                        //         // this._gameObject.add(gui.instance[info.name], "b", `${info.name}: z`).onChange(onChange);
-                        //     }
-                        //     else {
-                        //         // this._gameObject.add(gui.instance[info.name], "x", `${info.name}: x`);
-                        //         // this._gameObject.add(gui.instance[info.name], "y", `${info.name}: y`);
-                        //         // this._gameObject.add(gui.instance[info.name], "z", `${info.name}: z`);
-                        //     }
-                        // }
+                        guiControllerA = gui.addColor(gui.instance, info.name).listen();
+                        
+                        if (this._propertyHasGetterSetter(gui.instance, info.name)) {
+                            const onChange = () => {
+                                gui.instance[info.name] = gui.instance[info.name];
+                            };
+                            guiControllerA.onChange(onChange);
+                        }
                         break;
                     }
 
@@ -301,15 +320,22 @@ namespace paper.editor {
 
                     case editor.EditType.GAMEOBJECT:
                         break;
+
+                    case editor.EditType.NESTED: {
+                        const folder = gui.addFolder(info.name);
+                        folder.instance = gui.instance[info.name];
+                        this._addToInspector(folder);
+                        break;
+                    }
                 }
             }
         }
 
         private _debug(value: boolean) {
             if (value) {
-                EventPool.addEventListener(ModelComponentEvent.SceneSelected, ModelComponent, this._onSceneSelected);
-                EventPool.addEventListener(ModelComponentEvent.SceneUnselected, ModelComponent, this._onSceneUnselected);
-                EventPool.addEventListener(ModelComponentEvent.GameObjectSelectChanged, ModelComponent, this._onGameObjectSelectedChange);
+                ModelComponent.onSceneSelected.add(this._onSceneSelected, this);
+                ModelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
+                ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectedChange, this);
 
                 this._bufferedGameObjects.push(GameObject.globalGameObject);
 
@@ -320,9 +346,9 @@ namespace paper.editor {
                 this._modelComponent.select(Scene.activeScene);
             }
             else {
-                EventPool.removeEventListener(ModelComponentEvent.SceneSelected, ModelComponent, this._onSceneSelected);
-                EventPool.removeEventListener(ModelComponentEvent.SceneUnselected, ModelComponent, this._onSceneUnselected);
-                EventPool.removeEventListener(ModelComponentEvent.GameObjectSelectChanged, ModelComponent, this._onGameObjectSelectedChange);
+                ModelComponent.onSceneSelected.remove(this._onSceneSelected, this);
+                ModelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
+                ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectedChange, this);
 
                 for (const k in this._hierarchyFolders) {
                     const folder = this._hierarchyFolders[k];
@@ -349,6 +375,7 @@ namespace paper.editor {
         public onAwake() {
             const sceneOptions = {
                 debug: false,
+                console: false,
                 save: () => {
 
                     const sceneJSON = JSON.stringify(serialize(Application.sceneManager.activeScene));
@@ -360,7 +387,7 @@ namespace paper.editor {
                     else if (this._modelComponent.selectedGameObjects.length > 0) {
 
                     }
-                }
+                },
             };
 
             this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
@@ -380,8 +407,33 @@ namespace paper.editor {
 
                 this._debug(v);
             });
-            this._guiComponent.hierarchy.add(sceneOptions, "save");
-            this._guiComponent.hierarchy.close();
+            this._guiComponent.hierarchy.add(sceneOptions, "console").onChange((v: boolean) => {
+                if (v) {
+                    if (!this._vConsole) {
+                        this._vConsole = true;
+
+                        const loadScript = (url: string, callback: any) => {
+                            const script = document.createElement("script");
+                            script.onload = () => callback();
+                            script.src = url;
+                            document.body.appendChild(script);
+                        };
+                        loadScript(
+                            "https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js",
+                            () => {
+                                this._vConsole = new VConsole();
+                            }
+                        );
+                    }
+                }
+                else {
+                    if (this._vConsole) {
+                        // TODO
+                    }
+                }
+            });
+            // this._guiComponent.hierarchy.add(sceneOptions, "save");
+            // this._guiComponent.hierarchy.close();
         }
 
         public onEnable() {
@@ -416,7 +468,10 @@ namespace paper.editor {
 
             let i = 0;
             while (this._bufferedGameObjects.length > 0 && i++ < 5) {
-                this._addToHierarchy(this._bufferedGameObjects.shift()!);
+                const gameObject = this._bufferedGameObjects.shift();
+                if (gameObject) {
+                    this._addToHierarchy(gameObject);
+                }
             }
 
             // Open and select folder.
@@ -425,7 +480,7 @@ namespace paper.editor {
                 if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
                     this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
                     this._selectFolder.selected = true;
-                    this._openFolder(this._selectFolder.parent);
+                    this._openFolder(this._selectFolder);
                 }
             }
 

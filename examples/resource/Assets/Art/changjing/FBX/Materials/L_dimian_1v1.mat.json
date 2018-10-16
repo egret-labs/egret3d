@@ -1,0 +1,25 @@
+{    "asset":{        "version":2    },    "materials":[
+        {            "extensions":{                "KHR_techniques_webgl":{                    "technique":"builtin/meshbasic.shader.json",                    "values":{                        "diffuse":[
+                            0.625,
+                            0.625,
+                            0.625
+                        ],                        "opacity":1,                        "map":"Assets/Art/changjing/Textures/dimian.image.json",                        "uvTransform":[
+                            18,
+                            0,
+                            0,
+                            0,
+                            12,
+                            0,
+                            0,
+                            0,
+                            1
+                        ]                    }                },                "paper":{                    "renderQueue":2000,                    "defines":[
+                        "USE_MAP"
+                    ]                }            }        }
+    ],    "extensionsRequired":[
+        "KHR_techniques_webgl",
+        "paper"
+    ],    "extensionsUsed":[
+        "KHR_techniques_webgl",
+        "paper"
+    ],    "version":4}
