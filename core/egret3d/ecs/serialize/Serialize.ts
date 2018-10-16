@@ -172,7 +172,7 @@ namespace paper {
      */
     export function serializeStruct(source: BaseObject): ISerializedStruct {
         const className = egret.getQualifiedClassName(source);
-        const target = { class: _findClassCode(className) || className } as ISerializedStruct;
+        const target = { class: className } as ISerializedStruct;
         _serializeChildren(source, target, null, null);
 
         return target;
@@ -195,19 +195,9 @@ namespace paper {
         return keys;
     }
 
-    function _findClassCode(name: string) {
-        for (let key in serializeClassMap) {
-            if (serializeClassMap[key] === name) {
-                return key;
-            }
-        }
-
-        return "";
-    }
-
     function _serializeReference(source: BaseObject): ISerializedObject {
         const className = egret.getQualifiedClassName(source);
-        return { uuid: source.uuid, class: _findClassCode(className) || className };
+        return { uuid: source.uuid, class: className };
     }
 
     function _findPrefabRoot(gameObject: GameObject) {

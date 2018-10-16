@@ -146,11 +146,11 @@ namespace paper.editor {
         }
 
         private move() {
-            let distanceX = this.distance * Math.sin(this._panRad) * Math.cos(this._tiltRad);
-            let distanceY = this.distance * (this._tiltRad === 0 ? 0 : Math.sin(this._tiltRad));
-            let distanceZ = this.distance * Math.cos(this._panRad) * Math.cos(this._tiltRad);
+            const distanceX = this.distance * Math.sin(this._panRad) * Math.cos(this._tiltRad);
+            const distanceY = this.distance * (this._tiltRad === 0 ? 0 : Math.sin(this._tiltRad));
+            const distanceZ = this.distance * Math.cos(this._panRad) * Math.cos(this._tiltRad);
 
-            let target: egret3d.Vector3 = egret3d.Vector3.create();
+            const target: egret3d.Vector3 = egret3d.Vector3.create();
             target.copy(this.lookAtPoint);
             target.add(this.lookAtOffset);
 

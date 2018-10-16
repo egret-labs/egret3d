@@ -126,6 +126,7 @@ namespace paper {
                         componentTarget = prefabDeserializer.components[linkedID];
                     }
                     else {
+                        // const enabled = componentSource._enabled === undefined ? true : componentSource._enabled;
                         componentTarget = (target || this._rootTarget as GameObject).addComponent(clazz);
                     }
 

@@ -59,6 +59,9 @@ namespace paper.editor {
 
                 mesh.uploadVertexBuffer();
             }
+            else {
+                this.gameObject.activeSelf = false;
+            }
 
             return selectedGameObject;
         }

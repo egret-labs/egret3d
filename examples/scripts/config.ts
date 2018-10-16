@@ -3,66 +3,44 @@
 
 import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlugin, ManifestPlugin, UglifyPlugin } from 'built-in';
 import * as path from 'path';
+import { MergeJSONPlugin, MergeBinaryPlugin, ModifyDefaultResJSON } from './myplugin';
 
-
-
+let bakeRoot: string = "";
 const config: ResourceManagerConfig = {
 
     buildConfig: (params) => {
-
         const target = params.target;
         const command = params.command;
         const projectName = params.projectName;
         const version = params.version;
 
-        if (command == 'bake') {
+        if (command === 'bake') {
             const params = process.argv.splice(3);
+            const outputDir = '.';
+            bakeRoot = "resource/";
+
             switch (params[0]) {
                 case "--folder":
-                case "-f": {
-                    const outputDir = '.';
-                    return {
-                        outputDir,
-                        commands: [
-                            new EmitResConfigFilePlugin({
-                                output: `resource/${params[1]}/default.res.json`,
-                                typeSelector: config.typeSelector,
-                                nameSelector: p => {
-                                    if (p.indexOf("2d/") > 0) {
-                                        return path.basename(p).replace(/\./gi, "_")
-                                    }
-
-                                    return p.replace(params[1] + "/", "");
-                                },
-                                groupSelector: p => null
-                            })
-                        ]
-                    }
-                }
-
-                default: {
-                    const outputDir = '.';
-                    return {
-                        outputDir,
-                        commands: [
-                            new EmitResConfigFilePlugin({
-                                output: "resource/default.res.json",
-                                typeSelector: config.typeSelector,
-                                nameSelector: p => {
-                                    if (p.indexOf("2d/") > 0) {
-                                        return path.basename(p).replace(/\./gi, "_")
-                                    }
-
-                                    return p;
-                                },
-                                groupSelector: p => null
-                            })
-                        ]
-                    }
-                }
+                case "-f":
+                    bakeRoot = `resource/${params[1]}/`;
+                    break;
             }
+
+            return {
+                outputDir,
+                commands: [
+                    new MergeJSONPlugin({ root: bakeRoot, nameSelector, mergeJSONSelector }),
+                    new EmitResConfigFilePlugin({
+                        output: bakeRoot + "default.res.json",
+                        typeSelector: config.typeSelector,
+                        nameSelector,
+                        groupSelector: p => null
+                    }),
+                    new ModifyDefaultResJSON(`${params[1]}/`),
+                ]
+            };
         }
-        else if (command == 'build') {
+        else if (command === 'build') {
             const outputDir = '.';
             return {
                 outputDir,
@@ -70,27 +48,19 @@ const config: ResourceManagerConfig = {
                     new ExmlPlugin('debug'),
                     new IncrementCompilePlugin(),
                 ]
-            }
+            };
         }
-        else if (command == 'publish') {
-            const outputDir = target == "web" ? `bin-release/${version}` : `../${projectName}_${target}`;
+        else if (command === 'publish') {
+            const outputDir = `bin-release/web/${version}`;
             return {
                 outputDir,
                 commands: [
-                    new CompilePlugin({ libraryType: "debug" }),
-                    new ExmlPlugin('default'),
+                    new CompilePlugin({ libraryType: "release" }),
+                    new ExmlPlugin('commonjs'),
                     new UglifyPlugin([
                         {
-                            sources: [
-                                "libs/modules/egret/egret.js",
-                                "libs/modules/egret/egret.web.js",
-                                "libs/modules/eui/eui.js",
-                                "libs/modules/assetsmanager/assetsmanager.js",
-                                "libs/modules/egret3d/egret3d.js",
-                                "libs/modules/inspector/inspector.js",
-                                "libs/modules/oimo/oimo.js"
-                            ],
-                            target: "lib.min.js"
+                            sources: ['resource/2d/default.thm.js'],
+                            target: "default.thm.min.js"
                         },
                         {
                             sources: ["main.js"],
@@ -98,15 +68,14 @@ const config: ResourceManagerConfig = {
                         }]),
                     new ManifestPlugin({ output: "manifest.json" })
                 ]
-            }
+            };
         }
         else {
-            throw `unknown command : ${params.command}`
+            throw `unknown command : ${params.command}`;
         }
     },
 
     typeSelector: (path) => {
-
         if (path.indexOf("2d/") >= 0) {
             const ext = path.substr(path.lastIndexOf(".") + 1);
             const typeMap = {
@@ -120,10 +89,11 @@ const config: ResourceManagerConfig = {
                 "zip": "zip",
                 "mergeJson": "mergeJson",
                 "sheet": "sheet"
-            }
-            let type = typeMap[ext];
+            };
+            const type = typeMap[ext];
             return type;
-        } else {
+        }
+        else {
             let filei = path.lastIndexOf("/");
             let file = path.substr(filei + 1);
             let i = file.indexOf(".", 0);
@@ -147,17 +117,38 @@ const config: ResourceManagerConfig = {
 
                     ".bin": "bin",
                     ".zipjson": "bin"
-                }
-                const type = typemap[extname]
+                };
+                const type = typemap[extname];
                 if (type) {
                     return type;
                 }
+
                 i = file.indexOf(".", i + 1);
             }
+
             return 'Unknown';
         }
     }
-}
+};
 
+const nameSelector = (p: string) => {
+    if (p.indexOf("2d/") > 0) {
+        return path.basename(p).replace(/\./gi, "_");
+    }
+
+    return p.replace(bakeRoot, "");
+};
+
+const mergeJSONSelector = (p: string) => {
+    if (p.indexOf("default.res.json") >= 0) {
+        return null;
+    }
+
+    if (p.indexOf(".json") >= 0) {
+        return bakeRoot + "1.zipjson";
+    }
+
+    return null;
+};
 
 export = config;
