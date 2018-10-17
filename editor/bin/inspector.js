@@ -2807,10 +2807,24 @@ var paper;
             __extends(GUIComponent, _super);
             function GUIComponent() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.inspector = new dat.GUI({ closeOnTop: true, width: 330 });
-                _this.hierarchy = new dat.GUI({ closeOnTop: true, width: 330 });
+                _this.inspector = new dat.GUI({ autoPlace: _this._getAutoPlace(), closeOnTop: true, width: 330 });
+                _this.hierarchy = new dat.GUI({ autoPlace: _this._getAutoPlace(), closeOnTop: true, width: 330 });
                 return _this;
             }
+            GUIComponent.prototype._getAutoPlace = function () {
+                var hierarchy = document.getElementsByClassName("egret-hierarchy");
+                var inspector = document.getElementsByClassName("egret-inspector");
+                return hierarchy.length === 0 && inspector.length === 0;
+            };
+            GUIComponent.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                var hierarchy = document.getElementsByClassName("egret-hierarchy");
+                var inspector = document.getElementsByClassName("egret-inspector");
+                if (hierarchy.length > 0 && inspector.length > 0) {
+                    hierarchy[0].appendChild(this.hierarchy.domElement);
+                    inspector[0].appendChild(this.inspector.domElement);
+                }
+            };
             return GUIComponent;
         }(paper.SingletonComponent));
         editor.GUIComponent = GUIComponent;
@@ -4085,7 +4099,6 @@ var paper;
                 var guiControllerA;
                 var guiControllerB;
                 var guiControllerC;
-                var guiControllerD;
                 var _loop_1 = function (info) {
                     switch (info.editType) {
                         case 0 /* UINT */:
@@ -4264,15 +4277,13 @@ var paper;
                 var sceneOptions = {
                     debug: false,
                     console: false,
-                    save: function () {
-                        var sceneJSON = JSON.stringify(paper.serialize(paper.Application.sceneManager.activeScene));
-                        console.info(sceneJSON);
-                        if (_this._modelComponent.selectedScene) {
-                            // const sceneJSON = JSON.stringify(serialize(this._modelComponent.selectedScene));
-                            // console.info(sceneJSON);
-                        }
-                        else if (_this._modelComponent.selectedGameObjects.length > 0) {
-                        }
+                    resources: function () {
+                        // if (this._modelComponent.selectedScene) {
+                        //     const sceneJSON = JSON.stringify(serialize(this._modelComponent.selectedScene));
+                        //     console.info(sceneJSON);
+                        // }
+                        // else if (this._modelComponent.selectedGameObjects.length > 0) {
+                        // }
                     },
                 };
                 this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
@@ -4310,7 +4321,7 @@ var paper;
                         }
                     }
                 });
-                // this._guiComponent.hierarchy.add(sceneOptions, "save");
+                // this._guiComponent.hierarchy.add(sceneOptions, "resources");
                 // this._guiComponent.hierarchy.close();
             };
             GUISystem.prototype.onEnable = function () {
@@ -4672,7 +4683,7 @@ var paper;
                 this._skeletonDrawer = editor.EditorMeshHelper.createGameObject("SkeletonDrawer").addComponent(editor.SkeletonDrawer);
                 this._cameraViewFrustum = editor.EditorMeshHelper.createCameraWireframed("Camera");
                 this._cameraViewFrustum.activeSelf = false;
-                this._worldAxisesDrawer = editor.EditorMeshHelper.createGameObject("WorldAxisesDrawer").addComponent(editor.WorldAxisesDrawer);
+                // this._worldAxisesDrawer = EditorMeshHelper.createGameObject("WorldAxisesDrawer").addComponent(WorldAxisesDrawer);
                 this._gridDrawer = editor.EditorMeshHelper.createGameObject("GridDrawer").addComponent(editor.GridDrawer);
                 // TODO
                 // const editorCamera = egret3d.Camera.editor;
@@ -4726,8 +4737,8 @@ var paper;
                 this._skeletonDrawer = null;
                 this._cameraViewFrustum.destroy();
                 this._cameraViewFrustum = null;
-                this._worldAxisesDrawer.gameObject.destroy();
-                this._worldAxisesDrawer = null;
+                // this._worldAxisesDrawer!.gameObject.destroy();
+                // this._worldAxisesDrawer = null;
                 this._gridDrawer.gameObject.destroy();
                 this._gridDrawer = null;
             };
@@ -4783,7 +4794,7 @@ var paper;
                 this._boxColliderDrawer.update();
                 this._sphereColliderDrawer.update();
                 this._skeletonDrawer.update();
-                this._worldAxisesDrawer.update();
+                // this._worldAxisesDrawer!.update();
                 this._gridDrawer.update();
                 this._updateCameras();
                 this._updateLights();
@@ -4965,6 +4976,9 @@ var paper;
                         offset += 6;
                     }
                     mesh.uploadVertexBuffer();
+                }
+                else {
+                    this.gameObject.activeSelf = false;
                 }
                 return selectedGameObject;
             };

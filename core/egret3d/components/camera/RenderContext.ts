@@ -41,7 +41,6 @@ namespace egret3d {
         public readonly directShadowMaps: (WebGLTexture | null)[] = [];
         public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
         public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
-        public readonly ambientLightColor: Float32Array = new Float32Array([0, 0, 0]);
 
         public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
 
@@ -104,13 +103,8 @@ namespace egret3d {
             }
         }
 
-        public updateLights(lights: ReadonlyArray<BaseLight>, ambientLightColor: Color) {
+        public updateLights(lights: ReadonlyArray<BaseLight>) {
             let allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
-            if (lights.length > 0) {
-                this.ambientLightColor[0] = ambientLightColor.r;
-                this.ambientLightColor[1] = ambientLightColor.g;
-                this.ambientLightColor[2] = ambientLightColor.b;
-            }
 
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
                 if (light instanceof DirectionalLight) {
@@ -341,9 +335,8 @@ namespace egret3d {
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
             }
-
+            
             const fog = scene.fog;
-
             if (fog.mode !== FogMode.NONE) {
                 this.fogColor[0] = fog.color.r;
                 this.fogColor[1] = fog.color.g;

@@ -1694,8 +1694,6 @@ var paper;
          * @param config 实体添加该组件时可以传递的初始化数据。
          */
         BaseComponent.prototype.initialize = function (config) {
-            if (config) {
-            }
         };
         /**
          * 移除组件后，组件内部卸载时执行。
@@ -7314,6 +7312,7 @@ var paper;
                         componentTarget = prefabDeserializer.components[linkedID];
                     }
                     else {
+                        // const enabled = componentSource._enabled === undefined ? true : componentSource._enabled;
                         componentTarget = (target || this._rootTarget).addComponent(clazz);
                     }
                     // if (clazz === Behaviour) { TODO
@@ -7717,7 +7716,7 @@ var paper;
      */
     function serializeStruct(source) {
         var className = egret.getQualifiedClassName(source);
-        var target = { class: _findClassCode(className) || className };
+        var target = { class: className };
         _serializeChildren(source, target, null, null);
         return target;
     }
@@ -7736,17 +7735,9 @@ var paper;
         }
         return keys;
     }
-    function _findClassCode(name) {
-        for (var key in paper.serializeClassMap) {
-            if (paper.serializeClassMap[key] === name) {
-                return key;
-            }
-        }
-        return "";
-    }
     function _serializeReference(source) {
         var className = egret.getQualifiedClassName(source);
-        return { uuid: source.uuid, class: _findClassCode(className) || className };
+        return { uuid: source.uuid, class: className };
     }
     function _findPrefabRoot(gameObject) {
         while (!gameObject.extras.prefab) {
@@ -11314,13 +11305,8 @@ var egret3d;
                 this.cameraForward[2] = -rawData[10];
             }
         };
-        RenderContext.prototype.updateLights = function (lights, ambientLightColor) {
+        RenderContext.prototype.updateLights = function (lights) {
             var allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
-            if (lights.length > 0) {
-                this.ambientLightColor[0] = ambientLightColor.r;
-                this.ambientLightColor[1] = ambientLightColor.g;
-                this.ambientLightColor[2] = ambientLightColor.b;
-            }
             for (var _i = 0, lights_1 = lights; _i < lights_1.length; _i++) {
                 var light = lights_1[_i];
                 if (light instanceof egret3d.DirectionalLight) {
@@ -11511,6 +11497,10 @@ var egret3d;
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
             }
+            var currenAmbientColor = paper.Scene.activeScene.ambientColor;
+            this.ambientLightColor[0] = currenAmbientColor.r;
+            this.ambientLightColor[1] = currenAmbientColor.g;
+            this.ambientLightColor[2] = currenAmbientColor.b;
             var fog = scene.fog;
             if (fog.mode !== 0 /* NONE */) {
                 this.fogColor[0] = fog.color.r;
@@ -13995,7 +13985,7 @@ var egret3d;
             }
         };
         SkinnedMeshRenderer.prototype.initialize = function (reset) {
-            _super.prototype.initialize.call(this, reset);
+            _super.prototype.initialize.call(this);
             if (!reset) {
                 return;
             }
@@ -21952,10 +21942,11 @@ var egret3d;
                 var globalGameObject = paper.GameObject.globalGameObject;
                 // Add stage, set stage, update canvas.
                 var canvas = config.canvas;
+                var isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || canvas.parentElement === undefined;
                 var stage = globalGameObject.addComponent(egret3d.Stage, {
                     rotateEnabled: !(config.rotateEnabled === false),
                     size: { w: config.option.contentWidth, h: config.option.contentHeight },
-                    screenSize: egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement.clientWidth, h: canvas.parentElement.clientHeight },
+                    screenSize: isWX ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement.clientWidth, h: canvas.parentElement.clientHeight },
                 });
                 globalGameObject.getOrAddComponent(egret3d.DefaultTextures);
                 globalGameObject.getOrAddComponent(egret3d.DefaultMeshes);
@@ -21971,7 +21962,7 @@ var egret3d;
                 }, this);
                 // Update stage when window resized.
                 window.addEventListener("resize", function () {
-                    stage.screenSize = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement.clientWidth, h: canvas.parentElement.clientHeight };
+                    stage.screenSize = isWX ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement.clientWidth, h: canvas.parentElement.clientHeight };
                 }, false);
             };
             BeginSystem.prototype.onUpdate = function () {
@@ -22173,7 +22164,9 @@ var egret3d;
                             }
                             break;
                         case "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */:
-                            webgl.uniform3fv(location_3, context.ambientLightColor);
+                            var currenAmbientColor = paper.Scene.activeScene.ambientColor;
+                            webgl.uniform3f(location_3, currenAmbientColor.r, currenAmbientColor.g, currenAmbientColor.b);
+                            // webgl.uniform3fv(location, context.ambientLightColor);
                             break;
                         case "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */:
                             webgl.uniformMatrix4fv(location_3, false, context.directShadowMatrix);
@@ -22430,13 +22423,12 @@ var egret3d;
                 // Render cameras.
                 if (cameras.length > 0) {
                     this._egret2dOrderCount = 0;
-                    var currenAmbientColor = paper.Scene.activeScene.ambientColor;
                     for (var _a = 0, cameras_2 = cameras; _a < cameras_2.length; _a++) {
                         var camera = cameras_2[_a];
                         var scene = camera.gameObject.scene;
                         var renderEnabled = isPlayerMode ? scene !== editorScene : scene === editorScene;
                         if (renderEnabled && lightCountDirty) {
-                            camera.context.updateLights(lights, currenAmbientColor); // TODO 性能优化
+                            camera.context.updateLights(lights); // TODO 性能优化
                         }
                         if (camera.postQueues.length === 0) {
                             if (renderEnabled) {
@@ -24212,8 +24204,12 @@ var paper;
                             return '';
                         var url = value.name;
                         return url;
-                    case 12 /* MATERIAL */:
                     case 14 /* GAMEOBJECT */:
+                        if (!value) {
+                            return null;
+                        }
+                        return value.uuid;
+                    case 12 /* MATERIAL */:
                     case 15 /* TRANSFROM */:
                     case 17 /* SOUND */:
                     case 20 /* ARRAY */:
@@ -24262,8 +24258,12 @@ var paper;
                     case 18 /* MESH */:
                         var meshAsset = paper.Asset.find(serializeData);
                         return meshAsset;
-                    case 12 /* MATERIAL */:
                     case 14 /* GAMEOBJECT */:
+                        if (!serializeData) {
+                            return null;
+                        }
+                        return this.getGameObjectByUUid(serializeData);
+                    case 12 /* MATERIAL */:
                     case 15 /* TRANSFROM */:
                     case 17 /* SOUND */:
                     case 20 /* ARRAY */:

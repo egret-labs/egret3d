@@ -114,6 +114,8 @@ declare namespace paper.editor {
     class GUIComponent extends SingletonComponent {
         readonly inspector: dat.GUI;
         readonly hierarchy: dat.GUI;
+        private _getAutoPlace();
+        initialize(): void;
     }
 }
 declare namespace paper.editor {
