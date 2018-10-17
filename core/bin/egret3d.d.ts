@@ -3908,9 +3908,13 @@ declare namespace egret3d {
      */
     class Stage extends paper.SingletonComponent {
         /**
-         * 当舞台或屏幕尺寸的改变时派发事件。
+         * 当屏幕尺寸改变时派发事件。
          */
-        static onResize: signals.Signal;
+        onScreenResize: signals.Signal;
+        /**
+         * 当舞台尺寸改变时派发事件。
+         */
+        onResize: signals.Signal;
         /**
          * 是否允许因屏幕尺寸的改变而旋转舞台。
          */

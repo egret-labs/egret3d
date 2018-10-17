@@ -1,9 +1,9 @@
 /// 阅读 api.d.ts 查看文档
 ///<reference path="declaration/api.d.ts"/>
 
-import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlugin, ManifestPlugin, UglifyPlugin } from 'built-in';
-import * as path from 'path';
-import { MergeJSONPlugin, MergeBinaryPlugin, ModifyDefaultResJSON } from './myplugin';
+import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlugin, ManifestPlugin, UglifyPlugin } from "built-in";
+import * as path from "path";
+import { MergeJSONPlugin, MergeBinaryPlugin, ModifyDefaultResJSON } from "./myplugin";
 
 let bakeRoot: string = "";
 const config: ResourceManagerConfig = {
@@ -14,15 +14,17 @@ const config: ResourceManagerConfig = {
         const projectName = params.projectName;
         const version = params.version;
 
-        if (command === 'bake') {
+        if (command === "bake") {
             const params = process.argv.splice(3);
-            const outputDir = '.';
+            const outputDir = ".";
+            let subRoot = "";
             bakeRoot = "resource/";
 
             switch (params[0]) {
                 case "--folder":
                 case "-f":
-                    bakeRoot = `resource/${params[1]}/`;
+                    subRoot = `${params[1]}/`;
+                    bakeRoot += subRoot;
                     break;
             }
 
@@ -36,30 +38,30 @@ const config: ResourceManagerConfig = {
                         nameSelector,
                         groupSelector: p => null
                     }),
-                    new ModifyDefaultResJSON(`${params[1]}/`),
+                    new ModifyDefaultResJSON(subRoot),
                 ]
             };
         }
-        else if (command === 'build') {
-            const outputDir = '.';
+        else if (command === "build") {
+            const outputDir = ".";
             return {
                 outputDir,
                 commands: [
-                    new ExmlPlugin('debug'),
+                    new ExmlPlugin("debug"),
                     new IncrementCompilePlugin(),
                 ]
             };
         }
-        else if (command === 'publish') {
+        else if (command === "publish") {
             const outputDir = `bin-release/web/${version}`;
             return {
                 outputDir,
                 commands: [
                     new CompilePlugin({ libraryType: "release" }),
-                    new ExmlPlugin('commonjs'),
+                    new ExmlPlugin("commonjs"),
                     new UglifyPlugin([
                         {
-                            sources: ['resource/2d/default.thm.js'],
+                            sources: ["resource/2d/default.thm.js"],
                             target: "default.thm.min.js"
                         },
                         {
@@ -94,8 +96,8 @@ const config: ResourceManagerConfig = {
             return type;
         }
         else {
-            let filei = path.lastIndexOf("/");
-            let file = path.substr(filei + 1);
+            const filei = path.lastIndexOf("/");
+            const file = path.substr(filei + 1);
             let i = file.indexOf(".", 0);
             let extname = "";
             while (i >= 0) {
@@ -108,7 +110,7 @@ const config: ResourceManagerConfig = {
                     ".prefab.json": "Prefab",
 
                     ".image.json": "TextureDesc",
-                    ".vs.glsl": 'GLVertexShader',
+                    ".vs.glsl": "GLVertexShader",
                     ".fs.glsl": "GLFragmentShader",
                     ".shader.json": "Shader",
                     ".mat.json": "Material",
@@ -126,7 +128,7 @@ const config: ResourceManagerConfig = {
                 i = file.indexOf(".", i + 1);
             }
 
-            return 'Unknown';
+            return "Unknown";
         }
     }
 };

@@ -3,21 +3,25 @@ namespace egret3d.web {
      * @internal
      */
     export class BeginSystem extends paper.BaseSystem {
-        private _updateCanvas(canvas: HTMLCanvasElement, stage: Stage) {
+        private _canvas: HTMLCanvasElement = null!;
+
+        private _updateCanvas(stage: Stage) {
+            const canvas = this._canvas;
             const screenSize = stage.screenSize;
             const viewport = stage.viewport;
 
             // Update canvas size and rotate.
+            const parentElement = canvas.parentElement;
             canvas.width = viewport.w;
             canvas.height = viewport.h;
-            canvas.style.top = 0 + "px";
+            canvas.style.top = (parentElement ? parentElement.offsetTop : 0) + "px";
             canvas.style.position = "absolute";
             canvas.style[egret.web.getPrefixStyleName("transformOrigin")] = "0% 0% 0px";
 
             if (stage.rotated) {
                 // canvas.style.width = h + "px";
                 // canvas.style.height = w + "px";
-                canvas.style.left = screenSize.w + "px";
+                canvas.style.left = (parentElement ? parentElement.offsetLeft : 0) + screenSize.w + "px";
                 const transform = `matrix(0,${screenSize.h / canvas.width},${-screenSize.w / canvas.height},0,0,0)`;
                 canvas.style[egret.web.getPrefixStyleName("transform")] = transform;
             }
@@ -25,7 +29,7 @@ namespace egret3d.web {
                 // canvas.style.width = w + "px";
                 // canvas.style.height = h + "px";
                 // canvas.style[egret.web.getPrefixStyleName("transform")] = null;
-                canvas.style.left = 0 + "px";
+                canvas.style.left = (parentElement ? parentElement.offsetLeft : 0) + "px";
                 const transform = `matrix(${screenSize.w / canvas.width},0,0,${screenSize.h / canvas.height},0,0)`;
                 canvas.style[egret.web.getPrefixStyleName("transform")] = transform;
             }
@@ -34,12 +38,15 @@ namespace egret3d.web {
         public onAwake(config: RunEgretOptions) {
             const globalGameObject = paper.GameObject.globalGameObject;
             // Add stage, set stage, update canvas.
-            const canvas = config.canvas!;
-            const isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || canvas.parentElement === undefined;
-            const stage = globalGameObject.addComponent(Stage, {
+            this._canvas = config.canvas!;
+            const isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || this._canvas.parentElement === undefined;
+            const screenWidth = isWX ? window.innerWidth : this._canvas.parentElement!.clientWidth;
+            const screenHeight = isWX ? window.innerHeight : this._canvas.parentElement!.clientHeight;
+
+            globalGameObject.addComponent(Stage, {
                 rotateEnabled: !(config.rotateEnabled === false),
                 size: { w: config.option!.contentWidth, h: config.option!.contentHeight },
-                screenSize: isWX ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement!.clientWidth, h: canvas.parentElement!.clientHeight },
+                screenSize: { w: screenWidth, h: screenHeight },
             });
 
             globalGameObject.getOrAddComponent(DefaultTextures);
@@ -51,20 +58,25 @@ namespace egret3d.web {
             globalGameObject.getOrAddComponent(ContactCollecter);
             globalGameObject.getOrAddComponent(WebGLCapabilities);
 
-            this._updateCanvas(canvas, stage);
-            // Update canvas when stage resized.
-            Stage.onResize.add(() => {
-                this._updateCanvas(canvas, stage);
+            // Update canvas when screen resized.
+            this._updateCanvas(stage); // First update.
+            stage.onScreenResize.add(() => {
+                this._updateCanvas(stage);
             }, this);
-            // Update stage when window resized.
-            window.addEventListener("resize", () => {
-                stage.screenSize = isWX ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement!.clientWidth, h: canvas.parentElement!.clientHeight };
-            }, false);
         }
 
         public onUpdate() {
-            //
+            // TODO
             egret3d.Performance.startCounter(egret3d.PerformanceType.All);
+            // TODO 查询是否有性能问题。
+            const isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || this._canvas.parentElement === undefined;
+            const screenWidth = isWX ? window.innerWidth : this._canvas.parentElement!.clientWidth;
+            const screenHeight = isWX ? window.innerHeight : this._canvas.parentElement!.clientHeight;
+            const screenSize = stage.screenSize;
+
+            if (screenWidth !== screenSize.w || screenHeight !== screenSize.h) {
+                stage.screenSize = { w: screenWidth, h: screenHeight };
+            }
         }
     }
 }

@@ -58,12 +58,12 @@ namespace egret3d.web {
             const pointer = inputCollecter.getPointer(event.pointerId);
             pointer.event = event; // TODO 有可能是无效事件
 
-            if (event.target !== canvas) {
-                (event as any).clientX -= canvas.clientLeft;
-                (event as any).clientY -= canvas.clientTop;
-            }
+            // if (event.target !== canvas) {
+            //     (event as any).clientX -= canvas.clientLeft;
+            //     (event as any).clientY -= canvas.clientTop;
+            // }
 
-            pointer.position.set(event.clientX, event.clientY, 0.0);
+            pointer.position.set(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop, 0.0);
             stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
@@ -154,12 +154,12 @@ namespace egret3d.web {
             const pointer = inputCollecter.getPointer(pointerEvent.pointerId);
             pointer.event = pointerEvent;
 
-            if (event.target !== canvas) {
-                (pointerEvent as any).clientX -= canvas.clientLeft;
-                (pointerEvent as any).clientY -= canvas.clientTop;
-            }
+            // if (event.target !== canvas) {
+            //     (pointerEvent as any).clientX -= canvas.clientLeft;
+            //     (pointerEvent as any).clientY -= canvas.clientTop;
+            // }
 
-            pointer.position.set(event.clientX, event.clientY, 0.0);
+            pointer.position.set(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop, 0.0);
             stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
@@ -257,12 +257,12 @@ namespace egret3d.web {
             const pointer = inputCollecter.getPointer(pointerEvent.pointerId);
             pointer.event = pointerEvent;
 
-            if (event.target !== canvas) {
-                (pointerEvent as any).clientX -= canvas.clientLeft;
-                (pointerEvent as any).clientY -= canvas.clientTop;
-            }
+            // if (event.target !== canvas) {
+            //     (pointerEvent as any).clientX -= canvas.clientLeft;
+            //     (pointerEvent as any).clientY -= canvas.clientTop;
+            // }
 
-            pointer.position.set(pointerEvent.clientX, pointerEvent.clientY, 0.0);
+            pointer.position.set(pointerEvent.clientX - canvas.offsetLeft, pointerEvent.clientY - canvas.offsetTop, 0.0);
             stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
