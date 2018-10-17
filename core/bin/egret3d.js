@@ -4882,7 +4882,7 @@ var egret3d;
             /**
              *
              */
-            _this.shadowCameraFar = 100.0;
+            _this.shadowCameraFar = 1000.0;
             /**
              *
              */
