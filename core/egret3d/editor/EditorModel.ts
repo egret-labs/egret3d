@@ -155,9 +155,8 @@ namespace paper.editor {
                     return data;
                 case editor.EditType.MESH:
                     if (!value)
-                        return '';
-                    let url = value.name;
-                    return url;
+                        return null;
+                    return value.name;
                 case editor.EditType.GAMEOBJECT:
                     if (!value) {
                         return null;
@@ -210,8 +209,10 @@ namespace paper.editor {
                     }
                     return materials;
                 case editor.EditType.MESH:
-                    let meshAsset = paper.Asset.find(serializeData);
-                    return meshAsset;
+                    if (!serializeData) {
+                        return null;
+                    }
+                    return paper.Asset.find(serializeData);
                 case editor.EditType.GAMEOBJECT:
                     if (!serializeData) {
                         return null;
@@ -769,10 +770,6 @@ namespace paper.editor {
             for (const propertyValue of valueList) {
                 const { propName, copyValue, uniformType } = propertyValue;
 
-                if (!copyValue) {
-                    continue;
-                }
-
                 switch (uniformType) {
                     case gltf.UniformType.BOOL:
                         target.setBoolean(propName, copyValue);
@@ -798,7 +795,7 @@ namespace paper.editor {
                         target.setVector4v(propName, copyValue);
                         break;
                     case gltf.UniformType.SAMPLER_2D:
-                        target._glTFTechnique.uniforms[propName].value = copyValue;
+                        target.setTexture(propName, copyValue);
                         break;
                     case gltf.UniformType.FLOAT_MAT2:
                     case gltf.UniformType.FLOAT_MAT3:
