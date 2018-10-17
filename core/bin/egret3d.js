@@ -8913,6 +8913,14 @@ var egret3d;
         function Stage() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
+             * 当屏幕尺寸改变时派发事件。
+             */
+            _this.onScreenResize = new signals.Signal();
+            /**
+             * 当舞台尺寸改变时派发事件。
+             */
+            _this.onResize = new signals.Signal();
+            /**
              * 是否允许因屏幕尺寸的改变而旋转舞台。
              */
             _this.rotateEnabled = true;
@@ -8930,12 +8938,12 @@ var egret3d;
             var screenSize = this._screenSize;
             var size = this._size;
             var viewport = this._viewport;
-            viewport.w = Math.ceil(size.w);
+            viewport.w = Math.min(Math.ceil(size.w), Math.ceil(screenSize.w));
             if (this.rotateEnabled && (this.rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h)) {
-                viewport.h = Math.ceil(size.w / screenSize.h * screenSize.w);
+                viewport.h = Math.ceil(viewport.w / screenSize.h * screenSize.w);
             }
             else {
-                viewport.h = Math.ceil(size.w / screenSize.w * screenSize.h);
+                viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
             }
         };
         Stage.prototype.initialize = function (config) {
@@ -8983,7 +8991,7 @@ var egret3d;
                 this._screenSize.w = value.w;
                 this._screenSize.h = value.h;
                 this._updateViewport();
-                Stage.onResize.dispatch(this);
+                this.onScreenResize.dispatch();
             },
             enumerable: true,
             configurable: true
@@ -8999,7 +9007,7 @@ var egret3d;
                 this._size.w = value.w;
                 this._size.h = value.h;
                 this._updateViewport();
-                Stage.onResize.dispatch(this);
+                this.onResize.dispatch();
             },
             enumerable: true,
             configurable: true
@@ -9024,10 +9032,6 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
-        /**
-         * 当舞台或屏幕尺寸的改变时派发事件。
-         */
-        Stage.onResize = new signals.Signal();
         return Stage;
     }(paper.SingletonComponent));
     egret3d.Stage = Stage;
@@ -11256,7 +11260,6 @@ var egret3d;
             this.directShadowMaps = [];
             this.pointShadowMaps = [];
             this.spotShadowMaps = [];
-            this.ambientLightColor = new Float32Array([0, 0, 0]);
             this.viewPortPixel = { x: 0, y: 0, w: 0, h: 0 };
             //
             this.cameraPosition = new Float32Array(3);
@@ -11497,10 +11500,6 @@ var egret3d;
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
             }
-            var currenAmbientColor = paper.Scene.activeScene.ambientColor;
-            this.ambientLightColor[0] = currenAmbientColor.r;
-            this.ambientLightColor[1] = currenAmbientColor.g;
-            this.ambientLightColor[2] = currenAmbientColor.b;
             var fog = scene.fog;
             if (fog.mode !== 0 /* NONE */) {
                 this.fogColor[0] = fog.color.r;
@@ -12066,7 +12065,12 @@ var egret;
              **/
             Renderer.prototype.drawTextureElements = function (data, offset) {
                 var gl = this.context;
-                gl.bindTexture(gl.TEXTURE_2D, data.texture);
+                if (data.texture.isCancas) {
+                    gl.wxBindCanvasTexture(gl.TEXTURE_2D, data.texture);
+                }
+                else {
+                    gl.bindTexture(gl.TEXTURE_2D, data.texture);
+                }
                 var size = data.count * 3;
                 gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
                 return size;
@@ -21910,21 +21914,25 @@ var egret3d;
         var BeginSystem = (function (_super) {
             __extends(BeginSystem, _super);
             function BeginSystem() {
-                return _super !== null && _super.apply(this, arguments) || this;
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._canvas = null;
+                return _this;
             }
-            BeginSystem.prototype._updateCanvas = function (canvas, stage) {
+            BeginSystem.prototype._updateCanvas = function (stage) {
+                var canvas = this._canvas;
                 var screenSize = stage.screenSize;
                 var viewport = stage.viewport;
                 // Update canvas size and rotate.
+                var parentElement = canvas.parentElement;
                 canvas.width = viewport.w;
                 canvas.height = viewport.h;
-                canvas.style.top = 0 + "px";
+                canvas.style.top = (parentElement ? parentElement.offsetTop : 0) + "px";
                 canvas.style.position = "absolute";
                 canvas.style[egret.web.getPrefixStyleName("transformOrigin")] = "0% 0% 0px";
                 if (stage.rotated) {
                     // canvas.style.width = h + "px";
                     // canvas.style.height = w + "px";
-                    canvas.style.left = screenSize.w + "px";
+                    canvas.style.left = (parentElement ? parentElement.offsetLeft : 0) + screenSize.w + "px";
                     var transform = "matrix(0," + screenSize.h / canvas.width + "," + -screenSize.w / canvas.height + ",0,0,0)";
                     canvas.style[egret.web.getPrefixStyleName("transform")] = transform;
                 }
@@ -21932,7 +21940,7 @@ var egret3d;
                     // canvas.style.width = w + "px";
                     // canvas.style.height = h + "px";
                     // canvas.style[egret.web.getPrefixStyleName("transform")] = null;
-                    canvas.style.left = 0 + "px";
+                    canvas.style.left = (parentElement ? parentElement.offsetLeft : 0) + "px";
                     var transform = "matrix(" + screenSize.w / canvas.width + ",0,0," + screenSize.h / canvas.height + ",0,0)";
                     canvas.style[egret.web.getPrefixStyleName("transform")] = transform;
                 }
@@ -21941,12 +21949,14 @@ var egret3d;
                 var _this = this;
                 var globalGameObject = paper.GameObject.globalGameObject;
                 // Add stage, set stage, update canvas.
-                var canvas = config.canvas;
-                var isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || canvas.parentElement === undefined;
-                var stage = globalGameObject.addComponent(egret3d.Stage, {
+                this._canvas = config.canvas;
+                var isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || this._canvas.parentElement === undefined;
+                var screenWidth = isWX ? window.innerWidth : this._canvas.parentElement.clientWidth;
+                var screenHeight = isWX ? window.innerHeight : this._canvas.parentElement.clientHeight;
+                globalGameObject.addComponent(egret3d.Stage, {
                     rotateEnabled: !(config.rotateEnabled === false),
                     size: { w: config.option.contentWidth, h: config.option.contentHeight },
-                    screenSize: isWX ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement.clientWidth, h: canvas.parentElement.clientHeight },
+                    screenSize: { w: screenWidth, h: screenHeight },
                 });
                 globalGameObject.getOrAddComponent(egret3d.DefaultTextures);
                 globalGameObject.getOrAddComponent(egret3d.DefaultMeshes);
@@ -21955,19 +21965,23 @@ var egret3d;
                 globalGameObject.getOrAddComponent(egret3d.InputCollecter);
                 globalGameObject.getOrAddComponent(egret3d.ContactCollecter);
                 globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities);
-                this._updateCanvas(canvas, stage);
-                // Update canvas when stage resized.
-                egret3d.Stage.onResize.add(function () {
-                    _this._updateCanvas(canvas, stage);
+                // Update canvas when screen resized.
+                this._updateCanvas(egret3d.stage); // First update.
+                egret3d.stage.onScreenResize.add(function () {
+                    _this._updateCanvas(egret3d.stage);
                 }, this);
-                // Update stage when window resized.
-                window.addEventListener("resize", function () {
-                    stage.screenSize = isWX ? { w: window.innerWidth, h: window.innerHeight } : { w: canvas.parentElement.clientWidth, h: canvas.parentElement.clientHeight };
-                }, false);
             };
             BeginSystem.prototype.onUpdate = function () {
-                //
+                // TODO
                 egret3d.Performance.startCounter("all" /* All */);
+                // TODO 查询是否有性能问题。
+                var isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || this._canvas.parentElement === undefined;
+                var screenWidth = isWX ? window.innerWidth : this._canvas.parentElement.clientWidth;
+                var screenHeight = isWX ? window.innerHeight : this._canvas.parentElement.clientHeight;
+                var screenSize = egret3d.stage.screenSize;
+                if (screenWidth !== screenSize.w || screenHeight !== screenSize.h) {
+                    egret3d.stage.screenSize = { w: screenWidth, h: screenHeight };
+                }
             };
             return BeginSystem;
         }(paper.BaseSystem));
@@ -22483,11 +22497,11 @@ var egret3d;
                     var holdPointers = egret3d.inputCollecter.holdPointers;
                     var pointer = egret3d.inputCollecter.getPointer(event.pointerId);
                     pointer.event = event; // TODO 有可能是无效事件
-                    if (event.target !== canvas) {
-                        event.clientX -= canvas.clientLeft;
-                        event.clientY -= canvas.clientTop;
-                    }
-                    pointer.position.set(event.clientX, event.clientY, 0.0);
+                    // if (event.target !== canvas) {
+                    //     (event as any).clientX -= canvas.clientLeft;
+                    //     (event as any).clientY -= canvas.clientTop;
+                    // }
+                    pointer.position.set(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop, 0.0);
                     egret3d.stage.screenToStage(pointer.position, pointer.position);
                     switch (event.type) {
                         case "pointerover":
@@ -22561,11 +22575,11 @@ var egret3d;
                     var holdPointers = egret3d.inputCollecter.holdPointers;
                     var pointer = egret3d.inputCollecter.getPointer(pointerEvent.pointerId);
                     pointer.event = pointerEvent;
-                    if (event.target !== canvas) {
-                        pointerEvent.clientX -= canvas.clientLeft;
-                        pointerEvent.clientY -= canvas.clientTop;
-                    }
-                    pointer.position.set(event.clientX, event.clientY, 0.0);
+                    // if (event.target !== canvas) {
+                    //     (pointerEvent as any).clientX -= canvas.clientLeft;
+                    //     (pointerEvent as any).clientY -= canvas.clientTop;
+                    // }
+                    pointer.position.set(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop, 0.0);
                     egret3d.stage.screenToStage(pointer.position, pointer.position);
                     switch (event.type) {
                         case "mouseover":
@@ -22646,11 +22660,11 @@ var egret3d;
                     var holdPointers = egret3d.inputCollecter.holdPointers;
                     var pointer = egret3d.inputCollecter.getPointer(pointerEvent.pointerId);
                     pointer.event = pointerEvent;
-                    if (event.target !== canvas) {
-                        pointerEvent.clientX -= canvas.clientLeft;
-                        pointerEvent.clientY -= canvas.clientTop;
-                    }
-                    pointer.position.set(pointerEvent.clientX, pointerEvent.clientY, 0.0);
+                    // if (event.target !== canvas) {
+                    //     (pointerEvent as any).clientX -= canvas.clientLeft;
+                    //     (pointerEvent as any).clientY -= canvas.clientTop;
+                    // }
+                    pointer.position.set(pointerEvent.clientX - canvas.offsetLeft, pointerEvent.clientY - canvas.offsetTop, 0.0);
                     egret3d.stage.screenToStage(pointer.position, pointer.position);
                     switch (event.type) {
                         case "touchstart":

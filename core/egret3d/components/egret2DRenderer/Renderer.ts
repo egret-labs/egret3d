@@ -334,7 +334,13 @@ module egret.web {
          **/
         private drawTextureElements(data: any, offset: number): number {
             let gl = this.context;
-            gl.bindTexture(gl.TEXTURE_2D, data.texture);
+            if (data.texture.isCancas) {
+                (gl as any).wxBindCanvasTexture(gl.TEXTURE_2D, data.texture);
+            }
+            else {
+                gl.bindTexture(gl.TEXTURE_2D, data.texture);
+            }
+
             let size = data.count * 3;
             gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
             return size;
