@@ -165,7 +165,6 @@ namespace paper.editor {
             let guiControllerA: dat.GUIController;
             let guiControllerB: dat.GUIController;
             let guiControllerC: dat.GUIController;
-            let guiControllerD: dat.GUIController;
 
             for (const info of infos) {
                 switch (info.editType) {
@@ -305,7 +304,7 @@ namespace paper.editor {
 
                     case editor.EditType.COLOR: {
                         guiControllerA = gui.addColor(gui.instance, info.name).listen();
-                        
+
                         if (this._propertyHasGetterSetter(gui.instance, info.name)) {
                             const onChange = () => {
                                 gui.instance[info.name] = gui.instance[info.name];
@@ -376,17 +375,13 @@ namespace paper.editor {
             const sceneOptions = {
                 debug: false,
                 console: false,
-                save: () => {
-
-                    const sceneJSON = JSON.stringify(serialize(Application.sceneManager.activeScene));
-                    console.info(sceneJSON);
-                    if (this._modelComponent.selectedScene) {
-                        // const sceneJSON = JSON.stringify(serialize(this._modelComponent.selectedScene));
-                        // console.info(sceneJSON);
-                    }
-                    else if (this._modelComponent.selectedGameObjects.length > 0) {
-
-                    }
+                resources: () => {
+                    // if (this._modelComponent.selectedScene) {
+                    //     const sceneJSON = JSON.stringify(serialize(this._modelComponent.selectedScene));
+                    //     console.info(sceneJSON);
+                    // }
+                    // else if (this._modelComponent.selectedGameObjects.length > 0) {
+                    // }
                 },
             };
 
@@ -432,7 +427,7 @@ namespace paper.editor {
                     }
                 }
             });
-            // this._guiComponent.hierarchy.add(sceneOptions, "save");
+            // this._guiComponent.hierarchy.add(sceneOptions, "resources");
             // this._guiComponent.hierarchy.close();
         }
 

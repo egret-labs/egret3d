@@ -136,9 +136,6 @@ namespace paper {
          * @param config 实体添加该组件时可以传递的初始化数据。
          */
         public initialize(config?: any) {
-            if (config) { // TODO enabled 
-
-            }
         }
         /**
          * 移除组件后，组件内部卸载时执行。

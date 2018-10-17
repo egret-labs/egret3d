@@ -3,7 +3,7 @@ namespace paper.editor {
     /**
      * @internal
      */
-    export class GridController extends BaseComponent {
+    export class GridDrawer extends BaseComponent {
         private readonly _gridA: GameObject = this._createGrid("GridA");
         private readonly _gridB: GameObject = this._createGrid("GridB", 100.0 * _step, 100 * _step);
 
@@ -36,8 +36,8 @@ namespace paper.editor {
             const mA = (this._gridA.renderer as egret3d.MeshRenderer).material!;
             const mB = (this._gridB.renderer as egret3d.MeshRenderer).material!;
 
-            mA.setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Transparent);
-            mB.setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Transparent);
+            mA.setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Transparent);
+            mB.setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Transparent);
         }
 
         public update() {
@@ -56,7 +56,7 @@ namespace paper.editor {
             const mB = (this._gridB.renderer as egret3d.MeshRenderer).material!;
 
             mA.setOpacity(1.0 * 0.2);
-            mB.setOpacity(d * 0.2);
+            mB.setOpacity(0.2 * 0.2);
         }
     }
 }

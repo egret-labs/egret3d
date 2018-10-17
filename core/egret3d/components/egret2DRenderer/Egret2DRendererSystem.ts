@@ -13,8 +13,6 @@ namespace egret3d {
         public readonly webInput = egret.Capabilities.runtimeType === egret.RuntimeType.WEB ? new (egret as any)["web"].HTMLInput() : null;
 
         private _sortedDirty: boolean = false;
-        private readonly _stage: Stage = paper.GameObject.globalGameObject.getOrAddComponent(Stage);
-        private readonly _inputCollecter: InputCollecter = paper.GameObject.globalGameObject.getOrAddComponent(InputCollecter);
         private readonly _sortedRenderers: Egret2DRenderer[] = [];
 
         private _onSortRenderers(a: Egret2DRenderer, b: Egret2DRenderer) {
@@ -83,7 +81,6 @@ namespace egret3d {
         }
 
         public onEnable() {
-            const inputCollecter = this._inputCollecter;
             inputCollecter.onPointerDown.add(this._onTouchStart, this);
             inputCollecter.onPointerCancel.add(this._onTouchEnd, this);
             inputCollecter.onPointerUp.add(this._onTouchEnd, this);
@@ -103,14 +100,13 @@ namespace egret3d {
         }
 
         public onUpdate(deltaTime: number) {
-            const { w, h } = this._stage.viewport;
+            const { w, h } = stage.viewport;
             for (const gameObject of this._groups[0].gameObjects) {
                 (gameObject.renderer as Egret2DRenderer).update(deltaTime, w, h);
             }
         }
 
         public onDisable() {
-            const inputCollecter = this._inputCollecter;
             inputCollecter.onPointerDown.remove(this._onTouchStart, this);
             inputCollecter.onPointerCancel.remove(this._onTouchEnd, this);
             inputCollecter.onPointerUp.remove(this._onTouchEnd, this);

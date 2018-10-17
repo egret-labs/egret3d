@@ -2,7 +2,7 @@ namespace paper.editor {
     /**
      * @internal
      */
-    export class SkeletonDrawer extends BaseComponent {
+    export class SkeletonDrawer extends BaseSelectedGOComponent {
         private readonly _skeletonMesh: egret3d.Mesh = egret3d.Mesh.create(128, 0, [gltf.MeshAttributeType.POSITION], null, gltf.DrawMode.Dynamic);
 
         public initialize() {
@@ -21,46 +21,49 @@ namespace paper.editor {
         }
 
         public update() {
-            const modelComponent = this.gameObject.getComponent(ModelComponent)!;
-            const selectedGameObject = modelComponent.selectedGameObject!;
-            const skinnedMeshRenderer = selectedGameObject.getComponent(egret3d.SkinnedMeshRenderer)!;
-            const mesh = this._skeletonMesh;
+            const selectedGameObject = super.update();
+            const skinnedMeshRenderer = selectedGameObject ? selectedGameObject.getComponent(egret3d.SkinnedMeshRenderer) : null;
 
-            if (!skinnedMeshRenderer) {
-                return;
-            }
+            if (selectedGameObject && skinnedMeshRenderer) {
+                const mesh = this._skeletonMesh;
 
-            let offset = 0;
-            const helpVertex3A = egret3d.Vector3.create().release();
-            const helpVertex3B = egret3d.Vector3.create().release();
-            const helpMatrixA = egret3d.Matrix4.create().release();
-            const vertices = mesh.getVertices()!;
-            const bones = skinnedMeshRenderer.bones;
+                let offset = 0;
+                const helpVertex3A = egret3d.Vector3.create().release();
+                const helpVertex3B = egret3d.Vector3.create().release();
+                const helpMatrixA = egret3d.Matrix4.create().release();
+                const vertices = mesh.getVertices()!;
+                const bones = skinnedMeshRenderer.bones;
 
-            this.gameObject.transform.position = selectedGameObject.transform.position;
-            helpMatrixA.inverse(this.gameObject.transform.worldMatrix);
+                this.gameObject.transform.position = selectedGameObject!.transform.position;
+                helpMatrixA.inverse(this.gameObject.transform.worldMatrix);
 
-            for (const bone of bones) {
-                if (bone) {
-                    if (bone.parent && bones.indexOf(bone.parent) >= 0) {
-                        helpVertex3A.applyMatrix(helpMatrixA, bone.parent.position).toArray(vertices, offset);
-                        helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset + 3);
+                for (const bone of bones) {
+                    if (bone) {
+                        if (bone.parent && bones.indexOf(bone.parent) >= 0) {
+                            helpVertex3A.applyMatrix(helpMatrixA, bone.parent.position).toArray(vertices, offset);
+                            helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset + 3);
+                        }
+                        else {
+                            bone.getRight(helpVertex3B).applyDirection(helpMatrixA).multiplyScalar(0.25); // Bone length.
+                            helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset);
+                            helpVertex3A.applyMatrix(helpMatrixA, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
+                        }
                     }
                     else {
-                        bone.getRight(helpVertex3B).applyDirection(helpMatrixA).multiplyScalar(0.25); // Bone length.
-                        helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset);
-                        helpVertex3A.applyMatrix(helpMatrixA, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
+                        (egret3d.Vector3.ZERO as egret3d.Vector3).toArray(vertices, offset);
+                        (egret3d.Vector3.ZERO as egret3d.Vector3).toArray(vertices, offset + 3);
                     }
-                }
-                else {
-                    (egret3d.Vector3.ZERO as egret3d.Vector3).toArray(vertices, offset);
-                    (egret3d.Vector3.ZERO as egret3d.Vector3).toArray(vertices, offset + 3);
+
+                    offset += 6;
                 }
 
-                offset += 6;
+                mesh.uploadVertexBuffer();
+            }
+            else {
+                this.gameObject.activeSelf = false;
             }
 
-            mesh.uploadVertexBuffer();
+            return selectedGameObject;
         }
     }
 }

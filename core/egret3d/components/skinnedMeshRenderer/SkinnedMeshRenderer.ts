@@ -87,7 +87,7 @@ namespace egret3d {
         }
 
         public initialize(reset?: boolean) {
-            super.initialize(reset);
+            super.initialize();
 
             if (!reset) {
                 return;

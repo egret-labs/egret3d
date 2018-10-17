@@ -24,6 +24,10 @@
       "name": "promise"
     },
     {
+      "name": "zlib",
+      "path": "./libs/zlib"
+    },
+    {
       "name": "egret3d",
       "path": "../core"
     },

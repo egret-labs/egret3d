@@ -3917,7 +3917,7 @@ declare namespace egret3d {
         rotateEnabled: boolean;
         /**
          * 舞台是否因屏幕尺寸的改变而发生了旋转。
-         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于渲染尺寸宽度。
+         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于舞台尺寸宽度。
          */
         rotated: boolean;
         private readonly _screenSize;
@@ -3930,11 +3930,19 @@ declare namespace egret3d {
             screenSize: Readonly<ISize>;
         }): void;
         /**
+         * 屏幕到舞台坐标的转换。
+         */
+        screenToStage(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3): this;
+        /**
+         * 舞台到屏幕坐标的转换。
+         */
+        stageToScreen(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3): this;
+        /**
          * 屏幕尺寸。
          */
         screenSize: Readonly<egret3d.ISize>;
         /**
-         * 渲染尺寸。
+         * 舞台尺寸。
          */
         size: Readonly<egret3d.ISize>;
         /**
@@ -4427,14 +4435,6 @@ declare namespace egret3d {
         private readonly _keys;
         initialize(): void;
         /**
-         * 屏幕到舞台坐标的转换。
-         */
-        screenToStage(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3): this;
-        /**
-         * 舞台到屏幕坐标的转换。
-         */
-        stageToScreen(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3): this;
-        /**
          * 通过键名称创建或获取一个按键实例。
          */
         getKey(code: string): Key;
@@ -4626,7 +4626,6 @@ declare namespace egret3d {
         private readonly _projectionMatrix;
         private readonly _matProjO;
         private readonly _frameVectors;
-        private _stage;
         /**
          * 计算相机视锥区域
          */
@@ -4752,8 +4751,6 @@ declare namespace egret3d {
             componentClass: typeof Egret2DRenderer;
         }[];
         private _sortedDirty;
-        private readonly _stage;
-        private readonly _inputCollecter;
         private readonly _sortedRenderers;
         private _onSortRenderers(a, b);
         private _sortRenderers();
@@ -10026,7 +10023,13 @@ declare namespace egret3d {
      */
     type RunEgretOptions = {
         defaultScene?: string;
+        /**
+         * 舞台宽。
+         */
         contentWidth?: number;
+        /**
+         * 舞台高。
+         */
         contentHeight?: number;
         /**
          * 是否允许屏幕旋转，默认允许。

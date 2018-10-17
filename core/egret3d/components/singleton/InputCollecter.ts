@@ -332,34 +332,6 @@ namespace egret3d {
             this._pointers[1] = this.defaultPointer;
         }
         /**
-         * 屏幕到舞台坐标的转换。
-         */
-        public screenToStage(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3) {
-            const stage = this.gameObject.getComponent(Stage)!;
-            const screenSize = stage.screenSize;
-            const viewPort = stage.viewport;
-            const { x, y } = value;
-
-            if (stage.rotated) {
-                out.y = (screenSize.w - (x - viewPort.x)) * (viewPort.w / screenSize.h);
-                out.x = (y - viewPort.y) * (viewPort.h / screenSize.w);
-            }
-            else {
-                out.x = (x - viewPort.x) * (viewPort.w / screenSize.w);
-                out.y = (y - viewPort.y) * (viewPort.h / screenSize.h);
-            }
-
-            return this;
-        }
-        /**
-         * 舞台到屏幕坐标的转换。
-         */
-        public stageToScreen(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3) {
-            // TODO
-
-            return this;
-        }
-        /**
          * @internal
          */
         public getPointer(pointerID: uint) {
