@@ -2719,7 +2719,7 @@ var egret3d;
          */
         Matrix4.prototype.lookRotation = function (direction, up) {
             _helpVector3C.normalize(direction);
-            var x = _helpVector3A.cross(up, _helpVector3C).normalize();
+            var x = _helpVector3A.cross(up, _helpVector3C).normalize(undefined, egret3d.Vector3.RIGHT);
             var y = _helpVector3B.cross(_helpVector3C, x);
             var rawData = this.rawData;
             rawData[0] = x.x;
