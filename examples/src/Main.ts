@@ -5,8 +5,8 @@ declare class Examples {
 async function main() {
     RES.processor.map("json", new JSONProcessor());
 
-    // exampleStart();
-    new examples.pvp.AnimationTest().start();
+    exampleStart();
+    // new examples.pvp.AnimationTest().start();
 }
 
 class JSONProcessor implements RES.processor.Processor {
