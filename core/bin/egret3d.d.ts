@@ -633,6 +633,8 @@ declare namespace egret3d {
         clone(): Vector3;
         set(x: number, y: number, z: number): this;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromSphericalCoords(vector3: Readonly<IVector3>): this;
+        fromSphericalCoords(radius: number, phi: number, theta: number): this;
         clear(): void;
         equal(value: Readonly<IVector3>, threshold?: number): boolean;
         fromPlaneProjection(plane: Readonly<Plane>, source?: Readonly<IVector3>): this;
@@ -4544,6 +4546,10 @@ declare namespace egret3d {
          * 通常不需要使用该事件。
          */
         readonly onPointerLeave: signals.Signal;
+        /**
+         * 通常不需要使用该事件。
+         */
+        readonly onMouseWheel: signals.Signal;
         /**
          * 通常不需要使用该事件。
          */
@@ -10183,7 +10189,7 @@ declare namespace egret3d {
         clone(): Spherical;
         copy(value: Readonly<Spherical>): this;
         set(radius: number, phi: number, theta: number): this;
-        fromCartesianCoords(value: Readonly<IVector3>): this;
+        fromCartesianCoords(vector3: Readonly<IVector3>): this;
         fromCartesianCoords(x: number, y: number, z: number): this;
         makeSafe(): this;
     }

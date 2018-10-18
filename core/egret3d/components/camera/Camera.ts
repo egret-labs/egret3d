@@ -32,7 +32,7 @@ namespace egret3d {
                 gameObject.transform.lookAt(Vector3.ZERO);
 
                 const camera = gameObject.addComponent(Camera);
-                camera.cullingMask &= ~paper.CullingMask.UI;
+                camera.cullingMask &= ~paper.CullingMask.UI; // TODO 更明确的 UI 编辑方案。
                 camera.far = 10000.0;
             }
 

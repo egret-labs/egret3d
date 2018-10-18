@@ -1265,6 +1265,18 @@ var egret3d;
             this.z = value[offset + 2];
             return this;
         };
+        Vector3.prototype.fromSphericalCoords = function (p1, p2, p3) {
+            if (p1.hasOwnProperty("x")) {
+                p3 = p1.z;
+                p2 = p1.y;
+                p1 = p1.x;
+            }
+            var sinPhiRadius = Math.sin(p2) * p1;
+            this.x = sinPhiRadius * Math.sin(p3);
+            this.y = Math.cos(p2) * p1;
+            this.z = sinPhiRadius * Math.cos(p3);
+            return this;
+        };
         Vector3.prototype.clear = function () {
             this.x = 0.0;
             this.y = 0.0;
@@ -7479,12 +7491,15 @@ var paper;
                 if (!this._keepUUID && k === KEY_UUID) {
                     continue;
                 }
-                var kk = (deserializedKeys && k in deserializedKeys) ? deserializedKeys[k] : k;
+                var retargetKey = (deserializedKeys && k in deserializedKeys) ? deserializedKeys[k] : k;
                 if (deserializedIgnoreKeys &&
-                    deserializedIgnoreKeys.indexOf(kk) >= 0) {
+                    deserializedIgnoreKeys.indexOf(retargetKey) >= 0) {
                     continue;
                 }
-                target[kk] = this._deserializeChild(source[k], target[kk]);
+                var retarget = this._deserializeChild(source[k], target[retargetKey]);
+                if (retarget !== undefined) {
+                    target[retargetKey] = retarget;
+                }
             }
             return target;
         };
@@ -8101,7 +8116,8 @@ var paper;
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
-    var _helpVector3 = egret3d.Vector3.create();
+    var _helpVector3A = egret3d.Vector3.create();
+    var _helpVector3B = egret3d.Vector3.create();
     var _helpRotation = egret3d.Quaternion.create();
     var _helpMatrix = egret3d.Matrix4.create();
     var TransformDirty;
@@ -8310,7 +8326,9 @@ var egret3d;
                 return this;
             }
             if (worldPositionStays) {
-                _helpVector3.copy(this.position);
+                _helpVector3A.copy(this.position);
+                _helpRotation.copy(this.rotation);
+                _helpVector3B.copy(this.scale);
             }
             if (prevParent) {
                 prevParent._removeFromChildren(this);
@@ -8321,7 +8339,9 @@ var egret3d;
             this._parent = value;
             this._onParentChange(value, prevParent);
             if (worldPositionStays) {
-                this.position = _helpVector3;
+                this.position = _helpVector3A;
+                this.rotation = _helpRotation;
+                this.scale = _helpVector3B;
             }
             return this;
         };
@@ -8730,8 +8750,8 @@ var egret3d;
                 this._localRotation.fromEuler(q1, q2);
             }
             else {
-                _helpVector3.set(q1, q2, q3);
-                this._localRotation.fromEuler(_helpVector3, q4);
+                _helpVector3A.set(q1, q2, q3);
+                this._localRotation.fromEuler(_helpVector3A, q4);
             }
             if (this._parent) {
                 this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
@@ -8770,12 +8790,12 @@ var egret3d;
         };
         Transform.prototype.setEulerAngles = function (q1, q2, q3, q4) {
             if (q1.hasOwnProperty("x")) {
-                _helpVector3.multiplyScalar(egret3d.DEG_RAD, q1);
-                this._localRotation.fromEuler(_helpVector3, q2);
+                _helpVector3A.multiplyScalar(egret3d.DEG_RAD, q1);
+                this._localRotation.fromEuler(_helpVector3A, q2);
             }
             else {
-                _helpVector3.set(q1 * egret3d.DEG_RAD, q2 * egret3d.DEG_RAD, q3 * egret3d.DEG_RAD);
-                this._localRotation.fromEuler(_helpVector3, q4);
+                _helpVector3A.set(q1 * egret3d.DEG_RAD, q2 * egret3d.DEG_RAD, q3 * egret3d.DEG_RAD);
+                this._localRotation.fromEuler(_helpVector3A, q4);
             }
             if (this._parent) {
                 this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
@@ -8794,8 +8814,8 @@ var egret3d;
                 return this._eulerAngles;
             },
             set: function (value) {
-                _helpVector3.multiplyScalar(egret3d.DEG_RAD, value);
-                this._localRotation.fromEuler(_helpVector3);
+                _helpVector3A.multiplyScalar(egret3d.DEG_RAD, value);
+                this._localRotation.fromEuler(_helpVector3A);
                 if (this._parent) {
                     this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
                 }
@@ -8900,12 +8920,12 @@ var egret3d;
                 }
             }
             else {
-                _helpVector3.set(p1, p2, p3);
+                _helpVector3A.set(p1, p2, p3);
                 if (p4) {
-                    this.position = this._localPosition.add(_helpVector3, this.position);
+                    this.position = this._localPosition.add(_helpVector3A, this.position);
                 }
                 else {
-                    this.localPosition = this._localPosition.add(_helpVector3);
+                    this.localPosition = this._localPosition.add(_helpVector3A);
                 }
             }
             return this;
@@ -8921,13 +8941,13 @@ var egret3d;
                 }
             }
             else {
-                _helpVector3.set(p1, p2, p3);
+                _helpVector3A.set(p1, p2, p3);
                 if (p4) {
-                    this.euler = this._localEuler.add(_helpVector3, this.euler);
+                    this.euler = this._localEuler.add(_helpVector3A, this.euler);
                 }
                 else {
                     this.localEuler; // Update euler.
-                    this.localEuler = this._localEuler.add(_helpVector3);
+                    this.localEuler = this._localEuler.add(_helpVector3A);
                 }
             }
             return this;
@@ -8970,13 +8990,13 @@ var egret3d;
                 }
             }
             else {
-                _helpVector3.set(p1, p2, p3);
+                _helpVector3A.set(p1, p2, p3);
                 if (p4) {
-                    this.eulerAngles = this._localEulerAngles.add(_helpVector3, this.eulerAngles);
+                    this.eulerAngles = this._localEulerAngles.add(_helpVector3A, this.eulerAngles);
                 }
                 else {
                     this.localEulerAngles; // Update euler.
-                    this.localEulerAngles = this._localEulerAngles.add(_helpVector3);
+                    this.localEulerAngles = this._localEulerAngles.add(_helpVector3A);
                 }
             }
             return this;
@@ -10343,6 +10363,10 @@ var egret3d;
             /**
              * 通常不需要使用该事件。
              */
+            _this.onMouseWheel = new signals.Signal();
+            /**
+             * 通常不需要使用该事件。
+             */
             _this.onKeyDown = new signals.Signal();
             /**
              * 通常不需要使用该事件。
@@ -10934,7 +10958,7 @@ var egret3d;
                     gameObject.transform.setLocalPosition(0.0, 10.0, -10.0);
                     gameObject.transform.lookAt(egret3d.Vector3.ZERO);
                     var camera = gameObject.addComponent(Camera);
-                    camera.cullingMask &= ~4 /* UI */;
+                    camera.cullingMask &= ~4 /* UI */; // TODO 更明确的 UI 编辑方案。
                     camera.far = 10000.0;
                 }
                 return gameObject.getOrAddComponent(Camera);
@@ -22636,6 +22660,7 @@ var egret3d;
                     else {
                         egret3d.inputCollecter.mouseWheel = 0;
                     }
+                    egret3d.inputCollecter.onMouseWheel.dispatch(_this);
                     event.preventDefault();
                 };
                 _this._onMouseEvent = function (event) {
@@ -23712,7 +23737,7 @@ var egret3d;
             if (p1.hasOwnProperty("x")) {
                 p3 = p1.z;
                 p2 = p1.y;
-                p1 = p1.z;
+                p1 = p1.x;
             }
             this.radius = Math.sqrt(p1 * p1 + p2 * p2 + p3 * p3);
             if (this.radius === 0.0) {

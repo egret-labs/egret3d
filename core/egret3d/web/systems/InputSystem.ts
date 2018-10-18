@@ -140,6 +140,8 @@ namespace egret3d.web {
                 inputCollecter.mouseWheel = 0;
             }
 
+            inputCollecter.onMouseWheel.dispatch(this);
+
             event.preventDefault();
         }
 

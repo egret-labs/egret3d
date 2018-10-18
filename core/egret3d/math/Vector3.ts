@@ -141,6 +141,23 @@ namespace egret3d {
             return this;
         }
 
+        public fromSphericalCoords(vector3: Readonly<IVector3>): this;
+        public fromSphericalCoords(radius: number, phi: number, theta: number): this;
+        public fromSphericalCoords(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
+            if (p1.hasOwnProperty("x")) {
+                p3 = (p1 as Readonly<IVector3>).z;
+                p2 = (p1 as Readonly<IVector3>).y;
+                p1 = (p1 as Readonly<IVector3>).x;
+            }
+
+            const sinPhiRadius = Math.sin(p2) * (p1 as number);
+            this.x = sinPhiRadius * Math.sin(p3);
+            this.y = Math.cos(p2) * (p1 as number);
+            this.z = sinPhiRadius * Math.cos(p3);
+
+            return this;
+        }
+
         public clear() {
             this.x = 0.0;
             this.y = 0.0;

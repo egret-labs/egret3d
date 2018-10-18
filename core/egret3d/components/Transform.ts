@@ -1,5 +1,6 @@
 namespace egret3d {
-    const _helpVector3 = Vector3.create();
+    const _helpVector3A = Vector3.create();
+    const _helpVector3B = Vector3.create();
     const _helpRotation = Quaternion.create();
     const _helpMatrix = Matrix4.create();
 
@@ -225,8 +226,10 @@ namespace egret3d {
                 return this;
             }
 
-            if (worldPositionStays) {
-                _helpVector3.copy(this.position);
+            if (worldPositionStays) { // TODO copy matrix.
+                _helpVector3A.copy(this.position);
+                _helpRotation.copy(this.rotation);
+                _helpVector3B.copy(this.scale);
             }
 
             if (prevParent) {
@@ -240,8 +243,10 @@ namespace egret3d {
             this._parent = value;
             this._onParentChange(value, prevParent);
 
-            if (worldPositionStays) {
-                this.position = _helpVector3;
+            if (worldPositionStays) { // TODO copy matrix.
+                this.position = _helpVector3A;
+                this.rotation = _helpRotation;
+                this.scale = _helpVector3B;
             }
 
             return this;
@@ -701,8 +706,8 @@ namespace egret3d {
                 this._localRotation.fromEuler(q1 as Readonly<IVector3>, q2 as EulerOrder);
             }
             else {
-                _helpVector3.set(q1 as number, q2 as number, q3 as number);
-                this._localRotation.fromEuler(_helpVector3, q4 as EulerOrder);
+                _helpVector3A.set(q1 as number, q2 as number, q3 as number);
+                this._localRotation.fromEuler(_helpVector3A, q4 as EulerOrder);
             }
 
             if (this._parent) {
@@ -749,12 +754,12 @@ namespace egret3d {
         public setEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
         public setEulerAngles(q1: Readonly<IVector3> | number, q2?: EulerOrder | number, q3?: number, q4?: EulerOrder) {
             if (q1.hasOwnProperty("x")) {
-                _helpVector3.multiplyScalar(DEG_RAD, q1 as Readonly<IVector3>);
-                this._localRotation.fromEuler(_helpVector3, q2 as EulerOrder);
+                _helpVector3A.multiplyScalar(DEG_RAD, q1 as Readonly<IVector3>);
+                this._localRotation.fromEuler(_helpVector3A, q2 as EulerOrder);
             }
             else {
-                _helpVector3.set(q1 as number * DEG_RAD, q2 as number * DEG_RAD, q3 as number * DEG_RAD);
-                this._localRotation.fromEuler(_helpVector3, q4 as EulerOrder);
+                _helpVector3A.set(q1 as number * DEG_RAD, q2 as number * DEG_RAD, q3 as number * DEG_RAD);
+                this._localRotation.fromEuler(_helpVector3A, q4 as EulerOrder);
             }
 
             if (this._parent) {
@@ -776,8 +781,8 @@ namespace egret3d {
             return this._eulerAngles;
         }
         public set eulerAngles(value: Readonly<Vector3 | IVector3>) {
-            _helpVector3.multiplyScalar(DEG_RAD, value);
-            this._localRotation.fromEuler(_helpVector3);
+            _helpVector3A.multiplyScalar(DEG_RAD, value);
+            this._localRotation.fromEuler(_helpVector3A);
 
             if (this._parent) {
                 this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
@@ -890,13 +895,13 @@ namespace egret3d {
                 }
             }
             else {
-                _helpVector3.set(p1 as number, p2 as number, p3 as number);
+                _helpVector3A.set(p1 as number, p2 as number, p3 as number);
 
                 if (p4) {
-                    this.position = this._localPosition.add(_helpVector3, this.position);
+                    this.position = this._localPosition.add(_helpVector3A, this.position);
                 }
                 else {
-                    this.localPosition = this._localPosition.add(_helpVector3);
+                    this.localPosition = this._localPosition.add(_helpVector3A);
                 }
             }
 
@@ -919,14 +924,14 @@ namespace egret3d {
                 }
             }
             else {
-                _helpVector3.set(p1 as number, p2 as number, p3 as number);
+                _helpVector3A.set(p1 as number, p2 as number, p3 as number);
 
                 if (p4) {
-                    this.euler = this._localEuler.add(_helpVector3, this.euler);
+                    this.euler = this._localEuler.add(_helpVector3A, this.euler);
                 }
                 else {
                     this.localEuler; // Update euler.
-                    this.localEuler = this._localEuler.add(_helpVector3);
+                    this.localEuler = this._localEuler.add(_helpVector3A);
                 }
             }
 
@@ -979,14 +984,14 @@ namespace egret3d {
                 }
             }
             else {
-                _helpVector3.set(p1 as number, p2 as number, p3 as number);
+                _helpVector3A.set(p1 as number, p2 as number, p3 as number);
 
                 if (p4) {
-                    this.eulerAngles = this._localEulerAngles.add(_helpVector3, this.eulerAngles);
+                    this.eulerAngles = this._localEulerAngles.add(_helpVector3A, this.eulerAngles);
                 }
                 else {
                     this.localEulerAngles; // Update euler.
-                    this.localEulerAngles = this._localEulerAngles.add(_helpVector3);
+                    this.localEulerAngles = this._localEulerAngles.add(_helpVector3A);
                 }
             }
 

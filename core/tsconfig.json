@@ -89,6 +89,7 @@
         "egret3d/components/egret2DRenderer/Egret2DRendererSystem.ts",
         "egret3d/components/egret2DRenderer/Renderer.ts",
         "egret3d/components/egret2DRenderer/ScreenAdapter.ts",
+        "egret3d/components/light/Shadow.ts",
         "egret3d/components/light/BaseLight.ts",
         "egret3d/components/light/DirectionalLight.ts",
         "egret3d/components/light/PointLight.ts",

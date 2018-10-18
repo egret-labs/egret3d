@@ -2,7 +2,7 @@ namespace examples {
 
     export class SceneTest {
 
-        async  start() {
+        async start() {
             // Load resource config.
             await RES.loadConfig("resource/default.res.json", "resource/");
             // Load scene resource.

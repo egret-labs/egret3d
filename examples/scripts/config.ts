@@ -5,7 +5,7 @@ import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlu
 import * as path from "path";
 import { MergeJSONPlugin, MergeBinaryPlugin, ModifyDefaultResJSONPlugin, InspectorFilterPlugin } from "./myplugin";
 
-let bakeRoot: string = "";
+let bakeRoot: string = "resource/";
 const config: ResourceManagerConfig = {
 
     buildConfig: (params) => {
@@ -18,7 +18,6 @@ const config: ResourceManagerConfig = {
         if (command === "bake") {
             const outputDir = ".";
             let subRoot = "";
-            bakeRoot = "resource/";
 
             switch (commandLineParams[0]) {
                 case "--folder":
@@ -29,7 +28,6 @@ const config: ResourceManagerConfig = {
             }
 
             // TODO 合并操作应该在 publish 而不是 bake
-
             return {
                 outputDir,
                 commands: [
@@ -64,12 +62,14 @@ const config: ResourceManagerConfig = {
                     break;
             }
 
+            // TODO 合并操作应该在 publish 而不是 bake
             return {
                 outputDir,
                 commands: [
                     new CompilePlugin({ libraryType: "release" }),
                     new ExmlPlugin("commonjs"),
                     new InspectorFilterPlugin(inspectorFilterEnabled),
+                    new MergeJSONPlugin({ root: bakeRoot, nameSelector, mergeJSONSelector }),
                     new UglifyPlugin([
                         {
                             sources: ["resource/2d/default.thm.js"],

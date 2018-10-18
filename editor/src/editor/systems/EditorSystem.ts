@@ -44,8 +44,8 @@ namespace paper.editor {
                     container.innerHTML = containerHTML;
                     document.body.appendChild(container);
 
-                    this._guiComponent.hierarchy = new dat.GUI({ autoPlace: false, closeOnTop: true, width: 330 });
-                    this._guiComponent.inspector = new dat.GUI({ autoPlace: false, closeOnTop: true, width: 330 });
+                    this._guiComponent.hierarchy = new dat.GUI({ autoPlace: false, closeOnTop: true, scrollable: true, width: 330 });
+                    this._guiComponent.inspector = new dat.GUI({ autoPlace: false, closeOnTop: true, scrollable: true, width: 330 });
                     const hierarchy = document.getElementsByClassName("egret-hierarchy");
                     const inspector = document.getElementsByClassName("egret-inspector");
                     hierarchy[0].appendChild(this._guiComponent.hierarchy.domElement);
