@@ -899,7 +899,8 @@ declare namespace egret3d {
         set(x: number, y: number, z: number, w: number): this;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
         clear(): void;
-        normalize(source?: Readonly<IVector4>): this;
+        normalize(input?: Readonly<IVector4>): this;
+        multiplyScalar(scale: number, input?: Readonly<IVector4>): this;
         toArray(value: number[] | Float32Array, offset?: number): number[] | Float32Array;
         readonly length: number;
         readonly squaredLength: number;
@@ -5065,23 +5066,19 @@ declare namespace paper {
         Editor = 2,
     }
     /**
-     * 应用程序单例。
-     */
-    let Application: ECS;
-    /**
      * 应用程序。
      */
     class ECS {
-        /**
-         * 当应用程序的播放模式改变时派发事件。
-         */
-        static readonly onPlayerModeChange: signals.Signal;
         private static _instance;
         /**
          * 应用程序单例。
          */
         static getInstance(): ECS;
         private constructor();
+        /**
+         * 当应用程序的播放模式改变时派发事件。
+         */
+        readonly onPlayerModeChange: signals.Signal;
         /**
          * 引擎版本。
          */
@@ -5105,6 +5102,10 @@ declare namespace paper {
          */
         playerMode: PlayerMode;
     }
+    /**
+     * 应用程序单例。
+     */
+    const Application: ECS;
 }
 declare namespace egret3d {
     /**
@@ -6069,7 +6070,7 @@ declare namespace egret3d {
         s3tc: WEBGL_compressed_texture_s3tc;
         textureFloat: boolean;
         textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
-        initialize(): void;
+        initialize(config: RunEgretOptions): void;
     }
     /**
      * @private
@@ -6219,7 +6220,7 @@ declare namespace paper {
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        getOrAddComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T;
+        getOrAddComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends?: boolean, config?: any): T;
         /**
          * 向该实体已激活的全部 Behaviour 组件发送消息。
          * @param methodName
@@ -10023,52 +10024,6 @@ declare namespace egret3d.web {
 declare namespace egret3d.web {
 }
 declare namespace egret3d {
-    /**
-     *
-     */
-    type RunEgretOptions = {
-        defaultScene?: string;
-        /**
-         * 舞台宽。
-         */
-        contentWidth?: number;
-        /**
-         * 舞台高。
-         */
-        contentHeight?: number;
-        /**
-         * 是否允许屏幕旋转，默认允许。
-         */
-        rotateEnabled?: boolean;
-        /**
-         * 是否开启抗锯齿，默认关闭。
-         */
-        antialias: boolean;
-        /**
-         * 是否与画布背景色混合，默认不混合。
-         */
-        alpha: boolean;
-        option?: RequiredRuntimeOptions;
-        canvas?: HTMLCanvasElement;
-        webgl?: WebGLRenderingContext;
-        playerMode?: paper.PlayerMode;
-    };
-    type RequiredRuntimeOptions = {
-        antialias: boolean;
-        contentWidth: number;
-        contentHeight: number;
-    };
-    /**
-     * 引擎启动入口
-     */
-    function runEgret(options?: RunEgretOptions): void;
-}
-interface Window {
-    canvas: HTMLCanvasElement;
-    paper: any;
-    egret3d: any;
-}
-declare namespace egret3d {
     const MAX_VERTEX_COUNT_PER_BUFFER: number;
     /**
      * 尝试对场景内所有静态对象合并
@@ -10136,6 +10091,52 @@ declare namespace egret3d {
         static print(group?: number): void;
         static test(): void;
     }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    type RunEgretOptions = {
+        defaultScene?: string;
+        /**
+         * 舞台宽。
+         */
+        contentWidth?: number;
+        /**
+         * 舞台高。
+         */
+        contentHeight?: number;
+        /**
+         * 是否允许屏幕旋转，默认允许。
+         */
+        rotateEnabled?: boolean;
+        /**
+         * 是否开启抗锯齿，默认关闭。
+         */
+        antialias: boolean;
+        /**
+         * 是否与画布背景色混合，默认不混合。
+         */
+        alpha: boolean;
+        option?: RequiredRuntimeOptions;
+        canvas?: HTMLCanvasElement;
+        webgl?: WebGLRenderingContext;
+        playerMode?: paper.PlayerMode;
+    };
+    type RequiredRuntimeOptions = {
+        antialias: boolean;
+        contentWidth: number;
+        contentHeight: number;
+    };
+    /**
+     * 引擎启动入口
+     */
+    function runEgret(options?: RunEgretOptions): void;
+}
+interface Window {
+    canvas: HTMLCanvasElement;
+    paper: any;
+    egret3d: any;
 }
 declare namespace egret3d {
     /**

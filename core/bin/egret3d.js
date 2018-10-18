@@ -2860,11 +2860,11 @@ var egret3d;
             this.z = 0.0;
             this.w = 1.0;
         };
-        Vector4.prototype.normalize = function (source) {
-            if (!source) {
-                source = this;
+        Vector4.prototype.normalize = function (input) {
+            if (!input) {
+                input = this;
             }
-            var l = Math.sqrt(source.x * source.x + source.y * source.y + source.z * source.z + source.w * source.w);
+            var l = Math.sqrt(input.x * input.x + input.y * input.y + input.z * input.z + input.w * input.w);
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
                 this.x *= l;
@@ -2878,6 +2878,16 @@ var egret3d;
                 this.z = 0.0;
                 this.w = 1.0;
             }
+            return this;
+        };
+        Vector4.prototype.multiplyScalar = function (scale, input) {
+            if (!input) {
+                input = this;
+            }
+            this.x = scale * input.x;
+            this.y = scale * input.y;
+            this.z = scale * input.z;
+            this.w = scale * input.w;
             return this;
         };
         Vector4.prototype.toArray = function (value, offset) {
@@ -12279,6 +12289,10 @@ var paper;
     var ECS = (function () {
         function ECS() {
             /**
+             * 当应用程序的播放模式改变时派发事件。
+             */
+            this.onPlayerModeChange = new signals.Signal();
+            /**
              * 引擎版本。
              */
             this.version = "1.3.0.001";
@@ -12386,21 +12400,19 @@ var paper;
                     return;
                 }
                 this._playerMode = value;
-                ECS.onPlayerModeChange.dispatch(this.playerMode);
+                this.onPlayerModeChange.dispatch(this.playerMode);
             },
             enumerable: true,
             configurable: true
         });
-        /**
-         * 当应用程序的播放模式改变时派发事件。
-         */
-        ECS.onPlayerModeChange = new signals.Signal();
         ECS._instance = null;
         return ECS;
     }());
     paper.ECS = ECS;
     __reflect(ECS.prototype, "paper.ECS");
-    //
+    /**
+     * 应用程序单例。
+     */
     paper.Application = ECS.getInstance();
 })(paper || (paper = {}));
 var egret3d;
@@ -17056,8 +17068,10 @@ var egret3d;
             _this.precision = "highp";
             return _this;
         }
-        WebGLCapabilities.prototype.initialize = function () {
+        WebGLCapabilities.prototype.initialize = function (config) {
             _super.prototype.initialize.call(this);
+            WebGLCapabilities.canvas = config.canvas;
+            WebGLCapabilities.webgl = config.webgl;
             var webgl = WebGLCapabilities.webgl;
             if (!webgl) {
                 return;
@@ -17856,9 +17870,9 @@ var paper;
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        GameObject.prototype.getOrAddComponent = function (componentClass, isExtends) {
+        GameObject.prototype.getOrAddComponent = function (componentClass, isExtends, config) {
             if (isExtends === void 0) { isExtends = false; }
-            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, isExtends);
+            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, config);
         };
         /**
          * 向该实体已激活的全部 Behaviour 组件发送消息。
@@ -21997,7 +22011,7 @@ var egret3d;
                 globalGameObject.getOrAddComponent(egret3d.DefaultMaterials);
                 globalGameObject.getOrAddComponent(egret3d.InputCollecter);
                 globalGameObject.getOrAddComponent(egret3d.ContactCollecter);
-                globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities);
+                globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities, false, config);
                 // Update canvas when screen resized.
                 this._updateCanvas(egret3d.stage); // First update.
                 egret3d.stage.onScreenResize.add(function () {
@@ -22966,77 +22980,6 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    /**
-     * 引擎启动入口
-     */
-    function runEgret(options) {
-        if (options === void 0) { options = { antialias: false, alpha: false }; }
-        console.info("Egret version:", paper.Application.version);
-        console.info("Egret start.");
-        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
-        egret.Capabilities["renderMode" + ""] = "webgl";
-        var requiredOptions = getOptions(options);
-        var canvas = getMainCanvas(options);
-        //TODO
-        options.canvas = canvas;
-        options.option = requiredOptions;
-        options.webgl = canvas.getContext('webgl', options) || canvas.getContext("experimental-webgl", options);
-        egret3d.WebGLCapabilities.canvas = options.canvas;
-        egret3d.WebGLCapabilities.webgl = options.webgl;
-        paper.Application.initialize(options);
-        var systemManager = paper.Application.systemManager;
-        systemManager.register(egret3d.web.BeginSystem, 0 /* Begin */, options);
-        systemManager.register(egret3d.AnimationSystem, 5000 /* Animation */);
-        systemManager.register(egret3d.MeshRendererSystem, 7000 /* Renderer */);
-        systemManager.register(egret3d.SkinnedMeshRendererSystem, 7000 /* Renderer */);
-        systemManager.register(egret3d.particle.ParticleSystem, 7000 /* Renderer */);
-        systemManager.register(egret3d.Egret2DRendererSystem, 7000 /* Renderer */, options);
-        systemManager.register(egret3d.CameraAndLightSystem, 8000 /* Draw */);
-        systemManager.register(egret3d.web.WebGLRenderSystem, 8000 /* Draw */, options);
-        systemManager.register(egret3d.web.InputSystem, 10000 /* End */, options);
-        systemManager.register(egret3d.web.EndSystem, 10000 /* End */, options);
-        systemManager._preRegisterSystems();
-        console.info("Egret start complete.");
-    }
-    egret3d.runEgret = runEgret;
-    function getMainCanvas(options) {
-        if (window.canvas) {
-            return window.canvas;
-        }
-        else if (options.canvas) {
-            return options.canvas;
-        }
-        else {
-            var div = document.getElementsByClassName("egret-player")[0];
-            var canvas = document.createElement("canvas");
-            div.appendChild(canvas);
-            return canvas;
-        }
-    }
-    function getOptions(options) {
-        if (window.canvas) {
-            return {
-                antialias: options.antialias,
-                antialiasSamples: 4,
-                contentWidth: options.contentWidth || 640,
-                contentHeight: options.contentHeight || 1136
-            };
-        }
-        else {
-            var div = document.getElementsByClassName("egret-player")[0];
-            return {
-                antialias: options.antialias,
-                antialiasSamples: 4,
-                contentWidth: parseInt(div.getAttribute("data-content-width")),
-                contentHeight: parseInt(div.getAttribute("data-content-height"))
-            };
-        }
-    }
-})(egret3d || (egret3d = {}));
-window.paper = paper;
-window.egret3d = egret3d;
-var egret3d;
-(function (egret3d) {
     //最大允许合并的顶点数，超过就是下一批次
     egret3d.MAX_VERTEX_COUNT_PER_BUFFER = 50000;
     //
@@ -23609,6 +23552,76 @@ var egret3d;
     egret3d.Profile = Profile;
     __reflect(Profile.prototype, "egret3d.Profile");
 })(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * 引擎启动入口
+     */
+    function runEgret(options) {
+        if (options === void 0) { options = { antialias: false, alpha: false }; }
+        console.info("Egret version:", paper.Application.version);
+        console.info("Egret start.");
+        var requiredOptions = getOptions(options);
+        var canvas = getMainCanvas(options);
+        options.option = requiredOptions;
+        options.canvas = canvas;
+        options.webgl = canvas.getContext('webgl', options) || canvas.getContext("experimental-webgl", options);
+        // TODO
+        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
+        egret.Capabilities["renderMode" + ""] = "webgl";
+        paper.Application.initialize(options);
+        var systemManager = paper.Application.systemManager;
+        systemManager.register(egret3d.web.BeginSystem, 0 /* Begin */, options);
+        systemManager.register(egret3d.AnimationSystem, 5000 /* Animation */);
+        systemManager.register(egret3d.MeshRendererSystem, 7000 /* Renderer */);
+        systemManager.register(egret3d.SkinnedMeshRendererSystem, 7000 /* Renderer */);
+        systemManager.register(egret3d.particle.ParticleSystem, 7000 /* Renderer */);
+        systemManager.register(egret3d.Egret2DRendererSystem, 7000 /* Renderer */, options);
+        systemManager.register(egret3d.CameraAndLightSystem, 8000 /* Draw */);
+        systemManager.register(egret3d.web.WebGLRenderSystem, 8000 /* Draw */, options);
+        systemManager.register(egret3d.web.InputSystem, 10000 /* End */, options);
+        systemManager.register(egret3d.web.EndSystem, 10000 /* End */, options);
+        // TODO
+        systemManager._preRegisterSystems();
+        console.info("Egret start complete.");
+    }
+    egret3d.runEgret = runEgret;
+    function getMainCanvas(options) {
+        if (window.canvas) {
+            return window.canvas;
+        }
+        else if (options.canvas) {
+            return options.canvas;
+        }
+        else {
+            var div = document.getElementsByClassName("egret-player")[0];
+            var canvas = document.createElement("canvas");
+            div.appendChild(canvas);
+            return canvas;
+        }
+    }
+    function getOptions(options) {
+        if (window.canvas) {
+            return {
+                antialias: options.antialias,
+                antialiasSamples: 4,
+                contentWidth: options.contentWidth || 640,
+                contentHeight: options.contentHeight || 1136
+            };
+        }
+        else {
+            var div = document.getElementsByClassName("egret-player")[0];
+            return {
+                antialias: options.antialias,
+                antialiasSamples: 4,
+                contentWidth: parseInt(div.getAttribute("data-content-width")),
+                contentHeight: parseInt(div.getAttribute("data-content-height"))
+            };
+        }
+    }
+})(egret3d || (egret3d = {}));
+window.paper = paper;
+window.egret3d = egret3d;
 var egret3d;
 (function (egret3d) {
     /**

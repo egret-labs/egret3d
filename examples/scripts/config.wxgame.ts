@@ -3,6 +3,7 @@
 
 import { CleanPlugin, CompilePlugin, ExmlPlugin, ManifestPlugin, UglifyPlugin } from 'built-in';
 import * as defaultConfig from './config';
+import { InspectorFilterPlugin } from './myplugin';
 import { WxgamePlugin } from './wxgame/wxgame';
 
 const config: ResourceManagerConfig = {
@@ -18,6 +19,7 @@ const config: ResourceManagerConfig = {
                     new CleanPlugin({ matchers: ["js", "resource"] }),
                     new CompilePlugin({ libraryType: "debug", defines: { DEBUG: true, RELEASE: false } }),
                     new ExmlPlugin('commonjs'), // 非 EUI 项目关闭此设置
+                    new InspectorFilterPlugin(),
                     new WxgamePlugin(),
                     new ManifestPlugin({ output: 'manifest.js' })
                 ]
@@ -30,6 +32,7 @@ const config: ResourceManagerConfig = {
                     new CleanPlugin({ matchers: ["js", "resource"] }),
                     new CompilePlugin({ libraryType: "release", defines: { DEBUG: false, RELEASE: true } }),
                     new ExmlPlugin('commonjs'), // 非 EUI 项目关闭此设置
+                    new InspectorFilterPlugin(),
                     new WxgamePlugin(),
                     new UglifyPlugin([
                         {

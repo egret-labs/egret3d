@@ -20,7 +20,7 @@ namespace paper.editor {
 
         public static createIcon(name: string, parent: paper.GameObject, icon: egret3d.Texture) {
             const material = new egret3d.Material(egret3d.DefaultShaders.TRANSPARENT);
-            material.renderQueue = paper.RenderQueue.Overlay;
+            material.renderQueue = paper.RenderQueue.Overlay - 1;
             material.setTexture(egret3d.ShaderUniformName.Map, icon);
             material.setColor(egret3d.ShaderUniformName.Diffuse, egret3d.Color.RED);
             const iconObj = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material, parent.tag, parent.scene);
@@ -69,12 +69,16 @@ namespace paper.editor {
                     colors.push(colorCross.r, colorCross.g, colorCross.b, colorCross.a);
                 }
             }
+
             const mesh = new egret3d.Mesh(verticeCount, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
             mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
             mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, colors);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
 
-            const gameObject = this.createGameObject(name, mesh, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone());
+            const material = egret3d.DefaultMaterials.LINEDASHED_COLOR.clone();
+            material.setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Transparent).setOpacity(0.8);
+
+            const gameObject = this.createGameObject(name, mesh, material);
             return gameObject;
         }
     }

@@ -84,12 +84,12 @@ namespace egret3d {
             this.w = 1.0;
         }
 
-        public normalize(source?: Readonly<IVector4>) {
-            if (!source) {
-                source = this;
+        public normalize(input?: Readonly<IVector4>) {
+            if (!input) {
+                input = this;
             }
 
-            let l = Math.sqrt(source.x * source.x + source.y * source.y + source.z * source.z + source.w * source.w);
+            let l = Math.sqrt(input.x * input.x + input.y * input.y + input.z * input.z + input.w * input.w);
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
                 this.x *= l;
@@ -103,6 +103,19 @@ namespace egret3d {
                 this.z = 0.0;
                 this.w = 1.0;
             }
+
+            return this;
+        }
+
+        public multiplyScalar(scale: number, input?: Readonly<IVector4>) {
+            if (!input) {
+                input = this;
+            }
+
+            this.x = scale * input.x;
+            this.y = scale * input.y;
+            this.z = scale * input.z;
+            this.w = scale * input.w;
 
             return this;
         }

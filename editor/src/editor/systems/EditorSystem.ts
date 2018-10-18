@@ -84,6 +84,6 @@ namespace paper.editor {
             }
         }
     }
-    // 
+    //
     Application.systemManager.preRegister(EditorSystem, SystemOrder.LaterUpdate);
 }

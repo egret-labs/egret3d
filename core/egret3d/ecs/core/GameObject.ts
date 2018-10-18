@@ -679,8 +679,8 @@ namespace paper {
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        public getOrAddComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false) {
-            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, isExtends);
+        public getOrAddComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false, config?: any) {
+            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, config);
         }
         /**
          * 向该实体已激活的全部 Behaviour 组件发送消息。

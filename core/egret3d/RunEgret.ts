@@ -41,17 +41,15 @@ namespace egret3d {
         console.info("Egret version:", paper.Application.version);
         console.info("Egret start.");
 
-        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
-        egret.Capabilities["renderMode" + ""] = "webgl";
-
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas(options);
-        //TODO
-        options.canvas = canvas;
         options.option = requiredOptions;
+        options.canvas = canvas;
         options.webgl = <WebGLRenderingContext>canvas.getContext('webgl', options) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
-        WebGLCapabilities.canvas = options.canvas;
-        WebGLCapabilities.webgl = options.webgl;
+
+        // TODO
+        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
+        egret.Capabilities["renderMode" + ""] = "webgl";
 
         paper.Application.initialize(options);
         const systemManager = paper.Application.systemManager;
@@ -67,6 +65,7 @@ namespace egret3d {
         systemManager.register(web.WebGLRenderSystem, paper.SystemOrder.Draw, options);
         systemManager.register(web.InputSystem, paper.SystemOrder.End, options);
         systemManager.register(web.EndSystem, paper.SystemOrder.End, options);
+        // TODO
         systemManager._preRegisterSystems();
 
         console.info("Egret start complete.");
@@ -108,14 +107,9 @@ namespace egret3d {
     }
 }
 
-
-
-interface Window {
-
+declare interface Window {
     canvas: HTMLCanvasElement;
-
     paper: any;
-
     egret3d: any;
 }
 

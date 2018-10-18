@@ -73,20 +73,16 @@ namespace paper.editor {
 
             { // Rotate.
                 const rotate = this.rotate;
-                const axisX = EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const axisY = EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const axisZ = EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const axisE = EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createCircle(1.25, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                // const axisX = EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                // const axisY = EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                // const axisZ = EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                // const axisE = EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createTorus(1.25, 0.03, 4, 48, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const axisXYZE = EditorMeshHelper.createGameObject("AxisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickX = EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickY = EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickZ = EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickE = EditorMeshHelper.createGameObject("E", egret3d.DefaultMeshes.createTorus(1.25, 0.1, 4, 24, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickXYZE = EditorMeshHelper.createGameObject("XYZE", egret3d.DefaultMeshes.createSphere(0.7, 10, 8), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisX = EditorMeshHelper.createGameObject("AxisX", egret3d.MeshBuilder.createCircle(1.0, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisY = EditorMeshHelper.createGameObject("AxisY", egret3d.MeshBuilder.createCircle(1.0, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisZ = EditorMeshHelper.createGameObject("AxisZ", egret3d.MeshBuilder.createCircle(1.0, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisE = EditorMeshHelper.createGameObject("AxisE", egret3d.MeshBuilder.createCircle(1.25, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const axisXYZE = EditorMeshHelper.createGameObject("AxisXYZE", egret3d.MeshBuilder.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickX = EditorMeshHelper.createGameObject("X", egret3d.MeshBuilder.createTorus(1.0, 0.1, 4, 12, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickY = EditorMeshHelper.createGameObject("Y", egret3d.MeshBuilder.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickZ = EditorMeshHelper.createGameObject("Z", egret3d.MeshBuilder.createTorus(1.0, 0.1, 4, 12, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickE = EditorMeshHelper.createGameObject("E", egret3d.MeshBuilder.createTorus(1.25, 0.1, 4, 24, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickXYZE = EditorMeshHelper.createGameObject("XYZE", egret3d.MeshBuilder.createSphere(0.7, 10, 8), egret3d.DefaultMaterials.MESH_BASIC.clone());
 
                 this._highlights[pickX.uuid] = [axisX];
                 this._highlights[pickY.uuid] = [axisY];

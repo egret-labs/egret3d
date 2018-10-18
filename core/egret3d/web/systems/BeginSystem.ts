@@ -56,7 +56,7 @@ namespace egret3d.web {
 
             globalGameObject.getOrAddComponent(InputCollecter);
             globalGameObject.getOrAddComponent(ContactCollecter);
-            globalGameObject.getOrAddComponent(WebGLCapabilities);
+            globalGameObject.getOrAddComponent(WebGLCapabilities, false, config);
 
             // Update canvas when screen resized.
             this._updateCanvas(stage); // First update.

@@ -3,7 +3,7 @@
 
 import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlugin, ManifestPlugin, UglifyPlugin } from "built-in";
 import * as path from "path";
-import { MergeJSONPlugin, MergeBinaryPlugin, ModifyDefaultResJSON } from "./myplugin";
+import { MergeJSONPlugin, MergeBinaryPlugin, ModifyDefaultResJSONPlugin, InspectorFilterPlugin } from "./myplugin";
 
 let bakeRoot: string = "";
 const config: ResourceManagerConfig = {
@@ -13,20 +13,22 @@ const config: ResourceManagerConfig = {
         const command = params.command;
         const projectName = params.projectName;
         const version = params.version;
+        const commandLineParams = process.argv.splice(3);
 
         if (command === "bake") {
-            const params = process.argv.splice(3);
             const outputDir = ".";
             let subRoot = "";
             bakeRoot = "resource/";
 
-            switch (params[0]) {
+            switch (commandLineParams[0]) {
                 case "--folder":
                 case "-f":
-                    subRoot = `${params[1]}/`;
+                    subRoot = `${commandLineParams[1]}/`;
                     bakeRoot += subRoot;
                     break;
             }
+
+            // TODO 合并操作应该在 publish 而不是 bake
 
             return {
                 outputDir,
@@ -38,7 +40,7 @@ const config: ResourceManagerConfig = {
                         nameSelector,
                         groupSelector: p => null
                     }),
-                    new ModifyDefaultResJSON(subRoot),
+                    new ModifyDefaultResJSONPlugin(subRoot),
                 ]
             };
         }
@@ -54,11 +56,20 @@ const config: ResourceManagerConfig = {
         }
         else if (command === "publish") {
             const outputDir = `bin-release/web/${version}`;
+            let inspectorFilterEnabled = true;
+            switch (commandLineParams[0]) {
+                case "--inspector":
+                case "-i":
+                    inspectorFilterEnabled = false;
+                    break;
+            }
+
             return {
                 outputDir,
                 commands: [
                     new CompilePlugin({ libraryType: "release" }),
                     new ExmlPlugin("commonjs"),
+                    new InspectorFilterPlugin(inspectorFilterEnabled),
                     new UglifyPlugin([
                         {
                             sources: ["resource/2d/default.thm.js"],

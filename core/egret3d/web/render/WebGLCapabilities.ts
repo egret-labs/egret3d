@@ -197,9 +197,11 @@ namespace egret3d {
         public textureFloat: boolean;
         public textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
 
-        public initialize() {
+        public initialize(config: RunEgretOptions) {
             super.initialize();
 
+            WebGLCapabilities.canvas = config.canvas;
+            WebGLCapabilities.webgl = config.webgl;
             const webgl = WebGLCapabilities.webgl;
             if (!webgl) {
                 return;
