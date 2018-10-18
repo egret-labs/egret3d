@@ -4028,6 +4028,16 @@ var paper;
                     _this._selectSceneOrGameObject(null);
                     _this._selectSceneOrGameObject(_this._modelComponent.selectedGameObject);
                 };
+                _this._saveSceneOrGameObject = function () {
+                    if (_this._modelComponent.selectedScene) {
+                        var json = JSON.stringify(paper.serialize(_this._modelComponent.selectedScene));
+                        console.info(json);
+                    }
+                    else {
+                        var json = JSON.stringify(paper.serialize(_this._modelComponent.selectedGameObject));
+                        console.info(json);
+                    }
+                };
                 _this._createGameObject = function () {
                     if (_this._modelComponent.selectedScene) {
                         var gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "NoName" /* NoName */, "" /* Untagged */, _this._modelComponent.selectedScene);
@@ -4068,12 +4078,14 @@ var paper;
                 if (sceneOrGameObject) {
                     if (sceneOrGameObject instanceof paper.Scene) {
                         // Update scene.
+                        inspector.add(this, "_saveSceneOrGameObject", "save");
                         inspector.add(this, "_createGameObject", "createObject");
                         inspector.add(this, "_destroySceneOrGameObject", "destroy");
                         this._addToInspector(inspector);
                     }
                     else {
                         // Update game object.
+                        inspector.add(this, "_saveSceneOrGameObject", "save");
                         inspector.add(this, "_createGameObject", "createChildObject");
                         inspector.add(this, "_destroySceneOrGameObject", "destroy");
                         this._addToInspector(inspector);
@@ -4144,6 +4156,7 @@ var paper;
                 var guiControllerA;
                 var guiControllerB;
                 var guiControllerC;
+                var guiControllerD;
                 var _loop_1 = function (info) {
                     switch (info.editType) {
                         case 0 /* UINT */:
@@ -4265,8 +4278,42 @@ var paper;
                             }
                             break;
                         }
-                        case 11 /* RECT */:
+                        case 11 /* RECT */: {
+                            guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
+                            guiControllerC = gui.add(gui.instance[info.name], "w", info.name + ": w").step(0.1).listen();
+                            guiControllerD = gui.add(gui.instance[info.name], "h", info.name + ": h").step(0.1).listen();
+                            if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
+                                var onChange = function () {
+                                    gui.instance[info.name] = gui.instance[info.name];
+                                };
+                                guiControllerA.onChange(onChange);
+                                guiControllerB.onChange(onChange);
+                                guiControllerC.onChange(onChange);
+                                guiControllerD.onChange(onChange);
+                            }
+                            if (info.option) {
+                                if (info.option.minimum !== undefined) {
+                                    guiControllerA.min(info.option.minimum);
+                                    guiControllerB.min(info.option.minimum);
+                                    guiControllerC.min(info.option.minimum);
+                                    guiControllerD.min(info.option.minimum);
+                                }
+                                if (info.option.maximum !== undefined) {
+                                    guiControllerA.max(info.option.maximum);
+                                    guiControllerB.max(info.option.maximum);
+                                    guiControllerC.max(info.option.maximum);
+                                    guiControllerD.min(info.option.maximum);
+                                }
+                                if (info.option.step !== undefined) {
+                                    guiControllerA.step(info.option.step);
+                                    guiControllerB.step(info.option.step);
+                                    guiControllerC.step(info.option.step);
+                                    guiControllerD.step(info.option.step);
+                                }
+                            }
                             break;
+                        }
                         case 14 /* GAMEOBJECT */:
                             break;
                         case 21 /* NESTED */: {

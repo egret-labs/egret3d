@@ -94,7 +94,8 @@ namespace egret3d {
          * 相机视窗
          */
         @paper.serializedField
-        public readonly viewport: Rectangle = new Rectangle(0, 0, 1, 1);
+        @paper.editor.property(paper.editor.EditType.RECT)
+        public readonly viewport: Rectangle = Rectangle.create(0, 0, 1, 1);
         /**
          * TODO 功能完善后开放此接口
          */

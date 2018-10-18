@@ -34,6 +34,17 @@ namespace paper.editor {
             this._selectSceneOrGameObject(this._modelComponent.selectedGameObject);
         }
 
+        private _saveSceneOrGameObject = () => {
+            if (this._modelComponent.selectedScene) {
+                const json = JSON.stringify(serialize(this._modelComponent.selectedScene));
+                console.info(json);
+            }
+            else {
+                const json = JSON.stringify(serialize(this._modelComponent.selectedGameObject!));
+                console.info(json);
+            }
+        }
+
         private _createGameObject = () => {
             if (this._modelComponent.selectedScene) {
                 const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, DefaultNames.NoName, DefaultTags.Untagged, this._modelComponent.selectedScene);
@@ -80,12 +91,14 @@ namespace paper.editor {
             if (sceneOrGameObject) {
                 if (sceneOrGameObject instanceof Scene) {
                     // Update scene.
+                    inspector.add(this, "_saveSceneOrGameObject", "save");
                     inspector.add(this, "_createGameObject", "createObject");
                     inspector.add(this, "_destroySceneOrGameObject", "destroy");
                     this._addToInspector(inspector);
                 }
                 else {
                     // Update game object.
+                    inspector.add(this, "_saveSceneOrGameObject", "save");
                     inspector.add(this, "_createGameObject", "createChildObject");
                     inspector.add(this, "_destroySceneOrGameObject", "destroy");
                     this._addToInspector(inspector);
@@ -167,6 +180,7 @@ namespace paper.editor {
             let guiControllerA: dat.GUIController;
             let guiControllerB: dat.GUIController;
             let guiControllerC: dat.GUIController;
+            let guiControllerD: dat.GUIController;
 
             for (const info of infos) {
                 switch (info.editType) {
@@ -316,8 +330,46 @@ namespace paper.editor {
                         break;
                     }
 
-                    case editor.EditType.RECT:
+                    case editor.EditType.RECT: {
+                        guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
+                        guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
+                        guiControllerC = gui.add(gui.instance[info.name], "w", `${info.name}: w`).step(0.1).listen();
+                        guiControllerD = gui.add(gui.instance[info.name], "h", `${info.name}: h`).step(0.1).listen();
+
+                        if (this._propertyHasGetterSetter(gui.instance, info.name)) {
+                            const onChange = () => {
+                                gui.instance[info.name] = gui.instance[info.name];
+                            };
+                            guiControllerA.onChange(onChange);
+                            guiControllerB.onChange(onChange);
+                            guiControllerC.onChange(onChange);
+                            guiControllerD.onChange(onChange);
+                        }
+
+                        if (info.option) {
+                            if (info.option.minimum !== undefined) {
+                                guiControllerA.min(info.option.minimum);
+                                guiControllerB.min(info.option.minimum);
+                                guiControllerC.min(info.option.minimum);
+                                guiControllerD.min(info.option.minimum);
+                            }
+
+                            if (info.option.maximum !== undefined) {
+                                guiControllerA.max(info.option.maximum);
+                                guiControllerB.max(info.option.maximum);
+                                guiControllerC.max(info.option.maximum);
+                                guiControllerD.min(info.option.maximum);
+                            }
+
+                            if (info.option.step !== undefined) {
+                                guiControllerA.step(info.option.step);
+                                guiControllerB.step(info.option.step);
+                                guiControllerC.step(info.option.step);
+                                guiControllerD.step(info.option.step);
+                            }
+                        }
                         break;
+                    }
 
                     case editor.EditType.GAMEOBJECT:
                         break;
