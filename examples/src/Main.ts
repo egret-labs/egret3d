@@ -106,16 +106,16 @@ function exampleStart() {
     }
 
     function getCurrentExampleString() {
-        var appFile = "Test";
+        let appFile = "Test";
 
-        var str = location.search;
+        let str = location.search;
         str = str.slice(1, str.length);
-        var totalArray = str.split("&");
-        for (var i = 0; i < totalArray.length; i++) {
-            var itemArray = totalArray[i].split("=");
+        const totalArray = str.split("&");
+        for (let i = 0; i < totalArray.length; i++) {
+            const itemArray = totalArray[i].split("=");
             if (itemArray.length === 2) {
-                var key = itemArray[0];
-                var value = itemArray[1];
+                const key = itemArray[0];
+                const value = itemArray[1];
                 if (key === "example") {
                     appFile = value;
                     break;

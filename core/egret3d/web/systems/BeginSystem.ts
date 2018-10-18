@@ -49,14 +49,15 @@ namespace egret3d.web {
                 screenSize: { w: screenWidth, h: screenHeight },
             });
 
-            globalGameObject.getOrAddComponent(DefaultTextures);
+            globalGameObject.getOrAddComponent(WebGLCapabilities, false, config);
+            
             globalGameObject.getOrAddComponent(DefaultMeshes);
             globalGameObject.getOrAddComponent(DefaultShaders);
+            globalGameObject.getOrAddComponent(DefaultTextures);
             globalGameObject.getOrAddComponent(DefaultMaterials);
 
             globalGameObject.getOrAddComponent(InputCollecter);
             globalGameObject.getOrAddComponent(ContactCollecter);
-            globalGameObject.getOrAddComponent(WebGLCapabilities, false, config);
 
             // Update canvas when screen resized.
             this._updateCanvas(stage); // First update.

@@ -41,15 +41,15 @@ namespace egret3d {
         console.info("Egret version:", paper.Application.version);
         console.info("Egret start.");
 
+        // TODO
+        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
+        egret.Capabilities["renderMode" + ""] = "webgl";
+
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas(options);
         options.option = requiredOptions;
         options.canvas = canvas;
         options.webgl = <WebGLRenderingContext>canvas.getContext('webgl', options) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
-
-        // TODO
-        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
-        egret.Capabilities["renderMode" + ""] = "webgl";
 
         paper.Application.initialize(options);
         const systemManager = paper.Application.systemManager;

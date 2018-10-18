@@ -22005,13 +22005,13 @@ var egret3d;
                     size: { w: config.option.contentWidth, h: config.option.contentHeight },
                     screenSize: { w: screenWidth, h: screenHeight },
                 });
-                globalGameObject.getOrAddComponent(egret3d.DefaultTextures);
+                globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities, false, config);
                 globalGameObject.getOrAddComponent(egret3d.DefaultMeshes);
                 globalGameObject.getOrAddComponent(egret3d.DefaultShaders);
+                globalGameObject.getOrAddComponent(egret3d.DefaultTextures);
                 globalGameObject.getOrAddComponent(egret3d.DefaultMaterials);
                 globalGameObject.getOrAddComponent(egret3d.InputCollecter);
                 globalGameObject.getOrAddComponent(egret3d.ContactCollecter);
-                globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities, false, config);
                 // Update canvas when screen resized.
                 this._updateCanvas(egret3d.stage); // First update.
                 egret3d.stage.onScreenResize.add(function () {
@@ -22696,7 +22696,7 @@ var egret3d;
                     }
                     if (!_this._hasTouch) {
                         _this._hasTouch = true;
-                        _this._removeMouseEvent();
+                        _this._removeMouseEvent(); // TODO 同时支持 mouse 和 touch.
                     }
                     var touch = event.changedTouches[0];
                     event.isPrimary = true; // TODO
@@ -22910,18 +22910,15 @@ var egret3d;
             };
             InputSystem.prototype.onDisable = function () {
                 var canvas = this._canvas;
-                // if ((window as any).PointerEvent) {
-                //     // Pointer events.
-                //     canvas.removeEventListener("pointerover", this._onPointerEvent);
-                //     canvas.removeEventListener("pointerenter", this._onPointerEvent);
-                //     canvas.removeEventListener("pointerdown", this._onPointerEvent);
-                //     window.removeEventListener("pointermove", this._onPointerEvent);
-                //     window.removeEventListener("pointerup", this._onPointerEvent);
-                //     canvas.removeEventListener("pointercancel", this._onPointerEvent);
-                //     canvas.removeEventListener("pointerout", this._onPointerEvent);
-                //     canvas.removeEventListener("pointerleave", this._onPointerEvent);
-                // }
-                // else {
+                // Pointer events.
+                canvas.removeEventListener("pointerover", this._onPointerEvent);
+                canvas.removeEventListener("pointerenter", this._onPointerEvent);
+                canvas.removeEventListener("pointerdown", this._onPointerEvent);
+                window.removeEventListener("pointermove", this._onPointerEvent);
+                window.removeEventListener("pointerup", this._onPointerEvent);
+                canvas.removeEventListener("pointercancel", this._onPointerEvent);
+                canvas.removeEventListener("pointerout", this._onPointerEvent);
+                canvas.removeEventListener("pointerleave", this._onPointerEvent);
                 // Mouse events.
                 this._removeMouseEvent();
                 // Touch events.
@@ -22929,7 +22926,6 @@ var egret3d;
                 canvas.removeEventListener("touchmove", this._onTouchEvent);
                 canvas.removeEventListener("touchend", this._onTouchEvent);
                 window.removeEventListener("touchcancel", this._onTouchEvent);
-                // }
                 // Context menu event.
                 window.removeEventListener("contextmenu", this._onContextMenu);
                 // Mouse wheel event.
@@ -23561,14 +23557,14 @@ var egret3d;
         if (options === void 0) { options = { antialias: false, alpha: false }; }
         console.info("Egret version:", paper.Application.version);
         console.info("Egret start.");
+        // TODO
+        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
+        egret.Capabilities["renderMode" + ""] = "webgl";
         var requiredOptions = getOptions(options);
         var canvas = getMainCanvas(options);
         options.option = requiredOptions;
         options.canvas = canvas;
         options.webgl = canvas.getContext('webgl', options) || canvas.getContext("experimental-webgl", options);
-        // TODO
-        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
-        egret.Capabilities["renderMode" + ""] = "webgl";
         paper.Application.initialize(options);
         var systemManager = paper.Application.systemManager;
         systemManager.register(egret3d.web.BeginSystem, 0 /* Begin */, options);
