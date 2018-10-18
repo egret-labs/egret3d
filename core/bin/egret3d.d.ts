@@ -3350,6 +3350,70 @@ declare namespace paper {
         readonly groups: ReadonlyArray<GameObjectGroup>;
     }
 }
+declare namespace egret3d.particle {
+    /**
+     *
+     */
+    class ParticleSystem extends paper.BaseSystem {
+        protected readonly _interests: ({
+            componentClass: typeof ParticleComponent;
+            listeners: {
+                type: signals.Signal<any>;
+                listener: any;
+            }[];
+        } | {
+            componentClass: typeof ParticleRenderer;
+            listeners: {
+                type: signals.Signal<any>;
+                listener: (comp: ParticleRenderer) => void;
+            }[];
+        })[];
+        private readonly _drawCallCollecter;
+        /**
+        * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
+        */
+        private _onUpdateBatchMesh(comp);
+        private _onRenderUpdate(render, type);
+        /**
+         *
+         * @param render 渲染模式改变
+         */
+        private _onRenderMode(render);
+        private _onMainUpdate(component, type);
+        /**
+         * 更新速率模块
+         * @param component
+         */
+        private _onShapeChanged(comp);
+        /**
+         * 更新速率模块
+         * @param component
+         */
+        private _onVelocityOverLifetime(comp);
+        /**
+         * 更新颜色模块
+         * @param component
+         */
+        private _onColorOverLifetime(comp);
+        /**
+         * 更新大小模块
+         * @param component
+         */
+        private _onSizeOverLifetime(comp);
+        /**
+         * 更新旋转模块
+         * @param comp
+         */
+        private _onRotationOverLifetime(comp);
+        private _onTextureSheetAnimation(comp);
+        private _updateDrawCalls(gameObject);
+        onEnable(): void;
+        onAddGameObject(gameObject: paper.GameObject, _group: paper.GameObjectGroup): void;
+        onRemoveGameObject(gameObject: paper.GameObject): void;
+        onUpdate(deltaTime: number): void;
+        onDisable(): void;
+    }
+}
 declare namespace paper {
     /**
      * 全局时钟信息组件。
@@ -4984,6 +5048,19 @@ declare namespace egret3d {
         }): void;
     }
 }
+declare namespace egret3d {
+    /**
+     * 雾。
+     */
+    class Shadow implements paper.ISerializable {
+        /**
+         * 禁止实例化。
+         */
+        private constructor();
+        serialize(): any[];
+        deserialize(data: Readonly<[number, number, number, number, number, number, number, number]>): void;
+    }
+}
 declare namespace paper {
 }
 declare namespace egret3d {
@@ -5949,70 +6026,6 @@ declare namespace egret3d.particle {
          *
          */
         mesh: Mesh | null;
-    }
-}
-declare namespace egret3d.particle {
-    /**
-     *
-     */
-    class ParticleSystem extends paper.BaseSystem {
-        protected readonly _interests: ({
-            componentClass: typeof ParticleComponent;
-            listeners: {
-                type: signals.Signal<any>;
-                listener: any;
-            }[];
-        } | {
-            componentClass: typeof ParticleRenderer;
-            listeners: {
-                type: signals.Signal<any>;
-                listener: (comp: ParticleRenderer) => void;
-            }[];
-        })[];
-        private readonly _drawCallCollecter;
-        /**
-        * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
-        */
-        private _onUpdateBatchMesh(comp);
-        private _onRenderUpdate(render, type);
-        /**
-         *
-         * @param render 渲染模式改变
-         */
-        private _onRenderMode(render);
-        private _onMainUpdate(component, type);
-        /**
-         * 更新速率模块
-         * @param component
-         */
-        private _onShapeChanged(comp);
-        /**
-         * 更新速率模块
-         * @param component
-         */
-        private _onVelocityOverLifetime(comp);
-        /**
-         * 更新颜色模块
-         * @param component
-         */
-        private _onColorOverLifetime(comp);
-        /**
-         * 更新大小模块
-         * @param component
-         */
-        private _onSizeOverLifetime(comp);
-        /**
-         * 更新旋转模块
-         * @param comp
-         */
-        private _onRotationOverLifetime(comp);
-        private _onTextureSheetAnimation(comp);
-        private _updateDrawCalls(gameObject);
-        onEnable(): void;
-        onAddGameObject(gameObject: paper.GameObject, _group: paper.GameObjectGroup): void;
-        onRemoveGameObject(gameObject: paper.GameObject): void;
-        onUpdate(deltaTime: number): void;
-        onDisable(): void;
     }
 }
 declare namespace paper {
@@ -9757,7 +9770,7 @@ declare namespace egret3d {
          */
         private constructor();
         serialize(): number[];
-        deserialize(data: Readonly<[number, number, number, number, number, number, number, number]>): void;
+        deserialize(data: Readonly<[number, number, number, number, number, number, number, number]>): this;
     }
 }
 declare namespace egret3d {

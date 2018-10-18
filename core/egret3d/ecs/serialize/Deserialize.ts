@@ -81,16 +81,19 @@ namespace paper {
                     continue;
                 }
 
-                const kk = (deserializedKeys && k in deserializedKeys) ? deserializedKeys[k] : k;
+                const retargetKey = (deserializedKeys && k in deserializedKeys) ? deserializedKeys[k] : k;
 
                 if (
                     deserializedIgnoreKeys &&
-                    deserializedIgnoreKeys.indexOf(kk) >= 0
+                    deserializedIgnoreKeys.indexOf(retargetKey) >= 0
                 ) {
                     continue;
                 }
 
-                (target as any)[kk] = this._deserializeChild(source[k], (target as any)[kk]);
+                const retarget = this._deserializeChild(source[k], (target as any)[retargetKey]);
+                if (retarget !== undefined) {
+                    (target as any)[retargetKey] = retarget;
+                }
             }
 
             return target;
@@ -246,7 +249,7 @@ namespace paper {
                     else { // Map.
                         target = {};
 
-                        for (let k in source) {
+                        for (const k in source) {
                             target[k] = this._deserializeChild(source[k]);
                         }
 
