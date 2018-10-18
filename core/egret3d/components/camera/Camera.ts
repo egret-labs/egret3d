@@ -1,5 +1,7 @@
 namespace egret3d {
     const helpRectA = new Rectangle();
+    const _helpPlane = Plane.create();
+    const _helpRay = Ray.create();
     /**
      * 相机组件
      */
@@ -225,11 +227,11 @@ namespace egret3d {
          * 计算相机的 project matrix（投影矩阵）
          */
         public calcProjectMatrix(asp: number, matrix: Matrix4): Matrix4 {
-            if (this.opvalue > 0) {
+            if (this.opvalue > 0.0) {
                 Matrix4.perspectiveProjectLH(this.fov, asp, this.near, this.far, this._projectionMatrix);
             }
 
-            if (this.opvalue < 1) {
+            if (this.opvalue < 1.0) {
                 Matrix4.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this._matProjO);
             }
 
@@ -280,18 +282,25 @@ namespace egret3d {
             const vppos = helpVector3A;
             vppos.x = screenPos.x / vpp.w * 2.0 - 1.0;
             vppos.y = 1.0 - screenPos.y / vpp.h * 2.0;
-            vppos.z = screenPos.z;
+            vppos.z = 0.0;
 
-            const matrixView = helpMatrixA;
             const matrixProject = helpMatrixB;
             const asp = vpp.w / vpp.h;
 
-            matrixView.inverse(this.gameObject.transform.getWorldMatrix());
             this.calcProjectMatrix(asp, matrixProject);
 
-            helpMatrixC.multiply(matrixProject, matrixView)
-                .inverse()
-                .transformVector3(vppos, outWorldPos);
+            helpMatrixC.multiply(matrixProject, this.gameObject.transform.inverseWorldMatrix).inverse();
+            helpVector3B.applyMatrix(helpMatrixC, vppos);
+            vppos.z = 1.0;
+            helpVector3C.applyMatrix(helpMatrixC, vppos);
+            helpVector3B.subtract(helpVector3B, helpVector3C).normalize();
+            _helpRay.set(helpVector3C, helpVector3B);
+
+            const position = this.gameObject.transform.getForward().multiplyScalar(screenPos.z).add(this.gameObject.transform.position).release();
+            _helpPlane.fromPoint(position, this.gameObject.transform.getForward().release());
+            const raycastInfo = RaycastInfo.create().release();
+            _helpPlane.raycast(_helpRay, raycastInfo);
+            outWorldPos.copy(raycastInfo.position);
         }
         /**
          * 由世界坐标得到屏幕坐标
@@ -300,13 +309,11 @@ namespace egret3d {
             const vpp = helpRectA;
             this.calcViewPortPixel(vpp);
 
-            const matrixView = helpMatrixA;
             const matrixProject = helpMatrixB;
             const asp = vpp.w / vpp.h;
-            matrixView.inverse(this.gameObject.transform.getWorldMatrix());
             this.calcProjectMatrix(asp, matrixProject);
 
-            const matrixViewProject = helpMatrixC.multiply(matrixProject, matrixView);
+            const matrixViewProject = helpMatrixC.multiply(matrixProject, this.gameObject.transform.inverseWorldMatrix);
             const ndcPos = helpVector3A;
             matrixViewProject.transformVector3(worldPos, ndcPos);
             outScreenPos.x = (ndcPos.x + 1.0) * vpp.w * 0.5;

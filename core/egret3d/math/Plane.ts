@@ -122,4 +122,8 @@ namespace egret3d {
             return false;
         }
     }
+    /**
+     * @internal
+     */
+    const helpPlane = Plane.create();
 }

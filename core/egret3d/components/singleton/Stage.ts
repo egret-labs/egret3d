@@ -30,12 +30,13 @@ namespace egret3d {
             const screenSize = this._screenSize;
             const size = this._size;
             const viewport = this._viewport;
-            viewport.w = Math.min(Math.ceil(size.w), Math.ceil(screenSize.w));
 
             if (this.rotateEnabled && (this.rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h)) {
+                viewport.w = Math.min(Math.ceil(size.w));
                 viewport.h = Math.ceil(viewport.w / screenSize.h * screenSize.w);
             }
             else {
+                viewport.w = Math.min(Math.ceil(size.w));
                 viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
             }
         }

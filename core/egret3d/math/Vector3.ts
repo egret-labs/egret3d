@@ -253,7 +253,7 @@ namespace egret3d {
 
             const x = source.x, y = source.y, z = source.z;
             let l = Math.sqrt(x * x + y * y + z * z);
-            
+
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
                 this.x = x * l;
