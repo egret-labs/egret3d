@@ -2719,7 +2719,7 @@ var egret3d;
          */
         Matrix4.prototype.lookRotation = function (direction, up) {
             _helpVector3C.normalize(direction);
-            var x = _helpVector3A.cross(up, _helpVector3C).normalize();
+            var x = _helpVector3A.cross(up, _helpVector3C).normalize(undefined, egret3d.Vector3.RIGHT);
             var y = _helpVector3B.cross(_helpVector3C, x);
             var rawData = this.rawData;
             rawData[0] = x.x;
@@ -4882,7 +4882,7 @@ var egret3d;
             /**
              *
              */
-            _this.shadowCameraFar = 100.0;
+            _this.shadowCameraFar = 1000.0;
             /**
              *
              */
@@ -11260,7 +11260,6 @@ var egret3d;
             this.directShadowMaps = [];
             this.pointShadowMaps = [];
             this.spotShadowMaps = [];
-            this.ambientLightColor = new Float32Array([0, 0, 0]);
             this.viewPortPixel = { x: 0, y: 0, w: 0, h: 0 };
             //
             this.cameraPosition = new Float32Array(3);
@@ -11309,13 +11308,8 @@ var egret3d;
                 this.cameraForward[2] = -rawData[10];
             }
         };
-        RenderContext.prototype.updateLights = function (lights, ambientLightColor) {
+        RenderContext.prototype.updateLights = function (lights) {
             var allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
-            if (lights.length > 0) {
-                this.ambientLightColor[0] = ambientLightColor.r;
-                this.ambientLightColor[1] = ambientLightColor.g;
-                this.ambientLightColor[2] = ambientLightColor.b;
-            }
             for (var _i = 0, lights_1 = lights; _i < lights_1.length; _i++) {
                 var light = lights_1[_i];
                 if (light instanceof egret3d.DirectionalLight) {
@@ -12071,7 +12065,12 @@ var egret;
              **/
             Renderer.prototype.drawTextureElements = function (data, offset) {
                 var gl = this.context;
-                gl.bindTexture(gl.TEXTURE_2D, data.texture);
+                if (data.texture.isCancas) {
+                    gl.wxBindCanvasTexture(gl.TEXTURE_2D, data.texture);
+                }
+                else {
+                    gl.bindTexture(gl.TEXTURE_2D, data.texture);
+                }
                 var size = data.count * 3;
                 gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
                 return size;
@@ -22179,7 +22178,9 @@ var egret3d;
                             }
                             break;
                         case "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */:
-                            webgl.uniform3fv(location_3, context.ambientLightColor);
+                            var currenAmbientColor = paper.Scene.activeScene.ambientColor;
+                            webgl.uniform3f(location_3, currenAmbientColor.r, currenAmbientColor.g, currenAmbientColor.b);
+                            // webgl.uniform3fv(location, context.ambientLightColor);
                             break;
                         case "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */:
                             webgl.uniformMatrix4fv(location_3, false, context.directShadowMatrix);
@@ -22436,13 +22437,12 @@ var egret3d;
                 // Render cameras.
                 if (cameras.length > 0) {
                     this._egret2dOrderCount = 0;
-                    var currenAmbientColor = paper.Scene.activeScene.ambientColor;
                     for (var _a = 0, cameras_2 = cameras; _a < cameras_2.length; _a++) {
                         var camera = cameras_2[_a];
                         var scene = camera.gameObject.scene;
                         var renderEnabled = isPlayerMode ? scene !== editorScene : scene === editorScene;
                         if (renderEnabled && lightCountDirty) {
-                            camera.context.updateLights(lights, currenAmbientColor); // TODO 性能优化
+                            camera.context.updateLights(lights); // TODO 性能优化
                         }
                         if (camera.postQueues.length === 0) {
                             if (renderEnabled) {

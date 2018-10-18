@@ -682,7 +682,7 @@ namespace egret3d {
         public lookRotation(direction: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
             _helpVector3C.normalize(direction);
 
-            const x = _helpVector3A.cross(up, _helpVector3C).normalize();
+            const x = _helpVector3A.cross(up, _helpVector3C).normalize(undefined, Vector3.RIGHT);//TODO     Vector3.FORWARD
             const y = _helpVector3B.cross(_helpVector3C, x);
             const rawData = this.rawData;
 

@@ -55,7 +55,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public shadowCameraFar: number = 100.0;
+        public shadowCameraFar: number = 1000.0;
         /**
          * 
          */

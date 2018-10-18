@@ -5,9 +5,8 @@ declare class Examples {
 async function main() {
     RES.processor.map("json", new JSONProcessor());
 
-    // exampleStart();
+    exampleStart();
     // new examples.pvp.AnimationTest().start();
-    new examples.EUITest().start();
 }
 
 class JSONProcessor implements RES.processor.Processor {
@@ -106,16 +105,16 @@ function exampleStart() {
     }
 
     function getCurrentExampleString() {
-        let appFile = "Test";
-        let str = location.search;
-        str = str.slice(1, str.length);
-        const totalArray = str.split("&");
+        var appFile = "Test";
 
-        for (let i = 0; i < totalArray.length; i++) {
-            const itemArray = totalArray[i].split("=");
+        var str = location.search;
+        str = str.slice(1, str.length);
+        var totalArray = str.split("&");
+        for (var i = 0; i < totalArray.length; i++) {
+            var itemArray = totalArray[i].split("=");
             if (itemArray.length === 2) {
-                const key = itemArray[0];
-                const value = itemArray[1];
+                var key = itemArray[0];
+                var value = itemArray[1];
                 if (key === "example") {
                     appFile = value;
                     break;

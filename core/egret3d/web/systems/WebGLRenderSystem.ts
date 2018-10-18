@@ -189,7 +189,9 @@ namespace egret3d.web {
                         }
                         break;
                     case gltf.UniformSemanticType._AMBIENTLIGHTCOLOR:
-                        webgl.uniform3fv(location, context.ambientLightColor);
+                        const currenAmbientColor = paper.Scene.activeScene.ambientColor;
+                        webgl.uniform3f(location, currenAmbientColor.r, currenAmbientColor.g, currenAmbientColor.b);
+                        // webgl.uniform3fv(location, context.ambientLightColor);
                         break;
 
                     case gltf.UniformSemanticType._DIRECTIONSHADOWMAT:
@@ -469,14 +471,12 @@ namespace egret3d.web {
             // Render cameras.
             if (cameras.length > 0) {
                 this._egret2dOrderCount = 0;
-                const currenAmbientColor = paper.Scene.activeScene.ambientColor;
-
                 for (const camera of cameras) {
                     const scene = camera.gameObject.scene;
                     const renderEnabled = isPlayerMode ? scene !== editorScene : scene === editorScene;
 
                     if (renderEnabled && lightCountDirty) {
-                        camera.context.updateLights(lights, currenAmbientColor); // TODO 性能优化
+                        camera.context.updateLights(lights); // TODO 性能优化
                     }
 
                     if (camera.postQueues.length === 0) {
