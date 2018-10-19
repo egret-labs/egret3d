@@ -63,6 +63,13 @@ const config: ResourceManagerConfig = {
                 outputDir,
                 commands: [
                     new MergeJSONPlugin({ nameSelector, mergeJSONSelector }),
+                    new EmitResConfigFilePlugin({
+                        output: bakeInfo.root + "default.res.json",
+                        typeSelector: config.typeSelector,
+                        nameSelector,
+                        groupSelector: p => null
+                    }),
+
                     new CompilePlugin({ libraryType: "release" }),
                     new ExmlPlugin("commonjs"),
                     new InspectorFilterPlugin(inspectorFilterEnabled),
