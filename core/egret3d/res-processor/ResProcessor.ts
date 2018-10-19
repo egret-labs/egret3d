@@ -1,4 +1,8 @@
 namespace egret3d {
+    /**
+     * TODO
+     */
+    export let resRoot: string = "";
 
     function promisify(loader: egret.HttpRequest | egret.Sound, resource: RES.ResourceInfo): Promise<any> {
 
@@ -124,13 +128,24 @@ namespace egret3d {
                 }
 
                 const imgResource = (RES.host.resourceConfig as any)["getResource"](name);
-                return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
-                    const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, _textureFormat);
-                    texture.uploadImage(bitmapData.source, mipmap, _linear, _premultiply, _repeat);
-                    paper.Asset.register(texture);
-                    return texture;
+                if (imgResource) {
+                    return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
+                        const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, _textureFormat);
+                        texture.uploadImage(bitmapData.source, mipmap, _linear, _premultiply, _repeat);
+                        paper.Asset.register(texture);
+                        return texture;
 
-                })
+                    });
+                }
+
+                if (resRoot) {
+                    return getResByURL(name, resRoot).then((bitmapData: egret.BitmapData) => {
+                        const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, _textureFormat);
+                        texture.uploadImage(bitmapData.source, mipmap, _linear, _premultiply, _repeat);
+                        paper.Asset.register(texture);
+                        return texture;
+                    });
+                }
             });
         },
         onRemoveStart(host, resource) {
@@ -170,6 +185,10 @@ namespace egret3d {
                             const r = (RES.host.resourceConfig as any)["getResource"](value);
                             if (r) {
                                 const texture = await host.load(r, "TextureDesc");
+                                values[key] = texture;
+                            }
+                            else if (resRoot) {
+                                const texture = await getResByURL(value, resRoot);
                                 values[key] = texture;
                             }
                             else {
@@ -289,6 +308,9 @@ namespace egret3d {
             if (r) {
                 return host.load(r);
             }
+            else if (resRoot) {
+                return getResByURL(item, resRoot);
+            }
             else {
                 if (item.indexOf("builtin/") !== 0) {
                     console.error("加载不存在的资源", item);
@@ -297,6 +319,68 @@ namespace egret3d {
                 return Promise.resolve();
             }
         })));
+    }
+
+    function getResType(uri: string) {
+        const file = uri.substr(uri.lastIndexOf("/") + 1);
+        let i = file.indexOf(".", 0);
+        let extname = "";
+
+        while (i >= 0) {
+            extname = file.substr(i);
+            if (extname === ".assetbundle.json") {
+                return 'Bundle';
+            } else if (extname === ".png" || extname === ".jpg") {
+                return 'Texture';
+            } else if (extname === ".pvr.bin" || extname === ".pvr") {
+                return 'PVR';
+            } else if (extname === ".atlas.json") {
+                return 'Atlas';
+            } else if (extname === ".font.json") {
+                return 'Font';
+            } else if (extname === ".json" || extname === ".txt" || extname === ".effect.json") {
+                return 'TextAsset';
+            } else if (extname === ".packs.bin") {
+                return 'PackBin';
+            } else if (extname === ".packs.txt") {
+                return 'PackTxt';
+            } else if (extname === ".path.json") {
+                return 'pathAsset';
+            } else if (extname === ".mp3" || extname === ".ogg") {
+                return 'Sound';
+            } else if (extname === ".prefab.json") {
+                return 'Prefab';
+            } else if (extname === ".scene.json") {
+                return 'Scene';
+            } else if (extname === ".vs.glsl") {
+                return 'GLVertexShader';
+            } else if (extname === ".fs.glsl") {
+                return 'GLFragmentShader';
+            } else if (extname === ".shader.json") {
+                return 'Shader';
+            } else if (extname === ".image.json") {
+                return 'TextureDesc';
+            } else if (extname === ".mat.json") {
+                return 'Material';
+            } else if (extname === ".mesh.bin") {
+                return 'Mesh';
+            } else if (extname === ".ani.bin") {
+                return 'Animation';
+            }
+
+            i = file.indexOf(".", i + 1);
+        }
+
+        return "Unknown";
+    }
+
+    async function getResByURL(uri: string, root: string) {
+        return new Promise((r) => {
+            RES.getResByUrl(root + uri, (data: any) => {
+                paper.Asset.register(data);
+                r(data);
+            }, RES, getResType(uri));
+        });
     }
 
     RES.processor.map("Shader", ShaderProcessor);

@@ -408,6 +408,10 @@ namespace paper.editor {
                     case editor.EditType.GAMEOBJECT:
                         break;
 
+                    case editor.EditType.BUTTON:
+                        guiControllerA = gui.add(gui.instance, info.name);
+                        break;
+
                     case editor.EditType.NESTED: {
                         const folder = gui.addFolder(info.name);
                         folder.instance = gui.instance[info.name];
