@@ -97,15 +97,32 @@ export class MergeBinaryPlugin implements plugins.Command {
     }
 }
 
-
-export class ModifyDefaultResJSON implements plugins.Command {
-    constructor(private _root?: string) {
+export class ModifyDefaultResJSONPlugin implements plugins.Command {
+    constructor(public root?: string) {
     }
 
     async onFile(file: plugins.File) {
-        if (this._root && file.origin.indexOf("default.res.json") >= 0) {
-            const content = file.contents.toString().replace(new RegExp(this._root, "gi"), "");
+        if (this.root && file.origin.indexOf("default.res.json") >= 0) {
+            const content = file.contents.toString().replace(new RegExp(this.root, "gi"), "");
             file.contents = new Buffer(content);
+        }
+
+        return file;
+    }
+
+    async onFinish(commandContext: plugins.CommandContext) {
+
+    }
+}
+
+
+export class InspectorFilterPlugin implements plugins.Command {
+    constructor(public enabled: boolean = true) {
+    }
+
+    async onFile(file: plugins.File) {
+        if (this.enabled && file.origin.indexOf("inspector.js") >= 0 || file.origin.indexOf("inspector.min.js") >= 0) {
+            return null;
         }
 
         return file;

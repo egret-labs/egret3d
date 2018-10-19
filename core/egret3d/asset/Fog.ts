@@ -61,6 +61,8 @@ namespace egret3d {
             this.near = data[2];
             this.far = data[3];
             this.color.fromArray(data, 4);
+            
+            return this;
         }
     }
 }

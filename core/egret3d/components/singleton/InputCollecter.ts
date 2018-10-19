@@ -221,6 +221,10 @@ namespace egret3d {
         /**
          * 通常不需要使用该事件。
          */
+        public readonly onMouseWheel: signals.Signal = new signals.Signal();
+        /**
+         * 通常不需要使用该事件。
+         */
         public readonly onKeyDown: signals.Signal = new signals.Signal();
         /**
          * 通常不需要使用该事件。

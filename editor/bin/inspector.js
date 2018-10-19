@@ -3392,20 +3392,16 @@ var paper;
                 }
                 {
                     var rotate = this.rotate;
-                    var axisX = editor.EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisY = editor.EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisZ = editor.EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createCircle(1.0, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisE = editor.EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createCircle(1.25, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    // const axisX = EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    // const axisY = EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    // const axisZ = EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.createTorus(1.0, 0.02, 4, 24, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    // const axisE = EditorMeshHelper.createGameObject("AxisE", egret3d.DefaultMeshes.createTorus(1.25, 0.03, 4, 48, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var axisXYZE = editor.EditorMeshHelper.createGameObject("AxisXYZE", egret3d.DefaultMeshes.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickX = editor.EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickY = editor.EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickZ = editor.EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.createTorus(1.0, 0.1, 4, 12, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickE = editor.EditorMeshHelper.createGameObject("E", egret3d.DefaultMeshes.createTorus(1.25, 0.1, 4, 24, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickXYZE = editor.EditorMeshHelper.createGameObject("XYZE", egret3d.DefaultMeshes.createSphere(0.7, 10, 8), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisX = editor.EditorMeshHelper.createGameObject("AxisX", egret3d.MeshBuilder.createCircle(1.0, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisY = editor.EditorMeshHelper.createGameObject("AxisY", egret3d.MeshBuilder.createCircle(1.0, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisZ = editor.EditorMeshHelper.createGameObject("AxisZ", egret3d.MeshBuilder.createCircle(1.0, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisE = editor.EditorMeshHelper.createGameObject("AxisE", egret3d.MeshBuilder.createCircle(1.25, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var axisXYZE = editor.EditorMeshHelper.createGameObject("AxisXYZE", egret3d.MeshBuilder.createCircle(1, 1, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickX = editor.EditorMeshHelper.createGameObject("X", egret3d.MeshBuilder.createTorus(1.0, 0.1, 4, 12, 0.5, 1), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickY = editor.EditorMeshHelper.createGameObject("Y", egret3d.MeshBuilder.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickZ = editor.EditorMeshHelper.createGameObject("Z", egret3d.MeshBuilder.createTorus(1.0, 0.1, 4, 12, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickE = editor.EditorMeshHelper.createGameObject("E", egret3d.MeshBuilder.createTorus(1.25, 0.1, 4, 24, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickXYZE = editor.EditorMeshHelper.createGameObject("XYZE", egret3d.MeshBuilder.createSphere(0.7, 10, 8), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     this._highlights[pickX.uuid] = [axisX];
                     this._highlights[pickY.uuid] = [axisY];
                     this._highlights[pickZ.uuid] = [axisZ];
@@ -3953,8 +3949,8 @@ var paper;
                         container.style.margin = "auto";
                         container.innerHTML = containerHTML;
                         document.body.appendChild(container);
-                        this._guiComponent.hierarchy = new dat.GUI({ autoPlace: false, closeOnTop: true, width: 330 });
-                        this._guiComponent.inspector = new dat.GUI({ autoPlace: false, closeOnTop: true, width: 330 });
+                        this._guiComponent.hierarchy = new dat.GUI({ autoPlace: false, closeOnTop: true, scrollable: true, width: 330 });
+                        this._guiComponent.inspector = new dat.GUI({ autoPlace: false, closeOnTop: true, scrollable: true, width: 330 });
                         var hierarchy = document.getElementsByClassName("egret-hierarchy");
                         var inspector = document.getElementsByClassName("egret-inspector");
                         hierarchy[0].appendChild(this._guiComponent.hierarchy.domElement);
@@ -3992,7 +3988,7 @@ var paper;
         }(paper.BaseSystem));
         editor.EditorSystem = EditorSystem;
         __reflect(EditorSystem.prototype, "paper.editor.EditorSystem");
-        // 
+        //
         paper.Application.systemManager.preRegister(EditorSystem, 6000 /* LaterUpdate */);
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
@@ -4027,6 +4023,16 @@ var paper;
                 _this._onGameObjectSelectedChange = function (_c, value) {
                     _this._selectSceneOrGameObject(null);
                     _this._selectSceneOrGameObject(_this._modelComponent.selectedGameObject);
+                };
+                _this._saveSceneOrGameObject = function () {
+                    if (_this._modelComponent.selectedScene) {
+                        var json = JSON.stringify(paper.serialize(_this._modelComponent.selectedScene));
+                        console.info(json);
+                    }
+                    else {
+                        var json = JSON.stringify(paper.serialize(_this._modelComponent.selectedGameObject));
+                        console.info(json);
+                    }
                 };
                 _this._createGameObject = function () {
                     if (_this._modelComponent.selectedScene) {
@@ -4068,12 +4074,14 @@ var paper;
                 if (sceneOrGameObject) {
                     if (sceneOrGameObject instanceof paper.Scene) {
                         // Update scene.
+                        inspector.add(this, "_saveSceneOrGameObject", "save");
                         inspector.add(this, "_createGameObject", "createObject");
                         inspector.add(this, "_destroySceneOrGameObject", "destroy");
                         this._addToInspector(inspector);
                     }
                     else {
                         // Update game object.
+                        inspector.add(this, "_saveSceneOrGameObject", "save");
                         inspector.add(this, "_createGameObject", "createChildObject");
                         inspector.add(this, "_destroySceneOrGameObject", "destroy");
                         this._addToInspector(inspector);
@@ -4144,6 +4152,7 @@ var paper;
                 var guiControllerA;
                 var guiControllerB;
                 var guiControllerC;
+                var guiControllerD;
                 var _loop_1 = function (info) {
                     switch (info.editType) {
                         case 0 /* UINT */:
@@ -4265,8 +4274,42 @@ var paper;
                             }
                             break;
                         }
-                        case 11 /* RECT */:
+                        case 11 /* RECT */: {
+                            guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
+                            guiControllerC = gui.add(gui.instance[info.name], "w", info.name + ": w").step(0.1).listen();
+                            guiControllerD = gui.add(gui.instance[info.name], "h", info.name + ": h").step(0.1).listen();
+                            if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
+                                var onChange = function () {
+                                    gui.instance[info.name] = gui.instance[info.name];
+                                };
+                                guiControllerA.onChange(onChange);
+                                guiControllerB.onChange(onChange);
+                                guiControllerC.onChange(onChange);
+                                guiControllerD.onChange(onChange);
+                            }
+                            if (info.option) {
+                                if (info.option.minimum !== undefined) {
+                                    guiControllerA.min(info.option.minimum);
+                                    guiControllerB.min(info.option.minimum);
+                                    guiControllerC.min(info.option.minimum);
+                                    guiControllerD.min(info.option.minimum);
+                                }
+                                if (info.option.maximum !== undefined) {
+                                    guiControllerA.max(info.option.maximum);
+                                    guiControllerB.max(info.option.maximum);
+                                    guiControllerC.max(info.option.maximum);
+                                    guiControllerD.min(info.option.maximum);
+                                }
+                                if (info.option.step !== undefined) {
+                                    guiControllerA.step(info.option.step);
+                                    guiControllerB.step(info.option.step);
+                                    guiControllerC.step(info.option.step);
+                                    guiControllerD.step(info.option.step);
+                                }
+                            }
                             break;
+                        }
                         case 14 /* GAMEOBJECT */:
                             break;
                         case 21 /* NESTED */: {
@@ -4784,7 +4827,7 @@ var paper;
             };
             EditorMeshHelper.createIcon = function (name, parent, icon) {
                 var material = new egret3d.Material(egret3d.DefaultShaders.TRANSPARENT);
-                material.renderQueue = 4000 /* Overlay */;
+                material.renderQueue = 4000 /* Overlay */ - 1;
                 material.setTexture("map" /* Map */, icon);
                 material.setColor("diffuse" /* Diffuse */, egret3d.Color.RED);
                 var iconObj = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material, parent.tag, parent.scene);
@@ -4832,7 +4875,9 @@ var paper;
                 mesh.setAttributes("POSITION" /* POSITION */, vertices);
                 mesh.setAttributes("COLOR_0" /* COLOR_0 */, colors);
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
-                var gameObject = this.createGameObject(name, mesh, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone());
+                var material = egret3d.DefaultMaterials.LINEDASHED_COLOR.clone();
+                material.setBlend(1 /* Blend */).setRenderQueue(3000 /* Transparent */).setOpacity(0.8);
+                var gameObject = this.createGameObject(name, mesh, material);
                 return gameObject;
             };
             return EditorMeshHelper;

@@ -140,6 +140,8 @@ namespace egret3d.web {
                 inputCollecter.mouseWheel = 0;
             }
 
+            inputCollecter.onMouseWheel.dispatch(this);
+
             event.preventDefault();
         }
 
@@ -181,7 +183,7 @@ namespace egret3d.web {
                         (event as any).type = "pointerup";
                         this._pointerUp(pointer, true);
                     }
-                    
+
                     (event as any).type = "pointerover";
                     inputCollecter.onPointerOver.dispatch(pointer, inputCollecter.onPointerOver);
                     break;
@@ -245,7 +247,7 @@ namespace egret3d.web {
 
             if (!this._hasTouch) {
                 this._hasTouch = true;
-                this._removeMouseEvent();
+                this._removeMouseEvent(); // TODO 同时支持 mouse 和 touch.
             }
 
             const touch = event.changedTouches[0];
@@ -450,18 +452,15 @@ namespace egret3d.web {
         public onDisable() {
             const canvas = this._canvas;
 
-            // if ((window as any).PointerEvent) {
-            //     // Pointer events.
-            //     canvas.removeEventListener("pointerover", this._onPointerEvent);
-            //     canvas.removeEventListener("pointerenter", this._onPointerEvent);
-            //     canvas.removeEventListener("pointerdown", this._onPointerEvent);
-            //     window.removeEventListener("pointermove", this._onPointerEvent);
-            //     window.removeEventListener("pointerup", this._onPointerEvent);
-            //     canvas.removeEventListener("pointercancel", this._onPointerEvent);
-            //     canvas.removeEventListener("pointerout", this._onPointerEvent);
-            //     canvas.removeEventListener("pointerleave", this._onPointerEvent);
-            // }
-            // else {
+            // Pointer events.
+            canvas.removeEventListener("pointerover", this._onPointerEvent);
+            canvas.removeEventListener("pointerenter", this._onPointerEvent);
+            canvas.removeEventListener("pointerdown", this._onPointerEvent);
+            window.removeEventListener("pointermove", this._onPointerEvent);
+            window.removeEventListener("pointerup", this._onPointerEvent);
+            canvas.removeEventListener("pointercancel", this._onPointerEvent);
+            canvas.removeEventListener("pointerout", this._onPointerEvent);
+            canvas.removeEventListener("pointerleave", this._onPointerEvent);
             // Mouse events.
             this._removeMouseEvent();
             // Touch events.
@@ -469,7 +468,6 @@ namespace egret3d.web {
             canvas.removeEventListener("touchmove", this._onTouchEvent);
             canvas.removeEventListener("touchend", this._onTouchEvent);
             window.removeEventListener("touchcancel", this._onTouchEvent);
-            // }
             // Context menu event.
             window.removeEventListener("contextmenu", this._onContextMenu);
             // Mouse wheel event.

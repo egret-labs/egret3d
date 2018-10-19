@@ -32,7 +32,7 @@ namespace egret3d {
                 gameObject.transform.lookAt(Vector3.ZERO);
 
                 const camera = gameObject.addComponent(Camera);
-                camera.cullingMask &= ~paper.CullingMask.UI;
+                camera.cullingMask &= ~paper.CullingMask.UI; // TODO 更明确的 UI 编辑方案。
                 camera.far = 10000.0;
             }
 
@@ -94,7 +94,8 @@ namespace egret3d {
          * 相机视窗
          */
         @paper.serializedField
-        public readonly viewport: Rectangle = new Rectangle(0, 0, 1, 1);
+        @paper.editor.property(paper.editor.EditType.RECT)
+        public readonly viewport: Rectangle = Rectangle.create(0, 0, 1, 1);
         /**
          * TODO 功能完善后开放此接口
          */
