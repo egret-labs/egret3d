@@ -653,62 +653,59 @@ var paper;
         __reflect(PropertyInfo.prototype, "paper.editor.PropertyInfo");
         /**
          * 编辑类型
-         * TODO 类型需要显示设置值
          */
         var EditType;
         (function (EditType) {
             /**数字输入 */
-            EditType[EditType["UINT"] = 0] = "UINT";
-            EditType[EditType["INT"] = 1] = "INT";
-            EditType[EditType["FLOAT"] = 2] = "FLOAT";
+            EditType["UINT"] = "UINT";
+            EditType["INT"] = "INT";
+            EditType["FLOAT"] = "FLOAT";
             /**文本输入 */
-            EditType[EditType["TEXT"] = 3] = "TEXT";
+            EditType["TEXT"] = "TEXT";
             /**选中框 */
-            EditType[EditType["CHECKBOX"] = 4] = "CHECKBOX";
-            /**
-             * Size.
-             */
-            EditType[EditType["SIZE"] = 5] = "SIZE";
+            EditType["CHECKBOX"] = "CHECKBOX";
+            /** Size.*/
+            EditType["SIZE"] = "CHECKBOX";
             /**vertor2 */
-            EditType[EditType["VECTOR2"] = 6] = "VECTOR2";
+            EditType["VECTOR2"] = "VECTOR2";
             /**vertor3 */
-            EditType[EditType["VECTOR3"] = 7] = "VECTOR3";
+            EditType["VECTOR3"] = "VECTOR3";
             /**vertor4 */
-            EditType[EditType["VECTOR4"] = 8] = "VECTOR4";
+            EditType["VECTOR4"] = "VECTOR4";
             /**Quaternion */
-            EditType[EditType["QUATERNION"] = 9] = "QUATERNION";
+            EditType["QUATERNION"] = "QUATERNION";
             /**颜色选择器 */
-            EditType[EditType["COLOR"] = 10] = "COLOR";
+            EditType["COLOR"] = "COLOR";
             /**下拉 */
-            EditType[EditType["LIST"] = 11] = "LIST";
+            EditType["LIST"] = "LIST";
             /**Rect */
-            EditType[EditType["RECT"] = 12] = "RECT";
+            EditType["RECT"] = "RECT";
             /**材质 */
-            EditType[EditType["MATERIAL"] = 13] = "MATERIAL";
+            EditType["MATERIAL"] = "MATERIAL";
             /**材质数组 */
-            EditType[EditType["MATERIAL_ARRAY"] = 14] = "MATERIAL_ARRAY";
+            EditType["MATERIAL_ARRAY"] = "MATERIAL_ARRAY";
             /**游戏对象 */
-            EditType[EditType["GAMEOBJECT"] = 15] = "GAMEOBJECT";
+            EditType["GAMEOBJECT"] = "GAMEOBJECT";
             /**变换 TODO 不需要*/
-            EditType[EditType["TRANSFROM"] = 16] = "TRANSFROM";
+            EditType["TRANSFROM"] = "TRANSFROM";
             /**组件 */
-            EditType[EditType["COMPONENT"] = 17] = "COMPONENT";
+            EditType["COMPONENT"] = "COMPONENT";
             /**声音 */
-            EditType[EditType["SOUND"] = 18] = "SOUND";
+            EditType["SOUND"] = "SOUND";
             /**Mesh */
-            EditType[EditType["MESH"] = 19] = "MESH";
+            EditType["MESH"] = "MESH";
             /**shader */
-            EditType[EditType["SHADER"] = 20] = "SHADER";
+            EditType["SHADER"] = "SHADER";
             /**数组 */
-            EditType[EditType["ARRAY"] = 21] = "ARRAY";
-            /**
-             *
-             */
-            EditType[EditType["BUTTON"] = 22] = "BUTTON";
-            /**
-             *
-             */
-            EditType[EditType["NESTED"] = 23] = "NESTED";
+            EditType["ARRAY"] = "ARRAY";
+            /***/
+            EditType["BUTTON"] = "BUTTON";
+            /***/
+            EditType["NESTED"] = "NESTED";
+            /**贴图 */
+            EditType["TEXTUREDESC"] = "TEXTUREDESC";
+            /**矩阵 */
+            EditType["MAT3"] = "MAT3";
         })(EditType = editor.EditType || (editor.EditType = {}));
         var customMap = {};
         /**
@@ -1199,7 +1196,7 @@ var paper;
             paper.serializedField
         ], BaseComponent.prototype, "_enabled", void 0);
         __decorate([
-            paper.editor.property(4 /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], BaseComponent.prototype, "enabled", null);
         return BaseComponent;
     }(paper.BaseObject));
@@ -3587,7 +3584,7 @@ var paper;
         BaseRenderer.onMaterialsChanged = new signals.Signal();
         __decorate([
             paper.serializedField,
-            paper.editor.property(4 /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], BaseRenderer.prototype, "frustumCulled", void 0);
         __decorate([
             paper.serializedField
@@ -3602,16 +3599,16 @@ var paper;
             paper.serializedField
         ], BaseRenderer.prototype, "_materials", void 0);
         __decorate([
-            paper.editor.property(4 /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], BaseRenderer.prototype, "receiveShadows", null);
         __decorate([
-            paper.editor.property(4 /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], BaseRenderer.prototype, "castShadows", null);
         __decorate([
-            paper.editor.property(1 /* INT */, { minimum: -1 })
+            paper.editor.property("INT" /* INT */, { minimum: -1 })
         ], BaseRenderer.prototype, "lightmapIndex", null);
         __decorate([
-            paper.editor.property(14 /* MATERIAL_ARRAY */)
+            paper.editor.property("MATERIAL_ARRAY" /* MATERIAL_ARRAY */)
         ], BaseRenderer.prototype, "materials", null);
         return BaseRenderer;
     }(paper.BaseComponent));
@@ -5613,39 +5610,39 @@ var egret3d;
         ], BaseLight.prototype, "cullingMask", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], BaseLight.prototype, "intensity", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(10 /* COLOR */)
+            paper.editor.property("COLOR" /* COLOR */)
         ], BaseLight.prototype, "color", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(4 /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], BaseLight.prototype, "castShadows", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], BaseLight.prototype, "shadowRadius", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.01 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01 })
         ], BaseLight.prototype, "shadowBias", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(0 /* UINT */)
+            paper.editor.property("UINT" /* UINT */)
         ], BaseLight.prototype, "shadowSize", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], BaseLight.prototype, "shadowCameraNear", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], BaseLight.prototype, "shadowCameraFar", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], BaseLight.prototype, "shadowCameraSize", void 0);
         return BaseLight;
     }(paper.BaseComponent));
@@ -9129,13 +9126,13 @@ var egret3d;
             paper.serializedField("localScale")
         ], Transform.prototype, "_localScale", void 0);
         __decorate([
-            paper.editor.property(7 /* VECTOR3 */)
+            paper.editor.property("VECTOR3" /* VECTOR3 */)
         ], Transform.prototype, "localPosition", null);
         __decorate([
-            paper.editor.property(7 /* VECTOR3 */, { step: 1.0 })
+            paper.editor.property("VECTOR3" /* VECTOR3 */, { step: 1.0 })
         ], Transform.prototype, "localEulerAngles", null);
         __decorate([
-            paper.editor.property(7 /* VECTOR3 */)
+            paper.editor.property("VECTOR3" /* VECTOR3 */)
         ], Transform.prototype, "localScale", null);
         __decorate([
             paper.serializedField,
@@ -9301,19 +9298,19 @@ var egret3d;
             configurable: true
         });
         __decorate([
-            paper.editor.property(4 /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], Stage.prototype, "rotateEnabled", null);
         __decorate([
-            paper.editor.property(4 /* CHECKBOX */, { readonly: true })
+            paper.editor.property("CHECKBOX" /* CHECKBOX */, { readonly: true })
         ], Stage.prototype, "rotated", null);
         __decorate([
-            paper.editor.property(5 /* SIZE */)
+            paper.editor.property("CHECKBOX" /* SIZE */)
         ], Stage.prototype, "screenSize", null);
         __decorate([
-            paper.editor.property(5 /* SIZE */)
+            paper.editor.property("CHECKBOX" /* SIZE */)
         ], Stage.prototype, "size", null);
         __decorate([
-            paper.editor.property(12 /* RECT */, { readonly: true })
+            paper.editor.property("RECT" /* RECT */, { readonly: true })
         ], Stage.prototype, "viewport", null);
         return Stage;
     }(paper.SingletonComponent));
@@ -9880,10 +9877,10 @@ var egret3d;
             configurable: true
         });
         __decorate([
-            paper.editor.property(0 /* UINT */)
+            paper.editor.property("UINT" /* UINT */)
         ], CameraAndLightCollecter.prototype, "cameraCount", null);
         __decorate([
-            paper.editor.property(0 /* UINT */)
+            paper.editor.property("UINT" /* UINT */)
         ], CameraAndLightCollecter.prototype, "lightCount", null);
         return CameraAndLightCollecter;
     }(paper.SingletonComponent));
@@ -10133,7 +10130,7 @@ var egret3d;
             return this.renderers.indexOf(renderer) >= 0;
         };
         __decorate([
-            paper.editor.property(0 /* UINT */)
+            paper.editor.property("UINT" /* UINT */)
         ], DrawCallCollecter.prototype, "drawCallCount", void 0);
         return DrawCallCollecter;
     }(paper.SingletonComponent));
@@ -10646,7 +10643,7 @@ var egret3d;
         };
         __decorate([
             paper.serializedField,
-            paper.editor.property(23 /* NESTED */)
+            paper.editor.property("NESTED" /* NESTED */)
         ], BoxCollider.prototype, "aabb", void 0);
         BoxCollider = __decorate([
             paper.allowMultiple
@@ -10691,7 +10688,7 @@ var egret3d;
         };
         __decorate([
             paper.serializedField,
-            paper.editor.property(23 /* NESTED */)
+            paper.editor.property("NESTED" /* NESTED */)
         ], SphereCollider.prototype, "sphere", void 0);
         SphereCollider = __decorate([
             paper.allowMultiple
@@ -11269,39 +11266,39 @@ var egret3d;
         });
         __decorate([
             paper.serializedField,
-            paper.editor.property(4 /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], Camera.prototype, "clearOption_Color", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(4 /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], Camera.prototype, "clearOption_Depth", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(11 /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.CullingMask) })
+            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.CullingMask) })
         ], Camera.prototype, "cullingMask", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(1 /* INT */)
+            paper.editor.property("INT" /* INT */)
         ], Camera.prototype, "order", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0, maximum: Math.PI, step: 0.01 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: Math.PI, step: 0.01 })
         ], Camera.prototype, "fov", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], Camera.prototype, "size", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0, maximum: 1.0, step: 0.01 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 1.0, step: 0.01 })
         ], Camera.prototype, "opvalue", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(10 /* COLOR */)
+            paper.editor.property("COLOR" /* COLOR */)
         ], Camera.prototype, "backgroundColor", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(12 /* RECT */)
+            paper.editor.property("RECT" /* RECT */)
         ], Camera.prototype, "viewport", void 0);
         __decorate([
             paper.serializedField
@@ -11310,10 +11307,10 @@ var egret3d;
             paper.serializedField
         ], Camera.prototype, "_far", void 0);
         __decorate([
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.01, step: 1 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01, step: 1 })
         ], Camera.prototype, "near", null);
         __decorate([
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.02, maximum: 3000.0, step: 1 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.02, maximum: 3000.0, step: 1 })
         ], Camera.prototype, "far", null);
         return Camera;
     }(paper.BaseComponent));
@@ -12736,11 +12733,11 @@ var egret3d;
         };
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], PointLight.prototype, "decay", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], PointLight.prototype, "distance", void 0);
         return PointLight;
     }(egret3d.BaseLight));
@@ -12789,19 +12786,19 @@ var egret3d;
         };
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], SpotLight.prototype, "decay", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], SpotLight.prototype, "distance", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */)
+            paper.editor.property("FLOAT" /* FLOAT */)
         ], SpotLight.prototype, "angle", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.01 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01 })
         ], SpotLight.prototype, "penumbra", void 0);
         return SpotLight;
     }(egret3d.BaseLight));
@@ -12856,7 +12853,7 @@ var egret3d;
             paper.serializedField
         ], MeshFilter.prototype, "_mesh", void 0);
         __decorate([
-            paper.editor.property(19 /* MESH */)
+            paper.editor.property("MESH" /* MESH */)
         ], MeshFilter.prototype, "mesh", null);
         return MeshFilter;
     }(paper.BaseComponent));
@@ -14222,7 +14219,7 @@ var egret3d;
             paper.serializedField
         ], Animation.prototype, "autoPlay", void 0);
         __decorate([
-            paper.editor.property(2 /* FLOAT */)
+            paper.editor.property("FLOAT" /* FLOAT */)
         ], Animation.prototype, "timeScale", void 0);
         __decorate([
             paper.serializedField
@@ -16981,7 +16978,7 @@ var egret3d;
                 paper.serializedField
             ], ParticleRenderer.prototype, "_mesh", void 0);
             __decorate([
-                paper.editor.property(19 /* MESH */)
+                paper.editor.property("MESH" /* MESH */)
             ], ParticleRenderer.prototype, "mesh", null);
             return ParticleRenderer;
         }(paper.BaseRenderer));
@@ -18233,22 +18230,22 @@ var paper;
         GameObject._globalGameObject = null;
         __decorate([
             paper.serializedField,
-            paper.editor.property(4 /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], GameObject.prototype, "isStatic", void 0);
         __decorate([
             paper.serializedField
         ], GameObject.prototype, "hideFlags", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(11 /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.Layer) })
+            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.Layer) })
         ], GameObject.prototype, "layer", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(3 /* TEXT */)
+            paper.editor.property("TEXT" /* TEXT */)
         ], GameObject.prototype, "name", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(11 /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.DefaultTags) })
+            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.DefaultTags) })
         ], GameObject.prototype, "tag", void 0);
         __decorate([
             paper.serializedField
@@ -18257,7 +18254,7 @@ var paper;
             paper.serializedField
         ], GameObject.prototype, "_activeSelf", void 0);
         __decorate([
-            paper.editor.property(4 /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], GameObject.prototype, "activeSelf", null);
         __decorate([
             paper.serializedField,
@@ -18533,15 +18530,15 @@ var paper;
         ], Scene.prototype, "extras", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], Scene.prototype, "lightmapIntensity", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(10 /* COLOR */)
+            paper.editor.property("COLOR" /* COLOR */)
         ], Scene.prototype, "ambientColor", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(23 /* NESTED */)
+            paper.editor.property("NESTED" /* NESTED */)
         ], Scene.prototype, "fog", void 0);
         __decorate([
             paper.serializedField
@@ -19559,10 +19556,10 @@ var egret3d;
         AABB.ONE = new AABB().set(egret3d.Vector3.MINUS_ONE.clone().multiplyScalar(0.5), egret3d.Vector3.ONE.clone().multiplyScalar(0.5));
         AABB._instances = [];
         __decorate([
-            paper.editor.property(7 /* VECTOR3 */, { minimum: 0.0 })
+            paper.editor.property("VECTOR3" /* VECTOR3 */, { minimum: 0.0 })
         ], AABB.prototype, "size", null);
         __decorate([
-            paper.editor.property(7 /* VECTOR3 */)
+            paper.editor.property("VECTOR3" /* VECTOR3 */)
         ], AABB.prototype, "center", null);
         return AABB;
     }(paper.BaseRelease));
@@ -20481,19 +20478,19 @@ var egret3d;
             return this;
         };
         __decorate([
-            paper.editor.property(11 /* LIST */, { listItems: paper.editor.getItemsFromEnum(FogMode) })
+            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(FogMode) })
         ], Fog.prototype, "mode", void 0);
         __decorate([
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], Fog.prototype, "density", void 0);
         __decorate([
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.01, step: 1.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01, step: 1.0 })
         ], Fog.prototype, "near", void 0);
         __decorate([
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.02, step: 1.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.02, step: 1.0 })
         ], Fog.prototype, "far", void 0);
         __decorate([
-            paper.editor.property(10 /* COLOR */)
+            paper.editor.property("COLOR" /* COLOR */)
         ], Fog.prototype, "color", void 0);
         return Fog;
     }());
@@ -24193,10 +24190,10 @@ var egret3d;
         };
         Sphere._instances = [];
         __decorate([
-            paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], Sphere.prototype, "radius", void 0);
         __decorate([
-            paper.editor.property(7 /* VECTOR3 */)
+            paper.editor.property("VECTOR3" /* VECTOR3 */)
         ], Sphere.prototype, "center", void 0);
         return Sphere;
     }(paper.BaseRelease));
@@ -24353,44 +24350,44 @@ var paper;
             };
             EditorModel.prototype.serializeProperty = function (value, editType) {
                 switch (editType) {
-                    case 0 /* UINT */:
-                    case 1 /* INT */:
-                    case 2 /* FLOAT */:
-                    case 3 /* TEXT */:
-                    case 4 /* CHECKBOX */:
+                    case "UINT" /* UINT */:
+                    case "INT" /* INT */:
+                    case "FLOAT" /* FLOAT */:
+                    case "TEXT" /* TEXT */:
+                    case "CHECKBOX" /* CHECKBOX */:
                         return value;
-                    case 6 /* VECTOR2 */:
-                    case 7 /* VECTOR3 */:
-                    case 8 /* VECTOR4 */:
-                    case 9 /* QUATERNION */:
-                    case 10 /* COLOR */:
-                    case 12 /* RECT */:
+                    case "VECTOR2" /* VECTOR2 */:
+                    case "VECTOR3" /* VECTOR3 */:
+                    case "VECTOR4" /* VECTOR4 */:
+                    case "QUATERNION" /* QUATERNION */:
+                    case "COLOR" /* COLOR */:
+                    case "RECT" /* RECT */:
                         var className = egret.getQualifiedClassName(value);
                         var serializeData = value.serialize(value);
                         return { className: className, serializeData: serializeData };
-                    case 20 /* SHADER */:
+                    case "SHADER" /* SHADER */:
                         return value.name;
-                    case 11 /* LIST */:
+                    case "LIST" /* LIST */:
                         return value;
-                    case 14 /* MATERIAL_ARRAY */:
+                    case "MATERIAL_ARRAY" /* MATERIAL_ARRAY */:
                         var data = value.map(function (item) {
                             return { name: item.name, url: item.name };
                         });
                         return data;
-                    case 19 /* MESH */:
+                    case "MESH" /* MESH */:
                         if (!value)
                             return '';
                         var url = value.name;
                         return url;
-                    case 15 /* GAMEOBJECT */:
+                    case "GAMEOBJECT" /* GAMEOBJECT */:
                         if (!value) {
                             return null;
                         }
                         return value.uuid;
-                    case 13 /* MATERIAL */:
-                    case 16 /* TRANSFROM */:
-                    case 18 /* SOUND */:
-                    case 21 /* ARRAY */:
+                    case "MATERIAL" /* MATERIAL */:
+                    case "TRANSFROM" /* TRANSFROM */:
+                    case "SOUND" /* SOUND */:
+                    case "ARRAY" /* ARRAY */:
                         //TODO
                         console.error("not supported!");
                         break;
@@ -24400,18 +24397,18 @@ var paper;
             };
             EditorModel.prototype.deserializeProperty = function (serializeData, editType) {
                 switch (editType) {
-                    case 0 /* UINT */:
-                    case 1 /* INT */:
-                    case 2 /* FLOAT */:
-                    case 3 /* TEXT */:
-                    case 4 /* CHECKBOX */:
+                    case "UINT" /* UINT */:
+                    case "INT" /* INT */:
+                    case "FLOAT" /* FLOAT */:
+                    case "TEXT" /* TEXT */:
+                    case "CHECKBOX" /* CHECKBOX */:
                         return serializeData;
-                    case 6 /* VECTOR2 */:
-                    case 7 /* VECTOR3 */:
-                    case 8 /* VECTOR4 */:
-                    case 9 /* QUATERNION */:
-                    case 10 /* COLOR */:
-                    case 12 /* RECT */:
+                    case "VECTOR2" /* VECTOR2 */:
+                    case "VECTOR3" /* VECTOR3 */:
+                    case "VECTOR4" /* VECTOR4 */:
+                    case "QUATERNION" /* QUATERNION */:
+                    case "COLOR" /* COLOR */:
+                    case "RECT" /* RECT */:
                         var clazz = egret.getDefinitionByName(serializeData.className);
                         var target = null;
                         if (clazz) {
@@ -24419,13 +24416,13 @@ var paper;
                             target.deserialize(serializeData.serializeData);
                         }
                         return target;
-                    case 20 /* SHADER */:
+                    case "SHADER" /* SHADER */:
                         var url = serializeData;
                         var asset = paper.Asset.find(url);
                         return asset;
-                    case 11 /* LIST */:
+                    case "LIST" /* LIST */:
                         return serializeData;
-                    case 14 /* MATERIAL_ARRAY */:
+                    case "MATERIAL_ARRAY" /* MATERIAL_ARRAY */:
                         var materials = [];
                         for (var _i = 0, serializeData_1 = serializeData; _i < serializeData_1.length; _i++) {
                             var matrial = serializeData_1[_i];
@@ -24433,18 +24430,18 @@ var paper;
                             materials.push(asset_1);
                         }
                         return materials;
-                    case 19 /* MESH */:
+                    case "MESH" /* MESH */:
                         var meshAsset = paper.Asset.find(serializeData);
                         return meshAsset;
-                    case 15 /* GAMEOBJECT */:
+                    case "GAMEOBJECT" /* GAMEOBJECT */:
                         if (!serializeData) {
                             return null;
                         }
                         return this.getGameObjectByUUid(serializeData);
-                    case 13 /* MATERIAL */:
-                    case 16 /* TRANSFROM */:
-                    case 18 /* SOUND */:
-                    case 21 /* ARRAY */:
+                    case "MATERIAL" /* MATERIAL */:
+                    case "TRANSFROM" /* TRANSFROM */:
+                    case "SOUND" /* SOUND */:
+                    case "ARRAY" /* ARRAY */:
                         //TODO
                         console.error("not supported!");
                         return null;
@@ -24715,10 +24712,10 @@ var paper;
                 return result;
             };
             EditorModel.prototype.setTargetProperty = function (propName, target, value, editType) {
-                if (editType !== 6 /* VECTOR2 */ &&
-                    editType !== 7 /* VECTOR3 */ &&
-                    editType !== 8 /* VECTOR4 */ &&
-                    editType !== 10 /* COLOR */) {
+                if (editType !== "VECTOR2" /* VECTOR2 */ &&
+                    editType !== "VECTOR3" /* VECTOR3 */ &&
+                    editType !== "VECTOR4" /* VECTOR4 */ &&
+                    editType !== "COLOR" /* COLOR */) {
                     target[propName] = value;
                     return;
                 }
@@ -24727,25 +24724,25 @@ var paper;
                 }
                 else {
                     switch (editType) {
-                        case 6 /* VECTOR2 */:
+                        case "VECTOR2" /* VECTOR2 */:
                             var vec2 = target[propName];
                             vec2.x = value.x;
                             vec2.y = value.y;
                             break;
-                        case 7 /* VECTOR3 */:
+                        case "VECTOR3" /* VECTOR3 */:
                             var vec3 = target[propName];
                             vec3.x = value.x;
                             vec3.y = value.y;
                             vec3.z = value.z;
                             break;
-                        case 8 /* VECTOR4 */:
+                        case "VECTOR4" /* VECTOR4 */:
                             var vec4 = target[propName];
                             vec4.x = value.x;
                             vec4.y = value.y;
                             vec4.z = value.z;
                             vec4.w = value.w;
                             break;
-                        case 10 /* COLOR */:
+                        case "COLOR" /* COLOR */:
                             var color = target[propName];
                             color.r = value.r;
                             color.g = value.g;

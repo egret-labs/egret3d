@@ -320,61 +320,58 @@ declare namespace paper.editor {
     };
     /**
      * 编辑类型
-     * TODO 类型需要显示设置值
      */
     const enum EditType {
         /**数字输入 */
-        UINT = 0,
-        INT = 1,
-        FLOAT = 2,
+        UINT = "UINT",
+        INT = "INT",
+        FLOAT = "FLOAT",
         /**文本输入 */
-        TEXT = 3,
+        TEXT = "TEXT",
         /**选中框 */
-        CHECKBOX = 4,
-        /**
-         * Size.
-         */
-        SIZE = 5,
+        CHECKBOX = "CHECKBOX",
+        /** Size.*/
+        SIZE = "CHECKBOX",
         /**vertor2 */
-        VECTOR2 = 6,
+        VECTOR2 = "VECTOR2",
         /**vertor3 */
-        VECTOR3 = 7,
+        VECTOR3 = "VECTOR3",
         /**vertor4 */
-        VECTOR4 = 8,
+        VECTOR4 = "VECTOR4",
         /**Quaternion */
-        QUATERNION = 9,
+        QUATERNION = "QUATERNION",
         /**颜色选择器 */
-        COLOR = 10,
+        COLOR = "COLOR",
         /**下拉 */
-        LIST = 11,
+        LIST = "LIST",
         /**Rect */
-        RECT = 12,
+        RECT = "RECT",
         /**材质 */
-        MATERIAL = 13,
+        MATERIAL = "MATERIAL",
         /**材质数组 */
-        MATERIAL_ARRAY = 14,
+        MATERIAL_ARRAY = "MATERIAL_ARRAY",
         /**游戏对象 */
-        GAMEOBJECT = 15,
+        GAMEOBJECT = "GAMEOBJECT",
         /**变换 TODO 不需要*/
-        TRANSFROM = 16,
+        TRANSFROM = "TRANSFROM",
         /**组件 */
-        COMPONENT = 17,
+        COMPONENT = "COMPONENT",
         /**声音 */
-        SOUND = 18,
+        SOUND = "SOUND",
         /**Mesh */
-        MESH = 19,
+        MESH = "MESH",
         /**shader */
-        SHADER = 20,
+        SHADER = "SHADER",
         /**数组 */
-        ARRAY = 21,
-        /**
-         *
-         */
-        BUTTON = 22,
-        /**
-         *
-         */
-        NESTED = 23,
+        ARRAY = "ARRAY",
+        /***/
+        BUTTON = "BUTTON",
+        /***/
+        NESTED = "NESTED",
+        /**贴图 */
+        TEXTUREDESC = "TEXTUREDESC",
+        /**矩阵 */
+        MAT3 = "MAT3",
     }
     /**
      * 装饰器:自定义
