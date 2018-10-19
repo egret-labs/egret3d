@@ -81,6 +81,10 @@ namespace paper.editor {
          * 
          */
         NESTED,
+        /**贴图 */
+        TextureDesc,
+        /**矩阵 */
+        MAT3
     }
 
     let customMap: { [key: string]: boolean } = {};
