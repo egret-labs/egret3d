@@ -57,10 +57,6 @@ namespace egret3d {
                 drawCall.mesh = renderer.mesh;
                 drawCall.material = material || DefaultMaterials.MISSING;
                 drawCallCollecter.drawCalls.push(drawCall);
-
-                if (material && !renderer.forceCPUSkin) {
-                    material.addDefine(ShaderDefine.USE_SKINNING).addDefine(`${ShaderDefine.MAX_BONES} ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, renderer.bones.length)}`);
-                }
             }
         }
 

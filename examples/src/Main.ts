@@ -3,13 +3,13 @@ declare class Examples {
 }
 
 async function main() {
-    // if (RELEASE) {
-    //     RES.processor.map("json", new JSONProcessor());
-    // }
+    if (RELEASE) {
+        RES.processor.map("json", new JSONProcessor());
+    }
 
-    // exampleStart();
+    exampleStart();
     // new examples.SceneTest().start();
-    new examples.EUITest().start();
+    // new examples.EUITest().start();
 }
 
 class JSONProcessor implements RES.processor.Processor {
@@ -23,7 +23,7 @@ class JSONProcessor implements RES.processor.Processor {
         }
         else {
             if (!this._mergedCache) {
-                const r = (host as any).resourceConfig['getResource']("1.zipjson");
+                const r = (host as any).resourceConfig['getResource']("1.jsonbin");
                 const data = await host.load(r, "bin");
 
                 if (!this._mergedCache) {

@@ -1,9 +1,40 @@
+import * as path from 'path';
 import * as zlib from 'zlib';
 
+export class BakeInfo {
+    currentRoot = "";
+    readonly defaultRoot = "resource/";
+
+    get root() {
+        return this.currentRoot || this.defaultRoot;
+    }
+}
+
+export const bakeInfo = new BakeInfo();
+
 export type MergeJSONOption = {
-    root: string;
     nameSelector: (p: string) => string;
     mergeJSONSelector: (p: string) => string | null;
+};
+
+export const nameSelector = (p: string) => {
+    if (p.indexOf("2d/") > 0) {
+        return path.basename(p).replace(/\./gi, "_");
+    }
+
+    return p.replace(bakeInfo.root, "");
+};
+
+export const mergeJSONSelector = (p: string) => {
+    if (p.indexOf("default.res.json") >= 0) {
+        return null;
+    }
+
+    if (p.indexOf(".json") >= 0 && p.indexOf(".jsonbin") < 0) {
+        return bakeInfo.root + "1.jsonbin";
+    }
+
+    return null;
 };
 
 export class MergeJSONPlugin implements plugins.Command {
@@ -13,7 +44,7 @@ export class MergeJSONPlugin implements plugins.Command {
     }
 
     async onFile(file: plugins.File) {
-        if (file.origin.indexOf(this.options.root) !== 0) {
+        if (file.origin.indexOf(bakeInfo.root) !== 0) {
             return null;
         }
 
@@ -41,7 +72,7 @@ export class MergeJSONPlugin implements plugins.Command {
             const content = JSON.stringify(json, null, '\t');
 
             const jsonBuffer = await zip(content);
-            commandContext.createFile(mergeFilename, jsonBuffer, { type: "zipjson" });
+            commandContext.createFile(mergeFilename, jsonBuffer, { type: "jsonbin" });
         }
     }
 }
@@ -91,7 +122,7 @@ export class MergeBinaryPlugin implements plugins.Command {
 
             const gltfContent = await zip(b);
 
-            commandContext.createFile(mergeFilename + ".zipjson", indexJsonBuffer, { type: "zipjson" });
+            commandContext.createFile(mergeFilename + ".jsonbin", indexJsonBuffer, { type: "jsonbin" });
             commandContext.createFile(mergeFilename, gltfContent, { type: "bin" });
         }
     }

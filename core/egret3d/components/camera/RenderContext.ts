@@ -316,6 +316,10 @@ namespace egret3d {
                 this.lightmapIntensity = scene.lightmapIntensity;
                 this.shaderContextDefine += "#define USE_LIGHTMAP \n";
             }
+            
+            if (renderer.constructor === SkinnedMeshRenderer && !(renderer as SkinnedMeshRenderer).forceCPUSkin) {
+                this.shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, (renderer as SkinnedMeshRenderer).bones.length)} \n`;
+            }
 
             if (this.lightCount > 0) {
                 if (this.directLightCount > 0) {

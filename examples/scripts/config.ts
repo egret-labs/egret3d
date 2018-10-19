@@ -1,11 +1,9 @@
 /// 阅读 api.d.ts 查看文档
 ///<reference path="declaration/api.d.ts"/>
-
-import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlugin, ManifestPlugin, UglifyPlugin } from "built-in";
 import * as path from "path";
-import { MergeJSONPlugin, MergeBinaryPlugin, ModifyDefaultResJSONPlugin, InspectorFilterPlugin } from "./myplugin";
+import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlugin, ManifestPlugin, UglifyPlugin } from "built-in";
+import { bakeInfo, nameSelector, mergeJSONSelector, MergeJSONPlugin, MergeBinaryPlugin, ModifyDefaultResJSONPlugin, InspectorFilterPlugin } from "./myplugin";
 
-let bakeRoot: string = "resource/";
 const config: ResourceManagerConfig = {
 
     buildConfig: (params) => {
@@ -23,17 +21,15 @@ const config: ResourceManagerConfig = {
                 case "--folder":
                 case "-f":
                     subRoot = `${commandLineParams[1]}/`;
-                    bakeRoot += subRoot;
+                    bakeInfo.currentRoot = bakeInfo.defaultRoot + subRoot;
                     break;
             }
 
-            // TODO 合并操作应该在 publish 而不是 bake
             return {
                 outputDir,
                 commands: [
-                    new MergeJSONPlugin({ root: bakeRoot, nameSelector, mergeJSONSelector }),
                     new EmitResConfigFilePlugin({
-                        output: bakeRoot + "default.res.json",
+                        output: bakeInfo.root + "default.res.json",
                         typeSelector: config.typeSelector,
                         nameSelector,
                         groupSelector: p => null
@@ -66,10 +62,10 @@ const config: ResourceManagerConfig = {
             return {
                 outputDir,
                 commands: [
+                    new MergeJSONPlugin({ nameSelector, mergeJSONSelector }),
                     new CompilePlugin({ libraryType: "release" }),
                     new ExmlPlugin("commonjs"),
                     new InspectorFilterPlugin(inspectorFilterEnabled),
-                    new MergeJSONPlugin({ root: bakeRoot, nameSelector, mergeJSONSelector }),
                     new UglifyPlugin([
                         {
                             sources: ["resource/2d/default.thm.js"],
@@ -116,12 +112,13 @@ const config: ResourceManagerConfig = {
                 const typemap = {
                     ".png": "Texture",
                     ".jpg": "Texture",
+                    ".json": "json",
 
                     ".scene.json": "Scene",
                     ".prefab.json": "Prefab",
 
                     ".image.json": "TextureDesc",
-                    ".vs.glsl": "GLVertexShader",
+                    ".vs.glsl": 'GLVertexShader',
                     ".fs.glsl": "GLFragmentShader",
                     ".shader.json": "Shader",
                     ".mat.json": "Material",
@@ -129,7 +126,7 @@ const config: ResourceManagerConfig = {
                     ".ani.bin": "Animation",
 
                     ".bin": "bin",
-                    ".zipjson": "bin"
+                    ".jsonbin": "bin",
                 };
                 const type = typemap[extname];
                 if (type) {
@@ -142,26 +139,6 @@ const config: ResourceManagerConfig = {
             return "Unknown";
         }
     }
-};
-
-const nameSelector = (p: string) => {
-    if (p.indexOf("2d/") > 0) {
-        return path.basename(p).replace(/\./gi, "_");
-    }
-
-    return p.replace(bakeRoot, "");
-};
-
-const mergeJSONSelector = (p: string) => {
-    if (p.indexOf("default.res.json") >= 0) {
-        return null;
-    }
-
-    if (p.indexOf(".json") >= 0) {
-        return bakeRoot + "1.zipjson";
-    }
-
-    return null;
 };
 
 export = config;

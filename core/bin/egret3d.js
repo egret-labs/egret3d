@@ -11661,6 +11661,9 @@ var egret3d;
                 this.lightmapIntensity = scene.lightmapIntensity;
                 this.shaderContextDefine += "#define USE_LIGHTMAP \n";
             }
+            if (renderer.constructor === egret3d.SkinnedMeshRenderer && !renderer.forceCPUSkin) {
+                this.shaderContextDefine += "#define USE_SKINNING \n" + ("#define MAX_BONES " + Math.min(egret3d.SkinnedMeshRendererSystem.maxBoneCount, renderer.bones.length) + " \n");
+            }
             if (this.lightCount > 0) {
                 if (this.directLightCount > 0) {
                     this.shaderContextDefine += "#define NUM_DIR_LIGHTS " + this.directLightCount + "\n";
@@ -13372,9 +13375,6 @@ var egret3d;
                 drawCall.mesh = renderer.mesh;
                 drawCall.material = material || egret3d.DefaultMaterials.MISSING;
                 drawCallCollecter.drawCalls.push(drawCall);
-                if (material && !renderer.forceCPUSkin) {
-                    material.addDefine("USE_SKINNING" /* USE_SKINNING */).addDefine("MAX_BONES" /* MAX_BONES */ + " " + Math.min(SkinnedMeshRendererSystem.maxBoneCount, renderer.bones.length));
-                }
             }
         };
         SkinnedMeshRendererSystem.prototype.onEnable = function () {
