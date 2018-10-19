@@ -26,65 +26,58 @@ namespace paper.editor {
     };
     /**
      * 编辑类型
-     * TODO 类型需要显示设置值
      */
     export const enum EditType {
         /**数字输入 */
-        UINT,
-        INT,
-        FLOAT,
+        UINT = "UINT",
+        INT = "INT",
+        FLOAT = "FLOAT",
         /**文本输入 */
-        TEXT,
+        TEXT = "TEXT",
         /**选中框 */
-        CHECKBOX,
-        /**
-         * Size.
-         */
-        SIZE,
+        CHECKBOX = "CHECKBOX",
+        /** Size.*/
+        SIZE = "CHECKBOX",
         /**vertor2 */
-        VECTOR2,
+        VECTOR2 = "VECTOR2",
         /**vertor3 */
-        VECTOR3,
+        VECTOR3 = "VECTOR3",
         /**vertor4 */
-        VECTOR4,
+        VECTOR4 = "VECTOR4",
         /**Quaternion */
-        QUATERNION,
+        QUATERNION = "QUATERNION",
         /**颜色选择器 */
-        COLOR,
+        COLOR = "COLOR",
         /**下拉 */
-        LIST,
+        LIST = "LIST",
         /**Rect */
-        RECT,
+        RECT = "RECT",
         /**材质 */
-        MATERIAL,
+        MATERIAL = "MATERIAL",
         /**材质数组 */
-        MATERIAL_ARRAY,
+        MATERIAL_ARRAY = "MATERIAL_ARRAY",
         /**游戏对象 */
-        GAMEOBJECT,
+        GAMEOBJECT = "GAMEOBJECT",
         /**变换 TODO 不需要*/
-        TRANSFROM,
+        TRANSFROM = "TRANSFROM",
         /**组件 */
-        COMPONENT,
+        COMPONENT = "COMPONENT",
         /**声音 */
-        SOUND,
+        SOUND = "SOUND",
         /**Mesh */
-        MESH,
+        MESH = "MESH",
         /**shader */
-        SHADER,
+        SHADER = "SHADER",
         /**数组 */
-        ARRAY,
-        /**
-         * 
-         */
-        BUTTON,
-        /**
-         * 
-         */
-        NESTED,
+        ARRAY = "ARRAY",
+        /***/
+        BUTTON = "BUTTON",
+        /***/
+        NESTED = "NESTED",
         /**贴图 */
-        TextureDesc,
+        TEXTUREDESC = "TEXTUREDESC",
         /**矩阵 */
-        MAT3
+        MAT3 = "MAT3"
     }
 
     let customMap: { [key: string]: boolean } = {};
