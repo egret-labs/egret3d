@@ -32,9 +32,9 @@ namespace egret3d.particle {
         /**
         * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
         */
-        private _onUpdateBatchMesh(comp: ParticleComponent) {
+        private _onUpdateBatchMesh(comp: ParticleComponent, cleanPlayState: boolean = true) {
             const renderer = comp.gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
-            comp.initBatcher();
+            comp.initBatcher(cleanPlayState);
             //
             this._onRenderUpdate(renderer, ParticleRenderer.onRenderModeChanged);
             this._onRenderUpdate(renderer, ParticleRenderer.onVelocityScaleChanged);
@@ -425,7 +425,7 @@ namespace egret3d.particle {
             }
         }
 
-        private _updateDrawCalls(gameObject: paper.GameObject) {
+        private _updateDrawCalls(gameObject: paper.GameObject, cleanPlayState: boolean = true) {
             if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
                 return;
             }
@@ -434,7 +434,7 @@ namespace egret3d.particle {
             const component = gameObject.getComponent(ParticleComponent) as ParticleComponent;
             const renderer = gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             //
-            this._onUpdateBatchMesh(component);
+            this._onUpdateBatchMesh(component, cleanPlayState);
             drawCallCollecter.removeDrawCalls(renderer);
             if (!renderer.batchMesh || !renderer.batchMaterial) {
                 return;
@@ -454,7 +454,7 @@ namespace egret3d.particle {
                 drawCall.subMeshIndex = subMeshIndex++;
                 drawCall.mesh = renderer.batchMesh;
                 drawCall.material = renderer.batchMaterial || DefaultMaterials.MISSING,
-                drawCallCollecter.drawCalls.push(drawCall);
+                    drawCallCollecter.drawCalls.push(drawCall);
             }
         }
 
@@ -465,7 +465,7 @@ namespace egret3d.particle {
         }
 
         public onAddGameObject(gameObject: paper.GameObject, _group: paper.GameObjectGroup) {
-            this._updateDrawCalls(gameObject);
+            this._updateDrawCalls(gameObject, false);
 
             const component = gameObject.getComponent(ParticleComponent) as ParticleComponent;
             if (component.main.playOnAwake) {

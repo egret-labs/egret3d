@@ -5580,7 +5580,7 @@ var egret3d;
             /**
              *
              */
-            _this.shadowCameraFar = 1000.0;
+            _this.shadowCameraFar = 100.0;
             /**
              *
              */
@@ -6151,9 +6151,10 @@ var egret3d;
             /**
             * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
             */
-            ParticleSystem.prototype._onUpdateBatchMesh = function (comp) {
+            ParticleSystem.prototype._onUpdateBatchMesh = function (comp, cleanPlayState) {
+                if (cleanPlayState === void 0) { cleanPlayState = true; }
                 var renderer = comp.gameObject.getComponent(particle.ParticleRenderer);
-                comp.initBatcher();
+                comp.initBatcher(cleanPlayState);
                 //
                 this._onRenderUpdate(renderer, particle.ParticleRenderer.onRenderModeChanged);
                 this._onRenderUpdate(renderer, particle.ParticleRenderer.onVelocityScaleChanged);
@@ -6528,7 +6529,8 @@ var egret3d;
                     }
                 }
             };
-            ParticleSystem.prototype._updateDrawCalls = function (gameObject) {
+            ParticleSystem.prototype._updateDrawCalls = function (gameObject, cleanPlayState) {
+                if (cleanPlayState === void 0) { cleanPlayState = true; }
                 if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
                     return;
                 }
@@ -6536,7 +6538,7 @@ var egret3d;
                 var component = gameObject.getComponent(particle.ParticleComponent);
                 var renderer = gameObject.getComponent(particle.ParticleRenderer);
                 //
-                this._onUpdateBatchMesh(component);
+                this._onUpdateBatchMesh(component, cleanPlayState);
                 drawCallCollecter.removeDrawCalls(renderer);
                 if (!renderer.batchMesh || !renderer.batchMaterial) {
                     return;
@@ -6565,7 +6567,7 @@ var egret3d;
                 }
             };
             ParticleSystem.prototype.onAddGameObject = function (gameObject, _group) {
-                this._updateDrawCalls(gameObject);
+                this._updateDrawCalls(gameObject, false);
                 var component = gameObject.getComponent(particle.ParticleComponent);
                 if (component.main.playOnAwake) {
                     component.play();
@@ -12766,7 +12768,7 @@ var egret3d;
             /**
              *
              */
-            _this.penumbra = 0.0;
+            _this.penumbra = 1.0;
             return _this;
         }
         SpotLight.prototype.updateShadow = function (camera) {
@@ -16609,9 +16611,12 @@ var egret3d;
                 _this._batcher = new particle.ParticleBatcher();
                 return _this;
             }
-            ParticleComponent.prototype._clean = function () {
-                this._isPlaying = false;
-                this._isPaused = false;
+            ParticleComponent.prototype._clean = function (cleanPlayState) {
+                if (cleanPlayState === void 0) { cleanPlayState = false; }
+                if (cleanPlayState) {
+                    this._isPlaying = false;
+                    this._isPaused = false;
+                }
                 this._batcher.clean();
             };
             ParticleComponent.prototype.initialize = function () {
@@ -16625,8 +16630,9 @@ var egret3d;
             /**
              * @internal
              */
-            ParticleComponent.prototype.initBatcher = function () {
-                this._clean();
+            ParticleComponent.prototype.initBatcher = function (cleanPlayState) {
+                if (cleanPlayState === void 0) { cleanPlayState = false; }
+                this._clean(cleanPlayState);
                 this._batcher.init(this, this.gameObject.getComponent(particle.ParticleRenderer));
             };
             /**

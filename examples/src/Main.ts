@@ -3,11 +3,13 @@ declare class Examples {
 }
 
 async function main() {
-    if (RELEASE) {
-        RES.processor.map("json", new JSONProcessor());
-    }
+    // if (RELEASE) {
+    //     RES.processor.map("json", new JSONProcessor());
+    // }
 
-    exampleStart();
+    // exampleStart();
+    // new examples.SceneTest().start();
+    new examples.EUITest().start();
 }
 
 class JSONProcessor implements RES.processor.Processor {

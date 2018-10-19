@@ -3390,7 +3390,7 @@ declare namespace egret3d.particle {
         /**
         * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
         */
-        private _onUpdateBatchMesh(comp);
+        private _onUpdateBatchMesh(comp, cleanPlayState?);
         private _onRenderUpdate(render, type);
         /**
          *
@@ -3424,7 +3424,7 @@ declare namespace egret3d.particle {
          */
         private _onRotationOverLifetime(comp);
         private _onTextureSheetAnimation(comp);
-        private _updateDrawCalls(gameObject);
+        private _updateDrawCalls(gameObject, cleanPlayState?);
         onEnable(): void;
         onAddGameObject(gameObject: paper.GameObject, _group: paper.GameObjectGroup): void;
         onRemoveGameObject(gameObject: paper.GameObject): void;
@@ -5986,7 +5986,7 @@ declare namespace egret3d.particle {
          */
         readonly textureSheetAnimation: TextureSheetAnimationModule;
         private readonly _batcher;
-        private _clean();
+        private _clean(cleanPlayState?);
         initialize(): void;
         uninitialize(): void;
         play(withChildren?: boolean): void;

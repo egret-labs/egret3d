@@ -53,9 +53,12 @@ namespace egret3d.particle {
         public _isPaused: boolean = false;
         private readonly _batcher: ParticleBatcher = new ParticleBatcher();
 
-        private _clean() {
-            this._isPlaying = false;
-            this._isPaused = false;
+        private _clean(cleanPlayState: boolean = false) {//TODO
+            if (cleanPlayState) {
+                this._isPlaying = false;
+                this._isPaused = false;
+            }
+
             this._batcher.clean();
         }
 
@@ -71,8 +74,8 @@ namespace egret3d.particle {
         /**
          * @internal 
          */
-        public initBatcher() {
-            this._clean();
+        public initBatcher(cleanPlayState: boolean = false) {
+            this._clean(cleanPlayState);
             this._batcher.init(this, this.gameObject.getComponent(ParticleRenderer)!);
         }
         /**
