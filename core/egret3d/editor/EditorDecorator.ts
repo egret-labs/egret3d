@@ -15,6 +15,7 @@ namespace paper.editor {
     }
     /**属性配置 */
     export type PropertyOption = {
+        readonly?: boolean;
         minimum?: number;
         maximum?: number;
         step?: number;
@@ -23,7 +24,10 @@ namespace paper.editor {
         /**下拉项*/
         listItems?: { label: string, value: any }[];
     };
-    /**编辑类型 */
+    /**
+     * 编辑类型
+     * TODO 类型需要显示设置值
+     */
     export const enum EditType {
         /**数字输入 */
         UINT,
@@ -33,6 +37,10 @@ namespace paper.editor {
         TEXT,
         /**选中框 */
         CHECKBOX,
+        /**
+         * Size.
+         */
+        SIZE,
         /**vertor2 */
         VECTOR2,
         /**vertor3 */
@@ -65,6 +73,10 @@ namespace paper.editor {
         SHADER,
         /**数组 */
         ARRAY,
+        /**
+         * 
+         */
+        BUTTON,
         /**
          * 
          */

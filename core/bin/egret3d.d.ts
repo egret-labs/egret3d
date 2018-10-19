@@ -306,6 +306,7 @@ declare namespace paper.editor {
     }
     /**属性配置 */
     type PropertyOption = {
+        readonly?: boolean;
         minimum?: number;
         maximum?: number;
         step?: number;
@@ -317,7 +318,10 @@ declare namespace paper.editor {
             value: any;
         }[];
     };
-    /**编辑类型 */
+    /**
+     * 编辑类型
+     * TODO 类型需要显示设置值
+     */
     const enum EditType {
         /**数字输入 */
         UINT = 0,
@@ -327,42 +331,50 @@ declare namespace paper.editor {
         TEXT = 3,
         /**选中框 */
         CHECKBOX = 4,
+        /**
+         * Size.
+         */
+        SIZE = 5,
         /**vertor2 */
-        VECTOR2 = 5,
+        VECTOR2 = 6,
         /**vertor3 */
-        VECTOR3 = 6,
+        VECTOR3 = 7,
         /**vertor4 */
-        VECTOR4 = 7,
+        VECTOR4 = 8,
         /**Quaternion */
-        QUATERNION = 8,
+        QUATERNION = 9,
         /**颜色选择器 */
-        COLOR = 9,
+        COLOR = 10,
         /**下拉 */
-        LIST = 10,
+        LIST = 11,
         /**Rect */
-        RECT = 11,
+        RECT = 12,
         /**材质 */
-        MATERIAL = 12,
+        MATERIAL = 13,
         /**材质数组 */
-        MATERIAL_ARRAY = 13,
+        MATERIAL_ARRAY = 14,
         /**游戏对象 */
-        GAMEOBJECT = 14,
+        GAMEOBJECT = 15,
         /**变换 TODO 不需要*/
-        TRANSFROM = 15,
+        TRANSFROM = 16,
         /**组件 */
-        COMPONENT = 16,
+        COMPONENT = 17,
         /**声音 */
-        SOUND = 17,
+        SOUND = 18,
         /**Mesh */
-        MESH = 18,
+        MESH = 19,
         /**shader */
-        SHADER = 19,
+        SHADER = 20,
         /**数组 */
-        ARRAY = 20,
+        ARRAY = 21,
         /**
          *
          */
-        NESTED = 21,
+        BUTTON = 22,
+        /**
+         *
+         */
+        NESTED = 23,
     }
     /**
      * 装饰器:自定义
@@ -481,6 +493,10 @@ declare namespace paper {
          * 所有已注册的单例组件类。
          */
         private static readonly _allSingletonComponents;
+        /**
+         *
+         */
+        hideFlags: HideFlags;
         /**
          * 该组件的实体。
          */
@@ -4057,20 +4073,13 @@ declare namespace egret3d {
         /**
          * 当屏幕尺寸改变时派发事件。
          */
-        onScreenResize: signals.Signal;
+        readonly onScreenResize: signals.Signal;
         /**
          * 当舞台尺寸改变时派发事件。
          */
-        onResize: signals.Signal;
-        /**
-         * 是否允许因屏幕尺寸的改变而旋转舞台。
-         */
-        rotateEnabled: boolean;
-        /**
-         * 舞台是否因屏幕尺寸的改变而发生了旋转。
-         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于舞台尺寸宽度。
-         */
-        rotated: boolean;
+        readonly onResize: signals.Signal;
+        private _rotateEnabled;
+        private _rotated;
         private readonly _screenSize;
         private readonly _size;
         private readonly _viewport;
@@ -4088,6 +4097,15 @@ declare namespace egret3d {
          * 舞台到屏幕坐标的转换。
          */
         stageToScreen(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3): this;
+        /**
+         * 是否允许因屏幕尺寸的改变而旋转舞台。
+         */
+        rotateEnabled: boolean;
+        /**
+         * 舞台是否因屏幕尺寸的改变而发生了旋转。
+         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于舞台尺寸宽度。
+         */
+        readonly rotated: boolean;
         /**
          * 屏幕尺寸。
          */
@@ -10801,6 +10819,14 @@ declare namespace egret3d {
      * @deprecated
      */
     const InputManager: {
+        mouse: {
+            isPressed: (button: number) => boolean;
+            wasPressed: (button: number) => boolean;
+            wasReleased: (button: number) => boolean;
+        };
+        touch: {
+            getTouch: (button: number) => any;
+        };
         keyboard: {
             isPressed: (key: string) => boolean;
             wasPressed: (key: string) => boolean;

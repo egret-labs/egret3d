@@ -139,13 +139,14 @@ namespace paper.editor {
                 gameObject.hideFlags === HideFlags.Hide ||
                 gameObject.hideFlags === HideFlags.HideAndDontSave
             ) {
-                return;
+                return true;
             }
 
             let parentFolder = this._hierarchyFolders[gameObject.transform.parent ? gameObject.transform.parent.gameObject.uuid : gameObject.scene.uuid];
             if (!parentFolder) {
                 if (gameObject.transform.parent) {
-                    throw new Error(); // Never.
+                    // throw new Error(); // Never.
+                    return false;
                 }
 
                 parentFolder = this._guiComponent.hierarchy.addFolder(gameObject.scene.uuid, gameObject.scene.name + " <Scene>");
@@ -158,6 +159,8 @@ namespace paper.editor {
             folder.instance = gameObject;
             folder.onClick = this._nodeClickHandler;
             this._hierarchyFolders[gameObject.uuid] = folder;
+
+            return true;
         }
 
         private _propertyHasGetterSetter(target: any, propName: string) {
@@ -250,6 +253,37 @@ namespace paper.editor {
                     case editor.EditType.VECTOR2: {
                         guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
                         guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
+
+                        if (this._propertyHasGetterSetter(gui.instance, info.name)) {
+                            const onChange = () => {
+                                gui.instance[info.name] = gui.instance[info.name];
+                            };
+                            guiControllerA.onChange(onChange);
+                            guiControllerB.onChange(onChange);
+                        }
+
+                        if (info.option) {
+                            if (info.option.minimum !== undefined) {
+                                guiControllerA.min(info.option.minimum);
+                                guiControllerB.min(info.option.minimum);
+                            }
+
+                            if (info.option.maximum !== undefined) {
+                                guiControllerA.max(info.option.maximum);
+                                guiControllerB.max(info.option.maximum);
+                            }
+
+                            if (info.option.step !== undefined) {
+                                guiControllerA.step(info.option.step);
+                                guiControllerB.step(info.option.step);
+                            }
+                        }
+                        break;
+                    }
+
+                    case editor.EditType.SIZE: {
+                        guiControllerA = gui.add(gui.instance[info.name], "w", `${info.name}: w`).step(0.1).listen();
+                        guiControllerB = gui.add(gui.instance[info.name], "h", `${info.name}: h`).step(0.1).listen();
 
                         if (this._propertyHasGetterSetter(gui.instance, info.name)) {
                             const onChange = () => {
@@ -384,6 +418,33 @@ namespace paper.editor {
             }
         }
 
+        public onAwake() {
+            const sceneOptions = {
+                debug: false,
+                resources: () => {
+                    // if (this._modelComponent.selectedScene) {
+                    //     const sceneJSON = JSON.stringify(serialize(this._modelComponent.selectedScene));
+                    //     console.info(sceneJSON);
+                    // }
+                    // else if (this._modelComponent.selectedGameObjects.length > 0) {
+                    // }
+                },
+            };
+
+            this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
+                const sceneSystem = Application.systemManager.getOrRegisterSystem(editor.SceneSystem, SystemOrder.LaterUpdate);
+
+                if (v) {
+                    Application.playerMode = PlayerMode.DebugPlayer;
+                    sceneSystem.enabled = true;
+                }
+                else {
+                    Application.playerMode = PlayerMode.Player;
+                    sceneSystem.enabled = false;
+                }
+            });
+        }
+
         public onEnable() {
             ModelComponent.onSceneSelected.add(this._onSceneSelected, this);
             ModelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
@@ -440,7 +501,9 @@ namespace paper.editor {
             while (this._bufferedGameObjects.length > 0 && i++ < 5) {
                 const gameObject = this._bufferedGameObjects.shift();
                 if (gameObject) {
-                    this._addToHierarchy(gameObject);
+                    if (!this._addToHierarchy(gameObject)) {
+                        this._bufferedGameObjects.push(gameObject);
+                    }
                 }
             }
 

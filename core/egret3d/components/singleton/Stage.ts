@@ -7,21 +7,14 @@ namespace egret3d {
         /**
          * 当屏幕尺寸改变时派发事件。
          */
-        public onScreenResize: signals.Signal = new signals.Signal();
+        public readonly onScreenResize: signals.Signal = new signals.Signal();
         /**
          * 当舞台尺寸改变时派发事件。
          */
-        public onResize: signals.Signal = new signals.Signal();
-        /**
-         * 是否允许因屏幕尺寸的改变而旋转舞台。
-         */
-        public rotateEnabled: boolean = true;
-        /**
-         * 舞台是否因屏幕尺寸的改变而发生了旋转。
-         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于舞台尺寸宽度。
-         */
-        public rotated: boolean = false;
+        public readonly onResize: signals.Signal = new signals.Signal();
 
+        private _rotateEnabled: boolean = true;
+        private _rotated: boolean = false;
         private readonly _screenSize: egret3d.ISize = { w: 1024, h: 1024 };
         private readonly _size: egret3d.ISize = { w: 1024, h: 1024 };
         private readonly _viewport: egret3d.IRectangle = { x: 0, y: 0, w: 0, h: 0 };
@@ -30,14 +23,15 @@ namespace egret3d {
             const screenSize = this._screenSize;
             const size = this._size;
             const viewport = this._viewport;
-            // viewport.w = Math.ceil(size.w);
+            viewport.w = Math.ceil(size.w);
 
-            if (this.rotateEnabled && (this.rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h)) {
-                viewport.w = Math.ceil(Math.min(size.w, screenSize.h));
+            if (this._rotateEnabled && (this._rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h)) {
+                // viewport.w = Math.ceil(Math.min(size.w, screenSize.h));
                 viewport.h = Math.ceil(viewport.w / screenSize.h * screenSize.w);
             }
             else {
-                viewport.w = Math.ceil(Math.min(size.w, screenSize.w));
+                this._rotated = false;
+                // viewport.w = Math.ceil(Math.min(size.w, screenSize.w));
                 viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
             }
         }
@@ -47,7 +41,7 @@ namespace egret3d {
 
             stage = this;
 
-            this.rotateEnabled = config.rotateEnabled;
+            this._rotateEnabled = config.rotateEnabled;
             this._size.w = config.size.w;
             this._size.h = config.size.h;
             this._screenSize.w = config.screenSize.w;
@@ -62,7 +56,7 @@ namespace egret3d {
             const viewPort = this._viewport;
             const { x, y } = value;
 
-            if (this.rotated) {
+            if (this._rotated) {
                 out.y = (screenSize.w - (x - viewPort.x)) * (viewPort.w / screenSize.h);
                 out.x = (y - viewPort.y) * (viewPort.h / screenSize.w);
             }
@@ -82,8 +76,33 @@ namespace egret3d {
             return this;
         }
         /**
+         * 是否允许因屏幕尺寸的改变而旋转舞台。
+         */
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        public get rotateEnabled() {
+            return this._rotateEnabled;
+        }
+        public set rotateEnabled(value: boolean) {
+            if (this._rotateEnabled === value) {
+                return;
+            }
+
+            this._rotateEnabled = value;
+
+            this._updateViewport();
+        }
+        /**
+         * 舞台是否因屏幕尺寸的改变而发生了旋转。
+         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于舞台尺寸宽度。
+         */
+        @paper.editor.property(paper.editor.EditType.CHECKBOX, { readonly: true })
+        public get rotated() {
+            return this._rotated;
+        }
+        /**
          * 屏幕尺寸。
          */
+        @paper.editor.property(paper.editor.EditType.SIZE)
         public get screenSize(): Readonly<egret3d.ISize> {
             return this._screenSize;
         }
@@ -97,6 +116,7 @@ namespace egret3d {
         /**
          * 舞台尺寸。
          */
+        @paper.editor.property(paper.editor.EditType.SIZE)
         public get size(): Readonly<egret3d.ISize> {
             return this._size;
         }
@@ -110,6 +130,7 @@ namespace egret3d {
         /**
          * 渲染视口。
          */
+        @paper.editor.property(paper.editor.EditType.RECT, { readonly: true })
         public get viewport(): Readonly<egret3d.IRectangle> {
             return this._viewport;
         }

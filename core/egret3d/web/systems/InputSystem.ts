@@ -68,7 +68,7 @@ namespace egret3d.web {
             //     (event as any).clientY -= canvas.clientTop;
             // }
 
-            pointer.position.set(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop, 0.0);
+            pointer.position.set(event.clientX - (canvas.offsetLeft || 0.0), event.clientY - (canvas.offsetTop || 0.0), 0.0);
             stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
@@ -174,7 +174,7 @@ namespace egret3d.web {
             //     (pointerEvent as any).clientY -= canvas.clientTop;
             // }
 
-            pointer.position.set(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop, 0.0);
+            pointer.position.set(event.clientX - (canvas.offsetLeft || 0.0), event.clientY - (canvas.offsetTop || 0.0), 0.0);
             stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
@@ -286,7 +286,7 @@ namespace egret3d.web {
             //     (pointerEvent as any).clientY -= canvas.clientTop;
             // }
 
-            pointer.position.set(pointerEvent.clientX - canvas.offsetLeft, pointerEvent.clientY - canvas.offsetTop, 0.0);
+            pointer.position.set(pointerEvent.clientX - (canvas.offsetLeft || 0.0), pointerEvent.clientY - (canvas.offsetTop || 0.0), 0.0);
             stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
@@ -322,10 +322,10 @@ namespace egret3d.web {
                                 (eachPointerEvent as any).screenY = eachTouch.screenY;
                                 (eachPointerEvent as any).type = "pointermove";
 
-                                if (event.target !== canvas) {
-                                    (eachPointerEvent as any).clientX -= canvas.clientLeft;
-                                    (eachPointerEvent as any).clientY -= canvas.clientTop;
-                                }
+                                // if (event.target !== canvas) {
+                                //     (eachPointerEvent as any).clientX -= canvas.clientLeft;
+                                //     (eachPointerEvent as any).clientY -= canvas.clientTop;
+                                // }
 
                                 eachPointer.position.set(eachPointerEvent.clientX, eachPointerEvent.clientY, 0.0);
                                 stage.screenToStage(eachPointer.position, eachPointer.position);

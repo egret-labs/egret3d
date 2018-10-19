@@ -3956,30 +3956,6 @@ var paper;
                         hierarchy[0].appendChild(this._guiComponent.hierarchy.domElement);
                         inspector[0].appendChild(this._guiComponent.inspector.domElement);
                         container.insertBefore(document.getElementsByClassName("egret-player")[0], inspector[0]);
-                        var sceneOptions = {
-                            debug: false,
-                            resources: function () {
-                                // if (this._modelComponent.selectedScene) {
-                                //     const sceneJSON = JSON.stringify(serialize(this._modelComponent.selectedScene));
-                                //     console.info(sceneJSON);
-                                // }
-                                // else if (this._modelComponent.selectedGameObjects.length > 0) {
-                                // }
-                            },
-                        };
-                        this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
-                            var sceneSystem = paper.Application.systemManager.getOrRegisterSystem(editor.SceneSystem, 6000 /* LaterUpdate */);
-                            if (v) {
-                                paper.Application.playerMode = 1 /* DebugPlayer */;
-                                sceneSystem.enabled = true;
-                            }
-                            else {
-                                paper.Application.playerMode = 0 /* Player */;
-                                sceneSystem.enabled = false;
-                            }
-                        });
-                        // this._guiComponent.hierarchy.add(sceneOptions, "resources");
-                        // this._guiComponent.hierarchy.close();
                         paper.Application.systemManager.register(editor.GUISystem, 6000 /* LaterUpdate */ + 1); // Make sure the GUISystem update after the SceneSystem.
                     }
                 }
@@ -4118,12 +4094,13 @@ var paper;
                     gameObject.tag === "Editor Only" /* EditorOnly */ ||
                     gameObject.hideFlags === 2 /* Hide */ ||
                     gameObject.hideFlags === 3 /* HideAndDontSave */) {
-                    return;
+                    return true;
                 }
                 var parentFolder = this._hierarchyFolders[gameObject.transform.parent ? gameObject.transform.parent.gameObject.uuid : gameObject.scene.uuid];
                 if (!parentFolder) {
                     if (gameObject.transform.parent) {
-                        throw new Error(); // Never.
+                        // throw new Error(); // Never.
+                        return false;
                     }
                     parentFolder = this._guiComponent.hierarchy.addFolder(gameObject.scene.uuid, gameObject.scene.name + " <Scene>");
                     parentFolder.instance = gameObject.scene;
@@ -4134,6 +4111,7 @@ var paper;
                 folder.instance = gameObject;
                 folder.onClick = this._nodeClickHandler;
                 this._hierarchyFolders[gameObject.uuid] = folder;
+                return true;
             };
             GUISystem.prototype._propertyHasGetterSetter = function (target, propName) {
                 var prototype = Object.getPrototypeOf(target);
@@ -4201,10 +4179,10 @@ var paper;
                         case 3 /* TEXT */:
                             gui.add(gui.instance, info.name).listen();
                             break;
-                        case 10 /* LIST */:
+                        case 11 /* LIST */:
                             gui.add(gui.instance, info.name, info.option.listItems).listen();
                             break;
-                        case 5 /* VECTOR2 */: {
+                        case 6 /* VECTOR2 */: {
                             guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
                             guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
                             if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
@@ -4230,7 +4208,33 @@ var paper;
                             }
                             break;
                         }
-                        case 6 /* VECTOR3 */: {
+                        case 5 /* SIZE */: {
+                            guiControllerA = gui.add(gui.instance[info.name], "w", info.name + ": w").step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], "h", info.name + ": h").step(0.1).listen();
+                            if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
+                                var onChange = function () {
+                                    gui.instance[info.name] = gui.instance[info.name];
+                                };
+                                guiControllerA.onChange(onChange);
+                                guiControllerB.onChange(onChange);
+                            }
+                            if (info.option) {
+                                if (info.option.minimum !== undefined) {
+                                    guiControllerA.min(info.option.minimum);
+                                    guiControllerB.min(info.option.minimum);
+                                }
+                                if (info.option.maximum !== undefined) {
+                                    guiControllerA.max(info.option.maximum);
+                                    guiControllerB.max(info.option.maximum);
+                                }
+                                if (info.option.step !== undefined) {
+                                    guiControllerA.step(info.option.step);
+                                    guiControllerB.step(info.option.step);
+                                }
+                            }
+                            break;
+                        }
+                        case 7 /* VECTOR3 */: {
                             guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
                             guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
                             guiControllerC = gui.add(gui.instance[info.name], "z", info.name + ": z").step(0.1).listen();
@@ -4261,10 +4265,10 @@ var paper;
                             }
                             break;
                         }
-                        case 7 /* VECTOR4 */:
-                        case 8 /* QUATERNION */:
+                        case 8 /* VECTOR4 */:
+                        case 9 /* QUATERNION */:
                             break;
-                        case 9 /* COLOR */: {
+                        case 10 /* COLOR */: {
                             guiControllerA = gui.addColor(gui.instance, info.name).listen();
                             if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
                                 var onChange = function () {
@@ -4274,7 +4278,7 @@ var paper;
                             }
                             break;
                         }
-                        case 11 /* RECT */: {
+                        case 12 /* RECT */: {
                             guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
                             guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
                             guiControllerC = gui.add(gui.instance[info.name], "w", info.name + ": w").step(0.1).listen();
@@ -4310,9 +4314,9 @@ var paper;
                             }
                             break;
                         }
-                        case 14 /* GAMEOBJECT */:
+                        case 15 /* GAMEOBJECT */:
                             break;
-                        case 21 /* NESTED */: {
+                        case 23 /* NESTED */: {
                             var folder = gui.addFolder(info.name);
                             folder.instance = gui.instance[info.name];
                             this_1._addToInspector(folder);
@@ -4325,6 +4329,30 @@ var paper;
                     var info = infos_1[_i];
                     _loop_1(info);
                 }
+            };
+            GUISystem.prototype.onAwake = function () {
+                var sceneOptions = {
+                    debug: false,
+                    resources: function () {
+                        // if (this._modelComponent.selectedScene) {
+                        //     const sceneJSON = JSON.stringify(serialize(this._modelComponent.selectedScene));
+                        //     console.info(sceneJSON);
+                        // }
+                        // else if (this._modelComponent.selectedGameObjects.length > 0) {
+                        // }
+                    },
+                };
+                this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
+                    var sceneSystem = paper.Application.systemManager.getOrRegisterSystem(editor.SceneSystem, 6000 /* LaterUpdate */);
+                    if (v) {
+                        paper.Application.playerMode = 1 /* DebugPlayer */;
+                        sceneSystem.enabled = true;
+                    }
+                    else {
+                        paper.Application.playerMode = 0 /* Player */;
+                        sceneSystem.enabled = false;
+                    }
+                });
             };
             GUISystem.prototype.onEnable = function () {
                 editor.ModelComponent.onSceneSelected.add(this._onSceneSelected, this);
@@ -4372,7 +4400,9 @@ var paper;
                 while (this._bufferedGameObjects.length > 0 && i++ < 5) {
                     var gameObject = this._bufferedGameObjects.shift();
                     if (gameObject) {
-                        this._addToHierarchy(gameObject);
+                        if (!this._addToHierarchy(gameObject)) {
+                            this._bufferedGameObjects.push(gameObject);
+                        }
                     }
                 }
                 // Open and select folder.

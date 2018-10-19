@@ -92,6 +92,11 @@ namespace paper {
             return new componentClass();
         }
         /**
+         * 
+         */
+        @serializedField
+        public hideFlags: HideFlags = HideFlags.None;
+        /**
          * 该组件的实体。
          */
         public readonly gameObject: GameObject = null!;

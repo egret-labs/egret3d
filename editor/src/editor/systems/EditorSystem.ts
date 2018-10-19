@@ -52,33 +52,6 @@ namespace paper.editor {
                     inspector[0].appendChild(this._guiComponent.inspector.domElement);
                     container.insertBefore(document.getElementsByClassName("egret-player")[0], inspector[0]);
 
-                    const sceneOptions = {
-                        debug: false,
-                        resources: () => {
-                            // if (this._modelComponent.selectedScene) {
-                            //     const sceneJSON = JSON.stringify(serialize(this._modelComponent.selectedScene));
-                            //     console.info(sceneJSON);
-                            // }
-                            // else if (this._modelComponent.selectedGameObjects.length > 0) {
-                            // }
-                        },
-                    };
-
-                    this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
-                        const sceneSystem = Application.systemManager.getOrRegisterSystem(editor.SceneSystem, SystemOrder.LaterUpdate);
-
-                        if (v) {
-                            Application.playerMode = PlayerMode.DebugPlayer;
-                            sceneSystem.enabled = true;
-                        }
-                        else {
-                            Application.playerMode = PlayerMode.Player;
-                            sceneSystem.enabled = false;
-                        }
-                    });
-                    // this._guiComponent.hierarchy.add(sceneOptions, "resources");
-                    // this._guiComponent.hierarchy.close();
-
                     Application.systemManager.register(GUISystem, SystemOrder.LaterUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
                 }
             }

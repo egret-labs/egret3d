@@ -651,7 +651,10 @@ var paper;
         }());
         editor.PropertyInfo = PropertyInfo;
         __reflect(PropertyInfo.prototype, "paper.editor.PropertyInfo");
-        /**编辑类型 */
+        /**
+         * 编辑类型
+         * TODO 类型需要显示设置值
+         */
         var EditType;
         (function (EditType) {
             /**数字输入 */
@@ -662,42 +665,50 @@ var paper;
             EditType[EditType["TEXT"] = 3] = "TEXT";
             /**选中框 */
             EditType[EditType["CHECKBOX"] = 4] = "CHECKBOX";
+            /**
+             * Size.
+             */
+            EditType[EditType["SIZE"] = 5] = "SIZE";
             /**vertor2 */
-            EditType[EditType["VECTOR2"] = 5] = "VECTOR2";
+            EditType[EditType["VECTOR2"] = 6] = "VECTOR2";
             /**vertor3 */
-            EditType[EditType["VECTOR3"] = 6] = "VECTOR3";
+            EditType[EditType["VECTOR3"] = 7] = "VECTOR3";
             /**vertor4 */
-            EditType[EditType["VECTOR4"] = 7] = "VECTOR4";
+            EditType[EditType["VECTOR4"] = 8] = "VECTOR4";
             /**Quaternion */
-            EditType[EditType["QUATERNION"] = 8] = "QUATERNION";
+            EditType[EditType["QUATERNION"] = 9] = "QUATERNION";
             /**颜色选择器 */
-            EditType[EditType["COLOR"] = 9] = "COLOR";
+            EditType[EditType["COLOR"] = 10] = "COLOR";
             /**下拉 */
-            EditType[EditType["LIST"] = 10] = "LIST";
+            EditType[EditType["LIST"] = 11] = "LIST";
             /**Rect */
-            EditType[EditType["RECT"] = 11] = "RECT";
+            EditType[EditType["RECT"] = 12] = "RECT";
             /**材质 */
-            EditType[EditType["MATERIAL"] = 12] = "MATERIAL";
+            EditType[EditType["MATERIAL"] = 13] = "MATERIAL";
             /**材质数组 */
-            EditType[EditType["MATERIAL_ARRAY"] = 13] = "MATERIAL_ARRAY";
+            EditType[EditType["MATERIAL_ARRAY"] = 14] = "MATERIAL_ARRAY";
             /**游戏对象 */
-            EditType[EditType["GAMEOBJECT"] = 14] = "GAMEOBJECT";
+            EditType[EditType["GAMEOBJECT"] = 15] = "GAMEOBJECT";
             /**变换 TODO 不需要*/
-            EditType[EditType["TRANSFROM"] = 15] = "TRANSFROM";
+            EditType[EditType["TRANSFROM"] = 16] = "TRANSFROM";
             /**组件 */
-            EditType[EditType["COMPONENT"] = 16] = "COMPONENT";
+            EditType[EditType["COMPONENT"] = 17] = "COMPONENT";
             /**声音 */
-            EditType[EditType["SOUND"] = 17] = "SOUND";
+            EditType[EditType["SOUND"] = 18] = "SOUND";
             /**Mesh */
-            EditType[EditType["MESH"] = 18] = "MESH";
+            EditType[EditType["MESH"] = 19] = "MESH";
             /**shader */
-            EditType[EditType["SHADER"] = 19] = "SHADER";
+            EditType[EditType["SHADER"] = 20] = "SHADER";
             /**数组 */
-            EditType[EditType["ARRAY"] = 20] = "ARRAY";
+            EditType[EditType["ARRAY"] = 21] = "ARRAY";
             /**
              *
              */
-            EditType[EditType["NESTED"] = 21] = "NESTED";
+            EditType[EditType["BUTTON"] = 22] = "BUTTON";
+            /**
+             *
+             */
+            EditType[EditType["NESTED"] = 23] = "NESTED";
         })(EditType = editor.EditType || (editor.EditType = {}));
         var customMap = {};
         /**
@@ -998,6 +1009,10 @@ var paper;
         function BaseComponent() {
             var _this = _super.call(this) || this;
             /**
+             *
+             */
+            _this.hideFlags = 0 /* None */;
+            /**
              * 该组件的实体。
              */
             _this.gameObject = null;
@@ -1174,6 +1189,9 @@ var paper;
          * 所有已注册的单例组件类。
          */
         BaseComponent._allSingletonComponents = [];
+        __decorate([
+            paper.serializedField
+        ], BaseComponent.prototype, "hideFlags", void 0);
         __decorate([
             paper.serializedField
         ], BaseComponent.prototype, "extras", void 0);
@@ -3593,7 +3611,7 @@ var paper;
             paper.editor.property(1 /* INT */, { minimum: -1 })
         ], BaseRenderer.prototype, "lightmapIndex", null);
         __decorate([
-            paper.editor.property(13 /* MATERIAL_ARRAY */)
+            paper.editor.property(14 /* MATERIAL_ARRAY */)
         ], BaseRenderer.prototype, "materials", null);
         return BaseRenderer;
     }(paper.BaseComponent));
@@ -5599,7 +5617,7 @@ var egret3d;
         ], BaseLight.prototype, "intensity", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(9 /* COLOR */)
+            paper.editor.property(10 /* COLOR */)
         ], BaseLight.prototype, "color", void 0);
         __decorate([
             paper.serializedField,
@@ -9109,13 +9127,13 @@ var egret3d;
             paper.serializedField("localScale")
         ], Transform.prototype, "_localScale", void 0);
         __decorate([
-            paper.editor.property(6 /* VECTOR3 */)
+            paper.editor.property(7 /* VECTOR3 */)
         ], Transform.prototype, "localPosition", null);
         __decorate([
-            paper.editor.property(6 /* VECTOR3 */, { step: 1.0 })
+            paper.editor.property(7 /* VECTOR3 */, { step: 1.0 })
         ], Transform.prototype, "localEulerAngles", null);
         __decorate([
-            paper.editor.property(6 /* VECTOR3 */)
+            paper.editor.property(7 /* VECTOR3 */)
         ], Transform.prototype, "localScale", null);
         __decorate([
             paper.serializedField,
@@ -9144,15 +9162,8 @@ var egret3d;
              * 当舞台尺寸改变时派发事件。
              */
             _this.onResize = new signals.Signal();
-            /**
-             * 是否允许因屏幕尺寸的改变而旋转舞台。
-             */
-            _this.rotateEnabled = true;
-            /**
-             * 舞台是否因屏幕尺寸的改变而发生了旋转。
-             * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于舞台尺寸宽度。
-             */
-            _this.rotated = false;
+            _this._rotateEnabled = true;
+            _this._rotated = false;
             _this._screenSize = { w: 1024, h: 1024 };
             _this._size = { w: 1024, h: 1024 };
             _this._viewport = { x: 0, y: 0, w: 0, h: 0 };
@@ -9162,20 +9173,21 @@ var egret3d;
             var screenSize = this._screenSize;
             var size = this._size;
             var viewport = this._viewport;
-            // viewport.w = Math.ceil(size.w);
-            if (this.rotateEnabled && (this.rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h)) {
-                viewport.w = Math.ceil(Math.min(size.w, screenSize.h));
+            viewport.w = Math.ceil(size.w);
+            if (this._rotateEnabled && (this._rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h)) {
+                // viewport.w = Math.ceil(Math.min(size.w, screenSize.h));
                 viewport.h = Math.ceil(viewport.w / screenSize.h * screenSize.w);
             }
             else {
-                viewport.w = Math.ceil(Math.min(size.w, screenSize.w));
+                this._rotated = false;
+                // viewport.w = Math.ceil(Math.min(size.w, screenSize.w));
                 viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
             }
         };
         Stage.prototype.initialize = function (config) {
             _super.prototype.initialize.call(this);
             egret3d.stage = this;
-            this.rotateEnabled = config.rotateEnabled;
+            this._rotateEnabled = config.rotateEnabled;
             this._size.w = config.size.w;
             this._size.h = config.size.h;
             this._screenSize.w = config.screenSize.w;
@@ -9189,7 +9201,7 @@ var egret3d;
             var screenSize = this._screenSize;
             var viewPort = this._viewport;
             var x = value.x, y = value.y;
-            if (this.rotated) {
+            if (this._rotated) {
                 out.y = (screenSize.w - (x - viewPort.x)) * (viewPort.w / screenSize.h);
                 out.x = (y - viewPort.y) * (viewPort.h / screenSize.w);
             }
@@ -9206,6 +9218,34 @@ var egret3d;
             // TODO
             return this;
         };
+        Object.defineProperty(Stage.prototype, "rotateEnabled", {
+            /**
+             * 是否允许因屏幕尺寸的改变而旋转舞台。
+             */
+            get: function () {
+                return this._rotateEnabled;
+            },
+            set: function (value) {
+                if (this._rotateEnabled === value) {
+                    return;
+                }
+                this._rotateEnabled = value;
+                this._updateViewport();
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "rotated", {
+            /**
+             * 舞台是否因屏幕尺寸的改变而发生了旋转。
+             * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于舞台尺寸宽度。
+             */
+            get: function () {
+                return this._rotated;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Stage.prototype, "screenSize", {
             /**
              * 屏幕尺寸。
@@ -9258,6 +9298,21 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
+        __decorate([
+            paper.editor.property(4 /* CHECKBOX */)
+        ], Stage.prototype, "rotateEnabled", null);
+        __decorate([
+            paper.editor.property(4 /* CHECKBOX */, { readonly: true })
+        ], Stage.prototype, "rotated", null);
+        __decorate([
+            paper.editor.property(5 /* SIZE */)
+        ], Stage.prototype, "screenSize", null);
+        __decorate([
+            paper.editor.property(5 /* SIZE */)
+        ], Stage.prototype, "size", null);
+        __decorate([
+            paper.editor.property(12 /* RECT */, { readonly: true })
+        ], Stage.prototype, "viewport", null);
         return Stage;
     }(paper.SingletonComponent));
     egret3d.Stage = Stage;
@@ -10589,7 +10644,7 @@ var egret3d;
         };
         __decorate([
             paper.serializedField,
-            paper.editor.property(21 /* NESTED */)
+            paper.editor.property(23 /* NESTED */)
         ], BoxCollider.prototype, "aabb", void 0);
         BoxCollider = __decorate([
             paper.allowMultiple
@@ -10634,7 +10689,7 @@ var egret3d;
         };
         __decorate([
             paper.serializedField,
-            paper.editor.property(21 /* NESTED */)
+            paper.editor.property(23 /* NESTED */)
         ], SphereCollider.prototype, "sphere", void 0);
         SphereCollider = __decorate([
             paper.allowMultiple
@@ -11220,7 +11275,7 @@ var egret3d;
         ], Camera.prototype, "clearOption_Depth", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(10 /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.CullingMask) })
+            paper.editor.property(11 /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.CullingMask) })
         ], Camera.prototype, "cullingMask", void 0);
         __decorate([
             paper.serializedField,
@@ -11240,11 +11295,11 @@ var egret3d;
         ], Camera.prototype, "opvalue", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(9 /* COLOR */)
+            paper.editor.property(10 /* COLOR */)
         ], Camera.prototype, "backgroundColor", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(11 /* RECT */)
+            paper.editor.property(12 /* RECT */)
         ], Camera.prototype, "viewport", void 0);
         __decorate([
             paper.serializedField
@@ -12796,7 +12851,7 @@ var egret3d;
             paper.serializedField
         ], MeshFilter.prototype, "_mesh", void 0);
         __decorate([
-            paper.editor.property(18 /* MESH */)
+            paper.editor.property(19 /* MESH */)
         ], MeshFilter.prototype, "mesh", null);
         return MeshFilter;
     }(paper.BaseComponent));
@@ -16920,7 +16975,7 @@ var egret3d;
                 paper.serializedField
             ], ParticleRenderer.prototype, "_mesh", void 0);
             __decorate([
-                paper.editor.property(18 /* MESH */)
+                paper.editor.property(19 /* MESH */)
             ], ParticleRenderer.prototype, "mesh", null);
             return ParticleRenderer;
         }(paper.BaseRenderer));
@@ -18179,7 +18234,7 @@ var paper;
         ], GameObject.prototype, "hideFlags", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(10 /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.Layer) })
+            paper.editor.property(11 /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.Layer) })
         ], GameObject.prototype, "layer", void 0);
         __decorate([
             paper.serializedField,
@@ -18187,7 +18242,7 @@ var paper;
         ], GameObject.prototype, "name", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(10 /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.DefaultTags) })
+            paper.editor.property(11 /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.DefaultTags) })
         ], GameObject.prototype, "tag", void 0);
         __decorate([
             paper.serializedField
@@ -18476,11 +18531,11 @@ var paper;
         ], Scene.prototype, "lightmapIntensity", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(9 /* COLOR */)
+            paper.editor.property(10 /* COLOR */)
         ], Scene.prototype, "ambientColor", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property(21 /* NESTED */)
+            paper.editor.property(23 /* NESTED */)
         ], Scene.prototype, "fog", void 0);
         __decorate([
             paper.serializedField
@@ -19498,10 +19553,10 @@ var egret3d;
         AABB.ONE = new AABB().set(egret3d.Vector3.MINUS_ONE.clone().multiplyScalar(0.5), egret3d.Vector3.ONE.clone().multiplyScalar(0.5));
         AABB._instances = [];
         __decorate([
-            paper.editor.property(6 /* VECTOR3 */, { minimum: 0.0 })
+            paper.editor.property(7 /* VECTOR3 */, { minimum: 0.0 })
         ], AABB.prototype, "size", null);
         __decorate([
-            paper.editor.property(6 /* VECTOR3 */)
+            paper.editor.property(7 /* VECTOR3 */)
         ], AABB.prototype, "center", null);
         return AABB;
     }(paper.BaseRelease));
@@ -20420,7 +20475,7 @@ var egret3d;
             return this;
         };
         __decorate([
-            paper.editor.property(10 /* LIST */, { listItems: paper.editor.getItemsFromEnum(FogMode) })
+            paper.editor.property(11 /* LIST */, { listItems: paper.editor.getItemsFromEnum(FogMode) })
         ], Fog.prototype, "mode", void 0);
         __decorate([
             paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
@@ -20432,7 +20487,7 @@ var egret3d;
             paper.editor.property(2 /* FLOAT */, { minimum: 0.02, step: 1.0 })
         ], Fog.prototype, "far", void 0);
         __decorate([
-            paper.editor.property(9 /* COLOR */)
+            paper.editor.property(10 /* COLOR */)
         ], Fog.prototype, "color", void 0);
         return Fog;
     }());
@@ -22601,7 +22656,7 @@ var egret3d;
                     //     (event as any).clientX -= canvas.clientLeft;
                     //     (event as any).clientY -= canvas.clientTop;
                     // }
-                    pointer.position.set(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop, 0.0);
+                    pointer.position.set(event.clientX - (canvas.offsetLeft || 0.0), event.clientY - (canvas.offsetTop || 0.0), 0.0);
                     egret3d.stage.screenToStage(pointer.position, pointer.position);
                     switch (event.type) {
                         case "pointerover":
@@ -22688,7 +22743,7 @@ var egret3d;
                     //     (pointerEvent as any).clientX -= canvas.clientLeft;
                     //     (pointerEvent as any).clientY -= canvas.clientTop;
                     // }
-                    pointer.position.set(event.clientX - canvas.offsetLeft, event.clientY - canvas.offsetTop, 0.0);
+                    pointer.position.set(event.clientX - (canvas.offsetLeft || 0.0), event.clientY - (canvas.offsetTop || 0.0), 0.0);
                     egret3d.stage.screenToStage(pointer.position, pointer.position);
                     switch (event.type) {
                         case "mouseover":
@@ -22781,7 +22836,7 @@ var egret3d;
                     //     (pointerEvent as any).clientX -= canvas.clientLeft;
                     //     (pointerEvent as any).clientY -= canvas.clientTop;
                     // }
-                    pointer.position.set(pointerEvent.clientX - canvas.offsetLeft, pointerEvent.clientY - canvas.offsetTop, 0.0);
+                    pointer.position.set(pointerEvent.clientX - (canvas.offsetLeft || 0.0), pointerEvent.clientY - (canvas.offsetTop || 0.0), 0.0);
                     egret3d.stage.screenToStage(pointer.position, pointer.position);
                     switch (event.type) {
                         case "touchstart":
@@ -22811,10 +22866,10 @@ var egret3d;
                                         eachPointerEvent.screenX = eachTouch.screenX;
                                         eachPointerEvent.screenY = eachTouch.screenY;
                                         eachPointerEvent.type = "pointermove";
-                                        if (event.target !== canvas) {
-                                            eachPointerEvent.clientX -= canvas.clientLeft;
-                                            eachPointerEvent.clientY -= canvas.clientTop;
-                                        }
+                                        // if (event.target !== canvas) {
+                                        //     (eachPointerEvent as any).clientX -= canvas.clientLeft;
+                                        //     (eachPointerEvent as any).clientY -= canvas.clientTop;
+                                        // }
                                         eachPointer.position.set(eachPointerEvent.clientX, eachPointerEvent.clientY, 0.0);
                                         egret3d.stage.screenToStage(eachPointer.position, eachPointer.position);
                                         egret3d.inputCollecter.onPointerMove.dispatch(eachPointer, egret3d.inputCollecter.onPointerMove);
@@ -24135,7 +24190,7 @@ var egret3d;
             paper.editor.property(2 /* FLOAT */, { minimum: 0.0 })
         ], Sphere.prototype, "radius", void 0);
         __decorate([
-            paper.editor.property(6 /* VECTOR3 */)
+            paper.editor.property(7 /* VECTOR3 */)
         ], Sphere.prototype, "center", void 0);
         return Sphere;
     }(paper.BaseRelease));
@@ -24298,38 +24353,38 @@ var paper;
                     case 3 /* TEXT */:
                     case 4 /* CHECKBOX */:
                         return value;
-                    case 5 /* VECTOR2 */:
-                    case 6 /* VECTOR3 */:
-                    case 7 /* VECTOR4 */:
-                    case 8 /* QUATERNION */:
-                    case 9 /* COLOR */:
-                    case 11 /* RECT */:
+                    case 6 /* VECTOR2 */:
+                    case 7 /* VECTOR3 */:
+                    case 8 /* VECTOR4 */:
+                    case 9 /* QUATERNION */:
+                    case 10 /* COLOR */:
+                    case 12 /* RECT */:
                         var className = egret.getQualifiedClassName(value);
                         var serializeData = value.serialize(value);
                         return { className: className, serializeData: serializeData };
-                    case 19 /* SHADER */:
+                    case 20 /* SHADER */:
                         return value.name;
-                    case 10 /* LIST */:
+                    case 11 /* LIST */:
                         return value;
-                    case 13 /* MATERIAL_ARRAY */:
+                    case 14 /* MATERIAL_ARRAY */:
                         var data = value.map(function (item) {
                             return { name: item.name, url: item.name };
                         });
                         return data;
-                    case 18 /* MESH */:
+                    case 19 /* MESH */:
                         if (!value)
                             return '';
                         var url = value.name;
                         return url;
-                    case 14 /* GAMEOBJECT */:
+                    case 15 /* GAMEOBJECT */:
                         if (!value) {
                             return null;
                         }
                         return value.uuid;
-                    case 12 /* MATERIAL */:
-                    case 15 /* TRANSFROM */:
-                    case 17 /* SOUND */:
-                    case 20 /* ARRAY */:
+                    case 13 /* MATERIAL */:
+                    case 16 /* TRANSFROM */:
+                    case 18 /* SOUND */:
+                    case 21 /* ARRAY */:
                         //TODO
                         console.error("not supported!");
                         break;
@@ -24345,12 +24400,12 @@ var paper;
                     case 3 /* TEXT */:
                     case 4 /* CHECKBOX */:
                         return serializeData;
-                    case 5 /* VECTOR2 */:
-                    case 6 /* VECTOR3 */:
-                    case 7 /* VECTOR4 */:
-                    case 8 /* QUATERNION */:
-                    case 9 /* COLOR */:
-                    case 11 /* RECT */:
+                    case 6 /* VECTOR2 */:
+                    case 7 /* VECTOR3 */:
+                    case 8 /* VECTOR4 */:
+                    case 9 /* QUATERNION */:
+                    case 10 /* COLOR */:
+                    case 12 /* RECT */:
                         var clazz = egret.getDefinitionByName(serializeData.className);
                         var target = null;
                         if (clazz) {
@@ -24358,13 +24413,13 @@ var paper;
                             target.deserialize(serializeData.serializeData);
                         }
                         return target;
-                    case 19 /* SHADER */:
+                    case 20 /* SHADER */:
                         var url = serializeData;
                         var asset = paper.Asset.find(url);
                         return asset;
-                    case 10 /* LIST */:
+                    case 11 /* LIST */:
                         return serializeData;
-                    case 13 /* MATERIAL_ARRAY */:
+                    case 14 /* MATERIAL_ARRAY */:
                         var materials = [];
                         for (var _i = 0, serializeData_1 = serializeData; _i < serializeData_1.length; _i++) {
                             var matrial = serializeData_1[_i];
@@ -24372,18 +24427,18 @@ var paper;
                             materials.push(asset_1);
                         }
                         return materials;
-                    case 18 /* MESH */:
+                    case 19 /* MESH */:
                         var meshAsset = paper.Asset.find(serializeData);
                         return meshAsset;
-                    case 14 /* GAMEOBJECT */:
+                    case 15 /* GAMEOBJECT */:
                         if (!serializeData) {
                             return null;
                         }
                         return this.getGameObjectByUUid(serializeData);
-                    case 12 /* MATERIAL */:
-                    case 15 /* TRANSFROM */:
-                    case 17 /* SOUND */:
-                    case 20 /* ARRAY */:
+                    case 13 /* MATERIAL */:
+                    case 16 /* TRANSFROM */:
+                    case 18 /* SOUND */:
+                    case 21 /* ARRAY */:
                         //TODO
                         console.error("not supported!");
                         return null;
@@ -24654,10 +24709,10 @@ var paper;
                 return result;
             };
             EditorModel.prototype.setTargetProperty = function (propName, target, value, editType) {
-                if (editType !== 5 /* VECTOR2 */ &&
-                    editType !== 6 /* VECTOR3 */ &&
-                    editType !== 7 /* VECTOR4 */ &&
-                    editType !== 9 /* COLOR */) {
+                if (editType !== 6 /* VECTOR2 */ &&
+                    editType !== 7 /* VECTOR3 */ &&
+                    editType !== 8 /* VECTOR4 */ &&
+                    editType !== 10 /* COLOR */) {
                     target[propName] = value;
                     return;
                 }
@@ -24666,25 +24721,25 @@ var paper;
                 }
                 else {
                     switch (editType) {
-                        case 5 /* VECTOR2 */:
+                        case 6 /* VECTOR2 */:
                             var vec2 = target[propName];
                             vec2.x = value.x;
                             vec2.y = value.y;
                             break;
-                        case 6 /* VECTOR3 */:
+                        case 7 /* VECTOR3 */:
                             var vec3 = target[propName];
                             vec3.x = value.x;
                             vec3.y = value.y;
                             vec3.z = value.z;
                             break;
-                        case 7 /* VECTOR4 */:
+                        case 8 /* VECTOR4 */:
                             var vec4 = target[propName];
                             vec4.x = value.x;
                             vec4.y = value.y;
                             vec4.z = value.z;
                             vec4.w = value.w;
                             break;
-                        case 9 /* COLOR */:
+                        case 10 /* COLOR */:
                             var color = target[propName];
                             color.r = value.r;
                             color.g = value.g;
@@ -27100,6 +27155,49 @@ var egret3d;
          * @deprecated
          * @see egret3d.inputCollecter
          */
+        mouse: {
+            /**
+             * @deprecated
+             * @see egret3d.inputCollecter.defaultPointer.isHold()
+             */
+            isPressed: function (button) {
+                var buttons = [1 /* LeftMouse */, 4 /* MiddleMouse */, 2 /* RightMouse */];
+                return egret3d.inputCollecter.defaultPointer.isHold(buttons[button]);
+            },
+            /**
+             * @deprecated
+             * @see egret3d.inputCollecter.defaultPointer.isDown()
+             */
+            wasPressed: function (button) {
+                var buttons = [1 /* LeftMouse */, 4 /* MiddleMouse */, 2 /* RightMouse */];
+                return egret3d.inputCollecter.defaultPointer.isDown(buttons[button]);
+            },
+            /**
+             * @deprecated
+             * @see egret3d.inputCollecter.defaultPointer.isUp()
+             */
+            wasReleased: function (button) {
+                var buttons = [1 /* LeftMouse */, 4 /* MiddleMouse */, 2 /* RightMouse */];
+                return egret3d.inputCollecter.defaultPointer.isUp(buttons[button]);
+            },
+        },
+        /**
+         * @deprecated
+         * @see egret3d.inputCollecter
+         */
+        touch: {
+            /**
+             * @deprecated
+             * @see egret3d.inputCollecter.defaultPointer
+             */
+            getTouch: function (button) {
+                return undefined;
+            },
+        },
+        /**
+         * @deprecated
+         * @see egret3d.inputCollecter
+         */
         keyboard: {
             /**
              * @deprecated
@@ -27115,6 +27213,6 @@ var egret3d;
             wasPressed: function (key) {
                 return egret3d.inputCollecter.getKey("Key" + key.toUpperCase()).isUp();
             },
-        }
+        },
     };
 })(egret3d || (egret3d = {}));
