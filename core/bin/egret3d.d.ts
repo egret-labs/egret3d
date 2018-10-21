@@ -272,15 +272,27 @@ declare namespace paper {
      */
     abstract class BaseRelease<T extends BaseRelease<T>> {
         /**
+         *
+         */
+        onUpdateTarget?: any;
+        /**
          * 是否已被释放。
          * - 将对象从对象池取出时，需要设置此值为 `false`。
          */
         protected _released?: boolean;
         /**
+         * 更新该对象，使得该对象的 `onUpdate` 被执行。
+         */
+        update(): void;
+        /**
          * 在此帧末尾释放该对象。
          * - 不能在静态解释阶段执行。
          */
         release(): this;
+        /**
+         *
+         */
+        onUpdate?(v: T): void;
         /**
          * 在此帧末尾释放时调用。
          */
@@ -545,7 +557,7 @@ declare namespace egret3d {
         z: number;
     }
     /**
-     * 欧拉角旋转顺序。
+     * 欧拉旋转顺序。
      */
     const enum EulerOrder {
         XYZ = 0,
@@ -558,57 +570,57 @@ declare namespace egret3d {
     /**
      * 三维向量。
      */
-    class Vector3 extends paper.BaseRelease<AABB> implements IVector3, paper.ICCS<Vector3>, paper.ISerializable {
+    class Vector3 extends paper.BaseRelease<Vector3> implements IVector3, paper.ICCS<Vector3>, paper.ISerializable {
         /**
-         * 零
+         * 零向量。
          */
         static readonly ZERO: Readonly<IVector3> & {
             clone: () => Vector3;
         };
         /**
-         * 三方向均为一的向量
+         * 三方向均为一的向量。
          */
         static readonly ONE: Readonly<IVector3> & {
             clone: () => Vector3;
         };
         /**
-         * 三方向均为负一的向量
+         * 三方向均为负一的向量。
          */
         static readonly MINUS_ONE: Readonly<IVector3> & {
             clone: () => Vector3;
         };
         /**
-         * 上
+         * 上向量。
          */
         static readonly UP: Readonly<IVector3> & {
             clone: () => Vector3;
         };
         /**
-         * 下
+         * 下向量。
          */
         static readonly DOWN: Readonly<IVector3> & {
             clone: () => Vector3;
         };
         /**
-         * 左
+         * 左向量。
          */
         static readonly LEFT: Readonly<IVector3> & {
             clone: () => Vector3;
         };
         /**
-         * 右
+         * 右向量。
          */
         static readonly RIGHT: Readonly<IVector3> & {
             clone: () => Vector3;
         };
         /**
-         * 前
+         * 前向量。
          */
         static readonly FORWARD: Readonly<IVector3> & {
             clone: () => Vector3;
         };
         /**
-         * 后
+         * 后向量。
          */
         static readonly BACK: Readonly<IVector3> & {
             clone: () => Vector3;
@@ -645,36 +657,196 @@ declare namespace egret3d {
         copy(value: Readonly<IVector3>): this;
         clone(): Vector3;
         set(x: number, y: number, z: number): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        /**
+         * 通过数组设置该向量。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        fromArray(array: Readonly<ArrayLike<number>>, offset?: number): this;
+        clear(): this;
+        /**
+         * 向量归一化。
+         * - `v.normalize()` 归一化该向量，相当于 v /= v.length。
+         * - `v.normalize(input)` 将输入向量归一化的结果写入该向量，相当于 v = input / input.length。
+         * @param input 输入向量。
+         * @param defaultVector 如果该向量的长度为 0，则默认归一化的向量。
+         */
+        normalize(input?: Readonly<IVector3>, defaultVector?: Readonly<IVector3>): this;
+        /**
+         *
+         * @param input 输入向量。
+         */
+        negate(input?: Readonly<IVector3>): this;
+        /**
+         * 判断该向量是否和一个向量相等。
+         * @param value 一个向量。
+         * @param threshold 阈值。
+         */
+        equal(value: Readonly<IVector3>, threshold?: number): boolean;
         fromSphericalCoords(vector3: Readonly<IVector3>): this;
         fromSphericalCoords(radius: number, phi: number, theta: number): this;
-        clear(): void;
-        equal(value: Readonly<IVector3>, threshold?: number): boolean;
-        fromPlaneProjection(plane: Readonly<Plane>, source?: Readonly<IVector3>): this;
-        applyMatrix3(matrix: Readonly<Matrix3>, source?: Readonly<IVector3>): this;
-        applyMatrix(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
-        applyDirection(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>): this;
-        applyQuaternion(quaternion: Readonly<IVector4>, source?: Readonly<IVector3>): this;
-        normalize(source?: Readonly<IVector3>, defaultAxis?: Readonly<IVector3>): this;
-        negate(source?: Readonly<IVector3>): this;
-        addScalar(add: number, source?: Readonly<IVector3>): this;
+        fromPlaneProjection(plane: Readonly<Plane>, input?: Readonly<IVector3>): this;
+        applyMatrix3(matrix: Readonly<Matrix3>, input?: Readonly<IVector3>): this;
+        /**
+         * 向量与矩阵相乘运算。
+         * - `v.applyMatrix(matrix)` 将该向量与一个矩阵相乘，相当于 v *= matrix。
+         * - `v.applyMatrix(matrix, input)` 将输入向量与一个矩阵相乘的结果写入该向量，相当于 v = input * matrix。
+         * @param matrix 一个矩阵。
+         * @param input 输入向量。
+         */
+        applyMatrix(matrix: Readonly<Matrix4>, input?: Readonly<IVector3>): this;
+        /**
+         * 向量与矩阵相乘运算。
+         * - `v.applyDirection(matrix)` 将该向量与一个矩阵相乘，相当于 v *= matrix。
+         * - `v.applyDirection(matrix, input)` 将输入向量与一个矩阵相乘的结果写入该向量，相当于 v = input * matrix。
+         * @param matrix 一个矩阵。
+         * @param input 输入向量。
+         */
+        applyDirection(matrix: Readonly<Matrix4>, input?: Readonly<IVector3>): this;
+        /**
+         * 向量与四元数相乘运算。
+         * - `v.applyQuaternion(quaternion)` 将该向量与一个四元数相乘，相当于 v *= quaternion。
+         * - `v.applyQuaternion(quaternion, input)` 将输入向量与一个四元数相乘的结果写入该向量，相当于 v = input * quaternion。
+         * @param matrix 一个四元数。
+         * @param input 输入向量。
+         */
+        applyQuaternion(quaternion: Readonly<IVector4>, input?: Readonly<IVector3>): this;
+        /**
+         * 向量与标量相加运算。
+         * - `v.addScalar(scalar)` 将该向量与标量相加，相当于 v += scalar。
+         * - `v.addScalar(scalar, input)` 将输入向量与标量相加的结果写入该向量，相当于 v = input + scalar。
+         * @param scalar 标量。
+         * @param input 输入向量。
+         */
+        addScalar(scalar: number, input?: Readonly<IVector3>): this;
+        /**
+         * 向量与标量相乘运算。
+         * - `v.multiplyScalar(scalar)` 将该向量与标量相乘，相当于 v *= scalar。
+         * - `v.multiplyScalar(scalar, input)` 将输入向量与标量相乘的结果写入该向量，相当于 v = input * scalar。
+         * @param scalar 标量。
+         * @param input 输入向量。
+         */
+        multiplyScalar(scalar: number, input?: Readonly<IVector3>): this;
+        /**
+         * 向量相加运算。
+         * - `v.add(a)` 将该向量与一个向量相加，相当于 v += a。
+         * - `v.add(a, b)` 将两个向量相加的结果写入该向量，相当于 v = a + b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         add(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        /**
+         * 向量相减运算。
+         * - `v.subtract(a)` 将该向量与一个向量相减，相当于 v -= a。
+         * - `v.subtract(a, b)` 将两个向量相减的结果写入该向量，相当于 v = a - b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         subtract(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
-        multiplyScalar(scale: number, source?: Readonly<IVector3>): this;
+        /**
+         * 向量相乘运算。
+         * - `v.multiply(a)` 将该向量与一个向量相乘，相当于 v *= a。
+         * - `v.multiply(a, b)` 将两个向量相乘的结果写入该向量，相当于 v = a * b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         multiply(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        /**
+         * 向量相除运算。
+         * - 假设除向量分量均不为零。
+         * - `v.divide(a)` 将该向量与一个向量相除，相当于 v /= a。
+         * - `v.divide(a, b)` 将两个向量相除的结果写入该向量，相当于 v = a / b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
+        divide(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        /**
+         * 向量点乘运算。
+         * - `v.dot(a)` 将该向量与一个向量点乘，相当于 v ·= a。
+         * - `v.dot(a, b)` 将两个向量点乘的结果写入该向量，相当于 v = a · b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         dot(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): number;
+        /**
+         * 向量叉乘运算。
+         * - `v.cross(a)` 将该向量与一个向量叉乘，相当于 v ×= a。
+         * - `v.cross(a, b)` 将两个向量叉乘的结果写入该向量，相当于 v = a × b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         cross(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        /**
+         * 向量插值运算。
+         * - `v.lerp(t, a)` 将该向量与一个向量插值，相当于 v = v * (1 - t) + a * t。
+         * - `v.lerp(t, a, b)` 将两个向量插值的结果写入该向量，相当于 v = a * (1 - t) + b * t。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         lerp(t: number, valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        /**
+         * 向量最小值运算。
+         * - `v.min(a)` 将该向量与一个向量的最小值写入该向量，相当于 v = min(v, a)。
+         * - `v.min(a, b)` 将两个向量的最小值写入该向量，相当于 v = min(a, b)。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         min(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
+        /**
+         * 向量最大值运算。
+         * - `v.max(a)` 将该向量与一个向量的最大值写入该向量，相当于 v = max(v, a)。
+         * - `v.max(a, b)` 将两个向量的最大值写入该向量，相当于 v = max(a, b)。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         max(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>): this;
-        clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, source?: Readonly<IVector3>): this;
-        divide(source?: Readonly<IVector3>): this;
+        /**
+         * 向量夹紧运算。
+         * - 假设最小向量小于最大向量。
+         * - `v.clamp(valueMin, valueMax)` 相当于 v = max(valueMin, min(valueMax, v))。
+         * - `v.clamp(valueMin, valueMax, input)` 相当于 v = max(valueMin, min(valueMax, input))。
+         * @param valueMin 最小向量。
+         * @param valueMax 最大向量。
+         * @param input 输入向量。
+         */
+        clamp(valueMin: Readonly<IVector3>, valueMax: Readonly<IVector3>, input?: Readonly<IVector3>): this;
+        /**
+         *
+         * @param vector
+         * @param input
+         */
+        reflect(vector: Readonly<IVector3>, input?: Readonly<IVector3>): this;
+        /**
+         * 获得该向量和一个向量的夹角。（弧度制）
+         * - 假设向量长度均不为零。
+         */
         getAngle(value: Readonly<IVector3>): number;
+        /**
+         * 获取该向量和一个向量之间的距离的平方。
+         * @param value 一个向量。
+         */
         getSquaredDistance(value: Readonly<IVector3>): number;
+        /**
+         * 获取该向量和一个向量之间的距离。
+         * @param value 一个向量。
+         */
         getDistance(value: Readonly<IVector3>): number;
-        closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>): this;
-        toArray(value: number[] | Float32Array, offset?: number): number[] | Float32Array;
+        closestToTriangle(triangle: Readonly<Triangle>, input?: Readonly<IVector3>): this;
+        /**
+         * 将该向量转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
+        /**
+         * 该向量的长度。
+         * - 该值是实时计算的。
+         */
         readonly length: number;
+        /**
+         * 该向量的长度的平方。
+         * - 该值是实时计算的。
+         */
         readonly squaredLength: number;
         /**
          * @deprecated
@@ -742,7 +914,7 @@ declare namespace egret3d {
         static readonly IDENTITY: Readonly<Matrix4>;
         private static readonly _instances;
         /**
-         *
+         * 创建一个矩阵。
          * @param rawData
          * @param offsetOrByteOffset
          */
@@ -762,8 +934,8 @@ declare namespace egret3d {
         deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): Matrix4;
         copy(value: Readonly<Matrix4>): this;
         clone(): Matrix4;
-        identity(): Matrix4;
         set(n11: number, n12: number, n13: number, n14: number, n21: number, n22: number, n23: number, n24: number, n31: number, n32: number, n33: number, n34: number, n41: number, n42: number, n43: number, n44: number): Matrix4;
+        identity(): Matrix4;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): Matrix4;
         fromBuffer(value: ArrayBuffer, byteOffset?: number): Matrix4;
         fromTranslate(value: Readonly<IVector3>, rotationAndScaleStays?: boolean): Matrix4;
@@ -780,27 +952,63 @@ declare namespace egret3d {
         decompose(translation?: Vector3 | null, rotation?: Quaternion | null, scale?: Vector3 | null): Matrix4;
         transpose(source?: Readonly<Matrix4>): Matrix4;
         inverse(source?: Readonly<Matrix4>): Matrix4;
-        multiplyScalar(value: number, source?: Readonly<Matrix4>): void;
+        /**
+         *
+         * @param scale
+         * @param input
+         */
+        multiplyScalar(scale: number, input?: Readonly<Matrix4>): void;
+        /**
+         * - `v.multiply(a)` 将该矩阵与一个矩阵相乘的结果写入该矩阵，相当于 v *= a。
+         * - `v.multiply(a, b)` 将两个矩阵相乘的结果写入该矩阵，相当于 v = a * b。
+         * @param valueA 一个矩阵。
+         * @param valueB 另一个矩阵。
+         */
         multiply(valueA: Readonly<Matrix4>, valueB?: Readonly<Matrix4>): Matrix4;
+        /**
+         * 将一个矩阵与该矩阵相乘的结果写入该矩阵，相当于 v = x * v。
+         * @param value 一个矩阵。
+         */
         premultiply(value: Readonly<Matrix4>): Matrix4;
-        lerp(t: number, value: Matrix4, source?: Matrix4): Matrix4;
         /**
-         * 设置该矩阵，使得其 Z 轴正方向指向目标点。
-         * @param eye 起始点。
-         * @param target 目标点。
-         * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
+         * - `v.lert(t, a)` 将该矩阵和一个矩阵插值的结果写入该矩阵。
+         * - `v.lert(t, a, b)` 将两个矩阵插值的结果写入该矩阵。
+         * @param t 插值。
+         * @param valueA 一个矩阵。
+         * @param valueB 另一个矩阵。
          */
-        lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4;
+        lerp(t: number, valueA: Matrix4, valueB?: Matrix4): Matrix4;
         /**
-         * 设置该矩阵，使得其 Z 轴正方向指向目标方向。
+         * 设置该矩阵，使其 Z 轴正方向指向目标点。
          * - 矩阵的缩放值将被覆盖。
-         * @param target 目标方向。
-         * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
+         * @param from 起始点。
+         * @param to 目标点。
+         * @param up 旋转后，该矩阵的 Y 轴正方向。
          */
-        lookRotation(direction: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4;
+        lookAt(from: Readonly<IVector3>, to: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4;
+        /**
+         * 设置该矩阵，使其 Z 轴正方向指向目标方向。
+         * - 矩阵的缩放值将被覆盖。
+         * @param vector 目标方向。
+         * @param up 旋转后，该矩阵的 Y 轴正方向。
+         */
+        lookRotation(vector: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4;
+        /**
+         * 获得该矩阵最大的缩放值。
+         */
         getMaxScaleOnAxis(): number;
-        toArray(value?: number[] | Float32Array, offset?: number): number[] | Float32Array;
-        toEuler(value: Vector3, order?: EulerOrder): Vector3;
+        /**
+         * 将该旋转矩阵转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
+        /**
+         * 将该旋转矩阵转换为欧拉旋转。
+         * @param euler 欧拉旋转。（弧度制）
+         * @param order 欧拉旋转顺序。
+         */
+        toEuler(euler?: Vector3, order?: EulerOrder): Vector3;
         /**
          * @deprecated
          */
@@ -914,10 +1122,50 @@ declare namespace egret3d {
         set(x: number, y: number, z: number, w: number): this;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
         clear(): void;
+        /**
+         * 向量归一化。
+         * - `v.normalize()` 归一化该向量，相当于 v /= v.length。
+         * - `v.normalize(input)` 将输入向量归一化的结果写入该向量，相当于 v = input / input.length。
+         * @param input 输入向量。
+         */
         normalize(input?: Readonly<IVector4>): this;
-        multiplyScalar(scale: number, input?: Readonly<IVector4>): this;
-        toArray(value: number[] | Float32Array, offset?: number): number[] | Float32Array;
+        /**
+         * 判断该向量是否和一个向量相等。
+         * @param value 一个向量。
+         * @param threshold 阈值。
+         */
+        equal(value: Readonly<IVector4>, threshold?: number): boolean;
+        /**
+         * 向量与标量相乘运算。
+         * - `v.multiplyScalar(scalar)` 将该向量与标量相乘，相当于 v *= scalar。
+         * - `v.multiplyScalar(scalar, input)` 将输入向量与标量相乘的结果写入该向量，相当于 v = input * scalar。
+         * @param scalar 标量。
+         * @param input 输入向量。
+         */
+        multiplyScalar(scalar: number, input?: Readonly<IVector4>): this;
+        /**
+         * 向量点乘运算。
+         * - `v.dot(a)` 将该向量与一个向量点乘，相当于 v ·= a。
+         * - `v.dot(a, b)` 将两个向量点乘的结果写入该向量，相当于 v = a · b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
+        dot(valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): number;
+        /**
+         * 将该向量转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
+        /**
+         * 该向量的长度。
+         * - 该值是实时计算的。
+         */
         readonly length: number;
+        /**
+         * 该向量的长度的平方。
+         * - 该值是实时计算的。
+         */
         readonly squaredLength: number;
     }
 }
@@ -2905,38 +3153,86 @@ declare namespace egret3d {
         static readonly IDENTITY: Readonly<Quaternion>;
         protected static readonly _instances: Quaternion[];
         /**
-         *
+         * 创建一个四元数。
          */
         static create(x?: number, y?: number, z?: number, w?: number): Quaternion;
         clone(): Quaternion;
         /**
-         * - 旋转矩阵。
+         * 通过旋转矩阵设置该四元数。
+         * - 旋转矩阵不应包含缩放值。
+         * @param rotateMatrix 旋转矩阵。
          */
-        fromMatrix(matrix: Readonly<Matrix4>): this;
-        fromEuler(value: Readonly<IVector3>, order?: EulerOrder): this;
+        fromMatrix(rotateMatrix: Readonly<Matrix4>): this;
         /**
-         * - 向量必须已归一化。
+         * 通过欧拉旋转设置该四元数。
+         * @param euler 欧拉旋转。（弧度制）
+         * @param order 欧拉旋转顺序。
          */
-        fromAxis(axis: Readonly<IVector3>, radian: number): this;
-        inverse(source?: Readonly<IVector4>): this;
-        dot(value: Readonly<IVector4>): number;
+        fromEuler(euler: Readonly<IVector3>, order?: EulerOrder): this;
+        /**
+         * 通过指定旋转轴和旋转角设置该四元数。
+         * - 旋转轴应已被归一化。
+         * @param axis 旋转轴。
+         * @param angle 旋转角。（弧度制）
+         */
+        fromAxis(axis: Readonly<IVector3>, angle?: number): this;
+        /**
+         * 通过自起始方向到目标方向的旋转值设置该四元数。
+         * - 方向向量应已被归一化。
+         * @param from 起始方向。
+         * @param to 目标方向。
+         */
+        fromVectors(from: Readonly<IVector3>, to: Readonly<IVector3>): this;
+        /**
+         * - `v.inverse()` 反转该四元数。
+         * - `v.inverse(input)` 将反转一个四元数的结果写入该四元数。
+         * @param input
+         */
+        inverse(input?: Readonly<IVector4>): this;
+        /**
+         * 四元数相乘运算。
+         * - `v.multiply(a)` 将该四元数与一个四元数相乘，相当于 v *= a。
+         * - `v.multiply(a, b)` 将两个四元数相乘的结果写入该四元数，相当于 v = a * b。
+         * @param valueA 一个四元数。
+         * @param valueB 另一个四元数。
+         */
         multiply(valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
+        /**
+         * 将一个四元数与该四元数相乘的结果写入该四元数，相当于 v = x * v。
+         * @param value 一个四元数。
+         */
         premultiply(value: Readonly<IVector4>): this;
+        /**
+         * 四元数插值运算。
+         * - `v.lerp(t, a)` 将该四元数与一个四元数插值，相当于 v = v * (1 - t) + a * t。
+         * - `v.lerp(t, a, b)` 将两个四元数插值的结果写入该四元数，相当于 v = a * (1 - t) + b * t。
+         * @param valueA 一个四元数。
+         * @param valueB 另一个四元数。
+         */
         lerp(t: number, valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>): this;
         /**
          *
-         * @param eye
-         * @param target
-         * @param up
+         * @param from 起始点。
+         * @param to 目标点。
+         * @param up 旋转后，该四元数 Y 轴正方向。
          */
-        lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): this;
+        lookAt(from: Readonly<IVector3>, to: Readonly<IVector3>, up: Readonly<IVector3>): this;
         /**
          *
-         * @param value
-         * @param up
+         * @param vector 目标方向。
+         * @param up 旋转后，该四元数 Y 轴正方向。
          */
-        lookRotation(value: Readonly<IVector3>, up: Readonly<IVector3>): this;
-        toEuler(value: Vector3, order?: EulerOrder): Vector3;
+        lookRotation(vector: Readonly<IVector3>, up: Readonly<IVector3>): this;
+        /**
+         * 获得该四元数和一个四元数的夹角。（弧度制）
+         */
+        getAngle(value: Readonly<IVector4>): number;
+        /**
+         * 将该四元数转换为欧拉旋转。（弧度制）
+         * @param euler 欧拉旋转。
+         * @param order 欧拉旋转顺序。
+         */
+        toEuler(euler?: Vector3, order?: EulerOrder): Vector3;
     }
 }
 declare namespace egret3d {
@@ -3791,11 +4087,17 @@ declare namespace egret3d {
         private readonly _scale;
         private readonly _inverseWorldMatrix;
         private readonly _worldMatrix;
+        constructor();
         private _removeFromChildren(value);
         private _dirtify(isLocalDirty, dirty);
         private _updateMatrix(isWorldSpace);
         private _updateEuler(isWorldSpace, order?);
         protected _onParentChange(newParent: Transform | null, oldParent: Transform | null): void;
+        protected _onPositionUpdate(position: Readonly<Vector3>): void;
+        protected _onRotationUpdate(rotation: Readonly<Quaternion>): void;
+        protected _onEulerUpdate(euler: Readonly<Vector3>): void;
+        protected _onEulerAnglesUpdate(euler: Readonly<Vector3>): void;
+        protected _onScaleUpdate(scale: Readonly<Vector3>): void;
         /**
          * 销毁所有子（孙）级变换组件。
          */
@@ -3839,7 +4141,7 @@ declare namespace egret3d {
         /**
          * 该物体的本地位置。
          */
-        localPosition: Readonly<Vector3 | IVector3>;
+        localPosition: Readonly<Vector3>;
         /**
          * 该物体的本地旋转。
          */
@@ -3854,29 +4156,29 @@ declare namespace egret3d {
          */
         localRotation: Readonly<Quaternion | IVector4>;
         /**
-         * 该物体的本地欧拉弧度。
+         * 该物体的本地欧拉旋转。（弧度制）
          */
         getLocalEuler(order?: EulerOrder): Readonly<Vector3>;
         /**
-         * 该物体的本地欧拉弧度。
+         * 该物体的本地欧拉旋转。（弧度制）
          */
         setLocalEuler(value: Readonly<IVector3>, order?: EulerOrder): this;
         setLocalEuler(x: number, y: number, z: number, order?: EulerOrder): this;
         /**
-         * 该物体的本地欧拉弧度。
+         * 该物体的本地欧拉旋转。（弧度制）
          */
         localEuler: Readonly<Vector3 | IVector3>;
         /**
-         * 该物体的本地欧拉角度。
+         * 该物体的本地欧拉旋转。（角度制）
          */
         getLocalEulerAngles(order?: EulerOrder): Readonly<Vector3>;
         /**
-         * 该物体的本地欧拉角度。
+         * 该物体的本地欧拉旋转。（角度制）
          */
         setLocalEulerAngles(value: Readonly<IVector3>, order?: EulerOrder): this;
         setLocalEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
         /**
-         * 该物体的本地欧拉角度。
+         * 该物体的本地欧拉旋转。（角度制）
          */
         localEulerAngles: Readonly<Vector3 | IVector3>;
         /**
@@ -3927,29 +4229,29 @@ declare namespace egret3d {
          */
         rotation: Readonly<Quaternion | IVector4>;
         /**
-         * 该物体的世界欧拉弧度。
+         * 该物体的世界欧拉旋转。（弧度制）
          */
         getEuler(order?: EulerOrder): Readonly<Vector3>;
         /**
-         * 该物体的世界欧拉弧度。
+         * 该物体的世界欧拉旋转。（弧度制）
          */
         setEuler(v: Readonly<IVector3>, order?: EulerOrder): this;
         setEuler(x: number, y: number, z: number, order?: EulerOrder): this;
         /**
-         * 该物体的世界欧拉弧度。
+         * 该物体的世界欧拉旋转。（弧度制）
          */
         euler: Readonly<Vector3 | IVector3>;
         /**
-         * 该物体的世界欧拉角度。
+         * 该物体的世界欧拉旋转。（角度制）
          */
         getEulerAngles(order?: EulerOrder): Readonly<Vector3>;
         /**
-         * 该物体的世界欧拉角度。
+         * 该物体的世界欧拉旋转。（角度制）
          */
         setEulerAngles(v: Readonly<IVector3>, order?: EulerOrder): this;
         setEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
         /**
-         * 该物体的世界欧拉角度。
+         * 该物体的世界欧拉旋转。（角度制）
          */
         eulerAngles: Readonly<Vector3 | IVector3>;
         /**
@@ -3984,7 +4286,7 @@ declare namespace egret3d {
         translate(value: Readonly<IVector3>, isWorldSpace?: boolean): this;
         translate(x: number, y: number, z: number, isWorldSpace?: boolean): this;
         /**
-         * 将该物体旋转指定的欧拉弧度。
+         * 将该物体旋转指定的欧拉旋转。（弧度制）
          * @param isWorldSpace 是否是世界坐标系。
          */
         rotate(value: Readonly<IVector3>, isWorldSpace?: boolean, order?: EulerOrder): this;
@@ -3992,47 +4294,30 @@ declare namespace egret3d {
         /**
          * 将该物体绕指定轴旋转指定弧度。
          * @param axis 指定轴。
-         * @param radian 指定弧度。
+         * @param angle 指定弧度。
          * @param isWorldSpace 是否是世界坐标系。
          */
-        rotateOnAxis(axis: Readonly<IVector3>, radian: number, isWorldSpace?: boolean): this;
+        rotateOnAxis(axis: Readonly<IVector3>, angle: number, isWorldSpace?: boolean): this;
         /**
          * 将该物体绕世界指定点和世界指定轴旋转指定弧度。
          * @param worldPosition 世界指定点。
          * @param worldAxis 世界指定轴。
-         * @param radian 指定弧度。
+         * @param angle 指定弧度。
          */
-        rotateAround(worldPosition: Readonly<IVector3>, worldAxis: Readonly<IVector3>, radian: number): this;
-        /**
-         * 将该物体旋转指定的欧拉角度。
-         * @param isWorldSpace 是否是世界坐标系。
-         */
-        rotateAngle(value: Readonly<IVector3>, isWorldSpace?: boolean, order?: EulerOrder): this;
-        rotateAngle(x: number, y: number, z: number, isWorldSpace?: boolean, order?: EulerOrder): this;
-        /**
-         * 将该物体绕指定轴旋转指定角度。
-         * @param axis 指定轴。
-         * @param angle 指定角度。
-         * @param isWorldSpace 是否是世界坐标系。
-         */
-        rotateAngleOnAxis(axis: Readonly<IVector3>, angle: number, isWorldSpace?: boolean): this;
-        /**
-         * 将该物体绕世界指定点和世界指定轴旋转指定角度。
-         * @param worldPosition 世界指定点。
-         * @param worldAxis 世界指定轴。
-         * @param angle 指定角度。
-         */
-        rotateAngleAround(worldPosition: Readonly<IVector3>, worldAxis: Readonly<IVector3>, angle: number): this;
+        rotateAround(worldPosition: Readonly<IVector3>, worldAxis: Readonly<IVector3>, angle: number): this;
         /**
          * 获取该物体在世界空间坐标系下描述的 X 轴正方向。
+         * @param out 输出向量。
          */
         getRight(out?: Vector3): Vector3;
         /**
          * 获取该物体在世界空间坐标系下描述的 Y 轴正方向。
+         * @param out 输出向量。
          */
         getUp(out?: Vector3): Vector3;
         /**
          * 获取该物体在世界空间坐标系下描述的 Z 轴正方向。
+         * @param out 输出向量。
          */
         getForward(out?: Vector3): Vector3;
         /**

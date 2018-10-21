@@ -593,12 +593,22 @@ var paper;
         function BaseRelease() {
         }
         /**
+         * 更新该对象，使得该对象的 `onUpdate` 被执行。
+         */
+        BaseRelease.prototype.update = function () {
+            if (this.onUpdate) {
+                this.onUpdate.call(this.onUpdateTarget || this, this);
+            }
+        };
+        /**
          * 在此帧末尾释放该对象。
          * - 不能在静态解释阶段执行。
          */
         BaseRelease.prototype.release = function () {
             if (this._released) {
-                console.warn("The object has been released.");
+                if (true) {
+                    console.warn("The object has been released.");
+                }
                 return this;
             }
             paper.disposeCollecter.releases.push(this);
@@ -982,6 +992,10 @@ var paper;
             return true;
         };
         /**
+         * TODO RES 需要有注册的功能，并拥有查询所有指定类型资源的功能。
+         * Asset 类型需要引擎枚举，paper 空间还是引擎空间。
+         * 空间结构
+         * 引擎、res、ecs、2d、3d，其他
          * @internal
          */
         Asset._assets = {};
@@ -1206,7 +1220,7 @@ var paper;
 var egret3d;
 (function (egret3d) {
     /**
-     * 欧拉角旋转顺序。
+     * 欧拉旋转顺序。
      */
     var EulerOrder;
     (function (EulerOrder) {
@@ -1273,12 +1287,75 @@ var egret3d;
             this.z = z;
             return this;
         };
-        Vector3.prototype.fromArray = function (value, offset) {
+        /**
+         * 通过数组设置该向量。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        Vector3.prototype.fromArray = function (array, offset) {
             if (offset === void 0) { offset = 0; }
-            this.x = value[offset];
-            this.y = value[offset + 1];
-            this.z = value[offset + 2];
+            this.x = array[offset];
+            this.y = array[offset + 1];
+            this.z = array[offset + 2];
             return this;
+        };
+        Vector3.prototype.clear = function () {
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+            return this;
+        };
+        /**
+         * 向量归一化。
+         * - `v.normalize()` 归一化该向量，相当于 v /= v.length。
+         * - `v.normalize(input)` 将输入向量归一化的结果写入该向量，相当于 v = input / input.length。
+         * @param input 输入向量。
+         * @param defaultVector 如果该向量的长度为 0，则默认归一化的向量。
+         */
+        Vector3.prototype.normalize = function (input, defaultVector) {
+            if (defaultVector === void 0) { defaultVector = Vector3.FORWARD; }
+            if (!input) {
+                input = this;
+            }
+            var x = input.x, y = input.y, z = input.z;
+            var l = Math.sqrt(x * x + y * y + z * z);
+            if (l > egret3d.EPSILON) {
+                l = 1.0 / l;
+                this.x = x * l;
+                this.y = y * l;
+                this.z = z * l;
+            }
+            else {
+                this.copy(defaultVector);
+            }
+            return this;
+        };
+        /**
+         *
+         * @param input 输入向量。
+         */
+        Vector3.prototype.negate = function (input) {
+            if (!input) {
+                input = this;
+            }
+            this.x = input.x * -1.0;
+            this.y = input.y * -1.0;
+            this.z = input.z * -1.0;
+            return this;
+        };
+        /**
+         * 判断该向量是否和一个向量相等。
+         * @param value 一个向量。
+         * @param threshold 阈值。
+         */
+        Vector3.prototype.equal = function (value, threshold) {
+            if (threshold === void 0) { threshold = 0.000001; }
+            if (Math.abs(this.x - value.x) <= threshold &&
+                Math.abs(this.y - value.y) <= threshold &&
+                Math.abs(this.z - value.z) <= threshold) {
+                return true;
+            }
+            return false;
         };
         Vector3.prototype.fromSphericalCoords = function (p1, p2, p3) {
             if (p1.hasOwnProperty("x")) {
@@ -1292,75 +1369,73 @@ var egret3d;
             this.z = sinPhiRadius * Math.cos(p3);
             return this;
         };
-        Vector3.prototype.clear = function () {
-            this.x = 0.0;
-            this.y = 0.0;
-            this.z = 0.0;
+        Vector3.prototype.fromPlaneProjection = function (plane, input) {
+            if (!input) {
+                input = this;
+            }
+            return this.add(egret3d.helpVector3A.multiplyScalar(-plane.getDistance(input), plane.normal));
         };
-        Vector3.prototype.equal = function (value, threshold) {
-            if (threshold === void 0) { threshold = 0.000001; }
-            if (Math.abs(this.x - value.x) > threshold) {
-                return false;
+        Vector3.prototype.applyMatrix3 = function (matrix, input) {
+            if (!input) {
+                input = this;
             }
-            if (Math.abs(this.y - value.y) > threshold) {
-                return false;
-            }
-            if (Math.abs(this.z - value.z) > threshold) {
-                return false;
-            }
-            return true;
-        };
-        Vector3.prototype.fromPlaneProjection = function (plane, source) {
-            if (!source) {
-                source = this;
-            }
-            return this.add(egret3d.helpVector3A.multiplyScalar(-plane.getDistance(source), plane.normal));
-        };
-        Vector3.prototype.applyMatrix3 = function (matrix, source) {
-            if (!source) {
-                source = this;
-            }
-            // const x = source.x, y = source.y, z = source.z;
-            // const rawData = matrix.rawData;
-            // const w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]);
-            // this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
-            // this.y = (rawData[1] * x + rawData[5] * y + rawData[9] * z + rawData[13]) * w;
-            // this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
-            var x = source.x, y = source.y, z = source.z;
-            var e = matrix.rawData;
-            this.x = e[0] * x + e[3] * y + e[6] * z;
-            this.y = e[1] * x + e[4] * y + e[7] * z;
-            this.z = e[2] * x + e[5] * y + e[8] * z;
+            var x = input.x, y = input.y, z = input.z;
+            var rawData = matrix.rawData;
+            this.x = rawData[0] * x + rawData[3] * y + rawData[6] * z;
+            this.y = rawData[1] * x + rawData[4] * y + rawData[7] * z;
+            this.z = rawData[2] * x + rawData[5] * y + rawData[8] * z;
             return this;
         };
-        Vector3.prototype.applyMatrix = function (matrix, source) {
-            if (!source) {
-                source = this;
+        /**
+         * 向量与矩阵相乘运算。
+         * - `v.applyMatrix(matrix)` 将该向量与一个矩阵相乘，相当于 v *= matrix。
+         * - `v.applyMatrix(matrix, input)` 将输入向量与一个矩阵相乘的结果写入该向量，相当于 v = input * matrix。
+         * @param matrix 一个矩阵。
+         * @param input 输入向量。
+         */
+        Vector3.prototype.applyMatrix = function (matrix, input) {
+            if (!input) {
+                input = this;
             }
-            var x = source.x, y = source.y, z = source.z;
+            var x = input.x, y = input.y, z = input.z;
             var rawData = matrix.rawData;
-            var w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]);
+            var w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]); // TODO
             this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
             this.y = (rawData[1] * x + rawData[5] * y + rawData[9] * z + rawData[13]) * w;
             this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
             return this;
         };
-        Vector3.prototype.applyDirection = function (matrix, source) {
-            if (!source) {
-                source = this;
+        /**
+         * 向量与矩阵相乘运算。
+         * - `v.applyDirection(matrix)` 将该向量与一个矩阵相乘，相当于 v *= matrix。
+         * - `v.applyDirection(matrix, input)` 将输入向量与一个矩阵相乘的结果写入该向量，相当于 v = input * matrix。
+         * @param matrix 一个矩阵。
+         * @param input 输入向量。
+         */
+        Vector3.prototype.applyDirection = function (matrix, input) {
+            if (!input) {
+                input = this;
             }
-            var x = source.x, y = source.y, z = source.z;
+            var x = input.x, y = input.y, z = input.z;
             var rawData = matrix.rawData;
             this.x = rawData[0] * x + rawData[4] * y + rawData[8] * z;
             this.y = rawData[1] * x + rawData[5] * y + rawData[9] * z;
             this.z = rawData[2] * x + rawData[6] * y + rawData[10] * z;
             return this;
+            // return this.normalize(); TODO
         };
-        Vector3.prototype.applyQuaternion = function (quaternion, source) {
-            if (!source) {
-                source = this;
+        /**
+         * 向量与四元数相乘运算。
+         * - `v.applyQuaternion(quaternion)` 将该向量与一个四元数相乘，相当于 v *= quaternion。
+         * - `v.applyQuaternion(quaternion, input)` 将输入向量与一个四元数相乘的结果写入该向量，相当于 v = input * quaternion。
+         * @param matrix 一个四元数。
+         * @param input 输入向量。
+         */
+        Vector3.prototype.applyQuaternion = function (quaternion, input) {
+            if (!input) {
+                input = this;
             }
-            var x = source.x, y = source.y, z = source.z;
+            var x = input.x, y = input.y, z = input.z;
             var qx = quaternion.x, qy = quaternion.y, qz = quaternion.z, qw = quaternion.w;
             // calculate quat * vector
             var ix = qw * x + qy * z - qz * y;
@@ -1373,100 +1448,117 @@ var egret3d;
             this.z = iz * qw + iw * -qz + ix * -qy - iy * -qx;
             return this;
         };
-        Vector3.prototype.normalize = function (source, defaultAxis) {
-            if (!source) {
-                source = this;
+        /**
+         * 向量与标量相加运算。
+         * - `v.addScalar(scalar)` 将该向量与标量相加，相当于 v += scalar。
+         * - `v.addScalar(scalar, input)` 将输入向量与标量相加的结果写入该向量，相当于 v = input + scalar。
+         * @param scalar 标量。
+         * @param input 输入向量。
+         */
+        Vector3.prototype.addScalar = function (scalar, input) {
+            if (!input) {
+                input = this;
             }
-            var x = source.x, y = source.y, z = source.z;
-            var l = Math.sqrt(x * x + y * y + z * z);
-            if (l > egret3d.EPSILON) {
-                l = 1.0 / l;
-                this.x = x * l;
-                this.y = y * l;
-                this.z = z * l;
-            }
-            else {
-                if (!defaultAxis) {
-                    defaultAxis = Vector3.FORWARD;
-                }
-                this.copy(defaultAxis);
-            }
+            this.x = input.x + scalar;
+            this.y = input.y + scalar;
+            this.z = input.z + scalar;
             return this;
         };
-        Vector3.prototype.negate = function (source) {
-            if (!source) {
-                source = this;
+        /**
+         * 向量与标量相乘运算。
+         * - `v.multiplyScalar(scalar)` 将该向量与标量相乘，相当于 v *= scalar。
+         * - `v.multiplyScalar(scalar, input)` 将输入向量与标量相乘的结果写入该向量，相当于 v = input * scalar。
+         * @param scalar 标量。
+         * @param input 输入向量。
+         */
+        Vector3.prototype.multiplyScalar = function (scalar, input) {
+            if (!input) {
+                input = this;
             }
-            this.x = source.x * -1.0;
-            this.y = source.y * -1.0;
-            this.z = source.z * -1.0;
+            this.x = scalar * input.x;
+            this.y = scalar * input.y;
+            this.z = scalar * input.z;
             return this;
         };
-        Vector3.prototype.addScalar = function (add, source) {
-            if (source) {
-                this.x = source.x + add;
-                this.y = source.y + add;
-                this.z = source.z + add;
-            }
-            else {
-                this.x += add;
-                this.y += add;
-                this.z += add;
-            }
-            return this;
-        };
+        /**
+         * 向量相加运算。
+         * - `v.add(a)` 将该向量与一个向量相加，相当于 v += a。
+         * - `v.add(a, b)` 将两个向量相加的结果写入该向量，相当于 v = a + b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         Vector3.prototype.add = function (valueA, valueB) {
-            if (valueB) {
-                this.x = valueA.x + valueB.x;
-                this.y = valueA.y + valueB.y;
-                this.z = valueA.z + valueB.z;
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
             }
-            else {
-                this.x += valueA.x;
-                this.y += valueA.y;
-                this.z += valueA.z;
-            }
+            this.x = valueA.x + valueB.x;
+            this.y = valueA.y + valueB.y;
+            this.z = valueA.z + valueB.z;
             return this;
         };
+        /**
+         * 向量相减运算。
+         * - `v.subtract(a)` 将该向量与一个向量相减，相当于 v -= a。
+         * - `v.subtract(a, b)` 将两个向量相减的结果写入该向量，相当于 v = a - b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         Vector3.prototype.subtract = function (valueA, valueB) {
-            if (valueB) {
-                this.x = valueA.x - valueB.x;
-                this.y = valueA.y - valueB.y;
-                this.z = valueA.z - valueB.z;
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
             }
-            else {
-                this.x -= valueA.x;
-                this.y -= valueA.y;
-                this.z -= valueA.z;
-            }
+            this.x = valueA.x - valueB.x;
+            this.y = valueA.y - valueB.y;
+            this.z = valueA.z - valueB.z;
             return this;
         };
-        Vector3.prototype.multiplyScalar = function (scale, source) {
-            if (source) {
-                this.x = scale * source.x;
-                this.y = scale * source.y;
-                this.z = scale * source.z;
-            }
-            else {
-                this.x *= scale;
-                this.y *= scale;
-                this.z *= scale;
-            }
-            return this;
-        };
+        /**
+         * 向量相乘运算。
+         * - `v.multiply(a)` 将该向量与一个向量相乘，相当于 v *= a。
+         * - `v.multiply(a, b)` 将两个向量相乘的结果写入该向量，相当于 v = a * b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         Vector3.prototype.multiply = function (valueA, valueB) {
-            if (valueB) {
-                this.x = valueA.x * valueB.x;
-                this.y = valueA.y * valueB.y;
-                this.z = valueA.z * valueB.z;
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
             }
-            else {
-                this.x *= valueA.x;
-                this.y *= valueA.y;
-                this.z *= valueA.z;
-            }
+            this.x = valueA.x * valueB.x;
+            this.y = valueA.y * valueB.y;
+            this.z = valueA.z * valueB.z;
             return this;
         };
+        /**
+         * 向量相除运算。
+         * - 假设除向量分量均不为零。
+         * - `v.divide(a)` 将该向量与一个向量相除，相当于 v /= a。
+         * - `v.divide(a, b)` 将两个向量相除的结果写入该向量，相当于 v = a / b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
+        Vector3.prototype.divide = function (valueA, valueB) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+            if (true && (valueB.x === 0.0 || valueB.y === 0.0 || valueB.z === 0)) {
+                console.warn("Dividing by zero.");
+            }
+            this.x = valueA.x / valueB.x;
+            this.y = valueA.y / valueB.y;
+            this.z = valueA.z / valueB.z;
+            return this;
+        };
+        /**
+         * 向量点乘运算。
+         * - `v.dot(a)` 将该向量与一个向量点乘，相当于 v ·= a。
+         * - `v.dot(a, b)` 将两个向量点乘的结果写入该向量，相当于 v = a · b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         Vector3.prototype.dot = function (valueA, valueB) {
             if (!valueB) {
                 valueB = valueA;
@@ -1474,6 +1566,13 @@ var egret3d;
             }
             return valueA.x * valueB.x + valueA.y * valueB.y + valueA.z * valueB.z;
         };
+        /**
+         * 向量叉乘运算。
+         * - `v.cross(a)` 将该向量与一个向量叉乘，相当于 v ×= a。
+         * - `v.cross(a, b)` 将两个向量叉乘的结果写入该向量，相当于 v = a × b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         Vector3.prototype.cross = function (valueA, valueB) {
             if (!valueB) {
                 valueB = valueA;
@@ -1490,6 +1589,13 @@ var egret3d;
             this.z = x * yB - y * xB;
             return this;
         };
+        /**
+         * 向量插值运算。
+         * - `v.lerp(t, a)` 将该向量与一个向量插值，相当于 v = v * (1 - t) + a * t。
+         * - `v.lerp(t, a, b)` 将两个向量插值的结果写入该向量，相当于 v = a * (1 - t) + b * t。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         Vector3.prototype.lerp = function (t, valueA, valueB) {
             if (!valueB) {
                 valueB = valueA;
@@ -1501,6 +1607,13 @@ var egret3d;
             this.z = valueA.z * p + valueB.z * t;
             return this;
         };
+        /**
+         * 向量最小值运算。
+         * - `v.min(a)` 将该向量与一个向量的最小值写入该向量，相当于 v = min(v, a)。
+         * - `v.min(a, b)` 将两个向量的最小值写入该向量，相当于 v = min(a, b)。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         Vector3.prototype.min = function (valueA, valueB) {
             if (!valueB) {
                 valueB = valueA;
@@ -1511,6 +1624,13 @@ var egret3d;
             this.z = Math.min(valueA.z, valueB.z);
             return this;
         };
+        /**
+         * 向量最大值运算。
+         * - `v.max(a)` 将该向量与一个向量的最大值写入该向量，相当于 v = max(v, a)。
+         * - `v.max(a, b)` 将两个向量的最大值写入该向量，相当于 v = max(a, b)。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         Vector3.prototype.max = function (valueA, valueB) {
             if (!valueB) {
                 valueB = valueA;
@@ -1521,39 +1641,69 @@ var egret3d;
             this.z = Math.max(valueA.z, valueB.z);
             return this;
         };
-        Vector3.prototype.clamp = function (min, max, source) {
-            if (!source) {
-                source = this;
+        /**
+         * 向量夹紧运算。
+         * - 假设最小向量小于最大向量。
+         * - `v.clamp(valueMin, valueMax)` 相当于 v = max(valueMin, min(valueMax, v))。
+         * - `v.clamp(valueMin, valueMax, input)` 相当于 v = max(valueMin, min(valueMax, input))。
+         * @param valueMin 最小向量。
+         * @param valueMax 最大向量。
+         * @param input 输入向量。
+         */
+        Vector3.prototype.clamp = function (valueMin, valueMax, input) {
+            if (!input) {
+                input = this;
+            }
+            if (true && (valueMin.x > valueMax.x || valueMin.y > valueMax.y || valueMin.z > valueMax.z)) {
+                console.warn("Invalid arguments.");
             }
             // assumes min < max, componentwise
-            this.x = Math.max(min.x, Math.min(max.x, source.x));
-            this.y = Math.max(min.y, Math.min(max.y, source.y));
-            this.z = Math.max(min.z, Math.min(max.z, source.z));
+            this.x = Math.max(valueMin.x, Math.min(valueMax.x, input.x));
+            this.y = Math.max(valueMin.y, Math.min(valueMax.y, input.y));
+            this.z = Math.max(valueMin.z, Math.min(valueMax.z, input.z));
             return this;
         };
-        Vector3.prototype.divide = function (source) {
-            if (!source) {
-                source = this;
+        /**
+         *
+         * @param vector
+         * @param input
+         */
+        Vector3.prototype.reflect = function (vector, input) {
+            if (!input) {
+                input = this;
             }
-            this.x /= source.x;
-            this.y /= source.y;
-            this.z /= source.z;
-            return this;
+            return this.subtract(input, _helpVector3.multiplyScalar(2.0 * this.dot(vector), vector));
         };
+        /**
+         * 获得该向量和一个向量的夹角。（弧度制）
+         * - 假设向量长度均不为零。
+         */
         Vector3.prototype.getAngle = function (value) {
-            var theta = this.dot(value) / (Math.sqrt(this.squaredLength * Vector3.getSqrLength(value)));
+            var v = this.squaredLength * value.squaredLength;
+            if (true && v === 0.0) {
+                console.warn("Dividing by zero.");
+            }
+            var theta = this.dot(value) / Math.sqrt(v);
             // clamp, to handle numerical problems
-            return Math.acos(Math.max(-1, Math.min(1, theta)));
+            return Math.acos(Math.max(-1.0, Math.min(1.0, theta)));
         };
+        /**
+         * 获取该向量和一个向量之间的距离的平方。
+         * @param value 一个向量。
+         */
         Vector3.prototype.getSquaredDistance = function (value) {
             return _helpVector3.subtract(value, this).squaredLength;
         };
+        /**
+         * 获取该向量和一个向量之间的距离。
+         * @param value 一个向量。
+         */
         Vector3.prototype.getDistance = function (value) {
             return _helpVector3.subtract(value, this).length;
         };
-        Vector3.prototype.closestToTriangle = function (triangle, value) {
-            if (!value) {
-                value = this;
+        Vector3.prototype.closestToTriangle = function (triangle, input) {
+            if (!input) {
+                input = this;
             }
             var vab = egret3d.helpVector3A;
             var vac = egret3d.helpVector3B;
@@ -1570,14 +1720,14 @@ var egret3d;
             // the point lies in with the minimum amount of redundant computation.
             vab.subtract(b, a);
             vac.subtract(c, a);
-            vap.subtract(value, a);
+            vap.subtract(input, a);
             var d1 = vab.dot(vap);
             var d2 = vac.dot(vap);
             if (d1 <= 0 && d2 <= 0) {
                 // vertex region of A; barycentric coords (1, 0, 0)
                 return this.copy(a);
             }
-            vbp.subtract(value, b);
+            vbp.subtract(input, b);
             var d3 = vab.dot(vbp);
             var d4 = vac.dot(vbp);
             if (d3 >= 0 && d4 <= d3) {
@@ -1590,7 +1740,7 @@ var egret3d;
                 // edge region of AB; barycentric coords (1-v, v, 0)
                 return this.multiplyScalar(v, vab).add(a);
             }
-            vcp.subtract(value, c);
+            vcp.subtract(input, c);
             var d5 = vab.dot(vcp);
             var d6 = vac.dot(vcp);
             if (d6 >= 0 && d5 <= d6) {
@@ -1617,14 +1767,26 @@ var egret3d;
             w = vc * denom;
             return this.add(a, vac.multiplyScalar(w).add(vab.multiplyScalar(v)));
         };
-        Vector3.prototype.toArray = function (value, offset) {
+        /**
+         * 将该向量转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        Vector3.prototype.toArray = function (array, offset) {
             if (offset === void 0) { offset = 0; }
-            value[0 + offset] = this.x;
-            value[1 + offset] = this.y;
-            value[2 + offset] = this.z;
-            return value;
+            if (!array) {
+                array = [];
+            }
+            array[0 + offset] = this.x;
+            array[1 + offset] = this.y;
+            array[2 + offset] = this.z;
+            return array;
         };
         Object.defineProperty(Vector3.prototype, "length", {
+            /**
+             * 该向量的长度。
+             * - 该值是实时计算的。
+             */
             get: function () {
                 return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
             },
@@ -1632,6 +1794,10 @@ var egret3d;
             configurable: true
         });
         Object.defineProperty(Vector3.prototype, "squaredLength", {
+            /**
+             * 该向量的长度的平方。
+             * - 该值是实时计算的。
+             */
             get: function () {
                 return this.x * this.x + this.y * this.y + this.z * this.z;
             },
@@ -1768,39 +1934,39 @@ var egret3d;
             return this.getLength(this.subtract(a, b, _helpVector3));
         };
         /**
-         * 零
+         * 零向量。
          */
         Vector3.ZERO = new Vector3(0.0, 0.0, 0.0);
         /**
-         * 三方向均为一的向量
+         * 三方向均为一的向量。
          */
         Vector3.ONE = new Vector3(1.0, 1.0, 1.0);
         /**
-         * 三方向均为负一的向量
+         * 三方向均为负一的向量。
          */
         Vector3.MINUS_ONE = new Vector3(-1.0, -1.0, -1.0);
         /**
-         * 上
+         * 上向量。
          */
         Vector3.UP = new Vector3(0.0, 1.0, 0.0);
         /**
-         * 下
+         * 下向量。
          */
         Vector3.DOWN = new Vector3(0.0, -1.0, 0.0);
         /**
-         * 左
+         * 左向量。
          */
         Vector3.LEFT = new Vector3(-1.0, 0.0, 0.0);
         /**
-         * 右
+         * 右向量。
          */
         Vector3.RIGHT = new Vector3(1.0, 0.0, 0.0);
         /**
-         * 前
+         * 前向量。
          */
         Vector3.FORWARD = new Vector3(0.0, 0.0, 1.0);
         /**
-         * 后
+         * 后向量。
          */
         Vector3.BACK = new Vector3(0.0, 0.0, -1.0);
         Vector3._instances = [];
@@ -1878,7 +2044,7 @@ var egret3d;
             return _this;
         }
         /**
-         *
+         * 创建一个矩阵。
          * @param rawData
          * @param offsetOrByteOffset
          */
@@ -1915,25 +2081,6 @@ var egret3d;
         Matrix4.prototype.clone = function () {
             return Matrix4.create(this.rawData);
         };
-        Matrix4.prototype.identity = function () {
-            this.rawData[0] = 1.0;
-            this.rawData[1] = 0.0;
-            this.rawData[2] = 0.0;
-            this.rawData[3] = 0.0;
-            this.rawData[4] = 0.0;
-            this.rawData[5] = 1.0;
-            this.rawData[6] = 0.0;
-            this.rawData[7] = 0.0;
-            this.rawData[8] = 0.0;
-            this.rawData[9] = 0.0;
-            this.rawData[10] = 1.0;
-            this.rawData[11] = 0.0;
-            this.rawData[12] = 0.0;
-            this.rawData[13] = 0.0;
-            this.rawData[14] = 0.0;
-            this.rawData[15] = 1.0;
-            return this;
-        };
         Matrix4.prototype.set = function (n11, n12, n13, n14, n21, n22, n23, n24, n31, n32, n33, n34, n41, n42, n43, n44) {
             var rawData = this.rawData;
             rawData[0] = n11;
@@ -1952,6 +2099,25 @@ var egret3d;
             rawData[7] = n42;
             rawData[11] = n43;
             rawData[15] = n44;
+            return this;
+        };
+        Matrix4.prototype.identity = function () {
+            this.rawData[0] = 1.0;
+            this.rawData[1] = 0.0;
+            this.rawData[2] = 0.0;
+            this.rawData[3] = 0.0;
+            this.rawData[4] = 0.0;
+            this.rawData[5] = 1.0;
+            this.rawData[6] = 0.0;
+            this.rawData[7] = 0.0;
+            this.rawData[8] = 0.0;
+            this.rawData[9] = 0.0;
+            this.rawData[10] = 1.0;
+            this.rawData[11] = 0.0;
+            this.rawData[12] = 0.0;
+            this.rawData[13] = 0.0;
+            this.rawData[14] = 0.0;
+            this.rawData[15] = 1.0;
             return this;
         };
         Matrix4.prototype.fromArray = function (value, offset) {
@@ -2292,29 +2458,40 @@ var egret3d;
             rawData[15] = (n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33) * detInv;
             return this;
         };
-        Matrix4.prototype.multiplyScalar = function (value, source) {
-            if (!source) {
-                source = this;
+        /**
+         *
+         * @param scale
+         * @param input
+         */
+        Matrix4.prototype.multiplyScalar = function (scale, input) {
+            if (!input) {
+                input = this;
             }
-            var sourceRawData = source.rawData;
+            var sourceRawData = input.rawData;
             var rawData = this.rawData;
-            rawData[0] = sourceRawData[0] * value;
-            rawData[1] = sourceRawData[1] * value;
-            rawData[2] = sourceRawData[2] * value;
-            rawData[3] = sourceRawData[3] * value;
-            rawData[4] = sourceRawData[4] * value;
-            rawData[5] = sourceRawData[5] * value;
-            rawData[6] = sourceRawData[6] * value;
-            rawData[7] = sourceRawData[7] * value;
-            rawData[8] = sourceRawData[8] * value;
-            rawData[9] = sourceRawData[9] * value;
-            rawData[10] = sourceRawData[10] * value;
-            rawData[11] = sourceRawData[11] * value;
-            rawData[12] = sourceRawData[12] * value;
-            rawData[13] = sourceRawData[13] * value;
-            rawData[14] = sourceRawData[14] * value;
-            rawData[15] = sourceRawData[15] * value;
+            rawData[0] = sourceRawData[0] * scale;
+            rawData[1] = sourceRawData[1] * scale;
+            rawData[2] = sourceRawData[2] * scale;
+            rawData[3] = sourceRawData[3] * scale;
+            rawData[4] = sourceRawData[4] * scale;
+            rawData[5] = sourceRawData[5] * scale;
+            rawData[6] = sourceRawData[6] * scale;
+            rawData[7] = sourceRawData[7] * scale;
+            rawData[8] = sourceRawData[8] * scale;
+            rawData[9] = sourceRawData[9] * scale;
+            rawData[10] = sourceRawData[10] * scale;
+            rawData[11] = sourceRawData[11] * scale;
+            rawData[12] = sourceRawData[12] * scale;
+            rawData[13] = sourceRawData[13] * scale;
+            rawData[14] = sourceRawData[14] * scale;
+            rawData[15] = sourceRawData[15] * scale;
         };
+        /**
+         * - `v.multiply(a)` 将该矩阵与一个矩阵相乘的结果写入该矩阵，相当于 v *= a。
+         * - `v.multiply(a, b)` 将两个矩阵相乘的结果写入该矩阵，相当于 v = a * b。
+         * @param valueA 一个矩阵。
+         * @param valueB 另一个矩阵。
+         */
         Matrix4.prototype.multiply = function (valueA, valueB) {
             if (!valueB) {
                 valueB = valueA;
@@ -2349,52 +2526,68 @@ var egret3d;
             rawData[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
             return this;
         };
+        /**
+         * 将一个矩阵与该矩阵相乘的结果写入该矩阵，相当于 v = x * v。
+         * @param value 一个矩阵。
+         */
         Matrix4.prototype.premultiply = function (value) {
             this.multiply(value, this);
             return this;
         };
-        Matrix4.prototype.lerp = function (t, value, source) {
-            if (!source) {
-                source = this;
+        /**
+         * - `v.lert(t, a)` 将该矩阵和一个矩阵插值的结果写入该矩阵。
+         * - `v.lert(t, a, b)` 将两个矩阵插值的结果写入该矩阵。
+         * @param t 插值。
+         * @param valueA 一个矩阵。
+         * @param valueB 另一个矩阵。
+         */
+        Matrix4.prototype.lerp = function (t, valueA, valueB) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
             }
             var p = 1.0 - t;
             for (var i = 0; i < 16; i++) {
-                this.rawData[i] = source.rawData[i] * p + value.rawData[i] * t;
+                this.rawData[i] = valueA.rawData[i] * p + valueB.rawData[i] * t;
             }
             return this;
         };
         /**
-         * 设置该矩阵，使得其 Z 轴正方向指向目标点。
-         * @param eye 起始点。
-         * @param target 目标点。
-         * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
+         * 设置该矩阵，使其 Z 轴正方向指向目标点。
+         * - 矩阵的缩放值将被覆盖。
+         * @param from 起始点。
+         * @param to 目标点。
+         * @param up 旋转后，该矩阵的 Y 轴正方向。
          */
-        Matrix4.prototype.lookAt = function (eye, target, up) {
-            this.lookRotation(_helpVector3C.subtract(target, eye), up);
+        Matrix4.prototype.lookAt = function (from, to, up) {
+            this.lookRotation(_helpVector3C.subtract(to, from), up);
             return this;
         };
         /**
-         * 设置该矩阵，使得其 Z 轴正方向指向目标方向。
+         * 设置该矩阵，使其 Z 轴正方向指向目标方向。
          * - 矩阵的缩放值将被覆盖。
-         * @param target 目标方向。
-         * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
+         * @param vector 目标方向。
+         * @param up 旋转后，该矩阵的 Y 轴正方向。
          */
-        Matrix4.prototype.lookRotation = function (direction, up) {
-            _helpVector3C.normalize(direction);
-            var x = _helpVector3A.cross(up, _helpVector3C).normalize(undefined, egret3d.Vector3.RIGHT); //TODO     Vector3.FORWARD
-            var y = _helpVector3B.cross(_helpVector3C, x);
+        Matrix4.prototype.lookRotation = function (vector, up) {
+            var z = _helpVector3C.normalize(vector);
+            var x = _helpVector3A.cross(up, z).normalize(undefined, egret3d.Vector3.RIGHT); //TODO  Vector3.FORWARD
+            var y = _helpVector3B.cross(z, x);
             var rawData = this.rawData;
             rawData[0] = x.x;
             rawData[4] = y.x;
-            rawData[8] = _helpVector3C.x;
+            rawData[8] = z.x;
             rawData[1] = x.y;
             rawData[5] = y.y;
-            rawData[9] = _helpVector3C.y;
+            rawData[9] = z.y;
             rawData[2] = x.z;
             rawData[6] = y.z;
-            rawData[10] = _helpVector3C.z;
+            rawData[10] = z.z;
             return this;
         };
+        /**
+         * 获得该矩阵最大的缩放值。
+         */
         Matrix4.prototype.getMaxScaleOnAxis = function () {
             var rawData = this.rawData;
             var scaleXSq = rawData[0] * rawData[0] + rawData[1] * rawData[1] + rawData[2] * rawData[2];
@@ -2402,18 +2595,31 @@ var egret3d;
             var scaleZSq = rawData[8] * rawData[8] + rawData[9] * rawData[9] + rawData[10] * rawData[10];
             return Math.sqrt(Math.max(scaleXSq, scaleYSq, scaleZSq));
         };
-        Matrix4.prototype.toArray = function (value, offset) {
+        /**
+         * 将该旋转矩阵转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        Matrix4.prototype.toArray = function (array, offset) {
             if (offset === void 0) { offset = 0; }
-            if (!value) {
-                value = [];
+            if (!array) {
+                array = [];
             }
             for (var i = 0; i < 16; ++i) {
-                value[i + offset] = this.rawData[i];
+                array[i + offset] = this.rawData[i];
             }
-            return value;
+            return array;
         };
-        Matrix4.prototype.toEuler = function (value, order) {
+        /**
+         * 将该旋转矩阵转换为欧拉旋转。
+         * @param euler 欧拉旋转。（弧度制）
+         * @param order 欧拉旋转顺序。
+         */
+        Matrix4.prototype.toEuler = function (euler, order) {
             if (order === void 0) { order = 2 /* YXZ */; }
+            if (!euler) {
+                euler = egret3d.Vector3.create();
+            }
             // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
             var rawData = this.rawData;
             var m11 = rawData[0], m12 = rawData[4], m13 = rawData[8];
@@ -2421,79 +2627,79 @@ var egret3d;
             var m31 = rawData[2], m32 = rawData[6], m33 = rawData[10];
             switch (order) {
                 case 0 /* XYZ */: {
-                    value.y = Math.asin(egret3d.floatClamp(m13, -1.0, 1.0));
+                    euler.y = Math.asin(egret3d.floatClamp(m13, -1.0, 1.0));
                     if (Math.abs(m13) < 0.999999) {
-                        value.x = Math.atan2(-m23, m33);
-                        value.z = Math.atan2(-m12, m11);
+                        euler.x = Math.atan2(-m23, m33);
+                        euler.z = Math.atan2(-m12, m11);
                     }
                     else {
-                        value.x = Math.atan2(m32, m22);
-                        value.z = 0.0;
+                        euler.x = Math.atan2(m32, m22);
+                        euler.z = 0.0;
                     }
                     break;
                 }
                 case 1 /* XZY */: {
-                    value.z = Math.asin(-egret3d.floatClamp(m12, -1.0, 1.0));
+                    euler.z = Math.asin(-egret3d.floatClamp(m12, -1.0, 1.0));
                     if (Math.abs(m12) < 0.999999) {
-                        value.x = Math.atan2(m32, m22);
-                        value.y = Math.atan2(m13, m11);
+                        euler.x = Math.atan2(m32, m22);
+                        euler.y = Math.atan2(m13, m11);
                     }
                     else {
-                        value.x = Math.atan2(-m23, m33);
-                        value.y = 0.0;
+                        euler.x = Math.atan2(-m23, m33);
+                        euler.y = 0.0;
                     }
                     break;
                 }
                 case 2 /* YXZ */: {
-                    value.x = Math.asin(-egret3d.floatClamp(m23, -1.0, 1.0));
+                    euler.x = Math.asin(-egret3d.floatClamp(m23, -1.0, 1.0));
                     if (Math.abs(m23) < 0.999999) {
-                        value.y = Math.atan2(m13, m33);
-                        value.z = Math.atan2(m21, m22);
+                        euler.y = Math.atan2(m13, m33);
+                        euler.z = Math.atan2(m21, m22);
                     }
                     else {
-                        value.y = Math.atan2(-m31, m11);
-                        value.z = 0.0;
+                        euler.y = Math.atan2(-m31, m11);
+                        euler.z = 0.0;
                     }
                     break;
                 }
                 case 3 /* YZX */: {
-                    value.z = Math.asin(egret3d.floatClamp(m21, -1.0, 1.0));
+                    euler.z = Math.asin(egret3d.floatClamp(m21, -1.0, 1.0));
                     if (Math.abs(m21) < 0.999999) {
-                        value.x = Math.atan2(-m23, m22);
-                        value.y = Math.atan2(-m31, m11);
+                        euler.x = Math.atan2(-m23, m22);
+                        euler.y = Math.atan2(-m31, m11);
                     }
                     else {
-                        value.x = 0.0;
-                        value.y = Math.atan2(m13, m33);
+                        euler.x = 0.0;
+                        euler.y = Math.atan2(m13, m33);
                     }
                     break;
                 }
                 case 4 /* ZXY */: {
-                    value.x = Math.asin(egret3d.floatClamp(m32, -1.0, 1.0));
+                    euler.x = Math.asin(egret3d.floatClamp(m32, -1.0, 1.0));
                     if (Math.abs(m32) < 0.999999) {
-                        value.y = Math.atan2(-m31, m33);
-                        value.z = Math.atan2(-m12, m22);
+                        euler.y = Math.atan2(-m31, m33);
+                        euler.z = Math.atan2(-m12, m22);
                     }
                     else {
-                        value.y = 0.0;
-                        value.z = Math.atan2(m21, m11);
+                        euler.y = 0.0;
+                        euler.z = Math.atan2(m21, m11);
                     }
                     break;
                 }
                 case 5 /* ZYX */: {
-                    value.y = Math.asin(-egret3d.floatClamp(m31, -1.0, 1.0));
+                    euler.y = Math.asin(-egret3d.floatClamp(m31, -1.0, 1.0));
                     if (Math.abs(m31) < 0.999999) {
-                        value.x = Math.atan2(m32, m33);
-                        value.z = Math.atan2(m21, m11);
+                        euler.x = Math.atan2(m32, m33);
+                        euler.z = Math.atan2(m21, m11);
                     }
                     else {
-                        value.x = 0.0;
-                        value.z = Math.atan2(-m12, m22);
+                        euler.x = 0.0;
+                        euler.z = Math.atan2(-m12, m22);
                     }
                     break;
                 }
             }
-            return value;
+            return euler;
         };
         /**
          * @deprecated
@@ -2577,7 +2783,6 @@ var egret3d;
     var _helpVector3A = egret3d.Vector3.create();
     var _helpVector3B = egret3d.Vector3.create();
     var _helpVector3C = egret3d.Vector3.create();
-    var _helpVector3D = egret3d.Vector3.create();
     var _helpMatrix = Matrix4.create();
     /**
      * @internal
@@ -2887,17 +3092,24 @@ var egret3d;
             this.z = 0.0;
             this.w = 1.0;
         };
+        /**
+         * 向量归一化。
+         * - `v.normalize()` 归一化该向量，相当于 v /= v.length。
+         * - `v.normalize(input)` 将输入向量归一化的结果写入该向量，相当于 v = input / input.length。
+         * @param input 输入向量。
+         */
         Vector4.prototype.normalize = function (input) {
             if (!input) {
                 input = this;
             }
-            var l = Math.sqrt(input.x * input.x + input.y * input.y + input.z * input.z + input.w * input.w);
+            var x = input.x, y = input.y, z = input.z, w = input.w;
+            var l = Math.sqrt(x * x + y * y + z * z + w * w);
             if (l > egret3d.EPSILON) {
                 l = 1.0 / l;
-                this.x *= l;
-                this.y *= l;
-                this.z *= l;
-                this.w *= l;
+                this.x = x * l;
+                this.y = y * l;
+                this.z = z * l;
+                this.w = w * l;
             }
             else {
                 this.x = 0.0;
@@ -2907,25 +3119,73 @@ var egret3d;
             }
             return this;
         };
-        Vector4.prototype.multiplyScalar = function (scale, input) {
+        /**
+         * 判断该向量是否和一个向量相等。
+         * @param value 一个向量。
+         * @param threshold 阈值。
+         */
+        Vector4.prototype.equal = function (value, threshold) {
+            if (threshold === void 0) { threshold = 0.000001; }
+            if (Math.abs(this.x - value.x) <= threshold &&
+                Math.abs(this.y - value.y) <= threshold &&
+                Math.abs(this.z - value.z) <= threshold &&
+                Math.abs(this.w - value.w) <= threshold) {
+                return true;
+            }
+            return false;
+        };
+        /**
+         * 向量与标量相乘运算。
+         * - `v.multiplyScalar(scalar)` 将该向量与标量相乘，相当于 v *= scalar。
+         * - `v.multiplyScalar(scalar, input)` 将输入向量与标量相乘的结果写入该向量，相当于 v = input * scalar。
+         * @param scalar 标量。
+         * @param input 输入向量。
+         */
+        Vector4.prototype.multiplyScalar = function (scalar, input) {
             if (!input) {
                 input = this;
             }
-            this.x = scale * input.x;
-            this.y = scale * input.y;
-            this.z = scale * input.z;
-            this.w = scale * input.w;
+            this.x = scalar * input.x;
+            this.y = scalar * input.y;
+            this.z = scalar * input.z;
+            this.w = scalar * input.w;
             return this;
         };
-        Vector4.prototype.toArray = function (value, offset) {
+        /**
+         * 向量点乘运算。
+         * - `v.dot(a)` 将该向量与一个向量点乘，相当于 v ·= a。
+         * - `v.dot(a, b)` 将两个向量点乘的结果写入该向量，相当于 v = a · b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
+        Vector4.prototype.dot = function (valueA, valueB) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+            return valueA.x * valueB.x + valueA.y * valueB.y + valueA.z * valueB.z + valueA.w * valueB.w;
+        };
+        /**
+         * 将该向量转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        Vector4.prototype.toArray = function (array, offset) {
             if (offset === void 0) { offset = 0; }
-            value[0 + offset] = this.x;
-            value[1 + offset] = this.y;
-            value[2 + offset] = this.z;
-            value[3 + offset] = this.w;
-            return value;
+            if (!array) {
+                array = [];
+            }
+            array[0 + offset] = this.x;
+            array[1 + offset] = this.y;
+            array[2 + offset] = this.z;
+            array[3 + offset] = this.w;
+            return array;
         };
         Object.defineProperty(Vector4.prototype, "length", {
+            /**
+             * 该向量的长度。
+             * - 该值是实时计算的。
+             */
             get: function () {
                 return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
             },
@@ -2933,6 +3193,10 @@ var egret3d;
             configurable: true
         });
         Object.defineProperty(Vector4.prototype, "squaredLength", {
+            /**
+             * 该向量的长度的平方。
+             * - 该值是实时计算的。
+             */
             get: function () {
                 return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
             },
@@ -4668,7 +4932,7 @@ var egret3d;
             return _super !== null && _super.apply(this, arguments) || this;
         }
         /**
-         *
+         * 创建一个四元数。
          */
         Quaternion.create = function (x, y, z, w) {
             if (x === void 0) { x = 0.0; }
@@ -4686,12 +4950,14 @@ var egret3d;
             return Quaternion.create(this.x, this.y, this.z, this.w);
         };
         /**
-         * - 旋转矩阵。
+         * 通过旋转矩阵设置该四元数。
+         * - 旋转矩阵不应包含缩放值。
+         * @param rotateMatrix 旋转矩阵。
          */
-        Quaternion.prototype.fromMatrix = function (matrix) {
+        Quaternion.prototype.fromMatrix = function (rotateMatrix) {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
             // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
-            var rawData = matrix.rawData;
+            var rawData = rotateMatrix.rawData;
             var m11 = rawData[0], m12 = rawData[4], m13 = rawData[8];
             var m21 = rawData[1], m22 = rawData[5], m23 = rawData[9];
             var m31 = rawData[2], m32 = rawData[6], m33 = rawData[10];
@@ -4727,12 +4993,15 @@ var egret3d;
             }
             return this;
         };
-        Quaternion.prototype.fromEuler = function (value, order) {
+        /**
+         * 通过欧拉旋转设置该四元数。
+         * @param euler 欧拉旋转。（弧度制）
+         * @param order 欧拉旋转顺序。
+         */
+        Quaternion.prototype.fromEuler = function (euler, order) {
             if (order === void 0) { order = 2 /* YXZ */; }
-            var x = value.x, y = value.y, z = value.z;
-            // http://www.mathworks.com/matlabcentral/fileexchange/
-            // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
-            //	content/SpinCalc.m
+            var x = euler.x, y = euler.y, z = euler.z;
+            // http://www.mathworks.com/matlabcentral/fileexchange/20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/content/SpinCalc.m
             var cos = Math.cos;
             var sin = Math.sin;
             var c1 = cos(x * 0.5);
@@ -4782,47 +5051,98 @@ var egret3d;
             return this;
         };
         /**
-         * - 向量必须已归一化。
+         * 通过指定旋转轴和旋转角设置该四元数。
+         * - 旋转轴应已被归一化。
+         * @param axis 旋转轴。
+         * @param angle 旋转角。（弧度制）
          */
-        Quaternion.prototype.fromAxis = function (axis, radian) {
+        Quaternion.prototype.fromAxis = function (axis, angle) {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
-            // assumes axis is normalized
-            var halfAngle = radian * 0.5, s = Math.sin(halfAngle);
+            if (angle === void 0) { angle = 0.0; }
+            var halfAngle = angle * 0.5, s = Math.sin(halfAngle);
             this.x = axis.x * s;
             this.y = axis.y * s;
             this.z = axis.z * s;
             this.w = Math.cos(halfAngle);
             return this;
         };
-        Quaternion.prototype.inverse = function (source) {
-            if (!source) {
-                source = this;
+        /**
+         * 通过自起始方向到目标方向的旋转值设置该四元数。
+         * - 方向向量应已被归一化。
+         * @param from 起始方向。
+         * @param to 目标方向。
+         */
+        Quaternion.prototype.fromVectors = function (from, to) {
+            var r = from.dot(to) + 1.0;
+            var v1 = egret3d.helpVector3A;
+            if (r < egret3d.EPSILON) {
+                r = 0.0;
+                if (Math.abs(from.x) > Math.abs(from.z)) {
+                    v1.set(-from.y, from.x, 0.0);
+                }
+                else {
+                    v1.set(0.0, -from.z, from.y);
+                }
             }
-            this.x = source.x * -1;
-            this.y = source.y * -1;
-            this.z = source.z * -1;
-            this.w = source.w;
+            else {
+                v1.cross(from, to);
+            }
+            this.x = v1.x;
+            this.y = v1.y;
+            this.z = v1.z;
+            this.w = r;
+            return this.normalize();
+        };
+        /**
+         * - `v.inverse()` 反转该四元数。
+         * - `v.inverse(input)` 将反转一个四元数的结果写入该四元数。
+         * @param input
+         */
+        Quaternion.prototype.inverse = function (input) {
+            if (!input) {
+                input = this;
+            }
+            this.x = input.x * -1;
+            this.y = input.y * -1;
+            this.z = input.z * -1;
+            this.w = input.w;
             return this;
         };
-        Quaternion.prototype.dot = function (value) {
-            return this.x * value.x + this.y * value.y + this.z * value.z + this.w * value.w;
-        };
+        /**
+         * 四元数相乘运算。
+         * - `v.multiply(a)` 将该四元数与一个四元数相乘，相当于 v *= a。
+         * - `v.multiply(a, b)` 将两个四元数相乘的结果写入该四元数，相当于 v = a * b。
+         * @param valueA 一个四元数。
+         * @param valueB 另一个四元数。
+         */
         Quaternion.prototype.multiply = function (valueA, valueB) {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;
             }
-            var qax = valueA.x, qay = valueA.y, qaz = valueA.z, qaw = valueA.w;
-            var qbx = valueB.x, qby = valueB.y, qbz = valueB.z, qbw = valueB.w;
-            this.x = qax * qbw + qaw * qbx + qay * qbz - qaz * qby;
-            this.y = qay * qbw + qaw * qby + qaz * qbx - qax * qbz;
-            this.z = qaz * qbw + qaw * qbz + qax * qby - qay * qbx;
-            this.w = qaw * qbw - qax * qbx - qay * qby - qaz * qbz;
+            // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
+            var ax = valueA.x, ay = valueA.y, az = valueA.z, aw = valueA.w;
+            var bx = valueB.x, by = valueB.y, bz = valueB.z, bw = valueB.w;
+            this.x = ax * bw + aw * bx + ay * bz - az * by;
+            this.y = ay * bw + aw * by + az * bx - ax * bz;
+            this.z = az * bw + aw * bz + ax * by - ay * bx;
+            this.w = aw * bw - ax * bx - ay * by - az * bz;
             return this;
         };
+        /**
+         * 将一个四元数与该四元数相乘的结果写入该四元数，相当于 v = x * v。
+         * @param value 一个四元数。
+         */
         Quaternion.prototype.premultiply = function (value) {
             return this.multiply(value, this);
         };
+        /**
+         * 四元数插值运算。
+         * - `v.lerp(t, a)` 将该四元数与一个四元数插值，相当于 v = v * (1 - t) + a * t。
+         * - `v.lerp(t, a, b)` 将两个四元数插值的结果写入该四元数，相当于 v = a * (1 - t) + b * t。
+         * @param valueA 一个四元数。
+         * @param valueB 另一个四元数。
+         */
         Quaternion.prototype.lerp = function (t, valueA, valueB) {
             if (!valueB) {
                 valueB = valueA;
@@ -4832,64 +5152,82 @@ var egret3d;
                 return this.copy(valueA);
             if (t === 1.0)
                 return this.copy(valueB);
-            var x = valueA.x, y = valueA.y, z = valueA.z, w = valueA.w;
             // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
-            var cosHalfTheta = w * valueB.w + x * valueB.x + y * valueB.y + z * valueB.z;
+            var ax = valueA.x, ay = valueA.y, az = valueA.z, aw = valueA.w;
+            var bx = valueB.x, by = valueB.y, bz = valueB.z, bw = valueB.w;
+            var cosHalfTheta = aw * bw + ax * bx + ay * by + az * bz;
             if (cosHalfTheta < 0.0) {
-                this.w = -valueB.w;
-                this.x = -valueB.x;
-                this.y = -valueB.y;
-                this.z = -valueB.z;
+                this.w = -bw;
+                this.x = -bx;
+                this.y = -by;
+                this.z = -bz;
                 cosHalfTheta = -cosHalfTheta;
             }
             else {
-                this.copy(valueB);
+                this.w = bw;
+                this.x = bx;
+                this.y = by;
+                this.z = bz;
             }
             if (cosHalfTheta >= 1.0) {
-                this.w = w;
-                this.x = x;
-                this.y = y;
-                this.z = z;
+                this.w = aw;
+                this.x = ax;
+                this.y = ay;
+                this.z = az;
                 return this;
             }
             var sqrSinHalfTheta = 1.0 - cosHalfTheta * cosHalfTheta;
             if (sqrSinHalfTheta <= egret3d.EPSILON) {
                 var s = 1.0 - t;
-                this.w = s * w + t * this.w;
-                this.x = s * x + t * this.x;
-                this.y = s * y + t * this.y;
-                this.z = s * z + t * this.z;
+                this.w = s * aw + t * this.w;
+                this.x = s * ax + t * this.x;
+                this.y = s * ay + t * this.y;
+                this.z = s * az + t * this.z;
                 return this.normalize();
             }
             var sinHalfTheta = Math.sqrt(sqrSinHalfTheta);
             var halfTheta = Math.atan2(sinHalfTheta, cosHalfTheta);
             var ratioA = Math.sin((1.0 - t) * halfTheta) / sinHalfTheta, ratioB = Math.sin(t * halfTheta) / sinHalfTheta;
-            this.w = (w * ratioA + this.w * ratioB);
-            this.x = (x * ratioA + this.x * ratioB);
-            this.y = (y * ratioA + this.y * ratioB);
-            this.z = (z * ratioA + this.z * ratioB);
+            this.w = aw * ratioA + this.w * ratioB;
+            this.x = ax * ratioA + this.x * ratioB;
+            this.y = ay * ratioA + this.y * ratioB;
+            this.z = az * ratioA + this.z * ratioB;
             return this;
         };
         /**
          *
-         * @param eye
-         * @param target
-         * @param up
+         * @param from 起始点。
+         * @param to 目标点。
+         * @param up 旋转后，该四元数 Y 轴正方向。
          */
-        Quaternion.prototype.lookAt = function (eye, target, up) {
-            return this.fromMatrix(egret3d.helpMatrixA.lookAt(eye, target, up));
+        Quaternion.prototype.lookAt = function (from, to, up) {
+            return this.fromMatrix(egret3d.helpMatrixA.lookAt(from, to, up));
         };
         /**
          *
-         * @param value
-         * @param up
+         * @param vector 目标方向。
+         * @param up 旋转后，该四元数 Y 轴正方向。
          */
-        Quaternion.prototype.lookRotation = function (value, up) {
-            return this.fromMatrix(egret3d.helpMatrixA.lookRotation(value, up));
+        Quaternion.prototype.lookRotation = function (vector, up) {
+            return this.fromMatrix(egret3d.helpMatrixA.lookRotation(vector, up));
         };
-        Quaternion.prototype.toEuler = function (value, order) {
+        /**
+         * 获得该四元数和一个四元数的夹角。（弧度制）
+         */
+        Quaternion.prototype.getAngle = function (value) {
+            return 2.0 * Math.acos(Math.abs(egret3d.floatClamp(this.dot(value), -1.0, 1.0)));
+        };
+        /**
+         * 将该四元数转换为欧拉旋转。（弧度制）
+         * @param euler 欧拉旋转。
+         * @param order 欧拉旋转顺序。
+         */
+        Quaternion.prototype.toEuler = function (euler, order) {
             if (order === void 0) { order = 2 /* YXZ */; }
-            return _helpMatrix.fromRotation(this).toEuler(value, order);
+            if (!euler) {
+                euler = egret3d.Vector3.create();
+            }
+            return _helpMatrix.fromRotation(this).toEuler(euler, order);
         };
         Quaternion.IDENTITY = new Quaternion();
         Quaternion._instances = [];
@@ -8158,7 +8496,7 @@ var egret3d;
     var Transform = (function (_super) {
         __extends(Transform, _super);
         function Transform() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
+            var _this = _super.call(this) || this;
             _this._localDirty = 63 /* All */;
             _this._worldDirty = 63 /* All */;
             /**
@@ -8187,9 +8525,17 @@ var egret3d;
              * @internal
              */
             _this._parent = null;
+            _this._localPosition.onUpdateTarget = _this._position.onUpdateTarget = _this;
+            _this._localPosition.onUpdate = _this._position.onUpdate = _this._onPositionUpdate;
+            _this._localRotation.onUpdateTarget = _this._rotation.onUpdateTarget = _this;
+            _this._localRotation.onUpdate = _this._rotation.onUpdate = _this._onRotationUpdate;
+            _this._localEuler.onUpdateTarget = _this._euler.onUpdateTarget = _this;
+            _this._localEuler.onUpdate = _this._euler.onUpdate = _this._onEulerUpdate;
+            _this._localEulerAngles.onUpdateTarget = _this._eulerAngles.onUpdateTarget = _this;
+            _this._localEulerAngles.onUpdate = _this._eulerAngles.onUpdate = _this._onEulerAnglesUpdate;
+            _this._localScale.onUpdateTarget = _this._scale.onUpdateTarget = _this;
+            _this._localScale.onUpdate = _this._scale.onUpdate = _this._onScaleUpdate;
             return _this;
-            // public get root{
-            // }
         }
         Transform.prototype._removeFromChildren = function (value) {
             var index = 0;
@@ -8270,6 +8616,46 @@ var egret3d;
                 this.gameObject._activeInHierarchyDirty(prevActive);
             }
             this._dirtify(false, 7 /* PRS */);
+        };
+        Transform.prototype._onPositionUpdate = function (position) {
+            if (position === this._localPosition) {
+                this._dirtify(true, 1 /* Position */);
+            }
+            else {
+                this.position = position;
+            }
+        };
+        Transform.prototype._onRotationUpdate = function (rotation) {
+            if (rotation === this._localRotation) {
+                this._dirtify(true, 2 /* Rotation */);
+            }
+            else {
+                this.rotation = rotation;
+            }
+        };
+        Transform.prototype._onEulerUpdate = function (euler) {
+            if (euler === this._localEuler) {
+                this.localEuler = euler;
+            }
+            else {
+                this.euler = euler;
+            }
+        };
+        Transform.prototype._onEulerAnglesUpdate = function (euler) {
+            if (euler === this._localEulerAngles) {
+                this.localEulerAngles = euler;
+            }
+            else {
+                this.eulerAngles = euler;
+            }
+        };
+        Transform.prototype._onScaleUpdate = function (scale) {
+            if (scale === this._localScale) {
+                this._dirtify(true, 4 /* Scale */);
+            }
+            else {
+                this.scale = scale;
+            }
         };
         /**
          * @internal
@@ -8493,7 +8879,7 @@ var egret3d;
             configurable: true
         });
         /**
-         * 该物体的本地欧拉弧度。
+         * 该物体的本地欧拉旋转。（弧度制）
          */
         Transform.prototype.getLocalEuler = function (order) {
             if (this._localDirty & 8 /* Euler */) {
@@ -8522,7 +8908,7 @@ var egret3d;
         };
         Object.defineProperty(Transform.prototype, "localEuler", {
             /**
-             * 该物体的本地欧拉弧度。
+             * 该物体的本地欧拉旋转。（弧度制）
              */
             get: function () {
                 if (this._localDirty & 8 /* Euler */) {
@@ -8543,7 +8929,7 @@ var egret3d;
             configurable: true
         });
         /**
-         * 该物体的本地欧拉角度。
+         * 该物体的本地欧拉旋转。（角度制）
          */
         Transform.prototype.getLocalEulerAngles = function (order) {
             if (this._localDirty & 8 /* Euler */) {
@@ -8572,7 +8958,7 @@ var egret3d;
         };
         Object.defineProperty(Transform.prototype, "localEulerAngles", {
             /**
-             * 该物体的本地欧拉角度。
+             * 该物体的本地欧拉旋转。（角度制）
              */
             get: function () {
                 if (this._localDirty & 8 /* Euler */) {
@@ -8754,7 +9140,7 @@ var egret3d;
             configurable: true
         });
         /**
-         * 该物体的世界欧拉弧度。
+         * 该物体的世界欧拉旋转。（弧度制）
          */
         Transform.prototype.getEuler = function (order) {
             if (this._worldDirty & 8 /* Euler */) {
@@ -8778,7 +9164,7 @@ var egret3d;
         };
         Object.defineProperty(Transform.prototype, "euler", {
             /**
-             * 该物体的世界欧拉弧度。
+             * 该物体的世界欧拉旋转。（弧度制）
              */
             get: function () {
                 if (this._worldDirty & 8 /* Euler */) {
@@ -8797,7 +9183,7 @@ var egret3d;
             configurable: true
         });
         /**
-         * 该物体的世界欧拉角度。
+         * 该物体的世界欧拉旋转。（角度制）
          */
         Transform.prototype.getEulerAngles = function (order) {
             if (this._worldDirty & 8 /* Euler */) {
@@ -8822,7 +9208,7 @@ var egret3d;
         };
         Object.defineProperty(Transform.prototype, "eulerAngles", {
             /**
-             * 该物体的世界欧拉角度。
+             * 该物体的世界欧拉旋转。（角度制）
              */
             get: function () {
                 if (this._worldDirty & 8 /* Euler */) {
@@ -8972,11 +9358,11 @@ var egret3d;
         /**
          * 将该物体绕指定轴旋转指定弧度。
          * @param axis 指定轴。
-         * @param radian 指定弧度。
+         * @param angle 指定弧度。
          * @param isWorldSpace 是否是世界坐标系。
          */
-        Transform.prototype.rotateOnAxis = function (axis, radian, isWorldSpace) {
-            _helpRotation.fromAxis(axis, radian);
+        Transform.prototype.rotateOnAxis = function (axis, angle, isWorldSpace) {
+            _helpRotation.fromAxis(axis, angle);
             if (isWorldSpace) {
                 this.localRotation = this._localRotation.premultiply(_helpRotation).normalize();
             }
@@ -8989,55 +9375,16 @@ var egret3d;
          * 将该物体绕世界指定点和世界指定轴旋转指定弧度。
          * @param worldPosition 世界指定点。
          * @param worldAxis 世界指定轴。
-         * @param radian 指定弧度。
+         * @param angle 指定弧度。
          */
-        Transform.prototype.rotateAround = function (worldPosition, worldAxis, radian) {
-            this.rotateOnAxis(worldAxis, radian, true);
-            this.position = this._localPosition.applyMatrix(_helpMatrix.fromRotation(_helpRotation.fromAxis(worldAxis, radian)).fromTranslate(worldPosition, true), this.position);
+        Transform.prototype.rotateAround = function (worldPosition, worldAxis, angle) {
+            this.rotateOnAxis(worldAxis, angle, true);
+            this.position = this._localPosition.applyMatrix(_helpMatrix.fromRotation(_helpRotation.fromAxis(worldAxis, angle)).fromTranslate(worldPosition, true), this.position);
             return this;
-        };
-        Transform.prototype.rotateAngle = function (p1, p2, p3, p4, p5) {
-            if (p1.hasOwnProperty("x")) {
-                if (p2) {
-                    this.eulerAngles = this._localEulerAngles.add(p1, this.eulerAngles);
-                }
-                else {
-                    this.localEulerAngles; // Update euler.
-                    this.localEulerAngles = this._localEulerAngles.add(p1);
-                }
-            }
-            else {
-                _helpVector3A.set(p1, p2, p3);
-                if (p4) {
-                    this.eulerAngles = this._localEulerAngles.add(_helpVector3A, this.eulerAngles);
-                }
-                else {
-                    this.localEulerAngles; // Update euler.
-                    this.localEulerAngles = this._localEulerAngles.add(_helpVector3A);
-                }
-            }
-            return this;
-        };
-        /**
-         * 将该物体绕指定轴旋转指定角度。
-         * @param axis 指定轴。
-         * @param angle 指定角度。
-         * @param isWorldSpace 是否是世界坐标系。
-         */
-        Transform.prototype.rotateAngleOnAxis = function (axis, angle, isWorldSpace) {
-            return this.rotateOnAxis(axis, angle * egret3d.DEG_RAD, isWorldSpace);
-        };
-        /**
-         * 将该物体绕世界指定点和世界指定轴旋转指定角度。
-         * @param worldPosition 世界指定点。
-         * @param worldAxis 世界指定轴。
-         * @param angle 指定角度。
-         */
-        Transform.prototype.rotateAngleAround = function (worldPosition, worldAxis, angle) {
-            return this.rotateAround(worldPosition, worldAxis, angle * egret3d.DEG_RAD);
         };
         /**
          * 获取该物体在世界空间坐标系下描述的 X 轴正方向。
+         * @param out 输出向量。
          */
         Transform.prototype.getRight = function (out) {
             if (!out) {
@@ -9047,6 +9394,7 @@ var egret3d;
         };
         /**
          * 获取该物体在世界空间坐标系下描述的 Y 轴正方向。
+         * @param out 输出向量。
          */
         Transform.prototype.getUp = function (out) {
             if (!out) {
@@ -9056,6 +9404,7 @@ var egret3d;
         };
         /**
          * 获取该物体在世界空间坐标系下描述的 Z 轴正方向。
+         * @param out 输出向量。
          */
         Transform.prototype.getForward = function (out) {
             if (!out) {
@@ -11624,7 +11973,8 @@ var egret3d;
         };
         RenderContext.prototype.update = function (drawCall) {
             var renderer = drawCall.renderer;
-            var scene = renderer.gameObject.scene;
+            // const scene = renderer.gameObject.scene;
+            var scene = paper.Scene.activeScene;
             var matrix = drawCall.matrix || renderer.gameObject.transform.worldMatrix;
             this.drawCall = drawCall;
             this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
@@ -20298,7 +20648,7 @@ var egret3d;
         ShaderLib.equirect = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "equirect_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n\r\nvoid main() {\r\n\r\n\tvWorldPosition = transformDirection( position, modelMatrix );\r\n\r\n\t#include <begin_vertex>\r\n\t#include <project_vertex>\r\n\r\n}\r\n" }, { "name": "equirect_frag", "type": 35632, "uri": "uniform sampler2D tEquirect;\r\n\r\nvarying vec3 vWorldPosition;\r\n\r\n#include <common>\r\n\r\nvoid main() {\r\n\r\n\tvec3 direction = normalize( vWorldPosition );\r\n\r\n\tvec2 sampleUV;\r\n\r\n\tsampleUV.y = asin( clamp( direction.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\r\n\r\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\r\n\r\n\tgl_FragColor = texture2D( tEquirect, sampleUV );\r\n\r\n}\r\n" }], "techniques": [{ "name": "equirect", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "tEquirect": { "type": 35678 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.linebasic = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "linebasic_vert", "type": 35633, "uri": "#include <common>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\nuniform float linewidth;\r\nuniform vec2 resolution;\r\nattribute vec3 instanceStart;\r\nattribute vec3 instanceEnd;\r\nattribute vec3 instanceColorStart;\r\nattribute vec3 instanceColorEnd;\r\nvarying vec2 vUv;\r\n#ifdef USE_DASH\r\n\tuniform float dashScale;\r\n\tattribute float instanceDistanceStart;\r\n\tattribute float instanceDistanceEnd;\r\n\tvarying float vLineDistance;\r\n#endif\r\nvoid trimSegment( const in vec4 start, inout vec4 end ) {\r\n\t// trim end segment so it terminates between the camera plane and the near plane\r\n\t// conservative estimate of the near plane\r\n\tfloat a = projectionMatrix[ 2 ][ 2 ]; // 3nd entry in 3th column\r\n\tfloat b = projectionMatrix[ 3 ][ 2 ]; // 3nd entry in 4th column\r\n\tfloat nearEstimate = - 0.5 * b / a;\r\n\tfloat alpha = ( nearEstimate - start.z ) / ( end.z - start.z );\r\n\tend.xyz = mix( start.xyz, end.xyz, alpha );\r\n}\r\nvoid main() {\r\n\t#ifdef USE_COLOR\r\n\t\tvColor.xyz = ( position.y < 0.5 ) ? instanceColorStart : instanceColorEnd;\r\n\t#endif\r\n\t#ifdef USE_DASH\r\n\t\tvLineDistance = ( position.y < 0.5 ) ? dashScale * instanceDistanceStart : dashScale * instanceDistanceEnd;\r\n\t#endif\r\n\tfloat aspect = resolution.x / resolution.y;\r\n\tvUv = uv;\r\n\t// camera space\r\n\tvec4 start = modelViewMatrix * vec4( instanceStart, 1.0 );\r\n\tvec4 end = modelViewMatrix * vec4( instanceEnd, 1.0 );\r\n\t// special case for perspective projection, and segments that terminate either in, or behind, the camera plane\r\n\t// clearly the gpu firmware has a way of addressing this issue when projecting into ndc space\r\n\t// but we need to perform ndc-space calculations in the shader, so we must address this issue directly\r\n\t// perhaps there is a more elegant solution -- WestLangley\r\n\tbool perspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 ); // 4th entry in the 3rd column\r\n\tif ( perspective ) {\r\n\t\tif ( start.z < 0.0 && end.z >= 0.0 ) {\r\n\t\t\ttrimSegment( start, end );\r\n\t\t} else if ( end.z < 0.0 && start.z >= 0.0 ) {\r\n\t\t\ttrimSegment( end, start );\r\n\t\t}\r\n\t}\r\n\t// clip space\r\n\tvec4 clipStart = projectionMatrix * start;\r\n\tvec4 clipEnd = projectionMatrix * end;\r\n\t// ndc space\r\n\tvec2 ndcStart = clipStart.xy / clipStart.w;\r\n\tvec2 ndcEnd = clipEnd.xy / clipEnd.w;\r\n\t// direction\r\n\tvec2 dir = ndcEnd - ndcStart;\r\n\t// account for clip-space aspect ratio\r\n\tdir.x *= aspect;\r\n\tdir = normalize( dir );\r\n\t// perpendicular to dir\r\n\tvec2 offset = vec2( dir.y, - dir.x );\r\n\t// undo aspect ratio adjustment\r\n\tdir.x /= aspect;\r\n\toffset.x /= aspect;\r\n\t// sign flip\r\n\tif ( position.x < 0.0 ) offset *= - 1.0;\r\n\t// endcaps\r\n\tif ( position.y < 0.0 ) {\r\n\t\toffset += - dir;\r\n\t} else if ( position.y > 1.0 ) {\r\n\t\toffset += dir;\r\n\t}\r\n\t// adjust for linewidth\r\n\toffset *= linewidth;\r\n\t// adjust for clip-space to screen-space conversion // maybe resolution should be based on viewport ...\r\n\toffset /= resolution.y;\r\n\t// select end\r\n\tvec4 clip = ( position.y < 0.5 ) ? clipStart : clipEnd;\r\n\t// back to clip space\r\n\toffset *= clip.w;\r\n\tclip.xy += offset;\r\n\tgl_Position = clip;\r\n\tvec4 mvPosition = ( position.y < 0.5 ) ? start : end; // this is an approximation\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <fog_vertex>\r\n}" }, { "name": "linebasic_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#ifdef USE_DASH\r\n\r\n\tuniform float dashSize;\r\n\tuniform float gapSize;\r\n\r\n#endif\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvarying vec2 vUv;\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\t#ifdef USE_DASH\r\n\r\n\t\tif ( vUv.y < - 1.0 || vUv.y > 1.0 ) discard; // discard endcaps\r\n\r\n\t\tif ( mod( vLineDistance, dashSize + gapSize ) > dashSize ) discard; // todo - FIX\r\n\r\n\t#endif\r\n\r\n\tif ( abs( vUv.y ) > 1.0 ) {\r\n\r\n\t\tfloat a = vUv.x;\r\n\t\tfloat b = ( vUv.y > 0.0 ) ? vUv.y - 1.0 : vUv.y + 1.0;\r\n\t\tfloat len2 = a * a + b * b;\r\n\r\n\t\tif ( len2 > 1.0 ) discard;\r\n\r\n\t}\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <color_fragment>\r\n\r\n\tgl_FragColor = vec4( diffuseColor.rgb, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}" }], "techniques": [{ "name": "linebasic", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "instanceStart": { "semantic": "_INSTANCE_START" }, "instanceEnd": { "semantic": "_INSTANCE_END" }, "instanceColorStart": { "semantic": "_INSTANCE_COLOR_START" }, "instanceColorEnd": { "semantic": "_INSTANCE_COLOR_END" }, "instanceDistanceStart": { "semantic": "_INSTANCE_DISTANCE_START" }, "instanceDistanceEnd": { "semantic": "_INSTANCE_DISTANCE_END" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "logDepthBufFC": { "type": 5126 }, "linewidth": { "type": 5126, "value": 1 }, "resolution": { "type": 35664, "semantic": "_RESOLUTION" }, "dashScale": { "type": 5126, "value": 1 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "dashSize": { "type": 5126, "value": 1 }, "gapSize": { "type": 5126, "value": 1 }, "fogColor": { "type": 35665, "semantic": "_FOG_COLOR" }, "fogDensity": { "type": 5126, "semantic": "_FOG_DENSITY" }, "fogNear": { "type": 5126, "semantic": "_FOG_NEAR" }, "fogFar": { "type": 5126, "semantic": "_FOG_FAR" }, "clippingPlanes[0]": { "type": 35666 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.linedashed = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "linedashed_vert", "type": 35633, "uri": "uniform float scale;\r\nattribute float lineDistance;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <color_vertex>\r\n\r\n\tvLineDistance = scale * lineDistance;\r\n\r\n\tvec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\r\n\tgl_Position = projectionMatrix * mvPosition;\r\n\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "linedashed_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\nuniform float dashSize;\r\nuniform float totalSize;\r\n\r\nvarying float vLineDistance;\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tif ( mod( vLineDistance, totalSize ) > dashSize ) {\r\n\r\n\t\tdiscard;\r\n\r\n\t}\r\n\r\n\tvec3 outgoingLight = vec3( 0.0 );\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <color_fragment>\r\n\r\n\toutgoingLight = diffuseColor.rgb; // simple shader\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "linedashed", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "lineDistance": { "semantic": "_INSTANCE_DISTANCE" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "scale": { "type": 5126, "value": 1 }, "logDepthBufFC": { "type": 5126 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "dashSize": { "type": 5126, "value": 1 }, "totalSize": { "type": 5126, "value": 1 }, "fogColor": { "type": 35665, "semantic": "_FOG_COLOR" }, "fogDensity": { "type": 5126, "semantic": "_FOG_DENSITY" }, "fogNear": { "type": 5126, "semantic": "_FOG_NEAR" }, "fogFar": { "type": 5126, "semantic": "_FOG_FAR" }, "clippingPlanes[0]": { "type": 35666 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
-        ShaderLib.meshbasic = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshbasic_vert", "type": 35633, "uri": "#include <common>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_ENVMAP\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshbasic_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\r\n\t// accumulation (baked indirect lighting only)\r\n\t#ifdef USE_LIGHTMAP\r\n\t\t   lowp vec4 lightmapTex = texture2D(lightMap, vUv2);\r\n\t\t   highp float power =pow( 2.0 ,lightmapTex.a * 255.0 - 128.0);\r\n\t\t   reflectedLight.indirectDiffuse +=lightmapTex.rgb * power * lightMapIntensity * 1.2;//EGRET\r\n\t\t// reflectedLight.indirectDiffuse += texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\r\n\r\n\t#else\r\n\r\n\t\treflectedLight.indirectDiffuse += vec3( 1.0 );\r\n\r\n\t#endif\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\treflectedLight.indirectDiffuse *= diffuseColor.rgb;\r\n\r\n\tvec3 outgoingLight = reflectedLight.indirectDiffuse;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t// #include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshbasic", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "boneMatrices[0]": { "type": 35676, "semantic": "JOINTMATRIX" }, "logDepthBufFC": { "type": 5126 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "aoMap": { "type": 35678 }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678 }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "fogColor": { "type": 35665, "semantic": "_FOG_COLOR" }, "fogDensity": { "type": 5126, "semantic": "_FOG_DENSITY" }, "fogNear": { "type": 5126, "semantic": "_FOG_NEAR" }, "fogFar": { "type": 5126, "semantic": "_FOG_FAR" }, "specularMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
+        ShaderLib.meshbasic = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshbasic_vert", "type": 35633, "uri": "#include <common>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\t#include <skinbase_vertex>\r\n\r\n\t#ifdef USE_ENVMAP\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n\t#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshbasic_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform float opacity;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\r\n\t// accumulation (baked indirect lighting only)\r\n\t#ifdef USE_LIGHTMAP\r\n\t\t  reflectedLight.indirectDiffuse += texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\r\n\r\n\t#else\r\n\r\n\t\treflectedLight.indirectDiffuse += vec3( 1.0 );\r\n\r\n\t#endif\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\treflectedLight.indirectDiffuse *= diffuseColor.rgb;\r\n\r\n\tvec3 outgoingLight = reflectedLight.indirectDiffuse;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <tonemapping_fragment>\r\n\t// #include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshbasic", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "boneMatrices[0]": { "type": 35676, "semantic": "JOINTMATRIX" }, "logDepthBufFC": { "type": 5126 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "aoMap": { "type": 35678 }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678 }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "fogColor": { "type": 35665, "semantic": "_FOG_COLOR" }, "fogDensity": { "type": 5126, "semantic": "_FOG_DENSITY" }, "fogNear": { "type": 5126, "semantic": "_FOG_NEAR" }, "fogFar": { "type": 5126, "semantic": "_FOG_FAR" }, "specularMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.meshlambert = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshlambert_vert", "type": 35633, "uri": "#define LAMBERT\r\nvarying vec3 vLightFront;\r\n\r\n#ifdef DOUBLE_SIDED\r\n\r\n\tvarying vec3 vLightBack;\r\n\r\n#endif\r\n#include <common>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_pars_maps>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <lights_lambert_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshlambert_frag", "type": 35632, "uri": "uniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform float opacity;\r\n\r\nvarying vec3 vLightFront;\r\n\r\n#ifdef DOUBLE_SIDED\r\n\r\n\tvarying vec3 vLightBack;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_pars_maps>\r\n#include <fog_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <shadowmask_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\treflectedLight.indirectDiffuse = getAmbientLightIrradiance( ambientLightColor );\r\n\r\n\t#include <lightmap_fragment>\r\n\r\n\treflectedLight.indirectDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb );\r\n\r\n\t#ifdef DOUBLE_SIDED\r\n\r\n\t\treflectedLight.directDiffuse = ( gl_FrontFacing ) ? vLightFront : vLightBack;\r\n\r\n\t#else\r\n\r\n\t\treflectedLight.directDiffuse = vLightFront;\r\n\r\n\t#endif\r\n\r\n\treflectedLight.directDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb ) * getShadowMask();\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + totalEmissiveRadiance;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t// #include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshlambert", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": [] }, "ambientLightColor": { "type": 35665, "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "semantic": "Unknown" }, "ltc_2": { "type": 35678, "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "semantic": "Unknown" }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "boneMatrices[0]": { "type": 35676, "semantic": "JOINTMATRIX" }, "directionalShadowMatrix[0]": { "type": 35676, "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "aoMap": { "type": 35678 }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678 }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678 }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "fogColor": { "type": 35665, "semantic": "_FOG_COLOR" }, "fogDensity": { "type": 5126, "semantic": "_FOG_DENSITY" }, "fogNear": { "type": 5126, "semantic": "_FOG_NEAR" }, "fogFar": { "type": 5126, "semantic": "_FOG_FAR" }, "directionalShadowMap[0]": { "type": 35678, "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "semantic": "_POINTSHADOWMAP" }, "specularMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.meshphong = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphong_vert", "type": 35633, "uri": "#define PHONG\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <envmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <envmap_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshphong_frag", "type": 35632, "uri": "#define PHONG\r\n\r\nuniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform vec3 specular;\r\nuniform float shininess;\r\nuniform float opacity;\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <gradientmap_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <bsdfs>\r\n#include <lights_pars_begin>\r\n#include <lights_phong_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <specularmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <specularmap_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\t#include <lights_phong_fragment>\r\n\t#include <lights_fragment_begin>\r\n\t#include <lights_fragment_maps>\r\n\t#include <lights_fragment_end>\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\r\n\r\n\t#include <envmap_fragment>\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshphong", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126 }, "displacementBias": { "type": 5126 }, "refractionRatio": { "type": 5126, "value": [] }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "boneMatrices[0]": { "type": 35676, "semantic": "JOINTMATRIX" }, "directionalShadowMatrix[0]": { "type": 35676, "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "specular": { "type": 35665, "value": [1, 1, 1] }, "shininess": { "type": 5126, "value": 1 }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "aoMap": { "type": 35678 }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678 }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678 }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "gradientMap": { "type": 35678 }, "fogColor": { "type": 35665, "semantic": "_FOG_COLOR" }, "fogDensity": { "type": 5126, "semantic": "_FOG_DENSITY" }, "fogNear": { "type": 5126, "semantic": "_FOG_NEAR" }, "fogFar": { "type": 5126, "semantic": "_FOG_FAR" }, "ambientLightColor": { "type": 35665, "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "semantic": "Unknown" }, "ltc_2": { "type": 35678, "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "semantic": "_POINTSHADOWMAP" }, "bumpMap": { "type": 35678 }, "bumpScale": { "type": 5126 }, "normalMap": { "type": 35678 }, "normalScale": { "type": 35664 }, "specularMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.meshphysical = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphysical_vert", "type": 35633, "uri": "#define PHYSICAL\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <uv_pars_vertex>\r\n#include <uv2_pars_vertex>\r\n#include <displacementmap_pars_vertex>\r\n#include <color_pars_vertex>\r\n#include <fog_pars_vertex>\r\n#include <morphtarget_pars_vertex>\r\n#include <skinning_pars_vertex>\r\n#include <shadowmap_pars_vertex>\r\n#include <logdepthbuf_pars_vertex>\r\n#include <clipping_planes_pars_vertex>\r\n\r\nvoid main() {\r\n\r\n\t#include <uv_vertex>\r\n\t#include <uv2_vertex>\r\n\t#include <color_vertex>\r\n\r\n\t#include <beginnormal_vertex>\r\n\t#include <morphnormal_vertex>\r\n\t#include <skinbase_vertex>\r\n\t#include <skinnormal_vertex>\r\n\t#include <defaultnormal_vertex>\r\n\r\n#ifndef FLAT_SHADED // Normal computed with derivatives when FLAT_SHADED\r\n\r\n\tvNormal = normalize( transformedNormal );\r\n\r\n#endif\r\n\r\n\t#include <begin_vertex>\r\n\t#include <morphtarget_vertex>\r\n\t#include <skinning_vertex>\r\n\t#include <displacementmap_vertex>\r\n\t#include <project_vertex>\r\n\t#include <logdepthbuf_vertex>\r\n\t#include <clipping_planes_vertex>\r\n\r\n\tvViewPosition = - mvPosition.xyz;\r\n\r\n\t#include <worldpos_vertex>\r\n\t#include <shadowmap_vertex>\r\n\t#include <fog_vertex>\r\n\r\n}\r\n" }, { "name": "meshphysical_frag", "type": 35632, "uri": "#define PHYSICAL\r\n\r\nuniform vec3 diffuse;\r\nuniform vec3 emissive;\r\nuniform float roughness;\r\nuniform float metalness;\r\nuniform float opacity;\r\n\r\n#ifndef STANDARD\r\n\tuniform float clearCoat;\r\n\tuniform float clearCoatRoughness;\r\n#endif\r\n\r\nvarying vec3 vViewPosition;\r\n\r\n#ifndef FLAT_SHADED\r\n\r\n\tvarying vec3 vNormal;\r\n\r\n#endif\r\n\r\n#include <common>\r\n#include <packing>\r\n#include <dithering_pars_fragment>\r\n#include <color_pars_fragment>\r\n#include <uv_pars_fragment>\r\n#include <uv2_pars_fragment>\r\n#include <map_pars_fragment>\r\n#include <alphamap_pars_fragment>\r\n#include <aomap_pars_fragment>\r\n#include <lightmap_pars_fragment>\r\n#include <emissivemap_pars_fragment>\r\n#include <bsdfs>\r\n#include <cube_uv_reflection_fragment>\r\n#include <envmap_pars_fragment>\r\n#include <envmap_physical_pars_fragment>\r\n#include <fog_pars_fragment>\r\n#include <lights_pars_begin>\r\n#include <lights_physical_pars_fragment>\r\n#include <shadowmap_pars_fragment>\r\n#include <bumpmap_pars_fragment>\r\n#include <normalmap_pars_fragment>\r\n#include <roughnessmap_pars_fragment>\r\n#include <metalnessmap_pars_fragment>\r\n#include <logdepthbuf_pars_fragment>\r\n#include <clipping_planes_pars_fragment>\r\n\r\nvoid main() {\r\n\r\n\t#include <clipping_planes_fragment>\r\n\r\n\tvec4 diffuseColor = vec4( diffuse, opacity );\r\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\r\n\tvec3 totalEmissiveRadiance = emissive;\r\n\r\n\t#include <logdepthbuf_fragment>\r\n\t#include <map_fragment>\r\n\t#include <color_fragment>\r\n\t#include <alphamap_fragment>\r\n\t#include <alphatest_fragment>\r\n\t#include <roughnessmap_fragment>\r\n\t#include <metalnessmap_fragment>\r\n\t#include <normal_fragment_begin>\r\n\t#include <normal_fragment_maps>\r\n\t#include <emissivemap_fragment>\r\n\r\n\t// accumulation\r\n\t#include <lights_physical_fragment>\r\n\t#include <lights_fragment_begin>\r\n\t#include <lights_fragment_maps>\r\n\t#include <lights_fragment_end>\r\n\r\n\t// modulation\r\n\t#include <aomap_fragment>\r\n\r\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\r\n\r\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\r\n\r\n\t#include <tonemapping_fragment>\r\n\t#include <encodings_fragment>\r\n\t#include <fog_fragment>\r\n\t#include <premultiplied_alpha_fragment>\r\n\t#include <dithering_fragment>\r\n\r\n}\r\n" }], "techniques": [{ "name": "meshphysical", "attributes": { "position": { "semantic": "POSITION" }, "normal": { "semantic": "NORMAL" }, "uv": { "semantic": "TEXCOORD_0" }, "color": { "semantic": "COLOR_0" }, "morphTarget0": { "semantic": "WEIGHTS_0" }, "morphTarget1": { "semantic": "WEIGHTS_1" }, "morphTarget2": { "semantic": "WEIGHTS_2" }, "morphTarget3": { "semantic": "WEIGHTS_3" }, "morphNormal0": { "semantic": "MORPHNORMAL_0" }, "morphNormal1": { "semantic": "MORPHNORMAL_1" }, "morphNormal2": { "semantic": "MORPHNORMAL_2" }, "morphNormal3": { "semantic": "MORPHNORMAL_3" }, "morphTarget4": { "semantic": "WEIGHTS_4" }, "morphTarget5": { "semantic": "WEIGHTS_5" }, "morphTarget6": { "semantic": "WEIGHTS_6" }, "morphTarget7": { "semantic": "WEIGHTS_7" }, "skinIndex": { "semantic": "JOINTS_0" }, "skinWeight": { "semantic": "WEIGHTS_0" }, "uv2": { "semantic": "TEXCOORD_1" } }, "uniforms": { "modelMatrix": { "type": 35676, "semantic": "MODEL" }, "modelViewMatrix": { "type": 35676, "semantic": "MODELVIEW" }, "projectionMatrix": { "type": 35676, "semantic": "PROJECTION" }, "viewMatrix": { "type": 35676, "semantic": "VIEW" }, "normalMatrix": { "type": 35675, "semantic": "MODELVIEWINVERSE" }, "cameraPosition": { "type": 35665, "semantic": "_CAMERA_POS" }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "boneMatrices[0]": { "type": 35676, "semantic": "JOINTMATRIX" }, "directionalShadowMatrix[0]": { "type": 35676, "semantic": "_DIRECTIONSHADOWMAT" }, "spotShadowMatrix[0]": { "type": 35676, "semantic": "_SPOTSHADOWMAT" }, "pointShadowMatrix[0]": { "type": 35676, "semantic": "_POINTSHADOWMAT" }, "logDepthBufFC": { "type": 5126 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "roughness": { "type": 5126 }, "metalness": { "type": 5126 }, "opacity": { "type": 5126, "value": 1 }, "clearCoat": { "type": 5126 }, "clearCoatRoughness": { "type": 5126 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "aoMap": { "type": 35678 }, "aoMapIntensity": { "type": 5126, "value": 1 }, "lightMap": { "type": 35678, "semantic": "_LIGHTMAPTEX" }, "lightMapIntensity": { "type": 5126, "semantic": "_LIGHTMAPINTENSITY" }, "emissiveMap": { "type": 35678 }, "reflectivity": { "type": 5126, "value": [] }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678 }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124, "value": [] }, "refractionRatio": { "type": 5126, "value": [] }, "fogColor": { "type": 35665, "semantic": "_FOG_COLOR" }, "fogDensity": { "type": 5126, "semantic": "_FOG_DENSITY" }, "fogNear": { "type": 5126, "semantic": "_FOG_NEAR" }, "fogFar": { "type": 5126, "semantic": "_FOG_FAR" }, "ambientLightColor": { "type": 35665, "semantic": "_AMBIENTLIGHTCOLOR" }, "directionalLights[0]": { "type": 5126, "semantic": "_DIRECTLIGHTS" }, "pointLights[0]": { "type": 5126, "semantic": "_POINTLIGHTS" }, "spotLights[0]": { "type": 5126, "semantic": "_SPOTLIGHTS" }, "ltc_1": { "type": 35678, "semantic": "Unknown" }, "ltc_2": { "type": 35678, "semantic": "Unknown" }, "rectAreaLights[0]": { "type": -1, "semantic": "Unknown" }, "hemisphereLights[0]": { "type": -1, "semantic": "Unknown" }, "directionalShadowMap[0]": { "type": 35678, "semantic": "_DIRECTIONSHADOWMAP" }, "spotShadowMap[0]": { "type": 35678, "semantic": "_SPOTSHADOWMAP" }, "pointShadowMap[0]": { "type": 35678, "semantic": "_POINTSHADOWMAP" }, "bumpMap": { "type": 35678 }, "bumpScale": { "type": 5126 }, "normalMap": { "type": 35678 }, "normalScale": { "type": 35664 }, "roughnessMap": { "type": 35678 }, "metalnessMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } }, "states": { "enable": [], "functions": {} } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
@@ -22207,7 +22557,6 @@ var egret3d;
                 var screenWidth = isWX ? window.innerWidth : this._canvas.parentElement.clientWidth;
                 var screenHeight = isWX ? window.innerHeight : this._canvas.parentElement.clientHeight;
                 globalGameObject.addComponent(egret3d.Stage, {
-                    rotateEnabled: !(config.rotateEnabled === false),
                     size: { w: config.option.contentWidth, h: config.option.contentHeight },
                     screenSize: { w: screenWidth, h: screenHeight },
                 });
@@ -22225,7 +22574,7 @@ var egret3d;
                 }, this);
             };
             BeginSystem.prototype.onUpdate = function () {
-                // TODO
+                // TODO 
                 egret3d.Performance.startCounter("all" /* All */);
                 // TODO 查询是否有性能问题。
                 var isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || this._canvas.parentElement === undefined;
