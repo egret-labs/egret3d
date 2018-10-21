@@ -1388,10 +1388,9 @@ var ColorController = function (_Controller) {
         hueGradient(_this2.__hue_field);
         Common.extend(_this2.__input.style, {
             outline: 'none',
-            textAlign: 'center',
+            textAlign: 'left',
             color: '#fff',
             border: 0,
-            fontWeight: 'bold',
             textShadow: _this2.__input_textShadow + 'rgba(0,0,0,0.7)'
         });
         dom.bind(_this2.__saturation_field, 'mousedown', fieldDown);
@@ -1683,7 +1682,7 @@ var CenteredDiv = function () {
   return CenteredDiv;
 }();
 
-var styleSheet = ___$insertStyle(".dg ul{list-style:none;margin:0;padding:0;width:100%;clear:both}.dg.ac{position:fixed;top:0;left:0;right:0;height:0;z-index:0}.dg:not(.ac) .main{overflow:hidden}.dg.main{-webkit-transition:opacity .1s linear;-o-transition:opacity .1s linear;-moz-transition:opacity .1s linear;transition:opacity .1s linear}.dg.main.taller-than-window{overflow-y:auto}.dg.main.taller-than-window .close-button{opacity:1;margin-top:-1px;border-top:1px solid #2c2c2c}.dg.main ul.closed .close-button{opacity:1 !important}.dg.main:hover .close-button,.dg.main .close-button.drag{opacity:1}.dg.main .close-button{-webkit-transition:opacity .1s linear;-o-transition:opacity .1s linear;-moz-transition:opacity .1s linear;transition:opacity .1s linear;border:0;line-height:19px;height:20px;cursor:pointer;text-align:center;background-color:#000}.dg.main .close-button.close-top{position:relative}.dg.main .close-button.close-bottom{position:absolute}.dg.main .close-button:hover{background-color:#111}.dg.a{float:right;margin-right:15px;overflow-y:visible}.dg.a.has-save>ul.close-top{margin-top:0}.dg.a.has-save>ul.close-bottom{margin-top:27px}.dg.a.has-save>ul.closed{margin-top:0}.dg.a .save-row{top:0;z-index:1002}.dg.a .save-row.close-top{position:relative}.dg.a .save-row.close-bottom{position:fixed}.dg li{-webkit-transition:height .1s ease-out;-o-transition:height .1s ease-out;-moz-transition:height .1s ease-out;transition:height .1s ease-out;-webkit-transition:overflow .1s linear;-o-transition:overflow .1s linear;-moz-transition:overflow .1s linear;transition:overflow .1s linear}.dg li:not(.folder){cursor:auto;height:27px;line-height:27px;padding:0 4px 0 5px}.dg li.folder{padding:0;border-left:4px solid rgba(0,0,0,0)}.dg li.title{cursor:pointer;margin-left:-4px}.dg .closed li:not(.title),.dg .closed ul li,.dg .closed ul li>*{height:0;overflow:hidden;border:0}.dg .cr{clear:both;padding-left:3px;height:27px;overflow:hidden}.dg .property-name{cursor:default;float:left;clear:left;width:40%;overflow:hidden;text-overflow:ellipsis}.dg .c{float:left;width:60%;position:relative}.dg .c input[type=text]{border:0;margin-top:4px;padding:3px;width:100%;float:right}.dg .has-slider input[type=text]{width:30%;margin-left:0}.dg .slider{float:left;width:66%;margin-left:-5px;margin-right:0;height:19px;margin-top:4px}.dg .slider-fg{height:100%}.dg .c input[type=checkbox]{margin-top:7px}.dg .c select{margin-top:5px}.dg .cr.function,.dg .cr.function .property-name,.dg .cr.function *,.dg .cr.boolean,.dg .cr.boolean *{cursor:pointer}.dg .cr.color{overflow:visible}.dg .selector{display:none;position:absolute;margin-left:-9px;margin-top:23px;z-index:10}.dg .c:hover .selector,.dg .selector.drag{display:block}.dg li.save-row{padding:0}.dg li.save-row .button{display:inline-block;padding:0px 6px}.dg.dialogue{background-color:#222;width:460px;padding:15px;font-size:13px;line-height:15px}#dg-new-constructor{padding:10px;color:#222;font-family:Monaco, monospace;font-size:10px;border:0;resize:none;box-shadow:inset 1px 1px 1px #888;word-wrap:break-word;margin:12px 0;display:block;width:440px;overflow-y:scroll;height:100px;position:relative}#dg-local-explain{display:none;font-size:11px;line-height:17px;border-radius:3px;background-color:#333;padding:8px;margin-top:10px}#dg-local-explain code{font-size:10px}#dat-gui-save-locally{display:none}.dg{color:#eee;font:11px 'Lucida Grande', sans-serif;text-shadow:0 -1px 0 #111}.dg.main::-webkit-scrollbar{width:5px;background:#1a1a1a}.dg.main::-webkit-scrollbar-corner{height:0;display:none}.dg.main::-webkit-scrollbar-thumb{border-radius:5px;background:#676767}.dg li:not(.folder){background:#1a1a1a;border-bottom:1px solid #2c2c2c}.dg li.save-row{line-height:25px;background:#dad5cb;border:0}.dg li.save-row select{margin-left:5px;width:108px}.dg li.save-row .button{margin-left:5px;margin-top:1px;border-radius:2px;font-size:9px;line-height:7px;padding:4px 4px 5px 4px;background:#c5bdad;color:#fff;text-shadow:0 1px 0 #b0a58f;box-shadow:0 -1px 0 #b0a58f;cursor:pointer}.dg li.save-row .button.gears{background:#c5bdad url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAANCAYAAAB/9ZQ7AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAQJJREFUeNpiYKAU/P//PwGIC/ApCABiBSAW+I8AClAcgKxQ4T9hoMAEUrxx2QSGN6+egDX+/vWT4e7N82AMYoPAx/evwWoYoSYbACX2s7KxCxzcsezDh3evFoDEBYTEEqycggWAzA9AuUSQQgeYPa9fPv6/YWm/Acx5IPb7ty/fw+QZblw67vDs8R0YHyQhgObx+yAJkBqmG5dPPDh1aPOGR/eugW0G4vlIoTIfyFcA+QekhhHJhPdQxbiAIguMBTQZrPD7108M6roWYDFQiIAAv6Aow/1bFwXgis+f2LUAynwoIaNcz8XNx3Dl7MEJUDGQpx9gtQ8YCueB+D26OECAAQDadt7e46D42QAAAABJRU5ErkJggg==) 2px 1px no-repeat;height:7px;width:8px}.dg li.save-row .button:hover{background-color:#bab19e;box-shadow:0 -1px 0 #b0a58f}.dg li.folder{border-bottom:0}.dg li.title{padding-left:16px;background:#000 url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlI+hKgFxoCgAOw==) 6px 10px no-repeat;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.2)}.dg .closed li.title{background-image:url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlGIWqMCbWAEAOw==)}.dg .selected li.title{background-color:#272727}.dg .cr.boolean{border-left:3px solid #806787}.dg .cr.color{border-left:3px solid}.dg .cr.function{border-left:3px solid #e61d5f}.dg .cr.number{border-left:3px solid #2FA1D6}.dg .cr.number input[type=text]{color:#2FA1D6}.dg .cr.string{border-left:3px solid #1ed36f}.dg .cr.string input[type=text]{color:#1ed36f}.dg .cr.function:hover,.dg .cr.boolean:hover{background:#111}.dg .c input[type=text]{background:#303030;outline:none}.dg .c input[type=text]:hover{background:#3c3c3c}.dg .c input[type=text]:focus{background:#494949;color:#fff}.dg .c .slider{background:#303030;cursor:ew-resize}.dg .c .slider-fg{background:#2FA1D6;max-width:100%}.dg .c .slider:hover{background:#3c3c3c}.dg .c .slider:hover .slider-fg{background:#44abda}\n");
+var styleSheet = ___$insertStyle(".dg ul{list-style:none;margin:0;padding:0;width:100%;clear:both}.dg.ac{position:fixed;top:0;left:0;right:0;height:0;z-index:0}.dg:not(.ac) .main{overflow:hidden}.dg.main{-webkit-transition:opacity .1s linear;-o-transition:opacity .1s linear;-moz-transition:opacity .1s linear;transition:opacity .1s linear}.dg.main.taller-than-window{overflow-y:auto}.dg.main.taller-than-window .close-button{opacity:1;margin-top:-1px;border-top:1px solid #2c2c2c}.dg.main ul.closed .close-button{opacity:1 !important}.dg.main:hover .close-button,.dg.main .close-button.drag{opacity:1}.dg.main .close-button{-webkit-transition:opacity .1s linear;-o-transition:opacity .1s linear;-moz-transition:opacity .1s linear;transition:opacity .1s linear;border:0;line-height:19px;height:20px;cursor:pointer;text-align:center;background-color:#000}.dg.main .close-button.close-top{position:relative}.dg.main .close-button.close-bottom{position:absolute}.dg.main .close-button:hover{background-color:#111}.dg.a{float:right;margin-right:0px;overflow-y:visible}.dg.a.has-save>ul.close-top{margin-top:0}.dg.a.has-save>ul.close-bottom{margin-top:27px}.dg.a.has-save>ul.closed{margin-top:0}.dg.a .save-row{top:0;z-index:1002}.dg.a .save-row.close-top{position:relative}.dg.a .save-row.close-bottom{position:fixed}.dg li{-webkit-transition:height .1s ease-out;-o-transition:height .1s ease-out;-moz-transition:height .1s ease-out;transition:height .1s ease-out;-webkit-transition:overflow .1s linear;-o-transition:overflow .1s linear;-moz-transition:overflow .1s linear;transition:overflow .1s linear}.dg li:not(.folder){cursor:auto;height:27px;line-height:27px;padding:0 4px 0 5px}.dg li.folder{padding:0;border-left:4px solid rgba(0,0,0,0)}.dg li.title{cursor:pointer;margin-left:-4px}.dg .closed li:not(.title),.dg .closed ul li,.dg .closed ul li>*{height:0;overflow:hidden;border:0}.dg .cr{clear:both;padding-left:3px;height:27px;overflow:hidden}.dg .property-name{cursor:default;float:left;clear:left;width:40%;overflow:hidden;text-overflow:ellipsis}.dg .c{float:left;width:60%;position:relative}.dg .c input[type=text]{border:0;margin-top:4px;padding:3px;width:100%;float:right}.dg .has-slider input[type=text]{width:30%;margin-left:0}.dg .slider{float:left;width:66%;margin-left:-5px;margin-right:0;height:19px;margin-top:4px}.dg .slider-fg{height:100%}.dg .c input[type=checkbox]{margin-top:7px}.dg .c select{margin-top:5px}.dg .cr.function,.dg .cr.function .property-name,.dg .cr.function *,.dg .cr.boolean,.dg .cr.boolean *{cursor:pointer}.dg .cr.color{overflow:visible}.dg .selector{display:none;position:absolute;margin-left:-9px;margin-top:23px;z-index:10}.dg .c:hover .selector,.dg .selector.drag{display:block}.dg li.save-row{padding:0}.dg li.save-row .button{display:inline-block;padding:0px 6px}.dg.dialogue{background-color:#222;width:460px;padding:15px;font-size:13px;line-height:15px}#dg-new-constructor{padding:10px;color:#222;font-family:Monaco, monospace;font-size:10px;border:0;resize:none;box-shadow:inset 1px 1px 1px #888;word-wrap:break-word;margin:12px 0;display:block;width:440px;overflow-y:scroll;height:100px;position:relative}#dg-local-explain{display:none;font-size:11px;line-height:17px;border-radius:3px;background-color:#333;padding:8px;margin-top:10px}#dg-local-explain code{font-size:10px}#dat-gui-save-locally{display:none}.dg{color:#eee;font:11px 'Lucida Grande', sans-serif;text-shadow:0 -1px 0 #111}.dg.main::-webkit-scrollbar{width:5px;background:#1a1a1a}.dg.main::-webkit-scrollbar-corner{height:0;display:none}.dg.main::-webkit-scrollbar-thumb{border-radius:5px;background:#676767}.dg li:not(.folder){background:#1a1a1a;border-bottom:1px solid #2c2c2c}.dg li.save-row{line-height:25px;background:#dad5cb;border:0}.dg li.save-row select{margin-left:5px;width:108px}.dg li.save-row .button{margin-left:5px;margin-top:1px;border-radius:2px;font-size:9px;line-height:7px;padding:4px 4px 5px 4px;background:#c5bdad;color:#fff;text-shadow:0 1px 0 #b0a58f;box-shadow:0 -1px 0 #b0a58f;cursor:pointer}.dg li.save-row .button.gears{background:#c5bdad url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAANCAYAAAB/9ZQ7AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAQJJREFUeNpiYKAU/P//PwGIC/ApCABiBSAW+I8AClAcgKxQ4T9hoMAEUrxx2QSGN6+egDX+/vWT4e7N82AMYoPAx/evwWoYoSYbACX2s7KxCxzcsezDh3evFoDEBYTEEqycggWAzA9AuUSQQgeYPa9fPv6/YWm/Acx5IPb7ty/fw+QZblw67vDs8R0YHyQhgObx+yAJkBqmG5dPPDh1aPOGR/eugW0G4vlIoTIfyFcA+QekhhHJhPdQxbiAIguMBTQZrPD7108M6roWYDFQiIAAv6Aow/1bFwXgis+f2LUAynwoIaNcz8XNx3Dl7MEJUDGQpx9gtQ8YCueB+D26OECAAQDadt7e46D42QAAAABJRU5ErkJggg==) 2px 1px no-repeat;height:7px;width:8px}.dg li.save-row .button:hover{background-color:#bab19e;box-shadow:0 -1px 0 #b0a58f}.dg li.folder{border-bottom:0}.dg li.title{padding-left:16px;background:#000 url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlI+hKgFxoCgAOw==) 6px 10px no-repeat;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.2)}.dg .closed li.title{background-image:url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlGIWqMCbWAEAOw==)}.dg .selected li.title{background-color:#272727}.dg .cr.boolean{border-left:3px solid #806787}.dg .cr.color{border-left:3px solid}.dg .cr.function{border-left:3px solid #e61d5f}.dg .cr.number{border-left:3px solid #2FA1D6}.dg .cr.number input[type=text]{color:#2FA1D6}.dg .cr.string{border-left:3px solid #1ed36f}.dg .cr.string input[type=text]{color:#1ed36f}.dg .cr.function:hover,.dg .cr.boolean:hover{background:#111}.dg .c input[type=text]{background:#303030;outline:none}.dg .c input[type=text]:hover{background:#3c3c3c}.dg .c input[type=text]:focus{background:#494949;color:#fff}.dg .c .slider{background:#303030;cursor:ew-resize}.dg .c .slider-fg{background:#2FA1D6;max-width:100%}.dg .c .slider:hover{background:#3c3c3c}.dg .c .slider:hover .slider-fg{background:#44abda}\n");
 
 css.inject(styleSheet);
 var CSS_NAMESPACE = 'dg';
@@ -1810,7 +1809,7 @@ var GUI = function GUI(pars) {
           dom.removeClass(_this.__ul, GUI.CLASS_CLOSED);
         }
         this.onResize();
-        if (_this.__closeButton) {
+        if (_this.__closeButton && !this.name) {
           _this.__closeButton.innerHTML = v ? GUI.TEXT_OPEN : GUI.TEXT_CLOSED;
         }
       }
@@ -1866,7 +1865,7 @@ var GUI = function GUI(pars) {
       }
     }
     this.__closeButton = document.createElement('div');
-    this.__closeButton.innerHTML = GUI.TEXT_CLOSED;
+    this.__closeButton.innerHTML = this.label || GUI.TEXT_CLOSED;
     dom.addClass(this.__closeButton, GUI.CLASS_CLOSE_BUTTON);
     if (params.closeOnTop) {
       dom.addClass(this.__closeButton, GUI.CLASS_CLOSE_TOP);
@@ -1877,6 +1876,9 @@ var GUI = function GUI(pars) {
     }
     dom.bind(this.__closeButton, 'click', function () {
       _this.closed = !_this.closed;
+      if (_this.onClick) {
+        _this.onClick(_this);
+      }
     });
   } else {
     if (params.closed === undefined) {
@@ -2574,6 +2576,41 @@ var __extends = this && this.__extends || function __extends(t, e) {
 for (var i in e) e.hasOwnProperty(i) && (t[i] = e[i]);
 r.prototype = e.prototype, t.prototype = new r();
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator = (this && this.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = y[op[0] & 2 ? "return" : op[0] ? "throw" : "next"]) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [0, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -2606,6 +2643,108 @@ var paper;
         }(paper.BaseComponent));
         editor.BaseSelectedGOComponent = BaseSelectedGOComponent;
         __reflect(BaseSelectedGOComponent.prototype, "paper.editor.BaseSelectedGOComponent");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var resLoaded = false;
+        function getResType(uri) {
+            var file = uri.substr(uri.lastIndexOf("/") + 1);
+            var i = file.indexOf(".", 0);
+            var extname = "";
+            while (i >= 0) {
+                extname = file.substr(i);
+                if (extname === ".assetbundle.json") {
+                    return 'Bundle';
+                }
+                else if (extname === ".png" || extname === ".jpg") {
+                    return 'Texture';
+                }
+                else if (extname === ".pvr.bin" || extname === ".pvr") {
+                    return 'PVR';
+                }
+                else if (extname === ".atlas.json") {
+                    return 'Atlas';
+                }
+                else if (extname === ".font.json") {
+                    return 'Font';
+                }
+                else if (extname === ".json" || extname === ".txt" || extname === ".effect.json") {
+                    return 'TextAsset';
+                }
+                else if (extname === ".packs.bin") {
+                    return 'PackBin';
+                }
+                else if (extname === ".packs.txt") {
+                    return 'PackTxt';
+                }
+                else if (extname === ".path.json") {
+                    return 'pathAsset';
+                }
+                else if (extname === ".mp3" || extname === ".ogg") {
+                    return 'Sound';
+                }
+                else if (extname === ".prefab.json") {
+                    return 'Prefab';
+                }
+                else if (extname === ".scene.json") {
+                    return 'Scene';
+                }
+                else if (extname === ".vs.glsl") {
+                    return 'GLVertexShader';
+                }
+                else if (extname === ".fs.glsl") {
+                    return 'GLFragmentShader';
+                }
+                else if (extname === ".shader.json") {
+                    return 'Shader';
+                }
+                else if (extname === ".image.json") {
+                    return 'TextureDesc';
+                }
+                else if (extname === ".mat.json") {
+                    return 'Material';
+                }
+                else if (extname === ".mesh.bin") {
+                    return 'Mesh';
+                }
+                else if (extname === ".ani.bin") {
+                    return 'Animation';
+                }
+                i = file.indexOf(".", i + 1);
+            }
+            return "Unknown";
+        }
+        /**
+         * TODO
+         */
+        function getResAsync(uri, root) {
+            if (root === void 0) { root = "resource/"; }
+            return __awaiter(this, void 0, void 0, function () {
+                return __generator(this, function (_a) {
+                    switch (_a.label) {
+                        case 0:
+                            if (!!resLoaded) return [3 /*break*/, 2];
+                            return [4 /*yield*/, RES.loadConfig("resource/default.res.json", root)];
+                        case 1:
+                            _a.sent();
+                            resLoaded = true;
+                            _a.label = 2;
+                        case 2: return [2 /*return*/, new Promise(function (r) {
+                                egret3d.resRoot = root;
+                                RES.getResByUrl(root + uri, function (data) {
+                                    paper.Asset.register(data);
+                                    egret3d.resRoot = "";
+                                    r();
+                                }, RES, getResType(uri));
+                            })];
+                    }
+                });
+            });
+        }
+        editor.getResAsync = getResAsync;
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -2807,8 +2946,8 @@ var paper;
             __extends(GUIComponent, _super);
             function GUIComponent() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.hierarchy = null;
-                _this.inspector = null;
+                _this.hierarchy = new dat.GUI({ closeOnTop: true, width: 300 });
+                _this.inspector = new dat.GUI({ closeOnTop: true, width: 300 });
                 return _this;
             }
             return GUIComponent;
@@ -3920,44 +4059,68 @@ var paper;
                 return _this;
             }
             EditorSystem.prototype.onAwake = function () {
+                var _this = this;
                 paper.GameObject.globalGameObject.getOrAddComponent(editor.EditorDefaultTexture);
                 //
                 if (paper.Application.playerMode === 2 /* Editor */) {
                     paper.Application.systemManager.register(editor.SceneSystem, 6000 /* LaterUpdate */);
                 }
                 else {
-                    if (egret.Capabilities.isMobile) {
-                        this._guiComponent.hierarchy = new dat.GUI({ closeOnTop: true, width: 330 });
+                    var oldContainer_1 = this._guiComponent.hierarchy.domElement.parentElement;
+                    var container = document.createElement("div");
+                    container.style.overflow = "hidden";
+                    container.style.display = "flex";
+                    container.style.width = "100%";
+                    container.style.height = "100%";
+                    container.style.height = "100%";
+                    container.style.margin = "auto";
+                    container.innerHTML = containerHTML;
+                    document.body.insertBefore(container, document.body.firstElementChild);
+                    var hierarchy_1 = document.getElementsByClassName("egret-hierarchy");
+                    var inspector_1 = document.getElementsByClassName("egret-inspector");
+                    container.insertBefore(document.getElementsByClassName("egret-player")[0], inspector_1[0]);
+                    var empty = document.createElement("div");
+                    empty.style.width = "100%";
+                    oldContainer_1.style.display = "flex";
+                    oldContainer_1.insertBefore(empty, oldContainer_1.lastElementChild);
+                    this._guiComponent.hierarchy.onClick = function () {
+                        if (_this._guiComponent.hierarchy.closed) {
+                            oldContainer_1.insertBefore(_this._guiComponent.hierarchy.domElement, oldContainer_1.firstElementChild);
+                        }
+                        else {
+                            hierarchy_1[0].appendChild(_this._guiComponent.hierarchy.domElement);
+                        }
+                    };
+                    this._guiComponent.inspector.onClick = function () {
+                        if (_this._guiComponent.inspector.closed) {
+                            oldContainer_1.appendChild(_this._guiComponent.inspector.domElement);
+                        }
+                        else {
+                            inspector_1[0].appendChild(_this._guiComponent.inspector.domElement);
+                        }
+                    };
+                    if (paper.Application.isMobile) {
                         // TODO 前置组件。
-                        var loadScript = function (url, callback) {
-                            var script = document.createElement("script");
-                            script.onload = function () { return callback(); };
-                            script.src = url;
-                            document.body.appendChild(script);
-                        };
-                        loadScript("https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js", function () {
-                            new VConsole();
-                        });
+                        // const loadScript = (url: string, callback: any) => {
+                        //     const script = document.createElement("script");
+                        //     script.onload = () => callback();
+                        //     script.src = url;
+                        //     document.body.appendChild(script);
+                        // };
+                        // loadScript(
+                        //     "https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js",
+                        //     () => {
+                        //         new VConsole();
+                        //     }
+                        // );
+                        this._guiComponent.hierarchy.close();
+                        this._guiComponent.inspector.close();
                     }
                     else {
-                        var container = document.createElement("div");
-                        container.style.overflow = "hidden";
-                        container.style.display = "flex";
-                        container.style.width = "100%";
-                        container.style.height = "100%";
-                        container.style.height = "100%";
-                        container.style.margin = "auto";
-                        container.innerHTML = containerHTML;
-                        document.body.appendChild(container);
-                        this._guiComponent.hierarchy = new dat.GUI({ autoPlace: false, closeOnTop: true, scrollable: true, width: 330 });
-                        this._guiComponent.inspector = new dat.GUI({ autoPlace: false, closeOnTop: true, scrollable: true, width: 330 });
-                        var hierarchy = document.getElementsByClassName("egret-hierarchy");
-                        var inspector = document.getElementsByClassName("egret-inspector");
-                        hierarchy[0].appendChild(this._guiComponent.hierarchy.domElement);
-                        inspector[0].appendChild(this._guiComponent.inspector.domElement);
-                        container.insertBefore(document.getElementsByClassName("egret-player")[0], inspector[0]);
-                        paper.Application.systemManager.register(editor.GUISystem, 6000 /* LaterUpdate */ + 1); // Make sure the GUISystem update after the SceneSystem.
+                        hierarchy_1[0].appendChild(this._guiComponent.hierarchy.domElement);
+                        inspector_1[0].appendChild(this._guiComponent.inspector.domElement);
                     }
+                    paper.Application.systemManager.register(editor.GUISystem, 6000 /* LaterUpdate */ + 1); // Make sure the GUISystem update after the SceneSystem.
                 }
             };
             return EditorSystem;
@@ -3997,8 +4160,10 @@ var paper;
                     _this._selectSceneOrGameObject(null);
                 };
                 _this._onGameObjectSelectedChange = function (_c, value) {
-                    _this._selectSceneOrGameObject(null);
                     _this._selectSceneOrGameObject(_this._modelComponent.selectedGameObject);
+                };
+                _this._nodeClickHandler = function (gui) {
+                    _this._modelComponent.select(gui.instance, true);
                 };
                 _this._saveSceneOrGameObject = function () {
                     if (_this._modelComponent.selectedScene) {
@@ -4027,9 +4192,6 @@ var paper;
                         (selectedSceneOrGameObject).destroy();
                     }
                 };
-                _this._nodeClickHandler = function (gui) {
-                    _this._modelComponent.select(gui.instance, true);
-                };
                 return _this;
             }
             GUISystem.prototype._openFolder = function (folder) {
@@ -4039,7 +4201,21 @@ var paper;
                 folder.parent.open();
                 this._openFolder(folder.parent);
             };
+            GUISystem.prototype._getAssets = function (type) {
+                var result = [{ label: "None", value: null }];
+                if (RES.host.resourceConfig.config) {
+                    var resFSDatas = RES.host.resourceConfig.config.fileSystem.fsData;
+                    for (var k in resFSDatas) {
+                        var data = resFSDatas[k];
+                        if (data.type === type) {
+                            result.push({ label: k, value: data });
+                        }
+                    }
+                }
+                return result;
+            };
             GUISystem.prototype._selectSceneOrGameObject = function (sceneOrGameObject) {
+                var _this = this;
                 // Unselect prev folder.
                 if (this._selectFolder) {
                     this._selectFolder.selected = false;
@@ -4047,44 +4223,79 @@ var paper;
                 }
                 var inspector = this._guiComponent.inspector;
                 inspector.instance = sceneOrGameObject;
+                for (var k in this._inspectorFolders) {
+                    delete this._inspectorFolders[k];
+                }
+                if (inspector.__controllers) {
+                    for (var _i = 0, _a = inspector.__controllers.concat(); _i < _a.length; _i++) {
+                        var controller = _a[_i];
+                        inspector.remove(controller);
+                    }
+                }
+                if (inspector.__folders) {
+                    for (var k in inspector.__folders) {
+                        inspector.removeFolder(inspector.__folders[k]);
+                    }
+                }
+                var options = {
+                    scenes: "None",
+                    prefabs: "None",
+                };
+                inspector.add(options, "scenes", this._getAssets("Scene")).onChange(function (v) { return __awaiter(_this, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                if (!v) {
+                                    return [2 /*return*/];
+                                }
+                                return [4 /*yield*/, RES.getResAsync(v.url)];
+                            case 1:
+                                _a.sent();
+                                paper.Scene.activeScene.destroy();
+                                this._modelComponent.select(paper.Scene.create(v.url));
+                                return [2 /*return*/];
+                        }
+                    });
+                }); });
+                inspector.add(options, "prefabs", this._getAssets("Prefab")).onChange(function (v) { return __awaiter(_this, void 0, void 0, function () {
+                    var gameObject, parent_1;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                if (!v) {
+                                    return [2 /*return*/];
+                                }
+                                return [4 /*yield*/, RES.getResAsync(v.url)];
+                            case 1:
+                                _a.sent();
+                                gameObject = null;
+                                if (this._modelComponent.selectedGameObject) {
+                                    parent_1 = this._modelComponent.selectedGameObject;
+                                    gameObject = paper.Prefab.create(v.url, parent_1.scene);
+                                    gameObject.parent = parent_1;
+                                }
+                                else {
+                                    gameObject = paper.Prefab.create(v.url, this._modelComponent.selectedScene || paper.Scene.activeScene);
+                                }
+                                this._modelComponent.select(gameObject);
+                                return [2 /*return*/];
+                        }
+                    });
+                }); });
                 if (sceneOrGameObject) {
+                    inspector.add(this, "_destroySceneOrGameObject", "destroy");
+                    inspector.add(this, "_saveSceneOrGameObject", "save");
+                    this._addToInspector(inspector);
                     if (sceneOrGameObject instanceof paper.Scene) {
-                        // Update scene.
-                        inspector.add(this, "_saveSceneOrGameObject", "save");
-                        inspector.add(this, "_createGameObject", "createObject");
-                        inspector.add(this, "_destroySceneOrGameObject", "destroy");
-                        this._addToInspector(inspector);
                     }
                     else {
-                        // Update game object.
-                        inspector.add(this, "_saveSceneOrGameObject", "save");
-                        inspector.add(this, "_createGameObject", "createChildObject");
-                        inspector.add(this, "_destroySceneOrGameObject", "destroy");
-                        this._addToInspector(inspector);
-                        // Update components.
-                        for (var _i = 0, _a = sceneOrGameObject.components; _i < _a.length; _i++) {
-                            var component = _a[_i];
+                        for (var _b = 0, _d = sceneOrGameObject.components; _b < _d.length; _b++) {
+                            var component = _d[_b];
                             var folder = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
                             folder.instance = component;
                             folder.open();
                             this._inspectorFolders[component.uuid] = folder;
                             this._addToInspector(folder);
-                        }
-                    }
-                }
-                else {
-                    for (var k in this._inspectorFolders) {
-                        delete this._inspectorFolders[k];
-                    }
-                    if (inspector.__controllers) {
-                        for (var _b = 0, _d = inspector.__controllers.concat(); _b < _d.length; _b++) {
-                            var controller = _d[_b];
-                            inspector.remove(controller);
-                        }
-                    }
-                    if (inspector.__folders) {
-                        for (var k in inspector.__folders) {
-                            inspector.removeFolder(inspector.__folders[k]);
                         }
                     }
                 }
@@ -4133,7 +4344,7 @@ var paper;
                 var guiControllerD;
                 var _loop_1 = function (info) {
                     switch (info.editType) {
-                        case 0 /* UINT */:
+                        case "UINT" /* UINT */:
                             guiControllerA = gui.add(gui.instance, info.name).min(0).step(1).listen();
                             if (info.option) {
                                 if (info.option.minimum !== undefined) {
@@ -4147,7 +4358,7 @@ var paper;
                                 }
                             }
                             break;
-                        case 1 /* INT */:
+                        case "INT" /* INT */:
                             guiControllerA = gui.add(gui.instance, info.name).step(1).listen();
                             if (info.option) {
                                 if (info.option.minimum !== undefined) {
@@ -4161,7 +4372,7 @@ var paper;
                                 }
                             }
                             break;
-                        case 2 /* FLOAT */:
+                        case "FLOAT" /* FLOAT */:
                             guiControllerA = gui.add(gui.instance, info.name).step(0.1).listen();
                             if (info.option) {
                                 if (info.option.minimum !== undefined) {
@@ -4175,14 +4386,14 @@ var paper;
                                 }
                             }
                             break;
-                        case 4 /* CHECKBOX */:
-                        case 3 /* TEXT */:
+                        case "CHECKBOX" /* CHECKBOX */:
+                        case "TEXT" /* TEXT */:
                             gui.add(gui.instance, info.name).listen();
                             break;
-                        case 11 /* LIST */:
+                        case "LIST" /* LIST */:
                             gui.add(gui.instance, info.name, info.option.listItems).listen();
                             break;
-                        case 6 /* VECTOR2 */: {
+                        case "VECTOR2" /* VECTOR2 */: {
                             guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
                             guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
                             if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
@@ -4208,7 +4419,7 @@ var paper;
                             }
                             break;
                         }
-                        case 5 /* SIZE */: {
+                        case "CHECKBOX" /* SIZE */: {
                             guiControllerA = gui.add(gui.instance[info.name], "w", info.name + ": w").step(0.1).listen();
                             guiControllerB = gui.add(gui.instance[info.name], "h", info.name + ": h").step(0.1).listen();
                             if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
@@ -4234,7 +4445,7 @@ var paper;
                             }
                             break;
                         }
-                        case 7 /* VECTOR3 */: {
+                        case "VECTOR3" /* VECTOR3 */: {
                             guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
                             guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
                             guiControllerC = gui.add(gui.instance[info.name], "z", info.name + ": z").step(0.1).listen();
@@ -4265,10 +4476,10 @@ var paper;
                             }
                             break;
                         }
-                        case 8 /* VECTOR4 */:
-                        case 9 /* QUATERNION */:
+                        case "VECTOR4" /* VECTOR4 */:
+                        case "QUATERNION" /* QUATERNION */:
                             break;
-                        case 10 /* COLOR */: {
+                        case "COLOR" /* COLOR */: {
                             guiControllerA = gui.addColor(gui.instance, info.name).listen();
                             if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
                                 var onChange = function () {
@@ -4278,7 +4489,7 @@ var paper;
                             }
                             break;
                         }
-                        case 12 /* RECT */: {
+                        case "RECT" /* RECT */: {
                             guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
                             guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
                             guiControllerC = gui.add(gui.instance[info.name], "w", info.name + ": w").step(0.1).listen();
@@ -4314,9 +4525,12 @@ var paper;
                             }
                             break;
                         }
-                        case 15 /* GAMEOBJECT */:
+                        case "GAMEOBJECT" /* GAMEOBJECT */:
                             break;
-                        case 23 /* NESTED */: {
+                        case "BUTTON" /* BUTTON */:
+                            guiControllerA = gui.add(gui.instance, info.name);
+                            break;
+                        case "NESTED" /* NESTED */: {
                             var folder = gui.addFolder(info.name);
                             folder.instance = gui.instance[info.name];
                             this_1._addToInspector(folder);
@@ -4724,7 +4938,9 @@ var paper;
                             }
                         }
                         else if (!event_1.ctrlKey && !event_1.shiftKey) {
-                            this._modelComponent.select(paper.Scene.activeScene);
+                            if (this._modelComponent.selectedGameObject) {
+                                this._modelComponent.select(paper.Scene.activeScene);
+                            }
                         }
                     }
                 }

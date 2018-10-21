@@ -2,7 +2,7 @@ namespace paper.editor {
     /**
      * @internal
      */
-    export class TransfromController extends BaseComponent {
+    export class TransformController extends BaseComponent {
         public isWorldSpace: boolean = false;
         public readonly eye: egret3d.Vector3 = egret3d.Vector3.create();
         public readonly translate: GameObject = EditorMeshHelper.createGameObject("Translate");

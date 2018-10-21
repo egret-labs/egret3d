@@ -4075,14 +4075,12 @@ declare namespace egret3d {
          * 当舞台尺寸改变时派发事件。
          */
         readonly onResize: signals.Signal;
-        private _rotateEnabled;
         private _rotated;
         private readonly _screenSize;
         private readonly _size;
         private readonly _viewport;
         private _updateViewport();
         initialize(config: {
-            rotateEnabled: boolean;
             size: Readonly<ISize>;
             screenSize: Readonly<ISize>;
         }): void;
@@ -4094,10 +4092,6 @@ declare namespace egret3d {
          * 舞台到屏幕坐标的转换。
          */
         stageToScreen(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3): this;
-        /**
-         * 是否允许因屏幕尺寸的改变而旋转舞台。
-         */
-        rotateEnabled: boolean;
         /**
          * 舞台是否因屏幕尺寸的改变而发生了旋转。
          * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于舞台尺寸宽度。
@@ -5195,6 +5189,10 @@ declare namespace paper {
         private _bindUpdate;
         private _update();
         private _updatePlayerMode();
+        /**
+         *
+         */
+        readonly isMobile: boolean;
         /**
          * 运行模式。
          */
@@ -9795,6 +9793,10 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+    /**
+     * TODO
+     */
+    let resRoot: string;
     const BitmapDataProcessor: RES.processor.Processor;
     const ShaderProcessor: RES.processor.Processor;
     const TextureDescProcessor: RES.processor.Processor;
@@ -10140,10 +10142,6 @@ declare namespace egret3d {
          * 舞台高。
          */
         contentHeight?: number;
-        /**
-         * 是否允许屏幕旋转，默认允许。
-         */
-        rotateEnabled?: boolean;
         /**
          * 是否开启抗锯齿，默认关闭。
          */

@@ -1,4 +1,4 @@
-namespace examples {
+namespace examples.oimo {
 
     export class OimoBase {
         async start() {
@@ -12,6 +12,7 @@ namespace examples {
 
                 const light = gameObject.addComponent(egret3d.DirectionalLight);
                 light.intensity = 0.5;
+                light.castShadows = true;
             }
 
             { // Create ground.
@@ -20,6 +21,8 @@ namespace examples {
                 gameObject.transform.setLocalScale(groundSize);
 
                 const renderer = gameObject.getComponent(egret3d.MeshRenderer)!;
+                renderer.castShadows = true;
+                renderer.receiveShadows = true;
                 renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT);
 
                 const rigidbody = gameObject.addComponent(egret3d.oimo.Rigidbody);
@@ -30,7 +33,6 @@ namespace examples {
             }
 
             { // Create cubes.
-                const cubeSize = egret3d.Vector3.create(1.0, 1.0, 1.0);
 
                 for (let i = 0; i < 100; i++) {
                     const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, `Cube_${i}`);
@@ -39,9 +41,12 @@ namespace examples {
                         Math.random() * 8.0 + 4.0,
                         Math.random() * 8.0 - 4.0
                     );
+                    const cubeSize = egret3d.Vector3.create(Math.random() * 1.5 + 0.5, Math.random() * 1.5 + 0.5, Math.random() * 1.5 + 0.5).release();
                     gameObject.transform.setLocalScale(cubeSize);
 
                     const renderer = gameObject.getComponent(egret3d.MeshRenderer)!;
+                    renderer.castShadows = true;
+                    renderer.receiveShadows = true;
                     renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT);
 
                     const rigidbody = gameObject.addComponent(egret3d.oimo.Rigidbody);

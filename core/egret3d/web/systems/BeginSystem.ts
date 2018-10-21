@@ -44,7 +44,6 @@ namespace egret3d.web {
             const screenHeight = isWX ? window.innerHeight : this._canvas.parentElement!.clientHeight;
 
             globalGameObject.addComponent(Stage, {
-                rotateEnabled: !(config.rotateEnabled === false),
                 size: { w: config.option!.contentWidth, h: config.option!.contentHeight },
                 screenSize: { w: screenWidth, h: screenHeight },
             });
@@ -67,7 +66,7 @@ namespace egret3d.web {
         }
 
         public onUpdate() {
-            // TODO
+            // TODO 
             egret3d.Performance.startCounter(egret3d.PerformanceType.All);
             // TODO 查询是否有性能问题。
             const isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || this._canvas.parentElement === undefined;

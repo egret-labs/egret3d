@@ -102,6 +102,13 @@ namespace paper {
             this._update();
         }
         /**
+         * 
+         */
+        public get isMobile() {
+            const userAgent = (navigator && navigator.userAgent) ? navigator.userAgent.toLowerCase() : "";
+            return userAgent.indexOf("mobile") >= 0 || userAgent.indexOf("android") >= 0;
+        }
+        /**
          * TODO
          * @internal
          */

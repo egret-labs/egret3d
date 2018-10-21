@@ -9161,7 +9161,6 @@ var egret3d;
              * 当舞台尺寸改变时派发事件。
              */
             _this.onResize = new signals.Signal();
-            _this._rotateEnabled = true;
             _this._rotated = false;
             _this._screenSize = { w: 1024, h: 1024 };
             _this._size = { w: 1024, h: 1024 };
@@ -9172,21 +9171,24 @@ var egret3d;
             var screenSize = this._screenSize;
             var size = this._size;
             var viewport = this._viewport;
-            viewport.w = Math.ceil(size.w);
-            if (this._rotateEnabled && (this._rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h)) {
-                // viewport.w = Math.ceil(Math.min(size.w, screenSize.h));
-                viewport.h = Math.ceil(viewport.w / screenSize.h * screenSize.w);
+            if (paper.Application.isMobile) {
+                viewport.w = Math.ceil(size.w);
+                if (this._rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h) {
+                    viewport.h = Math.ceil(viewport.w / screenSize.h * screenSize.w);
+                }
+                else {
+                    viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
+                }
             }
             else {
                 this._rotated = false;
-                // viewport.w = Math.ceil(Math.min(size.w, screenSize.w));
+                viewport.w = Math.ceil(Math.min(size.w, screenSize.w));
                 viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
             }
         };
         Stage.prototype.initialize = function (config) {
             _super.prototype.initialize.call(this);
             egret3d.stage = this;
-            this._rotateEnabled = config.rotateEnabled;
             this._size.w = config.size.w;
             this._size.h = config.size.h;
             this._screenSize.w = config.screenSize.w;
@@ -9217,23 +9219,6 @@ var egret3d;
             // TODO
             return this;
         };
-        Object.defineProperty(Stage.prototype, "rotateEnabled", {
-            /**
-             * 是否允许因屏幕尺寸的改变而旋转舞台。
-             */
-            get: function () {
-                return this._rotateEnabled;
-            },
-            set: function (value) {
-                if (this._rotateEnabled === value) {
-                    return;
-                }
-                this._rotateEnabled = value;
-                this._updateViewport();
-            },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(Stage.prototype, "rotated", {
             /**
              * 舞台是否因屏幕尺寸的改变而发生了旋转。
@@ -9297,9 +9282,6 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
-        __decorate([
-            paper.editor.property("CHECKBOX" /* CHECKBOX */)
-        ], Stage.prototype, "rotateEnabled", null);
         __decorate([
             paper.editor.property("CHECKBOX" /* CHECKBOX */, { readonly: true })
         ], Stage.prototype, "rotated", null);
@@ -12954,6 +12936,17 @@ var paper;
             }
             this._update();
         };
+        Object.defineProperty(ECS.prototype, "isMobile", {
+            /**
+             *
+             */
+            get: function () {
+                var userAgent = (navigator && navigator.userAgent) ? navigator.userAgent.toLowerCase() : "";
+                return userAgent.indexOf("mobile") >= 0 || userAgent.indexOf("android") >= 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(ECS.prototype, "isFocused", {
             /**
              * TODO
@@ -20499,6 +20492,10 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    /**
+     * TODO
+     */
+    egret3d.resRoot = "";
     function promisify(loader, resource) {
         var _this = this;
         return new Promise(function (resolve, reject) {
@@ -20617,12 +20614,22 @@ var egret3d;
                     _premultiply = data["premultiply"] > 0;
                 }
                 var imgResource = RES.host.resourceConfig["getResource"](name);
-                return host.load(imgResource, "bitmapdata").then(function (bitmapData) {
-                    var texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, _textureFormat);
-                    texture.uploadImage(bitmapData.source, mipmap, _linear, _premultiply, _repeat);
-                    paper.Asset.register(texture);
-                    return texture;
-                });
+                if (imgResource) {
+                    return host.load(imgResource, "bitmapdata").then(function (bitmapData) {
+                        var texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, _textureFormat);
+                        texture.uploadImage(bitmapData.source, mipmap, _linear, _premultiply, _repeat);
+                        paper.Asset.register(texture);
+                        return texture;
+                    });
+                }
+                if (egret3d.resRoot) {
+                    return getResByURL(name, egret3d.resRoot).then(function (bitmapData) {
+                        var texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, _textureFormat);
+                        texture.uploadImage(bitmapData.source, mipmap, _linear, _premultiply, _repeat);
+                        paper.Asset.register(texture);
+                        return texture;
+                    });
+                }
             });
         },
         onRemoveStart: function (host, resource) {
@@ -20649,17 +20656,17 @@ var egret3d;
     egret3d.MaterialProcessor = {
         onLoadStart: function (host, resource) {
             return __awaiter(this, void 0, void 0, function () {
-                var result, _i, _a, mat, values, _b, _c, _d, key, value, r, texture, material;
+                var result, _i, _a, mat, values, _b, _c, _d, key, value, r, texture, texture, material;
                 return __generator(this, function (_e) {
                     switch (_e.label) {
                         case 0: return [4 /*yield*/, host.load(resource, 'json')];
                         case 1:
                             result = _e.sent();
-                            if (!(result.materials && result.materials.length > 0)) return [3 /*break*/, 8];
+                            if (!(result.materials && result.materials.length > 0)) return [3 /*break*/, 10];
                             _i = 0, _a = result.materials;
                             _e.label = 2;
                         case 2:
-                            if (!(_i < _a.length)) return [3 /*break*/, 8];
+                            if (!(_i < _a.length)) return [3 /*break*/, 10];
                             mat = _a[_i];
                             values = mat.extensions.KHR_techniques_webgl.values;
                             _b = [];
@@ -20668,28 +20675,35 @@ var egret3d;
                             _d = 0;
                             _e.label = 3;
                         case 3:
-                            if (!(_d < _b.length)) return [3 /*break*/, 7];
+                            if (!(_d < _b.length)) return [3 /*break*/, 9];
                             key = _b[_d];
                             value = values[key];
-                            if (!(value && typeof value === "string")) return [3 /*break*/, 6];
+                            if (!(value && typeof value === "string")) return [3 /*break*/, 8];
                             r = RES.host.resourceConfig["getResource"](value);
                             if (!r) return [3 /*break*/, 5];
                             return [4 /*yield*/, host.load(r, "TextureDesc")];
                         case 4:
                             texture = _e.sent();
                             values[key] = texture;
-                            return [3 /*break*/, 6];
+                            return [3 /*break*/, 8];
                         case 5:
+                            if (!egret3d.resRoot) return [3 /*break*/, 7];
+                            return [4 /*yield*/, getResByURL(value, egret3d.resRoot)];
+                        case 6:
+                            texture = _e.sent();
+                            values[key] = texture;
+                            return [3 /*break*/, 8];
+                        case 7:
                             console.log("Load image error.", value);
                             values[key] = egret3d.DefaultTextures.MISSING;
-                            _e.label = 6;
-                        case 6:
+                            _e.label = 8;
+                        case 8:
                             _d++;
                             return [3 /*break*/, 3];
-                        case 7:
+                        case 9:
                             _i++;
                             return [3 /*break*/, 2];
-                        case 8:
+                        case 10:
                             material = new egret3d.Material(result, resource.name);
                             paper.Asset.register(material);
                             return [2 /*return*/, material];
@@ -20792,6 +20806,9 @@ var egret3d;
             if (r) {
                 return host.load(r);
             }
+            else if (egret3d.resRoot) {
+                return getResByURL(item, egret3d.resRoot);
+            }
             else {
                 if (item.indexOf("builtin/") !== 0) {
                     console.error("加载不存在的资源", item);
@@ -20799,6 +20816,85 @@ var egret3d;
                 return Promise.resolve();
             }
         })));
+    }
+    function getResType(uri) {
+        var file = uri.substr(uri.lastIndexOf("/") + 1);
+        var i = file.indexOf(".", 0);
+        var extname = "";
+        while (i >= 0) {
+            extname = file.substr(i);
+            if (extname === ".assetbundle.json") {
+                return 'Bundle';
+            }
+            else if (extname === ".png" || extname === ".jpg") {
+                return 'Texture';
+            }
+            else if (extname === ".pvr.bin" || extname === ".pvr") {
+                return 'PVR';
+            }
+            else if (extname === ".atlas.json") {
+                return 'Atlas';
+            }
+            else if (extname === ".font.json") {
+                return 'Font';
+            }
+            else if (extname === ".json" || extname === ".txt" || extname === ".effect.json") {
+                return 'TextAsset';
+            }
+            else if (extname === ".packs.bin") {
+                return 'PackBin';
+            }
+            else if (extname === ".packs.txt") {
+                return 'PackTxt';
+            }
+            else if (extname === ".path.json") {
+                return 'pathAsset';
+            }
+            else if (extname === ".mp3" || extname === ".ogg") {
+                return 'Sound';
+            }
+            else if (extname === ".prefab.json") {
+                return 'Prefab';
+            }
+            else if (extname === ".scene.json") {
+                return 'Scene';
+            }
+            else if (extname === ".vs.glsl") {
+                return 'GLVertexShader';
+            }
+            else if (extname === ".fs.glsl") {
+                return 'GLFragmentShader';
+            }
+            else if (extname === ".shader.json") {
+                return 'Shader';
+            }
+            else if (extname === ".image.json") {
+                return 'TextureDesc';
+            }
+            else if (extname === ".mat.json") {
+                return 'Material';
+            }
+            else if (extname === ".mesh.bin") {
+                return 'Mesh';
+            }
+            else if (extname === ".ani.bin") {
+                return 'Animation';
+            }
+            i = file.indexOf(".", i + 1);
+        }
+        return "Unknown";
+    }
+    function getResByURL(uri, root) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (r) {
+                        RES.getResByUrl(root + uri, function (data) {
+                            paper.Asset.register(data);
+                            r(data);
+                        }, RES, getResType(uri));
+                    })];
+            });
+        });
     }
     RES.processor.map("Shader", egret3d.ShaderProcessor);
     RES.processor.map("Texture", egret3d.TextureProcessor);

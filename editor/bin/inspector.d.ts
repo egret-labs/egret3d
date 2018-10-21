@@ -98,7 +98,11 @@ declare namespace dat {
     }
 }declare namespace paper.editor {
 }
-declare namespace helper {
+declare namespace paper.editor {
+    /**
+     * TODO
+     */
+    function getResAsync(uri: string, root?: string): Promise<{}>;
 }
 declare namespace paper.editor {
 }
@@ -113,8 +117,8 @@ declare namespace paper.editor {
      *
      */
     class GUIComponent extends SingletonComponent {
-        hierarchy: dat.GUI;
-        inspector: dat.GUI | null;
+        readonly hierarchy: dat.GUI;
+        readonly inspector: dat.GUI;
     }
 }
 declare namespace paper.editor {

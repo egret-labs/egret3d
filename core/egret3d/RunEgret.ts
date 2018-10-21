@@ -13,10 +13,6 @@ namespace egret3d {
          */
         contentHeight?: number;
         /**
-         * 是否允许屏幕旋转，默认允许。
-         */
-        rotateEnabled?: boolean;
-        /**
          * 是否开启抗锯齿，默认关闭。
          */
         antialias: boolean;

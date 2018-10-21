@@ -3,7 +3,7 @@ namespace paper.editor {
      * 
      */
     export class GUIComponent extends SingletonComponent {
-        public hierarchy: dat.GUI = null!;
-        public inspector: dat.GUI | null = null;
+        public readonly hierarchy: dat.GUI = new dat.GUI({ closeOnTop: true, width: 300 });
+        public readonly inspector: dat.GUI = new dat.GUI({ closeOnTop: true, width: 300 });
     }
 }

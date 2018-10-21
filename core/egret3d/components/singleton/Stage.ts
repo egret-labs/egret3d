@@ -13,7 +13,6 @@ namespace egret3d {
          */
         public readonly onResize: signals.Signal = new signals.Signal();
 
-        private _rotateEnabled: boolean = true;
         private _rotated: boolean = false;
         private readonly _screenSize: egret3d.ISize = { w: 1024, h: 1024 };
         private readonly _size: egret3d.ISize = { w: 1024, h: 1024 };
@@ -23,25 +22,29 @@ namespace egret3d {
             const screenSize = this._screenSize;
             const size = this._size;
             const viewport = this._viewport;
-            viewport.w = Math.ceil(size.w);
 
-            if (this._rotateEnabled && (this._rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h)) {
-                // viewport.w = Math.ceil(Math.min(size.w, screenSize.h));
-                viewport.h = Math.ceil(viewport.w / screenSize.h * screenSize.w);
+            if (paper.Application.isMobile) {
+                viewport.w = Math.ceil(size.w);
+
+                if (this._rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h) {
+                    viewport.h = Math.ceil(viewport.w / screenSize.h * screenSize.w);
+                }
+                else {
+                    viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
+                }
             }
             else {
                 this._rotated = false;
-                // viewport.w = Math.ceil(Math.min(size.w, screenSize.w));
+                viewport.w = Math.ceil(Math.min(size.w, screenSize.w));
                 viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
             }
         }
 
-        public initialize(config: { rotateEnabled: boolean, size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
+        public initialize(config: { size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
             super.initialize();
 
             stage = this;
 
-            this._rotateEnabled = config.rotateEnabled;
             this._size.w = config.size.w;
             this._size.h = config.size.h;
             this._screenSize.w = config.screenSize.w;
@@ -74,22 +77,6 @@ namespace egret3d {
             // TODO
 
             return this;
-        }
-        /**
-         * 是否允许因屏幕尺寸的改变而旋转舞台。
-         */
-        @paper.editor.property(paper.editor.EditType.CHECKBOX)
-        public get rotateEnabled() {
-            return this._rotateEnabled;
-        }
-        public set rotateEnabled(value: boolean) {
-            if (this._rotateEnabled === value) {
-                return;
-            }
-
-            this._rotateEnabled = value;
-
-            this._updateViewport();
         }
         /**
          * 舞台是否因屏幕尺寸的改变而发生了旋转。

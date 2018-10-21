@@ -4,6 +4,7 @@
 declare var VConsole: any;
 
 namespace paper.editor {
+    type ResData = { name: string, type: string, url: string, root: string };
     /**
      * TODO GUI NEW SAVE LOAD
      * @internal
@@ -30,8 +31,11 @@ namespace paper.editor {
         }
 
         private _onGameObjectSelectedChange = (_c: any, value: GameObject) => {
-            this._selectSceneOrGameObject(null);
             this._selectSceneOrGameObject(this._modelComponent.selectedGameObject);
+        }
+
+        private _nodeClickHandler = (gui: dat.GUI) => {
+            this._modelComponent.select(gui.instance, true);
         }
 
         private _saveSceneOrGameObject = () => {
@@ -58,14 +62,10 @@ namespace paper.editor {
         }
 
         private _destroySceneOrGameObject = () => {
-            const selectedSceneOrGameObject = this._guiComponent.inspector!.instance as Scene | GameObject;
+            const selectedSceneOrGameObject = this._guiComponent.inspector.instance as Scene | GameObject;
             if (selectedSceneOrGameObject) {
                 (selectedSceneOrGameObject).destroy();
             }
-        }
-
-        private _nodeClickHandler = (gui: dat.GUI) => {
-            this._modelComponent.select(gui.instance, true);
         }
 
         private _openFolder(folder: dat.GUI) {
@@ -77,6 +77,22 @@ namespace paper.editor {
             this._openFolder(folder.parent);
         }
 
+        private _getAssets(type: string) {
+            const result = [{ label: "None", value: null }] as { label: string, value: ResData | null }[];
+
+            if (RES.host.resourceConfig.config) {
+                const resFSDatas = (RES.host.resourceConfig.config.fileSystem as any).fsData as { [key: string]: ResData };
+                for (const k in resFSDatas) {
+                    const data = resFSDatas[k];
+                    if (data.type === type) {
+                        result.push({ label: k, value: data });
+                    }
+                }
+            }
+
+            return result;
+        }
+
         private _selectSceneOrGameObject(sceneOrGameObject: Scene | GameObject | null) {
             // Unselect prev folder.
             if (this._selectFolder) {
@@ -84,49 +100,73 @@ namespace paper.editor {
                 this._selectFolder = null;
             }
 
-            const inspector = this._guiComponent.inspector!;
-
+            const inspector = this._guiComponent.inspector;
             inspector.instance = sceneOrGameObject;
 
-            if (sceneOrGameObject) {
-                if (sceneOrGameObject instanceof Scene) {
-                    // Update scene.
-                    inspector.add(this, "_saveSceneOrGameObject", "save");
-                    inspector.add(this, "_createGameObject", "createObject");
-                    inspector.add(this, "_destroySceneOrGameObject", "destroy");
-                    this._addToInspector(inspector);
+            for (const k in this._inspectorFolders) {
+                delete this._inspectorFolders[k];
+            }
+
+            if (inspector.__controllers) {
+                for (const controller of inspector.__controllers.concat()) {
+                    inspector.remove(controller);
+                }
+            }
+
+            if (inspector.__folders) {
+                for (const k in inspector.__folders) {
+                    inspector.removeFolder(inspector.__folders[k]);
+                }
+            }
+
+            const options = {
+                scenes: "None",
+                prefabs: "None",
+            };
+
+            inspector.add(options, "scenes", this._getAssets("Scene")).onChange(async (v: ResData | null) => {
+                if (!v) {
+                    return;
+                }
+
+                await RES.getResAsync(v.url);
+                Scene.activeScene.destroy();
+                this._modelComponent.select(Scene.create(v.url));
+            });
+
+            inspector.add(options, "prefabs", this._getAssets("Prefab")).onChange(async (v: ResData | null) => {
+                if (!v) {
+                    return;
+                }
+
+                await RES.getResAsync(v.url);
+                let gameObject: GameObject | null = null;
+                if (this._modelComponent.selectedGameObject) {
+                    const parent = this._modelComponent.selectedGameObject!;
+                    gameObject = Prefab.create(v.url, parent.scene)
+                    gameObject!.parent = parent;
                 }
                 else {
-                    // Update game object.
-                    inspector.add(this, "_saveSceneOrGameObject", "save");
-                    inspector.add(this, "_createGameObject", "createChildObject");
-                    inspector.add(this, "_destroySceneOrGameObject", "destroy");
-                    this._addToInspector(inspector);
+                    gameObject = Prefab.create(v.url, this._modelComponent.selectedScene || Scene.activeScene);
+                }
 
-                    // Update components.
+                this._modelComponent.select(gameObject);
+            });
+
+            if (sceneOrGameObject) {
+                inspector.add(this, "_destroySceneOrGameObject", "destroy");
+                inspector.add(this, "_saveSceneOrGameObject", "save");
+                this._addToInspector(inspector);
+
+                if (sceneOrGameObject instanceof Scene) { // Update scene.
+                }
+                else { // Update game object.
                     for (const component of sceneOrGameObject.components) {
                         const folder = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
                         folder.instance = component;
                         folder.open();
                         this._inspectorFolders[component.uuid] = folder;
                         this._addToInspector(folder);
-                    }
-                }
-            }
-            else {
-                for (const k in this._inspectorFolders) {
-                    delete this._inspectorFolders[k];
-                }
-
-                if (inspector.__controllers) {
-                    for (const controller of inspector.__controllers.concat()) {
-                        inspector.remove(controller);
-                    }
-                }
-
-                if (inspector.__folders) {
-                    for (const k in inspector.__folders) {
-                        inspector.removeFolder(inspector.__folders[k]);
                     }
                 }
             }
@@ -521,9 +561,9 @@ namespace paper.editor {
                 }
             }
 
-            this._guiComponent.inspector!.updateDisplay();
+            this._guiComponent.inspector.updateDisplay();
 
-            const inspectorFolders = this._guiComponent.inspector!.__folders;
+            const inspectorFolders = this._guiComponent.inspector.__folders;
             if (inspectorFolders) {
                 for (const k in inspectorFolders) {
                     inspectorFolders[k].updateDisplay();

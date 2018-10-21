@@ -1,12 +1,14 @@
 namespace egret3d {
+
     /**
      * 三维向量接口。
      */
     export interface IVector3 extends IVector2 {
         z: number;
     }
+
     /**
-     * 欧拉角旋转顺序。
+     * 欧拉旋转顺序。
      */
     export const enum EulerOrder {
         XYZ,
@@ -16,55 +18,59 @@ namespace egret3d {
         ZXY,
         ZYX,
     }
+
     /**
      * 三维向量。
      */
-    export class Vector3 extends paper.BaseRelease<AABB> implements IVector3, paper.ICCS<Vector3>, paper.ISerializable {
+    export class Vector3 extends paper.BaseRelease<Vector3> implements IVector3, paper.ICCS<Vector3>, paper.ISerializable {
+
         /**
-         * 零
+         * 零向量。
          */
         public static readonly ZERO: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, 0.0);
 
         /**
-         * 三方向均为一的向量
+         * 三方向均为一的向量。
          */
         public static readonly ONE: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(1.0, 1.0, 1.0);
+
         /**
-         * 三方向均为负一的向量
+         * 三方向均为负一的向量。
          */
         public static readonly MINUS_ONE: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(-1.0, -1.0, -1.0);
 
         /**
-         * 上
+         * 上向量。
          */
         public static readonly UP: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 1.0, 0.0);
 
         /**
-         * 下
+         * 下向量。
          */
         public static readonly DOWN: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, -1.0, 0.0);
 
         /**
-         * 左
+         * 左向量。
          */
         public static readonly LEFT: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(-1.0, 0.0, 0.0);
 
         /**
-         * 右
+         * 右向量。
          */
         public static readonly RIGHT: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(1.0, 0.0, 0.0);
 
         /**
-         * 前
+         * 前向量。
          */
         public static readonly FORWARD: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, 1.0);
 
         /**
-         * 后
+         * 后向量。
          */
         public static readonly BACK: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, -1.0);
 
         private static readonly _instances: Vector3[] = [];
+
         /**
          * 创建一个三维向量。
          * @param x X 轴分量。
@@ -95,6 +101,7 @@ namespace egret3d {
          * Z 轴分量。
          */
         public z: number;
+
         /**
          * 请使用 `egret3d.Vector3.create()` 创建实例。
          * @see egret3d.Vector3.create()
@@ -133,12 +140,86 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
-            this.x = value[offset];
-            this.y = value[offset + 1];
-            this.z = value[offset + 2];
+        /**
+         * 通过数组设置该向量。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        public fromArray(array: Readonly<ArrayLike<number>>, offset: number = 0) {
+            this.x = array[offset];
+            this.y = array[offset + 1];
+            this.z = array[offset + 2];
 
             return this;
+        }
+
+        public clear() {
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+
+            return this;
+        }
+
+        /**
+         * 向量归一化。
+         * - `v.normalize()` 归一化该向量，相当于 v /= v.length。
+         * - `v.normalize(input)` 将输入向量归一化的结果写入该向量，相当于 v = input / input.length。
+         * @param input 输入向量。
+         * @param defaultVector 如果该向量的长度为 0，则默认归一化的向量。
+         */
+        public normalize(input?: Readonly<IVector3>, defaultVector: Readonly<IVector3> = Vector3.FORWARD) {
+            if (!input) {
+                input = this;
+            }
+
+            const x = input.x, y = input.y, z = input.z;
+            let l = Math.sqrt(x * x + y * y + z * z);
+
+            if (l > egret3d.EPSILON) {
+                l = 1.0 / l;
+                this.x = x * l;
+                this.y = y * l;
+                this.z = z * l;
+            }
+            else {
+                this.copy(defaultVector);
+            }
+
+            return this;
+        }
+
+        /**
+         * 
+         * @param input 输入向量。
+         */
+        public negate(input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
+            }
+
+            this.x = input.x * -1.0;
+            this.y = input.y * -1.0;
+            this.z = input.z * -1.0;
+
+            return this;
+        }
+
+        /**
+         * 判断该向量是否和一个向量相等。
+         * @param value 一个向量。
+         * @param threshold 阈值。
+         */
+        public equal(value: Readonly<IVector3>, threshold: number = 0.000001) {
+            if (
+                Math.abs(this.x - value.x) <= threshold &&
+                Math.abs(this.y - value.y) <= threshold &&
+                Math.abs(this.z - value.z) <= threshold
+            ) {
+                return true;
+            }
+
+            return false;
         }
 
         public fromSphericalCoords(vector3: Readonly<IVector3>): this;
@@ -158,69 +239,45 @@ namespace egret3d {
             return this;
         }
 
-        public clear() {
-            this.x = 0.0;
-            this.y = 0.0;
-            this.z = 0.0;
+        public fromPlaneProjection(plane: Readonly<Plane>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
+            }
+
+            return this.add(helpVector3A.multiplyScalar(-plane.getDistance(input), plane.normal));
         }
 
-        public equal(value: Readonly<IVector3>, threshold: number = 0.000001) {
-            if (Math.abs(this.x - value.x) > threshold) {
-                return false;
+        public applyMatrix3(matrix: Readonly<Matrix3>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
             }
 
-            if (Math.abs(this.y - value.y) > threshold) {
-                return false;
-            }
+            const x = input.x, y = input.y, z = input.z;
+            const rawData = matrix.rawData;
 
-            if (Math.abs(this.z - value.z) > threshold) {
-                return false;
-            }
-
-            return true;
-        }
-
-        public fromPlaneProjection(plane: Readonly<Plane>, source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
-            }
-
-            return this.add(helpVector3A.multiplyScalar(-plane.getDistance(source), plane.normal));
-        }
-
-        public applyMatrix3(matrix: Readonly<Matrix3>, source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
-            }
-
-            // const x = source.x, y = source.y, z = source.z;
-            // const rawData = matrix.rawData;
-
-            // const w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]);
-            // this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
-            // this.y = (rawData[1] * x + rawData[5] * y + rawData[9] * z + rawData[13]) * w;
-            // this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
-
-
-            var x = source.x, y = source.y, z = source.z;
-            var e = matrix.rawData;
-
-            this.x = e[0] * x + e[3] * y + e[6] * z;
-            this.y = e[1] * x + e[4] * y + e[7] * z;
-            this.z = e[2] * x + e[5] * y + e[8] * z;
+            this.x = rawData[0] * x + rawData[3] * y + rawData[6] * z;
+            this.y = rawData[1] * x + rawData[4] * y + rawData[7] * z;
+            this.z = rawData[2] * x + rawData[5] * y + rawData[8] * z;
 
             return this;
         }
 
-        public applyMatrix(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
+        /**
+         * 向量与矩阵相乘运算。
+         * - `v.applyMatrix(matrix)` 将该向量与一个矩阵相乘，相当于 v *= matrix。
+         * - `v.applyMatrix(matrix, input)` 将输入向量与一个矩阵相乘的结果写入该向量，相当于 v = input * matrix。
+         * @param matrix 一个矩阵。
+         * @param input 输入向量。
+         */
+        public applyMatrix(matrix: Readonly<Matrix4>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
             }
 
-            const x = source.x, y = source.y, z = source.z;
+            const x = input.x, y = input.y, z = input.z;
             const rawData = matrix.rawData;
 
-            const w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]);
+            const w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]); // TODO
             this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
             this.y = (rawData[1] * x + rawData[5] * y + rawData[9] * z + rawData[13]) * w;
             this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
@@ -228,12 +285,19 @@ namespace egret3d {
             return this;
         }
 
-        public applyDirection(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
+        /**
+         * 向量与矩阵相乘运算。
+         * - `v.applyDirection(matrix)` 将该向量与一个矩阵相乘，相当于 v *= matrix。
+         * - `v.applyDirection(matrix, input)` 将输入向量与一个矩阵相乘的结果写入该向量，相当于 v = input * matrix。
+         * @param matrix 一个矩阵。
+         * @param input 输入向量。
+         */
+        public applyDirection(matrix: Readonly<Matrix4>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
             }
 
-            const x = source.x, y = source.y, z = source.z;
+            const x = input.x, y = input.y, z = input.z;
             const rawData = matrix.rawData;
 
             this.x = rawData[0] * x + rawData[4] * y + rawData[8] * z;
@@ -241,14 +305,22 @@ namespace egret3d {
             this.z = rawData[2] * x + rawData[6] * y + rawData[10] * z;
 
             return this;
+            // return this.normalize(); TODO
         }
 
-        public applyQuaternion(quaternion: Readonly<IVector4>, source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
+        /**
+         * 向量与四元数相乘运算。
+         * - `v.applyQuaternion(quaternion)` 将该向量与一个四元数相乘，相当于 v *= quaternion。
+         * - `v.applyQuaternion(quaternion, input)` 将输入向量与一个四元数相乘的结果写入该向量，相当于 v = input * quaternion。
+         * @param matrix 一个四元数。
+         * @param input 输入向量。
+         */
+        public applyQuaternion(quaternion: Readonly<IVector4>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
             }
 
-            const x = source.x, y = source.y, z = source.z;
+            const x = input.x, y = input.y, z = input.z;
             const qx = quaternion.x, qy = quaternion.y, qz = quaternion.z, qw = quaternion.w;
             // calculate quat * vector
             const ix = qw * x + qy * z - qz * y;
@@ -263,118 +335,136 @@ namespace egret3d {
             return this;
         }
 
-        public normalize(source?: Readonly<IVector3>, defaultAxis?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
+        /**
+         * 向量与标量相加运算。
+         * - `v.addScalar(scalar)` 将该向量与标量相加，相当于 v += scalar。
+         * - `v.addScalar(scalar, input)` 将输入向量与标量相加的结果写入该向量，相当于 v = input + scalar。
+         * @param scalar 标量。
+         * @param input 输入向量。
+         */
+        public addScalar(scalar: number, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
             }
 
-            const x = source.x, y = source.y, z = source.z;
-            let l = Math.sqrt(x * x + y * y + z * z);
-
-            if (l > egret3d.EPSILON) {
-                l = 1.0 / l;
-                this.x = x * l;
-                this.y = y * l;
-                this.z = z * l;
-            }
-            else {
-                if (!defaultAxis) {
-                    defaultAxis = Vector3.FORWARD;
-                }
-
-                this.copy(defaultAxis);
-            }
+            this.x = input.x + scalar;
+            this.y = input.y + scalar;
+            this.z = input.z + scalar;
 
             return this;
         }
 
-        public negate(source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
+        /**
+         * 向量与标量相乘运算。
+         * - `v.multiplyScalar(scalar)` 将该向量与标量相乘，相当于 v *= scalar。
+         * - `v.multiplyScalar(scalar, input)` 将输入向量与标量相乘的结果写入该向量，相当于 v = input * scalar。
+         * @param scalar 标量。
+         * @param input 输入向量。
+         */
+        public multiplyScalar(scalar: number, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
             }
 
-            this.x = source.x * -1.0;
-            this.y = source.y * -1.0;
-            this.z = source.z * -1.0;
+            this.x = scalar * input.x;
+            this.y = scalar * input.y;
+            this.z = scalar * input.z;
 
             return this;
         }
 
-        public addScalar(add: number, source?: Readonly<IVector3>) {
-            if (source) {
-                this.x = source.x + add;
-                this.y = source.y + add;
-                this.z = source.z + add;
-            }
-            else {
-                this.x += add;
-                this.y += add;
-                this.z += add;
-            }
-
-            return this;
-        }
-
+        /**
+         * 向量相加运算。
+         * - `v.add(a)` 将该向量与一个向量相加，相当于 v += a。
+         * - `v.add(a, b)` 将两个向量相加的结果写入该向量，相当于 v = a + b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         public add(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
-            if (valueB) {
-                this.x = valueA.x + valueB.x;
-                this.y = valueA.y + valueB.y;
-                this.z = valueA.z + valueB.z;
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
             }
-            else {
-                this.x += valueA.x;
-                this.y += valueA.y;
-                this.z += valueA.z;
-            }
+
+            this.x = valueA.x + valueB.x;
+            this.y = valueA.y + valueB.y;
+            this.z = valueA.z + valueB.z;
 
             return this;
         }
 
+        /**
+         * 向量相减运算。
+         * - `v.subtract(a)` 将该向量与一个向量相减，相当于 v -= a。
+         * - `v.subtract(a, b)` 将两个向量相减的结果写入该向量，相当于 v = a - b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         public subtract(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
-            if (valueB) {
-                this.x = valueA.x - valueB.x;
-                this.y = valueA.y - valueB.y;
-                this.z = valueA.z - valueB.z;
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
             }
-            else {
-                this.x -= valueA.x;
-                this.y -= valueA.y;
-                this.z -= valueA.z;
-            }
+
+            this.x = valueA.x - valueB.x;
+            this.y = valueA.y - valueB.y;
+            this.z = valueA.z - valueB.z;
 
             return this;
         }
 
-        public multiplyScalar(scale: number, source?: Readonly<IVector3>) {
-            if (source) {
-                this.x = scale * source.x;
-                this.y = scale * source.y;
-                this.z = scale * source.z;
-            }
-            else {
-                this.x *= scale;
-                this.y *= scale;
-                this.z *= scale;
-            }
-
-            return this;
-        }
-
+        /**
+         * 向量相乘运算。
+         * - `v.multiply(a)` 将该向量与一个向量相乘，相当于 v *= a。
+         * - `v.multiply(a, b)` 将两个向量相乘的结果写入该向量，相当于 v = a * b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         public multiply(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
-            if (valueB) {
-                this.x = valueA.x * valueB.x;
-                this.y = valueA.y * valueB.y;
-                this.z = valueA.z * valueB.z;
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
             }
-            else {
-                this.x *= valueA.x;
-                this.y *= valueA.y;
-                this.z *= valueA.z;
-            }
+
+            this.x = valueA.x * valueB.x;
+            this.y = valueA.y * valueB.y;
+            this.z = valueA.z * valueB.z;
 
             return this;
         }
 
+        /**
+         * 向量相除运算。
+         * - 假设除向量分量均不为零。
+         * - `v.divide(a)` 将该向量与一个向量相除，相当于 v /= a。
+         * - `v.divide(a, b)` 将两个向量相除的结果写入该向量，相当于 v = a / b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
+        public divide(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+
+            if (DEBUG && (valueB.x === 0.0 || valueB.y === 0.0 || valueB.z === 0)) {
+                console.warn("Dividing by zero.");
+            }
+
+            this.x = valueA.x / valueB.x;
+            this.y = valueA.y / valueB.y;
+            this.z = valueA.z / valueB.z;
+
+            return this;
+        }
+
+        /**
+         * 向量点乘运算。
+         * - `v.dot(a)` 将该向量与一个向量点乘，相当于 v ·= a。
+         * - `v.dot(a, b)` 将两个向量点乘的结果写入该向量，相当于 v = a · b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         public dot(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
             if (!valueB) {
                 valueB = valueA;
@@ -384,6 +474,13 @@ namespace egret3d {
             return valueA.x * valueB.x + valueA.y * valueB.y + valueA.z * valueB.z;
         }
 
+        /**
+         * 向量叉乘运算。
+         * - `v.cross(a)` 将该向量与一个向量叉乘，相当于 v ×= a。
+         * - `v.cross(a, b)` 将两个向量叉乘的结果写入该向量，相当于 v = a × b。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         public cross(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
             if (!valueB) {
                 valueB = valueA;
@@ -404,6 +501,13 @@ namespace egret3d {
             return this;
         }
 
+        /**
+         * 向量插值运算。
+         * - `v.lerp(t, a)` 将该向量与一个向量插值，相当于 v = v * (1 - t) + a * t。
+         * - `v.lerp(t, a, b)` 将两个向量插值的结果写入该向量，相当于 v = a * (1 - t) + b * t。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         public lerp(t: number, valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
             if (!valueB) {
                 valueB = valueA;
@@ -418,6 +522,13 @@ namespace egret3d {
             return this;
         }
 
+        /**
+         * 向量最小值运算。
+         * - `v.min(a)` 将该向量与一个向量的最小值写入该向量，相当于 v = min(v, a)。
+         * - `v.min(a, b)` 将两个向量的最小值写入该向量，相当于 v = min(a, b)。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         public min(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
             if (!valueB) {
                 valueB = valueA;
@@ -431,6 +542,13 @@ namespace egret3d {
             return this;
         }
 
+        /**
+         * 向量最大值运算。
+         * - `v.max(a)` 将该向量与一个向量的最大值写入该向量，相当于 v = max(v, a)。
+         * - `v.max(a, b)` 将两个向量的最大值写入该向量，相当于 v = max(a, b)。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
         public max(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
             if (!valueB) {
                 valueB = valueA;
@@ -444,49 +562,81 @@ namespace egret3d {
             return this;
         }
 
-        public clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
+        /**
+         * 向量夹紧运算。
+         * - 假设最小向量小于最大向量。
+         * - `v.clamp(valueMin, valueMax)` 相当于 v = max(valueMin, min(valueMax, v))。
+         * - `v.clamp(valueMin, valueMax, input)` 相当于 v = max(valueMin, min(valueMax, input))。
+         * @param valueMin 最小向量。
+         * @param valueMax 最大向量。
+         * @param input 输入向量。
+         */
+        public clamp(valueMin: Readonly<IVector3>, valueMax: Readonly<IVector3>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
+            }
+
+            if (DEBUG && (valueMin.x > valueMax.x || valueMin.y > valueMax.y || valueMin.z > valueMax.z)) {
+                console.warn("Invalid arguments.");
             }
 
             // assumes min < max, componentwise
-            this.x = Math.max(min.x, Math.min(max.x, source.x));
-            this.y = Math.max(min.y, Math.min(max.y, source.y));
-            this.z = Math.max(min.z, Math.min(max.z, source.z));
+            this.x = Math.max(valueMin.x, Math.min(valueMax.x, input.x));
+            this.y = Math.max(valueMin.y, Math.min(valueMax.y, input.y));
+            this.z = Math.max(valueMin.z, Math.min(valueMax.z, input.z));
 
             return this;
         }
 
-        public divide(source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
+        /**
+         * 
+         * @param vector 
+         * @param input 
+         */
+        public reflect(vector: Readonly<IVector3>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
             }
 
-            this.x /= source.x;
-            this.y /= source.y;
-            this.z /= source.z;
-
-            return this;
+            return this.subtract(input, _helpVector3.multiplyScalar(2.0 * this.dot(vector), vector));
         }
 
+        /**
+         * 获得该向量和一个向量的夹角。（弧度制）
+         * - 假设向量长度均不为零。
+         */
         public getAngle(value: Readonly<IVector3>) {
-            const theta = this.dot(value) / (Math.sqrt(this.squaredLength * Vector3.getSqrLength(value)));
+            const v = this.squaredLength * (value as Vector3).squaredLength;
+
+            if (DEBUG && v === 0.0) {
+                console.warn("Dividing by zero.");
+            }
+
+            const theta = this.dot(value) / Math.sqrt(v);
 
             // clamp, to handle numerical problems
-            return Math.acos(Math.max(- 1, Math.min(1, theta)));
+            return Math.acos(Math.max(-1.0, Math.min(1.0, theta)));
         }
 
+        /**
+         * 获取该向量和一个向量之间的距离的平方。
+         * @param value 一个向量。
+         */
         public getSquaredDistance(value: Readonly<IVector3>) {
             return _helpVector3.subtract(value, this).squaredLength;
         }
 
+        /**
+         * 获取该向量和一个向量之间的距离。
+         * @param value 一个向量。
+         */
         public getDistance(value: Readonly<IVector3>) {
             return _helpVector3.subtract(value, this).length;
         }
 
-        public closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>) {
-            if (!value) {
-                value = this;
+        public closestToTriangle(triangle: Readonly<Triangle>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
             }
 
             const vab = helpVector3A;
@@ -507,7 +657,7 @@ namespace egret3d {
 
             vab.subtract(b, a);
             vac.subtract(c, a);
-            vap.subtract(value, a);
+            vap.subtract(input, a);
             const d1 = vab.dot(vap);
             const d2 = vac.dot(vap);
             if (d1 <= 0 && d2 <= 0) {
@@ -515,7 +665,7 @@ namespace egret3d {
                 return this.copy(a);
             }
 
-            vbp.subtract(value, b);
+            vbp.subtract(input, b);
             const d3 = vab.dot(vbp);
             const d4 = vac.dot(vbp);
             if (d3 >= 0 && d4 <= d3) {
@@ -532,7 +682,7 @@ namespace egret3d {
                 return this.multiplyScalar(v, vab).add(a);
             }
 
-            vcp.subtract(value, c);
+            vcp.subtract(input, c);
             const d5 = vab.dot(vcp);
             const d6 = vac.dot(vcp);
             if (d6 >= 0 && d5 <= d6) {
@@ -566,18 +716,35 @@ namespace egret3d {
             return this.add(a, vac.multiplyScalar(w).add(vab.multiplyScalar(v)));
         }
 
-        public toArray(value: number[] | Float32Array, offset: number = 0) {
-            value[0 + offset] = this.x;
-            value[1 + offset] = this.y;
-            value[2 + offset] = this.z;
+        /**
+         * 将该向量转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        public toArray(array?: number[] | Float32Array, offset: number = 0) {
+            if (!array) {
+                array = [];
+            }
 
-            return value;
+            array[0 + offset] = this.x;
+            array[1 + offset] = this.y;
+            array[2 + offset] = this.z;
+
+            return array;
         }
 
+        /**
+         * 该向量的长度。
+         * - 该值是实时计算的。
+         */
         public get length() {
             return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
         }
 
+        /**
+         * 该向量的长度的平方。
+         * - 该值是实时计算的。
+         */
         public get squaredLength() {
             return this.x * this.x + this.y * this.y + this.z * this.z;
         }

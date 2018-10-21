@@ -12,19 +12,6 @@ namespace paper.editor {
         private readonly _cameraAndLightCollecter: egret3d.CameraAndLightCollecter = GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
 
-        // private readonly _pointerStartPosition: egret3d.Vector3 = egret3d.Vector3.create();
-        // private readonly _pointerPosition: egret3d.Vector3 = egret3d.Vector3.create();
-
-        private _orbitControls: OrbitControls | null = null;
-        private _transformController: TransfromController | null = null;
-        private _boxesDrawer: BoxesDrawer | null = null;
-        private _boxColliderDrawer: BoxColliderDrawer | null = null;
-        private _sphereColliderDrawer: SphereColliderDrawer | null = null;
-        private _skeletonDrawer: SkeletonDrawer | null = null;
-        private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
-        private _worldAxisesDrawer: WorldAxisesDrawer | null = null;
-        private _gridDrawer: GridDrawer | null = null;
-
         private readonly _keyEscape: egret3d.Key = egret3d.inputCollecter.getKey("Escape");
         private readonly _keyDelete: egret3d.Key = egret3d.inputCollecter.getKey("Delete");
         private readonly _keyE: egret3d.Key = egret3d.inputCollecter.getKey("KeyE");
@@ -32,6 +19,16 @@ namespace paper.editor {
         private readonly _keyR: egret3d.Key = egret3d.inputCollecter.getKey("KeyR");
         private readonly _keyX: egret3d.Key = egret3d.inputCollecter.getKey("KeyX");
         private readonly _keyF: egret3d.Key = egret3d.inputCollecter.getKey("KeyF");
+
+        private _orbitControls: OrbitControls | null = null;
+        private _transformController: TransformController | null = null;
+        private _boxesDrawer: BoxesDrawer | null = null;
+        private _boxColliderDrawer: BoxColliderDrawer | null = null;
+        private _sphereColliderDrawer: SphereColliderDrawer | null = null;
+        private _skeletonDrawer: SkeletonDrawer | null = null;
+        private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
+        private _worldAxisesDrawer: WorldAxisesDrawer | null = null;
+        private _gridDrawer: GridDrawer | null = null;
 
         private _onGameObjectHovered = (_c: any, value: GameObject | null) => {
         }
@@ -160,9 +157,8 @@ namespace paper.editor {
             ModelComponent.onGameObjectSelected.add(this._onGameObjectSelected, this);
             ModelComponent.onGameObjectUnselected.add(this._onGameObjectUnselected, this);
 
-            this._orbitControls = egret3d.Camera.editor.gameObject.getOrAddComponent(OrbitControls);
-
-            this._transformController = EditorMeshHelper.createGameObject("TransformController").addComponent(TransfromController);
+            this._orbitControls = egret3d.Camera.editor.gameObject.addComponent(OrbitControls);
+            this._transformController = EditorMeshHelper.createGameObject("TransformController").addComponent(TransformController);
             this._transformController.gameObject.activeSelf = false;
             this._boxesDrawer = EditorMeshHelper.createGameObject("BoxesDrawer").addComponent(BoxesDrawer);
             this._boxColliderDrawer = EditorMeshHelper.createGameObject("BoxColliderDrawer").addComponent(BoxColliderDrawer);
@@ -240,7 +236,6 @@ namespace paper.editor {
             const transformController = this._transformController!;
 
             const defaultPointer = egret3d.inputCollecter.defaultPointer;
-
             if (defaultPointer.isDown(egret3d.PointerButtonsType.LeftMouse, false)) {
                 if (defaultPointer.event!.buttons & egret3d.PointerButtonsType.RightMouse) { // 正在控制摄像机。
                 }
@@ -292,7 +287,9 @@ namespace paper.editor {
                         }
                     }
                     else if (!event.ctrlKey && !event.shiftKey) {
-                        this._modelComponent.select(Scene.activeScene);
+                        if (this._modelComponent.selectedGameObject) {
+                            this._modelComponent.select(Scene.activeScene);
+                        }
                     }
                 }
             }
