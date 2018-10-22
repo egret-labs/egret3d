@@ -99,10 +99,6 @@ declare namespace dat {
 }declare namespace paper.editor {
 }
 declare namespace paper.editor {
-    /**
-     * TODO
-     */
-    function getResAsync(uri: string, root?: string): Promise<{}>;
 }
 declare namespace paper.editor {
 }
@@ -122,6 +118,46 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
+    /**
+     *
+     */
+    class ModelComponent extends SingletonComponent {
+        static readonly onSceneSelected: signals.Signal;
+        static readonly onSceneUnselected: signals.Signal;
+        static readonly onGameObjectHovered: signals.Signal;
+        static readonly onGameObjectSelectChanged: signals.Signal;
+        static readonly onGameObjectSelected: signals.Signal;
+        static readonly onGameObjectUnselected: signals.Signal;
+        /**
+         * 所有选中的实体。
+         */
+        readonly selectedGameObjects: GameObject[];
+        /**
+         * 选中的场景。
+         */
+        selectedScene: Scene | null;
+        /**
+         *
+         */
+        hoveredGameObject: GameObject | null;
+        /**
+         * 最后一个选中的实体。
+         */
+        selectedGameObject: GameObject | null;
+        private _editorModel;
+        private _onEditorSelectGameObjects(event);
+        private _onChangeProperty(data);
+        private _onChangeEditMode(mode);
+        private _onChangeEditType(type);
+        initialize(): void;
+        private _select(value, isReplace?);
+        private _unselect(value);
+        hover(value: GameObject | null): void;
+        select(value: Scene | GameObject | null, isReplace?: boolean): void;
+        remove(value: GameObject): void;
+        unselect(value: GameObject): void;
+        changeProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void;
+    }
 }
 declare namespace paper.editor {
 }
@@ -146,8 +182,6 @@ declare namespace paper.editor {
         initialize(): void;
         update(): void;
     }
-}
-declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }

@@ -37,7 +37,7 @@ namespace paper.editor {
         /**选中框 */
         CHECKBOX = "CHECKBOX",
         /** Size.*/
-        SIZE = "CHECKBOX",
+        SIZE = "SIZE",
         /**vertor2 */
         VECTOR2 = "VECTOR2",
         /**vertor3 */

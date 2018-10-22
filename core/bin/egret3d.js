@@ -675,7 +675,7 @@ var paper;
             /**选中框 */
             EditType["CHECKBOX"] = "CHECKBOX";
             /** Size.*/
-            EditType["SIZE"] = "CHECKBOX";
+            EditType["SIZE"] = "SIZE";
             /**vertor2 */
             EditType["VECTOR2"] = "VECTOR2";
             /**vertor3 */
@@ -9635,10 +9635,10 @@ var egret3d;
             paper.editor.property("CHECKBOX" /* CHECKBOX */, { readonly: true })
         ], Stage.prototype, "rotated", null);
         __decorate([
-            paper.editor.property("CHECKBOX" /* SIZE */)
+            paper.editor.property("SIZE" /* SIZE */)
         ], Stage.prototype, "screenSize", null);
         __decorate([
-            paper.editor.property("CHECKBOX" /* SIZE */)
+            paper.editor.property("SIZE" /* SIZE */)
         ], Stage.prototype, "size", null);
         __decorate([
             paper.editor.property("RECT" /* RECT */, { readonly: true })
@@ -11764,8 +11764,8 @@ var egret3d;
             this.directShadowMaps = [];
             this.pointShadowMaps = [];
             this.spotShadowMaps = [];
-            this.viewPortPixel = { x: 0, y: 0, w: 0, h: 0 };
             //
+            this.viewPortPixel = { x: 0, y: 0, w: 0, h: 0 };
             this.cameraPosition = new Float32Array(3);
             this.cameraForward = new Float32Array(3);
             this.cameraUp = new Float32Array(3);
@@ -11990,9 +11990,6 @@ var egret3d;
                 this.lightmapIntensity = scene.lightmapIntensity;
                 this.shaderContextDefine += "#define USE_LIGHTMAP \n";
             }
-            if (renderer.constructor === egret3d.SkinnedMeshRenderer && !renderer.forceCPUSkin) {
-                this.shaderContextDefine += "#define USE_SKINNING \n" + ("#define MAX_BONES " + Math.min(egret3d.SkinnedMeshRendererSystem.maxBoneCount, renderer.bones.length) + " \n");
-            }
             if (this.lightCount > 0) {
                 if (this.directLightCount > 0) {
                     this.shaderContextDefine += "#define NUM_DIR_LIGHTS " + this.directLightCount + "\n";
@@ -12022,6 +12019,9 @@ var egret3d;
                     this.fogNear = fog.near;
                     this.fogFar = fog.far;
                 }
+            }
+            if (renderer.constructor === egret3d.SkinnedMeshRenderer && !renderer.forceCPUSkin) {
+                this.shaderContextDefine += "#define USE_SKINNING \n" + ("#define MAX_BONES " + Math.min(egret3d.SkinnedMeshRendererSystem.maxBoneCount, renderer.bones.length) + " \n");
             }
         };
         return RenderContext;
@@ -12573,7 +12573,7 @@ var egret;
              **/
             Renderer.prototype.drawTextureElements = function (data, offset) {
                 var gl = this.context;
-                if (data.texture.isCancas) {
+                if (data.texture.isCanvas) {
                     gl.wxBindCanvasTexture(gl.TEXTURE_2D, data.texture);
                 }
                 else {

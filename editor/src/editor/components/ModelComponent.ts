@@ -1,6 +1,6 @@
 namespace paper.editor {
     /**
-     * @internal
+     * 
      */
     export class ModelComponent extends SingletonComponent {
         public static readonly onSceneSelected: signals.Signal = new signals.Signal();

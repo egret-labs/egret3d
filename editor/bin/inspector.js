@@ -2576,6 +2576,12 @@ var __extends = this && this.__extends || function __extends(t, e) {
 for (var i in e) e.hasOwnProperty(i) && (t[i] = e[i]);
 r.prototype = e.prototype, t.prototype = new r();
 };
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -2611,12 +2617,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
 var paper;
 (function (paper) {
     var editor;
@@ -2649,102 +2649,28 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
-        var resLoaded = false;
-        function getResType(uri) {
-            var file = uri.substr(uri.lastIndexOf("/") + 1);
-            var i = file.indexOf(".", 0);
-            var extname = "";
-            while (i >= 0) {
-                extname = file.substr(i);
-                if (extname === ".assetbundle.json") {
-                    return 'Bundle';
-                }
-                else if (extname === ".png" || extname === ".jpg") {
-                    return 'Texture';
-                }
-                else if (extname === ".pvr.bin" || extname === ".pvr") {
-                    return 'PVR';
-                }
-                else if (extname === ".atlas.json") {
-                    return 'Atlas';
-                }
-                else if (extname === ".font.json") {
-                    return 'Font';
-                }
-                else if (extname === ".json" || extname === ".txt" || extname === ".effect.json") {
-                    return 'TextAsset';
-                }
-                else if (extname === ".packs.bin") {
-                    return 'PackBin';
-                }
-                else if (extname === ".packs.txt") {
-                    return 'PackTxt';
-                }
-                else if (extname === ".path.json") {
-                    return 'pathAsset';
-                }
-                else if (extname === ".mp3" || extname === ".ogg") {
-                    return 'Sound';
-                }
-                else if (extname === ".prefab.json") {
-                    return 'Prefab';
-                }
-                else if (extname === ".scene.json") {
-                    return 'Scene';
-                }
-                else if (extname === ".vs.glsl") {
-                    return 'GLVertexShader';
-                }
-                else if (extname === ".fs.glsl") {
-                    return 'GLFragmentShader';
-                }
-                else if (extname === ".shader.json") {
-                    return 'Shader';
-                }
-                else if (extname === ".image.json") {
-                    return 'TextureDesc';
-                }
-                else if (extname === ".mat.json") {
-                    return 'Material';
-                }
-                else if (extname === ".mesh.bin") {
-                    return 'Mesh';
-                }
-                else if (extname === ".ani.bin") {
-                    return 'Animation';
-                }
-                i = file.indexOf(".", i + 1);
-            }
-            return "Unknown";
-        }
         /**
-         * TODO
+         * @internal
          */
-        function getResAsync(uri, root) {
-            if (root === void 0) { root = "resource/"; }
-            return __awaiter(this, void 0, void 0, function () {
-                return __generator(this, function (_a) {
-                    switch (_a.label) {
-                        case 0:
-                            if (!!resLoaded) return [3 /*break*/, 2];
-                            return [4 /*yield*/, RES.loadConfig("resource/default.res.json", root)];
-                        case 1:
-                            _a.sent();
-                            resLoaded = true;
-                            _a.label = 2;
-                        case 2: return [2 /*return*/, new Promise(function (r) {
-                                egret3d.resRoot = root;
-                                RES.getResByUrl(root + uri, function (data) {
-                                    paper.Asset.register(data);
-                                    egret3d.resRoot = "";
-                                    r();
-                                }, RES, getResType(uri));
-                            })];
-                    }
-                });
-            });
-        }
-        editor.getResAsync = getResAsync;
+        var Helper = (function () {
+            function Helper() {
+            }
+            Helper.raycastAll = function (targets, mousePositionX, mousePositionY) {
+                var camera = egret3d.Camera.editor;
+                var ray = camera.createRayByScreen(mousePositionX, mousePositionY).release();
+                var raycastInfos = egret3d.raycastAll(ray, targets, 0.0, 16777215 /* Everything */, true);
+                return raycastInfos;
+            };
+            Helper.raycast = function (raycastAble, mousePositionX, mousePositionY) {
+                var camera = egret3d.Camera.editor;
+                var ray = camera.createRayByScreen(mousePositionX, mousePositionY);
+                var raycastInfo = egret3d.RaycastInfo.create();
+                return raycastAble.raycast(ray, raycastInfo) ? raycastInfo : null;
+            };
+            return Helper;
+        }());
+        editor.Helper = Helper;
+        __reflect(Helper.prototype, "paper.editor.Helper");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -2961,7 +2887,7 @@ var paper;
     var editor;
     (function (editor) {
         /**
-         * @internal
+         *
          */
         var ModelComponent = (function (_super) {
             __extends(ModelComponent, _super);
@@ -3463,9 +3389,9 @@ var paper;
         /**
          * @internal
          */
-        var TransfromController = (function (_super) {
-            __extends(TransfromController, _super);
-            function TransfromController() {
+        var TransformController = (function (_super) {
+            __extends(TransformController, _super);
+            function TransformController() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.isWorldSpace = false;
                 _this.eye = egret3d.Vector3.create();
@@ -3484,7 +3410,7 @@ var paper;
                 _this._hovered = null;
                 return _this;
             }
-            TransfromController.prototype.initialize = function () {
+            TransformController.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
                 {
                     var translate = this.translate;
@@ -3615,7 +3541,7 @@ var paper;
                 this._quad.parent = this.gameObject;
                 this._quad.activeSelf = false;
             };
-            TransfromController.prototype._updateTransform = function (mousePosition) {
+            TransformController.prototype._updateTransform = function (mousePosition) {
                 var isWorldSpace = this.isWorldSpace;
                 var hoveredName = this._hovered.name;
                 var raycastInfo = editor.Helper.raycast(this._plane, mousePosition.x, mousePosition.y);
@@ -3751,7 +3677,7 @@ var paper;
                     scale.release();
                 }
             };
-            TransfromController.prototype._updateSelf = function () {
+            TransformController.prototype._updateSelf = function () {
                 var isWorldSpace = this._mode === this.scale ? false : this.isWorldSpace; // scale always oriented to local rotation
                 var camera = egret3d.Camera.editor;
                 var modelComponent = this.gameObject.getComponent(editor.ModelComponent);
@@ -3812,7 +3738,7 @@ var paper;
                     alignVector.release();
                 }
             };
-            TransfromController.prototype._updatePlane = function () {
+            TransformController.prototype._updatePlane = function () {
                 var isWorldSpace = this._mode === this.scale ? false : this.isWorldSpace; // scale always oriented to local rotation
                 var rotation = isWorldSpace ? egret3d.Quaternion.IDENTITY : this.gameObject.transform.rotation;
                 var unitX = egret3d.Vector3.RIGHT.clone().applyQuaternion(rotation);
@@ -3863,7 +3789,7 @@ var paper;
                 alignVector.release();
                 dirVector.release();
             };
-            TransfromController.prototype.start = function (mousePosition) {
+            TransformController.prototype.start = function (mousePosition) {
                 var isWorldSpace = this.isWorldSpace;
                 var hoveredName = this._hovered.name;
                 var raycastInfo = editor.Helper.raycast(this._plane, mousePosition.x, mousePosition.y);
@@ -3900,7 +3826,7 @@ var paper;
                     this._offsetStart.applyQuaternion(currentSelectedPRS[4].clone().inverse().release());
                 }
             };
-            TransfromController.prototype.end = function () {
+            TransformController.prototype.end = function () {
                 //
                 var modelComponent = this.gameObject.getComponent(editor.ModelComponent);
                 for (var _i = 0, _a = modelComponent.selectedGameObjects; _i < _a.length; _i++) {
@@ -3926,14 +3852,14 @@ var paper;
                 }
                 this._controlling = false;
             };
-            TransfromController.prototype.update = function (mousePosition) {
+            TransformController.prototype.update = function (mousePosition) {
                 if (this._hovered && this._controlling) {
                     this._updateTransform(mousePosition);
                 }
                 this._updateSelf();
                 this._updatePlane();
             };
-            Object.defineProperty(TransfromController.prototype, "mode", {
+            Object.defineProperty(TransformController.prototype, "mode", {
                 get: function () {
                     return this._mode || this.translate;
                 },
@@ -3950,7 +3876,7 @@ var paper;
                 enumerable: true,
                 configurable: true
             });
-            Object.defineProperty(TransfromController.prototype, "hovered", {
+            Object.defineProperty(TransformController.prototype, "hovered", {
                 get: function () {
                     return this._hovered;
                 },
@@ -3988,10 +3914,10 @@ var paper;
                 enumerable: true,
                 configurable: true
             });
-            return TransfromController;
+            return TransformController;
         }(paper.BaseComponent));
-        editor.TransfromController = TransfromController;
-        __reflect(TransfromController.prototype, "paper.editor.TransfromController");
+        editor.TransformController = TransformController;
+        __reflect(TransformController.prototype, "paper.editor.TransformController");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -4419,7 +4345,7 @@ var paper;
                             }
                             break;
                         }
-                        case "CHECKBOX" /* SIZE */: {
+                        case "SIZE" /* SIZE */: {
                             guiControllerA = gui.add(gui.instance[info.name], "w", info.name + ": w").step(0.1).listen();
                             guiControllerB = gui.add(gui.instance[info.name], "h", info.name + ": h").step(0.1).listen();
                             if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
@@ -4698,8 +4624,13 @@ var paper;
                 ];
                 _this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
                 _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
-                // private readonly _pointerStartPosition: egret3d.Vector3 = egret3d.Vector3.create();
-                // private readonly _pointerPosition: egret3d.Vector3 = egret3d.Vector3.create();
+                _this._keyEscape = egret3d.inputCollecter.getKey("Escape");
+                _this._keyDelete = egret3d.inputCollecter.getKey("Delete");
+                _this._keyE = egret3d.inputCollecter.getKey("KeyE");
+                _this._keyW = egret3d.inputCollecter.getKey("KeyW");
+                _this._keyR = egret3d.inputCollecter.getKey("KeyR");
+                _this._keyX = egret3d.inputCollecter.getKey("KeyX");
+                _this._keyF = egret3d.inputCollecter.getKey("KeyF");
                 _this._orbitControls = null;
                 _this._transformController = null;
                 _this._boxesDrawer = null;
@@ -4709,13 +4640,6 @@ var paper;
                 _this._cameraViewFrustum = null; // TODO封装一下
                 _this._worldAxisesDrawer = null;
                 _this._gridDrawer = null;
-                _this._keyEscape = egret3d.inputCollecter.getKey("Escape");
-                _this._keyDelete = egret3d.inputCollecter.getKey("Delete");
-                _this._keyE = egret3d.inputCollecter.getKey("KeyE");
-                _this._keyW = egret3d.inputCollecter.getKey("KeyW");
-                _this._keyR = egret3d.inputCollecter.getKey("KeyR");
-                _this._keyX = egret3d.inputCollecter.getKey("KeyX");
-                _this._keyF = egret3d.inputCollecter.getKey("KeyF");
                 _this._onGameObjectHovered = function (_c, value) {
                 };
                 _this._onGameObjectSelectChanged = function (_c, value) {
@@ -4824,8 +4748,8 @@ var paper;
                 editor.ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectChanged, this);
                 editor.ModelComponent.onGameObjectSelected.add(this._onGameObjectSelected, this);
                 editor.ModelComponent.onGameObjectUnselected.add(this._onGameObjectUnselected, this);
-                this._orbitControls = egret3d.Camera.editor.gameObject.getOrAddComponent(editor.OrbitControls);
-                this._transformController = editor.EditorMeshHelper.createGameObject("TransformController").addComponent(editor.TransfromController);
+                this._orbitControls = egret3d.Camera.editor.gameObject.addComponent(editor.OrbitControls);
+                this._transformController = editor.EditorMeshHelper.createGameObject("TransformController").addComponent(editor.TransformController);
                 this._transformController.gameObject.activeSelf = false;
                 this._boxesDrawer = editor.EditorMeshHelper.createGameObject("BoxesDrawer").addComponent(editor.BoxesDrawer);
                 this._boxColliderDrawer = editor.EditorMeshHelper.createGameObject("BoxColliderDrawer").addComponent(editor.BoxColliderDrawer);
@@ -5130,34 +5054,6 @@ var paper;
         }());
         editor.EditorMeshHelper = EditorMeshHelper;
         __reflect(EditorMeshHelper.prototype, "paper.editor.EditorMeshHelper");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        /**
-         * @internal
-         */
-        var Helper = (function () {
-            function Helper() {
-            }
-            Helper.raycastAll = function (targets, mousePositionX, mousePositionY) {
-                var camera = egret3d.Camera.editor;
-                var ray = camera.createRayByScreen(mousePositionX, mousePositionY).release();
-                var raycastInfos = egret3d.raycastAll(ray, targets, 0.0, 16777215 /* Everything */, true);
-                return raycastInfos;
-            };
-            Helper.raycast = function (raycastAble, mousePositionX, mousePositionY) {
-                var camera = egret3d.Camera.editor;
-                var ray = camera.createRayByScreen(mousePositionX, mousePositionY);
-                var raycastInfo = egret3d.RaycastInfo.create();
-                return raycastAble.raycast(ray, raycastInfo) ? raycastInfo : null;
-            };
-            return Helper;
-        }());
-        editor.Helper = Helper;
-        __reflect(Helper.prototype, "paper.editor.Helper");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;

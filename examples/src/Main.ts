@@ -62,10 +62,10 @@ function exampleStart() {
         exampleClass = (window as any).examples[exampleString];
     }
 
+    createGUI(exampleString);
+
     const exampleObj: Examples = new exampleClass();
     exampleObj.start();
-
-    createGUI(exampleString);
 
     function createGUI(exampleString: string) {
         const namespaceExamples = (window as any).examples;
