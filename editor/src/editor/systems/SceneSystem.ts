@@ -151,6 +151,18 @@ namespace paper.editor {
             }
         }
 
+        public lookAtSelected() {
+            this._orbitControls!.distance = 10.0;
+            this._orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);
+
+            if (this._modelComponent.selectedGameObject) {
+                this._orbitControls!.lookAtPoint.copy(this._modelComponent.selectedGameObject.transform.position);
+            }
+            else {
+                this._orbitControls!.lookAtPoint.copy(egret3d.Vector3.ZERO);
+            }
+        }
+
         public onEnable() {
             ModelComponent.onGameObjectHovered.add(this._onGameObjectHovered, this);
             ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectChanged, this);
@@ -368,15 +380,7 @@ namespace paper.editor {
             }
 
             if (this._keyF.isUp(false) && !this._keyF.event!.altKey && !this._keyF.event!.ctrlKey && !this._keyF.event!.shiftKey) {
-                this._orbitControls!.distance = 10.0;
-                this._orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);
-
-                if (this._modelComponent.selectedGameObject) {
-                    this._orbitControls!.lookAtPoint.copy(this._modelComponent.selectedGameObject.transform.position);
-                }
-                else {
-                    this._orbitControls!.lookAtPoint.copy(egret3d.Vector3.ZERO);
-                }
+                this.lookAtSelected();
             }
 
             // Update model gameObjects.
