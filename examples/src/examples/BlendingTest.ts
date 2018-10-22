@@ -1,7 +1,7 @@
 namespace examples {
 
     export class BlendingTest {
-        async  start() {
+        async start() {
             // Load resource config.
             await RES.loadConfig("resource/default.res.json", "resource/");
 
@@ -20,6 +20,7 @@ namespace examples {
 
             const blends = [gltf.BlendMode.None, gltf.BlendMode.Blend, gltf.BlendMode.Add, gltf.BlendMode.Subtractive, gltf.BlendMode.Multiply];
             const blendNames = ["None", "Blend", "Add", "Subtractive", "Multiply"];
+
             for (let i = 0; i < textures.length; i++) {
                 for (let j = 0; j < blends.length; j++) {
                     const texture = textures[i];
@@ -30,9 +31,13 @@ namespace examples {
                     renderer.material!.setBlend(blends[j]).setDepth(true, false).setRenderQueue(paper.RenderQueue.Transparent);
                     gameObject.transform.setLocalPosition((j - blends.length * 0.5 + 0.5) * 1.1, -(i - textures.length * 0.5 + 0.5) * 1.1, 0.0);
                 }
-
+            }
+        
+            { 
+                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.PLANE, "Background");
+                const renderer = gameObject.getComponent(egret3d.MeshRenderer) as egret3d.MeshRenderer;
+                renderer.material = renderer.material!.clone();
             }
         }
     }
-
 }

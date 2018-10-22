@@ -124,6 +124,7 @@ function exampleStart() {
                 }
             }
         }
+        
         return appFile;
     }
 }

@@ -49,6 +49,7 @@ namespace egret3d {
         private readonly _scale: Vector3 = Vector3.ONE.clone();
         private readonly _inverseWorldMatrix: Matrix4 = Matrix4.create();
         private readonly _worldMatrix: Matrix4 = Matrix4.create();
+        // private readonly _observers: ITransformObserver[] = []; // TODO
         /**
          * @internal
          */
@@ -445,10 +446,10 @@ namespace egret3d {
         /**
          * 该物体的本地旋转。
          */
-        public get localRotation(): Readonly<Quaternion | IVector4> {
+        public get localRotation(): Readonly<Quaternion> {
             return this._localRotation;
         }
-        public set localRotation(value: Readonly<Quaternion | IVector4>) {
+        public set localRotation(value: Readonly<Quaternion>) {
             this._localRotation.x = value.x;
             this._localRotation.y = value.y;
             this._localRotation.z = value.z;
@@ -495,14 +496,14 @@ namespace egret3d {
         /**
          * 该物体的本地欧拉旋转。（弧度制）
          */
-        public get localEuler(): Readonly<Vector3 | IVector3> {
+        public get localEuler(): Readonly<Vector3> {
             if (this._localDirty & TransformDirty.Euler) {
                 this._updateEuler(false);
             }
 
             return this._localEuler;
         }
-        public set localEuler(value: Readonly<Vector3 | IVector3>) {
+        public set localEuler(value: Readonly<Vector3>) {
             this._localEuler.x = value.x;
             this._localEuler.y = value.y;
             this._localEuler.z = value.z;
@@ -551,14 +552,14 @@ namespace egret3d {
          * 该物体的本地欧拉旋转。（角度制）
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3, { step: 1.0 })
-        public get localEulerAngles(): Readonly<Vector3 | IVector3> {
+        public get localEulerAngles(): Readonly<Vector3> {
             if (this._localDirty & TransformDirty.Euler) {
                 this._updateEuler(false);
             }
 
             return this._localEulerAngles;
         }
-        public set localEulerAngles(value: Readonly<Vector3 | IVector3>) {
+        public set localEulerAngles(value: Readonly<Vector3>) {
             this._localEulerAngles.x = value.x;
             this._localEulerAngles.y = value.y;
             this._localEulerAngles.z = value.z;
@@ -598,10 +599,10 @@ namespace egret3d {
          * 该物体的本地缩放。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
-        public get localScale(): Readonly<Vector3 | IVector3> {
+        public get localScale(): Readonly<Vector3> {
             return this._localScale;
         }
-        public set localScale(value: Readonly<Vector3 | IVector3>) {
+        public set localScale(value: Readonly<Vector3>) {
             this._localScale.x = value.x;
             this._localScale.y = value.y;
             this._localScale.z = value.z;
@@ -667,7 +668,7 @@ namespace egret3d {
         /**
          * 该物体的世界位置。
          */
-        public get position(): Readonly<Vector3 | IVector3> {
+        public get position(): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Position) {
                 this.worldMatrix.decompose(this._position, null, null);
                 this._worldDirty &= ~TransformDirty.Position;
@@ -675,7 +676,7 @@ namespace egret3d {
 
             return this._position;
         }
-        public set position(value: Readonly<Vector3 | IVector3>) {
+        public set position(value: Readonly<Vector3>) {
             this._localPosition.x = value.x;
             this._localPosition.y = value.y;
             this._localPosition.z = value.z;
@@ -727,7 +728,7 @@ namespace egret3d {
         /**
          * 该物体的世界旋转。
          */
-        public get rotation(): Readonly<Quaternion | IVector4> {
+        public get rotation(): Readonly<Quaternion> {
             if (this._worldDirty & TransformDirty.Rotation) {
                 this.worldMatrix.decompose(null, this._rotation, null);
                 this._worldDirty &= ~TransformDirty.Rotation;
@@ -735,7 +736,7 @@ namespace egret3d {
 
             return this._rotation;
         }
-        public set rotation(value: Readonly<Quaternion | IVector4>) {
+        public set rotation(value: Readonly<Quaternion>) {
             this._localRotation.x = value.x;
             this._localRotation.y = value.y;
             this._localRotation.z = value.z;
@@ -782,14 +783,14 @@ namespace egret3d {
         /**
          * 该物体的世界欧拉旋转。（弧度制）
          */
-        public get euler(): Readonly<Vector3 | IVector3> {
+        public get euler(): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Euler) {
                 this._updateEuler(true);
             }
 
             return this._euler;
         }
-        public set euler(value: Readonly<Vector3 | IVector3>) {
+        public set euler(value: Readonly<Vector3>) {
             this._localRotation.fromEuler(value);
 
             if (this._parent) {
@@ -834,14 +835,14 @@ namespace egret3d {
         /**
          * 该物体的世界欧拉旋转。（角度制）
          */
-        public get eulerAngles(): Readonly<Vector3 | IVector3> {
+        public get eulerAngles(): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Euler) {
                 this._updateEuler(true);
             }
 
             return this._eulerAngles;
         }
-        public set eulerAngles(value: Readonly<Vector3 | IVector3>) {
+        public set eulerAngles(value: Readonly<Vector3>) {
             _helpVector3A.multiplyScalar(DEG_RAD, value);
             this._localRotation.fromEuler(_helpVector3A);
 
@@ -890,7 +891,7 @@ namespace egret3d {
         /**
          * 该物体的世界缩放。
          */
-        public get scale(): Readonly<Vector3 | IVector3> {
+        public get scale(): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Scale) {
                 this.worldMatrix.decompose(null, null, this._scale);
                 this._worldDirty &= ~TransformDirty.Scale;
@@ -898,7 +899,7 @@ namespace egret3d {
 
             return this._scale;
         }
-        public set scale(value: Readonly<Vector3 | IVector3>) {
+        public set scale(value: Readonly<Vector3>) {
             this._localScale.x = value.x;
             this._localScale.y = value.y;
             this._localScale.z = value.z;

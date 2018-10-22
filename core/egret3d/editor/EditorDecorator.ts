@@ -102,6 +102,7 @@ namespace paper.editor {
                     propertyList: [],
                 };
             }
+            
             if (editType !== undefined) {
                 propertyMap[target.constructor.name].propertyList.push(new PropertyInfo(property, editType, option));
             }

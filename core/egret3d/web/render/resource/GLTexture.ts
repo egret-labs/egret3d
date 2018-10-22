@@ -66,9 +66,9 @@ namespace egret3d {
         public static createGridTexture(name: string) {
             const mipmap = false;
             const linear = true;
-            const width = 256;
-            const height = 256;
-            const data = new Uint8Array(width * width * 4);
+            const width = 128;
+            const height = 128;
+            const data = new Uint8Array(width * height * 4);
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const seek = (y * width + x) * 4;
@@ -78,7 +78,7 @@ namespace egret3d {
                 }
             }
             const texture = new GLTexture2D(name, width, height, TextureFormatEnum.RGBA);
-            texture.uploadImage(data, mipmap, linear, true, false);
+            texture.uploadImage(data, mipmap, linear, true, true);
             return texture;
         }
         //

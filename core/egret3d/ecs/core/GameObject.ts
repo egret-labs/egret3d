@@ -307,7 +307,7 @@ namespace paper {
         /**
          * 添加一个指定组件实例。
          * @param componentClass 组件类。
-         * @param config Behaviour 组件 `onAwake(config?: any)` 的可选参数。
+         * @param config BaseComponent 组件 `initialize(config?: any)` 方法或 Behaviour 组件 `onAwake(config?: any)` 方法的可选参数。
          */
         public addComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, config?: any): T {
             registerClass(componentClass);
@@ -563,6 +563,7 @@ namespace paper {
 
             return component as T;
         }
+        
         /**
          * 获取全部指定组件实例。
          * @param componentClass 组件类。
@@ -608,6 +609,7 @@ namespace paper {
 
             return components;
         }
+
         /**
          * 获取一个自己或父级中指定的组件实例。
          * @param componentClass 组件类。
@@ -624,6 +626,7 @@ namespace paper {
 
             return result;
         }
+
         /**
          * 获取一个自己或子（孙）级中指定的组件实例。
          * @param componentClass 组件类。
@@ -642,6 +645,7 @@ namespace paper {
 
             return component;
         }
+
         /**
          * 获取全部自己和子（孙）级中指定的组件实例。
          * @param componentClass 组件类。
@@ -674,14 +678,17 @@ namespace paper {
 
             return components;
         }
+
         /**
          * 从该实体已注册的全部组件中获取一个指定组件实例，如果未添加该组件，则添加该组件。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
+         * @param config BaseComponent 组件 `initialize(config?: any)` 方法或 Behaviour 组件 `onAwake(config?: any)` 方法的可选参数。
          */
         public getOrAddComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false, config?: any) {
             return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, config);
         }
+
         /**
          * 向该实体已激活的全部 Behaviour 组件发送消息。
          * @param methodName 
@@ -689,16 +696,17 @@ namespace paper {
          */
         public sendMessage(methodName: string, parameter?: any, requireReceiver: boolean = true) {
             for (const component of this._components) {
-                if (component && component.isActiveAndEnabled && component.constructor instanceof Behaviour) {
+                if (component && component.isActiveAndEnabled && component instanceof Behaviour) {
                     if (methodName in component) {
                         (component as any)[methodName](parameter);
                     }
-                    else if (requireReceiver) {
+                    else if (DEBUG && requireReceiver) {
                         console.warn(this.name, egret.getQualifiedClassName(component), methodName); // TODO
                     }
                 }
             }
         }
+
         /**
          * 向该实体和其父级的 Behaviour 组件发送消息。
          * @param methodName 
@@ -712,6 +720,7 @@ namespace paper {
                 parent.gameObject.sendMessage(methodName, parameter, requireReceiver);
             }
         }
+
         /**
          * 向该实体和的其子（孙）级的 Behaviour 组件发送消息。
          * @param methodName 
@@ -726,12 +735,14 @@ namespace paper {
                 }
             }
         }
+
         /**
          * 该实体是否已经被销毁。
          */
         public get isDestroyed() {
             return !this._scene;
         }
+
         /**
          * 该实体是否可以被销毁。
          * - 当此值为 `true` 时，将会被添加到全局场景，反之将被添加到激活场景。
@@ -765,6 +776,7 @@ namespace paper {
                 child.gameObject.dontDestroy = value;
             }
         }
+
         /**
          * 该实体自身的激活状态。
          */
@@ -787,6 +799,7 @@ namespace paper {
                 this._activeSelf = value;//TODO
             }
         }
+
         /**
          * 该实体在场景中的激活状态。
          */
@@ -806,6 +819,7 @@ namespace paper {
 
             return this._activeInHierarchy;
         }
+
         /**
          * 该实体的路径。
          */
@@ -824,6 +838,7 @@ namespace paper {
 
             return path;
         }
+
         /**
          * 该实体已添加的全部组件。
          */
@@ -849,6 +864,7 @@ namespace paper {
 
             return this._cachedComponents;
         }
+
         /**
          * 该实体的父级实体。
          */
@@ -858,12 +874,14 @@ namespace paper {
         public set parent(gameObject: GameObject | null) {
             this.transform.parent = gameObject ? gameObject.transform : null;
         }
+
         /**
          * 该实体所属的场景。
          */
         public get scene() {
             return this._scene!;
         }
+
         /**
          * 全局实体。
          * - 全局实体不可被销毁。
