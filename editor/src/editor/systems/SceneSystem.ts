@@ -1,6 +1,6 @@
 namespace paper.editor {
     /**
-     * @internal
+     * 
      */
     export class SceneSystem extends BaseSystem {
         protected readonly _interests = [
