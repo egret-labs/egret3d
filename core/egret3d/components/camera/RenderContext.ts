@@ -42,9 +42,8 @@ namespace egret3d {
         public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
         public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
 
-        public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
-
         //
+        public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
         public readonly cameraPosition: Float32Array = new Float32Array(3);
         public readonly cameraForward: Float32Array = new Float32Array(3);
         public readonly cameraUp: Float32Array = new Float32Array(3);
@@ -317,10 +316,6 @@ namespace egret3d {
                 this.lightmapIntensity = scene.lightmapIntensity;
                 this.shaderContextDefine += "#define USE_LIGHTMAP \n";
             }
-            
-            if (renderer.constructor === SkinnedMeshRenderer && !(renderer as SkinnedMeshRenderer).forceCPUSkin) {
-                this.shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, (renderer as SkinnedMeshRenderer).bones.length)} \n`;
-            }
 
             if (this.lightCount > 0) {
                 if (this.directLightCount > 0) {
@@ -346,8 +341,8 @@ namespace egret3d {
                 this.fogColor[0] = fog.color.r;
                 this.fogColor[1] = fog.color.g;
                 this.fogColor[2] = fog.color.b;
-
                 this.shaderContextDefine += "#define USE_FOG \n";
+
                 if (fog.mode === FogMode.FOG_EXP2) {
                     this.fogDensity = fog.density;
                     this.shaderContextDefine += "#define FOG_EXP2 \n";
@@ -356,6 +351,10 @@ namespace egret3d {
                     this.fogNear = fog.near;
                     this.fogFar = fog.far;
                 }
+            }
+            
+            if (renderer.constructor === SkinnedMeshRenderer && !(renderer as SkinnedMeshRenderer).forceCPUSkin) {
+                this.shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, (renderer as SkinnedMeshRenderer).bones.length)} \n`;
             }
         }
     }

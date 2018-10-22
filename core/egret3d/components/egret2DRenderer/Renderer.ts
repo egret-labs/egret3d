@@ -334,7 +334,7 @@ module egret.web {
          **/
         private drawTextureElements(data: any, offset: number): number {
             let gl = this.context;
-            if (data.texture.isCancas) {
+            if (data.texture.isCanvas) {
                 (gl as any).wxBindCanvasTexture(gl.TEXTURE_2D, data.texture);
             }
             else {
