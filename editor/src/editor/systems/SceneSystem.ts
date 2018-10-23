@@ -1,6 +1,6 @@
 namespace paper.editor {
     /**
-     * @internal
+     * 
      */
     export class SceneSystem extends BaseSystem {
         protected readonly _interests = [
@@ -148,6 +148,18 @@ namespace paper.editor {
                 const eyeDistance = cameraPosition.getDistance(light.gameObject.transform.position);
                 icon.gameObject.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
                 icon.gameObject.transform.rotation = egret3d.Camera.editor.gameObject.transform.rotation;
+            }
+        }
+
+        public lookAtSelected() {
+            this._orbitControls!.distance = 10.0;
+            this._orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);
+
+            if (this._modelComponent.selectedGameObject) {
+                this._orbitControls!.lookAtPoint.copy(this._modelComponent.selectedGameObject.transform.position);
+            }
+            else {
+                this._orbitControls!.lookAtPoint.copy(egret3d.Vector3.ZERO);
             }
         }
 
@@ -368,15 +380,7 @@ namespace paper.editor {
             }
 
             if (this._keyF.isUp(false) && !this._keyF.event!.altKey && !this._keyF.event!.ctrlKey && !this._keyF.event!.shiftKey) {
-                this._orbitControls!.distance = 10.0;
-                this._orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);
-
-                if (this._modelComponent.selectedGameObject) {
-                    this._orbitControls!.lookAtPoint.copy(this._modelComponent.selectedGameObject.transform.position);
-                }
-                else {
-                    this._orbitControls!.lookAtPoint.copy(egret3d.Vector3.ZERO);
-                }
+                this.lookAtSelected();
             }
 
             // Update model gameObjects.

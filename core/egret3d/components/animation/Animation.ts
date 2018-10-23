@@ -611,7 +611,7 @@ namespace egret3d {
         }
 
         public get isCompleted() {
-            return this._playState !== 1;
+            return this._playState === 1;
         }
 
         public get totalTime() {

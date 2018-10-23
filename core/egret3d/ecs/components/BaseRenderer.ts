@@ -2,7 +2,7 @@ namespace paper {
     /**
      * 基础渲染组件。
      */
-    export abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
+    export abstract class BaseRenderer extends BaseComponent implements egret3d.ITransformObserver, egret3d.IRaycast {
         /**
          * 当渲染组件的材质列表改变时派发事件。
          */
@@ -107,7 +107,7 @@ namespace paper {
             return this._aabb;
         }
         /**
-         * 该渲染组件的世界包围球。
+         * 该渲染组件本地包围盒的世界包围球，用于摄像机视锥剔除。
          */
         public get boundingSphere(): Readonly<egret3d.Sphere> {
             if (this._boundingSphereDirty) {

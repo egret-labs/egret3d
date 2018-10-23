@@ -188,6 +188,42 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
+    /**
+     *
+     */
+    class SceneSystem extends BaseSystem {
+        protected readonly _interests: {
+            componentClass: typeof egret3d.Transform;
+        }[][];
+        private readonly _cameraAndLightCollecter;
+        private readonly _modelComponent;
+        private readonly _keyEscape;
+        private readonly _keyDelete;
+        private readonly _keyE;
+        private readonly _keyW;
+        private readonly _keyR;
+        private readonly _keyX;
+        private readonly _keyF;
+        private _orbitControls;
+        private _transformController;
+        private _boxesDrawer;
+        private _boxColliderDrawer;
+        private _sphereColliderDrawer;
+        private _skeletonDrawer;
+        private _cameraViewFrustum;
+        private _worldAxisesDrawer;
+        private _gridDrawer;
+        private _onGameObjectHovered;
+        private _onGameObjectSelectChanged;
+        private _onGameObjectSelected;
+        private _onGameObjectUnselected;
+        private _updateCameras();
+        private _updateLights();
+        lookAtSelected(): void;
+        onEnable(): void;
+        onDisable(): void;
+        onUpdate(): void;
+    }
 }
 declare namespace paper.editor {
 }

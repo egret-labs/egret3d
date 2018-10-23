@@ -1570,6 +1570,7 @@ declare namespace gltf {
         semantic?: string;
         /**
          * The value of the uniform.
+         * TODO 默认值
          */
         value: UniformValue;
         name?: any;
