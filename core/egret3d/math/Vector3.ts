@@ -176,7 +176,7 @@ namespace egret3d {
             const x = input.x, y = input.y, z = input.z;
             let l = Math.sqrt(x * x + y * y + z * z);
 
-            if (l > egret3d.EPSILON) {
+            if (l > Const.EPSILON) {
                 l = 1.0 / l;
                 this.x = x * l;
                 this.y = y * l;
@@ -210,7 +210,7 @@ namespace egret3d {
          * @param value 一个向量。
          * @param threshold 阈值。
          */
-        public equal(value: Readonly<IVector3>, threshold: number = 0.000001) {
+        public equal(value: Readonly<IVector3>, threshold: number = Const.EPSILON) {
             if (
                 Math.abs(this.x - value.x) <= threshold &&
                 Math.abs(this.y - value.y) <= threshold &&

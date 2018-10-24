@@ -97,7 +97,7 @@ namespace egret3d {
 
             const x = input.x, y = input.y, z = input.z, w = input.w;
             let l = Math.sqrt(x * x + y * y + z * z + w * w);
-            if (l > egret3d.EPSILON) {
+            if (l > Const.EPSILON) {
                 l = 1.0 / l;
                 this.x = x * l;
                 this.y = y * l;

@@ -109,6 +109,8 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
+}
+declare namespace paper.editor {
     /**
      *
      */
@@ -209,6 +211,7 @@ declare namespace paper.editor {
         private _boxesDrawer;
         private _boxColliderDrawer;
         private _sphereColliderDrawer;
+        private _cylinderColliderDrawer;
         private _skeletonDrawer;
         private _cameraViewFrustum;
         private _worldAxisesDrawer;

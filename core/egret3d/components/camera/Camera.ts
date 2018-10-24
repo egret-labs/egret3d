@@ -58,7 +58,7 @@ namespace egret3d {
          * - camera.cullingMask &= ~paper.CullingMask.UI;
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.CullingMask) })
+        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((paper as any).CullingMask) }) // TODO
         public cullingMask: paper.CullingMask = paper.CullingMask.Everything;
         /**
          * 相机渲染排序

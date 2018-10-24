@@ -14,7 +14,7 @@ namespace egret3d {
     /**
      * 矩形可序列化对象
      */
-    export class Rectangle extends paper.BaseRelease<AABB> implements IRectangle, paper.ICCS<Rectangle>, paper.ISerializable {
+    export class Rectangle extends paper.BaseRelease<Box> implements IRectangle, paper.ICCS<Rectangle>, paper.ISerializable {
         private static readonly _instances: Rectangle[] = [];
         /**
          * 创建一个矩形。

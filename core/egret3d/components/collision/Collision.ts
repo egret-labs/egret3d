@@ -2,7 +2,7 @@ namespace egret3d {
     const _helpVector3 = Vector3.create();
     const _helpRaycastInfo = RaycastInfo.create();
 
-    function _raycastCollider(ray: Readonly<Ray>, collider: BoxCollider | SphereCollider, raycastInfo: RaycastInfo, hit: boolean) {
+    function _raycastCollider(ray: Readonly<Ray>, collider: BoxCollider | SphereCollider | CylinderCollider, raycastInfo: RaycastInfo, hit: boolean) {
         const helpRaycastInfo = _helpRaycastInfo;
         const normal = raycastInfo.normal;
         helpRaycastInfo.normal = normal ? _helpVector3 : null;
@@ -83,7 +83,7 @@ namespace egret3d {
         // TODO renderQueue.
         return a.distance - b.distance;
     }
-    
+
     /**
      * 用世界空间坐标系的射线检测指定的实体。（不包含其子级）
      * @param ray 世界空间坐标系的射线。
@@ -114,6 +114,7 @@ namespace egret3d {
             let hit = false;
             const boxColliders = gameObject.getComponents(BoxCollider);
             const sphereColliders = gameObject.getComponents(SphereCollider);
+            const cylinderColliders = gameObject.getComponents(CylinderCollider);
 
             if (boxColliders.length > 0) {
                 for (const collider of boxColliders) {
@@ -134,6 +135,23 @@ namespace egret3d {
 
             if (sphereColliders.length > 0) {
                 for (const collider of sphereColliders) {
+                    if (!collider.enabled) {
+                        continue;
+                    }
+
+                    if (raycastInfo) {
+                        if (_raycastCollider(ray, collider, raycastInfo, hit)) {
+                            hit = true;
+                        }
+                    }
+                    else if (collider.raycast(ray)) {
+                        return true;
+                    }
+                }
+            }
+
+            if (cylinderColliders.length > 0) {
+                for (const collider of cylinderColliders) {
                     if (!collider.enabled) {
                         continue;
                     }

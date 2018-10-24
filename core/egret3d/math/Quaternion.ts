@@ -172,7 +172,7 @@ namespace egret3d {
             let r = (from as Vector3).dot(to) + 1.0;
             const v1 = helpVector3A;
 
-            if (r < egret3d.EPSILON) {
+            if (r < Const.EPSILON) {
                 r = 0.0;
 
                 if (Math.abs(from.x) > Math.abs(from.z)) {
@@ -292,7 +292,7 @@ namespace egret3d {
 
             const sqrSinHalfTheta = 1.0 - cosHalfTheta * cosHalfTheta;
 
-            if (sqrSinHalfTheta <= egret3d.EPSILON) { // Number.EPSILON
+            if (sqrSinHalfTheta <= Const.EPSILON) { // Number.EPSILON
 
                 const s = 1.0 - t;
                 this.w = s * aw + t * this.w;

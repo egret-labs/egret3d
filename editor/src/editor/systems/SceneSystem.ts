@@ -25,6 +25,7 @@ namespace paper.editor {
         private _boxesDrawer: BoxesDrawer | null = null;
         private _boxColliderDrawer: BoxColliderDrawer | null = null;
         private _sphereColliderDrawer: SphereColliderDrawer | null = null;
+        private _cylinderColliderDrawer: CylinderColliderDrawer | null = null;
         private _skeletonDrawer: SkeletonDrawer | null = null;
         private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
         private _worldAxisesDrawer: WorldAxisesDrawer | null = null;
@@ -175,6 +176,7 @@ namespace paper.editor {
             this._boxesDrawer = EditorMeshHelper.createGameObject("BoxesDrawer").addComponent(BoxesDrawer);
             this._boxColliderDrawer = EditorMeshHelper.createGameObject("BoxColliderDrawer").addComponent(BoxColliderDrawer);
             this._sphereColliderDrawer = EditorMeshHelper.createGameObject("SphereColliderDrawer").addComponent(SphereColliderDrawer);
+            this._cylinderColliderDrawer = EditorMeshHelper.createGameObject("CylinderColliderDrawer").addComponent(CylinderColliderDrawer);
             this._skeletonDrawer = EditorMeshHelper.createGameObject("SkeletonDrawer").addComponent(SkeletonDrawer);
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera");
             this._cameraViewFrustum.activeSelf = false;
@@ -231,6 +233,9 @@ namespace paper.editor {
 
             this._sphereColliderDrawer!.gameObject.destroy();
             this._sphereColliderDrawer = null;
+
+            this._cylinderColliderDrawer!.gameObject.destroy();
+            this._cylinderColliderDrawer = null;
 
             this._skeletonDrawer!.gameObject.destroy();
             this._skeletonDrawer = null;
@@ -401,6 +406,7 @@ namespace paper.editor {
             this._boxesDrawer!.update();
             this._boxColliderDrawer!.update();
             this._sphereColliderDrawer!.update();
+            this._cylinderColliderDrawer!.update();
             this._skeletonDrawer!.update();
             // this._worldAxisesDrawer!.update();
             this._gridDrawer!.update();

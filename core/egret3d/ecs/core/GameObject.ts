@@ -76,7 +76,7 @@ namespace paper {
          * - 用于各种层遮罩。
          */
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(Layer) })
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).Layer) }) // TODO
         public layer: Layer = Layer.Default;
         /**
          * 名称。
@@ -88,7 +88,7 @@ namespace paper {
          * 标签。
          */
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(DefaultTags) })
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).DefaultTags) }) // TODO
         public tag: string = "";
         /**
          * 变换组件。

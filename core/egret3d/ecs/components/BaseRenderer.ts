@@ -16,7 +16,7 @@ namespace paper {
         /**
          * @internal
          */
-        public _aabbDirty: boolean = true;
+        public _localBoundingBoxDirty: boolean = true;
         /**
          * @internal
          */
@@ -27,18 +27,21 @@ namespace paper {
         protected _castShadows: boolean = false;
         @serializedField
         protected _lightmapIndex: number = -1;
+        /**
+         * 如果该属性合并到 UV2 中，会破坏网格共享，共享的网格无法拥有不同的 lightmap UV。
+         */
         @serializedField
-        protected _lightmapScaleOffset: egret3d.Vector4 = egret3d.Vector4.create();//uv2共享
+        protected readonly _lightmapScaleOffset: egret3d.Vector4 = egret3d.Vector4.create();
         protected readonly _boundingSphere: egret3d.Sphere = egret3d.Sphere.create();
-        protected readonly _aabb: egret3d.AABB = egret3d.AABB.create();
+        protected readonly _localBoundingBox: egret3d.Box = egret3d.Box.create();
         @paper.serializedField
         protected readonly _materials: egret3d.Material[] = [egret3d.DefaultMaterials.MESH_BASIC];
 
         protected _recalculateSphere() {
-            const aabb = this.aabb; // Update aabb.
+            const localBoundingBox = this.localBoundingBox; // Update localBoundingBox.
 
             const worldMatrix = this.gameObject.transform.getWorldMatrix();
-            this._boundingSphere.set(aabb.center, aabb.boundingSphereRadius);
+            this._boundingSphere.set(localBoundingBox.center, localBoundingBox.boundingSphereRadius);
             this._boundingSphere.center.applyMatrix(worldMatrix);
             this._boundingSphere.radius *= worldMatrix.getMaxScaleOnAxis();
         }
@@ -48,10 +51,11 @@ namespace paper {
 
             this._materials.length = 0;
         }
+
         /**
          * 重新计算 AABB。
          */
-        public abstract recalculateAABB(): void;
+        public abstract recalculateLocalBox(): void;
 
         public abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
         public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
@@ -101,17 +105,19 @@ namespace paper {
         public get lightmapScaleOffset() {
             return this._lightmapScaleOffset;
         }
+
         /**
          * 该渲染组件的本地包围盒。
          */
-        public get aabb(): Readonly<egret3d.AABB> {
-            if (this._aabbDirty) {
-                this.recalculateAABB();
-                this._aabbDirty = false;
+        public get localBoundingBox(): Readonly<egret3d.Box> {
+            if (this._localBoundingBoxDirty) {
+                this.recalculateLocalBox();
+                this._localBoundingBoxDirty = false;
             }
 
-            return this._aabb;
+            return this._localBoundingBox;
         }
+
         /**
          * 该渲染组件本地包围盒的世界包围球，用于摄像机视锥剔除。
          */
@@ -123,6 +129,7 @@ namespace paper {
 
             return this._boundingSphere;
         }
+
         /**
          * 该渲染组件的材质列表。
          */
@@ -147,6 +154,7 @@ namespace paper {
 
             BaseRenderer.onMaterialsChanged.dispatch(this);
         }
+
         /**
          * 该渲染组件材质列表中的第一个材质。
          */
@@ -175,6 +183,13 @@ namespace paper {
             if (dirty) {
                 BaseRenderer.onMaterialsChanged.dispatch(this);
             }
+        }
+
+        /**
+         * @deprecated
+         */
+        public get aabb(): Readonly<egret3d.Box> {
+            return this.localBoundingBox;
         }
     }
 }

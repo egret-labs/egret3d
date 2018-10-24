@@ -1,5 +1,6 @@
 type int = number;
 type uint = number;
+type float = number;
 
 namespace paper {
     /**

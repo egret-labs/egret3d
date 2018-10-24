@@ -20,7 +20,7 @@ namespace egret3d {
         /**
          * 雾的模式。
          */
-        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(FogMode) })
+        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((egret3d as any).FogMode) }) // TODO
         public mode: FogMode = FogMode.NONE;
         /**
          * 雾的强度。

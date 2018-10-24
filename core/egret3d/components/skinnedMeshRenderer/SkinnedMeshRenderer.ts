@@ -150,17 +150,17 @@ namespace egret3d {
             this._mesh = null;
         }
 
-        public recalculateAABB() {
+        public recalculateLocalBox() {
             // TODO 蒙皮网格的 aabb 需要能自定义。
             if (this._mesh) {
-                this._aabb.clear();
+                this._localBoundingBox.clear();
 
                 const vertices = this._mesh._rawVertices || this._mesh.getVertices()!; // T pose mesh aabb.
                 const position = helpVector3A;
 
                 for (let i = 0, l = vertices.length; i < l; i += 3) {
                     position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
-                    this._aabb.add(position);
+                    this._localBoundingBox.add(position);
                 }
             }
         }
@@ -174,7 +174,7 @@ namespace egret3d {
             let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
             const transform = this.gameObject.transform;
             const localRay = helpRay.applyMatrix(transform.inverseWorldMatrix, p1);
-            const aabb = this.aabb;
+            const localBoundingBox = this.localBoundingBox;
 
             if (p2) {
                 if (p2 === true) {
@@ -187,9 +187,9 @@ namespace egret3d {
             }
 
             if (raycastMesh) {
-                return aabb.raycast(localRay) && this._mesh.raycast(p1, raycastInfo, this.forceCPUSkin ? null : this.boneMatrices);
+                return localBoundingBox.raycast(localRay) && this._mesh.raycast(p1, raycastInfo, this.forceCPUSkin ? null : this.boneMatrices);
             }
-            else if (aabb.raycast(localRay, raycastInfo)) {
+            else if (localBoundingBox.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) { // Update local raycast info to world.
                     raycastInfo.position.applyMatrix(transform.worldMatrix);
                     raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);

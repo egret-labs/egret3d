@@ -148,8 +148,8 @@ namespace egret3d.particle {
             this.lengthScale = 1.0;
         }
 
-        public recalculateAABB() {
-            this._aabb.copy(AABB.ONE);
+        public recalculateLocalBox() {
+            this._localBoundingBox.copy(Box.ONE);
         }
 
         public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
@@ -157,7 +157,7 @@ namespace egret3d.particle {
             let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
             const worldMatrix = this.gameObject.transform.worldMatrix;
             const localRay = helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
-            const aabb = this.aabb;
+            const localBoundingBox = this.localBoundingBox;
 
             if (p2) {
                 if (p2 === true) {
@@ -169,7 +169,7 @@ namespace egret3d.particle {
                 }
             }
 
-            if (aabb.raycast(localRay, raycastInfo)) {
+            if (localBoundingBox.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) { // Update local raycast info to world.
                     raycastInfo.position.applyMatrix(worldMatrix);
                     raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);

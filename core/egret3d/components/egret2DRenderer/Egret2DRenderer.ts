@@ -61,7 +61,7 @@ namespace egret3d {
             this.stage.removeChild(this.root);
         }
 
-        public recalculateAABB() {
+        public recalculateLocalBox() {
             // TODO
         }
 

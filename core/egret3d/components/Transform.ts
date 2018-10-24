@@ -147,12 +147,12 @@ namespace egret3d {
         private _updateEuler(isWorldSpace: boolean, order?: EulerOrder) {
             if (isWorldSpace) {
                 this.worldMatrix.toEuler(this._euler, order);
-                this._eulerAngles.multiplyScalar(RAD_DEG, this._euler);
+                this._eulerAngles.multiplyScalar(Const.RAD_DEG, this._euler);
                 this._worldDirty &= ~TransformDirty.Euler;
             }
             else {
                 this.localMatrix.toEuler(this._localEuler, order);
-                this._localEulerAngles.multiplyScalar(RAD_DEG, this._localEuler);
+                this._localEulerAngles.multiplyScalar(Const.RAD_DEG, this._localEuler);
                 this._localDirty &= ~TransformDirty.Euler;
             }
         }
@@ -477,14 +477,14 @@ namespace egret3d {
                 this._localEuler.x = (p1 as Readonly<IVector3>).x;
                 this._localEuler.y = (p1 as Readonly<IVector3>).y;
                 this._localEuler.z = (p1 as Readonly<IVector3>).z;
-                this._localEulerAngles.multiplyScalar(RAD_DEG, this._localEuler);
+                this._localEulerAngles.multiplyScalar(Const.RAD_DEG, this._localEuler);
                 this._localRotation.fromEuler(this._localEuler, p2 as EulerOrder);
             }
             else {
                 this._localEuler.x = p1 as number;
                 this._localEuler.y = p2 as number;
                 this._localEuler.z = p3 as number;
-                this._localEulerAngles.multiplyScalar(RAD_DEG, this._localEuler);
+                this._localEulerAngles.multiplyScalar(Const.RAD_DEG, this._localEuler);
                 this._localRotation.fromEuler(this._localEuler, p4 as EulerOrder);
             }
 
@@ -507,7 +507,7 @@ namespace egret3d {
             this._localEuler.x = value.x;
             this._localEuler.y = value.y;
             this._localEuler.z = value.z;
-            this._localEulerAngles.multiplyScalar(RAD_DEG, this._localEuler);
+            this._localEulerAngles.multiplyScalar(Const.RAD_DEG, this._localEuler);
             this._localRotation.fromEuler(this._localEuler);
             this._dirtify(true, TransformDirty.Rotation);
             this._localDirty &= ~TransformDirty.Euler;
@@ -532,14 +532,14 @@ namespace egret3d {
                 this._localEulerAngles.x = (p1 as Readonly<IVector3>).x;
                 this._localEulerAngles.y = (p1 as Readonly<IVector3>).y;
                 this._localEulerAngles.z = (p1 as Readonly<IVector3>).z;
-                this._localEuler.multiplyScalar(DEG_RAD, this._localEulerAngles);
+                this._localEuler.multiplyScalar(Const.DEG_RAD, this._localEulerAngles);
                 this._localRotation.fromEuler(this._localEuler, p2 as EulerOrder);
             }
             else {
                 this._localEulerAngles.x = p1 as number;
                 this._localEulerAngles.y = p2 as number;
                 this._localEulerAngles.z = p3 as number;
-                this._localEuler.multiplyScalar(DEG_RAD, this._localEulerAngles);
+                this._localEuler.multiplyScalar(Const.DEG_RAD, this._localEulerAngles);
                 this._localRotation.fromEuler(this._localEuler, p4 as EulerOrder);
             }
 
@@ -563,7 +563,7 @@ namespace egret3d {
             this._localEulerAngles.x = value.x;
             this._localEulerAngles.y = value.y;
             this._localEulerAngles.z = value.z;
-            this._localEuler.multiplyScalar(DEG_RAD, this._localEulerAngles);
+            this._localEuler.multiplyScalar(Const.DEG_RAD, this._localEulerAngles);
             this._localRotation.fromEuler(this._localEuler);
             this._dirtify(true, TransformDirty.Rotation);
             this._localDirty &= ~TransformDirty.Euler;
@@ -816,11 +816,11 @@ namespace egret3d {
         public setEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
         public setEulerAngles(q1: Readonly<IVector3> | number, q2?: EulerOrder | number, q3?: number, q4?: EulerOrder) {
             if (q1.hasOwnProperty("x")) {
-                _helpVector3A.multiplyScalar(DEG_RAD, q1 as Readonly<IVector3>);
+                _helpVector3A.multiplyScalar(Const.DEG_RAD, q1 as Readonly<IVector3>);
                 this._localRotation.fromEuler(_helpVector3A, q2 as EulerOrder);
             }
             else {
-                _helpVector3A.set(q1 as number * DEG_RAD, q2 as number * DEG_RAD, q3 as number * DEG_RAD);
+                _helpVector3A.set(q1 as number * Const.DEG_RAD, q2 as number * Const.DEG_RAD, q3 as number * Const.DEG_RAD);
                 this._localRotation.fromEuler(_helpVector3A, q4 as EulerOrder);
             }
 
@@ -843,7 +843,7 @@ namespace egret3d {
             return this._eulerAngles;
         }
         public set eulerAngles(value: Readonly<Vector3>) {
-            _helpVector3A.multiplyScalar(DEG_RAD, value);
+            _helpVector3A.multiplyScalar(Const.DEG_RAD, value);
             this._localRotation.fromEuler(_helpVector3A);
 
             if (this._parent) {

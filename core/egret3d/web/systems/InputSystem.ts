@@ -254,11 +254,11 @@ namespace egret3d.web {
 
             (event as any).isPrimary = true; // TODO
             (event as any).pointerId = touch.identifier + 2;
-            (event as any).pressure = touch.force || 0.5;
+            (event as any).pressure = (touch as any).force || 0.5; // TODO egret build bug
             (event as any).tangentialPressure = 0;
             (event as any).twist = 0;
-            (event as any).width = (touch.radiusX || 0) * 2;
-            (event as any).height = (touch.radiusY || 0) * 2;
+            (event as any).width = ((touch as any).radiusX || 0) * 2; // TODO egret build bug
+            (event as any).height = ((touch as any).radiusY || 0) * 2; // TODO egret build bug
             (event as any).tiltX = 0;
             (event as any).tiltY = 0;
             (event as any).pointerType = "touch";
@@ -310,9 +310,9 @@ namespace egret3d.web {
                                 const eachPointer = inputCollecter.getPointer(eachTouch.identifier + 2);
                                 const eachPointerEvent = eachPointer.event!;
 
-                                (eachPointerEvent as any).pressure = eachTouch.force || 0.5;
-                                (eachPointerEvent as any).width = (eachTouch.radiusX || 0) * 2;
-                                (eachPointerEvent as any).height = (eachTouch.radiusY || 0) * 2;
+                                (eachPointerEvent as any).pressure = (eachTouch as any).force || 0.5; // TODO egret build bug
+                                (eachPointerEvent as any).width = ((eachTouch as any).radiusX || 0) * 2; // TODO egret build bug
+                                (eachPointerEvent as any).height = ((eachTouch as any).radiusY || 0) * 2; // TODO egret build bug
 
                                 (eachPointerEvent as any).clientX = eachTouch.clientX;
                                 (eachPointerEvent as any).clientY = eachTouch.clientY;

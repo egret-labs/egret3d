@@ -2576,12 +2576,6 @@ var __extends = this && this.__extends || function __extends(t, e) {
 for (var i in e) e.hasOwnProperty(i) && (t[i] = e[i]);
 r.prototype = e.prototype, t.prototype = new r();
 };
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -2616,6 +2610,12 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
+};
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 var paper;
 (function (paper) {
@@ -2733,6 +2733,65 @@ var paper;
         }(paper.BaseComponent));
         editor.BoxesDrawer = BoxesDrawer;
         __reflect(BoxesDrawer.prototype, "paper.editor.BoxesDrawer");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**
+         * @internal
+         */
+        var CylinderColliderDrawer = (function (_super) {
+            __extends(CylinderColliderDrawer, _super);
+            function CylinderColliderDrawer() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._drawer = [];
+                return _this;
+            }
+            CylinderColliderDrawer.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+            };
+            CylinderColliderDrawer.prototype.update = function () {
+                var selectedGameObject = _super.prototype.update.call(this);
+                var colliders = selectedGameObject ? selectedGameObject.getComponents(egret3d.CylinderCollider) : null;
+                for (var i = 0, l = Math.max(this._drawer.length, colliders ? colliders.length : 0); i < l; ++i) {
+                    if (i + 1 > this._drawer.length) {
+                        var gameObject = editor.EditorMeshHelper.createGameObject("CylinderCollider_" + i);
+                        gameObject.parent = this.gameObject;
+                        editor.EditorMeshHelper.createCircle("Top", egret3d.Color.YELLOW, 0.4, paper.Scene.editorScene).transform
+                            .setParent(gameObject.transform).setLocalPosition(0.0, 0.5, 0.0).setLocalEuler(0.0, 0.0, Math.PI * 0.5);
+                        editor.EditorMeshHelper.createLine("Height", egret3d.Color.YELLOW, 0.4, paper.Scene.editorScene).transform
+                            .setParent(gameObject.transform).setLocalPosition(0.0, -0.5, 0.0);
+                        editor.EditorMeshHelper.createCircle("Bottom", egret3d.Color.YELLOW, 0.4, paper.Scene.editorScene).transform
+                            .setParent(gameObject.transform).setLocalPosition(0.0, -0.5, 0.0).setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
+                        this._drawer.push(gameObject);
+                    }
+                    var drawer = this._drawer[i];
+                    if (!colliders || i + 1 > colliders.length) {
+                        drawer.activeSelf = false;
+                    }
+                    else {
+                        var collider = colliders[i];
+                        if (collider.enabled) {
+                            drawer.activeSelf = true;
+                            drawer.transform.localPosition = egret3d.Vector3.create().copy(collider.center).applyMatrix(selectedGameObject.transform.worldMatrix).release();
+                            drawer.transform.localRotation = selectedGameObject.transform.rotation;
+                            drawer.transform.find("Top").transform.setLocalScale(collider.topRadius * 2.0);
+                            drawer.transform.find("Bottom").transform.setLocalScale(collider.bottomRadius * 2.0);
+                            drawer.transform.localScale = egret3d.Vector3.create(1.0, collider.height, 1.0).multiply(selectedGameObject.transform.scale).release();
+                        }
+                        else {
+                            drawer.activeSelf = false;
+                        }
+                    }
+                }
+                return selectedGameObject;
+            };
+            return CylinderColliderDrawer;
+        }(editor.BaseSelectedGOComponent));
+        editor.CylinderColliderDrawer = CylinderColliderDrawer;
+        __reflect(CylinderColliderDrawer.prototype, "paper.editor.CylinderColliderDrawer");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -3088,199 +3147,6 @@ var paper;
         /**
          * @internal
          */
-        var OrbitControls = (function (_super) {
-            __extends(OrbitControls, _super);
-            function OrbitControls() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.lookAtPoint = egret3d.Vector3.create(0.0, 0.0, 0.0);
-                _this.lookAtOffset = egret3d.Vector3.create();
-                _this.distance = 30;
-                _this.minPanAngle = -Infinity;
-                _this.maxPanAngle = Infinity;
-                _this.minTileAngle = -90;
-                _this.maxTileAngle = 90;
-                _this.moveSpped = 0.001;
-                _this.scaleSpeed = 0.2;
-                _this._enableMove = true;
-                _this._mouseDown = false;
-                _this._fingerTwo = false;
-                _this._panAngle = 0;
-                _this._panRad = 0;
-                _this._tiltAngle = 0;
-                _this._tiltRad = 0;
-                _this._mouseDownHandler = function (event) {
-                    if (event.button === 2) {
-                        _this._mouseDown = true;
-                        _this._lastMouseX = event.x;
-                        _this._lastMouseY = event.y;
-                        event.preventDefault();
-                    }
-                };
-                _this._mouseUpHandler = function (event) {
-                    if (event.button === 2) {
-                        _this._mouseDown = false;
-                        event.preventDefault();
-                    }
-                };
-                _this._mouseMoveHandler = function (event) {
-                    if (!_this._mouseDown || !_this._enableMove) {
-                        return;
-                    }
-                    var move = egret3d.Vector3.create(event.x - _this._lastMouseX, event.y - _this._lastMouseY, 0);
-                    if (event.ctrlKey) {
-                        move.x = -move.x;
-                        var center = _this.lookAtPoint;
-                        var dis = _this.gameObject.transform.getPosition().getDistance(center);
-                        var normalMat = egret3d.Matrix3.create();
-                        move.multiplyScalar(dis * _this.moveSpped).applyMatrix3(normalMat.getNormalMatrix(_this.gameObject.transform.getLocalMatrix()));
-                        normalMat.release();
-                        _this.lookAtOffset.add(move);
-                    }
-                    else {
-                        _this.panAngle += move.x;
-                        _this.tiltAngle += move.y;
-                    }
-                    _this._lastMouseX = event.x;
-                    _this._lastMouseY = event.y;
-                    move.release();
-                    event.preventDefault();
-                };
-                _this._mouseWheelHandler = function (event) {
-                    _this.distance = Math.max(_this.distance - (event.wheelDelta > 0 ? 2 : -2), 1);
-                    event.preventDefault();
-                };
-                return _this;
-                // private updateTouch(delta: number) {
-                //     var touch = this.bindTouch;
-                //     if (touch.touchCount > 0) {
-                //         if (touch.touchCount == 1) {
-                //             var _touch = touch.getTouch(0);
-                //             if (_touch.phase == egret3d.TouchPhase.BEGAN || this._fingerTwo) {
-                //                 this._lastTouchX = _touch.position.x;
-                //                 this._lastTouchY = _touch.position.y;
-                //             } else {
-                //                 var moveX = _touch.position.x - this._lastTouchX;
-                //                 var moveY = _touch.position.y - this._lastTouchY;
-                //                 this.panAngle += moveX * 0.5;
-                //                 this.tiltAngle += moveY * 0.5;
-                //                 this._lastTouchX = _touch.position.x;
-                //                 this._lastTouchY = _touch.position.y;
-                //             }
-                //             this._fingerTwo = false;
-                //         } else if (touch.touchCount == 2) {
-                //             var _touch1 = touch.getTouch(0);
-                //             var _touch2 = touch.getTouch(1);
-                //             if (_touch1.phase == egret3d.TouchPhase.BEGAN || _touch2.phase == egret3d.TouchPhase.BEGAN || this._fingerTwo == false) {
-                //                 hVec2_1.copy(_touch1.position);
-                //                 hVec2_2.copy(_touch2.position);
-                //                 this._lastDistance = egret3d.Vector2.getDistance(hVec2_1, hVec2_2);
-                //             } else {
-                //                 hVec2_1.copy(_touch1.position);
-                //                 hVec2_2.copy(_touch2.position);
-                //                 var distance = egret3d.Vector2.getDistance(hVec2_1, hVec2_2);
-                //                 var deltaDistance = distance - this._lastDistance;
-                //                 this.distance = Math.max(this.distance - deltaDistance * this.scaleSpeed, 1);
-                //                 this._lastDistance = distance;
-                //             }
-                //             this._fingerTwo = true;
-                //         } else {
-                //             this._fingerTwo = false;
-                //         }
-                //     }
-                // }
-            }
-            Object.defineProperty(OrbitControls.prototype, "panAngle", {
-                get: function () {
-                    return this._panAngle;
-                },
-                set: function (value) {
-                    this._panAngle = Math.max(this.minPanAngle, Math.min(this.maxPanAngle, value));
-                    this._panRad = this._panAngle * Math.PI / 180;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(OrbitControls.prototype, "tiltAngle", {
-                get: function () {
-                    return this._tiltAngle;
-                },
-                set: function (value) {
-                    this._tiltAngle = Math.max(this.minTileAngle, Math.min(this.maxTileAngle, value));
-                    this._tiltRad = this._tiltAngle * Math.PI / 180;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(OrbitControls.prototype, "enableMove", {
-                get: function () {
-                    return this._enableMove;
-                },
-                set: function (value) {
-                    if (this._enableMove === value) {
-                        return;
-                    }
-                    this._enableMove = value;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            OrbitControls.prototype.onStart = function () {
-            };
-            OrbitControls.prototype.onEnable = function () {
-                var canvas = egret3d.WebGLCapabilities.canvas;
-                if (canvas) {
-                    canvas.addEventListener("mousedown", this._mouseDownHandler);
-                    canvas.addEventListener("mouseup", this._mouseUpHandler);
-                    canvas.addEventListener("mouseout", this._mouseUpHandler);
-                    canvas.addEventListener("dblclick", this._mouseUpHandler);
-                    canvas.addEventListener("mousemove", this._mouseMoveHandler);
-                    canvas.addEventListener("wheel", this._mouseWheelHandler);
-                }
-            };
-            OrbitControls.prototype.onDisable = function () {
-                var canvas = egret3d.WebGLCapabilities.canvas;
-                if (canvas) {
-                    canvas.removeEventListener("mousedown", this._mouseDownHandler);
-                    canvas.removeEventListener("mouseup", this._mouseUpHandler);
-                    canvas.removeEventListener("mouseout", this._mouseUpHandler);
-                    canvas.removeEventListener("dblclick", this._mouseUpHandler);
-                    canvas.removeEventListener("mousemove", this._mouseMoveHandler);
-                    canvas.removeEventListener("wheel", this._mouseWheelHandler);
-                }
-            };
-            OrbitControls.prototype.onUpdate = function (delta) {
-                if (!this._enableMove) {
-                    return;
-                }
-                this.move();
-            };
-            OrbitControls.prototype.move = function () {
-                var distanceX = this.distance * Math.sin(this._panRad) * Math.cos(this._tiltRad);
-                var distanceY = this.distance * (this._tiltRad === 0 ? 0 : Math.sin(this._tiltRad));
-                var distanceZ = this.distance * Math.cos(this._panRad) * Math.cos(this._tiltRad);
-                var target = egret3d.Vector3.create();
-                target.copy(this.lookAtPoint);
-                target.add(this.lookAtOffset);
-                this.gameObject.transform.setPosition(target.x + distanceX, target.y + distanceY, target.z + distanceZ);
-                this.gameObject.transform.lookAt(target);
-                target.release();
-            };
-            OrbitControls = __decorate([
-                paper.executeInEditMode
-            ], OrbitControls);
-            return OrbitControls;
-        }(paper.Behaviour));
-        editor.OrbitControls = OrbitControls;
-        __reflect(OrbitControls.prototype, "paper.editor.OrbitControls");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        /**
-         * @internal
-         */
         var BoxColliderDrawer = (function (_super) {
             __extends(BoxColliderDrawer, _super);
             function BoxColliderDrawer() {
@@ -3323,6 +3189,77 @@ var paper;
         }(editor.BaseSelectedGOComponent));
         editor.BoxColliderDrawer = BoxColliderDrawer;
         __reflect(BoxColliderDrawer.prototype, "paper.editor.BoxColliderDrawer");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**
+         * @internal
+         */
+        var SkeletonDrawer = (function (_super) {
+            __extends(SkeletonDrawer, _super);
+            function SkeletonDrawer() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._skeletonMesh = egret3d.Mesh.create(128, 0, ["POSITION" /* POSITION */], null, 35048 /* Dynamic */);
+                return _this;
+            }
+            SkeletonDrawer.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                var mesh = this._skeletonMesh;
+                var material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
+                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
+                material
+                    .setColor(egret3d.Color.YELLOW)
+                    .setDepth(false, false)
+                    .renderQueue = 4000 /* Overlay */;
+                this.gameObject.getOrAddComponent(egret3d.MeshFilter).mesh = mesh;
+                this.gameObject.getOrAddComponent(egret3d.MeshRenderer).material = material;
+            };
+            SkeletonDrawer.prototype.update = function () {
+                var selectedGameObject = _super.prototype.update.call(this);
+                var skinnedMeshRenderer = selectedGameObject ? selectedGameObject.getComponent(egret3d.SkinnedMeshRenderer) : null;
+                if (selectedGameObject && skinnedMeshRenderer) {
+                    var mesh = this._skeletonMesh;
+                    var offset = 0;
+                    var helpVertex3A = egret3d.Vector3.create().release();
+                    var helpVertex3B = egret3d.Vector3.create().release();
+                    var helpMatrixA = egret3d.Matrix4.create().release();
+                    var vertices = mesh.getVertices();
+                    var bones = skinnedMeshRenderer.bones;
+                    this.gameObject.transform.position = selectedGameObject.transform.position;
+                    helpMatrixA.inverse(this.gameObject.transform.worldMatrix);
+                    for (var _i = 0, bones_1 = bones; _i < bones_1.length; _i++) {
+                        var bone = bones_1[_i];
+                        if (bone) {
+                            if (bone.parent && bones.indexOf(bone.parent) >= 0) {
+                                helpVertex3A.applyMatrix(helpMatrixA, bone.parent.position).toArray(vertices, offset);
+                                helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset + 3);
+                            }
+                            else {
+                                bone.getRight(helpVertex3B).applyDirection(helpMatrixA).multiplyScalar(0.25); // Bone length.
+                                helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset);
+                                helpVertex3A.applyMatrix(helpMatrixA, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
+                            }
+                        }
+                        else {
+                            egret3d.Vector3.ZERO.toArray(vertices, offset);
+                            egret3d.Vector3.ZERO.toArray(vertices, offset + 3);
+                        }
+                        offset += 6;
+                    }
+                    mesh.uploadVertexBuffer();
+                }
+                else {
+                    this.gameObject.activeSelf = false;
+                }
+                return selectedGameObject;
+            };
+            return SkeletonDrawer;
+        }(editor.BaseSelectedGOComponent));
+        editor.SkeletonDrawer = SkeletonDrawer;
+        __reflect(SkeletonDrawer.prototype, "paper.editor.SkeletonDrawer");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -4636,6 +4573,7 @@ var paper;
                 _this._boxesDrawer = null;
                 _this._boxColliderDrawer = null;
                 _this._sphereColliderDrawer = null;
+                _this._cylinderColliderDrawer = null;
                 _this._skeletonDrawer = null;
                 _this._cameraViewFrustum = null; // TODO封装一下
                 _this._worldAxisesDrawer = null;
@@ -4764,6 +4702,7 @@ var paper;
                 this._boxesDrawer = editor.EditorMeshHelper.createGameObject("BoxesDrawer").addComponent(editor.BoxesDrawer);
                 this._boxColliderDrawer = editor.EditorMeshHelper.createGameObject("BoxColliderDrawer").addComponent(editor.BoxColliderDrawer);
                 this._sphereColliderDrawer = editor.EditorMeshHelper.createGameObject("SphereColliderDrawer").addComponent(editor.SphereColliderDrawer);
+                this._cylinderColliderDrawer = editor.EditorMeshHelper.createGameObject("CylinderColliderDrawer").addComponent(editor.CylinderColliderDrawer);
                 this._skeletonDrawer = editor.EditorMeshHelper.createGameObject("SkeletonDrawer").addComponent(editor.SkeletonDrawer);
                 this._cameraViewFrustum = editor.EditorMeshHelper.createCameraWireframed("Camera");
                 this._cameraViewFrustum.activeSelf = false;
@@ -4811,6 +4750,8 @@ var paper;
                 this._boxColliderDrawer = null;
                 this._sphereColliderDrawer.gameObject.destroy();
                 this._sphereColliderDrawer = null;
+                this._cylinderColliderDrawer.gameObject.destroy();
+                this._cylinderColliderDrawer = null;
                 this._skeletonDrawer.gameObject.destroy();
                 this._skeletonDrawer = null;
                 this._cameraViewFrustum.destroy();
@@ -4961,6 +4902,7 @@ var paper;
                 this._boxesDrawer.update();
                 this._boxColliderDrawer.update();
                 this._sphereColliderDrawer.update();
+                this._cylinderColliderDrawer.update();
                 this._skeletonDrawer.update();
                 // this._worldAxisesDrawer!.update();
                 this._gridDrawer.update();
@@ -5007,6 +4949,11 @@ var paper;
                 iconObj.transform.setParent(parent.transform);
                 iconObj.addComponent(editor.GizmoPickComponent).pickTarget = parent;
                 return iconObj;
+            };
+            EditorMeshHelper.createLine = function (name, color, opacity, scene) {
+                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.LINEDASHED.clone(), "Editor Only" /* EditorOnly */, scene);
+                gameObject.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(1 /* Blend */, 3000 /* Transparent */, opacity);
+                return gameObject;
             };
             EditorMeshHelper.createBox = function (name, color, opacity, scene) {
                 var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone(), "Editor Only" /* EditorOnly */, scene);
@@ -5066,67 +5013,189 @@ var paper;
         /**
          * @internal
          */
-        var SkeletonDrawer = (function (_super) {
-            __extends(SkeletonDrawer, _super);
-            function SkeletonDrawer() {
+        var OrbitControls = (function (_super) {
+            __extends(OrbitControls, _super);
+            function OrbitControls() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._skeletonMesh = egret3d.Mesh.create(128, 0, ["POSITION" /* POSITION */], null, 35048 /* Dynamic */);
-                return _this;
-            }
-            SkeletonDrawer.prototype.initialize = function () {
-                _super.prototype.initialize.call(this);
-                var mesh = this._skeletonMesh;
-                var material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
-                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
-                material
-                    .setColor(egret3d.Color.YELLOW)
-                    .setDepth(false, false)
-                    .renderQueue = 4000 /* Overlay */;
-                this.gameObject.getOrAddComponent(egret3d.MeshFilter).mesh = mesh;
-                this.gameObject.getOrAddComponent(egret3d.MeshRenderer).material = material;
-            };
-            SkeletonDrawer.prototype.update = function () {
-                var selectedGameObject = _super.prototype.update.call(this);
-                var skinnedMeshRenderer = selectedGameObject ? selectedGameObject.getComponent(egret3d.SkinnedMeshRenderer) : null;
-                if (selectedGameObject && skinnedMeshRenderer) {
-                    var mesh = this._skeletonMesh;
-                    var offset = 0;
-                    var helpVertex3A = egret3d.Vector3.create().release();
-                    var helpVertex3B = egret3d.Vector3.create().release();
-                    var helpMatrixA = egret3d.Matrix4.create().release();
-                    var vertices = mesh.getVertices();
-                    var bones = skinnedMeshRenderer.bones;
-                    this.gameObject.transform.position = selectedGameObject.transform.position;
-                    helpMatrixA.inverse(this.gameObject.transform.worldMatrix);
-                    for (var _i = 0, bones_1 = bones; _i < bones_1.length; _i++) {
-                        var bone = bones_1[_i];
-                        if (bone) {
-                            if (bone.parent && bones.indexOf(bone.parent) >= 0) {
-                                helpVertex3A.applyMatrix(helpMatrixA, bone.parent.position).toArray(vertices, offset);
-                                helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset + 3);
-                            }
-                            else {
-                                bone.getRight(helpVertex3B).applyDirection(helpMatrixA).multiplyScalar(0.25); // Bone length.
-                                helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset);
-                                helpVertex3A.applyMatrix(helpMatrixA, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
-                            }
-                        }
-                        else {
-                            egret3d.Vector3.ZERO.toArray(vertices, offset);
-                            egret3d.Vector3.ZERO.toArray(vertices, offset + 3);
-                        }
-                        offset += 6;
+                _this.lookAtPoint = egret3d.Vector3.create(0.0, 0.0, 0.0);
+                _this.lookAtOffset = egret3d.Vector3.create();
+                _this.distance = 30;
+                _this.minPanAngle = -Infinity;
+                _this.maxPanAngle = Infinity;
+                _this.minTileAngle = -90;
+                _this.maxTileAngle = 90;
+                _this.moveSpped = 0.001;
+                _this.scaleSpeed = 0.2;
+                _this._enableMove = true;
+                _this._mouseDown = false;
+                _this._fingerTwo = false;
+                _this._panAngle = 0;
+                _this._panRad = 0;
+                _this._tiltAngle = 0;
+                _this._tiltRad = 0;
+                _this._mouseDownHandler = function (event) {
+                    if (event.button === 2) {
+                        _this._mouseDown = true;
+                        _this._lastMouseX = event.x;
+                        _this._lastMouseY = event.y;
+                        event.preventDefault();
                     }
-                    mesh.uploadVertexBuffer();
-                }
-                else {
-                    this.gameObject.activeSelf = false;
-                }
-                return selectedGameObject;
+                };
+                _this._mouseUpHandler = function (event) {
+                    if (event.button === 2) {
+                        _this._mouseDown = false;
+                        event.preventDefault();
+                    }
+                };
+                _this._mouseMoveHandler = function (event) {
+                    if (!_this._mouseDown || !_this._enableMove) {
+                        return;
+                    }
+                    var move = egret3d.Vector3.create(event.x - _this._lastMouseX, event.y - _this._lastMouseY, 0);
+                    if (event.ctrlKey) {
+                        move.x = -move.x;
+                        var center = _this.lookAtPoint;
+                        var dis = _this.gameObject.transform.getPosition().getDistance(center);
+                        var normalMat = egret3d.Matrix3.create();
+                        move.multiplyScalar(dis * _this.moveSpped).applyMatrix3(normalMat.getNormalMatrix(_this.gameObject.transform.getLocalMatrix()));
+                        normalMat.release();
+                        _this.lookAtOffset.add(move);
+                    }
+                    else {
+                        _this.panAngle += move.x;
+                        _this.tiltAngle += move.y;
+                    }
+                    _this._lastMouseX = event.x;
+                    _this._lastMouseY = event.y;
+                    move.release();
+                    event.preventDefault();
+                };
+                _this._mouseWheelHandler = function (event) {
+                    _this.distance = Math.max(_this.distance - (event.wheelDelta > 0 ? 2 : -2), 1);
+                    event.preventDefault();
+                };
+                return _this;
+                // private updateTouch(delta: number) {
+                //     var touch = this.bindTouch;
+                //     if (touch.touchCount > 0) {
+                //         if (touch.touchCount == 1) {
+                //             var _touch = touch.getTouch(0);
+                //             if (_touch.phase == egret3d.TouchPhase.BEGAN || this._fingerTwo) {
+                //                 this._lastTouchX = _touch.position.x;
+                //                 this._lastTouchY = _touch.position.y;
+                //             } else {
+                //                 var moveX = _touch.position.x - this._lastTouchX;
+                //                 var moveY = _touch.position.y - this._lastTouchY;
+                //                 this.panAngle += moveX * 0.5;
+                //                 this.tiltAngle += moveY * 0.5;
+                //                 this._lastTouchX = _touch.position.x;
+                //                 this._lastTouchY = _touch.position.y;
+                //             }
+                //             this._fingerTwo = false;
+                //         } else if (touch.touchCount == 2) {
+                //             var _touch1 = touch.getTouch(0);
+                //             var _touch2 = touch.getTouch(1);
+                //             if (_touch1.phase == egret3d.TouchPhase.BEGAN || _touch2.phase == egret3d.TouchPhase.BEGAN || this._fingerTwo == false) {
+                //                 hVec2_1.copy(_touch1.position);
+                //                 hVec2_2.copy(_touch2.position);
+                //                 this._lastDistance = egret3d.Vector2.getDistance(hVec2_1, hVec2_2);
+                //             } else {
+                //                 hVec2_1.copy(_touch1.position);
+                //                 hVec2_2.copy(_touch2.position);
+                //                 var distance = egret3d.Vector2.getDistance(hVec2_1, hVec2_2);
+                //                 var deltaDistance = distance - this._lastDistance;
+                //                 this.distance = Math.max(this.distance - deltaDistance * this.scaleSpeed, 1);
+                //                 this._lastDistance = distance;
+                //             }
+                //             this._fingerTwo = true;
+                //         } else {
+                //             this._fingerTwo = false;
+                //         }
+                //     }
+                // }
+            }
+            Object.defineProperty(OrbitControls.prototype, "panAngle", {
+                get: function () {
+                    return this._panAngle;
+                },
+                set: function (value) {
+                    this._panAngle = Math.max(this.minPanAngle, Math.min(this.maxPanAngle, value));
+                    this._panRad = this._panAngle * Math.PI / 180;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(OrbitControls.prototype, "tiltAngle", {
+                get: function () {
+                    return this._tiltAngle;
+                },
+                set: function (value) {
+                    this._tiltAngle = Math.max(this.minTileAngle, Math.min(this.maxTileAngle, value));
+                    this._tiltRad = this._tiltAngle * Math.PI / 180;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(OrbitControls.prototype, "enableMove", {
+                get: function () {
+                    return this._enableMove;
+                },
+                set: function (value) {
+                    if (this._enableMove === value) {
+                        return;
+                    }
+                    this._enableMove = value;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            OrbitControls.prototype.onStart = function () {
             };
-            return SkeletonDrawer;
-        }(editor.BaseSelectedGOComponent));
-        editor.SkeletonDrawer = SkeletonDrawer;
-        __reflect(SkeletonDrawer.prototype, "paper.editor.SkeletonDrawer");
+            OrbitControls.prototype.onEnable = function () {
+                var canvas = egret3d.WebGLCapabilities.canvas;
+                if (canvas) {
+                    canvas.addEventListener("mousedown", this._mouseDownHandler);
+                    canvas.addEventListener("mouseup", this._mouseUpHandler);
+                    canvas.addEventListener("mouseout", this._mouseUpHandler);
+                    canvas.addEventListener("dblclick", this._mouseUpHandler);
+                    canvas.addEventListener("mousemove", this._mouseMoveHandler);
+                    canvas.addEventListener("wheel", this._mouseWheelHandler);
+                }
+            };
+            OrbitControls.prototype.onDisable = function () {
+                var canvas = egret3d.WebGLCapabilities.canvas;
+                if (canvas) {
+                    canvas.removeEventListener("mousedown", this._mouseDownHandler);
+                    canvas.removeEventListener("mouseup", this._mouseUpHandler);
+                    canvas.removeEventListener("mouseout", this._mouseUpHandler);
+                    canvas.removeEventListener("dblclick", this._mouseUpHandler);
+                    canvas.removeEventListener("mousemove", this._mouseMoveHandler);
+                    canvas.removeEventListener("wheel", this._mouseWheelHandler);
+                }
+            };
+            OrbitControls.prototype.onUpdate = function (delta) {
+                if (!this._enableMove) {
+                    return;
+                }
+                this.move();
+            };
+            OrbitControls.prototype.move = function () {
+                var distanceX = this.distance * Math.sin(this._panRad) * Math.cos(this._tiltRad);
+                var distanceY = this.distance * (this._tiltRad === 0 ? 0 : Math.sin(this._tiltRad));
+                var distanceZ = this.distance * Math.cos(this._panRad) * Math.cos(this._tiltRad);
+                var target = egret3d.Vector3.create();
+                target.copy(this.lookAtPoint);
+                target.add(this.lookAtOffset);
+                this.gameObject.transform.setPosition(target.x + distanceX, target.y + distanceY, target.z + distanceZ);
+                this.gameObject.transform.lookAt(target);
+                target.release();
+            };
+            OrbitControls = __decorate([
+                paper.executeInEditMode
+            ], OrbitControls);
+            return OrbitControls;
+        }(paper.Behaviour));
+        editor.OrbitControls = OrbitControls;
+        __reflect(OrbitControls.prototype, "paper.editor.OrbitControls");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));

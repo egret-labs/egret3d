@@ -29,6 +29,13 @@ namespace paper.editor {
             return iconObj;
         }
 
+        public static createLine(name: string, color: egret3d.Color, opacity: number, scene: Scene) {
+            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.LINEDASHED.clone(), paper.DefaultTags.EditorOnly, scene);
+            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, opacity);
+
+            return gameObject;
+        }
+
         public static createBox(name: string, color: egret3d.Color, opacity: number, scene: Scene) {
             const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone(), paper.DefaultTags.EditorOnly, scene);
             gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, opacity);
