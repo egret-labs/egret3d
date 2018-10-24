@@ -261,6 +261,10 @@ namespace egret3d.web {
                         webgl.uniform1f(location, context.lightmapIntensity);
                         break;
 
+                    case gltf.UniformSemanticType._LIGHTMAP_SCALE_OFFSET:
+                        webgl.uniform4fv(location, context.lightmapScaleOffset);
+                        break;
+
                     case gltf.UniformSemanticType._REFERENCEPOSITION:
                         webgl.uniform3fv(location, context.lightPosition);
                         break;

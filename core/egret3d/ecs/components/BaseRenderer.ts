@@ -27,6 +27,8 @@ namespace paper {
         protected _castShadows: boolean = false;
         @serializedField
         protected _lightmapIndex: number = -1;
+        @serializedField
+        protected _lightmapScaleOffset: egret3d.Vector4 = egret3d.Vector4.create();//uv2共享
         protected readonly _boundingSphere: egret3d.Sphere = egret3d.Sphere.create();
         protected readonly _aabb: egret3d.AABB = egret3d.AABB.create();
         @paper.serializedField
@@ -94,6 +96,10 @@ namespace paper {
             }
 
             this._lightmapIndex = value;
+        }
+
+        public get lightmapScaleOffset() {
+            return this._lightmapScaleOffset;
         }
         /**
          * 该渲染组件的本地包围盒。
