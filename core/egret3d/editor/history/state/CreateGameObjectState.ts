@@ -14,7 +14,7 @@ namespace paper.editor {
             state.mesh = mesh;
             return state;
         }
-        public infos: { parentUUID: string, serializeData: any }[];
+        public infos: { parentUUID: string|null, serializeData: any|null }[];
         public createType: string;
         public addList: string[];
         private mesh: egret3d.Mesh;
@@ -42,7 +42,7 @@ namespace paper.editor {
                     this.infos.push({ parentUUID: null, serializeData: null });
                 }
                 for (let i: number = 0; i < this.infos.length; i++) {
-                    let obj: GameObject;
+                    let obj: GameObject|null;
                     if (this.isFirst) {
                         obj = this.createGameObjectByType(this.createType);
                         this.infos[i].serializeData = serialize(obj);
@@ -50,10 +50,10 @@ namespace paper.editor {
                     else {
                         obj = new Deserializer().deserialize(this.infos[i].serializeData, true,false,this.editorModel.scene);
                     }
-                    let parent = this.editorModel.getGameObjectByUUid(this.infos[i].parentUUID);
+                    let parent = this.editorModel.getGameObjectByUUid(this.infos[i].parentUUID!);
                     if (parent)
-                        obj.transform.parent = parent.transform;
-                    this.addList.push(obj.uuid);
+                        obj!.transform.parent = parent.transform;
+                    this.addList.push(obj!.uuid);
                 }
                 this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, this.addList);
                 this.isFirst = false;

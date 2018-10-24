@@ -137,7 +137,7 @@ namespace egret3d {
         let textureUint = 0;
         const allKeys = samplerKeys.concat(samplerArrayKeys);
 
-        for (let uniform of activeUniforms) {
+        for (const uniform of activeUniforms) {
             if (allKeys.indexOf(uniform.name) < 0) {
                 continue;
             }

@@ -2,10 +2,12 @@ namespace egret3d {
     const helpRectA = new Rectangle();
     const _helpPlane = Plane.create();
     const _helpRay = Ray.create();
+
     /**
      * 相机组件
      */
     export class Camera extends paper.BaseComponent {
+
         /**
          * 当前场景的主相机。
          * - 如果没有则创建一个。
@@ -20,6 +22,7 @@ namespace egret3d {
 
             return gameObject.getOrAddComponent(Camera);
         }
+
         /**
          * 编辑相机。
          * - 如果没有则创建一个。
@@ -40,17 +43,19 @@ namespace egret3d {
         }
 
         /**
-         * 是否清除颜色缓冲区
+         * 是否清除颜色缓冲区。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public clearOption_Color: boolean = true;
+
         /**
-         * 是否清除深度缓冲区
+         * 是否清除深度缓冲区。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public clearOption_Depth: boolean = true;
+
         /**
          * 相机的渲染剔除，对应 GameObject 的层级。
          * - camera.cullingMask = paper.CullingMask.UI;
@@ -60,8 +65,9 @@ namespace egret3d {
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((paper as any).CullingMask) }) // TODO
         public cullingMask: paper.CullingMask = paper.CullingMask.Everything;
+
         /**
-         * 相机渲染排序
+         * 相机渲染排序。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.INT)
@@ -210,6 +216,7 @@ namespace egret3d {
 
             return false;
         }
+
         /**
          * @internal
          */
@@ -224,6 +231,7 @@ namespace egret3d {
 
             this.context = new RenderContext();
         }
+        
         /**
          * 计算相机的 project matrix（投影矩阵）
          */

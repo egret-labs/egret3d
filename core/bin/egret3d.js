@@ -430,6 +430,7 @@
     signals.Signal = Signal;
     global['signals'] = signals
 }(window));
+"use strict";
 var __reflect = (this && this.__reflect) || function (p, c, t) {
     p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
 };
@@ -21466,8 +21467,8 @@ var egret3d;
         ShaderChunk.tonemapping_fragment = "#if defined( TONE_MAPPING )\n\n  gl_FragColor.rgb = toneMapping( gl_FragColor.rgb );\n\n#endif\n";
         ShaderChunk.tonemapping_pars_fragment = "#ifndef saturate\n #define saturate(a) clamp( a, 0.0, 1.0 )\n#endif\n\nuniform float toneMappingExposure;\nuniform float toneMappingWhitePoint;\n\n// exposure only\nvec3 LinearToneMapping( vec3 color ) {\n\n return toneMappingExposure * color;\n\n}\n\n// source: https://www.cs.utah.edu/~reinhard/cdrom/\nvec3 ReinhardToneMapping( vec3 color ) {\n\n color *= toneMappingExposure;\n return saturate( color / ( vec3( 1.0 ) + color ) );\n\n}\n\n// source: http://filmicgames.com/archives/75\n#define Uncharted2Helper( x ) max( ( ( x * ( 0.15 * x + 0.10 * 0.50 ) + 0.20 * 0.02 ) / ( x * ( 0.15 * x + 0.50 ) + 0.20 * 0.30 ) ) - 0.02 / 0.30, vec3( 0.0 ) )\nvec3 Uncharted2ToneMapping( vec3 color ) {\n\n // John Hable's filmic operator from Uncharted 2 video game\n color *= toneMappingExposure;\n return saturate( Uncharted2Helper( color ) / Uncharted2Helper( vec3( toneMappingWhitePoint ) ) );\n\n}\n\n// source: http://filmicgames.com/archives/75\nvec3 OptimizedCineonToneMapping( vec3 color ) {\n\n // optimized filmic operator by Jim Hejl and Richard Burgess-Dawson\n color *= toneMappingExposure;\n color = max( vec3( 0.0 ), color - 0.004 );\n return pow( ( color * ( 6.2 * color + 0.5 ) ) / ( color * ( 6.2 * color + 1.7 ) + 0.06 ), vec3( 2.2 ) );\n\n}\n";
         ShaderChunk.uv2_pars_fragment = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n varying vec2 vUv2;\n\n#endif";
-        ShaderChunk.uv2_pars_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n attribute vec2 uv2;\n varying vec2 vUv2;\n #ifdef USE_LIGHTMAP\n  uniform vec4 lightmapScaleOffset;\n #endif\n\n#endif";
-        ShaderChunk.uv2_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n #ifdef USE_LIGHTMAP\n  //1.0 - ((1.0 - uv2.y) * lightmapScaleOffset.y + lightmapScaleOffset.w);\n  vUv2 = vec2(uv2.x * lightmapScaleOffset.x + lightmapScaleOffset.z, 1.0 - ((1.0 - uv2.y) * lightmapScaleOffset.y + lightmapScaleOffset.w));\n #else \n  vUv2 = uv2;\n #endif\n\n#endif";
+        ShaderChunk.uv2_pars_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n attribute vec2 uv2;\n varying vec2 vUv2;\n #ifdef USE_LIGHTMAP//Egret \n  uniform vec4 lightmapScaleOffset;\n #endif\n\n#endif";
+        ShaderChunk.uv2_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n #ifdef USE_LIGHTMAP//Egret\n  vUv2 = vec2(uv2.x * lightmapScaleOffset.x + lightmapScaleOffset.z, 1.0 - ((1.0 - uv2.y) * lightmapScaleOffset.y + lightmapScaleOffset.w));\n #else \n  vUv2 = uv2;\n #endif\n\n#endif";
         ShaderChunk.uv_pars_fragment = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n\n#endif";
         ShaderChunk.uv_pars_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n uniform mat3 uvTransform;\n\n#endif\n";
         ShaderChunk.uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n #if defined FLIP_V \n  vUv = ( uvTransform * vec3( uv.x, 1.0 - uv.y, 1 ) ).xy;//modify egret\n #else\n  vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n #endif\n#endif";
@@ -24391,6 +24392,7 @@ var egret3d;
         //
         helpInverseMatrix.inverse(combineInstance.root.transform.getWorldMatrix());
         var meshAttribute = combineInstance.meshAttribute;
+        var lightmapScaleOffset = combineInstance.root.renderer.lightmapScaleOffset;
         var newAttribute = [];
         var tempIndexBuffers = [];
         var tempVertexBuffers = {};
@@ -24407,6 +24409,7 @@ var egret3d;
             var meshRenderer = instance.getComponent(egret3d.MeshRenderer);
             var worldMatrix = instance.transform.getWorldMatrix();
             var mesh = meshFilter.mesh;
+            var orginLightmapScaleOffset = meshRenderer.lightmapScaleOffset;
             var primitives = mesh.glTFMesh.primitives;
             //共享一个的buffer，vbo只处理一个submesh就可以了
             var combineOnce = true;
@@ -24496,24 +24499,24 @@ var egret3d;
                     }
                     if (meshAttribute["TEXCOORD_1" /* TEXCOORD_1 */]) {
                         if (combineInstance.lightmapIndex >= 0) {
-                            // //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
-                            // const uvBuffer = orginAttributes.TEXCOORD_1 ?
-                            //     mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) as Float32Array :
-                            //     mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0!)) as Float32Array;
-                            // //
-                            // for (let j = 0; j < uvBuffer.length; j += 2) {
-                            //     let u = uvBuffer[j + 0];
-                            //     let v = uvBuffer[j + 1];
-                            //     // u = ((u * orginLightmapScaleOffset[0] + orginLightmapScaleOffset[2]) - lightmapScaleOffset[2]) / lightmapScaleOffset[0];
-                            //     // v = ((v * orginLightmapScaleOffset[1] - orginLightmapScaleOffset[1] - orginLightmapScaleOffset[3]) + lightmapScaleOffset[3] + lightmapScaleOffset[1]) / lightmapScaleOffset[1];
-                            //     tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1].push(u, v);
+                            //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
+                            var uvBuffer = orginAttributes.TEXCOORD_1 ?
+                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) :
+                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0));
+                            //
+                            for (var j = 0; j < uvBuffer.length; j += 2) {
+                                var u = uvBuffer[j + 0];
+                                var v = uvBuffer[j + 1];
+                                u = ((u * orginLightmapScaleOffset.x + orginLightmapScaleOffset.z) - lightmapScaleOffset.z) / lightmapScaleOffset.x;
+                                v = ((v * orginLightmapScaleOffset.y - orginLightmapScaleOffset.y - orginLightmapScaleOffset.w) + lightmapScaleOffset.w + lightmapScaleOffset.x) / lightmapScaleOffset.x;
+                                tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */].push(u, v);
+                            }
+                            // if (orginAttributes.TEXCOORD_1 !== undefined) {
+                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
                             // }
-                            if (orginAttributes.TEXCOORD_1 !== undefined) {
-                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */]);
-                            }
-                            else {
-                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0, tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */]);
-                            }
+                            // else {
+                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0!, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
+                            // }
                         }
                         else {
                             if (orginAttributes.TEXCOORD_1 !== undefined) {
@@ -25022,14 +25025,16 @@ var paper;
                             case 1:
                                 rawScene = _a.sent();
                                 if (rawScene) {
-                                    if (this.activeEditorModel) {
-                                        this.activeEditorModel.scene.destroy();
-                                    }
                                     scene = rawScene.createInstance(true);
-                                    sceneEditorModel = new editor.EditorModel();
-                                    sceneEditorModel.init(scene, 'scene', sceneUrl);
-                                    this.setActiveModel(sceneEditorModel);
-                                    this.currentEditInfo = { url: sceneUrl, type: 'scene' };
+                                    if (scene) {
+                                        if (this.activeEditorModel) {
+                                            this.activeEditorModel.scene.destroy();
+                                        }
+                                        sceneEditorModel = new editor.EditorModel();
+                                        sceneEditorModel.init(scene, 'scene', sceneUrl);
+                                        this.setActiveModel(sceneEditorModel);
+                                        this.currentEditInfo = { url: sceneUrl, type: 'scene' };
+                                    }
                                 }
                                 return [2 /*return*/];
                         }
@@ -25049,28 +25054,30 @@ var paper;
                             case 1:
                                 prefab = _a.sent();
                                 if (prefab) {
-                                    if (this.activeEditorModel) {
-                                        this.activeEditorModel.scene.destroy();
-                                    }
                                     scene = paper.Scene.createEmpty('prefabEditScene', false);
                                     prefabInstance = prefab.createInstance(scene, true);
-                                    prefabEditorModel_1 = new editor.EditorModel();
-                                    prefabEditorModel_1.init(scene, 'prefab', prefabUrl);
-                                    clearPrefabInfo_1 = function (obj) {
-                                        obj.extras = {};
-                                        for (var _i = 0, _a = obj.components; _i < _a.length; _i++) {
-                                            var comp = _a[_i];
-                                            comp.extras = {};
+                                    if (prefabInstance) {
+                                        if (this.activeEditorModel) {
+                                            this.activeEditorModel.scene.destroy();
                                         }
-                                        for (var i = 0; i < obj.transform.children.length; i++) {
-                                            var child = obj.transform.children[i].gameObject;
-                                            if (prefabEditorModel_1.isPrefabChild(child))
-                                                clearPrefabInfo_1(child);
-                                        }
-                                    };
-                                    clearPrefabInfo_1(prefabInstance);
-                                    this.setActiveModel(prefabEditorModel_1);
-                                    this.currentEditInfo = { url: prefabUrl, type: 'prefab' };
+                                        prefabEditorModel_1 = new editor.EditorModel();
+                                        prefabEditorModel_1.init(scene, 'prefab', prefabUrl);
+                                        clearPrefabInfo_1 = function (obj) {
+                                            obj.extras = {};
+                                            for (var _i = 0, _a = obj.components; _i < _a.length; _i++) {
+                                                var comp = _a[_i];
+                                                comp.extras = {};
+                                            }
+                                            for (var i = 0; i < obj.transform.children.length; i++) {
+                                                var child = obj.transform.children[i].gameObject;
+                                                if (prefabEditorModel_1.isPrefabChild(child))
+                                                    clearPrefabInfo_1(child);
+                                            }
+                                        };
+                                        clearPrefabInfo_1(prefabInstance);
+                                        this.setActiveModel(prefabEditorModel_1);
+                                        this.currentEditInfo = { url: prefabUrl, type: 'prefab' };
+                                    }
                                 }
                                 return [2 /*return*/];
                         }
@@ -25549,7 +25556,6 @@ var paper;
                 }
             };
             EditorModel.prototype.createGameObject = function (parentList, createType, mesh) {
-                if (mesh === void 0) { mesh = null; }
                 var state = editor.CreateGameObjectState.create(parentList, createType, mesh);
                 this.addState(state);
             };
@@ -25886,13 +25892,13 @@ var paper;
                 this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_EDIT_TYPE, type));
             };
             EditorModel.prototype.isPrefabRoot = function (gameObj) {
-                if (gameObj.extras.prefab) {
+                if (gameObj.extras && gameObj.extras.prefab) {
                     return true;
                 }
                 return false;
             };
             EditorModel.prototype.isPrefabChild = function (gameObj) {
-                if (gameObj.extras.rootID) {
+                if (gameObj.extras && gameObj.extras.rootID) {
                     return true;
                 }
                 return false;
@@ -25924,6 +25930,7 @@ var paper;
                             return displayPathList[i_1].path;
                         }
                     }
+                    return [];
                 }
                 var length = gameobjects.length - 1;
                 while (length > 0) {
@@ -25977,11 +25984,12 @@ var paper;
                 }
                 var result = Array.isArray(obj) ? [] : {};
                 Object.keys(obj).forEach(function (key) {
-                    if (obj[key] && typeof obj[key] === 'object') {
-                        result[key] = _this.deepClone(obj[key]);
+                    var objTmp = obj;
+                    if (objTmp[key] && typeof objTmp[key] === 'object') {
+                        result[key] = _this.deepClone(objTmp[key]);
                     }
                     else {
-                        result[key] = obj[key];
+                        result[key] = objTmp[key];
                     }
                 });
                 return result;
@@ -26509,7 +26517,7 @@ var paper;
                 for (var index = 0; index < statesData.length; index++) {
                     var element = statesData[index];
                     var clazz = egret.getDefinitionByName(element.className);
-                    var state = null;
+                    var state = void 0;
                     if (clazz) {
                         state = new clazz();
                         state.batchIndex = element.batchIndex;
@@ -27328,13 +27336,13 @@ var paper;
             };
             BreakPrefabStructState.makePrefabInfo = function (gameOjbect) {
                 var isPrefabRoot = function (gameObj) {
-                    if (gameObj.extras.prefab) {
+                    if (gameObj.extras && gameObj.extras.prefab) {
                         return true;
                     }
                     return false;
                 };
                 var isPrefabChild = function (gameObj) {
-                    if (gameObj.extras.rootID) {
+                    if (gameObj.extras && gameObj.extras.rootID) {
                         return true;
                     }
                     return false;
@@ -27827,12 +27835,12 @@ var paper;
             ApplyPrefabInstanceState.prototype.clearExtrasFromSerilizeData = function (data) {
                 var objects = data.objects;
                 var components = data.components;
-                for (var _i = 0, objects_2 = objects; _i < objects_2.length; _i++) {
-                    var obj = objects_2[_i];
+                for (var _i = 0, _a = objects; _i < _a.length; _i++) {
+                    var obj = _a[_i];
                     delete obj["extras"];
                 }
-                for (var _a = 0, components_6 = components; _a < components_6.length; _a++) {
-                    var comp = components_6[_a];
+                for (var _b = 0, _c = components; _b < _c.length; _b++) {
+                    var comp = _c[_b];
                     delete comp["extras"];
                 }
                 return data;
@@ -27872,7 +27880,6 @@ var paper;
                 if (_super.prototype.undo.call(this)) {
                     var revertRoot = editor.Editor.activeEditorModel.getGameObjectByUUid(this.stateData.revertPrefabRootId);
                     var gameObjects = editor.Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(revertRoot);
-                    var removeGameObjIds = [];
                     for (var _i = 0, gameObjects_3 = gameObjects; _i < gameObjects_3.length; _i++) {
                         var gameObj = gameObjects_3[_i];
                         if (!(this.stateData.revertData[gameObj.extras.linkedID])) {

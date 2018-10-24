@@ -64,14 +64,16 @@ namespace paper.editor {
         public static async editScene(sceneUrl: string) {
             const rawScene = await RES.getResAsync(sceneUrl) as RawScene;
             if (rawScene) {
-                if (this.activeEditorModel) {
-                    this.activeEditorModel.scene.destroy();
-                }
                 let scene = rawScene.createInstance(true);
-                let sceneEditorModel = new EditorModel();
-                sceneEditorModel.init(scene, 'scene', sceneUrl);
-                this.setActiveModel(sceneEditorModel);
-                this.currentEditInfo = { url: sceneUrl, type: 'scene' };
+                if (scene) {
+                    if (this.activeEditorModel) {
+                        this.activeEditorModel.scene.destroy();
+                    }
+                    let sceneEditorModel = new EditorModel();
+                    sceneEditorModel.init(scene, 'scene', sceneUrl);
+                    this.setActiveModel(sceneEditorModel);
+                    this.currentEditInfo = { url: sceneUrl, type: 'scene' };
+                }
             }
         }
         /**
@@ -81,29 +83,30 @@ namespace paper.editor {
         public static async editPrefab(prefabUrl: string) {
             const prefab = await RES.getResAsync(prefabUrl) as Prefab;
             if (prefab) {
-                if (this.activeEditorModel) {
-                    this.activeEditorModel.scene.destroy();
-                }
                 let scene = Scene.createEmpty('prefabEditScene', false);
                 let prefabInstance = prefab.createInstance(scene, true);
-
-                let prefabEditorModel = new EditorModel();
-                prefabEditorModel.init(scene, 'prefab', prefabUrl);
-                //清除自身的预置体信息
-                let clearPrefabInfo = (obj: GameObject): void => {
-                    obj.extras = {};
-                    for (let comp of obj.components) {
-                        comp.extras = {};
+                if (prefabInstance) {
+                    if (this.activeEditorModel) {
+                        this.activeEditorModel.scene.destroy();
                     }
-                    for (let i: number = 0; i < obj.transform.children.length; i++) {
-                        let child = obj.transform.children[i].gameObject;
-                        if (prefabEditorModel.isPrefabChild(child))
-                            clearPrefabInfo(child);
-                    }
-                };
-                clearPrefabInfo(prefabInstance);
-                this.setActiveModel(prefabEditorModel);
-                this.currentEditInfo = { url: prefabUrl, type: 'prefab' };
+                    let prefabEditorModel = new EditorModel();
+                    prefabEditorModel.init(scene, 'prefab', prefabUrl);
+                    //清除自身的预置体信息
+                    let clearPrefabInfo = (obj: GameObject): void => {
+                        obj.extras = {};
+                        for (let comp of obj.components) {
+                            comp.extras = {};
+                        }
+                        for (let i: number = 0; i < obj.transform.children.length; i++) {
+                            let child = obj.transform.children[i].gameObject;
+                            if (prefabEditorModel.isPrefabChild(child))
+                                clearPrefabInfo(child);
+                        }
+                    };
+                    clearPrefabInfo(prefabInstance);
+                    this.setActiveModel(prefabEditorModel);
+                    this.currentEditInfo = { url: prefabUrl, type: 'prefab' };
+                }
             }
         }
         /**

@@ -26,7 +26,7 @@ namespace paper.editor{
                 let gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                 
                 if (gameObject) {
-                    let component = this.editorModel.getComponentById(gameObject,componentId);
+                    let component = this.editorModel.getComponentById(gameObject,componentId!);
                     if (component) {
                         gameObject.removeComponent(component);     
                         this.dispatchEditorModelEvent(EditorModelEvent.REMOVE_COMPONENT);                   
