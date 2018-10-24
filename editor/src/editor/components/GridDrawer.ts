@@ -36,8 +36,8 @@ namespace paper.editor {
             const mA = (this._gridA.renderer as egret3d.MeshRenderer).material!;
             const mB = (this._gridB.renderer as egret3d.MeshRenderer).material!;
 
-            mA.setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Transparent);
-            mB.setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Transparent);
+            mA.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
+            mB.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
         }
 
         public update() {
@@ -55,8 +55,8 @@ namespace paper.editor {
             const mA = (this._gridA.renderer as egret3d.MeshRenderer).material!;
             const mB = (this._gridB.renderer as egret3d.MeshRenderer).material!;
 
-            mA.setOpacity(1.0 * 0.2);
-            mB.setOpacity(0.2 * 0.2);
+            mA.opacity = 1.0 * 0.2;
+            mB.opacity = 0.2 * 0.2;
         }
     }
 }

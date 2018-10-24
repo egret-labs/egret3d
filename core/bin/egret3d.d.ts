@@ -920,7 +920,7 @@ declare namespace egret3d {
          */
         static create(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset?: number): Matrix4;
         /**
-         * 矩阵原始数据
+         * 矩阵原始数据。
          * @readonly
          */
         rawData: Float32Array;
@@ -947,7 +947,6 @@ declare namespace egret3d {
         fromRotationX(radian: number): Matrix4;
         fromRotationY(radian: number): Matrix4;
         fromRotationZ(radian: number): Matrix4;
-        determinant(): number;
         compose(translation: Readonly<IVector3>, rotation: Readonly<IVector4>, scale: Readonly<IVector3>): Matrix4;
         decompose(translation?: Vector3 | null, rotation?: Quaternion | null, scale?: Vector3 | null): Matrix4;
         transpose(source?: Readonly<Matrix4>): Matrix4;
@@ -993,6 +992,7 @@ declare namespace egret3d {
          * @param up 旋转后，该矩阵的 Y 轴正方向。
          */
         lookRotation(vector: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4;
+        determinant(): number;
         /**
          * 获得该矩阵最大的缩放值。
          */
@@ -1218,7 +1218,7 @@ declare namespace paper {
     /**
      * 基础渲染组件。
      */
-    abstract class BaseRenderer extends BaseComponent implements egret3d.ITransformObserver, egret3d.IRaycast {
+    abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
         /**
          * 当渲染组件的材质列表改变时派发事件。
          */
@@ -4953,14 +4953,14 @@ declare namespace egret3d {
      */
     function raycast(ray: Readonly<Ray>, gameObject: Readonly<paper.GameObject>, raycastMesh?: boolean, raycastInfo?: RaycastInfo): boolean;
     /**
-     * 用世界空间坐标系的射线检测指定的实体或变换组件列表。
+     * 用世界空间坐标系的射线检测指定的实体或组件列表。
      * @param ray 射线。
-     * @param gameObjectsOrTransforms 实体或变换组件列表。
+     * @param gameObjectsOrComponents 实体或组件列表。
      * @param maxDistance 最大相交点检测距离。
      * @param cullingMask 只对特定层的实体检测。
      * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      */
-    function raycastAll(ray: Readonly<Ray>, gameObjectsOrTransforms: ReadonlyArray<paper.GameObject | Transform>, maxDistance?: number, cullingMask?: paper.CullingMask, raycastMesh?: boolean): RaycastInfo[];
+    function raycastAll(ray: Readonly<Ray>, gameObjectsOrComponents: ReadonlyArray<paper.GameObject | paper.BaseComponent>, maxDistance?: number, cullingMask?: paper.CullingMask, raycastMesh?: boolean): RaycastInfo[];
 }
 declare namespace egret3d {
 }
@@ -6756,41 +6756,57 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     * 3×3矩阵
+     * 3×3 矩阵。
      */
     class Matrix3 extends paper.BaseRelease<Matrix3> implements paper.ICCS<Matrix3>, paper.ISerializable {
+        static readonly IDENTITY: Readonly<Matrix3>;
         private static readonly _instances;
+        /**
+         * 创建一个矩阵。
+         * @param rawData
+         * @param offsetOrByteOffset
+         */
         static create(): Matrix3;
         /**
-         * 矩阵原始数据
+         * 矩阵原始数据。
          * @readonly
          */
         rawData: Float32Array;
         /**
-         * @deprecated
+         * 请使用 `egret3d.Matrix3.create()` 创建实例。
+         * @see egret3d.Matrix3.create()
          */
-        constructor(rawData?: Float32Array | null);
-        /**
-         * 序列化
-         * @returns 序列化后的数据
-         */
+        private constructor();
         serialize(): Float32Array;
-        /**
-         * 反序列化
-         * @param value 序列化后的数据
-         */
         deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): Matrix3;
         copy(value: Readonly<Matrix3>): this;
         clone(): Matrix3;
         set(n11: number, n12: number, n13: number, n21: number, n22: number, n23: number, n31: number, n32: number, n33: number): Matrix3;
-        identity(): Matrix3;
-        inverse(matrix: Matrix3): Matrix3;
-        getNormalMatrix(matrix4: Readonly<Matrix4>): Matrix3;
+        identity(): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromBuffer(value: ArrayBuffer, byteOffset?: number): this;
+        /**
+         * 通过 UV 变换设置该矩阵。
+         * @param tx 水平偏移。
+         * @param ty 垂直偏移。
+         * @param sx 水平重复。
+         * @param sy 垂直重复。
+         * @param rotation 旋转。（弧度制）
+         * @param cx 水平中心。
+         * @param cy 垂直中心。
+         */
+        fromUVTransform(tx: number, ty: number, sx: number, sy: number, rotation: number, cx: number, cy: number): Matrix3;
+        inverse(matrix: Matrix3): this;
+        getNormalMatrix(matrix4: Readonly<Matrix4>): this;
         transpose(): this;
-        setFromMatrix4(m: Readonly<Matrix4>): this;
+        fromMatrix4(value: Readonly<Matrix4>): this;
         determinant(): number;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): Matrix3;
-        fromBuffer(value: ArrayBuffer, byteOffset?: number): Matrix3;
+        /**
+         * 将该旋转矩阵转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
     }
 }
 declare namespace egret3d {
@@ -6965,25 +6981,30 @@ declare namespace egret3d {
         private _cacheDefines;
         private readonly _textures;
         /**
-         * 请使用 `egret3d.Material.create()` 创建实例。
-         * @see egret3d.Material.create()
+         * 请使用 `Material.create()` 创建实例。
+         * @see Material.create()
          * @deprecated
          */
         constructor(shader?: Shader | string);
         constructor(config: GLTF, name: string);
         private _reset(shaderOrConfig);
         dispose(disposeChildren?: boolean): boolean;
+        /**
+         * 拷贝。
+         */
         copy(value: Material): this;
         /**
-         * 克隆材质资源。
+         * 克隆。
          */
         clone(): Material;
         /**
-         *
+         * 为该材质添加指定的 define。
+         * @param value define 字符串。
          */
         addDefine(value: string): this;
         /**
-         *
+         * 从该材质移除指定的 define。
+         * @param value define 字符串。
          */
         removeDefine(value: string): this;
         setBoolean(id: string, value: boolean): this;
@@ -7000,26 +7021,39 @@ declare namespace egret3d {
         setMatrix(id: string, value: Readonly<Matrix4>): this;
         setMatrixv(id: string, value: Float32Array): this;
         /**
-         * 获取该材质的主贴图。
+         * 设置该材质的混合模式。
+         * @param blend 混合模式。
+         * @param renderQueue 渲染顺序。
+         * @param opacity 透明度。
          */
-        getTexture(): Texture | null;
+        setBlend(blend: gltf.BlendMode, renderQueue: paper.RenderQueue, opacity?: number): this;
         /**
-         * 获取该材质的指定贴图。
-         * @param uniformName uniform 名称。
+         * 设置该材质剔除面片的模式。
+         * @param cullEnabled 是否开启剔除。
+         * @param frontFace 正面的顶点顺序。
+         * @param cullFace 剔除模式。
          */
-        getTexture(uniformName: string): Texture | null;
+        setCullFace(cullEnabled: boolean, frontFace?: gltf.FrontFace, cullFace?: gltf.CullFace): this;
         /**
-         * 设置该材质的主贴图。
-         * @param value 贴图。
+         * 设置该材质的深度检测和深度缓冲。
+         * @param depthTest 深度检测。
+         * @param depthWrite 深度缓冲。
          */
-        setTexture(value: egret3d.Texture | null): this;
+        setDepth(depthTest: boolean, depthWrite: boolean): this;
         /**
-         * 设置该材质的指定贴图。
-         * @param uniformName uniform 名称。
-         * @param value 贴图。
+         * 清除该材质的所有图形 API 状态。
          */
-        setTexture(uniformName: string, value: egret3d.Texture | null): this;
+        clearStates(): this;
+        /**
+         * 获取该材质的主颜色。
+         * @param out 颜色。
+         */
         getColor(out?: Color): Color;
+        /**
+         * 获取该材质的指定颜色。
+         * @param uniformName uniform 名称。
+         * @param out 颜色。
+         */
         getColor(uniformName: string, out?: Color): Color;
         /**
          * 设置该材质的主颜色。
@@ -7033,47 +7067,59 @@ declare namespace egret3d {
          */
         setColor(uniformName: string, value: Readonly<IColor>): this;
         /**
-         *
-         * @param blend
+         * 获取该材质的 UV 变换矩阵。
+         * @param out 矩阵。
          */
-        setBlend(blend: gltf.BlendMode): this;
+        getUVTransform(out?: Matrix3): Matrix3;
         /**
-         *
+         * 设置该材质的 UV 变换矩阵。
+         * @param out 矩阵。
          */
-        setCullFace(cull: boolean, frontFace?: gltf.FrontFace, cullFace?: gltf.CullFace): this;
+        setUVTTransform(value: Readonly<Matrix3>): this;
         /**
-         *
+         * 获取该材质的主贴图。
          */
-        setDepth(zTest: boolean, zWrite: boolean): this;
+        getTexture(): Texture | null;
         /**
-         *
+         * 获取该材质的指定贴图。
+         * @param uniformName uniform 名称。
          */
-        setRenderQueue(value: number): this;
+        getTexture(uniformName: string): Texture | null;
         /**
-         *
+         * 设置该材质的主贴图。
+         * @param value 贴图。
          */
-        setOpacity(value: number): this;
+        setTexture(value: Texture | null): this;
         /**
-         *
+         * 设置该材质的指定贴图。
+         * @param uniformName uniform 名称。
+         * @param value 贴图。
          */
-        setShader(value: Shader): this;
-        /**
-         *
-         */
-        clearStates(): this;
+        setTexture(uniformName: string, value: Texture | null): this;
         /**
          * 该材质的透明度。
-         * - 材质是否透明
          */
         opacity: number;
         /**
-         *
+         * 该材质的 shader。
          */
         shader: Shader;
         /**
-         *
+         * 该材质的 glTF 渲染技术。
          */
         readonly glTFTechnique: gltf.Technique;
+        /**
+         * @deprecated
+         */
+        setRenderQueue(value: number): this;
+        /**
+         * @deprecated
+         */
+        setOpacity(value: number): this;
+        /**
+         * @deprecated
+         */
+        setShader(value: Shader): this;
     }
 }
 declare namespace egret3d.ShaderLib {

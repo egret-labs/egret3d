@@ -54,7 +54,7 @@ namespace egret3d {
         public readonly matrix_p: Matrix4 = Matrix4.create();
         public readonly matrix_mv: Matrix4 = Matrix4.create();
         public readonly matrix_vp: Matrix4 = Matrix4.create();
-        public readonly matrix_mv_inverse: Matrix3 = new Matrix3();//INVERS
+        public readonly matrix_mv_inverse: Matrix3 = Matrix3.create();//INVERS
 
         public lightShadowCameraNear: number = 0;
         public lightShadowCameraFar: number = 0;
@@ -335,7 +335,7 @@ namespace egret3d {
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
             }
-            
+
             const fog = scene.fog;
             if (fog.mode !== FogMode.NONE) {
                 this.fogColor[0] = fog.color.r;
@@ -352,7 +352,7 @@ namespace egret3d {
                     this.fogFar = fog.far;
                 }
             }
-            
+
             if (renderer.constructor === SkinnedMeshRenderer && !(renderer as SkinnedMeshRenderer).forceCPUSkin) {
                 this.shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, (renderer as SkinnedMeshRenderer).bones.length)} \n`;
             }

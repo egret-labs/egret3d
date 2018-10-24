@@ -83,6 +83,7 @@ namespace egret3d {
         // TODO renderQueue.
         return a.distance - b.distance;
     }
+    
     /**
      * 用世界空间坐标系的射线检测指定的实体。（不包含其子级）
      * @param ray 世界空间坐标系的射线。
@@ -155,24 +156,25 @@ namespace egret3d {
 
         return false;
     }
+
     /**
-     * 用世界空间坐标系的射线检测指定的实体或变换组件列表。
+     * 用世界空间坐标系的射线检测指定的实体或组件列表。
      * @param ray 射线。
-     * @param gameObjectsOrTransforms 实体或变换组件列表。
+     * @param gameObjectsOrComponents 实体或组件列表。
      * @param maxDistance 最大相交点检测距离。
      * @param cullingMask 只对特定层的实体检测。
      * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      */
     export function raycastAll(
-        ray: Readonly<Ray>, gameObjectsOrTransforms: ReadonlyArray<paper.GameObject | Transform>,
+        ray: Readonly<Ray>, gameObjectsOrComponents: ReadonlyArray<paper.GameObject | paper.BaseComponent>,
         maxDistance: number = 0.0, cullingMask: paper.CullingMask = paper.CullingMask.Everything, raycastMesh: boolean = false
     ) {
         const raycastInfos = [] as RaycastInfo[];
 
-        for (const gameObject of gameObjectsOrTransforms) {
+        for (const gameObjectOrComponent of gameObjectsOrComponents) {
             _raycastAll(
                 ray,
-                gameObject instanceof Transform ? gameObject.gameObject : gameObject,
+                gameObjectOrComponent.constructor === paper.GameObject ? gameObjectOrComponent as paper.GameObject : (gameObjectOrComponent as paper.BaseComponent).gameObject,
                 maxDistance, cullingMask, raycastMesh, raycastInfos
             );
         }

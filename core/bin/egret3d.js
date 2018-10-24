@@ -2030,7 +2030,7 @@ var egret3d;
             if (offsetOrByteOffset === void 0) { offsetOrByteOffset = 0; }
             var _this = _super.call(this) || this;
             /**
-             * 矩阵原始数据
+             * 矩阵原始数据。
              * @readonly
              */
             _this.rawData = null;
@@ -2174,16 +2174,16 @@ var egret3d;
                     break;
                 }
                 case 1 /* XZY */: {
-                    var ac_1 = a * c, ad_1 = a * d, bc_1 = b * c, bd_1 = b * d;
+                    var ac = a * c, ad = a * d, bc = b * c, bd = b * d;
                     rawData[0] = c * e;
                     rawData[4] = -f;
                     rawData[8] = d * e;
-                    rawData[1] = ac_1 * f + bd_1;
+                    rawData[1] = ac * f + bd;
                     rawData[5] = a * e;
-                    rawData[9] = ad_1 * f - bc_1;
-                    rawData[2] = bc_1 * f - ad_1;
+                    rawData[9] = ad * f - bc;
+                    rawData[2] = bc * f - ad;
                     rawData[6] = b * e;
-                    rawData[10] = bd_1 * f + ac_1;
+                    rawData[10] = bd * f + ac;
                     break;
                 }
                 case 2 /* YXZ */: {
@@ -2297,39 +2297,6 @@ var egret3d;
             var c = Math.cos(radian), s = Math.sin(radian);
             this.set(c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
             return this;
-        };
-        Matrix4.prototype.determinant = function () {
-            var rawData = this.rawData;
-            var n11 = rawData[0], n12 = rawData[4], n13 = rawData[8], n14 = rawData[12];
-            var n21 = rawData[1], n22 = rawData[5], n23 = rawData[9], n24 = rawData[13];
-            var n31 = rawData[2], n32 = rawData[6], n33 = rawData[10], n34 = rawData[14];
-            var n41 = rawData[3], n42 = rawData[7], n43 = rawData[11], n44 = rawData[15];
-            //TODO: make this more efficient
-            //( based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js )
-            return (n41 * (+n14 * n23 * n32
-                - n13 * n24 * n32
-                - n14 * n22 * n33
-                + n12 * n24 * n33
-                + n13 * n22 * n34
-                - n12 * n23 * n34) +
-                n42 * (+n11 * n23 * n34
-                    - n11 * n24 * n33
-                    + n14 * n21 * n33
-                    - n13 * n21 * n34
-                    + n13 * n24 * n31
-                    - n14 * n23 * n31) +
-                n43 * (+n11 * n24 * n32
-                    - n11 * n22 * n34
-                    - n14 * n21 * n32
-                    + n12 * n21 * n34
-                    + n14 * n22 * n31
-                    - n12 * n24 * n31) +
-                n44 * (-n13 * n22 * n31
-                    - n11 * n23 * n32
-                    + n11 * n22 * n33
-                    + n13 * n21 * n32
-                    - n12 * n21 * n33
-                    + n12 * n23 * n31));
         };
         Matrix4.prototype.compose = function (translation, rotation, scale) {
             var rawData = this.rawData;
@@ -2584,6 +2551,39 @@ var egret3d;
             rawData[6] = y.z;
             rawData[10] = z.z;
             return this;
+        };
+        Matrix4.prototype.determinant = function () {
+            var rawData = this.rawData;
+            var n11 = rawData[0], n12 = rawData[4], n13 = rawData[8], n14 = rawData[12];
+            var n21 = rawData[1], n22 = rawData[5], n23 = rawData[9], n24 = rawData[13];
+            var n31 = rawData[2], n32 = rawData[6], n33 = rawData[10], n34 = rawData[14];
+            var n41 = rawData[3], n42 = rawData[7], n43 = rawData[11], n44 = rawData[15];
+            //TODO: make this more efficient
+            //( based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js )
+            return (n41 * (+n14 * n23 * n32
+                - n13 * n24 * n32
+                - n14 * n22 * n33
+                + n12 * n24 * n33
+                + n13 * n22 * n34
+                - n12 * n23 * n34) +
+                n42 * (+n11 * n23 * n34
+                    - n11 * n24 * n33
+                    + n14 * n21 * n33
+                    - n13 * n21 * n34
+                    + n13 * n24 * n31
+                    - n14 * n23 * n31) +
+                n43 * (+n11 * n24 * n32
+                    - n11 * n22 * n34
+                    - n14 * n21 * n32
+                    + n12 * n21 * n34
+                    + n14 * n22 * n31
+                    - n12 * n24 * n31) +
+                n44 * (-n13 * n22 * n31
+                    - n11 * n23 * n32
+                    + n11 * n22 * n33
+                    + n13 * n21 * n32
+                    - n12 * n21 * n33
+                    + n12 * n23 * n31));
         };
         /**
          * 获得该矩阵最大的缩放值。
@@ -3512,7 +3512,7 @@ var paper;
         return BaseRenderer;
     }(paper.BaseComponent));
     paper.BaseRenderer = BaseRenderer;
-    __reflect(BaseRenderer.prototype, "paper.BaseRenderer", ["egret3d.ITransformObserver", "egret3d.IRaycast"]);
+    __reflect(BaseRenderer.prototype, "paper.BaseRenderer", ["egret3d.IRaycast"]);
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
@@ -9635,17 +9635,17 @@ var egret3d;
             DefaultShaders.MESH_PHYSICAL = this._createShader("builtin/meshphysical.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.MESH_PHYSICAL_DOUBLESIDE = this._createShader("builtin/meshphysical_doubleside.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(1 /* Blend */);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(1 /* Blend */, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(1 /* Blend */);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(1 /* Blend */, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(3 /* Add */);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(3 /* Add */, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(3 /* Add */);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(3 /* Add */, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(7 /* Multiply */);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(7 /* Multiply */, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT_MULTIPLY = this._createShader("builtin/transparent_multiply.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(7 /* Multiply */);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(7 /* Multiply */, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT_MULTIPLY_DOUBLESIDE = this._createShader("builtin/transparent_multiply_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */);
             DefaultShaders.LINEDASHED = this._createShader("builtin/linedashed.shader.json", egret3d.ShaderLib.linedashed, 2000 /* Geometry */, helpMaterial.glTFTechnique.states);
@@ -9655,17 +9655,17 @@ var egret3d;
             DefaultShaders.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpMaterial.glTFTechnique.states);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", egret3d.ShaderLib.particle, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_COLOR" /* USE_COLOR */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(1 /* Blend */);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(1 /* Blend */, 3000 /* Transparent */);
             DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", egret3d.ShaderLib.particle, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_COLOR" /* USE_COLOR */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(3 /* Add */);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(3 /* Add */, 3000 /* Transparent */);
             DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", egret3d.ShaderLib.particle, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_COLOR" /* USE_COLOR */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(7 /* Multiply */);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(7 /* Multiply */, 3000 /* Transparent */);
             DefaultShaders.PARTICLE_MULTIPLY = this._createShader("builtin/particle_multiply.shader.json", egret3d.ShaderLib.particle, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_COLOR" /* USE_COLOR */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(2 /* Blend_PreMultiply */);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(2 /* Blend_PreMultiply */, 3000 /* Transparent */);
             DefaultShaders.PARTICLE_BLEND_PREMULTIPLY = this._createShader("builtin/particle_blend_premultiply.shader.json", egret3d.ShaderLib.particle, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_COLOR" /* USE_COLOR */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(4 /* Add_PreMultiply */);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(4 /* Add_PreMultiply */, 3000 /* Transparent */);
             DefaultShaders.PARTICLE_ADDITIVE_PREMULTIPLY = this._createShader("builtin/particle_additive_premultiply.shader.json", egret3d.ShaderLib.particle, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_COLOR" /* USE_COLOR */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(8 /* Multiply_PreMultiply */);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(8 /* Multiply_PreMultiply */, 3000 /* Transparent */);
             DefaultShaders.PARTICLE_MULTIPLY_PREMULTIPLY = this._createShader("builtin/particle_multiply_premultiply.shader.json", egret3d.ShaderLib.particle, 3000 /* Transparent */, helpMaterial.glTFTechnique.states, ["USE_COLOR" /* USE_COLOR */]);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.CUBE = this._createShader("builtin/cube.shader.json", egret3d.ShaderLib.cube, 2000 /* Geometry */, helpMaterial.glTFTechnique.states);
@@ -11014,21 +11014,21 @@ var egret3d;
     }
     egret3d.raycast = raycast;
     /**
-     * 用世界空间坐标系的射线检测指定的实体或变换组件列表。
+     * 用世界空间坐标系的射线检测指定的实体或组件列表。
      * @param ray 射线。
-     * @param gameObjectsOrTransforms 实体或变换组件列表。
+     * @param gameObjectsOrComponents 实体或组件列表。
      * @param maxDistance 最大相交点检测距离。
      * @param cullingMask 只对特定层的实体检测。
      * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      */
-    function raycastAll(ray, gameObjectsOrTransforms, maxDistance, cullingMask, raycastMesh) {
+    function raycastAll(ray, gameObjectsOrComponents, maxDistance, cullingMask, raycastMesh) {
         if (maxDistance === void 0) { maxDistance = 0.0; }
         if (cullingMask === void 0) { cullingMask = 16777215 /* Everything */; }
         if (raycastMesh === void 0) { raycastMesh = false; }
         var raycastInfos = [];
-        for (var _i = 0, gameObjectsOrTransforms_1 = gameObjectsOrTransforms; _i < gameObjectsOrTransforms_1.length; _i++) {
-            var gameObject = gameObjectsOrTransforms_1[_i];
-            _raycastAll(ray, gameObject instanceof egret3d.Transform ? gameObject.gameObject : gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+        for (var _i = 0, gameObjectsOrComponents_1 = gameObjectsOrComponents; _i < gameObjectsOrComponents_1.length; _i++) {
+            var gameObjectOrComponent = gameObjectsOrComponents_1[_i];
+            _raycastAll(ray, gameObjectOrComponent.constructor === paper.GameObject ? gameObjectOrComponent : gameObjectOrComponent.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
         }
         raycastInfos.sort(_sortRaycastInfo);
         return raycastInfos;
@@ -11628,7 +11628,7 @@ var egret3d;
             this.matrix_p = egret3d.Matrix4.create();
             this.matrix_mv = egret3d.Matrix4.create();
             this.matrix_vp = egret3d.Matrix4.create();
-            this.matrix_mv_inverse = new egret3d.Matrix3(); //INVERS
+            this.matrix_mv_inverse = egret3d.Matrix3.create(); //INVERS
             this.lightShadowCameraNear = 0;
             this.lightShadowCameraFar = 0;
             this.lightPosition = new Float32Array([0.0, 0.0, 0.0]);
@@ -14811,7 +14811,7 @@ var egret3d;
             this.layerWeight = 0.0;
             this.blendWeight = 0.0;
         };
-        BlendLayer.prototype.update = function (animationState) {
+        BlendLayer.prototype.updateLayerAndWeight = function (animationState) {
             var animationLayer = animationState.layer;
             var animationWeight = animationState._globalWeight;
             if (this.dirty > 0) {
@@ -14849,7 +14849,7 @@ var egret3d;
         __extends(AnimationChannel, _super);
         function AnimationChannel() {
             var _this = _super.call(this) || this;
-            _this.update = null;
+            _this.updateTarget = null;
             return _this;
         }
         /**
@@ -15235,15 +15235,15 @@ var egret3d;
                     switch (pathName) {
                         case "translation":
                             channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name);
-                            channel.update = this._onUpdateTranslation;
+                            channel.updateTarget = this._onUpdateTranslation;
                             break;
                         case "rotation":
                             channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name);
-                            channel.update = this._onUpdateRotation;
+                            channel.updateTarget = this._onUpdateRotation;
                             break;
                         case "scale":
                             channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name);
-                            channel.update = this._onUpdateScale;
+                            channel.updateTarget = this._onUpdateScale;
                             break;
                         case "weights":
                             // TODO
@@ -15253,7 +15253,7 @@ var egret3d;
                                 case "paper.GameObject":
                                     switch (channel.glTFChannel.extensions.paper.property) {
                                         case "activeSelf":
-                                            channel.update = this._onUpdateActive;
+                                            channel.updateTarget = this._onUpdateActive;
                                             break;
                                     }
                                     break;
@@ -15312,8 +15312,8 @@ var egret3d;
             if (this.weight !== 0.0) {
                 for (var _i = 0, _a = this._channels; _i < _a.length; _i++) {
                     var channel = _a[_i];
-                    if (channel.update) {
-                        channel.update(channel, this);
+                    if (channel.updateTarget) {
+                        channel.updateTarget(channel, this);
                     }
                 }
             }
@@ -19085,7 +19085,6 @@ var egret3d;
             var webgl = WebGLCapabilities.webgl;
             var stateEnables = this._stateEnables;
             var cacheStateEnable = this._cacheStateEnable;
-            //TODO WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshIndex, drawType, transform._worldMatrixDeterminant < 0);
             for (var _i = 0, stateEnables_1 = stateEnables; _i < stateEnables_1.length; _i++) {
                 var e = stateEnables_1[_i];
                 var b = state ? state.enable && state.enable.indexOf(e) >= 0 : false;
@@ -19315,52 +19314,50 @@ var paper;
 var egret3d;
 (function (egret3d) {
     /**
-     * 3×3矩阵
+     * 3×3 矩阵。
      */
     var Matrix3 = (function (_super) {
         __extends(Matrix3, _super);
         /**
-         * @deprecated
+         * 请使用 `egret3d.Matrix3.create()` 创建实例。
+         * @see egret3d.Matrix3.create()
          */
-        function Matrix3(rawData) {
-            if (rawData === void 0) { rawData = null; }
+        function Matrix3() {
             var _this = _super.call(this) || this;
             /**
-             * 矩阵原始数据
+             * 矩阵原始数据。
              * @readonly
              */
             _this.rawData = null;
-            if (rawData) {
-                _this.rawData = rawData;
-            }
-            else {
-                _this.rawData = new Float32Array([
-                    1.0, 0.0, 0.0,
-                    0.0, 1.0, 0.0,
-                    0.0, 0.0, 1.0,
-                ]);
-            }
+            // if (rawData) {
+            //     this.rawData = rawData;
+            // }
+            // else {
+            // TODO
+            _this.rawData = new Float32Array([
+                1.0, 0.0, 0.0,
+                0.0, 1.0, 0.0,
+                0.0, 0.0, 1.0,
+            ]);
             return _this;
+            // }
         }
+        /**
+         * 创建一个矩阵。
+         * @param rawData
+         * @param offsetOrByteOffset
+         */
         Matrix3.create = function () {
             if (this._instances.length > 0) {
-                var instance = this._instances.pop();
+                var instance = this._instances.pop().identity();
                 instance._released = false;
                 return instance;
             }
             return new Matrix3();
         };
-        /**
-         * 序列化
-         * @returns 序列化后的数据
-         */
         Matrix3.prototype.serialize = function () {
             return this.rawData;
         };
-        /**
-         * 反序列化
-         * @param value 序列化后的数据
-         */
         Matrix3.prototype.deserialize = function (value) {
             return this.fromArray(value);
         };
@@ -19375,19 +19372,54 @@ var egret3d;
         };
         Matrix3.prototype.set = function (n11, n12, n13, n21, n22, n23, n31, n32, n33) {
             this.rawData[0] = n11;
-            this.rawData[3] = n12;
-            this.rawData[6] = n13;
             this.rawData[1] = n21;
-            this.rawData[4] = n22;
-            this.rawData[7] = n23;
             this.rawData[2] = n31;
+            this.rawData[3] = n12;
+            this.rawData[4] = n22;
             this.rawData[5] = n32;
+            this.rawData[6] = n13;
+            this.rawData[7] = n23;
             this.rawData[8] = n33;
             return this;
         };
         Matrix3.prototype.identity = function () {
-            this.set(1, 0, 0, 0, 1, 0, 0, 0, 1);
+            this.rawData[0] = 1.0;
+            this.rawData[1] = 0.0;
+            this.rawData[2] = 0.0;
+            this.rawData[3] = 0.0;
+            this.rawData[4] = 1.0;
+            this.rawData[5] = 0.0;
+            this.rawData[6] = 0.0;
+            this.rawData[7] = 0.0;
+            this.rawData[8] = 1.0;
             return this;
+        };
+        Matrix3.prototype.fromArray = function (value, offset) {
+            if (offset === void 0) { offset = 0; }
+            for (var i = 0; i < 9; ++i) {
+                this.rawData[i] = value[i + offset];
+            }
+            return this;
+        };
+        Matrix3.prototype.fromBuffer = function (value, byteOffset) {
+            if (byteOffset === void 0) { byteOffset = 0; }
+            this.rawData = new Float32Array(value, byteOffset, 9);
+            return this;
+        };
+        /**
+         * 通过 UV 变换设置该矩阵。
+         * @param tx 水平偏移。
+         * @param ty 垂直偏移。
+         * @param sx 水平重复。
+         * @param sy 垂直重复。
+         * @param rotation 旋转。（弧度制）
+         * @param cx 水平中心。
+         * @param cy 垂直中心。
+         */
+        Matrix3.prototype.fromUVTransform = function (tx, ty, sx, sy, rotation, cx, cy) {
+            var c = Math.cos(rotation);
+            var s = Math.sin(rotation);
+            return this.set(sx * c, sx * s, -sx * (c * cx + s * cy) + cx + tx, -sy * s, sy * c, -sy * (-s * cx + c * cy) + cy + ty, 0.0, 0.0, 1.0);
         };
         Matrix3.prototype.inverse = function (matrix) {
             var me = matrix.rawData, te = this.rawData, n11 = me[0], n21 = me[1], n31 = me[2], n12 = me[3], n22 = me[4], n32 = me[5], n13 = me[6], n23 = me[7], n33 = me[8], t11 = n33 * n22 - n32 * n23, t12 = n32 * n13 - n33 * n12, t13 = n23 * n12 - n22 * n13, det = n11 * t11 + n21 * t12 + n31 * t13;
@@ -19410,24 +19442,25 @@ var egret3d;
             return this;
         };
         Matrix3.prototype.getNormalMatrix = function (matrix4) {
-            return this.setFromMatrix4(matrix4).inverse(this).transpose();
+            return this.fromMatrix4(matrix4).inverse(this).transpose();
         };
         Matrix3.prototype.transpose = function () {
-            var tmp, m = this.rawData;
-            tmp = m[1];
-            m[1] = m[3];
-            m[3] = tmp;
-            tmp = m[2];
-            m[2] = m[6];
-            m[6] = tmp;
-            tmp = m[5];
-            m[5] = m[7];
-            m[7] = tmp;
+            var temp = 0.0;
+            var rawData = this.rawData;
+            temp = rawData[1];
+            rawData[1] = rawData[3];
+            rawData[3] = temp;
+            temp = rawData[2];
+            rawData[2] = rawData[6];
+            rawData[6] = temp;
+            temp = rawData[5];
+            rawData[5] = rawData[7];
+            rawData[7] = temp;
             return this;
         };
-        Matrix3.prototype.setFromMatrix4 = function (m) {
-            var me = m.rawData;
-            this.set(me[0], me[4], me[8], me[1], me[5], me[9], me[2], me[6], me[10]);
+        Matrix3.prototype.fromMatrix4 = function (value) {
+            var rawData = value.rawData;
+            this.set(rawData[0], rawData[4], rawData[8], rawData[1], rawData[5], rawData[9], rawData[2], rawData[6], rawData[10]);
             // this.set(
             //     me[0], me[1], me[2],
             //     me[4], me[5], me[6],
@@ -19436,22 +19469,26 @@ var egret3d;
             return this;
         };
         Matrix3.prototype.determinant = function () {
-            var te = this.rawData;
-            var a = te[0], b = te[1], c = te[2], d = te[3], e = te[4], f = te[5], g = te[6], h = te[7], i = te[8];
+            var rawData = this.rawData;
+            var a = rawData[0], b = rawData[1], c = rawData[2], d = rawData[3], e = rawData[4], f = rawData[5], g = rawData[6], h = rawData[7], i = rawData[8];
             return a * e * i - a * f * h - b * d * i + b * f * g + c * d * h - c * e * g;
         };
-        Matrix3.prototype.fromArray = function (value, offset) {
+        /**
+         * 将该旋转矩阵转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        Matrix3.prototype.toArray = function (array, offset) {
             if (offset === void 0) { offset = 0; }
-            for (var i = 0; i < 9; ++i) {
-                this.rawData[i] = value[i + offset];
+            if (!array) {
+                array = [];
             }
-            return this;
+            for (var i = 0; i < 9; ++i) {
+                array[i + offset] = this.rawData[i];
+            }
+            return array;
         };
-        Matrix3.prototype.fromBuffer = function (value, byteOffset) {
-            if (byteOffset === void 0) { byteOffset = 0; }
-            this.rawData = new Float32Array(value, byteOffset, 9);
-            return this;
-        };
+        Matrix3.IDENTITY = new Matrix3();
         Matrix3._instances = [];
         return Matrix3;
     }(paper.BaseRelease));
@@ -20255,7 +20292,7 @@ var egret3d;
                 //
                 var shaderName = glTFMaterial.extensions.KHR_techniques_webgl.technique;
                 var shader = paper.Asset.find(shaderName);
-                if (!shader) {
+                if (!shader && true) {
                     console.error("Cannot find shader.", shaderName);
                 }
                 this._shader = shader || egret3d.DefaultShaders.MESH_BASIC;
@@ -20316,6 +20353,9 @@ var egret3d;
             this._shader = null;
             return true;
         };
+        /**
+         * 拷贝。
+         */
         Material.prototype.copy = function (value) {
             this.renderQueue = value.renderQueue;
             var sourceUniforms = value._glTFTechnique.uniforms;
@@ -20351,13 +20391,14 @@ var egret3d;
             return this;
         };
         /**
-         * 克隆材质资源。
+         * 克隆。
          */
         Material.prototype.clone = function () {
             return new Material(this._shader).copy(this);
         };
         /**
-         *
+         * 为该材质添加指定的 define。
+         * @param value define 字符串。
          */
         Material.prototype.addDefine = function (value) {
             if (this._defines.indexOf(value) < 0) {
@@ -20368,12 +20409,13 @@ var egret3d;
             return this;
         };
         /**
-         *
+         * 从该材质移除指定的 define。
+         * @param value define 字符串。
          */
         Material.prototype.removeDefine = function (value) {
-            var delIndex = this._defines.indexOf(value);
-            if (delIndex >= 0) {
-                this._defines.splice(delIndex, 1);
+            var index = this._defines.indexOf(value);
+            if (index >= 0) {
+                this._defines.splice(index, 1);
                 this._version++;
             }
             return this;
@@ -20565,95 +20607,13 @@ var egret3d;
             }
             return this;
         };
-        Material.prototype.getTexture = function (uniformName) {
-            if (!uniformName) {
-                uniformName = "map" /* Map */;
-            }
-            var uniform = this._glTFTechnique.uniforms[uniformName];
-            return uniform ? uniform.value || null : null;
-        };
-        Material.prototype.setTexture = function (p1, p2) {
-            var uniformName;
-            if (p1 === null || p1 instanceof egret3d.Texture) {
-                uniformName = "map" /* Map */;
-                p2 = p1;
-            }
-            else {
-                uniformName = p1;
-            }
-            if (!p2) {
-                p2 = egret3d.DefaultTextures.WHITE;
-            }
-            //兼容老键值
-            if (uniformName === "_MainTex" && this._glTFTechnique.uniforms["map" /* Map */]) {
-                uniformName = "map" /* Map */;
-                console.warn("已废弃的键值_MainTex，建议改为:map");
-            }
-            var uniform = this._glTFTechnique.uniforms[uniformName];
-            if (uniform !== undefined) {
-                if (uniform.value) {
-                    var index = this._textures.indexOf(uniform.value);
-                    if (index > -1) {
-                        this._textures.splice(index, 1);
-                    }
-                }
-                if (uniform.value !== p2) {
-                    uniform.value = p2;
-                    this._version++;
-                }
-            }
-            else if (true) {
-                console.warn("Try to set an unsupported uniform name.", uniformName);
-            }
-            if (p2 instanceof egret3d.BaseRenderTarget) {
-                this.addDefine("FLIP_V" /* FLIP_V */);
-            }
-            if (p2) {
-                this._textures.push(p2);
-            }
-            return this;
-        };
-        Material.prototype.getColor = function (p1, p2) {
-            var uniformName;
-            if (!p1) {
-                uniformName = "diffuse" /* Diffuse */;
-                p2 = egret3d.Color.create();
-            }
-            else if (p1 instanceof egret3d.Color) {
-                uniformName = "diffuse" /* Diffuse */;
-                p2 = p1;
-            }
-            else {
-                uniformName = p1;
-                if (!p2) {
-                    p2 = egret3d.Color.create();
-                }
-            }
-            var uniform = this._glTFTechnique.uniforms[uniformName];
-            if (uniform.value && Array.isArray(uniform.value)) {
-                p2.r = uniform.value[0];
-                p2.g = uniform.value[1];
-                p2.b = uniform.value[2];
-            }
-            return p2;
-        };
-        Material.prototype.setColor = function (p1, p2) {
-            var uniformName;
-            if (p1.hasOwnProperty("r")) {
-                uniformName = "diffuse" /* Diffuse */;
-                p2 = p1;
-            }
-            else {
-                uniformName = p1;
-            }
-            this.setVector3(uniformName, egret3d.Vector3.create(p2.r, p2.g, p2.b).release());
-            return this;
-        };
         /**
-         *
-         * @param blend
+         * 设置该材质的混合模式。
+         * @param blend 混合模式。
+         * @param renderQueue 渲染顺序。
+         * @param opacity 透明度。
          */
-        Material.prototype.setBlend = function (blend) {
+        Material.prototype.setBlend = function (blend, renderQueue, opacity) {
             if (!this._glTFTechnique.states) {
                 this._glTFTechnique.states = { enable: [], functions: {} };
             }
@@ -20708,19 +20668,30 @@ var egret3d;
                     enables.push(3042 /* BLEND */);
                 }
             }
+            if (renderQueue) {
+                this.renderQueue = renderQueue;
+            }
+            if (opacity !== undefined) {
+                this.opacity = opacity;
+            }
             return this;
         };
         /**
-         *
+         * 设置该材质剔除面片的模式。
+         * @param cullEnabled 是否开启剔除。
+         * @param frontFace 正面的顶点顺序。
+         * @param cullFace 剔除模式。
          */
-        Material.prototype.setCullFace = function (cull, frontFace, cullFace) {
+        Material.prototype.setCullFace = function (cullEnabled, frontFace, cullFace) {
+            if (frontFace === void 0) { frontFace = 2305 /* CCW */; }
+            if (cullFace === void 0) { cullFace = 1029 /* BACK */; }
             if (!this._glTFTechnique.states) {
                 this._glTFTechnique.states = { enable: [], functions: {} };
             }
             var enables = this._glTFTechnique.states.enable;
             var functions = this._glTFTechnique.states.functions;
             var index = enables.indexOf(2884 /* CULL_FACE */);
-            if (cull && frontFace && cullFace) {
+            if (cullEnabled) {
                 functions.frontFace = [frontFace];
                 functions.cullFace = [cullFace];
                 if (index < 0) {
@@ -20737,16 +20708,18 @@ var egret3d;
             return this;
         };
         /**
-         *
+         * 设置该材质的深度检测和深度缓冲。
+         * @param depthTest 深度检测。
+         * @param depthWrite 深度缓冲。
          */
-        Material.prototype.setDepth = function (zTest, zWrite) {
+        Material.prototype.setDepth = function (depthTest, depthWrite) {
             if (!this._glTFTechnique.states) {
                 this._glTFTechnique.states = { enable: [], functions: {} };
             }
             var enables = this._glTFTechnique.states.enable;
             var functions = this._glTFTechnique.states.functions;
             var index = enables.indexOf(2929 /* DEPTH_TEST */);
-            if (zTest) {
+            if (depthTest) {
                 if (index < 0) {
                     enables.push(2929 /* DEPTH_TEST */);
                 }
@@ -20757,7 +20730,7 @@ var egret3d;
                     enables.splice(index, 1);
                 }
             }
-            if (zWrite) {
+            if (depthWrite) {
                 functions.depthMask = [true];
             }
             else {
@@ -20766,38 +20739,130 @@ var egret3d;
             return this;
         };
         /**
-         *
-         */
-        Material.prototype.setRenderQueue = function (value) {
-            this.renderQueue = value;
-            return this;
-        };
-        /**
-         *
-         */
-        Material.prototype.setOpacity = function (value) {
-            return this.setFloat("opacity" /* Opacity */, value);
-        };
-        /**
-         *
-         */
-        Material.prototype.setShader = function (value) {
-            if (!value) {
-                console.warn("Set shader error.");
-                value = egret3d.DefaultShaders.MESH_BASIC;
-            }
-            if (this._shader === value) {
-                return;
-            }
-            this._reset(value);
-            return this;
-        };
-        /**
-         *
+         * 清除该材质的所有图形 API 状态。
          */
         Material.prototype.clearStates = function () {
             if (this._glTFTechnique.states) {
                 delete this._glTFTechnique.states;
+            }
+            return this;
+        };
+        Material.prototype.getColor = function (p1, p2) {
+            var uniformName;
+            if (!p1) {
+                uniformName = "diffuse" /* Diffuse */;
+                p2 = egret3d.Color.create();
+            }
+            else if (p1 instanceof egret3d.Color) {
+                uniformName = "diffuse" /* Diffuse */;
+                p2 = p1;
+            }
+            else {
+                uniformName = p1;
+                if (!p2) {
+                    p2 = egret3d.Color.create();
+                }
+            }
+            var uniform = this._glTFTechnique.uniforms[uniformName];
+            if (uniform && uniform.value && Array.isArray(uniform.value)) {
+                p2.r = uniform.value[0];
+                p2.g = uniform.value[1];
+                p2.b = uniform.value[2];
+            }
+            else if (true) {
+                console.error("Invalid glTF technique uniform.");
+            }
+            return p2;
+        };
+        Material.prototype.setColor = function (p1, p2) {
+            var uniformName;
+            if (p1.hasOwnProperty("r")) {
+                uniformName = "diffuse" /* Diffuse */;
+                p2 = p1;
+            }
+            else {
+                uniformName = p1;
+            }
+            this.setVector3(uniformName, egret3d.Vector3.create(p2.r, p2.g, p2.b).release());
+            return this;
+        };
+        /**
+         * 获取该材质的 UV 变换矩阵。
+         * @param out 矩阵。
+         */
+        Material.prototype.getUVTransform = function (out) {
+            if (!out) {
+                out = egret3d.Matrix3.create();
+            }
+            var uniform = this._glTFTechnique.uniforms["uvTransform" /* UVTransform */];
+            if (uniform && uniform.value && Array.isArray(uniform.value)) {
+                out.fromArray(uniform.value);
+            }
+            else if (true) {
+                console.error("Invalid glTF technique uniform.");
+            }
+            return out;
+        };
+        /**
+         * 设置该材质的 UV 变换矩阵。
+         * @param out 矩阵。
+         */
+        Material.prototype.setUVTTransform = function (value) {
+            var array = new Array(9); // TODO
+            value.toArray(array);
+            return this.setMatrixv("uvTransform" /* UVTransform */, array);
+        };
+        Material.prototype.getTexture = function (uniformName) {
+            if (!uniformName) {
+                uniformName = "map" /* Map */;
+            }
+            var uniform = this._glTFTechnique.uniforms[uniformName];
+            if (uniform) {
+                return uniform.value || null; // TODO
+            }
+            else if (true) {
+                console.error("Invalid glTF technique uniform.");
+            }
+            return null;
+        };
+        Material.prototype.setTexture = function (p1, p2) {
+            var uniformName;
+            if (p1 === null || p1 instanceof egret3d.Texture) {
+                uniformName = "map" /* Map */;
+                p2 = p1;
+            }
+            else {
+                uniformName = p1;
+            }
+            if (!p2) {
+                p2 = egret3d.DefaultTextures.WHITE;
+            }
+            //兼容老键值
+            if (uniformName === "_MainTex" && this._glTFTechnique.uniforms["map" /* Map */]) {
+                uniformName = "map" /* Map */;
+                console.warn("已废弃的键值_MainTex，建议改为:map");
+            }
+            var uniform = this._glTFTechnique.uniforms[uniformName];
+            if (uniform) {
+                if (uniform.value) {
+                    var index = this._textures.indexOf(uniform.value);
+                    if (index > -1) {
+                        this._textures.splice(index, 1);
+                    }
+                }
+                if (uniform.value !== p2) {
+                    uniform.value = p2;
+                    this._version++;
+                }
+            }
+            else if (true) {
+                console.error("Invalid glTF technique uniform.");
+            }
+            if (p2 instanceof egret3d.BaseRenderTarget) {
+                this.addDefine("FLIP_V" /* FLIP_V */);
+            }
+            if (p2) {
+                this._textures.push(p2);
             }
             return this;
         };
@@ -20820,11 +20885,16 @@ var egret3d;
         Object.defineProperty(Material.prototype, "opacity", {
             /**
              * 该材质的透明度。
-             * - 材质是否透明
              */
             get: function () {
                 var uniform = this._glTFTechnique.uniforms["opacity" /* Opacity */];
-                return (!uniform || uniform.value !== uniform.value) ? 1.0 : uniform.value;
+                if (uniform) {
+                    return (uniform.value !== uniform.value) ? 1.0 : uniform.value;
+                }
+                else if (true) {
+                    console.error("Invalid glTF technique uniform.");
+                }
+                return 1.0;
             },
             set: function (value) {
                 this.setFloat("opacity" /* Opacity */, value);
@@ -20834,14 +20904,16 @@ var egret3d;
         });
         Object.defineProperty(Material.prototype, "shader", {
             /**
-             *
+             * 该材质的 shader。
              */
             get: function () {
                 return this._shader;
             },
             set: function (value) {
                 if (!value) {
-                    console.warn("Set shader error.");
+                    if (true) {
+                        console.warn("Set shader error.");
+                    }
                     value = egret3d.DefaultShaders.MESH_BASIC;
                 }
                 if (this._shader === value) {
@@ -20854,7 +20926,7 @@ var egret3d;
         });
         Object.defineProperty(Material.prototype, "glTFTechnique", {
             /**
-             *
+             * 该材质的 glTF 渲染技术。
              */
             get: function () {
                 return this._glTFTechnique;
@@ -20862,6 +20934,35 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
+        /**
+         * @deprecated
+         */
+        Material.prototype.setRenderQueue = function (value) {
+            this.renderQueue = value;
+            return this;
+        };
+        /**
+         * @deprecated
+         */
+        Material.prototype.setOpacity = function (value) {
+            return this.setFloat("opacity" /* Opacity */, value);
+        };
+        /**
+         * @deprecated
+         */
+        Material.prototype.setShader = function (value) {
+            if (!value) {
+                if (true) {
+                    console.warn("Set shader error.");
+                }
+                value = egret3d.DefaultShaders.MESH_BASIC;
+            }
+            if (this._shader === value) {
+                return;
+            }
+            this._reset(value);
+            return this;
+        };
         return Material;
     }(egret3d.GLTFAsset));
     egret3d.Material = Material;
@@ -22291,7 +22392,7 @@ var egret3d;
             return _this;
         }
         GLTexture2D.createColorTexture = function (name, r, g, b) {
-            var mipmap = false;
+            var mipmap = true;
             var linear = true;
             var width = 1;
             var height = 1;
@@ -22301,7 +22402,7 @@ var egret3d;
             return texture;
         };
         GLTexture2D.createGridTexture = function (name) {
-            var mipmap = false;
+            var mipmap = true;
             var linear = true;
             var width = 128;
             var height = 128;
@@ -22920,13 +23021,23 @@ var egret3d;
                 //
                 var webgl = egret3d.WebGLCapabilities.webgl;
                 var technique = material._glTFTechnique;
+                var techniqueState = technique.states || null;
                 var renderState = this._renderState;
                 // Get program.
                 var program = renderState.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
                 // Use program.
                 var force = renderState.useProgram(program);
                 // Update states.
-                renderState.updateState(technique.states || null);
+                renderState.updateState(techniqueState);
+                //  TODO
+                // if (techniqueState && context.drawCall.renderer.transform._worldMatrixDeterminant < 0) {
+                //     if (techniqueState.functions!.frontFace[0] === 2305) { // CCW TODO 枚举
+                //         webgl.frontFace(2304);
+                //     }
+                //     else {
+                //         webgl.frontFace(2305);
+                //     }
+                // }
                 // Update static uniforms.
                 this._updateContextUniforms(program, context, technique);
                 // Update uniforms.

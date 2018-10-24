@@ -93,13 +93,23 @@ namespace egret3d.web {
             //
             const webgl = WebGLCapabilities.webgl!;
             const technique = material._glTFTechnique;
+            const techniqueState = technique.states || null;
             const renderState = this._renderState;
             // Get program.
             const program = renderState.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
             // Use program.
             const force = renderState.useProgram(program);
             // Update states.
-            renderState.updateState(technique.states || null);
+            renderState.updateState(techniqueState);
+            //  TODO
+            // if (techniqueState && context.drawCall.renderer.transform._worldMatrixDeterminant < 0) {
+            //     if (techniqueState.functions!.frontFace[0] === 2305) { // CCW TODO 枚举
+            //         webgl.frontFace(2304);
+            //     }
+            //     else {
+            //         webgl.frontFace(2305);
+            //     }
+            // }
             // Update static uniforms.
             this._updateContextUniforms(program, context, technique);
             // Update uniforms.

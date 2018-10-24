@@ -2,7 +2,7 @@ namespace paper {
     /**
      * 基础渲染组件。
      */
-    export abstract class BaseRenderer extends BaseComponent implements egret3d.ITransformObserver, egret3d.IRaycast {
+    export abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
         /**
          * 当渲染组件的材质列表改变时派发事件。
          */

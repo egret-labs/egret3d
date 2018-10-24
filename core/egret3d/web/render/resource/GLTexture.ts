@@ -53,22 +53,24 @@ namespace egret3d {
      */
     export class GLTexture2D extends GLTexture {
         public static createColorTexture(name: string, r: number, g: number, b: number) {
-            const mipmap = false;
+            const mipmap = true;
             const linear = true;
             const width = 1;
             const height = 1;
             const data = new Uint8Array([r, g, b, 255]);
             const texture = new GLTexture2D(name, width, height, TextureFormatEnum.RGBA);
             texture.uploadImage(data, mipmap, linear, true, false);
+            
             return texture;
         }
 
         public static createGridTexture(name: string) {
-            const mipmap = false;
+            const mipmap = true;
             const linear = true;
             const width = 128;
             const height = 128;
             const data = new Uint8Array(width * height * 4);
+
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const seek = (y * width + x) * 4;
@@ -77,8 +79,10 @@ namespace egret3d {
                     data[seek + 3] = 255;
                 }
             }
+
             const texture = new GLTexture2D(name, width, height, TextureFormatEnum.RGBA);
             texture.uploadImage(data, mipmap, linear, true, true);
+
             return texture;
         }
         //
@@ -102,6 +106,7 @@ namespace egret3d {
             webgl.bindTexture(webgl.TEXTURE_2D, this._texture);
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
+
             let formatGL = webgl.RGBA;
             if (this._format === TextureFormatEnum.RGB) {
                 formatGL = webgl.RGB;
@@ -147,6 +152,7 @@ namespace egret3d {
                 wrap_s_param = mirroredU ? webgl.MIRRORED_REPEAT : webgl.REPEAT;
                 wrap_t_param = mirroredV ? webgl.MIRRORED_REPEAT : webgl.REPEAT;
             }
+
             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, wrap_s_param);
             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, wrap_t_param);
         }

@@ -5,13 +5,16 @@ namespace egret3d {
         0.0, 0.0, 1.0, 0.0,
         0.0, 0.0, 0.0, 1.0
     ];
+
     /**
      * 4x4 矩阵。
      */
     export class Matrix4 extends paper.BaseRelease<Matrix4> implements paper.ICCS<Matrix4>, paper.ISerializable {
+
         public static readonly IDENTITY: Readonly<Matrix4> = new Matrix4();
 
         private static readonly _instances: Matrix4[] = [];
+
         /**
          * 创建一个矩阵。
          * @param rawData 
@@ -39,11 +42,13 @@ namespace egret3d {
 
             return new Matrix4(rawData, offsetOrByteOffset);
         }
+
         /**
-         * 矩阵原始数据
+         * 矩阵原始数据。
          * @readonly
          */
         public rawData: Float32Array = null!;
+
         /**
          * 请使用 `egret3d.Matrix4.create()` 创建实例。
          * @see egret3d.Matrix4.create()
@@ -221,7 +226,7 @@ namespace egret3d {
                 }
 
                 case EulerOrder.YZX: {
-                    var ac = a * c, ad = a * d, bc = b * c, bd = b * d;
+                    const ac = a * c, ad = a * d, bc = b * c, bd = b * d;
 
                     rawData[0] = c * e;
                     rawData[4] = bd - ac * f;
@@ -371,52 +376,6 @@ namespace egret3d {
             );
 
             return this;
-        }
-
-        public determinant() {
-            const rawData = this.rawData;
-            const n11 = rawData[0], n12 = rawData[4], n13 = rawData[8], n14 = rawData[12];
-            const n21 = rawData[1], n22 = rawData[5], n23 = rawData[9], n24 = rawData[13];
-            const n31 = rawData[2], n32 = rawData[6], n33 = rawData[10], n34 = rawData[14];
-            const n41 = rawData[3], n42 = rawData[7], n43 = rawData[11], n44 = rawData[15];
-
-            //TODO: make this more efficient
-            //( based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js )
-
-            return (
-                n41 * (
-                    + n14 * n23 * n32
-                    - n13 * n24 * n32
-                    - n14 * n22 * n33
-                    + n12 * n24 * n33
-                    + n13 * n22 * n34
-                    - n12 * n23 * n34
-                ) +
-                n42 * (
-                    + n11 * n23 * n34
-                    - n11 * n24 * n33
-                    + n14 * n21 * n33
-                    - n13 * n21 * n34
-                    + n13 * n24 * n31
-                    - n14 * n23 * n31
-                ) +
-                n43 * (
-                    + n11 * n24 * n32
-                    - n11 * n22 * n34
-                    - n14 * n21 * n32
-                    + n12 * n21 * n34
-                    + n14 * n22 * n31
-                    - n12 * n24 * n31
-                ) +
-                n44 * (
-                    - n13 * n22 * n31
-                    - n11 * n23 * n32
-                    + n11 * n22 * n33
-                    + n13 * n21 * n32
-                    - n12 * n21 * n33
-                    + n12 * n23 * n31
-                )
-            );
         }
 
         public compose(translation: Readonly<IVector3>, rotation: Readonly<IVector4>, scale: Readonly<IVector3>): Matrix4 {
@@ -710,6 +669,52 @@ namespace egret3d {
             rawData[2] = x.z; rawData[6] = y.z; rawData[10] = z.z;
 
             return this;
+        }
+
+        public determinant() {
+            const rawData = this.rawData;
+            const n11 = rawData[0], n12 = rawData[4], n13 = rawData[8], n14 = rawData[12];
+            const n21 = rawData[1], n22 = rawData[5], n23 = rawData[9], n24 = rawData[13];
+            const n31 = rawData[2], n32 = rawData[6], n33 = rawData[10], n34 = rawData[14];
+            const n41 = rawData[3], n42 = rawData[7], n43 = rawData[11], n44 = rawData[15];
+
+            //TODO: make this more efficient
+            //( based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js )
+
+            return (
+                n41 * (
+                    + n14 * n23 * n32
+                    - n13 * n24 * n32
+                    - n14 * n22 * n33
+                    + n12 * n24 * n33
+                    + n13 * n22 * n34
+                    - n12 * n23 * n34
+                ) +
+                n42 * (
+                    + n11 * n23 * n34
+                    - n11 * n24 * n33
+                    + n14 * n21 * n33
+                    - n13 * n21 * n34
+                    + n13 * n24 * n31
+                    - n14 * n23 * n31
+                ) +
+                n43 * (
+                    + n11 * n24 * n32
+                    - n11 * n22 * n34
+                    - n14 * n21 * n32
+                    + n12 * n21 * n34
+                    + n14 * n22 * n31
+                    - n12 * n24 * n31
+                ) +
+                n44 * (
+                    - n13 * n22 * n31
+                    - n11 * n23 * n32
+                    + n11 * n22 * n33
+                    + n13 * n21 * n32
+                    - n12 * n21 * n33
+                    + n12 * n23 * n31
+                )
+            );
         }
         /**
          * 获得该矩阵最大的缩放值。

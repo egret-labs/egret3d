@@ -40,8 +40,8 @@ namespace egret3d {
         */
         public _glTFTechnique: gltf.Technique = null!;
         /**
-         * 请使用 `egret3d.Material.create()` 创建实例。
-         * @see egret3d.Material.create()
+         * 请使用 `Material.create()` 创建实例。
+         * @see Material.create()
          * @deprecated
          */
         public constructor(shader?: Shader | string)
@@ -87,7 +87,8 @@ namespace egret3d {
                 //
                 const shaderName = glTFMaterial.extensions.KHR_techniques_webgl.technique;
                 const shader = paper.Asset.find<Shader>(shaderName);
-                if (!shader) {
+
+                if (!shader && DEBUG) {
                     console.error("Cannot find shader.", shaderName);
                 }
 
@@ -156,6 +157,9 @@ namespace egret3d {
             return true;
         }
 
+        /**
+         * 拷贝。
+         */
         public copy(value: Material) {
             this.renderQueue = value.renderQueue;
 
@@ -197,14 +201,17 @@ namespace egret3d {
 
             return this;
         }
+
         /**
-         * 克隆材质资源。
+         * 克隆。
          */
-        public clone(): Material {
+        public clone() {
             return new Material(this._shader).copy(this);
         }
+
         /**
-         * 
+         * 为该材质添加指定的 define。
+         * @param value define 字符串。
          */
         public addDefine(value: string) {
             if (this._defines.indexOf(value) < 0) {
@@ -215,13 +222,15 @@ namespace egret3d {
 
             return this;
         }
+
         /**
-         * 
+         * 从该材质移除指定的 define。
+         * @param value define 字符串。
          */
         public removeDefine(value: string) {
-            const delIndex = this._defines.indexOf(value);
-            if (delIndex >= 0) {
-                this._defines.splice(delIndex, 1);
+            const index = this._defines.indexOf(value);
+            if (index >= 0) {
+                this._defines.splice(index, 1);
                 this._version++;
             }
 
@@ -443,144 +452,12 @@ namespace egret3d {
         }
 
         /**
-         * 获取该材质的主贴图。
+         * 设置该材质的混合模式。
+         * @param blend 混合模式。
+         * @param renderQueue 渲染顺序。
+         * @param opacity 透明度。
          */
-        public getTexture(): Texture | null;
-        /**
-         * 获取该材质的指定贴图。
-         * @param uniformName uniform 名称。
-         */
-        public getTexture(uniformName: string): Texture | null;
-        public getTexture(uniformName?: string) {
-            if (!uniformName) {
-                uniformName = egret3d.ShaderUniformName.Map;
-            }
-
-            const uniform = this._glTFTechnique.uniforms[uniformName];
-            return uniform ? uniform.value || null : null;
-        }
-
-        /**
-         * 设置该材质的主贴图。
-         * @param value 贴图。 
-         */
-        public setTexture(value: egret3d.Texture | null): this;
-        /**
-         * 设置该材质的指定贴图。
-         * @param uniformName uniform 名称。
-         * @param value 贴图。
-         */
-        public setTexture(uniformName: string, value: egret3d.Texture | null): this;
-        public setTexture(p1: egret3d.Texture | null | string, p2?: egret3d.Texture | null) {
-            let uniformName: string;
-            if (p1 === null || p1 instanceof egret3d.Texture) {
-                uniformName = egret3d.ShaderUniformName.Map;
-                p2 = p1 as egret3d.Texture | null;
-            }
-            else {
-                uniformName = p1;
-            }
-
-            if (!p2) {
-                p2 = egret3d.DefaultTextures.WHITE;
-            }
-
-            //兼容老键值
-            if (uniformName === "_MainTex" && this._glTFTechnique.uniforms[ShaderUniformName.Map]) {
-                uniformName = ShaderUniformName.Map;
-                console.warn("已废弃的键值_MainTex，建议改为:map");
-            }
-
-            const uniform = this._glTFTechnique.uniforms[uniformName];
-            if (uniform !== undefined) {
-                if (uniform.value) {
-                    const index = this._textures.indexOf(uniform.value);
-                    if (index > -1) {
-                        this._textures.splice(index, 1);
-                    }
-                }
-                if (uniform.value !== p2) {
-                    uniform.value = p2;
-                    this._version++;
-                }
-            }
-            else if (DEBUG) {
-                console.warn("Try to set an unsupported uniform name.", uniformName);
-            }
-
-            if (p2 instanceof egret3d.BaseRenderTarget) {
-                this.addDefine(ShaderDefine.FLIP_V);
-            }
-
-            if (p2) {
-                this._textures.push(p2);
-            }
-
-            return this;
-        }
-
-        public getColor(out?: Color): Color;
-        public getColor(uniformName: string, out?: Color): Color;
-        public getColor(p1?: string | Color, p2?: Color): Color {
-            let uniformName: string;
-
-            if (!p1) {
-                uniformName = egret3d.ShaderUniformName.Diffuse;
-                p2 = Color.create();
-            }
-            else if (p1 instanceof Color) {
-                uniformName = egret3d.ShaderUniformName.Diffuse;
-                p2 = p1;
-            }
-            else {
-                uniformName = p1;
-                if (!p2) {
-                    p2 = Color.create();
-                }
-            }
-
-            const uniform = this._glTFTechnique.uniforms[uniformName];
-
-            if (uniform.value && Array.isArray(uniform.value)) {
-                p2.r = uniform.value[0];
-                p2.g = uniform.value[1];
-                p2.b = uniform.value[2];
-            }
-
-            return p2;
-        }
-
-        /**
-         * 设置该材质的主颜色。
-         * @param value 颜色。
-         */
-        public setColor(value: Readonly<IColor>): this;
-        /**
-         * 设置该材质的指定颜色。
-         * @param uniformName uniform 名称。
-         * @param value 颜色。
-         */
-        public setColor(uniformName: string, value: Readonly<IColor>): this;
-        public setColor(p1: Readonly<IColor> | string, p2?: Readonly<IColor>) {
-            let uniformName: string;
-            if (p1.hasOwnProperty("r")) {
-                uniformName = egret3d.ShaderUniformName.Diffuse;
-                p2 = p1 as Readonly<IColor>;
-            }
-            else {
-                uniformName = p1 as string;
-            }
-
-            this.setVector3(uniformName, Vector3.create(p2!.r, p2!.g, p2!.b).release());
-
-            return this;
-        }
-
-        /**
-         * 
-         * @param blend 
-         */
-        public setBlend(blend: gltf.BlendMode) {
+        public setBlend(blend: gltf.BlendMode, renderQueue: paper.RenderQueue, opacity?: number) {
             if (!this._glTFTechnique.states) {
                 this._glTFTechnique.states = { enable: [], functions: {} };
             }
@@ -647,13 +524,24 @@ namespace egret3d {
                 }
             }
 
+            if (renderQueue) {  // 兼容
+                this.renderQueue = renderQueue;
+            }
+
+            if (opacity !== undefined) {
+                this.opacity = opacity;
+            }
+
             return this;
         }
 
         /**
-         * 
+         * 设置该材质剔除面片的模式。
+         * @param cullEnabled 是否开启剔除。
+         * @param frontFace 正面的顶点顺序。
+         * @param cullFace 剔除模式。
          */
-        public setCullFace(cull: boolean, frontFace?: gltf.FrontFace, cullFace?: gltf.CullFace) {
+        public setCullFace(cullEnabled: boolean, frontFace: gltf.FrontFace = gltf.FrontFace.CCW, cullFace: gltf.CullFace = gltf.CullFace.BACK) {
             if (!this._glTFTechnique.states) {
                 this._glTFTechnique.states = { enable: [], functions: {} };
             }
@@ -661,9 +549,11 @@ namespace egret3d {
             const enables = this._glTFTechnique.states.enable!;
             const functions = this._glTFTechnique.states.functions!;
             const index = enables.indexOf(gltf.EnableState.CULL_FACE);
-            if (cull && frontFace && cullFace) {
+
+            if (cullEnabled) {
                 functions.frontFace = [frontFace];
                 functions.cullFace = [cullFace];
+
                 if (index < 0) {
                     enables.push(gltf.EnableState.CULL_FACE);
                 }
@@ -679,10 +569,13 @@ namespace egret3d {
 
             return this;
         }
+
         /**
-         * 
+         * 设置该材质的深度检测和深度缓冲。
+         * @param depthTest 深度检测。
+         * @param depthWrite 深度缓冲。
          */
-        public setDepth(zTest: boolean, zWrite: boolean) {
+        public setDepth(depthTest: boolean, depthWrite: boolean) {
             if (!this._glTFTechnique.states) {
                 this._glTFTechnique.states = { enable: [], functions: {} };
             }
@@ -691,7 +584,7 @@ namespace egret3d {
             const functions = this._glTFTechnique.states.functions!;
             const index = enables.indexOf(gltf.EnableState.DEPTH_TEST);
 
-            if (zTest) {
+            if (depthTest) {
                 if (index < 0) {
                     enables.push(gltf.EnableState.DEPTH_TEST);
                 }
@@ -704,7 +597,7 @@ namespace egret3d {
                 }
             }
 
-            if (zWrite) {
+            if (depthWrite) {
                 functions.depthMask = [true];
             }
             else {
@@ -713,40 +606,9 @@ namespace egret3d {
 
             return this;
         }
-        /**
-         * 
-         */
-        public setRenderQueue(value: number) {
-            this.renderQueue = value;
-            return this;
-        }
 
         /**
-         * 
-         */
-        public setOpacity(value: number) {
-            return this.setFloat(egret3d.ShaderUniformName.Opacity, value);
-        }
-        
-        /**
-         * 
-         */
-        public setShader(value: Shader) {
-            if (!value) {
-                console.warn("Set shader error.");
-                value = egret3d.DefaultShaders.MESH_BASIC;
-            }
-
-            if (this._shader === value) {
-                return;
-            }
-
-            this._reset(value);
-
-            return this;
-        }
-        /**
-         * 
+         * 清除该材质的所有图形 API 状态。
          */
         public clearStates() {
             if (this._glTFTechnique.states) {
@@ -755,6 +617,192 @@ namespace egret3d {
 
             return this;
         }
+
+        /**
+         * 获取该材质的主颜色。
+         * @param out 颜色。
+         */
+        public getColor(out?: Color): Color;
+        /**
+         * 获取该材质的指定颜色。
+         * @param uniformName uniform 名称。
+         * @param out 颜色。
+         */
+        public getColor(uniformName: string, out?: Color): Color;
+        public getColor(p1?: string | Color, p2?: Color): Color {
+            let uniformName: string;
+
+            if (!p1) {
+                uniformName = ShaderUniformName.Diffuse;
+                p2 = Color.create();
+            }
+            else if (p1 instanceof Color) {
+                uniformName = ShaderUniformName.Diffuse;
+                p2 = p1;
+            }
+            else {
+                uniformName = p1;
+                if (!p2) {
+                    p2 = Color.create();
+                }
+            }
+
+            const uniform = this._glTFTechnique.uniforms[uniformName];
+
+            if (uniform && uniform.value && Array.isArray(uniform.value)) {
+                p2.r = uniform.value[0];
+                p2.g = uniform.value[1];
+                p2.b = uniform.value[2];
+            }
+            else if (DEBUG) {
+                console.error("Invalid glTF technique uniform.");
+            }
+
+            return p2;
+        }
+
+        /**
+         * 设置该材质的主颜色。
+         * @param value 颜色。
+         */
+        public setColor(value: Readonly<IColor>): this;
+        /**
+         * 设置该材质的指定颜色。
+         * @param uniformName uniform 名称。
+         * @param value 颜色。
+         */
+        public setColor(uniformName: string, value: Readonly<IColor>): this;
+        public setColor(p1: Readonly<IColor> | string, p2?: Readonly<IColor>) {
+            let uniformName: string;
+            if (p1.hasOwnProperty("r")) {
+                uniformName = ShaderUniformName.Diffuse;
+                p2 = p1 as Readonly<IColor>;
+            }
+            else {
+                uniformName = p1 as string;
+            }
+
+            this.setVector3(uniformName, Vector3.create(p2!.r, p2!.g, p2!.b).release());
+
+            return this;
+        }
+
+        /**
+         * 获取该材质的 UV 变换矩阵。
+         * @param out 矩阵。
+         */
+        public getUVTransform(out?: Matrix3) {
+            if (!out) {
+                out = Matrix3.create();
+            }
+
+            const uniform = this._glTFTechnique.uniforms[ShaderUniformName.UVTransform];
+            if (uniform && uniform.value && Array.isArray(uniform.value)) {
+                out.fromArray(uniform.value);
+            }
+            else if (DEBUG) {
+                console.error("Invalid glTF technique uniform.");
+            }
+
+            return out;
+        }
+
+        /**
+         * 设置该材质的 UV 变换矩阵。
+         * @param out 矩阵。
+         */
+        public setUVTTransform(value: Readonly<Matrix3>) {
+            const array = new Array(9); // TODO
+            value.toArray(array);
+
+            return this.setMatrixv(ShaderUniformName.UVTransform, array as any);
+        }
+
+        /**
+         * 获取该材质的主贴图。
+         */
+        public getTexture(): Texture | null;
+        /**
+         * 获取该材质的指定贴图。
+         * @param uniformName uniform 名称。
+         */
+        public getTexture(uniformName: string): Texture | null;
+        public getTexture(uniformName?: string) {
+            if (!uniformName) {
+                uniformName = ShaderUniformName.Map;
+            }
+
+            const uniform = this._glTFTechnique.uniforms[uniformName];
+            if (uniform) {
+                return uniform.value || null; // TODO
+            }
+            else if (DEBUG) {
+                console.error("Invalid glTF technique uniform.");
+            }
+
+            return null;
+        }
+
+        /**
+         * 设置该材质的主贴图。
+         * @param value 贴图。 
+         */
+        public setTexture(value: Texture | null): this;
+        /**
+         * 设置该材质的指定贴图。
+         * @param uniformName uniform 名称。
+         * @param value 贴图。
+         */
+        public setTexture(uniformName: string, value: Texture | null): this;
+        public setTexture(p1: Texture | null | string, p2?: Texture | null) {
+            let uniformName: string;
+            if (p1 === null || p1 instanceof Texture) {
+                uniformName = ShaderUniformName.Map;
+                p2 = p1 as Texture | null;
+            }
+            else {
+                uniformName = p1;
+            }
+
+            if (!p2) {
+                p2 = DefaultTextures.WHITE;
+            }
+
+            //兼容老键值
+            if (uniformName === "_MainTex" && this._glTFTechnique.uniforms[ShaderUniformName.Map]) {
+                uniformName = ShaderUniformName.Map;
+                console.warn("已废弃的键值_MainTex，建议改为:map");
+            }
+
+            const uniform = this._glTFTechnique.uniforms[uniformName];
+            if (uniform) {
+                if (uniform.value) {
+                    const index = this._textures.indexOf(uniform.value);
+                    if (index > -1) {
+                        this._textures.splice(index, 1);
+                    }
+                }
+
+                if (uniform.value !== p2) {
+                    uniform.value = p2;
+                    this._version++;
+                }
+            }
+            else if (DEBUG) {
+                console.error("Invalid glTF technique uniform.");
+            }
+
+            if (p2 instanceof BaseRenderTarget) {
+                this.addDefine(ShaderDefine.FLIP_V);
+            }
+
+            if (p2) {
+                this._textures.push(p2);
+            }
+
+            return this;
+        }
+
         /**
          * TODO
          * @internal
@@ -767,27 +815,38 @@ namespace egret3d {
 
             return this._cacheDefines;
         }
+
         /**
          * 该材质的透明度。
-         * - 材质是否透明
          */
         public get opacity() {
-            const uniform = this._glTFTechnique.uniforms[egret3d.ShaderUniformName.Opacity];
-            return (!uniform || uniform.value !== uniform.value) ? 1.0 : uniform.value;
+            const uniform = this._glTFTechnique.uniforms[ShaderUniformName.Opacity];
+            if (uniform) {
+                return (uniform.value !== uniform.value) ? 1.0 : uniform.value;
+            }
+            else if (DEBUG) {
+                console.error("Invalid glTF technique uniform.");
+            }
+
+            return 1.0;
         }
         public set opacity(value: number) {
-            this.setFloat(egret3d.ShaderUniformName.Opacity, value);
+            this.setFloat(ShaderUniformName.Opacity, value);
         }
+
         /**
-         * 
+         * 该材质的 shader。
          */
         public get shader() {
             return this._shader;
         }
         public set shader(value: Shader) {
             if (!value) {
-                console.warn("Set shader error.");
-                value = egret3d.DefaultShaders.MESH_BASIC;
+                if (DEBUG) {
+                    console.warn("Set shader error.");
+                }
+
+                value = DefaultShaders.MESH_BASIC;
             }
 
             if (this._shader === value) {
@@ -796,11 +855,46 @@ namespace egret3d {
 
             this._reset(value);
         }
+
         /**
-         * 
+         * 该材质的 glTF 渲染技术。
          */
         public get glTFTechnique() {
             return this._glTFTechnique;
+        }
+
+        /**
+         * @deprecated
+         */
+        public setRenderQueue(value: number) {
+            this.renderQueue = value;
+            return this;
+        }
+        /**
+         * @deprecated
+         */
+        public setOpacity(value: number) {
+            return this.setFloat(ShaderUniformName.Opacity, value);
+        }
+        /**
+         * @deprecated
+         */
+        public setShader(value: Shader) {
+            if (!value) {
+                if (DEBUG) {
+                    console.warn("Set shader error.");
+                }
+
+                value = DefaultShaders.MESH_BASIC;
+            }
+
+            if (this._shader === value) {
+                return;
+            }
+
+            this._reset(value);
+
+            return this;
         }
     }
 }

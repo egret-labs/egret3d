@@ -31,14 +31,14 @@ namespace paper.editor {
 
         public static createBox(name: string, color: egret3d.Color, opacity: number, scene: Scene) {
             const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone(), paper.DefaultTags.EditorOnly, scene);
-            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Transparent).opacity = opacity;
+            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, opacity);
 
             return gameObject;
         }
 
         public static createCircle(name: string, color: egret3d.Color, opacity: number, scene: Scene) {
             const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone(), paper.DefaultTags.EditorOnly, scene);
-            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend).setRenderQueue(paper.RenderQueue.Transparent).opacity = opacity;
+            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, opacity);
 
             return gameObject;
         }
@@ -76,7 +76,7 @@ namespace paper.editor {
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
 
             const material = egret3d.DefaultMaterials.LINEDASHED_COLOR.clone();
-            material.setBlend(gltf.BlendMode.Blend).setRenderQueue(RenderQueue.Transparent).setOpacity(0.8);
+            material.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent, 0.8);
 
             const gameObject = this.createGameObject(name, mesh, material);
             return gameObject;
