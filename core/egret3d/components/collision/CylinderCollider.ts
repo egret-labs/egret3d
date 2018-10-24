@@ -230,9 +230,6 @@ namespace egret3d {
             // hit.fraction = min;
             // return true;
 
-
-
-
             // if (this.box.raycast(localRay, raycastInfo)) {
             //     if (raycastInfo) {
             //         const worldMatrix = transform.worldMatrix;

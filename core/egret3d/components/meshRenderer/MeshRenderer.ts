@@ -1,8 +1,7 @@
 namespace egret3d {
-    const _helpMatrix = Matrix4.create();
     /**
      * 网格渲染组件。
-     * - 渲染网格筛选组件提供的网格资源。
+     * - 用于渲染网格筛选组件提供的网格资源。
      */
     export class MeshRenderer extends paper.BaseRenderer {
         public recalculateLocalBox() {

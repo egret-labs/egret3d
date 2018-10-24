@@ -1,4 +1,5 @@
 namespace paper {
+
     /**
      * 实体。
      */
@@ -8,6 +9,7 @@ namespace paper {
          */
         public static readonly _instances: GameObject[] = [];
         private static _globalGameObject: GameObject | null = null;
+
         /**
          * 创建 GameObject，并添加到当前场景中。
          */
@@ -34,19 +36,6 @@ namespace paper {
             return gameObect;
         }
 
-        private static _sortRaycastInfo(a: egret3d.RaycastInfo, b: egret3d.RaycastInfo) {
-            // TODO renderQueue.
-            return a.distance - b.distance;
-        }
-        /**
-         * @deprecated
-         */
-        public static raycast(
-            ray: Readonly<egret3d.Ray>, gameObjects: ReadonlyArray<GameObject>,
-            maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false
-        ) {
-            return egret3d.raycastAll(ray, gameObjects, maxDistance, cullingMask, raycastMesh);
-        }
         /**
          * 全局实体。
          * - 全局实体不可被销毁。
@@ -60,17 +49,20 @@ namespace paper {
 
             return this._globalGameObject;
         }
+
         /**
          * 是否是静态模式。
          */
         @serializedField
         @editor.property(editor.EditType.CHECKBOX)
         public isStatic: boolean = false;
+
         /**
          * 
          */
         @serializedField
         public hideFlags: HideFlags = HideFlags.None;
+
         /**
          * 层级。
          * - 用于各种层遮罩。
@@ -78,28 +70,33 @@ namespace paper {
         @serializedField
         @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).Layer) }) // TODO
         public layer: Layer = Layer.Default;
+
         /**
          * 名称。
          */
         @serializedField
         @editor.property(editor.EditType.TEXT)
         public name: string = "";
+
         /**
          * 标签。
          */
         @serializedField
         @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).DefaultTags) }) // TODO
         public tag: string = "";
+
         /**
          * 变换组件。
          * @readonly
          */
         public transform: egret3d.Transform = null!;
+
         /**
          * 渲染组件。
          * @readonly
          */
         public renderer: BaseRenderer | null = null;
+
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
@@ -119,6 +116,7 @@ namespace paper {
         private readonly _components: (BaseComponent | undefined)[] = [];
         private readonly _cachedComponents: BaseComponent[] = [];
         private _scene: Scene | null = null;
+
         /**
          * 请使用 `paper.GameObject.create()` 创建实例。
          * @see paper.GameObject.create()
@@ -150,7 +148,7 @@ namespace paper {
                 this._removeComponent(component, null);
             }
 
-            // 销毁的第一时间就将组件和场景清除，场景的有无来判断实体是否已经销毁。
+            // 销毁的第一时间就将组件和场景清除，用场景的有无来判断实体是否已经销毁。
             this._components.length = 0;
             this._scene = null;
             disposeCollecter.gameObjects.push(this);
@@ -257,6 +255,7 @@ namespace paper {
                 child.gameObject._activeInHierarchyDirty(prevActive);
             }
         }
+        
         /**
          * 实体被销毁后，内部卸载。
          * @internal
@@ -563,7 +562,7 @@ namespace paper {
 
             return component as T;
         }
-        
+
         /**
          * 获取全部指定组件实例。
          * @param componentClass 组件类。
@@ -911,6 +910,15 @@ namespace paper {
          */
         public static findGameObjectsWithTag(tag: string, scene: Scene | null = null) {
             return (scene || Application.sceneManager.activeScene).findGameObjectsWithTag(tag);
+        }
+        /**
+         * @deprecated
+         */
+        public static raycast(
+            ray: Readonly<egret3d.Ray>, gameObjects: ReadonlyArray<GameObject>,
+            maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false
+        ) {
+            return egret3d.raycastAll(ray, gameObjects, maxDistance, cullingMask, raycastMesh);
         }
     }
 }

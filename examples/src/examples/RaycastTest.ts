@@ -36,14 +36,14 @@ namespace examples {
 
                 {
                     const boxCollider = gameObject.addComponent(egret3d.BoxCollider);
-                    boxCollider.aabb.size = egret3d.Vector3.create(2.0, 2.0, 2.0).release();
-                    boxCollider.aabb.center = egret3d.Vector3.create(2.0, 0.0, 0.0).release();
+                    boxCollider.box.size = egret3d.Vector3.create(2.0, 2.0, 2.0).release();
+                    boxCollider.box.center = egret3d.Vector3.create(2.0, 0.0, 0.0).release();
                 }
 
                 {
                     const boxCollider = gameObject.addComponent(egret3d.BoxCollider);
-                    boxCollider.aabb.size = egret3d.Vector3.create(2.0, 2.0, 2.0).release();
-                    boxCollider.aabb.center = egret3d.Vector3.create(-2.0, -0.0, 0.0).release();
+                    boxCollider.box.size = egret3d.Vector3.create(2.0, 2.0, 2.0).release();
+                    boxCollider.box.center = egret3d.Vector3.create(-2.0, -0.0, 0.0).release();
                 }
 
                 {

@@ -3,6 +3,7 @@ namespace egret3d {
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
     const _helpMatrix = Matrix4.create();
+    
     /**
      * 蒙皮网格渲染组件。
      */

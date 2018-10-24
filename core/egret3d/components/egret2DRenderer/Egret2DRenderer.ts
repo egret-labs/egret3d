@@ -1,6 +1,5 @@
 namespace egret3d {
 
-
     /**
      * 可以添加egret2d显示对象（包括EUI）进行渲染。
      * @version paper 1.0

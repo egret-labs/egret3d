@@ -1,45 +1,55 @@
 namespace paper {
     let _createEnabled = false;
+
     /**
      * 基础系统。
      * - 全部系统的基类。
      */
     export abstract class BaseSystem {
+
         /**
+         * 创建一个指定系统。
          * @internal
          */
         public static create<T extends BaseSystem>(systemClass: { new(order?: SystemOrder): T }, order: SystemOrder) {
             _createEnabled = true;
             return new systemClass(order);
         }
+
         /**
-         * 
+         * 该系统的执行顺序。
          */
         public readonly order: SystemOrder = -1;
+
         /**
-         * @internal
+         * @private
          */
         public _started: boolean = true;
         private _locked: boolean = false;
+
         /**
-         * 系统是否激活。
+         * 该系统是否被激活。
          */
         protected _enabled: boolean = true;
+
         /**
          * 
          */
         protected readonly _interests: ReadonlyArray<InterestConfig> | ReadonlyArray<ReadonlyArray<InterestConfig>> = [];
+
         /**
          * 
          */
         protected readonly _groups: GameObjectGroup[] = [];
+
         /**
          * 全局时钟信息组件实例。
          */
         protected readonly _clock: Clock = GameObject.globalGameObject.getOrAddComponent(Clock);
+
         /**
          * 禁止实例化系统。
-         * @protected
+         * @private
          */
         public constructor(order: SystemOrder = -1) {
             if (!_createEnabled) {
@@ -49,9 +59,10 @@ namespace paper {
 
             this.order = order;
         }
+
         /**
          * 系统内部初始化。
-         * @internal
+         * @private
          */
         public initialize(config?: any) {
             if (this._interests.length > 0) {
@@ -80,9 +91,10 @@ namespace paper {
             this.onAwake && this.onAwake(config);
             this.onEnable && this.onEnable();
         }
+
         /**
          * 系统内部卸载。
-         * @internal
+         * @private
          */
         public uninitialize() {
             this.onDestroy && this.onDestroy();
@@ -108,12 +120,13 @@ namespace paper {
                 }
             }
         }
+
         /**
          * 系统内部更新。
-         * @internal
+         * @private
          */
         public update() {
-            if (!this._enabled) {
+            if (!this._enabled || !this._started) {
                 return;
             }
 
@@ -141,9 +154,10 @@ namespace paper {
 
             this._locked = false;
         }
+
         /**
          * 系统内部更新。
-         * @internal
+         * @private
          */
         public lateUpdate() {
             if (!this._enabled) {
@@ -154,20 +168,24 @@ namespace paper {
             this.onLateUpdate && this.onLateUpdate(this._clock.deltaTime);
             this._locked = false;
         }
+
         /**
          * 该系统初始化时调用。
          * @param config 该系统被注册时可以传递的初始化数据。
          */
         public onAwake?(config?: any): void;
+
         /**
          * 该系统被激活时调用。
          * @see paper.BaseSystem#enabled
          */
         public onEnable?(): void;
+
         /**
          * 该系统开始运行时调用。
          */
         public onStart?(): void;
+
         /**
          * 实体被添加到系统时调用。
          * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
@@ -176,6 +194,7 @@ namespace paper {
          * @see paper.GameObject#addComponent()
          */
         public onAddGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
+
         /**
          * 充分非必要组件添加到实体时调用。
          * - 注意，该调用并不是立即的，而是等到添加到实体的下一帧才被调用。
@@ -184,6 +203,7 @@ namespace paper {
          * @see paper.GameObject#addComponent()
          */
         public onAddComponent?(component: BaseComponent, group: GameObjectGroup): void;
+
         /**
          * 充分非必要组件从实体移除时调用。
          * @param component 移除的实体组件。
@@ -191,6 +211,7 @@ namespace paper {
          * @see paper.GameObject#removeComponent()
          */
         public onRemoveComponent?(component: BaseComponent, group: GameObjectGroup): void;
+
         /**
          * 实体从系统移除时调用。
          * @param gameObject 移除的实体。
@@ -198,27 +219,32 @@ namespace paper {
          * @see paper.GameObject#removeComponent()
          */
         public onRemoveGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
+
         /**
          * 该系统更新时调用。
          * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
          */
         public onUpdate?(deltaTime?: number): void;
+
         /**
          * 该系统更新时调用。
          * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
          */
         public onLateUpdate?(deltaTime?: number): void;
+
         /**
          * 该系统被禁用时调用。
          * @see paper.BaseSystem#enabled
          */
         public onDisable?(): void;
+
         /**
          * 该系统被注销时调用。
          * @see paper.SystemManager#unregister()
          * @see paper.Application#systemManager
          */
         public onDestroy?(): void;
+
         /**
          * 该系统是否被激活。
          */
@@ -244,8 +270,9 @@ namespace paper {
                 this.onDisable && this.onDisable();
             }
         }
+
         /**
-         * 该系统的实体组。
+         * 该系统关心的实体组。
          */
         public get groups(): ReadonlyArray<GameObjectGroup> {
             return this._groups;

@@ -22,7 +22,7 @@ namespace egret3d {
             this._mesh = null;
         }
         /**
-         * 该渲染组件的网格资源。
+         * 该组件的网格资源。
          */
         @paper.editor.property(paper.editor.EditType.MESH)
         public get mesh() {
