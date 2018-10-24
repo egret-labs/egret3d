@@ -3328,7 +3328,7 @@ var paper;
             _this._receiveShadows = false;
             _this._castShadows = false;
             _this._lightmapIndex = -1;
-            _this._lightmapScaleOffset = egret3d.Vector4.create();
+            _this._lightmapScaleOffset = egret3d.Vector4.create(); //uv2共享
             _this._boundingSphere = egret3d.Sphere.create();
             _this._aabb = egret3d.AABB.create();
             _this._materials = [egret3d.DefaultMaterials.MESH_BASIC];

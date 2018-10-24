@@ -28,16 +28,41 @@ namespace examples {
                     const renderer = gameObject.getComponent(egret3d.MeshRenderer) as egret3d.MeshRenderer;
                     renderer.material = renderer.material!.clone();
                     renderer.material!.setTexture(texture);
-                    renderer.material!.setBlend(blends[j]).setDepth(true, false).setRenderQueue(paper.RenderQueue.Transparent);
+                    renderer.material!.setBlend(blends[j], paper.RenderQueue.Transparent).setDepth(true, false);
                     gameObject.transform.setLocalPosition((j - blends.length * 0.5 + 0.5) * 1.1, -(i - textures.length * 0.5 + 0.5) * 1.1, 0.0);
                 }
             }
-        
-            { 
+
+            {
                 const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.PLANE, "Background");
                 const renderer = gameObject.getComponent(egret3d.MeshRenderer) as egret3d.MeshRenderer;
                 renderer.material = renderer.material!.clone();
+                renderer.material.setTexture(egret3d.DefaultTextures.GRID);
+                gameObject.transform.setLocalPosition(0.0, 0.0, 1.0).setLocalScale(2.0);
+                gameObject.addComponent(UVUpdater);
             }
         }
+    }
+
+    class UVUpdater extends paper.Behaviour {
+        private readonly _offset: egret3d.Vector2 = egret3d.Vector2.create();
+        private readonly _repeat: egret3d.Vector2 = egret3d.Vector2.create(50.0, 50.0);
+        private readonly _uvTransformMatrix: egret3d.Matrix3 = egret3d.Matrix3.create();
+
+        public onAwake() {
+            const material = this.gameObject.renderer!.material!;
+            this._uvTransformMatrix.fromUVTransform(this._offset.x, this._offset.y, this._repeat.x, this._repeat.y, 0.0, 0.0, 0.0);
+            material.setUVTTransform(this._uvTransformMatrix);
+        }
+
+        public onUpdate() {
+            const time = paper.clock.time;
+            const material = this.gameObject.renderer!.material!;
+            this._offset.x = (time) % 1;
+            this._offset.y = (time) % 1;
+            this._uvTransformMatrix.fromUVTransform(this._offset.x, this._offset.y, this._repeat.x, this._repeat.y, 0.0, 0.0, 0.0);
+            material.setUVTTransform(this._uvTransformMatrix);
+        }
+
     }
 }
