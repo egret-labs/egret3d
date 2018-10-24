@@ -3328,7 +3328,7 @@ var paper;
             _this._receiveShadows = false;
             _this._castShadows = false;
             _this._lightmapIndex = -1;
-            _this._lightmapScaleOffset = egret3d.Vector4.create();
+            _this._lightmapScaleOffset = egret3d.Vector4.create(); //uv2共享
             _this._boundingSphere = egret3d.Sphere.create();
             _this._aabb = egret3d.AABB.create();
             _this._materials = [egret3d.DefaultMaterials.MESH_BASIC];
@@ -10920,6 +10920,7 @@ var egret3d;
         if (maxDistance === void 0) { maxDistance = 0.0; }
         if (cullingMask === void 0) { cullingMask = 16777215 /* Everything */; }
         if (raycastMesh === void 0) { raycastMesh = false; }
+        raycastMesh = false;
         if ((gameObject.hideFlags === 3 /* HideAndDontSave */ && gameObject.tag === "Editor Only" /* EditorOnly */ &&
             (!gameObject.transform.parent || gameObject.transform.parent.gameObject.activeInHierarchy)) ? gameObject.activeSelf : !gameObject.activeInHierarchy) {
             return false;
@@ -21098,8 +21099,8 @@ var egret3d;
         ShaderChunk.tonemapping_fragment = "#if defined( TONE_MAPPING )\n\n  gl_FragColor.rgb = toneMapping( gl_FragColor.rgb );\n\n#endif\n";
         ShaderChunk.tonemapping_pars_fragment = "#ifndef saturate\n #define saturate(a) clamp( a, 0.0, 1.0 )\n#endif\n\nuniform float toneMappingExposure;\nuniform float toneMappingWhitePoint;\n\n// exposure only\nvec3 LinearToneMapping( vec3 color ) {\n\n return toneMappingExposure * color;\n\n}\n\n// source: https://www.cs.utah.edu/~reinhard/cdrom/\nvec3 ReinhardToneMapping( vec3 color ) {\n\n color *= toneMappingExposure;\n return saturate( color / ( vec3( 1.0 ) + color ) );\n\n}\n\n// source: http://filmicgames.com/archives/75\n#define Uncharted2Helper( x ) max( ( ( x * ( 0.15 * x + 0.10 * 0.50 ) + 0.20 * 0.02 ) / ( x * ( 0.15 * x + 0.50 ) + 0.20 * 0.30 ) ) - 0.02 / 0.30, vec3( 0.0 ) )\nvec3 Uncharted2ToneMapping( vec3 color ) {\n\n // John Hable's filmic operator from Uncharted 2 video game\n color *= toneMappingExposure;\n return saturate( Uncharted2Helper( color ) / Uncharted2Helper( vec3( toneMappingWhitePoint ) ) );\n\n}\n\n// source: http://filmicgames.com/archives/75\nvec3 OptimizedCineonToneMapping( vec3 color ) {\n\n // optimized filmic operator by Jim Hejl and Richard Burgess-Dawson\n color *= toneMappingExposure;\n color = max( vec3( 0.0 ), color - 0.004 );\n return pow( ( color * ( 6.2 * color + 0.5 ) ) / ( color * ( 6.2 * color + 1.7 ) + 0.06 ), vec3( 2.2 ) );\n\n}\n";
         ShaderChunk.uv2_pars_fragment = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n varying vec2 vUv2;\n\n#endif";
-        ShaderChunk.uv2_pars_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n attribute vec2 uv2;\n varying vec2 vUv2;\n #ifdef USE_LIGHTMAP\n  uniform vec4 lightmapScaleOffset;\n #endif\n\n#endif";
-        ShaderChunk.uv2_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n #ifdef USE_LIGHTMAP\n  //1.0 - ((1.0 - uv2.y) * lightmapScaleOffset.y + lightmapScaleOffset.w);\n  vUv2 = vec2(uv2.x * lightmapScaleOffset.x + lightmapScaleOffset.z, 1.0 - ((1.0 - uv2.y) * lightmapScaleOffset.y + lightmapScaleOffset.w));\n #else \n  vUv2 = uv2;\n #endif\n\n#endif";
+        ShaderChunk.uv2_pars_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n attribute vec2 uv2;\n varying vec2 vUv2;\n #ifdef USE_LIGHTMAP//Egret \n  uniform vec4 lightmapScaleOffset;\n #endif\n\n#endif";
+        ShaderChunk.uv2_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n #ifdef USE_LIGHTMAP//Egret\n  vUv2 = vec2(uv2.x * lightmapScaleOffset.x + lightmapScaleOffset.z, 1.0 - ((1.0 - uv2.y) * lightmapScaleOffset.y + lightmapScaleOffset.w));\n #else \n  vUv2 = uv2;\n #endif\n\n#endif";
         ShaderChunk.uv_pars_fragment = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n\n#endif";
         ShaderChunk.uv_pars_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n uniform mat3 uvTransform;\n\n#endif\n";
         ShaderChunk.uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n #if defined FLIP_V \n  vUv = ( uvTransform * vec3( uv.x, 1.0 - uv.y, 1 ) ).xy;//modify egret\n #else\n  vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n #endif\n#endif";
@@ -23395,6 +23396,7 @@ var egret3d;
                     lightCountDirty = true;
                     this._cacheLightCount = 0;
                 }
+                // lightCountDirty = false;
                 // Render cameras.
                 if (cameras.length > 0) {
                     this._egret2dOrderCount = 0;
@@ -24023,6 +24025,7 @@ var egret3d;
         //
         helpInverseMatrix.inverse(combineInstance.root.transform.getWorldMatrix());
         var meshAttribute = combineInstance.meshAttribute;
+        var lightmapScaleOffset = combineInstance.root.renderer.lightmapScaleOffset;
         var newAttribute = [];
         var tempIndexBuffers = [];
         var tempVertexBuffers = {};
@@ -24039,6 +24042,7 @@ var egret3d;
             var meshRenderer = instance.getComponent(egret3d.MeshRenderer);
             var worldMatrix = instance.transform.getWorldMatrix();
             var mesh = meshFilter.mesh;
+            var orginLightmapScaleOffset = meshRenderer.lightmapScaleOffset;
             var primitives = mesh.glTFMesh.primitives;
             //共享一个的buffer，vbo只处理一个submesh就可以了
             var combineOnce = true;
@@ -24128,24 +24132,24 @@ var egret3d;
                     }
                     if (meshAttribute["TEXCOORD_1" /* TEXCOORD_1 */]) {
                         if (combineInstance.lightmapIndex >= 0) {
-                            // //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
-                            // const uvBuffer = orginAttributes.TEXCOORD_1 ?
-                            //     mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) as Float32Array :
-                            //     mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0!)) as Float32Array;
-                            // //
-                            // for (let j = 0; j < uvBuffer.length; j += 2) {
-                            //     let u = uvBuffer[j + 0];
-                            //     let v = uvBuffer[j + 1];
-                            //     // u = ((u * orginLightmapScaleOffset[0] + orginLightmapScaleOffset[2]) - lightmapScaleOffset[2]) / lightmapScaleOffset[0];
-                            //     // v = ((v * orginLightmapScaleOffset[1] - orginLightmapScaleOffset[1] - orginLightmapScaleOffset[3]) + lightmapScaleOffset[3] + lightmapScaleOffset[1]) / lightmapScaleOffset[1];
-                            //     tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1].push(u, v);
+                            //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
+                            var uvBuffer = orginAttributes.TEXCOORD_1 ?
+                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) :
+                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0));
+                            //
+                            for (var j = 0; j < uvBuffer.length; j += 2) {
+                                var u = uvBuffer[j + 0];
+                                var v = uvBuffer[j + 1];
+                                u = ((u * orginLightmapScaleOffset.x + orginLightmapScaleOffset.z) - lightmapScaleOffset.z) / lightmapScaleOffset.x;
+                                v = ((v * orginLightmapScaleOffset.y - orginLightmapScaleOffset.y - orginLightmapScaleOffset.w) + lightmapScaleOffset.w + lightmapScaleOffset.x) / lightmapScaleOffset.x;
+                                tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */].push(u, v);
+                            }
+                            // if (orginAttributes.TEXCOORD_1 !== undefined) {
+                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
                             // }
-                            if (orginAttributes.TEXCOORD_1 !== undefined) {
-                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */]);
-                            }
-                            else {
-                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0, tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */]);
-                            }
+                            // else {
+                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0!, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
+                            // }
                         }
                         else {
                             if (orginAttributes.TEXCOORD_1 !== undefined) {
