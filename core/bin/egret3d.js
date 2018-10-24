@@ -10920,7 +10920,6 @@ var egret3d;
         if (maxDistance === void 0) { maxDistance = 0.0; }
         if (cullingMask === void 0) { cullingMask = 16777215 /* Everything */; }
         if (raycastMesh === void 0) { raycastMesh = false; }
-        raycastMesh = false;
         if ((gameObject.hideFlags === 3 /* HideAndDontSave */ && gameObject.tag === "Editor Only" /* EditorOnly */ &&
             (!gameObject.transform.parent || gameObject.transform.parent.gameObject.activeInHierarchy)) ? gameObject.activeSelf : !gameObject.activeInHierarchy) {
             return false;
@@ -12228,7 +12227,7 @@ var egret;
                 }
                 this.uploadVerticesArray(this.vao.getVertices());
                 // 有mesh，则使用indicesForMesh
-                if (this.vao.isMesh()) {
+                if (this.vao.hasMesh) {
                     this.uploadIndicesArray(this.vao.getMeshIndices());
                 }
                 var length = this.drawCmdManager.drawDataLen;
@@ -12251,7 +12250,7 @@ var egret;
                     }
                 }
                 // 切换回默认indices
-                if (this.vao.isMesh()) {
+                if (this.vao.hasMesh) {
                     this.uploadIndicesArray(this.vao.getIndices());
                 }
                 // 清空数据
@@ -23396,7 +23395,6 @@ var egret3d;
                     lightCountDirty = true;
                     this._cacheLightCount = 0;
                 }
-                // lightCountDirty = false;
                 // Render cameras.
                 if (cameras.length > 0) {
                     this._egret2dOrderCount = 0;
