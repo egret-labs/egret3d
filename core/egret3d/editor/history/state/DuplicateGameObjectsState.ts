@@ -17,7 +17,7 @@ namespace paper.editor {
                 let UUID = obj.uuid;
                 let parentUUID = obj.transform.parent ? obj.transform.parent.gameObject.uuid : null;
                 let serializeData = serialize(obj);
-                duplicateInfo.push({ UUID, parentUUID, serializeData });
+                duplicateInfo.push({ UUID, parentUUID:parentUUID!, serializeData });
             }
             const state = new DuplicateGameObjectsState();
             state.duplicateInfo = duplicateInfo;
@@ -47,7 +47,7 @@ namespace paper.editor {
                 this.addList = [];
                 for (let i: number = 0; i < this.duplicateInfo.length; i++) {
                     let info = this.duplicateInfo[i];
-                    let obj: GameObject = new Deserializer().deserialize(info.serializeData,!this.firstDo,false,this.editorModel.scene);
+                    let obj: GameObject = new Deserializer().deserialize(info.serializeData,!this.firstDo,false,this.editorModel.scene) as paper.GameObject;
                     let parent = this.editorModel.getGameObjectByUUid(info.parentUUID);
                     if (parent) {
                         obj.transform.parent = parent.transform;
@@ -68,9 +68,9 @@ namespace paper.editor {
         }
         private clearPrefabInfo(obj: GameObject): void {
             if (this.editorModel.isPrefabChild(obj)) {
-                obj.extras.linkedID=undefined;
-                obj.extras.prefab=undefined;
-                obj.extras.rootID=undefined;
+                obj.extras!.linkedID=undefined;
+                obj.extras!.prefab=undefined;
+                obj.extras!.rootID=undefined;
                 for (let i: number = 0; i < obj.transform.children.length; i++) {
                     this.clearPrefabInfo(obj.transform.children[i].gameObject);
                 }

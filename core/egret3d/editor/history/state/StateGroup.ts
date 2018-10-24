@@ -45,7 +45,7 @@ namespace paper.editor {
             for (let index = 0; index < statesData.length; index++) {
                 const element = statesData[index];
                 const clazz = egret.getDefinitionByName(element.className);
-                let state: BaseState = null;
+                let state: BaseState;
                 if (clazz) {
                     state = new clazz();
                     state.batchIndex = element.batchIndex;

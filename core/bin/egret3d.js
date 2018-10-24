@@ -430,6 +430,7 @@
     signals.Signal = Signal;
     global['signals'] = signals
 }(window));
+"use strict";
 var __reflect = (this && this.__reflect) || function (p, c, t) {
     p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
 };
@@ -12227,7 +12228,7 @@ var egret;
                 }
                 this.uploadVerticesArray(this.vao.getVertices());
                 // 有mesh，则使用indicesForMesh
-                if (this.vao.isMesh()) {
+                if (this.vao.hasMesh) {
                     this.uploadIndicesArray(this.vao.getMeshIndices());
                 }
                 var length = this.drawCmdManager.drawDataLen;
@@ -12250,7 +12251,7 @@ var egret;
                     }
                 }
                 // 切换回默认indices
-                if (this.vao.isMesh()) {
+                if (this.vao.hasMesh) {
                     this.uploadIndicesArray(this.vao.getIndices());
                 }
                 // 清空数据
@@ -24784,14 +24785,16 @@ var paper;
                             case 1:
                                 rawScene = _a.sent();
                                 if (rawScene) {
-                                    if (this.activeEditorModel) {
-                                        this.activeEditorModel.scene.destroy();
-                                    }
                                     scene = rawScene.createInstance(true);
-                                    sceneEditorModel = new editor.EditorModel();
-                                    sceneEditorModel.init(scene, 'scene', sceneUrl);
-                                    this.setActiveModel(sceneEditorModel);
-                                    this.currentEditInfo = { url: sceneUrl, type: 'scene' };
+                                    if (scene) {
+                                        if (this.activeEditorModel) {
+                                            this.activeEditorModel.scene.destroy();
+                                        }
+                                        sceneEditorModel = new editor.EditorModel();
+                                        sceneEditorModel.init(scene, 'scene', sceneUrl);
+                                        this.setActiveModel(sceneEditorModel);
+                                        this.currentEditInfo = { url: sceneUrl, type: 'scene' };
+                                    }
                                 }
                                 return [2 /*return*/];
                         }
@@ -24811,28 +24814,30 @@ var paper;
                             case 1:
                                 prefab = _a.sent();
                                 if (prefab) {
-                                    if (this.activeEditorModel) {
-                                        this.activeEditorModel.scene.destroy();
-                                    }
                                     scene = paper.Scene.createEmpty('prefabEditScene', false);
                                     prefabInstance = prefab.createInstance(scene, true);
-                                    prefabEditorModel_1 = new editor.EditorModel();
-                                    prefabEditorModel_1.init(scene, 'prefab', prefabUrl);
-                                    clearPrefabInfo_1 = function (obj) {
-                                        obj.extras = {};
-                                        for (var _i = 0, _a = obj.components; _i < _a.length; _i++) {
-                                            var comp = _a[_i];
-                                            comp.extras = {};
+                                    if (prefabInstance) {
+                                        if (this.activeEditorModel) {
+                                            this.activeEditorModel.scene.destroy();
                                         }
-                                        for (var i = 0; i < obj.transform.children.length; i++) {
-                                            var child = obj.transform.children[i].gameObject;
-                                            if (prefabEditorModel_1.isPrefabChild(child))
-                                                clearPrefabInfo_1(child);
-                                        }
-                                    };
-                                    clearPrefabInfo_1(prefabInstance);
-                                    this.setActiveModel(prefabEditorModel_1);
-                                    this.currentEditInfo = { url: prefabUrl, type: 'prefab' };
+                                        prefabEditorModel_1 = new editor.EditorModel();
+                                        prefabEditorModel_1.init(scene, 'prefab', prefabUrl);
+                                        clearPrefabInfo_1 = function (obj) {
+                                            obj.extras = {};
+                                            for (var _i = 0, _a = obj.components; _i < _a.length; _i++) {
+                                                var comp = _a[_i];
+                                                comp.extras = {};
+                                            }
+                                            for (var i = 0; i < obj.transform.children.length; i++) {
+                                                var child = obj.transform.children[i].gameObject;
+                                                if (prefabEditorModel_1.isPrefabChild(child))
+                                                    clearPrefabInfo_1(child);
+                                            }
+                                        };
+                                        clearPrefabInfo_1(prefabInstance);
+                                        this.setActiveModel(prefabEditorModel_1);
+                                        this.currentEditInfo = { url: prefabUrl, type: 'prefab' };
+                                    }
                                 }
                                 return [2 /*return*/];
                         }
@@ -25187,7 +25192,6 @@ var paper;
                 }
             };
             EditorModel.prototype.createGameObject = function (parentList, createType, mesh) {
-                if (mesh === void 0) { mesh = null; }
                 var state = editor.CreateGameObjectState.create(parentList, createType, mesh);
                 this.addState(state);
             };
@@ -25524,13 +25528,13 @@ var paper;
                 this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_EDIT_TYPE, type));
             };
             EditorModel.prototype.isPrefabRoot = function (gameObj) {
-                if (gameObj.extras.prefab) {
+                if (gameObj.extras && gameObj.extras.prefab) {
                     return true;
                 }
                 return false;
             };
             EditorModel.prototype.isPrefabChild = function (gameObj) {
-                if (gameObj.extras.rootID) {
+                if (gameObj.extras && gameObj.extras.rootID) {
                     return true;
                 }
                 return false;
@@ -25562,6 +25566,7 @@ var paper;
                             return displayPathList[i_1].path;
                         }
                     }
+                    return [];
                 }
                 var length = gameobjects.length - 1;
                 while (length > 0) {
@@ -25615,11 +25620,12 @@ var paper;
                 }
                 var result = Array.isArray(obj) ? [] : {};
                 Object.keys(obj).forEach(function (key) {
-                    if (obj[key] && typeof obj[key] === 'object') {
-                        result[key] = _this.deepClone(obj[key]);
+                    var objTmp = obj;
+                    if (objTmp[key] && typeof objTmp[key] === 'object') {
+                        result[key] = _this.deepClone(objTmp[key]);
                     }
                     else {
-                        result[key] = obj[key];
+                        result[key] = objTmp[key];
                     }
                 });
                 return result;
@@ -26188,7 +26194,7 @@ var paper;
                 for (var index = 0; index < statesData.length; index++) {
                     var element = statesData[index];
                     var clazz = egret.getDefinitionByName(element.className);
-                    var state = null;
+                    var state = void 0;
                     if (clazz) {
                         state = new clazz();
                         state.batchIndex = element.batchIndex;
@@ -27007,13 +27013,13 @@ var paper;
             };
             BreakPrefabStructState.makePrefabInfo = function (gameOjbect) {
                 var isPrefabRoot = function (gameObj) {
-                    if (gameObj.extras.prefab) {
+                    if (gameObj.extras && gameObj.extras.prefab) {
                         return true;
                     }
                     return false;
                 };
                 var isPrefabChild = function (gameObj) {
-                    if (gameObj.extras.rootID) {
+                    if (gameObj.extras && gameObj.extras.rootID) {
                         return true;
                     }
                     return false;
@@ -27506,12 +27512,12 @@ var paper;
             ApplyPrefabInstanceState.prototype.clearExtrasFromSerilizeData = function (data) {
                 var objects = data.objects;
                 var components = data.components;
-                for (var _i = 0, objects_2 = objects; _i < objects_2.length; _i++) {
-                    var obj = objects_2[_i];
+                for (var _i = 0, _a = objects; _i < _a.length; _i++) {
+                    var obj = _a[_i];
                     delete obj["extras"];
                 }
-                for (var _a = 0, components_6 = components; _a < components_6.length; _a++) {
-                    var comp = components_6[_a];
+                for (var _b = 0, _c = components; _b < _c.length; _b++) {
+                    var comp = _c[_b];
                     delete comp["extras"];
                 }
                 return data;
@@ -27551,7 +27557,6 @@ var paper;
                 if (_super.prototype.undo.call(this)) {
                     var revertRoot = editor.Editor.activeEditorModel.getGameObjectByUUid(this.stateData.revertPrefabRootId);
                     var gameObjects = editor.Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(revertRoot);
-                    var removeGameObjIds = [];
                     for (var _i = 0, gameObjects_3 = gameObjects; _i < gameObjects_3.length; _i++) {
                         var gameObj = gameObjects_3[_i];
                         if (!(this.stateData.revertData[gameObj.extras.linkedID])) {

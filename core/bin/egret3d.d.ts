@@ -313,8 +313,8 @@ declare namespace paper.editor {
         /**编辑类型 */
         editType: EditType;
         /**属性配置 */
-        option: PropertyOption;
-        constructor(name?: string, editType?: EditType, option?: PropertyOption);
+        option: PropertyOption | undefined;
+        constructor(name: string, editType: EditType, option?: PropertyOption);
     }
     /**属性配置 */
     type PropertyOption = {
@@ -402,7 +402,10 @@ declare namespace paper.editor {
     /**
      * 从枚举中生成装饰器列表项。
      */
-    function getItemsFromEnum(enumObject: any): any[];
+    function getItemsFromEnum(enumObject: any): {
+        label: string;
+        value: any;
+    }[];
     /**
      * 获取一个实例对象的编辑信息
      * @param classInstance 实例对象
@@ -1211,7 +1214,7 @@ declare namespace paper {
         /**
          * @deprecated
          */
-        createInstance(scene?: Scene | null, keepUUID?: boolean): GameObject;
+        createInstance(scene?: Scene | null, keepUUID?: boolean): GameObject | null;
     }
 }
 declare namespace paper {
@@ -1516,7 +1519,7 @@ declare namespace egret3d {
         static parseFromBinary(array: Uint32Array): {
             config: GLTF;
             buffers: (Float32Array | Uint32Array | Uint16Array)[];
-        };
+        } | undefined;
         /**
          *
          */
@@ -1526,7 +1529,7 @@ declare namespace egret3d {
          */
         static createGLTFExtensionsConfig(): GLTF;
         static createTechnique(source: gltf.Technique): gltf.Technique;
-        static copyTechniqueStates(source: gltf.States, target?: gltf.States): gltf.States;
+        static copyTechniqueStates(source: gltf.States, target?: gltf.States): gltf.States | undefined;
         /**
          * Buffer 列表。
          */
@@ -2863,7 +2866,7 @@ declare namespace paper {
         /**
          * 从程序已创建的全部场景中获取指定名称的场景。
          */
-        getScene(name: string): Scene;
+        getScene(name: string): Scene | null;
         /**
          * 程序已创建的全部动态场景。
          */
@@ -2888,7 +2891,7 @@ declare namespace paper {
         /**
          * @deprecated
          */
-        loadScene(resourceName: string, combineStaticObjects?: boolean): Scene;
+        loadScene(resourceName: string, combineStaticObjects?: boolean): Scene | null;
         /**
          * @deprecated
          */
@@ -3355,7 +3358,7 @@ declare namespace egret3d {
     function sign(value: number): number;
     function floatClamp(v: number, min?: number, max?: number): number;
     function numberLerp(fromV: number, toV: number, v: number): number;
-    function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3;
+    function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3 | null;
     function triangleIntersectsPlane(): void;
     function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<AABB>): boolean;
     function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<AABB>): boolean;
@@ -3408,61 +3411,61 @@ declare namespace egret3d {
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点数。（默认全部顶点）
          */
-        getVertices(offset?: number, count?: number): Float32Array;
+        getVertices(offset?: number, count?: number): Float32Array | null;
         /**
          * 获取该网格顶点的 UV 属性数据。
          * - u0, v0, u1, v1, ...
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点数。（默认全部顶点）
          */
-        getUVs(offset?: number, count?: number): Float32Array;
+        getUVs(offset?: number, count?: number): Float32Array | null;
         /**
          * 获取该网格顶点的颜色属性数据。
          * - r0, g0, b0, a0, r1, g1, b1, a1, ...
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点数。（默认全部顶点）
          */
-        getColors(offset?: number, count?: number): Float32Array;
+        getColors(offset?: number, count?: number): Float32Array | null;
         /**
          * 获取该网格顶点的法线属性数据。
          * - x0, y0, z0, x1, y1, z1, ...
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点数。（默认全部顶点）
          */
-        getNormals(offset?: number, count?: number): Float32Array;
+        getNormals(offset?: number, count?: number): Float32Array | null;
         /**
          * 获取该网格顶点的切线属性数据。
          * - x0, y0, z0, w0,  x1, y1, z1, w1, ...
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点数。（默认全部顶点）
          */
-        getTangents(offset?: number, count?: number): Float32Array;
+        getTangents(offset?: number, count?: number): Float32Array | null;
         /**
          * 获取该网格顶点的指定属性数据。
          * @param attributeType 属性名。
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点总数。（默认全部顶点）
          */
-        getAttributes(attributeType: gltf.MeshAttribute, offset?: number, count?: number): Float32Array;
+        getAttributes(attributeType: gltf.MeshAttribute, offset?: number, count?: number): Float32Array | null;
         /**
          * 设置该网格指定的顶点属性数据。
          * @param attributeType 属性名。
          * @param value 属性数据。
          * @param offset 顶点偏移。（默认从第一个点开始）
          */
-        setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset?: number): Float32Array;
+        setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset?: number): Float32Array | null;
         /**
          * 获取该网格的顶点索引数据。
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
          */
-        getIndices(subMeshIndex?: number): Uint16Array;
+        getIndices(subMeshIndex?: number): Uint16Array | null;
         /**
          * 设置该网格的顶点索引数据。
          * @param value 顶点索引数据。
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
          * @param offset 索引偏移。（默认不偏移）
          */
-        setIndices(value: Readonly<ArrayLike<number>>, subMeshIndex?: number, offset?: number): Uint16Array;
+        setIndices(value: Readonly<ArrayLike<number>>, subMeshIndex?: number, offset?: number): Uint16Array | null;
         /**
          * 当修改该网格的顶点属性后，调用此方法来更新顶点属性的缓冲区。
          * @param uploadAttributes
@@ -3652,7 +3655,7 @@ declare namespace paper {
          */
         getSystem<T extends BaseSystem>(systemClass: {
             new (): T;
-        }): T;
+        }): T | null;
         /**
          * 从程序已注册的全部系统中获取一个指定的系统，如果尚未注册，则注册该系统。
          */
@@ -3955,7 +3958,7 @@ declare namespace paper {
     /**
      *
      */
-    function clone(object: GameObject): BaseComponent | GameObject | Scene;
+    function clone(object: GameObject): BaseComponent | GameObject | Scene | null;
     /**
      *
      */
@@ -4035,12 +4038,12 @@ declare namespace egret3d {
         /**
          *
          */
-        getChildAt(index: number): Transform;
+        getChildAt(index: number): Transform | null;
         /**
          * 通过指定的名称或路径获取该组件实体的子级（孙级）变换组件。
          * @param nameOrPath 名称或路径。
          */
-        find(nameOrPath: string): Transform;
+        find(nameOrPath: string): Transform | null;
         /**
          * 该物体的本地位置。
          */
@@ -4680,7 +4683,7 @@ declare namespace egret3d {
          * 该 Pointer 此帧移动的状态。
          * @param value
          */
-        isMove(distance?: number, isPlayerMode?: boolean): boolean;
+        isMove(distance?: number, isPlayerMode?: boolean): boolean | null;
     }
     /**
      * 按键的信息。
@@ -4823,7 +4826,7 @@ declare namespace paper {
          * 通过指定的场景资源创建一个场景。
          * @param name 场景资源的名称。
          */
-        static create(name: string, combineStaticObjects?: boolean): Scene;
+        static create(name: string, combineStaticObjects?: boolean): Scene | null;
         /**
          * 全局静态的场景。
          * - 全局场景无法被销毁。
@@ -4880,13 +4883,13 @@ declare namespace paper {
          * - 仅返回第一个符合条件的实体。
          * @param nameOrPath 名称或路径。
          */
-        find(nameOrPath: string): GameObject;
+        find(nameOrPath: string): GameObject | null;
         /**
          * 获取该场景指定标识的第一个实体。
          * - 仅返回第一个符合条件的实体。
          * @param tag 标识。
          */
-        findWithTag(tag: string): GameObject;
+        findWithTag(tag: string): GameObject | null;
         /**
          * 获取该场景指定标识的全部实体。
          * - 返回符合条件的全部实体。
@@ -5458,7 +5461,7 @@ declare namespace paper {
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        getComponentInParent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T;
+        getComponentInParent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T | null;
         /**
          * 获取一个自己或子（孙）级中指定的组件实例。
          * @param componentClass 组件类。
@@ -5540,12 +5543,12 @@ declare namespace paper {
          * @deprecated
          * @see paper.Scene#find()
          */
-        static find(name: string, scene?: Scene | null): GameObject;
+        static find(name: string, scene?: Scene | null): GameObject | null;
         /**
          * @deprecated
          * @see paper.Scene#findWithTag()
          */
-        static findWithTag(tag: string, scene?: Scene | null): GameObject;
+        static findWithTag(tag: string, scene?: Scene | null): GameObject | null;
         /**
          * @deprecated
          * @see paper.Scene#findGameObjectsWithTag()
@@ -5799,7 +5802,7 @@ declare namespace egret3d {
         /**
          * 该渲染组件的根骨骼。
          */
-        readonly rootBone: Transform;
+        readonly rootBone: Transform | null;
         /**
          * 该渲染组件的网格资源。
          */
@@ -5954,7 +5957,7 @@ declare namespace egret3d {
          */
         private _lastAnimationState;
         uninitialize(): void;
-        fadeIn(animationName: string | null, fadeTime: number, playTimes?: number, layer?: number, additive?: boolean): AnimationState | null;
+        fadeIn(animationName: string | null | undefined, fadeTime: number, playTimes?: number, layer?: number, additive?: boolean): AnimationState | null;
         play(animationNameOrNames?: string | string[] | null, playTimes?: number): AnimationState | null;
         stop(): void;
         readonly lastAnimationnName: string;
@@ -5962,7 +5965,7 @@ declare namespace egret3d {
          * 动画数据列表。
          */
         animations: ReadonlyArray<GLTFAsset>;
-        readonly lastAnimationState: AnimationState;
+        readonly lastAnimationState: AnimationState | null;
     }
 }
 declare namespace egret3d {
@@ -6132,7 +6135,7 @@ declare namespace egret3d.particle {
         private readonly _alphaValue;
         private readonly _colorValue;
         deserialize(element: any): this;
-        evaluate(t: number, out: Color): Color;
+        evaluate(t: number | undefined, out: Color): Color;
         readonly alphaValues: Readonly<Float32Array>;
         readonly colorValues: Readonly<Float32Array>;
     }
@@ -6163,7 +6166,7 @@ declare namespace egret3d.particle {
         readonly gradientMin: Gradient;
         readonly gradientMax: Gradient;
         deserialize(element: any): this;
-        evaluate(t: number, out: Color): Color;
+        evaluate(t: number | undefined, out: Color): Color;
     }
     /**
      *
@@ -6847,7 +6850,7 @@ declare namespace egret3d {
             wasReleased: (button: number) => boolean;
         };
         touch: {
-            getTouch: (button: number) => any;
+            getTouch: (button: number) => undefined;
         };
         keyboard: {
             isPressed: (key: string) => boolean;
@@ -7019,8 +7022,8 @@ declare namespace egret3d {
         setVector2v(id: string, value: Float32Array): this;
         setVector3(id: string, value: Readonly<IVector3>): this;
         setVector3v(id: string, value: Float32Array): this;
-        setVector4(id: string, value: Readonly<IVector4>): this;
-        setVector4v(id: string, value: Float32Array | [number, number, number, number]): this;
+        setVector4(id: string, value: Readonly<IVector4>): this | undefined;
+        setVector4v(id: string, value: Float32Array | [number, number, number, number]): this | undefined;
         setMatrix(id: string, value: Readonly<Matrix4>): this;
         setMatrixv(id: string, value: Float32Array): this;
         /**
@@ -7122,7 +7125,7 @@ declare namespace egret3d {
         /**
          * @deprecated
          */
-        setShader(value: Shader): this;
+        setShader(value: Shader): this | undefined;
     }
 }
 declare namespace egret3d.ShaderLib {
@@ -7233,7 +7236,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -7382,7 +7385,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -7536,7 +7539,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -7646,7 +7649,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -7821,7 +7824,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -7973,7 +7976,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -8091,7 +8094,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "refractionRatio": {
                             "type": number;
-                            "value": any[];
+                            "value": never[];
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
@@ -8140,7 +8143,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "reflectivity": {
                             "type": number;
-                            "value": any[];
+                            "value": never[];
                         };
                         "envMapIntensity": {
                             "type": number;
@@ -8155,7 +8158,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "maxMipLevel": {
                             "type": number;
-                            "value": any[];
+                            "value": never[];
                         };
                         "fogColor": {
                             "type": number;
@@ -8181,7 +8184,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -8299,7 +8302,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "refractionRatio": {
                             "type": number;
-                            "value": any[];
+                            "value": never[];
                         };
                         "ambientLightColor": {
                             "type": number;
@@ -8399,7 +8402,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "reflectivity": {
                             "type": number;
-                            "value": any[];
+                            "value": never[];
                         };
                         "envMapIntensity": {
                             "type": number;
@@ -8414,7 +8417,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "maxMipLevel": {
                             "type": number;
-                            "value": any[];
+                            "value": never[];
                         };
                         "fogColor": {
                             "type": number;
@@ -8452,7 +8455,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -8579,7 +8582,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "refractionRatio": {
                             "type": number;
-                            "value": any[];
+                            "value": never[];
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
@@ -8655,7 +8658,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "reflectivity": {
                             "type": number;
-                            "value": any[];
+                            "value": never[];
                         };
                         "envMapIntensity": {
                             "type": number;
@@ -8670,7 +8673,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "maxMipLevel": {
                             "type": number;
-                            "value": any[];
+                            "value": never[];
                         };
                         "gradientMap": {
                             "type": number;
@@ -8756,7 +8759,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -8959,7 +8962,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "reflectivity": {
                             "type": number;
-                            "value": any[];
+                            "value": never[];
                         };
                         "envMapIntensity": {
                             "type": number;
@@ -8974,11 +8977,11 @@ declare namespace egret3d.ShaderLib {
                         };
                         "maxMipLevel": {
                             "type": number;
-                            "value": any[];
+                            "value": never[];
                         };
                         "refractionRatio": {
                             "type": number;
-                            "value": any[];
+                            "value": never[];
                         };
                         "fogColor": {
                             "type": number;
@@ -9064,7 +9067,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -9217,7 +9220,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -9532,7 +9535,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -9686,7 +9689,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -9872,7 +9875,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -10022,7 +10025,7 @@ declare namespace egret3d.ShaderLib {
                         };
                     };
                     "states": {
-                        "enable": any[];
+                        "enable": never[];
                         "functions": {};
                     };
                 }[];
@@ -10364,7 +10367,7 @@ declare namespace egret3d {
         height: number;
         format: TextureFormatEnum;
         texture: WebGLTexture;
-        constructor(format: TextureFormatEnum, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
+        constructor(format: TextureFormatEnum | undefined, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
         dispose(): void;
         caclByteLength(): number;
     }
@@ -10383,7 +10386,7 @@ declare namespace egret3d {
         protected uploadTexture(): void;
         use(): void;
         generateMipmap(): boolean;
-        dispose(): boolean;
+        dispose(): false | undefined;
         caclByteLength(): number;
         readonly texture: WebGLTexture;
         readonly width: number;
@@ -10726,7 +10729,7 @@ declare namespace paper.editor {
         createPrefabState(prefab: Prefab, parent?: GameObject): void;
         serializeProperty(value: any, editType: editor.EditType): any;
         deserializeProperty(serializeData: any, editType: editor.EditType): any;
-        createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh?: egret3d.Mesh): void;
+        createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh): void;
         addComponent(gameObjectUUid: string, compClzName: string): void;
         removeComponent(gameObjectUUid: string, componentUUid: string): void;
         getComponentById(gameObject: GameObject, componentId: string): BaseComponent | null;
@@ -10801,7 +10804,7 @@ declare namespace paper.editor {
         private _cacheIds;
         private findAssetRefs(target, as, refs?);
         private findFromChildren(source, as, refs, parent, key);
-        getAllGameObjectsFromPrefabInstance(gameObj: paper.GameObject, objs?: paper.GameObject[] | null): GameObject[];
+        getAllGameObjectsFromPrefabInstance(gameObj: paper.GameObject, objs?: paper.GameObject[] | null): GameObject[] | null;
         modifyMaterialPropertyValues(target: egret3d.Material, valueList: any[]): Promise<void>;
     }
 }
@@ -11035,8 +11038,8 @@ declare namespace paper.editor {
         static toString(): string;
         static create(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh): CreateGameObjectState | null;
         infos: {
-            parentUUID: string;
-            serializeData: any;
+            parentUUID: string | null;
+            serializeData: any | null;
         }[];
         createType: string;
         addList: string[];
@@ -11149,7 +11152,7 @@ declare namespace paper.editor {
         static create(applyData: editor.ApplyData, applyPrefabRootId: string, prefab: paper.Prefab): ApplyPrefabInstanceState | null;
         private readonly stateData;
         undo(): boolean;
-        getAllUUidFromGameObject(gameObj: paper.GameObject, uuids?: string[] | null): string[];
+        getAllUUidFromGameObject(gameObj: paper.GameObject, uuids?: string[] | null): string[] | null;
         setLinkedId(gameObj: GameObject, ids: string[]): void;
         clearLinkedId(gameObj: GameObject): void;
         protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
@@ -11157,8 +11160,8 @@ declare namespace paper.editor {
         modifyPrefabComponentPropertyValues(linkedId: string, componentUUid: string, tempObj: GameObject, valueList: any[]): void;
         setGameObjectPrefabRootId(gameObj: GameObject, rootID: string): void;
         getGameObjectsByLinkedId(linkedId: string, filterApplyRootId: string): GameObject[];
-        getGameObjectByLinkedId(gameObj: paper.GameObject, linkedID: string): GameObject;
-        getGameObjectByUUid(gameObj: GameObject, uuid: string): GameObject;
+        getGameObjectByLinkedId(gameObj: paper.GameObject, linkedID: string): GameObject | null | undefined;
+        getGameObjectByUUid(gameObj: GameObject, uuid: string): GameObject | null | undefined;
         redo(): boolean;
         private clearGameObjectExtrasInfo(gameObj);
         private clearExtrasFromSerilizeData(data);
@@ -11207,7 +11210,7 @@ declare namespace egret3d {
          * 禁止实例化。
          */
         private constructor();
-        serialize(): any[];
+        serialize(): never[];
         deserialize(data: Readonly<[number, number, number, number, number, number, number, number]>): void;
     }
 }

@@ -6,8 +6,8 @@ namespace paper.editor {
         /**编辑类型 */
         public editType: EditType;
         /**属性配置 */
-        public option: PropertyOption;
-        constructor(name?: string, editType?: EditType, option?: PropertyOption) {
+        public option: PropertyOption|undefined;
+        constructor(name: string, editType: EditType, option?: PropertyOption) {
             this.name = name;
             this.editType = editType;
             this.option = option;
@@ -140,7 +140,7 @@ namespace paper.editor {
      * 获取一个实例对象的编辑信息
      * @param classInstance 实例对象
      */
-    export function getEditInfo(classInstance) {
+    export function getEditInfo(classInstance:any) {
         var whileInsance = classInstance.__proto__;
         var retrunList = [] as PropertyInfo[];
         var className;
