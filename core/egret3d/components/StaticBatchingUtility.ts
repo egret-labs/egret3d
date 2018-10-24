@@ -138,6 +138,7 @@ namespace egret3d {
         helpInverseMatrix.inverse(combineInstance.root.transform.getWorldMatrix());
 
         const meshAttribute = combineInstance.meshAttribute;
+        const lightmapScaleOffset = combineInstance.root.renderer.lightmapScaleOffset;
         const newAttribute: gltf.MeshAttributeType[] = [];
         const tempIndexBuffers: number[][] = [];
         const tempVertexBuffers: { [key: string]: number[] } = {};
@@ -154,6 +155,7 @@ namespace egret3d {
             const meshRenderer = instance.getComponent(egret3d.MeshRenderer)!;
             const worldMatrix = instance.transform.getWorldMatrix();
             const mesh = meshFilter.mesh!;
+            const orginLightmapScaleOffset = meshRenderer.lightmapScaleOffset;
 
             const primitives = mesh.glTFMesh.primitives;
             //共享一个的buffer，vbo只处理一个submesh就可以了
@@ -245,25 +247,25 @@ namespace egret3d {
                     }
                     if (meshAttribute[gltf.MeshAttributeType.TEXCOORD_1]) {
                         if (combineInstance.lightmapIndex >= 0) {
-                            // //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
-                            // const uvBuffer = orginAttributes.TEXCOORD_1 ?
-                            //     mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) as Float32Array :
-                            //     mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0!)) as Float32Array;
-                            // //
-                            // for (let j = 0; j < uvBuffer.length; j += 2) {
-                            //     let u = uvBuffer[j + 0];
-                            //     let v = uvBuffer[j + 1];
-                            //     // u = ((u * orginLightmapScaleOffset[0] + orginLightmapScaleOffset[2]) - lightmapScaleOffset[2]) / lightmapScaleOffset[0];
-                            //     // v = ((v * orginLightmapScaleOffset[1] - orginLightmapScaleOffset[1] - orginLightmapScaleOffset[3]) + lightmapScaleOffset[3] + lightmapScaleOffset[1]) / lightmapScaleOffset[1];
+                            //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
+                            const uvBuffer = orginAttributes.TEXCOORD_1 ?
+                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) as Float32Array :
+                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0!)) as Float32Array;
+                            //
+                            for (let j = 0; j < uvBuffer.length; j += 2) {
+                                let u = uvBuffer[j + 0];
+                                let v = uvBuffer[j + 1];
+                                u = ((u * orginLightmapScaleOffset.x + orginLightmapScaleOffset.z) - lightmapScaleOffset.z) / lightmapScaleOffset.x;
+                                v = ((v * orginLightmapScaleOffset.y - orginLightmapScaleOffset.y - orginLightmapScaleOffset.w) + lightmapScaleOffset.w + lightmapScaleOffset.x) / lightmapScaleOffset.x;
 
-                            //     tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1].push(u, v);
+                                tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1].push(u, v);
+                            }
+                            // if (orginAttributes.TEXCOORD_1 !== undefined) {
+                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
                             // }
-                            if (orginAttributes.TEXCOORD_1 !== undefined) {
-                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
-                            }
-                            else {
-                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0!, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
-                            }
+                            // else {
+                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0!, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
+                            // }
                         }
                         else {
                             if (orginAttributes.TEXCOORD_1 !== undefined) {
