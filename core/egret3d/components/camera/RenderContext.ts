@@ -24,6 +24,7 @@ namespace egret3d {
         public lightmap: Texture | null = null;
         public lightmapUV: number = 1;
         public lightmapIntensity: number = 1.0;
+        public lightmapScaleOffset:Float32Array = new Float32Array(4);
 
         //TODO
         // 12: dirX, dirY, dirZ, colorR, colorG, colorB, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
@@ -314,6 +315,10 @@ namespace egret3d {
                 this.lightmap = scene.lightmaps[renderer.lightmapIndex];
                 this.lightmapUV = drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0;
                 this.lightmapIntensity = scene.lightmapIntensity;
+                this.lightmapScaleOffset[0] = renderer.lightmapScaleOffset.x;
+                this.lightmapScaleOffset[1] = renderer.lightmapScaleOffset.y;
+                this.lightmapScaleOffset[2] = renderer.lightmapScaleOffset.z;
+                this.lightmapScaleOffset[3] = renderer.lightmapScaleOffset.w;
                 this.shaderContextDefine += "#define USE_LIGHTMAP \n";
             }
 
