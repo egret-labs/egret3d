@@ -102,7 +102,7 @@ module egret.web {
             this.uploadVerticesArray(this.vao.getVertices());
 
             // 有mesh，则使用indicesForMesh
-            if (this.vao.isMesh()) {
+            if ((this.vao as any).hasMesh) {
                 this.uploadIndicesArray(this.vao.getMeshIndices());
             }
 
@@ -127,7 +127,7 @@ module egret.web {
             }
 
             // 切换回默认indices
-            if (this.vao.isMesh()) {
+            if ((this.vao as any).hasMesh) {
                 this.uploadIndicesArray(this.vao.getIndices());
             }
 
