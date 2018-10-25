@@ -44,7 +44,7 @@ namespace paper.editor {
         dispatchEvent(event: BaseEvent): void {
             var list = this.__z_e_listeners[event.type];
             if (list !== undefined) {
-                list.forEach(ef => {
+                list.forEach((ef:any) => {
                     ef['___dirty___'] = true;
                 });
                 var size = list.length;

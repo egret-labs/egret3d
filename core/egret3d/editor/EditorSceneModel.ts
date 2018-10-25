@@ -1,6 +1,6 @@
 namespace paper.editor {
     export class EditorSceneModel {
-        private viewCache = {};
+        private viewCache:any = {};
         public get editorScene(): Scene {
             return Application.sceneManager.editorScene;
         }

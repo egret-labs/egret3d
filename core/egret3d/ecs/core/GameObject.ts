@@ -1,4 +1,5 @@
 namespace paper {
+
     /**
      * 实体。
      */
@@ -8,6 +9,7 @@ namespace paper {
          */
         public static readonly _instances: GameObject[] = [];
         private static _globalGameObject: GameObject | null = null;
+
         /**
          * 创建 GameObject，并添加到当前场景中。
          */
@@ -34,19 +36,6 @@ namespace paper {
             return gameObect;
         }
 
-        private static _sortRaycastInfo(a: egret3d.RaycastInfo, b: egret3d.RaycastInfo) {
-            // TODO renderQueue.
-            return a.distance - b.distance;
-        }
-        /**
-         * @deprecated
-         */
-        public static raycast(
-            ray: Readonly<egret3d.Ray>, gameObjects: ReadonlyArray<GameObject>,
-            maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false
-        ) {
-            return egret3d.raycastAll(ray, gameObjects, maxDistance, cullingMask, raycastMesh);
-        }
         /**
          * 全局实体。
          * - 全局实体不可被销毁。
@@ -60,46 +49,54 @@ namespace paper {
 
             return this._globalGameObject;
         }
+
         /**
          * 是否是静态模式。
          */
         @serializedField
         @editor.property(editor.EditType.CHECKBOX)
         public isStatic: boolean = false;
+
         /**
          * 
          */
         @serializedField
         public hideFlags: HideFlags = HideFlags.None;
+
         /**
          * 层级。
          * - 用于各种层遮罩。
          */
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(Layer) })
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).Layer) }) // TODO
         public layer: Layer = Layer.Default;
+
         /**
          * 名称。
          */
         @serializedField
         @editor.property(editor.EditType.TEXT)
         public name: string = "";
+
         /**
          * 标签。
          */
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(DefaultTags) })
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).DefaultTags) }) // TODO
         public tag: string = "";
+
         /**
          * 变换组件。
          * @readonly
          */
         public transform: egret3d.Transform = null!;
+
         /**
          * 渲染组件。
          * @readonly
          */
         public renderer: BaseRenderer | null = null;
+
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
@@ -119,6 +116,7 @@ namespace paper {
         private readonly _components: (BaseComponent | undefined)[] = [];
         private readonly _cachedComponents: BaseComponent[] = [];
         private _scene: Scene | null = null;
+
         /**
          * 请使用 `paper.GameObject.create()` 创建实例。
          * @see paper.GameObject.create()
@@ -150,7 +148,7 @@ namespace paper {
                 this._removeComponent(component, null);
             }
 
-            // 销毁的第一时间就将组件和场景清除，场景的有无来判断实体是否已经销毁。
+            // 销毁的第一时间就将组件和场景清除，用场景的有无来判断实体是否已经销毁。
             this._components.length = 0;
             this._scene = null;
             disposeCollecter.gameObjects.push(this);
@@ -257,6 +255,7 @@ namespace paper {
                 child.gameObject._activeInHierarchyDirty(prevActive);
             }
         }
+        
         /**
          * 实体被销毁后，内部卸载。
          * @internal
@@ -307,7 +306,7 @@ namespace paper {
         /**
          * 添加一个指定组件实例。
          * @param componentClass 组件类。
-         * @param config Behaviour 组件 `onAwake(config?: any)` 的可选参数。
+         * @param config BaseComponent 组件 `initialize(config?: any)` 方法或 Behaviour 组件 `onAwake(config?: any)` 方法的可选参数。
          */
         public addComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, config?: any): T {
             registerClass(componentClass);
@@ -563,6 +562,7 @@ namespace paper {
 
             return component as T;
         }
+
         /**
          * 获取全部指定组件实例。
          * @param componentClass 组件类。
@@ -608,6 +608,7 @@ namespace paper {
 
             return components;
         }
+
         /**
          * 获取一个自己或父级中指定的组件实例。
          * @param componentClass 组件类。
@@ -624,6 +625,7 @@ namespace paper {
 
             return result;
         }
+
         /**
          * 获取一个自己或子（孙）级中指定的组件实例。
          * @param componentClass 组件类。
@@ -642,6 +644,7 @@ namespace paper {
 
             return component;
         }
+
         /**
          * 获取全部自己和子（孙）级中指定的组件实例。
          * @param componentClass 组件类。
@@ -674,14 +677,17 @@ namespace paper {
 
             return components;
         }
+
         /**
          * 从该实体已注册的全部组件中获取一个指定组件实例，如果未添加该组件，则添加该组件。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
+         * @param config BaseComponent 组件 `initialize(config?: any)` 方法或 Behaviour 组件 `onAwake(config?: any)` 方法的可选参数。
          */
-        public getOrAddComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false) {
-            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, isExtends);
+        public getOrAddComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false, config?: any) {
+            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, config);
         }
+
         /**
          * 向该实体已激活的全部 Behaviour 组件发送消息。
          * @param methodName 
@@ -689,16 +695,17 @@ namespace paper {
          */
         public sendMessage(methodName: string, parameter?: any, requireReceiver: boolean = true) {
             for (const component of this._components) {
-                if (component && component.isActiveAndEnabled && component.constructor instanceof Behaviour) {
+                if (component && component.isActiveAndEnabled && component instanceof Behaviour) {
                     if (methodName in component) {
                         (component as any)[methodName](parameter);
                     }
-                    else if (requireReceiver) {
+                    else if (DEBUG && requireReceiver) {
                         console.warn(this.name, egret.getQualifiedClassName(component), methodName); // TODO
                     }
                 }
             }
         }
+
         /**
          * 向该实体和其父级的 Behaviour 组件发送消息。
          * @param methodName 
@@ -712,6 +719,7 @@ namespace paper {
                 parent.gameObject.sendMessage(methodName, parameter, requireReceiver);
             }
         }
+
         /**
          * 向该实体和的其子（孙）级的 Behaviour 组件发送消息。
          * @param methodName 
@@ -726,12 +734,14 @@ namespace paper {
                 }
             }
         }
+
         /**
          * 该实体是否已经被销毁。
          */
         public get isDestroyed() {
             return !this._scene;
         }
+
         /**
          * 该实体是否可以被销毁。
          * - 当此值为 `true` 时，将会被添加到全局场景，反之将被添加到激活场景。
@@ -765,6 +775,7 @@ namespace paper {
                 child.gameObject.dontDestroy = value;
             }
         }
+
         /**
          * 该实体自身的激活状态。
          */
@@ -787,6 +798,7 @@ namespace paper {
                 this._activeSelf = value;//TODO
             }
         }
+
         /**
          * 该实体在场景中的激活状态。
          */
@@ -806,6 +818,7 @@ namespace paper {
 
             return this._activeInHierarchy;
         }
+
         /**
          * 该实体的路径。
          */
@@ -824,6 +837,7 @@ namespace paper {
 
             return path;
         }
+
         /**
          * 该实体已添加的全部组件。
          */
@@ -849,6 +863,7 @@ namespace paper {
 
             return this._cachedComponents;
         }
+
         /**
          * 该实体的父级实体。
          */
@@ -858,12 +873,14 @@ namespace paper {
         public set parent(gameObject: GameObject | null) {
             this.transform.parent = gameObject ? gameObject.transform : null;
         }
+
         /**
          * 该实体所属的场景。
          */
         public get scene() {
             return this._scene!;
         }
+
         /**
          * 全局实体。
          * - 全局实体不可被销毁。
@@ -893,6 +910,15 @@ namespace paper {
          */
         public static findGameObjectsWithTag(tag: string, scene: Scene | null = null) {
             return (scene || Application.sceneManager.activeScene).findGameObjectsWithTag(tag);
+        }
+        /**
+         * @deprecated
+         */
+        public static raycast(
+            ray: Readonly<egret3d.Ray>, gameObjects: ReadonlyArray<GameObject>,
+            maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false
+        ) {
+            return egret3d.raycastAll(ray, gameObjects, maxDistance, cullingMask, raycastMesh);
         }
     }
 }

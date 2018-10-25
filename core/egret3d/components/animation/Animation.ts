@@ -35,7 +35,7 @@ namespace egret3d {
             this.blendWeight = 0.0;
         }
 
-        public update(animationState: AnimationState) {
+        public updateLayerAndWeight(animationState: AnimationState) {
             const animationLayer = animationState.layer;
             let animationWeight = animationState._globalWeight;
 
@@ -98,7 +98,7 @@ namespace egret3d {
         components: paper.BaseComponent | paper.BaseComponent[];
         inputBuffer: Float32Array;
         outputBuffer: Float32Array;
-        update: ((channel: AnimationChannel, animationState: AnimationState) => void) | null = null;
+        updateTarget: ((channel: AnimationChannel, animationState: AnimationState) => void) | null = null;
     }
     const _animationChannels: AnimationChannel[] = [];
     /**
@@ -486,17 +486,17 @@ namespace egret3d {
                     switch (pathName) {
                         case "translation":
                             channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name!);
-                            channel.update = this._onUpdateTranslation;
+                            channel.updateTarget = this._onUpdateTranslation;
                             break;
 
                         case "rotation":
                             channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name!);
-                            channel.update = this._onUpdateRotation;
+                            channel.updateTarget = this._onUpdateRotation;
                             break;
 
                         case "scale":
                             channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name!);
-                            channel.update = this._onUpdateScale;
+                            channel.updateTarget = this._onUpdateScale;
                             break;
 
                         case "weights":
@@ -508,7 +508,7 @@ namespace egret3d {
                                 case "paper.GameObject":
                                     switch (channel.glTFChannel.extensions!.paper.property) {
                                         case "activeSelf":
-                                            channel.update = this._onUpdateActive;
+                                            channel.updateTarget = this._onUpdateActive;
                                             break;
                                     }
                                     break;
@@ -576,8 +576,8 @@ namespace egret3d {
 
             if (this.weight !== 0.0) {
                 for (const channel of this._channels) {
-                    if (channel.update) {
-                        channel.update(channel, this);
+                    if (channel.updateTarget) {
+                        channel.updateTarget(channel, this);
                     }
                 }
             }
@@ -611,7 +611,7 @@ namespace egret3d {
         }
 
         public get isCompleted() {
-            return this._playState !== 1;
+            return this._playState === 1;
         }
 
         public get totalTime() {

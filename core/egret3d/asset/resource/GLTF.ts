@@ -787,6 +787,7 @@ declare namespace gltf {
         _SPOTSHADOWMAP = "_SPOTSHADOWMAP",
         _LIGHTMAPTEX = "_LIGHTMAPTEX",
         _LIGHTMAPINTENSITY = "_LIGHTMAPINTENSITY",
+        _LIGHTMAP_SCALE_OFFSET = "_LIGHTMAP_SCALE_OFFSET",
         _REFERENCEPOSITION = "_REFERENCEPOSITION",
         _NEARDICTANCE = "_NEARDICTANCE",
         _FARDISTANCE = "_FARDISTANCE",
@@ -1570,6 +1571,7 @@ declare namespace gltf {
         semantic?: string;
         /**
          * The value of the uniform.
+         * TODO 默认值
          */
         value: UniformValue;
         name?: any;

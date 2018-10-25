@@ -6,8 +6,8 @@ namespace paper.editor {
         /**编辑类型 */
         public editType: EditType;
         /**属性配置 */
-        public option: PropertyOption;
-        constructor(name?: string, editType?: EditType, option?: PropertyOption) {
+        public option: PropertyOption|undefined;
+        constructor(name: string, editType: EditType, option?: PropertyOption) {
             this.name = name;
             this.editType = editType;
             this.option = option;
@@ -15,6 +15,7 @@ namespace paper.editor {
     }
     /**属性配置 */
     export type PropertyOption = {
+        readonly?: boolean;
         minimum?: number;
         maximum?: number;
         step?: number;
@@ -23,52 +24,60 @@ namespace paper.editor {
         /**下拉项*/
         listItems?: { label: string, value: any }[];
     };
-    /**编辑类型 */
+    /**
+     * 编辑类型
+     */
     export const enum EditType {
         /**数字输入 */
-        UINT,
-        INT,
-        FLOAT,
+        UINT = "UINT",
+        INT = "INT",
+        FLOAT = "FLOAT",
         /**文本输入 */
-        TEXT,
+        TEXT = "TEXT",
         /**选中框 */
-        CHECKBOX,
+        CHECKBOX = "CHECKBOX",
+        /** Size.*/
+        SIZE = "SIZE",
         /**vertor2 */
-        VECTOR2,
+        VECTOR2 = "VECTOR2",
         /**vertor3 */
-        VECTOR3,
+        VECTOR3 = "VECTOR3",
         /**vertor4 */
-        VECTOR4,
+        VECTOR4 = "VECTOR4",
         /**Quaternion */
-        QUATERNION,
+        QUATERNION = "QUATERNION",
         /**颜色选择器 */
-        COLOR,
+        COLOR = "COLOR",
         /**下拉 */
-        LIST,
+        LIST = "LIST",
         /**Rect */
-        RECT,
+        RECT = "RECT",
         /**材质 */
-        MATERIAL,
+        MATERIAL = "MATERIAL",
         /**材质数组 */
-        MATERIAL_ARRAY,
+        MATERIAL_ARRAY = "MATERIAL_ARRAY",
         /**游戏对象 */
-        GAMEOBJECT,
+        GAMEOBJECT = "GAMEOBJECT",
         /**变换 TODO 不需要*/
-        TRANSFROM,
+        TRANSFROM = "TRANSFROM",
         /**组件 */
-        COMPONENT,
+        COMPONENT = "COMPONENT",
         /**声音 */
-        SOUND,
+        SOUND = "SOUND",
         /**Mesh */
-        MESH,
+        MESH = "MESH",
         /**shader */
-        SHADER,
+        SHADER = "SHADER",
         /**数组 */
-        ARRAY,
-        /**
-         * 
-         */
-        NESTED,
+        ARRAY = "ARRAY",
+        /***/
+        BUTTON = "BUTTON",
+        /***/
+        NESTED = "NESTED",
+        /**贴图 */
+        TEXTUREDESC = "TEXTUREDESC",
+        /**矩阵 */
+        MAT3 = "MAT3"
     }
 
     let customMap: { [key: string]: boolean } = {};
@@ -93,6 +102,7 @@ namespace paper.editor {
                     propertyList: [],
                 };
             }
+            
             if (editType !== undefined) {
                 propertyMap[target.constructor.name].propertyList.push(new PropertyInfo(property, editType, option));
             }
@@ -130,7 +140,7 @@ namespace paper.editor {
      * 获取一个实例对象的编辑信息
      * @param classInstance 实例对象
      */
-    export function getEditInfo(classInstance) {
+    export function getEditInfo(classInstance:any) {
         var whileInsance = classInstance.__proto__;
         var retrunList = [] as PropertyInfo[];
         var className;

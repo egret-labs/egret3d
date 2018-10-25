@@ -1,12 +1,11 @@
 namespace egret3d {
-    const _helpMatrix = Matrix4.create();
     /**
      * 网格渲染组件。
-     * - 渲染网格筛选组件提供的网格资源。
+     * - 用于渲染网格筛选组件提供的网格资源。
      */
     export class MeshRenderer extends paper.BaseRenderer {
-        public recalculateAABB() {
-            this._aabb.clear();
+        public recalculateLocalBox() {
+            this._localBoundingBox.clear();
 
             const filter = this.gameObject.getComponent(MeshFilter);
             if (filter && filter.mesh) {
@@ -15,7 +14,7 @@ namespace egret3d {
 
                 for (let i = 0, l = vertices.length; i < l; i += 3) {
                     position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
-                    this._aabb.add(position);
+                    this._localBoundingBox.add(position);
                 }
             }
         }
@@ -30,7 +29,7 @@ namespace egret3d {
             let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
             const transform = this.gameObject.transform;
             const localRay = helpRay.applyMatrix(transform.inverseWorldMatrix, p1);
-            const aabb = this.aabb;
+            const localBoundingBox = this.localBoundingBox;
 
             if (p2) {
                 if (p2 === true) {
@@ -42,7 +41,7 @@ namespace egret3d {
                 }
             }
 
-            if (raycastMesh ? aabb.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo) : aabb.raycast(localRay, raycastInfo)) {
+            if (raycastMesh ? localBoundingBox.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo) : localBoundingBox.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) { // Update local raycast info to world.
                     const worldMatrix = transform.worldMatrix;
                     raycastInfo.position.applyMatrix(worldMatrix);

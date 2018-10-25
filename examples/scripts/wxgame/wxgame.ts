@@ -6,8 +6,7 @@ export class WxgamePlugin implements plugins.Command {
         if (file.extname === '.js') {
             const filename = file.origin;
             if (
-                filename === "libs/modules/promise/promise.js" || filename === 'libs/modules/promise/promise.min.js' ||
-                filename === "libs/modules/inspector/inspector.js" || filename === 'libs/modules/inspector/inspector.min.js'
+                filename === "libs/modules/promise/promise.js" || filename === 'libs/modules/promise/promise.min.js'
             ) {
                 return null;
             }
@@ -93,56 +92,8 @@ export class WxgamePlugin implements plugins.Command {
         }
 
         const gameJSONPath = path.join(pluginContext.outputDir, "game.json");
-        let gameJSONContent = JSON.parse(fs.readFileSync(gameJSONPath, { encoding: "utf8" }));
+        const gameJSONContent = JSON.parse(fs.readFileSync(gameJSONPath, { encoding: "utf8" }));
         gameJSONContent.deviceOrientation = orientation;
         fs.writeFileSync(gameJSONPath, JSON.stringify(gameJSONContent, null, "\t"));
-    }
-}
-
-export class ManifestWxgamePlugin implements plugins.Command {
-
-    async onFile(file: plugins.File) {
-        if (file.origin === 'manifest.js') {
-            const content = `require("js/lib.min.js");
-require('egret.wxgame.js');
-require("js/main.js");`;
-
-            file.contents = new Buffer(content);
-        }
-
-        return file;
-    }
-
-    async onFinish(pluginContext: plugins.CommandContext) {
-
-    }
-}
-
-export class ResourceFilterPlugin implements plugins.Command {
-    include?: string[];
-
-    constructor(include?: string[]) {
-        this.include = include;
-    }
-
-    async onFile(file: plugins.File) {
-        if (
-            !this.include ||
-            file.origin.indexOf(".res.json") >= 0 ||
-            file.origin.indexOf("resource") < 0
-        ) {
-            return file;
-        }
-
-        for (const name of this.include) {
-            if (file.origin.indexOf(name) >= 0) {
-                return file;
-            }
-        }
-
-        return null;
-    }
-
-    async onFinish(commandContext: plugins.CommandContext) {
     }
 }

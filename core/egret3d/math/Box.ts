@@ -12,12 +12,12 @@ namespace egret3d {
     /**
      * 轴对称包围盒。
      */
-    export class AABB extends paper.BaseRelease<AABB> implements paper.ICCS<AABB>, paper.ISerializable, IRaycast {
-        public static readonly ONE: Readonly<AABB> = new AABB().set(
+    export class Box extends paper.BaseRelease<Box> implements paper.ICCS<Box>, paper.ISerializable, IRaycast {
+        public static readonly ONE: Readonly<Box> = new Box().set(
             Vector3.MINUS_ONE.clone().multiplyScalar(0.5),
             Vector3.ONE.clone().multiplyScalar(0.5)
         );
-        private static readonly _instances: AABB[] = [];
+        private static readonly _instances: Box[] = [];
         /**
          * 创建一个
          * @param minimum 
@@ -30,7 +30,7 @@ namespace egret3d {
                 return instance;
             }
 
-            return new AABB().set(minimum, maximum);
+            return new Box().set(minimum, maximum);
         }
 
         private _dirtyRadius: boolean = true;
@@ -58,10 +58,10 @@ namespace egret3d {
         }
 
         public clone() {
-            return AABB.create(this.minimum, this.maximum);
+            return Box.create(this.minimum, this.maximum);
         }
 
-        public copy(value: Readonly<AABB>) {
+        public copy(value: Readonly<Box>) {
             return this.set(value.minimum, value.maximum);
         }
 
@@ -114,7 +114,7 @@ namespace egret3d {
             return this;
         }
 
-        public applyMatrix(value: Readonly<Matrix4>, source?: Readonly<AABB>) {
+        public applyMatrix(value: Readonly<Matrix4>, source?: Readonly<Box>) {
             if (!source) {
                 source = this;
             }
@@ -149,7 +149,7 @@ namespace egret3d {
         /**
          * 
          */
-        public add(value: Readonly<IVector3 | AABB>, source?: Readonly<AABB>) {
+        public add(value: Readonly<IVector3 | Box>, source?: Readonly<Box>) {
             if (!source) {
                 source = this;
             }
@@ -157,7 +157,7 @@ namespace egret3d {
             const min = source.minimum;
             const max = source.maximum;
 
-            if (value instanceof AABB) {
+            if (value instanceof Box) {
                 this._minimum.min(value._minimum, min);
                 this._maximum.max(value._maximum, max);
             }
@@ -175,7 +175,7 @@ namespace egret3d {
         /**
          * 
          */
-        public expand(value: Readonly<IVector3> | number, source?: Readonly<AABB>) {
+        public expand(value: Readonly<IVector3> | number, source?: Readonly<Box>) {
             if (!source) {
                 source = this;
             }
@@ -201,7 +201,7 @@ namespace egret3d {
         /**
          * 
          */
-        public offset(value: number | Readonly<IVector3>, source?: Readonly<AABB>) {
+        public offset(value: number | Readonly<IVector3>, source?: Readonly<Box>) {
             if (!source) {
                 source = this;
             }
@@ -227,11 +227,11 @@ namespace egret3d {
         /**
          * 
          */
-        public contains(value: Readonly<IVector3 | AABB>) {
+        public contains(value: Readonly<IVector3 | Box>) {
             const min = this._minimum;
             const max = this._maximum;
 
-            if (value instanceof AABB) {
+            if (value instanceof Box) {
                 const vMin = value.minimum;
                 const vMax = value.maximum;
 
@@ -413,5 +413,5 @@ namespace egret3d {
     /**
      * @internal
      */
-    export const helpAABBA = AABB.create();
+    export const helpAABBA = Box.create();
 }

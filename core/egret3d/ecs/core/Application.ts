@@ -8,17 +8,9 @@ namespace paper {
         Editor,
     }
     /**
-     * 应用程序单例。
-     */
-    export let Application: ECS;
-    /**
      * 应用程序。
      */
     export class ECS {
-        /**
-         * 当应用程序的播放模式改变时派发事件。
-         */
-        public static readonly onPlayerModeChange: signals.Signal = new signals.Signal();
 
         private static _instance: ECS | null = null;
         /**
@@ -34,6 +26,10 @@ namespace paper {
 
         private constructor() {
         }
+        /**
+         * 当应用程序的播放模式改变时派发事件。
+         */
+        public readonly onPlayerModeChange: signals.Signal = new signals.Signal();
         /**
          * 引擎版本。
          */
@@ -106,6 +102,13 @@ namespace paper {
             this._update();
         }
         /**
+         * 
+         */
+        public get isMobile() {
+            const userAgent = (navigator && navigator.userAgent) ? navigator.userAgent.toLowerCase() : "";
+            return userAgent.indexOf("mobile") >= 0 || userAgent.indexOf("android") >= 0;
+        }
+        /**
          * TODO
          * @internal
          */
@@ -132,9 +135,11 @@ namespace paper {
 
             this._playerMode = value;
 
-            ECS.onPlayerModeChange.dispatch(this.playerMode);
+            this.onPlayerModeChange.dispatch(this.playerMode);
         }
     }
-    //
-    Application = ECS.getInstance();
+    /**
+     * 应用程序单例。
+     */
+    export const Application: ECS = ECS.getInstance();
 }

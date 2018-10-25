@@ -1,20 +1,25 @@
 namespace egret3d {
+
     /**
      * 默认的贴图。
      */
     export class DefaultTextures extends paper.SingletonComponent {
+
         /**
          * 纯白色纹理
          */
         public static WHITE: Texture;
+
         /**
          * 纯灰色纹理
          */
         public static GRAY: Texture;
+
         /**
          * 黑白网格纹理
          */
         public static GRID: Texture;
+
         /**
          * 用于表示纹理丢失的紫色纹理
          */

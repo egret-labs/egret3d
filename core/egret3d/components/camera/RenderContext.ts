@@ -24,6 +24,7 @@ namespace egret3d {
         public lightmap: Texture | null = null;
         public lightmapUV: number = 1;
         public lightmapIntensity: number = 1.0;
+        public lightmapScaleOffset:Float32Array = new Float32Array(4);
 
         //TODO
         // 12: dirX, dirY, dirZ, colorR, colorG, colorB, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
@@ -41,11 +42,9 @@ namespace egret3d {
         public readonly directShadowMaps: (WebGLTexture | null)[] = [];
         public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
         public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
-        public readonly ambientLightColor: Float32Array = new Float32Array([0, 0, 0]);
-
-        public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
 
         //
+        public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
         public readonly cameraPosition: Float32Array = new Float32Array(3);
         public readonly cameraForward: Float32Array = new Float32Array(3);
         public readonly cameraUp: Float32Array = new Float32Array(3);
@@ -56,7 +55,7 @@ namespace egret3d {
         public readonly matrix_p: Matrix4 = Matrix4.create();
         public readonly matrix_mv: Matrix4 = Matrix4.create();
         public readonly matrix_vp: Matrix4 = Matrix4.create();
-        public readonly matrix_mv_inverse: Matrix3 = new Matrix3();//INVERS
+        public readonly matrix_mv_inverse: Matrix3 = Matrix3.create();//INVERS
 
         public lightShadowCameraNear: number = 0;
         public lightShadowCameraFar: number = 0;
@@ -104,13 +103,8 @@ namespace egret3d {
             }
         }
 
-        public updateLights(lights: ReadonlyArray<BaseLight>, ambientLightColor: Color) {
+        public updateLights(lights: ReadonlyArray<BaseLight>) {
             let allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
-            if (lights.length > 0) {
-                this.ambientLightColor[0] = ambientLightColor.r;
-                this.ambientLightColor[1] = ambientLightColor.g;
-                this.ambientLightColor[2] = ambientLightColor.b;
-            }
 
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
                 if (light instanceof DirectionalLight) {
@@ -303,7 +297,8 @@ namespace egret3d {
 
         public update(drawCall: DrawCall) {
             const renderer = drawCall.renderer;
-            const scene = renderer.gameObject.scene;
+            // const scene = renderer.gameObject.scene;
+            const scene = paper.Scene.activeScene;
             const matrix = drawCall.matrix || renderer.gameObject.transform.worldMatrix;
             this.drawCall = drawCall;
             this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
@@ -320,6 +315,10 @@ namespace egret3d {
                 this.lightmap = scene.lightmaps[renderer.lightmapIndex];
                 this.lightmapUV = drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0;
                 this.lightmapIntensity = scene.lightmapIntensity;
+                this.lightmapScaleOffset[0] = renderer.lightmapScaleOffset.x;
+                this.lightmapScaleOffset[1] = renderer.lightmapScaleOffset.y;
+                this.lightmapScaleOffset[2] = renderer.lightmapScaleOffset.z;
+                this.lightmapScaleOffset[3] = renderer.lightmapScaleOffset.w;
                 this.shaderContextDefine += "#define USE_LIGHTMAP \n";
             }
 
@@ -343,13 +342,12 @@ namespace egret3d {
             }
 
             const fog = scene.fog;
-
             if (fog.mode !== FogMode.NONE) {
                 this.fogColor[0] = fog.color.r;
                 this.fogColor[1] = fog.color.g;
                 this.fogColor[2] = fog.color.b;
-
                 this.shaderContextDefine += "#define USE_FOG \n";
+
                 if (fog.mode === FogMode.FOG_EXP2) {
                     this.fogDensity = fog.density;
                     this.shaderContextDefine += "#define FOG_EXP2 \n";
@@ -358,6 +356,10 @@ namespace egret3d {
                     this.fogNear = fog.near;
                     this.fogFar = fog.far;
                 }
+            }
+
+            if (renderer.constructor === SkinnedMeshRenderer && !(renderer as SkinnedMeshRenderer).forceCPUSkin) {
+                this.shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, (renderer as SkinnedMeshRenderer).bones.length)} \n`;
             }
         }
     }

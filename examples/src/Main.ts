@@ -3,10 +3,13 @@ declare class Examples {
 }
 
 async function main() {
-    RES.processor.map("json", new JSONProcessor());
+    if (RELEASE) {
+        RES.processor.map("json", new JSONProcessor());
+    }
 
-    // exampleStart();
-    new examples.pvp.AnimationTest().start();
+    exampleStart();
+    // new examples.SceneTest().start();
+    // new examples.EUITest().start();
 }
 
 class JSONProcessor implements RES.processor.Processor {
@@ -20,7 +23,7 @@ class JSONProcessor implements RES.processor.Processor {
         }
         else {
             if (!this._mergedCache) {
-                const r = (host as any).resourceConfig['getResource']("1.zipjson");
+                const r = (host as any).resourceConfig['getResource']("1.jsonbin");
                 const data = await host.load(r, "bin");
 
                 if (!this._mergedCache) {
@@ -59,10 +62,10 @@ function exampleStart() {
         exampleClass = (window as any).examples[exampleString];
     }
 
+    createGUI(exampleString);
+
     const exampleObj: Examples = new exampleClass();
     exampleObj.start();
-
-    createGUI(exampleString);
 
     function createGUI(exampleString: string) {
         const namespaceExamples = (window as any).examples;
@@ -105,22 +108,23 @@ function exampleStart() {
     }
 
     function getCurrentExampleString() {
-        var appFile = "Test";
+        let appFile = "Test";
 
-        var str = location.search;
+        let str = location.search;
         str = str.slice(1, str.length);
-        var totalArray = str.split("&");
-        for (var i = 0; i < totalArray.length; i++) {
-            var itemArray = totalArray[i].split("=");
+        const totalArray = str.split("&");
+        for (let i = 0; i < totalArray.length; i++) {
+            const itemArray = totalArray[i].split("=");
             if (itemArray.length === 2) {
-                var key = itemArray[0];
-                var value = itemArray[1];
+                const key = itemArray[0];
+                const value = itemArray[1];
                 if (key === "example") {
                     appFile = value;
                     break;
                 }
             }
         }
+        
         return appFile;
     }
 }

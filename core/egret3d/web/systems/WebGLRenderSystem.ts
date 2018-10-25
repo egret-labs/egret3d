@@ -93,13 +93,23 @@ namespace egret3d.web {
             //
             const webgl = WebGLCapabilities.webgl!;
             const technique = material._glTFTechnique;
+            const techniqueState = technique.states || null;
             const renderState = this._renderState;
             // Get program.
             const program = renderState.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
             // Use program.
             const force = renderState.useProgram(program);
             // Update states.
-            renderState.updateState(technique.states || null);
+            renderState.updateState(techniqueState);
+            //  TODO
+            // if (techniqueState && context.drawCall.renderer.transform._worldMatrixDeterminant < 0) {
+            //     if (techniqueState.functions!.frontFace[0] === 2305) { // CCW TODO 枚举
+            //         webgl.frontFace(2304);
+            //     }
+            //     else {
+            //         webgl.frontFace(2305);
+            //     }
+            // }
             // Update static uniforms.
             this._updateContextUniforms(program, context, technique);
             // Update uniforms.
@@ -189,7 +199,9 @@ namespace egret3d.web {
                         }
                         break;
                     case gltf.UniformSemanticType._AMBIENTLIGHTCOLOR:
-                        webgl.uniform3fv(location, context.ambientLightColor);
+                        const currenAmbientColor = paper.Scene.activeScene.ambientColor;
+                        webgl.uniform3f(location, currenAmbientColor.r, currenAmbientColor.g, currenAmbientColor.b);
+                        // webgl.uniform3fv(location, context.ambientLightColor);
                         break;
 
                     case gltf.UniformSemanticType._DIRECTIONSHADOWMAT:
@@ -257,6 +269,10 @@ namespace egret3d.web {
                         break;
                     case gltf.UniformSemanticType._LIGHTMAPINTENSITY:
                         webgl.uniform1f(location, context.lightmapIntensity);
+                        break;
+
+                    case gltf.UniformSemanticType._LIGHTMAP_SCALE_OFFSET:
+                        webgl.uniform4fv(location, context.lightmapScaleOffset);
                         break;
 
                     case gltf.UniformSemanticType._REFERENCEPOSITION:
@@ -469,14 +485,12 @@ namespace egret3d.web {
             // Render cameras.
             if (cameras.length > 0) {
                 this._egret2dOrderCount = 0;
-                const currenAmbientColor = paper.Scene.activeScene.ambientColor;
-
                 for (const camera of cameras) {
                     const scene = camera.gameObject.scene;
                     const renderEnabled = isPlayerMode ? scene !== editorScene : scene === editorScene;
 
                     if (renderEnabled && lightCountDirty) {
-                        camera.context.updateLights(lights, currenAmbientColor); // TODO 性能优化
+                        camera.context.updateLights(lights); // TODO 性能优化
                     }
 
                     if (camera.postQueues.length === 0) {

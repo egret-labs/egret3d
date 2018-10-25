@@ -11,15 +11,19 @@ namespace egret3d.web {
                 return false;
             }
 
+            const downPointers = inputCollecter.downPointers;
             const holdPointers = inputCollecter.holdPointers;
             const upPointers = inputCollecter.upPointers;
-            const index = holdPointers.indexOf(pointer);
+            let index = holdPointers.indexOf(pointer);
 
             if (index >= 0) {
                 holdPointers.splice(index, 1);
             }
+            else {
+                index = downPointers.indexOf(pointer);
+            }
 
-            if (upPointers.indexOf(pointer) < 0) {
+            if (index >= 0 && upPointers.indexOf(pointer) < 0) {
                 inputCollecter.removePointer(pointer.event!.pointerId);
                 upPointers.push(pointer);
 
@@ -56,14 +60,15 @@ namespace egret3d.web {
             const downPointers = inputCollecter.downPointers;
             const holdPointers = inputCollecter.holdPointers;
             const pointer = inputCollecter.getPointer(event.pointerId);
-            pointer.event = event; // TODO 有可能是无效事件
+            const prevEvent = pointer.event;
+            pointer.event = event;
 
-            if (event.target !== canvas) {
-                (event as any).clientX -= canvas.clientLeft;
-                (event as any).clientY -= canvas.clientTop;
-            }
+            // if (event.target !== canvas) {
+            //     (event as any).clientX -= canvas.clientLeft;
+            //     (event as any).clientY -= canvas.clientTop;
+            // }
 
-            pointer.position.set(event.clientX, event.clientY, 0.0);
+            pointer.position.set(event.clientX - (canvas.offsetLeft || 0.0), event.clientY - (canvas.offsetTop || 0.0), 0.0);
             stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
@@ -80,7 +85,7 @@ namespace egret3d.web {
                     break;
 
                 case "pointerdown":
-                    if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) {
+                    if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) { // TODO
                         pointer.downPosition.copy(pointer.position);
                         downPointers.push(pointer);
                         inputCollecter.onPointerDown.dispatch(pointer, inputCollecter.onPointerDown);
@@ -91,14 +96,21 @@ namespace egret3d.web {
                     if (event.target === canvas || holdPointers.length > 0) {
                         inputCollecter.onPointerMove.dispatch(pointer, inputCollecter.onPointerMove);
                     }
+                    else {
+                        pointer.event = prevEvent;
+                    }
                     break;
 
                 case "pointerup":
-                    this._pointerUp(pointer, false);
+                    if (!this._pointerUp(pointer, false)) {
+                        pointer.event = prevEvent;
+                    }
                     break;
 
                 case "pointercancel":
-                    this._pointerUp(pointer, true);
+                    if (!this._pointerUp(pointer, true)) {
+                        pointer.event = prevEvent;
+                    }
                     break;
 
                 case "pointerout":
@@ -128,6 +140,8 @@ namespace egret3d.web {
                 inputCollecter.mouseWheel = 0;
             }
 
+            inputCollecter.onMouseWheel.dispatch(this);
+
             event.preventDefault();
         }
 
@@ -152,14 +166,15 @@ namespace egret3d.web {
             const downPointers = inputCollecter.downPointers;
             const holdPointers = inputCollecter.holdPointers;
             const pointer = inputCollecter.getPointer(pointerEvent.pointerId);
+            const prevEvent = pointer.event;
             pointer.event = pointerEvent;
 
-            if (event.target !== canvas) {
-                (pointerEvent as any).clientX -= canvas.clientLeft;
-                (pointerEvent as any).clientY -= canvas.clientTop;
-            }
+            // if (event.target !== canvas) {
+            //     (pointerEvent as any).clientX -= canvas.clientLeft;
+            //     (pointerEvent as any).clientY -= canvas.clientTop;
+            // }
 
-            pointer.position.set(event.clientX, event.clientY, 0.0);
+            pointer.position.set(event.clientX - (canvas.offsetLeft || 0.0), event.clientY - (canvas.offsetTop || 0.0), 0.0);
             stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
@@ -168,6 +183,7 @@ namespace egret3d.web {
                         (event as any).type = "pointerup";
                         this._pointerUp(pointer, true);
                     }
+
                     (event as any).type = "pointerover";
                     inputCollecter.onPointerOver.dispatch(pointer, inputCollecter.onPointerOver);
                     break;
@@ -178,7 +194,7 @@ namespace egret3d.web {
                     break;
 
                 case "mousedown":
-                    if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) {
+                    if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) { // TODO
                         pointer.downPosition.copy(pointer.position);
                         downPointers.push(pointer);
                         (event as any).type = "pointerdown";
@@ -191,16 +207,23 @@ namespace egret3d.web {
                         (event as any).type = "pointermove";
                         inputCollecter.onPointerMove.dispatch(pointer, inputCollecter.onPointerMove);
                     }
+                    else {
+                        pointer.event = prevEvent;
+                    }
                     break;
 
                 case "mouseup":
                     (event as any).type = "pointerup";
-                    this._pointerUp(pointer, false);
+                    if (!this._pointerUp(pointer, false)) {
+                        pointer.event = prevEvent;
+                    }
                     break;
 
                 case "mousecancel":
                     (event as any).type = "pointercancel";
-                    this._pointerUp(pointer, true);
+                    if (!this._pointerUp(pointer, true)) {
+                        pointer.event = prevEvent;
+                    }
                     break;
 
                 case "mouseout":
@@ -224,18 +247,18 @@ namespace egret3d.web {
 
             if (!this._hasTouch) {
                 this._hasTouch = true;
-                this._removeMouseEvent();
+                this._removeMouseEvent(); // TODO 同时支持 mouse 和 touch.
             }
 
             const touch = event.changedTouches[0];
 
             (event as any).isPrimary = true; // TODO
             (event as any).pointerId = touch.identifier + 2;
-            (event as any).pressure = touch.force || 0.5;
+            (event as any).pressure = (touch as any).force || 0.5; // TODO egret build bug
             (event as any).tangentialPressure = 0;
             (event as any).twist = 0;
-            (event as any).width = (touch.radiusX || 0) * 2;
-            (event as any).height = (touch.radiusY || 0) * 2;
+            (event as any).width = ((touch as any).radiusX || 0) * 2; // TODO egret build bug
+            (event as any).height = ((touch as any).radiusY || 0) * 2; // TODO egret build bug
             (event as any).tiltX = 0;
             (event as any).tiltY = 0;
             (event as any).pointerType = "touch";
@@ -255,19 +278,20 @@ namespace egret3d.web {
             const downPointers = inputCollecter.downPointers;
             const holdPointers = inputCollecter.holdPointers;
             const pointer = inputCollecter.getPointer(pointerEvent.pointerId);
+            const prevEvent = pointer.event;
             pointer.event = pointerEvent;
 
-            if (event.target !== canvas) {
-                (pointerEvent as any).clientX -= canvas.clientLeft;
-                (pointerEvent as any).clientY -= canvas.clientTop;
-            }
+            // if (event.target !== canvas) {
+            //     (pointerEvent as any).clientX -= canvas.clientLeft;
+            //     (pointerEvent as any).clientY -= canvas.clientTop;
+            // }
 
-            pointer.position.set(pointerEvent.clientX, pointerEvent.clientY, 0.0);
+            pointer.position.set(pointerEvent.clientX - (canvas.offsetLeft || 0.0), pointerEvent.clientY - (canvas.offsetTop || 0.0), 0.0);
             stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
                 case "touchstart":
-                    if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) {
+                    if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) { // TODO
                         pointer.downPosition.copy(pointer.position);
                         downPointers.push(pointer);
                         (event as any).type = "pointerdown";
@@ -286,9 +310,9 @@ namespace egret3d.web {
                                 const eachPointer = inputCollecter.getPointer(eachTouch.identifier + 2);
                                 const eachPointerEvent = eachPointer.event!;
 
-                                (eachPointerEvent as any).pressure = eachTouch.force || 0.5;
-                                (eachPointerEvent as any).width = (eachTouch.radiusX || 0) * 2;
-                                (eachPointerEvent as any).height = (eachTouch.radiusY || 0) * 2;
+                                (eachPointerEvent as any).pressure = (eachTouch as any).force || 0.5; // TODO egret build bug
+                                (eachPointerEvent as any).width = ((eachTouch as any).radiusX || 0) * 2; // TODO egret build bug
+                                (eachPointerEvent as any).height = ((eachTouch as any).radiusY || 0) * 2; // TODO egret build bug
 
                                 (eachPointerEvent as any).clientX = eachTouch.clientX;
                                 (eachPointerEvent as any).clientY = eachTouch.clientY;
@@ -298,10 +322,10 @@ namespace egret3d.web {
                                 (eachPointerEvent as any).screenY = eachTouch.screenY;
                                 (eachPointerEvent as any).type = "pointermove";
 
-                                if (event.target !== canvas) {
-                                    (eachPointerEvent as any).clientX -= canvas.clientLeft;
-                                    (eachPointerEvent as any).clientY -= canvas.clientTop;
-                                }
+                                // if (event.target !== canvas) {
+                                //     (eachPointerEvent as any).clientX -= canvas.clientLeft;
+                                //     (eachPointerEvent as any).clientY -= canvas.clientTop;
+                                // }
 
                                 eachPointer.position.set(eachPointerEvent.clientX, eachPointerEvent.clientY, 0.0);
                                 stage.screenToStage(eachPointer.position, eachPointer.position);
@@ -309,16 +333,23 @@ namespace egret3d.web {
                             }
                         }
                     }
+                    else {
+                        pointer.event = prevEvent;
+                    }
                     break;
 
                 case "touchend":
                     (event as any).type = "pointerup";
-                    this._pointerUp(pointer, true);
+                    if (!this._pointerUp(pointer, false)) {
+                        pointer.event = prevEvent;
+                    }
                     break;
 
                 case "touchcancel":
                     (event as any).type = "pointercancel";
-                    this._pointerUp(pointer, false);
+                    if (!this._pointerUp(pointer, true)) {
+                        pointer.event = prevEvent;
+                    }
                     break;
             }
 
@@ -393,21 +424,21 @@ namespace egret3d.web {
             //     canvas.addEventListener("pointerleave", this._onPointerEvent);
             // }
             // else {
-                // Mouse events.
-                if (!this._hasTouch) {
-                    canvas.addEventListener("mousedown", this._onMouseEvent);
-                    canvas.addEventListener("mouseover", this._onMouseEvent);
-                    canvas.addEventListener("mouseenter", this._onMouseEvent);
-                    window.addEventListener("mousemove", this._onMouseEvent);
-                    window.addEventListener("mouseup", this._onMouseEvent);
-                    canvas.addEventListener("mouseout", this._onMouseEvent);
-                    canvas.addEventListener("mouseleave", this._onMouseEvent);
-                }
-                // Touch events.
-                canvas.addEventListener("touchstart", this._onTouchEvent);
-                canvas.addEventListener("touchmove", this._onTouchEvent);
-                canvas.addEventListener("touchend", this._onTouchEvent);
-                window.addEventListener("touchcancel", this._onTouchEvent);
+            // Mouse events.
+            if (!this._hasTouch) {
+                canvas.addEventListener("mousedown", this._onMouseEvent);
+                canvas.addEventListener("mouseover", this._onMouseEvent);
+                canvas.addEventListener("mouseenter", this._onMouseEvent);
+                window.addEventListener("mousemove", this._onMouseEvent);
+                window.addEventListener("mouseup", this._onMouseEvent);
+                canvas.addEventListener("mouseout", this._onMouseEvent);
+                canvas.addEventListener("mouseleave", this._onMouseEvent);
+            }
+            // Touch events.
+            canvas.addEventListener("touchstart", this._onTouchEvent);
+            canvas.addEventListener("touchmove", this._onTouchEvent);
+            canvas.addEventListener("touchend", this._onTouchEvent);
+            window.addEventListener("touchcancel", this._onTouchEvent);
             // }
             // Context menu event.
             window.addEventListener("contextmenu", this._onContextMenu);
@@ -421,26 +452,22 @@ namespace egret3d.web {
         public onDisable() {
             const canvas = this._canvas;
 
-            // if ((window as any).PointerEvent) {
-            //     // Pointer events.
-            //     canvas.removeEventListener("pointerover", this._onPointerEvent);
-            //     canvas.removeEventListener("pointerenter", this._onPointerEvent);
-            //     canvas.removeEventListener("pointerdown", this._onPointerEvent);
-            //     window.removeEventListener("pointermove", this._onPointerEvent);
-            //     window.removeEventListener("pointerup", this._onPointerEvent);
-            //     canvas.removeEventListener("pointercancel", this._onPointerEvent);
-            //     canvas.removeEventListener("pointerout", this._onPointerEvent);
-            //     canvas.removeEventListener("pointerleave", this._onPointerEvent);
-            // }
-            // else {
-                // Mouse events.
-                this._removeMouseEvent();
-                // Touch events.
-                canvas.removeEventListener("touchstart", this._onTouchEvent);
-                canvas.removeEventListener("touchmove", this._onTouchEvent);
-                canvas.removeEventListener("touchend", this._onTouchEvent);
-                window.removeEventListener("touchcancel", this._onTouchEvent);
-            // }
+            // Pointer events.
+            canvas.removeEventListener("pointerover", this._onPointerEvent);
+            canvas.removeEventListener("pointerenter", this._onPointerEvent);
+            canvas.removeEventListener("pointerdown", this._onPointerEvent);
+            window.removeEventListener("pointermove", this._onPointerEvent);
+            window.removeEventListener("pointerup", this._onPointerEvent);
+            canvas.removeEventListener("pointercancel", this._onPointerEvent);
+            canvas.removeEventListener("pointerout", this._onPointerEvent);
+            canvas.removeEventListener("pointerleave", this._onPointerEvent);
+            // Mouse events.
+            this._removeMouseEvent();
+            // Touch events.
+            canvas.removeEventListener("touchstart", this._onTouchEvent);
+            canvas.removeEventListener("touchmove", this._onTouchEvent);
+            canvas.removeEventListener("touchend", this._onTouchEvent);
+            window.removeEventListener("touchcancel", this._onTouchEvent);
             // Context menu event.
             window.removeEventListener("contextmenu", this._onContextMenu);
             // Mouse wheel event.

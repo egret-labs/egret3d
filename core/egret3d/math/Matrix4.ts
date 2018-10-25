@@ -5,15 +5,18 @@ namespace egret3d {
         0.0, 0.0, 1.0, 0.0,
         0.0, 0.0, 0.0, 1.0
     ];
+
     /**
      * 4x4 矩阵。
      */
     export class Matrix4 extends paper.BaseRelease<Matrix4> implements paper.ICCS<Matrix4>, paper.ISerializable {
+
         public static readonly IDENTITY: Readonly<Matrix4> = new Matrix4();
 
         private static readonly _instances: Matrix4[] = [];
+
         /**
-         * 
+         * 创建一个矩阵。
          * @param rawData 
          * @param offsetOrByteOffset 
          */
@@ -39,11 +42,13 @@ namespace egret3d {
 
             return new Matrix4(rawData, offsetOrByteOffset);
         }
+
         /**
-         * 矩阵原始数据
+         * 矩阵原始数据。
          * @readonly
          */
         public rawData: Float32Array = null!;
+
         /**
          * 请使用 `egret3d.Matrix4.create()` 创建实例。
          * @see egret3d.Matrix4.create()
@@ -84,6 +89,21 @@ namespace egret3d {
             return Matrix4.create(this.rawData);
         }
 
+        public set(
+            n11: number, n12: number, n13: number, n14: number,
+            n21: number, n22: number, n23: number, n24: number,
+            n31: number, n32: number, n33: number, n34: number,
+            n41: number, n42: number, n43: number, n44: number,
+        ): Matrix4 {
+            const rawData = this.rawData;
+            rawData[0] = n11; rawData[4] = n12; rawData[8] = n13; rawData[12] = n14;
+            rawData[1] = n21; rawData[5] = n22; rawData[9] = n23; rawData[13] = n24;
+            rawData[2] = n31; rawData[6] = n32; rawData[10] = n33; rawData[14] = n34;
+            rawData[3] = n41; rawData[7] = n42; rawData[11] = n43; rawData[15] = n44;
+
+            return this;
+        }
+
         public identity(): Matrix4 {
             this.rawData[0] = 1.0;
             this.rawData[1] = 0.0;
@@ -104,21 +124,6 @@ namespace egret3d {
             this.rawData[13] = 0.0;
             this.rawData[14] = 0.0;
             this.rawData[15] = 1.0;
-
-            return this;
-        }
-
-        public set(
-            n11: number, n12: number, n13: number, n14: number,
-            n21: number, n22: number, n23: number, n24: number,
-            n31: number, n32: number, n33: number, n34: number,
-            n41: number, n42: number, n43: number, n44: number,
-        ): Matrix4 {
-            const rawData = this.rawData;
-            rawData[0] = n11; rawData[4] = n12; rawData[8] = n13; rawData[12] = n14;
-            rawData[1] = n21; rawData[5] = n22; rawData[9] = n23; rawData[13] = n24;
-            rawData[2] = n31; rawData[6] = n32; rawData[10] = n33; rawData[14] = n34;
-            rawData[3] = n41; rawData[7] = n42; rawData[11] = n43; rawData[15] = n44;
 
             return this;
         }
@@ -221,7 +226,7 @@ namespace egret3d {
                 }
 
                 case EulerOrder.YZX: {
-                    var ac = a * c, ad = a * d, bc = b * c, bd = b * d;
+                    const ac = a * c, ad = a * d, bc = b * c, bd = b * d;
 
                     rawData[0] = c * e;
                     rawData[4] = bd - ac * f;
@@ -371,52 +376,6 @@ namespace egret3d {
             );
 
             return this;
-        }
-
-        public determinant() {
-            const rawData = this.rawData;
-            const n11 = rawData[0], n12 = rawData[4], n13 = rawData[8], n14 = rawData[12];
-            const n21 = rawData[1], n22 = rawData[5], n23 = rawData[9], n24 = rawData[13];
-            const n31 = rawData[2], n32 = rawData[6], n33 = rawData[10], n34 = rawData[14];
-            const n41 = rawData[3], n42 = rawData[7], n43 = rawData[11], n44 = rawData[15];
-
-            //TODO: make this more efficient
-            //( based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js )
-
-            return (
-                n41 * (
-                    + n14 * n23 * n32
-                    - n13 * n24 * n32
-                    - n14 * n22 * n33
-                    + n12 * n24 * n33
-                    + n13 * n22 * n34
-                    - n12 * n23 * n34
-                ) +
-                n42 * (
-                    + n11 * n23 * n34
-                    - n11 * n24 * n33
-                    + n14 * n21 * n33
-                    - n13 * n21 * n34
-                    + n13 * n24 * n31
-                    - n14 * n23 * n31
-                ) +
-                n43 * (
-                    + n11 * n24 * n32
-                    - n11 * n22 * n34
-                    - n14 * n21 * n32
-                    + n12 * n21 * n34
-                    + n14 * n22 * n31
-                    - n12 * n24 * n31
-                ) +
-                n44 * (
-                    - n13 * n22 * n31
-                    - n11 * n23 * n32
-                    + n11 * n22 * n33
-                    + n13 * n21 * n32
-                    - n12 * n21 * n33
-                    + n12 * n23 * n31
-                )
-            );
         }
 
         public compose(translation: Readonly<IVector3>, rotation: Readonly<IVector4>, scale: Readonly<IVector3>): Matrix4 {
@@ -572,36 +531,45 @@ namespace egret3d {
 
             return this;
         }
-
-        public multiplyScalar(value: number, source?: Readonly<Matrix4>) {
-            if (!source) {
-                source = this;
+        /**
+         * 
+         * @param scale 
+         * @param input 
+         */
+        public multiplyScalar(scale: number, input?: Readonly<Matrix4>) {
+            if (!input) {
+                input = this;
             }
 
-            const sourceRawData = source.rawData;
+            const sourceRawData = input.rawData;
             const rawData = this.rawData;
 
-            rawData[0] = sourceRawData[0] * value;
-            rawData[1] = sourceRawData[1] * value;
-            rawData[2] = sourceRawData[2] * value;
-            rawData[3] = sourceRawData[3] * value;
+            rawData[0] = sourceRawData[0] * scale;
+            rawData[1] = sourceRawData[1] * scale;
+            rawData[2] = sourceRawData[2] * scale;
+            rawData[3] = sourceRawData[3] * scale;
 
-            rawData[4] = sourceRawData[4] * value;
-            rawData[5] = sourceRawData[5] * value;
-            rawData[6] = sourceRawData[6] * value;
-            rawData[7] = sourceRawData[7] * value;
+            rawData[4] = sourceRawData[4] * scale;
+            rawData[5] = sourceRawData[5] * scale;
+            rawData[6] = sourceRawData[6] * scale;
+            rawData[7] = sourceRawData[7] * scale;
 
-            rawData[8] = sourceRawData[8] * value;
-            rawData[9] = sourceRawData[9] * value;
-            rawData[10] = sourceRawData[10] * value;
-            rawData[11] = sourceRawData[11] * value;
+            rawData[8] = sourceRawData[8] * scale;
+            rawData[9] = sourceRawData[9] * scale;
+            rawData[10] = sourceRawData[10] * scale;
+            rawData[11] = sourceRawData[11] * scale;
 
-            rawData[12] = sourceRawData[12] * value;
-            rawData[13] = sourceRawData[13] * value;
-            rawData[14] = sourceRawData[14] * value;
-            rawData[15] = sourceRawData[15] * value;
+            rawData[12] = sourceRawData[12] * scale;
+            rawData[13] = sourceRawData[13] * scale;
+            rawData[14] = sourceRawData[14] * scale;
+            rawData[15] = sourceRawData[15] * scale;
         }
-
+        /**
+         * - `v.multiply(a)` 将该矩阵与一个矩阵相乘的结果写入该矩阵，相当于 v *= a。
+         * - `v.multiply(a, b)` 将两个矩阵相乘的结果写入该矩阵，相当于 v = a * b。
+         * @param valueA 一个矩阵。
+         * @param valueB 另一个矩阵。
+         */
         public multiply(valueA: Readonly<Matrix4>, valueB?: Readonly<Matrix4>): Matrix4 {
             if (!valueB) {
                 valueB = valueA;
@@ -644,55 +612,113 @@ namespace egret3d {
 
             return this;
         }
-
+        /**
+         * 将一个矩阵与该矩阵相乘的结果写入该矩阵，相当于 v = x * v。
+         * @param value 一个矩阵。
+         */
         public premultiply(value: Readonly<Matrix4>): Matrix4 {
             this.multiply(value, this);
             return this;
         }
-
-        public lerp(t: number, value: Matrix4, source?: Matrix4): Matrix4 {
-            if (!source) {
-                source = this;
+        /**
+         * - `v.lert(t, a)` 将该矩阵和一个矩阵插值的结果写入该矩阵。
+         * - `v.lert(t, a, b)` 将两个矩阵插值的结果写入该矩阵。
+         * @param t 插值。
+         * @param valueA 一个矩阵。
+         * @param valueB 另一个矩阵。
+         */
+        public lerp(t: number, valueA: Matrix4, valueB?: Matrix4): Matrix4 {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
             }
 
             const p = 1.0 - t;
             for (let i = 0; i < 16; i++) {
-                this.rawData[i] = source.rawData[i] * p + value.rawData[i] * t;
+                this.rawData[i] = valueA.rawData[i] * p + valueB.rawData[i] * t;
             }
 
             return this;
         }
         /**
-         * 设置该矩阵，使得其 Z 轴正方向指向目标点。
-         * @param eye 起始点。
-         * @param target 目标点。
-         * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
+         * 设置该矩阵，使其 Z 轴正方向指向目标点。
+         * - 矩阵的缩放值将被覆盖。
+         * @param from 起始点。
+         * @param to 目标点。
+         * @param up 旋转后，该矩阵的 Y 轴正方向。
          */
-        public lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
-            this.lookRotation(_helpVector3C.subtract(target, eye), up);
+        public lookAt(from: Readonly<IVector3>, to: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
+            this.lookRotation(_helpVector3C.subtract(to, from), up);
 
             return this;
         }
         /**
-         * 设置该矩阵，使得其 Z 轴正方向指向目标方向。
+         * 设置该矩阵，使其 Z 轴正方向指向目标方向。
          * - 矩阵的缩放值将被覆盖。
-         * @param target 目标方向。
-         * @param up 旋转后，该矩阵在世界空间坐标系下描述的 Y 轴正方向。
+         * @param vector 目标方向。
+         * @param up 旋转后，该矩阵的 Y 轴正方向。
          */
-        public lookRotation(direction: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
-            _helpVector3C.normalize(direction);
-
-            const x = _helpVector3A.cross(up, _helpVector3C).normalize();
-            const y = _helpVector3B.cross(_helpVector3C, x);
+        public lookRotation(vector: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
+            const z = _helpVector3C.normalize(vector);
+            const x = _helpVector3A.cross(up, z).normalize(undefined, Vector3.RIGHT); //TODO  Vector3.FORWARD
+            const y = _helpVector3B.cross(z, x);
             const rawData = this.rawData;
 
-            rawData[0] = x.x; rawData[4] = y.x; rawData[8] = _helpVector3C.x;
-            rawData[1] = x.y; rawData[5] = y.y; rawData[9] = _helpVector3C.y;
-            rawData[2] = x.z; rawData[6] = y.z; rawData[10] = _helpVector3C.z;
+            rawData[0] = x.x; rawData[4] = y.x; rawData[8] = z.x;
+            rawData[1] = x.y; rawData[5] = y.y; rawData[9] = z.y;
+            rawData[2] = x.z; rawData[6] = y.z; rawData[10] = z.z;
 
             return this;
         }
 
+        public determinant() {
+            const rawData = this.rawData;
+            const n11 = rawData[0], n12 = rawData[4], n13 = rawData[8], n14 = rawData[12];
+            const n21 = rawData[1], n22 = rawData[5], n23 = rawData[9], n24 = rawData[13];
+            const n31 = rawData[2], n32 = rawData[6], n33 = rawData[10], n34 = rawData[14];
+            const n41 = rawData[3], n42 = rawData[7], n43 = rawData[11], n44 = rawData[15];
+
+            //TODO: make this more efficient
+            //( based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js )
+
+            return (
+                n41 * (
+                    + n14 * n23 * n32
+                    - n13 * n24 * n32
+                    - n14 * n22 * n33
+                    + n12 * n24 * n33
+                    + n13 * n22 * n34
+                    - n12 * n23 * n34
+                ) +
+                n42 * (
+                    + n11 * n23 * n34
+                    - n11 * n24 * n33
+                    + n14 * n21 * n33
+                    - n13 * n21 * n34
+                    + n13 * n24 * n31
+                    - n14 * n23 * n31
+                ) +
+                n43 * (
+                    + n11 * n24 * n32
+                    - n11 * n22 * n34
+                    - n14 * n21 * n32
+                    + n12 * n21 * n34
+                    + n14 * n22 * n31
+                    - n12 * n24 * n31
+                ) +
+                n44 * (
+                    - n13 * n22 * n31
+                    - n11 * n23 * n32
+                    + n11 * n22 * n33
+                    + n13 * n21 * n32
+                    - n12 * n21 * n33
+                    + n12 * n23 * n31
+                )
+            );
+        }
+        /**
+         * 获得该矩阵最大的缩放值。
+         */
         public getMaxScaleOnAxis() {
             const rawData = this.rawData;
 
@@ -702,20 +728,31 @@ namespace egret3d {
 
             return Math.sqrt(Math.max(scaleXSq, scaleYSq, scaleZSq));
         }
-
-        public toArray(value?: number[] | Float32Array, offset: number = 0) {
-            if (!value) {
-                value = [];
+        /**
+         * 将该旋转矩阵转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        public toArray(array?: number[] | Float32Array, offset: number = 0) {
+            if (!array) {
+                array = [];
             }
 
             for (let i = 0; i < 16; ++i) {
-                value[i + offset] = this.rawData[i];
+                array[i + offset] = this.rawData[i];
             }
 
-            return value;
+            return array;
         }
-
-        public toEuler(value: Vector3, order: EulerOrder = EulerOrder.YXZ) {
+        /**
+         * 将该旋转矩阵转换为欧拉旋转。
+         * @param euler 欧拉旋转。（弧度制）
+         * @param order 欧拉旋转顺序。
+         */
+        public toEuler(euler?: Vector3, order: EulerOrder = EulerOrder.YXZ) {
+            if (!euler) {
+                euler = Vector3.create();
+            }
             // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
             const rawData = this.rawData;
             const m11 = rawData[0], m12 = rawData[4], m13 = rawData[8];
@@ -724,91 +761,91 @@ namespace egret3d {
 
             switch (order) {
                 case EulerOrder.XYZ: {
-                    value.y = Math.asin(floatClamp(m13, -1.0, 1.0));
+                    euler.y = Math.asin(floatClamp(m13, -1.0, 1.0));
 
                     if (Math.abs(m13) < 0.999999) {
-                        value.x = Math.atan2(-m23, m33);
-                        value.z = Math.atan2(-m12, m11);
+                        euler.x = Math.atan2(-m23, m33);
+                        euler.z = Math.atan2(-m12, m11);
                     }
                     else {
-                        value.x = Math.atan2(m32, m22);
-                        value.z = 0.0;
+                        euler.x = Math.atan2(m32, m22);
+                        euler.z = 0.0;
                     }
                     break;
                 }
 
                 case EulerOrder.XZY: {
-                    value.z = Math.asin(-floatClamp(m12, -1.0, 1.0));
+                    euler.z = Math.asin(-floatClamp(m12, -1.0, 1.0));
 
                     if (Math.abs(m12) < 0.999999) {
-                        value.x = Math.atan2(m32, m22);
-                        value.y = Math.atan2(m13, m11);
+                        euler.x = Math.atan2(m32, m22);
+                        euler.y = Math.atan2(m13, m11);
                     }
                     else {
-                        value.x = Math.atan2(-m23, m33);
-                        value.y = 0.0;
+                        euler.x = Math.atan2(-m23, m33);
+                        euler.y = 0.0;
                     }
                     break;
                 }
 
                 case EulerOrder.YXZ: {
-                    value.x = Math.asin(-floatClamp(m23, -1.0, 1.0));
+                    euler.x = Math.asin(-floatClamp(m23, -1.0, 1.0));
 
                     if (Math.abs(m23) < 0.999999) {
-                        value.y = Math.atan2(m13, m33);
-                        value.z = Math.atan2(m21, m22);
+                        euler.y = Math.atan2(m13, m33);
+                        euler.z = Math.atan2(m21, m22);
                     }
                     else {
-                        value.y = Math.atan2(-m31, m11);
-                        value.z = 0.0;
+                        euler.y = Math.atan2(-m31, m11);
+                        euler.z = 0.0;
                     }
                     break;
                 }
 
                 case EulerOrder.YZX: {
-                    value.z = Math.asin(floatClamp(m21, -1.0, 1.0));
+                    euler.z = Math.asin(floatClamp(m21, -1.0, 1.0));
 
                     if (Math.abs(m21) < 0.999999) {
-                        value.x = Math.atan2(-m23, m22);
-                        value.y = Math.atan2(-m31, m11);
+                        euler.x = Math.atan2(-m23, m22);
+                        euler.y = Math.atan2(-m31, m11);
                     }
                     else {
-                        value.x = 0.0;
-                        value.y = Math.atan2(m13, m33);
+                        euler.x = 0.0;
+                        euler.y = Math.atan2(m13, m33);
                     }
                     break;
                 }
 
                 case EulerOrder.ZXY: {
-                    value.x = Math.asin(floatClamp(m32, -1.0, 1.0));
+                    euler.x = Math.asin(floatClamp(m32, -1.0, 1.0));
 
                     if (Math.abs(m32) < 0.999999) {
-                        value.y = Math.atan2(- m31, m33);
-                        value.z = Math.atan2(- m12, m22);
+                        euler.y = Math.atan2(- m31, m33);
+                        euler.z = Math.atan2(- m12, m22);
                     }
                     else {
-                        value.y = 0.0;
-                        value.z = Math.atan2(m21, m11);
+                        euler.y = 0.0;
+                        euler.z = Math.atan2(m21, m11);
                     }
                     break;
                 }
 
                 case EulerOrder.ZYX: {
-                    value.y = Math.asin(-floatClamp(m31, -1.0, 1.0));
+                    euler.y = Math.asin(-floatClamp(m31, -1.0, 1.0));
 
                     if (Math.abs(m31) < 0.999999) {
-                        value.x = Math.atan2(m32, m33);
-                        value.z = Math.atan2(m21, m11);
+                        euler.x = Math.atan2(m32, m33);
+                        euler.z = Math.atan2(m21, m11);
                     }
                     else {
-                        value.x = 0.0;
-                        value.z = Math.atan2(- m12, m22);
+                        euler.x = 0.0;
+                        euler.z = Math.atan2(- m12, m22);
                     }
                     break;
                 }
             }
 
-            return value;
+            return euler;
         }
         /**
          * @deprecated
@@ -903,7 +940,6 @@ namespace egret3d {
     const _helpVector3A = Vector3.create();
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
-    const _helpVector3D = Vector3.create();
     const _helpMatrix = Matrix4.create();
 
     /**

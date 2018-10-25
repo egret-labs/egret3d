@@ -24,9 +24,8 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                let revertRoot: GameObject = Editor.activeEditorModel.getGameObjectByUUid(this.stateData.revertPrefabRootId);
-                let gameObjects: GameObject[] = Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(revertRoot);
-                let removeGameObjIds: string[] = [];
+                let revertRoot: GameObject = Editor.activeEditorModel.getGameObjectByUUid(this.stateData.revertPrefabRootId) as GameObject;
+                let gameObjects: GameObject[] = Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(revertRoot) as GameObject[];
 
                 for (const gameObj of gameObjects) {
                     if (!(this.stateData.revertData[gameObj!.extras!.linkedID!])) {
@@ -38,7 +37,7 @@ namespace paper.editor {
                     if (revertData.revertGameObjects && revertData.revertGameObjects.length > 0) {
                         for (const obj of revertData.revertGameObjects) {
                             const {serializeData} = obj;
-                            const newObj:GameObject | null = new Deserializer().deserialize(serializeData,true,false,this.editorModel.scene);
+                            const newObj:GameObject = new Deserializer().deserialize(serializeData,true,false,this.editorModel.scene) as GameObject;
                             newObj.parent = gameObj;
                         }
 
@@ -104,8 +103,8 @@ namespace paper.editor {
 
         public redo(): boolean {
             if (super.redo()) {
-                let revertRoot: GameObject = Editor.activeEditorModel.getGameObjectByUUid(this.stateData.revertPrefabRootId);
-                let gameObjects: GameObject[] = Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(revertRoot);
+                let revertRoot: GameObject = Editor.activeEditorModel.getGameObjectByUUid(this.stateData.revertPrefabRootId) as GameObject;
+                let gameObjects: GameObject[] = Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(revertRoot) as GameObject[];
                 let removeGameObjIds: string[] = [];
 
                 for (const gameObj of gameObjects) {
@@ -116,14 +115,14 @@ namespace paper.editor {
                     let revertData: any = this.stateData.revertData[gameObj!.extras!.linkedID!];
 
                     if (revertData.revertGameObjects && revertData.revertGameObjects.length > 0) {
-                        revertData.revertGameObjects.forEach(element => {
+                        revertData.revertGameObjects.forEach((element:any) => {
                             removeGameObjIds.push(element.id);
                         });
                     }
 
                     if (revertData.revertComponents && revertData.revertComponents.length > 0) {
                         const revertComponentIds: string[] = [];
-                        revertData.revertComponents.forEach(element => {
+                        revertData.revertComponents.forEach((element:any) => {
                             revertComponentIds.push(element.id);
                         });
 

@@ -1,4 +1,5 @@
 namespace egret3d {
+
     /**
      * Shader 通用宏定义。
      */
@@ -24,6 +25,7 @@ namespace egret3d {
         USE_FOG = "USE_FOG",
         FOG_EXP2 = "FOG_EXP2",
     }
+
     /**
      * Shader 通用 Uniform 名称。
      */
@@ -36,6 +38,7 @@ namespace egret3d {
         Shininess = "shininess",
         UVTransform = "uvTransform",
     }
+
     /**
      * Shader 资源。
      */

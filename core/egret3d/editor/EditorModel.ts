@@ -149,7 +149,7 @@ namespace paper.editor {
                 case editor.EditType.LIST:
                     return value;
                 case editor.EditType.MATERIAL_ARRAY:
-                    const data = value.map((item) => {
+                    const data = value.map((item:paper.Asset) => {
                         return { name: item.name, url: item.name };
                     });
                     return data;
@@ -230,7 +230,7 @@ namespace paper.editor {
             }
         }
 
-        public createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh = null) {
+        public createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh) {
             let state = CreateGameObjectState.create(parentList, createType, mesh);
             this.addState(state);
         }
@@ -398,13 +398,13 @@ namespace paper.editor {
                 for (let i: number = 0; i < objects.length; i++) {
                     let obj = objects[i];
                     obj.transform.parent = targetObject.transform;
-                    let transform = (targetObject.transform.children as Array<egret3d.Transform>).pop();
+                    let transform = (targetObject.transform.children as Array<egret3d.Transform>).pop()!;
                     (targetObject.transform.children as Array<egret3d.Transform>).splice(index, 0, transform);
                 }
             }
             else {
                 if (targetObject.transform.parent) {
-                    let index;
+                    let index:number;
                     switch (dir) {
                         case 'top': index = targetObject.transform.parent.children.indexOf(targetObject.transform); break;
                         case 'bottom': index = targetObject.transform.parent.children.indexOf(targetObject.transform) + 1; break;
@@ -413,7 +413,7 @@ namespace paper.editor {
                         let obj = objects[i];
                         obj.transform.parent = targetObject.transform.parent;
                         let transform = (targetObject.transform.parent.children as Array<egret3d.Transform>).pop();
-                        (targetObject.transform.parent.children as Array<egret3d.Transform>).splice(index, 0, transform);
+                        (targetObject.transform.parent.children as Array<egret3d.Transform>).splice(index!, 0, transform!);
                     }
                 }
                 else {
@@ -421,14 +421,14 @@ namespace paper.editor {
                     for (let i: number = 0; i < objects.length; i++) {
                         all.splice(all.indexOf(objects[i]), 1);
                     }
-                    let index;
+                    let index:number;
                     switch (dir) {
                         case 'top': index = all.indexOf(targetObject); break;
                         case 'bottom': index = all.indexOf(targetObject) + 1; break;
                     }
                     for (let i: number = 0; i < objects.length; i++) {
                         let obj = objects[i];
-                        all.splice(index, 0, obj);
+                        all.splice(index!, 0, obj);
                     }
                 }
             }
@@ -576,14 +576,14 @@ namespace paper.editor {
         }
 
         public isPrefabRoot(gameObj: GameObject): boolean {
-            if (gameObj.extras.prefab) {
+            if (gameObj.extras&&gameObj.extras.prefab) {
                 return true;
             }
             return false;
         }
 
         public isPrefabChild(gameObj: GameObject): boolean {
-            if (gameObj.extras.rootID) {
+            if (gameObj.extras&&gameObj.extras.rootID) {
                 return true;
             }
             return false;
@@ -614,6 +614,7 @@ namespace paper.editor {
                         return displayPathList[i].path;
                     }
                 }
+                return [];
             }
             var length: number = gameobjects.length - 1;
             while (length > 0) {
@@ -670,10 +671,11 @@ namespace paper.editor {
             }
             const result: any = Array.isArray(obj) ? [] : {};
             Object.keys(obj).forEach((key: string) => {
-                if (obj[key] && typeof obj[key] === 'object') {
-                    result[key] = this.deepClone(obj[key]);
+                let objTmp:any=obj;
+                if (objTmp[key] && typeof objTmp[key] === 'object') {
+                    result[key] = this.deepClone(objTmp[key]);
                 } else {
-                    result[key] = obj[key];
+                    result[key] = objTmp[key];
                 }
             });
             return result;

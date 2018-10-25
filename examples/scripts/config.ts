@@ -1,11 +1,9 @@
 /// 阅读 api.d.ts 查看文档
 ///<reference path="declaration/api.d.ts"/>
+import * as path from "path";
+import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlugin, ManifestPlugin, UglifyPlugin } from "built-in";
+import { bakeInfo, nameSelector, mergeJSONSelector, MergeJSONPlugin, MergeBinaryPlugin, ModifyDefaultResJSONPlugin, InspectorFilterPlugin } from "./myplugin";
 
-import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlugin, ManifestPlugin, UglifyPlugin } from 'built-in';
-import * as path from 'path';
-import { MergeJSONPlugin, MergeBinaryPlugin, ModifyDefaultResJSON } from './myplugin';
-
-let bakeRoot: string = "";
 const config: ResourceManagerConfig = {
 
     buildConfig: (params) => {
@@ -13,53 +11,71 @@ const config: ResourceManagerConfig = {
         const command = params.command;
         const projectName = params.projectName;
         const version = params.version;
+        const commandLineParams = process.argv.splice(3);
 
-        if (command === 'bake') {
-            const params = process.argv.splice(3);
-            const outputDir = '.';
-            bakeRoot = "resource/";
+        if (command === "bake") {
+            const outputDir = ".";
+            let subRoot = "";
 
-            switch (params[0]) {
+            switch (commandLineParams[0]) {
                 case "--folder":
                 case "-f":
-                    bakeRoot = `resource/${params[1]}/`;
+                    subRoot = `${commandLineParams[1]}/`;
+                    bakeInfo.currentRoot = bakeInfo.defaultRoot + subRoot;
                     break;
             }
 
             return {
                 outputDir,
                 commands: [
-                    new MergeJSONPlugin({ root: bakeRoot, nameSelector, mergeJSONSelector }),
                     new EmitResConfigFilePlugin({
-                        output: bakeRoot + "default.res.json",
+                        output: bakeInfo.root + "default.res.json",
                         typeSelector: config.typeSelector,
                         nameSelector,
                         groupSelector: p => null
                     }),
-                    new ModifyDefaultResJSON(`${params[1]}/`),
+                    new ModifyDefaultResJSONPlugin(subRoot),
                 ]
             };
         }
-        else if (command === 'build') {
-            const outputDir = '.';
+        else if (command === "build") {
+            const outputDir = ".";
             return {
                 outputDir,
                 commands: [
-                    new ExmlPlugin('debug'),
+                    new ExmlPlugin("debug"),
                     new IncrementCompilePlugin(),
                 ]
             };
         }
-        else if (command === 'publish') {
+        else if (command === "publish") {
             const outputDir = `bin-release/web/${version}`;
+            let inspectorFilterEnabled = true;
+            switch (commandLineParams[0]) {
+                case "--inspector":
+                case "-i":
+                    inspectorFilterEnabled = false;
+                    break;
+            }
+
+            // TODO 合并操作应该在 publish 而不是 bake
             return {
                 outputDir,
                 commands: [
+                    new MergeJSONPlugin({ nameSelector, mergeJSONSelector }),
+                    new EmitResConfigFilePlugin({
+                        output: bakeInfo.root + "default.res.json",
+                        typeSelector: config.typeSelector,
+                        nameSelector,
+                        groupSelector: p => null
+                    }),
+
                     new CompilePlugin({ libraryType: "release" }),
-                    new ExmlPlugin('commonjs'),
+                    new ExmlPlugin("commonjs"),
+                    new InspectorFilterPlugin(inspectorFilterEnabled),
                     new UglifyPlugin([
                         {
-                            sources: ['resource/2d/default.thm.js'],
+                            sources: ["resource/2d/default.thm.js"],
                             target: "default.thm.min.js"
                         },
                         {
@@ -94,8 +110,8 @@ const config: ResourceManagerConfig = {
             return type;
         }
         else {
-            let filei = path.lastIndexOf("/");
-            let file = path.substr(filei + 1);
+            const filei = path.lastIndexOf("/");
+            const file = path.substr(filei + 1);
             let i = file.indexOf(".", 0);
             let extname = "";
             while (i >= 0) {
@@ -103,6 +119,7 @@ const config: ResourceManagerConfig = {
                 const typemap = {
                     ".png": "Texture",
                     ".jpg": "Texture",
+                    ".json": "json",
 
                     ".scene.json": "Scene",
                     ".prefab.json": "Prefab",
@@ -116,7 +133,7 @@ const config: ResourceManagerConfig = {
                     ".ani.bin": "Animation",
 
                     ".bin": "bin",
-                    ".zipjson": "bin"
+                    ".jsonbin": "bin",
                 };
                 const type = typemap[extname];
                 if (type) {
@@ -126,29 +143,9 @@ const config: ResourceManagerConfig = {
                 i = file.indexOf(".", i + 1);
             }
 
-            return 'Unknown';
+            return "Unknown";
         }
     }
-};
-
-const nameSelector = (p: string) => {
-    if (p.indexOf("2d/") > 0) {
-        return path.basename(p).replace(/\./gi, "_");
-    }
-
-    return p.replace(bakeRoot, "");
-};
-
-const mergeJSONSelector = (p: string) => {
-    if (p.indexOf("default.res.json") >= 0) {
-        return null;
-    }
-
-    if (p.indexOf(".json") >= 0) {
-        return bakeRoot + "1.zipjson";
-    }
-
-    return null;
 };
 
 export = config;

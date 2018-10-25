@@ -12,7 +12,7 @@ namespace egret3d {
                         this._updateDrawCalls(component.gameObject);
 
                         if (component.gameObject.renderer) {
-                            component.gameObject.renderer._aabbDirty = true;
+                            component.gameObject.renderer._localBoundingBoxDirty = true;
                         }
                     }
                 }]

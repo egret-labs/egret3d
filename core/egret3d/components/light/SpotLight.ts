@@ -26,7 +26,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01 })
-        public penumbra: number = 0.0;
+        public penumbra: number = 1.0;
 
         public renderTarget: BaseRenderTarget;
 

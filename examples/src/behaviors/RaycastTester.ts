@@ -48,7 +48,6 @@ namespace behaviors {
         public onUpdate() {
             const lineTransform = this._line.transform;
             lineTransform.setLocalScale(1.0);
-            this._normal.activeSelf = true;
 
             if (this.target && this.target.renderer) {
                 const ray = this._updateAngGetRay();
@@ -57,10 +56,14 @@ namespace behaviors {
 
                 if (this.target.renderer.raycast(ray, raycastInfo, this.raycastMesh)) {
                     lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
+                    this._normal.activeSelf = true;
                     this._normal.transform.position = raycastInfo.position;
                     this._normal.transform.lookRotation(raycastInfo.normal);
+                    return;
                 }
             }
+
+            this._normal.activeSelf = false;
         }
     }
 
@@ -70,7 +73,6 @@ namespace behaviors {
         public onUpdate() {
             const lineTransform = this._line.transform;
             lineTransform.setLocalScale(1.0);
-            this._normal.activeSelf = true;
 
             if (this.target) {
                 const ray = this._updateAngGetRay();
@@ -79,10 +81,14 @@ namespace behaviors {
 
                 if (egret3d.raycast(ray, this.target, false, raycastInfo)) {
                     lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
+                    this._normal.activeSelf = true;
                     this._normal.transform.position = raycastInfo.position;
                     this._normal.transform.lookRotation(raycastInfo.normal);
+                    return;
                 }
             }
+
+            this._normal.activeSelf = false;
         }
     }
 }

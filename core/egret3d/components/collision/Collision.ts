@@ -2,7 +2,7 @@ namespace egret3d {
     const _helpVector3 = Vector3.create();
     const _helpRaycastInfo = RaycastInfo.create();
 
-    function _raycastCollider(ray: Readonly<Ray>, collider: BoxCollider | SphereCollider, raycastInfo: RaycastInfo, hit: boolean) {
+    function _raycastCollider(ray: Readonly<Ray>, collider: BoxCollider | SphereCollider | CylinderCollider, raycastInfo: RaycastInfo, hit: boolean) {
         const helpRaycastInfo = _helpRaycastInfo;
         const normal = raycastInfo.normal;
         helpRaycastInfo.normal = normal ? _helpVector3 : null;
@@ -83,6 +83,7 @@ namespace egret3d {
         // TODO renderQueue.
         return a.distance - b.distance;
     }
+
     /**
      * 用世界空间坐标系的射线检测指定的实体。（不包含其子级）
      * @param ray 世界空间坐标系的射线。
@@ -113,6 +114,7 @@ namespace egret3d {
             let hit = false;
             const boxColliders = gameObject.getComponents(BoxCollider);
             const sphereColliders = gameObject.getComponents(SphereCollider);
+            const cylinderColliders = gameObject.getComponents(CylinderCollider);
 
             if (boxColliders.length > 0) {
                 for (const collider of boxColliders) {
@@ -147,6 +149,23 @@ namespace egret3d {
                     }
                 }
             }
+
+            if (cylinderColliders.length > 0) {
+                for (const collider of cylinderColliders) {
+                    if (!collider.enabled) {
+                        continue;
+                    }
+
+                    if (raycastInfo) {
+                        if (_raycastCollider(ray, collider, raycastInfo, hit)) {
+                            hit = true;
+                        }
+                    }
+                    else if (collider.raycast(ray)) {
+                        return true;
+                    }
+                }
+            }
         }
 
         if (raycastInfo && raycastInfo.transform) {
@@ -155,24 +174,25 @@ namespace egret3d {
 
         return false;
     }
+
     /**
-     * 用世界空间坐标系的射线检测指定的实体或变换组件列表。
+     * 用世界空间坐标系的射线检测指定的实体或组件列表。
      * @param ray 射线。
-     * @param gameObjectsOrTransforms 实体或变换组件列表。
+     * @param gameObjectsOrComponents 实体或组件列表。
      * @param maxDistance 最大相交点检测距离。
      * @param cullingMask 只对特定层的实体检测。
      * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      */
     export function raycastAll(
-        ray: Readonly<Ray>, gameObjectsOrTransforms: ReadonlyArray<paper.GameObject | Transform>,
+        ray: Readonly<Ray>, gameObjectsOrComponents: ReadonlyArray<paper.GameObject | paper.BaseComponent>,
         maxDistance: number = 0.0, cullingMask: paper.CullingMask = paper.CullingMask.Everything, raycastMesh: boolean = false
     ) {
         const raycastInfos = [] as RaycastInfo[];
 
-        for (const gameObject of gameObjectsOrTransforms) {
+        for (const gameObjectOrComponent of gameObjectsOrComponents) {
             _raycastAll(
                 ray,
-                gameObject instanceof Transform ? gameObject.gameObject : gameObject,
+                gameObjectOrComponent.constructor === paper.GameObject ? gameObjectOrComponent as paper.GameObject : (gameObjectOrComponent as paper.BaseComponent).gameObject,
                 maxDistance, cullingMask, raycastMesh, raycastInfos
             );
         }

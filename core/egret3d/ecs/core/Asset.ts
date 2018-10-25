@@ -4,6 +4,10 @@ namespace paper {
      */
     export abstract class Asset extends BaseObject {
         /**
+         * TODO RES 需要有注册的功能，并拥有查询所有指定类型资源的功能。
+         * Asset 类型需要引擎枚举，paper 空间还是引擎空间。
+         * 空间结构
+         * 引擎、res、ecs、2d、3d，其他
          * @internal
          */
         public static readonly _assets: { [key: string]: Asset } = {};

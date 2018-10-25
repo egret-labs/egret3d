@@ -61,6 +61,7 @@ declare namespace dat {
 
     interface GUIParams {
         autoPlace?: boolean;
+        scrollable?: boolean;
         closed?: boolean;
         closeOnTop?: boolean;
         load?: any;
@@ -97,7 +98,9 @@ declare namespace dat {
     }
 }declare namespace paper.editor {
 }
-declare namespace helper {
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }
@@ -112,11 +115,51 @@ declare namespace paper.editor {
      *
      */
     class GUIComponent extends SingletonComponent {
-        readonly inspector: dat.GUI;
         readonly hierarchy: dat.GUI;
+        readonly inspector: dat.GUI;
     }
 }
 declare namespace paper.editor {
+    /**
+     *
+     */
+    class ModelComponent extends SingletonComponent {
+        static readonly onSceneSelected: signals.Signal;
+        static readonly onSceneUnselected: signals.Signal;
+        static readonly onGameObjectHovered: signals.Signal;
+        static readonly onGameObjectSelectChanged: signals.Signal;
+        static readonly onGameObjectSelected: signals.Signal;
+        static readonly onGameObjectUnselected: signals.Signal;
+        /**
+         * 所有选中的实体。
+         */
+        readonly selectedGameObjects: GameObject[];
+        /**
+         * 选中的场景。
+         */
+        selectedScene: Scene | null;
+        /**
+         *
+         */
+        hoveredGameObject: GameObject | null;
+        /**
+         * 最后一个选中的实体。
+         */
+        selectedGameObject: GameObject | null;
+        private _editorModel;
+        private _onEditorSelectGameObjects(event);
+        private _onChangeProperty(data);
+        private _onChangeEditMode(mode);
+        private _onChangeEditType(type);
+        initialize(): void;
+        private _select(value, isReplace?);
+        private _unselect(value);
+        hover(value: GameObject | null): void;
+        select(value: Scene | GameObject | null, isReplace?: boolean): void;
+        remove(value: GameObject): void;
+        unselect(value: GameObject): void;
+        changeProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void;
+    }
 }
 declare namespace paper.editor {
 }
@@ -147,8 +190,43 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
-}
-declare namespace paper.editor {
+    /**
+     *
+     */
+    class SceneSystem extends BaseSystem {
+        protected readonly _interests: {
+            componentClass: typeof egret3d.Transform;
+        }[][];
+        private readonly _cameraAndLightCollecter;
+        private readonly _modelComponent;
+        private readonly _keyEscape;
+        private readonly _keyDelete;
+        private readonly _keyE;
+        private readonly _keyW;
+        private readonly _keyR;
+        private readonly _keyX;
+        private readonly _keyF;
+        private _orbitControls;
+        private _transformController;
+        private _boxesDrawer;
+        private _boxColliderDrawer;
+        private _sphereColliderDrawer;
+        private _cylinderColliderDrawer;
+        private _skeletonDrawer;
+        private _cameraViewFrustum;
+        private _worldAxisesDrawer;
+        private _gridDrawer;
+        private _onGameObjectHovered;
+        private _onGameObjectSelectChanged;
+        private _onGameObjectSelected;
+        private _onGameObjectUnselected;
+        private _updateCameras();
+        private _updateLights();
+        lookAtSelected(): void;
+        onEnable(): void;
+        onDisable(): void;
+        onUpdate(): void;
+    }
 }
 declare namespace paper.editor {
 }

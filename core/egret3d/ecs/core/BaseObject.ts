@@ -1,5 +1,6 @@
 namespace paper {
     let _hashCount: number = 1;
+
     /**
      * 生成 uuid 的方式。
      * @internal
@@ -7,22 +8,42 @@ namespace paper {
     export let createUUID = () => {
         return (_hashCount++).toString();
     };
+
     /**
      * 可以被 paper.DisposeCollecter 收集，并在此帧末尾释放的基础对象。
      */
     export abstract class BaseRelease<T extends BaseRelease<T>> {
+
+        /**
+         * 
+         */
+        public onUpdateTarget?: any;
+
         /**
          * 是否已被释放。
          * - 将对象从对象池取出时，需要设置此值为 `false`。
          */
         protected _released?: boolean;
+
+        /**
+         * 更新该对象，使得该对象的 `onUpdate` 被执行。
+         */
+        public update() {
+            if (this.onUpdate) {
+                this.onUpdate.call(this.onUpdateTarget || this, this);
+            }
+        }
+
         /**
          * 在此帧末尾释放该对象。
          * - 不能在静态解释阶段执行。
          */
         public release() {
             if (this._released) {
-                console.warn("The object has been released.");
+                if (DEBUG) {
+                    console.warn("The object has been released.");
+                }
+
                 return this;
             }
 
@@ -31,11 +52,18 @@ namespace paper {
 
             return this;
         }
+
+        /**
+         * 
+         */
+        public onUpdate?(v: T): void;
+
         /**
          * 在此帧末尾释放时调用。
          */
         public onClear?(): void;
     }
+
     /**
      * 基础对象。
      */

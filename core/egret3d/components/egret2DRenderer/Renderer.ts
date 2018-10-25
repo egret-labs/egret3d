@@ -102,7 +102,7 @@ module egret.web {
             this.uploadVerticesArray(this.vao.getVertices());
 
             // 有mesh，则使用indicesForMesh
-            if (this.vao.isMesh()) {
+            if ((this.vao as any).hasMesh) {
                 this.uploadIndicesArray(this.vao.getMeshIndices());
             }
 
@@ -127,7 +127,7 @@ module egret.web {
             }
 
             // 切换回默认indices
-            if (this.vao.isMesh()) {
+            if ((this.vao as any).hasMesh) {
                 this.uploadIndicesArray(this.vao.getIndices());
             }
 
@@ -334,7 +334,13 @@ module egret.web {
          **/
         private drawTextureElements(data: any, offset: number): number {
             let gl = this.context;
-            gl.bindTexture(gl.TEXTURE_2D, data.texture);
+            if (data.texture.isCanvas) {
+                (gl as any).wxBindCanvasTexture(gl.TEXTURE_2D, data.texture);
+            }
+            else {
+                gl.bindTexture(gl.TEXTURE_2D, data.texture);
+            }
+
             let size = data.count * 3;
             gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
             return size;

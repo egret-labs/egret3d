@@ -21,20 +21,20 @@ namespace paper.editor {
         }
         private static makePrefabInfo(gameOjbect: GameObject): Info[] {
             let isPrefabRoot = (gameObj: GameObject): boolean => {
-                if (gameObj.extras.prefab) {
+                if (gameObj.extras&&gameObj.extras.prefab) {
                     return true;
                 }
                 return false;
             }
             let isPrefabChild = (gameObj: GameObject): boolean => {
-                if (gameObj.extras.rootID) {
+                if (gameObj.extras&&gameObj.extras.rootID) {
                     return true;
                 }
                 return false;
             }
 
             let makeInfo = (target: GameObject, result: Info[] = []) => {
-                result.push({ uuid: target.uuid, linkid: target.extras.linkedID, rootid: target.extras.rootID, prefab: target.extras.prefab.name });
+                result.push({ uuid: target.uuid, linkid: target.extras!.linkedID, rootid: target.extras!.rootID, prefab: target.extras!.prefab!.name });
                 target.transform.children.forEach(transform => {
                     let obj = transform.gameObject;
                     if (isPrefabChild(obj) && !isPrefabRoot(obj)) {
@@ -63,9 +63,9 @@ namespace paper.editor {
             let ids = this.prefabInfos.map(prefabInfos => { return prefabInfos.uuid });
             let objs = this.editorModel.getGameObjectsByUUids(ids);
             objs.forEach(obj => {
-                obj.extras.linkedID = undefined;
-                obj.extras.prefab = undefined;
-                obj.extras.rootID = undefined;
+                obj.extras!.linkedID = undefined;
+                obj.extras!.prefab = undefined;
+                obj.extras!.rootID = undefined;
                 this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: null });
             });
             return true;
@@ -77,10 +77,10 @@ namespace paper.editor {
                 b: for (let k: number = 0; k < this.prefabInfos.length; k++) {
                     let info = this.prefabInfos[k];
                     if (obj.uuid === info.uuid) {
-                        obj.extras.linkedID = info.linkid;
-                        obj.extras.prefab = paper.Asset.find(info.prefab)
-                        obj.extras.rootID = info.rootid;
-                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: obj.extras.prefab });
+                        obj.extras!.linkedID = info.linkid;
+                        obj.extras!.prefab = paper.Asset.find(info.prefab!) as paper.Prefab;
+                        obj.extras!.rootID = info.rootid;
+                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: obj.extras!.prefab });
                         break b;
                     }
                 }

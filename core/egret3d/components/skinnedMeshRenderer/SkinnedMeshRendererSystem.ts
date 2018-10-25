@@ -17,7 +17,7 @@ namespace egret3d {
                             this._updateDrawCalls(component.gameObject);
 
                             if (component.gameObject.renderer) {
-                                component.gameObject.renderer._aabbDirty = true;
+                                component.gameObject.renderer._localBoundingBoxDirty = true;
                             }
                         }
                     },
@@ -57,10 +57,6 @@ namespace egret3d {
                 drawCall.mesh = renderer.mesh;
                 drawCall.material = material || DefaultMaterials.MISSING;
                 drawCallCollecter.drawCalls.push(drawCall);
-
-                if (material && !renderer.forceCPUSkin) {
-                    material.addDefine(ShaderDefine.USE_SKINNING).addDefine(`${ShaderDefine.MAX_BONES} ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, renderer.bones.length)}`);
-                }
             }
         }
 

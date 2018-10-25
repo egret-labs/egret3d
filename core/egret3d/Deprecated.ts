@@ -31,6 +31,49 @@ namespace egret3d {
          * @deprecated
          * @see egret3d.inputCollecter
          */
+        mouse: {
+            /**
+             * @deprecated
+             * @see egret3d.inputCollecter.defaultPointer.isHold()
+             */
+            isPressed: function (button: number) {
+                const buttons = [egret3d.PointerButtonsType.LeftMouse, egret3d.PointerButtonsType.MiddleMouse, egret3d.PointerButtonsType.RightMouse];
+                return egret3d.inputCollecter.defaultPointer.isHold(buttons[button]);
+            },
+            /**
+             * @deprecated
+             * @see egret3d.inputCollecter.defaultPointer.isDown()
+             */
+            wasPressed: function (button: number) {
+                const buttons = [egret3d.PointerButtonsType.LeftMouse, egret3d.PointerButtonsType.MiddleMouse, egret3d.PointerButtonsType.RightMouse];
+                return egret3d.inputCollecter.defaultPointer.isDown(buttons[button]);
+            },
+            /**
+             * @deprecated
+             * @see egret3d.inputCollecter.defaultPointer.isUp()
+             */
+            wasReleased: function (button: number) {
+                const buttons = [egret3d.PointerButtonsType.LeftMouse, egret3d.PointerButtonsType.MiddleMouse, egret3d.PointerButtonsType.RightMouse];
+                return egret3d.inputCollecter.defaultPointer.isUp(buttons[button]);
+            },
+        },
+        /**
+         * @deprecated
+         * @see egret3d.inputCollecter
+         */
+        touch: {
+            /**
+             * @deprecated
+             * @see egret3d.inputCollecter.defaultPointer
+             */
+            getTouch: function (button: number) {
+                return undefined;
+            },
+        },
+        /**
+         * @deprecated
+         * @see egret3d.inputCollecter
+         */
         keyboard: {
             /**
              * @deprecated
@@ -46,6 +89,6 @@ namespace egret3d {
             wasPressed: function (key: string) {
                 return egret3d.inputCollecter.getKey("Key" + key.toUpperCase()).isUp();
             },
-        }
+        },
     };
 }

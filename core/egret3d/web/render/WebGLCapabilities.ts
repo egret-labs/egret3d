@@ -137,7 +137,7 @@ namespace egret3d {
         let textureUint = 0;
         const allKeys = samplerKeys.concat(samplerArrayKeys);
 
-        for (let uniform of activeUniforms) {
+        for (const uniform of activeUniforms) {
             if (allKeys.indexOf(uniform.name) < 0) {
                 continue;
             }
@@ -197,9 +197,11 @@ namespace egret3d {
         public textureFloat: boolean;
         public textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
 
-        public initialize() {
+        public initialize(config: RunEgretOptions) {
             super.initialize();
 
+            WebGLCapabilities.canvas = config.canvas;
+            WebGLCapabilities.webgl = config.webgl;
             const webgl = WebGLCapabilities.webgl;
             if (!webgl) {
                 return;
@@ -309,7 +311,6 @@ namespace egret3d {
             const webgl = WebGLCapabilities.webgl!;
             const stateEnables = this._stateEnables;
             const cacheStateEnable = this._cacheStateEnable;
-            //TODO WebGLKit.draw(context, drawCall.material, drawCall.mesh, drawCall.subMeshIndex, drawType, transform._worldMatrixDeterminant < 0);
             for (const e of stateEnables) {
                 const b = state ? state.enable && state.enable.indexOf(e) >= 0 : false;
                 if (cacheStateEnable[e] !== b) {

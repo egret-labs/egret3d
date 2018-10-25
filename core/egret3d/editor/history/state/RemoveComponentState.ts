@@ -43,7 +43,7 @@ namespace paper.editor {
                 let componentUUid = this.stateData.componentUUid;
                 let obj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
                 if (obj) {
-                    let component: BaseComponent = this.editorModel.getComponentById(obj, componentUUid);
+                    let component: BaseComponent = this.editorModel.getComponentById(obj, componentUUid) as BaseComponent;
 
                     if (component) {
                         obj.removeComponent(component);

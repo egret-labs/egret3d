@@ -24,7 +24,7 @@ namespace paper.editor{
 
         public undo(): boolean {
             if (super.undo()) {
-                let deleteUUid: string = this.stateData.cachePrefabUUid;
+                let deleteUUid: string = this.stateData.cachePrefabUUid!;
                 if (deleteUUid) {
                     let gameObj = this.editorModel.getGameObjectByUUid(deleteUUid);
                     if (gameObj) {
@@ -41,11 +41,11 @@ namespace paper.editor{
             if (super.redo()) {
                 const prefab = this.stateData.prefab;
                 if (prefab) {
-                    let instance:GameObject = this.stateData.prefab.createInstance(this.editorModel.scene);
-                    this.stateData.cachePrefabUUid = instance.uuid;
-                    let parent=this.editorModel.getGameObjectByUUid(this.stateData.parentUUID);
+                    let instance:GameObject|null = this.stateData.prefab.createInstance(this.editorModel.scene);
+                    this.stateData.cachePrefabUUid = instance!.uuid;
+                    let parent=this.editorModel.getGameObjectByUUid(this.stateData.parentUUID!);
                     if(parent){
-                        instance.transform.parent=parent.transform;
+                        instance!.transform.parent=parent.transform;
                     }
                     this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS);
                 }

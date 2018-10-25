@@ -1,5 +1,6 @@
 namespace egret3d {
-    const _helpVector3 = Vector3.create();
+    const _helpVector3A = Vector3.create();
+    const _helpVector3B = Vector3.create();
     const _helpRotation = Quaternion.create();
     const _helpMatrix = Matrix4.create();
 
@@ -48,6 +49,7 @@ namespace egret3d {
         private readonly _scale: Vector3 = Vector3.ONE.clone();
         private readonly _inverseWorldMatrix: Matrix4 = Matrix4.create();
         private readonly _worldMatrix: Matrix4 = Matrix4.create();
+        // private readonly _observers: ITransformObserver[] = []; // TODO
         /**
          * @internal
          */
@@ -56,6 +58,21 @@ namespace egret3d {
          * @internal
          */
         public _parent: Transform | null = null;
+
+        public constructor() {
+            super();
+
+            this._localPosition.onUpdateTarget = this._position.onUpdateTarget = this;
+            this._localPosition.onUpdate = this._position.onUpdate = this._onPositionUpdate;
+            this._localRotation.onUpdateTarget = this._rotation.onUpdateTarget = this;
+            this._localRotation.onUpdate = this._rotation.onUpdate = this._onRotationUpdate;
+            this._localEuler.onUpdateTarget = this._euler.onUpdateTarget = this;
+            this._localEuler.onUpdate = this._euler.onUpdate = this._onEulerUpdate;
+            this._localEulerAngles.onUpdateTarget = this._eulerAngles.onUpdateTarget = this;
+            this._localEulerAngles.onUpdate = this._eulerAngles.onUpdate = this._onEulerAnglesUpdate;
+            this._localScale.onUpdateTarget = this._scale.onUpdateTarget = this;
+            this._localScale.onUpdate = this._scale.onUpdate = this._onScaleUpdate;
+        }
 
         private _removeFromChildren(value: Transform) {
             let index = 0;
@@ -130,12 +147,12 @@ namespace egret3d {
         private _updateEuler(isWorldSpace: boolean, order?: EulerOrder) {
             if (isWorldSpace) {
                 this.worldMatrix.toEuler(this._euler, order);
-                this._eulerAngles.multiplyScalar(RAD_DEG, this._euler);
+                this._eulerAngles.multiplyScalar(Const.RAD_DEG, this._euler);
                 this._worldDirty &= ~TransformDirty.Euler;
             }
             else {
                 this.localMatrix.toEuler(this._localEuler, order);
-                this._localEulerAngles.multiplyScalar(RAD_DEG, this._localEuler);
+                this._localEulerAngles.multiplyScalar(Const.RAD_DEG, this._localEuler);
                 this._localDirty &= ~TransformDirty.Euler;
             }
         }
@@ -148,6 +165,52 @@ namespace egret3d {
 
             this._dirtify(false, TransformDirty.PRS);
         }
+
+        protected _onPositionUpdate(position: Readonly<Vector3>): void {
+            if (position === this._localPosition) {
+                this._dirtify(true, TransformDirty.Position);
+            }
+            else {
+                this.position = position;
+            }
+        }
+
+        protected _onRotationUpdate(rotation: Readonly<Quaternion>): void {
+            if (rotation === this._localRotation) {
+                this._dirtify(true, TransformDirty.Rotation);
+            }
+            else {
+                this.rotation = rotation;
+            }
+        }
+
+        protected _onEulerUpdate(euler: Readonly<Vector3>): void {
+            if (euler === this._localEuler) {
+                this.localEuler = euler;
+            }
+            else {
+                this.euler = euler;
+            }
+        }
+
+        protected _onEulerAnglesUpdate(euler: Readonly<Vector3>): void {
+            if (euler === this._localEulerAngles) {
+                this.localEulerAngles = euler;
+            }
+            else {
+                this.eulerAngles = euler;
+            }
+        }
+
+        protected _onScaleUpdate(scale: Readonly<Vector3>): void {
+            if (scale === this._localScale) {
+                this._dirtify(true, TransformDirty.Scale);
+            }
+            else {
+                this.scale = scale;
+            }
+        }
+
         /**
          * @internal
          */
@@ -225,8 +288,10 @@ namespace egret3d {
                 return this;
             }
 
-            if (worldPositionStays) {
-                _helpVector3.copy(this.position);
+            if (worldPositionStays) { // TODO copy matrix.
+                _helpVector3A.copy(this.position);
+                _helpRotation.copy(this.rotation);
+                _helpVector3B.copy(this.scale);
             }
 
             if (prevParent) {
@@ -240,8 +305,10 @@ namespace egret3d {
             this._parent = value;
             this._onParentChange(value, prevParent);
 
-            if (worldPositionStays) {
-                this.position = _helpVector3;
+            if (worldPositionStays) { // TODO copy matrix.
+                this.position = _helpVector3A;
+                this.rotation = _helpRotation;
+                this.scale = _helpVector3B;
             }
 
             return this;
@@ -337,10 +404,10 @@ namespace egret3d {
          * 该物体的本地位置。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
-        public get localPosition(): Readonly<Vector3 | IVector3> {
+        public get localPosition(): Readonly<Vector3> {
             return this._localPosition;
         }
-        public set localPosition(value: Readonly<Vector3 | IVector3>) {
+        public set localPosition(value: Readonly<Vector3>) {
             this._localPosition.x = value.x;
             this._localPosition.y = value.y;
             this._localPosition.z = value.z;
@@ -379,10 +446,10 @@ namespace egret3d {
         /**
          * 该物体的本地旋转。
          */
-        public get localRotation(): Readonly<Quaternion | IVector4> {
+        public get localRotation(): Readonly<Quaternion> {
             return this._localRotation;
         }
-        public set localRotation(value: Readonly<Quaternion | IVector4>) {
+        public set localRotation(value: Readonly<Quaternion>) {
             this._localRotation.x = value.x;
             this._localRotation.y = value.y;
             this._localRotation.z = value.z;
@@ -391,7 +458,7 @@ namespace egret3d {
             this._dirtify(true, TransformDirty.Rotation);
         }
         /**
-         * 该物体的本地欧拉弧度。
+         * 该物体的本地欧拉旋转。（弧度制）
          */
         public getLocalEuler(order?: EulerOrder): Readonly<Vector3> {
             if (this._localDirty & TransformDirty.Euler) {
@@ -401,7 +468,7 @@ namespace egret3d {
             return this._localEuler;
         }
         /**
-         * 该物体的本地欧拉弧度。
+         * 该物体的本地欧拉旋转。（弧度制）
          */
         public setLocalEuler(value: Readonly<IVector3>, order?: EulerOrder): this;
         public setLocalEuler(x: number, y: number, z: number, order?: EulerOrder): this;
@@ -410,14 +477,14 @@ namespace egret3d {
                 this._localEuler.x = (p1 as Readonly<IVector3>).x;
                 this._localEuler.y = (p1 as Readonly<IVector3>).y;
                 this._localEuler.z = (p1 as Readonly<IVector3>).z;
-                this._localEulerAngles.multiplyScalar(RAD_DEG, this._localEuler);
+                this._localEulerAngles.multiplyScalar(Const.RAD_DEG, this._localEuler);
                 this._localRotation.fromEuler(this._localEuler, p2 as EulerOrder);
             }
             else {
                 this._localEuler.x = p1 as number;
                 this._localEuler.y = p2 as number;
                 this._localEuler.z = p3 as number;
-                this._localEulerAngles.multiplyScalar(RAD_DEG, this._localEuler);
+                this._localEulerAngles.multiplyScalar(Const.RAD_DEG, this._localEuler);
                 this._localRotation.fromEuler(this._localEuler, p4 as EulerOrder);
             }
 
@@ -427,26 +494,26 @@ namespace egret3d {
             return this;
         }
         /**
-         * 该物体的本地欧拉弧度。
+         * 该物体的本地欧拉旋转。（弧度制）
          */
-        public get localEuler(): Readonly<Vector3 | IVector3> {
+        public get localEuler(): Readonly<Vector3> {
             if (this._localDirty & TransformDirty.Euler) {
                 this._updateEuler(false);
             }
 
             return this._localEuler;
         }
-        public set localEuler(value: Readonly<Vector3 | IVector3>) {
+        public set localEuler(value: Readonly<Vector3>) {
             this._localEuler.x = value.x;
             this._localEuler.y = value.y;
             this._localEuler.z = value.z;
-            this._localEulerAngles.multiplyScalar(RAD_DEG, this._localEuler);
+            this._localEulerAngles.multiplyScalar(Const.RAD_DEG, this._localEuler);
             this._localRotation.fromEuler(this._localEuler);
             this._dirtify(true, TransformDirty.Rotation);
             this._localDirty &= ~TransformDirty.Euler;
         }
         /**
-         * 该物体的本地欧拉角度。
+         * 该物体的本地欧拉旋转。（角度制）
          */
         public getLocalEulerAngles(order?: EulerOrder): Readonly<Vector3> {
             if (this._localDirty & TransformDirty.Euler) {
@@ -456,7 +523,7 @@ namespace egret3d {
             return this._localEulerAngles;
         }
         /**
-         * 该物体的本地欧拉角度。
+         * 该物体的本地欧拉旋转。（角度制）
          */
         public setLocalEulerAngles(value: Readonly<IVector3>, order?: EulerOrder): this;
         public setLocalEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
@@ -465,14 +532,14 @@ namespace egret3d {
                 this._localEulerAngles.x = (p1 as Readonly<IVector3>).x;
                 this._localEulerAngles.y = (p1 as Readonly<IVector3>).y;
                 this._localEulerAngles.z = (p1 as Readonly<IVector3>).z;
-                this._localEuler.multiplyScalar(DEG_RAD, this._localEulerAngles);
+                this._localEuler.multiplyScalar(Const.DEG_RAD, this._localEulerAngles);
                 this._localRotation.fromEuler(this._localEuler, p2 as EulerOrder);
             }
             else {
                 this._localEulerAngles.x = p1 as number;
                 this._localEulerAngles.y = p2 as number;
                 this._localEulerAngles.z = p3 as number;
-                this._localEuler.multiplyScalar(DEG_RAD, this._localEulerAngles);
+                this._localEuler.multiplyScalar(Const.DEG_RAD, this._localEulerAngles);
                 this._localRotation.fromEuler(this._localEuler, p4 as EulerOrder);
             }
 
@@ -482,21 +549,21 @@ namespace egret3d {
             return this;
         }
         /**
-         * 该物体的本地欧拉角度。
+         * 该物体的本地欧拉旋转。（角度制）
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3, { step: 1.0 })
-        public get localEulerAngles(): Readonly<Vector3 | IVector3> {
+        public get localEulerAngles(): Readonly<Vector3> {
             if (this._localDirty & TransformDirty.Euler) {
                 this._updateEuler(false);
             }
 
             return this._localEulerAngles;
         }
-        public set localEulerAngles(value: Readonly<Vector3 | IVector3>) {
+        public set localEulerAngles(value: Readonly<Vector3>) {
             this._localEulerAngles.x = value.x;
             this._localEulerAngles.y = value.y;
             this._localEulerAngles.z = value.z;
-            this._localEuler.multiplyScalar(DEG_RAD, this._localEulerAngles);
+            this._localEuler.multiplyScalar(Const.DEG_RAD, this._localEulerAngles);
             this._localRotation.fromEuler(this._localEuler);
             this._dirtify(true, TransformDirty.Rotation);
             this._localDirty &= ~TransformDirty.Euler;
@@ -532,10 +599,10 @@ namespace egret3d {
          * 该物体的本地缩放。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
-        public get localScale(): Readonly<Vector3 | IVector3> {
+        public get localScale(): Readonly<Vector3> {
             return this._localScale;
         }
-        public set localScale(value: Readonly<Vector3 | IVector3>) {
+        public set localScale(value: Readonly<Vector3>) {
             this._localScale.x = value.x;
             this._localScale.y = value.y;
             this._localScale.z = value.z;
@@ -601,7 +668,7 @@ namespace egret3d {
         /**
          * 该物体的世界位置。
          */
-        public get position(): Readonly<Vector3 | IVector3> {
+        public get position(): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Position) {
                 this.worldMatrix.decompose(this._position, null, null);
                 this._worldDirty &= ~TransformDirty.Position;
@@ -609,7 +676,7 @@ namespace egret3d {
 
             return this._position;
         }
-        public set position(value: Readonly<Vector3 | IVector3>) {
+        public set position(value: Readonly<Vector3>) {
             this._localPosition.x = value.x;
             this._localPosition.y = value.y;
             this._localPosition.z = value.z;
@@ -661,7 +728,7 @@ namespace egret3d {
         /**
          * 该物体的世界旋转。
          */
-        public get rotation(): Readonly<Quaternion | IVector4> {
+        public get rotation(): Readonly<Quaternion> {
             if (this._worldDirty & TransformDirty.Rotation) {
                 this.worldMatrix.decompose(null, this._rotation, null);
                 this._worldDirty &= ~TransformDirty.Rotation;
@@ -669,7 +736,7 @@ namespace egret3d {
 
             return this._rotation;
         }
-        public set rotation(value: Readonly<Quaternion | IVector4>) {
+        public set rotation(value: Readonly<Quaternion>) {
             this._localRotation.x = value.x;
             this._localRotation.y = value.y;
             this._localRotation.z = value.z;
@@ -682,7 +749,7 @@ namespace egret3d {
             this._dirtify(true, TransformDirty.Rotation);
         }
         /**
-         * 该物体的世界欧拉弧度。
+         * 该物体的世界欧拉旋转。（弧度制）
          */
         public getEuler(order?: EulerOrder): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Euler) {
@@ -692,7 +759,7 @@ namespace egret3d {
             return this._euler;
         }
         /**
-         * 该物体的世界欧拉弧度。
+         * 该物体的世界欧拉旋转。（弧度制）
          */
         public setEuler(v: Readonly<IVector3>, order?: EulerOrder): this;
         public setEuler(x: number, y: number, z: number, order?: EulerOrder): this;
@@ -701,8 +768,8 @@ namespace egret3d {
                 this._localRotation.fromEuler(q1 as Readonly<IVector3>, q2 as EulerOrder);
             }
             else {
-                _helpVector3.set(q1 as number, q2 as number, q3 as number);
-                this._localRotation.fromEuler(_helpVector3, q4 as EulerOrder);
+                _helpVector3A.set(q1 as number, q2 as number, q3 as number);
+                this._localRotation.fromEuler(_helpVector3A, q4 as EulerOrder);
             }
 
             if (this._parent) {
@@ -714,16 +781,16 @@ namespace egret3d {
             return this;
         }
         /**
-         * 该物体的世界欧拉弧度。
+         * 该物体的世界欧拉旋转。（弧度制）
          */
-        public get euler(): Readonly<Vector3 | IVector3> {
+        public get euler(): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Euler) {
                 this._updateEuler(true);
             }
 
             return this._euler;
         }
-        public set euler(value: Readonly<Vector3 | IVector3>) {
+        public set euler(value: Readonly<Vector3>) {
             this._localRotation.fromEuler(value);
 
             if (this._parent) {
@@ -733,7 +800,7 @@ namespace egret3d {
             this._dirtify(true, TransformDirty.Rotation);
         }
         /**
-         * 该物体的世界欧拉角度。
+         * 该物体的世界欧拉旋转。（角度制）
          */
         public getEulerAngles(order?: EulerOrder): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Euler) {
@@ -743,18 +810,18 @@ namespace egret3d {
             return this._eulerAngles;
         }
         /**
-         * 该物体的世界欧拉角度。
+         * 该物体的世界欧拉旋转。（角度制）
          */
         public setEulerAngles(v: Readonly<IVector3>, order?: EulerOrder): this;
         public setEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
         public setEulerAngles(q1: Readonly<IVector3> | number, q2?: EulerOrder | number, q3?: number, q4?: EulerOrder) {
             if (q1.hasOwnProperty("x")) {
-                _helpVector3.multiplyScalar(DEG_RAD, q1 as Readonly<IVector3>);
-                this._localRotation.fromEuler(_helpVector3, q2 as EulerOrder);
+                _helpVector3A.multiplyScalar(Const.DEG_RAD, q1 as Readonly<IVector3>);
+                this._localRotation.fromEuler(_helpVector3A, q2 as EulerOrder);
             }
             else {
-                _helpVector3.set(q1 as number * DEG_RAD, q2 as number * DEG_RAD, q3 as number * DEG_RAD);
-                this._localRotation.fromEuler(_helpVector3, q4 as EulerOrder);
+                _helpVector3A.set(q1 as number * Const.DEG_RAD, q2 as number * Const.DEG_RAD, q3 as number * Const.DEG_RAD);
+                this._localRotation.fromEuler(_helpVector3A, q4 as EulerOrder);
             }
 
             if (this._parent) {
@@ -766,18 +833,18 @@ namespace egret3d {
             return this;
         }
         /**
-         * 该物体的世界欧拉角度。
+         * 该物体的世界欧拉旋转。（角度制）
          */
-        public get eulerAngles(): Readonly<Vector3 | IVector3> {
+        public get eulerAngles(): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Euler) {
                 this._updateEuler(true);
             }
 
             return this._eulerAngles;
         }
-        public set eulerAngles(value: Readonly<Vector3 | IVector3>) {
-            _helpVector3.multiplyScalar(DEG_RAD, value);
-            this._localRotation.fromEuler(_helpVector3);
+        public set eulerAngles(value: Readonly<Vector3>) {
+            _helpVector3A.multiplyScalar(Const.DEG_RAD, value);
+            this._localRotation.fromEuler(_helpVector3A);
 
             if (this._parent) {
                 this._localRotation.premultiply(_helpRotation.inverse(this._parent.rotation)).normalize();
@@ -824,7 +891,7 @@ namespace egret3d {
         /**
          * 该物体的世界缩放。
          */
-        public get scale(): Readonly<Vector3 | IVector3> {
+        public get scale(): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Scale) {
                 this.worldMatrix.decompose(null, null, this._scale);
                 this._worldDirty &= ~TransformDirty.Scale;
@@ -832,7 +899,7 @@ namespace egret3d {
 
             return this._scale;
         }
-        public set scale(value: Readonly<Vector3 | IVector3>) {
+        public set scale(value: Readonly<Vector3>) {
             this._localScale.x = value.x;
             this._localScale.y = value.y;
             this._localScale.z = value.z;
@@ -890,20 +957,20 @@ namespace egret3d {
                 }
             }
             else {
-                _helpVector3.set(p1 as number, p2 as number, p3 as number);
+                _helpVector3A.set(p1 as number, p2 as number, p3 as number);
 
                 if (p4) {
-                    this.position = this._localPosition.add(_helpVector3, this.position);
+                    this.position = this._localPosition.add(_helpVector3A, this.position);
                 }
                 else {
-                    this.localPosition = this._localPosition.add(_helpVector3);
+                    this.localPosition = this._localPosition.add(_helpVector3A);
                 }
             }
 
             return this;
         }
         /**
-         * 将该物体旋转指定的欧拉弧度。
+         * 将该物体旋转指定的欧拉旋转。（弧度制）
          * @param isWorldSpace 是否是世界坐标系。
          */
         public rotate(value: Readonly<IVector3>, isWorldSpace?: boolean, order?: EulerOrder): this;
@@ -919,14 +986,14 @@ namespace egret3d {
                 }
             }
             else {
-                _helpVector3.set(p1 as number, p2 as number, p3 as number);
+                _helpVector3A.set(p1 as number, p2 as number, p3 as number);
 
                 if (p4) {
-                    this.euler = this._localEuler.add(_helpVector3, this.euler);
+                    this.euler = this._localEuler.add(_helpVector3A, this.euler);
                 }
                 else {
                     this.localEuler; // Update euler.
-                    this.localEuler = this._localEuler.add(_helpVector3);
+                    this.localEuler = this._localEuler.add(_helpVector3A);
                 }
             }
 
@@ -935,11 +1002,11 @@ namespace egret3d {
         /**
          * 将该物体绕指定轴旋转指定弧度。
          * @param axis 指定轴。
-         * @param radian 指定弧度。
+         * @param angle 指定弧度。
          * @param isWorldSpace 是否是世界坐标系。
          */
-        public rotateOnAxis(axis: Readonly<IVector3>, radian: number, isWorldSpace?: boolean) {
-            _helpRotation.fromAxis(axis, radian);
+        public rotateOnAxis(axis: Readonly<IVector3>, angle: number, isWorldSpace?: boolean) {
+            _helpRotation.fromAxis(axis, angle);
 
             if (isWorldSpace) {
                 this.localRotation = this._localRotation.premultiply(_helpRotation).normalize();
@@ -954,64 +1021,17 @@ namespace egret3d {
          * 将该物体绕世界指定点和世界指定轴旋转指定弧度。
          * @param worldPosition 世界指定点。
          * @param worldAxis 世界指定轴。
-         * @param radian 指定弧度。
+         * @param angle 指定弧度。
          */
-        public rotateAround(worldPosition: Readonly<IVector3>, worldAxis: Readonly<IVector3>, radian: number) {
-            this.rotateOnAxis(worldAxis, radian, true);
-            this.position = this._localPosition.applyMatrix(_helpMatrix.fromRotation(_helpRotation.fromAxis(worldAxis, radian)).fromTranslate(worldPosition, true), this.position);
+        public rotateAround(worldPosition: Readonly<IVector3>, worldAxis: Readonly<IVector3>, angle: number) {
+            this.rotateOnAxis(worldAxis, angle, true);
+            this.position = this._localPosition.applyMatrix(_helpMatrix.fromRotation(_helpRotation.fromAxis(worldAxis, angle)).fromTranslate(worldPosition, true), this.position);
 
             return this;
-        }
-        /**
-         * 将该物体旋转指定的欧拉角度。
-         * @param isWorldSpace 是否是世界坐标系。
-         */
-        public rotateAngle(value: Readonly<IVector3>, isWorldSpace?: boolean, order?: EulerOrder): this;
-        public rotateAngle(x: number, y: number, z: number, isWorldSpace?: boolean, order?: EulerOrder): this;
-        public rotateAngle(p1: Readonly<IVector3> | number, p2?: boolean | number, p3?: EulerOrder | number, p4?: boolean, p5?: EulerOrder) {
-            if (p1.hasOwnProperty("x")) {
-                if (p2) {
-                    this.eulerAngles = this._localEulerAngles.add(p1 as Readonly<IVector3>, this.eulerAngles);
-                }
-                else {
-                    this.localEulerAngles; // Update euler.
-                    this.localEulerAngles = this._localEulerAngles.add(p1 as Readonly<IVector3>);
-                }
-            }
-            else {
-                _helpVector3.set(p1 as number, p2 as number, p3 as number);
-
-                if (p4) {
-                    this.eulerAngles = this._localEulerAngles.add(_helpVector3, this.eulerAngles);
-                }
-                else {
-                    this.localEulerAngles; // Update euler.
-                    this.localEulerAngles = this._localEulerAngles.add(_helpVector3);
-                }
-            }
-
-            return this;
-        }
-        /**
-         * 将该物体绕指定轴旋转指定角度。
-         * @param axis 指定轴。
-         * @param angle 指定角度。
-         * @param isWorldSpace 是否是世界坐标系。
-         */
-        public rotateAngleOnAxis(axis: Readonly<IVector3>, angle: number, isWorldSpace?: boolean) {
-            return this.rotateOnAxis(axis, angle * DEG_RAD, isWorldSpace);
-        }
-        /**
-         * 将该物体绕世界指定点和世界指定轴旋转指定角度。
-         * @param worldPosition 世界指定点。
-         * @param worldAxis 世界指定轴。
-         * @param angle 指定角度。
-         */
-        public rotateAngleAround(worldPosition: Readonly<IVector3>, worldAxis: Readonly<IVector3>, angle: number) {
-            return this.rotateAround(worldPosition, worldAxis, angle * DEG_RAD);
         }
         /**
          * 获取该物体在世界空间坐标系下描述的 X 轴正方向。
+         * @param out 输出向量。
          */
         public getRight(out?: Vector3) {
             if (!out) {
@@ -1022,6 +1042,7 @@ namespace egret3d {
         }
         /**
          * 获取该物体在世界空间坐标系下描述的 Y 轴正方向。
+         * @param out 输出向量。
          */
         public getUp(out?: Vector3) {
             if (!out) {
@@ -1032,6 +1053,7 @@ namespace egret3d {
         }
         /**
          * 获取该物体在世界空间坐标系下描述的 Z 轴正方向。
+         * @param out 输出向量。
          */
         public getForward(out?: Vector3) {
             if (!out) {

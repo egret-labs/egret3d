@@ -7,11 +7,11 @@ namespace paper.editor {
 
         public static create(serializeData: any[], parent: GameObject): PasteGameObjectsState {
             const state = new PasteGameObjectsState();
-            let parentUUID: string = parent ? parent.uuid : null;
+            let parentUUID = parent ? parent.uuid : null;
             state.pasteInfo = { parentUUID: parentUUID, serializeData: serializeData };
             return state;
         }
-        private pasteInfo: { parentUUID: string, serializeData: any[] };
+        private pasteInfo: { parentUUID: string|null, serializeData: any[] };
         private cacheSerializeData: any[];
         private addList: string[];
         public undo(): boolean {
@@ -30,7 +30,7 @@ namespace paper.editor {
         public redo(): boolean {
             if (super.redo()) {
                 this.addList = [];
-                let parent = this.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID);
+                let parent = this.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID!);
                 let serializeDataList = this.cacheSerializeData ? this.cacheSerializeData : this.pasteInfo.serializeData;
                 let keepUID = this.cacheSerializeData ? true : false;
                 for (let i: number = 0; i < serializeDataList.length; i++) {
@@ -40,12 +40,12 @@ namespace paper.editor {
                         obj.transform.parent = parent.transform;
                     }
                     //清理预置体信息
-                    this.clearPrefabInfo(obj);
-                    this.addList.push(obj.uuid);
+                    this.clearPrefabInfo(obj!);
+                    this.addList.push(obj!.uuid);
                     if (serializeDataList === this.pasteInfo.serializeData) {
                         if (!this.cacheSerializeData)
                             this.cacheSerializeData = [];
-                        this.cacheSerializeData.push(serialize(obj));
+                        this.cacheSerializeData.push(serialize(obj!));
                     }
                 }
                 this.dispatchEditorModelEvent(EditorModelEvent.ADD_GAMEOBJECTS, this.addList);

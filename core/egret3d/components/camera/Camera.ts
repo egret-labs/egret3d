@@ -1,9 +1,13 @@
 namespace egret3d {
     const helpRectA = new Rectangle();
+    const _helpPlane = Plane.create();
+    const _helpRay = Ray.create();
+
     /**
      * 相机组件
      */
     export class Camera extends paper.BaseComponent {
+
         /**
          * 当前场景的主相机。
          * - 如果没有则创建一个。
@@ -18,6 +22,7 @@ namespace egret3d {
 
             return gameObject.getOrAddComponent(Camera);
         }
+
         /**
          * 编辑相机。
          * - 如果没有则创建一个。
@@ -30,7 +35,7 @@ namespace egret3d {
                 gameObject.transform.lookAt(Vector3.ZERO);
 
                 const camera = gameObject.addComponent(Camera);
-                camera.cullingMask &= ~paper.CullingMask.UI;
+                camera.cullingMask &= ~paper.CullingMask.UI; // TODO 更明确的 UI 编辑方案。
                 camera.far = 10000.0;
             }
 
@@ -38,17 +43,19 @@ namespace egret3d {
         }
 
         /**
-         * 是否清除颜色缓冲区
+         * 是否清除颜色缓冲区。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public clearOption_Color: boolean = true;
+
         /**
-         * 是否清除深度缓冲区
+         * 是否清除深度缓冲区。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public clearOption_Depth: boolean = true;
+
         /**
          * 相机的渲染剔除，对应 GameObject 的层级。
          * - camera.cullingMask = paper.CullingMask.UI;
@@ -56,10 +63,11 @@ namespace egret3d {
          * - camera.cullingMask &= ~paper.CullingMask.UI;
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(paper.CullingMask) })
+        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((paper as any).CullingMask) }) // TODO
         public cullingMask: paper.CullingMask = paper.CullingMask.Everything;
+
         /**
-         * 相机渲染排序
+         * 相机渲染排序。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.INT)
@@ -92,7 +100,8 @@ namespace egret3d {
          * 相机视窗
          */
         @paper.serializedField
-        public readonly viewport: Rectangle = new Rectangle(0, 0, 1, 1);
+        @paper.editor.property(paper.editor.EditType.RECT)
+        public readonly viewport: Rectangle = Rectangle.create(0, 0, 1, 1);
         /**
          * TODO 功能完善后开放此接口
          */
@@ -207,6 +216,7 @@ namespace egret3d {
 
             return false;
         }
+
         /**
          * @internal
          */
@@ -221,15 +231,16 @@ namespace egret3d {
 
             this.context = new RenderContext();
         }
+        
         /**
          * 计算相机的 project matrix（投影矩阵）
          */
         public calcProjectMatrix(asp: number, matrix: Matrix4): Matrix4 {
-            if (this.opvalue > 0) {
+            if (this.opvalue > 0.0) {
                 Matrix4.perspectiveProjectLH(this.fov, asp, this.near, this.far, this._projectionMatrix);
             }
 
-            if (this.opvalue < 1) {
+            if (this.opvalue < 1.0) {
                 Matrix4.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this._matProjO);
             }
 
@@ -280,18 +291,25 @@ namespace egret3d {
             const vppos = helpVector3A;
             vppos.x = screenPos.x / vpp.w * 2.0 - 1.0;
             vppos.y = 1.0 - screenPos.y / vpp.h * 2.0;
-            vppos.z = screenPos.z;
+            vppos.z = 0.0;
 
-            const matrixView = helpMatrixA;
             const matrixProject = helpMatrixB;
             const asp = vpp.w / vpp.h;
 
-            matrixView.inverse(this.gameObject.transform.getWorldMatrix());
             this.calcProjectMatrix(asp, matrixProject);
 
-            helpMatrixC.multiply(matrixProject, matrixView)
-                .inverse()
-                .transformVector3(vppos, outWorldPos);
+            helpMatrixC.multiply(matrixProject, this.gameObject.transform.inverseWorldMatrix).inverse();
+            helpVector3B.applyMatrix(helpMatrixC, vppos);
+            vppos.z = 1.0;
+            helpVector3C.applyMatrix(helpMatrixC, vppos);
+            helpVector3B.subtract(helpVector3B, helpVector3C).normalize();
+            _helpRay.set(helpVector3C, helpVector3B);
+
+            const position = this.gameObject.transform.getForward().multiplyScalar(screenPos.z).add(this.gameObject.transform.position).release();
+            _helpPlane.fromPoint(position, this.gameObject.transform.getForward().release());
+            const raycastInfo = RaycastInfo.create().release();
+            _helpPlane.raycast(_helpRay, raycastInfo);
+            outWorldPos.copy(raycastInfo.position);
         }
         /**
          * 由世界坐标得到屏幕坐标
@@ -300,13 +318,11 @@ namespace egret3d {
             const vpp = helpRectA;
             this.calcViewPortPixel(vpp);
 
-            const matrixView = helpMatrixA;
             const matrixProject = helpMatrixB;
             const asp = vpp.w / vpp.h;
-            matrixView.inverse(this.gameObject.transform.getWorldMatrix());
             this.calcProjectMatrix(asp, matrixProject);
 
-            const matrixViewProject = helpMatrixC.multiply(matrixProject, matrixView);
+            const matrixViewProject = helpMatrixC.multiply(matrixProject, this.gameObject.transform.inverseWorldMatrix);
             const ndcPos = helpVector3A;
             matrixViewProject.transformVector3(worldPos, ndcPos);
             outScreenPos.x = (ndcPos.x + 1.0) * vpp.w * 0.5;

@@ -1,23 +1,33 @@
 namespace egret3d {
+
     /**
-     * TODO 使用枚举常数。
+     * 内联的数字常数枚举。
      */
-    export const RAD_DEG: number = 180.0 / Math.PI;
-    /**
-     * TODO 使用枚举常数。
-     */
-    export const DEG_RAD: number = Math.PI / 180.0;
-    /**
-     * TODO 使用枚举常数。
-     */
-    export const EPSILON = 2.220446049250313e-16; // Number.EPSILON
+    export const enum Const {
+
+        /**
+         * 弧度制到角度制相乘的系数。
+         */
+        RAD_DEG = 57.29577951308232,
+
+        /**
+         * 角度制到弧度制相乘的系数。
+         */
+        DEG_RAD = 0.017453292519943295,
+
+        /**
+         * 大于零的最小正值。
+         * - https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
+         */
+        EPSILON = 2.2204460492503130808472633361816E-16,
+    }
 
     export function sign(value: number): number {
         if (value === 0 || value !== value) {
             return value;
         }
 
-        
+
         return value > 0 ? 1 : -1;
     }
 
@@ -26,6 +36,7 @@ namespace egret3d {
             return min;
         else if (v > max)
             return max;
+
         else
             return v;
     }
@@ -89,7 +100,7 @@ namespace egret3d {
         return true;
     }
 
-    export function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<AABB>) {
+    export function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<Box>) {
         if (aabb.isEmpty) {
             return false;
         }
@@ -137,7 +148,7 @@ namespace egret3d {
         return satForAxes(axes);
     }
 
-    export function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<AABB>) {
+    export function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<Box>) {
         // We compute the minimum and maximum dot product values. If those values
         // are on the same side (back or front) of the plane, then there is no intersection.
         let vMin: number;
@@ -179,14 +190,14 @@ namespace egret3d {
         return Math.abs(plane.getDistance(sphere.center)) <= sphere.radius;
     }
 
-    export function aabbIntersectsSphere(aabb: Readonly<AABB>, sphere: Readonly<Sphere>) {
+    export function aabbIntersectsSphere(aabb: Readonly<Box>, sphere: Readonly<Sphere>) {
         // Find the point on the AABB closest to the sphere center.
         helpVector3A.copy(sphere.center).clamp(aabb.minimum, aabb.maximum);
         // If that point is inside the sphere, the AABB and sphere intersect.
         return helpVector3A.getSquaredDistance(sphere.center) <= (sphere.radius * sphere.radius);
     }
 
-    export function aabbIntersectsAABB(valueA: Readonly<AABB>, valueB: Readonly<AABB>) {
+    export function aabbIntersectsAABB(valueA: Readonly<Box>, valueB: Readonly<Box>) {
         const minA = valueA.minimum;
         const maxA = valueA.maximum;
         const minB = valueB.minimum;
@@ -202,4 +213,17 @@ namespace egret3d {
 
         return valueA.center.getSquaredDistance(valueB.center) <= (radiusSum * radiusSum);
     }
+
+    /**
+     * @deprecated
+     */
+    export const RAD_DEG: number = 180.0 / Math.PI;
+    /**
+     * @deprecated
+     */
+    export const DEG_RAD: number = Math.PI / 180.0;
+    /**
+     * @deprecated
+     */
+    export const EPSILON = 2.220446049250313e-16;
 }
