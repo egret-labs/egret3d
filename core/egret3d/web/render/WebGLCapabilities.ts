@@ -45,7 +45,7 @@ namespace egret3d {
     function _getConstDefines(maxPrecision: string) {
         let defines = "precision " + maxPrecision + " float; \n";
         defines += "precision " + maxPrecision + " int; \n";
-        // defines += "#extension GL_OES_standard_derivatives : enable \n";
+        defines += "#extension GL_OES_standard_derivatives : enable \n";
 
         return defines;
     }

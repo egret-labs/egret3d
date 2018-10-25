@@ -3,7 +3,7 @@ namespace examples {
     export class BlendingTest {
         async start() {
             // Load resource config.
-            await RES.loadConfig("resource/default.res.json", "resource/");
+            await RES.loadConfig("default.res.json", "resource/");
 
             const textures = [
                 await RES.getResAsync("UV_Grid_Sm.jpg"),

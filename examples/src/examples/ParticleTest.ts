@@ -4,7 +4,7 @@ namespace examples {
 
         async  start() {
             // Load resource config.
-            await RES.loadConfig("resource/default.res.json", "resource/");
+            await RES.loadConfig("default.res.json", "resource/");
             // Create camera.
             egret3d.Camera.main;
             // Load prefab resource.

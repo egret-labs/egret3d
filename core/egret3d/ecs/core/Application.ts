@@ -122,6 +122,7 @@ namespace paper {
         public get isRunning() {
             return this._isRunning;
         }
+
         /**
          * 运行模式。
          */
@@ -138,8 +139,9 @@ namespace paper {
             this.onPlayerModeChange.dispatch(this.playerMode);
         }
     }
+
     /**
      * 应用程序单例。
      */
-    export const Application: ECS = ECS.getInstance();
+    export const Application = ECS.getInstance();
 }

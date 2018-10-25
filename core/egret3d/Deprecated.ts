@@ -2,6 +2,14 @@ namespace egret3d {
     /**
      * @deprecated
      */
+    export type AABB = Box;
+    /**
+     * @deprecated
+     */
+    export const AABB = Box;
+    /**
+     * @deprecated
+     */
     export type Matrix = Matrix4;
     /**
      * @deprecated
