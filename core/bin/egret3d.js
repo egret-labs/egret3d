@@ -430,7 +430,6 @@
     signals.Signal = Signal;
     global['signals'] = signals
 }(window));
-"use strict";
 var __reflect = (this && this.__reflect) || function (p, c, t) {
     p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
 };
@@ -3266,7 +3265,7 @@ var paper;
         };
         Object.defineProperty(BaseRenderer.prototype, "receiveShadows", {
             /**
-             * 该渲染组件是否接收投影。
+             * 该组件是否接收投影。
              */
             get: function () {
                 return this._receiveShadows;
@@ -3282,7 +3281,7 @@ var paper;
         });
         Object.defineProperty(BaseRenderer.prototype, "castShadows", {
             /**
-             * 该渲染组件是否产生投影。
+             * 该组件是否产生投影。
              */
             get: function () {
                 return this._castShadows;
@@ -3298,7 +3297,7 @@ var paper;
         });
         Object.defineProperty(BaseRenderer.prototype, "lightmapIndex", {
             /**
-             * 该渲染组件的光照图索引。
+             * 该组件的光照图索引。
              */
             get: function () {
                 return this._lightmapIndex;
@@ -3321,7 +3320,7 @@ var paper;
         });
         Object.defineProperty(BaseRenderer.prototype, "localBoundingBox", {
             /**
-             * 该渲染组件的本地包围盒。
+             * 该组件的本地包围盒。
              */
             get: function () {
                 if (this._localBoundingBoxDirty) {
@@ -3335,7 +3334,7 @@ var paper;
         });
         Object.defineProperty(BaseRenderer.prototype, "boundingSphere", {
             /**
-             * 该渲染组件本地包围盒的世界包围球，用于摄像机视锥剔除。
+             * 基于该组件本地包围盒生成的世界包围球，用于摄像机视锥剔除。
              */
             get: function () {
                 if (this._boundingSphereDirty) {
@@ -3349,7 +3348,7 @@ var paper;
         });
         Object.defineProperty(BaseRenderer.prototype, "materials", {
             /**
-             * 该渲染组件的材质列表。
+             * 该组件的材质列表。
              */
             get: function () {
                 return this._materials;
@@ -3374,7 +3373,7 @@ var paper;
         });
         Object.defineProperty(BaseRenderer.prototype, "material", {
             /**
-             * 该渲染组件材质列表中的第一个材质。
+             * 该组件材质列表中的第一个材质。
              */
             get: function () {
                 return this._materials.length > 0 ? this._materials[0] : null;
@@ -4421,21 +4420,21 @@ var paper;
     var BaseSystem = (function () {
         /**
          * 禁止实例化系统。
-         * @protected
+         * @private
          */
         function BaseSystem(order) {
             if (order === void 0) { order = -1; }
             /**
-             *
+             * 该系统的执行顺序。
              */
             this.order = -1;
             /**
-             * @internal
+             * @private
              */
             this._started = true;
             this._locked = false;
             /**
-             * 系统是否激活。
+             * 该系统是否被激活。
              */
             this._enabled = true;
             /**
@@ -4457,6 +4456,7 @@ var paper;
             this.order = order;
         }
         /**
+         * 创建一个指定系统。
          * @internal
          */
         BaseSystem.create = function (systemClass, order) {
@@ -4465,7 +4465,7 @@ var paper;
         };
         /**
          * 系统内部初始化。
-         * @internal
+         * @private
          */
         BaseSystem.prototype.initialize = function (config) {
             if (this._interests.length > 0) {
@@ -4495,7 +4495,7 @@ var paper;
         };
         /**
          * 系统内部卸载。
-         * @internal
+         * @private
          */
         BaseSystem.prototype.uninitialize = function () {
             this.onDestroy && this.onDestroy();
@@ -4523,10 +4523,10 @@ var paper;
         };
         /**
          * 系统内部更新。
-         * @internal
+         * @private
          */
         BaseSystem.prototype.update = function () {
-            if (!this._enabled) {
+            if (!this._enabled || !this._started) {
                 return;
             }
             this._locked = true;
@@ -4554,7 +4554,7 @@ var paper;
         };
         /**
          * 系统内部更新。
-         * @internal
+         * @private
          */
         BaseSystem.prototype.lateUpdate = function () {
             if (!this._enabled) {
@@ -4592,7 +4592,7 @@ var paper;
         });
         Object.defineProperty(BaseSystem.prototype, "groups", {
             /**
-             * 该系统的实体组。
+             * 该系统关心的实体组。
              */
             get: function () {
                 return this._groups;
@@ -5113,10 +5113,9 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    var _helpMatrix = egret3d.Matrix4.create();
     /**
      * 网格渲染组件。
-     * - 渲染网格筛选组件提供的网格资源。
+     * - 用于渲染网格筛选组件提供的网格资源。
      */
     var MeshRenderer = (function (_super) {
         __extends(MeshRenderer, _super);
@@ -9065,6 +9064,11 @@ var egret3d;
              * 当舞台尺寸改变时派发事件。
              */
             _this.onResize = new signals.Signal();
+            /**
+             * 渲染视口与舞台尺寸之间的缩放系数。
+             * - scaler = viewport.w / size.w
+             */
+            _this.scaler = 1.0;
             _this._rotated = false;
             _this._screenSize = { w: 1024, h: 1024 };
             _this._size = { w: 1024, h: 1024 };
@@ -9079,15 +9083,26 @@ var egret3d;
                 viewport.w = Math.ceil(size.w);
                 if (this._rotated = size.w > size.h ? screenSize.h > screenSize.w : screenSize.w > screenSize.h) {
                     viewport.h = Math.ceil(viewport.w / screenSize.h * screenSize.w);
+                    if (viewport.h !== viewport.h) {
+                        viewport.h = screenSize.w;
+                    }
                 }
                 else {
                     viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
+                    if (viewport.h !== viewport.h) {
+                        viewport.h = screenSize.h;
+                    }
                 }
+                this.scaler = 1.0;
             }
             else {
                 this._rotated = false;
                 viewport.w = Math.ceil(Math.min(size.w, screenSize.w));
                 viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
+                if (viewport.h !== viewport.h) {
+                    viewport.h = screenSize.h;
+                }
+                this.scaler = viewport.w / size.w;
             }
         };
         Stage.prototype.initialize = function (config) {
@@ -9126,7 +9141,7 @@ var egret3d;
         Object.defineProperty(Stage.prototype, "rotated", {
             /**
              * 舞台是否因屏幕尺寸的改变而发生了旋转。
-             * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于舞台尺寸宽度。
+             * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终以舞台宽度为依据。
              */
             get: function () {
                 return this._rotated;
@@ -11215,11 +11230,11 @@ var egret3d;
         function Camera() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
-             * 是否清除颜色缓冲区
+             * 是否清除颜色缓冲区。
              */
             _this.clearOption_Color = true;
             /**
-             * 是否清除深度缓冲区
+             * 是否清除深度缓冲区。
              */
             _this.clearOption_Depth = true;
             /**
@@ -11230,7 +11245,7 @@ var egret3d;
              */
             _this.cullingMask = 16777215 /* Everything */;
             /**
-             * 相机渲染排序
+             * 相机渲染排序。
              */
             _this.order = 0;
             /**
@@ -11977,6 +11992,8 @@ var egret3d;
                     this.shaderContextDefine += "#define USE_SHADOWMAP \n";
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
+                // this.shaderContextDefine += "#define OBJECTSPACE_NORMALMAP \n";  //TODO 根据参数生成define
+                // this.shaderContextDefine += "#define FLAT_SHADED \n";
             }
             var fog = scene.fog;
             if (fog.mode !== 0 /* NONE */) {
@@ -13275,19 +13292,6 @@ var paper;
             // gameObect.addComponent(egret3d.Transform);
             return gameObect;
         };
-        GameObject._sortRaycastInfo = function (a, b) {
-            // TODO renderQueue.
-            return a.distance - b.distance;
-        };
-        /**
-         * @deprecated
-         */
-        GameObject.raycast = function (ray, gameObjects, maxDistance, cullingMask, raycastMesh) {
-            if (maxDistance === void 0) { maxDistance = 0.0; }
-            if (cullingMask === void 0) { cullingMask = 16777215 /* Everything */; }
-            if (raycastMesh === void 0) { raycastMesh = false; }
-            return egret3d.raycastAll(ray, gameObjects, maxDistance, cullingMask, raycastMesh);
-        };
         Object.defineProperty(GameObject, "globalGameObject", {
             /**
              * 全局实体。
@@ -13317,7 +13321,7 @@ var paper;
                 }
                 this._removeComponent(component, null);
             }
-            // 销毁的第一时间就将组件和场景清除，场景的有无来判断实体是否已经销毁。
+            // 销毁的第一时间就将组件和场景清除，用场景的有无来判断实体是否已经销毁。
             this._components.length = 0;
             this._scene = null;
             paper.disposeCollecter.gameObjects.push(this);
@@ -14048,6 +14052,15 @@ var paper;
             return (scene || paper.Application.sceneManager.activeScene).findGameObjectsWithTag(tag);
         };
         /**
+         * @deprecated
+         */
+        GameObject.raycast = function (ray, gameObjects, maxDistance, cullingMask, raycastMesh) {
+            if (maxDistance === void 0) { maxDistance = 0.0; }
+            if (cullingMask === void 0) { cullingMask = 16777215 /* Everything */; }
+            if (raycastMesh === void 0) { raycastMesh = false; }
+            return egret3d.raycastAll(ray, gameObjects, maxDistance, cullingMask, raycastMesh);
+        };
+        /**
          * @internal
          */
         GameObject._instances = [];
@@ -14275,7 +14288,7 @@ var egret3d;
         };
         Object.defineProperty(MeshFilter.prototype, "mesh", {
             /**
-             * 该渲染组件的网格资源。
+             * 该组件的网格资源。
              */
             get: function () {
                 return this._mesh;
@@ -18908,9 +18921,9 @@ var egret3d;
         return "lowp";
     }
     function _getConstDefines(maxPrecision) {
-        var defines = "precision " + maxPrecision + " float; \n";
+        var defines = "#extension GL_OES_standard_derivatives : enable \n";
+        defines += "precision " + maxPrecision + " float; \n";
         defines += "precision " + maxPrecision + " int; \n";
-        // defines += "#extension GL_OES_standard_derivatives : enable \n";
         return defines;
     }
     function _replace(_match, include) {
@@ -18928,9 +18941,10 @@ var egret3d;
         webgl.compileShader(shader);
         var parameter = webgl.getShaderParameter(shader, webgl.COMPILE_STATUS);
         if (!parameter) {
-            if (confirm("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
-                alert(gltfShader.uri);
-            }
+            console.error("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?");
+            // if (confirm("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
+            //     alert(gltfShader.uri);
+            // }
             webgl.deleteShader(shader);
             return null;
         }
@@ -19029,9 +19043,9 @@ var egret3d;
             this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
             this.maxAnisotropy = (this.anisotropyExt !== null) ? webgl.getParameter(this.anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
             // use dfdx and dfdy must enable OES_standard_derivatives
-            _getExtension(webgl, "OES_standard_derivatives");
+            this.oes_standard_derivatives = !!_getExtension(webgl, "OES_standard_derivatives");
             // GL_OES_standard_derivatives
-            _getExtension(webgl, "GL_OES_standard_derivatives");
+            this.gl_oes_standard_derivatives = !!_getExtension(webgl, "GL_OES_standard_derivatives");
             //TODO
             WebGLCapabilities.commonDefines = _getConstDefines(this.maxPrecision);
             egret3d.SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
@@ -19093,7 +19107,8 @@ var egret3d;
             webgl.linkProgram(program);
             var parameter = webgl.getProgramParameter(program, webgl.LINK_STATUS);
             if (!parameter) {
-                alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
+                console.error("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
+                // alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
                 webgl.deleteProgram(program);
                 return null;
             }

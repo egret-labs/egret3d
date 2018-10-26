@@ -287,7 +287,7 @@ namespace paper.editor {
                         break;
 
                     case editor.EditType.LIST:
-                        gui.add(gui.instance, info.name, info.option.listItems!).listen();
+                        gui.add(gui.instance, info.name, info.option!.listItems!).listen();
                         break;
 
                     case editor.EditType.VECTOR2: {

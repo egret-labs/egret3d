@@ -328,8 +328,8 @@ declare namespace paper.editor {
         /**编辑类型 */
         editType: EditType;
         /**属性配置 */
-        option: PropertyOption;
-        constructor(name?: string, editType?: EditType, option?: PropertyOption);
+        option: PropertyOption | undefined;
+        constructor(name: string, editType: EditType, option?: PropertyOption);
     }
     /**属性配置 */
     type PropertyOption = {
@@ -1217,32 +1217,32 @@ declare namespace paper {
         abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
         abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
         /**
-         * 该渲染组件是否接收投影。
+         * 该组件是否接收投影。
          */
         receiveShadows: boolean;
         /**
-         * 该渲染组件是否产生投影。
+         * 该组件是否产生投影。
          */
         castShadows: boolean;
         /**
-         * 该渲染组件的光照图索引。
+         * 该组件的光照图索引。
          */
         lightmapIndex: number;
         readonly lightmapScaleOffset: egret3d.Vector4;
         /**
-         * 该渲染组件的本地包围盒。
+         * 该组件的本地包围盒。
          */
         readonly localBoundingBox: Readonly<egret3d.Box>;
         /**
-         * 该渲染组件本地包围盒的世界包围球，用于摄像机视锥剔除。
+         * 基于该组件本地包围盒生成的世界包围球，用于摄像机视锥剔除。
          */
         readonly boundingSphere: Readonly<egret3d.Sphere>;
         /**
-         * 该渲染组件的材质列表。
+         * 该组件的材质列表。
          */
         materials: ReadonlyArray<egret3d.Material>;
         /**
-         * 该渲染组件材质列表中的第一个材质。
+         * 该组件材质列表中的第一个材质。
          */
         material: egret3d.Material | null;
         /**
@@ -2885,12 +2885,16 @@ declare namespace paper {
      */
     abstract class BaseSystem {
         /**
-         *
+         * 该系统的执行顺序。
          */
         readonly order: SystemOrder;
+        /**
+         * @private
+         */
+        _started: boolean;
         private _locked;
         /**
-         * 系统是否激活。
+         * 该系统是否被激活。
          */
         protected _enabled: boolean;
         /**
@@ -2907,9 +2911,29 @@ declare namespace paper {
         protected readonly _clock: Clock;
         /**
          * 禁止实例化系统。
-         * @protected
+         * @private
          */
         constructor(order?: SystemOrder);
+        /**
+         * 系统内部初始化。
+         * @private
+         */
+        initialize(config?: any): void;
+        /**
+         * 系统内部卸载。
+         * @private
+         */
+        uninitialize(): void;
+        /**
+         * 系统内部更新。
+         * @private
+         */
+        update(): void;
+        /**
+         * 系统内部更新。
+         * @private
+         */
+        lateUpdate(): void;
         /**
          * 该系统初始化时调用。
          * @param config 该系统被注册时可以传递的初始化数据。
@@ -2980,7 +3004,7 @@ declare namespace paper {
          */
         enabled: boolean;
         /**
-         * 该系统的实体组。
+         * 该系统关心的实体组。
          */
         readonly groups: ReadonlyArray<GameObjectGroup>;
     }
@@ -3209,7 +3233,7 @@ declare namespace egret3d {
 declare namespace egret3d {
     /**
      * 网格渲染组件。
-     * - 渲染网格筛选组件提供的网格资源。
+     * - 用于渲染网格筛选组件提供的网格资源。
      */
     class MeshRenderer extends paper.BaseRenderer {
         recalculateLocalBox(): void;
@@ -4294,6 +4318,11 @@ declare namespace egret3d {
          * 当舞台尺寸改变时派发事件。
          */
         readonly onResize: signals.Signal;
+        /**
+         * 渲染视口与舞台尺寸之间的缩放系数。
+         * - scaler = viewport.w / size.w
+         */
+        scaler: number;
         private _rotated;
         private readonly _screenSize;
         private readonly _size;
@@ -4313,7 +4342,7 @@ declare namespace egret3d {
         stageToScreen(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3): this;
         /**
          * 舞台是否因屏幕尺寸的改变而发生了旋转。
-         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终等于舞台尺寸宽度。
+         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终以舞台宽度为依据。
          */
         readonly rotated: boolean;
         /**
@@ -4993,11 +5022,11 @@ declare namespace egret3d {
          */
         static readonly editor: Camera;
         /**
-         * 是否清除颜色缓冲区
+         * 是否清除颜色缓冲区。
          */
         clearOption_Color: boolean;
         /**
-         * 是否清除深度缓冲区
+         * 是否清除深度缓冲区。
          */
         clearOption_Depth: boolean;
         /**
@@ -5008,7 +5037,7 @@ declare namespace egret3d {
          */
         cullingMask: paper.CullingMask;
         /**
-         * 相机渲染排序
+         * 相机渲染排序。
          */
         order: number;
         /**
@@ -5465,11 +5494,6 @@ declare namespace paper {
          * 创建 GameObject，并添加到当前场景中。
          */
         static create(name?: string, tag?: string, scene?: Scene | null): GameObject;
-        private static _sortRaycastInfo(a, b);
-        /**
-         * @deprecated
-         */
-        static raycast(ray: Readonly<egret3d.Ray>, gameObjects: ReadonlyArray<GameObject>, maxDistance?: number, cullingMask?: CullingMask, raycastMesh?: boolean): egret3d.RaycastInfo[];
         /**
          * 全局实体。
          * - 全局实体不可被销毁。
@@ -5659,6 +5683,10 @@ declare namespace paper {
          * @see paper.Scene#findGameObjectsWithTag()
          */
         static findGameObjectsWithTag(tag: string, scene?: Scene | null): GameObject[];
+        /**
+         * @deprecated
+         */
+        static raycast(ray: Readonly<egret3d.Ray>, gameObjects: ReadonlyArray<GameObject>, maxDistance?: number, cullingMask?: CullingMask, raycastMesh?: boolean): egret3d.RaycastInfo[];
     }
 }
 declare namespace egret3d {
@@ -5726,7 +5754,7 @@ declare namespace egret3d {
         private _mesh;
         uninitialize(): void;
         /**
-         * 该渲染组件的网格资源。
+         * 该组件的网格资源。
          */
         mesh: Mesh | null;
     }
@@ -6707,6 +6735,8 @@ declare namespace egret3d {
         s3tc: WEBGL_compressed_texture_s3tc;
         textureFloat: boolean;
         textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
+        oes_standard_derivatives: boolean;
+        gl_oes_standard_derivatives: boolean;
         initialize(config: RunEgretOptions): void;
     }
     /**
@@ -10223,8 +10253,8 @@ declare namespace egret3d.ShaderChunk {
     const tonemapping_fragment = "#if defined( TONE_MAPPING )\n\n  gl_FragColor.rgb = toneMapping( gl_FragColor.rgb );\n\n#endif\n";
     const tonemapping_pars_fragment = "#ifndef saturate\n #define saturate(a) clamp( a, 0.0, 1.0 )\n#endif\n\nuniform float toneMappingExposure;\nuniform float toneMappingWhitePoint;\n\n// exposure only\nvec3 LinearToneMapping( vec3 color ) {\n\n return toneMappingExposure * color;\n\n}\n\n// source: https://www.cs.utah.edu/~reinhard/cdrom/\nvec3 ReinhardToneMapping( vec3 color ) {\n\n color *= toneMappingExposure;\n return saturate( color / ( vec3( 1.0 ) + color ) );\n\n}\n\n// source: http://filmicgames.com/archives/75\n#define Uncharted2Helper( x ) max( ( ( x * ( 0.15 * x + 0.10 * 0.50 ) + 0.20 * 0.02 ) / ( x * ( 0.15 * x + 0.50 ) + 0.20 * 0.30 ) ) - 0.02 / 0.30, vec3( 0.0 ) )\nvec3 Uncharted2ToneMapping( vec3 color ) {\n\n // John Hable's filmic operator from Uncharted 2 video game\n color *= toneMappingExposure;\n return saturate( Uncharted2Helper( color ) / Uncharted2Helper( vec3( toneMappingWhitePoint ) ) );\n\n}\n\n// source: http://filmicgames.com/archives/75\nvec3 OptimizedCineonToneMapping( vec3 color ) {\n\n // optimized filmic operator by Jim Hejl and Richard Burgess-Dawson\n color *= toneMappingExposure;\n color = max( vec3( 0.0 ), color - 0.004 );\n return pow( ( color * ( 6.2 * color + 0.5 ) ) / ( color * ( 6.2 * color + 1.7 ) + 0.06 ), vec3( 2.2 ) );\n\n}\n";
     const uv2_pars_fragment = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n varying vec2 vUv2;\n\n#endif";
-    const uv2_pars_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n attribute vec2 uv2;\n varying vec2 vUv2;\n #ifdef USE_LIGHTMAP\n  uniform vec4 lightmapScaleOffset;\n #endif\n\n#endif";
-    const uv2_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n #ifdef USE_LIGHTMAP\n  //1.0 - ((1.0 - uv2.y) * lightmapScaleOffset.y + lightmapScaleOffset.w);\n  vUv2 = vec2(uv2.x * lightmapScaleOffset.x + lightmapScaleOffset.z, 1.0 - ((1.0 - uv2.y) * lightmapScaleOffset.y + lightmapScaleOffset.w));\n #else \n  vUv2 = uv2;\n #endif\n\n#endif";
+    const uv2_pars_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n attribute vec2 uv2;\n varying vec2 vUv2;\n #ifdef USE_LIGHTMAP//Egret \n  uniform vec4 lightmapScaleOffset;\n #endif\n\n#endif";
+    const uv2_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n #ifdef USE_LIGHTMAP//Egret\n  vUv2 = vec2(uv2.x * lightmapScaleOffset.x + lightmapScaleOffset.z, 1.0 - ((1.0 - uv2.y) * lightmapScaleOffset.y + lightmapScaleOffset.w));\n #else \n  vUv2 = uv2;\n #endif\n\n#endif";
     const uv_pars_fragment = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n\n#endif";
     const uv_pars_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n uniform mat3 uvTransform;\n\n#endif\n";
     const uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n #if defined FLIP_V \n  vUv = ( uvTransform * vec3( uv.x, 1.0 - uv.y, 1 ) ).xy;//modify egret\n #else\n  vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n #endif\n#endif";
@@ -10884,7 +10914,7 @@ declare namespace paper.editor {
         createPrefabState(prefab: Prefab, parent?: GameObject): void;
         serializeProperty(value: any, editType: editor.EditType): any;
         deserializeProperty(serializeData: any, editType: editor.EditType): any;
-        createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh?: egret3d.Mesh): void;
+        createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh): void;
         addComponent(gameObjectUUid: string, compClzName: string): void;
         removeComponent(gameObjectUUid: string, componentUUid: string): void;
         getComponentById(gameObject: GameObject, componentId: string): BaseComponent | null;
@@ -11107,8 +11137,8 @@ declare namespace paper.editor {
         static toString(): string;
         static create(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh): CreateGameObjectState | null;
         infos: {
-            parentUUID: string;
-            serializeData: any;
+            parentUUID: string | null;
+            serializeData: any | null;
         }[];
         createType: string;
         addList: string[];
