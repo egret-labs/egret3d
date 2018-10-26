@@ -43,9 +43,9 @@ namespace egret3d {
     }
 
     function _getConstDefines(maxPrecision: string) {
-        let defines = "precision " + maxPrecision + " float; \n";
+        let defines = "#extension GL_OES_standard_derivatives : enable \n";
+        defines += "precision " + maxPrecision + " float; \n";
         defines += "precision " + maxPrecision + " int; \n";
-        // defines += "#extension GL_OES_standard_derivatives : enable \n";
 
         return defines;
     }
@@ -69,9 +69,10 @@ namespace egret3d {
 
         const parameter = webgl.getShaderParameter(shader, webgl.COMPILE_STATUS);
         if (!parameter) {
-            if (confirm("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
-                alert(gltfShader.uri);
-            }
+            console.error("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?");
+            // if (confirm("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
+            //     alert(gltfShader.uri);
+            // }
 
             webgl.deleteShader(shader);
 
@@ -197,6 +198,9 @@ namespace egret3d {
         public textureFloat: boolean;
         public textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
 
+        public oes_standard_derivatives: boolean;
+        public gl_oes_standard_derivatives: boolean;
+
         public initialize(config: RunEgretOptions) {
             super.initialize();
 
@@ -229,9 +233,9 @@ namespace egret3d {
             this.maxAnisotropy = (this.anisotropyExt !== null) ? webgl.getParameter(this.anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
 
             // use dfdx and dfdy must enable OES_standard_derivatives
-            _getExtension(webgl, "OES_standard_derivatives");
+            this.oes_standard_derivatives = !!_getExtension(webgl, "OES_standard_derivatives");
             // GL_OES_standard_derivatives
-            _getExtension(webgl, "GL_OES_standard_derivatives");
+            this.gl_oes_standard_derivatives = !!_getExtension(webgl, "GL_OES_standard_derivatives");
 
             //TODO
             WebGLCapabilities.commonDefines = _getConstDefines(this.maxPrecision);
@@ -284,7 +288,8 @@ namespace egret3d {
 
             const parameter = webgl.getProgramParameter(program, webgl.LINK_STATUS);
             if (!parameter) {
-                alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
+                console.error("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
+                // alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
                 webgl.deleteProgram(program);
 
                 return null;

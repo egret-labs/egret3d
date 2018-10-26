@@ -2698,9 +2698,9 @@ var paper;
                 var hoveredGameObject = modelComponent.hoveredGameObject;
                 if (hoveredGameObject && hoveredGameObject.renderer) {
                     this._hoverBox.activeSelf = true;
-                    this._hoverBox.transform.localPosition = egret3d.Vector3.create().copy(hoveredGameObject.renderer.aabb.center).applyMatrix(hoveredGameObject.transform.worldMatrix).release();
+                    this._hoverBox.transform.localPosition = egret3d.Vector3.create().copy(hoveredGameObject.renderer.localBoundingBox.center).applyMatrix(hoveredGameObject.transform.worldMatrix).release();
                     this._hoverBox.transform.localRotation = hoveredGameObject.transform.rotation;
-                    this._hoverBox.transform.localScale = egret3d.Vector3.create().multiply(hoveredGameObject.renderer.aabb.size, hoveredGameObject.transform.scale);
+                    this._hoverBox.transform.localScale = egret3d.Vector3.create().multiply(hoveredGameObject.renderer.localBoundingBox.size, hoveredGameObject.transform.scale);
                 }
                 else {
                     this._hoverBox.activeSelf = false;
@@ -2719,9 +2719,9 @@ var paper;
                         var gameObject = selectedGameObjects[i];
                         if (gameObject.activeSelf && gameObject.renderer) {
                             drawer.activeSelf = true;
-                            drawer.transform.localPosition = egret3d.Vector3.create().copy(gameObject.renderer.aabb.center).applyMatrix(gameObject.transform.worldMatrix).release();
+                            drawer.transform.localPosition = egret3d.Vector3.create().copy(gameObject.renderer.localBoundingBox.center).applyMatrix(gameObject.transform.worldMatrix).release();
                             drawer.transform.localRotation = gameObject.transform.rotation;
-                            drawer.transform.localScale = egret3d.Vector3.create().multiply(gameObject.renderer.aabb.size, gameObject.transform.scale).release();
+                            drawer.transform.localScale = egret3d.Vector3.create().multiply(gameObject.renderer.localBoundingBox.size, gameObject.transform.scale).release();
                         }
                         else {
                             drawer.activeSelf = false;
@@ -3174,9 +3174,9 @@ var paper;
                         var collider = colliders[i];
                         if (collider.enabled) {
                             drawer.activeSelf = true;
-                            drawer.transform.localPosition = egret3d.Vector3.create().copy(collider.aabb.center).applyMatrix(selectedGameObject.transform.worldMatrix).release();
+                            drawer.transform.localPosition = egret3d.Vector3.create().copy(collider.box.center).applyMatrix(selectedGameObject.transform.worldMatrix).release();
                             drawer.transform.localRotation = selectedGameObject.transform.rotation;
-                            drawer.transform.localScale = egret3d.Vector3.create().multiply(collider.aabb.size, selectedGameObject.transform.scale).release();
+                            drawer.transform.localScale = egret3d.Vector3.create().multiply(collider.box.size, selectedGameObject.transform.scale).release();
                         }
                         else {
                             drawer.activeSelf = false;
