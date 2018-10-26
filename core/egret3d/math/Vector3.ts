@@ -276,11 +276,23 @@ namespace egret3d {
 
             const x = input.x, y = input.y, z = input.z;
             const rawData = matrix.rawData;
+            let w = rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15];
 
-            const w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]); // TODO
-            this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
-            this.y = (rawData[1] * x + rawData[5] * y + rawData[9] * z + rawData[13]) * w;
-            this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
+            if (w < -Const.EPSILON || Const.EPSILON < w) {
+                w = 1.0 / w;
+                this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
+                this.y = (rawData[1] * x + rawData[5] * y + rawData[9] * z + rawData[13]) * w;
+                this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
+            }
+            else {
+                this.x = 0.0;
+                this.y = 0.0;
+                this.z = 0.0;
+
+                if (DEBUG) {
+                    console.warn("Dividing by zero.");
+                }
+            }
 
             return this;
         }

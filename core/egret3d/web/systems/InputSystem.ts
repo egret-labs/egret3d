@@ -56,6 +56,7 @@ namespace egret3d.web {
                 return;
             }
 
+            const rotated = stage.rotated;
             const canvas = this._canvas;
             const downPointers = inputCollecter.downPointers;
             const holdPointers = inputCollecter.holdPointers;
@@ -63,12 +64,12 @@ namespace egret3d.web {
             const prevEvent = pointer.event;
             pointer.event = event;
 
-            // if (event.target !== canvas) {
-            //     (event as any).clientX -= canvas.clientLeft;
-            //     (event as any).clientY -= canvas.clientTop;
-            // }
-
             pointer.position.set(event.clientX - (canvas.offsetLeft || 0.0), event.clientY - (canvas.offsetTop || 0.0), 0.0);
+
+            if (rotated) {
+                pointer.position.x += stage.screenSize.w;
+            }
+
             stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
@@ -78,10 +79,12 @@ namespace egret3d.web {
                     }
 
                     inputCollecter.onPointerOver.dispatch(pointer, inputCollecter.onPointerOver);
+                    event.preventDefault();
                     break;
 
                 case "pointerenter":
                     inputCollecter.onPointerEnter.dispatch(pointer, inputCollecter.onPointerEnter);
+                    event.preventDefault();
                     break;
 
                 case "pointerdown":
@@ -89,12 +92,14 @@ namespace egret3d.web {
                         pointer.downPosition.copy(pointer.position);
                         downPointers.push(pointer);
                         inputCollecter.onPointerDown.dispatch(pointer, inputCollecter.onPointerDown);
+                        event.preventDefault();
                     }
                     break;
 
                 case "pointermove":
                     if (event.target === canvas || holdPointers.length > 0) {
                         inputCollecter.onPointerMove.dispatch(pointer, inputCollecter.onPointerMove);
+                        event.preventDefault();
                     }
                     else {
                         pointer.event = prevEvent;
@@ -104,25 +109,27 @@ namespace egret3d.web {
                 case "pointerup":
                     if (!this._pointerUp(pointer, false)) {
                         pointer.event = prevEvent;
+                        event.preventDefault();
                     }
                     break;
 
                 case "pointercancel":
                     if (!this._pointerUp(pointer, true)) {
                         pointer.event = prevEvent;
+                        event.preventDefault();
                     }
                     break;
 
                 case "pointerout":
                     inputCollecter.onPointerOut.dispatch(pointer, inputCollecter.onPointerOut);
+                    event.preventDefault();
                     break;
 
                 case "pointerleave":
                     inputCollecter.onPointerLeave.dispatch(pointer, inputCollecter.onPointerLeave);
+                    event.preventDefault();
                     break;
             }
-
-            // event.preventDefault();
         }
 
         private _onMouseWheelEvent = (event: PointerEvent) => {
@@ -161,6 +168,7 @@ namespace egret3d.web {
             (event as any).tiltY = 0;
             (event as any).pointerType = "mouse";
 
+            const rotated = stage.rotated;
             const pointerEvent = event as PointerEvent;
             const canvas = this._canvas;
             const downPointers = inputCollecter.downPointers;
@@ -169,12 +177,12 @@ namespace egret3d.web {
             const prevEvent = pointer.event;
             pointer.event = pointerEvent;
 
-            // if (event.target !== canvas) {
-            //     (pointerEvent as any).clientX -= canvas.clientLeft;
-            //     (pointerEvent as any).clientY -= canvas.clientTop;
-            // }
-
             pointer.position.set(event.clientX - (canvas.offsetLeft || 0.0), event.clientY - (canvas.offsetTop || 0.0), 0.0);
+
+            if (rotated) {
+                pointer.position.x += stage.screenSize.w;
+            }
+
             stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
@@ -186,11 +194,13 @@ namespace egret3d.web {
 
                     (event as any).type = "pointerover";
                     inputCollecter.onPointerOver.dispatch(pointer, inputCollecter.onPointerOver);
+                    event.preventDefault();
                     break;
 
                 case "mouseenter":
                     (event as any).type = "pointerenter";
                     inputCollecter.onPointerEnter.dispatch(pointer, inputCollecter.onPointerEnter);
+                    event.preventDefault();
                     break;
 
                 case "mousedown":
@@ -199,6 +209,7 @@ namespace egret3d.web {
                         downPointers.push(pointer);
                         (event as any).type = "pointerdown";
                         inputCollecter.onPointerDown.dispatch(pointer, inputCollecter.onPointerDown);
+                        event.preventDefault();
                     }
                     break;
 
@@ -206,6 +217,7 @@ namespace egret3d.web {
                     if (event.target === canvas || holdPointers.length > 0) {
                         (event as any).type = "pointermove";
                         inputCollecter.onPointerMove.dispatch(pointer, inputCollecter.onPointerMove);
+                        event.preventDefault();
                     }
                     else {
                         pointer.event = prevEvent;
@@ -216,6 +228,7 @@ namespace egret3d.web {
                     (event as any).type = "pointerup";
                     if (!this._pointerUp(pointer, false)) {
                         pointer.event = prevEvent;
+                        event.preventDefault();
                     }
                     break;
 
@@ -223,21 +236,22 @@ namespace egret3d.web {
                     (event as any).type = "pointercancel";
                     if (!this._pointerUp(pointer, true)) {
                         pointer.event = prevEvent;
+                        event.preventDefault();
                     }
                     break;
 
                 case "mouseout":
                     (event as any).type = "pointerout";
                     inputCollecter.onPointerOut.dispatch(pointer, inputCollecter.onPointerOut);
+                    event.preventDefault();
                     break;
 
                 case "mouseleave":
                     (event as any).type = "pointerleave";
                     inputCollecter.onPointerLeave.dispatch(pointer, inputCollecter.onPointerLeave);
+                    event.preventDefault();
                     break;
             }
-
-            // event.preventDefault();
         }
 
         private _onTouchEvent = (event: TouchEvent) => {
@@ -273,6 +287,7 @@ namespace egret3d.web {
             (event as any).screenX = touch.screenX;
             (event as any).screenY = touch.screenY;
 
+            const rotated = stage.rotated;
             const pointerEvent = <any>event as PointerEvent;
             const canvas = this._canvas;
             const downPointers = inputCollecter.downPointers;
@@ -281,12 +296,12 @@ namespace egret3d.web {
             const prevEvent = pointer.event;
             pointer.event = pointerEvent;
 
-            // if (event.target !== canvas) {
-            //     (pointerEvent as any).clientX -= canvas.clientLeft;
-            //     (pointerEvent as any).clientY -= canvas.clientTop;
-            // }
-
             pointer.position.set(pointerEvent.clientX - (canvas.offsetLeft || 0.0), pointerEvent.clientY - (canvas.offsetTop || 0.0), 0.0);
+
+            if (rotated) {
+                pointer.position.x += stage.screenSize.w;
+            }
+
             stage.screenToStage(pointer.position, pointer.position);
 
             switch (event.type) {
@@ -296,6 +311,7 @@ namespace egret3d.web {
                         downPointers.push(pointer);
                         (event as any).type = "pointerdown";
                         inputCollecter.onPointerDown.dispatch(pointer, inputCollecter.onPointerDown);
+                        event.preventDefault();
                     }
                     break;
 
@@ -322,16 +338,18 @@ namespace egret3d.web {
                                 (eachPointerEvent as any).screenY = eachTouch.screenY;
                                 (eachPointerEvent as any).type = "pointermove";
 
-                                // if (event.target !== canvas) {
-                                //     (eachPointerEvent as any).clientX -= canvas.clientLeft;
-                                //     (eachPointerEvent as any).clientY -= canvas.clientTop;
-                                // }
+                                eachPointer.position.set(eachPointerEvent.clientX - (canvas.offsetLeft || 0.0), eachPointerEvent.clientY - (canvas.offsetTop || 0.0), 0.0);
 
-                                eachPointer.position.set(eachPointerEvent.clientX, eachPointerEvent.clientY, 0.0);
+                                if (rotated) {
+                                    eachPointer.position.x += stage.screenSize.w;
+                                }
+
                                 stage.screenToStage(eachPointer.position, eachPointer.position);
                                 inputCollecter.onPointerMove.dispatch(eachPointer, inputCollecter.onPointerMove);
                             }
                         }
+
+                        event.preventDefault();
                     }
                     else {
                         pointer.event = prevEvent;
@@ -342,6 +360,7 @@ namespace egret3d.web {
                     (event as any).type = "pointerup";
                     if (!this._pointerUp(pointer, false)) {
                         pointer.event = prevEvent;
+                        event.preventDefault();
                     }
                     break;
 
@@ -349,11 +368,10 @@ namespace egret3d.web {
                     (event as any).type = "pointercancel";
                     if (!this._pointerUp(pointer, true)) {
                         pointer.event = prevEvent;
+                        event.preventDefault();
                     }
                     break;
             }
-
-            // event.preventDefault();
         }
 
         private _onContextMenu = (event: Event) => {

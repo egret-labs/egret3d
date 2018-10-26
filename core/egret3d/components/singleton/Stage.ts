@@ -63,6 +63,8 @@ namespace egret3d {
 
                 this.scaler = viewport.w / size.w;
             }
+
+            size.h = viewport.h / this.scaler;
         }
 
         public initialize(config: { size: Readonly<ISize>, screenSize: Readonly<ISize> }) {

@@ -15,7 +15,7 @@ namespace paper {
             return this._instance;
         }
 
-        private constructor() {
+        private constructor() { 
         }
 
         private readonly _preSystems: { systemClass: { new(): BaseSystem }, order: number }[] = [];

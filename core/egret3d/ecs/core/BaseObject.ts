@@ -32,6 +32,8 @@ namespace paper {
             if (this.onUpdate) {
                 this.onUpdate.call(this.onUpdateTarget || this, this);
             }
+
+            return this;
         }
 
         /**
