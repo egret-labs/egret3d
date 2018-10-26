@@ -339,6 +339,9 @@ namespace egret3d {
                     this.shaderContextDefine += "#define USE_SHADOWMAP \n";
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
+                
+                // this.shaderContextDefine += "#define OBJECTSPACE_NORMALMAP \n";  //TODO 根据参数生成define
+                // this.shaderContextDefine += "#define FLAT_SHADED \n";
             }
 
             const fog = scene.fog;
