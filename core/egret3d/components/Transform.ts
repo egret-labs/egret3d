@@ -47,8 +47,8 @@ namespace egret3d {
         private readonly _euler: Vector3 = Vector3.create();
         private readonly _eulerAngles: Vector3 = Vector3.create();
         private readonly _scale: Vector3 = Vector3.ONE.clone();
-        private readonly _inverseWorldMatrix: Matrix4 = Matrix4.create();
-        private readonly _worldMatrix: Matrix4 = Matrix4.create();
+        private readonly _worldToLocalMatrix: Matrix4 = Matrix4.create();
+        private readonly _localToWorldMatrix: Matrix4 = Matrix4.create();
         // private readonly _observers: ITransformObserver[] = []; // TODO
         /**
          * @internal
@@ -121,13 +121,13 @@ namespace egret3d {
                 const localMatrix = this.localMatrix;
 
                 if (this._parent) {
-                    this._worldMatrix.multiply(this._parent.worldMatrix, localMatrix);
+                    this._localToWorldMatrix.multiply(this._parent.worldMatrix, localMatrix);
                 }
                 else {
-                    this._worldMatrix.copy(localMatrix);
+                    this._localToWorldMatrix.copy(localMatrix);
                 }
 
-                this._worldMatrixDeterminant = this._worldMatrix.determinant();
+                this._worldMatrixDeterminant = this._localToWorldMatrix.determinant();
                 this._worldDirty &= ~TransformDirty.Matrix;
             }
             else {
@@ -918,7 +918,7 @@ namespace egret3d {
                 this._updateMatrix(true);
             }
 
-            return this._worldMatrix;
+            return this._localToWorldMatrix;
         }
         /**
          * 该物体的世界矩阵。
@@ -928,18 +928,18 @@ namespace egret3d {
                 this._updateMatrix(true);
             }
 
-            return this._worldMatrix;
+            return this._localToWorldMatrix;
         }
         /**
-         * 该物体的世界逆矩阵。
+         * 从世界空间坐标系到该物体空间坐标系的变换矩阵。
          */
         public get inverseWorldMatrix(): Readonly<Matrix4> {
             if (this._worldDirty & TransformDirty.InverseMatrix) {
-                this._inverseWorldMatrix.inverse(this.worldMatrix);
+                this._worldToLocalMatrix.inverse(this.worldMatrix);
                 this._worldDirty &= ~TransformDirty.InverseMatrix;
             }
 
-            return this._inverseWorldMatrix;
+            return this._worldToLocalMatrix;
         }
         /**
          * 将该物体位移指定距离。

@@ -427,7 +427,7 @@ namespace egret3d.web {
             }
         }
 
-        private _viewport(viewport: Rectangle, target: BaseRenderTarget | null) {
+        private _viewport(viewport: Rectangle, target: BaseRenderTarget | null) { // TODO
             const webgl = WebGLCapabilities.webgl!;
 
             let w: number;

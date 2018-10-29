@@ -24,7 +24,7 @@ namespace egret3d {
         public lightmap: Texture | null = null;
         public lightmapUV: number = 1;
         public lightmapIntensity: number = 1.0;
-        public lightmapScaleOffset:Float32Array = new Float32Array(4);
+        public lightmapScaleOffset: Float32Array = new Float32Array(4);
 
         //TODO
         // 12: dirX, dirY, dirZ, colorR, colorG, colorB, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
@@ -70,8 +70,8 @@ namespace egret3d {
         public drawCall: DrawCall = null!;
 
         public updateCamera(camera: Camera, matrix: Matrix4) {
-            camera.calcViewPortPixel(this.viewPortPixel); // update viewport
-            camera.calcProjectMatrix(this.viewPortPixel.w / this.viewPortPixel.h, this.matrix_p);
+            const asp = camera.calcViewPortPixel(this.viewPortPixel); // update viewport
+            camera.calcProjectMatrix(asp, this.matrix_p);
 
             this.matrix_v.inverse(matrix);
             this.matrix_vp.multiply(this.matrix_p, this.matrix_v);

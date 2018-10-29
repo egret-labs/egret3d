@@ -11,8 +11,14 @@ namespace egret3d {
                 { componentClass: [DirectionalLight, PointLight, SpotLight] }
             ]
         ];
-        protected readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
-        protected readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
+
+        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
+        private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
+
+        public onAwake() {
+            this._lightCamera.hideFlags = paper.HideFlags.HideAndDontSave;
+        }
 
         public onAddGameObject(_gameObject: paper.GameObject, group: paper.GameObjectGroup) {
             if (group === this._groups[0]) {
