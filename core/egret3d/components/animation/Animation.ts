@@ -1,12 +1,10 @@
 namespace egret3d {
     /**
-     * 
+     * 动画混合层。
      */
     class BlendLayer extends paper.BaseRelease<BlendLayer> {
         private static _instances = [] as BlendLayer[];
-        /**
-         * @internal
-         */
+
         public static create() {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!;
@@ -71,13 +69,11 @@ namespace egret3d {
         }
     }
     /**
-     * 
+     * 动画通道。
      */
     class AnimationChannel extends paper.BaseRelease<AnimationChannel> {
         private static _instances = [] as AnimationChannel[];
-        /**
-         * @internal
-         */
+
         public static create() {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!;
@@ -92,13 +88,40 @@ namespace egret3d {
             super();
         }
 
-        glTFChannel: GLTFAnimationChannel;
-        glTFSampler: gltf.AnimationSampler;
-        blendLayer: BlendLayer | null;
-        components: paper.BaseComponent | paper.BaseComponent[];
-        inputBuffer: Float32Array;
-        outputBuffer: Float32Array;
-        updateTarget: ((channel: AnimationChannel, animationState: AnimationState) => void) | null = null;
+        public glTFChannel: GLTFAnimationChannel;
+        public glTFSampler: gltf.AnimationSampler;
+        public blendLayer: BlendLayer | null;
+        public components: paper.BaseComponent | paper.BaseComponent[];
+        public inputBuffer: Float32Array;
+        public outputBuffer: Float32Array;
+        public updateTarget: ((channel: AnimationChannel, animationState: AnimationState) => void) | null = null;
+
+        public getFrameIndex(currentTime: number): uint {
+            const inputBuffer = this.inputBuffer;
+            const frameCount = inputBuffer.length;
+
+            if (currentTime <= inputBuffer[0]) {
+                return 0;
+            }
+            else if (currentTime >= inputBuffer[frameCount - 1]) {
+                return frameCount - 1;
+            }
+
+            let beginIndex = 0;
+            let endIndex = frameCount - 1;
+
+            while (endIndex - beginIndex > 1) {
+                const middleIndex = beginIndex + ((endIndex - beginIndex) * 0.5) >> 0;
+                if (currentTime >= inputBuffer[middleIndex]) {
+                    beginIndex = middleIndex;
+                }
+                else {
+                    endIndex = middleIndex;
+                }
+            }
+
+            return beginIndex;
+        }
     }
     const _animationChannels: AnimationChannel[] = [];
     /**
@@ -278,42 +301,26 @@ namespace egret3d {
         private _animationComponent: Animation = null as any;
 
         private _onUpdateTranslation(channel: AnimationChannel, animationState: AnimationState) {
-            let isInterpolation = false;
-            let frameIndex = 0;
-            const inputBuffer = channel.inputBuffer;
+            const interpolation = channel.glTFSampler.interpolation;
+            const currentTime = animationState._currentTime;
             const outputBuffer = channel.outputBuffer;
+            const frameIndex = channel.getFrameIndex(currentTime);
 
-            if (animationState._currentTime <= inputBuffer[0]) {
-            }
-            else if (animationState._currentTime >= inputBuffer[inputBuffer.length - 1]) {
-                frameIndex = inputBuffer.length - 1;
-            }
-            else {
-                isInterpolation = channel.glTFSampler.interpolation !== "STEP";
-
-                for (let i = 0, l = inputBuffer.length; i < l; ++i) { // TODO 更快的查询
-                    if (animationState._currentTime < inputBuffer[i]) {
-                        break;
-                    }
-
-                    frameIndex = i;
-                }
-            }
-
-            const isComponents = Array.isArray(channel.components);
             let offset = frameIndex * 3;
             let x = outputBuffer[offset++];
             let y = outputBuffer[offset++];
             let z = outputBuffer[offset++];
 
-            if (isInterpolation) {
-                const progress = (animationState._currentTime - inputBuffer[frameIndex]) / (inputBuffer[frameIndex + 1] - inputBuffer[frameIndex]);
+            if (!interpolation || interpolation !== "STEP") {
+                const inputBuffer = channel.inputBuffer;
+                const frameStart = inputBuffer[frameIndex];
+                const progress = (currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
                 x += (outputBuffer[offset++] - x) * progress;
                 y += (outputBuffer[offset++] - y) * progress;
                 z += (outputBuffer[offset++] - z) * progress;
             }
 
-            if (isComponents) {
+            if (Array.isArray(channel.components)) {
                 for (const component of channel.components as Transform[]) {
                     component.setLocalPosition(x, y, z);
                 }
@@ -324,44 +331,28 @@ namespace egret3d {
         }
 
         private _onUpdateRotation(channel: AnimationChannel, animationState: AnimationState) {
-            let isInterpolation = false;
-            let frameIndex = 0;
-            const inputBuffer = channel.inputBuffer;
+            const interpolation = channel.glTFSampler.interpolation;
+            const currentTime = animationState._currentTime;
             const outputBuffer = channel.outputBuffer;
+            const frameIndex = channel.getFrameIndex(currentTime);
 
-            if (animationState._currentTime <= inputBuffer[0]) {
-            }
-            else if (animationState._currentTime >= inputBuffer[inputBuffer.length - 1]) {
-                frameIndex = inputBuffer.length - 1;
-            }
-            else {
-                isInterpolation = channel.glTFSampler.interpolation !== "STEP";
-
-                for (let i = 0, l = inputBuffer.length; i < l; ++i) { // TODO 更快的查询
-                    if (animationState._currentTime < inputBuffer[i]) {
-                        break;
-                    }
-
-                    frameIndex = i;
-                }
-            }
-
-            const isComponents = Array.isArray(channel.components);
             let offset = frameIndex * 4;
             let x = outputBuffer[offset++];
             let y = outputBuffer[offset++];
             let z = outputBuffer[offset++];
             let w = outputBuffer[offset++];
 
-            if (isInterpolation) {
-                const progress = (animationState._currentTime - inputBuffer[frameIndex]) / (inputBuffer[frameIndex + 1] - inputBuffer[frameIndex]);
+            if (!interpolation || interpolation !== "STEP") {
+                const inputBuffer = channel.inputBuffer;
+                const frameStart = inputBuffer[frameIndex];
+                const progress = (currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
                 x += (outputBuffer[offset++] - x) * progress;
                 y += (outputBuffer[offset++] - y) * progress;
                 z += (outputBuffer[offset++] - z) * progress;
                 w += (outputBuffer[offset++] - w) * progress;
             }
 
-            if (isComponents) {
+            if (Array.isArray(channel.components)) {
                 for (const component of channel.components as Transform[]) {
                     component.setLocalRotation(x, y, z, w);
                 }
@@ -372,42 +363,26 @@ namespace egret3d {
         }
 
         private _onUpdateScale(channel: AnimationChannel, animationState: AnimationState) {
-            let isInterpolation = false;
-            let frameIndex = 0;
-            const inputBuffer = channel.inputBuffer;
+            const interpolation = channel.glTFSampler.interpolation;
+            const currentTime = animationState._currentTime;
             const outputBuffer = channel.outputBuffer;
+            const frameIndex = channel.getFrameIndex(currentTime);
 
-            if (animationState._currentTime <= inputBuffer[0]) {
-            }
-            else if (animationState._currentTime >= inputBuffer[inputBuffer.length - 1]) {
-                frameIndex = inputBuffer.length - 1;
-            }
-            else {
-                isInterpolation = channel.glTFSampler.interpolation !== "STEP";
-
-                for (let i = 0, l = inputBuffer.length; i < l; ++i) { // TODO 更快的查询
-                    if (animationState._currentTime < inputBuffer[i]) {
-                        break;
-                    }
-
-                    frameIndex = i;
-                }
-            }
-
-            const isComponents = Array.isArray(channel.components);
             let offset = frameIndex * 3;
             let x = outputBuffer[offset++];
             let y = outputBuffer[offset++];
             let z = outputBuffer[offset++];
 
-            if (isInterpolation) {
-                const progress = (animationState._currentTime - inputBuffer[frameIndex]) / (inputBuffer[frameIndex + 1] - inputBuffer[frameIndex]);
+            if (!interpolation || interpolation !== "STEP") {
+                const inputBuffer = channel.inputBuffer;
+                const frameStart = inputBuffer[frameIndex];
+                const progress = (animationState._currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
                 x += (outputBuffer[offset++] - x) * progress;
                 y += (outputBuffer[offset++] - y) * progress;
                 z += (outputBuffer[offset++] - z) * progress;
             }
 
-            if (isComponents) {
+            if (Array.isArray(channel.components)) {
                 for (const component of channel.components as Transform[]) {
                     component.setLocalScale(x, y, z);
                 }
@@ -418,29 +393,13 @@ namespace egret3d {
         }
 
         private _onUpdateActive(channel: AnimationChannel, animationState: AnimationState) {
-            let frameIndex = 0;
-            const inputBuffer = channel.inputBuffer;
+            const currentTime = animationState._currentTime;
             const outputBuffer = channel.outputBuffer;
+            const frameIndex = channel.getFrameIndex(currentTime);
 
-            if (animationState._currentTime <= inputBuffer[0]) {
-            }
-            else if (animationState._currentTime >= inputBuffer[inputBuffer.length - 1]) {
-                frameIndex = inputBuffer.length - 1;
-            }
-            else {
-                for (let i = 0, l = inputBuffer.length; i < l; ++i) { // TODO 更快的查询
-                    if (animationState._currentTime < inputBuffer[i]) {
-                        break;
-                    }
-
-                    frameIndex = i;
-                }
-            }
-
-            const isComponents = Array.isArray(channel.components);
             const activeSelf = outputBuffer[frameIndex] !== 0;
 
-            if (isComponents) {
+            if (Array.isArray(channel.components)) {
                 for (const component of channel.components as Transform[]) {
                     component.gameObject.activeSelf = activeSelf;
                 }
@@ -538,6 +497,7 @@ namespace egret3d {
 
             const prevPlayState = this._playState;
             // const prevPlayTimes = this.currentPlayTimes;
+            // const prevTime = this._currentTime;
             const duration = this.animationClip.duration;
             const totalTime = this.playTimes * duration;
 
@@ -674,7 +634,7 @@ namespace egret3d {
         /**
          * @internal
          */
-        public _getBlendlayer(type: string, name: string): BlendLayer {
+        public _getBlendlayer(type: string, name: string) {
             if (!(type in this._blendLayers)) {
                 this._blendLayers[type] = {};
             }
@@ -753,7 +713,9 @@ namespace egret3d {
 
             // this._blendLayers.length = 0;
         }
-
+        /**
+         * 
+         */
         public fadeIn(
             animationName: string | null = null,
             fadeTime: number, playTimes: number = -1,
@@ -798,7 +760,9 @@ namespace egret3d {
 
             return animationState;
         }
-
+        /**
+         * 
+         */
         public play(animationNameOrNames: string | string[] | null = null, playTimes: number = -1): AnimationState | null {
             this._animationNames.length = 0;
 
@@ -816,30 +780,37 @@ namespace egret3d {
 
             return this.fadeIn(animationNameOrNames, 0.0, playTimes);
         }
-
-        public stop() {
+        /**
+         * 
+         */
+        public stop(): void {
             for (const blendNode of this._blendNodes) {
                 if (!blendNode.parent && blendNode instanceof AnimationState) {
                     blendNode.stop();
                 }
             }
         }
-
+        /**
+         * 
+         */
         public get lastAnimationnName(): string {
             return this._lastAnimationState ? this._lastAnimationState.animationClip.name : "";
         }
         /**
          * 动画数据列表。
          */
+        public get animations(): ReadonlyArray<GLTFAsset> {
+            return this._animations;
+        }
         public set animations(animations: ReadonlyArray<GLTFAsset>) {
             for (let i = 0, l = animations.length; i < l; i++) {
                 this._animations[i] = animations[i];
             }
         }
-        public get animations(): ReadonlyArray<GLTFAsset> {
-            return this._animations;
-        }
-        public get lastAnimationState() {
+        /**
+         * 
+         */
+        public get lastAnimationState(): AnimationState | null {
             return this._lastAnimationState;
         }
     }

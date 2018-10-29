@@ -127,7 +127,7 @@ namespace egret3d {
                     this._localToWorldMatrix.copy(localMatrix);
                 }
 
-                this._worldMatrixDeterminant = this._localToWorldMatrix.determinant();
+                this._worldMatrixDeterminant = this._localToWorldMatrix.determinant;
                 this._worldDirty &= ~TransformDirty.Matrix;
             }
             else {
@@ -658,7 +658,7 @@ namespace egret3d {
             }
 
             if (this._parent) {
-                this._localPosition.applyMatrix(_helpMatrix.inverse(this._parent.worldMatrix));
+                this._localPosition.applyMatrix(this._parent.inverseWorldMatrix);
             }
 
             this._dirtify(true, TransformDirty.Position);
@@ -682,7 +682,7 @@ namespace egret3d {
             this._localPosition.z = value.z;
 
             if (this._parent) {
-                this._localPosition.applyMatrix(_helpMatrix.inverse(this._parent.worldMatrix));
+                this._localPosition.applyMatrix(this._parent.inverseWorldMatrix);
             }
 
             this._dirtify(true, TransformDirty.Position);
@@ -881,7 +881,7 @@ namespace egret3d {
             }
 
             if (this._parent) {
-                this._localScale.applyDirection(_helpMatrix.inverse(this._parent.worldMatrix));
+                this._localScale.applyMatrixWithoutTranslate(this._parent.inverseWorldMatrix);
             }
 
             this._dirtify(true, TransformDirty.Scale);
@@ -905,7 +905,7 @@ namespace egret3d {
             this._localScale.z = value.z;
 
             if (this._parent) {
-                this._localScale.applyDirection(_helpMatrix.inverse(this._parent.worldMatrix));
+                this._localScale.applyMatrixWithoutTranslate(this._parent.inverseWorldMatrix);
             }
 
             this._dirtify(true, TransformDirty.Scale);
@@ -973,9 +973,9 @@ namespace egret3d {
          * 将该物体旋转指定的欧拉旋转。（弧度制）
          * @param isWorldSpace 是否是世界坐标系。
          */
-        public rotate(value: Readonly<IVector3>, isWorldSpace?: boolean, order?: EulerOrder): this;
-        public rotate(x: number, y: number, z: number, isWorldSpace?: boolean, order?: EulerOrder): this;
-        public rotate(p1: Readonly<IVector3> | number, p2?: boolean | number, p3?: EulerOrder | number, p4?: boolean, p5?: EulerOrder) {
+        public rotate(value: Readonly<IVector3>, isWorldSpace?: boolean): this;
+        public rotate(x: number, y: number, z: number, isWorldSpace?: boolean): this;
+        public rotate(p1: Readonly<IVector3> | number, p2?: boolean | number, p3?: EulerOrder | number, p4?: boolean) {
             if (p1.hasOwnProperty("x")) {
                 if (p2) {
                     this.euler = this._localEuler.add(p1 as Readonly<IVector3>, this.euler);
@@ -1005,7 +1005,7 @@ namespace egret3d {
          * @param angle 指定弧度。
          * @param isWorldSpace 是否是世界坐标系。
          */
-        public rotateOnAxis(axis: Readonly<IVector3>, angle: number, isWorldSpace?: boolean) {
+        public rotateOnAxis(axis: Readonly<IVector3>, angle: number, isWorldSpace?: boolean): this {
             _helpRotation.fromAxis(axis, angle);
 
             if (isWorldSpace) {
@@ -1023,51 +1023,18 @@ namespace egret3d {
          * @param worldAxis 世界指定轴。
          * @param angle 指定弧度。
          */
-        public rotateAround(worldPosition: Readonly<IVector3>, worldAxis: Readonly<IVector3>, angle: number) {
+        public rotateAround(worldPosition: Readonly<IVector3>, worldAxis: Readonly<IVector3>, angle: number): this {
             this.rotateOnAxis(worldAxis, angle, true);
             this.position = this._localPosition.applyMatrix(_helpMatrix.fromRotation(_helpRotation.fromAxis(worldAxis, angle)).fromTranslate(worldPosition, true), this.position);
 
             return this;
         }
         /**
-         * 获取该物体在世界空间坐标系下描述的 X 轴正方向。
-         * @param out 输出向量。
-         */
-        public getRight(out?: Vector3) {
-            if (!out) {
-                out = Vector3.create();
-            }
-
-            return out.applyDirection(this.worldMatrix, Vector3.RIGHT).normalize();
-        }
-        /**
-         * 获取该物体在世界空间坐标系下描述的 Y 轴正方向。
-         * @param out 输出向量。
-         */
-        public getUp(out?: Vector3) {
-            if (!out) {
-                out = Vector3.create();
-            }
-
-            return out.applyDirection(this.worldMatrix, Vector3.UP).normalize();
-        }
-        /**
-         * 获取该物体在世界空间坐标系下描述的 Z 轴正方向。
-         * @param out 输出向量。
-         */
-        public getForward(out?: Vector3) {
-            if (!out) {
-                out = Vector3.create();
-            }
-
-            return out.applyDirection(this.worldMatrix, Vector3.FORWARD).normalize();
-        }
-        /**
          * 通过旋转使得该物体的 Z 轴正方向指向目标点。
          * @param target 目标点。
          * @param up 旋转后，该物体在世界空间坐标系下描述的 Y 轴正方向。
          */
-        public lookAt(target: Readonly<Transform> | Readonly<IVector3>, up: Readonly<IVector3> = Vector3.UP) {
+        public lookAt(target: Readonly<Transform> | Readonly<IVector3>, up: Readonly<IVector3> = Vector3.UP): this {
             this.rotation = this._localRotation.fromMatrix(
                 _helpMatrix.lookAt(
                     this.position,
@@ -1083,10 +1050,43 @@ namespace egret3d {
          * @param target 目标方向。
          * @param up 旋转后，该物体在世界空间坐标系下描述的 Y 轴正方向。
          */
-        public lookRotation(direction: Readonly<IVector3>, up: Readonly<IVector3> = Vector3.UP) {
+        public lookRotation(direction: Readonly<IVector3>, up: Readonly<IVector3> = Vector3.UP): this {
             this.rotation = this._localRotation.fromMatrix(_helpMatrix.lookRotation(direction, up));
 
             return this;
+        }
+        /**
+         * 获取该物体在世界空间坐标系下描述的 X 轴正方向。
+         * @param out 输出向量。
+         */
+        public getRight(out?: Vector3): Vector3 {
+            if (!out) {
+                out = Vector3.create();
+            }
+
+            return out.applyDirection(this.worldMatrix, Vector3.RIGHT).normalize();
+        }
+        /**
+         * 获取该物体在世界空间坐标系下描述的 Y 轴正方向。
+         * @param out 输出向量。
+         */
+        public getUp(out?: Vector3): Vector3 {
+            if (!out) {
+                out = Vector3.create();
+            }
+
+            return out.applyDirection(this.worldMatrix, Vector3.UP).normalize();
+        }
+        /**
+         * 获取该物体在世界空间坐标系下描述的 Z 轴正方向。
+         * @param out 输出向量。
+         */
+        public getForward(out?: Vector3): Vector3 {
+            if (!out) {
+                out = Vector3.create();
+            }
+
+            return out.applyDirection(this.worldMatrix, Vector3.FORWARD).normalize();
         }
         /**
          * 该组件实体的全部子级变换组件总数。
@@ -1105,7 +1105,7 @@ namespace egret3d {
         /**
          * 该组件实体的父级变换组件。
          */
-        public get parent() {
+        public get parent(): Transform | null {
             return this._parent;
         }
         public set parent(value: Transform | null) {

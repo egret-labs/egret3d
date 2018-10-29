@@ -61,8 +61,8 @@ namespace egret3d {
             return this;
         }
 
-        public fromPoint(value: Readonly<IVector3>, normal: Readonly<IVector3> = Vector3.UP) {
-            this.constant = -helpVector3A.dot(normal, value);
+        public fromPoint(value: Readonly<IVector3>, normal: Vector3 = Vector3.UP) {
+            this.constant = -normal.dot(value);
             this.normal.copy(normal);
 
             return this;
@@ -101,6 +101,15 @@ namespace egret3d {
         public getDistance(value: Readonly<IVector3>) {
             return this.normal.dot(value) + this.constant;
         }
+        
+        public getProjectionPoint(point: Readonly<IVector3>, output?: Vector3) {
+            if (!output) {
+                output = Vector3.create();
+            }
+
+
+            return output.multiplyScalar(-this.getDistance(point), this.normal).add(point);
+        }
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
             const t = ray.getDistanceToPlane(this);
@@ -108,7 +117,7 @@ namespace egret3d {
                 if (raycastInfo) {
                     const normal = raycastInfo.normal;
                     raycastInfo.distance = t;
-                    ray.at(t, raycastInfo.position);
+                    ray.getPointAt(t, raycastInfo.position);
 
                     if (normal) {
                         // TODO

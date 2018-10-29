@@ -1,25 +1,31 @@
 namespace egret3d {
     /**
-     * 
+     * 尺寸接口。
      */
     export interface ISize {
+        /**
+         * 宽。
+         */
         w: number;
+        /**
+         * 高。
+         */
         h: number;
     }
     /**
-     * 
+     * 矩形接口。
      */
     export interface IRectangle extends IVector2, ISize {
     }
     /**
-     * 矩形可序列化对象
+     * 矩形。
      */
     export class Rectangle extends paper.BaseRelease<Box> implements IRectangle, paper.ICCS<Rectangle>, paper.ISerializable {
         private static readonly _instances: Rectangle[] = [];
         /**
          * 创建一个矩形。
-         * @param x X 轴分量。
-         * @param y Y 轴分量。
+         * @param x 水平坐标。
+         * @param y 垂直坐标。
          * @param w 宽。
          * @param h 高。
          */
@@ -32,6 +38,7 @@ namespace egret3d {
 
             return new Rectangle().set(x, y, w, h);
         }
+
         public x: number;
         public y: number;
         public w: number;

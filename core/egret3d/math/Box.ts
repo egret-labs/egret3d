@@ -318,7 +318,7 @@ namespace egret3d {
 
             if (raycastInfo) {
                 const normal = raycastInfo.normal;
-                ray.at(raycastInfo.distance = tmin >= 0.0 ? tmin : tmax, raycastInfo.position);
+                ray.getPointAt(raycastInfo.distance = tmin >= 0.0 ? tmin : tmax, raycastInfo.position);
 
                 if (normal) {
                     switch (hitDirection) {

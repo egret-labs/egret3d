@@ -64,7 +64,7 @@ namespace egret3d {
 
         public applyMatrix(matrix: Readonly<Matrix4>) {
             this.center.applyMatrix(matrix);
-            this.radius = this.radius * matrix.getMaxScaleOnAxis();
+            this.radius = this.radius * matrix.maxScaleOnAxis;
 
             return this;
         }
@@ -159,7 +159,7 @@ namespace egret3d {
 
             if (raycastInfo) {
                 const normal = raycastInfo.normal;
-                const position = ray.at(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
+                const position = ray.getPointAt(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
 
                 if (normal) {
                     normal.subtract(position, this.center).normalize();

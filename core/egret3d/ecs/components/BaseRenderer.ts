@@ -43,7 +43,7 @@ namespace paper {
             const worldMatrix = this.gameObject.transform.getWorldMatrix();
             this._boundingSphere.set(localBoundingBox.center, localBoundingBox.boundingSphereRadius);
             this._boundingSphere.center.applyMatrix(worldMatrix);
-            this._boundingSphere.radius *= worldMatrix.getMaxScaleOnAxis();
+            this._boundingSphere.radius *= worldMatrix.maxScaleOnAxis;
         }
 
         public uninitialize() {

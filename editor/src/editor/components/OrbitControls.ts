@@ -122,9 +122,7 @@ namespace paper.editor {
                 move.x = -move.x;
                 const center = this.lookAtPoint;
                 const dis = this.gameObject.transform.getPosition().getDistance(center);
-                const normalMat = egret3d.Matrix3.create();
-                move.multiplyScalar(dis * this.moveSpped).applyMatrix3(normalMat.getNormalMatrix(this.gameObject.transform.getLocalMatrix()));
-                normalMat.release();
+                move.multiplyScalar(dis * this.moveSpped).applyMatrixWithoutTranslate(this.gameObject.transform.localMatrix);
 
                 this.lookAtOffset.add(move);
             }
