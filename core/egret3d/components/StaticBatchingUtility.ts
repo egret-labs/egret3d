@@ -135,7 +135,7 @@ namespace egret3d {
      */
     function _combineMesh(combineInstance: CombineInstance): Mesh {
         //
-        helpInverseMatrix.inverse(combineInstance.root.transform.getWorldMatrix());
+        helpInverseMatrix.copy(combineInstance.root.transform.worldToLocalMatrix);
 
         const meshAttribute = combineInstance.meshAttribute;
         const lightmapScaleOffset = combineInstance.root.renderer.lightmapScaleOffset;
@@ -153,7 +153,7 @@ namespace egret3d {
         for (const instance of combineInstance.instances) {
             const meshFilter = instance.getComponent(egret3d.MeshFilter)!;
             const meshRenderer = instance.getComponent(egret3d.MeshRenderer)!;
-            const worldMatrix = instance.transform.getWorldMatrix();
+            const worldMatrix = instance.transform.localToWorldMatrix;
             const mesh = meshFilter.mesh!;
             const orginLightmapScaleOffset = meshRenderer.lightmapScaleOffset;
 

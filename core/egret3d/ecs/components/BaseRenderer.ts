@@ -40,7 +40,7 @@ namespace paper {
         protected _recalculateSphere() {
             const localBoundingBox = this.localBoundingBox; // Update localBoundingBox.
 
-            const worldMatrix = this.gameObject.transform.getWorldMatrix();
+            const worldMatrix = this.gameObject.transform.localToWorldMatrix;
             this._boundingSphere.set(localBoundingBox.center, localBoundingBox.boundingSphereRadius);
             this._boundingSphere.center.applyMatrix(worldMatrix);
             this._boundingSphere.radius *= worldMatrix.maxScaleOnAxis;

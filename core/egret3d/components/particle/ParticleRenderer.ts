@@ -155,7 +155,7 @@ namespace egret3d.particle {
         public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
             let raycastMesh = false;
             let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
-            const worldMatrix = this.gameObject.transform.worldMatrix;
+            const worldMatrix = this.gameObject.transform.localToWorldMatrix;
             const localRay = helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
             const localBoundingBox = this.localBoundingBox;
 

@@ -64,7 +64,7 @@ namespace egret3d {
             // const temp = cameraTransform.getWorldMatrix().clone().release();
             // temp.rawData[12] = -temp.rawData[12];//Left-hand
             const context = camera.context;
-            context.matrix_v.inverse(cameraTransform.getWorldMatrix());
+            context.matrix_v.inverse(cameraTransform.localToWorldMatrix);
             context.matrix_vp.multiply(context.matrix_p, context.matrix_v);
             context.updateLightDepth(this);
         }

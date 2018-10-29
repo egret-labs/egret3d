@@ -37,7 +37,7 @@ namespace egret3d {
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
             const transform = this.gameObject.transform;
-            const localRay = helpRay.applyMatrix(transform.inverseWorldMatrix, ray);
+            const localRay = helpRay.applyMatrix(transform.worldToLocalMatrix, ray);
             localRay.origin.subtract(this.center);
             const end = Vector3.create().multiplyScalar(999999.0, localRay.direction).add(localRay.origin).release();
 
@@ -124,7 +124,7 @@ namespace egret3d {
             if (raycastInfo) {
                 raycastInfo.position.set(p1x + min * dx, p1y + min * dy, p1z + min * dz).add(this.center);
 
-                const worldMatrix = transform.worldMatrix;
+                const worldMatrix = transform.localToWorldMatrix;
                 raycastInfo.position.applyMatrix(worldMatrix);
                 raycastInfo.distance = ray.origin.getDistance(raycastInfo.position);
 

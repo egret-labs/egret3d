@@ -299,7 +299,7 @@ namespace egret3d {
             const renderer = drawCall.renderer;
             // const scene = renderer.gameObject.scene;
             const scene = paper.Scene.activeScene;
-            const matrix = drawCall.matrix || renderer.gameObject.transform.worldMatrix;
+            const matrix = drawCall.matrix || renderer.gameObject.transform.localToWorldMatrix;
             this.drawCall = drawCall;
             this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
             this.matrix_mv.multiply(this.matrix_v, this.matrix_m);

@@ -3,7 +3,7 @@ namespace egret3d {
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
     const _helpMatrix = Matrix4.create();
-    
+
     /**
      * 蒙皮网格渲染组件。
      */
@@ -44,7 +44,7 @@ namespace egret3d {
             for (let i = 0, l = bones.length; i < l; ++i) {
                 const offset = i * 16;
                 const bone = bones[i];
-                const matrix = bone ? bone.getWorldMatrix() : Matrix4.IDENTITY;
+                const matrix = bone ? bone.localToWorldMatrix : Matrix4.IDENTITY;
                 _helpMatrix.fromArray(inverseBindMatrices, offset).premultiply(matrix).toArray(boneMatrices, offset);
             }
 
@@ -174,7 +174,7 @@ namespace egret3d {
             let raycastMesh = false;
             let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
             const transform = this.gameObject.transform;
-            const localRay = helpRay.applyMatrix(transform.inverseWorldMatrix, p1);
+            const localRay = helpRay.applyMatrix(transform.worldToLocalMatrix, p1);
             const localBoundingBox = this.localBoundingBox;
 
             if (p2) {
@@ -192,7 +192,7 @@ namespace egret3d {
             }
             else if (localBoundingBox.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) { // Update local raycast info to world.
-                    raycastInfo.position.applyMatrix(transform.worldMatrix);
+                    raycastInfo.position.applyMatrix(transform.localToWorldMatrix);
                     raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
                 }
 

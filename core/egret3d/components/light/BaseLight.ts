@@ -81,7 +81,7 @@ namespace egret3d {
             );
 
             const context = camera.context;
-            context.updateCamera(camera, this.gameObject.transform.getWorldMatrix());
+            context.updateCamera(camera, this.gameObject.transform.localToWorldMatrix);
             context.updateLightDepth(this);
             matrix.multiply(context.matrix_p).multiply(context.matrix_v);
         }
