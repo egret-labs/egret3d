@@ -3070,17 +3070,18 @@ var paper;
                 }
                 if (value) {
                     if (value instanceof paper.Scene) {
+                        window["pse"] = window["psgo"] = null; // For quick debug.
                         this.selectedScene = value;
                         ModelComponent.onSceneSelected.dispatch(this, value);
                     }
                     else {
+                        window["pse"] = window["psgo"] = value; // For quick debug.
                         this.selectedGameObjects.push(value);
                         this.selectedGameObject = value;
                         ModelComponent.onGameObjectSelectChanged.dispatch(this, this.selectedGameObject);
                         ModelComponent.onGameObjectSelected.dispatch(this, value);
                     }
                 }
-                (global || window)["psgo"] = value; // For quick debug.
             };
             ModelComponent.prototype._unselect = function (value) {
                 var index = this.selectedGameObjects.indexOf(value);
@@ -3422,9 +3423,9 @@ var paper;
                         var collider = colliders[i];
                         if (collider.enabled) {
                             drawer.activeSelf = true;
-                            drawer.transform.localPosition.applyMatrix(selectedGameObject.transform.localToWorldMatrix, collider.sphere.center).release();
+                            drawer.transform.localPosition.applyMatrix(selectedGameObject.transform.localToWorldMatrix, collider.sphere.center).update();
                             drawer.transform.localRotation = selectedGameObject.transform.rotation;
-                            drawer.transform.localScale = egret3d.Vector3.create().multiplyScalar(collider.sphere.radius * 2, selectedGameObject.transform.scale).release();
+                            drawer.transform.localScale.multiplyScalar(collider.sphere.radius * 2, selectedGameObject.transform.scale).update();
                         }
                         else {
                             drawer.activeSelf = false;
@@ -3602,6 +3603,10 @@ var paper;
                 var isWorldSpace = this.isWorldSpace;
                 var hoveredName = this._hovered.name;
                 var raycastInfo = editor.Helper.raycast(this._plane, mousePosition.x, mousePosition.y);
+                if (!raycastInfo) {
+                    //TODO
+                    return;
+                }
                 var modelComponent = this.gameObject.getComponent(editor.ModelComponent);
                 var selectedGameObject = modelComponent.selectedGameObject;
                 var currentSelectedPRS = this._prsStarts[selectedGameObject.uuid];
@@ -4181,8 +4186,11 @@ var paper;
                 _this._onGameObjectSelectedChange = function (_c, value) {
                     _this._selectSceneOrGameObject(_this._modelComponent.selectedGameObject);
                 };
-                _this._nodeClickHandler = function (gui) {
+                _this._sceneOrGameObjectGUIClickHandler = function (gui) {
                     _this._modelComponent.select(gui.instance, true);
+                };
+                _this._componentOrPropertyGUIClickHandler = function (gui) {
+                    window["psc"] = gui.instance;
                 };
                 _this._saveSceneOrGameObject = function () {
                     if (_this._modelComponent.selectedScene) {
@@ -4253,7 +4261,11 @@ var paper;
                 }
                 if (inspector.__folders) {
                     for (var k in inspector.__folders) {
-                        inspector.removeFolder(inspector.__folders[k]);
+                        try {
+                            inspector.removeFolder(inspector.__folders[k]);
+                        }
+                        catch (e) {
+                        }
                     }
                 }
                 var options = {
@@ -4334,12 +4346,12 @@ var paper;
                     }
                     parentFolder = this._guiComponent.hierarchy.addFolder(gameObject.scene.uuid, gameObject.scene.name + " <Scene>");
                     parentFolder.instance = gameObject.scene;
-                    parentFolder.onClick = this._nodeClickHandler;
+                    parentFolder.onClick = this._sceneOrGameObjectGUIClickHandler;
                     this._hierarchyFolders[gameObject.scene.uuid] = parentFolder;
                 }
                 var folder = parentFolder.addFolder(gameObject.uuid, gameObject.name);
                 folder.instance = gameObject;
-                folder.onClick = this._nodeClickHandler;
+                folder.onClick = this._sceneOrGameObjectGUIClickHandler;
                 this._hierarchyFolders[gameObject.uuid] = folder;
                 return true;
             };
@@ -4361,6 +4373,7 @@ var paper;
                 var guiControllerB;
                 var guiControllerC;
                 var guiControllerD;
+                gui.onClick = this._componentOrPropertyGUIClickHandler;
                 var _loop_1 = function (info) {
                     switch (info.editType) {
                         case "UINT" /* UINT */:
