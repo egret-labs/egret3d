@@ -235,9 +235,9 @@ namespace paper.editor {
                 const camera = egret3d.Camera.editor;
                 const tempVector = egret3d.Vector3.create();
                 const rotationAxis = egret3d.Vector3.create();
-                const quaternion = !isWorldSpace ? selectedGameObject.transform.getRotation() : egret3d.Quaternion.IDENTITY.clone();
+                const rotation = !isWorldSpace ? selectedGameObject.transform.rotation : egret3d.Quaternion.IDENTITY.clone();
                 const tempQuaternion = egret3d.Quaternion.create();
-                const ROTATION_SPEED = 20 / selectedGameObject.transform.getPosition().getDistance(tempVector.applyMatrix(camera.gameObject.transform.getWorldMatrix()));
+                const ROTATION_SPEED = 20 / selectedGameObject.transform.position.getDistance(tempVector.applyMatrix(camera.gameObject.transform.localToWorldMatrix));
                 let rotationAngle = 0;
 
                 if (hoveredName.indexOf("XYZE") >= 0) {
@@ -258,7 +258,7 @@ namespace paper.editor {
                     tempVector.copy(unit);
                     tempVector2.subtract(this._offsetStart, this._offsetEnd);
                     if (!isWorldSpace) {
-                        tempVector.applyQuaternion(quaternion);
+                        tempVector.applyQuaternion(rotation);
                         tempVector2.applyQuaternion(currentSelectedPRS[4]);
                     }
                     rotationAngle = tempVector2.dot(tempVector.cross(this.eye).normalize()) * ROTATION_SPEED;
@@ -341,7 +341,7 @@ namespace paper.editor {
 
             eye.normalize();
 
-            const quaternion = isWorldSpace ? egret3d.Quaternion.IDENTITY : selectedGameObject.transform.getRotation();
+            const quaternion = isWorldSpace ? egret3d.Quaternion.IDENTITY : selectedGameObject.transform.rotation;
             this.gameObject.transform.position = selectedGameObject.transform.position;
             this.gameObject.transform.rotation = quaternion;
             this.gameObject.transform.scale = egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10.0).release();

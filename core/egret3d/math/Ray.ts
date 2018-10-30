@@ -92,7 +92,7 @@ namespace egret3d {
             return this;
         }
         /**
-         * 获得一个点到该射线的最近点。
+         * 获取一个点到该射线的最近点。
          * @param point 一个点。
          * @param out 最近点。
          */
@@ -112,7 +112,7 @@ namespace egret3d {
             return out.copy(direction).multiplyScalar(directionDistance).add(origin);
         }
         /**
-         * 获得从该射线的起点沿着射线方向移动一段距离的一个点。
+         * 获取从该射线的起点沿着射线方向移动一段距离的一个点。
          * - out = ray.origin + ray.direction * distanceDelta
          * @param distanceDelta 移动距离。
          * @param out 一个点。
@@ -147,7 +147,7 @@ namespace egret3d {
             return Math.sqrt(this.getSquaredDistance(point));
         }
         /**
-         * 获得该射线起点到一个平面的最近距离。
+         * 获取该射线起点到一个平面的最近距离。
          * - 如果射线并不与平面相交，则返回 -1。
          * @param plane 一个平面。
          */

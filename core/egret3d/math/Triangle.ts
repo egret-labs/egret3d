@@ -123,7 +123,7 @@ namespace egret3d {
             return Triangle.getNormal(this.a, this.b, this.c, out);
         }
         /**
-         * 获得一个点到该三角形的最近点。
+         * 获取一个点到该三角形的最近点。
          * @param point 一个点。
          * @param out 最近点。
          */

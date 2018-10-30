@@ -121,7 +121,7 @@ namespace paper.editor {
             if (event.ctrlKey) {
                 move.x = -move.x;
                 const center = this.lookAtPoint;
-                const dis = this.gameObject.transform.getPosition().getDistance(center);
+                const dis = this.gameObject.transform.position.getDistance(center);
                 move.multiplyScalar(dis * this.moveSpped).applyMatrixWithoutTranslate(this.gameObject.transform.localMatrix);
 
                 this.lookAtOffset.add(move);

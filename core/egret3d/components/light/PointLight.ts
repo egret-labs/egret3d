@@ -42,11 +42,11 @@ namespace egret3d {
             const context = camera.context;
             camera.calcProjectMatrix(1.0, context.matrix_p);
             const shadowMatrix = this.shadowMatrix;
-            shadowMatrix.fromTranslate(this.gameObject.transform.getPosition().clone().multiplyScalar(-1).release());
+            shadowMatrix.fromTranslate(this.gameObject.transform.position.clone().multiplyScalar(-1).release());
         }
 
         public updateFace(camera: Camera, faceIndex: number) {
-            const position = this.gameObject.transform.getPosition().clone().release();
+            const position = this.gameObject.transform.position.clone().release();
             helpVector3A.set(
                 position.x + _targets[faceIndex].x,
                 position.y + _targets[faceIndex].y,
@@ -64,7 +64,7 @@ namespace egret3d {
             // const temp = cameraTransform.getWorldMatrix().clone().release();
             // temp.rawData[12] = -temp.rawData[12];//Left-hand
             const context = camera.context;
-            context.matrix_v.inverse(cameraTransform.localToWorldMatrix);
+            context.matrix_v.copy(cameraTransform.worldToLocalMatrix);
             context.matrix_vp.multiply(context.matrix_p, context.matrix_v);
             context.updateLightDepth(this);
         }

@@ -21,7 +21,7 @@ namespace egret3d {
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
             const transform = this.gameObject.transform;
-            const localRay = helpRay.applyMatrix(helpMatrixA.inverse(transform.localToWorldMatrix), ray);
+            const localRay = helpRay.applyMatrix(transform.worldToLocalMatrix, ray);
 
             if (this.sphere.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) {

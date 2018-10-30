@@ -213,58 +213,12 @@ namespace egret3d {
             if (t === 0.0) return this.copy(from);
             if (t === 1.0) return this.copy(to);
 
-            // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
-            const ax = from.x, ay = from.y, az = from.z, aw = from.w;
-            const bx = to.x, by = to.y, bz = to.z, bw = to.w;
-            let cosHalfTheta = aw * bw + ax * bx + ay * by + az * bz;
+            const p = 1.0 - t;
 
-            if (cosHalfTheta < 0.0) {
-                this.w = -bw;
-                this.x = -bx;
-                this.y = -by;
-                this.z = -bz;
-
-                cosHalfTheta = -cosHalfTheta;
-            }
-            else {
-                this.w = bw;
-                this.x = bx;
-                this.y = by;
-                this.z = bz;
-            }
-
-            if (cosHalfTheta >= 1.0) {
-                this.w = aw;
-                this.x = ax;
-                this.y = ay;
-                this.z = az;
-
-                return this;
-            }
-
-            const sqrSinHalfTheta = 1.0 - cosHalfTheta * cosHalfTheta;
-
-            if (sqrSinHalfTheta <= Const.EPSILON) { // Number.EPSILON
-
-                const s = 1.0 - t;
-                this.w = s * aw + t * this.w;
-                this.x = s * ax + t * this.x;
-                this.y = s * ay + t * this.y;
-                this.z = s * az + t * this.z;
-
-                return this.normalize();
-
-            }
-
-            const sinHalfTheta = Math.sqrt(sqrSinHalfTheta);
-            const halfTheta = Math.atan2(sinHalfTheta, cosHalfTheta);
-            const ratioA = Math.sin((1.0 - t) * halfTheta) / sinHalfTheta,
-                ratioB = Math.sin(t * halfTheta) / sinHalfTheta;
-
-            this.w = aw * ratioA + this.w * ratioB;
-            this.x = ax * ratioA + this.x * ratioB;
-            this.y = ay * ratioA + this.y * ratioB;
-            this.z = az * ratioA + this.z * ratioB;
+            this.x = from.x * p + to.x * t;
+            this.y = from.y * p + to.y * t;
+            this.z = from.z * p + to.z * t;
+            this.w = from.w * p + to.w * t;
 
             return this;
         }

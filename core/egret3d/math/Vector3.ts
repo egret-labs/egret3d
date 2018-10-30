@@ -24,47 +24,47 @@ namespace egret3d {
      */
     export class Vector3 extends paper.BaseRelease<Vector3> implements IVector3, paper.ICCS<Vector3>, paper.ISerializable {
         /**
-         * 一个静态的零向量。
+         * 零向量。
          * - 请注意不要修改该值。
          */
         public static readonly ZERO: Readonly<Vector3> = new Vector3(0.0, 0.0, 0.0);
         /**
-         * 一个静态的三方向均为一的向量。
+         * 三方向均为一的向量。
          * - 请注意不要修改该值。
          */
         public static readonly ONE: Readonly<Vector3> = new Vector3(1.0, 1.0, 1.0);
         /**
-         * 一个静态的三方向均为负一的向量。
+         * 三方向均为负一的向量。
          * - 请注意不要修改该值。
          */
         public static readonly MINUS_ONE: Readonly<Vector3> = new Vector3(-1.0, -1.0, -1.0);
         /**
-         * 一个静态的上向量。
+         * 上向量。
          * - 请注意不要修改该值。
          */
         public static readonly UP: Readonly<Vector3> = new Vector3(0.0, 1.0, 0.0);
         /**
-         * 一个静态的下向量。
+         * 下向量。
          * - 请注意不要修改该值。
          */
         public static readonly DOWN: Readonly<Vector3> = new Vector3(0.0, -1.0, 0.0);
         /**
-         * 一个静态的左向量。
+         * 左向量。
          * - 请注意不要修改该值。
          */
         public static readonly LEFT: Readonly<Vector3> = new Vector3(-1.0, 0.0, 0.0);
         /**
-         * 一个静态的右向量。
+         * 右向量。
          * - 请注意不要修改该值。
          */
         public static readonly RIGHT: Readonly<Vector3> = new Vector3(1.0, 0.0, 0.0);
         /**
-         * 一个静态的前向量。
+         * 前向量。
          * - 请注意不要修改该值。
          */
         public static readonly FORWARD: Readonly<Vector3> = new Vector3(0.0, 0.0, 1.0);
         /**
-         * 一个静态的后向量。
+         * 后向量。
          * - 请注意不要修改该值。
          */
         public static readonly BACK: Readonly<Vector3> = new Vector3(0.0, 0.0, -1.0);
@@ -243,7 +243,7 @@ namespace egret3d {
         public applyMatrix(matrix: Readonly<Matrix4>): this;
         /**
          * 将输入向量与一个矩阵相乘的结果写入该向量。
-         * - v = input * matrix。
+         * - v = input * matrix
          * @param matrix 一个矩阵。
          * @param input 输入向量。
          */
@@ -675,7 +675,7 @@ namespace egret3d {
             return this.subtract(input, _helpVector3.multiplyScalar(2.0 * this.dot(normal), normal));
         }
         /**
-         * 获得该向量和一个向量的夹角。（弧度制）
+         * 获取该向量和一个向量的夹角。（弧度制）
          * - 假设向量长度均不为零。
          */
         public getAngle(vector: Readonly<IVector3>): number {

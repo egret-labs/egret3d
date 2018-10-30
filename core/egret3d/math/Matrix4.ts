@@ -931,7 +931,7 @@ namespace egret3d {
             );
         }
         /**
-         * 获得该矩阵的最大缩放值。
+         * 获取该矩阵的最大缩放值。
          * - 该值是实时计算的。
          */
         public get maxScaleOnAxis(): number {

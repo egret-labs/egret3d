@@ -63,7 +63,7 @@ namespace paper.editor {
                     icon = EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, EditorDefaultTexture.CAMERA_ICON).transform;
                 }
 
-                const cameraPosition = egret3d.Camera.editor.gameObject.transform.getPosition();
+                const cameraPosition = egret3d.Camera.editor.gameObject.transform.position;
                 const eyeDistance = cameraPosition.getDistance(camera.gameObject.transform.position);
                 icon.gameObject.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
                 icon.gameObject.transform.rotation = egret3d.Camera.editor.gameObject.transform.rotation;
@@ -145,7 +145,7 @@ namespace paper.editor {
                     icon = EditorMeshHelper.createIcon("__pickTarget", light.gameObject, EditorDefaultTexture.LIGHT_ICON).transform;
                 }
 
-                const cameraPosition = egret3d.Camera.editor.gameObject.transform.getPosition();
+                const cameraPosition = egret3d.Camera.editor.gameObject.transform.position;
                 const eyeDistance = cameraPosition.getDistance(light.gameObject.transform.position);
                 icon.gameObject.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
                 icon.gameObject.transform.rotation = egret3d.Camera.editor.gameObject.transform.rotation;

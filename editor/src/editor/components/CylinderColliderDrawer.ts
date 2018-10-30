@@ -36,11 +36,11 @@ namespace paper.editor {
                     const collider = colliders[i];
                     if (collider.enabled) {
                         drawer.activeSelf = true;
-                        drawer.transform.localPosition = egret3d.Vector3.create().copy(collider.center).applyMatrix(selectedGameObject!.transform.worldMatrix).release();
+                        drawer.transform.localPosition.applyMatrix(selectedGameObject!.transform.localToWorldMatrix, collider.center).update();
                         drawer.transform.localRotation = selectedGameObject!.transform.rotation;
                         drawer.transform.find("Top")!.transform.setLocalScale(collider.topRadius * 2.0);
                         drawer.transform.find("Bottom")!.transform.setLocalScale(collider.bottomRadius * 2.0);
-                        drawer.transform.localScale = egret3d.Vector3.create(1.0, collider.height, 1.0).multiply(selectedGameObject!.transform.scale).release();
+                        drawer.transform.localScale.set(1.0, collider.height, 1.0).multiply(selectedGameObject!.transform.scale).update();
                     }
                     else {
                         drawer.activeSelf = false;

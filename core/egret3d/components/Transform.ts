@@ -377,14 +377,14 @@ namespace egret3d {
             return ancestor;
         }
         /**
-         * @deprecated
-         */
-        public setLocalPosition(point: Readonly<IVector3>): this;
-        /**
          * 设置该组件的本地位置。
-         * @param x X 坐标。
-         * @param y Y 坐标。
-         * @param z Z 坐标。
+         * @param position 位置。
+         */
+        public setLocalPosition(position: Readonly<IVector3>): this;
+        /**
+         * @param x 位置的 X 坐标。
+         * @param y 位置的 Y 坐标。
+         * @param z 位置的 Z 坐标。
          */
         public setLocalPosition(x: number, y: number, z: number): this;
         public setLocalPosition(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
@@ -420,11 +420,11 @@ namespace egret3d {
             this._dirtify(true, TransformDirty.Position);
         }
         /**
-         * @deprecated
+         * 设置该组件的本地四元数旋转。
+         * @param rotation 四元数旋转。
          */
         public setLocalRotation(rotation: Readonly<IVector4>): this;
         /**
-         * 设置该组件的本地四元数旋转。
          * @param x X 分量。
          * @param y Y 分量。
          * @param z Z 分量。
@@ -466,11 +466,11 @@ namespace egret3d {
             this._dirtify(true, TransformDirty.Rotation);
         }
         /**
-         * @deprecated
-         */
-        public setLocalEuler(value: Readonly<IVector3>, order?: EulerOrder): this;
-        /**
          * 设置该组件的本地欧拉旋转。（弧度制）
+         * @param euler 欧拉旋转。
+         */
+        public setLocalEuler(euler: Readonly<IVector3>, order?: EulerOrder): this;
+        /**
          * @param x 
          * @param y 
          * @param z 
@@ -518,11 +518,11 @@ namespace egret3d {
             this._localDirty &= ~TransformDirty.Euler;
         }
         /**
-         * @deprecated
-         */
-        public setLocalEulerAngles(value: Readonly<IVector3>, order?: EulerOrder): this;
-        /**
          * 设置该组件的本地欧拉旋转。（角度制）
+         * @param euler 欧拉旋转。
+         */
+        public setLocalEulerAngles(euler: Readonly<IVector3>, order?: EulerOrder): this;
+        /**
          * @param x 
          * @param y 
          * @param z 
@@ -571,14 +571,14 @@ namespace egret3d {
             this._localDirty &= ~TransformDirty.Euler;
         }
         /**
-         * @deprecated
-         */
-        public setLocalScale(v: Readonly<IVector3>): this;
-        /**
          * 设置该组件的本地缩放。
-         * @param x 
-         * @param y 
-         * @param z 
+         * @param scale 缩放。
+         */
+        public setLocalScale(scale: Readonly<IVector3>): this;
+        /**
+         * @param x X 轴缩放。
+         * @param y Y 轴缩放。
+         * @param z Z 轴缩放。
          */
         public setLocalScale(x: number, y?: number, z?: number): this;
         public setLocalScale(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
@@ -622,11 +622,12 @@ namespace egret3d {
             return this._localMatrix;
         }
         /**
-         * @deprecated
+         * 设置该组件的世界位置。
+         * @param position 位置。
          */
         public setPosition(position: Readonly<IVector3>): this;
         /**
-         * 设置该物体的世界位置。
+         * 设置该组件的世界位置。
          * @param x 
          * @param y 
          * @param z 
@@ -653,7 +654,7 @@ namespace egret3d {
             return this;
         }
         /**
-         * 该物体的世界位置。
+         * 该组件的世界位置。
          */
         public get position(): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Position) {
@@ -675,11 +676,11 @@ namespace egret3d {
             this._dirtify(true, TransformDirty.Position);
         }
         /**
-         * @deprecated
+         * 设置该组件的本地四元数旋转。
+         * @param rotation 四元数旋转。
          */
-        public setRotation(v: Readonly<IVector4>): this;
+        public setRotation(rotation: Readonly<IVector4>): this;
         /**
-         * 
          * @param x 
          * @param y 
          * @param z 
@@ -709,7 +710,7 @@ namespace egret3d {
             return this;
         }
         /**
-         * 该物体的世界旋转。
+         * 该组件的世界旋转。
          */
         public get rotation(): Readonly<Quaternion> {
             if (this._worldDirty & TransformDirty.Rotation) {
@@ -732,11 +733,15 @@ namespace egret3d {
             this._dirtify(true, TransformDirty.Rotation);
         }
         /**
-         * @deprecated
+         * 该组件的世界欧拉旋转。（弧度制）
+         * @param euler 欧拉旋转。
          */
-        public setEuler(v: Readonly<IVector3>, order?: EulerOrder): this;
+        public setEuler(euler: Readonly<IVector3>, order?: EulerOrder): this;
         /**
-         * 该物体的世界欧拉旋转。（弧度制）
+         * @param x 
+         * @param y 
+         * @param z 
+         * @param order 
          */
         public setEuler(x: number, y: number, z: number, order?: EulerOrder): this;
         public setEuler(q1: Readonly<IVector3> | number, q2?: EulerOrder | number, q3?: number, q4?: EulerOrder) {
@@ -757,7 +762,7 @@ namespace egret3d {
             return this;
         }
         /**
-         * 该物体的世界欧拉旋转。（弧度制）
+         * 该组件的世界欧拉旋转。（弧度制）
          */
         public get euler(): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Euler) {
@@ -776,11 +781,15 @@ namespace egret3d {
             this._dirtify(true, TransformDirty.Rotation);
         }
         /**
-         * @deprecated
+         * 该组件的世界欧拉旋转。（角度制）
+         * @param euler 欧拉旋转。
          */
-        public setEulerAngles(v: Readonly<IVector3>, order?: EulerOrder): this;
+        public setEulerAngles(euler: Readonly<IVector3>, order?: EulerOrder): this;
         /**
-         * 该物体的世界欧拉旋转。（角度制）
+         * @param x 
+         * @param y 
+         * @param z 
+         * @param order 
          */
         public setEulerAngles(x: number, y: number, z: number, order?: EulerOrder): this;
         public setEulerAngles(q1: Readonly<IVector3> | number, q2?: EulerOrder | number, q3?: number, q4?: EulerOrder) {
@@ -802,7 +811,7 @@ namespace egret3d {
             return this;
         }
         /**
-         * 该物体的世界欧拉旋转。（角度制）
+         * 该组件的世界欧拉旋转。（角度制）
          */
         public get eulerAngles(): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Euler) {
@@ -822,11 +831,14 @@ namespace egret3d {
             this._dirtify(true, TransformDirty.Rotation);
         }
         /**
-         * @deprecated
+         * 该组件的世界缩放。
+         * @param scale
          */
-        public setScale(v: Readonly<IVector3>): this;
+        public setScale(scale: Readonly<IVector3>): this;
         /**
-         * 该物体的世界缩放。
+         * @param x 
+         * @param y 
+         * @param z 
          */
         public setScale(x: number, y?: number, z?: number): this;
         public setScale(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
@@ -850,7 +862,7 @@ namespace egret3d {
             return this;
         }
         /**
-         * 该物体的世界缩放。
+         * 该组件的世界缩放。
          */
         public get scale(): Readonly<Vector3> {
             if (this._worldDirty & TransformDirty.Scale) {

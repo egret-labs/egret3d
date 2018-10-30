@@ -229,6 +229,87 @@ namespace egret3d {
             return this.multiply(quaternion, this);
         }
         /**
+         * 将该四元数和目标四元数球形插值的结果写入该四元数。
+         * - v = v * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param t 插值因子。
+         * @param to 目标矩阵。
+         */
+        public slerp(t: number, to: Readonly<IVector4>): this;
+        /**
+         * 将两个四元数球形插值的结果写入该四元数。
+         * - v = from * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param t 插值因子。
+         * @param from 起始矩阵。
+         * @param to 目标矩阵。
+         */
+        public slerp(t: number, from: Readonly<IVector4>, to: Readonly<IVector4>): this;
+        public slerp(t: number, from: Readonly<IVector4>, to?: Readonly<IVector4>) {
+            if (!to) {
+                to = from;
+                from = this;
+            }
+
+            if (t === 0.0) return this.copy(from);
+            if (t === 1.0) return this.copy(to);
+
+            // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
+            const ax = from.x, ay = from.y, az = from.z, aw = from.w;
+            const bx = to.x, by = to.y, bz = to.z, bw = to.w;
+            let cosHalfTheta = aw * bw + ax * bx + ay * by + az * bz;
+
+            if (cosHalfTheta < 0.0) {
+                this.w = -bw;
+                this.x = -bx;
+                this.y = -by;
+                this.z = -bz;
+
+                cosHalfTheta = -cosHalfTheta;
+            }
+            else {
+                this.w = bw;
+                this.x = bx;
+                this.y = by;
+                this.z = bz;
+            }
+
+            if (cosHalfTheta >= 1.0) {
+                this.w = aw;
+                this.x = ax;
+                this.y = ay;
+                this.z = az;
+
+                return this;
+            }
+
+            const sqrSinHalfTheta = 1.0 - cosHalfTheta * cosHalfTheta;
+
+            if (sqrSinHalfTheta <= Const.EPSILON) { // Number.EPSILON
+
+                const s = 1.0 - t;
+                this.w = s * aw + t * this.w;
+                this.x = s * ax + t * this.x;
+                this.y = s * ay + t * this.y;
+                this.z = s * az + t * this.z;
+
+                return this.normalize();
+
+            }
+
+            const sinHalfTheta = Math.sqrt(sqrSinHalfTheta);
+            const halfTheta = Math.atan2(sinHalfTheta, cosHalfTheta);
+            const ratioA = Math.sin((1.0 - t) * halfTheta) / sinHalfTheta,
+                ratioB = Math.sin(t * halfTheta) / sinHalfTheta;
+
+            this.w = aw * ratioA + this.w * ratioB;
+            this.x = ax * ratioA + this.x * ratioB;
+            this.y = ay * ratioA + this.y * ratioB;
+            this.z = az * ratioA + this.z * ratioB;
+
+            return this;
+        }
+        /**
          * 设置该四元数，使其与起始点到目标点的方向相一致。
          * @param from 起始点。
          * @param to 目标点。
@@ -246,7 +327,7 @@ namespace egret3d {
             return this.fromMatrix(helpMatrixA.lookRotation(vector, up));
         }
         /**
-         * 获得该四元数和一个四元数的夹角。（弧度制）
+         * 获取该四元数和一个四元数的夹角。（弧度制）
          */
         public getAngle(value: Readonly<IVector4>): number {
             return 2.0 * Math.acos(Math.abs(egret3d.floatClamp(this.dot(value), -1.0, 1.0)));

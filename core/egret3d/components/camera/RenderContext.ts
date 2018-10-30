@@ -73,7 +73,7 @@ namespace egret3d {
             const asp = camera.calcViewPortPixel(this.viewPortPixel); // update viewport
             camera.calcProjectMatrix(asp, this.matrix_p);
 
-            this.matrix_v.inverse(matrix);
+            this.matrix_v.inverse(matrix); // TODO
             this.matrix_vp.multiply(this.matrix_p, this.matrix_v);
 
             const rawData = matrix.rawData;
@@ -180,7 +180,7 @@ namespace egret3d {
                     }
 
                     case PointLight: {
-                        const position = light.gameObject.transform.getPosition().clone().release();
+                        const position = light.gameObject.transform.position.clone().release();
                         position.applyMatrix(this.matrix_v);
                         lightArray = this.pointLightArray;
                         index = pointLightIndex * LightSize.Point;
@@ -200,7 +200,7 @@ namespace egret3d {
                     }
 
                     case SpotLight: {
-                        const position = light.gameObject.transform.getPosition().clone().release();
+                        const position = light.gameObject.transform.position.clone().release();
                         position.applyMatrix(this.matrix_v);
                         light.gameObject.transform.getForward(_helpVector3);
                         _helpVector3.applyDirection(this.matrix_v).normalize();
@@ -285,7 +285,7 @@ namespace egret3d {
         }
 
         public updateLightDepth(light: BaseLight) {
-            const position = light.gameObject.transform.getPosition();
+            const position = light.gameObject.transform.position;
             //
             this.lightPosition[0] = position.x;
             this.lightPosition[1] = position.y;
