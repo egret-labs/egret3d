@@ -294,7 +294,6 @@ namespace egret3d {
                 this.z = s * az + t * this.z;
 
                 return this.normalize();
-
             }
 
             const sinHalfTheta = Math.sqrt(sqrSinHalfTheta);

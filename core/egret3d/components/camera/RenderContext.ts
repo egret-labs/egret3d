@@ -161,7 +161,7 @@ namespace egret3d {
                 switch (light.constructor) {
                     case DirectionalLight: {
                         light.gameObject.transform.getForward(_helpVector3);
-                        _helpVector3.applyDirection(this.matrix_v).normalize();
+                        _helpVector3.applyDirection(this.matrix_v);
 
                         lightArray = this.directLightArray;
                         index = directLightIndex * LightSize.Directional;
@@ -203,7 +203,7 @@ namespace egret3d {
                         const position = light.gameObject.transform.position.clone().release();
                         position.applyMatrix(this.matrix_v);
                         light.gameObject.transform.getForward(_helpVector3);
-                        _helpVector3.applyDirection(this.matrix_v).normalize();
+                        _helpVector3.applyDirection(this.matrix_v);
 
                         lightArray = this.spotLightArray;
                         index = spotLightIndex * LightSize.Spot;

@@ -87,7 +87,7 @@ namespace egret3d {
         public applyMatrix(matrix: Readonly<Matrix4>, input: Readonly<Ray>): this;
         public applyMatrix(matrix: Readonly<Matrix4>, input?: Readonly<Ray>) {
             this.origin.applyMatrix(matrix, (input || this).origin);
-            this.direction.applyDirection(matrix, (input || this).direction).normalize();
+            this.direction.applyDirection(matrix, (input || this).direction);
 
             return this;
         }

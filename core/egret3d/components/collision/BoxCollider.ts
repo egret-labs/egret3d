@@ -26,13 +26,13 @@ namespace egret3d {
 
             if (this.box.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) {
-                    const worldMatrix = transform.localToWorldMatrix;
-                    raycastInfo.position.applyMatrix(worldMatrix);
+                    const localToWorldMatrix = transform.localToWorldMatrix;
+                    raycastInfo.position.applyMatrix(transform.localToWorldMatrix);
                     raycastInfo.distance = ray.origin.getDistance(raycastInfo.position);
 
                     const normal = raycastInfo.normal;
                     if (normal) {
-                        normal.applyDirection(worldMatrix).normalize();
+                        normal.applyDirection(localToWorldMatrix);
                     }
                 }
 
@@ -41,7 +41,7 @@ namespace egret3d {
 
             return false;
         }
-        
+
         /**
          * @deprecated
          */

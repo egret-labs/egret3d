@@ -236,6 +236,33 @@ namespace egret3d {
             return this;
         }
         /**
+         * 将该向量乘以一个 3x3 矩阵。
+         * - v *= matrix
+         * @param matrix 一个 3x3 矩阵。
+         */
+        public applyMatrix3(matrix: Readonly<Matrix3>): this;
+        /**
+         * 将输入向量与一个 3x3 矩阵相乘的结果写入该向量。
+         * - v = input * matrix
+         * @param matrix 一个 3x3 矩阵。
+         * @param input 输入向量。
+         */
+        public applyMatrix3(matrix: Readonly<Matrix3>, input: Readonly<IVector3>): this;
+        public applyMatrix3(matrix: Readonly<Matrix3>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
+            }
+
+            const x = input.x, y = input.y, z = input.z;
+            const rawData = matrix.rawData;
+
+            this.x = rawData[0] * x + rawData[3] * y + rawData[6] * z;
+            this.y = rawData[1] * x + rawData[4] * y + rawData[7] * z;
+            this.z = rawData[2] * x + rawData[5] * y + rawData[8] * z;
+
+            return this;
+        }
+        /**
          * 将该向量乘以一个矩阵。
          * - v *= matrix
          * @param matrix 一个矩阵。
@@ -285,7 +312,7 @@ namespace egret3d {
         public applyDirection(matrix: Readonly<Matrix4>): this;
         /**
          * 将输入向量与一个矩阵相乘的结果写入该向量。
-         * - v = input * matrix。
+         * - v = input * matrix
          * - 矩阵的平移数据不会影响向量。
          * - 结果被归一化。
          * @param matrix 一个矩阵。
@@ -293,7 +320,18 @@ namespace egret3d {
          */
         public applyDirection(matrix: Readonly<Matrix4>, input: Readonly<IVector3>): this;
         public applyDirection(matrix: Readonly<Matrix4>, input?: Readonly<IVector3>) {
-            return this.applyMatrixWithoutTranslate(matrix, input).normalize();
+            if (!input) {
+                input = this;
+            }
+
+            const x = input.x, y = input.y, z = input.z;
+            const rawData = matrix.rawData;
+
+            this.x = rawData[0] * x + rawData[4] * y + rawData[8] * z;
+            this.y = rawData[1] * x + rawData[5] * y + rawData[9] * z;
+            this.z = rawData[2] * x + rawData[6] * y + rawData[10] * z;
+
+            return this.normalize();
         }
         /**
          * 将该向量乘以一个矩阵。
@@ -304,7 +342,7 @@ namespace egret3d {
         public applyMatrixWithoutTranslate(matrix: Readonly<Matrix4>): this;
         /**
          * 将输入向量与一个矩阵相乘的结果写入该向量。
-         * - v = input * matrix。
+         * - v = input * matrix
          * - 矩阵的平移数据不会影响向量。
          * @param matrix 一个矩阵。
          * @param input 输入向量。
@@ -358,7 +396,7 @@ namespace egret3d {
         }
         /**
          * 将该向量加上一个标量。
-         * - v += scalar。
+         * - v += scalar
          * @param scalar 标量。
          */
         public addScalar(scalar: number): this;
@@ -382,7 +420,7 @@ namespace egret3d {
         }
         /**
          * 将该向量乘以一个标量。
-         * - v *= scalar。
+         * - v *= scalar
          * @param scalar 标量。
          */
         public multiplyScalar(scalar: number): this;

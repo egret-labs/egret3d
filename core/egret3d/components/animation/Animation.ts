@@ -26,6 +26,10 @@ namespace egret3d {
         }
 
         public onClear() {
+            this.reset();
+        }
+
+        public reset() {
             this.dirty = 0;
             this.layer = 0;
             this.leftWeight = 0.0;
@@ -66,6 +70,8 @@ namespace egret3d {
             this.leftWeight = 1.0;
             this.layerWeight = animationWeight;
             this.blendWeight = animationWeight;
+            
+            return true;
         }
     }
     /**
@@ -207,6 +213,7 @@ namespace egret3d {
                 if (this._subFadeState > 0) { // Fade complete event.
                     if (!isFadeOut) {
                         this._fadeState = 0;
+                        this._subFadeState = 0;
                         this._onFadeStateChange();
                     }
                 }
@@ -320,13 +327,34 @@ namespace egret3d {
                 z += (outputBuffer[offset++] - z) * progress;
             }
 
-            if (Array.isArray(channel.components)) {
+            const isArray = Array.isArray(channel.components);
+            // const blendLayer = channel.blendLayer!;
+            // const blendWeight = blendLayer.blendWeight;
+            const blendTarget = (isArray ? (channel.components as Transform[])[0].localPosition : (channel.components as Transform).localPosition) as Vector3;
+
+            // if (blendLayer.dirty > 1) {
+            //     blendTarget.x += x * blendWeight;
+            //     blendTarget.y += y * blendWeight;
+            //     blendTarget.z += z * blendWeight;
+            // }
+            // else if (blendWeight !== 1.0) {
+            //     blendTarget.x = x * blendWeight;
+            //     blendTarget.y = y * blendWeight;
+            //     blendTarget.z = z * blendWeight;
+            // }
+            // else {
+                blendTarget.x = x;
+                blendTarget.y = y;
+                blendTarget.z = z;
+            // }
+
+            if (isArray) {
                 for (const component of channel.components as Transform[]) {
-                    component.setLocalPosition(x, y, z);
+                    component.localPosition = blendTarget;
                 }
             }
             else {
-                (channel.components as Transform).setLocalPosition(x, y, z);
+                blendTarget.update();
             }
         }
 
@@ -352,13 +380,37 @@ namespace egret3d {
                 w += (outputBuffer[offset++] - w) * progress;
             }
 
-            if (Array.isArray(channel.components)) {
+            const isArray = Array.isArray(channel.components);
+            // const blendLayer = channel.blendLayer!;
+            // const blendWeight = blendLayer.blendWeight;
+            const blendTarget = (isArray ? (channel.components as Transform[])[0].localRotation : (channel.components as Transform).localRotation) as Quaternion;
+
+            // if (blendLayer.dirty > 1) {
+            //     blendTarget.x += x * blendWeight;
+            //     blendTarget.y += y * blendWeight;
+            //     blendTarget.z += z * blendWeight;
+            //     blendTarget.w += w * blendWeight;
+            // }
+            // else if (blendWeight !== 1.0) {
+            //     blendTarget.x = x * blendWeight;
+            //     blendTarget.y = y * blendWeight;
+            //     blendTarget.z = z * blendWeight;
+            //     blendTarget.w = w * blendWeight;
+            // }
+            // else {
+                blendTarget.x = x;
+                blendTarget.y = y;
+                blendTarget.z = z;
+                blendTarget.w = w;
+            // }
+
+            if (isArray) {
                 for (const component of channel.components as Transform[]) {
-                    component.setLocalRotation(x, y, z, w);
+                    component.localRotation = blendTarget;
                 }
             }
             else {
-                (channel.components as Transform).setLocalRotation(x, y, z, w);
+                blendTarget.update();
             }
         }
 
@@ -382,13 +434,34 @@ namespace egret3d {
                 z += (outputBuffer[offset++] - z) * progress;
             }
 
-            if (Array.isArray(channel.components)) {
+            const isArray = Array.isArray(channel.components);
+            // const blendLayer = channel.blendLayer!;
+            // const blendWeight = blendLayer.blendWeight;
+            const blendTarget = (isArray ? (channel.components as Transform[])[0].localScale : (channel.components as Transform).localScale) as Vector3;
+
+            // if (blendLayer.dirty > 1) {
+            //     blendTarget.x += (x - 1.0) * blendWeight;
+            //     blendTarget.y += (y - 1.0) * blendWeight;
+            //     blendTarget.z += (z - 1.0) * blendWeight;
+            // }
+            // else if (blendWeight !== 1.0) {
+            //     blendTarget.x = (x - 1.0) * blendWeight + 1.0;
+            //     blendTarget.y = (y - 1.0) * blendWeight + 1.0;
+            //     blendTarget.z = (z - 1.0) * blendWeight + 1.0;
+            // }
+            // else {
+                blendTarget.x = x;
+                blendTarget.y = y;
+                blendTarget.z = z;
+            // }
+
+            if (isArray) {
                 for (const component of channel.components as Transform[]) {
-                    component.setLocalScale(x, y, z);
+                    component.localScale = blendTarget;
                 }
             }
             else {
-                (channel.components as Transform).setLocalScale(x, y, z);
+                blendTarget.update();
             }
         }
 
@@ -495,6 +568,7 @@ namespace egret3d {
                 this._time += deltaTime;
             }
 
+            // const isBlendDirty = this._fadeState !== 0 || this._subFadeState === 0;
             const prevPlayState = this._playState;
             // const prevPlayTimes = this.currentPlayTimes;
             // const prevTime = this._currentTime;
@@ -536,7 +610,12 @@ namespace egret3d {
 
             if (this.weight !== 0.0) {
                 for (const channel of this._channels) {
-                    if (channel.updateTarget) {
+                    if (!channel.updateTarget) {
+                        continue;
+                    }
+
+                    const blendLayer = channel.blendLayer;
+                    if (!blendLayer || blendLayer.updateLayerAndWeight(this)) {
                         channel.updateTarget(channel, this);
                     }
                 }
@@ -613,7 +692,7 @@ namespace egret3d {
          * 骨骼姿势列表。
          * @internal
          */
-        public readonly _blendLayers: { [key: string]: { [key: string]: BlendLayer } } = {};
+        private readonly _blendLayers: { [key: string]: { [key: string]: BlendLayer } } = {};
         /**
          * 最后一个播放的动画状态。
          * - 当进行动画混合时，该值通常没有任何意义。
@@ -653,6 +732,14 @@ namespace egret3d {
         public _update(globalTime: number) {
             const blendNodes = this._blendNodes;
             const blendNodeCount = blendNodes.length;
+
+            for (const k in this._blendLayers) { // Reset blendLayers.
+                const blendLayers = this._blendLayers[k];
+
+                for (const kB in blendLayers) {
+                    blendLayers[kB].reset();
+                }
+            }
 
             if (blendNodeCount === 1) {
                 const blendNode = blendNodes[0];
@@ -706,12 +793,16 @@ namespace egret3d {
 
         public uninitialize() {
             super.uninitialize();
-            // TODO
-            // for (const blendLayer in this._blendLayers) {
-            //     blendLayer.release();
-            // }
 
-            // this._blendLayers.length = 0;
+            for (const k in this._blendLayers) {
+                const blendLayers = this._blendLayers[k];
+
+                for (const kB in blendLayers) {
+                    blendLayers[kB].release();
+                }
+
+                delete this._blendLayers[k];
+            }
         }
         /**
          * 

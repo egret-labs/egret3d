@@ -289,6 +289,7 @@ namespace egret3d {
 
             if (distanceToPlane < -Const.EPSILON || Const.EPSILON < distanceToPlane) {
                 if (this.opvalue === 0.0) {
+                    // TODO
                     // worldPosition.subtract(vppos, forward.multiplyScalar(distanceToPlane - stagePosition.z));
                 }
                 else {
@@ -414,9 +415,9 @@ namespace egret3d {
             // asp
             return pixelViewport.w / pixelViewport.h;
         }
-
         /**
          * 该摄像机的视点到近裁剪面距离。
+         * - 该值过小会引起深度冲突。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: 3000.0 - 0.01, step: 1 })
         public get near(): number {
@@ -433,7 +434,6 @@ namespace egret3d {
 
             this._near = value;
         }
-
         /**
          * 该摄像机的视点到远裁剪面距离。
          */

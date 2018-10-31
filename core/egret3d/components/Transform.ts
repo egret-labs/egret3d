@@ -854,6 +854,7 @@ namespace egret3d {
             }
 
             if (this._parent) {
+                // TODO
                 this._localScale.applyMatrixWithoutTranslate(this._parent.worldToLocalMatrix);
             }
 
@@ -878,6 +879,7 @@ namespace egret3d {
             this._localScale.z = value.z;
 
             if (this._parent) {
+                // TODO
                 this._localScale.applyMatrixWithoutTranslate(this._parent.worldToLocalMatrix);
             }
 
@@ -1027,7 +1029,7 @@ namespace egret3d {
                 out = Vector3.create();
             }
 
-            return out.applyDirection(this.localToWorldMatrix, Vector3.RIGHT).normalize();
+            return out.applyDirection(this.localToWorldMatrix, Vector3.RIGHT);
         }
         /**
          * 获取该组件在世界空间坐标系下描述的 Y 轴正方向。
@@ -1038,7 +1040,7 @@ namespace egret3d {
                 out = Vector3.create();
             }
 
-            return out.applyDirection(this.localToWorldMatrix, Vector3.UP).normalize();
+            return out.applyDirection(this.localToWorldMatrix, Vector3.UP);
         }
         /**
          * 获取该组件在世界空间坐标系下描述的 Z 轴正方向。
@@ -1049,7 +1051,7 @@ namespace egret3d {
                 out = Vector3.create();
             }
 
-            return out.applyDirection(this.localToWorldMatrix, Vector3.FORWARD).normalize();
+            return out.applyDirection(this.localToWorldMatrix, Vector3.FORWARD);
         }
         /**
          * 该组件的全部子级变换组件总数。（不包含孙级）

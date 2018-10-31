@@ -28,7 +28,8 @@ namespace egret3d {
             let raycastMesh = false;
             let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
             const transform = this.gameObject.transform;
-            const localRay = helpRay.applyMatrix(transform.worldToLocalMatrix, p1);
+            const worldToLocalMatrix = transform.worldToLocalMatrix;
+            const localRay = helpRay.applyMatrix(worldToLocalMatrix, p1);
             const localBoundingBox = this.localBoundingBox;
 
             if (p2) {
@@ -43,13 +44,14 @@ namespace egret3d {
 
             if (raycastMesh ? localBoundingBox.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo) : localBoundingBox.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) { // Update local raycast info to world.
-                    const worldMatrix = transform.localToWorldMatrix;
-                    raycastInfo.position.applyMatrix(worldMatrix);
+                    const localToWorldMatrix = transform.localToWorldMatrix;
+                    raycastInfo.position.applyMatrix(localToWorldMatrix);
                     raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
 
                     const normal = raycastInfo.normal;
                     if (normal) {
-                        normal.applyDirection(worldMatrix).normalize();
+                        // normal.applyDirection(localToWorldMatrix);
+                        normal.applyMatrix3(helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
                     }
                 }
 
