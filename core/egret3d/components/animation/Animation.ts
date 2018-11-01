@@ -673,7 +673,7 @@ namespace egret3d {
         /**
          * 动画速度。
          */
-        @paper.editor.property(paper.editor.EditType.FLOAT)
+        @paper.property(paper.EditType.FLOAT)
         public timeScale: number = 1.0;
         /**
          * 动画数据列表。

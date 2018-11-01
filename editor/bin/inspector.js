@@ -2622,6 +2622,92 @@ var paper;
     var editor;
     (function (editor) {
         /**
+         * 事件派发器
+         */
+        var EventDispatcher = (function () {
+            function EventDispatcher() {
+                this.__z_e_listeners = {};
+            }
+            EventDispatcher.prototype.addEventListener = function (type, fun, thisObj, level) {
+                if (level === void 0) { level = 0; }
+                var list = this.__z_e_listeners[type];
+                if (list === undefined) {
+                    list = [];
+                    this.__z_e_listeners[type] = list;
+                }
+                var item = {
+                    func: fun,
+                    context: thisObj,
+                    level: level
+                };
+                list.push(item);
+                list.sort(function (a, b) {
+                    return b.level - a.level;
+                });
+            };
+            EventDispatcher.prototype.removeEventListener = function (type, fun, thisObj) {
+                var list = this.__z_e_listeners[type];
+                if (list !== undefined) {
+                    var size = list.length;
+                    for (var i = 0; i < size; i++) {
+                        var obj = list[i];
+                        if (obj.func === fun && obj.context === thisObj) {
+                            list.splice(i, 1);
+                            return;
+                        }
+                    }
+                }
+            };
+            EventDispatcher.prototype.dispatchEvent = function (event) {
+                var list = this.__z_e_listeners[event.type];
+                if (list !== undefined) {
+                    list.forEach(function (ef) {
+                        ef['___dirty___'] = true;
+                    });
+                    var size = list.length;
+                    for (var i = 0; i < size; i++) {
+                        var ef = list[i];
+                        if (ef['___dirty___']) {
+                            var fun = ef.func;
+                            var context = ef.context;
+                            if (context) {
+                                fun.call(context, event);
+                            }
+                            else {
+                                fun(event);
+                            }
+                            ef['___dirty___'] = false;
+                        }
+                        if (size != list.length) {
+                            size = list.length;
+                            i = 0;
+                        }
+                    }
+                }
+            };
+            return EventDispatcher;
+        }());
+        editor.EventDispatcher = EventDispatcher;
+        __reflect(EventDispatcher.prototype, "paper.editor.EventDispatcher", ["paper.editor.IEventDispatcher"]);
+        /**
+         * 事件
+         */
+        var BaseEvent = (function () {
+            function BaseEvent(type, data) {
+                this.type = type;
+                this.data = data;
+            }
+            return BaseEvent;
+        }());
+        editor.BaseEvent = BaseEvent;
+        __reflect(BaseEvent.prototype, "paper.editor.BaseEvent");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**
          * @internal
          */
         var BaseSelectedGOComponent = (function (_super) {
@@ -2649,28 +2735,331 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
+        var BaseState = (function () {
+            function BaseState() {
+                this.autoClear = false;
+                this.batchIndex = 0;
+                this._isDone = false;
+            }
+            BaseState.prototype.undo = function () {
+                if (this._isDone) {
+                    this._isDone = false;
+                    return true;
+                }
+                return false;
+            };
+            BaseState.prototype.redo = function () {
+                if (this._isDone) {
+                    return false;
+                }
+                this._isDone = true;
+                this.editorModel.dirty = true;
+                return true;
+            };
+            Object.defineProperty(BaseState.prototype, "isDone", {
+                get: function () {
+                    return this._isDone;
+                },
+                set: function (value) {
+                    this._isDone = value;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            BaseState.prototype.dispatchEditorModelEvent = function (type, data) {
+                this.editorModel.dispatchEvent(new editor.EditorModelEvent(type, data));
+            };
+            BaseState.prototype.serialize = function () {
+                return null;
+            };
+            BaseState.prototype.deserialize = function (data) {
+            };
+            return BaseState;
+        }());
+        editor.BaseState = BaseState;
+        __reflect(BaseState.prototype, "paper.editor.BaseState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var EditorSceneModel = (function () {
+            function EditorSceneModel() {
+                this.viewCache = {};
+            }
+            Object.defineProperty(EditorSceneModel.prototype, "editorScene", {
+                get: function () {
+                    return paper.Application.sceneManager.editorScene;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(EditorSceneModel.prototype, "editorModel", {
+                set: function (v) {
+                    if (this.currentModel) {
+                        this.viewCache[this.currentModel.contentUrl] = {
+                            position: this.cameraObject.transform.position.clone(),
+                            rotation: this.cameraObject.transform.rotation.clone()
+                        };
+                    }
+                    // this.pickGameScript.clearSelected();
+                    // this.geoController.clearSelected();//TODO:应在controller里新增清空状态函数
+                    // this.editorCameraScript.editorModel = v;
+                    // this.pickGameScript.editorModel = v;
+                    // this.geoController.editorModel = v;
+                    this.currentModel = v;
+                    if (v && this.viewCache[v.contentUrl]) {
+                        this.cameraObject.transform.setPosition(this.viewCache[v.contentUrl].position);
+                        this.cameraObject.transform.setRotation(this.viewCache[v.contentUrl].rotation);
+                    }
+                    else {
+                        this.cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
+                        this.cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            EditorSceneModel.prototype.init = function () {
+                this.cameraObject = egret3d.Camera.editor.gameObject;
+                // this.cameraObject = GameObject.create("EditorCamera", DefaultTags.EditorOnly, Application.sceneManager.editorScene);
+                var camera = this.cameraObject.getOrAddComponent(egret3d.Camera);
+                camera.near = 0.1;
+                camera.far = 500.0;
+                camera.backgroundColor.set(0.13, 0.28, 0.51, 1.00);
+                this.cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
+                this.cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
+                paper.GameObject.globalGameObject.sendMessage("bootstrap");
+                // this.editorCameraScript = this.cameraObject.addComponent(EditorCameraScript);
+                // this.editorCameraScript.moveSpeed = 10;
+                // this.editorCameraScript.rotateSpeed = 0.5;
+                // this.pickGameScript = this.cameraObject.addComponent(PickGameObjectScript);
+                // this.geoController = this.cameraObject.addComponent(Controller)
+            };
+            return EditorSceneModel;
+        }());
+        editor.EditorSceneModel = EditorSceneModel;
+        __reflect(EditorSceneModel.prototype, "paper.editor.EditorSceneModel");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var ValueUUID = (function () {
+            function ValueUUID(_value) {
+                this._value = _value;
+                // empty
+            }
+            ValueUUID.prototype.asHex = function () {
+                return this._value;
+            };
+            return ValueUUID;
+        }());
+        __reflect(ValueUUID.prototype, "ValueUUID", ["paper.editor.UUID"]);
+        var V4UUID = (function (_super) {
+            __extends(V4UUID, _super);
+            function V4UUID() {
+                return _super.call(this, [
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    '-',
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    '-',
+                    '4',
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    '-',
+                    V4UUID._oneOf(V4UUID._timeHighBits),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    '-',
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                    V4UUID._randomHex(),
+                ].join('')) || this;
+            }
+            V4UUID._oneOf = function (array) {
+                return array[Math.floor(array.length * Math.random())];
+            };
+            V4UUID._randomHex = function () {
+                return V4UUID._oneOf(V4UUID._chars);
+            };
+            V4UUID._chars = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
+            V4UUID._timeHighBits = ['8', '9', 'a', 'b'];
+            return V4UUID;
+        }(ValueUUID));
+        __reflect(V4UUID.prototype, "V4UUID");
+        function v4() {
+            return new V4UUID();
+        }
+        editor.v4 = v4;
+        var _UUIDPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        function isUUID(value) {
+            return _UUIDPattern.test(value);
+        }
+        editor.isUUID = isUUID;
+        /**
+         * Parses a UUID that is of the format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
+         * @param value A uuid string.
+         */
+        function parse(value) {
+            if (!isUUID(value)) {
+                throw new Error('invalid uuid');
+            }
+            return new ValueUUID(value);
+        }
+        editor.parse = parse;
+        function generateUuid() {
+            return v4().asHex();
+        }
+        editor.generateUuid = generateUuid;
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**
+         * 状态组
+         * @author 杨宁
+         */
+        var StateGroup = (function (_super) {
+            __extends(StateGroup, _super);
+            function StateGroup() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            StateGroup.create = function (stateList) {
+                var instance = new StateGroup();
+                instance.stateList = stateList;
+                return instance;
+            };
+            StateGroup.prototype.redo = function () {
+                for (var i = 0; i < this.stateList.length; i++) {
+                    this.stateList[i].redo();
+                }
+                return true;
+            };
+            StateGroup.prototype.undo = function () {
+                for (var i = this.stateList.length - 1; i >= 0; i--) {
+                    this.stateList[i].undo();
+                }
+                return true;
+            };
+            StateGroup.prototype.serialize = function () {
+                var states = this.stateList;
+                var statesData = [];
+                for (var index = 0; index < states.length; index++) {
+                    var element = states[index];
+                    var className = egret.getQualifiedClassName(element);
+                    var data = {
+                        className: className,
+                        batchIndex: element.batchIndex,
+                        data: element['serialize'] ? element['serialize']() : element.data,
+                        autoClear: element.autoClear,
+                        isDone: element.isDone,
+                    };
+                    statesData.push(data);
+                }
+                return states;
+            };
+            StateGroup.prototype.deserialize = function (data) {
+                this.stateList = [];
+                var statesData = data;
+                for (var index = 0; index < statesData.length; index++) {
+                    var element = statesData[index];
+                    var clazz = egret.getDefinitionByName(element.className);
+                    var state = void 0;
+                    if (clazz) {
+                        state = new clazz();
+                        state.batchIndex = element.batchIndex;
+                        state.data = element['deserialize'] ? element['deserialize'](element.data) : element.data;
+                        state.autoClear = element.autoClear;
+                        state.isDone = element.isDone;
+                        this.stateList.push(state);
+                    }
+                }
+            };
+            return StateGroup;
+        }(editor.BaseState));
+        editor.StateGroup = StateGroup;
+        __reflect(StateGroup.prototype, "paper.editor.StateGroup");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
         /**
          * @internal
          */
-        var Helper = (function () {
-            function Helper() {
+        var BoxColliderDrawer = (function (_super) {
+            __extends(BoxColliderDrawer, _super);
+            function BoxColliderDrawer() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._drawer = [];
+                return _this;
             }
-            Helper.raycastAll = function (targets, mousePositionX, mousePositionY) {
-                var camera = egret3d.Camera.editor;
-                var ray = camera.createRayByScreen(mousePositionX, mousePositionY).release();
-                var raycastInfos = egret3d.raycastAll(ray, targets, 0.0, 16777215 /* Everything */, true);
-                return raycastInfos;
+            BoxColliderDrawer.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
             };
-            Helper.raycast = function (raycastAble, mousePositionX, mousePositionY) {
-                var camera = egret3d.Camera.editor;
-                var ray = camera.createRayByScreen(mousePositionX, mousePositionY);
-                var raycastInfo = egret3d.RaycastInfo.create();
-                return raycastAble.raycast(ray, raycastInfo) ? raycastInfo : null;
+            BoxColliderDrawer.prototype.update = function () {
+                var selectedGameObject = _super.prototype.update.call(this);
+                var colliders = selectedGameObject ? selectedGameObject.getComponents(egret3d.BoxCollider) : null;
+                for (var i = 0, l = Math.max(this._drawer.length, colliders ? colliders.length : 0); i < l; ++i) {
+                    if (i + 1 > this._drawer.length) {
+                        var gameObject = editor.EditorMeshHelper.createBox("BoxCollider_" + i, egret3d.Color.YELLOW, 0.4, paper.Scene.editorScene);
+                        gameObject.parent = this.gameObject;
+                        this._drawer.push(gameObject);
+                    }
+                    var drawer = this._drawer[i];
+                    if (!colliders || i + 1 > colliders.length) {
+                        drawer.activeSelf = false;
+                    }
+                    else {
+                        var collider = colliders[i];
+                        if (collider.enabled) {
+                            drawer.activeSelf = true;
+                            drawer.transform.localPosition.applyMatrix(selectedGameObject.transform.localToWorldMatrix, collider.box.center).update();
+                            drawer.transform.localRotation = selectedGameObject.transform.rotation;
+                            drawer.transform.localScale.multiply(collider.box.size, selectedGameObject.transform.scale).update();
+                        }
+                        else {
+                            drawer.activeSelf = false;
+                        }
+                    }
+                }
+                return selectedGameObject;
             };
-            return Helper;
-        }());
-        editor.Helper = Helper;
-        __reflect(Helper.prototype, "paper.editor.Helper");
+            return BoxColliderDrawer;
+        }(editor.BaseSelectedGOComponent));
+        editor.BoxColliderDrawer = BoxColliderDrawer;
+        __reflect(BoxColliderDrawer.prototype, "paper.editor.BoxColliderDrawer");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -3339,48 +3728,67 @@ var paper;
         /**
          * @internal
          */
-        var BoxColliderDrawer = (function (_super) {
-            __extends(BoxColliderDrawer, _super);
-            function BoxColliderDrawer() {
+        var SkeletonDrawer = (function (_super) {
+            __extends(SkeletonDrawer, _super);
+            function SkeletonDrawer() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._drawer = [];
+                _this._skeletonMesh = egret3d.Mesh.create(128, 0, ["POSITION" /* POSITION */], null, 35048 /* Dynamic */);
                 return _this;
             }
-            BoxColliderDrawer.prototype.initialize = function () {
+            SkeletonDrawer.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
+                var mesh = this._skeletonMesh;
+                var material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
+                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
+                material
+                    .setColor(egret3d.Color.YELLOW)
+                    .setDepth(false, false)
+                    .renderQueue = 4000 /* Overlay */;
+                this.gameObject.getOrAddComponent(egret3d.MeshFilter).mesh = mesh;
+                this.gameObject.getOrAddComponent(egret3d.MeshRenderer).material = material;
             };
-            BoxColliderDrawer.prototype.update = function () {
+            SkeletonDrawer.prototype.update = function () {
                 var selectedGameObject = _super.prototype.update.call(this);
-                var colliders = selectedGameObject ? selectedGameObject.getComponents(egret3d.BoxCollider) : null;
-                for (var i = 0, l = Math.max(this._drawer.length, colliders ? colliders.length : 0); i < l; ++i) {
-                    if (i + 1 > this._drawer.length) {
-                        var gameObject = editor.EditorMeshHelper.createBox("BoxCollider_" + i, egret3d.Color.YELLOW, 0.4, paper.Scene.editorScene);
-                        gameObject.parent = this.gameObject;
-                        this._drawer.push(gameObject);
-                    }
-                    var drawer = this._drawer[i];
-                    if (!colliders || i + 1 > colliders.length) {
-                        drawer.activeSelf = false;
-                    }
-                    else {
-                        var collider = colliders[i];
-                        if (collider.enabled) {
-                            drawer.activeSelf = true;
-                            drawer.transform.localPosition.applyMatrix(selectedGameObject.transform.localToWorldMatrix, collider.box.center).update();
-                            drawer.transform.localRotation = selectedGameObject.transform.rotation;
-                            drawer.transform.localScale.multiply(collider.box.size, selectedGameObject.transform.scale).update();
+                var skinnedMeshRenderer = selectedGameObject ? selectedGameObject.getComponent(egret3d.SkinnedMeshRenderer) : null;
+                if (selectedGameObject && skinnedMeshRenderer) {
+                    var mesh = this._skeletonMesh;
+                    var offset = 0;
+                    var helpVertex3A = egret3d.Vector3.create().release();
+                    var helpVertex3B = egret3d.Vector3.create().release();
+                    var vertices = mesh.getVertices();
+                    var bones = skinnedMeshRenderer.bones;
+                    this.gameObject.transform.position = selectedGameObject.transform.position;
+                    var worldToLocalMatrix = this.gameObject.transform.worldToLocalMatrix;
+                    for (var _i = 0, bones_1 = bones; _i < bones_1.length; _i++) {
+                        var bone = bones_1[_i];
+                        if (bone) {
+                            if (bone.parent && bones.indexOf(bone.parent) >= 0) {
+                                helpVertex3A.applyMatrix(worldToLocalMatrix, bone.parent.position).toArray(vertices, offset);
+                                helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).toArray(vertices, offset + 3);
+                            }
+                            else {
+                                bone.getRight(helpVertex3B).applyDirection(worldToLocalMatrix).multiplyScalar(0.25); // Bone length.
+                                helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).toArray(vertices, offset);
+                                helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
+                            }
                         }
                         else {
-                            drawer.activeSelf = false;
+                            egret3d.Vector3.ZERO.toArray(vertices, offset);
+                            egret3d.Vector3.ZERO.toArray(vertices, offset + 3);
                         }
+                        offset += 6;
                     }
+                    mesh.uploadVertexBuffer();
+                }
+                else {
+                    this.gameObject.activeSelf = false;
                 }
                 return selectedGameObject;
             };
-            return BoxColliderDrawer;
+            return SkeletonDrawer;
         }(editor.BaseSelectedGOComponent));
-        editor.BoxColliderDrawer = BoxColliderDrawer;
-        __reflect(BoxColliderDrawer.prototype, "paper.editor.BoxColliderDrawer");
+        editor.SkeletonDrawer = SkeletonDrawer;
+        __reflect(SkeletonDrawer.prototype, "paper.editor.SkeletonDrawer");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -4155,561 +4563,276 @@ var paper;
         paper.Application.systemManager.preRegister(EditorSystem, 6000 /* LaterUpdate */);
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
+/// <reference path="./EventDispatcher.ts" />
 var paper;
 (function (paper) {
     var editor;
     (function (editor) {
         /**
-         * TODO GUI NEW SAVE LOAD
-         * @internal
+         * 检测一个实例对象是否为已被自定义
+         * @param classInstance 实例对象
          */
-        var GUISystem = (function (_super) {
-            __extends(GUISystem, _super);
-            function GUISystem() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._interests = [
-                    [{ componentClass: egret3d.Transform }]
-                ];
-                _this._disposeCollecter = paper.GameObject.globalGameObject.getOrAddComponent(paper.DisposeCollecter);
-                _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
-                _this._guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.GUIComponent);
-                _this._bufferedGameObjects = [];
-                _this._hierarchyFolders = {};
-                _this._inspectorFolders = {};
-                _this._selectFolder = null;
-                _this._onSceneSelected = function (_c, value) {
-                    _this._selectSceneOrGameObject(value);
-                };
-                _this._onSceneUnselected = function (_c, value) {
-                    _this._selectSceneOrGameObject(null);
-                };
-                _this._onGameObjectSelectedChange = function (_c, value) {
-                    _this._selectSceneOrGameObject(_this._modelComponent.selectedGameObject);
-                };
-                _this._sceneOrGameObjectGUIClickHandler = function (gui) {
-                    _this._modelComponent.select(gui.instance, true);
-                };
-                _this._componentOrPropertyGUIClickHandler = function (gui) {
-                    window["psc"] = gui.instance;
-                };
-                _this._saveSceneOrGameObject = function () {
-                    if (_this._modelComponent.selectedScene) {
-                        var json = JSON.stringify(paper.serialize(_this._modelComponent.selectedScene));
-                        console.info(json);
-                    }
-                    else {
-                        var json = JSON.stringify(paper.serialize(_this._modelComponent.selectedGameObject));
-                        console.info(json);
-                    }
-                };
-                _this._createGameObject = function () {
-                    if (_this._modelComponent.selectedScene) {
-                        var gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "NoName" /* NoName */, "" /* Untagged */, _this._modelComponent.selectedScene);
-                        _this._modelComponent.select(gameObject, true);
-                    }
-                    else {
-                        var gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "NoName" /* NoName */, "" /* Untagged */, _this._modelComponent.selectedGameObject.scene);
-                        gameObject.transform.parent = _this._modelComponent.selectedGameObject.transform;
-                        _this._modelComponent.select(gameObject, true);
-                    }
-                };
-                _this._destroySceneOrGameObject = function () {
-                    var selectedSceneOrGameObject = _this._guiComponent.inspector.instance;
-                    if (selectedSceneOrGameObject) {
-                        (selectedSceneOrGameObject).destroy();
-                    }
-                };
-                return _this;
+        function isCustom(classInstance) {
+            var clzName = egret.getQualifiedClassName(classInstance);
+            var clz = egret.getDefinitionByName(clzName);
+            return clz['__custom__'] ? true : false;
+        }
+        editor.isCustom = isCustom;
+        /**
+         * 获取一个实例对象的编辑信息
+         * @param classInstance 实例对象
+         */
+        function getEditInfo(classInstance) {
+            var retrunList = [];
+            var clzName = egret.getQualifiedClassName(classInstance);
+            var clz = egret.getDefinitionByName(clzName);
+            var extend = clz.prototype.__types__;
+            for (var i = extend.length - 1; i >= 0; i--) {
+                var clzName_1 = extend[i];
+                var clz_1 = egret.getDefinitionByName(clzName_1);
+                if (clz_1 && clz_1.prototype.hasOwnProperty('__props__')) {
+                    retrunList = retrunList.concat(clz_1.prototype['__props__']);
+                }
             }
-            GUISystem.prototype._openFolder = function (folder) {
-                if (!folder.parent || folder.parent === this._guiComponent.hierarchy) {
-                    return;
+            return retrunList;
+        }
+        editor.getEditInfo = getEditInfo;
+        /**
+         * 获取一个实例对象某个属性的编辑类型
+         * @param classInstance 实例对象
+         * @param propName 属性名
+         */
+        function getEditType(classInstance, propName) {
+            var editInfoList = getEditInfo(classInstance);
+            for (var index = 0; index < editInfoList.length; index++) {
+                var element = editInfoList[index];
+                if (element.name === propName) {
+                    return element.editType;
                 }
-                folder.parent.open();
-                this._openFolder(folder.parent);
-            };
-            GUISystem.prototype._getAssets = function (type) {
-                var result = [{ label: "None", value: null }];
-                if (RES.host.resourceConfig.config) {
-                    var resFSDatas = RES.host.resourceConfig.config.fileSystem.fsData;
-                    for (var k in resFSDatas) {
-                        var data = resFSDatas[k];
-                        if (data.type === type) {
-                            result.push({ label: k, value: data });
-                        }
-                    }
-                }
-                return result;
-            };
-            GUISystem.prototype._selectSceneOrGameObject = function (sceneOrGameObject) {
-                var _this = this;
-                // Unselect prev folder.
-                if (this._selectFolder) {
-                    this._selectFolder.selected = false;
-                    this._selectFolder = null;
-                }
-                var inspector = this._guiComponent.inspector;
-                inspector.instance = sceneOrGameObject;
-                for (var k in this._inspectorFolders) {
-                    delete this._inspectorFolders[k];
-                }
-                if (inspector.__controllers) {
-                    for (var _i = 0, _a = inspector.__controllers.concat(); _i < _a.length; _i++) {
-                        var controller = _a[_i];
-                        inspector.remove(controller);
-                    }
-                }
-                if (inspector.__folders) {
-                    for (var k in inspector.__folders) {
-                        try {
-                            inspector.removeFolder(inspector.__folders[k]);
-                        }
-                        catch (e) {
-                        }
-                    }
-                }
-                var options = {
-                    scenes: "None",
-                    prefabs: "None",
-                };
-                inspector.add(options, "scenes", this._getAssets("Scene")).onChange(function (v) { return __awaiter(_this, void 0, void 0, function () {
+            }
+            return null;
+        }
+        editor.getEditType = getEditType;
+        /**
+         * 编辑器事件
+         */
+        var EditorEvent = (function (_super) {
+            __extends(EditorEvent, _super);
+            function EditorEvent(type, data) {
+                return _super.call(this, type, data) || this;
+            }
+            EditorEvent.CHANGE_SCENE = "changeScene";
+            return EditorEvent;
+        }(editor.BaseEvent));
+        editor.EditorEvent = EditorEvent;
+        __reflect(EditorEvent.prototype, "paper.editor.EditorEvent");
+        /**
+         * 编辑器
+         **/
+        var Editor = (function () {
+            function Editor() {
+            }
+            /**初始化 */
+            Editor.init = function () {
+                return __awaiter(this, void 0, void 0, function () {
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0:
-                                if (!v) {
-                                    return [2 /*return*/];
-                                }
-                                return [4 /*yield*/, RES.getResAsync(v.url)];
+                                this.eventDispatcher = new editor.EventDispatcher();
+                                //覆盖生成 uuid 的方式。
+                                createUUID = editor.generateUuid;
+                                //初始化编辑环境
+                                this.initEditEnvironment();
+                                //允许重新加载
+                                RES.FEATURE_FLAG.FIX_DUPLICATE_LOAD = 0;
+                                //初始化资源
+                                return [4 /*yield*/, RES.loadConfig("resource/default.res.json", "resource/")];
                             case 1:
+                                //初始化资源
                                 _a.sent();
-                                paper.Scene.activeScene.destroy();
-                                this._modelComponent.select(paper.Scene.create(v.url));
+                                //初始化编辑场景
+                                this.editorSceneModel = new editor.EditorSceneModel();
+                                this.editorSceneModel.init();
                                 return [2 /*return*/];
                         }
                     });
-                }); });
-                inspector.add(options, "prefabs", this._getAssets("Prefab")).onChange(function (v) { return __awaiter(_this, void 0, void 0, function () {
-                    var gameObject, parent_1;
-                    return __generator(this, function (_a) {
-                        switch (_a.label) {
-                            case 0:
-                                if (!v) {
-                                    return [2 /*return*/];
-                                }
-                                return [4 /*yield*/, RES.getResAsync(v.url)];
-                            case 1:
-                                _a.sent();
-                                gameObject = null;
-                                if (this._modelComponent.selectedGameObject) {
-                                    parent_1 = this._modelComponent.selectedGameObject;
-                                    gameObject = paper.Prefab.create(v.url, parent_1.scene);
-                                    gameObject.parent = parent_1;
-                                }
-                                else {
-                                    gameObject = paper.Prefab.create(v.url, this._modelComponent.selectedScene || paper.Scene.activeScene);
-                                }
-                                this._modelComponent.select(gameObject);
-                                return [2 /*return*/];
-                        }
-                    });
-                }); });
-                if (sceneOrGameObject) {
-                    inspector.add(this, "_destroySceneOrGameObject", "destroy");
-                    inspector.add(this, "_saveSceneOrGameObject", "save");
-                    this._addToInspector(inspector);
-                    if (sceneOrGameObject instanceof paper.Scene) {
-                    }
-                    else {
-                        for (var _b = 0, _d = sceneOrGameObject.components; _b < _d.length; _b++) {
-                            var component = _d[_b];
-                            var folder = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
-                            folder.instance = component;
-                            folder.open();
-                            this._inspectorFolders[component.uuid] = folder;
-                            this._addToInspector(folder);
-                        }
-                    }
-                }
-            };
-            GUISystem.prototype._addToHierarchy = function (gameObject) {
-                if (gameObject.uuid in this._hierarchyFolders ||
-                    gameObject.tag === "Editor Only" /* EditorOnly */ ||
-                    gameObject.hideFlags === 2 /* Hide */ ||
-                    gameObject.hideFlags === 3 /* HideAndDontSave */) {
-                    return true;
-                }
-                var parentFolder = this._hierarchyFolders[gameObject.transform.parent ? gameObject.transform.parent.gameObject.uuid : gameObject.scene.uuid];
-                if (!parentFolder) {
-                    if (gameObject.transform.parent) {
-                        // throw new Error(); // Never.
-                        return false;
-                    }
-                    parentFolder = this._guiComponent.hierarchy.addFolder(gameObject.scene.uuid, gameObject.scene.name + " <Scene>");
-                    parentFolder.instance = gameObject.scene;
-                    parentFolder.onClick = this._sceneOrGameObjectGUIClickHandler;
-                    this._hierarchyFolders[gameObject.scene.uuid] = parentFolder;
-                }
-                var folder = parentFolder.addFolder(gameObject.uuid, gameObject.name);
-                folder.instance = gameObject;
-                folder.onClick = this._sceneOrGameObjectGUIClickHandler;
-                this._hierarchyFolders[gameObject.uuid] = folder;
-                return true;
-            };
-            GUISystem.prototype._propertyHasGetterSetter = function (target, propName) {
-                var prototype = Object.getPrototypeOf(target);
-                var descriptror;
-                while (prototype) {
-                    descriptror = Object.getOwnPropertyDescriptor(prototype, propName);
-                    if (descriptror && descriptror.get && descriptror.set) {
-                        return true;
-                    }
-                    prototype = Object.getPrototypeOf(prototype);
-                }
-                return false;
-            };
-            GUISystem.prototype._addToInspector = function (gui) {
-                var infos = editor.getEditInfo(gui.instance);
-                var guiControllerA;
-                var guiControllerB;
-                var guiControllerC;
-                var guiControllerD;
-                gui.onClick = this._componentOrPropertyGUIClickHandler;
-                var _loop_1 = function (info) {
-                    switch (info.editType) {
-                        case "UINT" /* UINT */:
-                            guiControllerA = gui.add(gui.instance, info.name).min(0).step(1).listen();
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                }
-                            }
-                            break;
-                        case "INT" /* INT */:
-                            guiControllerA = gui.add(gui.instance, info.name).step(1).listen();
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                }
-                            }
-                            break;
-                        case "FLOAT" /* FLOAT */:
-                            guiControllerA = gui.add(gui.instance, info.name).step(0.1).listen();
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                }
-                            }
-                            break;
-                        case "CHECKBOX" /* CHECKBOX */:
-                        case "TEXT" /* TEXT */:
-                            gui.add(gui.instance, info.name).listen();
-                            break;
-                        case "LIST" /* LIST */:
-                            gui.add(gui.instance, info.name, info.option.listItems).listen();
-                            break;
-                        case "VECTOR2" /* VECTOR2 */: {
-                            guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
-                            if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
-                                var onChange = function () {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA.onChange(onChange);
-                                guiControllerB.onChange(onChange);
-                            }
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                    guiControllerB.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                    guiControllerB.max(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                    guiControllerB.step(info.option.step);
-                                }
-                            }
-                            break;
-                        }
-                        case "SIZE" /* SIZE */: {
-                            guiControllerA = gui.add(gui.instance[info.name], "w", info.name + ": w").step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], "h", info.name + ": h").step(0.1).listen();
-                            if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
-                                var onChange = function () {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA.onChange(onChange);
-                                guiControllerB.onChange(onChange);
-                            }
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                    guiControllerB.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                    guiControllerB.max(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                    guiControllerB.step(info.option.step);
-                                }
-                            }
-                            break;
-                        }
-                        case "VECTOR3" /* VECTOR3 */: {
-                            guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
-                            guiControllerC = gui.add(gui.instance[info.name], "z", info.name + ": z").step(0.1).listen();
-                            if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
-                                var onChange = function () {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA.onChange(onChange);
-                                guiControllerB.onChange(onChange);
-                                guiControllerC.onChange(onChange);
-                            }
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                    guiControllerB.min(info.option.minimum);
-                                    guiControllerC.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                    guiControllerB.max(info.option.maximum);
-                                    guiControllerC.max(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                    guiControllerB.step(info.option.step);
-                                    guiControllerC.step(info.option.step);
-                                }
-                            }
-                            break;
-                        }
-                        case "VECTOR4" /* VECTOR4 */:
-                        case "QUATERNION" /* QUATERNION */:
-                            break;
-                        case "COLOR" /* COLOR */: {
-                            guiControllerA = gui.addColor(gui.instance, info.name).listen();
-                            if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
-                                var onChange = function () {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA.onChange(onChange);
-                            }
-                            break;
-                        }
-                        case "RECT" /* RECT */: {
-                            guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
-                            guiControllerC = gui.add(gui.instance[info.name], "w", info.name + ": w").step(0.1).listen();
-                            guiControllerD = gui.add(gui.instance[info.name], "h", info.name + ": h").step(0.1).listen();
-                            if (this_1._propertyHasGetterSetter(gui.instance, info.name)) {
-                                var onChange = function () {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA.onChange(onChange);
-                                guiControllerB.onChange(onChange);
-                                guiControllerC.onChange(onChange);
-                                guiControllerD.onChange(onChange);
-                            }
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                    guiControllerB.min(info.option.minimum);
-                                    guiControllerC.min(info.option.minimum);
-                                    guiControllerD.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                    guiControllerB.max(info.option.maximum);
-                                    guiControllerC.max(info.option.maximum);
-                                    guiControllerD.min(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                    guiControllerB.step(info.option.step);
-                                    guiControllerC.step(info.option.step);
-                                    guiControllerD.step(info.option.step);
-                                }
-                            }
-                            break;
-                        }
-                        case "GAMEOBJECT" /* GAMEOBJECT */:
-                            break;
-                        case "BUTTON" /* BUTTON */:
-                            guiControllerA = gui.add(gui.instance, info.name);
-                            break;
-                        case "NESTED" /* NESTED */: {
-                            var folder = gui.addFolder(info.name);
-                            folder.instance = gui.instance[info.name];
-                            this_1._addToInspector(folder);
-                            break;
-                        }
-                    }
-                };
-                var this_1 = this;
-                for (var _i = 0, infos_1 = infos; _i < infos_1.length; _i++) {
-                    var info = infos_1[_i];
-                    _loop_1(info);
-                }
-            };
-            GUISystem.prototype.onAwake = function () {
-                var sceneOptions = {
-                    debug: false,
-                    resources: function () {
-                        // if (this._modelComponent.selectedScene) {
-                        //     const sceneJSON = JSON.stringify(serialize(this._modelComponent.selectedScene));
-                        //     console.info(sceneJSON);
-                        // }
-                        // else if (this._modelComponent.selectedGameObjects.length > 0) {
-                        // }
-                    },
-                };
-                this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
-                    var sceneSystem = paper.Application.systemManager.getOrRegisterSystem(editor.SceneSystem, 6000 /* LaterUpdate */);
-                    if (v) {
-                        paper.Application.playerMode = 1 /* DebugPlayer */;
-                        sceneSystem.enabled = true;
-                    }
-                    else {
-                        paper.Application.playerMode = 0 /* Player */;
-                        sceneSystem.enabled = false;
-                    }
                 });
             };
-            GUISystem.prototype.onEnable = function () {
-                editor.ModelComponent.onSceneSelected.add(this._onSceneSelected, this);
-                editor.ModelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
-                editor.ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectedChange, this);
-                this._bufferedGameObjects.push(paper.GameObject.globalGameObject);
-                for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
-                    var gameObject = _a[_i];
-                    this._bufferedGameObjects.push(gameObject);
-                }
-                this._modelComponent.select(paper.Scene.activeScene);
+            Object.defineProperty(Editor, "activeEditorModel", {
+                /**
+                 * 当前激活的编辑模型
+                 */
+                get: function () {
+                    return this._activeEditorModel;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            //设置激活模型
+            Editor.setActiveModel = function (model) {
+                this.activeScene(model.scene);
+                this._activeEditorModel = model;
+                this.editorSceneModel.editorModel = model;
+                this.dispatchEvent(new EditorEvent(EditorEvent.CHANGE_SCENE));
             };
-            GUISystem.prototype.onDisable = function () {
-                editor.ModelComponent.onSceneSelected.remove(this._onSceneSelected, this);
-                editor.ModelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
-                editor.ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectedChange, this);
-                for (var k in this._hierarchyFolders) {
-                    var folder = this._hierarchyFolders[k];
-                    delete this._hierarchyFolders[k];
-                    if (folder && folder.parent) {
-                        try {
-                            folder.parent.removeFolder(folder);
-                        }
-                        catch (e) {
-                        }
-                    }
+            Editor.activeScene = function (scene) {
+                if (paper.Application.sceneManager.activeScene) {
+                    var objs_1 = paper.Application.sceneManager.activeScene.getRootGameObjects();
+                    objs_1.forEach(function (obj) {
+                        obj.activeSelf = false;
+                    });
                 }
-                for (var k in this._inspectorFolders) {
-                    delete this._inspectorFolders[k];
-                }
-                this._bufferedGameObjects.length = 0;
-                this._selectFolder = null;
+                paper.Application.sceneManager.activeScene = scene;
+                var objs = paper.Application.sceneManager.activeScene.getRootGameObjects();
+                objs.forEach(function (obj) {
+                    obj.activeSelf = true;
+                });
             };
-            GUISystem.prototype.onAddGameObject = function (gameObject, _group) {
-                this._bufferedGameObjects.push(gameObject);
+            /**
+             * 编辑场景
+             * @param sceneUrl 场景资源URL
+             */
+            Editor.editScene = function (sceneUrl) {
+                return __awaiter(this, void 0, void 0, function () {
+                    var rawScene, scene, sceneEditorModel;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, RES.getResAsync(sceneUrl)];
+                            case 1:
+                                rawScene = _a.sent();
+                                if (rawScene) {
+                                    scene = rawScene.createInstance(true);
+                                    if (scene) {
+                                        if (this.activeEditorModel) {
+                                            this.activeEditorModel.scene.destroy();
+                                        }
+                                        sceneEditorModel = new editor.EditorModel();
+                                        sceneEditorModel.init(scene, 'scene', sceneUrl);
+                                        this.setActiveModel(sceneEditorModel);
+                                        this.currentEditInfo = { url: sceneUrl, type: 'scene' };
+                                    }
+                                }
+                                return [2 /*return*/];
+                        }
+                    });
+                });
             };
-            GUISystem.prototype.onRemoveGameObject = function (gameObject, _group) {
-                var index = this._bufferedGameObjects.indexOf(gameObject);
-                if (index >= 0) {
-                    this._bufferedGameObjects[index] = null;
-                }
+            /**
+             * 编辑预置体
+             * @param prefabUrl 预置体资源URL
+             */
+            Editor.editPrefab = function (prefabUrl) {
+                return __awaiter(this, void 0, void 0, function () {
+                    var prefab, scene, prefabInstance, prefabEditorModel_1, clearPrefabInfo_1;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, RES.getResAsync(prefabUrl)];
+                            case 1:
+                                prefab = _a.sent();
+                                if (prefab) {
+                                    scene = paper.Scene.createEmpty('prefabEditScene', false);
+                                    prefabInstance = prefab.createInstance(scene, true);
+                                    if (prefabInstance) {
+                                        if (this.activeEditorModel) {
+                                            this.activeEditorModel.scene.destroy();
+                                        }
+                                        prefabEditorModel_1 = new editor.EditorModel();
+                                        prefabEditorModel_1.init(scene, 'prefab', prefabUrl);
+                                        clearPrefabInfo_1 = function (obj) {
+                                            obj.extras = {};
+                                            for (var _i = 0, _a = obj.components; _i < _a.length; _i++) {
+                                                var comp = _a[_i];
+                                                comp.extras = {};
+                                            }
+                                            for (var i = 0; i < obj.transform.children.length; i++) {
+                                                var child = obj.transform.children[i].gameObject;
+                                                if (prefabEditorModel_1.isPrefabChild(child))
+                                                    clearPrefabInfo_1(child);
+                                            }
+                                        };
+                                        clearPrefabInfo_1(prefabInstance);
+                                        this.setActiveModel(prefabEditorModel_1);
+                                        this.currentEditInfo = { url: prefabUrl, type: 'prefab' };
+                                    }
+                                }
+                                return [2 /*return*/];
+                        }
+                    });
+                });
             };
-            GUISystem.prototype.onUpdate = function () {
-                var i = 0;
-                while (this._bufferedGameObjects.length > 0 && i++ < 5) {
-                    var gameObject = this._bufferedGameObjects.shift();
-                    if (gameObject) {
-                        if (!this._addToHierarchy(gameObject)) {
-                            this._bufferedGameObjects.push(gameObject);
+            /**
+             * 刷新
+             */
+            Editor.refresh = function () {
+                return __awaiter(this, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                if (this.activeEditorModel) {
+                                    this.activeEditorModel.scene.destroy();
+                                }
+                                //初始化资源
+                                return [4 /*yield*/, RES.loadConfig("resource/default.res.json", "resource/")];
+                            case 1:
+                                //初始化资源
+                                _a.sent();
+                                if (this.currentEditInfo) {
+                                    switch (this.currentEditInfo.type) {
+                                        case 'scene':
+                                            this.editScene(this.currentEditInfo.url);
+                                            break;
+                                        case 'prefab':
+                                            this.editPrefab(this.currentEditInfo.url);
+                                            break;
+                                    }
+                                }
+                                return [2 /*return*/];
                         }
-                    }
-                }
-                // Open and select folder.
-                if (!this._selectFolder) {
-                    var sceneOrGameObject = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
-                    if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
-                        this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
-                        this._selectFolder.selected = true;
-                        this._openFolder(this._selectFolder);
-                    }
-                }
-                this._guiComponent.inspector.updateDisplay();
-                var inspectorFolders = this._guiComponent.inspector.__folders;
-                if (inspectorFolders) {
-                    for (var k in inspectorFolders) {
-                        inspectorFolders[k].updateDisplay();
-                    }
-                }
-                {
-                    for (var _i = 0, _a = this._disposeCollecter.scenes; _i < _a.length; _i++) {
-                        var scene = _a[_i];
-                        var folder = this._hierarchyFolders[scene.uuid];
-                        delete this._hierarchyFolders[scene.uuid];
-                        if (folder && folder.parent) {
-                            try {
-                                folder.parent.removeFolder(folder);
-                            }
-                            catch (e) {
-                            }
-                        }
-                    }
-                    for (var _b = 0, _d = this._disposeCollecter.gameObjects; _b < _d.length; _b++) {
-                        var gameObject = _d[_b];
-                        var folder = this._hierarchyFolders[gameObject.uuid];
-                        delete this._hierarchyFolders[gameObject.uuid];
-                        if (folder && folder.parent) {
-                            try {
-                                folder.parent.removeFolder(folder);
-                            }
-                            catch (e) {
-                            }
-                        }
-                    }
-                    for (var _e = 0, _f = this._disposeCollecter.components; _e < _f.length; _e++) {
-                        var component = _f[_e];
-                        var folder = this._inspectorFolders[component.uuid];
-                        delete this._inspectorFolders[component.uuid];
-                        if (folder && folder.parent) {
-                            try {
-                                folder.parent.removeFolder(folder);
-                            }
-                            catch (e) {
-                            }
-                        }
-                    }
-                }
+                    });
+                });
             };
-            return GUISystem;
-        }(paper.BaseSystem));
-        editor.GUISystem = GUISystem;
-        __reflect(GUISystem.prototype, "paper.editor.GUISystem");
+            /**
+             * 撤销
+             */
+            Editor.undo = function () {
+                if (this.activeEditorModel)
+                    this.activeEditorModel.history.back();
+            };
+            /**
+             * 重做
+             */
+            Editor.redo = function () {
+                if (this.activeEditorModel)
+                    this.activeEditorModel.history.forward();
+            };
+            Editor.deserializeHistory = function (data) {
+                this.activeEditorModel.history.deserialize(data);
+            };
+            Editor.serializeHistory = function () {
+                var historyData = this.activeEditorModel.history.serialize();
+                return JSON.stringify(historyData);
+            };
+            Editor.addEventListener = function (type, fun, thisObj, level) {
+                if (level === void 0) { level = 0; }
+                this.eventDispatcher.addEventListener(type, fun, thisObj, level);
+            };
+            Editor.removeEventListener = function (type, fun, thisObj) {
+                this.eventDispatcher.removeEventListener(type, fun, thisObj);
+            };
+            Editor.dispatchEvent = function (event) {
+                this.eventDispatcher.dispatchEvent(event);
+            };
+            Editor.initEditEnvironment = function () {
+                egret3d.runEgret({
+                    antialias: false,
+                    alpha: false,
+                    playerMode: 2 /* Editor */,
+                });
+            };
+            return Editor;
+        }());
+        editor.Editor = Editor;
+        __reflect(Editor.prototype, "paper.editor.Editor");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -5204,66 +5327,3130 @@ var paper;
         /**
          * @internal
          */
-        var SkeletonDrawer = (function (_super) {
-            __extends(SkeletonDrawer, _super);
-            function SkeletonDrawer() {
+        var Helper = (function () {
+            function Helper() {
+            }
+            Helper.raycastAll = function (targets, mousePositionX, mousePositionY) {
+                var camera = egret3d.Camera.editor;
+                var ray = camera.createRayByScreen(mousePositionX, mousePositionY).release();
+                var raycastInfos = egret3d.raycastAll(ray, targets, 0.0, 16777215 /* Everything */, true);
+                return raycastInfos;
+            };
+            Helper.raycast = function (raycastAble, mousePositionX, mousePositionY) {
+                var camera = egret3d.Camera.editor;
+                var ray = camera.createRayByScreen(mousePositionX, mousePositionY);
+                var raycastInfo = egret3d.RaycastInfo.create();
+                return raycastAble.raycast(ray, raycastInfo) ? raycastInfo : null;
+            };
+            return Helper;
+        }());
+        editor.Helper = Helper;
+        __reflect(Helper.prototype, "paper.editor.Helper");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+/// <reference path="./EventDispatcher.ts" />
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        editor.context = new editor.EventDispatcher();
+        var selectItemType;
+        (function (selectItemType) {
+            selectItemType[selectItemType["GAMEOBJECT"] = 0] = "GAMEOBJECT";
+            selectItemType[selectItemType["ASSET"] = 1] = "ASSET";
+        })(selectItemType = editor.selectItemType || (editor.selectItemType = {}));
+        /**
+         * 编辑模型事件
+         */
+        var EditorModelEvent = (function (_super) {
+            __extends(EditorModelEvent, _super);
+            function EditorModelEvent(type, data) {
+                return _super.call(this, type, data) || this;
+            }
+            EditorModelEvent.ADD_GAMEOBJECTS = "addGameObject";
+            EditorModelEvent.DELETE_GAMEOBJECTS = "deleteGameObject";
+            EditorModelEvent.SELECT_GAMEOBJECTS = "selectGame";
+            EditorModelEvent.CHANGE_DIRTY = 'change_dirty';
+            EditorModelEvent.CHANGE_PROPERTY = "changeProperty";
+            EditorModelEvent.CHANGE_EDIT_MODE = "changeEditMode";
+            EditorModelEvent.CHANGE_EDIT_TYPE = "changeEditType";
+            EditorModelEvent.ADD_COMPONENT = "addComponent";
+            EditorModelEvent.REMOVE_COMPONENT = "removeComponent";
+            EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY = "updateGameObjectsHierarchy";
+            EditorModelEvent.SAVE_ASSET = "saveAsset";
+            return EditorModelEvent;
+        }(editor.BaseEvent));
+        editor.EditorModelEvent = EditorModelEvent;
+        __reflect(EditorModelEvent.prototype, "paper.editor.EditorModelEvent");
+        var ModifyObjectType;
+        (function (ModifyObjectType) {
+            ModifyObjectType[ModifyObjectType["GAMEOBJECT"] = 0] = "GAMEOBJECT";
+            ModifyObjectType[ModifyObjectType["BASECOMPONENT"] = 1] = "BASECOMPONENT";
+        })(ModifyObjectType = editor.ModifyObjectType || (editor.ModifyObjectType = {}));
+        /**
+         * 编辑模型
+         */
+        var EditorModel = (function (_super) {
+            __extends(EditorModel, _super);
+            function EditorModel() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._skeletonMesh = egret3d.Mesh.create(128, 0, ["POSITION" /* POSITION */], null, 35048 /* Dynamic */);
+                _this._dirty = false;
+                _this._cacheIds = [];
                 return _this;
             }
-            SkeletonDrawer.prototype.initialize = function () {
-                _super.prototype.initialize.call(this);
-                var mesh = this._skeletonMesh;
-                var material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
-                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
-                material
-                    .setColor(egret3d.Color.YELLOW)
-                    .setDepth(false, false)
-                    .renderQueue = 4000 /* Overlay */;
-                this.gameObject.getOrAddComponent(egret3d.MeshFilter).mesh = mesh;
-                this.gameObject.getOrAddComponent(egret3d.MeshRenderer).material = material;
+            Object.defineProperty(EditorModel.prototype, "history", {
+                get: function () {
+                    return this._history;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(EditorModel.prototype, "scene", {
+                get: function () {
+                    return this._scene;
+                },
+                set: function (value) {
+                    this._scene = value;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(EditorModel.prototype, "contentType", {
+                get: function () {
+                    return this._contentType;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(EditorModel.prototype, "contentUrl", {
+                get: function () {
+                    return this._contentUrl;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(EditorModel.prototype, "dirty", {
+                get: function () {
+                    return this._dirty;
+                },
+                set: function (v) {
+                    if (this._dirty !== v) {
+                        this._dirty = v;
+                        this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_DIRTY));
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            /**
+             * 初始化
+             * @param history
+             */
+            EditorModel.prototype.init = function (scene, contentType, contentUrl) {
+                this._history = new editor.History();
+                this._scene = scene;
+                this._contentType = contentType;
+                this._contentUrl = contentUrl;
             };
-            SkeletonDrawer.prototype.update = function () {
-                var selectedGameObject = _super.prototype.update.call(this);
-                var skinnedMeshRenderer = selectedGameObject ? selectedGameObject.getComponent(egret3d.SkinnedMeshRenderer) : null;
-                if (selectedGameObject && skinnedMeshRenderer) {
-                    var mesh = this._skeletonMesh;
-                    var offset = 0;
-                    var helpVertex3A = egret3d.Vector3.create().release();
-                    var helpVertex3B = egret3d.Vector3.create().release();
-                    var vertices = mesh.getVertices();
-                    var bones = skinnedMeshRenderer.bones;
-                    this.gameObject.transform.position = selectedGameObject.transform.position;
-                    var worldToLocalMatrix = this.gameObject.transform.worldToLocalMatrix;
-                    for (var _i = 0, bones_1 = bones; _i < bones_1.length; _i++) {
-                        var bone = bones_1[_i];
-                        if (bone) {
-                            if (bone.parent && bones.indexOf(bone.parent) >= 0) {
-                                helpVertex3A.applyMatrix(worldToLocalMatrix, bone.parent.position).toArray(vertices, offset);
-                                helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).toArray(vertices, offset + 3);
+            EditorModel.prototype.addState = function (state) {
+                if (state) {
+                    state.editorModel = this;
+                    this.history.add(state);
+                }
+            };
+            EditorModel.prototype.setTransformProperty = function (propName, propOldValue, propNewValue, target) {
+                var valueEditType = editor.getEditType(target, propName);
+                if (valueEditType !== null) {
+                    var newPropertyData = {
+                        propName: propName,
+                        copyValue: this.serializeProperty(propNewValue, valueEditType),
+                        valueEditType: valueEditType
+                    };
+                    var prePropertyData = {
+                        propName: propName,
+                        copyValue: this.serializeProperty(propOldValue, valueEditType),
+                        valueEditType: valueEditType
+                    };
+                    this.createModifyComponent(target.gameObject.uuid, target.uuid, [newPropertyData], [prePropertyData]);
+                }
+            };
+            EditorModel.prototype.createModifyGameObjectPropertyState = function (gameObjectUUid, newValueList, preValueCopylist) {
+                var state = editor.ModifyGameObjectPropertyState.create(gameObjectUUid, newValueList, preValueCopylist);
+                this.addState(state);
+            };
+            EditorModel.prototype.createModifyComponent = function (gameObjectUUid, componentUUid, newValueList, preValueCopylist) {
+                var state = editor.ModifyComponentPropertyState.create(gameObjectUUid, componentUUid, newValueList, preValueCopylist);
+                this.addState(state);
+            };
+            EditorModel.prototype.createPrefabState = function (prefab, parent) {
+                var state = editor.CreatePrefabState.create(prefab, parent);
+                this.addState(state);
+            };
+            EditorModel.prototype.serializeProperty = function (value, editType) {
+                switch (editType) {
+                    case "UINT" /* UINT */:
+                    case "INT" /* INT */:
+                    case "FLOAT" /* FLOAT */:
+                    case "TEXT" /* TEXT */:
+                    case "CHECKBOX" /* CHECKBOX */:
+                        return value;
+                    case "VECTOR2" /* VECTOR2 */:
+                    case "VECTOR3" /* VECTOR3 */:
+                    case "VECTOR4" /* VECTOR4 */:
+                    case "QUATERNION" /* QUATERNION */:
+                    case "COLOR" /* COLOR */:
+                    case "RECT" /* RECT */:
+                        var className = egret.getQualifiedClassName(value);
+                        var serializeData = value.serialize(value);
+                        return { className: className, serializeData: serializeData };
+                    case "SHADER" /* SHADER */:
+                        return value.name;
+                    case "LIST" /* LIST */:
+                        return value;
+                    case "MATERIAL_ARRAY" /* MATERIAL_ARRAY */:
+                        var data = value.map(function (item) {
+                            return { name: item.name, url: item.name };
+                        });
+                        return data;
+                    case "MESH" /* MESH */:
+                        if (!value)
+                            return '';
+                        var url = value.name;
+                        return url;
+                    case "GAMEOBJECT" /* GAMEOBJECT */:
+                        if (!value) {
+                            return null;
+                        }
+                        return value.uuid;
+                    case "MATERIAL" /* MATERIAL */:
+                    case "TRANSFROM" /* TRANSFROM */:
+                    case "SOUND" /* SOUND */:
+                    case "ARRAY" /* ARRAY */:
+                        //TODO
+                        console.error("not supported!");
+                        break;
+                    default:
+                        break;
+                }
+            };
+            EditorModel.prototype.deserializeProperty = function (serializeData, editType) {
+                switch (editType) {
+                    case "UINT" /* UINT */:
+                    case "INT" /* INT */:
+                    case "FLOAT" /* FLOAT */:
+                    case "TEXT" /* TEXT */:
+                    case "CHECKBOX" /* CHECKBOX */:
+                        return serializeData;
+                    case "VECTOR2" /* VECTOR2 */:
+                    case "VECTOR3" /* VECTOR3 */:
+                    case "VECTOR4" /* VECTOR4 */:
+                    case "QUATERNION" /* QUATERNION */:
+                    case "COLOR" /* COLOR */:
+                    case "RECT" /* RECT */:
+                        var clazz = egret.getDefinitionByName(serializeData.className);
+                        var target = null;
+                        if (clazz) {
+                            target = new clazz();
+                            target.deserialize(serializeData.serializeData);
+                        }
+                        return target;
+                    case "SHADER" /* SHADER */:
+                        var url = serializeData;
+                        var asset = paper.Asset.find(url);
+                        return asset;
+                    case "LIST" /* LIST */:
+                        return serializeData;
+                    case "MATERIAL_ARRAY" /* MATERIAL_ARRAY */:
+                        var materials = [];
+                        for (var _i = 0, serializeData_1 = serializeData; _i < serializeData_1.length; _i++) {
+                            var matrial = serializeData_1[_i];
+                            var asset_1 = paper.Asset.find(matrial.url);
+                            materials.push(asset_1);
+                        }
+                        return materials;
+                    case "MESH" /* MESH */:
+                        var meshAsset = paper.Asset.find(serializeData);
+                        return meshAsset;
+                    case "GAMEOBJECT" /* GAMEOBJECT */:
+                        if (!serializeData) {
+                            return null;
+                        }
+                        return this.getGameObjectByUUid(serializeData);
+                    case "MATERIAL" /* MATERIAL */:
+                    case "TRANSFROM" /* TRANSFROM */:
+                    case "SOUND" /* SOUND */:
+                    case "ARRAY" /* ARRAY */:
+                        //TODO
+                        console.error("not supported!");
+                        return null;
+                    default:
+                        break;
+                }
+            };
+            EditorModel.prototype.createGameObject = function (parentList, createType, mesh) {
+                var state = editor.CreateGameObjectState.create(parentList, createType, mesh);
+                this.addState(state);
+            };
+            EditorModel.prototype.addComponent = function (gameObjectUUid, compClzName) {
+                var data = {
+                    gameObjectUUid: gameObjectUUid,
+                    compClzName: compClzName
+                };
+                var state = editor.AddComponentState.create(gameObjectUUid, compClzName);
+                this.addState(state);
+            };
+            EditorModel.prototype.removeComponent = function (gameObjectUUid, componentUUid) {
+                var obj = this.getGameObjectByUUid(gameObjectUUid);
+                if (!obj) {
+                    return;
+                }
+                var removeComponent = this.getComponentById(obj, componentUUid);
+                if (!removeComponent) {
+                    return;
+                }
+                var serializeData = paper.serialize(removeComponent);
+                var state = editor.RemoveComponentState.create(gameObjectUUid, componentUUid, serializeData);
+                this.addState(state);
+            };
+            EditorModel.prototype.getComponentById = function (gameObject, componentId) {
+                for (var i = 0; i < gameObject.components.length; i++) {
+                    var comp = gameObject.components[i];
+                    if (comp.uuid === componentId) {
+                        return comp;
+                    }
+                }
+                return null;
+            };
+            EditorModel.prototype.getComponentByAssetId = function (gameObject, assetId) {
+                for (var i = 0; i < gameObject.components.length; i++) {
+                    var comp = gameObject.components[i];
+                    if (comp.extras.linkedID === assetId) {
+                        return comp;
+                    }
+                }
+                return null;
+            };
+            /**
+             * 复制游戏对象
+             * @param objs
+             */
+            EditorModel.prototype.copyGameObject = function (objs) {
+                var clipboard = __global.runtimeModule.getClipborad();
+                var content = [];
+                //过滤
+                this.filtTopHierarchyGameObjects(objs);
+                //排序
+                objs = this.sortGameObjectsForHierarchy(objs);
+                for (var i = 0; i < objs.length; i++) {
+                    var obj = objs[i];
+                    content.push({
+                        type: "gameObject",
+                        serializeData: paper.serialize(obj)
+                    });
+                }
+                clipboard.writeText(JSON.stringify(content), "paper");
+            };
+            /**
+             * 粘贴游戏对象
+             * @param parent
+             */
+            EditorModel.prototype.pasteGameObject = function (parent) {
+                var clipboard = __global.runtimeModule.getClipborad();
+                var msg = clipboard.readText("paper");
+                var content = JSON.parse(msg);
+                if (content && content.length > 0) {
+                    var objData = [];
+                    for (var i = 0; i < content.length; i++) {
+                        objData.push(content[i].serializeData);
+                    }
+                    var state = editor.PasteGameObjectsState.create(objData, parent);
+                    this.addState(state);
+                }
+            };
+            /**
+             * 克隆游戏对象
+             * @param gameObjects
+             */
+            EditorModel.prototype.duplicateGameObjects = function (gameObjects) {
+                var state = editor.DuplicateGameObjectsState.create(gameObjects, this);
+                this.addState(state);
+            };
+            /**
+             * 删除游戏对象
+             * @param gameObjects
+             */
+            EditorModel.prototype.deleteGameObject = function (gameObjects) {
+                var _this = this;
+                var deleteState = editor.DeleteGameObjectsState.create(gameObjects, this);
+                var breakList = [];
+                gameObjects.forEach(function (obj) {
+                    if (_this.isPrefabChild(obj) && !_this.isPrefabRoot(obj)) {
+                        breakList.push(obj);
+                    }
+                });
+                if (breakList.length > 0) {
+                    var breakState = editor.BreakPrefabStructState.create(breakList);
+                    var stateGroup = editor.StateGroup.create([breakState, deleteState]);
+                    this.addState(stateGroup);
+                }
+                else {
+                    this.addState(deleteState);
+                }
+            };
+            /**
+             * 解除预置体联系
+             * @param gameObjects
+             */
+            EditorModel.prototype.breakPrefab = function (gameObjects) {
+                var _this = this;
+                var breakList = [];
+                gameObjects.forEach(function (obj) {
+                    if (_this.isPrefabChild(obj) || _this.isPrefabRoot(obj)) {
+                        breakList.push(obj);
+                    }
+                });
+                if (breakList.length > 0) {
+                    var breakState = editor.BreakPrefabStructState.create(breakList);
+                    this.addState(breakState);
+                }
+            };
+            /**
+             * 更改层级
+             * */
+            EditorModel.prototype.updateGameObjectsHierarchy = function (gameObjects, targetGameobjcet, dir) {
+                var _this = this;
+                var gameObjectHierarchyState = editor.GameObjectHierarchyState.create(gameObjects, targetGameobjcet, dir, this);
+                var breakList = [];
+                gameObjects.forEach(function (obj) {
+                    if (_this.isPrefabChild(obj) &&
+                        !_this.isPrefabRoot(obj) &&
+                        (obj.transform.parent !== targetGameobjcet.transform.parent || dir === 'inner')) {
+                        breakList.push(obj);
+                    }
+                });
+                if (breakList.length > 0) {
+                    var breakPrefabStructState = editor.BreakPrefabStructState.create(breakList);
+                    var stateGroup = editor.StateGroup.create([breakPrefabStructState, gameObjectHierarchyState]);
+                    this.addState(stateGroup);
+                }
+                else {
+                    this.addState(gameObjectHierarchyState);
+                }
+            };
+            /**
+             * 设置对象的层级
+             */
+            EditorModel.prototype.setGameObjectsHierarchy = function (objects, targetObject, dir) {
+                objects = objects.concat();
+                //剔除所有父级
+                objects.forEach(function (obj) { obj.transform.parent = null; });
+                objects.reverse();
+                if (dir === 'inner') {
+                    var index = targetObject.transform.children.length;
+                    for (var i = 0; i < objects.length; i++) {
+                        var obj = objects[i];
+                        obj.transform.parent = targetObject.transform;
+                        var transform = targetObject.transform.children.pop();
+                        targetObject.transform.children.splice(index, 0, transform);
+                    }
+                }
+                else {
+                    if (targetObject.transform.parent) {
+                        var index = void 0;
+                        switch (dir) {
+                            case 'top':
+                                index = targetObject.transform.parent.children.indexOf(targetObject.transform);
+                                break;
+                            case 'bottom':
+                                index = targetObject.transform.parent.children.indexOf(targetObject.transform) + 1;
+                                break;
+                        }
+                        for (var i = 0; i < objects.length; i++) {
+                            var obj = objects[i];
+                            obj.transform.parent = targetObject.transform.parent;
+                            var transform = targetObject.transform.parent.children.pop();
+                            targetObject.transform.parent.children.splice(index, 0, transform);
+                        }
+                    }
+                    else {
+                        var all = this.scene.gameObjects;
+                        for (var i = 0; i < objects.length; i++) {
+                            all.splice(all.indexOf(objects[i]), 1);
+                        }
+                        var index = void 0;
+                        switch (dir) {
+                            case 'top':
+                                index = all.indexOf(targetObject);
+                                break;
+                            case 'bottom':
+                                index = all.indexOf(targetObject) + 1;
+                                break;
+                        }
+                        for (var i = 0; i < objects.length; i++) {
+                            var obj = objects[i];
+                            all.splice(index, 0, obj);
+                        }
+                    }
+                }
+            };
+            /**
+             * 筛选层级中的顶层游戏对象
+             * @param gameObjects
+             */
+            EditorModel.prototype.filtTopHierarchyGameObjects = function (gameObjects) {
+                var findParent = false;
+                var parent = null;
+                for (var index = gameObjects.length - 1; index >= 0; index--) {
+                    var element = gameObjects[index];
+                    findParent = false;
+                    parent = element.transform.parent;
+                    while (parent) {
+                        for (var i = 0; i < gameObjects.length; i++) {
+                            var element_1 = gameObjects[i];
+                            if (element_1.transform === parent) {
+                                gameObjects.splice(index, 1);
+                                findParent = true;
+                                break;
+                            }
+                        }
+                        if (findParent) {
+                            break;
+                        }
+                        parent = parent.parent;
+                    }
+                }
+            };
+            EditorModel.prototype.getGameObjectByUUid = function (uuid) {
+                var objects = this.scene.gameObjects;
+                for (var i = 0; i < objects.length; i++) {
+                    if (objects[i].uuid === uuid) {
+                        return objects[i];
+                    }
+                }
+                return null;
+            };
+            EditorModel.prototype.getGameObjectsByUUids = function (uuids) {
+                var objects = this.scene.gameObjects;
+                var obj;
+                var result = [];
+                var idIndex;
+                var cloneIds = uuids.concat();
+                for (var i = 0; i < objects.length; i++) {
+                    if (cloneIds.length === 0) {
+                        return result;
+                    }
+                    obj = objects[i];
+                    idIndex = cloneIds.indexOf(obj.uuid);
+                    if (idIndex !== -1) {
+                        result.push(obj);
+                        cloneIds.splice(idIndex, 1);
+                    }
+                }
+                return result;
+            };
+            EditorModel.prototype.setTargetProperty = function (propName, target, value, editType) {
+                if (editType !== "VECTOR2" /* VECTOR2 */ &&
+                    editType !== "VECTOR3" /* VECTOR3 */ &&
+                    editType !== "VECTOR4" /* VECTOR4 */ &&
+                    editType !== "COLOR" /* COLOR */) {
+                    target[propName] = value;
+                    return;
+                }
+                if (this.propertyHasGetterSetter(propName, target)) {
+                    target[propName] = value;
+                }
+                else {
+                    switch (editType) {
+                        case "VECTOR2" /* VECTOR2 */:
+                            var vec2 = target[propName];
+                            vec2.x = value.x;
+                            vec2.y = value.y;
+                            break;
+                        case "VECTOR3" /* VECTOR3 */:
+                            var vec3 = target[propName];
+                            vec3.x = value.x;
+                            vec3.y = value.y;
+                            vec3.z = value.z;
+                            break;
+                        case "VECTOR4" /* VECTOR4 */:
+                            var vec4 = target[propName];
+                            vec4.x = value.x;
+                            vec4.y = value.y;
+                            vec4.z = value.z;
+                            vec4.w = value.w;
+                            break;
+                        case "COLOR" /* COLOR */:
+                            var color = target[propName];
+                            color.r = value.r;
+                            color.g = value.g;
+                            color.b = value.b;
+                            color.a = value.a;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            };
+            EditorModel.prototype.propertyHasGetterSetter = function (propName, target) {
+                var prototype = Object.getPrototypeOf(target);
+                var descriptror;
+                while (prototype) {
+                    descriptror = Object.getOwnPropertyDescriptor(prototype, propName);
+                    if (descriptror && descriptror.get && descriptror.set) {
+                        return true;
+                    }
+                    prototype = Object.getPrototypeOf(prototype);
+                }
+                return false;
+            };
+            /**
+             * 选择游戏对象
+             *  */
+            EditorModel.prototype.selectGameObject = function (objs) {
+                this.currentSelected = objs;
+                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.SELECT_GAMEOBJECTS, objs));
+            };
+            /**
+             * 切换编辑模式
+             */
+            EditorModel.prototype.changeEditMode = function (mode) {
+                this.currentEditMode = mode;
+                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_EDIT_MODE, mode));
+            };
+            /**
+             * 切换编辑类型
+             */
+            EditorModel.prototype.changeEditType = function (type) {
+                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_EDIT_TYPE, type));
+            };
+            EditorModel.prototype.isPrefabRoot = function (gameObj) {
+                if (gameObj.extras && gameObj.extras.prefab) {
+                    return true;
+                }
+                return false;
+            };
+            EditorModel.prototype.isPrefabChild = function (gameObj) {
+                if (gameObj.extras && gameObj.extras.rootID) {
+                    return true;
+                }
+                return false;
+            };
+            /**将对象按照层级进行排序
+             */
+            EditorModel.prototype.sortGameObjectsForHierarchy = function (gameobjects) {
+                var _this = this;
+                gameobjects = gameobjects.concat();
+                if (gameobjects.length < 2) {
+                    return gameobjects;
+                }
+                //生成每个对象的显示索引路径列表
+                var displayPathList = [];
+                gameobjects.forEach(function (obj) {
+                    var result = [];
+                    var currentObj = obj;
+                    while (currentObj.transform.parent) {
+                        result.unshift(currentObj.transform.parent.children.indexOf(currentObj.transform));
+                        currentObj = currentObj.transform.parent.gameObject;
+                    }
+                    //追加一个根部索引
+                    result.unshift(_this.scene.gameObjects.indexOf(currentObj));
+                    displayPathList.push({ gameObject: obj, path: result });
+                });
+                function getPath(gameObject) {
+                    for (var i_1 = 0; i_1 < displayPathList.length; i_1++) {
+                        if (displayPathList[i_1].gameObject === gameObject) {
+                            return displayPathList[i_1].path;
+                        }
+                    }
+                    return [];
+                }
+                var length = gameobjects.length - 1;
+                while (length > 0) {
+                    for (var i = 0; i < length; i++) {
+                        var A = getPath(gameobjects[i]);
+                        var B = getPath(gameobjects[i + 1]);
+                        var needChangeIndex = false;
+                        var minLength = Math.min(A.length, B.length);
+                        var k = 0;
+                        b: for (k; k < minLength; k++) {
+                            if (A[k] === B[k]) {
+                                continue;
+                            }
+                            else if (A[k] > B[k]) {
+                                needChangeIndex = true;
+                                break b;
+                            }
+                            else if (A[k] < B[k]) {
+                                needChangeIndex = false;
+                                break b;
+                            }
+                        }
+                        if (k === minLength && !needChangeIndex && A.length > B.length) {
+                            needChangeIndex = true;
+                        }
+                        if (needChangeIndex) {
+                            var tmpv = gameobjects[i];
+                            gameobjects[i] = gameobjects[i + 1];
+                            gameobjects[i + 1] = tmpv;
+                        }
+                    }
+                    length--;
+                }
+                return gameobjects;
+            };
+            EditorModel.prototype.createApplyPrefabState = function (applyData, applyPrefabInstanceId, prefab) {
+                var state = editor.ApplyPrefabInstanceState.create(applyData, applyPrefabInstanceId, prefab);
+                this.addState(state);
+            };
+            EditorModel.prototype.createRevertPrefabState = function (revertData, revertPrefabInstanceId) {
+                var state = editor.RevertPrefabInstanceState.create(revertData, revertPrefabInstanceId);
+                this.addState(state);
+            };
+            EditorModel.prototype.deepClone = function (obj) {
+                var _this = this;
+                if (!obj || typeof obj !== 'object') {
+                    return obj;
+                }
+                if (obj instanceof RegExp) {
+                    return obj;
+                }
+                var result = Array.isArray(obj) ? [] : {};
+                Object.keys(obj).forEach(function (key) {
+                    var objTmp = obj;
+                    if (objTmp[key] && typeof objTmp[key] === 'object') {
+                        result[key] = _this.deepClone(objTmp[key]);
+                    }
+                    else {
+                        result[key] = objTmp[key];
+                    }
+                });
+                return result;
+            };
+            EditorModel.prototype.updateAsset = function (asset, prefabInstance) {
+                if (prefabInstance === void 0) { prefabInstance = null; }
+                var refs = this.findAssetRefs(this.scene, asset);
+                var serializeData;
+                if (asset instanceof paper.Prefab) {
+                    serializeData = paper.serialize(prefabInstance);
+                }
+                else {
+                }
+                //save asset
+                //destory asset,getRes
+                //update refrence (paper.assets[])
+                this._cacheIds.length = 0;
+            };
+            EditorModel.prototype.findAssetRefs = function (target, as, refs) {
+                if (refs === void 0) { refs = null; }
+                if (this._cacheIds.indexOf(target.uuid) >= 0) {
+                    return;
+                }
+                this._cacheIds.push(target.uuid);
+                refs = refs || [];
+                for (var key in target) {
+                    var source = target[key];
+                    if ((typeof source) === "object") {
+                        this.findFromChildren(source, as, refs, target, key);
+                    }
+                }
+                return refs;
+            };
+            EditorModel.prototype.findFromChildren = function (source, as, refs, parent, key) {
+                if ((typeof source) !== "object") {
+                    return;
+                }
+                if (Array.isArray(source) || ArrayBuffer.isView(source)) {
+                    for (var index = 0; index < source.length; index++) {
+                        var element = source[index];
+                        this.findFromChildren(element, as, refs, source, index);
+                    }
+                }
+                if (source.constructor === Object) {
+                    for (var key_1 in source) {
+                        var element = source[key_1];
+                        this.findFromChildren(element, as, refs, source, key_1);
+                    }
+                }
+                if (source instanceof paper.BaseObject) {
+                    if (source instanceof paper.Asset && source === as) {
+                        refs.push({ p: parent, k: key });
+                        return;
+                    }
+                    this.findAssetRefs(source, as, refs);
+                }
+            };
+            EditorModel.prototype.getAllGameObjectsFromPrefabInstance = function (gameObj, objs) {
+                if (objs === void 0) { objs = null; }
+                if (gameObj) {
+                    objs = objs || [];
+                    if (gameObj.extras.linkedID) {
+                        objs.push(gameObj);
+                    }
+                    for (var index = 0; index < gameObj.transform.children.length; index++) {
+                        var element = gameObj.transform.children[index];
+                        var obj = element.gameObject;
+                        this.getAllGameObjectsFromPrefabInstance(obj, objs);
+                    }
+                }
+                return objs;
+            };
+            EditorModel.prototype.modifyMaterialPropertyValues = function (target, valueList) {
+                return __awaiter(this, void 0, void 0, function () {
+                    var _i, valueList_1, propertyValue, propName, copyValue, uniformType, _glTFMaterial, gltfUnifromMap, uniformMap, key, value;
+                    return __generator(this, function (_a) {
+                        for (_i = 0, valueList_1 = valueList; _i < valueList_1.length; _i++) {
+                            propertyValue = valueList_1[_i];
+                            propName = propertyValue.propName, copyValue = propertyValue.copyValue, uniformType = propertyValue.uniformType;
+                            if (!copyValue) {
+                                continue;
+                            }
+                            switch (uniformType) {
+                                case 35670 /* BOOL */:
+                                    target.setBoolean(propName, copyValue);
+                                    break;
+                                case 5124 /* INT */:
+                                    target.setInt(propName, copyValue);
+                                case 5126 /* FLOAT */:
+                                    target.setFloat(propName, copyValue);
+                                    break;
+                                case 35671 /* BOOL_VEC2 */:
+                                case 35667 /* INT_VEC2 */:
+                                case 35664 /* FLOAT_VEC2 */:
+                                    target.setVector2v(propName, copyValue);
+                                    break;
+                                case 35672 /* BOOL_VEC3 */:
+                                case 35668 /* INT_VEC3 */:
+                                case 35665 /* FLOAT_VEC3 */:
+                                    target.setVector3v(propName, copyValue);
+                                    break;
+                                case 35673 /* BOOL_VEC4 */:
+                                case 35669 /* INT_VEC4 */:
+                                case 35666 /* FLOAT_VEC4 */:
+                                    target.setVector4v(propName, copyValue);
+                                    break;
+                                case 35678 /* SAMPLER_2D */:
+                                    target._glTFTechnique.uniforms[propName].value = copyValue;
+                                    break;
+                                case 35674 /* FLOAT_MAT2 */:
+                                case 35675 /* FLOAT_MAT3 */:
+                                case 35676 /* FLOAT_MAT4 */:
+                                    target.setMatrixv(propName, copyValue);
+                                    break;
+                                default:
+                                    break;
+                            }
+                            if (propName === "renderQueue") {
+                                target.config.materials[0].extensions.paper.renderQueue = copyValue;
+                            }
+                            this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: copyValue }));
+                        }
+                        _glTFMaterial = target.config.materials[0];
+                        gltfUnifromMap = _glTFMaterial.extensions.KHR_techniques_webgl.values;
+                        uniformMap = target._glTFTechnique.uniforms;
+                        for (key in uniformMap) {
+                            if (uniformMap[key].semantic === undefined) {
+                                value = uniformMap[key].value;
+                                if (Array.isArray(value)) {
+                                    gltfUnifromMap[key] = value.concat();
+                                }
+                                else if (value instanceof egret3d.GLTexture2D) {
+                                    gltfUnifromMap[key] = value.name;
+                                }
+                                else {
+                                    gltfUnifromMap[key] = value;
+                                }
+                            }
+                        }
+                        return [2 /*return*/];
+                    });
+                });
+            };
+            return EditorModel;
+        }(editor.EventDispatcher));
+        editor.EditorModel = EditorModel;
+        __reflect(EditorModel.prototype, "paper.editor.EditorModel");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        editor.EventType = {
+            HistoryState: "HistoryState",
+            HistoryAdd: "HistoryAdd",
+            HistoryFree: "HistoryFree"
+        };
+        var History = (function () {
+            function History() {
+                this.dispatcher = null;
+                this._locked = 0;
+                this._index = -1;
+                this._batchIndex = 0;
+                this._states = [];
+                this._batchStates = [];
+                this._events = [];
+            }
+            History.prototype._free = function () {
+                if (this._states.length > this._index + 1) {
+                    this._states.length = this._index + 1; // TODO release.
+                    if (this.dispatcher) {
+                        this.dispatcher.dispatchEvent(new editor.BaseEvent(editor.EventType.HistoryFree, null));
+                    }
+                }
+            };
+            History.prototype._doState = function (state, isUndo) {
+                if (isUndo) {
+                    state.undo();
+                }
+                else {
+                    state.redo();
+                }
+                var d = isUndo ? "undo" : "redo";
+                if (this.dispatcher) {
+                    var data = { isUndo: isUndo };
+                    this._events.push(data);
+                }
+                return state.batchIndex > 0 && (isUndo ? this._index >= 0 : this._index < this._states.length - 1);
+            };
+            History.prototype.back = function () {
+                if (this._index < 0 || this._batchIndex > 0) {
+                    return false;
+                }
+                this._locked |= 1;
+                while (this._doState(this._states[this._index--], true)) {
+                }
+                if (this.dispatcher && this._events.length > 0) {
+                    for (var _i = 0, _a = this._events; _i < _a.length; _i++) {
+                        var event_3 = _a[_i];
+                        this.dispatcher.dispatchEvent(new editor.BaseEvent(editor.EventType.HistoryState, event_3));
+                    }
+                    this._events.length = 0;
+                }
+                this._locked &= 2;
+                return true;
+            };
+            History.prototype.forward = function () {
+                if (this._index >= this._states.length - 1 || this._batchIndex > 0) {
+                    return false;
+                }
+                this._locked |= 1;
+                while (this._doState(this._states[++this._index], false)) {
+                }
+                if (this.dispatcher && this._events.length > 0) {
+                    for (var _i = 0, _a = this._events; _i < _a.length; _i++) {
+                        var event_4 = _a[_i];
+                        this.dispatcher.dispatchEvent(new editor.BaseEvent(editor.EventType.HistoryState, event_4));
+                    }
+                    this._events.length = 0;
+                }
+                this._locked &= 2;
+                return true;
+            };
+            History.prototype.go = function (index) {
+                if (this._batchIndex > 0) {
+                    return false;
+                }
+                var result = false;
+                if (this._index < index) {
+                    while (this._index !== index && this.forward()) {
+                        result = true;
+                    }
+                }
+                else {
+                    while (this._index !== index && this.back()) {
+                        result = true;
+                    }
+                }
+                return result;
+            };
+            History.prototype.add = function (state) {
+                if (this._locked !== 0) {
+                    return;
+                }
+                if (this._batchIndex > 0) {
+                    state.batchIndex = this._batchIndex;
+                    this._batchStates.push(state);
+                }
+                else {
+                    this._states[this._index + 1] = state;
+                    if (this.dispatcher !== null) {
+                        this.dispatcher.dispatchEvent(new editor.BaseEvent(editor.EventType.HistoryAdd, event));
+                    }
+                    this.forward();
+                    this._free();
+                }
+            };
+            History.prototype.beginBatch = function () {
+                this._batchIndex++;
+            };
+            History.prototype.endBatch = function () {
+                if (this._batchIndex === 0) {
+                    return;
+                }
+                this._batchIndex--;
+                if (this._batchIndex === 0) {
+                    var index = this._index + 1;
+                    for (var _i = 0, _a = this._batchStates; _i < _a.length; _i++) {
+                        var state = _a[_i];
+                        this._states[index++] = state;
+                    }
+                    if (this.dispatcher !== null) {
+                        this.dispatcher.dispatchEvent(new editor.BaseEvent(editor.EventType.HistoryAdd, event));
+                    }
+                    this._batchStates.length = 0;
+                    this.go(this._states.length - 1);
+                }
+            };
+            History.prototype.getState = function (index) {
+                return this._states[index];
+            };
+            Object.defineProperty(History.prototype, "enabled", {
+                get: function () {
+                    return this._locked === 0;
+                },
+                set: function (value) {
+                    if (value) {
+                        this._locked &= 1;
+                    }
+                    else {
+                        this._locked |= 2;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(History.prototype, "count", {
+                get: function () {
+                    return this._states.length;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(History.prototype, "index", {
+                get: function () {
+                    return this._index;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(History.prototype, "batchIndex", {
+                get: function () {
+                    return this._batchIndex;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(History.prototype, "locked", {
+                get: function () {
+                    return this._locked;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(History.prototype, "states", {
+                get: function () {
+                    return this._states;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            History.prototype.serialize = function () {
+                var states = this.states;
+                var statesData = [];
+                for (var index = 0; index < states.length; index++) {
+                    var element = states[index];
+                    var className = egret.getQualifiedClassName(element);
+                    var data = {
+                        className: className,
+                        batchIndex: element.batchIndex,
+                        data: element.hasOwnProperty('deserialize') ? element['serialize']() : element.data,
+                        autoClear: element.autoClear,
+                        isDone: element.isDone,
+                    };
+                    statesData.push(data);
+                }
+                var serializeHistory = {
+                    index: this.index,
+                    batchIndex: this.batchIndex,
+                    locked: this.locked,
+                    statesData: statesData,
+                };
+                return serializeHistory;
+            };
+            History.prototype.deserialize = function (serializeHistory) {
+                var states = [];
+                var statesData = serializeHistory.statesData;
+                for (var index = 0; index < statesData.length; index++) {
+                    var element = statesData[index];
+                    var clazz = egret.getDefinitionByName(element.className);
+                    var state = void 0;
+                    if (clazz) {
+                        state = new clazz();
+                        state.batchIndex = element.batchIndex;
+                        state.data = element.hasOwnProperty('deserialize') ? element['deserialize'](element.data) : element.data;
+                        state.autoClear = element.autoClear;
+                        state.isDone = element.isDone;
+                        states.push(state);
+                    }
+                }
+                var initData = {
+                    states: states,
+                    index: serializeHistory.index,
+                    batchIndex: serializeHistory.batchIndex,
+                    locked: serializeHistory.locked,
+                };
+                this._index = initData ? initData.index : -1;
+                this._locked = initData ? initData.locked : 0;
+                this._batchIndex = initData ? initData.batchIndex : 0;
+                this._states = initData ? initData.states : [];
+            };
+            return History;
+        }());
+        editor.History = History;
+        __reflect(History.prototype, "paper.editor.History");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        //添加组件
+        var AddComponentState = (function (_super) {
+            __extends(AddComponentState, _super);
+            function AddComponentState() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            AddComponentState.toString = function () {
+                return "[class common.AddComponentState]";
+            };
+            AddComponentState.create = function (gameObjectUUid, compClzName) {
+                var state = new AddComponentState();
+                var data = { gameObjectUUid: gameObjectUUid, compClzName: compClzName };
+                state.data = data;
+                return state;
+            };
+            Object.defineProperty(AddComponentState.prototype, "stateData", {
+                get: function () {
+                    return this.data;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            AddComponentState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    var gameObjectUUid = this.stateData.gameObjectUUid;
+                    var componentId = this.stateData.cacheComponentId;
+                    var gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
+                    if (gameObject) {
+                        var component = this.editorModel.getComponentById(gameObject, componentId);
+                        if (component) {
+                            gameObject.removeComponent(component);
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
+                        }
+                    }
+                    return true;
+                }
+                return false;
+            };
+            AddComponentState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    var gameObjectUUid = this.stateData.gameObjectUUid;
+                    var compClzName = this.stateData.compClzName;
+                    var gameObject = this.editorModel.getGameObjectByUUid(gameObjectUUid);
+                    if (gameObject) {
+                        if (this.stateData.serializeData) {
+                            new paper.Deserializer().deserialize(this.data.serializeData, true, false, gameObject);
+                        }
+                        else {
+                            var compClz = egret.getDefinitionByName(compClzName);
+                            var addComponent = gameObject.addComponent(compClz);
+                            this.stateData.serializeData = paper.serialize(addComponent);
+                            this.stateData.cacheComponentId = addComponent.uuid;
+                        }
+                        this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
+                    }
+                    return true;
+                }
+                return false;
+            };
+            return AddComponentState;
+        }(editor.BaseState));
+        editor.AddComponentState = AddComponentState;
+        __reflect(AddComponentState.prototype, "paper.editor.AddComponentState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var ApplyPrefabInstanceState = (function (_super) {
+            __extends(ApplyPrefabInstanceState, _super);
+            function ApplyPrefabInstanceState() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.firstRedo = true;
+                return _this;
+            }
+            ApplyPrefabInstanceState.toString = function () {
+                return "[class common.ApplyPrefabInstanceState]";
+            };
+            ApplyPrefabInstanceState.create = function (applyData, applyPrefabRootId, prefab) {
+                var state = new ApplyPrefabInstanceState();
+                var cachePrefabSerializedData = editor.Editor.activeEditorModel.deepClone(prefab._raw);
+                var data = {
+                    applyPrefabRootId: applyPrefabRootId,
+                    prefab: prefab,
+                    applyData: applyData,
+                    cachePrefabSerializedData: cachePrefabSerializedData
+                };
+                data.cacheGameObjetsIds = [];
+                data.cacheComponentsIds = {};
+                state.data = data;
+                return state;
+            };
+            Object.defineProperty(ApplyPrefabInstanceState.prototype, "stateData", {
+                get: function () {
+                    return this.data;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            ApplyPrefabInstanceState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    var applyGameObject = editor.Editor.activeEditorModel.getGameObjectByUUid(this.stateData.applyPrefabRootId);
+                    var objects = this.editorModel.scene.gameObjects;
+                    for (var index = objects.length - 1; index >= 0; index--) {
+                        if (this.stateData.cacheGameObjetsIds.length === 0 && Object.keys(this.stateData.cacheComponentsIds).length === 0) {
+                            break;
+                        }
+                        var gameObj = objects[index];
+                        var gIndex = this.stateData.cacheGameObjetsIds.indexOf(gameObj.uuid);
+                        if (gIndex >= 0) {
+                            gameObj.destroy();
+                            this.stateData.cacheGameObjetsIds.splice(gIndex, 1);
+                        }
+                        else if (this.stateData.cacheComponentsIds[gameObj.uuid] && this.stateData.cacheComponentsIds[gameObj.uuid].length > 0) {
+                            var comIds = this.stateData.cacheComponentsIds[gameObj.uuid];
+                            for (var comIndex = gameObj.components.length - 1; comIndex >= 0; comIndex--) {
+                                var com = gameObj.components[comIndex];
+                                var cIndex = comIds.indexOf(com.uuid);
+                                if (cIndex >= 0) {
+                                    gameObj.removeComponent(com);
+                                    comIds.splice(cIndex, 1);
+                                    if (comIds.length === 0) {
+                                        delete this.stateData.cacheComponentsIds[gameObj.uuid];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    var tempPrefabObject = this.stateData.prefab.createInstance(paper.Application.sceneManager.globalScene, true);
+                    for (var linkedId in this.stateData.applyData) {
+                        var applyData = this.stateData.applyData[linkedId];
+                        if (applyData.addGameObjects && applyData.addGameObjects.length > 0) {
+                            for (var index = 0; index < applyData.addGameObjects.length; index++) {
+                                var obj = applyData.addGameObjects[index];
+                                var originalObj = this.getGameObjectByUUid(applyGameObject, obj.id);
+                                if (originalObj) {
+                                    this.clearLinkedId(originalObj);
+                                }
+                            }
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
+                        }
+                        if (applyData.addComponents && applyData.addComponents.length > 0) {
+                            for (var index = 0; index < applyData.addComponents.length; index++) {
+                                var element = applyData.addComponents[index];
+                                var id = element.id, gameObjId = element.gameObjId;
+                                var originalObj = this.getGameObjectByUUid(applyGameObject, gameObjId);
+                                if (originalObj) {
+                                    var originalComponent = editor.Editor.activeEditorModel.getComponentById(originalObj, id);
+                                    if (originalComponent) {
+                                        originalComponent.extras = {};
+                                    }
+                                }
+                            }
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
+                        }
+                        if (applyData.modifyGameObjectPropertyList && applyData.modifyGameObjectPropertyList.length > 0) {
+                            for (var _i = 0, _a = applyData.modifyGameObjectPropertyList; _i < _a.length; _i++) {
+                                var obj = _a[_i];
+                                this.modifyPrefabGameObjectPropertyValues(linkedId, tempPrefabObject, obj.preValueCopylist);
+                            }
+                        }
+                        if (applyData.modifyComponentPropertyList && applyData.modifyComponentPropertyList.length > 0) {
+                            for (var _b = 0, _c = applyData.modifyComponentPropertyList; _b < _c.length; _b++) {
+                                var obj = _c[_b];
+                                this.modifyPrefabComponentPropertyValues(linkedId, obj.componentId, tempPrefabObject, obj.preValueCopylist);
+                            }
+                        }
+                    }
+                    //reset prefab serrializedata,save prefab
+                    // (this.stateData.prefab as any)._raw = this.stateData.cachePrefabSerializedData;
+                    var prefabJson = this.stateData.cachePrefabSerializedData;
+                    this.stateData.prefab._raw = prefabJson;
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefab.name, raw: prefabJson });
+                    tempPrefabObject.destroy();
+                    tempPrefabObject = null;
+                    return true;
+                }
+                return false;
+            };
+            ApplyPrefabInstanceState.prototype.getAllUUidFromGameObject = function (gameObj, uuids) {
+                if (uuids === void 0) { uuids = null; }
+                if (gameObj) {
+                    uuids = uuids || [];
+                    uuids.push(gameObj.uuid);
+                    for (var _i = 0, _a = gameObj.components; _i < _a.length; _i++) {
+                        var com = _a[_i];
+                        uuids.push(com.uuid);
+                    }
+                    for (var index = 0; index < gameObj.transform.children.length; index++) {
+                        var element = gameObj.transform.children[index];
+                        var obj = element.gameObject;
+                        this.getAllUUidFromGameObject(obj, uuids);
+                    }
+                }
+                return uuids;
+            };
+            ApplyPrefabInstanceState.prototype.setLinkedId = function (gameObj, ids) {
+                if (gameObj) {
+                    var linkedId = ids.shift();
+                    if (linkedId === undefined) {
+                        console.error("linkedId error");
+                    }
+                    gameObj.extras.linkedID = linkedId;
+                    for (var _i = 0, _a = gameObj.components; _i < _a.length; _i++) {
+                        var com = _a[_i];
+                        linkedId = ids.shift();
+                        if (linkedId === undefined) {
+                            console.error("linkedId error");
+                        }
+                        com.extras.linkedID = linkedId;
+                    }
+                    for (var index = 0; index < gameObj.transform.children.length; index++) {
+                        var element = gameObj.transform.children[index];
+                        var obj = element.gameObject;
+                        if (obj.hideFlags === 3 /* HideAndDontSave */) {
+                            continue;
+                        }
+                        this.setLinkedId(obj, ids);
+                    }
+                }
+            };
+            ApplyPrefabInstanceState.prototype.clearLinkedId = function (gameObj) {
+                if (gameObj) {
+                    gameObj.extras = {};
+                    for (var index = 0; index < gameObj.components.length; index++) {
+                        var element = gameObj.components[index];
+                        element.extras = {};
+                    }
+                    for (var index = 0; index < gameObj.transform.children.length; index++) {
+                        var element = gameObj.transform.children[index];
+                        var obj = element.gameObject;
+                        this.clearLinkedId(obj);
+                    }
+                }
+            };
+            ApplyPrefabInstanceState.prototype.dispathPropertyEvent = function (modifyObj, propName, newValue) {
+                this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
+            };
+            ApplyPrefabInstanceState.prototype.modifyPrefabGameObjectPropertyValues = function (linkedId, tempObj, valueList) {
+                var _this = this;
+                var prefabObj = this.getGameObjectByLinkedId(tempObj, linkedId);
+                var objects = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
+                valueList.forEach(function (propertyValue) {
+                    var propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                    var newValue = _this.editorModel.deserializeProperty(copyValue, valueEditType);
+                    objects.forEach(function (object) {
+                        if (paper.equal(object[propName], prefabObj[propName])) {
+                            _this.editorModel.setTargetProperty(propName, object, newValue, valueEditType);
+                            _this.dispathPropertyEvent(object, propName, newValue);
+                        }
+                    });
+                    _this.editorModel.setTargetProperty(propName, prefabObj, newValue, valueEditType);
+                });
+                this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
+            };
+            ApplyPrefabInstanceState.prototype.modifyPrefabComponentPropertyValues = function (linkedId, componentUUid, tempObj, valueList) {
+                var _this = this;
+                var prefabObj = this.getGameObjectByLinkedId(tempObj, linkedId);
+                var objects = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
+                var _loop_1 = function (k) {
+                    var prefabComp = prefabObj.components[k];
+                    if (prefabComp.uuid === componentUUid) {
+                        valueList.forEach(function (propertyValue) {
+                            var propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                            var newValue = _this.editorModel.deserializeProperty(copyValue, valueEditType);
+                            objects.forEach(function (object) {
+                                var objectComp = _this.editorModel.getComponentByAssetId(object, prefabComp.extras.linkedID);
+                                if (objectComp !== null) {
+                                    if (paper.equal(objectComp[propName], prefabComp[propName])) {
+                                        _this.editorModel.setTargetProperty(propName, objectComp, newValue, valueEditType);
+                                        _this.dispathPropertyEvent(objectComp, propName, newValue);
+                                    }
+                                }
+                            });
+                            _this.editorModel.setTargetProperty(propName, prefabComp, newValue, valueEditType);
+                        });
+                    }
+                };
+                for (var k = 0; k < prefabObj.components.length; k++) {
+                    _loop_1(k);
+                }
+            };
+            ApplyPrefabInstanceState.prototype.setGameObjectPrefabRootId = function (gameObj, rootID) {
+                if (gameObj.extras.prefab === undefined) {
+                    gameObj.extras.rootID = rootID;
+                }
+                for (var index = 0; index < gameObj.transform.children.length; index++) {
+                    var element = gameObj.transform.children[index];
+                    var obj = element.gameObject;
+                    this.setGameObjectPrefabRootId(obj, rootID);
+                }
+            };
+            ApplyPrefabInstanceState.prototype.getGameObjectsByLinkedId = function (linkedId, filterApplyRootId) {
+                var objects = this.editorModel.scene.gameObjects;
+                var result = [];
+                for (var _i = 0, objects_1 = objects; _i < objects_1.length; _i++) {
+                    var obj = objects_1[_i];
+                    if ((obj.extras && obj.extras.linkedID && obj.extras.linkedID === linkedId) && (obj.extras.prefab || (obj.extras.rootID && obj.extras.rootID !== filterApplyRootId)) && obj.uuid !== filterApplyRootId) {
+                        result.push(obj);
+                    }
+                }
+                return result;
+            };
+            ApplyPrefabInstanceState.prototype.getGameObjectByLinkedId = function (gameObj, linkedID) {
+                if (!gameObj) {
+                    return null;
+                }
+                var result;
+                if (gameObj.extras.linkedID === linkedID) {
+                    result = gameObj;
+                    return gameObj;
+                }
+                for (var index = 0; index < gameObj.transform.children.length; index++) {
+                    var element = gameObj.transform.children[index];
+                    var obj = element.gameObject;
+                    result = this.getGameObjectByLinkedId(obj, linkedID);
+                    if (result) {
+                        break;
+                    }
+                }
+                return result;
+            };
+            ApplyPrefabInstanceState.prototype.getGameObjectByUUid = function (gameObj, uuid) {
+                if (!gameObj) {
+                    return null;
+                }
+                var result;
+                if (gameObj.uuid === uuid) {
+                    result = gameObj;
+                    return gameObj;
+                }
+                for (var index = 0; index < gameObj.transform.children.length; index++) {
+                    var element = gameObj.transform.children[index];
+                    var obj = element.gameObject;
+                    result = this.getGameObjectByUUid(obj, uuid);
+                    if (result) {
+                        break;
+                    }
+                }
+                return result;
+            };
+            ApplyPrefabInstanceState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    var tempPrefabObject = this.stateData.prefab.createInstance(paper.Application.sceneManager.globalScene, true);
+                    var tempGameObjects = editor.Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(tempPrefabObject);
+                    var applyGameObject = editor.Editor.activeEditorModel.getGameObjectByUUid(this.stateData.applyPrefabRootId);
+                    for (var _i = 0, _a = tempGameObjects; _i < _a.length; _i++) {
+                        var gameObj = _a[_i];
+                        if (!(this.stateData.applyData[gameObj.extras.linkedID])) {
+                            continue;
+                        }
+                        var applyData = this.stateData.applyData[gameObj.extras.linkedID];
+                        if (applyData.addGameObjects && applyData.addGameObjects.length > 0) {
+                            for (var index = 0; index < applyData.addGameObjects.length; index++) {
+                                var obj = applyData.addGameObjects[index];
+                                var ids = [];
+                                var newObj = void 0;
+                                if (this.firstRedo) {
+                                    newObj = new paper.Deserializer().deserialize(obj.serializeData, false, false, paper.Application.sceneManager.globalScene);
+                                    newObj.parent = gameObj;
+                                    ids = this.getAllUUidFromGameObject(newObj);
+                                    obj.cacheSerializeData = Object.create(null);
+                                    obj.cacheSerializeData[gameObj.uuid] = [];
+                                    obj.cacheSerializeData[gameObj.uuid][index] = paper.serialize(newObj);
+                                }
+                                else {
+                                    var cacheData = obj.cacheSerializeData[gameObj.uuid][index];
+                                    newObj = new paper.Deserializer().deserialize(cacheData, true, false, paper.Application.sceneManager.globalScene);
+                                    newObj.parent = gameObj;
+                                    ids = this.getAllUUidFromGameObject(newObj);
+                                }
+                                var linkedId = gameObj.extras.linkedID;
+                                var instanceGameObjects = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
+                                for (var _b = 0, instanceGameObjects_1 = instanceGameObjects; _b < instanceGameObjects_1.length; _b++) {
+                                    var instanceGameObject = instanceGameObjects_1[_b];
+                                    var addObj = void 0;
+                                    if (this.firstRedo) {
+                                        addObj = new paper.Deserializer().deserialize(obj.serializeData, false, false, this.editorModel.scene);
+                                        addObj.parent = instanceGameObject;
+                                        var rootId = instanceGameObject.extras.prefab ? instanceGameObject.uuid : instanceGameObject.extras.rootID;
+                                        this.setGameObjectPrefabRootId(addObj, rootId);
+                                        this.setLinkedId(addObj, ids.concat());
+                                        obj.cacheSerializeData[instanceGameObject.uuid] = [];
+                                        obj.cacheSerializeData[instanceGameObject.uuid][index] = this.clearExtrasFromSerilizeData(paper.serialize(addObj));
+                                    }
+                                    else {
+                                        var cacheData = obj.cacheSerializeData[instanceGameObject.uuid][index];
+                                        addObj = new paper.Deserializer().deserialize(cacheData, true, false, this.editorModel.scene);
+                                        addObj.parent = instanceGameObject;
+                                        var rootId = instanceGameObject.extras.prefab ? instanceGameObject.uuid : instanceGameObject.extras.rootID;
+                                        this.setGameObjectPrefabRootId(addObj, rootId);
+                                        this.setLinkedId(addObj, ids.concat());
+                                    }
+                                    if (addObj) {
+                                        this.stateData.cacheGameObjetsIds.push(addObj.uuid);
+                                    }
+                                }
+                                var originalGameObj = this.getGameObjectByUUid(applyGameObject, obj.id);
+                                if (originalGameObj) {
+                                    this.setGameObjectPrefabRootId(originalGameObj, this.stateData.applyPrefabRootId);
+                                    this.setLinkedId(originalGameObj, ids.concat());
+                                }
+                            }
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS);
+                        }
+                        if (applyData.addComponents && applyData.addComponents.length > 0) {
+                            for (var _c = 0, _d = applyData.addComponents; _c < _d.length; _c++) {
+                                var obj = _d[_c];
+                                var newComponent = void 0;
+                                if (this.firstRedo) {
+                                    newComponent = new paper.Deserializer().deserialize(obj.serializeData, false, false, gameObj);
+                                    obj.cacheSerializeData = Object.create(null);
+                                    obj.cacheSerializeData[gameObj.uuid] = paper.serialize(newComponent);
+                                }
+                                else {
+                                    var cacheData = obj.cacheSerializeData[gameObj.uuid];
+                                    newComponent = new paper.Deserializer().deserialize(cacheData, true, false, gameObj);
+                                }
+                                var linkedId = gameObj.extras.linkedID;
+                                var instanceGameObjects = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
+                                for (var _e = 0, instanceGameObjects_2 = instanceGameObjects; _e < instanceGameObjects_2.length; _e++) {
+                                    var instanceGameObject = instanceGameObjects_2[_e];
+                                    var addComponent = void 0;
+                                    if (this.firstRedo) {
+                                        addComponent = new paper.Deserializer().deserialize(obj.serializeData, false, false, instanceGameObject);
+                                        addComponent.extras.linkedID = newComponent.uuid;
+                                        obj.cacheSerializeData[instanceGameObject.uuid] = this.clearExtrasFromSerilizeData(paper.serialize(addComponent));
+                                    }
+                                    else {
+                                        var cacheData = obj.cacheSerializeData[instanceGameObject.uuid];
+                                        addComponent = new paper.Deserializer().deserialize(cacheData, true, false, instanceGameObject);
+                                        addComponent.extras.linkedID = newComponent.uuid;
+                                    }
+                                    this.stateData.cacheComponentsIds[instanceGameObject.uuid] = this.stateData.cacheComponentsIds[instanceGameObject.uuid] || [];
+                                    if (addComponent) {
+                                        this.stateData.cacheComponentsIds[instanceGameObject.uuid].push(addComponent.uuid);
+                                    }
+                                }
+                                var originalGameObj = this.getGameObjectByUUid(applyGameObject, obj.gameObjId);
+                                if (originalGameObj) {
+                                    var originalComponent = editor.Editor.activeEditorModel.getComponentById(originalGameObj, obj.id);
+                                    originalComponent.extras.linkedID = newComponent.uuid;
+                                }
+                            }
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
+                        }
+                        if (applyData.modifyGameObjectPropertyList && applyData.modifyGameObjectPropertyList.length > 0) {
+                            for (var _f = 0, _g = applyData.modifyGameObjectPropertyList; _f < _g.length; _f++) {
+                                var obj = _g[_f];
+                                this.modifyPrefabGameObjectPropertyValues(gameObj.extras.linkedID, tempPrefabObject, obj.newValueList);
+                            }
+                        }
+                        if (applyData.modifyComponentPropertyList && applyData.modifyComponentPropertyList.length > 0) {
+                            for (var _h = 0, _j = applyData.modifyComponentPropertyList; _h < _j.length; _h++) {
+                                var obj = _j[_h];
+                                this.modifyPrefabComponentPropertyValues(gameObj.extras.linkedID, obj.componentId, tempPrefabObject, obj.newValueList);
+                            }
+                        }
+                    }
+                    this.clearGameObjectExtrasInfo(tempPrefabObject);
+                    // (this.stateData.prefab as any)._raw = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
+                    var prefabJson = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
+                    this.stateData.prefab._raw = prefabJson;
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefab.name, raw: prefabJson });
+                    tempPrefabObject.destroy();
+                    this.firstRedo = false;
+                    return true;
+                }
+                return false;
+            };
+            ApplyPrefabInstanceState.prototype.clearGameObjectExtrasInfo = function (gameObj) {
+                if (gameObj) {
+                    delete gameObj.extras;
+                    for (var _i = 0, _a = gameObj.components; _i < _a.length; _i++) {
+                        var comp = _a[_i];
+                        delete comp.extras;
+                    }
+                    for (var index = 0; index < gameObj.transform.children.length; index++) {
+                        var element = gameObj.transform.children[index];
+                        var obj = element.gameObject;
+                        this.clearGameObjectExtrasInfo(obj);
+                    }
+                }
+            };
+            ApplyPrefabInstanceState.prototype.clearExtrasFromSerilizeData = function (data) {
+                var objects = data.objects;
+                var components = data.components;
+                for (var _i = 0, _a = objects; _i < _a.length; _i++) {
+                    var obj = _a[_i];
+                    delete obj["extras"];
+                }
+                for (var _b = 0, _c = components; _b < _c.length; _b++) {
+                    var comp = _c[_b];
+                    delete comp["extras"];
+                }
+                return data;
+            };
+            return ApplyPrefabInstanceState;
+        }(editor.BaseState));
+        editor.ApplyPrefabInstanceState = ApplyPrefabInstanceState;
+        __reflect(ApplyPrefabInstanceState.prototype, "paper.editor.ApplyPrefabInstanceState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**
+         * 预置体结构状态
+         * @author 杨宁
+         */
+        var BreakPrefabStructState = (function (_super) {
+            __extends(BreakPrefabStructState, _super);
+            function BreakPrefabStructState() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.prefabInfos = [];
+                return _this;
+            }
+            BreakPrefabStructState.create = function (prefabInstanceList) {
+                var _this = this;
+                var instance = new BreakPrefabStructState();
+                instance.prefabInfos = [];
+                prefabInstanceList.forEach(function (obj) {
+                    for (var _i = 0, _a = instance.prefabInfos; _i < _a.length; _i++) {
+                        var info = _a[_i];
+                        if (info.uuid === obj.uuid)
+                            return;
+                    }
+                    instance.prefabInfos = instance.prefabInfos.concat(_this.makePrefabInfo(obj));
+                });
+                return instance;
+            };
+            BreakPrefabStructState.makePrefabInfo = function (gameOjbect) {
+                var isPrefabRoot = function (gameObj) {
+                    if (gameObj.extras && gameObj.extras.prefab) {
+                        return true;
+                    }
+                    return false;
+                };
+                var isPrefabChild = function (gameObj) {
+                    if (gameObj.extras && gameObj.extras.rootID) {
+                        return true;
+                    }
+                    return false;
+                };
+                var makeInfo = function (target, result) {
+                    if (result === void 0) { result = []; }
+                    result.push({ uuid: target.uuid, linkid: target.extras.linkedID, rootid: target.extras.rootID, prefab: target.extras.prefab.name });
+                    target.transform.children.forEach(function (transform) {
+                        var obj = transform.gameObject;
+                        if (isPrefabChild(obj) && !isPrefabRoot(obj)) {
+                            makeInfo(obj, result);
+                        }
+                    });
+                };
+                var target = gameOjbect;
+                var infos = [];
+                while (target) {
+                    if (isPrefabRoot(target)) {
+                        makeInfo(target, infos);
+                        break;
+                    }
+                    if (target.transform.parent)
+                        target = target.transform.parent.gameObject;
+                    else
+                        break;
+                }
+                return infos;
+            };
+            BreakPrefabStructState.prototype.redo = function () {
+                var _this = this;
+                var ids = this.prefabInfos.map(function (prefabInfos) { return prefabInfos.uuid; });
+                var objs = this.editorModel.getGameObjectsByUUids(ids);
+                objs.forEach(function (obj) {
+                    obj.extras.linkedID = undefined;
+                    obj.extras.prefab = undefined;
+                    obj.extras.rootID = undefined;
+                    _this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: null });
+                });
+                return true;
+            };
+            BreakPrefabStructState.prototype.undo = function () {
+                var all = this.editorModel.scene.gameObjects;
+                for (var i = 0; i < all.length; i++) {
+                    var obj = all[i];
+                    b: for (var k = 0; k < this.prefabInfos.length; k++) {
+                        var info = this.prefabInfos[k];
+                        if (obj.uuid === info.uuid) {
+                            obj.extras.linkedID = info.linkid;
+                            obj.extras.prefab = paper.Asset.find(info.prefab);
+                            obj.extras.rootID = info.rootid;
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: obj.extras.prefab });
+                            break b;
+                        }
+                    }
+                }
+                return true;
+            };
+            BreakPrefabStructState.prototype.serialize = function () {
+                return this.prefabInfos;
+            };
+            BreakPrefabStructState.prototype.deserialize = function (data) {
+                this.prefabInfos = data;
+            };
+            return BreakPrefabStructState;
+        }(editor.BaseState));
+        editor.BreakPrefabStructState = BreakPrefabStructState;
+        __reflect(BreakPrefabStructState.prototype, "paper.editor.BreakPrefabStructState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        //创建游戏对象
+        var CreateGameObjectState = (function (_super) {
+            __extends(CreateGameObjectState, _super);
+            function CreateGameObjectState() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.isFirst = true;
+                return _this;
+            }
+            CreateGameObjectState.toString = function () {
+                return "[class common.AddGameObjectState]";
+            };
+            CreateGameObjectState.create = function (parentList, createType, mesh) {
+                var infos = parentList.map(function (obj) { return { parentUUID: obj.uuid, serializeData: null }; });
+                var state = new CreateGameObjectState();
+                state.infos = infos;
+                state.createType = createType;
+                state.mesh = mesh;
+                return state;
+            };
+            CreateGameObjectState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    var objs = this.editorModel.getGameObjectsByUUids(this.addList);
+                    for (var index = 0; index < objs.length; index++) {
+                        var element = objs[index];
+                        element.destroy();
+                    }
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, this.addList);
+                    return true;
+                }
+                return false;
+            };
+            CreateGameObjectState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    this.addList = [];
+                    //一条信息都没有则添加到场景根
+                    if (this.infos.length === 0) {
+                        this.infos.push({ parentUUID: null, serializeData: null });
+                    }
+                    for (var i = 0; i < this.infos.length; i++) {
+                        var obj = void 0;
+                        if (this.isFirst) {
+                            obj = this.createGameObjectByType(this.createType);
+                            this.infos[i].serializeData = paper.serialize(obj);
+                        }
+                        else {
+                            obj = new paper.Deserializer().deserialize(this.infos[i].serializeData, true, false, this.editorModel.scene);
+                        }
+                        var parent_1 = this.editorModel.getGameObjectByUUid(this.infos[i].parentUUID);
+                        if (parent_1)
+                            obj.transform.parent = parent_1.transform;
+                        this.addList.push(obj.uuid);
+                    }
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, this.addList);
+                    this.isFirst = false;
+                    return true;
+                }
+                return false;
+            };
+            CreateGameObjectState.prototype.createGameObjectByType = function (createType) {
+                var obj = new paper.GameObject();
+                var meshFilter;
+                obj.name = createType.toLowerCase();
+                if (this.mesh) {
+                    meshFilter = obj.addComponent(egret3d.MeshFilter);
+                    meshFilter.mesh = this.mesh;
+                    obj.addComponent(egret3d.MeshRenderer);
+                }
+                return obj;
+            };
+            return CreateGameObjectState;
+        }(editor.BaseState));
+        editor.CreateGameObjectState = CreateGameObjectState;
+        __reflect(CreateGameObjectState.prototype, "paper.editor.CreateGameObjectState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var CreatePrefabState = (function (_super) {
+            __extends(CreatePrefabState, _super);
+            function CreatePrefabState() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            CreatePrefabState.toString = function () {
+                return "[class common.CreatePrefabState]";
+            };
+            CreatePrefabState.create = function (prefab, parent) {
+                var state = new CreatePrefabState();
+                var parentUUID = parent ? parent.uuid : undefined;
+                var data = {
+                    prefab: prefab,
+                    parentUUID: parentUUID
+                };
+                state.data = data;
+                return state;
+            };
+            Object.defineProperty(CreatePrefabState.prototype, "stateData", {
+                get: function () {
+                    return this.data;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            CreatePrefabState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    var deleteUUid = this.stateData.cachePrefabUUid;
+                    if (deleteUUid) {
+                        var gameObj = this.editorModel.getGameObjectByUUid(deleteUUid);
+                        if (gameObj) {
+                            gameObj.destroy();
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, [deleteUUid]);
+                        }
+                    }
+                    return true;
+                }
+                return false;
+            };
+            CreatePrefabState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    var prefab = this.stateData.prefab;
+                    if (prefab) {
+                        var instance = this.stateData.prefab.createInstance(this.editorModel.scene);
+                        this.stateData.cachePrefabUUid = instance.uuid;
+                        var parent_2 = this.editorModel.getGameObjectByUUid(this.stateData.parentUUID);
+                        if (parent_2) {
+                            instance.transform.parent = parent_2.transform;
+                        }
+                        this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS);
+                    }
+                    return true;
+                }
+                return false;
+            };
+            return CreatePrefabState;
+        }(editor.BaseState));
+        editor.CreatePrefabState = CreatePrefabState;
+        __reflect(CreatePrefabState.prototype, "paper.editor.CreatePrefabState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        //删除游戏对象
+        var DeleteGameObjectsState = (function (_super) {
+            __extends(DeleteGameObjectsState, _super);
+            function DeleteGameObjectsState() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            DeleteGameObjectsState.toString = function () {
+                return "[class common.deleteGameObjectsState]";
+            };
+            DeleteGameObjectsState.create = function (gameObjects, editorModel) {
+                gameObjects = gameObjects.concat();
+                //筛选
+                editorModel.filtTopHierarchyGameObjects(gameObjects);
+                //排序
+                gameObjects = editorModel.sortGameObjectsForHierarchy(gameObjects);
+                var infos = [];
+                for (var i = 0; i < gameObjects.length; i++) {
+                    var obj = gameObjects[i];
+                    var oldParentUUID = void 0;
+                    var oldIndex = void 0;
+                    var serializeData = paper.serialize(obj);
+                    if (obj.transform.parent) {
+                        oldParentUUID = obj.transform.parent.gameObject.uuid;
+                        oldIndex = obj.transform.parent.children.indexOf(obj.transform);
+                    }
+                    else {
+                        oldParentUUID = undefined;
+                        oldIndex = editorModel.scene.gameObjects.indexOf(obj);
+                    }
+                    infos.push({ UUID: obj.uuid, oldParentUUID: oldParentUUID, oldIndex: oldIndex, serializeData: serializeData });
+                }
+                var state = new DeleteGameObjectsState();
+                state.deleteInfo = infos;
+                return state;
+            };
+            DeleteGameObjectsState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    for (var i = 0; i < this.deleteInfo.length; i++) {
+                        var info = this.deleteInfo[i];
+                        var obj = new paper.Deserializer().deserialize(info.serializeData, true, false, this.editorModel.scene);
+                        var oldParentObj = this.editorModel.getGameObjectByUUid(info.oldParentUUID);
+                        if (oldParentObj) {
+                            var oldTargetTransform = oldParentObj.transform.children[info.oldIndex];
+                            if (oldTargetTransform) {
+                                this.editorModel.setGameObjectsHierarchy([obj], oldTargetTransform.gameObject, 'top');
                             }
                             else {
-                                bone.getRight(helpVertex3B).applyDirection(worldToLocalMatrix).multiplyScalar(0.25); // Bone length.
-                                helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).toArray(vertices, offset);
-                                helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
+                                this.editorModel.setGameObjectsHierarchy([obj], oldParentObj, 'inner');
                             }
                         }
                         else {
-                            egret3d.Vector3.ZERO.toArray(vertices, offset);
-                            egret3d.Vector3.ZERO.toArray(vertices, offset + 3);
+                            obj.transform.parent = null;
+                            var all = this.editorModel.scene.gameObjects;
+                            var currentIndex = all.indexOf(obj);
+                            all.splice(currentIndex, 1);
+                            all.splice(info.oldIndex, 0, obj);
                         }
-                        offset += 6;
                     }
-                    mesh.uploadVertexBuffer();
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, this.deleteInfo.map(function (info) { return info.UUID; }));
+                    return true;
                 }
-                else {
-                    this.gameObject.activeSelf = false;
-                }
-                return selectedGameObject;
+                return false;
             };
-            return SkeletonDrawer;
-        }(editor.BaseSelectedGOComponent));
-        editor.SkeletonDrawer = SkeletonDrawer;
-        __reflect(SkeletonDrawer.prototype, "paper.editor.SkeletonDrawer");
+            DeleteGameObjectsState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    var ids = this.deleteInfo.map(function (info) { return info.UUID; });
+                    var objs = this.editorModel.getGameObjectsByUUids(ids);
+                    for (var index = 0; index < objs.length; index++) {
+                        var element = objs[index];
+                        element.destroy();
+                    }
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, ids);
+                    return true;
+                }
+                return false;
+            };
+            DeleteGameObjectsState.prototype.serialize = function () {
+                return this.deleteInfo;
+            };
+            DeleteGameObjectsState.prototype.deserialize = function (data) {
+                this.deleteInfo = data;
+            };
+            return DeleteGameObjectsState;
+        }(editor.BaseState));
+        editor.DeleteGameObjectsState = DeleteGameObjectsState;
+        __reflect(DeleteGameObjectsState.prototype, "paper.editor.DeleteGameObjectsState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        //克隆游戏对象
+        var DuplicateGameObjectsState = (function (_super) {
+            __extends(DuplicateGameObjectsState, _super);
+            function DuplicateGameObjectsState() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.firstDo = true;
+                return _this;
+            }
+            DuplicateGameObjectsState.toString = function () {
+                return "[class common.DuplicateGameObjectsState]";
+            };
+            DuplicateGameObjectsState.create = function (objs, editorModel) {
+                //过滤
+                editorModel.filtTopHierarchyGameObjects(objs);
+                //排序
+                objs = editorModel.sortGameObjectsForHierarchy(objs);
+                var duplicateInfo = [];
+                for (var i = 0; i < objs.length; i++) {
+                    var obj = objs[i];
+                    var UUID = obj.uuid;
+                    var parentUUID = obj.transform.parent ? obj.transform.parent.gameObject.uuid : null;
+                    var serializeData = paper.serialize(obj);
+                    duplicateInfo.push({ UUID: UUID, parentUUID: parentUUID, serializeData: serializeData });
+                }
+                var state = new DuplicateGameObjectsState();
+                state.duplicateInfo = duplicateInfo;
+                return state;
+            };
+            DuplicateGameObjectsState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    var objs = this.editorModel.getGameObjectsByUUids(this.addList);
+                    for (var index = 0; index < objs.length; index++) {
+                        var element = objs[index];
+                        element.destroy();
+                    }
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, this.addList);
+                    return true;
+                }
+                return false;
+            };
+            DuplicateGameObjectsState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    this.addList = [];
+                    for (var i = 0; i < this.duplicateInfo.length; i++) {
+                        var info = this.duplicateInfo[i];
+                        var obj = new paper.Deserializer().deserialize(info.serializeData, !this.firstDo, true, this.editorModel.scene);
+                        var parent_3 = this.editorModel.getGameObjectByUUid(info.parentUUID);
+                        if (parent_3) {
+                            obj.transform.parent = parent_3.transform;
+                        }
+                        //清理预置体信息
+                        this.clearPrefabInfo(obj);
+                        this.addList.push(obj.uuid);
+                        if (this.firstDo) {
+                            info.serializeData = paper.serialize(obj);
+                        }
+                    }
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, this.addList);
+                    this.firstDo = false;
+                    return true;
+                }
+                return false;
+            };
+            DuplicateGameObjectsState.prototype.clearPrefabInfo = function (obj) {
+                if (this.editorModel.isPrefabChild(obj)) {
+                    obj.extras.linkedID = undefined;
+                    obj.extras.prefab = undefined;
+                    obj.extras.rootID = undefined;
+                    for (var i = 0; i < obj.transform.children.length; i++) {
+                        this.clearPrefabInfo(obj.transform.children[i].gameObject);
+                    }
+                }
+            };
+            DuplicateGameObjectsState.prototype.serialize = function () {
+                return { duplicateInfo: this.duplicateInfo, addList: this.addList };
+            };
+            DuplicateGameObjectsState.prototype.deserialize = function (data) {
+                this.duplicateInfo = data.duplicateInfo;
+                this.addList = data.addList;
+            };
+            return DuplicateGameObjectsState;
+        }(editor.BaseState));
+        editor.DuplicateGameObjectsState = DuplicateGameObjectsState;
+        __reflect(DuplicateGameObjectsState.prototype, "paper.editor.DuplicateGameObjectsState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**
+         * 游戏对象层级
+         * @author 杨宁
+         */
+        var GameObjectHierarchyState = (function (_super) {
+            __extends(GameObjectHierarchyState, _super);
+            function GameObjectHierarchyState() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.gameObjectsInfo = [];
+                return _this;
+            }
+            GameObjectHierarchyState.create = function (gameObjects, targetGameObj, dir, editorModel) {
+                //筛选
+                gameObjects = gameObjects.concat();
+                editorModel.filtTopHierarchyGameObjects(gameObjects);
+                //必须进行层级排序
+                var objs = editorModel.sortGameObjectsForHierarchy(gameObjects);
+                //整理对象信息
+                var objInfos = [];
+                for (var i = 0; i < objs.length; i++) {
+                    var obj = objs[i];
+                    var oldTargetUUID = void 0;
+                    var oldDir = void 0;
+                    if (obj.transform.parent) {
+                        var index = obj.transform.parent.children.indexOf(obj.transform);
+                        if (++index < obj.transform.parent.children.length) {
+                            oldTargetUUID = obj.transform.parent.children[index].gameObject.uuid;
+                            oldDir = 'top';
+                        }
+                        else {
+                            oldTargetUUID = obj.transform.parent.gameObject.uuid;
+                            oldDir = 'inner';
+                        }
+                    }
+                    else {
+                        var all = editorModel.scene.gameObjects;
+                        var index = all.indexOf(obj);
+                        if (++index < all.length) {
+                            oldTargetUUID = all[index].uuid;
+                            oldDir = 'top';
+                        }
+                        else {
+                            oldTargetUUID = 'scene'; //特殊标记，用来标记最外层最后一个
+                            oldDir = 'inner';
+                        }
+                    }
+                    objInfos.push({ UUID: obj.uuid, oldTargetUUID: oldTargetUUID, oldDir: oldDir });
+                }
+                var instance = new GameObjectHierarchyState();
+                instance.gameObjectsInfo = objInfos;
+                instance.targetDir = dir;
+                instance.targetObject = targetGameObj.uuid;
+                return instance;
+            };
+            GameObjectHierarchyState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    var tmpList = this.gameObjectsInfo.concat();
+                    tmpList.reverse();
+                    for (var index = 0; index < tmpList.length; index++) {
+                        var info = tmpList[index];
+                        var obj = this.editorModel.getGameObjectByUUid(info.UUID);
+                        var oldTarget = this.editorModel.getGameObjectByUUid(info.oldTargetUUID);
+                        var oldDir = info.oldDir;
+                        if (info.oldTargetUUID === 'scene') {
+                            var all = this.editorModel.scene.gameObjects;
+                            oldTarget = all[all.length - 1];
+                            oldDir = 'bottom';
+                        }
+                        this.editorModel.setGameObjectsHierarchy([obj], oldTarget, oldDir);
+                    }
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
+                    return true;
+                }
+                return false;
+            };
+            GameObjectHierarchyState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    var gameObjectUUids = this.gameObjectsInfo.map(function (v) { return v.UUID; });
+                    var gameObjs = this.editorModel.getGameObjectsByUUids(gameObjectUUids);
+                    var targetGameObj = this.editorModel.getGameObjectByUUid(this.targetObject);
+                    gameObjs = this.editorModel.sortGameObjectsForHierarchy(gameObjs);
+                    this.editorModel.setGameObjectsHierarchy(gameObjs, targetGameObj, this.targetDir);
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
+                    return true;
+                }
+                return false;
+            };
+            return GameObjectHierarchyState;
+        }(editor.BaseState));
+        editor.GameObjectHierarchyState = GameObjectHierarchyState;
+        __reflect(GameObjectHierarchyState.prototype, "paper.editor.GameObjectHierarchyState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        //修改组件属性属性
+        var ModifyComponentPropertyState = (function (_super) {
+            __extends(ModifyComponentPropertyState, _super);
+            function ModifyComponentPropertyState() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            ModifyComponentPropertyState.toString = function () {
+                return "[class common.ModifyComponentPropertyState]";
+            };
+            ModifyComponentPropertyState.create = function (gameObjUUid, componentUUid, newValueList, preValueCopylist) {
+                var state = new ModifyComponentPropertyState();
+                var data = {
+                    gameObjUUid: gameObjUUid,
+                    componentUUid: componentUUid,
+                    newValueList: newValueList,
+                    preValueCopylist: preValueCopylist,
+                };
+                state.data = data;
+                return state;
+            };
+            Object.defineProperty(ModifyComponentPropertyState.prototype, "stateData", {
+                get: function () {
+                    return this.data;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            ModifyComponentPropertyState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    this.modifyProperty(this.stateData.preValueCopylist);
+                    return true;
+                }
+                return false;
+            };
+            ModifyComponentPropertyState.prototype.modifyProperty = function (valueList) {
+                var _this = this;
+                var gameObjectUUid = this.stateData.gameObjUUid;
+                var componentUUid = this.stateData.componentUUid;
+                var gameObj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
+                var modifyObj;
+                if (gameObj) {
+                    modifyObj = this.editorModel.getComponentById(gameObj, componentUUid);
+                    if (modifyObj) {
+                        valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
+                            var propName, copyValue, valueEditType, newValue;
+                            return __generator(this, function (_a) {
+                                propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                                newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
+                                this.editorModel.setTargetProperty(propName, modifyObj, newValue, valueEditType);
+                                this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
+                                return [2 /*return*/];
+                            });
+                        }); });
+                    }
+                }
+            };
+            ModifyComponentPropertyState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    this.modifyProperty(this.stateData.newValueList);
+                    return true;
+                }
+                return false;
+            };
+            return ModifyComponentPropertyState;
+        }(editor.BaseState));
+        editor.ModifyComponentPropertyState = ModifyComponentPropertyState;
+        __reflect(ModifyComponentPropertyState.prototype, "paper.editor.ModifyComponentPropertyState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var ModifyGameObjectPropertyState = (function (_super) {
+            __extends(ModifyGameObjectPropertyState, _super);
+            function ModifyGameObjectPropertyState() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            ModifyGameObjectPropertyState.create = function (gameObjectUUid, newValueList, preValueCopylist) {
+                var state = new ModifyGameObjectPropertyState();
+                var data = {
+                    gameObjectUUid: gameObjectUUid,
+                    newValueList: newValueList,
+                    preValueCopylist: preValueCopylist,
+                };
+                state.data = data;
+                return state;
+            };
+            Object.defineProperty(ModifyGameObjectPropertyState.prototype, "stateData", {
+                get: function () {
+                    return this.data;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            ModifyGameObjectPropertyState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    this.modifyProperty(this.stateData.preValueCopylist);
+                    return true;
+                }
+                return false;
+            };
+            ModifyGameObjectPropertyState.prototype.modifyProperty = function (valueList) {
+                var _this = this;
+                var uuid = this.stateData.gameObjectUUid;
+                var modifyObj = this.editorModel.getGameObjectByUUid(uuid);
+                if (modifyObj !== null) {
+                    valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
+                        var propName, copyValue, valueEditType, newValue;
+                        return __generator(this, function (_a) {
+                            propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                            newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
+                            this.editorModel.setTargetProperty(propName, modifyObj, newValue, valueEditType);
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
+                            return [2 /*return*/];
+                        });
+                    }); });
+                }
+            };
+            ModifyGameObjectPropertyState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    this.modifyProperty(this.stateData.newValueList);
+                    return true;
+                }
+                return false;
+            };
+            return ModifyGameObjectPropertyState;
+        }(editor.BaseState));
+        editor.ModifyGameObjectPropertyState = ModifyGameObjectPropertyState;
+        __reflect(ModifyGameObjectPropertyState.prototype, "paper.editor.ModifyGameObjectPropertyState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        //粘贴游戏对象
+        var PasteGameObjectsState = (function (_super) {
+            __extends(PasteGameObjectsState, _super);
+            function PasteGameObjectsState() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            PasteGameObjectsState.toString = function () {
+                return "[class common.PasteGameObjectsState]";
+            };
+            PasteGameObjectsState.create = function (serializeData, parent) {
+                var state = new PasteGameObjectsState();
+                var parentUUID = parent ? parent.uuid : null;
+                state.pasteInfo = { parentUUID: parentUUID, serializeData: serializeData };
+                return state;
+            };
+            PasteGameObjectsState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    var objs = this.editorModel.getGameObjectsByUUids(this.addList);
+                    for (var index = 0; index < objs.length; index++) {
+                        var element = objs[index];
+                        element.destroy();
+                    }
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, this.addList);
+                    return true;
+                }
+                return false;
+            };
+            PasteGameObjectsState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    this.addList = [];
+                    var parent_4 = this.editorModel.getGameObjectByUUid(this.pasteInfo.parentUUID);
+                    var serializeDataList = this.cacheSerializeData ? this.cacheSerializeData : this.pasteInfo.serializeData;
+                    var keepUID = this.cacheSerializeData ? true : false;
+                    for (var i = 0; i < serializeDataList.length; i++) {
+                        var info = serializeDataList[i];
+                        var obj = new paper.Deserializer().deserialize(info, keepUID, true, this.editorModel.scene);
+                        if (obj && parent_4) {
+                            obj.transform.parent = parent_4.transform;
+                        }
+                        //清理预置体信息
+                        this.clearPrefabInfo(obj);
+                        this.addList.push(obj.uuid);
+                        if (serializeDataList === this.pasteInfo.serializeData) {
+                            if (!this.cacheSerializeData)
+                                this.cacheSerializeData = [];
+                            this.cacheSerializeData.push(paper.serialize(obj));
+                        }
+                    }
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS, this.addList);
+                    return true;
+                }
+                return false;
+            };
+            PasteGameObjectsState.prototype.clearPrefabInfo = function (obj) {
+                if (this.editorModel.isPrefabChild(obj)) {
+                    obj.extras.linkedID = undefined;
+                    obj.extras.prefab = undefined;
+                    obj.extras.rootID = undefined;
+                    for (var i = 0; i < obj.transform.children.length; i++) {
+                        this.clearPrefabInfo(obj.transform.children[i].gameObject);
+                    }
+                }
+            };
+            PasteGameObjectsState.prototype.serialize = function () {
+                return { pasteInfo: this.pasteInfo, addList: this.addList };
+            };
+            PasteGameObjectsState.prototype.deserialize = function (data) {
+                this.addList = data.addList;
+                this.pasteInfo = data.pasteInfo;
+            };
+            return PasteGameObjectsState;
+        }(editor.BaseState));
+        editor.PasteGameObjectsState = PasteGameObjectsState;
+        __reflect(PasteGameObjectsState.prototype, "paper.editor.PasteGameObjectsState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        //移除组件
+        var RemoveComponentState = (function (_super) {
+            __extends(RemoveComponentState, _super);
+            function RemoveComponentState() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            RemoveComponentState.toString = function () {
+                return "[class common.RemoveComponentState]";
+            };
+            RemoveComponentState.create = function (gameObjectUUid, componentUUid, cacheSerializeData) {
+                var state = new RemoveComponentState();
+                var data = {
+                    gameObjectUUid: gameObjectUUid,
+                    componentUUid: componentUUid,
+                    cacheSerializeData: cacheSerializeData
+                };
+                state.data = data;
+                return state;
+            };
+            Object.defineProperty(RemoveComponentState.prototype, "stateData", {
+                get: function () {
+                    return this.data;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            RemoveComponentState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    var gameObject = this.editorModel.getGameObjectByUUid(this.stateData.gameObjectUUid);
+                    if (gameObject) {
+                        new paper.Deserializer().deserialize(this.stateData.cacheSerializeData, true, false, gameObject);
+                        this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
+                    }
+                    return true;
+                }
+                return false;
+            };
+            RemoveComponentState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    var gameObjectUUid = this.stateData.gameObjectUUid;
+                    var componentUUid = this.stateData.componentUUid;
+                    var obj = this.editorModel.getGameObjectByUUid(gameObjectUUid);
+                    if (obj) {
+                        var component = this.editorModel.getComponentById(obj, componentUUid);
+                        if (component) {
+                            obj.removeComponent(component);
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
+                        }
+                    }
+                    return true;
+                }
+                return false;
+            };
+            return RemoveComponentState;
+        }(editor.BaseState));
+        editor.RemoveComponentState = RemoveComponentState;
+        __reflect(RemoveComponentState.prototype, "paper.editor.RemoveComponentState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        var RevertPrefabInstanceState = (function (_super) {
+            __extends(RevertPrefabInstanceState, _super);
+            function RevertPrefabInstanceState() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            RevertPrefabInstanceState.toString = function () {
+                return "[class common.RevertPrefabInstanceState]";
+            };
+            RevertPrefabInstanceState.create = function (revertData, revertPrefabRootId) {
+                var state = new RevertPrefabInstanceState();
+                var data = { revertData: revertData, revertPrefabRootId: revertPrefabRootId };
+                state.data = data;
+                return state;
+            };
+            Object.defineProperty(RevertPrefabInstanceState.prototype, "stateData", {
+                get: function () {
+                    return this.data;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            RevertPrefabInstanceState.prototype.undo = function () {
+                if (_super.prototype.undo.call(this)) {
+                    var revertRoot = editor.Editor.activeEditorModel.getGameObjectByUUid(this.stateData.revertPrefabRootId);
+                    var gameObjects = editor.Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(revertRoot);
+                    for (var _i = 0, gameObjects_2 = gameObjects; _i < gameObjects_2.length; _i++) {
+                        var gameObj = gameObjects_2[_i];
+                        if (!(this.stateData.revertData[gameObj.extras.linkedID])) {
+                            continue;
+                        }
+                        var revertData = this.stateData.revertData[gameObj.extras.linkedID];
+                        if (revertData.revertGameObjects && revertData.revertGameObjects.length > 0) {
+                            for (var _a = 0, _b = revertData.revertGameObjects; _a < _b.length; _a++) {
+                                var obj = _b[_a];
+                                var serializeData = obj.serializeData;
+                                var newObj = new paper.Deserializer().deserialize(serializeData, true, false, this.editorModel.scene);
+                                newObj.parent = gameObj;
+                            }
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_GAMEOBJECTS);
+                        }
+                        if (revertData.revertComponents && revertData.revertComponents.length > 0) {
+                            for (var _c = 0, _d = revertData.revertComponents; _c < _d.length; _c++) {
+                                var com = _d[_c];
+                                var serializeData = com.serializeData;
+                                new paper.Deserializer().deserialize(serializeData, true, false, gameObj);
+                            }
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.ADD_COMPONENT);
+                        }
+                        if (revertData.modifyGameObjectPropertyList && revertData.modifyGameObjectPropertyList.length > 0) {
+                            for (var _e = 0, _f = revertData.modifyGameObjectPropertyList; _e < _f.length; _e++) {
+                                var obj = _f[_e];
+                                var preValueCopylist = obj.newValueList;
+                                this.modifyPrefabGameObjectPropertyValues(gameObj, preValueCopylist);
+                            }
+                        }
+                        if (revertData.modifyComponentPropertyList && revertData.modifyComponentPropertyList.length > 0) {
+                            for (var _g = 0, _h = revertData.modifyComponentPropertyList; _g < _h.length; _g++) {
+                                var obj = _h[_g];
+                                var componentId = obj.componentId, preValueCopylist = obj.preValueCopylist;
+                                this.modifyPrefabComponentPropertyValues(gameObj, componentId, preValueCopylist);
+                            }
+                        }
+                    }
+                    return true;
+                }
+                return false;
+            };
+            RevertPrefabInstanceState.prototype.dispathPropertyEvent = function (modifyObj, propName, newValue) {
+                this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
+            };
+            RevertPrefabInstanceState.prototype.modifyPrefabGameObjectPropertyValues = function (gameObj, valueList) {
+                var _this = this;
+                valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
+                    var propName, copyValue, valueEditType, newValue;
+                    return __generator(this, function (_a) {
+                        propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                        newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
+                        this.editorModel.setTargetProperty(propName, gameObj, newValue, valueEditType);
+                        this.dispathPropertyEvent(gameObj, propName, newValue);
+                        return [2 /*return*/];
+                    });
+                }); });
+            };
+            RevertPrefabInstanceState.prototype.modifyPrefabComponentPropertyValues = function (gameObj, componentUUid, valueList) {
+                var _this = this;
+                var _loop_2 = function (k) {
+                    var prefabComp = gameObj.components[k];
+                    if (prefabComp.uuid === componentUUid) {
+                        valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
+                            var propName, copyValue, valueEditType, newValue;
+                            return __generator(this, function (_a) {
+                                propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
+                                newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
+                                this.editorModel.setTargetProperty(propName, prefabComp, newValue, valueEditType);
+                                this.dispathPropertyEvent(prefabComp, propName, newValue);
+                                return [2 /*return*/];
+                            });
+                        }); });
+                    }
+                };
+                for (var k = 0; k < gameObj.components.length; k++) {
+                    _loop_2(k);
+                }
+            };
+            RevertPrefabInstanceState.prototype.redo = function () {
+                if (_super.prototype.redo.call(this)) {
+                    var revertRoot = editor.Editor.activeEditorModel.getGameObjectByUUid(this.stateData.revertPrefabRootId);
+                    var gameObjects = editor.Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(revertRoot);
+                    var removeGameObjIds_1 = [];
+                    var _loop_3 = function (gameObj) {
+                        if (!(this_1.stateData.revertData[gameObj.extras.linkedID])) {
+                            return "continue";
+                        }
+                        var revertData = this_1.stateData.revertData[gameObj.extras.linkedID];
+                        if (revertData.revertGameObjects && revertData.revertGameObjects.length > 0) {
+                            revertData.revertGameObjects.forEach(function (element) {
+                                removeGameObjIds_1.push(element.id);
+                            });
+                        }
+                        if (revertData.revertComponents && revertData.revertComponents.length > 0) {
+                            var revertComponentIds_1 = [];
+                            revertData.revertComponents.forEach(function (element) {
+                                revertComponentIds_1.push(element.id);
+                            });
+                            var components = gameObj.components;
+                            for (var index = components.length - 1; index >= 0; index--) {
+                                var element = components[index];
+                                if (revertComponentIds_1.indexOf(element.uuid) >= 0) {
+                                    gameObj.removeComponent(element.constructor);
+                                }
+                            }
+                            this_1.dispatchEditorModelEvent(editor.EditorModelEvent.REMOVE_COMPONENT);
+                        }
+                        if (revertData.modifyGameObjectPropertyList && revertData.modifyGameObjectPropertyList.length > 0) {
+                            for (var _i = 0, _a = revertData.modifyGameObjectPropertyList; _i < _a.length; _i++) {
+                                var obj = _a[_i];
+                                var newValueList = obj.newValueList;
+                                this_1.modifyPrefabGameObjectPropertyValues(gameObj, newValueList);
+                            }
+                        }
+                        if (revertData.modifyComponentPropertyList && revertData.modifyComponentPropertyList.length > 0) {
+                            for (var _b = 0, _c = revertData.modifyComponentPropertyList; _b < _c.length; _b++) {
+                                var obj = _c[_b];
+                                var componentId = obj.componentId, newValueList = obj.newValueList;
+                                this_1.modifyPrefabComponentPropertyValues(gameObj, componentId, newValueList);
+                            }
+                        }
+                    };
+                    var this_1 = this;
+                    for (var _i = 0, gameObjects_3 = gameObjects; _i < gameObjects_3.length; _i++) {
+                        var gameObj = gameObjects_3[_i];
+                        _loop_3(gameObj);
+                    }
+                    var gameObjs = editor.Editor.activeEditorModel.getGameObjectsByUUids(removeGameObjIds_1);
+                    gameObjs.forEach(function (element) { return element.destroy(); });
+                    this.dispatchEditorModelEvent(editor.EditorModelEvent.DELETE_GAMEOBJECTS, removeGameObjIds_1);
+                    return true;
+                }
+                return false;
+            };
+            return RevertPrefabInstanceState;
+        }(editor.BaseState));
+        editor.RevertPrefabInstanceState = RevertPrefabInstanceState;
+        __reflect(RevertPrefabInstanceState.prototype, "paper.editor.RevertPrefabInstanceState");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**
+         * TODO GUI NEW SAVE LOAD
+         * @internal
+         */
+        var GUISystem = (function (_super) {
+            __extends(GUISystem, _super);
+            function GUISystem() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._interests = [
+                    [{ componentClass: egret3d.Transform }]
+                ];
+                _this._disposeCollecter = paper.GameObject.globalGameObject.getOrAddComponent(paper.DisposeCollecter);
+                _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
+                _this._guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.GUIComponent);
+                _this._bufferedGameObjects = [];
+                _this._hierarchyFolders = {};
+                _this._inspectorFolders = {};
+                _this._selectFolder = null;
+                _this._onSceneSelected = function (_c, value) {
+                    _this._selectSceneOrGameObject(value);
+                };
+                _this._onSceneUnselected = function (_c, value) {
+                    _this._selectSceneOrGameObject(null);
+                };
+                _this._onGameObjectSelectedChange = function (_c, value) {
+                    _this._selectSceneOrGameObject(_this._modelComponent.selectedGameObject);
+                };
+                _this._sceneOrGameObjectGUIClickHandler = function (gui) {
+                    _this._modelComponent.select(gui.instance, true);
+                };
+                _this._componentOrPropertyGUIClickHandler = function (gui) {
+                    window["psc"] = gui.instance;
+                };
+                _this._saveSceneOrGameObject = function () {
+                    if (_this._modelComponent.selectedScene) {
+                        var json = JSON.stringify(paper.serialize(_this._modelComponent.selectedScene));
+                        console.info(json);
+                    }
+                    else {
+                        var json = JSON.stringify(paper.serialize(_this._modelComponent.selectedGameObject));
+                        console.info(json);
+                    }
+                };
+                _this._createGameObject = function () {
+                    if (_this._modelComponent.selectedScene) {
+                        var gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "NoName" /* NoName */, "" /* Untagged */, _this._modelComponent.selectedScene);
+                        _this._modelComponent.select(gameObject, true);
+                    }
+                    else {
+                        var gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "NoName" /* NoName */, "" /* Untagged */, _this._modelComponent.selectedGameObject.scene);
+                        gameObject.transform.parent = _this._modelComponent.selectedGameObject.transform;
+                        _this._modelComponent.select(gameObject, true);
+                    }
+                };
+                _this._destroySceneOrGameObject = function () {
+                    var selectedSceneOrGameObject = _this._guiComponent.inspector.instance;
+                    if (selectedSceneOrGameObject) {
+                        (selectedSceneOrGameObject).destroy();
+                    }
+                };
+                return _this;
+            }
+            GUISystem.prototype._openFolder = function (folder) {
+                if (!folder.parent || folder.parent === this._guiComponent.hierarchy) {
+                    return;
+                }
+                folder.parent.open();
+                this._openFolder(folder.parent);
+            };
+            GUISystem.prototype._getAssets = function (type) {
+                var result = [{ label: "None", value: null }];
+                if (RES.host.resourceConfig.config) {
+                    var resFSDatas = RES.host.resourceConfig.config.fileSystem.fsData;
+                    for (var k in resFSDatas) {
+                        var data = resFSDatas[k];
+                        if (data.type === type) {
+                            result.push({ label: k, value: data });
+                        }
+                    }
+                }
+                return result;
+            };
+            GUISystem.prototype._selectSceneOrGameObject = function (sceneOrGameObject) {
+                var _this = this;
+                // Unselect prev folder.
+                if (this._selectFolder) {
+                    this._selectFolder.selected = false;
+                    this._selectFolder = null;
+                }
+                var inspector = this._guiComponent.inspector;
+                inspector.instance = sceneOrGameObject;
+                for (var k in this._inspectorFolders) {
+                    delete this._inspectorFolders[k];
+                }
+                if (inspector.__controllers) {
+                    for (var _i = 0, _a = inspector.__controllers.concat(); _i < _a.length; _i++) {
+                        var controller = _a[_i];
+                        inspector.remove(controller);
+                    }
+                }
+                if (inspector.__folders) {
+                    for (var k in inspector.__folders) {
+                        try {
+                            inspector.removeFolder(inspector.__folders[k]);
+                        }
+                        catch (e) {
+                        }
+                    }
+                }
+                var options = {
+                    scenes: "None",
+                    prefabs: "None",
+                };
+                inspector.add(options, "scenes", this._getAssets("Scene")).onChange(function (v) { return __awaiter(_this, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                if (!v) {
+                                    return [2 /*return*/];
+                                }
+                                return [4 /*yield*/, RES.getResAsync(v.url)];
+                            case 1:
+                                _a.sent();
+                                paper.Scene.activeScene.destroy();
+                                this._modelComponent.select(paper.Scene.create(v.url));
+                                return [2 /*return*/];
+                        }
+                    });
+                }); });
+                inspector.add(options, "prefabs", this._getAssets("Prefab")).onChange(function (v) { return __awaiter(_this, void 0, void 0, function () {
+                    var gameObject, parent_5;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                if (!v) {
+                                    return [2 /*return*/];
+                                }
+                                return [4 /*yield*/, RES.getResAsync(v.url)];
+                            case 1:
+                                _a.sent();
+                                gameObject = null;
+                                if (this._modelComponent.selectedGameObject) {
+                                    parent_5 = this._modelComponent.selectedGameObject;
+                                    gameObject = paper.Prefab.create(v.url, parent_5.scene);
+                                    gameObject.parent = parent_5;
+                                }
+                                else {
+                                    gameObject = paper.Prefab.create(v.url, this._modelComponent.selectedScene || paper.Scene.activeScene);
+                                }
+                                this._modelComponent.select(gameObject);
+                                return [2 /*return*/];
+                        }
+                    });
+                }); });
+                if (sceneOrGameObject) {
+                    inspector.add(this, "_destroySceneOrGameObject", "destroy");
+                    inspector.add(this, "_saveSceneOrGameObject", "save");
+                    this._addToInspector(inspector);
+                    if (sceneOrGameObject instanceof paper.Scene) {
+                    }
+                    else {
+                        for (var _b = 0, _d = sceneOrGameObject.components; _b < _d.length; _b++) {
+                            var component = _d[_b];
+                            var folder = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
+                            folder.instance = component;
+                            folder.open();
+                            this._inspectorFolders[component.uuid] = folder;
+                            this._addToInspector(folder);
+                        }
+                    }
+                }
+            };
+            GUISystem.prototype._addToHierarchy = function (gameObject) {
+                if (gameObject.uuid in this._hierarchyFolders ||
+                    gameObject.tag === "Editor Only" /* EditorOnly */ ||
+                    gameObject.hideFlags === 2 /* Hide */ ||
+                    gameObject.hideFlags === 3 /* HideAndDontSave */) {
+                    return true;
+                }
+                var parentFolder = this._hierarchyFolders[gameObject.transform.parent ? gameObject.transform.parent.gameObject.uuid : gameObject.scene.uuid];
+                if (!parentFolder) {
+                    if (gameObject.transform.parent) {
+                        // throw new Error(); // Never.
+                        return false;
+                    }
+                    parentFolder = this._guiComponent.hierarchy.addFolder(gameObject.scene.uuid, gameObject.scene.name + " <Scene>");
+                    parentFolder.instance = gameObject.scene;
+                    parentFolder.onClick = this._sceneOrGameObjectGUIClickHandler;
+                    this._hierarchyFolders[gameObject.scene.uuid] = parentFolder;
+                }
+                var folder = parentFolder.addFolder(gameObject.uuid, gameObject.name);
+                folder.instance = gameObject;
+                folder.onClick = this._sceneOrGameObjectGUIClickHandler;
+                this._hierarchyFolders[gameObject.uuid] = folder;
+                return true;
+            };
+            GUISystem.prototype._propertyHasGetterSetter = function (target, propName) {
+                var prototype = Object.getPrototypeOf(target);
+                var descriptror;
+                while (prototype) {
+                    descriptror = Object.getOwnPropertyDescriptor(prototype, propName);
+                    if (descriptror && descriptror.get && descriptror.set) {
+                        return true;
+                    }
+                    prototype = Object.getPrototypeOf(prototype);
+                }
+                return false;
+            };
+            GUISystem.prototype._addToInspector = function (gui) {
+                var infos = editor.getEditInfo(gui.instance);
+                var guiControllerA;
+                var guiControllerB;
+                var guiControllerC;
+                var guiControllerD;
+                gui.onClick = this._componentOrPropertyGUIClickHandler;
+                var _loop_4 = function (info) {
+                    switch (info.editType) {
+                        case "UINT" /* UINT */:
+                            guiControllerA = gui.add(gui.instance, info.name).min(0).step(1).listen();
+                            if (info.option) {
+                                if (info.option.minimum !== undefined) {
+                                    guiControllerA.min(info.option.minimum);
+                                }
+                                if (info.option.maximum !== undefined) {
+                                    guiControllerA.max(info.option.maximum);
+                                }
+                                if (info.option.step !== undefined) {
+                                    guiControllerA.step(info.option.step);
+                                }
+                            }
+                            break;
+                        case "INT" /* INT */:
+                            guiControllerA = gui.add(gui.instance, info.name).step(1).listen();
+                            if (info.option) {
+                                if (info.option.minimum !== undefined) {
+                                    guiControllerA.min(info.option.minimum);
+                                }
+                                if (info.option.maximum !== undefined) {
+                                    guiControllerA.max(info.option.maximum);
+                                }
+                                if (info.option.step !== undefined) {
+                                    guiControllerA.step(info.option.step);
+                                }
+                            }
+                            break;
+                        case "FLOAT" /* FLOAT */:
+                            guiControllerA = gui.add(gui.instance, info.name).step(0.1).listen();
+                            if (info.option) {
+                                if (info.option.minimum !== undefined) {
+                                    guiControllerA.min(info.option.minimum);
+                                }
+                                if (info.option.maximum !== undefined) {
+                                    guiControllerA.max(info.option.maximum);
+                                }
+                                if (info.option.step !== undefined) {
+                                    guiControllerA.step(info.option.step);
+                                }
+                            }
+                            break;
+                        case "CHECKBOX" /* CHECKBOX */:
+                        case "TEXT" /* TEXT */:
+                            gui.add(gui.instance, info.name).listen();
+                            break;
+                        case "LIST" /* LIST */:
+                            gui.add(gui.instance, info.name, info.option.listItems).listen();
+                            break;
+                        case "VECTOR2" /* VECTOR2 */: {
+                            guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
+                            if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
+                                var onChange = function () {
+                                    gui.instance[info.name] = gui.instance[info.name];
+                                };
+                                guiControllerA.onChange(onChange);
+                                guiControllerB.onChange(onChange);
+                            }
+                            if (info.option) {
+                                if (info.option.minimum !== undefined) {
+                                    guiControllerA.min(info.option.minimum);
+                                    guiControllerB.min(info.option.minimum);
+                                }
+                                if (info.option.maximum !== undefined) {
+                                    guiControllerA.max(info.option.maximum);
+                                    guiControllerB.max(info.option.maximum);
+                                }
+                                if (info.option.step !== undefined) {
+                                    guiControllerA.step(info.option.step);
+                                    guiControllerB.step(info.option.step);
+                                }
+                            }
+                            break;
+                        }
+                        case "SIZE" /* SIZE */: {
+                            guiControllerA = gui.add(gui.instance[info.name], "w", info.name + ": w").step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], "h", info.name + ": h").step(0.1).listen();
+                            if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
+                                var onChange = function () {
+                                    gui.instance[info.name] = gui.instance[info.name];
+                                };
+                                guiControllerA.onChange(onChange);
+                                guiControllerB.onChange(onChange);
+                            }
+                            if (info.option) {
+                                if (info.option.minimum !== undefined) {
+                                    guiControllerA.min(info.option.minimum);
+                                    guiControllerB.min(info.option.minimum);
+                                }
+                                if (info.option.maximum !== undefined) {
+                                    guiControllerA.max(info.option.maximum);
+                                    guiControllerB.max(info.option.maximum);
+                                }
+                                if (info.option.step !== undefined) {
+                                    guiControllerA.step(info.option.step);
+                                    guiControllerB.step(info.option.step);
+                                }
+                            }
+                            break;
+                        }
+                        case "VECTOR3" /* VECTOR3 */: {
+                            guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
+                            guiControllerC = gui.add(gui.instance[info.name], "z", info.name + ": z").step(0.1).listen();
+                            if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
+                                var onChange = function () {
+                                    gui.instance[info.name] = gui.instance[info.name];
+                                };
+                                guiControllerA.onChange(onChange);
+                                guiControllerB.onChange(onChange);
+                                guiControllerC.onChange(onChange);
+                            }
+                            if (info.option) {
+                                if (info.option.minimum !== undefined) {
+                                    guiControllerA.min(info.option.minimum);
+                                    guiControllerB.min(info.option.minimum);
+                                    guiControllerC.min(info.option.minimum);
+                                }
+                                if (info.option.maximum !== undefined) {
+                                    guiControllerA.max(info.option.maximum);
+                                    guiControllerB.max(info.option.maximum);
+                                    guiControllerC.max(info.option.maximum);
+                                }
+                                if (info.option.step !== undefined) {
+                                    guiControllerA.step(info.option.step);
+                                    guiControllerB.step(info.option.step);
+                                    guiControllerC.step(info.option.step);
+                                }
+                            }
+                            break;
+                        }
+                        case "VECTOR4" /* VECTOR4 */:
+                        case "QUATERNION" /* QUATERNION */:
+                            break;
+                        case "COLOR" /* COLOR */: {
+                            guiControllerA = gui.addColor(gui.instance, info.name).listen();
+                            if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
+                                var onChange = function () {
+                                    gui.instance[info.name] = gui.instance[info.name];
+                                };
+                                guiControllerA.onChange(onChange);
+                            }
+                            break;
+                        }
+                        case "RECT" /* RECT */: {
+                            guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
+                            guiControllerC = gui.add(gui.instance[info.name], "w", info.name + ": w").step(0.1).listen();
+                            guiControllerD = gui.add(gui.instance[info.name], "h", info.name + ": h").step(0.1).listen();
+                            if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
+                                var onChange = function () {
+                                    gui.instance[info.name] = gui.instance[info.name];
+                                };
+                                guiControllerA.onChange(onChange);
+                                guiControllerB.onChange(onChange);
+                                guiControllerC.onChange(onChange);
+                                guiControllerD.onChange(onChange);
+                            }
+                            if (info.option) {
+                                if (info.option.minimum !== undefined) {
+                                    guiControllerA.min(info.option.minimum);
+                                    guiControllerB.min(info.option.minimum);
+                                    guiControllerC.min(info.option.minimum);
+                                    guiControllerD.min(info.option.minimum);
+                                }
+                                if (info.option.maximum !== undefined) {
+                                    guiControllerA.max(info.option.maximum);
+                                    guiControllerB.max(info.option.maximum);
+                                    guiControllerC.max(info.option.maximum);
+                                    guiControllerD.min(info.option.maximum);
+                                }
+                                if (info.option.step !== undefined) {
+                                    guiControllerA.step(info.option.step);
+                                    guiControllerB.step(info.option.step);
+                                    guiControllerC.step(info.option.step);
+                                    guiControllerD.step(info.option.step);
+                                }
+                            }
+                            break;
+                        }
+                        case "GAMEOBJECT" /* GAMEOBJECT */:
+                            break;
+                        case "BUTTON" /* BUTTON */:
+                            guiControllerA = gui.add(gui.instance, info.name);
+                            break;
+                        case "NESTED" /* NESTED */: {
+                            var folder = gui.addFolder(info.name);
+                            folder.instance = gui.instance[info.name];
+                            this_2._addToInspector(folder);
+                            break;
+                        }
+                    }
+                };
+                var this_2 = this;
+                for (var _i = 0, infos_1 = infos; _i < infos_1.length; _i++) {
+                    var info = infos_1[_i];
+                    _loop_4(info);
+                }
+            };
+            GUISystem.prototype.onAwake = function () {
+                var sceneOptions = {
+                    debug: false,
+                    resources: function () {
+                        // if (this._modelComponent.selectedScene) {
+                        //     const sceneJSON = JSON.stringify(serialize(this._modelComponent.selectedScene));
+                        //     console.info(sceneJSON);
+                        // }
+                        // else if (this._modelComponent.selectedGameObjects.length > 0) {
+                        // }
+                    },
+                };
+                this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
+                    var sceneSystem = paper.Application.systemManager.getOrRegisterSystem(editor.SceneSystem, 6000 /* LaterUpdate */);
+                    if (v) {
+                        paper.Application.playerMode = 1 /* DebugPlayer */;
+                        sceneSystem.enabled = true;
+                    }
+                    else {
+                        paper.Application.playerMode = 0 /* Player */;
+                        sceneSystem.enabled = false;
+                    }
+                });
+            };
+            GUISystem.prototype.onEnable = function () {
+                editor.ModelComponent.onSceneSelected.add(this._onSceneSelected, this);
+                editor.ModelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
+                editor.ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectedChange, this);
+                this._bufferedGameObjects.push(paper.GameObject.globalGameObject);
+                for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
+                    var gameObject = _a[_i];
+                    this._bufferedGameObjects.push(gameObject);
+                }
+                this._modelComponent.select(paper.Scene.activeScene);
+            };
+            GUISystem.prototype.onDisable = function () {
+                editor.ModelComponent.onSceneSelected.remove(this._onSceneSelected, this);
+                editor.ModelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
+                editor.ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectedChange, this);
+                for (var k in this._hierarchyFolders) {
+                    var folder = this._hierarchyFolders[k];
+                    delete this._hierarchyFolders[k];
+                    if (folder && folder.parent) {
+                        try {
+                            folder.parent.removeFolder(folder);
+                        }
+                        catch (e) {
+                        }
+                    }
+                }
+                for (var k in this._inspectorFolders) {
+                    delete this._inspectorFolders[k];
+                }
+                this._bufferedGameObjects.length = 0;
+                this._selectFolder = null;
+            };
+            GUISystem.prototype.onAddGameObject = function (gameObject, _group) {
+                this._bufferedGameObjects.push(gameObject);
+            };
+            GUISystem.prototype.onRemoveGameObject = function (gameObject, _group) {
+                var index = this._bufferedGameObjects.indexOf(gameObject);
+                if (index >= 0) {
+                    this._bufferedGameObjects[index] = null;
+                }
+            };
+            GUISystem.prototype.onUpdate = function () {
+                var i = 0;
+                while (this._bufferedGameObjects.length > 0 && i++ < 5) {
+                    var gameObject = this._bufferedGameObjects.shift();
+                    if (gameObject) {
+                        if (!this._addToHierarchy(gameObject)) {
+                            this._bufferedGameObjects.push(gameObject);
+                        }
+                    }
+                }
+                // Open and select folder.
+                if (!this._selectFolder) {
+                    var sceneOrGameObject = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
+                    if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
+                        this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
+                        this._selectFolder.selected = true;
+                        this._openFolder(this._selectFolder);
+                    }
+                }
+                this._guiComponent.inspector.updateDisplay();
+                var inspectorFolders = this._guiComponent.inspector.__folders;
+                if (inspectorFolders) {
+                    for (var k in inspectorFolders) {
+                        inspectorFolders[k].updateDisplay();
+                    }
+                }
+                {
+                    for (var _i = 0, _a = this._disposeCollecter.scenes; _i < _a.length; _i++) {
+                        var scene = _a[_i];
+                        var folder = this._hierarchyFolders[scene.uuid];
+                        delete this._hierarchyFolders[scene.uuid];
+                        if (folder && folder.parent) {
+                            try {
+                                folder.parent.removeFolder(folder);
+                            }
+                            catch (e) {
+                            }
+                        }
+                    }
+                    for (var _b = 0, _d = this._disposeCollecter.gameObjects; _b < _d.length; _b++) {
+                        var gameObject = _d[_b];
+                        var folder = this._hierarchyFolders[gameObject.uuid];
+                        delete this._hierarchyFolders[gameObject.uuid];
+                        if (folder && folder.parent) {
+                            try {
+                                folder.parent.removeFolder(folder);
+                            }
+                            catch (e) {
+                            }
+                        }
+                    }
+                    for (var _e = 0, _f = this._disposeCollecter.components; _e < _f.length; _e++) {
+                        var component = _f[_e];
+                        var folder = this._inspectorFolders[component.uuid];
+                        delete this._inspectorFolders[component.uuid];
+                        if (folder && folder.parent) {
+                            try {
+                                folder.parent.removeFolder(folder);
+                            }
+                            catch (e) {
+                            }
+                        }
+                    }
+                }
+            };
+            return GUISystem;
+        }(paper.BaseSystem));
+        editor.GUISystem = GUISystem;
+        __reflect(GUISystem.prototype, "paper.editor.GUISystem");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));

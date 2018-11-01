@@ -43,14 +43,14 @@ namespace egret3d {
          * 该相机是否清除颜色缓冲区。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        @paper.property(paper.EditType.CHECKBOX)
         public clearOption_Color: boolean = true;
 
         /**
          * 该相机是否清除深度缓冲区。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        @paper.property(paper.EditType.CHECKBOX)
         public clearOption_Depth: boolean = true;
 
         /**
@@ -61,7 +61,7 @@ namespace egret3d {
          * - camera.cullingMask &= ~paper.CullingMask.UI;
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((paper as any).CullingMask) }) // TODO
+        @paper.property(paper.EditType.LIST, { listItems: paper.getItemsFromEnum((paper as any).CullingMask) }) // TODO
         public cullingMask: paper.CullingMask = paper.CullingMask.Everything;
 
         /**
@@ -69,35 +69,35 @@ namespace egret3d {
          * - 该值越低的相机优先绘制。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.INT)
+        @paper.property(paper.EditType.INT)
         public order: number = 0;
 
         /**
          * 透视投影的视野。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: Math.PI, step: 0.01 })
+        @paper.property(paper.EditType.FLOAT, { minimum: 0.0, maximum: Math.PI, step: 0.01 })
         public fov: number = Math.PI * 0.25;
 
         /**
          * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间差值。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 1.0, step: 0.01 })
+        @paper.property(paper.EditType.FLOAT, { minimum: 0.0, maximum: 1.0, step: 0.01 })
         public opvalue: number = 1.0;
 
         /**
          * 正交投影的竖向size
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        @paper.property(paper.EditType.FLOAT, { minimum: 0.0 })
         public size: number = 2.0;
 
         /**
          * 该相机的背景色。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.COLOR)
+        @paper.property(paper.EditType.COLOR)
         public readonly backgroundColor: Color = Color.create(0.15, 0.25, 0.5, 1.0);
 
         /**
@@ -105,7 +105,7 @@ namespace egret3d {
          * - 归一化的。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.RECT)
+        @paper.property(paper.EditType.RECT)
         public readonly viewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
 
         /**
@@ -419,7 +419,7 @@ namespace egret3d {
          * 该摄像机的视点到近裁剪面距离。
          * - 该值过小会引起深度冲突。
          */
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: 3000.0 - 0.01, step: 1 })
+        @paper.property(paper.EditType.FLOAT, { minimum: 0.01, maximum: 3000.0 - 0.01, step: 1 })
         public get near(): number {
             return this._near;
         }
@@ -437,7 +437,7 @@ namespace egret3d {
         /**
          * 该摄像机的视点到远裁剪面距离。
          */
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.02, maximum: 3000.0, step: 1 })
+        @paper.property(paper.EditType.FLOAT, { minimum: 0.02, maximum: 3000.0, step: 1 })
         public get far(): number {
             return this._far;
         }

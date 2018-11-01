@@ -62,7 +62,7 @@ namespace egret3d {
         /**
          * 此帧的绘制总数。
          */
-        @paper.editor.property(paper.editor.EditType.UINT)
+        @paper.property(paper.EditType.UINT)
         public drawCallCount: number = 0;
         /**
          * 此帧参与渲染的渲染组件列表。

@@ -237,7 +237,7 @@ namespace paper.editor {
 
             for (const info of infos) {
                 switch (info.editType) {
-                    case editor.EditType.UINT:
+                    case paper.EditType.UINT:
                         guiControllerA = gui.add(gui.instance, info.name).min(0).step(1).listen();
 
                         if (info.option) {
@@ -255,7 +255,7 @@ namespace paper.editor {
                         }
                         break;
 
-                    case editor.EditType.INT:
+                    case paper.EditType.INT:
                         guiControllerA = gui.add(gui.instance, info.name).step(1).listen();
 
                         if (info.option) {
@@ -273,7 +273,7 @@ namespace paper.editor {
                         }
                         break;
 
-                    case editor.EditType.FLOAT:
+                    case paper.EditType.FLOAT:
                         guiControllerA = gui.add(gui.instance, info.name).step(0.1).listen();
 
                         if (info.option) {
@@ -291,16 +291,16 @@ namespace paper.editor {
                         }
                         break;
 
-                    case editor.EditType.CHECKBOX:
-                    case editor.EditType.TEXT:
+                    case paper.EditType.CHECKBOX:
+                    case paper.EditType.TEXT:
                         gui.add(gui.instance, info.name).listen();
                         break;
 
-                    case editor.EditType.LIST:
+                    case paper.EditType.LIST:
                         gui.add(gui.instance, info.name, info.option!.listItems!).listen();
                         break;
 
-                    case editor.EditType.VECTOR2: {
+                    case paper.EditType.VECTOR2: {
                         guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
                         guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
 
@@ -331,7 +331,7 @@ namespace paper.editor {
                         break;
                     }
 
-                    case editor.EditType.SIZE: {
+                    case paper.EditType.SIZE: {
                         guiControllerA = gui.add(gui.instance[info.name], "w", `${info.name}: w`).step(0.1).listen();
                         guiControllerB = gui.add(gui.instance[info.name], "h", `${info.name}: h`).step(0.1).listen();
 
@@ -362,7 +362,7 @@ namespace paper.editor {
                         break;
                     }
 
-                    case editor.EditType.VECTOR3: {
+                    case paper.EditType.VECTOR3: {
                         guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
                         guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
                         guiControllerC = gui.add(gui.instance[info.name], "z", `${info.name}: z`).step(0.1).listen();
@@ -398,11 +398,11 @@ namespace paper.editor {
                         break;
                     }
 
-                    case editor.EditType.VECTOR4:
-                    case editor.EditType.QUATERNION:
+                    case paper.EditType.VECTOR4:
+                    case paper.EditType.QUATERNION:
                         break;
 
-                    case editor.EditType.COLOR: {
+                    case paper.EditType.COLOR: {
                         guiControllerA = gui.addColor(gui.instance, info.name).listen();
 
                         if (this._propertyHasGetterSetter(gui.instance, info.name)) {
@@ -414,7 +414,7 @@ namespace paper.editor {
                         break;
                     }
 
-                    case editor.EditType.RECT: {
+                    case paper.EditType.RECT: {
                         guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
                         guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
                         guiControllerC = gui.add(gui.instance[info.name], "w", `${info.name}: w`).step(0.1).listen();
@@ -455,14 +455,14 @@ namespace paper.editor {
                         break;
                     }
 
-                    case editor.EditType.GAMEOBJECT:
+                    case paper.EditType.GAMEOBJECT:
                         break;
 
-                    case editor.EditType.BUTTON:
+                    case paper.EditType.BUTTON:
                         guiControllerA = gui.add(gui.instance, info.name);
                         break;
 
-                    case editor.EditType.NESTED: {
+                    case paper.EditType.NESTED: {
                         const folder = gui.addFolder(info.name);
                         folder.instance = gui.instance[info.name];
                         this._addToInspector(folder);

@@ -12,55 +12,55 @@ namespace egret3d {
          * 该灯光的强度。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        @paper.property(paper.EditType.FLOAT, { minimum: 0.0 })
         public intensity: number = 1.0;
         /**
          * 该灯光的颜色。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.COLOR)
+        @paper.property(paper.EditType.COLOR)
         public readonly color: Color = Color.create(1.0, 1.0, 1.0, 1.0);
         /**
          * 该灯光是否投射阴影。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        @paper.property(paper.EditType.CHECKBOX)
         public castShadows: boolean = false;
         /**
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        @paper.property(paper.EditType.FLOAT, { minimum: 0.0 })
         public shadowRadius: number = 0.5;
         /**
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01 })
+        @paper.property(paper.EditType.FLOAT, { minimum: 0.01 })
         public shadowBias: number = 0.01;
         /**
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.UINT)
+        @paper.property(paper.EditType.UINT)
         public shadowSize: number = 512;
         /**
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        @paper.property(paper.EditType.FLOAT, { minimum: 0.0 })
         public shadowCameraNear: number = 1.0;
         /**
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        @paper.property(paper.EditType.FLOAT, { minimum: 0.0 })
         public shadowCameraFar: number = 100.0;
         /**
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        @paper.property(paper.EditType.FLOAT, { minimum: 0.0 })
         public shadowCameraSize: number = 30;
 
         public readonly viewPortPixel: Rectangle = Rectangle.create();

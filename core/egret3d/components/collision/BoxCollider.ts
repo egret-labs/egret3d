@@ -17,7 +17,7 @@ namespace egret3d {
          * 描述该组件的立方体。
          */
         @paper.serializedField("aabb")
-        @paper.editor.property(paper.editor.EditType.NESTED)
+        @paper.property(paper.EditType.NESTED)
         public readonly box: Box = Box.ONE.clone();
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {

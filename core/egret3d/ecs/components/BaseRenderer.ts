@@ -11,7 +11,7 @@ namespace paper {
          * 该组件是否开启视锥剔除。
          */
         @serializedField
-        @editor.property(editor.EditType.CHECKBOX)
+        @property(EditType.CHECKBOX)
         public frustumCulled: boolean = true;
         /**
          * @internal
@@ -62,7 +62,7 @@ namespace paper {
         /**
          * 该组件是否接收投影。
          */
-        @editor.property(editor.EditType.CHECKBOX)
+        @property(EditType.CHECKBOX)
         public get receiveShadows() {
             return this._receiveShadows;
         }
@@ -76,7 +76,7 @@ namespace paper {
         /**
          * 该组件是否产生投影。
          */
-        @editor.property(editor.EditType.CHECKBOX)
+        @property(EditType.CHECKBOX)
         public get castShadows() {
             return this._castShadows;
         }
@@ -90,7 +90,7 @@ namespace paper {
         /**
          * 该组件的光照图索引。
          */
-        @editor.property(editor.EditType.INT, { minimum: -1 })
+        @property(EditType.INT, { minimum: -1 })
         public get lightmapIndex() {
             return this._lightmapIndex;
         }
@@ -133,7 +133,7 @@ namespace paper {
         /**
          * 该组件的材质列表。
          */
-        @paper.editor.property(paper.editor.EditType.MATERIAL_ARRAY)
+        @paper.property(paper.EditType.MATERIAL_ARRAY)
         public get materials(): ReadonlyArray<egret3d.Material> {
             return this._materials;
         }

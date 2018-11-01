@@ -54,7 +54,7 @@ namespace paper {
          * 是否是静态模式。
          */
         @serializedField
-        @editor.property(editor.EditType.CHECKBOX)
+        @property(EditType.CHECKBOX)
         public isStatic: boolean = false;
 
         /**
@@ -68,21 +68,21 @@ namespace paper {
          * - 用于各种层遮罩。
          */
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).Layer) }) // TODO
+        @property(EditType.LIST, { listItems: getItemsFromEnum((paper as any).Layer) }) // TODO
         public layer: Layer = Layer.Default;
 
         /**
          * 名称。
          */
         @serializedField
-        @editor.property(editor.EditType.TEXT)
+        @property(EditType.TEXT)
         public name: string = "";
 
         /**
          * 标签。
          */
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).DefaultTags) }) // TODO
+        @property(EditType.LIST, { listItems: getItemsFromEnum((paper as any).DefaultTags) }) // TODO
         public tag: string = "";
 
         /**
@@ -778,7 +778,7 @@ namespace paper {
         /**
          * 该实体自身的激活状态。
          */
-        @editor.property(editor.EditType.CHECKBOX)
+        @property(EditType.CHECKBOX)
         public get activeSelf() {
             return this._activeSelf;
         }

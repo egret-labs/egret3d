@@ -420,7 +420,7 @@ namespace egret3d {
         /**
          * 该立方体的尺寸。
          */
-        @paper.editor.property(paper.editor.EditType.VECTOR3, { minimum: 0.0 })
+        @paper.property(paper.EditType.VECTOR3, { minimum: 0.0 })
         public get size(): Readonly<IVector3> {
             if (this._dirtySize) {
                 this._size.subtract(this._maximum, this._minimum);
@@ -441,7 +441,7 @@ namespace egret3d {
         /**
          * 该立方体的中心点。
          */
-        @paper.editor.property(paper.editor.EditType.VECTOR3)
+        @paper.property(paper.EditType.VECTOR3)
         public get center(): Readonly<IVector3> {
             if (this._dirtyCenter) {
                 this._center.add(this._maximum, this._minimum).multiplyScalar(0.5);

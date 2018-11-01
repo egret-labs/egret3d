@@ -1,5 +1,50 @@
 /// <reference path="./EventDispatcher.ts" />
 namespace paper.editor {
+
+    /**
+     * 检测一个实例对象是否为已被自定义
+     * @param classInstance 实例对象
+     */
+    export function isCustom(classInstance: any): boolean {
+        let clzName = egret.getQualifiedClassName(classInstance);
+        let clz = egret.getDefinitionByName(clzName);
+        return clz['__custom__'] ? true : false;
+    }
+
+    /**
+     * 获取一个实例对象的编辑信息
+     * @param classInstance 实例对象
+     */
+    export function getEditInfo(classInstance: any) {
+        var retrunList = [] as PropertyInfo[];
+        let clzName = egret.getQualifiedClassName(classInstance);
+        let clz = egret.getDefinitionByName(clzName);
+        let extend: string[] = clz.prototype.__types__;
+        for (let i = extend.length - 1; i >= 0; i--) {
+            let clzName = extend[i];
+            let clz = egret.getDefinitionByName(clzName);
+            if (clz && clz.prototype.hasOwnProperty('__props__')) {
+                retrunList = retrunList.concat(clz.prototype['__props__']);
+            }
+        }
+        return retrunList;
+    }
+    /**
+     * 获取一个实例对象某个属性的编辑类型
+     * @param classInstance 实例对象
+     * @param propName 属性名
+     */
+    export function getEditType(classInstance: any, propName: string): paper.EditType | null {
+        const editInfoList = getEditInfo(classInstance);
+        for (let index = 0; index < editInfoList.length; index++) {
+            const element = editInfoList[index];
+            if (element.name === propName) {
+                return element.editType;
+            }
+        }
+        return null;
+    }
+
     /**
      * 编辑器事件
      */

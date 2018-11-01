@@ -18,9 +18,9 @@
         "outFile": "bin/editor/editor.js"
     },
     "include": [
+        "src",
         "../core/libs/",
         "../core/bin/",
-        "src",
         "libs"
     ]
 }

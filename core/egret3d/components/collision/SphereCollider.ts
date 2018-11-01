@@ -16,7 +16,7 @@ namespace egret3d {
          * 描述该组件的球体。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.NESTED)
+        @paper.property(paper.EditType.NESTED)
         public readonly sphere: Sphere = Sphere.create(Vector3.ZERO, 0.5);
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
