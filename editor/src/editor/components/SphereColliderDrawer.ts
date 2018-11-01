@@ -36,9 +36,9 @@ namespace paper.editor {
                     const collider = colliders[i];
                     if (collider.enabled) {
                         drawer.activeSelf = true;
-                        drawer.transform.localPosition = egret3d.Vector3.create().copy(collider.sphere.center).applyMatrix(selectedGameObject!.transform.worldMatrix).release();
+                        drawer.transform.localPosition.applyMatrix(selectedGameObject!.transform.localToWorldMatrix, collider.sphere.center).update();
                         drawer.transform.localRotation = selectedGameObject!.transform.rotation;
-                        drawer.transform.localScale = egret3d.Vector3.create().multiplyScalar(collider.sphere.radius * 2, selectedGameObject!.transform.scale).release();
+                        drawer.transform.localScale.multiplyScalar(collider.sphere.radius * 2, selectedGameObject!.transform.scale).update();
                     }
                     else {
                         drawer.activeSelf = false;

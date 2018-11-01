@@ -81,9 +81,10 @@ namespace egret3d {
             n21: number, n22: number, n23: number,
             n31: number, n32: number, n33: number,
         ): Matrix3 {
-            this.rawData[0] = n11; this.rawData[1] = n21; this.rawData[2] = n31;
-            this.rawData[3] = n12; this.rawData[4] = n22; this.rawData[5] = n32;
-            this.rawData[6] = n13; this.rawData[7] = n23; this.rawData[8] = n33;
+            const rawData = this.rawData;
+            rawData[0] = n11; rawData[1] = n21; rawData[2] = n31;
+            rawData[3] = n12; rawData[4] = n22; rawData[5] = n32;
+            rawData[6] = n13; rawData[7] = n23; rawData[8] = n33;
 
             return this;
         }
@@ -131,8 +132,12 @@ namespace egret3d {
             );
         }
 
-        public inverse(matrix: Matrix3) {
-            const me = matrix.rawData,
+        public inverse(input?: Matrix3) {
+            if (!input) {
+                input = this;
+            }
+
+            const me = input.rawData,
                 te = this.rawData,
 
                 n11 = me[0], n21 = me[1], n31 = me[2],
@@ -174,7 +179,7 @@ namespace egret3d {
         }
 
         public getNormalMatrix(matrix4: Readonly<Matrix4>) {
-            return this.fromMatrix4(matrix4).inverse(this).transpose();
+            return this.fromMatrix4(matrix4).inverse().transpose();
         }
 
         public transpose() {
@@ -195,11 +200,6 @@ namespace egret3d {
                 rawData[1], rawData[5], rawData[9],
                 rawData[2], rawData[6], rawData[10]
             );
-            // this.set(
-            //     me[0], me[1], me[2],
-            //     me[4], me[5], me[6],
-            //     me[8], me[9], me[10]
-            // );
 
             return this;
         }
@@ -230,4 +230,8 @@ namespace egret3d {
             return array;
         }
     }
+    /**
+     * @deprecated
+     */
+    export const helpMatrix3A = Matrix3.create();
 }

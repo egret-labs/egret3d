@@ -39,7 +39,7 @@ namespace egret3d {
             camera.fov = this.angle;
             camera.opvalue = 1.0;
             camera.renderTarget = this.renderTarget;
-            camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
+            camera.gameObject.transform.localToWorldMatrix.copy(this.gameObject.transform.localToWorldMatrix); //
 
             this.viewPortPixel.set(0, 0, this.shadowSize, this.shadowSize);
             this._updateShadowMatrix(camera);

@@ -5,22 +5,23 @@ namespace egret3d {
         0.0, 0.0, 1.0, 0.0,
         0.0, 0.0, 0.0, 1.0
     ];
-
     /**
      * 4x4 矩阵。
      */
     export class Matrix4 extends paper.BaseRelease<Matrix4> implements paper.ICCS<Matrix4>, paper.ISerializable {
-
+        /**
+         * 一个静态的恒等矩阵。
+         * - 请注意不要修改该值。
+         */
         public static readonly IDENTITY: Readonly<Matrix4> = new Matrix4();
 
         private static readonly _instances: Matrix4[] = [];
-
         /**
          * 创建一个矩阵。
          * @param rawData 
          * @param offsetOrByteOffset 
          */
-        public static create(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset: number = 0) {
+        public static create(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset: number = 0): Matrix4 {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!;
                 instance._released = false;
@@ -42,13 +43,11 @@ namespace egret3d {
 
             return new Matrix4(rawData, offsetOrByteOffset);
         }
-
         /**
          * 矩阵原始数据。
          * @readonly
          */
         public rawData: Float32Array = null!;
-
         /**
          * 请使用 `egret3d.Matrix4.create()` 创建实例。
          * @see egret3d.Matrix4.create()
@@ -80,9 +79,7 @@ namespace egret3d {
         }
 
         public copy(value: Readonly<Matrix4>) {
-            this.fromArray(value.rawData);
-
-            return this;
+            return this.fromArray(value.rawData);
         }
 
         public clone() {
@@ -94,7 +91,7 @@ namespace egret3d {
             n21: number, n22: number, n23: number, n24: number,
             n31: number, n32: number, n33: number, n34: number,
             n41: number, n42: number, n43: number, n44: number,
-        ): Matrix4 {
+        ) {
             const rawData = this.rawData;
             rawData[0] = n11; rawData[4] = n12; rawData[8] = n13; rawData[12] = n14;
             rawData[1] = n21; rawData[5] = n22; rawData[9] = n23; rawData[13] = n24;
@@ -103,8 +100,10 @@ namespace egret3d {
 
             return this;
         }
-
-        public identity(): Matrix4 {
+        /**
+         * 将该矩阵转换为恒等矩阵。
+         */
+        public identity(): this {
             this.rawData[0] = 1.0;
             this.rawData[1] = 0.0;
             this.rawData[2] = 0.0;
@@ -128,37 +127,50 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0): Matrix4 {
+        public fromArray(array: Readonly<ArrayLike<number>>, offset: number = 0): this {
             for (let i = 0; i < 16; ++i) {
-                this.rawData[i] = value[i + offset];
+                this.rawData[i] = array[i + offset];
             }
 
             return this;
         }
 
-        public fromBuffer(value: ArrayBuffer, byteOffset: number = 0): Matrix4 {
-            this.rawData = new Float32Array(value, byteOffset, 16);
+        public fromBuffer(buffer: ArrayBuffer, byteOffset: number = 0): this {
+            this.rawData = new Float32Array(buffer, byteOffset, 16);
 
             return this;
         }
-
-        public fromTranslate(value: Readonly<IVector3>, rotationAndScaleStays: boolean = false): Matrix4 {
+        /**
+         * 通过平移向量设置该矩阵。
+         * @param translate 平移向量。
+         * @param rotationAndScaleStays 是否保留该矩阵的旋转和数据。
+         */
+        public fromTranslate(translate: Readonly<IVector3>, rotationAndScaleStays: boolean = false): this {
             if (!rotationAndScaleStays) {
                 this.identity();
             }
 
-            this.rawData[12] = value.x;
-            this.rawData[13] = value.y;
-            this.rawData[14] = value.z;
+            this.rawData[12] = translate.x;
+            this.rawData[13] = translate.y;
+            this.rawData[14] = translate.z;
 
             return this;
         }
-
-        public fromRotation(rotation: Quaternion, translateStays: boolean = false): Matrix4 {
+        /**
+         * 通过四元数旋转设置该矩阵。
+         * @param rotation 四元数旋转。
+         * @param translateStays 是否保留该矩阵的平移数据。
+         */
+        public fromRotation(rotation: Readonly<Quaternion>, translateStays: boolean = false): this {
             return this.compose(translateStays ? _helpVector3A.fromArray(this.rawData, 12) : Vector3.ZERO, rotation, Vector3.ONE);
         }
-
-        public fromEuler(value: Readonly<IVector3>, order: EulerOrder = EulerOrder.YXZ, translateStays: boolean = false) {
+        /**
+         * 通过欧拉旋转设置该矩阵。
+         * @param euler 欧拉旋转。
+         * @param order 欧拉旋转顺序。
+         * @param translateStays 是否保留该矩阵的平移数据。
+         */
+        public fromEuler(euler: Readonly<IVector3>, order: EulerOrder = EulerOrder.YXZ, translateStays: boolean = false): this {
             // http://www.mathworks.com/matlabcentral/fileexchange/
             // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
             //	content/SpinCalc.m
@@ -166,7 +178,7 @@ namespace egret3d {
             const cos = Math.cos;
             const sin = Math.sin;
 
-            const { x, y, z } = value;
+            const { x, y, z } = euler;
             const a = cos(x), b = sin(x);
             const c = cos(y), d = sin(y);
             const e = cos(z), f = sin(z);
@@ -292,17 +304,21 @@ namespace egret3d {
 
             return this;
         }
-
-        public fromScale(x: number, y: number, z: number, translateStays: boolean = false): Matrix4 {
+        /**
+         * 通过缩放向量设置该矩阵。
+         * @param scale 缩放向量。
+         * @param translateStays 是否保留该矩阵的平移数据。
+         */
+        public fromScale(scale: Readonly<IVector3>, translateStays: boolean = false): this {
             if (translateStays) {
                 _helpVector3A.fromArray(this.rawData, 12);
             }
 
             this.identity();
 
-            this.rawData[0] = x;
-            this.rawData[5] = y;
-            this.rawData[10] = z;
+            this.rawData[0] = scale.x;
+            this.rawData[5] = scale.y;
+            this.rawData[10] = scale.z;
 
             if (translateStays) {
                 this.rawData[12] = _helpVector3A.x;
@@ -312,106 +328,122 @@ namespace egret3d {
 
             return this;
         }
-
-        public fromAxis(axis: Readonly<IVector3>, radian: number = 0.0): Matrix4 {
-            // Based on http://www.gamedev.net/reference/articles/article1199.asp
-            const c = Math.cos(radian);
-            const s = Math.sin(radian);
-            const t = 1.0 - c;
-            const x = axis.x, y = axis.y, z = axis.z;
-            const tx = t * x, ty = t * y;
-
-            this.set(
-                tx * x + c, tx * y - s * z, tx * z + s * y, 0.0,
-                tx * y + s * z, ty * y + c, ty * z - s * x, 0.0,
-                tx * z - s * y, ty * z + s * x, t * z * z + c, 0.0,
-                0.0, 0.0, 0.0, 1.0
-            );
-
-            return this;
-        }
-
-        public fromAxises(axisX: Readonly<IVector3>, axisY: Readonly<IVector3>, axisZ: Readonly<IVector3>): Matrix4 {
-            this.set(
-                axisX.x, axisY.x, axisZ.x, 0.0,
-                axisX.y, axisY.y, axisZ.y, 0.0,
-                axisX.z, axisY.z, axisZ.z, 0.0,
-                0.0, 0.0, 0.0, 1.0
-            );
-
-            return this;
-        }
-
-        public fromRotationX(radian: number): Matrix4 {
-            const c = Math.cos(radian), s = Math.sin(radian);
-            this.set(
+        /**
+         * 通过绕 X 轴的旋转角度设置该矩阵。
+         * @param angle 旋转角。（弧度制）
+         */
+        public fromRotationX(angle: number): this {
+            const c = Math.cos(angle), s = Math.sin(angle);
+            return this.set(
                 1, 0, 0, 0,
                 0, c, - s, 0,
                 0, s, c, 0,
                 0, 0, 0, 1
             );
-
-            return this;
         }
-
-        public fromRotationY(radian: number): Matrix4 {
-            const c = Math.cos(radian), s = Math.sin(radian);
-            this.set(
+        /**
+         * 通过绕 Y 轴的旋转角度设置该矩阵。
+         * @param theta 旋转角。（弧度制）
+         */
+        public fromRotationY(theta: number): this {
+            const c = Math.cos(theta), s = Math.sin(theta);
+            return this.set(
                 c, 0, s, 0,
                 0, 1, 0, 0,
                 - s, 0, c, 0,
                 0, 0, 0, 1
             );
-
-            return this;
         }
-
-        public fromRotationZ(radian: number): Matrix4 {
-            const c = Math.cos(radian), s = Math.sin(radian);
-            this.set(
+        /**
+         * 通过绕 Z 轴的旋转角度设置该矩阵。
+         * @param theta 旋转角。（弧度制）
+         */
+        public fromRotationZ(theta: number): this {
+            const c = Math.cos(theta), s = Math.sin(theta);
+            return this.set(
                 c, - s, 0, 0,
                 s, c, 0, 0,
                 0, 0, 1, 0,
                 0, 0, 0, 1
             );
-
-            return this;
         }
+        /**
+         * 通过旋转轴设置该矩阵。
+         * - 假设旋转轴已被归一化。
+         * @param axis 旋转轴。
+         * @param angle 旋转角。（弧度制）
+         */
+        public fromAxis(axis: Readonly<IVector3>, angle: number): this {
+            // Based on http://www.gamedev.net/reference/articles/article1199.asp
+            const c = Math.cos(angle);
+            const s = Math.sin(angle);
+            const t = 1.0 - c;
+            const x = axis.x, y = axis.y, z = axis.z;
+            const tx = t * x, ty = t * y;
 
-        public compose(translation: Readonly<IVector3>, rotation: Readonly<IVector4>, scale: Readonly<IVector3>): Matrix4 {
+            return this.set(
+                tx * x + c, tx * y - s * z, tx * z + s * y, 0.0,
+                tx * y + s * z, ty * y + c, ty * z - s * x, 0.0,
+                tx * z - s * y, ty * z + s * x, t * z * z + c, 0.0,
+                0.0, 0.0, 0.0, 1.0
+            );
+        }
+        /**
+         * 通过 X、Y、Z 轴设置该矩阵。
+         * @param axisX X 轴。
+         * @param axisY Y 轴。
+         * @param axisZ Z 轴。
+         */
+        public fromAxises(axisX: Readonly<IVector3>, axisY: Readonly<IVector3>, axisZ: Readonly<IVector3>): this {
+            return this.set(
+                axisX.x, axisY.x, axisZ.x, 0.0,
+                axisX.y, axisY.y, axisZ.y, 0.0,
+                axisX.z, axisY.z, axisZ.z, 0.0,
+                0.0, 0.0, 0.0, 1.0
+            );
+        }
+        /**
+         * 通过平移向量、四元数旋转、缩放向量设置该矩阵。
+         * @param translation 平移向量。
+         * @param rotation 四元数旋转。
+         * @param scale 缩放向量。
+         */
+        public compose(translation: Readonly<IVector3>, rotation: Readonly<IVector4>, scale: Readonly<IVector3>): this {
+            const rX = rotation.x, rY = rotation.y, rZ = rotation.z, rW = rotation.w;
+            const sX = scale.x, sY = scale.y, sZ = scale.z;
+            const x2 = rX + rX, y2 = rY + rY, z2 = rZ + rZ;
+            const xx = rX * x2, xy = rX * y2, xz = rX * z2;
+            const yy = rY * y2, yz = rY * z2, zz = rZ * z2;
+            const wx = rW * x2, wy = rW * y2, wz = rW * z2;
             const rawData = this.rawData;
-            const x = rotation.x, y = rotation.y, z = rotation.z, w = rotation.w;
-            const x2 = x + x, y2 = y + y, z2 = z + z;
-            const xx = x * x2, xy = x * y2, xz = x * z2;
-            const yy = y * y2, yz = y * z2, zz = z * z2;
-            const wx = w * x2, wy = w * y2, wz = w * z2;
 
-            const sx = scale.x, sy = scale.y, sz = scale.z;
+            rawData[0] = (1.0 - (yy + zz)) * sX;
+            rawData[1] = (xy + wz) * sX;
+            rawData[2] = (xz - wy) * sX;
 
-            rawData[0] = (1.0 - (yy + zz)) * sx;
-            rawData[1] = (xy + wz) * sx;
-            rawData[2] = (xz - wy) * sx;
-            rawData[3] = 0.0;
+            rawData[4] = (xy - wz) * sY;
+            rawData[5] = (1.0 - (xx + zz)) * sY;
+            rawData[6] = (yz + wx) * sY;
 
-            rawData[4] = (xy - wz) * sy;
-            rawData[5] = (1.0 - (xx + zz)) * sy;
-            rawData[6] = (yz + wx) * sy;
-            rawData[7] = 0.0;
-
-            rawData[8] = (xz + wy) * sz;
-            rawData[9] = (yz - wx) * sz;
-            rawData[10] = (1.0 - (xx + yy)) * sz;
-            rawData[11] = 0.0;
+            rawData[8] = (xz + wy) * sZ;
+            rawData[9] = (yz - wx) * sZ;
+            rawData[10] = (1.0 - (xx + yy)) * sZ;
 
             rawData[12] = translation.x;
             rawData[13] = translation.y;
             rawData[14] = translation.z;
-            rawData[15] = 1.0;
+
+            rawData[3] = rawData[7] = rawData[11] = 0.0, rawData[15] = 1.0;
 
             return this;
         }
-
-        public decompose(translation: Vector3 | null = null, rotation: Quaternion | null = null, scale: Vector3 | null = null): Matrix4 {
+        /**
+         * 将该矩阵分解为平移向量、四元数旋转、缩放向量。
+         * @param translation 平移向量。
+         * @param rotation 四元数旋转。
+         * @param scale 缩放向量。
+         */
+        public decompose(translation: Vector3 | null = null, rotation: Quaternion | null = null, scale: Vector3 | null = null): this {
             const rawData = this.rawData;
 
             if (translation) {
@@ -421,35 +453,37 @@ namespace egret3d {
             }
 
             if (rotation || scale) {
-                let sx = _helpVector3A.set(rawData[0], rawData[1], rawData[2]).length;
-                let sy = _helpVector3A.set(rawData[4], rawData[5], rawData[6]).length;
-                let sz = _helpVector3A.set(rawData[8], rawData[9], rawData[10]).length;
+                const helpVector3A = _helpVector3A;
+                let sx = helpVector3A.set(rawData[0], rawData[1], rawData[2]).length;
+                let sy = helpVector3A.set(rawData[4], rawData[5], rawData[6]).length;
+                let sz = helpVector3A.set(rawData[8], rawData[9], rawData[10]).length;
 
                 // if determine is negative, we need to invert one scale
-                const det = this.determinant();
+                const det = this.determinant;
                 if (det < 0.0) sx = -sx;
 
                 if (rotation) {
                     // scale the rotation part
-                    _helpMatrix.copy(this);
+                    const helpMatrix = _helpMatrix;
+                    helpMatrix.copy(this);
 
                     const invSX = 1.0 / sx;
                     const invSY = 1.0 / sy;
                     const invSZ = 1.0 / sz;
 
-                    _helpMatrix.rawData[0] *= invSX;
-                    _helpMatrix.rawData[1] *= invSX;
-                    _helpMatrix.rawData[2] *= invSX;
+                    helpMatrix.rawData[0] *= invSX;
+                    helpMatrix.rawData[1] *= invSX;
+                    helpMatrix.rawData[2] *= invSX;
 
-                    _helpMatrix.rawData[4] *= invSY;
-                    _helpMatrix.rawData[5] *= invSY;
-                    _helpMatrix.rawData[6] *= invSY;
+                    helpMatrix.rawData[4] *= invSY;
+                    helpMatrix.rawData[5] *= invSY;
+                    helpMatrix.rawData[6] *= invSY;
 
-                    _helpMatrix.rawData[8] *= invSZ;
-                    _helpMatrix.rawData[9] *= invSZ;
-                    _helpMatrix.rawData[10] *= invSZ;
+                    helpMatrix.rawData[8] *= invSZ;
+                    helpMatrix.rawData[9] *= invSZ;
+                    helpMatrix.rawData[10] *= invSZ;
 
-                    rotation.fromMatrix(_helpMatrix);
+                    rotation.fromMatrix(helpMatrix);
                 }
 
                 if (scale) {
@@ -461,33 +495,49 @@ namespace egret3d {
 
             return this;
         }
-
-        public transpose(source?: Readonly<Matrix4>): Matrix4 {
-            if (!source) {
-                source = this;
+        /**
+         * 转置该矩阵。
+         */
+        public transpose(): this;
+        /**
+         * 将输入矩阵转置的结果写入该矩阵。
+         * @param input 输入矩阵。
+         */
+        public transpose(input: Readonly<Matrix4>): this;
+        public transpose(input?: Readonly<Matrix4>) {
+            if (!input) {
+                input = this;
             }
 
-            const valueRawData = source.rawData;
+            const inputRawData = input.rawData;
             const rawData = this.rawData;
             let temp = 0.0;
 
-            temp = valueRawData[1]; rawData[1] = valueRawData[4]; rawData[4] = temp;
-            temp = valueRawData[2]; rawData[2] = valueRawData[8]; rawData[8] = temp;
-            temp = valueRawData[6]; rawData[6] = valueRawData[9]; rawData[9] = temp;
+            temp = inputRawData[1]; rawData[1] = inputRawData[4]; rawData[4] = temp;
+            temp = inputRawData[2]; rawData[2] = inputRawData[8]; rawData[8] = temp;
+            temp = inputRawData[6]; rawData[6] = inputRawData[9]; rawData[9] = temp;
 
-            temp = valueRawData[3]; rawData[3] = valueRawData[12]; rawData[12] = temp;
-            temp = valueRawData[7]; rawData[7] = valueRawData[13]; rawData[13] = temp;
-            temp = valueRawData[11]; rawData[11] = valueRawData[14]; rawData[14] = temp;
+            temp = inputRawData[3]; rawData[3] = inputRawData[12]; rawData[12] = temp;
+            temp = inputRawData[7]; rawData[7] = inputRawData[13]; rawData[13] = temp;
+            temp = inputRawData[11]; rawData[11] = inputRawData[14]; rawData[14] = temp;
 
             return this;
         }
-
-        public inverse(source?: Readonly<Matrix4>): Matrix4 {
-            if (!source) {
-                source = this;
+        /**
+         * 将该矩阵求逆。
+         */
+        public inverse(): this;
+        /**
+         * 将输入矩阵的逆矩阵写入该矩阵。
+         * @param input 输入矩阵。
+         */
+        public inverse(input: Readonly<Matrix4>): this;
+        public inverse(input?: Readonly<Matrix4>) {
+            if (!input) {
+                input = this;
             }
 
-            const valueRawData = source.rawData;
+            const valueRawData = input.rawData;
             const rawData = this.rawData;
             const n11 = valueRawData[0], n21 = valueRawData[1], n31 = valueRawData[2], n41 = valueRawData[3],
                 n12 = valueRawData[4], n22 = valueRawData[5], n32 = valueRawData[6], n42 = valueRawData[7],
@@ -532,11 +582,19 @@ namespace egret3d {
             return this;
         }
         /**
-         * 
-         * @param scale 
-         * @param input 
+         * 将该矩阵乘以一个标量。
+         * - v *= scaler
+         * @param scalar 标量。
          */
-        public multiplyScalar(scale: number, input?: Readonly<Matrix4>) {
+        public multiplyScalar(scalar: number): this;
+        /**
+         * 将输入矩阵与一个标量相乘的结果写入该矩阵。
+         * - v = input * scaler
+         * @param scalar 标量。
+         * @param input 收入矩阵。
+         */
+        public multiplyScalar(scalar: number, input: Readonly<Matrix4>): this;
+        public multiplyScalar(scalar: number, input?: Readonly<Matrix4>) {
             if (!input) {
                 input = this;
             }
@@ -544,40 +602,49 @@ namespace egret3d {
             const sourceRawData = input.rawData;
             const rawData = this.rawData;
 
-            rawData[0] = sourceRawData[0] * scale;
-            rawData[1] = sourceRawData[1] * scale;
-            rawData[2] = sourceRawData[2] * scale;
-            rawData[3] = sourceRawData[3] * scale;
+            rawData[0] = sourceRawData[0] * scalar;
+            rawData[1] = sourceRawData[1] * scalar;
+            rawData[2] = sourceRawData[2] * scalar;
+            rawData[3] = sourceRawData[3] * scalar;
 
-            rawData[4] = sourceRawData[4] * scale;
-            rawData[5] = sourceRawData[5] * scale;
-            rawData[6] = sourceRawData[6] * scale;
-            rawData[7] = sourceRawData[7] * scale;
+            rawData[4] = sourceRawData[4] * scalar;
+            rawData[5] = sourceRawData[5] * scalar;
+            rawData[6] = sourceRawData[6] * scalar;
+            rawData[7] = sourceRawData[7] * scalar;
 
-            rawData[8] = sourceRawData[8] * scale;
-            rawData[9] = sourceRawData[9] * scale;
-            rawData[10] = sourceRawData[10] * scale;
-            rawData[11] = sourceRawData[11] * scale;
+            rawData[8] = sourceRawData[8] * scalar;
+            rawData[9] = sourceRawData[9] * scalar;
+            rawData[10] = sourceRawData[10] * scalar;
+            rawData[11] = sourceRawData[11] * scalar;
 
-            rawData[12] = sourceRawData[12] * scale;
-            rawData[13] = sourceRawData[13] * scale;
-            rawData[14] = sourceRawData[14] * scale;
-            rawData[15] = sourceRawData[15] * scale;
+            rawData[12] = sourceRawData[12] * scalar;
+            rawData[13] = sourceRawData[13] * scalar;
+            rawData[14] = sourceRawData[14] * scalar;
+            rawData[15] = sourceRawData[15] * scalar;
+
+            return this;
         }
         /**
-         * - `v.multiply(a)` 将该矩阵与一个矩阵相乘的结果写入该矩阵，相当于 v *= a。
-         * - `v.multiply(a, b)` 将两个矩阵相乘的结果写入该矩阵，相当于 v = a * b。
-         * @param valueA 一个矩阵。
-         * @param valueB 另一个矩阵。
+         * 将该矩阵乘以一个矩阵。
+         * - v *= matrix
+         * @param matrix 一个矩阵。
          */
-        public multiply(valueA: Readonly<Matrix4>, valueB?: Readonly<Matrix4>): Matrix4 {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
+        public multiply(matrix: Readonly<Matrix4>): this;
+        /**
+         * 将两个矩阵相乘的结果写入该矩阵。
+         * - v = matrixA * matrixB
+         * @param matrixA 一个矩阵。
+         * @param matrixB 另一个矩阵。
+         */
+        public multiply(matrixA: Readonly<Matrix4>, matrixB: Readonly<Matrix4>): this;
+        public multiply(matrixA: Readonly<Matrix4>, matrixB?: Readonly<Matrix4>) {
+            if (!matrixB) {
+                matrixB = matrixA;
+                matrixA = this;
             }
 
-            const rawDataA = valueA.rawData;
-            const rawDataB = valueB.rawData;
+            const rawDataA = matrixA.rawData;
+            const rawDataB = matrixB.rawData;
             const rawData = this.rawData;
 
             const a11 = rawDataA[0], a12 = rawDataA[4], a13 = rawDataA[8], a14 = rawDataA[12];
@@ -613,54 +680,79 @@ namespace egret3d {
             return this;
         }
         /**
-         * 将一个矩阵与该矩阵相乘的结果写入该矩阵，相当于 v = x * v。
-         * @param value 一个矩阵。
+         * 将一个矩阵与该矩阵相乘的结果写入该矩阵。
+         * - v = matrix * v
+         * @param matrix 一个矩阵。
          */
-        public premultiply(value: Readonly<Matrix4>): Matrix4 {
-            this.multiply(value, this);
-            return this;
+        public premultiply(matrix: Readonly<Matrix4>): this {
+            return this.multiply(matrix, this);
         }
         /**
-         * - `v.lert(t, a)` 将该矩阵和一个矩阵插值的结果写入该矩阵。
-         * - `v.lert(t, a, b)` 将两个矩阵插值的结果写入该矩阵。
-         * @param t 插值。
-         * @param valueA 一个矩阵。
-         * @param valueB 另一个矩阵。
+         * 将该矩阵和目标矩阵插值的结果写入该矩阵。
+         * - v = v * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param t 插值因子。
+         * @param to 目标矩阵。
          */
-        public lerp(t: number, valueA: Matrix4, valueB?: Matrix4): Matrix4 {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
+        public lerp(t: number, to: Readonly<Matrix4>): this;
+        /**
+         * 将两个矩阵插值的结果写入该矩阵。
+         * - v = from * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param t 插值因子。
+         * @param from 起始矩阵。
+         * @param to 目标矩阵。
+         */
+        public lerp(t: number, from: Readonly<Matrix4>, to: Readonly<Matrix4>): this;
+        public lerp(t: number, from: Readonly<Matrix4>, to?: Readonly<Matrix4>) {
+            if (!to) {
+                to = from;
+                from = this;
+            }
+
+            if (t === 0.0) {
+                for (let i = 0; i < 16; i++) {
+                    this.rawData[i] = from.rawData[i];
+                }
+
+                return this;
+            }
+            else if (t === 1.0) {
+                for (let i = 0; i < 16; i++) {
+                    this.rawData[i] = to.rawData[i];
+                }
+
+                return this;
             }
 
             const p = 1.0 - t;
             for (let i = 0; i < 16; i++) {
-                this.rawData[i] = valueA.rawData[i] * p + valueB.rawData[i] * t;
+                this.rawData[i] = from.rawData[i] * p + to.rawData[i] * t;
             }
 
             return this;
         }
         /**
-         * 设置该矩阵，使其 Z 轴正方向指向目标点。
+         * 设置该矩阵，使其 Z 轴正方向与起始点到目标点的方向相一致。
          * - 矩阵的缩放值将被覆盖。
          * @param from 起始点。
          * @param to 目标点。
-         * @param up 旋转后，该矩阵的 Y 轴正方向。
+         * @param up 
          */
-        public lookAt(from: Readonly<IVector3>, to: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
+        public lookAt(from: Readonly<IVector3>, to: Readonly<IVector3>, up: Readonly<IVector3>): this {
             this.lookRotation(_helpVector3C.subtract(to, from), up);
 
             return this;
         }
         /**
-         * 设置该矩阵，使其 Z 轴正方向指向目标方向。
+         * 设置该矩阵，使其 Z 轴正方向与目标方向相一致。
          * - 矩阵的缩放值将被覆盖。
          * @param vector 目标方向。
-         * @param up 旋转后，该矩阵的 Y 轴正方向。
+         * @param up 
          */
-        public lookRotation(vector: Readonly<IVector3>, up: Readonly<IVector3>): Matrix4 {
+        public lookRotation(vector: Readonly<IVector3>, up: Readonly<IVector3>): this {
             const z = _helpVector3C.normalize(vector);
-            const x = _helpVector3A.cross(up, z).normalize(undefined, Vector3.RIGHT); //TODO  Vector3.FORWARD
+            const x = _helpVector3A.cross(up, z).normalize(_helpVector3A, Vector3.RIGHT);
             const y = _helpVector3B.cross(z, x);
             const rawData = this.rawData;
 
@@ -670,70 +762,12 @@ namespace egret3d {
 
             return this;
         }
-
-        public determinant() {
-            const rawData = this.rawData;
-            const n11 = rawData[0], n12 = rawData[4], n13 = rawData[8], n14 = rawData[12];
-            const n21 = rawData[1], n22 = rawData[5], n23 = rawData[9], n24 = rawData[13];
-            const n31 = rawData[2], n32 = rawData[6], n33 = rawData[10], n34 = rawData[14];
-            const n41 = rawData[3], n42 = rawData[7], n43 = rawData[11], n44 = rawData[15];
-
-            //TODO: make this more efficient
-            //( based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js )
-
-            return (
-                n41 * (
-                    + n14 * n23 * n32
-                    - n13 * n24 * n32
-                    - n14 * n22 * n33
-                    + n12 * n24 * n33
-                    + n13 * n22 * n34
-                    - n12 * n23 * n34
-                ) +
-                n42 * (
-                    + n11 * n23 * n34
-                    - n11 * n24 * n33
-                    + n14 * n21 * n33
-                    - n13 * n21 * n34
-                    + n13 * n24 * n31
-                    - n14 * n23 * n31
-                ) +
-                n43 * (
-                    + n11 * n24 * n32
-                    - n11 * n22 * n34
-                    - n14 * n21 * n32
-                    + n12 * n21 * n34
-                    + n14 * n22 * n31
-                    - n12 * n24 * n31
-                ) +
-                n44 * (
-                    - n13 * n22 * n31
-                    - n11 * n23 * n32
-                    + n11 * n22 * n33
-                    + n13 * n21 * n32
-                    - n12 * n21 * n33
-                    + n12 * n23 * n31
-                )
-            );
-        }
-        /**
-         * 获得该矩阵最大的缩放值。
-         */
-        public getMaxScaleOnAxis() {
-            const rawData = this.rawData;
-
-            const scaleXSq = rawData[0] * rawData[0] + rawData[1] * rawData[1] + rawData[2] * rawData[2];
-            const scaleYSq = rawData[4] * rawData[4] + rawData[5] * rawData[5] + rawData[6] * rawData[6];
-            const scaleZSq = rawData[8] * rawData[8] + rawData[9] * rawData[9] + rawData[10] * rawData[10];
-
-            return Math.sqrt(Math.max(scaleXSq, scaleYSq, scaleZSq));
-        }
         /**
          * 将该旋转矩阵转换为数组。
          * @param array 数组。
          * @param offset 数组偏移。
          */
-        public toArray(array?: number[] | Float32Array, offset: number = 0) {
+        public toArray(array?: number[] | Float32Array, offset: number = 0): number[] | Float32Array {
             if (!array) {
                 array = [];
             }
@@ -749,7 +783,7 @@ namespace egret3d {
          * @param euler 欧拉旋转。（弧度制）
          * @param order 欧拉旋转顺序。
          */
-        public toEuler(euler?: Vector3, order: EulerOrder = EulerOrder.YXZ) {
+        public toEuler(euler?: Vector3, order: EulerOrder = EulerOrder.YXZ): Vector3 {
             if (!euler) {
                 euler = Vector3.create();
             }
@@ -847,6 +881,68 @@ namespace egret3d {
 
             return euler;
         }
+        /**
+         * 获取该矩阵的行列式。
+         * - 该值是实时计算的。
+         */
+        public get determinant(): number {
+            const rawData = this.rawData;
+            const n11 = rawData[0], n12 = rawData[4], n13 = rawData[8], n14 = rawData[12];
+            const n21 = rawData[1], n22 = rawData[5], n23 = rawData[9], n24 = rawData[13];
+            const n31 = rawData[2], n32 = rawData[6], n33 = rawData[10], n34 = rawData[14];
+            const n41 = rawData[3], n42 = rawData[7], n43 = rawData[11], n44 = rawData[15];
+
+            //TODO: make this more efficient
+            //( based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js )
+
+            return (
+                n41 * (
+                    + n14 * n23 * n32
+                    - n13 * n24 * n32
+                    - n14 * n22 * n33
+                    + n12 * n24 * n33
+                    + n13 * n22 * n34
+                    - n12 * n23 * n34
+                ) +
+                n42 * (
+                    + n11 * n23 * n34
+                    - n11 * n24 * n33
+                    + n14 * n21 * n33
+                    - n13 * n21 * n34
+                    + n13 * n24 * n31
+                    - n14 * n23 * n31
+                ) +
+                n43 * (
+                    + n11 * n24 * n32
+                    - n11 * n22 * n34
+                    - n14 * n21 * n32
+                    + n12 * n21 * n34
+                    + n14 * n22 * n31
+                    - n12 * n24 * n31
+                ) +
+                n44 * (
+                    - n13 * n22 * n31
+                    - n11 * n23 * n32
+                    + n11 * n22 * n33
+                    + n13 * n21 * n32
+                    - n12 * n21 * n33
+                    + n12 * n23 * n31
+                )
+            );
+        }
+        /**
+         * 获取该矩阵的最大缩放值。
+         * - 该值是实时计算的。
+         */
+        public get maxScaleOnAxis(): number {
+            const rawData = this.rawData;
+            const scaleXSq = rawData[0] * rawData[0] + rawData[1] * rawData[1] + rawData[2] * rawData[2];
+            const scaleYSq = rawData[4] * rawData[4] + rawData[5] * rawData[5] + rawData[6] * rawData[6];
+            const scaleZSq = rawData[8] * rawData[8] + rawData[9] * rawData[9] + rawData[10] * rawData[10];
+
+            return Math.sqrt(Math.max(scaleXSq, scaleYSq, scaleZSq));
+        }
+
         /**
          * @deprecated
          */

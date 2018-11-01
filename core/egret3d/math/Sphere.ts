@@ -64,7 +64,7 @@ namespace egret3d {
 
         public applyMatrix(matrix: Readonly<Matrix4>) {
             this.center.applyMatrix(matrix);
-            this.radius = this.radius * matrix.getMaxScaleOnAxis();
+            this.radius = this.radius * matrix.maxScaleOnAxis;
 
             return this;
         }
@@ -107,18 +107,15 @@ namespace egret3d {
             return this.center.getSquaredDistance(value as IVector3) <= this.radius * this.radius;
         }
         /**
-         * 获取一点到该球体表面的最近距离。
-         * @param value 点。
+         * 获取一个点到该球体的最近点。（如果该点在球体内部，则最近点就是该点）
+         * @param point 一个点。
+         * @param out 最近点。
          */
-        public getDistance(value: Readonly<IVector3>) {
-            return this.center.getDistance(value) - this.radius;
-        }
-        /**
-         * 
-         * @param point 
-         * @param out 
-         */
-        public clampPoint(point: Readonly<IVector3>, out: Vector3) {
+        public getClosestPointToPoint(point: Readonly<IVector3>, out?: Vector3) {
+            if (!out) {
+                out = egret3d.Vector3.create();
+            }
+
             const squaredDistance = this.center.getSquaredDistance(point);
 
             if (squaredDistance > (this.radius * this.radius)) {
@@ -130,6 +127,13 @@ namespace egret3d {
             }
 
             return out;
+        }
+        /**
+         * 获取一点到该球体表面的最近距离。
+         * @param value 点。
+         */
+        public getDistance(value: Readonly<IVector3>) {
+            return this.center.getDistance(value) - this.radius;
         }
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
@@ -159,7 +163,7 @@ namespace egret3d {
 
             if (raycastInfo) {
                 const normal = raycastInfo.normal;
-                const position = ray.at(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
+                const position = ray.getPointAt(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
 
                 if (normal) {
                     normal.subtract(position, this.center).normalize();

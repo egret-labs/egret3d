@@ -57,8 +57,10 @@ namespace behaviors {
                 if (this.target.renderer.raycast(ray, raycastInfo, this.raycastMesh)) {
                     lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
                     this._normal.activeSelf = true;
-                    this._normal.transform.position = raycastInfo.position;
-                    this._normal.transform.lookRotation(raycastInfo.normal);
+                    this._normal.transform
+                        .setPosition(raycastInfo.position)
+                        .lookRotation(raycastInfo.normal)
+                        .setLocalScale(1.0, 1.0, raycastInfo.normal.length);
                     return;
                 }
             }
@@ -82,8 +84,10 @@ namespace behaviors {
                 if (egret3d.raycast(ray, this.target, false, raycastInfo)) {
                     lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
                     this._normal.activeSelf = true;
-                    this._normal.transform.position = raycastInfo.position;
-                    this._normal.transform.lookRotation(raycastInfo.normal);
+                    this._normal.transform
+                        .setPosition(raycastInfo.position)
+                        .lookRotation(raycastInfo.normal)
+                        .setLocalScale(1.0, 1.0, raycastInfo.normal.length);
                     return;
                 }
             }

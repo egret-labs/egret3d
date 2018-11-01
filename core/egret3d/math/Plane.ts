@@ -61,8 +61,8 @@ namespace egret3d {
             return this;
         }
 
-        public fromPoint(value: Readonly<IVector3>, normal: Readonly<IVector3> = Vector3.UP) {
-            this.constant = -helpVector3A.dot(normal, value);
+        public fromPoint(value: Readonly<IVector3>, normal: Vector3 = Vector3.UP) {
+            this.constant = -normal.dot(value);
             this.normal.copy(normal);
 
             return this;
@@ -75,25 +75,25 @@ namespace egret3d {
             return this;
         }
 
-        public normalize(source?: Readonly<Plane>) {
-            if (!source) {
-                source = this;
+        public normalize(input?: Readonly<Plane>) {
+            if (!input) {
+                input = this;
             }
 
-            const inverseNormalLength = source.normal.length;
-            this.constant = source.constant * (1.0 / inverseNormalLength);
-            this.normal.multiplyScalar(inverseNormalLength, source.normal);
+            const inverseNormalLength = input.normal.length;
+            this.constant = input.constant * (1.0 / inverseNormalLength);
+            this.normal.multiplyScalar(inverseNormalLength, input.normal);
 
             return this;
         }
 
-        public negate(source?: Readonly<Plane>) {
-            if (!source) {
-                source = this;
+        public negate(input?: Readonly<Plane>) {
+            if (!input) {
+                input = this;
             }
 
-            this.constant = -source.constant;
-            this.normal.negate(source.normal);
+            this.constant = -input.constant;
+            this.normal.negate(input.normal);
 
             return this;
         }
@@ -102,13 +102,21 @@ namespace egret3d {
             return this.normal.dot(value) + this.constant;
         }
 
+        public getProjectionPoint(point: Readonly<IVector3>, output?: Vector3) {
+            if (!output) {
+                output = Vector3.create();
+            }
+
+            return output.multiplyScalar(-this.getDistance(point), this.normal).add(point);
+        }
+
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
             const t = ray.getDistanceToPlane(this);
             if (t > 0.0) {
                 if (raycastInfo) {
                     const normal = raycastInfo.normal;
                     raycastInfo.distance = t;
-                    ray.at(t, raycastInfo.position);
+                    ray.getPointAt(t, raycastInfo.position);
 
                     if (normal) {
                         // TODO

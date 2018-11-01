@@ -7,6 +7,7 @@ namespace paper.editor {
      * @internal
      */
     export class EditorSystem extends BaseSystem {
+        private _isMobile: boolean = false;
         private readonly _guiComponent: GUIComponent = GameObject.globalGameObject.getOrAddComponent(GUIComponent);
 
         public onAwake() {
@@ -55,7 +56,9 @@ namespace paper.editor {
                     }
                 };
 
-                if (paper.Application.isMobile) {
+                this._isMobile = paper.Application.isMobile;
+
+                if (this._isMobile) {
                     // TODO 前置组件。
                     // const loadScript = (url: string, callback: any) => {
                     //     const script = document.createElement("script");
@@ -78,6 +81,44 @@ namespace paper.editor {
                 }
 
                 Application.systemManager.register(GUISystem, SystemOrder.LaterUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
+            }
+        }
+
+        public onUpdate() {
+            const isMobile = paper.Application.isMobile;
+            if (this._isMobile !== isMobile) {
+                if (isMobile) {
+                    if (!this._guiComponent.hierarchy.closed) {
+                        this._guiComponent.hierarchy.close();
+                        if (this._guiComponent.hierarchy.onClick) {
+                            this._guiComponent.hierarchy.onClick(this._guiComponent.hierarchy);
+                        }
+                    }
+
+                    if (!this._guiComponent.inspector.closed) {
+                        this._guiComponent.inspector.close();
+                        if (this._guiComponent.inspector.onClick) {
+                            this._guiComponent.inspector.onClick(this._guiComponent.inspector);
+                        }
+                    }
+                }
+                else {
+                    if (this._guiComponent.hierarchy.closed) {
+                        this._guiComponent.hierarchy.open();
+                        if (this._guiComponent.hierarchy.onClick) {
+                            this._guiComponent.hierarchy.onClick(this._guiComponent.hierarchy);
+                        }
+                    }
+
+                    if (this._guiComponent.inspector.closed) {
+                        this._guiComponent.inspector.open();
+                        if (this._guiComponent.inspector.onClick) {
+                            this._guiComponent.inspector.onClick(this._guiComponent.inspector);
+                        }
+                    }
+                }
+
+                this._isMobile = isMobile;
             }
         }
     }

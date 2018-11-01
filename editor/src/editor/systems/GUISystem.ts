@@ -34,8 +34,12 @@ namespace paper.editor {
             this._selectSceneOrGameObject(this._modelComponent.selectedGameObject);
         }
 
-        private _nodeClickHandler = (gui: dat.GUI) => {
+        private _sceneOrGameObjectGUIClickHandler = (gui: dat.GUI) => {
             this._modelComponent.select(gui.instance, true);
+        }
+
+        private _componentOrPropertyGUIClickHandler = (gui: dat.GUI) => {
+            (window as any)["psc"] = gui.instance;
         }
 
         private _saveSceneOrGameObject = () => {
@@ -115,7 +119,11 @@ namespace paper.editor {
 
             if (inspector.__folders) {
                 for (const k in inspector.__folders) {
-                    inspector.removeFolder(inspector.__folders[k]);
+                    try {
+                        inspector.removeFolder(inspector.__folders[k]);
+                    }
+                    catch (e) {
+                    }
                 }
             }
 
@@ -191,13 +199,13 @@ namespace paper.editor {
 
                 parentFolder = this._guiComponent.hierarchy.addFolder(gameObject.scene.uuid, gameObject.scene.name + " <Scene>");
                 parentFolder.instance = gameObject.scene;
-                parentFolder.onClick = this._nodeClickHandler;
+                parentFolder.onClick = this._sceneOrGameObjectGUIClickHandler;
                 this._hierarchyFolders[gameObject.scene.uuid] = parentFolder;
             }
 
             const folder = parentFolder.addFolder(gameObject.uuid, gameObject.name);
             folder.instance = gameObject;
-            folder.onClick = this._nodeClickHandler;
+            folder.onClick = this._sceneOrGameObjectGUIClickHandler;
             this._hierarchyFolders[gameObject.uuid] = folder;
 
             return true;
@@ -224,6 +232,8 @@ namespace paper.editor {
             let guiControllerB: dat.GUIController;
             let guiControllerC: dat.GUIController;
             let guiControllerD: dat.GUIController;
+
+            gui.onClick = this._componentOrPropertyGUIClickHandler;
 
             for (const info of infos) {
                 switch (info.editType) {

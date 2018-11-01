@@ -30,23 +30,22 @@ namespace paper.editor {
                 let offset = 0;
                 const helpVertex3A = egret3d.Vector3.create().release();
                 const helpVertex3B = egret3d.Vector3.create().release();
-                const helpMatrixA = egret3d.Matrix4.create().release();
                 const vertices = mesh.getVertices()!;
                 const bones = skinnedMeshRenderer.bones;
 
                 this.gameObject.transform.position = selectedGameObject!.transform.position;
-                helpMatrixA.inverse(this.gameObject.transform.worldMatrix);
+                const worldToLocalMatrix = this.gameObject.transform.worldToLocalMatrix;
 
                 for (const bone of bones) {
                     if (bone) {
                         if (bone.parent && bones.indexOf(bone.parent) >= 0) {
-                            helpVertex3A.applyMatrix(helpMatrixA, bone.parent.position).toArray(vertices, offset);
-                            helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset + 3);
+                            helpVertex3A.applyMatrix(worldToLocalMatrix, bone.parent.position).toArray(vertices, offset);
+                            helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).toArray(vertices, offset + 3);
                         }
                         else {
-                            bone.getRight(helpVertex3B).applyDirection(helpMatrixA).multiplyScalar(0.25); // Bone length.
-                            helpVertex3A.applyMatrix(helpMatrixA, bone.position).toArray(vertices, offset);
-                            helpVertex3A.applyMatrix(helpMatrixA, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
+                            bone.getRight(helpVertex3B).applyDirection(worldToLocalMatrix).multiplyScalar(0.25); // Bone length.
+                            helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).toArray(vertices, offset);
+                            helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
                         }
                     }
                     else {

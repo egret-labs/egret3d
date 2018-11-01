@@ -73,7 +73,7 @@ namespace egret3d {
             const asp = camera.calcViewPortPixel(this.viewPortPixel); // update viewport
             camera.calcProjectMatrix(asp, this.matrix_p);
 
-            this.matrix_v.inverse(matrix);
+            this.matrix_v.inverse(matrix); // TODO
             this.matrix_vp.multiply(this.matrix_p, this.matrix_v);
 
             const rawData = matrix.rawData;
@@ -161,7 +161,7 @@ namespace egret3d {
                 switch (light.constructor) {
                     case DirectionalLight: {
                         light.gameObject.transform.getForward(_helpVector3);
-                        _helpVector3.applyDirection(this.matrix_v).normalize();
+                        _helpVector3.applyDirection(this.matrix_v);
 
                         lightArray = this.directLightArray;
                         index = directLightIndex * LightSize.Directional;
@@ -180,7 +180,7 @@ namespace egret3d {
                     }
 
                     case PointLight: {
-                        const position = light.gameObject.transform.getPosition().clone().release();
+                        const position = light.gameObject.transform.position.clone().release();
                         position.applyMatrix(this.matrix_v);
                         lightArray = this.pointLightArray;
                         index = pointLightIndex * LightSize.Point;
@@ -200,10 +200,10 @@ namespace egret3d {
                     }
 
                     case SpotLight: {
-                        const position = light.gameObject.transform.getPosition().clone().release();
+                        const position = light.gameObject.transform.position.clone().release();
                         position.applyMatrix(this.matrix_v);
                         light.gameObject.transform.getForward(_helpVector3);
-                        _helpVector3.applyDirection(this.matrix_v).normalize();
+                        _helpVector3.applyDirection(this.matrix_v);
 
                         lightArray = this.spotLightArray;
                         index = spotLightIndex * LightSize.Spot;
@@ -285,7 +285,7 @@ namespace egret3d {
         }
 
         public updateLightDepth(light: BaseLight) {
-            const position = light.gameObject.transform.getPosition();
+            const position = light.gameObject.transform.position;
             //
             this.lightPosition[0] = position.x;
             this.lightPosition[1] = position.y;
@@ -300,7 +300,8 @@ namespace egret3d {
             const renderer = drawCall.renderer;
             // const scene = renderer.gameObject.scene;
             const scene = paper.Scene.activeScene;
-            const matrix = drawCall.matrix || (renderer ? renderer.gameObject.transform.worldMatrix : Matrix4.IDENTITY);
+            const matrix = drawCall.matrix || (renderer ? renderer.gameObject.transform.localToWorldMatrix : Matrix4.IDENTITY);
+            this.drawCall = drawCall;
             this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
             this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
             this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);
@@ -321,7 +322,6 @@ namespace egret3d {
                 this.lightmapScaleOffset[2] = renderer.lightmapScaleOffset.z;
                 this.lightmapScaleOffset[3] = renderer.lightmapScaleOffset.w;
                 this.shaderContextDefine += "#define USE_LIGHTMAP \n";
-                // console.log("lightmapIndex:" + renderer.lightmapIndex + " uv:" + this.lightmapUV);
             }
 
             if (this.lightCount > 0) {
@@ -341,9 +341,6 @@ namespace egret3d {
                     this.shaderContextDefine += "#define USE_SHADOWMAP \n";
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
-
-                // this.shaderContextDefine += "#define OBJECTSPACE_NORMALMAP \n";  //TODO 根据参数生成define
-                // this.shaderContextDefine += "#define FLAT_SHADED \n";
             }
 
             const fog = scene.fog;
@@ -351,11 +348,11 @@ namespace egret3d {
                 this.fogColor[0] = fog.color.r;
                 this.fogColor[1] = fog.color.g;
                 this.fogColor[2] = fog.color.b;
-                this.shaderContextDefine += "#define USE_FOG \n";
+                this.shaderContextDefine += "#define USE_FOG \n";//TODO 根据参数生成define
 
                 if (fog.mode === FogMode.FOG_EXP2) {
                     this.fogDensity = fog.density;
-                    this.shaderContextDefine += "#define FOG_EXP2 \n";
+                    this.shaderContextDefine += "#define FOG_EXP2 \n";//TODO 根据参数生成define
                 }
                 else {
                     this.fogNear = fog.near;

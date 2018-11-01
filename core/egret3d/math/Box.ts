@@ -10,7 +10,7 @@ namespace egret3d {
         Vector3.create(),
     ];
     /**
-     * 轴对称包围盒。
+     * 几何立方体。
      */
     export class Box extends paper.BaseRelease<Box> implements paper.ICCS<Box>, paper.ISerializable, IRaycast {
         public static readonly ONE: Readonly<Box> = new Box().set(
@@ -19,9 +19,9 @@ namespace egret3d {
         );
         private static readonly _instances: Box[] = [];
         /**
-         * 创建一个
-         * @param minimum 
-         * @param maximum 
+         * 创建一个几何立方体。
+         * @param minimum 最小点。
+         * @param maximum 最大点。
          */
         public static create(minimum: Readonly<IVector3> | null = null, maximum: Readonly<IVector3> | null = null) {
             if (this._instances.length > 0) {
@@ -102,68 +102,88 @@ namespace egret3d {
             return this;
         }
         /**
-         * 
+         * 设置该立方体，使得全部点都在立方体内。
+         * @param points 全部点。
          */
-        public fromPoints(value: Readonly<ArrayLike<IVector3>>) {
+        public fromPoints(points: Readonly<ArrayLike<IVector3>>): this {
             this.clear();
 
-            for (const point of value as IVector3[]) {
+            for (const point of points as IVector3[]) {
                 this.add(point);
             }
 
             return this;
         }
-
-        public applyMatrix(value: Readonly<Matrix4>, source?: Readonly<Box>) {
-            if (!source) {
-                source = this;
+        /**
+         * 将该立方体乘以一个矩阵。
+         * - v *= matrix
+         * @param matrix 一个矩阵。
+         */
+        public applyMatrix(matrix: Readonly<Matrix4>): this;
+        /**
+         * 将输入立方体与一个矩阵相乘的结果写入该立方体。
+         * - v = input * matrix
+         * @param matrix 一个矩阵。
+         * @param input 输入立方体。
+         */
+        public applyMatrix(matrix: Readonly<Matrix4>, input: Readonly<Box>): this;
+        public applyMatrix(matrix: Readonly<Matrix4>, input?: Readonly<Box>) {
+            if (!input) {
+                input = this;
             }
 
             // transform of empty box is an empty box.
-            if (source.isEmpty) {
-                if (source !== this!) {
-                    this.copy(source);
+            if (input.isEmpty) {
+                if (input !== this!) {
+                    this.copy(input);
                 }
 
                 return this;
             }
 
-            const min = source.minimum;
-            const max = source.maximum;
+            const min = input.minimum;
+            const max = input.maximum;
 
             // NOTE: I am using a binary pattern to specify all 2^3 combinations below
-            _points[0].set(min.x, min.y, min.z).applyMatrix(value); // 000
-            _points[1].set(min.x, min.y, max.z).applyMatrix(value); // 001
-            _points[2].set(min.x, max.y, min.z).applyMatrix(value); // 010
-            _points[3].set(min.x, max.y, max.z).applyMatrix(value); // 011
-            _points[4].set(max.x, min.y, min.z).applyMatrix(value); // 100
-            _points[5].set(max.x, min.y, max.z).applyMatrix(value); // 101
-            _points[6].set(max.x, max.y, min.z).applyMatrix(value); // 110
-            _points[7].set(max.x, max.y, max.z).applyMatrix(value); // 111
+            _points[0].set(min.x, min.y, min.z).applyMatrix(matrix); // 000
+            _points[1].set(min.x, min.y, max.z).applyMatrix(matrix); // 001
+            _points[2].set(min.x, max.y, min.z).applyMatrix(matrix); // 010
+            _points[3].set(min.x, max.y, max.z).applyMatrix(matrix); // 011
+            _points[4].set(max.x, min.y, min.z).applyMatrix(matrix); // 100
+            _points[5].set(max.x, min.y, max.z).applyMatrix(matrix); // 101
+            _points[6].set(max.x, max.y, min.z).applyMatrix(matrix); // 110
+            _points[7].set(max.x, max.y, max.z).applyMatrix(matrix); // 111
 
             this.fromPoints(_points);
 
             return this;
-
         }
         /**
-         * 
+         * 增加该立方体的体积，使其能刚好包含指定的点或立方体。
+         * @param pointOrBox 一个点或立方体。
          */
-        public add(value: Readonly<IVector3 | Box>, source?: Readonly<Box>) {
-            if (!source) {
-                source = this;
+        public add(pointOrBox: Readonly<IVector3 | Box>): this;
+        /**
+         * 增加输入立方体的体积，并将改变的结果写入该立方体，使其能刚好包含指定的点或立方体。
+         * @param pointOrBox 一个点或立方体。
+         * @param input 输入立方体。 
+         */
+        public add(pointOrBox: Readonly<IVector3 | Box>, input: Readonly<Box>): this;
+        public add(pointOrBox: Readonly<IVector3 | Box>, input?: Readonly<Box>) {
+            if (!input) {
+                input = this;
             }
 
-            const min = source.minimum;
-            const max = source.maximum;
+            const min = input.minimum;
+            const max = input.maximum;
 
-            if (value instanceof Box) {
-                this._minimum.min(value._minimum, min);
-                this._maximum.max(value._maximum, max);
+            if (pointOrBox instanceof Box) {
+                this._minimum.min(pointOrBox._minimum, min);
+                this._maximum.max(pointOrBox._maximum, max);
             }
             else {
-                this._minimum.min(value as IVector3, min);
-                this._maximum.max(value as IVector3, max);
+                this._minimum.min(pointOrBox as IVector3, min);
+                this._maximum.max(pointOrBox as IVector3, max);
             }
 
             this._dirtyRadius = true;
@@ -173,23 +193,31 @@ namespace egret3d {
             return this;
         }
         /**
-         * 
+         * 通过一个标量或向量扩大该立方体。
+         * @param scalarOrVector 一个标量或向量。
          */
-        public expand(value: Readonly<IVector3> | number, source?: Readonly<Box>) {
-            if (!source) {
-                source = this;
+        public expand(scalarOrVector: number | Readonly<IVector3>): this;
+        /**
+         * 通过一个标量或向量扩大输入立方体，并将改变的结果写入该立方体。
+         * @param scalarOrVector 一个标量或向量。
+         * @param input 输入立方体。 
+         */
+        public expand(scalarOrVector: number | Readonly<IVector3>, input: Readonly<Box>): this;
+        public expand(scalarOrVector: number | Readonly<IVector3>, input?: Readonly<Box>) {
+            if (!input) {
+                input = this;
             }
 
-            const min = source.minimum;
-            const max = source.maximum;
+            const min = input.minimum;
+            const max = input.maximum;
 
-            if (typeof value === "number") {
-                this._minimum.addScalar(-value, min);
-                this._maximum.addScalar(value, max);
+            if (typeof scalarOrVector === "number") {
+                this._minimum.addScalar(-scalarOrVector, min);
+                this._maximum.addScalar(scalarOrVector, max);
             }
             else {
-                this._minimum.subtract(value as IVector3, min);
-                this._maximum.add(value as IVector3, max);
+                this._minimum.subtract(scalarOrVector as IVector3, min);
+                this._maximum.add(scalarOrVector as IVector3, max);
             }
 
             this._dirtyRadius = true;
@@ -199,23 +227,31 @@ namespace egret3d {
             return this;
         }
         /**
-         * 
+         * 通过一个标量或向量移动该立方体。
+         * @param scalarOrVector 一个标量或向量。
          */
-        public offset(value: number | Readonly<IVector3>, source?: Readonly<Box>) {
-            if (!source) {
-                source = this;
+        public translate(scalarOrVector: number | Readonly<IVector3>): this;
+        /**
+         * 通过一个标量或向量移动输入立方体，并将改变的结果写入该立方体。
+         * @param scalarOrVector 一个标量或向量。
+         * @param input 输入立方体。 
+         */
+        public translate(scalarOrVector: number | Readonly<IVector3>, input: Readonly<Box>): this;
+        public translate(scalarOrVector: number | Readonly<IVector3>, input?: Readonly<Box>) {
+            if (!input) {
+                input = this;
             }
 
-            const min = source.minimum;
-            const max = source.maximum;
+            const min = input.minimum;
+            const max = input.maximum;
 
-            if (typeof value === "number") {
-                this._minimum.addScalar(value, min);
-                this._maximum.addScalar(value, max);
+            if (typeof scalarOrVector === "number") {
+                this._minimum.addScalar(scalarOrVector, min);
+                this._maximum.addScalar(scalarOrVector, max);
             }
             else {
-                this._minimum.add(value, min);
-                this._maximum.add(value, max);
+                this._minimum.add(scalarOrVector, min);
+                this._maximum.add(scalarOrVector, max);
             }
 
             this._dirtyRadius = true;
@@ -225,32 +261,43 @@ namespace egret3d {
             return this;
         }
         /**
-         * 
+         * 获取一个点到该立方体的最近点。（如果该点在立方体内部，则最近点就是该点）
+         * @param point 一个点。
+         * @param out 最近点。
          */
-        public contains(value: Readonly<IVector3 | Box>) {
+        public getClosestPointToPoint(point: Readonly<IVector3>, out?: Vector3): Vector3 {
+            if (!out) {
+                out = egret3d.Vector3.create();
+            }
+
+            return out.clamp(this._minimum, this._maximum, point);
+        }
+        /**
+         * 获取一个点到该立方体的最近距离。
+         * @param point 一个点。
+         */
+        public getDistance(point: Readonly<IVector3>): number {
+            return helpVector3A.clamp(this._minimum, this._maximum, point).subtract(point).length;
+        }
+        /**
+         * 该立方体是否包含指定的点或立方体。
+         */
+        public contains(pointOrBox: Readonly<IVector3 | Box>): boolean {
             const min = this._minimum;
             const max = this._maximum;
 
-            if (value instanceof Box) {
-                const vMin = value.minimum;
-                const vMax = value.maximum;
+            if (pointOrBox instanceof Box) {
+                const vMin = pointOrBox.minimum;
+                const vMax = pointOrBox.maximum;
 
                 return min.x <= vMin.x && vMax.x <= max.x &&
                     min.y <= vMin.y && vMax.y <= max.y &&
                     min.z <= vMin.z && vMax.z <= max.z;
             }
 
-            return ((value as IVector3).x > min.x) && ((value as IVector3).x < max.x) &&
-                ((value as IVector3).y > min.y) && ((value as IVector3).x < max.y) &&
-                ((value as IVector3).z > min.z) && ((value as IVector3).z < max.z);
-        }
-
-        public getDistance(value: Readonly<IVector3>) {
-            return helpVector3A.clamp(this._minimum, this._maximum, value).subtract(value).length;
-        }
-
-        public clampPoints(value: Readonly<IVector3>, out: Vector3) {
-            return out.clamp(this._minimum, this._maximum, value);
+            return ((pointOrBox as IVector3).x > min.x) && ((pointOrBox as IVector3).x < max.x) &&
+                ((pointOrBox as IVector3).y > min.y) && ((pointOrBox as IVector3).x < max.y) &&
+                ((pointOrBox as IVector3).z > min.z) && ((pointOrBox as IVector3).z < max.z);
         }
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
@@ -318,7 +365,7 @@ namespace egret3d {
 
             if (raycastInfo) {
                 const normal = raycastInfo.normal;
-                ray.at(raycastInfo.distance = tmin >= 0.0 ? tmin : tmax, raycastInfo.position);
+                ray.getPointAt(raycastInfo.distance = tmin >= 0.0 ? tmin : tmax, raycastInfo.position);
 
                 if (normal) {
                     switch (hitDirection) {
@@ -339,15 +386,17 @@ namespace egret3d {
 
             return true;
         }
-
-        public get isEmpty() {
+        /**
+         * 该立方体是否为空。
+         */
+        public get isEmpty(): boolean {
             // this is a more robust check for empty than ( volume <= 0 ) because volume can get positive with two negative axes
             return (this._maximum.x < this._minimum.x) || (this._maximum.y < this._minimum.y) || (this._maximum.z < this._minimum.z);
         }
         /**
-         * Bounding sphere radius.
+         * 该立方体的包围球半径。
          */
-        public get boundingSphereRadius() {
+        public get boundingSphereRadius(): number {
             if (this._dirtyRadius) {
                 helpVector3A.subtract(this._maximum, this._minimum).multiplyScalar(0.5);
                 this._boundingSphereRadius = helpVector3A.length;
@@ -357,19 +406,19 @@ namespace egret3d {
             return this._boundingSphereRadius;
         }
         /**
-         * 
+         * 该立方体的最小点。
          */
         public get minimum(): Readonly<IVector3> {
             return this._minimum;
         }
         /**
-         * 
+         * 该立方体的最大点。
          */
         public get maximum(): Readonly<IVector3> {
             return this._maximum;
         }
         /**
-         * 
+         * 该立方体的尺寸。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3, { minimum: 0.0 })
         public get size(): Readonly<IVector3> {
@@ -390,7 +439,7 @@ namespace egret3d {
             this._dirtyRadius = true;
         }
         /**
-         * 
+         * 该立方体的中心点。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get center(): Readonly<IVector3> {

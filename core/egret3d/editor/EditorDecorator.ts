@@ -79,32 +79,25 @@ namespace paper.editor {
         /**矩阵 */
         MAT3 = "MAT3"
     }
-
-    let customMap: { [key: string]: boolean } = {};
     /**
      * 装饰器:自定义
      */
     export function custom() {
         return function (target: any) {
-            customMap[target.name] = true;
+            target['__custom__']=true;
         };
     }
-    let propertyMap: { [key: string]: { extends: string, propertyList: PropertyInfo[] } } = {};
     /**
      * 装饰器:属性
      * @param editType 编辑类型
      */
     export function property(editType?: EditType, option?: PropertyOption) {
         return function (target: any, property: string) {
-            if (!propertyMap[target.constructor.name]) {
-                propertyMap[target.constructor.name] = {
-                    extends: target.__proto__.constructor.name,
-                    propertyList: [],
-                };
+            if(!target.hasOwnProperty('__props__')){
+                target['__props__']=[];
             }
-            
             if (editType !== undefined) {
-                propertyMap[target.constructor.name].propertyList.push(new PropertyInfo(property, editType, option));
+                target['__props__'].push(new PropertyInfo(property, editType, option));
             }
             else {
                 //TODO:自动分析编辑类型
@@ -117,7 +110,9 @@ namespace paper.editor {
      * @param classInstance 实例对象
      */
     export function isCustom(classInstance: any): boolean {
-        return customMap[classInstance.constructor.name] ? true : false;
+        let clzName=egret.getQualifiedClassName(classInstance);
+        let clz=egret.getDefinitionByName(clzName);
+        return clz['__custom__'] ? true : false;
     }
 
     /**
@@ -141,16 +136,16 @@ namespace paper.editor {
      * @param classInstance 实例对象
      */
     export function getEditInfo(classInstance:any) {
-        var whileInsance = classInstance.__proto__;
         var retrunList = [] as PropertyInfo[];
-        var className;
-        while (whileInsance) {
-            className = whileInsance.constructor.name;
-            var classInfo = propertyMap[className];
-            if (classInfo) {
-                retrunList = retrunList.concat(classInfo.propertyList);
+        let clzName=egret.getQualifiedClassName(classInstance);
+        let clz=egret.getDefinitionByName(clzName);
+        let extend:string[]=clz.prototype.__types__;
+        for(let i=extend.length-1;i>=0;i--){
+            let clzName=extend[i];
+            let clz=egret.getDefinitionByName(clzName);
+            if(clz&&clz.prototype.hasOwnProperty('__props__')){
+                retrunList = retrunList.concat(clz.prototype['__props__']);
             }
-            whileInsance = whileInsance.__proto__;
         }
         return retrunList;
     }
