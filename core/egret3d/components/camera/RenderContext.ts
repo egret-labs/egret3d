@@ -296,11 +296,11 @@ namespace egret3d {
         }
 
         public update(drawCall: DrawCall) {
+            this.drawCall = drawCall;
             const renderer = drawCall.renderer;
             // const scene = renderer.gameObject.scene;
             const scene = paper.Scene.activeScene;
-            const matrix = drawCall.matrix || renderer.gameObject.transform.worldMatrix;
-            this.drawCall = drawCall;
+            const matrix = drawCall.matrix || (renderer ? renderer.gameObject.transform.worldMatrix : Matrix4.IDENTITY);
             this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
             this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
             this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);
@@ -309,6 +309,7 @@ namespace egret3d {
             this.shaderContextDefine = "";
 
             if (
+                renderer &&
                 renderer.lightmapIndex >= 0 &&
                 scene.lightmaps.length > renderer.lightmapIndex
             ) {
@@ -320,6 +321,7 @@ namespace egret3d {
                 this.lightmapScaleOffset[2] = renderer.lightmapScaleOffset.z;
                 this.lightmapScaleOffset[3] = renderer.lightmapScaleOffset.w;
                 this.shaderContextDefine += "#define USE_LIGHTMAP \n";
+                // console.log("lightmapIndex:" + renderer.lightmapIndex + " uv:" + this.lightmapUV);
             }
 
             if (this.lightCount > 0) {
@@ -335,11 +337,11 @@ namespace egret3d {
                     this.shaderContextDefine += "#define NUM_SPOT_LIGHTS " + this.spotLightCount + "\n";
                 }
 
-                if (renderer.receiveShadows) {
+                if (renderer && renderer.receiveShadows) {
                     this.shaderContextDefine += "#define USE_SHADOWMAP \n";
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
-                
+
                 // this.shaderContextDefine += "#define OBJECTSPACE_NORMALMAP \n";  //TODO 根据参数生成define
                 // this.shaderContextDefine += "#define FLAT_SHADED \n";
             }
@@ -361,7 +363,7 @@ namespace egret3d {
                 }
             }
 
-            if (renderer.constructor === SkinnedMeshRenderer && !(renderer as SkinnedMeshRenderer).forceCPUSkin) {
+            if (renderer && renderer.constructor === SkinnedMeshRenderer && !(renderer as SkinnedMeshRenderer).forceCPUSkin) {
                 this.shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, (renderer as SkinnedMeshRenderer).bones.length)} \n`;
             }
         }

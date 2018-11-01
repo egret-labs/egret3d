@@ -56,22 +56,29 @@ namespace egret3d.web {
 
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
-
-        private _renderCamera(camera: Camera, renderEnabled: boolean) {
-            if (renderEnabled) {
-                //在这里先剔除，然后排序，最后绘制
-                const drawCalls = this._drawCallCollecter;
-                drawCalls.frustumCulling(camera);
-                //
-                const opaqueCalls = drawCalls.opaqueCalls;
-                const transparentCalls = drawCalls.transparentCalls;
-                // Step 1 draw opaques.
-                for (const drawCall of opaqueCalls) {
-                    this._draw(camera.context, drawCall, drawCall.material);
-                }
-                // Step 2 draw transparents.
-                for (const drawCall of transparentCalls) {
-                    this._draw(camera.context, drawCall, drawCall.material);
+        /**
+         * @internal
+         */
+        public _renderCamera(camera: Camera, renderTarget: BaseRenderTarget) {
+            const renderState = this._renderState;
+            this._viewport(camera.viewport, renderTarget);
+            renderState.clear(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+            //
+            const drawCalls = this._drawCallCollecter;
+            const opaqueCalls = drawCalls.opaqueCalls;
+            const transparentCalls = drawCalls.transparentCalls;
+            // Step 1 draw opaques.
+            for (const drawCall of opaqueCalls) {
+                this._draw(camera.context, drawCall, drawCall.material);
+            }
+            // Step 2 draw transparents.
+            for (const drawCall of transparentCalls) {
+                this._draw(camera.context, drawCall, drawCall.material);
+            }
+            //
+            if (camera.renderTarget) {
+                if (camera.renderTarget.generateMipmap()) {
+                    renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
                 }
             }
             // Egret2D渲染不加入DrawCallList的排序
@@ -83,12 +90,14 @@ namespace egret3d.web {
                     }
 
                     egret2DRenderer._draw();
-                    this._renderState.clearState();
+                    renderState.clearState();
                 }
             }
         }
-
-        private _draw(context: RenderContext, drawCall: DrawCall, material: Material) {
+        /**
+         * @internal
+         */
+        public _draw(context: RenderContext, drawCall: DrawCall, material: Material) {
             context.update(drawCall);
             //
             const webgl = WebGLCapabilities.webgl!;
@@ -426,8 +435,10 @@ namespace egret3d.web {
                 webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
             }
         }
-
-        private _viewport(viewport: Rectangle, target: BaseRenderTarget | null) { // TODO
+        /**
+         * @internal
+         */
+        public _viewport(viewport: Rectangle, target: BaseRenderTarget | null) { // TODO
             const webgl = WebGLCapabilities.webgl!;
 
             let w: number;
@@ -489,29 +500,22 @@ namespace egret3d.web {
                     const scene = camera.gameObject.scene;
                     const renderEnabled = isPlayerMode ? scene !== editorScene : scene === editorScene;
 
-                    if (renderEnabled && lightCountDirty) {
-                        camera.context.updateLights(lights); // TODO 性能优化
-                    }
-
-                    if (camera.postQueues.length === 0) {
-                        if (renderEnabled) {
-                            this._viewport(camera.viewport, camera.renderTarget);
-                            renderState.clear(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                    if (renderEnabled) {
+                        //在这里先剔除，然后排序，最后绘制
+                        const drawCalls = this._drawCallCollecter;
+                        drawCalls.frustumCulling(camera);
+                        if (lightCountDirty) {
+                            camera.context.updateLights(lights); // TODO 性能优化
                         }
-
-                        this._renderCamera(camera, renderEnabled);
-
-                        if (renderEnabled && camera.renderTarget) {
-                            if (camera.renderTarget.generateMipmap()) {
-                                renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
-                            }
+                        //
+                        if (camera.postQueues.length === 0) {
+                            this._renderCamera(camera, camera.renderTarget);
+                        }
+                        else {
+                            camera.postProcessContext.render();
                         }
                     }
-                    else {
-                        for (const item of camera.postQueues) {
-                            // TODO
-                        }
-                    }
+
                 }
             }
             else {

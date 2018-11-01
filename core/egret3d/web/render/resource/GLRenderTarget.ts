@@ -22,16 +22,15 @@ namespace egret3d {
             this._mipmap = mipmap;
             this._linear = linear;
 
-            this.uploadTexture();
+            this.createFramebuffer();
         }
 
-        protected uploadTexture() {
+        protected createFramebuffer() {
             const width = this._width;
             const height = this._height;
             const depth = this._depth;
             const stencil = this._stencil;
             const webgl = WebGLCapabilities.webgl;
-            this._texture = webgl.createTexture()!;
             this._fbo = webgl.createFramebuffer()!;
             (this._fbo as any)["width"] = width;
             (this._fbo as any)["height"] = height;
@@ -51,6 +50,11 @@ namespace egret3d {
                 }
                 webgl.bindRenderbuffer(webgl.RENDERBUFFER, null);
             }
+            this.createTexture();
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+        }
+
+        protected createTexture() {
         }
 
         use() {
@@ -64,13 +68,19 @@ namespace egret3d {
             if (!super.dispose()) {
                 return false;
             }
-            if (this._texture !== null) {
-                const webgl = WebGLCapabilities.webgl;
-                webgl.deleteFramebuffer(this._renderbuffer);
-                webgl.deleteTexture(this._texture);
-                this._renderbuffer = null as any;
-                this._texture = null as any;
+            const webgl = WebGLCapabilities.webgl;
+            if (this._renderbuffer) {
+                webgl.deleteRenderbuffer(this._renderbuffer);
             }
+            if (this._texture !== null) {
+                webgl.deleteTexture(this._texture);
+            }
+            if (this._fbo) {
+                webgl.deleteFramebuffer(this._fbo);
+            }
+            this._renderbuffer = null;
+            this._texture = null;
+            this._fbo = null;
         }
 
         caclByteLength() {
@@ -91,16 +101,18 @@ namespace egret3d {
     }
 
     export class GlRenderTarget extends BaseRenderTarget {
-        protected uploadTexture() {
-            super.uploadTexture();
+        protected createTexture() {
+            super.createTexture();
 
             const webgl = WebGLCapabilities.webgl;
+            this._texture = webgl.createTexture()!;
             webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
+            webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 1);
             webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, 4);
             webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, this._width, this._height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
 
-            if (this._mipmap) {
-                webgl.generateMipmap(webgl.TEXTURE_2D);
+            const isPower2 = isPowerOfTwo(this._width) && isPowerOfTwo(this._height);
+            if (isPower2) {
                 if (this._linear) {
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR_MIPMAP_LINEAR);
@@ -111,6 +123,8 @@ namespace egret3d {
                 }
             }
             else {
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
                 if (this._linear) {
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
@@ -121,8 +135,11 @@ namespace egret3d {
                 }
             }
 
+            if (this._mipmap && isPower2) {
+                webgl.generateMipmap(webgl.TEXTURE_2D);
+            }
+
             webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, this.texture, 0);
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
 
         use() {
@@ -149,6 +166,7 @@ namespace egret3d {
             super(name, width, height, depth, stencil);
 
             const webgl = WebGLCapabilities.webgl;
+            this._texture = webgl.createTexture()!;
             webgl.bindTexture(webgl.TEXTURE_CUBE_MAP, this.texture);
             webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
             webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);

@@ -191,7 +191,7 @@ declare namespace paper.editor {
 }
 declare namespace paper.editor {
     /**
-     *
+     * TODO
      */
     class SceneSystem extends BaseSystem {
         protected readonly _interests: {
@@ -227,6 +227,8 @@ declare namespace paper.editor {
         onDisable(): void;
         onUpdate(): void;
     }
+}
+declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }

@@ -20,6 +20,12 @@ namespace egret3d {
         public static CIRCLE_LINE: Mesh;
         public static CUBE_LINE: Mesh;
 
+        /**
+         * @internal
+         */
+        public static FULLSCREEN_QUAD: Mesh;
+
+
         public initialize() {
             super.initialize();
             // TODO 颜色切线，球体，更多类型。
@@ -38,6 +44,20 @@ namespace egret3d {
                 mesh.name = "builtin/quad_particle.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD_PARTICLE = mesh;
+            }
+
+            { // FULLSCREEN_QUAD.
+                const mesh = MeshBuilder.createPlane(2.0, 2.0);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/fullscreen_quad.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.FULLSCREEN_QUAD = mesh;
+
+                //后期渲染专用，UV反转一下，这样shader中就不用反转了
+                const uvs = mesh.getUVs();
+                for (let i = 1, l = uvs.length; i < l; i += 2) {
+                    uvs[i] = 1.0 - uvs[i];
+                }
             }
 
             { // PLANE.

@@ -111,7 +111,8 @@ namespace egret3d {
         /**
          * TODO 功能完善后开放此接口
          */
-        public readonly postQueues: ICameraPostQueue[] = [];
+        public readonly postQueues: ICameraPostProcessing[] = [];
+        public postProcessContext: PostProcessRenderContext = null as any;
 
         /**
          * 相机渲染上下文
@@ -235,6 +236,7 @@ namespace egret3d {
             super.initialize();
 
             this.context = new RenderContext();
+            this.postProcessContext = new PostProcessRenderContext(this);
         }
 
         /**
