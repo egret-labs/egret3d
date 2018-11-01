@@ -49,8 +49,8 @@ namespace paper.editor {
             const d = (eyeDistance % 1.0);
             const s = d * (_step - 1) + 1.0;
 
-            this._gridA.transform.setScale(s * _step, 0.0, s * _step);
-            this._gridB.transform.setScale(s, 0.0, s);
+            this._gridA.transform.setLocalScale(s * _step, 0.0, s * _step);
+            this._gridB.transform.setLocalScale(s, 0.0, s);
 
             const mA = (this._gridA.renderer as egret3d.MeshRenderer).material!;
             const mB = (this._gridB.renderer as egret3d.MeshRenderer).material!;

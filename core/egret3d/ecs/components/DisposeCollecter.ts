@@ -12,6 +12,10 @@ namespace paper {
          */
         public readonly gameObjects: GameObject[] = [];
         /**
+         * 暂存此帧更改过父级的实体。
+         */
+        public readonly parentChangedGameObjects: GameObject[] = [];
+        /**
          * 暂存此帧销毁的全部组件。
          */
         public readonly components: BaseComponent[] = [];
@@ -31,6 +35,7 @@ namespace paper {
         public clear() {
             this.scenes.length = 0;
             this.gameObjects.length = 0;
+            this.parentChangedGameObjects.length = 0;
             this.components.length = 0;
             this.releases.length = 0;
         }
