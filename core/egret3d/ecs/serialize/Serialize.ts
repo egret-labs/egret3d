@@ -1,10 +1,10 @@
 namespace paper {
     /**
-     * 
+     * @private
      */
     export const DATA_VERSION: number = 3;
     /**
-     * 
+     * @private
      */
     export const DATA_VERSIONS = [DATA_VERSION];
 
@@ -21,7 +21,7 @@ namespace paper {
     let _serializeData: ISerializedData | null = null;
     let _defaultGameObject: GameObject | null = null;
     /**
-     * 
+     * @private
      */
     export function serialize(source: Scene | GameObject | BaseComponent, inline: boolean = false): ISerializedData {
         if (_serializeData) {
@@ -51,7 +51,7 @@ namespace paper {
         return serializeData;
     }
     /**
-     * 
+     * @private
      */
     export function clone(object: GameObject) {
         const data = serialize(object, true);
@@ -60,7 +60,7 @@ namespace paper {
         return deserializer.deserialize(data);
     }
     /**
-     * 
+     * @private
      */
     export function equal(source: any, target: any): boolean {
         const typeSource = typeof source;
@@ -127,7 +127,7 @@ namespace paper {
         }
 
         if (source.constructor === Object) {
-            for (let k of source) {
+            for (const k in source) {
                 if (!equal(source[k], target[k])) {
                     return false;
                 }
@@ -147,7 +147,7 @@ namespace paper {
         throw new Error("Unsupported data.");
     }
     /**
-     * 
+     * @private
      */
     export function serializeAsset(source: Asset): IAssetReference {
         if (!source.name) {

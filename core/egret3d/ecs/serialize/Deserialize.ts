@@ -299,6 +299,7 @@ namespace paper {
 
             const sceneClassName = egret.getQualifiedClassName(Scene);
             const transformClassName = egret.getQualifiedClassName(egret3d.Transform);
+            const updateRoots = [];
             const components: { [key: string]: ISerializedObject } = {};
             let root: Scene | GameObject | BaseComponent | null = null;
 
@@ -348,6 +349,12 @@ namespace paper {
                                 if (!target) {
                                     // Delete node.
                                 }
+
+                                // Update node root id.
+                                updateRoots.push(
+                                    target,
+                                    prefabDeserializer.objects[extras.rootID!]!.uuid
+                                );
                             }
                         }
                         else {
@@ -414,6 +421,10 @@ namespace paper {
                         this._deserializeObject(componentSource, component);
                     }
                 }
+            }
+
+            for (let i = 0, l = updateRoots.length; i < l; i += 2) {
+                (updateRoots[0] as GameObject).extras!.rootID = updateRoots[1];
             }
 
             Deserializer._lastDeserializer = this;

@@ -346,9 +346,9 @@ namespace paper.editor {
             eye.normalize();
 
             const quaternion = isWorldSpace ? egret3d.Quaternion.IDENTITY : selectedGameObject.transform.rotation;
-            this.gameObject.transform.position = selectedGameObject.transform.position;
-            this.gameObject.transform.rotation = quaternion;
-            this.gameObject.transform.scale = egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10.0).release();
+            this.gameObject.transform.localPosition = selectedGameObject.transform.position;
+            this.gameObject.transform.localRotation = quaternion;
+            this.gameObject.transform.localScale = egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10.0).release();
 
             if (this._mode === this.rotate) {
                 const tempQuaternion = quaternion.clone();

@@ -334,35 +334,6 @@ namespace egret3d {
             return this.normalize();
         }
         /**
-         * 将该向量乘以一个矩阵。
-         * - v *= matrix
-         * - 矩阵的平移数据不会影响向量。
-         * @param matrix 一个矩阵。
-         */
-        public applyMatrixWithoutTranslate(matrix: Readonly<Matrix4>): this;
-        /**
-         * 将输入向量与一个矩阵相乘的结果写入该向量。
-         * - v = input * matrix
-         * - 矩阵的平移数据不会影响向量。
-         * @param matrix 一个矩阵。
-         * @param input 输入向量。
-         */
-        public applyMatrixWithoutTranslate(matrix: Readonly<Matrix4>, input: Readonly<IVector3>): this;
-        public applyMatrixWithoutTranslate(matrix: Readonly<Matrix4>, input?: Readonly<IVector3>) {
-            if (!input) {
-                input = this;
-            }
-
-            const x = input.x, y = input.y, z = input.z;
-            const rawData = matrix.rawData;
-
-            this.x = rawData[0] * x + rawData[4] * y + rawData[8] * z;
-            this.y = rawData[1] * x + rawData[5] * y + rawData[9] * z;
-            this.z = rawData[2] * x + rawData[6] * y + rawData[10] * z;
-
-            return this;
-        }
-        /**
          * 将该向量乘以一个四元数。
          * - v *= quaternion
          * @param quaternion 一个四元数。
