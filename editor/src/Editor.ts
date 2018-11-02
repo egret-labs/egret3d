@@ -63,7 +63,7 @@ namespace paper.editor {
         public static async init() {
             this.eventDispatcher = new EventDispatcher();
             //覆盖生成 uuid 的方式。
-            createUUID = generateUuid;
+            paper.createUUID = generateUuid;
             //初始化编辑环境
             this.initEditEnvironment();
             //允许重新加载

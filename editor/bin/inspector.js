@@ -3296,8 +3296,8 @@ var paper;
                 var eyeDistance = (10000.0 - target.getDistance(camera.gameObject.transform.position)) * 0.01; // TODO
                 var d = (eyeDistance % 1.0);
                 var s = d * (_step - 1) + 1.0;
-                this._gridA.transform.setScale(s * _step, 0.0, s * _step);
-                this._gridB.transform.setScale(s, 0.0, s);
+                this._gridA.transform.setLocalScale(s * _step, 0.0, s * _step);
+                this._gridB.transform.setLocalScale(s, 0.0, s);
                 var mA = this._gridA.renderer.material;
                 var mB = this._gridB.renderer.material;
                 mA.opacity = 1.0 * 0.2;
@@ -3580,7 +3580,7 @@ var paper;
                         move.x = -move.x;
                         var center = _this.lookAtPoint;
                         var dis = _this.gameObject.transform.position.getDistance(center);
-                        move.multiplyScalar(dis * _this.moveSpped).applyMatrixWithoutTranslate(_this.gameObject.transform.localMatrix);
+                        move.multiplyScalar(dis * _this.moveSpped).applyQuaternion(_this.gameObject.transform.rotation);
                         _this.lookAtOffset.add(move);
                     }
                     else {
@@ -4159,9 +4159,9 @@ var paper;
                 }
                 eye.normalize();
                 var quaternion = isWorldSpace ? egret3d.Quaternion.IDENTITY : selectedGameObject.transform.rotation;
-                this.gameObject.transform.position = selectedGameObject.transform.position;
-                this.gameObject.transform.rotation = quaternion;
-                this.gameObject.transform.scale = egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10.0).release();
+                this.gameObject.transform.localPosition = selectedGameObject.transform.position;
+                this.gameObject.transform.localRotation = quaternion;
+                this.gameObject.transform.localScale = egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10.0).release();
                 if (this._mode === this.rotate) {
                     var tempQuaternion = quaternion.clone();
                     var tempQuaternion2 = quaternion.clone();
@@ -4640,7 +4640,7 @@ var paper;
                             case 0:
                                 this.eventDispatcher = new editor.EventDispatcher();
                                 //覆盖生成 uuid 的方式。
-                                createUUID = editor.generateUuid;
+                                paper.createUUID = editor.generateUuid;
                                 //初始化编辑环境
                                 this.initEditEnvironment();
                                 //允许重新加载
@@ -7310,7 +7310,7 @@ var paper;
                     this.addList = [];
                     for (var i = 0; i < this.duplicateInfo.length; i++) {
                         var info = this.duplicateInfo[i];
-                        var obj = new paper.Deserializer().deserialize(info.serializeData, !this.firstDo, true, this.editorModel.scene);
+                        var obj = new paper.Deserializer().deserialize(info.serializeData, !this.firstDo, false, this.editorModel.scene);
                         var parent_3 = this.editorModel.getGameObjectByUUid(info.parentUUID);
                         if (parent_3) {
                             obj.transform.parent = parent_3.transform;
@@ -7623,7 +7623,7 @@ var paper;
                     var keepUID = this.cacheSerializeData ? true : false;
                     for (var i = 0; i < serializeDataList.length; i++) {
                         var info = serializeDataList[i];
-                        var obj = new paper.Deserializer().deserialize(info, keepUID, true, this.editorModel.scene);
+                        var obj = new paper.Deserializer().deserialize(info, keepUID, false, this.editorModel.scene);
                         if (obj && parent_4) {
                             obj.transform.parent = parent_4.transform;
                         }
@@ -8446,6 +8446,20 @@ var paper;
                             }
                         }
                     }
+                    // TODO
+                    // for (const gameObject of this._disposeCollecter.parentChangedGameObjects) {
+                    //     const folder = this._hierarchyFolders[gameObject.uuid];
+                    //     if (folder) {
+                    //         if (folder.parent) {
+                    //             try {
+                    //                 folder.parent.removeFolder(folder);
+                    //             }
+                    //             catch (e) {
+                    //             }
+                    //         }
+                    //         this._bufferedGameObjects.push(gameObject);
+                    //     }
+                    // }
                 }
             };
             return GUISystem;
