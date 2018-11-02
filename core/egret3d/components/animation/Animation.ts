@@ -70,7 +70,7 @@ namespace egret3d {
             this.leftWeight = 1.0;
             this.layerWeight = animationWeight;
             this.blendWeight = animationWeight;
-            
+
             return true;
         }
     }
@@ -106,11 +106,18 @@ namespace egret3d {
             const inputBuffer = this.inputBuffer;
             const frameCount = inputBuffer.length;
 
-            if (currentTime <= inputBuffer[0]) {
+            if (DEBUG && frameCount === 0) {
+                throw new Error();
+            }
+
+            if (frameCount === 1) {
+                return -1;
+            }
+            else if (currentTime <= inputBuffer[0]) {
                 return 0;
             }
             else if (currentTime >= inputBuffer[frameCount - 1]) {
-                return frameCount - 1;
+                return frameCount - 2;
             }
 
             let beginIndex = 0;
@@ -313,18 +320,27 @@ namespace egret3d {
             const outputBuffer = channel.outputBuffer;
             const frameIndex = channel.getFrameIndex(currentTime);
 
-            let offset = frameIndex * 3;
-            let x = outputBuffer[offset++];
-            let y = outputBuffer[offset++];
-            let z = outputBuffer[offset++];
+            let x: number, y: number, z: number;
 
-            if (!interpolation || interpolation !== "STEP") {
-                const inputBuffer = channel.inputBuffer;
-                const frameStart = inputBuffer[frameIndex];
-                const progress = (currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
-                x += (outputBuffer[offset++] - x) * progress;
-                y += (outputBuffer[offset++] - y) * progress;
-                z += (outputBuffer[offset++] - z) * progress;
+            if (frameIndex >= 0) {
+                let offset = frameIndex * 3;
+                x = outputBuffer[offset++];
+                y = outputBuffer[offset++];
+                z = outputBuffer[offset++];
+
+                if (!interpolation || interpolation !== "STEP") {
+                    const inputBuffer = channel.inputBuffer;
+                    const frameStart = inputBuffer[frameIndex];
+                    const progress = (currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
+                    x += (outputBuffer[offset++] - x) * progress;
+                    y += (outputBuffer[offset++] - y) * progress;
+                    z += (outputBuffer[offset++] - z) * progress;
+                }
+            }
+            else {
+                x = outputBuffer[0];
+                y = outputBuffer[1];
+                z = outputBuffer[2];
             }
 
             const isArray = Array.isArray(channel.components);
@@ -343,9 +359,9 @@ namespace egret3d {
             //     blendTarget.z = z * blendWeight;
             // }
             // else {
-                blendTarget.x = x;
-                blendTarget.y = y;
-                blendTarget.z = z;
+            blendTarget.x = x;
+            blendTarget.y = y;
+            blendTarget.z = z;
             // }
 
             if (isArray) {
@@ -364,20 +380,30 @@ namespace egret3d {
             const outputBuffer = channel.outputBuffer;
             const frameIndex = channel.getFrameIndex(currentTime);
 
-            let offset = frameIndex * 4;
-            let x = outputBuffer[offset++];
-            let y = outputBuffer[offset++];
-            let z = outputBuffer[offset++];
-            let w = outputBuffer[offset++];
+            let x: number, y: number, z: number, w: number;
 
-            if (!interpolation || interpolation !== "STEP") {
-                const inputBuffer = channel.inputBuffer;
-                const frameStart = inputBuffer[frameIndex];
-                const progress = (currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
-                x += (outputBuffer[offset++] - x) * progress;
-                y += (outputBuffer[offset++] - y) * progress;
-                z += (outputBuffer[offset++] - z) * progress;
-                w += (outputBuffer[offset++] - w) * progress;
+            if (frameIndex >= 0) {
+                let offset = frameIndex * 4;
+                x = outputBuffer[offset++];
+                y = outputBuffer[offset++];
+                z = outputBuffer[offset++];
+                w = outputBuffer[offset++];
+
+                if (!interpolation || interpolation !== "STEP") {
+                    const inputBuffer = channel.inputBuffer;
+                    const frameStart = inputBuffer[frameIndex];
+                    const progress = (currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
+                    x += (outputBuffer[offset++] - x) * progress;
+                    y += (outputBuffer[offset++] - y) * progress;
+                    z += (outputBuffer[offset++] - z) * progress;
+                    w += (outputBuffer[offset++] - w) * progress;
+                }
+            }
+            else {
+                x = outputBuffer[0];
+                y = outputBuffer[1];
+                z = outputBuffer[2];
+                w = outputBuffer[3];
             }
 
             const isArray = Array.isArray(channel.components);
@@ -398,10 +424,10 @@ namespace egret3d {
             //     blendTarget.w = w * blendWeight;
             // }
             // else {
-                blendTarget.x = x;
-                blendTarget.y = y;
-                blendTarget.z = z;
-                blendTarget.w = w;
+            blendTarget.x = x;
+            blendTarget.y = y;
+            blendTarget.z = z;
+            blendTarget.w = w;
             // }
 
             if (isArray) {
@@ -420,18 +446,27 @@ namespace egret3d {
             const outputBuffer = channel.outputBuffer;
             const frameIndex = channel.getFrameIndex(currentTime);
 
-            let offset = frameIndex * 3;
-            let x = outputBuffer[offset++];
-            let y = outputBuffer[offset++];
-            let z = outputBuffer[offset++];
+            let x: number, y: number, z: number;
 
-            if (!interpolation || interpolation !== "STEP") {
-                const inputBuffer = channel.inputBuffer;
-                const frameStart = inputBuffer[frameIndex];
-                const progress = (animationState._currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
-                x += (outputBuffer[offset++] - x) * progress;
-                y += (outputBuffer[offset++] - y) * progress;
-                z += (outputBuffer[offset++] - z) * progress;
+            if (frameIndex >= 0) {
+                let offset = frameIndex * 3;
+                x = outputBuffer[offset++];
+                y = outputBuffer[offset++];
+                z = outputBuffer[offset++];
+
+                if (!interpolation || interpolation !== "STEP") {
+                    const inputBuffer = channel.inputBuffer;
+                    const frameStart = inputBuffer[frameIndex];
+                    const progress = (animationState._currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
+                    x += (outputBuffer[offset++] - x) * progress;
+                    y += (outputBuffer[offset++] - y) * progress;
+                    z += (outputBuffer[offset++] - z) * progress;
+                }
+            }
+            else {
+                x = outputBuffer[0];
+                y = outputBuffer[1];
+                z = outputBuffer[2];
             }
 
             const isArray = Array.isArray(channel.components);
@@ -450,9 +485,9 @@ namespace egret3d {
             //     blendTarget.z = (z - 1.0) * blendWeight + 1.0;
             // }
             // else {
-                blendTarget.x = x;
-                blendTarget.y = y;
-                blendTarget.z = z;
+            blendTarget.x = x;
+            blendTarget.y = y;
+            blendTarget.z = z;
             // }
 
             if (isArray) {

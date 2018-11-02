@@ -4373,7 +4373,9 @@ var paper;
                 var guiControllerB;
                 var guiControllerC;
                 var guiControllerD;
-                gui.onClick = this._componentOrPropertyGUIClickHandler;
+                if (gui !== this._guiComponent.inspector) {
+                    gui.onClick = this._componentOrPropertyGUIClickHandler;
+                }
                 var _loop_1 = function (info) {
                     switch (info.editType) {
                         case "UINT" /* UINT */:
@@ -4642,31 +4644,6 @@ var paper;
                 }
             };
             GUISystem.prototype.onUpdate = function () {
-                var i = 0;
-                while (this._bufferedGameObjects.length > 0 && i++ < 5) {
-                    var gameObject = this._bufferedGameObjects.shift();
-                    if (gameObject) {
-                        if (!this._addToHierarchy(gameObject)) {
-                            this._bufferedGameObjects.push(gameObject);
-                        }
-                    }
-                }
-                // Open and select folder.
-                if (!this._selectFolder) {
-                    var sceneOrGameObject = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
-                    if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
-                        this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
-                        this._selectFolder.selected = true;
-                        this._openFolder(this._selectFolder);
-                    }
-                }
-                this._guiComponent.inspector.updateDisplay();
-                var inspectorFolders = this._guiComponent.inspector.__folders;
-                if (inspectorFolders) {
-                    for (var k in inspectorFolders) {
-                        inspectorFolders[k].updateDisplay();
-                    }
-                }
                 {
                     for (var _i = 0, _a = this._disposeCollecter.scenes; _i < _a.length; _i++) {
                         var scene = _a[_i];
@@ -4704,20 +4681,51 @@ var paper;
                             }
                         }
                     }
-                    // TODO
-                    // for (const gameObject of this._disposeCollecter.parentChangedGameObjects) {
-                    //     const folder = this._hierarchyFolders[gameObject.uuid];
-                    //     if (folder) {
-                    //         if (folder.parent) {
-                    //             try {
-                    //                 folder.parent.removeFolder(folder);
-                    //             }
-                    //             catch (e) {
-                    //             }
-                    //         }
-                    //         this._bufferedGameObjects.push(gameObject);
-                    //     }
-                    // }
+                    for (var _g = 0, _h = this._disposeCollecter.parentChangedGameObjects; _g < _h.length; _g++) {
+                        var gameObject = _h[_g];
+                        var folder = this._hierarchyFolders[gameObject.uuid];
+                        if (folder) {
+                            delete this._hierarchyFolders[gameObject.uuid];
+                            if (folder && folder.parent) {
+                                try {
+                                    folder.parent.removeFolder(folder);
+                                }
+                                catch (e) {
+                                }
+                            }
+                            this._bufferedGameObjects.push(gameObject);
+                        }
+                        else if (this._bufferedGameObjects.indexOf(gameObject) < 0) {
+                            this._bufferedGameObjects.push(gameObject);
+                        }
+                    }
+                }
+                // Add folder.
+                var i = 0;
+                while (this._bufferedGameObjects.length > 0 && i++ < 5) {
+                    var gameObject = this._bufferedGameObjects.shift();
+                    if (gameObject) {
+                        if (!this._addToHierarchy(gameObject)) {
+                            this._bufferedGameObjects.push(gameObject);
+                        }
+                    }
+                }
+                // Open and select folder.
+                if (!this._selectFolder) {
+                    var sceneOrGameObject = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
+                    if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
+                        this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
+                        this._selectFolder.selected = true;
+                        this._openFolder(this._selectFolder);
+                    }
+                }
+                // Update folder.
+                this._guiComponent.inspector.updateDisplay();
+                var inspectorFolders = this._guiComponent.inspector.__folders;
+                if (inspectorFolders) {
+                    for (var k in inspectorFolders) {
+                        inspectorFolders[k].updateDisplay();
+                    }
                 }
             };
             return GUISystem;

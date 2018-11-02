@@ -101,13 +101,13 @@ namespace examples {
                 this._cubeEraser.transform.setLocalEuler(0.0, 0.0, 0.0);
             }
 
-            for (const pointer of inputCollecter.downPointers) {
+            for (const pointer of inputCollecter.getDownPointers()) {
                 if (!(pointer.event!.pointerId in this._holdCubes)) {
                     this._holdCubes[pointer.event!.pointerId] = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
                 }
             }
 
-            for (const pointer of inputCollecter.holdPointers) {
+            for (const pointer of inputCollecter.getHoldPointers()) {
                 const cube = this._holdCubes[pointer.event!.pointerId];
                 if (cube) {
                     const ray = camera.createRayByScreen(pointer.position.x, pointer.position.y).release();
@@ -120,13 +120,21 @@ namespace examples {
                 }
             }
 
-            for (const pointer of inputCollecter.upPointers) {
+            for (const pointer of inputCollecter.getUpPointers()) {
                 const cube = this._holdCubes[pointer.event!.pointerId];
                 if (cube) {
                     cube.destroy();
                     delete this._holdCubes[pointer.event!.pointerId];
                 }
             }
+
+            for (const key of inputCollecter.getDownKeys()) {
+                console.log("KeyDown", key.event!.code, key.event!.key, key.event!.keyCode);
+            }
+
+            // for (const key of inputCollecter.getUpKeys()) {
+            //     console.log("KeyUp", key.event!.code, key.event!.key);
+            // }
         }
     }
 }

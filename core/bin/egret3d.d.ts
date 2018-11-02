@@ -4368,39 +4368,40 @@ declare namespace paper {
         readonly components: {
             [key: string]: BaseComponent;
         };
+        root: Scene | GameObject | BaseComponent | null;
         private _keepUUID;
         private _makeLink;
         private readonly _deserializers;
         private _rootTarget;
         private _deserializeObject(source, target);
-        private _createComponent(componentSource, source?, target?);
+        private _deserializeComponent(componentSource, source?, target?);
         private _deserializeChild(source, target?);
         getAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent | null;
     }
 }
 declare namespace paper {
     /**
-     *
+     * @private
      */
     const DATA_VERSION: number;
     /**
-     *
+     * @private
      */
     const DATA_VERSIONS: number[];
     /**
-     *
+     * @private
      */
     function serialize(source: Scene | GameObject | BaseComponent, inline?: boolean): ISerializedData;
     /**
-     *
+     * @private
      */
     function clone(object: GameObject): BaseComponent | GameObject | Scene;
     /**
-     *
+     * @private
      */
     function equal(source: any, target: any): boolean;
     /**
-     *
+     * @private
      */
     function serializeAsset(source: Asset): IAssetReference;
     /**
@@ -5291,36 +5292,36 @@ declare namespace egret3d {
          */
         readonly onKeyUp: signals.Signal;
         /**
-         * 此帧按下的全部 Pointer。
-         */
-        readonly downPointers: Pointer[];
-        /**
-         * 此帧持续按下的全部 Pointer。
-         */
-        readonly holdPointers: Pointer[];
-        /**
-         * 此帧抬起的全部 Pointer。
-         */
-        readonly upPointers: Pointer[];
-        /**
-         * 此帧按下的全部按键。
-         */
-        readonly downKeys: Key[];
-        /**
-         * 此帧持续按下的全部按键。
-         */
-        readonly holdKeys: Key[];
-        /**
-         * 此帧抬起的全部按键。
-         */
-        readonly upKeys: Key[];
-        /**
          * 默认的 Pointer 实例。
          */
         readonly defaultPointer: Pointer;
         private readonly _pointers;
         private readonly _keys;
         initialize(): void;
+        /**
+         * 此帧按下的全部 Pointer。
+         */
+        getDownPointers(isPlayerMode?: boolean): ReadonlyArray<Pointer>;
+        /**
+         * 此帧持续按下的全部 Pointer。
+         */
+        getHoldPointers(isPlayerMode?: boolean): ReadonlyArray<Pointer>;
+        /**
+         * 此帧抬起的全部 Pointer。
+         */
+        getUpPointers(isPlayerMode?: boolean): ReadonlyArray<Pointer>;
+        /**
+         * 此帧按下的全部按键。
+         */
+        getDownKeys(isPlayerMode?: boolean): ReadonlyArray<Key>;
+        /**
+         * 此帧持续按下的全部按键。
+         */
+        getHoldKeys(isPlayerMode?: boolean): ReadonlyArray<Key>;
+        /**
+         * 此帧抬起的全部按键。
+         */
+        getUpKeys(isPlayerMode?: boolean): ReadonlyArray<Key>;
         /**
          * 通过键名称创建或获取一个按键实例。
          */
@@ -6671,65 +6672,6 @@ declare namespace egret3d.particle {
     /**
      * TODO
      */
-    class GradientColorKey extends paper.BaseObject {
-        time: number;
-        readonly color: Color;
-        deserialize(element: any): this;
-    }
-    /**
-     * TODO
-     */
-    class GradientAlphaKey extends paper.BaseObject {
-        alpha: number;
-        time: number;
-        deserialize(element: any): this;
-    }
-    /**
-     * TODO
-     */
-    class Gradient extends paper.BaseObject {
-        mode: GradientMode;
-        private readonly alphaKeys;
-        private readonly colorKeys;
-        private readonly _alphaValue;
-        private readonly _colorValue;
-        deserialize(element: any): this;
-        evaluate(t: number, out: Color): Color;
-        readonly alphaValues: Readonly<Float32Array>;
-        readonly colorValues: Readonly<Float32Array>;
-    }
-    /**
-     * TODO create
-     */
-    class MinMaxCurve extends paper.BaseObject {
-        mode: CurveMode;
-        constant: number;
-        constantMin: number;
-        constantMax: number;
-        readonly curve: AnimationCurve;
-        readonly curveMin: AnimationCurve;
-        readonly curveMax: AnimationCurve;
-        deserialize(element: any): this;
-        evaluate(t?: number): number;
-        copy(source: Readonly<MinMaxCurve>): void;
-    }
-    /**
-     * TODO create
-     */
-    class MinMaxGradient extends paper.BaseObject {
-        mode: ColorGradientMode;
-        readonly color: Color;
-        readonly colorMin: Color;
-        readonly colorMax: Color;
-        readonly gradient: Gradient;
-        readonly gradientMin: Gradient;
-        readonly gradientMax: Gradient;
-        deserialize(element: any): this;
-        evaluate(t: number, out: Color): Color;
-    }
-    /**
-     *
-     */
     class Burst implements paper.ISerializable {
         time: number;
         minCount: number;
@@ -6740,13 +6682,139 @@ declare namespace egret3d.particle {
         deserialize(element: Readonly<[number, number, number, number, number]>): this;
     }
     /**
+     * TODO
+     */
+    class GradientColorKey implements paper.ISerializable {
+        time: number;
+        readonly color: Color;
+        serialize(): {
+            time: number;
+            color: number[];
+        };
+        deserialize(element: any): this;
+    }
+    /**
+     * TODO
+     */
+    class GradientAlphaKey implements paper.ISerializable {
+        time: number;
+        alpha: number;
+        serialize(): {
+            time: number;
+            alpha: number;
+        };
+        deserialize(element: any): this;
+    }
+    /**
+     * TODO
+     */
+    class Gradient implements paper.ISerializable {
+        mode: GradientMode;
+        private readonly alphaKeys;
+        private readonly colorKeys;
+        private readonly _alphaValue;
+        private readonly _colorValue;
+        serialize(): {
+            mode: GradientMode;
+            alphaKeys: {
+                time: number;
+                alpha: number;
+            }[];
+            colorKeys: {
+                time: number;
+                color: number[];
+            }[];
+        };
+        deserialize(element: any): this;
+        evaluate(t: number, out: Color): Color;
+        readonly alphaValues: Readonly<Float32Array>;
+        readonly colorValues: Readonly<Float32Array>;
+    }
+    /**
+     * TODO create
+     */
+    class MinMaxCurve implements paper.ISerializable {
+        mode: CurveMode;
+        constant: number;
+        constantMin: number;
+        constantMax: number;
+        readonly curve: AnimationCurve;
+        readonly curveMin: AnimationCurve;
+        readonly curveMax: AnimationCurve;
+        serialize(): {
+            mode: CurveMode;
+            constant: number;
+            constantMin: number;
+            constantMax: number;
+            curve: number[][];
+            curveMin: number[][];
+            curveMax: number[][];
+        };
+        deserialize(element: any): this;
+        evaluate(t?: number): number;
+        copy(source: Readonly<MinMaxCurve>): void;
+    }
+    /**
+     * TODO create
+     */
+    class MinMaxGradient implements paper.ISerializable {
+        mode: ColorGradientMode;
+        readonly color: Color;
+        readonly colorMin: Color;
+        readonly colorMax: Color;
+        readonly gradient: Gradient;
+        readonly gradientMin: Gradient;
+        readonly gradientMax: Gradient;
+        serialize(): {
+            mode: ColorGradientMode;
+            color: number[];
+            colorMin: number[];
+            colorMax: number[];
+            gradient: {
+                mode: GradientMode;
+                alphaKeys: {
+                    time: number;
+                    alpha: number;
+                }[];
+                colorKeys: {
+                    time: number;
+                    color: number[];
+                }[];
+            };
+            gradientMin: {
+                mode: GradientMode;
+                alphaKeys: {
+                    time: number;
+                    alpha: number;
+                }[];
+                colorKeys: {
+                    time: number;
+                    color: number[];
+                }[];
+            };
+            gradientMax: {
+                mode: GradientMode;
+                alphaKeys: {
+                    time: number;
+                    alpha: number;
+                }[];
+                colorKeys: {
+                    time: number;
+                    color: number[];
+                }[];
+            };
+        };
+        deserialize(element: any): this;
+        evaluate(t: number, out: Color): Color;
+    }
+    /**
      * 粒子模块基类。
      */
     abstract class ParticleModule extends paper.BaseObject {
         enable: boolean;
         protected readonly _component: ParticleComponent;
         constructor(component: ParticleComponent);
-        deserialize(element: any): this;
+        deserialize(_element: any): this;
     }
     /**
      *
