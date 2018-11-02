@@ -36,6 +36,7 @@ namespace paper.editor {
                 const empty = document.createElement("div");
                 empty.style.width = "100%";
                 oldContainer.style.display = "flex";
+                oldContainer.insertBefore(this._guiComponent.stats.dom, oldContainer.lastElementChild);
                 oldContainer.insertBefore(empty, oldContainer.lastElementChild);
 
                 this._guiComponent.hierarchy.onClick = () => {
