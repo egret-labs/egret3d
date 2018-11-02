@@ -727,31 +727,26 @@ var paper;
             /**矩阵 */
             EditType["MAT3"] = "MAT3";
         })(EditType = editor.EditType || (editor.EditType = {}));
-        var customMap = {};
         /**
          * 装饰器:自定义
          */
         function custom() {
             return function (target) {
-                customMap[target.name] = true;
+                target['__custom__'] = true;
             };
         }
         editor.custom = custom;
-        var propertyMap = {};
         /**
          * 装饰器:属性
          * @param editType 编辑类型
          */
         function property(editType, option) {
             return function (target, property) {
-                if (!propertyMap[target.constructor.name]) {
-                    propertyMap[target.constructor.name] = {
-                        extends: target.__proto__.constructor.name,
-                        propertyList: [],
-                    };
+                if (!target.hasOwnProperty('__props__')) {
+                    target['__props__'] = [];
                 }
                 if (editType !== undefined) {
-                    propertyMap[target.constructor.name].propertyList.push(new PropertyInfo(property, editType, option));
+                    target['__props__'].push(new PropertyInfo(property, editType, option));
                 }
                 else {
                     //TODO:自动分析编辑类型
@@ -764,7 +759,9 @@ var paper;
          * @param classInstance 实例对象
          */
         function isCustom(classInstance) {
-            return customMap[classInstance.constructor.name] ? true : false;
+            var clzName = egret.getQualifiedClassName(classInstance);
+            var clz = egret.getDefinitionByName(clzName);
+            return clz['__custom__'] ? true : false;
         }
         editor.isCustom = isCustom;
         /**
@@ -786,16 +783,16 @@ var paper;
          * @param classInstance 实例对象
          */
         function getEditInfo(classInstance) {
-            var whileInsance = classInstance.__proto__;
             var retrunList = [];
-            var className;
-            while (whileInsance) {
-                className = whileInsance.constructor.name;
-                var classInfo = propertyMap[className];
-                if (classInfo) {
-                    retrunList = retrunList.concat(classInfo.propertyList);
+            var clzName = egret.getQualifiedClassName(classInstance);
+            var clz = egret.getDefinitionByName(clzName);
+            var extend = clz.prototype.__types__;
+            for (var i = extend.length - 1; i >= 0; i--) {
+                var clzName_1 = extend[i];
+                var clz_1 = egret.getDefinitionByName(clzName_1);
+                if (clz_1 && clz_1.prototype.hasOwnProperty('__props__')) {
+                    retrunList = retrunList.concat(clz_1.prototype['__props__']);
                 }
-                whileInsance = whileInsance.__proto__;
             }
             return retrunList;
         }
@@ -7776,6 +7773,7 @@ var paper;
              *
              */
             this.components = {};
+            this.root = null;
             this._deserializers = {};
             this._rootTarget = null;
         }
@@ -7789,20 +7787,20 @@ var paper;
                 if (!this._keepUUID && k === KEY_UUID) {
                     continue;
                 }
-                var retargetKey = (deserializedKeys && k in deserializedKeys) ? deserializedKeys[k] : k;
-                if (deserializedIgnoreKeys &&
-                    deserializedIgnoreKeys.indexOf(retargetKey) >= 0) {
+                var retargetKey = (deserializedKeys && k in deserializedKeys) ? deserializedKeys[k] : k; // 重定向反序列化 key。
+                if (deserializedIgnoreKeys && deserializedIgnoreKeys.indexOf(retargetKey) >= 0) {
                     continue;
                 }
                 var retarget = this._deserializeChild(source[k], target[retargetKey]);
-                if (retarget !== undefined) {
-                    target[retargetKey] = retarget;
+                if (retarget === undefined) {
+                    continue;
                 }
+                target[retargetKey] = retarget;
             }
             return target;
         };
-        Deserializer.prototype._createComponent = function (componentSource, source, target) {
-            var className = paper.serializeClassMap[componentSource.class] || componentSource.class;
+        Deserializer.prototype._deserializeComponent = function (componentSource, source, target) {
+            var className = paper.serializeClassMap[componentSource.class] || componentSource.class; // 废弃 serializeClassMap。
             var clazz = egret.getDefinitionByName(className);
             var componentTarget = undefined;
             if (clazz) {
@@ -7841,9 +7839,11 @@ var paper;
                 }
             }
             else {
-                componentTarget = (target || this._rootTarget).addComponent(paper.MissingComponent);
+                componentTarget = target.addComponent(paper.MissingComponent);
                 componentTarget.missingObject = componentSource;
-                console.warn("Class " + className + " is not defined.");
+                if (true) {
+                    console.warn("Class " + className + " is not defined.");
+                }
             }
             this.components[componentSource.uuid] = componentTarget;
             return componentTarget;
@@ -7972,6 +7972,7 @@ var paper;
             this._rootTarget = rootTarget;
             var sceneClassName = egret.getQualifiedClassName(paper.Scene);
             var transformClassName = egret.getQualifiedClassName(egret3d.Transform);
+            var updateRoots = [];
             var components = {};
             var root = null;
             if (data.components) {
@@ -8017,6 +8018,8 @@ var paper;
                                 if (!target) {
                                     // Delete node.
                                 }
+                                // Update node root id.
+                                updateRoots.push(target, prefabDeserializer.root.uuid);
                             }
                         }
                         else {
@@ -8053,7 +8056,7 @@ var paper;
                         if (target.constructor === paper.GameObject && KEY_COMPONENTS in source) {
                             for (var _h = 0, _j = source[KEY_COMPONENTS]; _h < _j.length; _h++) {
                                 var componentUUID = _j[_h];
-                                this._createComponent(components[componentUUID.uuid], source, target);
+                                this._deserializeComponent(components[componentUUID.uuid], source, target);
                             }
                         }
                     }
@@ -8071,13 +8074,17 @@ var paper;
                         this._deserializeObject(componentSource, component);
                     }
                     else if (rootTarget && rootTarget.constructor === paper.GameObject) {
-                        component = this._createComponent(componentSource);
+                        component = this._deserializeComponent(componentSource);
                         root = root || component;
                         this._deserializeObject(componentSource, component);
                     }
                 }
             }
+            for (var i = 0, l = updateRoots.length; i < l; i += 2) {
+                updateRoots[0].extras.rootID = updateRoots[1];
+            }
             Deserializer._lastDeserializer = this;
+            this.root = root;
             return root;
         };
         return Deserializer;
@@ -8088,11 +8095,11 @@ var paper;
 var paper;
 (function (paper) {
     /**
-     *
+     * @private
      */
     paper.DATA_VERSION = 3;
     /**
-     *
+     * @private
      */
     paper.DATA_VERSIONS = [paper.DATA_VERSION];
     var KEY_GAMEOBJECTS = "gameObjects";
@@ -8107,7 +8114,7 @@ var paper;
     var _serializeData = null;
     var _defaultGameObject = null;
     /**
-     *
+     * @private
      */
     function serialize(source, inline) {
         if (inline === void 0) { inline = false; }
@@ -8133,7 +8140,7 @@ var paper;
     }
     paper.serialize = serialize;
     /**
-     *
+     * @private
      */
     function clone(object) {
         var data = serialize(object, true);
@@ -8142,7 +8149,7 @@ var paper;
     }
     paper.clone = clone;
     /**
-     *
+     * @private
      */
     function equal(source, target) {
         var typeSource = typeof source;
@@ -8193,8 +8200,7 @@ var paper;
             return source === target;
         }
         if (source.constructor === Object) {
-            for (var _i = 0, source_1 = source; _i < source_1.length; _i++) {
-                var k = source_1[_i];
+            for (var k in source) {
                 if (!equal(source[k], target[k])) {
                     return false;
                 }
@@ -8211,7 +8217,7 @@ var paper;
     }
     paper.equal = equal;
     /**
-     *
+     * @private
      */
     function serializeAsset(source) {
         if (!source.name) {
@@ -10677,7 +10683,7 @@ var egret3d;
             if (!this.event || (isPlayerMode && paper.Application.playerMode !== 0 /* Player */)) {
                 return false;
             }
-            return egret3d.inputCollecter.downKeys.indexOf(this) >= 0;
+            return egret3d.inputCollecter._downKeys.indexOf(this) >= 0;
         };
         /**
          * 该按键此帧持续按下的状态。
@@ -10688,7 +10694,7 @@ var egret3d;
             if (!this.event || (isPlayerMode && paper.Application.playerMode !== 0 /* Player */)) {
                 return false;
             }
-            return egret3d.inputCollecter.holdKeys.indexOf(this) >= 0;
+            return egret3d.inputCollecter._holdKeys.indexOf(this) >= 0;
         };
         /**
          * 该按键此帧抬起的状态。
@@ -10699,7 +10705,7 @@ var egret3d;
             if (!this.event || (isPlayerMode && paper.Application.playerMode !== 0 /* Player */)) {
                 return false;
             }
-            return egret3d.inputCollecter.upKeys.indexOf(this) >= 0;
+            return egret3d.inputCollecter._upKeys.indexOf(this) >= 0;
         };
         return Key;
     }());
@@ -10764,29 +10770,29 @@ var egret3d;
              */
             _this.onKeyUp = new signals.Signal();
             /**
-             * 此帧按下的全部 Pointer。
+             * @internal
              */
-            _this.downPointers = [];
+            _this._downPointers = [];
             /**
-             * 此帧持续按下的全部 Pointer。
+             * @internal
              */
-            _this.holdPointers = [];
+            _this._holdPointers = [];
             /**
-             * 此帧抬起的全部 Pointer。
+             * @internal
              */
-            _this.upPointers = [];
+            _this._upPointers = [];
             /**
-             * 此帧按下的全部按键。
+             * @internal
              */
-            _this.downKeys = [];
+            _this._downKeys = [];
             /**
-             * 此帧持续按下的全部按键。
+             * @internal
              */
-            _this.holdKeys = [];
+            _this._holdKeys = [];
             /**
-             * 此帧抬起的全部按键。
+             * @internal
              */
-            _this.upKeys = [];
+            _this._upKeys = [];
             /**
              * 默认的 Pointer 实例。
              */
@@ -10799,30 +10805,26 @@ var egret3d;
          * @internal
          */
         InputCollecter.prototype.update = function (deltaTime) {
-            for (var _i = 0, _a = this.downPointers; _i < _a.length; _i++) {
+            for (var _i = 0, _a = this._downPointers; _i < _a.length; _i++) {
                 var pointer = _a[_i];
-                if (this.upPointers.indexOf(pointer) >= 0) {
-                    continue;
-                }
                 pointer.holdedTime = 0.0;
-                this.holdPointers.push(pointer);
             }
-            for (var _b = 0, _c = this.holdPointers; _b < _c.length; _b++) {
+            for (var _b = 0, _c = this._holdPointers; _b < _c.length; _b++) {
                 var pointer = _c[_b];
-                pointer.holdedTime += deltaTime;
-                pointer.speed.subtract(pointer.position, pointer._prevPosition);
-                pointer._prevPosition.copy(pointer.position);
-            }
-            for (var _d = 0, _e = this.downKeys; _d < _e.length; _d++) {
-                var key = _e[_d];
-                if (this.holdKeys.indexOf(key) >= 0) {
+                if (this._downPointers.indexOf(pointer) >= 0) {
                     continue;
                 }
-                key.holdedTime = 0.0;
-                this.holdKeys.push(key);
+                pointer.holdedTime += deltaTime;
             }
-            for (var _f = 0, _g = this.holdKeys; _f < _g.length; _f++) {
+            for (var _d = 0, _e = this._downKeys; _d < _e.length; _d++) {
+                var key = _e[_d];
+                key.holdedTime = 0.0;
+            }
+            for (var _f = 0, _g = this._holdKeys; _f < _g.length; _f++) {
                 var key = _g[_f];
+                if (this._downKeys.indexOf(key) >= 0) {
+                    continue;
+                }
                 key.holdedTime += deltaTime;
             }
             return this;
@@ -10840,17 +10842,17 @@ var egret3d;
                     pointer._prevPosition.copy(pointer.position);
                 }
             }
-            if (this.upPointers.length > 0) {
-                this.upPointers.length = 0;
+            if (this._upPointers.length > 0) {
+                this._upPointers.length = 0;
             }
-            if (this.downPointers.length > 0) {
-                this.downPointers.length = 0;
+            if (this._downPointers.length > 0) {
+                this._downPointers.length = 0;
             }
-            if (this.upKeys.length > 0) {
-                this.upKeys.length = 0;
+            if (this._upKeys.length > 0) {
+                this._upKeys.length = 0;
             }
-            if (this.downKeys.length > 0) {
-                this.downKeys.length = 0;
+            if (this._downKeys.length > 0) {
+                this._downKeys.length = 0;
             }
             return this;
         };
@@ -10860,12 +10862,72 @@ var egret3d;
             this._pointers[1] = this.defaultPointer;
         };
         /**
+         * 此帧按下的全部 Pointer。
+         */
+        InputCollecter.prototype.getDownPointers = function (isPlayerMode) {
+            if (isPlayerMode === void 0) { isPlayerMode = true; }
+            if (isPlayerMode && paper.Application.playerMode !== 0 /* Player */) {
+                return [];
+            }
+            return this._downPointers;
+        };
+        /**
+         * 此帧持续按下的全部 Pointer。
+         */
+        InputCollecter.prototype.getHoldPointers = function (isPlayerMode) {
+            if (isPlayerMode === void 0) { isPlayerMode = true; }
+            if (isPlayerMode && paper.Application.playerMode !== 0 /* Player */) {
+                return [];
+            }
+            return this._holdPointers;
+        };
+        /**
+         * 此帧抬起的全部 Pointer。
+         */
+        InputCollecter.prototype.getUpPointers = function (isPlayerMode) {
+            if (isPlayerMode === void 0) { isPlayerMode = true; }
+            if (isPlayerMode && paper.Application.playerMode !== 0 /* Player */) {
+                return [];
+            }
+            return this._upPointers;
+        };
+        /**
+         * 此帧按下的全部按键。
+         */
+        InputCollecter.prototype.getDownKeys = function (isPlayerMode) {
+            if (isPlayerMode === void 0) { isPlayerMode = true; }
+            if (isPlayerMode && paper.Application.playerMode !== 0 /* Player */) {
+                return [];
+            }
+            return this._downKeys;
+        };
+        /**
+         * 此帧持续按下的全部按键。
+         */
+        InputCollecter.prototype.getHoldKeys = function (isPlayerMode) {
+            if (isPlayerMode === void 0) { isPlayerMode = true; }
+            if (isPlayerMode && paper.Application.playerMode !== 0 /* Player */) {
+                return [];
+            }
+            return this._holdKeys;
+        };
+        /**
+         * 此帧抬起的全部按键。
+         */
+        InputCollecter.prototype.getUpKeys = function (isPlayerMode) {
+            if (isPlayerMode === void 0) { isPlayerMode = true; }
+            if (isPlayerMode && paper.Application.playerMode !== 0 /* Player */) {
+                return [];
+            }
+            return this._upKeys;
+        };
+        /**
          * @internal
          */
         InputCollecter.prototype.getPointer = function (pointerID) {
             var pointers = this._pointers;
             if (!(pointerID in pointers)) {
-                if (this.downPointers.length === 0 && this.holdPointers.length === 0) {
+                if (this._downPointers.length === 0 && this._holdPointers.length === 0) {
                     pointers[pointerID] = this.defaultPointer;
                 }
                 else {
@@ -15246,7 +15308,7 @@ var egret3d;
                 return 0;
             }
             else if (currentTime >= inputBuffer[frameCount - 1]) {
-                return frameCount - 1;
+                return frameCount - 2;
             }
             var beginIndex = 0;
             var endIndex = frameCount - 1;
@@ -16630,65 +16692,87 @@ var egret3d;
         /**
          * TODO
          */
-        var GradientColorKey = (function (_super) {
-            __extends(GradientColorKey, _super);
-            function GradientColorKey() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.color = egret3d.Color.create();
-                return _this;
+        var Burst = (function () {
+            function Burst() {
+                this.time = 0.0;
+                this.minCount = 0;
+                this.maxCount = 100;
+                this.cycleCount = 1;
+                this.repeatInterval = 1.0;
             }
-            GradientColorKey.prototype.deserialize = function (element) {
-                this.color.deserialize(element.color);
-                this.time = element.time;
+            Burst.prototype.serialize = function () {
+                return [this.time, this.minCount, this.maxCount, this.cycleCount, this.repeatInterval];
+            };
+            Burst.prototype.deserialize = function (element) {
+                this.time = element[0];
+                this.minCount = element[1];
+                this.maxCount = element[2];
+                this.cycleCount = element[3];
+                this.repeatInterval = element[4];
                 return this;
             };
-            __decorate([
-                paper.serializedField
-            ], GradientColorKey.prototype, "time", void 0);
-            __decorate([
-                paper.serializedField
-            ], GradientColorKey.prototype, "color", void 0);
-            return GradientColorKey;
-        }(paper.BaseObject));
-        particle.GradientColorKey = GradientColorKey;
-        __reflect(GradientColorKey.prototype, "egret3d.particle.GradientColorKey");
+            return Burst;
+        }());
+        particle.Burst = Burst;
+        __reflect(Burst.prototype, "egret3d.particle.Burst", ["paper.ISerializable"]);
         /**
          * TODO
          */
-        var GradientAlphaKey = (function (_super) {
-            __extends(GradientAlphaKey, _super);
-            function GradientAlphaKey() {
-                return _super !== null && _super.apply(this, arguments) || this;
+        var GradientColorKey = (function () {
+            function GradientColorKey() {
+                this.time = 0.0;
+                this.color = egret3d.Color.create();
             }
+            GradientColorKey.prototype.serialize = function () {
+                return { time: this.time, color: this.color.serialize() };
+            };
+            GradientColorKey.prototype.deserialize = function (element) {
+                this.time = element.time;
+                this.color.deserialize(element.color);
+                return this;
+            };
+            return GradientColorKey;
+        }());
+        particle.GradientColorKey = GradientColorKey;
+        __reflect(GradientColorKey.prototype, "egret3d.particle.GradientColorKey", ["paper.ISerializable"]);
+        /**
+         * TODO
+         */
+        var GradientAlphaKey = (function () {
+            function GradientAlphaKey() {
+                this.time = 0.0;
+                this.alpha = 0.0;
+            }
+            GradientAlphaKey.prototype.serialize = function () {
+                return { time: this.time, alpha: this.alpha };
+            };
             GradientAlphaKey.prototype.deserialize = function (element) {
                 this.alpha = element.alpha;
                 this.time = element.time;
                 return this;
             };
-            __decorate([
-                paper.serializedField
-            ], GradientAlphaKey.prototype, "alpha", void 0);
-            __decorate([
-                paper.serializedField
-            ], GradientAlphaKey.prototype, "time", void 0);
             return GradientAlphaKey;
-        }(paper.BaseObject));
+        }());
         particle.GradientAlphaKey = GradientAlphaKey;
-        __reflect(GradientAlphaKey.prototype, "egret3d.particle.GradientAlphaKey");
+        __reflect(GradientAlphaKey.prototype, "egret3d.particle.GradientAlphaKey", ["paper.ISerializable"]);
         /**
          * TODO
          */
-        var Gradient = (function (_super) {
-            __extends(Gradient, _super);
+        var Gradient = (function () {
             function Gradient() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.mode = 0 /* Blend */;
-                _this.alphaKeys = new Array();
-                _this.colorKeys = new Array();
-                _this._alphaValue = new Float32Array(8);
-                _this._colorValue = new Float32Array(16);
-                return _this;
+                this.mode = 0 /* Blend */;
+                this.alphaKeys = new Array();
+                this.colorKeys = new Array();
+                this._alphaValue = new Float32Array(8);
+                this._colorValue = new Float32Array(16);
             }
+            Gradient.prototype.serialize = function () {
+                return {
+                    mode: this.mode,
+                    alphaKeys: this.alphaKeys.map(function (v) { return v.serialize(); }),
+                    colorKeys: this.colorKeys.map(function (v) { return v.serialize(); }),
+                };
+            };
             Gradient.prototype.deserialize = function (element) {
                 this.colorKeys.length = 0;
                 for (var i = 0, l = element.colorKeys.length; i < l; i++) {
@@ -16761,33 +16845,36 @@ var egret3d;
                 enumerable: true,
                 configurable: true
             });
-            __decorate([
-                paper.serializedField
-            ], Gradient.prototype, "mode", void 0);
-            __decorate([
-                paper.serializedField
-            ], Gradient.prototype, "alphaKeys", void 0);
-            __decorate([
-                paper.serializedField
-            ], Gradient.prototype, "colorKeys", void 0);
             return Gradient;
-        }(paper.BaseObject));
+        }());
         particle.Gradient = Gradient;
-        __reflect(Gradient.prototype, "egret3d.particle.Gradient");
+        __reflect(Gradient.prototype, "egret3d.particle.Gradient", ["paper.ISerializable"]);
         /**
          * TODO create
          */
-        var MinMaxCurve = (function (_super) {
-            __extends(MinMaxCurve, _super);
+        var MinMaxCurve = (function () {
             function MinMaxCurve() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.mode = 0 /* Constant */;
-                _this.curve = new AnimationCurve();
-                _this.curveMin = new AnimationCurve();
-                _this.curveMax = new AnimationCurve();
-                return _this;
+                this.mode = 0 /* Constant */;
+                this.constant = 0.0;
+                this.constantMin = 0.0;
+                this.constantMax = 1.0;
+                this.curve = new AnimationCurve();
+                this.curveMin = new AnimationCurve();
+                this.curveMax = new AnimationCurve();
             }
+            MinMaxCurve.prototype.serialize = function () {
+                return {
+                    mode: this.mode,
+                    constant: this.constant,
+                    constantMin: this.constantMin,
+                    constantMax: this.constantMax,
+                    curve: this.curve.serialize(),
+                    curveMin: this.curveMin.serialize(),
+                    curveMax: this.curveMax.serialize(),
+                };
+            };
             MinMaxCurve.prototype.deserialize = function (element) {
+                // 该兼容代码可以在插件导出全数据后移除。
                 this.mode = element.mode;
                 this.constant = element.constant || 0;
                 this.constantMin = element.constantMin || 0;
@@ -16823,49 +16910,36 @@ var egret3d;
                 this.curveMin.copy(source.curveMin);
                 this.curveMax.copy(source.curveMax);
             };
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "mode", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "constant", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "constantMin", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "constantMax", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "curve", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "curveMin", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxCurve.prototype, "curveMax", void 0);
             return MinMaxCurve;
-        }(paper.BaseObject));
+        }());
         particle.MinMaxCurve = MinMaxCurve;
-        __reflect(MinMaxCurve.prototype, "egret3d.particle.MinMaxCurve");
+        __reflect(MinMaxCurve.prototype, "egret3d.particle.MinMaxCurve", ["paper.ISerializable"]);
         /**
          * TODO create
          */
-        var MinMaxGradient = (function (_super) {
-            __extends(MinMaxGradient, _super);
+        var MinMaxGradient = (function () {
             function MinMaxGradient() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.mode = 1 /* Gradient */;
-                _this.color = egret3d.Color.create();
-                _this.colorMin = egret3d.Color.create();
-                _this.colorMax = egret3d.Color.create();
-                _this.gradient = new Gradient();
-                _this.gradientMin = new Gradient();
-                _this.gradientMax = new Gradient();
-                return _this;
+                this.mode = 1 /* Gradient */;
+                this.color = egret3d.Color.create();
+                this.colorMin = egret3d.Color.create();
+                this.colorMax = egret3d.Color.create();
+                this.gradient = new Gradient();
+                this.gradientMin = new Gradient();
+                this.gradientMax = new Gradient();
             }
+            MinMaxGradient.prototype.serialize = function () {
+                return {
+                    mode: this.mode,
+                    color: this.color.serialize(),
+                    colorMin: this.colorMin.serialize(),
+                    colorMax: this.colorMax.serialize(),
+                    gradient: this.gradient.serialize(),
+                    gradientMin: this.gradientMin.serialize(),
+                    gradientMax: this.gradientMax.serialize(),
+                };
+            };
             MinMaxGradient.prototype.deserialize = function (element) {
-                // super.deserialize(element);
+                // 该兼容代码可以在插件导出全数据后移除。
                 this.mode = element.mode;
                 if (element.color) {
                     this.color.deserialize(element.color);
@@ -16920,52 +16994,10 @@ var egret3d;
                 }
                 return out;
             };
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "mode", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "color", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "colorMin", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "colorMax", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "gradient", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "gradientMin", void 0);
-            __decorate([
-                paper.serializedField
-            ], MinMaxGradient.prototype, "gradientMax", void 0);
             return MinMaxGradient;
-        }(paper.BaseObject));
-        particle.MinMaxGradient = MinMaxGradient;
-        __reflect(MinMaxGradient.prototype, "egret3d.particle.MinMaxGradient");
-        /**
-         *
-         */
-        var Burst = (function () {
-            function Burst() {
-            }
-            Burst.prototype.serialize = function () {
-                return [this.time, this.minCount, this.maxCount, this.cycleCount, this.repeatInterval];
-            };
-            Burst.prototype.deserialize = function (element) {
-                this.time = element[0];
-                this.minCount = element[1];
-                this.maxCount = element[2];
-                this.cycleCount = element[3];
-                this.repeatInterval = element[4];
-                return this;
-            };
-            return Burst;
         }());
-        particle.Burst = Burst;
-        __reflect(Burst.prototype, "egret3d.particle.Burst", ["paper.ISerializable"]);
+        particle.MinMaxGradient = MinMaxGradient;
+        __reflect(MinMaxGradient.prototype, "egret3d.particle.MinMaxGradient", ["paper.ISerializable"]);
         /**
          * 粒子模块基类。
          */
@@ -16977,7 +17009,7 @@ var egret3d;
                 _this._component = component;
                 return _this;
             }
-            ParticleModule.prototype.deserialize = function (element) {
+            ParticleModule.prototype.deserialize = function (_element) {
                 this.enable = true;
                 return this;
             };
@@ -17276,6 +17308,10 @@ var egret3d;
                  *
                  */
                 _this.arcMode = 0 /* Random */;
+                /**
+                 *
+                 */
+                _this.radiusSpread = 0.0;
                 /**
                  *
                  */
@@ -17634,6 +17670,7 @@ var egret3d;
             __extends(RotationOverLifetimeModule, _super);
             function RotationOverLifetimeModule() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._separateAxes = false;
                 _this._x = new MinMaxCurve();
                 _this._y = new MinMaxCurve();
                 _this._z = new MinMaxCurve();
@@ -17729,7 +17766,12 @@ var egret3d;
             __extends(TextureSheetAnimationModule, _super);
             function TextureSheetAnimationModule() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._useRandomRow = false;
                 _this._animation = 0 /* WholeSheet */;
+                _this._numTilesX = 1;
+                _this._numTilesY = 1;
+                _this._cycleCount = 1;
+                _this._rowIndex = 0;
                 _this._frameOverTime = new MinMaxCurve();
                 _this._startFrame = new MinMaxCurve();
                 _this._floatValues = new Float32Array(4);
@@ -23962,8 +24004,8 @@ var egret3d;
                     }
                     var rotated = egret3d.stage.rotated;
                     var canvas = _this._canvas;
-                    var downPointers = egret3d.inputCollecter.downPointers;
-                    var holdPointers = egret3d.inputCollecter.holdPointers;
+                    var downPointers = egret3d.inputCollecter._downPointers;
+                    var holdPointers = egret3d.inputCollecter._holdPointers;
                     var pointer = egret3d.inputCollecter.getPointer(event.pointerId);
                     var prevEvent = pointer.event;
                     pointer.event = event;
@@ -23988,6 +24030,7 @@ var egret3d;
                             if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) {
                                 pointer.downPosition.copy(pointer.position);
                                 downPointers.push(pointer);
+                                holdPointers.push(pointer);
                                 egret3d.inputCollecter.onPointerDown.dispatch(pointer, egret3d.inputCollecter.onPointerDown);
                                 event.preventDefault();
                             }
@@ -24056,8 +24099,8 @@ var egret3d;
                     var rotated = egret3d.stage.rotated;
                     var pointerEvent = event;
                     var canvas = _this._canvas;
-                    var downPointers = egret3d.inputCollecter.downPointers;
-                    var holdPointers = egret3d.inputCollecter.holdPointers;
+                    var downPointers = egret3d.inputCollecter._downPointers;
+                    var holdPointers = egret3d.inputCollecter._holdPointers;
                     var pointer = egret3d.inputCollecter.getPointer(pointerEvent.pointerId);
                     var prevEvent = pointer.event;
                     pointer.event = pointerEvent;
@@ -24085,6 +24128,7 @@ var egret3d;
                             if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) {
                                 pointer.downPosition.copy(pointer.position);
                                 downPointers.push(pointer);
+                                holdPointers.push(pointer);
                                 event.type = "pointerdown";
                                 egret3d.inputCollecter.onPointerDown.dispatch(pointer, egret3d.inputCollecter.onPointerDown);
                                 event.preventDefault();
@@ -24156,8 +24200,8 @@ var egret3d;
                     var rotated = egret3d.stage.rotated;
                     var pointerEvent = event;
                     var canvas = _this._canvas;
-                    var downPointers = egret3d.inputCollecter.downPointers;
-                    var holdPointers = egret3d.inputCollecter.holdPointers;
+                    var downPointers = egret3d.inputCollecter._downPointers;
+                    var holdPointers = egret3d.inputCollecter._holdPointers;
                     var pointer = egret3d.inputCollecter.getPointer(pointerEvent.pointerId);
                     var prevEvent = pointer.event;
                     pointer.event = pointerEvent;
@@ -24171,6 +24215,7 @@ var egret3d;
                             if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) {
                                 pointer.downPosition.copy(pointer.position);
                                 downPointers.push(pointer);
+                                holdPointers.push(pointer);
                                 event.type = "pointerdown";
                                 egret3d.inputCollecter.onPointerDown.dispatch(pointer, egret3d.inputCollecter.onPointerDown);
                                 event.preventDefault();
@@ -24226,9 +24271,9 @@ var egret3d;
                     }
                 };
                 _this._onContextMenu = function (event) {
-                    if (egret3d.inputCollecter.downPointers.length > 0 ||
-                        egret3d.inputCollecter.holdPointers.length > 0 ||
-                        egret3d.inputCollecter.upPointers.length > 0) {
+                    if (egret3d.inputCollecter._downPointers.length > 0 ||
+                        egret3d.inputCollecter._holdPointers.length > 0 ||
+                        egret3d.inputCollecter._upPointers.length > 0) {
                         event.preventDefault();
                     }
                 };
@@ -24236,34 +24281,37 @@ var egret3d;
                     if (!egret3d.inputCollecter.isActiveAndEnabled) {
                         return;
                     }
-                    var downKeys = egret3d.inputCollecter.downKeys;
-                    var holdKeys = egret3d.inputCollecter.holdKeys;
-                    var upKeys = egret3d.inputCollecter.upKeys;
+                    var downKeys = egret3d.inputCollecter._downKeys;
+                    var holdKeys = egret3d.inputCollecter._holdKeys;
+                    var upKeys = egret3d.inputCollecter._upKeys;
                     var key = egret3d.inputCollecter.getKey(event.code);
                     key.event = event;
                     switch (event.type) {
                         case "keydown":
                             if (downKeys.indexOf(key) < 0 && holdKeys.indexOf(key) < 0) {
                                 downKeys.push(key);
+                                holdKeys.push(key);
                                 egret3d.inputCollecter.onKeyDown.dispatch(key, egret3d.inputCollecter.onKeyDown);
                             }
                             break;
-                        case "keyup":
+                        case "keyup": {
+                            var isDown = false;
                             var index = downKeys.indexOf(key);
                             if (index >= 0) {
+                                isDown = true;
                                 downKeys.splice(index, 1);
                             }
-                            else {
-                                index = holdKeys.indexOf(key);
-                                if (index >= 0) {
-                                    holdKeys.splice(index, 1);
-                                }
+                            index = holdKeys.indexOf(key);
+                            if (index >= 0) {
+                                isDown = true;
+                                holdKeys.splice(index, 1);
                             }
-                            if (index >= 0 && upKeys.indexOf(key) < 0) {
+                            if (isDown && upKeys.indexOf(key) < 0) {
                                 upKeys.push(key);
                                 egret3d.inputCollecter.onKeyUp.dispatch(key, egret3d.inputCollecter.onKeyUp);
                             }
                             break;
+                        }
                     }
                 };
                 return _this;
@@ -24272,17 +24320,21 @@ var egret3d;
                 if (pointer.event.buttons !== 0 /* None */) {
                     return false;
                 }
-                var downPointers = egret3d.inputCollecter.downPointers;
-                var holdPointers = egret3d.inputCollecter.holdPointers;
-                var upPointers = egret3d.inputCollecter.upPointers;
-                var index = holdPointers.indexOf(pointer);
+                var isDown = false;
+                var downPointers = egret3d.inputCollecter._downPointers;
+                var holdPointers = egret3d.inputCollecter._holdPointers;
+                var upPointers = egret3d.inputCollecter._upPointers;
+                var index = downPointers.indexOf(pointer);
                 if (index >= 0) {
+                    isDown = true;
+                    downPointers.splice(index, 1);
+                }
+                index = holdPointers.indexOf(pointer);
+                if (index >= 0) {
+                    isDown = true;
                     holdPointers.splice(index, 1);
                 }
-                else {
-                    index = downPointers.indexOf(pointer);
-                }
-                if (index >= 0 && upPointers.indexOf(pointer) < 0) {
+                if (isDown && upPointers.indexOf(pointer) < 0) {
                     egret3d.inputCollecter.removePointer(pointer.event.pointerId);
                     upPointers.push(pointer);
                     if (isCancel) {

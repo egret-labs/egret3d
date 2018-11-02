@@ -75,7 +75,7 @@ namespace egret3d {
              * @see egret3d.inputCollecter.defaultPointer
              */
             getTouch: function (button: number) {
-                return undefined;
+                return inputCollecter.getHoldPointers()[button];
             },
         },
         /**

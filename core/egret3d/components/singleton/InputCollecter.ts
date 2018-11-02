@@ -150,7 +150,7 @@ namespace egret3d {
                 return false;
             }
 
-            return inputCollecter.downKeys.indexOf(this) >= 0;
+            return inputCollecter._downKeys.indexOf(this) >= 0;
         }
         /**
          * 该按键此帧持续按下的状态。
@@ -161,7 +161,7 @@ namespace egret3d {
                 return false;
             }
 
-            return inputCollecter.holdKeys.indexOf(this) >= 0;
+            return inputCollecter._holdKeys.indexOf(this) >= 0;
         }
         /**
          * 该按键此帧抬起的状态。
@@ -172,7 +172,7 @@ namespace egret3d {
                 return false;
             }
 
-            return inputCollecter.upKeys.indexOf(this) >= 0;
+            return inputCollecter._upKeys.indexOf(this) >= 0;
         }
     }
     /**
@@ -231,29 +231,29 @@ namespace egret3d {
          */
         public readonly onKeyUp: signals.Signal = new signals.Signal();
         /**
-         * 此帧按下的全部 Pointer。
+         * @internal
          */
-        public readonly downPointers: Pointer[] = [];
+        public readonly _downPointers: Pointer[] = [];
         /**
-         * 此帧持续按下的全部 Pointer。
+         * @internal
          */
-        public readonly holdPointers: Pointer[] = [];
+        public readonly _holdPointers: Pointer[] = [];
         /**
-         * 此帧抬起的全部 Pointer。
+         * @internal
          */
-        public readonly upPointers: Pointer[] = [];
+        public readonly _upPointers: Pointer[] = [];
         /**
-         * 此帧按下的全部按键。
+         * @internal
          */
-        public readonly downKeys: Key[] = [];
+        public readonly _downKeys: Key[] = [];
         /**
-         * 此帧持续按下的全部按键。
+         * @internal
          */
-        public readonly holdKeys: Key[] = [];
+        public readonly _holdKeys: Key[] = [];
         /**
-         * 此帧抬起的全部按键。
+         * @internal
          */
-        public readonly upKeys: Key[] = [];
+        public readonly _upKeys: Key[] = [];
         /**
          * 默认的 Pointer 实例。
          */
@@ -265,31 +265,27 @@ namespace egret3d {
          * @internal
          */
         public update(deltaTime: number) {
-            for (const pointer of this.downPointers) {
-                if (this.upPointers.indexOf(pointer) >= 0) {
-                    continue;
-                }
-
+            for (const pointer of this._downPointers) {
                 pointer.holdedTime = 0.0;
-                this.holdPointers.push(pointer);
             }
 
-            for (const pointer of this.holdPointers) {
-                pointer.holdedTime += deltaTime;
-                pointer.speed.subtract(pointer.position, pointer._prevPosition);
-                pointer._prevPosition.copy(pointer.position);
-            }
-
-            for (const key of this.downKeys) {
-                if (this.holdKeys.indexOf(key) >= 0) {
+            for (const pointer of this._holdPointers) {
+                if (this._downPointers.indexOf(pointer) >= 0) {
                     continue;
                 }
 
-                key.holdedTime = 0.0;
-                this.holdKeys.push(key);
+                pointer.holdedTime += deltaTime;
             }
 
-            for (const key of this.holdKeys) {
+            for (const key of this._downKeys) {
+                key.holdedTime = 0.0;
+            }
+
+            for (const key of this._holdKeys) {
+                if (this._downKeys.indexOf(key) >= 0) {
+                    continue;
+                }
+
                 key.holdedTime += deltaTime;
             }
 
@@ -310,20 +306,20 @@ namespace egret3d {
                 }
             }
 
-            if (this.upPointers.length > 0) {
-                this.upPointers.length = 0;
+            if (this._upPointers.length > 0) {
+                this._upPointers.length = 0;
             }
 
-            if (this.downPointers.length > 0) {
-                this.downPointers.length = 0;
+            if (this._downPointers.length > 0) {
+                this._downPointers.length = 0;
             }
 
-            if (this.upKeys.length > 0) {
-                this.upKeys.length = 0;
+            if (this._upKeys.length > 0) {
+                this._upKeys.length = 0;
             }
 
-            if (this.downKeys.length > 0) {
-                this.downKeys.length = 0;
+            if (this._downKeys.length > 0) {
+                this._downKeys.length = 0;
             }
 
             return this;
@@ -336,12 +332,72 @@ namespace egret3d {
             this._pointers[1] = this.defaultPointer;
         }
         /**
+         * 此帧按下的全部 Pointer。
+         */
+        public getDownPointers(isPlayerMode: boolean = true): ReadonlyArray<Pointer> {
+            if (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player) {
+                return [];
+            }
+
+            return this._downPointers;
+        }
+        /**
+         * 此帧持续按下的全部 Pointer。
+         */
+        public getHoldPointers(isPlayerMode: boolean = true): ReadonlyArray<Pointer> {
+            if (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player) {
+                return [];
+            }
+
+            return this._holdPointers;
+        }
+        /**
+         * 此帧抬起的全部 Pointer。
+         */
+        public getUpPointers(isPlayerMode: boolean = true): ReadonlyArray<Pointer> {
+            if (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player) {
+                return [];
+            }
+
+            return this._upPointers;
+        }
+        /**
+         * 此帧按下的全部按键。
+         */
+        public getDownKeys(isPlayerMode: boolean = true): ReadonlyArray<Key> {
+            if (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player) {
+                return [];
+            }
+
+            return this._downKeys;
+        }
+        /**
+         * 此帧持续按下的全部按键。
+         */
+        public getHoldKeys(isPlayerMode: boolean = true): ReadonlyArray<Key> {
+            if (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player) {
+                return [];
+            }
+
+            return this._holdKeys;
+        }
+        /**
+         * 此帧抬起的全部按键。
+         */
+        public getUpKeys(isPlayerMode: boolean = true): ReadonlyArray<Key> {
+            if (isPlayerMode && paper.Application.playerMode !== paper.PlayerMode.Player) {
+                return [];
+            }
+
+            return this._upKeys;
+        }
+        /**
          * @internal
          */
         public getPointer(pointerID: uint) {
             const pointers = this._pointers;
             if (!(pointerID in pointers)) {
-                if (this.downPointers.length === 0 && this.holdPointers.length === 0) {
+                if (this._downPointers.length === 0 && this._holdPointers.length === 0) {
                     pointers[pointerID] = this.defaultPointer;
                 }
                 else {

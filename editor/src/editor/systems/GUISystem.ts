@@ -233,7 +233,9 @@ namespace paper.editor {
             let guiControllerC: dat.GUIController;
             let guiControllerD: dat.GUIController;
 
-            gui.onClick = this._componentOrPropertyGUIClickHandler;
+            if (gui !== this._guiComponent.inspector) {
+                gui.onClick = this._componentOrPropertyGUIClickHandler;
+            }
 
             for (const info of infos) {
                 switch (info.editType) {
@@ -551,35 +553,6 @@ namespace paper.editor {
         }
 
         public onUpdate() {
-            let i = 0;
-            while (this._bufferedGameObjects.length > 0 && i++ < 5) {
-                const gameObject = this._bufferedGameObjects.shift();
-                if (gameObject) {
-                    if (!this._addToHierarchy(gameObject)) {
-                        this._bufferedGameObjects.push(gameObject);
-                    }
-                }
-            }
-
-            // Open and select folder.
-            if (!this._selectFolder) {
-                const sceneOrGameObject = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
-                if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
-                    this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
-                    this._selectFolder.selected = true;
-                    this._openFolder(this._selectFolder);
-                }
-            }
-
-            this._guiComponent.inspector.updateDisplay();
-
-            const inspectorFolders = this._guiComponent.inspector.__folders;
-            if (inspectorFolders) {
-                for (const k in inspectorFolders) {
-                    inspectorFolders[k].updateDisplay();
-                }
-            }
-
             { // Clear folders.
                 for (const scene of this._disposeCollecter.scenes) {
                     const folder = this._hierarchyFolders[scene.uuid];
@@ -620,21 +593,57 @@ namespace paper.editor {
                     }
                 }
 
-                // TODO
-                // for (const gameObject of this._disposeCollecter.parentChangedGameObjects) {
-                //     const folder = this._hierarchyFolders[gameObject.uuid];
-                //     if (folder) {
-                //         if (folder.parent) {
-                //             try {
-                //                 folder.parent.removeFolder(folder);
-                //             }
-                //             catch (e) {
-                //             }
-                //         }
+                for (const gameObject of this._disposeCollecter.parentChangedGameObjects) {
+                    const folder = this._hierarchyFolders[gameObject.uuid];
 
-                //         this._bufferedGameObjects.push(gameObject);
-                //     }
-                // }
+                    if (folder) {
+                        delete this._hierarchyFolders[gameObject.uuid];
+
+                        if (folder && folder.parent) {
+                            try {
+                                folder.parent.removeFolder(folder);
+                            }
+                            catch (e) {
+                            }
+                        }
+
+                        this._bufferedGameObjects.push(gameObject);
+                    }
+                    else if (this._bufferedGameObjects.indexOf(gameObject) < 0) {
+                        this._bufferedGameObjects.push(gameObject);
+                    }
+                }
+            }
+
+            // Add folder.
+            let i = 0;
+            while (this._bufferedGameObjects.length > 0 && i++ < 5) {
+                const gameObject = this._bufferedGameObjects.shift();
+                if (gameObject) {
+                    if (!this._addToHierarchy(gameObject)) {
+                        this._bufferedGameObjects.push(gameObject);
+                    }
+                }
+            }
+
+            // Open and select folder.
+            if (!this._selectFolder) {
+                const sceneOrGameObject = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
+                if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
+                    this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
+                    this._selectFolder.selected = true;
+                    this._openFolder(this._selectFolder);
+                }
+            }
+
+            // Update folder.
+            this._guiComponent.inspector.updateDisplay();
+
+            const inspectorFolders = this._guiComponent.inspector.__folders;
+            if (inspectorFolders) {
+                for (const k in inspectorFolders) {
+                    inspectorFolders[k].updateDisplay();
+                }
             }
         }
     }
