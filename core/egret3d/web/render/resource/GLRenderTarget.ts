@@ -107,7 +107,7 @@ namespace egret3d {
             const webgl = WebGLCapabilities.webgl;
             this._texture = webgl.createTexture()!;
             webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
-            webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 1);
+            webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
             webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, 4);
             webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, this._width, this._height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
 

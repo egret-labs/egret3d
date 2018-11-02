@@ -51,6 +51,11 @@ namespace egret3d {
             webglSystem._draw(camera.context, this._drawCall, mat);
         }
 
+        public clear(){
+            this._fullScreenRT.dispose();
+            this._fullScreenRT = null;
+        }
+
         public get currentCamera() {
             return this._currentCamera;
         }

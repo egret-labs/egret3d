@@ -193,15 +193,23 @@ namespace egret3d.particle {
     /**
      * TODO
      */
-    export class GradientColorKey extends paper.BaseObject {
-        @paper.serializedField
-        public time: number;
-        @paper.serializedField
-        public readonly color: Color = Color.create();
+    export class Burst implements paper.ISerializable {
+        public time: number = 0.0;
+        public minCount: number = 0;
+        public maxCount: number = 100;
+        public cycleCount: number = 1;
+        public repeatInterval: number = 1.0;
 
-        public deserialize(element: any) {
-            this.color.deserialize(element.color);
-            this.time = element.time;
+        public serialize() {
+            return [this.time, this.minCount, this.maxCount, this.cycleCount, this.repeatInterval];
+        }
+
+        public deserialize(element: Readonly<[number, number, number, number, number]>) {
+            this.time = element[0];
+            this.minCount = element[1];
+            this.maxCount = element[2];
+            this.cycleCount = element[3];
+            this.repeatInterval = element[4];
 
             return this;
         }
@@ -209,11 +217,31 @@ namespace egret3d.particle {
     /**
      * TODO
      */
-    export class GradientAlphaKey extends paper.BaseObject {
-        @paper.serializedField
-        public alpha: number;
-        @paper.serializedField
-        public time: number;
+    export class GradientColorKey implements paper.ISerializable {
+        public time: number = 0.0;
+        public readonly color: Color = Color.create();
+
+        public serialize() {
+            return { time: this.time, color: this.color.serialize() };
+        }
+
+        public deserialize(element: any) {
+            this.time = element.time;
+            this.color.deserialize(element.color);
+
+            return this;
+        }
+    }
+    /**
+     * TODO
+     */
+    export class GradientAlphaKey implements paper.ISerializable {
+        public time: number = 0.0;
+        public alpha: number = 0.0;
+
+        public serialize() {
+            return { time: this.time, alpha: this.alpha };
+        }
 
         public deserialize(element: any) {
             this.alpha = element.alpha;
@@ -225,16 +253,21 @@ namespace egret3d.particle {
     /**
      * TODO
      */
-    export class Gradient extends paper.BaseObject {
-        @paper.serializedField
+    export class Gradient implements paper.ISerializable {
         public mode: GradientMode = GradientMode.Blend;
-        @paper.serializedField
         private readonly alphaKeys: Array<GradientAlphaKey> = new Array<GradientAlphaKey>();
-        @paper.serializedField
         private readonly colorKeys: Array<GradientColorKey> = new Array<GradientColorKey>();
 
         private readonly _alphaValue: Float32Array = new Float32Array(8);
         private readonly _colorValue: Float32Array = new Float32Array(16);
+
+        public serialize() {
+            return {
+                mode: this.mode,
+                alphaKeys: this.alphaKeys.map(v => v.serialize()),
+                colorKeys: this.colorKeys.map(v => v.serialize()),
+            };
+        }
 
         public deserialize(element: any) {
             this.colorKeys.length = 0;
@@ -309,23 +342,29 @@ namespace egret3d.particle {
     /**
      * TODO create
      */
-    export class MinMaxCurve extends paper.BaseObject {
-        @paper.serializedField
+    export class MinMaxCurve implements paper.ISerializable {
         public mode: CurveMode = CurveMode.Constant;
-        @paper.serializedField
-        public constant: number;
-        @paper.serializedField
-        public constantMin: number;
-        @paper.serializedField
-        public constantMax: number;
-        @paper.serializedField
+        public constant: number = 0.0;
+        public constantMin: number = 0.0;
+        public constantMax: number = 1.0;
         public readonly curve: AnimationCurve = new AnimationCurve();
-        @paper.serializedField
         public readonly curveMin: AnimationCurve = new AnimationCurve();
-        @paper.serializedField
         public readonly curveMax: AnimationCurve = new AnimationCurve();
 
+        public serialize() {
+            return {
+                mode: this.mode,
+                constant: this.constant,
+                constantMin: this.constantMin,
+                constantMax: this.constantMax,
+                curve: this.curve.serialize(),
+                curveMin: this.curveMin.serialize(),
+                curveMax: this.curveMax.serialize(),
+            };
+        }
+
         public deserialize(element: any) {
+            // 该兼容代码可以在插件导出全数据后移除。
             this.mode = element.mode;
             this.constant = element.constant || 0;
             this.constantMin = element.constantMin || 0;
@@ -340,11 +379,14 @@ namespace egret3d.particle {
         public evaluate(t: number = 0): number {
             if (this.mode === CurveMode.Constant) {
                 return this.constant;
-            } else if (this.mode === CurveMode.TwoConstants) {
+            }
+            else if (this.mode === CurveMode.TwoConstants) {
                 return (Math.random() * (this.constantMax - this.constantMin) + this.constantMin);
-            } else if (this.mode === CurveMode.Curve) {
+            }
+            else if (this.mode === CurveMode.Curve) {
                 return this.curve.evaluate(t);
-            } else { //Two Curves
+            }
+            else { //Two Curves
                 const min = this.curveMin.evaluate(t);
                 const max = this.curveMax.evaluate(t);
                 return (Math.random() * (min - max) + min);
@@ -364,24 +406,29 @@ namespace egret3d.particle {
     /**
      * TODO create
      */
-    export class MinMaxGradient extends paper.BaseObject {
-        @paper.serializedField
+    export class MinMaxGradient implements paper.ISerializable {
         public mode: ColorGradientMode = ColorGradientMode.Gradient;
-        @paper.serializedField
         public readonly color: Color = Color.create();
-        @paper.serializedField
         public readonly colorMin: Color = Color.create();
-        @paper.serializedField
         public readonly colorMax: Color = Color.create();
-        @paper.serializedField
         public readonly gradient: Gradient = new Gradient();
-        @paper.serializedField
         public readonly gradientMin: Gradient = new Gradient();
-        @paper.serializedField
         public readonly gradientMax: Gradient = new Gradient();
 
+        public serialize() {
+            return {
+                mode: this.mode,
+                color: this.color.serialize(),
+                colorMin: this.colorMin.serialize(),
+                colorMax: this.colorMax.serialize(),
+                gradient: this.gradient.serialize(),
+                gradientMin: this.gradientMin.serialize(),
+                gradientMax: this.gradientMax.serialize(),
+            };
+        }
+
         public deserialize(element: any) {
-            // super.deserialize(element);
+            // 该兼容代码可以在插件导出全数据后移除。
             this.mode = element.mode;
             if (element.color) {
                 this.color.deserialize(element.color);
@@ -411,21 +458,25 @@ namespace egret3d.particle {
                 out.g = this.color.g;
                 out.b = this.color.b;
                 out.a = this.color.a;
-            } else if (this.mode === ColorGradientMode.TwoColors) {
+            }
+            else if (this.mode === ColorGradientMode.TwoColors) {
                 out.r = Math.random() * (this.colorMax.r - this.colorMin.r) + this.colorMin.r;
                 out.g = Math.random() * (this.colorMax.g - this.colorMin.g) + this.colorMin.g;
                 out.b = Math.random() * (this.colorMax.b - this.colorMin.b) + this.colorMin.b;
                 out.a = Math.random() * (this.colorMax.a - this.colorMin.a) + this.colorMin.a;
-            } else if (this.mode === ColorGradientMode.Gradient) {
+            }
+            else if (this.mode === ColorGradientMode.Gradient) {
                 return this.gradient.evaluate(t, out);
-            } else if (this.mode === ColorGradientMode.TwoGradients) {
+            }
+            else if (this.mode === ColorGradientMode.TwoGradients) {
                 this.gradientMin.evaluate(t, _helpColorA);
                 this.gradientMax.evaluate(t, _helpColorB);
                 out.r = (Math.random() * (_helpColorA.r - _helpColorB.r) + _helpColorA.r);
                 out.g = (Math.random() * (_helpColorA.g - _helpColorB.g) + _helpColorA.g);
                 out.b = (Math.random() * (_helpColorA.b - _helpColorB.b) + _helpColorA.b);
                 out.a = (Math.random() * (_helpColorA.a - _helpColorB.a) + _helpColorA.a);
-            } else {
+            }
+            else {
                 out.r = Math.random();
                 out.g = Math.random();
                 out.b = Math.random();
@@ -433,30 +484,6 @@ namespace egret3d.particle {
             }
 
             return out;
-        }
-    }
-    /**
-     * 
-     */
-    export class Burst implements paper.ISerializable {
-        public time: number;
-        public minCount: number;
-        public maxCount: number;
-        public cycleCount: number;
-        public repeatInterval: number;
-
-        public serialize() {
-            return [this.time, this.minCount, this.maxCount, this.cycleCount, this.repeatInterval];
-        }
-
-        public deserialize(element: Readonly<[number, number, number, number, number]>) {
-            this.time = element[0];
-            this.minCount = element[1];
-            this.maxCount = element[2];
-            this.cycleCount = element[3];
-            this.repeatInterval = element[4];
-
-            return this;
         }
     }
     /**
@@ -474,7 +501,7 @@ namespace egret3d.particle {
             this._component = component;
         }
 
-        public deserialize(element: any) { // TODO
+        public deserialize(_element: any) { // TODO
             this.enable = true;
 
             return this;
@@ -659,7 +686,7 @@ namespace egret3d.particle {
         @paper.serializedField
         public readonly bursts: Burst[] = [];
 
-        public deserialize(element: any) { // TODO
+        public deserialize(element: any) { // 兼容
             super.deserialize(element);
             this.rateOverTime.deserialize(element.rateOverTime);
             if (element.bursts) {
@@ -712,7 +739,7 @@ namespace egret3d.particle {
          * 
          */
         @paper.serializedField
-        public radiusSpread: number;
+        public radiusSpread: number = 0.0;
         /**
          * 
          */
@@ -956,7 +983,7 @@ namespace egret3d.particle {
      */
     export class RotationOverLifetimeModule extends ParticleModule {
         @paper.serializedField
-        private _separateAxes: boolean;
+        private _separateAxes: boolean = false;
         @paper.serializedField
         private readonly _x: MinMaxCurve = new MinMaxCurve();
         @paper.serializedField
@@ -1023,17 +1050,17 @@ namespace egret3d.particle {
      */
     export class TextureSheetAnimationModule extends ParticleModule {
         @paper.serializedField
-        private _useRandomRow: boolean;
+        private _useRandomRow: boolean = false;
         @paper.serializedField
         private _animation: AnimationType = AnimationType.WholeSheet;
         @paper.serializedField
-        private _numTilesX: number;
+        private _numTilesX: uint = 1;
         @paper.serializedField
-        private _numTilesY: number;
+        private _numTilesY: uint = 1;
         @paper.serializedField
-        private _cycleCount: number;
+        private _cycleCount: uint = 1;
         @paper.serializedField
-        private _rowIndex: number;
+        private _rowIndex: uint = 0;
         @paper.serializedField
         private readonly _frameOverTime: MinMaxCurve = new MinMaxCurve();
         @paper.serializedField
