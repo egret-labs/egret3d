@@ -36,6 +36,249 @@ namespace egret3d {
         PenEraser = 0b100000,
     }
     /**
+     * 按键枚举。
+     */
+    export const enum KeyCode {
+        Unknown = "Unknown",
+
+        F1 = "F1",
+        F2 = "F2",
+        F3 = "F3",
+        F4 = "F4",
+        F5 = "F5",
+        F6 = "F6",
+        F7 = "F7",
+        F8 = "F8",
+        F9 = "F9",
+        F10 = "F10",
+        F11 = "F11",
+        F12 = "F12",
+
+        Digit0 = "Digit0",
+        Digit1 = "Digit1",
+        Digit2 = "Digit2",
+        Digit3 = "Digit3",
+        Digit4 = "Digit4",
+        Digit5 = "Digit5",
+        Digit6 = "Digit6",
+        Digit7 = "Digit7",
+        Digit8 = "Digit8",
+        Digit9 = "Digit9",
+
+        KeyA = "KeyA",
+        KeyB = "KeyB",
+        KeyC = "KeyC",
+        KeyD = "KeyD",
+        KeyE = "KeyE",
+        KeyF = "KeyF",
+        KeyG = "KeyG",
+        KeyH = "KeyH",
+        KeyI = "KeyI",
+        KeyJ = "KeyJ",
+        KeyK = "KeyK",
+        KeyL = "KeyL",
+        KeyM = "KeyM",
+        KeyN = "KeyN",
+        KeyO = "KeyO",
+        KeyP = "KeyP",
+        KeyQ = "KeyQ",
+        KeyR = "KeyR",
+        KeyS = "KeyS",
+        KeyT = "KeyT",
+        KeyU = "KeyU",
+        KeyV = "KeyV",
+        KeyW = "KeyW",
+        KeyX = "KeyX",
+        KeyY = "KeyY",
+        KeyZ = "KeyZ",
+
+        Backquote = "Backquote",
+        Minus = "Minus",
+        Equal = "Equal",
+        BracketLeft = "BracketLeft",
+        BracketRight = "BracketRight",
+        Backslash = "Backslash",
+        Semicolon = "Semicolon",
+        Quote = "Quote",
+        Comma = "Comma",
+        Period = "Period",
+        Slash = "Slash",
+
+        Escape = "Escape",
+        ScrollLock = "ScrollLock",
+        Pause = "Pause",
+        Backspace = "Backspace",
+        Tab = "Tab",
+        CapsLock = "CapsLock",
+        Space = "Space",
+        ContextMenu = "ContextMenu",
+
+        ShiftLeft = "ShiftLeft",
+        ControlLeft = "ControlLeft",
+        AltLeft = "AltLeft",
+        MetaLeft = "MetaLeft",
+
+        ShiftRight = "ShiftRight",
+        ControlRight = "ControlRight",
+        AltRight = "AltRight",
+        MetaRight = "MetaRight",
+
+        Insert = "Insert",
+        Delete = "Delete",
+        Home = "Home",
+        End = "End",
+        PageUp = "PageUp",
+        PageDown = "PageDown",
+
+        ArrowUp = "ArrowUp",
+        ArrowDown = "ArrowDown",
+        ArrowLeft = "ArrowLeft",
+        ArrowRight = "ArrowRight",
+
+        NumpadLock = "NumLock",
+        NumpadDivide = "NumpadDivide",
+        NumpadMultiply = "NumpadMultiply",
+        NumpadSubtract = "NumpadSubtract",
+        NumpadAdd = "NumpadAdd",
+        NumpadEnter = "NumpadEnter",
+        NumpadDecimal = "NumpadDecimal",
+
+        Numpad0 = "Numpad0",
+        Numpad1 = "Numpad1",
+        Numpad2 = "Numpad2",
+        Numpad3 = "Numpad3",
+        Numpad4 = "Numpad4",
+        Numpad5 = "Numpad5",
+        Numpad6 = "Numpad6",
+        Numpad7 = "Numpad7",
+        Numpad8 = "Numpad8",
+        Numpad9 = "Numpad9",
+    }
+
+    const _keyToCode = [
+        "`", KeyCode.Backquote,
+        "1", KeyCode.Digit1,
+        "2", KeyCode.Digit2,
+        "3", KeyCode.Digit3,
+        "4", KeyCode.Digit4,
+        "5", KeyCode.Digit5,
+        "6", KeyCode.Digit6,
+        "7", KeyCode.Digit7,
+        "8", KeyCode.Digit8,
+        "9", KeyCode.Digit9,
+        "0", KeyCode.Digit0,
+        "-", KeyCode.Minus,
+        "=", KeyCode.Equal,
+        "[", KeyCode.BracketLeft,
+        "]", KeyCode.BracketRight,
+        "\\", KeyCode.Backslash,
+        ";", KeyCode.Semicolon,
+        "'", KeyCode.Quote,
+        ",", KeyCode.Comma,
+        ".", KeyCode.Period,
+        "/", KeyCode.Slash,
+
+        "~", KeyCode.Backquote,
+        "!", KeyCode.Digit1,
+        "@", KeyCode.Digit2,
+        "#", KeyCode.Digit3,
+        "$", KeyCode.Digit4,
+        "%", KeyCode.Digit5,
+        "^", KeyCode.Digit6,
+        "&", KeyCode.Digit7,
+        "*", KeyCode.Digit8,
+        "(", KeyCode.Digit9,
+        ")", KeyCode.Digit0,
+        "_", KeyCode.Minus,
+        "+", KeyCode.Equal,
+        "{", KeyCode.BracketLeft,
+        "}", KeyCode.BracketRight,
+        "|", KeyCode.Backslash,
+        ":", KeyCode.Semicolon,
+        '"', KeyCode.Quote,
+        "<", KeyCode.Comma,
+        ">", KeyCode.Period,
+        "?", KeyCode.Slash,
+
+        "a", KeyCode.KeyA,
+        "b", KeyCode.KeyB,
+        "c", KeyCode.KeyC,
+        "d", KeyCode.KeyD,
+        "e", KeyCode.KeyE,
+        "f", KeyCode.KeyF,
+        "g", KeyCode.KeyG,
+        "h", KeyCode.KeyH,
+        "i", KeyCode.KeyI,
+        "j", KeyCode.KeyJ,
+        "k", KeyCode.KeyK,
+        "l", KeyCode.KeyL,
+        "m", KeyCode.KeyM,
+        "n", KeyCode.KeyN,
+        "o", KeyCode.KeyO,
+        "p", KeyCode.KeyP,
+        "q", KeyCode.KeyQ,
+        'r', KeyCode.KeyR,
+        "s", KeyCode.KeyS,
+        "t", KeyCode.KeyT,
+        "u", KeyCode.KeyU,
+        "v", KeyCode.KeyV,
+        "w", KeyCode.KeyW,
+        "x", KeyCode.KeyX,
+        "y", KeyCode.KeyY,
+        "z", KeyCode.KeyZ,
+    ];
+
+    const _keyCodeToCode = [
+        48, KeyCode.Digit0,
+        49, KeyCode.Digit1,
+        50, KeyCode.Digit2,
+        51, KeyCode.Digit3,
+        52, KeyCode.Digit4,
+        53, KeyCode.Digit5,
+        54, KeyCode.Digit6,
+        55, KeyCode.Digit7,
+        56, KeyCode.Digit8,
+        57, KeyCode.Digit9,
+
+        65, KeyCode.KeyA,
+        66, KeyCode.KeyB,
+        67, KeyCode.KeyC,
+        68, KeyCode.KeyD,
+        69, KeyCode.KeyE,
+        70, KeyCode.KeyF,
+        71, KeyCode.KeyG,
+        72, KeyCode.KeyH,
+        73, KeyCode.KeyI,
+        74, KeyCode.KeyJ,
+        75, KeyCode.KeyK,
+        76, KeyCode.KeyL,
+        77, KeyCode.KeyM,
+        78, KeyCode.KeyN,
+        79, KeyCode.KeyO,
+        80, KeyCode.KeyP,
+        81, KeyCode.KeyQ,
+        82, KeyCode.KeyR,
+        83, KeyCode.KeyS,
+        84, KeyCode.KeyT,
+        85, KeyCode.KeyU,
+        86, KeyCode.KeyV,
+        87, KeyCode.KeyW,
+        88, KeyCode.KeyX,
+        89, KeyCode.KeyY,
+        90, KeyCode.KeyZ,
+
+        96, KeyCode.Digit0,
+        97, KeyCode.Digit1,
+        98, KeyCode.Digit2,
+        99, KeyCode.Digit3,
+        100, KeyCode.Digit4,
+        101, KeyCode.Digit5,
+        102, KeyCode.Digit6,
+        103, KeyCode.Digit7,
+        104, KeyCode.Digit8,
+        105, KeyCode.Digit9,
+    ];
+    /**
      * 鼠标、笔、触控等的信息。
      */
     export class Pointer extends paper.BaseRelease<Pointer> {
@@ -428,7 +671,43 @@ namespace egret3d {
         /**
          * 通过键名称创建或获取一个按键实例。
          */
-        public getKey(code: string) {
+        public getKey(code: string | number) {
+            if (typeof code === "number") { // KeyCode.
+                const index = _keyCodeToCode.indexOf(code);
+                if (index >= 0) {
+                    code = _keyCodeToCode[index + 1] as string;
+                }
+                else {
+                    if (DEBUG) {
+                        console.error(`Unsupported keyCode "${code}", use egret3d.keyCode enumeration instead.`);
+                    }
+
+                    code = KeyCode.Unknown;
+                }
+            }
+            else if (code.length === 1) { // Key.
+                const index = _keyToCode.indexOf(code);
+                if (index >= 0) {
+                    code = _keyToCode[index + 1];
+                }
+                else {
+                    if (DEBUG) {
+                        console.error(`Unsupported key "${code}", use egret3d.keyCode enumeration instead.`);
+                    }
+
+                    code = KeyCode.Unknown;
+                }
+            }
+            else if (!code) {
+                if (DEBUG) {
+                    console.error(`Invalid code.`);
+                }
+
+                code = KeyCode.Unknown;
+            }
+
+            code = code.toLowerCase();
+
             const keys = this._keys;
             if (!(code in keys)) {
                 keys[code] = new Key();

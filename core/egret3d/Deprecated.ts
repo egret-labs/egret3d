@@ -87,15 +87,15 @@ namespace egret3d {
              * @deprecated
              * @see egret3d.inputCollecter.getKey()
              */
-            isPressed: function (key: string) {
-                return egret3d.inputCollecter.getKey("Key" + key.toUpperCase()).isHold();
+            isPressed: function (key: string | number) {
+                return egret3d.inputCollecter.getKey(key).isHold();
             },
             /**
              * @deprecated
              * @see egret3d.inputCollecter.getKey()
              */
-            wasPressed: function (key: string) {
-                return egret3d.inputCollecter.getKey("Key" + key.toUpperCase()).isUp();
+            wasPressed: function (key: string | number) {
+                return egret3d.inputCollecter.getKey(key).isUp();
             },
         },
     };

@@ -1,5 +1,21 @@
 namespace egret3d {
+    export namespace math {
+        export function euclideanModulo(n: number, m: number): number {
+            return ((n % m) + m) % m;
+        }
 
+        export function clamp(v: number, min: number = 0.0, max: number = 1.0) {
+            if (v < min) {
+                return min;
+            }
+            else if (v > max) {
+                return max;
+            }
+            else {
+                return v;
+            }
+        }
+    }
     /**
      * 内联的数字常数枚举。
      */
@@ -30,15 +46,19 @@ namespace egret3d {
 
         return value > 0 ? 1 : -1;
     }
-
+    /**
+     * @deprecated
+     */
     export function floatClamp(v: number, min: number = 0.0, max: number = 1.0) {
-        if (v < min)
+        if (v < min) {
             return min;
-        else if (v > max)
+        }
+        else if (v > max) {
             return max;
-
-        else
+        }
+        else {
             return v;
+        }
     }
 
     export function numberLerp(fromV: number, toV: number, v: number) {

@@ -127,6 +127,14 @@ namespace examples {
                     delete this._holdCubes[pointer.event!.pointerId];
                 }
             }
+
+            for (const key of inputCollecter.getDownKeys()) {
+                console.log("KeyDown", key.event!.code, key.event!.key, key.event!.keyCode);
+            }
+
+            // for (const key of inputCollecter.getUpKeys()) {
+            //     console.log("KeyUp", key.event!.code, key.event!.key);
+            // }
         }
     }
 }
