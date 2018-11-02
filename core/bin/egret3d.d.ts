@@ -753,6 +753,19 @@ declare namespace egret3d {
          */
         fromSphericalCoords(radius: number, phi: number, theta: number): this;
         /**
+         * 将该向量乘以一个 3x3 矩阵。
+         * - v *= matrix
+         * @param matrix 一个 3x3 矩阵。
+         */
+        applyMatrix3(matrix: Readonly<Matrix3>): this;
+        /**
+         * 将输入向量与一个 3x3 矩阵相乘的结果写入该向量。
+         * - v = input * matrix
+         * @param matrix 一个 3x3 矩阵。
+         * @param input 输入向量。
+         */
+        applyMatrix3(matrix: Readonly<Matrix3>, input: Readonly<IVector3>): this;
+        /**
          * 将该向量乘以一个矩阵。
          * - v *= matrix
          * @param matrix 一个矩阵。
@@ -775,7 +788,7 @@ declare namespace egret3d {
         applyDirection(matrix: Readonly<Matrix4>): this;
         /**
          * 将输入向量与一个矩阵相乘的结果写入该向量。
-         * - v = input * matrix。
+         * - v = input * matrix
          * - 矩阵的平移数据不会影响向量。
          * - 结果被归一化。
          * @param matrix 一个矩阵。
@@ -791,7 +804,7 @@ declare namespace egret3d {
         applyMatrixWithoutTranslate(matrix: Readonly<Matrix4>): this;
         /**
          * 将输入向量与一个矩阵相乘的结果写入该向量。
-         * - v = input * matrix。
+         * - v = input * matrix
          * - 矩阵的平移数据不会影响向量。
          * @param matrix 一个矩阵。
          * @param input 输入向量。
@@ -812,7 +825,7 @@ declare namespace egret3d {
         applyQuaternion(quaternion: Readonly<IVector4>, input: Readonly<IVector3>): this;
         /**
          * 将该向量加上一个标量。
-         * - v += scalar。
+         * - v += scalar
          * @param scalar 标量。
          */
         addScalar(scalar: number): this;
@@ -825,7 +838,7 @@ declare namespace egret3d {
         addScalar(scalar: number, input: Readonly<IVector3>): this;
         /**
          * 将该向量乘以一个标量。
-         * - v *= scalar。
+         * - v *= scalar
          * @param scalar 标量。
          */
         multiplyScalar(scalar: number): this;
@@ -5611,6 +5624,7 @@ declare namespace egret3d {
         calcViewPortPixel(pixelViewport: IRectangle): number;
         /**
          * 该摄像机的视点到近裁剪面距离。
+         * - 该值过小会引起深度冲突。
          */
         near: number;
         /**
@@ -8746,7 +8760,7 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                             "value": number[];
                         };
-                        "lightmapScaleOffset": {
+                        "lightMapScaleOffset": {
                             "type": number;
                             "semantic": string;
                         };
@@ -8954,7 +8968,7 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                             "value": number[];
                         };
-                        "lightmapScaleOffset": {
+                        "lightMapScaleOffset": {
                             "type": number;
                             "semantic": string;
                         };
@@ -9225,7 +9239,7 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                             "value": number[];
                         };
-                        "lightmapScaleOffset": {
+                        "lightMapScaleOffset": {
                             "type": number;
                             "semantic": string;
                         };
@@ -9529,7 +9543,7 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                             "value": number[];
                         };
-                        "lightmapScaleOffset": {
+                        "lightMapScaleOffset": {
                             "type": number;
                             "semantic": string;
                         };
@@ -10693,6 +10707,214 @@ declare namespace egret3d.ShaderLib {
         "extensionsRequired": string[];
         "extensionsUsed": string[];
     };
+    const test: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                        "uv2": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "lightMapScaleOffset": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "refractionRatio": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "morphTargetInfluences[0]": {
+                            "type": number;
+                        };
+                        "boneTexture": {
+                            "type": number;
+                        };
+                        "boneTextureSize": {
+                            "type": number;
+                        };
+                        "boneMatrices[0]": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "logDepthBufFC": {
+                            "type": number;
+                        };
+                        "diffuse": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                        "alphaMap": {
+                            "type": number;
+                        };
+                        "aoMap": {
+                            "type": number;
+                        };
+                        "aoMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "lightMap": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "lightMapIntensity": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "reflectivity": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "envMapIntensity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "envMap": {
+                            "type": number;
+                        };
+                        "flipEnvMap": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "maxMipLevel": {
+                            "type": number;
+                            "value": any[];
+                        };
+                        "fogColor": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "fogDensity": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "fogNear": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "fogFar": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "specularMap": {
+                            "type": number;
+                        };
+                        "clippingPlanes[0]": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+    };
 }
 declare namespace egret3d.ShaderChunk {
     const alphamap_fragment = "#ifdef USE_ALPHAMAP\n\n diffuseColor.a *= texture2D( alphaMap, vUv ).g;\n\n#endif\n";
@@ -10784,8 +11006,8 @@ declare namespace egret3d.ShaderChunk {
     const tonemapping_fragment = "#if defined( TONE_MAPPING )\n\n  gl_FragColor.rgb = toneMapping( gl_FragColor.rgb );\n\n#endif\n";
     const tonemapping_pars_fragment = "#ifndef saturate\n #define saturate(a) clamp( a, 0.0, 1.0 )\n#endif\n\nuniform float toneMappingExposure;\nuniform float toneMappingWhitePoint;\n\n// exposure only\nvec3 LinearToneMapping( vec3 color ) {\n\n return toneMappingExposure * color;\n\n}\n\n// source: https://www.cs.utah.edu/~reinhard/cdrom/\nvec3 ReinhardToneMapping( vec3 color ) {\n\n color *= toneMappingExposure;\n return saturate( color / ( vec3( 1.0 ) + color ) );\n\n}\n\n// source: http://filmicgames.com/archives/75\n#define Uncharted2Helper( x ) max( ( ( x * ( 0.15 * x + 0.10 * 0.50 ) + 0.20 * 0.02 ) / ( x * ( 0.15 * x + 0.50 ) + 0.20 * 0.30 ) ) - 0.02 / 0.30, vec3( 0.0 ) )\nvec3 Uncharted2ToneMapping( vec3 color ) {\n\n // John Hable's filmic operator from Uncharted 2 video game\n color *= toneMappingExposure;\n return saturate( Uncharted2Helper( color ) / Uncharted2Helper( vec3( toneMappingWhitePoint ) ) );\n\n}\n\n// source: http://filmicgames.com/archives/75\nvec3 OptimizedCineonToneMapping( vec3 color ) {\n\n // optimized filmic operator by Jim Hejl and Richard Burgess-Dawson\n color *= toneMappingExposure;\n color = max( vec3( 0.0 ), color - 0.004 );\n return pow( ( color * ( 6.2 * color + 0.5 ) ) / ( color * ( 6.2 * color + 1.7 ) + 0.06 ), vec3( 2.2 ) );\n\n}\n";
     const uv2_pars_fragment = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n varying vec2 vUv2;\n\n#endif";
-    const uv2_pars_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n attribute vec2 uv2;\n varying vec2 vUv2;\n #ifdef USE_LIGHTMAP//Egret \n  uniform vec4 lightmapScaleOffset;\n #endif\n\n#endif";
-    const uv2_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n #ifdef USE_LIGHTMAP//Egret\n  vUv2 = vec2(uv2.x * lightmapScaleOffset.x + lightmapScaleOffset.z, 1.0 - ((1.0 - uv2.y) * lightmapScaleOffset.y + lightmapScaleOffset.w));\n #else \n  vUv2 = uv2;\n #endif\n\n#endif";
+    const uv2_pars_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n attribute vec2 uv2;\n varying vec2 vUv2;\n #ifdef USE_LIGHTMAP//Egret \n  uniform vec4 lightMapScaleOffset;\n #endif\n\n#endif";
+    const uv2_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n #ifdef USE_LIGHTMAP//Egret\n  vUv2 = vec2(uv2.x * lightMapScaleOffset.x + lightMapScaleOffset.z, 1.0 - ((1.0 - uv2.y) * lightMapScaleOffset.y + lightMapScaleOffset.w));\n #else \n  vUv2 = uv2;\n #endif\n\n#endif";
     const uv_pars_fragment = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n\n#endif";
     const uv_pars_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n uniform mat3 uvTransform;\n\n#endif\n";
     const uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n #if defined FLIP_V \n  vUv = ( uvTransform * vec3( uv.x, 1.0 - uv.y, 1 ) ).xy;//modify egret\n #else\n  vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n #endif\n#endif";
@@ -11577,7 +11799,7 @@ declare namespace egret3d {
          * @param cy 垂直中心。
          */
         fromUVTransform(tx: number, ty: number, sx: number, sy: number, rotation: number, cx: number, cy: number): Matrix3;
-        inverse(matrix: Matrix3): this;
+        inverse(input?: Matrix3): this;
         getNormalMatrix(matrix4: Readonly<Matrix4>): this;
         transpose(): this;
         fromMatrix4(value: Readonly<Matrix4>): this;
@@ -11589,6 +11811,10 @@ declare namespace egret3d {
          */
         toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
     }
+    /**
+     * @deprecated
+     */
+    const helpMatrix3A: Matrix3;
 }
 declare namespace paper.editor {
     /**

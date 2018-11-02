@@ -3,7 +3,7 @@
 	attribute vec2 uv2;
 	varying vec2 vUv2;
 	#ifdef USE_LIGHTMAP//Egret	
-		uniform vec4 lightmapScaleOffset;
+		uniform vec4 lightMapScaleOffset;
 	#endif
 
 #endif
