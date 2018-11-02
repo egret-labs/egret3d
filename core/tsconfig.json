@@ -23,6 +23,7 @@
         "libs/resourcemanager.d.ts",
         "egret3d/ecs/core/InterFace.ts",
         "egret3d/ecs/core/Decorators.ts",
+        "egret3d/editor/EditorDecorators.ts",
         "egret3d/ecs/core/Layer.ts",
         "egret3d/ecs/core/BaseObject.ts",
         "egret3d/math/Math.ts",

@@ -106,14 +106,14 @@ namespace egret3d {
          * 舞台是否因屏幕尺寸的改变而发生了旋转。
          * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终以舞台宽度为依据。
          */
-        @paper.property(paper.EditType.CHECKBOX, { readonly: true })
+        @paper.editor.property(paper.editor.EditType.CHECKBOX, { readonly: true })
         public get rotated() {
             return this._rotated;
         }
         /**
          * 屏幕尺寸。
          */
-        @paper.property(paper.EditType.SIZE)
+        @paper.editor.property(paper.editor.EditType.SIZE)
         public get screenSize(): Readonly<egret3d.ISize> {
             return this._screenSize;
         }
@@ -127,7 +127,7 @@ namespace egret3d {
         /**
          * 舞台尺寸。
          */
-        @paper.property(paper.EditType.SIZE)
+        @paper.editor.property(paper.editor.EditType.SIZE)
         public get size(): Readonly<egret3d.ISize> {
             return this._size;
         }
@@ -142,7 +142,7 @@ namespace egret3d {
         /**
          * 渲染视口。
          */
-        @paper.property(paper.EditType.RECT, { readonly: true })
+        @paper.editor.property(paper.editor.EditType.RECT, { readonly: true })
         public get viewport(): Readonly<egret3d.IRectangle> {
             return this._viewport;
         }

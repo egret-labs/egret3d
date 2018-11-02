@@ -19,13 +19,13 @@ namespace egret3d {
          * 
          */
         @paper.serializedField
-        @paper.property(paper.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public decay: number = 0.0;
         /**
          * 
          */
         @paper.serializedField
-        @paper.property(paper.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public distance: number = 10.0;
 
         public renderTarget: BaseRenderTarget;

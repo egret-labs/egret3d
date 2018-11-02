@@ -37,14 +37,14 @@ namespace egret3d {
         /**
          * 摄像机计数
          */
-        @paper.property(paper.EditType.UINT)
+        @paper.editor.property(paper.editor.EditType.UINT)
         public get cameraCount() {
             return this.cameras.length;
         }
         /**
          * 灯光计数。
          */
-        @paper.property(paper.EditType.UINT)
+        @paper.editor.property(paper.editor.EditType.UINT)
         public get lightCount() {
             return this.lights.length;
         }

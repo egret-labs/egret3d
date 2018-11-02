@@ -20,29 +20,29 @@ namespace egret3d {
         /**
          * 雾的模式。
          */
-        @paper.property(paper.EditType.LIST, { listItems: paper.getItemsFromEnum((egret3d as any).FogMode) }) // TODO
+        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((egret3d as any).FogMode) }) // TODO
         public mode: FogMode = FogMode.NONE;
         /**
          * 雾的强度。
          */
-        @paper.property(paper.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public density: number = 0.01;
         /**
          * 雾的近平面。
          * - 最小值 0.01。
          */
-        @paper.property(paper.EditType.FLOAT, { minimum: 0.01, step: 1.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, step: 1.0 })
         public near: number = 0.01;
         /**
          * 雾的远平面。
          * - 最小值 0.02。
          */
-        @paper.property(paper.EditType.FLOAT, { minimum: 0.02, step: 1.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.02, step: 1.0 })
         public far: number = 100.0;
         /**
          * 雾的颜色。
          */
-        @paper.property(paper.EditType.COLOR)
+        @paper.editor.property(paper.editor.EditType.COLOR)
         public readonly color: Color = Color.create(0.5, 0.5, 0.5, 1);
         /**
          * 禁止实例化。

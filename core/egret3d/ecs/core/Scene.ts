@@ -85,19 +85,19 @@ namespace paper {
          * 该场景使用光照贴图时的光照强度。
          */
         @serializedField
-        @property(EditType.FLOAT, { minimum: 0.0 })
+        @editor.property(editor.EditType.FLOAT, { minimum: 0.0 })
         public lightmapIntensity: number = 1.0;
         /**
          * 该场景的环境光。
          */
         @serializedField
-        @property(EditType.COLOR)
+        @editor.property(editor.EditType.COLOR)
         public readonly ambientColor: egret3d.Color = egret3d.Color.create(0.20, 0.20, 0.25, 1.0);
         /**
          * 该场景的雾。
          */
         @serializedField
-        @property(EditType.NESTED)
+        @editor.property(editor.EditType.NESTED)
         public readonly fog: egret3d.Fog = egret3d.Fog.create();
         /**
          * 该场景的光照贴图列表。

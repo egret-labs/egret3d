@@ -197,7 +197,7 @@ namespace egret3d.particle {
         /**
          * 
          */
-        @paper.property(paper.EditType.MESH)
+        @paper.editor.property(paper.editor.EditType.MESH)
         public get mesh() {
             return this._mesh;
         }

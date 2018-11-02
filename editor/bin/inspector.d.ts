@@ -286,7 +286,7 @@ declare namespace paper.editor {
      * @param classInstance 实例对象
      * @param propName 属性名
      */
-    function getEditType(classInstance: any, propName: string): paper.EditType | null;
+    function getEditType(classInstance: any, propName: string): paper.editor.EditType | null;
     /**
      * 编辑器事件
      */
@@ -436,8 +436,8 @@ declare namespace paper.editor {
         createModifyGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): void;
         createModifyComponent(gameObjectUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): any;
         createPrefabState(prefab: Prefab, parent?: GameObject): void;
-        serializeProperty(value: any, editType: paper.EditType): any;
-        deserializeProperty(serializeData: any, editType: paper.EditType): any;
+        serializeProperty(value: any, editType: paper.editor.EditType): any;
+        deserializeProperty(serializeData: any, editType: paper.editor.EditType): any;
         createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh): void;
         addComponent(gameObjectUUid: string, compClzName: string): void;
         removeComponent(gameObjectUUid: string, componentUUid: string): void;
@@ -483,7 +483,7 @@ declare namespace paper.editor {
         filtTopHierarchyGameObjects(gameObjects: GameObject[]): void;
         getGameObjectByUUid(uuid: string): GameObject | null;
         getGameObjectsByUUids(uuids: string[]): GameObject[];
-        setTargetProperty(propName: string, target: any, value: any, editType: paper.EditType): void;
+        setTargetProperty(propName: string, target: any, value: any, editType: paper.editor.EditType): void;
         private propertyHasGetterSetter(propName, target);
         /**当前选中的对象 */
         currentSelected: GameObject[];

@@ -282,100 +282,6 @@ declare namespace paper {
     function deprecated(version: string): (target: any, key: string, descriptor: PropertyDescriptor) => void;
 }
 declare namespace paper {
-    /**属性信息 */
-    class PropertyInfo {
-        /**属性名称 */
-        name: string;
-        /**编辑类型 */
-        editType: EditType;
-        /**属性配置 */
-        option: PropertyOption | undefined;
-        constructor(name: string, editType: EditType, option?: PropertyOption);
-    }
-    /**属性配置 */
-    type PropertyOption = {
-        readonly?: boolean;
-        minimum?: number;
-        maximum?: number;
-        step?: number;
-        /**赋值函数*/
-        set?: string;
-        /**下拉项*/
-        listItems?: {
-            label: string;
-            value: any;
-        }[];
-    };
-    /**
-     * 编辑类型
-     */
-    const enum EditType {
-        /**数字输入 */
-        UINT = "UINT",
-        INT = "INT",
-        FLOAT = "FLOAT",
-        /**文本输入 */
-        TEXT = "TEXT",
-        /**选中框 */
-        CHECKBOX = "CHECKBOX",
-        /** Size.*/
-        SIZE = "SIZE",
-        /**vertor2 */
-        VECTOR2 = "VECTOR2",
-        /**vertor3 */
-        VECTOR3 = "VECTOR3",
-        /**vertor4 */
-        VECTOR4 = "VECTOR4",
-        /**Quaternion */
-        QUATERNION = "QUATERNION",
-        /**颜色选择器 */
-        COLOR = "COLOR",
-        /**下拉 */
-        LIST = "LIST",
-        /**Rect */
-        RECT = "RECT",
-        /**材质 */
-        MATERIAL = "MATERIAL",
-        /**材质数组 */
-        MATERIAL_ARRAY = "MATERIAL_ARRAY",
-        /**游戏对象 */
-        GAMEOBJECT = "GAMEOBJECT",
-        /**变换 TODO 不需要*/
-        TRANSFROM = "TRANSFROM",
-        /**组件 */
-        COMPONENT = "COMPONENT",
-        /**声音 */
-        SOUND = "SOUND",
-        /**Mesh */
-        MESH = "MESH",
-        /**shader */
-        SHADER = "SHADER",
-        /**数组 */
-        ARRAY = "ARRAY",
-        /***/
-        BUTTON = "BUTTON",
-        /***/
-        NESTED = "NESTED",
-        /**贴图 */
-        TEXTUREDESC = "TEXTUREDESC",
-        /**矩阵 */
-        MAT3 = "MAT3",
-    }
-    /**
-     * 装饰器:自定义
-     */
-    function custom(): (target: any) => void;
-    /**
-     * 装饰器:属性
-     * @param editType 编辑类型
-     */
-    function property(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
-    /**
-     * 从枚举中生成装饰器列表项。
-     */
-    function getItemsFromEnum(enumObject: any): any[];
-}
-declare namespace paper {
     /**
      * 可以被 paper.DisposeCollecter 收集，并在此帧末尾释放的基础对象。
      */
@@ -516,6 +422,100 @@ declare namespace egret3d {
          */
         static lerp(v1: Vector2, v2: Vector2, value: number, out: Vector2): Vector2;
     }
+}
+declare namespace paper.editor {
+    /**属性信息 */
+    class PropertyInfo {
+        /**属性名称 */
+        name: string;
+        /**编辑类型 */
+        editType: EditType;
+        /**属性配置 */
+        option: PropertyOption | undefined;
+        constructor(name: string, editType: EditType, option?: PropertyOption);
+    }
+    /**属性配置 */
+    type PropertyOption = {
+        readonly?: boolean;
+        minimum?: number;
+        maximum?: number;
+        step?: number;
+        /**赋值函数*/
+        set?: string;
+        /**下拉项*/
+        listItems?: {
+            label: string;
+            value: any;
+        }[];
+    };
+    /**
+     * 编辑类型
+     */
+    const enum EditType {
+        /**数字输入 */
+        UINT = "UINT",
+        INT = "INT",
+        FLOAT = "FLOAT",
+        /**文本输入 */
+        TEXT = "TEXT",
+        /**选中框 */
+        CHECKBOX = "CHECKBOX",
+        /** Size.*/
+        SIZE = "SIZE",
+        /**vertor2 */
+        VECTOR2 = "VECTOR2",
+        /**vertor3 */
+        VECTOR3 = "VECTOR3",
+        /**vertor4 */
+        VECTOR4 = "VECTOR4",
+        /**Quaternion */
+        QUATERNION = "QUATERNION",
+        /**颜色选择器 */
+        COLOR = "COLOR",
+        /**下拉 */
+        LIST = "LIST",
+        /**Rect */
+        RECT = "RECT",
+        /**材质 */
+        MATERIAL = "MATERIAL",
+        /**材质数组 */
+        MATERIAL_ARRAY = "MATERIAL_ARRAY",
+        /**游戏对象 */
+        GAMEOBJECT = "GAMEOBJECT",
+        /**变换 TODO 不需要*/
+        TRANSFROM = "TRANSFROM",
+        /**组件 */
+        COMPONENT = "COMPONENT",
+        /**声音 */
+        SOUND = "SOUND",
+        /**Mesh */
+        MESH = "MESH",
+        /**shader */
+        SHADER = "SHADER",
+        /**数组 */
+        ARRAY = "ARRAY",
+        /***/
+        BUTTON = "BUTTON",
+        /***/
+        NESTED = "NESTED",
+        /**贴图 */
+        TEXTUREDESC = "TEXTUREDESC",
+        /**矩阵 */
+        MAT3 = "MAT3",
+    }
+    /**
+     * 装饰器:自定义
+     */
+    function custom(): (target: any) => void;
+    /**
+     * 装饰器:属性
+     * @param editType 编辑类型
+     */
+    function property(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
+    /**
+     * 从枚举中生成装饰器列表项。
+     */
+    function getItemsFromEnum(enumObject: any): any[];
 }
 declare namespace egret3d {
     /**
@@ -5454,29 +5454,6 @@ declare namespace paper {
         readonly gameObjects: ReadonlyArray<GameObject>;
     }
 }
-declare namespace egret3d {
-    /**
-     * 立方体碰撞组件接口。
-     */
-    interface IBoxCollider extends ICollider {
-        readonly box: Box;
-    }
-    /**
-     * 立方体碰撞组件。
-     */
-    class BoxCollider extends paper.BaseComponent implements IBoxCollider, IRaycast {
-        readonly colliderType: ColliderType;
-        /**
-         * 描述该组件的立方体。
-         */
-        readonly box: Box;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
-        /**
-         * @deprecated
-         */
-        readonly aabb: Box;
-    }
-}
 declare namespace paper {
     /**
      * 实体。
@@ -5680,6 +5657,26 @@ declare namespace paper {
          * @deprecated
          */
         static raycast(ray: Readonly<egret3d.Ray>, gameObjects: ReadonlyArray<GameObject>, maxDistance?: number, cullingMask?: CullingMask, raycastMesh?: boolean): egret3d.RaycastInfo[];
+    }
+}
+declare namespace egret3d {
+    /**
+     * 球体碰撞组件接口。
+     * TODO 使用碰撞接口
+     */
+    interface ISphereCollider extends ICollider {
+        readonly sphere: Sphere;
+    }
+    /**
+     * 球体碰撞组件。
+     */
+    class SphereCollider extends paper.BaseComponent implements ISphereCollider, IRaycast {
+        readonly colliderType: ColliderType;
+        /**
+         * 描述该组件的球体。
+         */
+        readonly sphere: Sphere;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
 }
 declare namespace egret3d {
@@ -11352,21 +11349,24 @@ interface Window {
 }
 declare namespace egret3d {
     /**
-     * 球体碰撞组件接口。
-     * TODO 使用碰撞接口
+     * 立方体碰撞组件接口。
      */
-    interface ISphereCollider extends ICollider {
-        readonly sphere: Sphere;
+    interface IBoxCollider extends ICollider {
+        readonly box: Box;
     }
     /**
-     * 球体碰撞组件。
+     * 立方体碰撞组件。
      */
-    class SphereCollider extends paper.BaseComponent implements ISphereCollider, IRaycast {
+    class BoxCollider extends paper.BaseComponent implements IBoxCollider, IRaycast {
         readonly colliderType: ColliderType;
         /**
-         * 描述该组件的球体。
+         * 描述该组件的立方体。
          */
-        readonly sphere: Sphere;
+        readonly box: Box;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        /**
+         * @deprecated
+         */
+        readonly aabb: Box;
     }
 }

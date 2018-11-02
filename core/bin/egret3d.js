@@ -585,116 +585,6 @@ var paper;
     }
     paper.deprecated = deprecated;
 })(paper || (paper = {}));
-(function (paper) {
-    /**属性信息 */
-    var PropertyInfo = (function () {
-        function PropertyInfo(name, editType, option) {
-            this.name = name;
-            this.editType = editType;
-            this.option = option;
-        }
-        return PropertyInfo;
-    }());
-    paper.PropertyInfo = PropertyInfo;
-    __reflect(PropertyInfo.prototype, "paper.PropertyInfo");
-    /**
-     * 编辑类型
-     */
-    var EditType;
-    (function (EditType) {
-        /**数字输入 */
-        EditType["UINT"] = "UINT";
-        EditType["INT"] = "INT";
-        EditType["FLOAT"] = "FLOAT";
-        /**文本输入 */
-        EditType["TEXT"] = "TEXT";
-        /**选中框 */
-        EditType["CHECKBOX"] = "CHECKBOX";
-        /** Size.*/
-        EditType["SIZE"] = "SIZE";
-        /**vertor2 */
-        EditType["VECTOR2"] = "VECTOR2";
-        /**vertor3 */
-        EditType["VECTOR3"] = "VECTOR3";
-        /**vertor4 */
-        EditType["VECTOR4"] = "VECTOR4";
-        /**Quaternion */
-        EditType["QUATERNION"] = "QUATERNION";
-        /**颜色选择器 */
-        EditType["COLOR"] = "COLOR";
-        /**下拉 */
-        EditType["LIST"] = "LIST";
-        /**Rect */
-        EditType["RECT"] = "RECT";
-        /**材质 */
-        EditType["MATERIAL"] = "MATERIAL";
-        /**材质数组 */
-        EditType["MATERIAL_ARRAY"] = "MATERIAL_ARRAY";
-        /**游戏对象 */
-        EditType["GAMEOBJECT"] = "GAMEOBJECT";
-        /**变换 TODO 不需要*/
-        EditType["TRANSFROM"] = "TRANSFROM";
-        /**组件 */
-        EditType["COMPONENT"] = "COMPONENT";
-        /**声音 */
-        EditType["SOUND"] = "SOUND";
-        /**Mesh */
-        EditType["MESH"] = "MESH";
-        /**shader */
-        EditType["SHADER"] = "SHADER";
-        /**数组 */
-        EditType["ARRAY"] = "ARRAY";
-        /***/
-        EditType["BUTTON"] = "BUTTON";
-        /***/
-        EditType["NESTED"] = "NESTED";
-        /**贴图 */
-        EditType["TEXTUREDESC"] = "TEXTUREDESC";
-        /**矩阵 */
-        EditType["MAT3"] = "MAT3";
-    })(EditType = paper.EditType || (paper.EditType = {}));
-    /**
-     * 装饰器:自定义
-     */
-    function custom() {
-        return function (target) {
-            target['__custom__'] = true;
-        };
-    }
-    paper.custom = custom;
-    /**
-     * 装饰器:属性
-     * @param editType 编辑类型
-     */
-    function property(editType, option) {
-        return function (target, property) {
-            if (!target.hasOwnProperty('__props__')) {
-                target['__props__'] = [];
-            }
-            if (editType !== undefined) {
-                target['__props__'].push(new PropertyInfo(property, editType, option));
-            }
-            else {
-                //TODO:自动分析编辑类型
-            }
-        };
-    }
-    paper.property = property;
-    /**
-     * 从枚举中生成装饰器列表项。
-     */
-    function getItemsFromEnum(enumObject) {
-        var items = [];
-        for (var k in enumObject) {
-            if (!isNaN(Number(k))) {
-                continue;
-            }
-            items.push({ label: k, value: enumObject[k] });
-        }
-        return items;
-    }
-    paper.getItemsFromEnum = getItemsFromEnum;
-})(paper || (paper = {}));
 var paper;
 (function (paper) {
     var _hashCount = 1;
@@ -950,6 +840,120 @@ var egret3d;
     __reflect(Vector2.prototype, "egret3d.Vector2", ["egret3d.IVector2", "paper.ICCS", "paper.ISerializable"]);
     var _helpVector2A = new Vector2();
 })(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**属性信息 */
+        var PropertyInfo = (function () {
+            function PropertyInfo(name, editType, option) {
+                this.name = name;
+                this.editType = editType;
+                this.option = option;
+            }
+            return PropertyInfo;
+        }());
+        editor.PropertyInfo = PropertyInfo;
+        __reflect(PropertyInfo.prototype, "paper.editor.PropertyInfo");
+        /**
+         * 编辑类型
+         */
+        var EditType;
+        (function (EditType) {
+            /**数字输入 */
+            EditType["UINT"] = "UINT";
+            EditType["INT"] = "INT";
+            EditType["FLOAT"] = "FLOAT";
+            /**文本输入 */
+            EditType["TEXT"] = "TEXT";
+            /**选中框 */
+            EditType["CHECKBOX"] = "CHECKBOX";
+            /** Size.*/
+            EditType["SIZE"] = "SIZE";
+            /**vertor2 */
+            EditType["VECTOR2"] = "VECTOR2";
+            /**vertor3 */
+            EditType["VECTOR3"] = "VECTOR3";
+            /**vertor4 */
+            EditType["VECTOR4"] = "VECTOR4";
+            /**Quaternion */
+            EditType["QUATERNION"] = "QUATERNION";
+            /**颜色选择器 */
+            EditType["COLOR"] = "COLOR";
+            /**下拉 */
+            EditType["LIST"] = "LIST";
+            /**Rect */
+            EditType["RECT"] = "RECT";
+            /**材质 */
+            EditType["MATERIAL"] = "MATERIAL";
+            /**材质数组 */
+            EditType["MATERIAL_ARRAY"] = "MATERIAL_ARRAY";
+            /**游戏对象 */
+            EditType["GAMEOBJECT"] = "GAMEOBJECT";
+            /**变换 TODO 不需要*/
+            EditType["TRANSFROM"] = "TRANSFROM";
+            /**组件 */
+            EditType["COMPONENT"] = "COMPONENT";
+            /**声音 */
+            EditType["SOUND"] = "SOUND";
+            /**Mesh */
+            EditType["MESH"] = "MESH";
+            /**shader */
+            EditType["SHADER"] = "SHADER";
+            /**数组 */
+            EditType["ARRAY"] = "ARRAY";
+            /***/
+            EditType["BUTTON"] = "BUTTON";
+            /***/
+            EditType["NESTED"] = "NESTED";
+            /**贴图 */
+            EditType["TEXTUREDESC"] = "TEXTUREDESC";
+            /**矩阵 */
+            EditType["MAT3"] = "MAT3";
+        })(EditType = editor.EditType || (editor.EditType = {}));
+        /**
+         * 装饰器:自定义
+         */
+        function custom() {
+            return function (target) {
+                target['__custom__'] = true;
+            };
+        }
+        editor.custom = custom;
+        /**
+         * 装饰器:属性
+         * @param editType 编辑类型
+         */
+        function property(editType, option) {
+            return function (target, property) {
+                if (!target.hasOwnProperty('__props__')) {
+                    target['__props__'] = [];
+                }
+                if (editType !== undefined) {
+                    target['__props__'].push(new PropertyInfo(property, editType, option));
+                }
+                else {
+                    //TODO:自动分析编辑类型
+                }
+            };
+        }
+        editor.property = property;
+        /**
+         * 从枚举中生成装饰器列表项。
+         */
+        function getItemsFromEnum(enumObject) {
+            var items = [];
+            for (var k in enumObject) {
+                if (!isNaN(Number(k))) {
+                    continue;
+                }
+                items.push({ label: k, value: enumObject[k] });
+            }
+            return items;
+        }
+        editor.getItemsFromEnum = getItemsFromEnum;
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -1767,7 +1771,7 @@ var paper;
             paper.serializedField
         ], BaseComponent.prototype, "_enabled", void 0);
         __decorate([
-            paper.property("CHECKBOX" /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], BaseComponent.prototype, "enabled", null);
         return BaseComponent;
     }(paper.BaseObject));
@@ -3294,7 +3298,7 @@ var paper;
         BaseRenderer.onMaterialsChanged = new signals.Signal();
         __decorate([
             paper.serializedField,
-            paper.property("CHECKBOX" /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], BaseRenderer.prototype, "frustumCulled", void 0);
         __decorate([
             paper.serializedField
@@ -3312,16 +3316,16 @@ var paper;
             paper.serializedField
         ], BaseRenderer.prototype, "_materials", void 0);
         __decorate([
-            paper.property("CHECKBOX" /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], BaseRenderer.prototype, "receiveShadows", null);
         __decorate([
-            paper.property("CHECKBOX" /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], BaseRenderer.prototype, "castShadows", null);
         __decorate([
-            paper.property("INT" /* INT */, { minimum: -1 })
+            paper.editor.property("INT" /* INT */, { minimum: -1 })
         ], BaseRenderer.prototype, "lightmapIndex", null);
         __decorate([
-            paper.property("MATERIAL_ARRAY" /* MATERIAL_ARRAY */)
+            paper.editor.property("MATERIAL_ARRAY" /* MATERIAL_ARRAY */)
         ], BaseRenderer.prototype, "materials", null);
         return BaseRenderer;
     }(paper.BaseComponent));
@@ -5042,10 +5046,10 @@ var egret3d;
         Box.ONE = new Box().set(egret3d.Vector3.MINUS_ONE.clone().multiplyScalar(0.5), egret3d.Vector3.ONE.clone().multiplyScalar(0.5));
         Box._instances = [];
         __decorate([
-            paper.property("VECTOR3" /* VECTOR3 */, { minimum: 0.0 })
+            paper.editor.property("VECTOR3" /* VECTOR3 */, { minimum: 0.0 })
         ], Box.prototype, "size", null);
         __decorate([
-            paper.property("VECTOR3" /* VECTOR3 */)
+            paper.editor.property("VECTOR3" /* VECTOR3 */)
         ], Box.prototype, "center", null);
         return Box;
     }(paper.BaseRelease));
@@ -5778,39 +5782,39 @@ var egret3d;
         ], BaseLight.prototype, "cullingMask", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], BaseLight.prototype, "intensity", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("COLOR" /* COLOR */)
+            paper.editor.property("COLOR" /* COLOR */)
         ], BaseLight.prototype, "color", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("CHECKBOX" /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], BaseLight.prototype, "castShadows", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], BaseLight.prototype, "shadowRadius", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.01 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01 })
         ], BaseLight.prototype, "shadowBias", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("UINT" /* UINT */)
+            paper.editor.property("UINT" /* UINT */)
         ], BaseLight.prototype, "shadowSize", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], BaseLight.prototype, "shadowCameraNear", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], BaseLight.prototype, "shadowCameraFar", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], BaseLight.prototype, "shadowCameraSize", void 0);
         return BaseLight;
     }(paper.BaseComponent));
@@ -6736,10 +6740,10 @@ var egret3d;
         };
         Sphere._instances = [];
         __decorate([
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], Sphere.prototype, "radius", void 0);
         __decorate([
-            paper.property("VECTOR3" /* VECTOR3 */)
+            paper.editor.property("VECTOR3" /* VECTOR3 */)
         ], Sphere.prototype, "center", void 0);
         return Sphere;
     }(paper.BaseRelease));
@@ -9519,13 +9523,13 @@ var egret3d;
             paper.serializedField("localScale")
         ], Transform.prototype, "_localScale", void 0);
         __decorate([
-            paper.property("VECTOR3" /* VECTOR3 */)
+            paper.editor.property("VECTOR3" /* VECTOR3 */)
         ], Transform.prototype, "localPosition", null);
         __decorate([
-            paper.property("VECTOR3" /* VECTOR3 */, { step: 1.0 })
+            paper.editor.property("VECTOR3" /* VECTOR3 */, { step: 1.0 })
         ], Transform.prototype, "localEulerAngles", null);
         __decorate([
-            paper.property("VECTOR3" /* VECTOR3 */)
+            paper.editor.property("VECTOR3" /* VECTOR3 */)
         ], Transform.prototype, "localScale", null);
         __decorate([
             paper.serializedField,
@@ -9696,16 +9700,16 @@ var egret3d;
             configurable: true
         });
         __decorate([
-            paper.property("CHECKBOX" /* CHECKBOX */, { readonly: true })
+            paper.editor.property("CHECKBOX" /* CHECKBOX */, { readonly: true })
         ], Stage.prototype, "rotated", null);
         __decorate([
-            paper.property("SIZE" /* SIZE */)
+            paper.editor.property("SIZE" /* SIZE */)
         ], Stage.prototype, "screenSize", null);
         __decorate([
-            paper.property("SIZE" /* SIZE */)
+            paper.editor.property("SIZE" /* SIZE */)
         ], Stage.prototype, "size", null);
         __decorate([
-            paper.property("RECT" /* RECT */, { readonly: true })
+            paper.editor.property("RECT" /* RECT */, { readonly: true })
         ], Stage.prototype, "viewport", null);
         return Stage;
     }(paper.SingletonComponent));
@@ -10272,10 +10276,10 @@ var egret3d;
             configurable: true
         });
         __decorate([
-            paper.property("UINT" /* UINT */)
+            paper.editor.property("UINT" /* UINT */)
         ], CameraAndLightCollecter.prototype, "cameraCount", null);
         __decorate([
-            paper.property("UINT" /* UINT */)
+            paper.editor.property("UINT" /* UINT */)
         ], CameraAndLightCollecter.prototype, "lightCount", null);
         return CameraAndLightCollecter;
     }(paper.SingletonComponent));
@@ -10525,7 +10529,7 @@ var egret3d;
             return this.renderers.indexOf(renderer) >= 0;
         };
         __decorate([
-            paper.property("UINT" /* UINT */)
+            paper.editor.property("UINT" /* UINT */)
         ], DrawCallCollecter.prototype, "drawCallCount", void 0);
         return DrawCallCollecter;
     }(paper.SingletonComponent));
@@ -11245,15 +11249,15 @@ var paper;
         ], Scene.prototype, "extras", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], Scene.prototype, "lightmapIntensity", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("COLOR" /* COLOR */)
+            paper.editor.property("COLOR" /* COLOR */)
         ], Scene.prototype, "ambientColor", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("NESTED" /* NESTED */)
+            paper.editor.property("NESTED" /* NESTED */)
         ], Scene.prototype, "fog", void 0);
         __decorate([
             paper.serializedField
@@ -11267,61 +11271,6 @@ var paper;
     paper.Scene = Scene;
     __reflect(Scene.prototype, "paper.Scene");
 })(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * 立方体碰撞组件。
-     */
-    var BoxCollider = (function (_super) {
-        __extends(BoxCollider, _super);
-        function BoxCollider() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.colliderType = egret3d.ColliderType.Box;
-            /**
-             * 描述该组件的立方体。
-             */
-            _this.box = egret3d.Box.ONE.clone();
-            return _this;
-        }
-        BoxCollider.prototype.raycast = function (ray, raycastInfo) {
-            var transform = this.gameObject.transform;
-            var localRay = egret3d.helpRay.applyMatrix(transform.worldToLocalMatrix, ray);
-            if (this.box.raycast(localRay, raycastInfo)) {
-                if (raycastInfo) {
-                    var localToWorldMatrix = transform.localToWorldMatrix;
-                    raycastInfo.position.applyMatrix(transform.localToWorldMatrix);
-                    raycastInfo.distance = ray.origin.getDistance(raycastInfo.position);
-                    var normal = raycastInfo.normal;
-                    if (normal) {
-                        normal.applyDirection(localToWorldMatrix);
-                    }
-                }
-                return true;
-            }
-            return false;
-        };
-        Object.defineProperty(BoxCollider.prototype, "aabb", {
-            /**
-             * @deprecated
-             */
-            get: function () {
-                return this.box;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        __decorate([
-            paper.serializedField("aabb"),
-            paper.property("NESTED" /* NESTED */)
-        ], BoxCollider.prototype, "box", void 0);
-        BoxCollider = __decorate([
-            paper.allowMultiple
-        ], BoxCollider);
-        return BoxCollider;
-    }(paper.BaseComponent));
-    egret3d.BoxCollider = BoxCollider;
-    __reflect(BoxCollider.prototype, "egret3d.BoxCollider", ["egret3d.IBoxCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
-})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     /**
@@ -12194,22 +12143,22 @@ var paper;
         GameObject._globalGameObject = null;
         __decorate([
             paper.serializedField,
-            paper.property("CHECKBOX" /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], GameObject.prototype, "isStatic", void 0);
         __decorate([
             paper.serializedField
         ], GameObject.prototype, "hideFlags", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("LIST" /* LIST */, { listItems: paper.getItemsFromEnum(paper.Layer) }) // TODO
+            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.Layer) }) // TODO
         ], GameObject.prototype, "layer", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("TEXT" /* TEXT */)
+            paper.editor.property("TEXT" /* TEXT */)
         ], GameObject.prototype, "name", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("LIST" /* LIST */, { listItems: paper.getItemsFromEnum(paper.DefaultTags) }) // TODO
+            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.DefaultTags) }) // TODO
         ], GameObject.prototype, "tag", void 0);
         __decorate([
             paper.serializedField
@@ -12218,7 +12167,7 @@ var paper;
             paper.serializedField
         ], GameObject.prototype, "_activeSelf", void 0);
         __decorate([
-            paper.property("CHECKBOX" /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], GameObject.prototype, "activeSelf", null);
         __decorate([
             paper.serializedField,
@@ -12229,6 +12178,53 @@ var paper;
     paper.GameObject = GameObject;
     __reflect(GameObject.prototype, "paper.GameObject");
 })(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * 球体碰撞组件。
+     */
+    var SphereCollider = (function (_super) {
+        __extends(SphereCollider, _super);
+        function SphereCollider() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.colliderType = egret3d.ColliderType.Sphere;
+            /**
+             * 描述该组件的球体。
+             */
+            _this.sphere = egret3d.Sphere.create(egret3d.Vector3.ZERO, 0.5);
+            return _this;
+        }
+        SphereCollider.prototype.raycast = function (ray, raycastInfo) {
+            var transform = this.gameObject.transform;
+            var worldToLocalMatrix = transform.worldToLocalMatrix;
+            var localRay = egret3d.helpRay.applyMatrix(transform.worldToLocalMatrix, ray);
+            if (this.sphere.raycast(localRay, raycastInfo)) {
+                if (raycastInfo) {
+                    var localToWorldMatrix = transform.localToWorldMatrix;
+                    raycastInfo.position.applyMatrix(localToWorldMatrix);
+                    raycastInfo.distance = ray.origin.getDistance(raycastInfo.position);
+                    var normal = raycastInfo.normal;
+                    if (normal) {
+                        // normal.applyDirection(localToWorldMatrix);
+                        normal.applyMatrix3(egret3d.helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
+                    }
+                }
+                return true;
+            }
+            return false;
+        };
+        __decorate([
+            paper.serializedField,
+            paper.editor.property("NESTED" /* NESTED */)
+        ], SphereCollider.prototype, "sphere", void 0);
+        SphereCollider = __decorate([
+            paper.allowMultiple
+        ], SphereCollider);
+        return SphereCollider;
+    }(paper.BaseComponent));
+    egret3d.SphereCollider = SphereCollider;
+    __reflect(SphereCollider.prototype, "egret3d.SphereCollider", ["egret3d.ISphereCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -12361,19 +12357,19 @@ var egret3d;
         };
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], CylinderCollider.prototype, "topRadius", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], CylinderCollider.prototype, "bottomRadius", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], CylinderCollider.prototype, "height", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("VECTOR3" /* VECTOR3 */)
+            paper.editor.property("VECTOR3" /* VECTOR3 */)
         ], CylinderCollider.prototype, "center", void 0);
         CylinderCollider = __decorate([
             paper.allowMultiple
@@ -13015,39 +13011,39 @@ var egret3d;
         };
         __decorate([
             paper.serializedField,
-            paper.property("CHECKBOX" /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], Camera.prototype, "clearOption_Color", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("CHECKBOX" /* CHECKBOX */)
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], Camera.prototype, "clearOption_Depth", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("LIST" /* LIST */, { listItems: paper.getItemsFromEnum(paper.CullingMask) }) // TODO
+            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.CullingMask) }) // TODO
         ], Camera.prototype, "cullingMask", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("INT" /* INT */)
+            paper.editor.property("INT" /* INT */)
         ], Camera.prototype, "order", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: Math.PI, step: 0.01 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: Math.PI, step: 0.01 })
         ], Camera.prototype, "fov", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 1.0, step: 0.01 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 1.0, step: 0.01 })
         ], Camera.prototype, "opvalue", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], Camera.prototype, "size", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("COLOR" /* COLOR */)
+            paper.editor.property("COLOR" /* COLOR */)
         ], Camera.prototype, "backgroundColor", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("RECT" /* RECT */)
+            paper.editor.property("RECT" /* RECT */)
         ], Camera.prototype, "viewport", void 0);
         __decorate([
             paper.serializedField
@@ -13056,10 +13052,10 @@ var egret3d;
             paper.serializedField
         ], Camera.prototype, "_far", void 0);
         __decorate([
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.01, maximum: 3000.0 - 0.01, step: 1 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01, maximum: 3000.0 - 0.01, step: 1 })
         ], Camera.prototype, "near", null);
         __decorate([
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.02, maximum: 3000.0, step: 1 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.02, maximum: 3000.0, step: 1 })
         ], Camera.prototype, "far", null);
         return Camera;
     }(paper.BaseComponent));
@@ -14582,11 +14578,11 @@ var egret3d;
         };
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], PointLight.prototype, "decay", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], PointLight.prototype, "distance", void 0);
         return PointLight;
     }(egret3d.BaseLight));
@@ -14635,19 +14631,19 @@ var egret3d;
         };
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], SpotLight.prototype, "decay", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], SpotLight.prototype, "distance", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */)
+            paper.editor.property("FLOAT" /* FLOAT */)
         ], SpotLight.prototype, "angle", void 0);
         __decorate([
             paper.serializedField,
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.01 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01 })
         ], SpotLight.prototype, "penumbra", void 0);
         return SpotLight;
     }(egret3d.BaseLight));
@@ -14702,7 +14698,7 @@ var egret3d;
             paper.serializedField
         ], MeshFilter.prototype, "_mesh", void 0);
         __decorate([
-            paper.property("MESH" /* MESH */)
+            paper.editor.property("MESH" /* MESH */)
         ], MeshFilter.prototype, "mesh", null);
         return MeshFilter;
     }(paper.BaseComponent));
@@ -16058,7 +16054,7 @@ var egret3d;
             paper.serializedField
         ], Animation.prototype, "autoPlay", void 0);
         __decorate([
-            paper.property("FLOAT" /* FLOAT */)
+            paper.editor.property("FLOAT" /* FLOAT */)
         ], Animation.prototype, "timeScale", void 0);
         __decorate([
             paper.serializedField
@@ -18797,7 +18793,7 @@ var egret3d;
                 paper.serializedField
             ], ParticleRenderer.prototype, "_mesh", void 0);
             __decorate([
-                paper.property("MESH" /* MESH */)
+                paper.editor.property("MESH" /* MESH */)
             ], ParticleRenderer.prototype, "mesh", null);
             return ParticleRenderer;
         }(paper.BaseRenderer));
@@ -21693,19 +21689,19 @@ var egret3d;
             return this;
         };
         __decorate([
-            paper.property("LIST" /* LIST */, { listItems: paper.getItemsFromEnum(egret3d.FogMode) }) // TODO
+            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(egret3d.FogMode) }) // TODO
         ], Fog.prototype, "mode", void 0);
         __decorate([
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], Fog.prototype, "density", void 0);
         __decorate([
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.01, step: 1.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01, step: 1.0 })
         ], Fog.prototype, "near", void 0);
         __decorate([
-            paper.property("FLOAT" /* FLOAT */, { minimum: 0.02, step: 1.0 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.02, step: 1.0 })
         ], Fog.prototype, "far", void 0);
         __decorate([
-            paper.property("COLOR" /* COLOR */)
+            paper.editor.property("COLOR" /* COLOR */)
         ], Fog.prototype, "color", void 0);
         return Fog;
     }());
@@ -25079,47 +25075,55 @@ window.egret3d = egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 球体碰撞组件。
+     * 立方体碰撞组件。
      */
-    var SphereCollider = (function (_super) {
-        __extends(SphereCollider, _super);
-        function SphereCollider() {
+    var BoxCollider = (function (_super) {
+        __extends(BoxCollider, _super);
+        function BoxCollider() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.colliderType = egret3d.ColliderType.Sphere;
+            _this.colliderType = egret3d.ColliderType.Box;
             /**
-             * 描述该组件的球体。
+             * 描述该组件的立方体。
              */
-            _this.sphere = egret3d.Sphere.create(egret3d.Vector3.ZERO, 0.5);
+            _this.box = egret3d.Box.ONE.clone();
             return _this;
         }
-        SphereCollider.prototype.raycast = function (ray, raycastInfo) {
+        BoxCollider.prototype.raycast = function (ray, raycastInfo) {
             var transform = this.gameObject.transform;
-            var worldToLocalMatrix = transform.worldToLocalMatrix;
             var localRay = egret3d.helpRay.applyMatrix(transform.worldToLocalMatrix, ray);
-            if (this.sphere.raycast(localRay, raycastInfo)) {
+            if (this.box.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) {
                     var localToWorldMatrix = transform.localToWorldMatrix;
-                    raycastInfo.position.applyMatrix(localToWorldMatrix);
+                    raycastInfo.position.applyMatrix(transform.localToWorldMatrix);
                     raycastInfo.distance = ray.origin.getDistance(raycastInfo.position);
                     var normal = raycastInfo.normal;
                     if (normal) {
-                        // normal.applyDirection(localToWorldMatrix);
-                        normal.applyMatrix3(egret3d.helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
+                        normal.applyDirection(localToWorldMatrix);
                     }
                 }
                 return true;
             }
             return false;
         };
+        Object.defineProperty(BoxCollider.prototype, "aabb", {
+            /**
+             * @deprecated
+             */
+            get: function () {
+                return this.box;
+            },
+            enumerable: true,
+            configurable: true
+        });
         __decorate([
-            paper.serializedField,
-            paper.property("NESTED" /* NESTED */)
-        ], SphereCollider.prototype, "sphere", void 0);
-        SphereCollider = __decorate([
+            paper.serializedField("aabb"),
+            paper.editor.property("NESTED" /* NESTED */)
+        ], BoxCollider.prototype, "box", void 0);
+        BoxCollider = __decorate([
             paper.allowMultiple
-        ], SphereCollider);
-        return SphereCollider;
+        ], BoxCollider);
+        return BoxCollider;
     }(paper.BaseComponent));
-    egret3d.SphereCollider = SphereCollider;
-    __reflect(SphereCollider.prototype, "egret3d.SphereCollider", ["egret3d.ISphereCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
+    egret3d.BoxCollider = BoxCollider;
+    __reflect(BoxCollider.prototype, "egret3d.BoxCollider", ["egret3d.IBoxCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
 })(egret3d || (egret3d = {}));

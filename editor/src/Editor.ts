@@ -34,7 +34,7 @@ namespace paper.editor {
      * @param classInstance 实例对象
      * @param propName 属性名
      */
-    export function getEditType(classInstance: any, propName: string): paper.EditType | null {
+    export function getEditType(classInstance: any, propName: string): paper.editor.EditType | null {
         const editInfoList = getEditInfo(classInstance);
         for (let index = 0; index < editInfoList.length; index++) {
             const element = editInfoList[index];

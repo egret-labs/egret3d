@@ -11,28 +11,28 @@ namespace egret3d {
          * 该圆柱（锥）的顶部半径。
          */
         @paper.serializedField
-        @paper.property(paper.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public topRadius: number = 0.5;
 
         /**
          * 该圆柱（锥）的底部半径。
          */
         @paper.serializedField
-        @paper.property(paper.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public bottomRadius: number = 0.5;
 
         /**
          * 该圆柱（锥）的高度。
          */
         @paper.serializedField
-        @paper.property(paper.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public height: number = 1.0;
 
         /**
          * 该圆柱（锥）的中心点。
          */
         @paper.serializedField
-        @paper.property(paper.EditType.VECTOR3)
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
         public readonly center: Vector3 = egret3d.Vector3.create();
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {

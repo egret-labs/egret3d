@@ -429,7 +429,7 @@ namespace egret3d {
          * - 并不会返回一个新的 `egret3d.Vector3` 实例。
          * - 可以调用 `vector3.update()` 将对该向量的修改同步到该组件，`gameObject.transform.localPosition.add(egret3d.Vector3.ONE).update()`。
          */
-        @paper.property(paper.EditType.VECTOR3)
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get localPosition(): Readonly<Vector3> {
             return this._localPosition;
         }
@@ -574,7 +574,7 @@ namespace egret3d {
         /**
          * 该组件的本地欧拉旋转。（角度制）
          */
-        @paper.property(paper.EditType.VECTOR3, { step: 1.0 })
+        @paper.editor.property(paper.editor.EditType.VECTOR3, { step: 1.0 })
         public get localEulerAngles(): Readonly<Vector3> {
             if (this._localDirty & TransformDirty.Euler) {
                 this._updateEuler(false);
@@ -621,7 +621,7 @@ namespace egret3d {
         /**
          * 该组件的本地缩放。
          */
-        @paper.property(paper.EditType.VECTOR3)
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get localScale(): Readonly<Vector3> {
             return this._localScale;
         }

@@ -81,7 +81,7 @@ namespace paper.editor {
             }
         }
         public setTransformProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void {
-            let valueEditType: paper.EditType | null = getEditType(target,propName);
+            let valueEditType: paper.editor.EditType | null = getEditType(target,propName);
 
             if (valueEditType !== null) {
                 let newPropertyData = {
@@ -115,46 +115,46 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public serializeProperty(value: any, editType: paper.EditType): any {
+        public serializeProperty(value: any, editType: paper.editor.EditType): any {
             switch (editType) {
-                case paper.EditType.UINT:
-                case paper.EditType.INT:
-                case paper.EditType.FLOAT:
-                case paper.EditType.TEXT:
-                case paper.EditType.CHECKBOX:
+                case paper.editor.EditType.UINT:
+                case paper.editor.EditType.INT:
+                case paper.editor.EditType.FLOAT:
+                case paper.editor.EditType.TEXT:
+                case paper.editor.EditType.CHECKBOX:
                     return value;
-                case paper.EditType.VECTOR2:
-                case paper.EditType.VECTOR3:
-                case paper.EditType.VECTOR4:
-                case paper.EditType.QUATERNION:
-                case paper.EditType.COLOR:
-                case paper.EditType.RECT:
+                case paper.editor.EditType.VECTOR2:
+                case paper.editor.EditType.VECTOR3:
+                case paper.editor.EditType.VECTOR4:
+                case paper.editor.EditType.QUATERNION:
+                case paper.editor.EditType.COLOR:
+                case paper.editor.EditType.RECT:
                     const className = egret.getQualifiedClassName(value);
                     const serializeData = value.serialize(value);
                     return { className, serializeData };
-                case paper.EditType.SHADER:
+                case paper.editor.EditType.SHADER:
                     return value.name;
-                case paper.EditType.LIST:
+                case paper.editor.EditType.LIST:
                     return value;
-                case paper.EditType.MATERIAL_ARRAY:
+                case paper.editor.EditType.MATERIAL_ARRAY:
                     const data = value.map((item:paper.Asset) => {
                         return { name: item.name, url: item.name };
                     });
                     return data;
-                case paper.EditType.MESH:
+                case paper.editor.EditType.MESH:
                     if (!value)
                         return '';
                     let url = value.name;
                     return url;
-                case paper.EditType.GAMEOBJECT:
+                case paper.editor.EditType.GAMEOBJECT:
                     if (!value) {
                         return null;
                     }
                     return value.uuid;
-                case paper.EditType.MATERIAL:
-                case paper.EditType.TRANSFROM:
-                case paper.EditType.SOUND:
-                case paper.EditType.ARRAY:
+                case paper.editor.EditType.MATERIAL:
+                case paper.editor.EditType.TRANSFROM:
+                case paper.editor.EditType.SOUND:
+                case paper.editor.EditType.ARRAY:
                     //TODO
                     console.error("not supported!");
                     break;
@@ -163,20 +163,20 @@ namespace paper.editor {
             }
         }
 
-        public deserializeProperty(serializeData: any, editType: paper.EditType) {
+        public deserializeProperty(serializeData: any, editType: paper.editor.EditType) {
             switch (editType) {
-                case paper.EditType.UINT:
-                case paper.EditType.INT:
-                case paper.EditType.FLOAT:
-                case paper.EditType.TEXT:
-                case paper.EditType.CHECKBOX:
+                case paper.editor.EditType.UINT:
+                case paper.editor.EditType.INT:
+                case paper.editor.EditType.FLOAT:
+                case paper.editor.EditType.TEXT:
+                case paper.editor.EditType.CHECKBOX:
                     return serializeData;
-                case paper.EditType.VECTOR2:
-                case paper.EditType.VECTOR3:
-                case paper.EditType.VECTOR4:
-                case paper.EditType.QUATERNION:
-                case paper.EditType.COLOR:
-                case paper.EditType.RECT:
+                case paper.editor.EditType.VECTOR2:
+                case paper.editor.EditType.VECTOR3:
+                case paper.editor.EditType.VECTOR4:
+                case paper.editor.EditType.QUATERNION:
+                case paper.editor.EditType.COLOR:
+                case paper.editor.EditType.RECT:
                     const clazz = egret.getDefinitionByName(serializeData.className);
                     let target: ISerializable | null = null;
                     if (clazz) {
@@ -184,31 +184,31 @@ namespace paper.editor {
                         target!.deserialize(serializeData.serializeData);
                     }
                     return target;
-                case paper.EditType.SHADER:
+                case paper.editor.EditType.SHADER:
                     const url = serializeData;
                     const asset = paper.Asset.find(url);
                     return asset;
-                case paper.EditType.LIST:
+                case paper.editor.EditType.LIST:
                     return serializeData;
-                case paper.EditType.MATERIAL_ARRAY:
+                case paper.editor.EditType.MATERIAL_ARRAY:
                     const materials: egret3d.Material[] = [];
                     for (const matrial of serializeData) {
                         const asset = paper.Asset.find(matrial.url);
                         materials.push(asset as egret3d.Material);
                     }
                     return materials;
-                case paper.EditType.MESH:
+                case paper.editor.EditType.MESH:
                     let meshAsset = paper.Asset.find(serializeData);
                     return meshAsset;
-                case paper.EditType.GAMEOBJECT:
+                case paper.editor.EditType.GAMEOBJECT:
                     if (!serializeData) {
                         return null;
                     }
                     return this.getGameObjectByUUid(serializeData);
-                case paper.EditType.MATERIAL:
-                case paper.EditType.TRANSFROM:
-                case paper.EditType.SOUND:
-                case paper.EditType.ARRAY:
+                case paper.editor.EditType.MATERIAL:
+                case paper.editor.EditType.TRANSFROM:
+                case paper.editor.EditType.SOUND:
+                case paper.editor.EditType.ARRAY:
                     //TODO
                     console.error("not supported!");
                     return null;
@@ -478,11 +478,11 @@ namespace paper.editor {
             return result;
         }
 
-        public setTargetProperty(propName: string, target: any, value: any, editType: paper.EditType): void {
-            if (editType !== paper.EditType.VECTOR2 &&
-                editType !== paper.EditType.VECTOR3 &&
-                editType !== paper.EditType.VECTOR4 &&
-                editType !== paper.EditType.COLOR) {
+        public setTargetProperty(propName: string, target: any, value: any, editType: paper.editor.EditType): void {
+            if (editType !== paper.editor.EditType.VECTOR2 &&
+                editType !== paper.editor.EditType.VECTOR3 &&
+                editType !== paper.editor.EditType.VECTOR4 &&
+                editType !== paper.editor.EditType.COLOR) {
                 target[propName] = value;
                 return;
             }
@@ -491,25 +491,25 @@ namespace paper.editor {
                 target[propName] = value;
             } else {
                 switch (editType) {
-                    case paper.EditType.VECTOR2:
+                    case paper.editor.EditType.VECTOR2:
                         const vec2: egret3d.Vector2 = target[propName];
                         vec2.x = value.x;
                         vec2.y = value.y;
                         break;
-                    case paper.EditType.VECTOR3:
+                    case paper.editor.EditType.VECTOR3:
                         const vec3: egret3d.Vector3 = target[propName];
                         vec3.x = value.x;
                         vec3.y = value.y;
                         vec3.z = value.z;
                         break;
-                    case paper.EditType.VECTOR4:
+                    case paper.editor.EditType.VECTOR4:
                         const vec4: egret3d.Vector4 = target[propName];
                         vec4.x = value.x;
                         vec4.y = value.y;
                         vec4.z = value.z;
                         vec4.w = value.w;
                         break;
-                    case paper.EditType.COLOR:
+                    case paper.editor.EditType.COLOR:
                         const color: egret3d.Color = target[propName];
                         color.r = value.r;
                         color.g = value.g;

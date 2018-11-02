@@ -21,12 +21,12 @@ namespace egret3d {
         /**
          * 球体半径。
          */
-        @paper.property(paper.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public radius: number = 0.0;
         /**
          * 球体中心点。
          */
-        @paper.property(paper.EditType.VECTOR3)
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
         public readonly center: Vector3 = Vector3.create();
         /**
          * 请使用 `egret3d.Sphere.create()` 创建实例。

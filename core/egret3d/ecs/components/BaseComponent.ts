@@ -167,7 +167,7 @@ namespace paper {
         /**
          * 该组件自身的激活状态。
          */
-        @property(EditType.CHECKBOX)
+        @editor.property(editor.EditType.CHECKBOX)
         public get enabled() {
             return this._enabled;
         }
