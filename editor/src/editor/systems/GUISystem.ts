@@ -619,6 +619,22 @@ namespace paper.editor {
                         }
                     }
                 }
+
+                // TODO
+                // for (const gameObject of this._disposeCollecter.parentChangedGameObjects) {
+                //     const folder = this._hierarchyFolders[gameObject.uuid];
+                //     if (folder) {
+                //         if (folder.parent) {
+                //             try {
+                //                 folder.parent.removeFolder(folder);
+                //             }
+                //             catch (e) {
+                //             }
+                //         }
+
+                //         this._bufferedGameObjects.push(gameObject);
+                //     }
+                // }
             }
         }
     }

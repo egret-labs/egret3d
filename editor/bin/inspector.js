@@ -2907,8 +2907,8 @@ var paper;
                 var eyeDistance = (10000.0 - target.getDistance(camera.gameObject.transform.position)) * 0.01; // TODO
                 var d = (eyeDistance % 1.0);
                 var s = d * (_step - 1) + 1.0;
-                this._gridA.transform.setScale(s * _step, 0.0, s * _step);
-                this._gridB.transform.setScale(s, 0.0, s);
+                this._gridA.transform.setLocalScale(s * _step, 0.0, s * _step);
+                this._gridB.transform.setLocalScale(s, 0.0, s);
                 var mA = this._gridA.renderer.material;
                 var mB = this._gridB.renderer.material;
                 mA.opacity = 1.0 * 0.2;
@@ -3191,7 +3191,7 @@ var paper;
                         move.x = -move.x;
                         var center = _this.lookAtPoint;
                         var dis = _this.gameObject.transform.position.getDistance(center);
-                        move.multiplyScalar(dis * _this.moveSpped).applyMatrixWithoutTranslate(_this.gameObject.transform.localMatrix);
+                        move.multiplyScalar(dis * _this.moveSpped).applyQuaternion(_this.gameObject.transform.rotation);
                         _this.lookAtOffset.add(move);
                     }
                     else {
@@ -3751,9 +3751,9 @@ var paper;
                 }
                 eye.normalize();
                 var quaternion = isWorldSpace ? egret3d.Quaternion.IDENTITY : selectedGameObject.transform.rotation;
-                this.gameObject.transform.position = selectedGameObject.transform.position;
-                this.gameObject.transform.rotation = quaternion;
-                this.gameObject.transform.scale = egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10.0).release();
+                this.gameObject.transform.localPosition = selectedGameObject.transform.position;
+                this.gameObject.transform.localRotation = quaternion;
+                this.gameObject.transform.localScale = egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10.0).release();
                 if (this._mode === this.rotate) {
                     var tempQuaternion = quaternion.clone();
                     var tempQuaternion2 = quaternion.clone();
@@ -4704,6 +4704,20 @@ var paper;
                             }
                         }
                     }
+                    // TODO
+                    // for (const gameObject of this._disposeCollecter.parentChangedGameObjects) {
+                    //     const folder = this._hierarchyFolders[gameObject.uuid];
+                    //     if (folder) {
+                    //         if (folder.parent) {
+                    //             try {
+                    //                 folder.parent.removeFolder(folder);
+                    //             }
+                    //             catch (e) {
+                    //             }
+                    //         }
+                    //         this._bufferedGameObjects.push(gameObject);
+                    //     }
+                    // }
                 }
             };
             return GUISystem;
