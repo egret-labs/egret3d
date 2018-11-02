@@ -313,23 +313,23 @@ vec3 computeVelocity(in float t)
 
 vec3 computePosition(in vec3 startVelocity, in vec3 lifeVelocity,in float age,in float t,vec3 gravityVelocity,vec4 worldRotation)
 {
-   	vec3 startPosition;
+   	vec3 position;
    	vec3 lifePosition;
 		#if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)
 			#ifdef VELOCITYCONSTANT
-				  startPosition=startVelocity*age;
+				  position=startVelocity*age;
 				  lifePosition=lifeVelocity*age;
 			#endif
 			#ifdef VELOCITYCURVE
-				  startPosition=startVelocity*age;
+				  position=startVelocity*age;
 				  lifePosition=vec3(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveZ,t));
 			#endif
 			#ifdef VELOCITYTWOCONSTANT
-				  startPosition=startVelocity*age;
+				  position=startVelocity*age;
 				  lifePosition=lifeVelocity*age;
 			#endif
 			#ifdef VELOCITYTWOCURVE
-				  startPosition=startVelocity*age;
+				  position=startVelocity*age;
 				  lifePosition=vec3(mix(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveMaxX,t),random1.y)
 			      								,mix(evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveMaxY,t),random1.z)
 			      								,mix(evaluate_curve_total(u_velocityCurveZ,t),evaluate_curve_total(u_velocityCurveMaxZ,t),random1.w));
@@ -338,23 +338,23 @@ vec3 computePosition(in vec3 startVelocity, in vec3 lifeVelocity,in float age,in
 			vec3 finalPosition;
 			if(u_spaceType==0){
 			  if(u_scalingMode!=2)
-			   finalPosition =rotation_quaternions(u_positionScale*(startPosition.xyz+startPosition+lifePosition),worldRotation);
+			   finalPosition =rotation_quaternions(u_positionScale*(startPosition.xyz+position+lifePosition),worldRotation);
 			  else
-			   finalPosition =rotation_quaternions(u_positionScale*startPosition.xyz+startPosition+lifePosition,worldRotation);
+			   finalPosition =rotation_quaternions(u_positionScale*startPosition.xyz+position+lifePosition,worldRotation);
 			}
 			else{
 			  if(u_scalingMode!=2)
-			    finalPosition = rotation_quaternions(u_positionScale*(startPosition.xyz+startPosition),worldRotation)+lifePosition;
+			    finalPosition = rotation_quaternions(u_positionScale*(startPosition.xyz+position),worldRotation)+lifePosition;
 			  else
-			    finalPosition = rotation_quaternions(u_positionScale*startPosition.xyz+startPosition,worldRotation)+lifePosition;
+			    finalPosition = rotation_quaternions(u_positionScale*startPosition.xyz+position,worldRotation)+lifePosition;
 			}
 		  #else
-			 startPosition=startVelocity*age;
+			 position=startVelocity*age;
 			 vec3 finalPosition;
 			 if(u_scalingMode!=2)
-			   finalPosition = rotation_quaternions(u_positionScale*(startPosition.xyz+startPosition),worldRotation);
+			   finalPosition = rotation_quaternions(u_positionScale*(startPosition.xyz+position),worldRotation);
 			 else
-			   finalPosition = rotation_quaternions(u_positionScale*startPosition.xyz+startPosition,worldRotation);
+			   finalPosition = rotation_quaternions(u_positionScale*startPosition.xyz+position,worldRotation);
 		#endif
   
   if(u_simulationSpace==1)

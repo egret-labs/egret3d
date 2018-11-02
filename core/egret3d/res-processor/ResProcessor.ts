@@ -62,7 +62,7 @@ namespace egret3d {
                 for (const shader of shaders) {
                     const source = (RES.host.resourceConfig as any)["getResource"](shader.uri);
                     if (source) {
-                        const shaderSource = await host.load(source);
+                        const shaderSource = await host.load(source, "text");
                         if (shaderSource) {
                             shader.uri = shaderSource;
                         }
@@ -178,6 +178,12 @@ namespace egret3d {
 
             if (result.materials && result.materials.length > 0) {
                 for (const mat of result.materials as egret3d.GLTFMaterial[]) {
+                    //load shader
+                    const technique = mat.extensions.KHR_techniques_webgl.technique;
+                    const techniqueRes = (RES.host.resourceConfig as any)["getResource"](technique);
+                    if (techniqueRes) {
+                        const shader = await host.load(techniqueRes, "Shader");
+                    }
                     const values = mat.extensions.KHR_techniques_webgl.values;
                     for (const key in values) {
                         const value = values[key];
@@ -353,9 +359,11 @@ namespace egret3d {
             } else if (extname === ".scene.json") {
                 return 'Scene';
             } else if (extname === ".vs.glsl") {
-                return 'GLVertexShader';
+                return 'text';
             } else if (extname === ".fs.glsl") {
-                return 'GLFragmentShader';
+                return 'text';
+            } else if (extname === ".glsl") {
+                return 'text';
             } else if (extname === ".shader.json") {
                 return 'Shader';
             } else if (extname === ".image.json") {
