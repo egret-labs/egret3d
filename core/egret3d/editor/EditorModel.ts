@@ -491,24 +491,22 @@ namespace paper.editor {
             return result;
         }
 
-        private getTargetByPropertyChain(propertyChain: string[], target: any) {
-            if (propertyChain.length === 1) {
+        public getTargetByPropertyChain(propertyChain: string[], target: any) {
+            if (propertyChain.length == 1) {
                 return target;
             }
-
-            const first: string | undefined = propertyChain.shift();
-
-            if (!first) {
-                console.error("property chain error")
+            
+            let realTarget:any;
+            for (let index = 0; index < propertyChain.length; index++) {
+                if (index === propertyChain.length - 1) {
+                    return realTarget;
+                }
+                const element = propertyChain[index];
+                realTarget = realTarget ? realTarget[element] : target[element];
             }
 
-            if (first && target[first]) {
-                target = target[first];
-                target =  this.getTargetByPropertyChain(propertyChain, target);
-            }
-
-            return target;
-        }
+            throw new Error("can not find target");
+		}
 
         public setTargetProperty(propName: string, target: any, value: any, editType: paper.editor.EditType): void;
         public setTargetProperty(propNameOrpropertyChain: string | string[], target: any, value: any, editType: paper.editor.EditType) {
@@ -516,7 +514,7 @@ namespace paper.editor {
 
             if (Array.isArray(propNameOrpropertyChain)) {
                 target = this.getTargetByPropertyChain(propNameOrpropertyChain,target);
-                propertyName = propNameOrpropertyChain[0];
+                propertyName = propNameOrpropertyChain[propNameOrpropertyChain.length - 1];
             }else{
                 propertyName = propNameOrpropertyChain;
             }
