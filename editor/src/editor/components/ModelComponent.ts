@@ -141,10 +141,12 @@ namespace paper.editor {
 
             if (value) {
                 if (value instanceof Scene) {
+                    (window as any)["pse"] = (window as any)["psgo"] = null; // For quick debug.
                     this.selectedScene = value;
                     ModelComponent.onSceneSelected.dispatch(this, value);
                 }
                 else {
+                    (window as any)["pse"] = (window as any)["psgo"] = value; // For quick debug.
                     this.selectedGameObjects.push(value);
                     this.selectedGameObject = value;
                     ModelComponent.onGameObjectSelectChanged.dispatch(this, this.selectedGameObject);
@@ -152,7 +154,6 @@ namespace paper.editor {
                 }
             }
 
-            (global || window)["psgo"] = value; // For quick debug.
         }
 
         private _unselect(value: GameObject) {

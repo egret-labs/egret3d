@@ -81,17 +81,19 @@ namespace egret3d {
             n21: number, n22: number, n23: number,
             n31: number, n32: number, n33: number,
         ): Matrix3 {
-            this.rawData[0] = n11; this.rawData[1] = n21; this.rawData[2] = n31;
-            this.rawData[3] = n12; this.rawData[4] = n22; this.rawData[5] = n32;
-            this.rawData[6] = n13; this.rawData[7] = n23; this.rawData[8] = n33;
+            const rawData = this.rawData;
+            rawData[0] = n11; rawData[1] = n21; rawData[2] = n31;
+            rawData[3] = n12; rawData[4] = n22; rawData[5] = n32;
+            rawData[6] = n13; rawData[7] = n23; rawData[8] = n33;
 
             return this;
         }
 
         public identity() {
-            this.rawData[0] = 1.0; this.rawData[1] = 0.0; this.rawData[2] = 0.0;
-            this.rawData[3] = 0.0; this.rawData[4] = 1.0; this.rawData[5] = 0.0;
-            this.rawData[6] = 0.0; this.rawData[7] = 0.0; this.rawData[8] = 1.0;
+            const rawData = this.rawData;
+            rawData[0] = 1.0; rawData[1] = 0.0; rawData[2] = 0.0;
+            rawData[3] = 0.0; rawData[4] = 1.0; rawData[5] = 0.0;
+            rawData[6] = 0.0; rawData[7] = 0.0; rawData[8] = 1.0;
 
             return this;
         }
@@ -107,6 +109,15 @@ namespace egret3d {
         public fromBuffer(value: ArrayBuffer, byteOffset: number = 0) {
             this.rawData = new Float32Array(value, byteOffset, 9);
 
+            return this;
+        }
+
+        public fromScale(vector: Readonly<IVector3>) {
+            const rawData = this.rawData;
+            rawData[0] = vector.x; rawData[1] = 0.0; rawData[2] = 0.0;
+            rawData[3] = 0.0; rawData[4] = vector.y; rawData[5] = 0.0;
+            rawData[6] = 0.0; rawData[7] = 0.0; rawData[8] = vector.z;
+            
             return this;
         }
 
@@ -131,8 +142,23 @@ namespace egret3d {
             );
         }
 
-        public inverse(matrix: Matrix3) {
-            const me = matrix.rawData,
+        public fromMatrix4(value: Readonly<Matrix4>) {
+            const rawData = value.rawData;
+            this.set(
+                rawData[0], rawData[4], rawData[8],
+                rawData[1], rawData[5], rawData[9],
+                rawData[2], rawData[6], rawData[10]
+            );
+
+            return this;
+        }
+
+        public inverse(input?: Matrix3) {
+            if (!input) {
+                input = this;
+            }
+
+            const me = input.rawData,
                 te = this.rawData,
 
                 n11 = me[0], n21 = me[1], n31 = me[2],
@@ -174,7 +200,7 @@ namespace egret3d {
         }
 
         public getNormalMatrix(matrix4: Readonly<Matrix4>) {
-            return this.fromMatrix4(matrix4).inverse(this).transpose();
+            return this.fromMatrix4(matrix4).inverse().transpose();
         }
 
         public transpose() {
@@ -187,30 +213,58 @@ namespace egret3d {
 
             return this;
         }
+        /**
+         * 将该矩阵乘以一个矩阵。
+         * - v *= matrix
+         * @param matrix 一个矩阵。
+         */
+        public multiply(matrix: Readonly<Matrix3>): this;
+        /**
+         * 将两个矩阵相乘的结果写入该矩阵。
+         * - v = matrixA * matrixB
+         * @param matrixA 一个矩阵。
+         * @param matrixB 另一个矩阵。
+         */
+        public multiply(matrixA: Readonly<Matrix3>, matrixB: Readonly<Matrix3>): this;
+        public multiply(matrixA: Readonly<Matrix3>, matrixB?: Readonly<Matrix3>) {
+            if (!matrixB) {
+                matrixB = matrixA;
+                matrixA = this;
+            }
 
-        public fromMatrix4(value: Readonly<Matrix4>) {
-            const rawData = value.rawData;
-            this.set(
-                rawData[0], rawData[4], rawData[8],
-                rawData[1], rawData[5], rawData[9],
-                rawData[2], rawData[6], rawData[10]
-            );
-            // this.set(
-            //     me[0], me[1], me[2],
-            //     me[4], me[5], me[6],
-            //     me[8], me[9], me[10]
-            // );
+            const rawDataA = matrixA.rawData;
+            const rawDataB = matrixB.rawData;
+            const rawData = this.rawData;
+
+            const a11 = rawDataA[0], a12 = rawDataA[3], a13 = rawDataA[6];
+            const a21 = rawDataA[1], a22 = rawDataA[4], a23 = rawDataA[7];
+            const a31 = rawDataA[2], a32 = rawDataA[5], a33 = rawDataA[8];
+
+            const b11 = rawDataB[0], b12 = rawDataB[3], b13 = rawDataB[6];
+            const b21 = rawDataB[1], b22 = rawDataB[4], b23 = rawDataB[7];
+            const b31 = rawDataB[2], b32 = rawDataB[5], b33 = rawDataB[8];
+
+            rawData[0] = a11 * b11 + a12 * b21 + a13 * b31;
+            rawData[3] = a11 * b12 + a12 * b22 + a13 * b32;
+            rawData[6] = a11 * b13 + a12 * b23 + a13 * b33;
+
+            rawData[1] = a21 * b11 + a22 * b21 + a23 * b31;
+            rawData[4] = a21 * b12 + a22 * b22 + a23 * b32;
+            rawData[7] = a21 * b13 + a22 * b23 + a23 * b33;
+
+            rawData[2] = a31 * b11 + a32 * b21 + a33 * b31;
+            rawData[5] = a31 * b12 + a32 * b22 + a33 * b32;
+            rawData[8] = a31 * b13 + a32 * b23 + a33 * b33;
 
             return this;
         }
-
-        public determinant() {
-            const rawData = this.rawData;
-            const a = rawData[0], b = rawData[1], c = rawData[2],
-                d = rawData[3], e = rawData[4], f = rawData[5],
-                g = rawData[6], h = rawData[7], i = rawData[8];
-
-            return a * e * i - a * f * h - b * d * i + b * f * g + c * d * h - c * e * g;
+        /**
+         * 将一个矩阵与该矩阵相乘的结果写入该矩阵。
+         * - v = matrix * v
+         * @param matrix 一个矩阵。
+         */
+        public premultiply(matrix: Readonly<Matrix3>): this {
+            return this.multiply(matrix, this);
         }
 
         /**
@@ -229,5 +283,18 @@ namespace egret3d {
 
             return array;
         }
+
+        public get determinant() {
+            const rawData = this.rawData;
+            const a = rawData[0], b = rawData[1], c = rawData[2],
+                d = rawData[3], e = rawData[4], f = rawData[5],
+                g = rawData[6], h = rawData[7], i = rawData[8];
+
+            return a * e * i - a * f * h - b * d * i + b * f * g + c * d * h - c * e * g;
+        }
     }
+    /**
+     * @deprecated
+     */
+    export const helpMatrix3A = Matrix3.create();
 }

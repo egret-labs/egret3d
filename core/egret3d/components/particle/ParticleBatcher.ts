@@ -320,8 +320,8 @@ namespace egret3d.particle {
             }
 
             const transform = comp.gameObject.transform;
-            this._worldPostionCache = transform.getPosition();
-            this._worldRotationCache = transform.getRotation();
+            this._worldPostionCache = transform.position;
+            this._worldRotationCache = transform.rotation;
             if (comp._isPlaying && this._time >= mainModule.startDelay.constant && comp.emission.enable) {
                 this._updateEmission(elapsedTime);
             }
@@ -416,21 +416,21 @@ namespace egret3d.particle {
             switch (mainModule.scaleMode) {
                 case ScalingMode.Local:
                     {
-                        const scale = transform.getLocalScale();
+                        const scale = transform.localScale;
                         material.setVector3(ParticleMaterialUniform.POSITION_SCALE, scale);
                         material.setVector3(ParticleMaterialUniform.SIZE_SCALE, scale);
                     }
                     break;
                 case ScalingMode.Shape:
                     {
-                        const scale = transform.getScale();
+                        const scale = transform.scale;
                         material.setVector3(ParticleMaterialUniform.POSITION_SCALE, scale);
                         material.setVector3(ParticleMaterialUniform.SIZE_SCALE, Vector3.ONE);
                     }
                     break;
                 case ScalingMode.Hierarchy:
                     {
-                        const scale = transform.getScale();
+                        const scale = transform.scale;
                         material.setVector3(ParticleMaterialUniform.POSITION_SCALE, scale);
                         material.setVector3(ParticleMaterialUniform.SIZE_SCALE, scale);
                     }

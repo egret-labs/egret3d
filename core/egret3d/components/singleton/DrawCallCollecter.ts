@@ -214,7 +214,7 @@ namespace egret3d {
                         this.opaqueCalls.push(drawCall);
                     }
 
-                    drawCall.zdist = renderer.gameObject.transform.getPosition().getDistance(cameraPosition);
+                    drawCall.zdist = renderer.gameObject.transform.position.getDistance(cameraPosition);
                 }
             }
 

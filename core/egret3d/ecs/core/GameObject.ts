@@ -562,7 +562,6 @@ namespace paper {
 
             return component as T;
         }
-
         /**
          * 获取全部指定组件实例。
          * @param componentClass 组件类。

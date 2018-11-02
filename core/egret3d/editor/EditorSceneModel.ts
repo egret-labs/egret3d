@@ -1,6 +1,6 @@
 namespace paper.editor {
     export class EditorSceneModel {
-        private viewCache:any = {};
+        private viewCache: any = {};
         public get editorScene(): Scene {
             return Application.sceneManager.editorScene;
         }
@@ -8,8 +8,8 @@ namespace paper.editor {
         public set editorModel(v: EditorModel) {
             if (this.currentModel) {
                 this.viewCache[this.currentModel.contentUrl] = {
-                    position: this.cameraObject.transform.getPosition().clone(),
-                    rotation: this.cameraObject.transform.getRotation().clone()
+                    position: this.cameraObject.transform.position.clone(),
+                    rotation: this.cameraObject.transform.rotation.clone()
                 }
             }
             // this.pickGameScript.clearSelected();

@@ -640,14 +640,5 @@ namespace egret3d {
 
             return mesh;
         }
-
-        private computeLineDistances(vertices: Float32Array, out: Float32Array) {
-            out[0] = 0;
-            for (let i = 3, ii = 1; i > vertices.length; i += 3, ii++) {
-                const start = egret3d.Vector3.create(vertices[i - 3], vertices[i - 2], vertices[i - 1]);
-                const end = egret3d.Vector3.create(vertices[i], vertices[i + 1], vertices[i + 2]);
-                out[ii] = out[ii - 1] + start.getDistance(end);
-            }
-        }
     }
 }

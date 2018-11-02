@@ -144,7 +144,7 @@ namespace egret3d {
         ];
 
         private _updateClipToWorldMatrix(asp: number) {
-            return this._clipToWorldMatrix.inverse(this.calcProjectMatrix(asp, this._worldToClipMatrix).multiply(this.gameObject.transform.inverseWorldMatrix));
+            return this._clipToWorldMatrix.inverse(this.calcProjectMatrix(asp, this._worldToClipMatrix).multiply(this.gameObject.transform.worldToLocalMatrix));
         }
 
         /**
@@ -179,7 +179,7 @@ namespace egret3d {
             farRT.set(far_w, far_h, this.far);
             farRD.set(far_w, -far_h, this.far);
 
-            const worldMatrix = this.gameObject.transform.worldMatrix;
+            const worldMatrix = this.gameObject.transform.localToWorldMatrix;
             farLD.applyMatrix(worldMatrix);
             nearLD.applyMatrix(worldMatrix);
             farRD.applyMatrix(worldMatrix);
@@ -228,7 +228,7 @@ namespace egret3d {
         public _update(_delta: number) {
             this._calcCameraFrame();
 
-            this.context.updateCamera(this, this.gameObject.transform.worldMatrix);
+            this.context.updateCamera(this, this.gameObject.transform.localToWorldMatrix);
         }
 
         public initialize() {
@@ -289,6 +289,7 @@ namespace egret3d {
 
             if (distanceToPlane < -Const.EPSILON || Const.EPSILON < distanceToPlane) {
                 if (this.opvalue === 0.0) {
+                    // TODO
                     // worldPosition.subtract(vppos, forward.multiplyScalar(distanceToPlane - stagePosition.z));
                 }
                 else {
@@ -311,7 +312,7 @@ namespace egret3d {
 
             const vpp = _helpRectA;
             const asp = this.calcViewPortPixel(vpp);
-            const worldToClipMatrix = this.calcProjectMatrix(asp, this._worldToClipMatrix).multiply(this.gameObject.transform.inverseWorldMatrix);
+            const worldToClipMatrix = this.calcProjectMatrix(asp, this._worldToClipMatrix).multiply(this.gameObject.transform.worldToLocalMatrix);
             stagePosition.applyMatrix(worldToClipMatrix, worldPosition);
             stagePosition.x = (stagePosition.x + 1.0) * vpp.w * 0.5;
             stagePosition.y = (1.0 - stagePosition.y) * vpp.h * 0.5;
@@ -414,9 +415,9 @@ namespace egret3d {
             // asp
             return pixelViewport.w / pixelViewport.h;
         }
-
         /**
          * 该摄像机的视点到近裁剪面距离。
+         * - 该值过小会引起深度冲突。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: 3000.0 - 0.01, step: 1 })
         public get near(): number {
@@ -433,7 +434,6 @@ namespace egret3d {
 
             this._near = value;
         }
-
         /**
          * 该摄像机的视点到远裁剪面距离。
          */
@@ -463,7 +463,7 @@ namespace egret3d {
             const matrixProject = helpMatrixB;
             this.calcProjectMatrix(asp, matrixProject);
 
-            const matrixViewProject = helpMatrixC.multiply(matrixProject, this.gameObject.transform.inverseWorldMatrix);
+            const matrixViewProject = helpMatrixC.multiply(matrixProject, this.gameObject.transform.worldToLocalMatrix);
             const ndcPos = helpVector3A;
             matrixViewProject.transformVector3(worldPos, ndcPos);
             outScreenPos.x = (ndcPos.x + 1.0) * vpp.w * 0.5;

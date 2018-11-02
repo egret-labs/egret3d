@@ -11,19 +11,24 @@ namespace egret3d.web {
                 return false;
             }
 
-            const downPointers = inputCollecter.downPointers;
-            const holdPointers = inputCollecter.holdPointers;
-            const upPointers = inputCollecter.upPointers;
-            let index = holdPointers.indexOf(pointer);
+            let isDown = false;
+            const downPointers = inputCollecter._downPointers;
+            const holdPointers = inputCollecter._holdPointers;
+            const upPointers = inputCollecter._upPointers;
 
+            let index = downPointers.indexOf(pointer);
             if (index >= 0) {
+                isDown = true;
+                downPointers.splice(index, 1);
+            }
+
+            index = holdPointers.indexOf(pointer);
+            if (index >= 0) {
+                isDown = true;
                 holdPointers.splice(index, 1);
             }
-            else {
-                index = downPointers.indexOf(pointer);
-            }
 
-            if (index >= 0 && upPointers.indexOf(pointer) < 0) {
+            if (isDown && upPointers.indexOf(pointer) < 0) {
                 inputCollecter.removePointer(pointer.event!.pointerId);
                 upPointers.push(pointer);
 
@@ -58,8 +63,8 @@ namespace egret3d.web {
 
             const rotated = stage.rotated;
             const canvas = this._canvas;
-            const downPointers = inputCollecter.downPointers;
-            const holdPointers = inputCollecter.holdPointers;
+            const downPointers = inputCollecter._downPointers;
+            const holdPointers = inputCollecter._holdPointers;
             const pointer = inputCollecter.getPointer(event.pointerId);
             const prevEvent = pointer.event;
             pointer.event = event;
@@ -91,6 +96,7 @@ namespace egret3d.web {
                     if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) { // TODO
                         pointer.downPosition.copy(pointer.position);
                         downPointers.push(pointer);
+                        holdPointers.push(pointer);
                         inputCollecter.onPointerDown.dispatch(pointer, inputCollecter.onPointerDown);
                         event.preventDefault();
                     }
@@ -171,8 +177,8 @@ namespace egret3d.web {
             const rotated = stage.rotated;
             const pointerEvent = event as PointerEvent;
             const canvas = this._canvas;
-            const downPointers = inputCollecter.downPointers;
-            const holdPointers = inputCollecter.holdPointers;
+            const downPointers = inputCollecter._downPointers;
+            const holdPointers = inputCollecter._holdPointers;
             const pointer = inputCollecter.getPointer(pointerEvent.pointerId);
             const prevEvent = pointer.event;
             pointer.event = pointerEvent;
@@ -207,6 +213,7 @@ namespace egret3d.web {
                     if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) { // TODO
                         pointer.downPosition.copy(pointer.position);
                         downPointers.push(pointer);
+                        holdPointers.push(pointer);
                         (event as any).type = "pointerdown";
                         inputCollecter.onPointerDown.dispatch(pointer, inputCollecter.onPointerDown);
                         event.preventDefault();
@@ -290,8 +297,8 @@ namespace egret3d.web {
             const rotated = stage.rotated;
             const pointerEvent = <any>event as PointerEvent;
             const canvas = this._canvas;
-            const downPointers = inputCollecter.downPointers;
-            const holdPointers = inputCollecter.holdPointers;
+            const downPointers = inputCollecter._downPointers;
+            const holdPointers = inputCollecter._holdPointers;
             const pointer = inputCollecter.getPointer(pointerEvent.pointerId);
             const prevEvent = pointer.event;
             pointer.event = pointerEvent;
@@ -309,6 +316,7 @@ namespace egret3d.web {
                     if (downPointers.indexOf(pointer) < 0 && holdPointers.indexOf(pointer) < 0) { // TODO
                         pointer.downPosition.copy(pointer.position);
                         downPointers.push(pointer);
+                        holdPointers.push(pointer);
                         (event as any).type = "pointerdown";
                         inputCollecter.onPointerDown.dispatch(pointer, inputCollecter.onPointerDown);
                         event.preventDefault();
@@ -376,9 +384,9 @@ namespace egret3d.web {
 
         private _onContextMenu = (event: Event) => {
             if (
-                inputCollecter.downPointers.length > 0 ||
-                inputCollecter.holdPointers.length > 0 ||
-                inputCollecter.upPointers.length > 0
+                inputCollecter._downPointers.length > 0 ||
+                inputCollecter._holdPointers.length > 0 ||
+                inputCollecter._upPointers.length > 0
             ) {
                 event.preventDefault();
             }
@@ -389,9 +397,9 @@ namespace egret3d.web {
                 return;
             }
 
-            const downKeys = inputCollecter.downKeys;
-            const holdKeys = inputCollecter.holdKeys;
-            const upKeys = inputCollecter.upKeys;
+            const downKeys = inputCollecter._downKeys;
+            const holdKeys = inputCollecter._holdKeys;
+            const upKeys = inputCollecter._upKeys;
             const key = inputCollecter.getKey(event.code);
             key.event = event;
 
@@ -399,27 +407,31 @@ namespace egret3d.web {
                 case "keydown":
                     if (downKeys.indexOf(key) < 0 && holdKeys.indexOf(key) < 0) {
                         downKeys.push(key);
+                        holdKeys.push(key);
                         inputCollecter.onKeyDown.dispatch(key, inputCollecter.onKeyDown);
                     }
                     break;
 
-                case "keyup":
+                case "keyup": {
+                    let isDown = false;
                     let index = downKeys.indexOf(key);
                     if (index >= 0) {
+                        isDown = true;
                         downKeys.splice(index, 1);
                     }
-                    else {
-                        index = holdKeys.indexOf(key);
-                        if (index >= 0) {
-                            holdKeys.splice(index, 1);
-                        }
+
+                    index = holdKeys.indexOf(key);
+                    if (index >= 0) {
+                        isDown = true;
+                        holdKeys.splice(index, 1);
                     }
 
-                    if (index >= 0 && upKeys.indexOf(key) < 0) {
+                    if (isDown && upKeys.indexOf(key) < 0) {
                         upKeys.push(key);
                         inputCollecter.onKeyUp.dispatch(key, inputCollecter.onKeyUp);
                     }
                     break;
+                }
             }
         }
 

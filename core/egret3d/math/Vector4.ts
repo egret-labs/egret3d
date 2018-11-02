@@ -3,6 +3,9 @@ namespace egret3d {
      * 
      */
     export interface IVector4 extends IVector3 {
+        /**
+         * w 轴分量。
+         */
         w: number;
     }
     /**
@@ -68,6 +71,15 @@ namespace egret3d {
             return this;
         }
 
+        public clear() {
+            this.x = 0.0;
+            this.y = 0.0;
+            this.z = 0.0;
+            this.w = 1.0;
+
+            return this;
+        }
+
         public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
             this.x = value[offset];
             this.y = value[offset + 1];
@@ -76,20 +88,34 @@ namespace egret3d {
 
             return this;
         }
-
-        public clear() {
-            this.x = 0.0;
-            this.y = 0.0;
-            this.z = 0.0;
-            this.w = 1.0;
-        }
-
         /**
-         * 向量归一化。
-         * - `v.normalize()` 归一化该向量，相当于 v /= v.length。
-         * - `v.normalize(input)` 将输入向量归一化的结果写入该向量，相当于 v = input / input.length。
+         * 判断该向量是否和一个向量相等。
+         * @param value 一个向量。
+         * @param threshold 阈值。
+         */
+        public equal(value: Readonly<IVector4>, threshold: number = 0.000001) {
+            if (
+                Math.abs(this.x - value.x) <= threshold &&
+                Math.abs(this.y - value.y) <= threshold &&
+                Math.abs(this.z - value.z) <= threshold &&
+                Math.abs(this.w - value.w) <= threshold
+            ) {
+                return true;
+            }
+
+            return false;
+        }
+        /**
+         * 归一化该向量。
+         * - v /= v.length
+         */
+        public normalize(): this;
+        /**
+         * 将输入向量的归一化结果写入该向量。
+         * - v = input / input.length
          * @param input 输入向量。
          */
+        public normalize(input: Readonly<IVector4>): this;
         public normalize(input?: Readonly<IVector4>) {
             if (!input) {
                 input = this;
@@ -113,25 +139,27 @@ namespace egret3d {
 
             return this;
         }
-
         /**
-         * 判断该向量是否和一个向量相等。
-         * @param value 一个向量。
-         * @param threshold 阈值。
+         * 反转该向量。
          */
-        public equal(value: Readonly<IVector4>, threshold: number = 0.000001) {
-            if (
-                Math.abs(this.x - value.x) <= threshold &&
-                Math.abs(this.y - value.y) <= threshold &&
-                Math.abs(this.z - value.z) <= threshold &&
-                Math.abs(this.w - value.w) <= threshold
-            ) {
-                return true;
+        public inverse(): this;
+        /**
+         * 将输入向量的反转结果写入该向量。
+         * @param input 输入向量。
+         */
+        public inverse(input: Readonly<IVector3>): this;
+        public inverse(input?: Readonly<IVector4>) {
+            if (!input) {
+                input = this;
             }
 
-            return false;
-        }
+            this.x = input.x * -1;
+            this.y = input.y * -1;
+            this.z = input.z * -1;
+            this.w = input.w;
 
+            return this;
+        }
         /**
          * 向量与标量相乘运算。
          * - `v.multiplyScalar(scalar)` 将该向量与标量相乘，相当于 v *= scalar。
@@ -139,7 +167,7 @@ namespace egret3d {
          * @param scalar 标量。
          * @param input 输入向量。
          */
-        public multiplyScalar(scalar: number, input?: Readonly<IVector4>) {
+        public multiplyScalar(scalar: number, input?: Readonly<IVector4>): this {
             if (!input) {
                 input = this;
             }
@@ -151,23 +179,49 @@ namespace egret3d {
 
             return this;
         }
-
         /**
-         * 向量点乘运算。
-         * - `v.dot(a)` 将该向量与一个向量点乘，相当于 v ·= a。
-         * - `v.dot(a, b)` 将两个向量点乘的结果写入该向量，相当于 v = a · b。
-         * @param valueA 一个向量。
-         * @param valueB 另一个向量。
+         * 将该向量与一个向量相点乘。
+         * - v · vector
+         * @param vector 一个向量。
          */
-        public dot(valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>) {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
+        public dot(vector: Readonly<IVector4>): number {
+            return this.x * vector.x + this.y * vector.y + this.z * vector.z + this.w * vector.w;
+        }
+        /**
+         * 将该向量和目标向量插值的结果写入该向量。
+         * - v = v * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param t 插值因子。
+         * @param to 目标矩阵。
+         */
+        public lerp(t: number, to: Readonly<IVector4>): this;
+        /**
+         * 将两个向量插值的结果写入该向量。
+         * - v = from * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param t 插值因子。
+         * @param from 起始矩阵。
+         * @param to 目标矩阵。
+         */
+        public lerp(t: number, from: Readonly<IVector4>, to: Readonly<IVector4>): this;
+        public lerp(t: number, from: Readonly<IVector4>, to?: Readonly<IVector4>) {
+            if (!to) {
+                to = from;
+                from = this;
             }
 
-            return valueA.x * valueB.x + valueA.y * valueB.y + valueA.z * valueB.z + valueA.w * valueB.w;
-        }
+            if (t === 0.0) return this.copy(from);
+            if (t === 1.0) return this.copy(to);
 
+            const p = 1.0 - t;
+
+            this.x = from.x * p + to.x * t;
+            this.y = from.y * p + to.y * t;
+            this.z = from.z * p + to.z * t;
+            this.w = from.w * p + to.w * t;
+
+            return this;
+        }
         /**
          * 将该向量转换为数组。
          * @param array 数组。
@@ -185,20 +239,18 @@ namespace egret3d {
 
             return array;
         }
-
         /**
          * 该向量的长度。
          * - 该值是实时计算的。
          */
-        public get length() {
+        public get length(): number {
             return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
         }
-
         /**
          * 该向量的长度的平方。
          * - 该值是实时计算的。
          */
-        public get squaredLength() {
+        public get squaredLength(): number {
             return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
         }
     }
