@@ -426,7 +426,7 @@ namespace egret3d {
         /**
          * 创建圆形网格。
          */
-        public static createCircle(radius: number = 0.5, arc: number = 1.0, axis: number = 1) {
+        public static createCircle(radius: number = 0.5, arc: number = 1.0, axis: 1 | 2 | 3 = 3) {
             const vertices: number[] = [];
             for (let i = 0; i <= 64 * arc; ++i) {
                 switch (axis) {
@@ -452,7 +452,7 @@ namespace egret3d {
         /**
          * 创建圆环网格。
          */
-        public static createTorus(radius: number = 0.5, tube: number = 0.1, radialSegments: number = 4, tubularSegments: number = 12, arc: number = 1.0, axis: number = 1) {
+        public static createTorus(radius: number = 0.5, tube: number = 0.1, radialSegments: number = 4, tubularSegments: number = 12, arc: number = 1.0, axis: 1 | 2 | 3 = 3) {
             const indices: number[] = [];
             const vertices: number[] = [];
             const normals: number[] = [];

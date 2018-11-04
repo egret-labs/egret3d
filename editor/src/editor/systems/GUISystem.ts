@@ -151,7 +151,7 @@ namespace paper.editor {
                 let gameObject: GameObject | null = null;
                 if (this._modelComponent.selectedGameObject) {
                     const parent = this._modelComponent.selectedGameObject!;
-                    gameObject = Prefab.create(v.url, parent.scene)
+                    gameObject = Prefab.create(v.url, parent.scene);
                     gameObject!.parent = parent;
                 }
                 else {
@@ -553,6 +553,7 @@ namespace paper.editor {
         }
 
         public onUpdate() {
+            const isHierarchyShowed = !this._guiComponent.hierarchy.closed && this._guiComponent.hierarchy.domElement.style.display !== "none";
             const isInspectorShowed = !this._guiComponent.inspector.closed && this._guiComponent.inspector.domElement.style.display !== "none";
 
             { // Clear folders.
@@ -617,7 +618,7 @@ namespace paper.editor {
                 }
             }
 
-            if (isInspectorShowed) {
+            if (isHierarchyShowed) {
                 // Add folder.
                 let i = 0;
                 while (this._bufferedGameObjects.length > 0 && i++ < 5) {
@@ -629,8 +630,7 @@ namespace paper.editor {
                     }
                 }
 
-                // Open and select folder.
-                if (!this._selectFolder) {
+                if (!this._selectFolder) {  // Open and select folder.
                     const sceneOrGameObject = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
                     if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
                         this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
@@ -638,8 +638,9 @@ namespace paper.editor {
                         this._openFolder(this._selectFolder);
                     }
                 }
+            }
 
-                // Update folder.
+            if (isInspectorShowed) { // Update folder.
                 this._guiComponent.inspector.updateDisplay();
 
                 const inspectorFolders = this._guiComponent.inspector.__folders;

@@ -16,9 +16,5 @@
     "docs": "typedoc --out docs/test --tsconfig tsconfig.json --json api.json"
   },
   "author": "egret",
-  "license": "ISC",
-  "dependencies": {
-    "@types/signals": "^1.0.1",
-    "signals": "^1.0.0"
-  }
+  "license": "ISC"
 }

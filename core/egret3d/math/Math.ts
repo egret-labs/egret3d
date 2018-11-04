@@ -15,6 +15,10 @@ namespace egret3d {
                 return v;
             }
         }
+
+        export function lerp(from: number, to: number, t: number) {
+            return from * (1.0 - t) + to * t;
+        }
     }
     /**
      * 内联的数字常数枚举。

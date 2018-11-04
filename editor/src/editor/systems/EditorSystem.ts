@@ -86,6 +86,12 @@ namespace paper.editor {
         }
 
         public onUpdate() {
+            this._guiComponent.stats.update();
+            this._guiComponent.renderPanel.update(
+                paper.Application.systemManager.getSystem((egret3d as any)["web"]["WebGLRenderSystem"])!.deltaTime,
+                200
+            );
+
             const isMobile = paper.Application.isMobile;
             if (this._isMobile !== isMobile) {
                 if (isMobile) {
@@ -124,5 +130,5 @@ namespace paper.editor {
         }
     }
     //
-    Application.systemManager.preRegister(EditorSystem, SystemOrder.LaterUpdate);
+    Application.systemManager.preRegister(EditorSystem, SystemOrder.Begin - 10000);
 }

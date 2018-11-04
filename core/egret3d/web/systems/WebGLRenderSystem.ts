@@ -444,7 +444,7 @@ namespace egret3d.web {
                 target.use();
             }
 
-            webgl.viewport(w * viewport.x, h * viewport.y, w * viewport.w, h * viewport.h);
+            webgl.viewport(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h);
             webgl.depthRange(0, 1);
         }
 
@@ -454,7 +454,6 @@ namespace egret3d.web {
                 return;
             }
 
-            Performance.startCounter("render");
             let lightCountDirty = false;
             const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
             const renderState = this._renderState;
@@ -517,8 +516,6 @@ namespace egret3d.web {
             else {
                 renderState.clear(true, true, Color.BLACK);
             }
-
-            Performance.endCounter("render");
         }
     }
 }

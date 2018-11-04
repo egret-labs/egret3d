@@ -983,20 +983,21 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix4): Matrix4 {
-            let tan = 1.0 / (Math.tan(fov * 0.5));
-            out.rawData[0] = tan / aspect;
+        public static perspectiveProjectLH(left: number, right: number, top: number, bottom: number, near: number, far: number, out: Matrix4): Matrix4 {
+            const x = 2 * near / (right - left);
+            const y = 2 * near / (top - bottom);
+            out.rawData[0] = x;
             out.rawData[1] = out.rawData[2] = out.rawData[3] = 0.0;
 
             out.rawData[4] = out.rawData[6] = out.rawData[7] = 0.0;
-            out.rawData[5] = tan;
+            out.rawData[5] = y;
 
             out.rawData[8] = out.rawData[9] = 0.0;
-            out.rawData[10] = (zfar + znear) / (zfar - znear);
+            out.rawData[10] = (far + near) / (far - near);
             out.rawData[11] = 1.0;
 
             out.rawData[12] = out.rawData[13] = out.rawData[15] = 0.0;
-            out.rawData[14] = -2 * (znear * zfar) / (zfar - znear);
+            out.rawData[14] = -2 * (near * far) / (far - near);
 
             return out;
         }

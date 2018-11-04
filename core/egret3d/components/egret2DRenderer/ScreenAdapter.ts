@@ -12,8 +12,8 @@ namespace egret3d {
      * @language zh_CN
      */
     export interface IScreenAdapter {
-        $dirty:boolean;
-        calculateScaler(canvasWidth:number, canvasHeight:number, out:{w:number, h:number, s:number});
+        $dirty: boolean;
+        calculateScaler(canvasWidth: number, canvasHeight: number, out: { w: number, h: number, s: number });
     }
 
     /**
@@ -30,7 +30,7 @@ namespace egret3d {
      */
     export class ConstantAdapter implements IScreenAdapter {
         public $dirty = true;
-        private _scaleFactor:number = 1;
+        private _scaleFactor: number = 1;
         /**
          * scaleFactor
          * @version paper 1.0
@@ -43,11 +43,11 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public set scaleFactor(value:number) {
+        public set scaleFactor(value: number) {
             this._scaleFactor = value;
             this.$dirty = true;
         }
-        public calculateScaler(canvasWidth:number, canvasHeight:number,  out:{w:number, h:number, s:number}) {
+        public calculateScaler(canvasWidth: number, canvasHeight: number, out: { w: number, h: number, s: number }) {
             let scaler = this._scaleFactor;
             out.s = scaler;
             out.w = canvasWidth / scaler;
@@ -69,7 +69,7 @@ namespace egret3d {
      */
     export class ExpandAdapter implements IScreenAdapter {
         public $dirty = true;
-        private _resolution:Vector2 = new Vector2(640, 1136);
+        private _resolution: Vector2 = new Vector2(640, 1136);
         /**
          * setResolution
          * @version paper 1.0
@@ -82,16 +82,16 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public setResolution(width:number, height:number) {
+        public setResolution(width: number, height: number) {
             this._resolution.x = width;
             this._resolution.y = height;
             this.$dirty = true;
         }
-        public calculateScaler(canvasWidth:number, canvasHeight:number, out:{w:number, h:number, s:number}) {
+        public calculateScaler(canvasWidth: number, canvasHeight: number, out: { w: number, h: number, s: number }) {
             let canvasRate = canvasWidth / canvasHeight;
             let resolutionRate = this._resolution.x / this._resolution.y;
             let scaler = 1;
-            if(canvasRate > resolutionRate) {
+            if (canvasRate > resolutionRate) {
                 scaler = canvasHeight / this._resolution.y;
             } else {
                 scaler = canvasWidth / this._resolution.x;
@@ -116,7 +116,7 @@ namespace egret3d {
      */
     export class ShrinkAdapter implements IScreenAdapter {
         public $dirty = true;
-        private _resolution:Vector2 = new Vector2(640, 1136);
+        private _resolution: Vector2 = new Vector2(640, 1136);
         /**
          * setResolution
          * @version paper 1.0
@@ -129,16 +129,16 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public setResolution(width:number, height:number) {
+        public setResolution(width: number, height: number) {
             this._resolution.x = width;
             this._resolution.y = height;
             this.$dirty = true;
         }
-        public calculateScaler(canvasWidth:number, canvasHeight:number, out:{w:number, h:number, s:number}) {
+        public calculateScaler(canvasWidth: number, canvasHeight: number, out: { w: number, h: number, s: number }) {
             let canvasRate = canvasWidth / canvasHeight;
             let resolutionRate = this._resolution.x / this._resolution.y;
             let scaler = 1;
-            if(canvasRate > resolutionRate) {
+            if (canvasRate > resolutionRate) {
                 scaler = canvasWidth / this._resolution.x;
             } else {
                 scaler = canvasHeight / this._resolution.y;
@@ -163,7 +163,7 @@ namespace egret3d {
      */
     export class MatchWidthOrHeightAdapter implements IScreenAdapter {
         public $dirty = true;
-        private _resolution:Vector2 = new Vector2(640, 1136);
+        private _resolution: Vector2 = new Vector2(640, 1136);
         /**
          * setResolution
          * @version paper 1.0
@@ -176,12 +176,12 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public setResolution(width:number, height:number) {
+        public setResolution(width: number, height: number) {
             this._resolution.x = width;
             this._resolution.y = height;
             this.$dirty = true;
         }
-        private _matchFactor:number = 0; // width : height
+        private _matchFactor: number = 1.0; // width : height
         /**
          * matchFactor
          * @version paper 1.0
@@ -194,11 +194,11 @@ namespace egret3d {
          * @platform Web
          * @language zh_CN
          */
-        public set matchFactor(value:number) {
+        public set matchFactor(value: number) {
             this._matchFactor = value;
             this.$dirty = true;
         }
-        public calculateScaler(canvasWidth:number, canvasHeight:number, out:{w:number, h:number, s:number}) {
+        public calculateScaler(canvasWidth: number, canvasHeight: number, out: { w: number, h: number, s: number }) {
             let scaler1 = canvasWidth / this._resolution.x;
             let scaler2 = canvasHeight / this._resolution.y;
             let scaler = scaler1 + (scaler2 - scaler1) * this._matchFactor;

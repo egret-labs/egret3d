@@ -10,9 +10,6 @@ namespace egret3d.web {
             if (contactCollecter.isActiveAndEnabled) {
                 this._contactCollecter.update(deltaTime);
             }
-
-            Performance.updateFPS();
-            Performance.endCounter(egret3d.PerformanceType.All);
         }
     }
 }

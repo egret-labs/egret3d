@@ -8,38 +8,64 @@ namespace examples {
             // Create camera.
             egret3d.Camera.main;
 
+            { // Create light.
+                const gameObject = paper.GameObject.create("Light");
+                gameObject.transform.setLocalPosition(1.0, 10.0, -1.0);
+                gameObject.transform.lookAt(egret3d.Vector3.ZERO);
+
+                const light = gameObject.addComponent(egret3d.DirectionalLight);
+                light.intensity = 0.5;
+            }
+
             paper.GameObject.create("WorldToStageTest")
                 .addComponent(egret3d.Egret2DRenderer).gameObject
                 .addComponent(WorldToStageTest);
 
-            egret3d.Camera.main.gameObject.addComponent(StageToWorldTest);
+            paper.GameObject.create("StageToWorldTest")
+                .addComponent(StageToWorldTest);
         }
     }
 
     class WorldToStageTest extends paper.Behaviour {
-        private readonly _cube: paper.GameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "Cube");
-        private readonly _shape: egret.Shape = new egret.Shape();
+        private readonly _worldToStage: paper.GameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.SPHERE, "WorldToStage");
+        private readonly _stageToWorld: paper.GameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.TORUS, "StageToWorld");
+        private readonly _shapeA: egret.Shape = new egret.Shape();
+        private readonly _shapeB: egret.Shape = new egret.Shape();
 
         public onAwake() {
-            this._shape.graphics.lineStyle(2, 0x000000, 1);
-            this._shape.graphics.drawCircle(0.0, 0.0, 50.0);
-            (this.gameObject.renderer as egret3d.Egret2DRenderer).stage.addChild(this._shape);
+            this._worldToStage.renderer!.material = egret3d.DefaultMaterials.MESH_LAMBERT;
+            this._stageToWorld.renderer!.material = egret3d.DefaultMaterials.MESH_LAMBERT;
+
+            this._shapeA.graphics.lineStyle(2, 0x000000, 1);
+            this._shapeA.graphics.drawCircle(0.0, 0.0, 50.0);
+            this._shapeB.x = 10.0;
+            this._shapeB.y = 10.0;
+            (this.gameObject.renderer as egret3d.Egret2DRenderer).stage.addChild(this._shapeA);
+            (this.gameObject.renderer as egret3d.Egret2DRenderer).stage.addChild(this._shapeB);
         }
 
         public onUpdate() {
-            const stagePosition = egret3d.Camera.main.worldToStage(this._cube.transform.position).release();
-            this._shape.x = stagePosition.x;
-            this._shape.y = stagePosition.y;
+            // WorldToStage.
+            const position = egret3d.Camera.main.worldToStage(this._worldToStage.transform.position).release();
+            this._shapeA.x = position.x;
+            this._shapeA.y = position.y;
+
+            // StageToWorld.
+            position.z = 10.0;
+            egret3d.Camera.main.stageToWorld(position, position);
+            this._stageToWorld.transform.position = position;
+
+            this._shapeB.graphics.clear();
+            this._shapeB.graphics.lineStyle(2, 0x000000, 1);
+            this._shapeB.graphics.drawRect(0.0, 0.0, egret3d.stage.viewport.w - 20.0, egret3d.stage.viewport.h - 20.0);
         }
     }
 
     class StageToWorldTest extends paper.Behaviour {
-        @paper.editor.property(paper.editor.EditType.VECTOR3)
+        // @paper.editor.property(paper.editor.EditType.VECTOR3) TODO
         public readonly stagePosition: egret3d.Vector3 = egret3d.Vector3.create();
 
         public onAwake() {
-            this.stagePosition.set(egret3d.stage.size.w * 0.5, egret3d.stage.size.h * 0.5, 0.0);
-
             for (let i = 0, l = 100; i < l; ++i) {
                 const line = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Y, `Line_${i}`);
                 line.transform.parent = this.gameObject.transform;

@@ -62,6 +62,7 @@ namespace egret3d {
 
         public recalculateLocalBox() {
             // TODO
+            this._localBoundingBox.size = egret3d.Vector3.ZERO;
         }
 
         public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
