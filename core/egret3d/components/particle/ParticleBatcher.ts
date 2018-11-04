@@ -115,12 +115,16 @@ namespace egret3d.particle {
             const worldPostionBuffer = this._worldPostionBuffer;
             const worldRoationBuffer = this._worldRoationBuffer;
 
+            const isSize3D = main.startSize3D;
+            const isRotation3D = main.startRotation3D;
+
             const age = Math.min(lastEmittsionTime / main.duration, 1.0);
             const vertexStride = this._vertexStride;
 
             let addCount = 0, startIndex = 0, endIndex = 0;
             let lifetime = 0.0;
             let startSpeed = 0.0;
+            let startSize = 0.0;
             let randomVelocityX = 0.0, randomVelocityY = 0.0, randomVelocityZ = 0.0;
             let randomColor = 0.0, randomSize = 0.0, randomRotation = 0.0, randomTextureAnimation = 0.0;
             let vector2Offset = 0, vector3Offset = 0, vector4Offset = 0;
@@ -134,13 +138,26 @@ namespace egret3d.particle {
                 velocityHelper.y *= startSpeed;
                 velocityHelper.z *= startSpeed;
 
-                startSizeHelper.x = main.startSizeX.evaluate(age);
-                startSizeHelper.y = main.startSizeY.evaluate(age);
-                startSizeHelper.z = main.startSizeZ.evaluate(age);
+                if (isSize3D) {
+                    startSizeHelper.x = main.startSizeX.evaluate(age);
+                    startSizeHelper.y = main.startSizeY.evaluate(age);
+                    startSizeHelper.z = main.startSizeZ.evaluate(age);
+                }
+                else {
+                    startSize = main.startSizeX.evaluate(age);
+                    startSizeHelper.x = startSize;
+                    startSizeHelper.y = startSize;
+                    startSizeHelper.z = startSize;
+                }
 
-                startRotationHelper.x = main.startRotationX.evaluate(age);
-                startRotationHelper.y = main.startRotationY.evaluate(age);
-                startRotationHelper.z = main.startRotationZ.evaluate(age);
+                if (isRotation3D) {
+                    startRotationHelper.x = main.startRotationX.evaluate(age);
+                    startRotationHelper.y = main.startRotationY.evaluate(age);
+                    startRotationHelper.z = main.startRotationZ.evaluate(age);
+                }
+                else {
+                    startRotationHelper.x = main.startRotationX.evaluate(age);
+                }
 
                 randomVelocityX = isVelocityRandom ? Math.random() : 0.0;
                 randomVelocityY = isVelocityRandom ? Math.random() : 0.0;
@@ -387,21 +404,17 @@ namespace egret3d.particle {
             const mainModule = comp.main;
             //
             if (this._dirty) {
-                renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes);
-                // const bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
-                // const bufferOffset = this._lastFrameFirstCursor;
-                // if (this._firstAliveCursor > this._lastFrameFirstCursor) {
-                //     const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
-                //     // const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor);
-                //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
-                // }
-                // else {
-                //     const addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
-                //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
-                //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
-                //     // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount);
-                //     // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor);
-                // }
+                // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes);
+                const bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
+                if (this._firstAliveCursor > this._lastFrameFirstCursor) {
+                    const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
+                    renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
+                }
+                else {
+                    const addCount = mainModule.maxParticles - this._lastFrameFirstCursor;
+                    renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
+                    renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
+                }
                 this._lastFrameFirstCursor = this._firstAliveCursor;
                 this._dirty = false;
             }

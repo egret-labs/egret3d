@@ -7,6 +7,7 @@ namespace egret3d.particle {
             {
                 componentClass: ParticleComponent,
                 listeners: [
+                    { type: onStartSize3DChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, onStartSize3DChanged); } },
                     { type: onStartRotation3DChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, onStartRotation3DChanged); } },
                     { type: onSimulationSpaceChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, onSimulationSpaceChanged); } },
                     { type: onScaleModeChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, onScaleModeChanged); } },
@@ -40,6 +41,7 @@ namespace egret3d.particle {
             this._onRenderUpdate(renderer, ParticleRenderer.onVelocityScaleChanged);
             this._onRenderUpdate(renderer, ParticleRenderer.onLengthScaleChanged);
             //
+            this._onMainUpdate(comp, onSizeChanged);
             this._onMainUpdate(comp, onStartRotation3DChanged);
             this._onMainUpdate(comp, onSimulationSpaceChanged);
             this._onMainUpdate(comp, onScaleModeChanged);
@@ -122,6 +124,10 @@ namespace egret3d.particle {
             const material = renderer.batchMaterial;
             const mainModule = component.main;
             switch (type) {
+                case onStartSize3DChanged: {
+                    material.setBoolean(ParticleMaterialUniform.START_SIZE3D, mainModule.startSize3D);
+                    break;
+                }
                 case onStartRotation3DChanged: {
                     material.setBoolean(ParticleMaterialUniform.START_ROTATION3D, mainModule.startRotation3D);
                     break;

@@ -13531,8 +13531,6 @@ var egret3d;
             this.directShadowMatrix = new Float32Array(0);
             this.spotShadowMatrix = new Float32Array(0);
             this.pointShadowMatrix = new Float32Array(0);
-            this.matrix_m = egret3d.Matrix4.create();
-            this.matrix_mvp = egret3d.Matrix4.create();
             this.directShadowMaps = [];
             this.pointShadowMaps = [];
             this.spotShadowMaps = [];
@@ -13542,10 +13540,12 @@ var egret3d;
             this.cameraForward = new Float32Array(3);
             this.cameraUp = new Float32Array(3);
             // transforms
+            this.matrix_m = egret3d.Matrix4.create();
             this.matrix_v = egret3d.Matrix4.create();
             this.matrix_p = egret3d.Matrix4.create();
             this.matrix_mv = egret3d.Matrix4.create();
             this.matrix_vp = egret3d.Matrix4.create();
+            this.matrix_mvp = egret3d.Matrix4.create();
             this.matrix_mv_inverse = egret3d.Matrix3.create(); //INVERS
             this.lightShadowCameraNear = 0;
             this.lightShadowCameraFar = 0;
@@ -16983,6 +16983,7 @@ var egret3d;
         particle.onRotationChanged = new signals.Signal();
         particle.onTextureSheetChanged = new signals.Signal();
         particle.onShapeChanged = new signals.Signal();
+        particle.onStartSize3DChanged = new signals.Signal();
         particle.onStartRotation3DChanged = new signals.Signal();
         particle.onSimulationSpaceChanged = new signals.Signal();
         particle.onScaleModeChanged = new signals.Signal();
@@ -17570,6 +17571,7 @@ var egret3d;
                  *
                  */
                 _this.gravityModifier = new MinMaxCurve(); //TODO
+                _this._startSize3D = false;
                 _this._startRotation3D = false;
                 _this._simulationSpace = 0 /* Local */;
                 _this._scaleMode = 0 /* Hierarchy */;
@@ -17583,6 +17585,7 @@ var egret3d;
                 this.startDelay.deserialize(element.startDelay);
                 this.startLifetime.deserialize(element.startLifetime);
                 this.startSpeed.deserialize(element.startSpeed);
+                this._startSize3D = element.startSize3D || false;
                 this.startSizeX.deserialize(element.startSizeX);
                 this.startSizeY.deserialize(element.startSizeY);
                 this.startSizeZ.deserialize(element.startSizeZ);
@@ -17598,6 +17601,20 @@ var egret3d;
                 this._maxParticles = (element._maxParticles || element.maxParticles) || 0;
                 return this;
             };
+            Object.defineProperty(MainModule.prototype, "startSize3D", {
+                get: function () {
+                    return this._startSize3D;
+                },
+                set: function (value) {
+                    if (this._startSize3D === value) {
+                        return;
+                    }
+                    this._startSize3D = value;
+                    particle.onStartSize3DChanged.dispatch(this._component);
+                },
+                enumerable: true,
+                configurable: true
+            });
             Object.defineProperty(MainModule.prototype, "startRotation3D", {
                 /**
                  *
@@ -17708,6 +17725,9 @@ var egret3d;
             __decorate([
                 paper.serializedField
             ], MainModule.prototype, "gravityModifier", void 0);
+            __decorate([
+                paper.serializedField
+            ], MainModule.prototype, "_startSize3D", void 0);
             __decorate([
                 paper.serializedField
             ], MainModule.prototype, "_startRotation3D", void 0);
@@ -18574,11 +18594,14 @@ var egret3d;
                 var random1Buffer = this._random1Buffer;
                 var worldPostionBuffer = this._worldPostionBuffer;
                 var worldRoationBuffer = this._worldRoationBuffer;
+                var isSize3D = main.startSize3D;
+                var isRotation3D = main.startRotation3D;
                 var age = Math.min(lastEmittsionTime / main.duration, 1.0);
                 var vertexStride = this._vertexStride;
                 var addCount = 0, startIndex = 0, endIndex = 0;
                 var lifetime = 0.0;
                 var startSpeed = 0.0;
+                var startSize = 0.0;
                 var randomVelocityX = 0.0, randomVelocityY = 0.0, randomVelocityZ = 0.0;
                 var randomColor = 0.0, randomSize = 0.0, randomRotation = 0.0, randomTextureAnimation = 0.0;
                 var vector2Offset = 0, vector3Offset = 0, vector4Offset = 0;
@@ -18590,12 +18613,25 @@ var egret3d;
                     velocityHelper.x *= startSpeed;
                     velocityHelper.y *= startSpeed;
                     velocityHelper.z *= startSpeed;
-                    startSizeHelper.x = main.startSizeX.evaluate(age);
-                    startSizeHelper.y = main.startSizeY.evaluate(age);
-                    startSizeHelper.z = main.startSizeZ.evaluate(age);
-                    startRotationHelper.x = main.startRotationX.evaluate(age);
-                    startRotationHelper.y = main.startRotationY.evaluate(age);
-                    startRotationHelper.z = main.startRotationZ.evaluate(age);
+                    if (isSize3D) {
+                        startSizeHelper.x = main.startSizeX.evaluate(age);
+                        startSizeHelper.y = main.startSizeY.evaluate(age);
+                        startSizeHelper.z = main.startSizeZ.evaluate(age);
+                    }
+                    else {
+                        startSize = main.startSizeX.evaluate(age);
+                        startSizeHelper.x = startSize;
+                        startSizeHelper.y = startSize;
+                        startSizeHelper.z = startSize;
+                    }
+                    if (isRotation3D) {
+                        startRotationHelper.x = main.startRotationX.evaluate(age);
+                        startRotationHelper.y = main.startRotationY.evaluate(age);
+                        startRotationHelper.z = main.startRotationZ.evaluate(age);
+                    }
+                    else {
+                        startRotationHelper.x = main.startRotationX.evaluate(age);
+                    }
                     randomVelocityX = isVelocityRandom ? Math.random() : 0.0;
                     randomVelocityY = isVelocityRandom ? Math.random() : 0.0;
                     randomVelocityZ = isVelocityRandom ? Math.random() : 0.0;
@@ -18815,21 +18851,17 @@ var egret3d;
                 var mainModule = comp.main;
                 //
                 if (this._dirty) {
-                    renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes);
-                    // const bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
-                    // const bufferOffset = this._lastFrameFirstCursor;
-                    // if (this._firstAliveCursor > this._lastFrameFirstCursor) {
-                    //     const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
-                    //     // const bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor);
-                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
-                    // }
-                    // else {
-                    //     const addCount = mainModule._maxParticles - this._lastFrameFirstCursor;
-                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
-                    //     renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
-                    //     // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount);
-                    //     // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor);
-                    // }
+                    // renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes);
+                    var bufferOffset = this._lastFrameFirstCursor * this._vertexStride;
+                    if (this._firstAliveCursor > this._lastFrameFirstCursor) {
+                        var bufferCount = (this._firstAliveCursor - this._lastFrameFirstCursor) * this._vertexStride;
+                        renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, bufferCount);
+                    }
+                    else {
+                        var addCount = mainModule.maxParticles - this._lastFrameFirstCursor;
+                        renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, bufferOffset, addCount * this._vertexStride);
+                        renderer.batchMesh.uploadVertexBuffer(this._vertexAttributes, 0, this._firstAliveCursor * this._vertexStride);
+                    }
                     this._lastFrameFirstCursor = this._firstAliveCursor;
                     this._dirty = false;
                 }
@@ -19121,6 +19153,7 @@ var egret3d;
             ParticleMaterialUniform["SIZE_SCALE"] = "u_sizeScale";
             ParticleMaterialUniform["SCALING_MODE"] = "u_scalingMode";
             ParticleMaterialUniform["GRAVIT"] = "u_gravity";
+            ParticleMaterialUniform["START_SIZE3D"] = "START_SIZE3D";
             ParticleMaterialUniform["START_ROTATION3D"] = "u_startRotation3D";
             ParticleMaterialUniform["SIMULATION_SPACE"] = "u_simulationSpace";
             ParticleMaterialUniform["CURRENTTIME"] = "u_currentTime";
@@ -19331,6 +19364,7 @@ var egret3d;
                     {
                         componentClass: particle.ParticleComponent,
                         listeners: [
+                            { type: particle.onStartSize3DChanged, listener: function (comp) { _this._onMainUpdate(comp, particle.onStartSize3DChanged); } },
                             { type: particle.onStartRotation3DChanged, listener: function (comp) { _this._onMainUpdate(comp, particle.onStartRotation3DChanged); } },
                             { type: particle.onSimulationSpaceChanged, listener: function (comp) { _this._onMainUpdate(comp, particle.onSimulationSpaceChanged); } },
                             { type: particle.onScaleModeChanged, listener: function (comp) { _this._onMainUpdate(comp, particle.onScaleModeChanged); } },
@@ -19367,6 +19401,7 @@ var egret3d;
                 this._onRenderUpdate(renderer, particle.ParticleRenderer.onVelocityScaleChanged);
                 this._onRenderUpdate(renderer, particle.ParticleRenderer.onLengthScaleChanged);
                 //
+                this._onMainUpdate(comp, particle.onSizeChanged);
                 this._onMainUpdate(comp, particle.onStartRotation3DChanged);
                 this._onMainUpdate(comp, particle.onSimulationSpaceChanged);
                 this._onMainUpdate(comp, particle.onScaleModeChanged);
@@ -19443,6 +19478,10 @@ var egret3d;
                 var material = renderer.batchMaterial;
                 var mainModule = component.main;
                 switch (type) {
+                    case particle.onStartSize3DChanged: {
+                        material.setBoolean("START_SIZE3D" /* START_SIZE3D */, mainModule.startSize3D);
+                        break;
+                    }
                     case particle.onStartRotation3DChanged: {
                         material.setBoolean("u_startRotation3D" /* START_ROTATION3D */, mainModule.startRotation3D);
                         break;
@@ -21266,7 +21305,7 @@ var egret3d;
                 this._glTFTechnique.states = egret3d.GLTFAsset.copyTechniqueStates(this._shader._states);
             }
             else {
-                //默认转台
+                //默认状态
                 this.setDepth(true, true);
                 this.setCullFace(true, 2305 /* CCW */, 1029 /* BACK */);
                 this.setRenderQueue(2000 /* Geometry */);
@@ -23236,6 +23275,10 @@ var egret3d;
                         var accessor = this.getAccessor(accessorIndex);
                         var bufferOffset = this.getBufferOffset(accessor);
                         var subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
+                        if (offset > 0) {
+                            var accessorTypeCount = this.getAccessorTypeCount(accessor.type);
+                            bufferOffset += offset * accessorTypeCount * this.getComponentTypeCount(accessor.componentType);
+                        }
                         webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, subVertexBuffer);
                     }
                     else {

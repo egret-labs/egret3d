@@ -6709,6 +6709,7 @@ declare namespace egret3d.particle {
     const onRotationChanged: signals.Signal;
     const onTextureSheetChanged: signals.Signal;
     const onShapeChanged: signals.Signal;
+    const onStartSize3DChanged: signals.Signal;
     const onStartRotation3DChanged: signals.Signal;
     const onSimulationSpaceChanged: signals.Signal;
     const onScaleModeChanged: signals.Signal;
@@ -7035,11 +7036,13 @@ declare namespace egret3d.particle {
          *
          */
         readonly gravityModifier: MinMaxCurve;
+        private _startSize3D;
         private _startRotation3D;
         private _simulationSpace;
         private _scaleMode;
         private _maxParticles;
         deserialize(element: any): this;
+        startSize3D: boolean;
         /**
          *
          */
