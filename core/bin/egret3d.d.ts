@@ -1282,7 +1282,7 @@ declare namespace egret3d {
         /**
          * @deprecated
          */
-        static perspectiveProjectLH(left: number, right: number, top: number, bottom: number, near: number, far: number, out: Matrix4): Matrix4;
+        static perspectiveProjectLH(fov: number, aspect: number, znear: number, zfar: number, out: Matrix4): Matrix4;
         /**
          * @deprecated
          */
@@ -3021,7 +3021,6 @@ declare namespace egret3d {
     namespace math {
         function euclideanModulo(n: number, m: number): number;
         function clamp(v: number, min?: number, max?: number): number;
-        function lerp(from: number, to: number, t: number): number;
     }
     /**
      * 内联的数字常数枚举。
@@ -3430,10 +3429,6 @@ declare namespace paper {
          */
         readonly order: SystemOrder;
         /**
-         * 该系统在调试模式时每帧消耗的时间，仅用于性能统计。（以毫秒为单位）
-         */
-        deltaTime: uint;
-        /**
          * @private
          */
         _started: boolean;
@@ -3442,7 +3437,6 @@ declare namespace paper {
          * 该系统是否被激活。
          */
         protected _enabled: boolean;
-        private _startTime;
         /**
          *
          */
@@ -4144,7 +4138,7 @@ declare namespace paper {
      * 全局时钟信息组件。
      */
     class Clock extends SingletonComponent {
-        maxFixedSubSteps: uint;
+        maxFixedSubSteps: number;
         fixedDeltaTime: number;
         timeScale: number;
         private _frameCount;
@@ -4155,11 +4149,7 @@ declare namespace paper {
         private _unscaledDeltaTime;
         private _fixedTime;
         initialize(): void;
-        readonly frameCount: uint;
-        /**
-         * 系统时间。（以毫秒为单位）
-         */
-        readonly now: uint;
+        readonly frameCount: number;
         /**
          * 从程序开始运行时的累计时间。（以秒为单位）
          */
@@ -4897,9 +4887,13 @@ declare namespace egret3d {
          * 当舞台尺寸改变时派发事件。
          */
         readonly onResize: signals.Signal;
+        /**
+         * 渲染视口与舞台尺寸之间的缩放系数。
+         * - scaler = viewport.w / size.w
+         */
         scaler: number;
+        private _isLandspace;
         private _rotated;
-        private _matchFactor;
         private readonly _screenSize;
         private readonly _size;
         private readonly _viewport;
@@ -4911,32 +4905,28 @@ declare namespace egret3d {
         /**
          * 屏幕到舞台坐标的转换。
          */
-        screenToStage(value: Readonly<Vector3>, out: Vector3): this;
+        screenToStage(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3): this;
         /**
          * 舞台到屏幕坐标的转换。
          */
-        stageToScreen(value: Readonly<Vector3>, out: Vector3): this;
+        stageToScreen(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3): this;
         /**
          * 舞台是否因屏幕尺寸的改变而发生了旋转。
-         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转。
+         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终以舞台宽度为依据。
          */
         readonly rotated: boolean;
         /**
-         * 以宽或高适配的系数。
-         */
-        matchFactor: number;
-        /**
          * 屏幕尺寸。
          */
-        screenSize: Readonly<ISize>;
+        screenSize: Readonly<egret3d.ISize>;
         /**
-         * 舞台初始尺寸。
+         * 舞台尺寸。
          */
-        size: Readonly<ISize>;
+        size: Readonly<egret3d.ISize>;
         /**
          * 渲染视口。
          */
-        readonly viewport: Readonly<IRectangle>;
+        readonly viewport: Readonly<egret3d.IRectangle>;
         /**
          * @deprecated
          */
@@ -5888,7 +5878,7 @@ declare namespace egret3d {
          */
         opvalue: number;
         /**
-         * 正交投影的尺寸。
+         * 正交投影的竖向size
          */
         size: number;
         /**
@@ -5918,7 +5908,6 @@ declare namespace egret3d {
         private _updateClipToWorldMatrix(asp);
         /**
          * 计算相机视锥区域
-         * TODO
          */
         private _calcCameraFrame();
         private _intersectPlane(boundingSphere, v0, v1, v2);
@@ -6087,6 +6076,178 @@ declare module egret.web {
 }
 declare namespace egret3d {
     /**
+     * IScreenAdapter
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 屏幕适配策略接口，实现此接口可以自定义适配策略
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    interface IScreenAdapter {
+        $dirty: boolean;
+        calculateScaler(canvasWidth: number, canvasHeight: number, out: {
+            w: number;
+            h: number;
+            s: number;
+        }): any;
+    }
+    /**
+     * ConstantAdapter
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 恒定像素的适配策略
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    class ConstantAdapter implements IScreenAdapter {
+        $dirty: boolean;
+        private _scaleFactor;
+        /**
+         * scaleFactor
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 设置缩放值
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        scaleFactor: number;
+        calculateScaler(canvasWidth: number, canvasHeight: number, out: {
+            w: number;
+            h: number;
+            s: number;
+        }): void;
+    }
+    /**
+     * ConstantAdapter
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 拉伸扩展的适配策略
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    class ExpandAdapter implements IScreenAdapter {
+        $dirty: boolean;
+        private _resolution;
+        /**
+         * setResolution
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 设置分辨率
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        setResolution(width: number, height: number): void;
+        calculateScaler(canvasWidth: number, canvasHeight: number, out: {
+            w: number;
+            h: number;
+            s: number;
+        }): void;
+    }
+    /**
+     * ShrinkAdapter
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 缩放的适配策略
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    class ShrinkAdapter implements IScreenAdapter {
+        $dirty: boolean;
+        private _resolution;
+        /**
+         * setResolution
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 设置分辨率
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        setResolution(width: number, height: number): void;
+        calculateScaler(canvasWidth: number, canvasHeight: number, out: {
+            w: number;
+            h: number;
+            s: number;
+        }): void;
+    }
+    /**
+     * MatchWidthOrHeightAdapter
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 适应宽高适配策略
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    class MatchWidthOrHeightAdapter implements IScreenAdapter {
+        $dirty: boolean;
+        private _resolution;
+        /**
+         * setResolution
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 设置分辨率
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        setResolution(width: number, height: number): void;
+        private _matchFactor;
+        /**
+         * matchFactor
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 设置匹配系数，0-1之间，越小越倾向以宽度适配，越大越倾向以高度适配。
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        matchFactor: number;
+        calculateScaler(canvasWidth: number, canvasHeight: number, out: {
+            w: number;
+            h: number;
+            s: number;
+        }): void;
+    }
+}
+declare namespace egret3d {
+    /**
      *
      * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
      */
@@ -6122,19 +6283,6 @@ declare namespace egret3d {
          * @returns 贝塞尔曲线对象
          */
         static createCubicBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, v3: egret3d.Vector3, bezierPointNum: number): Curve3;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 雾。
-     */
-    class Shadow implements paper.ISerializable {
-        /**
-         * 禁止实例化。
-         */
-        private constructor();
-        serialize(): any[];
-        deserialize(data: Readonly<[number, number, number, number, number, number, number, number]>): void;
     }
 }
 declare namespace egret3d {
@@ -6561,6 +6709,7 @@ declare namespace egret3d.particle {
     const onRotationChanged: signals.Signal;
     const onTextureSheetChanged: signals.Signal;
     const onShapeChanged: signals.Signal;
+    const onStartSize3DChanged: signals.Signal;
     const onStartRotation3DChanged: signals.Signal;
     const onSimulationSpaceChanged: signals.Signal;
     const onScaleModeChanged: signals.Signal;
@@ -6887,11 +7036,13 @@ declare namespace egret3d.particle {
          *
          */
         readonly gravityModifier: MinMaxCurve;
+        private _startSize3D;
         private _startRotation3D;
         private _simulationSpace;
         private _scaleMode;
         private _maxParticles;
         deserialize(element: any): this;
+        startSize3D: boolean;
         /**
          *
          */
@@ -7567,11 +7718,11 @@ declare namespace egret3d {
         /**
          * 创建圆形网格。
          */
-        static createCircle(radius?: number, arc?: number, axis?: 1 | 2 | 3): Mesh;
+        static createCircle(radius?: number, arc?: number, axis?: number): Mesh;
         /**
          * 创建圆环网格。
          */
-        static createTorus(radius?: number, tube?: number, radialSegments?: number, tubularSegments?: number, arc?: number, axis?: 1 | 2 | 3): Mesh;
+        static createTorus(radius?: number, tube?: number, radialSegments?: number, tubularSegments?: number, arc?: number, axis?: number): Mesh;
         /**
         * 创建球体网格。
         * @param radius 半径。
@@ -11149,6 +11300,16 @@ declare namespace egret3d.io {
 declare namespace egret3d.utils {
     function getRelativePath(targetPath: string, sourcePath: string): string;
 }
+declare namespace Stats {
+    /**
+     * 显示调试面板
+     */
+    function show(container: HTMLDivElement, refreshTime?: number): void;
+    /**
+     * 关闭调试面板
+     */
+    function hide(): void;
+}
 declare namespace egret3d {
     /**
      * 网格。
@@ -11313,6 +11474,36 @@ declare namespace egret3d {
      * @param root
      */
     function combine(instances: ReadonlyArray<paper.GameObject>): void;
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    const enum PerformanceType {
+        All = "all",
+    }
+    type PerformanceEntity = {
+        start: number;
+        end: number;
+        delta: number;
+        _cache: number[];
+        averageRange: number;
+        averageDelta: number;
+    };
+    /**
+     * Performance
+     * 数据收集
+     */
+    class Performance {
+        private static _entities;
+        static enable: boolean;
+        static getEntity(key: string): PerformanceEntity;
+        static getFPS(): number;
+        static updateFPS(): void;
+        private static _getNow();
+        static startCounter(key: string, averageRange?: number): void;
+        static endCounter(key: string): void;
+    }
 }
 declare namespace egret3d {
     type ProfileItem = {
@@ -12028,173 +12219,14 @@ declare namespace paper.editor {
 }
 declare namespace egret3d {
     /**
-     * IScreenAdapter
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
+     * 雾。
      */
-    /**
-     * 屏幕适配策略接口，实现此接口可以自定义适配策略
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    interface IScreenAdapter {
-        $dirty: boolean;
-        calculateScaler(canvasWidth: number, canvasHeight: number, out: {
-            w: number;
-            h: number;
-            s: number;
-        }): any;
-    }
-    /**
-     * ConstantAdapter
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 恒定像素的适配策略
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class ConstantAdapter implements IScreenAdapter {
-        $dirty: boolean;
-        private _scaleFactor;
+    class Shadow implements paper.ISerializable {
         /**
-         * scaleFactor
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
+         * 禁止实例化。
          */
-        /**
-         * 设置缩放值
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        scaleFactor: number;
-        calculateScaler(canvasWidth: number, canvasHeight: number, out: {
-            w: number;
-            h: number;
-            s: number;
-        }): void;
-    }
-    /**
-     * ConstantAdapter
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 拉伸扩展的适配策略
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class ExpandAdapter implements IScreenAdapter {
-        $dirty: boolean;
-        private _resolution;
-        /**
-         * setResolution
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置分辨率
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        setResolution(width: number, height: number): void;
-        calculateScaler(canvasWidth: number, canvasHeight: number, out: {
-            w: number;
-            h: number;
-            s: number;
-        }): void;
-    }
-    /**
-     * ShrinkAdapter
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 缩放的适配策略
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class ShrinkAdapter implements IScreenAdapter {
-        $dirty: boolean;
-        private _resolution;
-        /**
-         * setResolution
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置分辨率
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        setResolution(width: number, height: number): void;
-        calculateScaler(canvasWidth: number, canvasHeight: number, out: {
-            w: number;
-            h: number;
-            s: number;
-        }): void;
-    }
-    /**
-     * MatchWidthOrHeightAdapter
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 适应宽高适配策略
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    class MatchWidthOrHeightAdapter implements IScreenAdapter {
-        $dirty: boolean;
-        private _resolution;
-        /**
-         * setResolution
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置分辨率
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        setResolution(width: number, height: number): void;
-        private _matchFactor;
-        /**
-         * matchFactor
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置匹配系数，0-1之间，越小越倾向以宽度适配，越大越倾向以高度适配。
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        matchFactor: number;
-        calculateScaler(canvasWidth: number, canvasHeight: number, out: {
-            w: number;
-            h: number;
-            s: number;
-        }): void;
+        private constructor();
+        serialize(): any[];
+        deserialize(data: Readonly<[number, number, number, number, number, number, number, number]>): void;
     }
 }

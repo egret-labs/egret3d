@@ -37,8 +37,6 @@ namespace egret3d {
         public spotShadowMatrix: Float32Array = new Float32Array(0);
         public pointShadowMatrix: Float32Array = new Float32Array(0);
 
-        public readonly matrix_m: Matrix4 = Matrix4.create();
-        public readonly matrix_mvp: Matrix4 = Matrix4.create();
         public readonly directShadowMaps: (WebGLTexture | null)[] = [];
         public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
         public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
@@ -51,10 +49,12 @@ namespace egret3d {
 
 
         // transforms
+        public readonly matrix_m: Matrix4 = Matrix4.create();
         public readonly matrix_v: Matrix4 = Matrix4.create();
         public readonly matrix_p: Matrix4 = Matrix4.create();
         public readonly matrix_mv: Matrix4 = Matrix4.create();
         public readonly matrix_vp: Matrix4 = Matrix4.create();
+        public readonly matrix_mvp: Matrix4 = Matrix4.create();
         public readonly matrix_mv_inverse: Matrix3 = Matrix3.create();//INVERS
 
         public lightShadowCameraNear: number = 0;

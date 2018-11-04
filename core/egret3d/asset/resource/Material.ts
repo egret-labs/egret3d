@@ -121,6 +121,12 @@ namespace egret3d {
             else if (this._shader._states) {
                 this._glTFTechnique.states = GLTFAsset.copyTechniqueStates(this._shader._states);
             }
+            else {
+                //默认状态
+                this.setDepth(true, true);
+                this.setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this.setRenderQueue(paper.RenderQueue.Geometry);
+            }
 
             const materialDefines = glTFMaterial.extensions.paper.defines;
 

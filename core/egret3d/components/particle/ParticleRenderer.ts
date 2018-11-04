@@ -22,6 +22,7 @@ namespace egret3d.particle {
         SIZE_SCALE = 'u_sizeScale',
         SCALING_MODE = 'u_scalingMode',
         GRAVIT = 'u_gravity',
+        START_SIZE3D = 'START_SIZE3D',
         START_ROTATION3D = 'u_startRotation3D',
         SIMULATION_SPACE = 'u_simulationSpace',
         CURRENTTIME = 'u_currentTime',
