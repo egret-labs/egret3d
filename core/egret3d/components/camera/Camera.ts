@@ -10,7 +10,16 @@ namespace egret3d {
          * - 如果没有则创建一个。
          */
         public static get main() {
-            let gameObject = paper.Application.sceneManager.activeScene.findWithTag(paper.DefaultTags.MainCamera);
+            const scene = paper.Application.sceneManager.activeScene;
+
+            let gameObject = scene.findWithTag(paper.DefaultTags.MainCamera);
+            if (!gameObject) { // TODO 兼容数据错误，在 2.0 移除
+                gameObject = scene.findWithTag("Main Camera");
+                if (gameObject) {
+                    gameObject.tag = paper.DefaultTags.MainCamera;
+                }
+            }
+
             if (!gameObject) {
                 gameObject = paper.GameObject.create(paper.DefaultNames.MainCamera, paper.DefaultTags.MainCamera);
                 gameObject.transform.setLocalPosition(0.0, 10.0, -10.0);

@@ -45,10 +45,10 @@ namespace paper {
         Untagged = "",
         Respawn = "Respawn",
         Finish = "Finish",
-        EditorOnly = "Editor Only",
-        MainCamera = "Main Camera",
+        EditorOnly = "EditorOnly",
+        MainCamera = "MainCamera",
         Player = "Player",
-        GameController = "Game Controller",
+        GameController = "GameController",
         Global = "Global",
     }
 
@@ -99,7 +99,7 @@ namespace paper {
         UserLayer10 = 0x000800,
         UserLayer11 = 0x000f00,
     }
-    
+
     /**
      * culling mask
      * @version paper 1.0
