@@ -87,7 +87,7 @@ namespace paper.editor {
         }
 
         public onUpdate() {
-            if (Application.playerMode === PlayerMode.Editor) { 
+            if (Application.playerMode === PlayerMode.Editor) {
                 return;
             }
 
@@ -97,6 +97,16 @@ namespace paper.editor {
                 paper.Application.systemManager.getSystem((egret3d as any)["web"]["WebGLRenderSystem"])!.deltaTime,
                 200
             );
+
+            if (egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyH).isDown(false)) {
+                const statsDOM = guiComponent.stats.dom;
+                if (statsDOM.style.display !== "none") {
+                    statsDOM.style.display = "none";
+                }
+                else {
+                    statsDOM.style.display = "block";
+                }
+            }
 
             // TODO dc tc vc
 
