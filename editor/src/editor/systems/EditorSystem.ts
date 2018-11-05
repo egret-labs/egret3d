@@ -8,7 +8,7 @@ namespace paper.editor {
      */
     export class EditorSystem extends BaseSystem {
         private _isMobile: boolean = false;
-        private readonly _guiComponent: GUIComponent = GameObject.globalGameObject.getOrAddComponent(GUIComponent);
+        private readonly _guiComponent: GUIComponent | null = Application.playerMode === PlayerMode.Editor ? null : GameObject.globalGameObject.getOrAddComponent(GUIComponent);
 
         public onAwake() {
             GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
@@ -17,7 +17,8 @@ namespace paper.editor {
                 Application.systemManager.register(SceneSystem, SystemOrder.LaterUpdate);
             }
             else {
-                const oldContainer = this._guiComponent.hierarchy.domElement.parentElement!;
+                const guiComponent = this._guiComponent!;
+                const oldContainer = guiComponent!.hierarchy.domElement.parentElement!;
                 const container = document.createElement("div");
                 container.style.overflow = "hidden";
                 container.style.display = "flex";
@@ -36,24 +37,24 @@ namespace paper.editor {
                 const empty = document.createElement("div");
                 empty.style.width = "100%";
                 oldContainer.style.display = "flex";
-                oldContainer.insertBefore(this._guiComponent.stats.dom, oldContainer.lastElementChild);
+                oldContainer.insertBefore(guiComponent.stats.dom, oldContainer.lastElementChild);
                 oldContainer.insertBefore(empty, oldContainer.lastElementChild);
 
-                this._guiComponent.hierarchy.onClick = () => {
-                    if (this._guiComponent.hierarchy.closed) {
-                        oldContainer.insertBefore(this._guiComponent.hierarchy.domElement, oldContainer.firstElementChild);
+                guiComponent.hierarchy.onClick = () => {
+                    if (guiComponent.hierarchy.closed) {
+                        oldContainer.insertBefore(guiComponent.hierarchy.domElement, oldContainer.firstElementChild);
                     }
                     else {
-                        hierarchy[0].appendChild(this._guiComponent.hierarchy.domElement);
+                        hierarchy[0].appendChild(guiComponent.hierarchy.domElement);
                     }
                 };
 
-                this._guiComponent.inspector.onClick = () => {
-                    if (this._guiComponent.inspector.closed) {
-                        oldContainer.appendChild(this._guiComponent.inspector.domElement);
+                guiComponent.inspector.onClick = () => {
+                    if (guiComponent.inspector.closed) {
+                        oldContainer.appendChild(guiComponent.inspector.domElement);
                     }
                     else {
-                        inspector[0].appendChild(this._guiComponent.inspector.domElement);
+                        inspector[0].appendChild(guiComponent.inspector.domElement);
                     }
                 };
 
@@ -73,12 +74,12 @@ namespace paper.editor {
                     //         new VConsole();
                     //     }
                     // );
-                    this._guiComponent.hierarchy.close();
-                    this._guiComponent.inspector.close();
+                    guiComponent.hierarchy.close();
+                    guiComponent.inspector.close();
                 }
                 else {
-                    hierarchy[0].appendChild(this._guiComponent.hierarchy.domElement);
-                    inspector[0].appendChild(this._guiComponent.inspector.domElement);
+                    hierarchy[0].appendChild(guiComponent.hierarchy.domElement);
+                    inspector[0].appendChild(guiComponent.inspector.domElement);
                 }
 
                 Application.systemManager.register(GUISystem, SystemOrder.LaterUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
@@ -86,41 +87,48 @@ namespace paper.editor {
         }
 
         public onUpdate() {
-            this._guiComponent.stats.update();
-            this._guiComponent.renderPanel.update(
+            if (Application.playerMode === PlayerMode.Editor) { 
+                return;
+            }
+
+            const guiComponent = this._guiComponent!;
+            guiComponent.stats.update();
+            guiComponent.renderPanel.update(
                 paper.Application.systemManager.getSystem((egret3d as any)["web"]["WebGLRenderSystem"])!.deltaTime,
                 200
             );
 
+            // TODO dc tc vc
+
             const isMobile = paper.Application.isMobile;
             if (this._isMobile !== isMobile) {
                 if (isMobile) {
-                    if (!this._guiComponent.hierarchy.closed) {
-                        this._guiComponent.hierarchy.close();
-                        if (this._guiComponent.hierarchy.onClick) {
-                            this._guiComponent.hierarchy.onClick(this._guiComponent.hierarchy);
+                    if (!guiComponent.hierarchy.closed) {
+                        guiComponent.hierarchy.close();
+                        if (guiComponent.hierarchy.onClick) {
+                            guiComponent.hierarchy.onClick(guiComponent.hierarchy);
                         }
                     }
 
-                    if (!this._guiComponent.inspector.closed) {
-                        this._guiComponent.inspector.close();
-                        if (this._guiComponent.inspector.onClick) {
-                            this._guiComponent.inspector.onClick(this._guiComponent.inspector);
+                    if (!guiComponent.inspector.closed) {
+                        guiComponent.inspector.close();
+                        if (guiComponent.inspector.onClick) {
+                            guiComponent.inspector.onClick(guiComponent.inspector);
                         }
                     }
                 }
                 else {
-                    if (this._guiComponent.hierarchy.closed) {
-                        this._guiComponent.hierarchy.open();
-                        if (this._guiComponent.hierarchy.onClick) {
-                            this._guiComponent.hierarchy.onClick(this._guiComponent.hierarchy);
+                    if (guiComponent.hierarchy.closed) {
+                        guiComponent.hierarchy.open();
+                        if (guiComponent.hierarchy.onClick) {
+                            guiComponent.hierarchy.onClick(guiComponent.hierarchy);
                         }
                     }
 
-                    if (this._guiComponent.inspector.closed) {
-                        this._guiComponent.inspector.open();
-                        if (this._guiComponent.inspector.onClick) {
-                            this._guiComponent.inspector.onClick(this._guiComponent.inspector);
+                    if (guiComponent.inspector.closed) {
+                        guiComponent.inspector.open();
+                        if (guiComponent.inspector.onClick) {
+                            guiComponent.inspector.onClick(guiComponent.inspector);
                         }
                     }
                 }

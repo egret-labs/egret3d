@@ -393,9 +393,13 @@ namespace paper.editor {
                 this._modelComponent.hover(null);
             }
 
-            for (const gameObject of this._modelComponent.selectedGameObjects) {
-                if (gameObject.isDestroyed) {
-                    this._modelComponent.unselect(gameObject);
+            {
+                let i = this._modelComponent.selectedGameObjects.length;
+                while (i--) { 
+                    const gameObject = this._modelComponent.selectedGameObjects[0];
+                    if (gameObject.isDestroyed) {
+                        this._modelComponent.unselect(gameObject);
+                    }
                 }
             }
 

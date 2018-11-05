@@ -4642,18 +4642,18 @@ var paper;
             function EditorSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this._isMobile = false;
-                _this._guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.GUIComponent);
+                _this._guiComponent = paper.Application.playerMode === 2 /* Editor */ ? null : paper.GameObject.globalGameObject.getOrAddComponent(editor.GUIComponent);
                 return _this;
             }
             EditorSystem.prototype.onAwake = function () {
-                var _this = this;
                 paper.GameObject.globalGameObject.getOrAddComponent(editor.EditorDefaultTexture);
                 //
                 if (paper.Application.playerMode === 2 /* Editor */) {
                     paper.Application.systemManager.register(editor.SceneSystem, 6000 /* LaterUpdate */);
                 }
                 else {
-                    var oldContainer_1 = this._guiComponent.hierarchy.domElement.parentElement;
+                    var guiComponent_1 = this._guiComponent;
+                    var oldContainer_1 = guiComponent_1.hierarchy.domElement.parentElement;
                     var container = document.createElement("div");
                     container.style.overflow = "hidden";
                     container.style.display = "flex";
@@ -4669,22 +4669,22 @@ var paper;
                     var empty = document.createElement("div");
                     empty.style.width = "100%";
                     oldContainer_1.style.display = "flex";
-                    oldContainer_1.insertBefore(this._guiComponent.stats.dom, oldContainer_1.lastElementChild);
+                    oldContainer_1.insertBefore(guiComponent_1.stats.dom, oldContainer_1.lastElementChild);
                     oldContainer_1.insertBefore(empty, oldContainer_1.lastElementChild);
-                    this._guiComponent.hierarchy.onClick = function () {
-                        if (_this._guiComponent.hierarchy.closed) {
-                            oldContainer_1.insertBefore(_this._guiComponent.hierarchy.domElement, oldContainer_1.firstElementChild);
+                    guiComponent_1.hierarchy.onClick = function () {
+                        if (guiComponent_1.hierarchy.closed) {
+                            oldContainer_1.insertBefore(guiComponent_1.hierarchy.domElement, oldContainer_1.firstElementChild);
                         }
                         else {
-                            hierarchy_1[0].appendChild(_this._guiComponent.hierarchy.domElement);
+                            hierarchy_1[0].appendChild(guiComponent_1.hierarchy.domElement);
                         }
                     };
-                    this._guiComponent.inspector.onClick = function () {
-                        if (_this._guiComponent.inspector.closed) {
-                            oldContainer_1.appendChild(_this._guiComponent.inspector.domElement);
+                    guiComponent_1.inspector.onClick = function () {
+                        if (guiComponent_1.inspector.closed) {
+                            oldContainer_1.appendChild(guiComponent_1.inspector.domElement);
                         }
                         else {
-                            inspector_1[0].appendChild(_this._guiComponent.inspector.domElement);
+                            inspector_1[0].appendChild(guiComponent_1.inspector.domElement);
                         }
                     };
                     this._isMobile = paper.Application.isMobile;
@@ -4702,46 +4702,51 @@ var paper;
                         //         new VConsole();
                         //     }
                         // );
-                        this._guiComponent.hierarchy.close();
-                        this._guiComponent.inspector.close();
+                        guiComponent_1.hierarchy.close();
+                        guiComponent_1.inspector.close();
                     }
                     else {
-                        hierarchy_1[0].appendChild(this._guiComponent.hierarchy.domElement);
-                        inspector_1[0].appendChild(this._guiComponent.inspector.domElement);
+                        hierarchy_1[0].appendChild(guiComponent_1.hierarchy.domElement);
+                        inspector_1[0].appendChild(guiComponent_1.inspector.domElement);
                     }
                     paper.Application.systemManager.register(editor.GUISystem, 6000 /* LaterUpdate */ + 1); // Make sure the GUISystem update after the SceneSystem.
                 }
             };
             EditorSystem.prototype.onUpdate = function () {
-                this._guiComponent.stats.update();
-                this._guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["web"]["WebGLRenderSystem"]).deltaTime, 200);
+                if (paper.Application.playerMode === 2 /* Editor */) {
+                    return;
+                }
+                var guiComponent = this._guiComponent;
+                guiComponent.stats.update();
+                guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["web"]["WebGLRenderSystem"]).deltaTime, 200);
+                // TODO dc tc vc
                 var isMobile = paper.Application.isMobile;
                 if (this._isMobile !== isMobile) {
                     if (isMobile) {
-                        if (!this._guiComponent.hierarchy.closed) {
-                            this._guiComponent.hierarchy.close();
-                            if (this._guiComponent.hierarchy.onClick) {
-                                this._guiComponent.hierarchy.onClick(this._guiComponent.hierarchy);
+                        if (!guiComponent.hierarchy.closed) {
+                            guiComponent.hierarchy.close();
+                            if (guiComponent.hierarchy.onClick) {
+                                guiComponent.hierarchy.onClick(guiComponent.hierarchy);
                             }
                         }
-                        if (!this._guiComponent.inspector.closed) {
-                            this._guiComponent.inspector.close();
-                            if (this._guiComponent.inspector.onClick) {
-                                this._guiComponent.inspector.onClick(this._guiComponent.inspector);
+                        if (!guiComponent.inspector.closed) {
+                            guiComponent.inspector.close();
+                            if (guiComponent.inspector.onClick) {
+                                guiComponent.inspector.onClick(guiComponent.inspector);
                             }
                         }
                     }
                     else {
-                        if (this._guiComponent.hierarchy.closed) {
-                            this._guiComponent.hierarchy.open();
-                            if (this._guiComponent.hierarchy.onClick) {
-                                this._guiComponent.hierarchy.onClick(this._guiComponent.hierarchy);
+                        if (guiComponent.hierarchy.closed) {
+                            guiComponent.hierarchy.open();
+                            if (guiComponent.hierarchy.onClick) {
+                                guiComponent.hierarchy.onClick(guiComponent.hierarchy);
                             }
                         }
-                        if (this._guiComponent.inspector.closed) {
-                            this._guiComponent.inspector.open();
-                            if (this._guiComponent.inspector.onClick) {
-                                this._guiComponent.inspector.onClick(this._guiComponent.inspector);
+                        if (guiComponent.inspector.closed) {
+                            guiComponent.inspector.open();
+                            if (guiComponent.inspector.onClick) {
+                                guiComponent.inspector.onClick(guiComponent.inspector);
                             }
                         }
                     }
@@ -5165,7 +5170,7 @@ var paper;
             SceneSystem.prototype._updateLights = function () {
                 for (var _i = 0, _a = this._cameraAndLightCollecter.lights; _i < _a.length; _i++) {
                     var light = _a[_i];
-                    if (light.gameObject.tag === "Editor Only" /* EditorOnly */) {
+                    if (light.gameObject.tag === "EditorOnly" /* EditorOnly */) {
                         continue;
                     }
                     var icon = light.gameObject.transform.find("__pickTarget");
@@ -5219,7 +5224,7 @@ var paper;
                 //
                 for (var _i = 0, _a = this._cameraAndLightCollecter.cameras; _i < _a.length; _i++) {
                     var camera = _a[_i];
-                    if (camera.gameObject.tag === "Editor Only" /* EditorOnly */) {
+                    if (camera.gameObject.tag === "EditorOnly" /* EditorOnly */) {
                         continue;
                     }
                     var icon = camera.gameObject.transform.find("__pickTarget");
@@ -5229,7 +5234,7 @@ var paper;
                 }
                 for (var _b = 0, _d = this._cameraAndLightCollecter.lights; _b < _d.length; _b++) {
                     var light = _d[_b];
-                    if (light.gameObject.tag === "Editor Only" /* EditorOnly */) {
+                    if (light.gameObject.tag === "EditorOnly" /* EditorOnly */) {
                         continue;
                     }
                     var icon = light.gameObject.transform.find("__pickTarget");
@@ -5288,7 +5293,7 @@ var paper;
                                     if (hoveredGameObject.renderer instanceof egret3d.SkinnedMeshRenderer && !hoveredGameObject.transform.find("__pickTarget")) {
                                         var animation = hoveredGameObject.getComponentInParent(egret3d.Animation);
                                         if (animation) {
-                                            var pickGameObject = editor.EditorMeshHelper.createGameObject("__pickTarget", null, null, "Editor Only" /* EditorOnly */, hoveredGameObject.scene);
+                                            var pickGameObject = editor.EditorMeshHelper.createGameObject("__pickTarget", null, null, "EditorOnly" /* EditorOnly */, hoveredGameObject.scene);
                                             pickGameObject.transform.parent = hoveredGameObject.transform;
                                             pickGameObject.addComponent(editor.GizmoPickComponent).pickTarget = animation.gameObject;
                                         }
@@ -5387,10 +5392,13 @@ var paper;
                 if (this._modelComponent.hoveredGameObject && this._modelComponent.hoveredGameObject.isDestroyed) {
                     this._modelComponent.hover(null);
                 }
-                for (var _b = 0, _d = this._modelComponent.selectedGameObjects; _b < _d.length; _b++) {
-                    var gameObject = _d[_b];
-                    if (gameObject.isDestroyed) {
-                        this._modelComponent.unselect(gameObject);
+                {
+                    var i = this._modelComponent.selectedGameObjects.length;
+                    while (i--) {
+                        var gameObject = this._modelComponent.selectedGameObjects[0];
+                        if (gameObject.isDestroyed) {
+                            this._modelComponent.unselect(gameObject);
+                        }
                     }
                 }
                 if (transformController.isActiveAndEnabled) {
@@ -5447,7 +5455,7 @@ var paper;
             EditorMeshHelper.createGameObject = function (name, mesh, material, tag, scene) {
                 if (mesh === void 0) { mesh = null; }
                 if (material === void 0) { material = null; }
-                if (tag === void 0) { tag = "Editor Only" /* EditorOnly */; }
+                if (tag === void 0) { tag = "EditorOnly" /* EditorOnly */; }
                 if (scene === void 0) { scene = paper.Scene.editorScene; }
                 var gameObject = paper.GameObject.create(name, tag, scene);
                 gameObject.hideFlags = 3 /* HideAndDontSave */;
@@ -5470,17 +5478,17 @@ var paper;
                 return iconObj;
             };
             EditorMeshHelper.createLine = function (name, color, opacity, scene) {
-                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.LINEDASHED.clone(), "Editor Only" /* EditorOnly */, scene);
+                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.LINEDASHED.clone(), "EditorOnly" /* EditorOnly */, scene);
                 gameObject.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(1 /* Blend */, 3000 /* Transparent */, opacity);
                 return gameObject;
             };
             EditorMeshHelper.createBox = function (name, color, opacity, scene) {
-                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone(), "Editor Only" /* EditorOnly */, scene);
+                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone(), "EditorOnly" /* EditorOnly */, scene);
                 gameObject.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(1 /* Blend */, 3000 /* Transparent */, opacity);
                 return gameObject;
             };
             EditorMeshHelper.createCircle = function (name, color, opacity, scene) {
-                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone(), "Editor Only" /* EditorOnly */, scene);
+                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone(), "EditorOnly" /* EditorOnly */, scene);
                 gameObject.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(1 /* Blend */, 3000 /* Transparent */, opacity);
                 return gameObject;
             };
@@ -8300,7 +8308,7 @@ var paper;
             };
             GUISystem.prototype._addToHierarchy = function (gameObject) {
                 if (gameObject.uuid in this._hierarchyFolders ||
-                    gameObject.tag === "Editor Only" /* EditorOnly */ ||
+                    gameObject.tag === "EditorOnly" /* EditorOnly */ ||
                     gameObject.hideFlags === 2 /* Hide */ ||
                     gameObject.hideFlags === 3 /* HideAndDontSave */) {
                     return true;

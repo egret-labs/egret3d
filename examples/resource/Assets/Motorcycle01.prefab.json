@@ -1,0 +1,23 @@
+{
+	"assets":[
+		"Assets/Art/Motorcycle01/Motorbike_03.mesh.bin",
+		"Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_tire_BaseColor.mat.json",
+		"Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_wheel_BaseColor.mat.json",
+		"Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_frame_BaseColor.mat.json",
+		"Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_engine_BaseColor.mat.json",
+		"Assets/Art/Motorcycle01/Materials/Dical_d.mat.json",
+		"Assets/Art/Motorcycle01/Materials/lowpoly_bag_ve_motorcycle_bag_BaseColor.mat.json",
+		"Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_details_BaseColor_NONLOGO.mat.json",
+		"Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_lights_basecolor.mat.json"
+	],
+	"objects":[
+		{"uuid":"1","unityId":-5408,"class":"paper.GameObject","name":"Motorcycle01","tag":"Untagged","layer":2,"isStatic":false,"components":[{"uuid":"2"},{"uuid":"3"},{"uuid":"4"}]}
+	],
+	"components":[
+		{"uuid":"2","unityId":-5410,"class":"egret3d.Transform","localPosition":[0,0,0],"localRotation":[-0.631421,0.318288,0.318288,0.631421],"localScale":[1,1,1],"children":[]},
+		{"uuid":"3","unityId":-5412,"class":"egret3d.MeshFilter","_mesh":{"asset":0}},
+		{"uuid":"4","unityId":-5414,"class":"egret3d.MeshRenderer","_lightmapIndex":-1,"_castShadows":true,"_receiveShadows":true,"_lightmapScaleOffset":[1,1,0,0],"_materials":[{"asset":1},{"asset":2},{"asset":3},{"asset":4},{"asset":5},{"asset":6},{"asset":7},{"asset":8}]}
+	],
+
+	"version":4
+}

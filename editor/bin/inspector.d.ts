@@ -18,7 +18,7 @@ declare class Stats {
 }
 
 declare namespace Stats {
-    declare class Panel {
+    class Panel {
         public constructor(name: string, color: string, bgColor: string);
         public update(value: number, maxValue: number): void;
     }
