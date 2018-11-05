@@ -80,20 +80,8 @@ namespace paper.editor {
                 this.history.add(state);
             }
         }
-
-        public getEditType(propName: string, target: any): editor.EditType | null {
-            const editInfoList = editor.getEditInfo(target);
-            for (let index = 0; index < editInfoList.length; index++) {
-                const element = editInfoList[index];
-                if (element.name === propName) {
-                    return element.editType;
-                }
-            }
-            return null;
-        }
-
         public setTransformProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void {
-            let valueEditType: paper.editor.EditType | null = this.getEditType(propName, target);
+            let valueEditType: paper.editor.EditType | null = getEditType(target,propName);
 
             if (valueEditType !== null) {
                 let newPropertyData = {
@@ -127,45 +115,45 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public serializeProperty(value: any, editType: editor.EditType): any {
+        public serializeProperty(value: any, editType: paper.editor.EditType): any {
             switch (editType) {
-                case editor.EditType.UINT:
-                case editor.EditType.INT:
-                case editor.EditType.FLOAT:
-                case editor.EditType.TEXT:
-                case editor.EditType.CHECKBOX:
+                case paper.editor.EditType.UINT:
+                case paper.editor.EditType.INT:
+                case paper.editor.EditType.FLOAT:
+                case paper.editor.EditType.TEXT:
+                case paper.editor.EditType.CHECKBOX:
                     return value;
-                case editor.EditType.VECTOR2:
-                case editor.EditType.VECTOR3:
-                case editor.EditType.VECTOR4:
-                case editor.EditType.QUATERNION:
-                case editor.EditType.COLOR:
-                case editor.EditType.RECT:
+                case paper.editor.EditType.VECTOR2:
+                case paper.editor.EditType.VECTOR3:
+                case paper.editor.EditType.VECTOR4:
+                case paper.editor.EditType.QUATERNION:
+                case paper.editor.EditType.COLOR:
+                case paper.editor.EditType.RECT:
                     const className = egret.getQualifiedClassName(value);
                     const serializeData = value.serialize(value);
                     return { className, serializeData };
-                case editor.EditType.SHADER:
+                case paper.editor.EditType.SHADER:
                     return value.name;
-                case editor.EditType.LIST:
+                case paper.editor.EditType.LIST:
                     return value;
-                case editor.EditType.MATERIAL_ARRAY:
+                case paper.editor.EditType.MATERIAL_ARRAY:
                     const data = value.map((item: paper.Asset) => {
                         return { name: item.name, url: item.name };
                     });
                     return data;
-                case editor.EditType.MESH:
+                case paper.editor.EditType.MESH:
                     if (!value)
                         return null;
                     return value.name;
-                case editor.EditType.GAMEOBJECT:
+                case paper.editor.EditType.GAMEOBJECT:
                     if (!value) {
                         return null;
                     }
                     return value.uuid;
-                case editor.EditType.MATERIAL:
-                case editor.EditType.TRANSFROM:
-                case editor.EditType.SOUND:
-                case editor.EditType.ARRAY:
+                case paper.editor.EditType.MATERIAL:
+                case paper.editor.EditType.TRANSFROM:
+                case paper.editor.EditType.SOUND:
+                case paper.editor.EditType.ARRAY:
                     //TODO
                     console.error("not supported!");
                     break;
@@ -174,20 +162,20 @@ namespace paper.editor {
             }
         }
 
-        public deserializeProperty(serializeData: any, editType: editor.EditType) {
+        public deserializeProperty(serializeData: any, editType: paper.editor.EditType) {
             switch (editType) {
-                case editor.EditType.UINT:
-                case editor.EditType.INT:
-                case editor.EditType.FLOAT:
-                case editor.EditType.TEXT:
-                case editor.EditType.CHECKBOX:
+                case paper.editor.EditType.UINT:
+                case paper.editor.EditType.INT:
+                case paper.editor.EditType.FLOAT:
+                case paper.editor.EditType.TEXT:
+                case paper.editor.EditType.CHECKBOX:
                     return serializeData;
-                case editor.EditType.VECTOR2:
-                case editor.EditType.VECTOR3:
-                case editor.EditType.VECTOR4:
-                case editor.EditType.QUATERNION:
-                case editor.EditType.COLOR:
-                case editor.EditType.RECT:
+                case paper.editor.EditType.VECTOR2:
+                case paper.editor.EditType.VECTOR3:
+                case paper.editor.EditType.VECTOR4:
+                case paper.editor.EditType.QUATERNION:
+                case paper.editor.EditType.COLOR:
+                case paper.editor.EditType.RECT:
                     const clazz = egret.getDefinitionByName(serializeData.className);
                     let target: ISerializable | null = null;
                     if (clazz) {
@@ -195,33 +183,33 @@ namespace paper.editor {
                         target!.deserialize(serializeData.serializeData);
                     }
                     return target;
-                case editor.EditType.SHADER:
+                case paper.editor.EditType.SHADER:
                     const url = serializeData;
                     const asset = paper.Asset.find(url);
                     return asset;
-                case editor.EditType.LIST:
+                case paper.editor.EditType.LIST:
                     return serializeData;
-                case editor.EditType.MATERIAL_ARRAY:
+                case paper.editor.EditType.MATERIAL_ARRAY:
                     const materials: egret3d.Material[] = [];
                     for (const matrial of serializeData) {
                         const asset = paper.Asset.find(matrial.url);
                         materials.push(asset as egret3d.Material);
                     }
                     return materials;
-                case editor.EditType.MESH:
+                case paper.editor.EditType.MESH:
                     if (!serializeData) {
                         return null;
                     }
                     return paper.Asset.find(serializeData);
-                case editor.EditType.GAMEOBJECT:
+                case paper.editor.EditType.GAMEOBJECT:
                     if (!serializeData) {
                         return null;
                     }
                     return this.getGameObjectByUUid(serializeData);
-                case editor.EditType.MATERIAL:
-                case editor.EditType.TRANSFROM:
-                case editor.EditType.SOUND:
-                case editor.EditType.ARRAY:
+                case paper.editor.EditType.MATERIAL:
+                case paper.editor.EditType.TRANSFROM:
+                case paper.editor.EditType.SOUND:
+                case paper.editor.EditType.ARRAY:
                     //TODO
                     console.error("not supported!");
                     return null;

@@ -133,7 +133,7 @@ namespace paper {
         /**
          * 该组件的材质列表。
          */
-        @paper.editor.property(paper.editor.EditType.MATERIAL_ARRAY)
+        @editor.property(editor.EditType.MATERIAL_ARRAY)
         public get materials(): ReadonlyArray<egret3d.Material> {
             return this._materials;
         }
