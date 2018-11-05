@@ -123,11 +123,12 @@
 		var W = 90;
 		var H = 48;
 		var B = 2;
+		var DG = 15;
 
 		var WIDTH = W * PR, HEIGHT = H * PR,
 			TEXT_X = B * PR, TEXT_Y = B * PR,
-			GRAPH_X = B * PR, GRAPH_Y = B + 15 * PR,
-			GRAPH_WIDTH = (W - B * 2) * PR, GRAPH_HEIGHT = (H - B * 2 - 15) * PR;
+			GRAPH_X = B * PR, GRAPH_Y = (B + DG) * PR,
+			GRAPH_WIDTH = (W - B * 2) * PR, GRAPH_HEIGHT = (H - B * 2 - DG) * PR;
 
 		var canvas = document.createElement('canvas');
 		canvas.width = WIDTH;

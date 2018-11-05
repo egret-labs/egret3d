@@ -108,12 +108,92 @@ namespace egret3d {
         private _dirtify(isLocalDirty: ConstrainBoolean, dirty: TransformDirty) {
             if (isLocalDirty) {
                 this._localDirty |= dirty | TransformDirty.MIM;
-
                 if (dirty & TransformDirty.Rotation) {
                     this._localDirty |= TransformDirty.Scale | TransformDirty.Euler;
                 }
                 else if (dirty & TransformDirty.Scale) {
                     this._localDirty |= TransformDirty.Rotation;
+                }
+
+
+                if (DEBUG) {
+
+                    if (dirty & TransformDirty.Position) {
+                        let isError = false;
+                        const localPosition = this._localPosition;
+
+                        if (localPosition.x !== localPosition.x) {
+                            isError = true;
+                            localPosition.x = 0.0;
+                        }
+
+                        if (localPosition.y !== localPosition.y) {
+                            isError = true;
+                            localPosition.y = 0.0;
+                        }
+
+                        if (localPosition.z !== localPosition.z) {
+                            isError = true;
+                            localPosition.z = 0.0;
+                        }
+
+                        if (isError) {
+                            console.error("Error local position.");
+                        }
+                    }
+
+                    if (dirty & TransformDirty.Rotation) {
+                        let isError = false;
+                        const localRotation = this._localRotation;
+
+                        if (localRotation.x !== localRotation.x) {
+                            isError = true;
+                            localRotation.x = 0.0;
+                        }
+
+                        if (localRotation.y !== localRotation.y) {
+                            isError = true;
+                            localRotation.y = 0.0;
+                        }
+
+                        if (localRotation.z !== localRotation.z) {
+                            isError = true;
+                            localRotation.z = 0.0;
+                        }
+
+                        if (localRotation.w !== localRotation.w) {
+                            isError = true;
+                            localRotation.w = 0.0;
+                        }
+
+                        if (isError) {
+                            console.error("Error local rotation.");
+                        }
+                    }
+
+                    if (dirty & TransformDirty.Scale) {
+                        let isError = false;
+                        const localScale = this._localScale;
+
+                        if (localScale.x !== localScale.x) {
+                            isError = true;
+                            localScale.x = 0.0;
+                        }
+
+                        if (localScale.y !== localScale.y) {
+                            isError = true;
+                            localScale.y = 0.0;
+                        }
+
+                        if (localScale.z !== localScale.z) {
+                            isError = true;
+                            localScale.z = 0.0;
+                        }
+
+                        if (isError) {
+                            console.error("Error local scale.");
+                        }
+                    }
                 }
             }
 
@@ -409,15 +489,17 @@ namespace egret3d {
          */
         public setLocalPosition(x: number, y: number, z: number): this;
         public setLocalPosition(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
+            const localPosition = this._localPosition;
+
             if (p1.hasOwnProperty("x")) {
-                this._localPosition.x = (p1 as Readonly<IVector3>).x;
-                this._localPosition.y = (p1 as Readonly<IVector3>).y;
-                this._localPosition.z = (p1 as Readonly<IVector3>).z;
+                localPosition.x = (p1 as Readonly<IVector3>).x;
+                localPosition.y = (p1 as Readonly<IVector3>).y;
+                localPosition.z = (p1 as Readonly<IVector3>).z;
             }
             else {
-                this._localPosition.x = p1 as number;
-                this._localPosition.y = p2 || 0.0;
-                this._localPosition.z = p3 || 0.0;
+                localPosition.x = p1 as number;
+                localPosition.y = p2 || 0.0;
+                localPosition.z = p3 || 0.0;
             }
 
             this._dirtify(true, TransformDirty.Position);

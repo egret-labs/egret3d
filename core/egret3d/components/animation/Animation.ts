@@ -505,7 +505,7 @@ namespace egret3d {
             const outputBuffer = channel.outputBuffer;
             const frameIndex = channel.getFrameIndex(currentTime);
 
-            const activeSelf = outputBuffer[frameIndex] !== 0;
+            const activeSelf = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]) !== 0;
 
             if (Array.isArray(channel.components)) {
                 for (const component of channel.components as Transform[]) {

@@ -6,6 +6,16 @@ namespace examples {
             // Create camera.
             egret3d.Camera.main;
 
+            { // Create light.
+                const gameObject = paper.GameObject.create("Light");
+                gameObject.transform.setLocalPosition(1.0, 10.0, -1.0);
+                gameObject.transform.lookAt(egret3d.Vector3.ZERO);
+
+                const light = gameObject.addComponent(egret3d.DirectionalLight);
+                light.intensity = 0.5;
+                light.castShadows = true;
+            }
+
             paper.GameObject.globalGameObject.addComponent(Updater);
         }
     }
@@ -20,13 +30,13 @@ namespace examples {
         private readonly _holdCubes: { [key: string]: paper.GameObject } = {};
 
         public onAwake() {
-            this._cubeLeft.transform.setLocalPosition(-2.0, 1.0, 0.0);
-            this._cubeMiddle.transform.setLocalPosition(0.0, 1.0, 0.0);
-            this._cubeRight.transform.setLocalPosition(2.0, 1.0, 0.0);
+            this._cubeLeft.transform.setLocalPosition(-2.0, 1.0, 0.0).gameObject.renderer!.material = egret3d.DefaultMaterials.MESH_LAMBERT;
+            this._cubeMiddle.transform.setLocalPosition(0.0, 1.0, 0.0).gameObject.renderer!.material = egret3d.DefaultMaterials.MESH_LAMBERT;
+            this._cubeRight.transform.setLocalPosition(2.0, 1.0, 0.0).gameObject.renderer!.material = egret3d.DefaultMaterials.MESH_LAMBERT;
 
-            this._cubeBack.transform.setLocalPosition(-2.0, -1.0, 0.0);
-            this._cubeForward.transform.setLocalPosition(0.0, -1.0, 0.0);
-            this._cubeEraser.transform.setLocalPosition(2.0, -1.0, 0.0);
+            this._cubeBack.transform.setLocalPosition(-2.0, -1.0, 0.0).gameObject.renderer!.material = egret3d.DefaultMaterials.MESH_LAMBERT;
+            this._cubeForward.transform.setLocalPosition(0.0, -1.0, 0.0).gameObject.renderer!.material = egret3d.DefaultMaterials.MESH_LAMBERT;
+            this._cubeEraser.transform.setLocalPosition(2.0, -1.0, 0.0).gameObject.renderer!.material = egret3d.DefaultMaterials.MESH_LAMBERT;
         }
 
         public onUpdate() {
@@ -103,7 +113,9 @@ namespace examples {
 
             for (const pointer of inputCollecter.getDownPointers()) {
                 if (!(pointer.event!.pointerId in this._holdCubes)) {
-                    this._holdCubes[pointer.event!.pointerId] = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
+                    const cube = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
+                    cube.renderer!.material = egret3d.DefaultMaterials.MESH_LAMBERT;
+                    this._holdCubes[pointer.event!.pointerId] = cube;
                 }
             }
 
