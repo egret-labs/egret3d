@@ -1,6 +1,6 @@
 namespace paper.editor {
 
-    type Info = { uuid: string, linkid?: string, rootid?: string, prefab?: string };
+    type Info = { uuid: string, linkid?: string, rootid?: string, prefab?: string, components: { uuid: string, linkid?: string }[] };
     /**
      * 预置体结构状态
      * @author 杨宁
@@ -21,20 +21,34 @@ namespace paper.editor {
         }
         private static makePrefabInfo(gameOjbect: GameObject): Info[] {
             let isPrefabRoot = (gameObj: GameObject): boolean => {
-                if (gameObj.extras&&gameObj.extras.prefab) {
+                if (gameObj.extras && gameObj.extras.prefab) {
                     return true;
                 }
                 return false;
             }
             let isPrefabChild = (gameObj: GameObject): boolean => {
-                if (gameObj.extras&&gameObj.extras.rootID) {
+                if (gameObj.extras && gameObj.extras.rootID) {
                     return true;
                 }
                 return false;
             }
 
             let makeInfo = (target: GameObject, result: Info[] = []) => {
-                result.push({ uuid: target.uuid, linkid: target.extras!.linkedID, rootid: target.extras!.rootID, prefab: target.extras!.prefab!.name });
+                result.push({
+                    uuid: target.uuid,
+                    linkid: target.extras!.linkedID,
+                    rootid: target.extras!.rootID,
+                    prefab: target.extras!.prefab ? target.extras!.prefab!.name : undefined,
+                    components: (() => {
+                        let list = [];
+                        for (let comp of target.components) {
+                            if (comp.extras && comp.extras.linkedID) {
+                                list.push({ uuid: comp.uuid, linkid: comp.extras.linkedID })
+                            }
+                        }
+                        return list
+                    })()
+                });
                 target.transform.children.forEach(transform => {
                     let obj = transform.gameObject;
                     if (isPrefabChild(obj) && !isPrefabRoot(obj)) {
@@ -66,6 +80,11 @@ namespace paper.editor {
                 obj.extras!.linkedID = undefined;
                 obj.extras!.prefab = undefined;
                 obj.extras!.rootID = undefined;
+                for(let comp of obj.components){
+                    if(comp.extras&&comp.extras.linkedID){
+                        comp.extras.linkedID=undefined;
+                    }
+                }
                 this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: null });
             });
             return true;
@@ -78,8 +97,16 @@ namespace paper.editor {
                     let info = this.prefabInfos[k];
                     if (obj.uuid === info.uuid) {
                         obj.extras!.linkedID = info.linkid;
-                        obj.extras!.prefab = paper.Asset.find(info.prefab!) as paper.Prefab;
+                        obj.extras!.prefab = info.prefab ? paper.Asset.find(info.prefab!) as paper.Prefab : undefined;
                         obj.extras!.rootID = info.rootid;
+                        for (let comp of obj.components) {
+                            c:for (let compInfo of info.components) {
+                                if (comp.uuid === compInfo.uuid) {
+                                    comp.extras!.linkedID = compInfo.linkid;
+                                    break c;
+                                }
+                            }
+                        }
                         this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: obj.extras!.prefab });
                         break b;
                     }
