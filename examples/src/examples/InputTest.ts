@@ -144,9 +144,9 @@ namespace examples {
                 console.log("KeyDown", key.event!.code, key.event!.key, key.event!.keyCode);
             }
 
-            // for (const key of inputCollecter.getUpKeys()) {
-            //     console.log("KeyUp", key.event!.code, key.event!.key);
-            // }
+            for (const key of inputCollecter.getUpKeys()) {
+                console.log("KeyUp", key.event!.code, key.event!.key, key.event!.keyCode);
+            }
         }
     }
 }
