@@ -296,10 +296,11 @@ namespace egret3d {
         }
 
         public update(drawCall: DrawCall) {
+            this.drawCall = drawCall;
             const renderer = drawCall.renderer;
             // const scene = renderer.gameObject.scene;
             const scene = paper.Scene.activeScene;
-            const matrix = drawCall.matrix || renderer.gameObject.transform.localToWorldMatrix;
+            const matrix = drawCall.matrix || (renderer ? renderer.gameObject.transform.localToWorldMatrix : Matrix4.IDENTITY);
             this.drawCall = drawCall;
             this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
             this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
@@ -309,6 +310,7 @@ namespace egret3d {
             this.shaderContextDefine = "";
 
             if (
+                renderer &&
                 renderer.lightmapIndex >= 0 &&
                 scene.lightmaps.length > renderer.lightmapIndex
             ) {
@@ -335,13 +337,10 @@ namespace egret3d {
                     this.shaderContextDefine += "#define NUM_SPOT_LIGHTS " + this.spotLightCount + "\n";
                 }
 
-                if (renderer.receiveShadows) {
+                if (renderer && renderer.receiveShadows) {
                     this.shaderContextDefine += "#define USE_SHADOWMAP \n";
                     this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
-                
-                // this.shaderContextDefine += "#define OBJECTSPACE_NORMALMAP \n";  //TODO 根据参数生成define
-                // this.shaderContextDefine += "#define FLAT_SHADED \n";
             }
 
             const fog = scene.fog;
@@ -349,11 +348,11 @@ namespace egret3d {
                 this.fogColor[0] = fog.color.r;
                 this.fogColor[1] = fog.color.g;
                 this.fogColor[2] = fog.color.b;
-                this.shaderContextDefine += "#define USE_FOG \n";
+                this.shaderContextDefine += "#define USE_FOG \n";//TODO 根据参数生成define
 
                 if (fog.mode === FogMode.FOG_EXP2) {
                     this.fogDensity = fog.density;
-                    this.shaderContextDefine += "#define FOG_EXP2 \n";
+                    this.shaderContextDefine += "#define FOG_EXP2 \n";//TODO 根据参数生成define
                 }
                 else {
                     this.fogNear = fog.near;
@@ -361,7 +360,7 @@ namespace egret3d {
                 }
             }
 
-            if (renderer.constructor === SkinnedMeshRenderer && !(renderer as SkinnedMeshRenderer).forceCPUSkin) {
+            if (renderer && renderer.constructor === SkinnedMeshRenderer && !(renderer as SkinnedMeshRenderer).forceCPUSkin) {
                 this.shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, (renderer as SkinnedMeshRenderer).bones.length)} \n`;
             }
         }

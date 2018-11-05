@@ -30,7 +30,7 @@ const config: ResourceManagerConfig = {
             return {
                 outputDir,
                 commands: [
-                    new MergeJSONPlugin({ nameSelector, mergeJSONSelector }),
+                    // new MergeJSONPlugin({ nameSelector, mergeJSONSelector }),
                     new EmitResConfigFilePlugin({
                         output: bakeInfo.root + "default.res.json",
                         typeSelector: config.typeSelector,

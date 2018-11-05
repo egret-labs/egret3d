@@ -238,6 +238,10 @@ namespace egret3d {
         return valueA.center.getSquaredDistance(valueB.center) <= (radiusSum * radiusSum);
     }
 
+    export function isPowerOfTwo(value: number): boolean {
+        return (value & (value - 1)) === 0 && value !== 0;
+    }
+
     /**
      * @deprecated
      */

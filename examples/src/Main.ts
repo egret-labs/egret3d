@@ -4,9 +4,14 @@ declare class Examples {
 
 async function main() {
     if (RELEASE) {
-        RES.processor.map("json", new JSONProcessor());
+        // RES.processor.map("json", new JSONProcessor());
     }
-
+    //  // Load resource config.
+    //  await RES.loadConfig("default.res.json", "http://10.1.1.240:8000/resource/sniper/");
+    //  // Load scene resource.
+    //  await RES.getResAsync("Assets/Scenes/venture101.scene.json");
+    //  // Create scene.
+    //  paper.Scene.create("Assets/Scenes/venture101.scene.json", false);
     exampleStart();
     // new examples.SceneTest().start();
     // new examples.EUITest().start();
