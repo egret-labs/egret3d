@@ -321,14 +321,13 @@ namespace egret3d {
             const clipToWorldMatrix = this._updateClipToWorldMatrix(asp);
 
             const backupZ = stagePosition.z;
-            const matchFactor = stage.matchFactor;
-            const stageSize = stage.size;
-            const stageViewport = stage.viewport;
-            const viewport = this.viewport; // TODO
+            const viewport = this.viewport;
+            const kX = viewport.w / vpp.w * 2.0;
+            const kY = viewport.h / vpp.h * 2.0;
 
             worldPosition.set(
-                (stagePosition.x * math.lerp(stageViewport.w / stageSize.w, 1.0, matchFactor) / vpp.w * 2.0 - 1.0),
-                (1.0 - stagePosition.y * math.lerp(1.0, stageViewport.h / stageSize.h, matchFactor) / vpp.h * 2.0),
+                (stagePosition.x * kX - 1.0),
+                (1.0 - stagePosition.y * kY),
                 0.95,
             ).applyMatrix(clipToWorldMatrix);
 
@@ -363,9 +362,11 @@ namespace egret3d {
             const vpp = _helpRectA;
             const asp = this.calcViewPortPixel(vpp);
             const worldToClipMatrix = this.calcProjectMatrix(asp, this._worldToClipMatrix).multiply(this.gameObject.transform.worldToLocalMatrix);
+            const viewport = this.viewport;
+
             stagePosition.applyMatrix(worldToClipMatrix, worldPosition);
-            stagePosition.x = (stagePosition.x + 1.0) * vpp.w * 0.5 / this.viewport.w;
-            stagePosition.y = (1.0 - stagePosition.y) * vpp.h * 0.5 / this.viewport.h;
+            stagePosition.x = (stagePosition.x + 1.0) * vpp.w * 0.5 / viewport.w;
+            stagePosition.y = (1.0 - stagePosition.y) * vpp.h * 0.5 / viewport.h;
             // stagePosition.z = TODO
 
             return stagePosition;
@@ -381,22 +382,23 @@ namespace egret3d {
             if (!ray) {
                 ray = Ray.create();
             }
-            // TODO
-            const matchFactor = stage.matchFactor;
-            const viewport = this.viewport;
 
             const vpp = _helpRectA;
             const asp = this.calcViewPortPixel(vpp);
             const clipToWorldMatrix = this._updateClipToWorldMatrix(asp);
 
+            const viewport = this.viewport;
+            const kX = viewport.w / vpp.w * 2.0;
+            const kY = viewport.h / vpp.h * 2.0;
+
             ray.origin.set(
-                stageX / vpp.w * 2.0 - 1.0,
-                1.0 - stageY / vpp.h * 2.0,
+                stageX * kX - 1.0,
+                1.0 - stageY * kY,
                 0.0,
             ).applyMatrix(clipToWorldMatrix);
             ray.direction.set(
-                stageX / vpp.w * 2.0 - 1.0,
-                1.0 - stageY / vpp.h * 2.0,
+                stageX * kX - 1.0,
+                1.0 - stageY * kY,
                 1.0,
             ).applyMatrix(clipToWorldMatrix).subtract(ray.origin).normalize();
 

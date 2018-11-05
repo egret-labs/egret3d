@@ -2668,17 +2668,18 @@ var egret3d;
         /**
          * @deprecated
          */
-        Matrix4.perspectiveProjectLH = function (fov, aspect, znear, zfar, out) {
-            var tan = 1.0 / (Math.tan(fov * 0.5));
-            out.rawData[0] = tan / aspect;
+        Matrix4.perspectiveProjectLH = function (left, right, top, bottom, near, far, out) {
+            var x = 2 * near / (right - left);
+            var y = 2 * near / (top - bottom);
+            out.rawData[0] = x;
             out.rawData[1] = out.rawData[2] = out.rawData[3] = 0.0;
             out.rawData[4] = out.rawData[6] = out.rawData[7] = 0.0;
-            out.rawData[5] = tan;
+            out.rawData[5] = y;
             out.rawData[8] = out.rawData[9] = 0.0;
-            out.rawData[10] = (zfar + znear) / (zfar - znear);
+            out.rawData[10] = (far + near) / (far - near);
             out.rawData[11] = 1.0;
             out.rawData[12] = out.rawData[13] = out.rawData[15] = 0.0;
-            out.rawData[14] = -2 * (znear * zfar) / (zfar - znear);
+            out.rawData[14] = -2 * (near * far) / (far - near);
             return out;
         };
         /**
@@ -4048,6 +4049,10 @@ var egret3d;
             }
         }
         math.clamp = clamp;
+        function lerp(from, to, t) {
+            return from * (1.0 - t) + to * t;
+        }
+        math.lerp = lerp;
     })(math = egret3d.math || (egret3d.math = {}));
     /**
      * 内联的数字常数枚举。
@@ -5115,6 +5120,10 @@ var paper;
              */
             this.order = -1;
             /**
+             * 该系统在调试模式时每帧消耗的时间，仅用于性能统计。（以毫秒为单位）
+             */
+            this.deltaTime = 0;
+            /**
              * @private
              */
             this._started = true;
@@ -5123,6 +5132,7 @@ var paper;
              * 该系统是否被激活。
              */
             this._enabled = true;
+            this._startTime = 0;
             /**
              *
              */
@@ -5215,6 +5225,10 @@ var paper;
             if (!this._enabled || !this._started) {
                 return;
             }
+            if (true) {
+                this._startTime = this._clock.now;
+                this.deltaTime = 0;
+            }
             this._locked = true;
             for (var _i = 0, _a = this._groups; _i < _a.length; _i++) {
                 var group = _a[_i];
@@ -5237,18 +5251,27 @@ var paper;
             }
             this.onUpdate && this.onUpdate(this._clock.deltaTime);
             this._locked = false;
+            if (true) {
+                this.deltaTime += this._clock.now - this._startTime;
+            }
         };
         /**
          * 系统内部更新。
          * @private
          */
         BaseSystem.prototype.lateUpdate = function () {
-            if (!this._enabled) {
+            if (!this._enabled || !this._started) {
                 return;
+            }
+            if (true) {
+                this._startTime = this._clock.now;
             }
             this._locked = true;
             this.onLateUpdate && this.onLateUpdate(this._clock.deltaTime);
             this._locked = false;
+            if (true) {
+                this.deltaTime += this._clock.now - this._startTime;
+            }
         };
         Object.defineProperty(BaseSystem.prototype, "enabled", {
             /**
@@ -6947,7 +6970,7 @@ var paper;
         Clock.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             paper.Time = paper.clock = this;
-            this._beginTime = Date.now() * 0.001;
+            this._beginTime = this.now * 0.001;
         };
         /**
          * @internal
@@ -6964,7 +6987,7 @@ var paper;
                     this._fixedTime -= this.fixedDeltaTime * this.maxFixedSubSteps;
                 }
             }
-            var now = time || Date.now() * 0.001;
+            var now = time || this.now * 0.001;
             this._frameCount += 1;
             this._unscaledTime = now - this._beginTime;
             this._unscaledDeltaTime = this._unscaledTime - this._lastTime;
@@ -6973,6 +6996,22 @@ var paper;
         Object.defineProperty(Clock.prototype, "frameCount", {
             get: function () {
                 return this._frameCount;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Clock.prototype, "now", {
+            /**
+             * 系统时间。（以毫秒为单位）
+             */
+            get: function () {
+                if (window.performance) {
+                    return window.performance.now();
+                }
+                if (Date.now) {
+                    return Date.now();
+                }
+                return new Date().getTime();
             },
             enumerable: true,
             configurable: true
@@ -9832,13 +9871,9 @@ var egret3d;
              * 当舞台尺寸改变时派发事件。
              */
             _this.onResize = new signals.Signal();
-            /**
-             * 渲染视口与舞台尺寸之间的缩放系数。
-             * - scaler = viewport.w / size.w
-             */
             _this.scaler = 1.0;
-            _this._isLandspace = false;
             _this._rotated = false;
+            _this._matchFactor = 1.0;
             _this._screenSize = { w: 1024, h: 1024 };
             _this._size = { w: 1024, h: 1024 };
             _this._viewport = { x: 0, y: 0, w: 0, h: 0 };
@@ -9849,31 +9884,27 @@ var egret3d;
             var size = this._size;
             var viewport = this._viewport;
             if (paper.Application.isMobile) {
-                viewport.w = Math.ceil(size.w);
-                if (this._rotated = this._isLandspace ? screenSize.h > screenSize.w : screenSize.w > screenSize.h) {
-                    viewport.h = Math.ceil(viewport.w / screenSize.h * screenSize.w);
-                    if (viewport.h !== viewport.h) {
-                        viewport.h = screenSize.w;
-                    }
+                var screenW = screenSize.w;
+                var screenH = screenSize.h;
+                if (this._rotated = (size.w > size.h) ? screenSize.h > screenSize.w : screenSize.w > screenSize.h) {
+                    screenW = screenSize.h;
+                    screenH = screenSize.w;
                 }
-                else {
-                    viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
-                    if (viewport.h !== viewport.h) {
-                        viewport.h = screenSize.h;
-                    }
-                }
-                this.scaler = 1.0;
+                var scalerW = size.w / screenW;
+                var scalerH = size.h / screenH;
+                this.scaler = egret3d.math.lerp(scalerW, scalerH, this._matchFactor);
+                viewport.w = Math.ceil(screenW * this.scaler);
+                viewport.h = Math.ceil(screenH * this.scaler);
             }
             else {
+                var scalerW = Math.min(size.w, screenSize.w) / screenSize.w;
+                var scalerH = size.h / screenSize.h;
+                this.scaler = egret3d.math.lerp(scalerW, scalerH, this._matchFactor);
                 this._rotated = false;
-                viewport.w = Math.ceil(Math.min(size.w, screenSize.w));
-                viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
-                if (viewport.h !== viewport.h) {
-                    viewport.h = screenSize.h;
-                }
-                this.scaler = viewport.w / size.w;
+                viewport.w = Math.ceil(screenSize.w * this.scaler);
+                viewport.h = Math.ceil(screenSize.h * this.scaler);
             }
-            size.h = viewport.h / this.scaler;
+            // size.h = viewport.h / this.scaler;
         };
         Stage.prototype.initialize = function (config) {
             _super.prototype.initialize.call(this);
@@ -9882,7 +9913,6 @@ var egret3d;
             this._size.h = config.size.h || 2.0;
             this._screenSize.w = config.screenSize.w || 2.0;
             this._screenSize.h = config.screenSize.h || 2.0;
-            this._isLandspace = this._size.w > this._size.h;
             this._updateViewport();
         };
         /**
@@ -9912,10 +9942,28 @@ var egret3d;
         Object.defineProperty(Stage.prototype, "rotated", {
             /**
              * 舞台是否因屏幕尺寸的改变而发生了旋转。
-             * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终以舞台宽度为依据。
+             * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转。
              */
             get: function () {
                 return this._rotated;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Stage.prototype, "matchFactor", {
+            /**
+             * 以宽或高适配的系数。
+             */
+            get: function () {
+                return this._matchFactor;
+            },
+            set: function (value) {
+                if (this._matchFactor === value) {
+                    return;
+                }
+                this._matchFactor = value;
+                this._updateViewport();
+                this.onResize.dispatch();
             },
             enumerable: true,
             configurable: true
@@ -9938,7 +9986,7 @@ var egret3d;
         });
         Object.defineProperty(Stage.prototype, "size", {
             /**
-             * 舞台尺寸。
+             * 舞台初始尺寸。
              */
             get: function () {
                 return this._size;
@@ -9946,7 +9994,6 @@ var egret3d;
             set: function (value) {
                 this._size.w = value.w || 2.0;
                 this._size.h = value.h || 2.0;
-                this._isLandspace = this._size.w > this._size.h;
                 this._updateViewport();
                 this.onResize.dispatch();
             },
@@ -9976,6 +10023,9 @@ var egret3d;
         __decorate([
             paper.editor.property("CHECKBOX" /* CHECKBOX */, { readonly: true })
         ], Stage.prototype, "rotated", null);
+        __decorate([
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 1.0 })
+        ], Stage.prototype, "matchFactor", null);
         __decorate([
             paper.editor.property("SIZE" /* SIZE */)
         ], Stage.prototype, "screenSize", null);
@@ -13002,7 +13052,7 @@ var egret3d;
              */
             _this.opvalue = 1.0;
             /**
-             * 正交投影的竖向size
+             * 正交投影的尺寸。
              */
             _this.size = 2.0;
             /**
@@ -13087,6 +13137,7 @@ var egret3d;
         };
         /**
          * 计算相机视锥区域
+         * TODO
          */
         Camera.prototype._calcCameraFrame = function () {
             var vpp = _helpRectA;
@@ -13099,18 +13150,30 @@ var egret3d;
             var nearLT = this._frameVectors[5];
             var farRT = this._frameVectors[6];
             var nearRT = this._frameVectors[7];
-            var near_h = this.near * Math.tan(this.fov * 0.5);
-            var near_w = near_h * asp;
-            nearLT.set(-near_w, near_h, this.near);
-            nearLD.set(-near_w, -near_h, this.near);
-            nearRT.set(near_w, near_h, this.near);
-            nearRD.set(near_w, -near_h, this.near);
-            var far_h = this.far * Math.tan(this.fov * 0.5);
-            var far_w = far_h * asp;
-            farLT.set(-far_w, far_h, this.far);
-            farLD.set(-far_w, -far_h, this.far);
-            farRT.set(far_w, far_h, this.far);
-            farRD.set(far_w, -far_h, this.far);
+            var near = this.near;
+            var far = this.far;
+            var matchFactor = egret3d.stage.matchFactor;
+            var tan = Math.tan(this.fov * 0.5);
+            var nearHX = near * tan;
+            var nearWX = nearHX * asp;
+            var nearWY = near * tan;
+            var nearHY = nearWY / asp;
+            var farHX = far * tan;
+            var farWX = farHX * asp;
+            var farWY = far * tan;
+            var farHY = farWY / asp;
+            var nearWidth = egret3d.math.lerp(nearWY, nearWX, matchFactor);
+            var nearHeight = egret3d.math.lerp(nearHY, nearHX, matchFactor);
+            var farWidth = egret3d.math.lerp(farWY, farWX, matchFactor);
+            var farHeight = egret3d.math.lerp(farHY, farHX, matchFactor);
+            nearLT.set(-nearWidth, nearHeight, near);
+            nearLD.set(-nearWidth, -nearHeight, near);
+            nearRT.set(nearWidth, nearHeight, near);
+            nearRD.set(nearWidth, -nearHeight, near);
+            farLT.set(-farWidth, farHeight, far);
+            farLD.set(-farWidth, -farHeight, far);
+            farRT.set(farWidth, farHeight, far);
+            farRD.set(farWidth, -farHeight, far);
             var worldMatrix = this.gameObject.transform.localToWorldMatrix;
             farLD.applyMatrix(worldMatrix);
             nearLD.applyMatrix(worldMatrix);
@@ -13158,11 +13221,31 @@ var egret3d;
          * TODO
          */
         Camera.prototype.calcProjectMatrix = function (asp, matrix) {
+            var matchFactor = 1.0 - egret3d.stage.matchFactor;
             if (this.opvalue > 0.0) {
-                egret3d.Matrix4.perspectiveProjectLH(this.fov, asp, this.near, this.far, this._projectionMatrix);
+                var tan = Math.tan(this.fov * 0.5);
+                var topX = this.near * tan;
+                var heightX = 2.0 * topX;
+                var widthX = asp * heightX;
+                var leftX = -0.5 * widthX;
+                var leftY = -this.near * tan;
+                var widthY = 2.0 * -leftY;
+                var heightY = widthY / asp;
+                var topY = 0.5 * heightY;
+                var top_1 = topX + (topY - topX) * matchFactor;
+                var left = leftX + (leftY - leftX) * matchFactor;
+                var width = widthX + (widthY - widthX) * matchFactor;
+                var height = heightX + (heightY - heightX) * matchFactor;
+                egret3d.Matrix4.perspectiveProjectLH(left, left + width, top_1, top_1 - height, this.near, this.far, this._projectionMatrix);
             }
             if (this.opvalue < 1.0) {
-                egret3d.Matrix4.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this._matProjO);
+                var widthX = this.size * asp;
+                var heightX = this.size;
+                var widthY = this.size;
+                var heightY = this.size / asp;
+                var width = widthX + (widthY - widthX) * matchFactor;
+                var height = heightX + (heightY - heightX) * matchFactor;
+                egret3d.Matrix4.orthoProjectLH(width, height, this.near, this.far, this._matProjO);
             }
             if (this.opvalue === 0.0) {
                 matrix.copy(this._matProjO);
@@ -13185,10 +13268,13 @@ var egret3d;
                 worldPosition = egret3d.Vector3.create();
             }
             var vpp = _helpRectA;
-            var scaler = egret3d.stage.scaler;
             var asp = this.calcViewPortPixel(vpp);
             var clipToWorldMatrix = this._updateClipToWorldMatrix(asp);
-            worldPosition.set(stagePosition.x * scaler / vpp.w * 2.0 - 1.0, 1.0 - stagePosition.y * scaler / vpp.h * 2.0, 0.95).applyMatrix(clipToWorldMatrix);
+            var backupZ = stagePosition.z;
+            var viewport = this.viewport;
+            var kX = viewport.w / vpp.w * 2.0;
+            var kY = viewport.h / vpp.h * 2.0;
+            worldPosition.set((stagePosition.x * kX - 1.0), (1.0 - stagePosition.y * kY), 0.95).applyMatrix(clipToWorldMatrix);
             var transform = this.gameObject.transform;
             var position = transform.position;
             var forward = transform.getForward().multiplyScalar(-1.0).release();
@@ -13199,7 +13285,7 @@ var egret3d;
                     // worldPosition.subtract(vppos, forward.multiplyScalar(distanceToPlane - stagePosition.z));
                 }
                 else {
-                    worldPosition.multiplyScalar(-stagePosition.z / distanceToPlane).add(position);
+                    worldPosition.multiplyScalar(-backupZ / distanceToPlane).add(position);
                 }
             }
             return worldPosition;
@@ -13216,9 +13302,10 @@ var egret3d;
             var vpp = _helpRectA;
             var asp = this.calcViewPortPixel(vpp);
             var worldToClipMatrix = this.calcProjectMatrix(asp, this._worldToClipMatrix).multiply(this.gameObject.transform.worldToLocalMatrix);
+            var viewport = this.viewport;
             stagePosition.applyMatrix(worldToClipMatrix, worldPosition);
-            stagePosition.x = (stagePosition.x + 1.0) * vpp.w * 0.5;
-            stagePosition.y = (1.0 - stagePosition.y) * vpp.h * 0.5;
+            stagePosition.x = (stagePosition.x + 1.0) * vpp.w * 0.5 / viewport.w;
+            stagePosition.y = (1.0 - stagePosition.y) * vpp.h * 0.5 / viewport.h;
             // stagePosition.z = TODO
             return stagePosition;
         };
@@ -13235,8 +13322,11 @@ var egret3d;
             var vpp = _helpRectA;
             var asp = this.calcViewPortPixel(vpp);
             var clipToWorldMatrix = this._updateClipToWorldMatrix(asp);
-            ray.origin.set(stageX / vpp.w * 2.0 - 1.0, 1.0 - stageY / vpp.h * 2.0, 0.0).applyMatrix(clipToWorldMatrix);
-            ray.direction.set(stageX / vpp.w * 2.0 - 1.0, 1.0 - stageY / vpp.h * 2.0, 1.0).applyMatrix(clipToWorldMatrix).subtract(ray.origin).normalize();
+            var viewport = this.viewport;
+            var kX = viewport.w / vpp.w * 2.0;
+            var kY = viewport.h / vpp.h * 2.0;
+            ray.origin.set(stageX * kX - 1.0, 1.0 - stageY * kY, 0.0).applyMatrix(clipToWorldMatrix);
+            ray.direction.set(stageX * kX - 1.0, 1.0 - stageY * kY, 1.0).applyMatrix(clipToWorldMatrix).subtract(ray.origin).normalize();
             return ray;
         };
         /**
@@ -13400,7 +13490,7 @@ var egret3d;
         ], Camera.prototype, "backgroundColor", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property("RECT" /* RECT */)
+            paper.editor.property("RECT" /* RECT */, { step: 0.01 })
         ], Camera.prototype, "viewport", void 0);
         __decorate([
             paper.serializedField
@@ -13869,6 +13959,7 @@ var egret3d;
         };
         Egret2DRenderer.prototype.recalculateLocalBox = function () {
             // TODO
+            this._localBoundingBox.size = egret3d.Vector3.ZERO;
         };
         Egret2DRenderer.prototype.raycast = function (p1, p2, p3) {
             // TODO
@@ -14478,227 +14569,6 @@ var egret;
 var egret3d;
 (function (egret3d) {
     /**
-     * ConstantAdapter
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 恒定像素的适配策略
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var ConstantAdapter = (function () {
-        function ConstantAdapter() {
-            this.$dirty = true;
-            this._scaleFactor = 1;
-        }
-        Object.defineProperty(ConstantAdapter.prototype, "scaleFactor", {
-            /**
-             * scaleFactor
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 设置缩放值
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            set: function (value) {
-                this._scaleFactor = value;
-                this.$dirty = true;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        ConstantAdapter.prototype.calculateScaler = function (canvasWidth, canvasHeight, out) {
-            var scaler = this._scaleFactor;
-            out.s = scaler;
-            out.w = canvasWidth / scaler;
-            out.h = canvasHeight / scaler;
-        };
-        return ConstantAdapter;
-    }());
-    egret3d.ConstantAdapter = ConstantAdapter;
-    __reflect(ConstantAdapter.prototype, "egret3d.ConstantAdapter", ["egret3d.IScreenAdapter"]);
-    /**
-     * ConstantAdapter
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 拉伸扩展的适配策略
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var ExpandAdapter = (function () {
-        function ExpandAdapter() {
-            this.$dirty = true;
-            this._resolution = new egret3d.Vector2(640, 1136);
-        }
-        /**
-         * setResolution
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置分辨率
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        ExpandAdapter.prototype.setResolution = function (width, height) {
-            this._resolution.x = width;
-            this._resolution.y = height;
-            this.$dirty = true;
-        };
-        ExpandAdapter.prototype.calculateScaler = function (canvasWidth, canvasHeight, out) {
-            var canvasRate = canvasWidth / canvasHeight;
-            var resolutionRate = this._resolution.x / this._resolution.y;
-            var scaler = 1;
-            if (canvasRate > resolutionRate) {
-                scaler = canvasHeight / this._resolution.y;
-            }
-            else {
-                scaler = canvasWidth / this._resolution.x;
-            }
-            out.s = scaler;
-            out.w = canvasWidth / scaler;
-            out.h = canvasHeight / scaler;
-        };
-        return ExpandAdapter;
-    }());
-    egret3d.ExpandAdapter = ExpandAdapter;
-    __reflect(ExpandAdapter.prototype, "egret3d.ExpandAdapter", ["egret3d.IScreenAdapter"]);
-    /**
-     * ShrinkAdapter
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 缩放的适配策略
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var ShrinkAdapter = (function () {
-        function ShrinkAdapter() {
-            this.$dirty = true;
-            this._resolution = new egret3d.Vector2(640, 1136);
-        }
-        /**
-         * setResolution
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置分辨率
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        ShrinkAdapter.prototype.setResolution = function (width, height) {
-            this._resolution.x = width;
-            this._resolution.y = height;
-            this.$dirty = true;
-        };
-        ShrinkAdapter.prototype.calculateScaler = function (canvasWidth, canvasHeight, out) {
-            var canvasRate = canvasWidth / canvasHeight;
-            var resolutionRate = this._resolution.x / this._resolution.y;
-            var scaler = 1;
-            if (canvasRate > resolutionRate) {
-                scaler = canvasWidth / this._resolution.x;
-            }
-            else {
-                scaler = canvasHeight / this._resolution.y;
-            }
-            out.s = scaler;
-            out.w = canvasWidth / scaler;
-            out.h = canvasHeight / scaler;
-        };
-        return ShrinkAdapter;
-    }());
-    egret3d.ShrinkAdapter = ShrinkAdapter;
-    __reflect(ShrinkAdapter.prototype, "egret3d.ShrinkAdapter", ["egret3d.IScreenAdapter"]);
-    /**
-     * MatchWidthOrHeightAdapter
-     * @version paper 1.0
-     * @platform Web
-     * @language en_US
-     */
-    /**
-     * 适应宽高适配策略
-     * @version paper 1.0
-     * @platform Web
-     * @language zh_CN
-     */
-    var MatchWidthOrHeightAdapter = (function () {
-        function MatchWidthOrHeightAdapter() {
-            this.$dirty = true;
-            this._resolution = new egret3d.Vector2(640, 1136);
-            this._matchFactor = 0; // width : height
-        }
-        /**
-         * setResolution
-         * @version paper 1.0
-         * @platform Web
-         * @language en_US
-         */
-        /**
-         * 设置分辨率
-         * @version paper 1.0
-         * @platform Web
-         * @language zh_CN
-         */
-        MatchWidthOrHeightAdapter.prototype.setResolution = function (width, height) {
-            this._resolution.x = width;
-            this._resolution.y = height;
-            this.$dirty = true;
-        };
-        Object.defineProperty(MatchWidthOrHeightAdapter.prototype, "matchFactor", {
-            /**
-             * matchFactor
-             * @version paper 1.0
-             * @platform Web
-             * @language en_US
-             */
-            /**
-             * 设置匹配系数，0-1之间，越小越倾向以宽度适配，越大越倾向以高度适配。
-             * @version paper 1.0
-             * @platform Web
-             * @language zh_CN
-             */
-            set: function (value) {
-                this._matchFactor = value;
-                this.$dirty = true;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        MatchWidthOrHeightAdapter.prototype.calculateScaler = function (canvasWidth, canvasHeight, out) {
-            var scaler1 = canvasWidth / this._resolution.x;
-            var scaler2 = canvasHeight / this._resolution.y;
-            var scaler = scaler1 + (scaler2 - scaler1) * this._matchFactor;
-            out.s = scaler;
-            out.w = canvasWidth / scaler;
-            out.h = canvasHeight / scaler;
-        };
-        return MatchWidthOrHeightAdapter;
-    }());
-    egret3d.MatchWidthOrHeightAdapter = MatchWidthOrHeightAdapter;
-    __reflect(MatchWidthOrHeightAdapter.prototype, "egret3d.MatchWidthOrHeightAdapter", ["egret3d.IScreenAdapter"]);
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
      *
      * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
      */
@@ -14771,6 +14641,33 @@ var egret3d;
     }());
     egret3d.Curve3 = Curve3;
     __reflect(Curve3.prototype, "egret3d.Curve3");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * 雾。
+     */
+    var Shadow = (function () {
+        /**
+         * 禁止实例化。
+         */
+        function Shadow() {
+        }
+        /**
+         * @internal
+         */
+        Shadow.create = function () {
+            return new Shadow();
+        };
+        Shadow.prototype.serialize = function () {
+            return [];
+        };
+        Shadow.prototype.deserialize = function (data) {
+        };
+        return Shadow;
+    }());
+    egret3d.Shadow = Shadow;
+    __reflect(Shadow.prototype, "egret3d.Shadow", ["paper.ISerializable"]);
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -20936,7 +20833,7 @@ var egret3d;
         MeshBuilder.createCircle = function (radius, arc, axis) {
             if (radius === void 0) { radius = 0.5; }
             if (arc === void 0) { arc = 1.0; }
-            if (axis === void 0) { axis = 1; }
+            if (axis === void 0) { axis = 3; }
             var vertices = [];
             for (var i = 0; i <= 64 * arc; ++i) {
                 switch (axis) {
@@ -20965,7 +20862,7 @@ var egret3d;
             if (radialSegments === void 0) { radialSegments = 4; }
             if (tubularSegments === void 0) { tubularSegments = 12; }
             if (arc === void 0) { arc = 1.0; }
-            if (axis === void 0) { axis = 1; }
+            if (axis === void 0) { axis = 3; }
             var indices = [];
             var vertices = [];
             var normals = [];
@@ -23022,148 +22919,6 @@ var egret3d;
         utils.getRelativePath = getRelativePath;
     })(utils = egret3d.utils || (egret3d.utils = {}));
 })(egret3d || (egret3d = {}));
-var Stats;
-(function (Stats_1) {
-    var stats;
-    var loop;
-    /**
-     * 显示调试面板
-     */
-    function show(container, refreshTime) {
-        if (refreshTime === void 0) { refreshTime = 500; }
-        if (stats == null) {
-            stats = new Stats();
-            stats.container.style.position = 'absolute';
-            stats.container.style.left = '0px';
-            stats.container.style.top = '0px';
-            container.appendChild(stats.container);
-        }
-        else {
-            container.appendChild(stats.container);
-        }
-        if (loop) {
-            hide();
-        }
-        loop = setInterval(function () {
-            stats.update();
-        }, refreshTime);
-        egret3d.Performance.enable = true;
-    }
-    Stats_1.show = show;
-    /**
-     * 关闭调试面板
-     */
-    function hide() {
-        if (loop) {
-            clearInterval(loop);
-        }
-        if (stats != null && stats.container.parentNode) {
-            stats.container.parentNode.removeChild(stats.container);
-        }
-        egret3d.Performance.enable = false;
-    }
-    Stats_1.hide = hide;
-    /**
-     *
-     * @author mrdoob / http://mrdoob.com/
-     * @modify egret
-     */
-    var Stats = (function () {
-        function Stats() {
-            var _this = this;
-            this.mode = 0;
-            this.container = document.createElement('div');
-            this.container.style.cssText = 'position:fixed;top:0;left:0;cursor:pointer;opacity:0.7;z-index:1';
-            this.container.addEventListener('click', function (event) {
-                event.preventDefault();
-                _this.showPanel(++_this.mode % _this.container.children.length);
-            }, false);
-            this.fpsPanel = this.addPanel(new Panel('FPS', '#0ff', '#002'));
-            this.msPanel = this.addPanel(new Panel('MS', '#0f0', '#020'));
-            this.renderPanel = this.addPanel(new Panel('R%', '#0f0', '#020'));
-            if (self.performance && self.performance["memory"]) {
-                this.memPanel = this.addPanel(new Panel('MB', '#f08', '#201'));
-            }
-            this.showPanel(0);
-        }
-        Stats.prototype.update = function () {
-            var fps = egret3d.Performance.getFPS();
-            var fpsEntity = egret3d.Performance.getEntity("fps");
-            var allEntity = egret3d.Performance.getEntity("all");
-            var renderEntity = egret3d.Performance.getEntity("render");
-            this.fpsPanel.update(fps, 100);
-            this.msPanel.update(allEntity.delta, 200);
-            this.renderPanel.update(Math.floor(renderEntity.delta / fpsEntity.delta * 100), 100);
-            if (this.memPanel) {
-                var memory = performance["memory"];
-                this.memPanel.update(memory.usedJSHeapSize / 1048576, memory.jsHeapSizeLimit / 1048576);
-            }
-        };
-        Stats.prototype.showPanel = function (id) {
-            for (var i = 0; i < this.container.children.length; i++) {
-                this.container.children[i]["style"].display = i === id ? 'block' : 'none';
-            }
-            this.mode = id;
-        };
-        Stats.prototype.addPanel = function (panel) {
-            this.container.appendChild(panel.canvas);
-            return panel;
-        };
-        return Stats;
-    }());
-    __reflect(Stats.prototype, "Stats");
-    /**
-     *
-     */
-    var Panel = (function () {
-        function Panel(name, fg, bg) {
-            this.name = name;
-            this.fg = fg;
-            this.bg = bg;
-            this.min = Infinity;
-            this.max = 0;
-            this.PR = Math.round(window.devicePixelRatio || 1);
-            this.WIDTH = 80 * this.PR;
-            this.HEIGHT = 48 * this.PR;
-            this.TEXT_X = 3 * this.PR;
-            this.TEXT_Y = 2 * this.PR;
-            this.GRAPH_X = 3 * this.PR;
-            this.GRAPH_Y = 15 * this.PR;
-            this.GRAPH_WIDTH = 74 * this.PR, this.GRAPH_HEIGHT = 30 * this.PR;
-            this.canvas = document.createElement('canvas');
-            this.canvas.width = this.WIDTH;
-            this.canvas.height = this.HEIGHT;
-            this.canvas.style.cssText = 'width:80px;height:48px';
-            this.context = this.canvas.getContext('2d');
-            this.context.font = 'bold ' + (9 * this.PR) + 'px Helvetica,Arial,sans-serif';
-            this.context.textBaseline = 'top';
-            this.context.fillStyle = bg;
-            this.context.fillRect(0, 0, this.WIDTH, this.HEIGHT);
-            this.context.fillStyle = fg;
-            this.context.fillText(name, this.TEXT_X, this.TEXT_Y);
-            this.context.fillRect(this.GRAPH_X, this.GRAPH_Y, this.GRAPH_WIDTH, this.GRAPH_HEIGHT);
-            this.context.fillStyle = bg;
-            this.context.globalAlpha = 0.9;
-            this.context.fillRect(this.GRAPH_X, this.GRAPH_Y, this.GRAPH_WIDTH, this.GRAPH_HEIGHT);
-        }
-        Panel.prototype.update = function (value, maxValue) {
-            this.min = Math.min(this.min, value);
-            this.max = Math.max(this.max, value);
-            this.context.fillStyle = this.bg;
-            this.context.globalAlpha = 1;
-            this.context.fillRect(0, 0, this.WIDTH, this.GRAPH_Y);
-            this.context.fillStyle = this.fg;
-            this.context.fillText(Math.round(value) + ' ' + this.name + ' (' + Math.round(this.min) + '-' + Math.round(this.max) + ')', this.TEXT_X, this.TEXT_Y);
-            this.context.drawImage(this.canvas, this.GRAPH_X + this.PR, this.GRAPH_Y, this.GRAPH_WIDTH - this.PR, this.GRAPH_HEIGHT, this.GRAPH_X, this.GRAPH_Y, this.GRAPH_WIDTH - this.PR, this.GRAPH_HEIGHT);
-            this.context.fillRect(this.GRAPH_X + this.GRAPH_WIDTH - this.PR, this.GRAPH_Y, this.PR, this.GRAPH_HEIGHT);
-            this.context.fillStyle = this.bg;
-            this.context.globalAlpha = 0.9;
-            this.context.fillRect(this.GRAPH_X + this.GRAPH_WIDTH - this.PR, this.GRAPH_Y, this.PR, Math.round((1 - (value / maxValue)) * this.GRAPH_HEIGHT));
-        };
-        return Panel;
-    }());
-    __reflect(Panel.prototype, "Panel");
-})(Stats || (Stats = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -23906,10 +23661,11 @@ var egret3d;
                 egret3d.stage.onScreenResize.add(function () {
                     _this._updateCanvas(egret3d.stage);
                 }, this);
+                egret3d.stage.onResize.add(function () {
+                    _this._updateCanvas(egret3d.stage);
+                }, this);
             };
             BeginSystem.prototype.onUpdate = function () {
-                // TODO 
-                egret3d.Performance.startCounter("all" /* All */);
                 // TODO 查询是否有性能问题。
                 var isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || this._canvas.parentElement === undefined;
                 var screenWidth = isWX ? window.innerWidth : this._canvas.parentElement.clientWidth;
@@ -24350,7 +24106,7 @@ var egret3d;
                     h = target.height;
                     target.use();
                 }
-                webgl.viewport(w * viewport.x, h * viewport.y, w * viewport.w, h * viewport.h);
+                webgl.viewport(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h);
                 webgl.depthRange(0, 1);
             };
             WebGLRenderSystem.prototype.onUpdate = function () {
@@ -24358,7 +24114,6 @@ var egret3d;
                 if (!webgl) {
                     return;
                 }
-                egret3d.Performance.startCounter("render");
                 var lightCountDirty = false;
                 var isPlayerMode = paper.Application.playerMode === 0 /* Player */;
                 var renderState = this._renderState;
@@ -24416,7 +24171,6 @@ var egret3d;
                 else {
                     renderState.clear(true, true, egret3d.Color.BLACK);
                 }
-                egret3d.Performance.endCounter("render");
             };
             return WebGLRenderSystem;
         }(paper.BaseSystem));
@@ -24894,8 +24648,6 @@ var egret3d;
                 if (contactCollecter.isActiveAndEnabled) {
                     this._contactCollecter.update(deltaTime);
                 }
-                egret3d.Performance.updateFPS();
-                egret3d.Performance.endCounter("all" /* All */);
             };
             return EndSystem;
         }(paper.BaseSystem));
@@ -25271,94 +25023,6 @@ var egret3d;
         return CombineInstance;
     }());
     __reflect(CombineInstance.prototype, "CombineInstance");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     *
-     */
-    var PerformanceType;
-    (function (PerformanceType) {
-        PerformanceType["All"] = "all";
-    })(PerformanceType = egret3d.PerformanceType || (egret3d.PerformanceType = {}));
-    /**
-     * Performance
-     * 数据收集
-     */
-    var Performance = (function () {
-        function Performance() {
-        }
-        Performance.getEntity = function (key) {
-            return this._entities[key];
-        };
-        Performance.getFPS = function () {
-            var entity = this.getEntity("fps");
-            return (entity && entity.averageDelta) ? Math.floor(1000 / entity.averageDelta) : 0;
-        };
-        Performance.updateFPS = function () {
-            if (!this.enable) {
-                return;
-            }
-            this.endCounter("fps");
-            this.startCounter("fps", 60);
-        };
-        Performance._getNow = function () {
-            if (window.performance) {
-                return window.performance.now();
-            }
-            return new Date().getTime();
-        };
-        Performance.startCounter = function (key, averageRange) {
-            if (averageRange === void 0) { averageRange = 1; }
-            if (!this.enable) {
-                return;
-            }
-            var entity = this._entities[key];
-            if (!entity) {
-                entity = {
-                    start: 0,
-                    end: 0,
-                    delta: 0,
-                    _cache: [],
-                    averageRange: 1,
-                    averageDelta: 0
-                };
-                this._entities[key] = entity;
-            }
-            entity.start = this._getNow();
-            entity.averageRange = averageRange;
-        };
-        Performance.endCounter = function (key) {
-            if (!this.enable) {
-                return;
-            }
-            var entity = this._entities[key];
-            if (entity) {
-                entity.end = this._getNow();
-                entity.delta = entity.end - entity.start;
-                if (entity.averageRange > 1) {
-                    entity._cache.push(entity.delta);
-                    var length = entity._cache.length;
-                    if (length >= entity.averageRange) {
-                        if (length > entity.averageRange) {
-                            entity._cache.shift();
-                            length--;
-                        }
-                        var sum = 0;
-                        for (var i = 0; i < length; i++) {
-                            sum += entity._cache[i];
-                        }
-                        entity.averageDelta = sum / length;
-                    }
-                }
-            }
-        };
-        Performance._entities = {};
-        Performance.enable = false;
-        return Performance;
-    }());
-    egret3d.Performance = Performance;
-    __reflect(Performance.prototype, "egret3d.Performance");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -28764,27 +28428,221 @@ var paper;
 var egret3d;
 (function (egret3d) {
     /**
-     * 雾。
+     * ConstantAdapter
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
      */
-    var Shadow = (function () {
-        /**
-         * 禁止实例化。
-         */
-        function Shadow() {
+    /**
+     * 恒定像素的适配策略
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    var ConstantAdapter = (function () {
+        function ConstantAdapter() {
+            this.$dirty = true;
+            this._scaleFactor = 1;
+        }
+        Object.defineProperty(ConstantAdapter.prototype, "scaleFactor", {
+            /**
+             * scaleFactor
+             * @version paper 1.0
+             * @platform Web
+             * @language en_US
+             */
+            /**
+             * 设置缩放值
+             * @version paper 1.0
+             * @platform Web
+             * @language zh_CN
+             */
+            set: function (value) {
+                this._scaleFactor = value;
+                this.$dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ConstantAdapter.prototype.calculateScaler = function (canvasWidth, canvasHeight, out) {
+            var scaler = this._scaleFactor;
+            out.s = scaler;
+            out.w = canvasWidth / scaler;
+            out.h = canvasHeight / scaler;
+        };
+        return ConstantAdapter;
+    }());
+    egret3d.ConstantAdapter = ConstantAdapter;
+    __reflect(ConstantAdapter.prototype, "egret3d.ConstantAdapter", ["egret3d.IScreenAdapter"]);
+    /**
+     * ConstantAdapter
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 拉伸扩展的适配策略
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    var ExpandAdapter = (function () {
+        function ExpandAdapter() {
+            this.$dirty = true;
+            this._resolution = new egret3d.Vector2(640, 1136);
         }
         /**
-         * @internal
+         * setResolution
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
          */
-        Shadow.create = function () {
-            return new Shadow();
+        /**
+         * 设置分辨率
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        ExpandAdapter.prototype.setResolution = function (width, height) {
+            this._resolution.x = width;
+            this._resolution.y = height;
+            this.$dirty = true;
         };
-        Shadow.prototype.serialize = function () {
-            return [];
+        ExpandAdapter.prototype.calculateScaler = function (canvasWidth, canvasHeight, out) {
+            var canvasRate = canvasWidth / canvasHeight;
+            var resolutionRate = this._resolution.x / this._resolution.y;
+            var scaler = 1;
+            if (canvasRate > resolutionRate) {
+                scaler = canvasHeight / this._resolution.y;
+            }
+            else {
+                scaler = canvasWidth / this._resolution.x;
+            }
+            out.s = scaler;
+            out.w = canvasWidth / scaler;
+            out.h = canvasHeight / scaler;
         };
-        Shadow.prototype.deserialize = function (data) {
-        };
-        return Shadow;
+        return ExpandAdapter;
     }());
-    egret3d.Shadow = Shadow;
-    __reflect(Shadow.prototype, "egret3d.Shadow", ["paper.ISerializable"]);
+    egret3d.ExpandAdapter = ExpandAdapter;
+    __reflect(ExpandAdapter.prototype, "egret3d.ExpandAdapter", ["egret3d.IScreenAdapter"]);
+    /**
+     * ShrinkAdapter
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 缩放的适配策略
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    var ShrinkAdapter = (function () {
+        function ShrinkAdapter() {
+            this.$dirty = true;
+            this._resolution = new egret3d.Vector2(640, 1136);
+        }
+        /**
+         * setResolution
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 设置分辨率
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        ShrinkAdapter.prototype.setResolution = function (width, height) {
+            this._resolution.x = width;
+            this._resolution.y = height;
+            this.$dirty = true;
+        };
+        ShrinkAdapter.prototype.calculateScaler = function (canvasWidth, canvasHeight, out) {
+            var canvasRate = canvasWidth / canvasHeight;
+            var resolutionRate = this._resolution.x / this._resolution.y;
+            var scaler = 1;
+            if (canvasRate > resolutionRate) {
+                scaler = canvasWidth / this._resolution.x;
+            }
+            else {
+                scaler = canvasHeight / this._resolution.y;
+            }
+            out.s = scaler;
+            out.w = canvasWidth / scaler;
+            out.h = canvasHeight / scaler;
+        };
+        return ShrinkAdapter;
+    }());
+    egret3d.ShrinkAdapter = ShrinkAdapter;
+    __reflect(ShrinkAdapter.prototype, "egret3d.ShrinkAdapter", ["egret3d.IScreenAdapter"]);
+    /**
+     * MatchWidthOrHeightAdapter
+     * @version paper 1.0
+     * @platform Web
+     * @language en_US
+     */
+    /**
+     * 适应宽高适配策略
+     * @version paper 1.0
+     * @platform Web
+     * @language zh_CN
+     */
+    var MatchWidthOrHeightAdapter = (function () {
+        function MatchWidthOrHeightAdapter() {
+            this.$dirty = true;
+            this._resolution = new egret3d.Vector2(640, 1136);
+            this._matchFactor = 1.0; // width : height
+        }
+        /**
+         * setResolution
+         * @version paper 1.0
+         * @platform Web
+         * @language en_US
+         */
+        /**
+         * 设置分辨率
+         * @version paper 1.0
+         * @platform Web
+         * @language zh_CN
+         */
+        MatchWidthOrHeightAdapter.prototype.setResolution = function (width, height) {
+            this._resolution.x = width;
+            this._resolution.y = height;
+            this.$dirty = true;
+        };
+        Object.defineProperty(MatchWidthOrHeightAdapter.prototype, "matchFactor", {
+            /**
+             * matchFactor
+             * @version paper 1.0
+             * @platform Web
+             * @language en_US
+             */
+            /**
+             * 设置匹配系数，0-1之间，越小越倾向以宽度适配，越大越倾向以高度适配。
+             * @version paper 1.0
+             * @platform Web
+             * @language zh_CN
+             */
+            set: function (value) {
+                this._matchFactor = value;
+                this.$dirty = true;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        MatchWidthOrHeightAdapter.prototype.calculateScaler = function (canvasWidth, canvasHeight, out) {
+            var scaler1 = canvasWidth / this._resolution.x;
+            var scaler2 = canvasHeight / this._resolution.y;
+            var scaler = scaler1 + (scaler2 - scaler1) * this._matchFactor;
+            out.s = scaler;
+            out.w = canvasWidth / scaler;
+            out.h = canvasHeight / scaler;
+        };
+        return MatchWidthOrHeightAdapter;
+    }());
+    egret3d.MatchWidthOrHeightAdapter = MatchWidthOrHeightAdapter;
+    __reflect(MatchWidthOrHeightAdapter.prototype, "egret3d.MatchWidthOrHeightAdapter", ["egret3d.IScreenAdapter"]);
 })(egret3d || (egret3d = {}));
