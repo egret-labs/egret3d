@@ -19721,6 +19721,9 @@ var egret3d;
                 // component.stop();
             };
             ParticleSystem.prototype.onUpdate = function (deltaTime) {
+                if (deltaTime > 0.3) {
+                    deltaTime = 0.3; //防止dt过大，引起周期错乱
+                }
                 for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
                     var gameObject = _a[_i];
                     gameObject.getComponent(particle.ParticleComponent).update(deltaTime);

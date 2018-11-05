@@ -485,6 +485,9 @@ namespace egret3d.particle {
         }
 
         public onUpdate(deltaTime: number) {
+            if (deltaTime > 0.3) {
+                deltaTime = 0.3;//防止dt过大，引起周期错乱
+            }
             for (const gameObject of this._groups[0].gameObjects) {
                 (gameObject.getComponent(ParticleComponent) as ParticleComponent).update(deltaTime);
             }
