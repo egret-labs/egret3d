@@ -92,7 +92,7 @@ namespace paper {
         registerClass(componentClass);
         componentClass.executeInEditMode = true;
     }
-    
+
     /**
      * 通过装饰器标记 API 已被废弃。
      * @param version 废弃的版本。

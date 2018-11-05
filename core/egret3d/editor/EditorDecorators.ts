@@ -1,3 +1,4 @@
+
 namespace paper.editor {
     /**属性信息 */
     export class PropertyInfo {
@@ -6,7 +7,7 @@ namespace paper.editor {
         /**编辑类型 */
         public editType: EditType;
         /**属性配置 */
-        public option: PropertyOption|undefined;
+        public option: PropertyOption | undefined;
         constructor(name: string, editType: EditType, option?: PropertyOption) {
             this.name = name;
             this.editType = editType;
@@ -84,7 +85,7 @@ namespace paper.editor {
      */
     export function custom() {
         return function (target: any) {
-            target['__custom__']=true;
+            target['__custom__'] = true;
         };
     }
     /**
@@ -93,8 +94,8 @@ namespace paper.editor {
      */
     export function property(editType?: EditType, option?: PropertyOption) {
         return function (target: any, property: string) {
-            if(!target.hasOwnProperty('__props__')){
-                target['__props__']=[];
+            if (!target.hasOwnProperty('__props__')) {
+                target['__props__'] = [];
             }
             if (editType !== undefined) {
                 target['__props__'].push(new PropertyInfo(property, editType, option));
@@ -103,16 +104,6 @@ namespace paper.editor {
                 //TODO:自动分析编辑类型
             }
         };
-    }
-
-    /**
-     * 检测一个实例对象是否为已被自定义
-     * @param classInstance 实例对象
-     */
-    export function isCustom(classInstance: any): boolean {
-        let clzName=egret.getQualifiedClassName(classInstance);
-        let clz=egret.getDefinitionByName(clzName);
-        return clz['__custom__'] ? true : false;
     }
 
     /**
@@ -129,24 +120,5 @@ namespace paper.editor {
         }
 
         return items;
-    }
-
-    /**
-     * 获取一个实例对象的编辑信息
-     * @param classInstance 实例对象
-     */
-    export function getEditInfo(classInstance:any) {
-        var retrunList = [] as PropertyInfo[];
-        let clzName=egret.getQualifiedClassName(classInstance);
-        let clz=egret.getDefinitionByName(clzName);
-        let extend:string[]=clz.prototype.__types__;
-        for(let i=extend.length-1;i>=0;i--){
-            let clzName=extend[i];
-            let clz=egret.getDefinitionByName(clzName);
-            if(clz&&clz.prototype.hasOwnProperty('__props__')){
-                retrunList = retrunList.concat(clz.prototype['__props__']);
-            }
-        }
-        return retrunList;
     }
 }

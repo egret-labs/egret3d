@@ -18,9 +18,9 @@
         "outFile": "bin/inspector.js"
     },
     "include": [
+        "src",
         "../core/libs/",
         "../core/bin/",
-        "src",
         "libs"
     ]
 }

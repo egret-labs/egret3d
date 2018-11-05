@@ -68,6 +68,7 @@ namespace paper {
         private _keepUUID: boolean;
         private _makeLink: boolean;
         private readonly _deserializers: { [key: string]: Deserializer } = {};
+        private readonly _prefabRootMap: { [key: string]: { rootUUID: string, root: GameObject } } = {};
         private _rootTarget: Scene | GameObject | null = null;
 
         private _deserializeObject(source: ISerializedObject, target: BaseObject) {
@@ -76,6 +77,10 @@ namespace paper {
 
             for (const k in source) {
                 if (k === KEY_CLASS) { // 类名不需要反序列化。
+                    continue;
+                }
+
+                if (k === KEY_EXTRAS) {//不应该应用extras的值.
                     continue;
                 }
 
@@ -303,7 +308,6 @@ namespace paper {
 
             const sceneClassName = egret.getQualifiedClassName(Scene);
             const transformClassName = egret.getQualifiedClassName(egret3d.Transform);
-            const updateRoots = [];
             const components: { [key: string]: ISerializedObject } = {};
             let root: Scene | GameObject | BaseComponent | null = null;
 
@@ -341,6 +345,7 @@ namespace paper {
 
                                     if (target) { // Cache.
                                         this._deserializers[source.uuid] = Deserializer._lastDeserializer;
+                                        this._prefabRootMap[source.uuid] = { rootUUID: target.uuid, root: target };
                                     }
                                     else { // Missing prefab.
                                         target = GameObject.create(DefaultNames.MissingPrefab, DefaultTags.Untagged, this._rootTarget as Scene);
@@ -350,21 +355,11 @@ namespace paper {
                             else { // Prefab node.
                                 const prefabDeserializer = this._deserializers[extras.rootID!];
                                 target = prefabDeserializer.objects[linkedID];
-                                if (!target) {
-                                    // Delete node.
-                                }
-
-                                // Update node root id.
-                                updateRoots.push(
-                                    target,
-                                    prefabDeserializer.root!.uuid
-                                );
                             }
                         }
                         else {
                             target = GameObject.create(DefaultNames.NoName, DefaultTags.Untagged, this._rootTarget as Scene);
-
-                            if (this._makeLink) { // TODO
+                            if (this._makeLink) { // 在editor模式下调用Prefab.createInstance方法始终会走到这里
                                 (target as GameObject).extras!.linkedID = source.uuid;
                                 if (root) {
                                     (target as GameObject).extras!.rootID = (root as GameObject).uuid;
@@ -405,6 +400,19 @@ namespace paper {
                         }
                     }
                 }
+                //重新设置rootid的值
+                for (let uuid in this._prefabRootMap) {
+                    let rootDeser=this._deserializers[uuid];
+                    for(let key in rootDeser.objects){
+                        let obj=rootDeser.objects[key]
+                        if(obj instanceof GameObject){
+                            if(obj.extras.linkedID&&obj.extras.rootID===this._prefabRootMap[uuid].rootUUID){
+                                obj.extras.rootID=this._prefabRootMap[uuid].root.uuid;
+                            }
+                        }
+
+                    }
+                }
             }
 
             if (data.components) {
@@ -426,11 +434,6 @@ namespace paper {
                     }
                 }
             }
-
-            for (let i = 0, l = updateRoots.length; i < l; i += 2) {
-                (updateRoots[0] as GameObject).extras!.rootID = updateRoots[1];
-            }
-
             Deserializer._lastDeserializer = this;
 
             this.root = root;

@@ -119,7 +119,7 @@ namespace paper.editor {
                 this.dispatchEditorModelEvent(EditorModelEvent.SAVE_ASSET, {name:this.stateData.prefab.name,raw:prefabJson});
 
                 tempPrefabObject!.destroy();
-                tempPrefabObject = null;
+                tempPrefabObject = null as any;
 
                 return true;
             }
