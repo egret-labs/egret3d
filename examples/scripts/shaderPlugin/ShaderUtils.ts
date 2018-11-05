@@ -1,4 +1,4 @@
-import * as fs from "fs-extra";
+import * as fs from "fs";
 import * as path from "path";
 import * as gltf from "./GLTF";
 import * as shaderConfig from "./ShaderConfig";
