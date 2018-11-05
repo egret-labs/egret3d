@@ -1,5 +1,5 @@
 #! /usr/bin/env node
-import * as fs from "fs-extra";
+import * as fs from "fs";
 import * as path from "path";
 import * as gltf from "./GLTF";
 import * as ShaderUtils from './ShaderUtils';
@@ -225,7 +225,7 @@ export class GenerateLibsCommand implements IShaderCommand {
     public execute(shaderContext: ShaderGenerateContext) {
         console.log("-----------------generateLibs------------------");
         if (!fs.existsSync(path.dirname(this._outputPath))) {
-            fs.mkdirsSync(path.dirname(this._outputPath));
+            fs.mkdirSync(path.dirname(this._outputPath));
         }
         let all: string = "namespace " + this._spaceName + "." + this._outputName + " {\n";
         for (const name in shaderContext.shaderAssets) {
@@ -259,7 +259,7 @@ export class GenerateGLTFCommand implements IShaderCommand {
             let dir = this._outputPath !== "" ? this._outputPath : shaderContext.shaders[name].dir + "\\";
             const outPath = dir + name + ".shader.json";
             if (!fs.existsSync(path.dirname(outPath))) {
-                fs.mkdirsSync(path.dirname(outPath));
+                fs.mkdirSync(path.dirname(outPath));
             }
             console.log("生成:" +outPath);
             const shaders = asset.extensions.KHR_techniques_webgl!.shaders;
