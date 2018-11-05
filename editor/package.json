@@ -2,13 +2,16 @@
   "name": "@egret/inspector",
   "version": "1.2.0",
   "compilerVersion": "5.3.1",
-  "description": "egret 3d editor lib",
-  "main": "bin/editor/editor.js",
+  "description": "egret 3d inspector lib",
+  "main": "bin/inspector.js",
   "bin": {},
   "scripts": {
     "build": "egret build && node ./script/build.js",
     "build-examples": "egret build && node ./script/build.js && cd .. && cd examples && egret clean && cd .. && cd editor"
   },
   "author": "egret",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@types/stats": "^0.16.30"
+  }
 }

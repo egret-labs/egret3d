@@ -127,7 +127,7 @@
         "egret3d/util/regexputil.ts",
         "egret3d/util/stream.ts",
         "egret3d/util/utils.ts",
-        "egret3d/Stats.ts",
+
         "egret3d/web/render/resource/Mesh.ts",
         "egret3d/web/render/resource/GLTexture.ts",
         "egret3d/web/render/resource/GLRenderTarget.ts",
@@ -137,7 +137,6 @@
         "egret3d/web/systems/InputSystem.ts",
         "egret3d/web/systems/EndSystem.ts",
         "egret3d/components/StaticBatchingUtility.ts",
-        "egret3d/Performance.ts",
         "egret3d/Profile.ts",
         "egret3d/RunEgret.ts",
         "egret3d/Deprecated.ts"

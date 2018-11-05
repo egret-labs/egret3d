@@ -49,7 +49,7 @@ namespace egret3d.web {
             });
 
             globalGameObject.getOrAddComponent(WebGLCapabilities, false, config); // TODO 下放到渲染系统初始化，但贴图对 webgl 有依赖。
-            
+
             globalGameObject.getOrAddComponent(DefaultMeshes);
             globalGameObject.getOrAddComponent(DefaultShaders);
             globalGameObject.getOrAddComponent(DefaultTextures);
@@ -62,11 +62,12 @@ namespace egret3d.web {
             stage.onScreenResize.add(() => {
                 this._updateCanvas(stage);
             }, this);
+            stage.onResize.add(() => {
+                this._updateCanvas(stage);
+            }, this);
         }
 
         public onUpdate() {
-            // TODO 
-            egret3d.Performance.startCounter(egret3d.PerformanceType.All);
             // TODO 查询是否有性能问题。
             const isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || this._canvas.parentElement === undefined;
             const screenWidth = isWX ? window.innerWidth : this._canvas.parentElement!.clientWidth;

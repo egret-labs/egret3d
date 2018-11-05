@@ -45,6 +45,7 @@ namespace examples {
         public onStart() {
             const renderer = this.gameObject.getComponent(egret3d.Egret2DRenderer)!;
             const adapter = new egret3d.MatchWidthOrHeightAdapter();
+
             adapter.setResolution(egret3d.stage.size.w, egret3d.stage.size.h);
             renderer.screenAdapter = adapter;
             const assetAdapter = new AssetAdapter();

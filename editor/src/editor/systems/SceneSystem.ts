@@ -12,13 +12,13 @@ namespace paper.editor {
         private readonly _cameraAndLightCollecter: egret3d.CameraAndLightCollecter = GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
 
-        private readonly _keyEscape: egret3d.Key = egret3d.inputCollecter.getKey("Escape");
-        private readonly _keyDelete: egret3d.Key = egret3d.inputCollecter.getKey("Delete");
-        private readonly _keyE: egret3d.Key = egret3d.inputCollecter.getKey("KeyE");
-        private readonly _keyW: egret3d.Key = egret3d.inputCollecter.getKey("KeyW");
-        private readonly _keyR: egret3d.Key = egret3d.inputCollecter.getKey("KeyR");
-        private readonly _keyX: egret3d.Key = egret3d.inputCollecter.getKey("KeyX");
-        private readonly _keyF: egret3d.Key = egret3d.inputCollecter.getKey("KeyF");
+        private readonly _keyEscape: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.Escape);
+        private readonly _keyDelete: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.Delete);
+        private readonly _keyE: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyE);
+        private readonly _keyW: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyW);
+        private readonly _keyR: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyR);
+        private readonly _keyX: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyX);
+        private readonly _keyF: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyF);
 
         private _orbitControls: OrbitControls | null = null;
         private _transformController: TransformController | null = null;

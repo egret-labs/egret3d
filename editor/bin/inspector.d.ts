@@ -1,4 +1,28 @@
-// Type definitions for dat.GUI 0.6
+// Type definitions for Stats.js 0.16.0
+// Project: http://github.com/mrdoob/stats.js
+// Definitions by: Gregory Dalton <https://github.com/gregolai>, Harm Berntsen <https://github.com/hberntsen>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+
+declare class Stats {
+    REVISION: number;
+    dom: HTMLDivElement;
+
+    /**
+     * @param value 0:fps, 1: ms, 2: mb, 3+: custom
+     */
+    showPanel(value: number): void;
+    addPanel(value: Stats.Panel): Stats.Panel;
+    begin(): void;
+    end(): number;
+    update(): void;
+}
+
+declare namespace Stats {
+    declare class Panel {
+        public constructor(name: string, color: string, bgColor: string);
+        public update(value: number, maxValue: number): void;
+    }
+}// Type definitions for dat.GUI 0.6
 // Project: https://github.com/dataarts/dat.gui
 // Definitions by: Satoru Kimura <https://github.com/gyohk>, ZongJing Lu <https://github.com/sonic3d>, Richard Roylance <https://github.com/rroylance>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
@@ -200,6 +224,9 @@ declare namespace paper.editor {
     class GUIComponent extends SingletonComponent {
         readonly hierarchy: dat.GUI;
         readonly inspector: dat.GUI;
+        readonly stats: Stats;
+        readonly renderPanel: Stats.Panel;
+        initialize(): void;
     }
 }
 declare namespace paper.editor {
@@ -483,6 +510,7 @@ declare namespace paper.editor {
         filtTopHierarchyGameObjects(gameObjects: GameObject[]): void;
         getGameObjectByUUid(uuid: string): GameObject | null;
         getGameObjectsByUUids(uuids: string[]): GameObject[];
+        getTargetByPropertyChain(propertyChain: string[], target: any): any;
         setTargetProperty(propName: string, target: any, value: any, editType: paper.editor.EditType): void;
         private propertyHasGetterSetter(propName, target);
         /**当前选中的对象 */

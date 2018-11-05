@@ -12,17 +12,14 @@ namespace egret3d {
          * 当舞台尺寸改变时派发事件。
          */
         public readonly onResize: signals.Signal = new signals.Signal();
-        /**
-         * 渲染视口与舞台尺寸之间的缩放系数。
-         * - scaler = viewport.w / size.w
-         */
+
         public scaler: number = 1.0;
 
-        private _isLandspace: boolean = false;
         private _rotated: boolean = false;
-        private readonly _screenSize: egret3d.ISize = { w: 1024, h: 1024 };
-        private readonly _size: egret3d.ISize = { w: 1024, h: 1024 };
-        private readonly _viewport: egret3d.IRectangle = { x: 0, y: 0, w: 0, h: 0 };
+        private _matchFactor: number = 1.0;
+        private readonly _screenSize: ISize = { w: 1024, h: 1024 };
+        private readonly _size: ISize = { w: 1024, h: 1024 };
+        private readonly _viewport: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
 
         private _updateViewport() {
             const screenSize = this._screenSize;
@@ -30,38 +27,32 @@ namespace egret3d {
             const viewport = this._viewport;
 
             if (paper.Application.isMobile) {
-                viewport.w = Math.ceil(size.w);
+                let screenW = screenSize.w;
+                let screenH = screenSize.h;
 
-                if (this._rotated = this._isLandspace ? screenSize.h > screenSize.w : screenSize.w > screenSize.h) {
-                    viewport.h = Math.ceil(viewport.w / screenSize.h * screenSize.w);
-
-                    if (viewport.h !== viewport.h) {
-                        viewport.h = screenSize.w;
-                    }
-                }
-                else {
-                    viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
-
-                    if (viewport.h !== viewport.h) {
-                        viewport.h = screenSize.h;
-                    }
+                if (this._rotated = (size.w > size.h) ? screenSize.h > screenSize.w : screenSize.w > screenSize.h) {
+                    screenW = screenSize.h;
+                    screenH = screenSize.w;
                 }
 
-                this.scaler = 1.0;
+                const scalerW = size.w / screenW;
+                const scalerH = size.h / screenH;
+                this.scaler = math.lerp(scalerW, scalerH, this._matchFactor);
+
+                viewport.w = Math.ceil(screenW * this.scaler);
+                viewport.h = Math.ceil(screenH * this.scaler);
             }
             else {
+                const scalerW = Math.min(size.w, screenSize.w) / screenSize.w;
+                const scalerH = size.h / screenSize.h;
+                this.scaler = math.lerp(scalerW, scalerH, this._matchFactor);
+
                 this._rotated = false;
-                viewport.w = Math.ceil(Math.min(size.w, screenSize.w));
-                viewport.h = Math.ceil(viewport.w / screenSize.w * screenSize.h);
-
-                if (viewport.h !== viewport.h) {
-                    viewport.h = screenSize.h;
-                }
-
-                this.scaler = viewport.w / size.w;
+                viewport.w = Math.ceil(screenSize.w * this.scaler);
+                viewport.h = Math.ceil(screenSize.h * this.scaler);
             }
 
-            size.h = viewport.h / this.scaler;
+            // size.h = viewport.h / this.scaler;
         }
 
         public initialize(config: { size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
@@ -72,13 +63,12 @@ namespace egret3d {
             this._size.h = config.size.h || 2.0;
             this._screenSize.w = config.screenSize.w || 2.0;
             this._screenSize.h = config.screenSize.h || 2.0;
-            this._isLandspace = this._size.w > this._size.h;
             this._updateViewport();
         }
         /**
          * 屏幕到舞台坐标的转换。
          */
-        public screenToStage(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3) {
+        public screenToStage(value: Readonly<Vector3>, out: Vector3) {
             const screenSize = this._screenSize;
             const viewPort = this._viewport;
             const { x, y } = value;
@@ -97,53 +87,65 @@ namespace egret3d {
         /**
          * 舞台到屏幕坐标的转换。
          */
-        public stageToScreen(value: Readonly<egret3d.Vector3>, out: egret3d.Vector3) {
+        public stageToScreen(value: Readonly<Vector3>, out: Vector3) {
             // TODO
-
             return this;
         }
         /**
          * 舞台是否因屏幕尺寸的改变而发生了旋转。
-         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转，即无论是否旋转，渲染视口的宽度始终以舞台宽度为依据。
+         * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转。
          */
         @paper.editor.property(paper.editor.EditType.CHECKBOX, { readonly: true })
         public get rotated() {
             return this._rotated;
         }
         /**
+         * 以宽或高适配的系数。
+         */
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 1.0 })
+        public get matchFactor(): number {
+            return this._matchFactor;
+        }
+        public set matchFactor(value: number) {
+            if (this._matchFactor === value) {
+                return;
+            }
+
+            this._matchFactor = value;
+            this._updateViewport();
+            this.onResize.dispatch();
+        }
+        /**
          * 屏幕尺寸。
          */
         @paper.editor.property(paper.editor.EditType.SIZE)
-        public get screenSize(): Readonly<egret3d.ISize> {
+        public get screenSize(): Readonly<ISize> {
             return this._screenSize;
         }
-        public set screenSize(value: Readonly<egret3d.ISize>) {
+        public set screenSize(value: Readonly<ISize>) {
             this._screenSize.w = value.w || 2.0;
             this._screenSize.h = value.h || 2.0;
             this._updateViewport();
-
             this.onScreenResize.dispatch();
         }
         /**
-         * 舞台尺寸。
+         * 舞台初始尺寸。
          */
         @paper.editor.property(paper.editor.EditType.SIZE)
-        public get size(): Readonly<egret3d.ISize> {
+        public get size(): Readonly<ISize> {
             return this._size;
         }
-        public set size(value: Readonly<egret3d.ISize>) {
+        public set size(value: Readonly<ISize>) {
             this._size.w = value.w || 2.0;
             this._size.h = value.h || 2.0;
-            this._isLandspace = this._size.w > this._size.h;
             this._updateViewport();
-
             this.onResize.dispatch();
         }
         /**
          * 渲染视口。
          */
         @paper.editor.property(paper.editor.EditType.RECT, { readonly: true })
-        public get viewport(): Readonly<egret3d.IRectangle> {
+        public get viewport(): Readonly<IRectangle> {
             return this._viewport;
         }
 

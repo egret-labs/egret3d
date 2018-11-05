@@ -81,7 +81,7 @@ namespace egret3d {
          * @param b 蓝色通道
          * @param a 透明通道
          */
-        public static create(r: number = 1.0, g: number = 1.0, b: number = 1.0, a: number = 1.0) {
+        public static create(r: number = 1.0, g: number = 1.0, b: number = 1.0, a: number = 1.0): Color {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!.set(r, g, b, a);
                 instance._released = false;
@@ -119,16 +119,19 @@ namespace egret3d {
             return this.set(value.r, value.g, value.b, value.a);
         }
 
-        public set(r: number, g: number, b: number, a: number): Color {
+        public set(r: number, g: number, b: number, a?: number): this {
             this.r = r;
             this.g = g;
             this.b = b;
-            this.a = a;
+
+            if (a !== undefined) {
+                this.a = a;
+            }
 
             return this;
         }
 
-        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0): Color {
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
             this.r = value[0 + offset];
             this.g = value[1 + offset];
             this.b = value[2 + offset];
@@ -137,7 +140,39 @@ namespace egret3d {
             return this;
         }
 
-        public multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>): Color {
+        public fromHex(hex: uint): this {
+            this.r = (hex >> 16 & 255) / 255;
+            this.g = (hex >> 8 & 255) / 255;
+            this.b = (hex & 255) / 255;
+
+            return this;
+        }
+
+        // public fromHSL(h: number, s: number, l: number): this {
+        //     // h,s,l ranges are in 0.0 - 1.0
+        //     h = _Math.euclideanModulo(h, 1);
+        //     s = floatClamp(s, 0, 1);
+        //     l = floatClamp(l, 0, 1);
+
+        //     if (s === 0) {
+
+        //         this.r = this.g = this.b = l;
+
+        //     } else {
+
+        //         var p = l <= 0.5 ? l * (1 + s) : l + s - (l * s);
+        //         var q = (2 * l) - p;
+
+        //         this.r = hue2rgb(q, p, h + 1 / 3);
+        //         this.g = hue2rgb(q, p, h);
+        //         this.b = hue2rgb(q, p, h - 1 / 3);
+
+        //     }
+
+        //     return this;
+        // }
+
+        public multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>): this {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;
@@ -151,7 +186,7 @@ namespace egret3d {
             return this;
         }
 
-        public scale(value: number, source?: Readonly<Color>): Color {
+        public scale(value: number, source?: Readonly<Color>): this {
             if (!source) {
                 source = this;
             }
@@ -164,7 +199,7 @@ namespace egret3d {
             return this;
         }
 
-        public lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>): Color {
+        public lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>): this {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;

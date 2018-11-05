@@ -137,15 +137,14 @@ namespace paper.editor {
                 case paper.editor.EditType.LIST:
                     return value;
                 case paper.editor.EditType.MATERIAL_ARRAY:
-                    const data = value.map((item:paper.Asset) => {
+                    const data = value.map((item: paper.Asset) => {
                         return { name: item.name, url: item.name };
                     });
                     return data;
                 case paper.editor.EditType.MESH:
                     if (!value)
-                        return '';
-                    let url = value.name;
-                    return url;
+                        return null;
+                    return value.name;
                 case paper.editor.EditType.GAMEOBJECT:
                     if (!value) {
                         return null;
@@ -198,8 +197,10 @@ namespace paper.editor {
                     }
                     return materials;
                 case paper.editor.EditType.MESH:
-                    let meshAsset = paper.Asset.find(serializeData);
-                    return meshAsset;
+                    if (!serializeData) {
+                        return null;
+                    }
+                    return paper.Asset.find(serializeData);
                 case paper.editor.EditType.GAMEOBJECT:
                     if (!serializeData) {
                         return null;
@@ -391,7 +392,7 @@ namespace paper.editor {
             }
             else {
                 if (targetObject.transform.parent) {
-                    let index:number;
+                    let index: number;
                     switch (dir) {
                         case 'top': index = targetObject.transform.parent.children.indexOf(targetObject.transform); break;
                         case 'bottom': index = targetObject.transform.parent.children.indexOf(targetObject.transform) + 1; break;
@@ -408,7 +409,7 @@ namespace paper.editor {
                     for (let i: number = 0; i < objects.length; i++) {
                         all.splice(all.indexOf(objects[i]), 1);
                     }
-                    let index:number;
+                    let index: number;
                     switch (dir) {
                         case 'top': index = all.indexOf(targetObject); break;
                         case 'bottom': index = all.indexOf(targetObject) + 1; break;
@@ -478,39 +479,66 @@ namespace paper.editor {
             return result;
         }
 
-        public setTargetProperty(propName: string, target: any, value: any, editType: paper.editor.EditType): void {
+        public getTargetByPropertyChain(propertyChain: string[], target: any) {
+            if (propertyChain.length == 1) {
+                return target;
+            }
+            
+            let realTarget:any;
+            for (let index = 0; index < propertyChain.length; index++) {
+                if (index === propertyChain.length - 1) {
+                    return realTarget;
+                }
+                const element = propertyChain[index];
+                realTarget = realTarget ? realTarget[element] : target[element];
+            }
+
+            throw new Error("can not find target");
+		}
+
+        public setTargetProperty(propName: string, target: any, value: any, editType: paper.editor.EditType): void;
+        public setTargetProperty(propNameOrpropertyChain: string | string[], target: any, value: any, editType: paper.editor.EditType) {
+            let propertyName:string;
+
+            if (Array.isArray(propNameOrpropertyChain)) {
+                target = this.getTargetByPropertyChain(propNameOrpropertyChain,target);
+                propertyName = propNameOrpropertyChain[propNameOrpropertyChain.length - 1];
+            }else{
+                propertyName = propNameOrpropertyChain;
+            }
+
             if (editType !== paper.editor.EditType.VECTOR2 &&
                 editType !== paper.editor.EditType.VECTOR3 &&
                 editType !== paper.editor.EditType.VECTOR4 &&
                 editType !== paper.editor.EditType.COLOR) {
-                target[propName] = value;
+                target[propertyName] = value;
                 return;
             }
 
-            if (this.propertyHasGetterSetter(propName, target)) {
-                target[propName] = value;
+            if (this.propertyHasGetterSetter(propertyName, target)) {
+                target[propertyName] = value;
             } else {
                 switch (editType) {
                     case paper.editor.EditType.VECTOR2:
-                        const vec2: egret3d.Vector2 = target[propName];
+                        const vec2: egret3d.Vector2 = target[propertyName];
                         vec2.x = value.x;
                         vec2.y = value.y;
                         break;
                     case paper.editor.EditType.VECTOR3:
-                        const vec3: egret3d.Vector3 = target[propName];
+                        const vec3: egret3d.Vector3 = target[propertyName];
                         vec3.x = value.x;
                         vec3.y = value.y;
                         vec3.z = value.z;
                         break;
                     case paper.editor.EditType.VECTOR4:
-                        const vec4: egret3d.Vector4 = target[propName];
+                        const vec4: egret3d.Vector4 = target[propertyName];
                         vec4.x = value.x;
                         vec4.y = value.y;
                         vec4.z = value.z;
                         vec4.w = value.w;
                         break;
                     case paper.editor.EditType.COLOR:
-                        const color: egret3d.Color = target[propName];
+                        const color: egret3d.Color = target[propertyName];
                         color.r = value.r;
                         color.g = value.g;
                         color.b = value.b;
@@ -563,14 +591,14 @@ namespace paper.editor {
         }
 
         public isPrefabRoot(gameObj: GameObject): boolean {
-            if (gameObj.extras&&gameObj.extras.prefab) {
+            if (gameObj.extras && gameObj.extras.prefab) {
                 return true;
             }
             return false;
         }
 
         public isPrefabChild(gameObj: GameObject): boolean {
-            if (gameObj.extras&&gameObj.extras.rootID) {
+            if (gameObj.extras && gameObj.extras.rootID) {
                 return true;
             }
             return false;
@@ -658,7 +686,7 @@ namespace paper.editor {
             }
             const result: any = Array.isArray(obj) ? [] : {};
             Object.keys(obj).forEach((key: string) => {
-                let objTmp:any=obj;
+                let objTmp: any = obj;
                 if (objTmp[key] && typeof objTmp[key] === 'object') {
                     result[key] = this.deepClone(objTmp[key]);
                 } else {
@@ -759,10 +787,6 @@ namespace paper.editor {
             for (const propertyValue of valueList) {
                 const { propName, copyValue, uniformType } = propertyValue;
 
-                if (!copyValue) {
-                    continue;
-                }
-
                 switch (uniformType) {
                     case gltf.UniformType.BOOL:
                         target.setBoolean(propName, copyValue);
@@ -788,7 +812,7 @@ namespace paper.editor {
                         target.setVector4v(propName, copyValue);
                         break;
                     case gltf.UniformType.SAMPLER_2D:
-                        target._glTFTechnique.uniforms[propName].value = copyValue;
+                        target.setTexture(propName, copyValue);
                         break;
                     case gltf.UniformType.FLOAT_MAT2:
                     case gltf.UniformType.FLOAT_MAT3:

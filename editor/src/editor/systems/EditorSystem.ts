@@ -36,6 +36,7 @@ namespace paper.editor {
                 const empty = document.createElement("div");
                 empty.style.width = "100%";
                 oldContainer.style.display = "flex";
+                oldContainer.insertBefore(this._guiComponent.stats.dom, oldContainer.lastElementChild);
                 oldContainer.insertBefore(empty, oldContainer.lastElementChild);
 
                 this._guiComponent.hierarchy.onClick = () => {
@@ -85,6 +86,12 @@ namespace paper.editor {
         }
 
         public onUpdate() {
+            this._guiComponent.stats.update();
+            this._guiComponent.renderPanel.update(
+                paper.Application.systemManager.getSystem((egret3d as any)["web"]["WebGLRenderSystem"])!.deltaTime,
+                200
+            );
+
             const isMobile = paper.Application.isMobile;
             if (this._isMobile !== isMobile) {
                 if (isMobile) {
@@ -123,5 +130,5 @@ namespace paper.editor {
         }
     }
     //
-    Application.systemManager.preRegister(EditorSystem, SystemOrder.LaterUpdate);
+    Application.systemManager.preRegister(EditorSystem, SystemOrder.Begin - 10000);
 }

@@ -6,8 +6,9 @@ namespace paper.editor {
      * @param classInstance 实例对象
      */
     export function isCustom(classInstance: any): boolean {
-        let clzName = egret.getQualifiedClassName(classInstance);
-        let clz = egret.getDefinitionByName(clzName);
+        // let clzName = egret.getQualifiedClassName(classInstance);
+        // let clz = egret.getDefinitionByName(clzName);
+        let clz = classInstance.constructor;
         return clz['__custom__'] ? true : false;
     }
 
@@ -17,15 +18,26 @@ namespace paper.editor {
      */
     export function getEditInfo(classInstance: any) {
         var retrunList = [] as PropertyInfo[];
-        let clzName = egret.getQualifiedClassName(classInstance);
-        let clz = egret.getDefinitionByName(clzName);
-        let extend: string[] = clz.prototype.__types__;
-        for (let i = extend.length - 1; i >= 0; i--) {
-            let clzName = extend[i];
-            let clz = egret.getDefinitionByName(clzName);
-            if (clz && clz.prototype.hasOwnProperty('__props__')) {
-                retrunList = retrunList.concat(clz.prototype['__props__']);
+        // let clzName = egret.getQualifiedClassName(classInstance);
+        // let clz = egret.getDefinitionByName(clzName);
+        // let extend: string[] = clz.prototype.__types__;
+        // for (let i = extend.length - 1; i >= 0; i--) {
+        //     let clzName = extend[i];
+        //     let clz = egret.getDefinitionByName(clzName);
+        //     if (clz && clz.prototype.hasOwnProperty('__props__')) {
+        //         retrunList = retrunList.concat(clz.prototype['__props__']);
+        //     }
+        // }
+        let proto = classInstance;
+        while (proto) {
+            if (proto.constructor.prototype) {
+                if (proto.constructor.prototype.hasOwnProperty('__props__')) {
+                    retrunList = retrunList.concat(proto.constructor.prototype['__props__']);
+                }
+                proto=proto.constructor.prototype.__proto__;
+                continue;
             }
+            break;
         }
         return retrunList;
     }

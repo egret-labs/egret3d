@@ -3,6 +3,7 @@
 import * as path from "path";
 import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlugin, ManifestPlugin, UglifyPlugin } from "built-in";
 import { bakeInfo, nameSelector, mergeJSONSelector, MergeJSONPlugin, MergeBinaryPlugin, ModifyDefaultResJSONPlugin, InspectorFilterPlugin } from "./myplugin";
+import { ShaderGenerateContext } from './shaderPlugin/ShaderGenerate';
 
 const config: ResourceManagerConfig = {
 
@@ -22,6 +23,12 @@ const config: ResourceManagerConfig = {
                 case "-f":
                     subRoot = `${commandLineParams[1]}/`;
                     bakeInfo.currentRoot = bakeInfo.defaultRoot + subRoot;
+                    break;
+                case "--shader":
+                case "-s":
+                    subRoot = `${commandLineParams[1]}/`;
+                    const shaderGenerate = new ShaderGenerateContext();
+                    shaderGenerate.execute(bakeInfo.defaultRoot + subRoot);
                     break;
             }
 

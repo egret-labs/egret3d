@@ -1,3 +1,187 @@
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+		typeof define === 'function' && define.amd ? define(factory) :
+			(global.Stats = factory());
+}(this, (function () {
+	'use strict';
+
+	/**
+	 * @author mrdoob / http://mrdoob.com/
+	 */
+
+	var Stats = function () {
+
+		var mode = 0;
+
+		var container = document.createElement('div');
+		container.style.cssText = 'position:fixed;top:0;left:0;cursor:pointer;opacity:0.9;z-index:10000';
+		container.addEventListener('click', function (event) {
+
+			event.preventDefault();
+			showPanel(++mode % container.children.length);
+
+		}, false);
+
+		//
+
+		function addPanel(panel) {
+
+			container.appendChild(panel.dom);
+			return panel;
+
+		}
+
+		function showPanel(id) {
+
+			for (var i = 0; i < container.children.length; i++) {
+
+				container.children[i].style.display = i === id ? 'block' : 'none';
+
+			}
+
+			mode = id;
+
+		}
+
+		//
+
+		var beginTime = (performance || Date).now(), prevTime = beginTime, frames = 0;
+
+		var fpsPanel = addPanel(new Stats.Panel('FPS', '#0ff', '#002'));
+		var msPanel = addPanel(new Stats.Panel('MS', '#0f0', '#020'));
+
+		if (self.performance && self.performance.memory) {
+
+			var memPanel = addPanel(new Stats.Panel('MB', '#f08', '#201'));
+
+		}
+
+		showPanel(0);
+
+		return {
+
+			REVISION: 16,
+
+			dom: container,
+
+			addPanel: addPanel,
+			showPanel: showPanel,
+
+			begin: function () {
+
+				beginTime = (performance || Date).now();
+
+			},
+
+			end: function () {
+
+				frames++;
+
+				var time = (performance || Date).now();
+
+				msPanel.update(time - beginTime, 200);
+
+				if (time > prevTime + 1000) {
+
+					fpsPanel.update((frames * 1000) / (time - prevTime), 100);
+
+					prevTime = time;
+					frames = 0;
+
+					if (memPanel) {
+
+						var memory = performance.memory;
+						memPanel.update(memory.usedJSHeapSize / 1048576, memory.jsHeapSizeLimit / 1048576);
+
+					}
+
+				}
+
+				return time;
+
+			},
+
+			update: function () {
+
+				beginTime = this.end();
+
+			},
+
+			// Backwards Compatibility
+
+			domElement: container,
+			setMode: showPanel
+
+		};
+
+	};
+
+	Stats.Panel = function (name, fg, bg) {
+
+		var min = Infinity, max = 0, round = Math.round;
+		var PR = round(window.devicePixelRatio || 1);
+		var W = 90;
+		var H = 48;
+		var B = 2;
+		var DG = 15;
+
+		var WIDTH = W * PR, HEIGHT = H * PR,
+			TEXT_X = B * PR, TEXT_Y = B * PR,
+			GRAPH_X = B * PR, GRAPH_Y = (B + DG) * PR,
+			GRAPH_WIDTH = (W - B * 2) * PR, GRAPH_HEIGHT = (H - B * 2 - DG) * PR;
+
+		var canvas = document.createElement('canvas');
+		canvas.width = WIDTH;
+		canvas.height = HEIGHT;
+		canvas.style.cssText = `width:${W}px;height:${H}px`;
+
+		var context = canvas.getContext('2d');
+		context.font = 'bold ' + (9 * PR) + 'px Helvetica,Arial,sans-serif';
+		context.textBaseline = 'top';
+
+		context.fillStyle = bg;
+		context.fillRect(0, 0, WIDTH, HEIGHT);
+
+		context.fillStyle = fg;
+		context.fillText(name, TEXT_X, TEXT_Y);
+		context.fillRect(GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT);
+
+		context.fillStyle = bg;
+		context.globalAlpha = 0.9;
+		context.fillRect(GRAPH_X, GRAPH_Y, GRAPH_WIDTH, GRAPH_HEIGHT);
+
+		return {
+
+			dom: canvas,
+
+			update: function (value, maxValue) {
+
+				min = Math.min(min, value);
+				max = Math.max(max, value);
+
+				context.fillStyle = bg;
+				context.globalAlpha = 1;
+				context.fillRect(0, 0, WIDTH, GRAPH_Y);
+				context.fillStyle = fg;
+				context.fillText(round(value) + ' ' + name + ' (' + round(min) + '-' + round(max) + ')', TEXT_X, TEXT_Y);
+
+				context.drawImage(canvas, GRAPH_X + PR, GRAPH_Y, GRAPH_WIDTH - PR, GRAPH_HEIGHT, GRAPH_X, GRAPH_Y, GRAPH_WIDTH - PR, GRAPH_HEIGHT);
+
+				context.fillRect(GRAPH_X + GRAPH_WIDTH - PR, GRAPH_Y, PR, GRAPH_HEIGHT);
+
+				context.fillStyle = bg;
+				context.globalAlpha = 0.9;
+				context.fillRect(GRAPH_X + GRAPH_WIDTH - PR, GRAPH_Y, PR, round((1 - (value / maxValue)) * GRAPH_HEIGHT));
+
+			}
+
+		};
+
+	};
+
+	return Stats;
+
+})));
 /**
  * dat-gui JavaScript Controller Library
  * http://code.google.com/p/dat-gui
@@ -3322,8 +3506,14 @@ var paper;
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.hierarchy = new dat.GUI({ closeOnTop: true, width: 300 });
                 _this.inspector = new dat.GUI({ closeOnTop: true, width: 300 });
+                _this.stats = new Stats();
+                _this.renderPanel = _this.stats.addPanel(new Stats.Panel("MS(R)", "#ff8", "#221"));
                 return _this;
             }
+            GUIComponent.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this.stats.showPanel(0);
+            };
             return GUIComponent;
         }(paper.SingletonComponent));
         editor.GUIComponent = GUIComponent;
@@ -4479,6 +4669,7 @@ var paper;
                     var empty = document.createElement("div");
                     empty.style.width = "100%";
                     oldContainer_1.style.display = "flex";
+                    oldContainer_1.insertBefore(this._guiComponent.stats.dom, oldContainer_1.lastElementChild);
                     oldContainer_1.insertBefore(empty, oldContainer_1.lastElementChild);
                     this._guiComponent.hierarchy.onClick = function () {
                         if (_this._guiComponent.hierarchy.closed) {
@@ -4522,6 +4713,8 @@ var paper;
                 }
             };
             EditorSystem.prototype.onUpdate = function () {
+                this._guiComponent.stats.update();
+                this._guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["web"]["WebGLRenderSystem"]).deltaTime, 200);
                 var isMobile = paper.Application.isMobile;
                 if (this._isMobile !== isMobile) {
                     if (isMobile) {
@@ -4560,7 +4753,7 @@ var paper;
         editor.EditorSystem = EditorSystem;
         __reflect(EditorSystem.prototype, "paper.editor.EditorSystem");
         //
-        paper.Application.systemManager.preRegister(EditorSystem, 6000 /* LaterUpdate */);
+        paper.Application.systemManager.preRegister(EditorSystem, 0 /* Begin */ - 10000);
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 /// <reference path="./EventDispatcher.ts" />
@@ -4573,8 +4766,9 @@ var paper;
          * @param classInstance 实例对象
          */
         function isCustom(classInstance) {
-            var clzName = egret.getQualifiedClassName(classInstance);
-            var clz = egret.getDefinitionByName(clzName);
+            // let clzName = egret.getQualifiedClassName(classInstance);
+            // let clz = egret.getDefinitionByName(clzName);
+            var clz = classInstance.constructor;
             return clz['__custom__'] ? true : false;
         }
         editor.isCustom = isCustom;
@@ -4584,15 +4778,26 @@ var paper;
          */
         function getEditInfo(classInstance) {
             var retrunList = [];
-            var clzName = egret.getQualifiedClassName(classInstance);
-            var clz = egret.getDefinitionByName(clzName);
-            var extend = clz.prototype.__types__;
-            for (var i = extend.length - 1; i >= 0; i--) {
-                var clzName_1 = extend[i];
-                var clz_1 = egret.getDefinitionByName(clzName_1);
-                if (clz_1 && clz_1.prototype.hasOwnProperty('__props__')) {
-                    retrunList = retrunList.concat(clz_1.prototype['__props__']);
+            // let clzName = egret.getQualifiedClassName(classInstance);
+            // let clz = egret.getDefinitionByName(clzName);
+            // let extend: string[] = clz.prototype.__types__;
+            // for (let i = extend.length - 1; i >= 0; i--) {
+            //     let clzName = extend[i];
+            //     let clz = egret.getDefinitionByName(clzName);
+            //     if (clz && clz.prototype.hasOwnProperty('__props__')) {
+            //         retrunList = retrunList.concat(clz.prototype['__props__']);
+            //     }
+            // }
+            var proto = classInstance;
+            while (proto) {
+                if (proto.constructor.prototype) {
+                    if (proto.constructor.prototype.hasOwnProperty('__props__')) {
+                        retrunList = retrunList.concat(proto.constructor.prototype['__props__']);
+                    }
+                    proto = proto.constructor.prototype.__proto__;
+                    continue;
                 }
+                break;
             }
             return retrunList;
         }
@@ -4853,13 +5058,13 @@ var paper;
                 ];
                 _this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
                 _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
-                _this._keyEscape = egret3d.inputCollecter.getKey("Escape");
-                _this._keyDelete = egret3d.inputCollecter.getKey("Delete");
-                _this._keyE = egret3d.inputCollecter.getKey("KeyE");
-                _this._keyW = egret3d.inputCollecter.getKey("KeyW");
-                _this._keyR = egret3d.inputCollecter.getKey("KeyR");
-                _this._keyX = egret3d.inputCollecter.getKey("KeyX");
-                _this._keyF = egret3d.inputCollecter.getKey("KeyF");
+                _this._keyEscape = egret3d.inputCollecter.getKey("Escape" /* Escape */);
+                _this._keyDelete = egret3d.inputCollecter.getKey("Delete" /* Delete */);
+                _this._keyE = egret3d.inputCollecter.getKey("KeyE" /* KeyE */);
+                _this._keyW = egret3d.inputCollecter.getKey("KeyW" /* KeyW */);
+                _this._keyR = egret3d.inputCollecter.getKey("KeyR" /* KeyR */);
+                _this._keyX = egret3d.inputCollecter.getKey("KeyX" /* KeyX */);
+                _this._keyF = egret3d.inputCollecter.getKey("KeyF" /* KeyF */);
                 _this._orbitControls = null;
                 _this._transformController = null;
                 _this._boxesDrawer = null;
@@ -5514,9 +5719,8 @@ var paper;
                         return data;
                     case "MESH" /* MESH */:
                         if (!value)
-                            return '';
-                        var url = value.name;
-                        return url;
+                            return null;
+                        return value.name;
                     case "GAMEOBJECT" /* GAMEOBJECT */:
                         if (!value) {
                             return null;
@@ -5569,8 +5773,10 @@ var paper;
                         }
                         return materials;
                     case "MESH" /* MESH */:
-                        var meshAsset = paper.Asset.find(serializeData);
-                        return meshAsset;
+                        if (!serializeData) {
+                            return null;
+                        }
+                        return paper.Asset.find(serializeData);
                     case "GAMEOBJECT" /* GAMEOBJECT */:
                         if (!serializeData) {
                             return null;
@@ -5848,39 +6054,61 @@ var paper;
                 }
                 return result;
             };
-            EditorModel.prototype.setTargetProperty = function (propName, target, value, editType) {
+            EditorModel.prototype.getTargetByPropertyChain = function (propertyChain, target) {
+                if (propertyChain.length == 1) {
+                    return target;
+                }
+                var realTarget;
+                for (var index = 0; index < propertyChain.length; index++) {
+                    if (index === propertyChain.length - 1) {
+                        return realTarget;
+                    }
+                    var element = propertyChain[index];
+                    realTarget = realTarget ? realTarget[element] : target[element];
+                }
+                throw new Error("can not find target");
+            };
+            EditorModel.prototype.setTargetProperty = function (propNameOrpropertyChain, target, value, editType) {
+                var propertyName;
+                if (Array.isArray(propNameOrpropertyChain)) {
+                    target = this.getTargetByPropertyChain(propNameOrpropertyChain, target);
+                    propertyName = propNameOrpropertyChain[propNameOrpropertyChain.length - 1];
+                }
+                else {
+                    propertyName = propNameOrpropertyChain;
+                }
                 if (editType !== "VECTOR2" /* VECTOR2 */ &&
                     editType !== "VECTOR3" /* VECTOR3 */ &&
                     editType !== "VECTOR4" /* VECTOR4 */ &&
                     editType !== "COLOR" /* COLOR */) {
-                    target[propName] = value;
+                    target[propertyName] = value;
                     return;
                 }
-                if (this.propertyHasGetterSetter(propName, target)) {
-                    target[propName] = value;
+                if (this.propertyHasGetterSetter(propertyName, target)) {
+                    target[propertyName] = value;
                 }
                 else {
                     switch (editType) {
                         case "VECTOR2" /* VECTOR2 */:
-                            var vec2 = target[propName];
+                            var vec2 = target[propertyName];
                             vec2.x = value.x;
                             vec2.y = value.y;
                             break;
                         case "VECTOR3" /* VECTOR3 */:
-                            var vec3 = target[propName];
+                            var vec3 = target[propertyName];
                             vec3.x = value.x;
                             vec3.y = value.y;
                             vec3.z = value.z;
                             break;
                         case "VECTOR4" /* VECTOR4 */:
-                            var vec4 = target[propName];
+                            var vec4 = target[propertyName];
                             vec4.x = value.x;
                             vec4.y = value.y;
                             vec4.z = value.z;
                             vec4.w = value.w;
                             break;
                         case "COLOR" /* COLOR */:
-                            var color = target[propName];
+                            var color = target[propertyName];
                             color.r = value.r;
                             color.g = value.g;
                             color.b = value.b;
@@ -6101,9 +6329,6 @@ var paper;
                         for (_i = 0, valueList_1 = valueList; _i < valueList_1.length; _i++) {
                             propertyValue = valueList_1[_i];
                             propName = propertyValue.propName, copyValue = propertyValue.copyValue, uniformType = propertyValue.uniformType;
-                            if (!copyValue) {
-                                continue;
-                            }
                             switch (uniformType) {
                                 case 35670 /* BOOL */:
                                     target.setBoolean(propName, copyValue);
@@ -6129,7 +6354,7 @@ var paper;
                                     target.setVector4v(propName, copyValue);
                                     break;
                                 case 35678 /* SAMPLER_2D */:
-                                    target._glTFTechnique.uniforms[propName].value = copyValue;
+                                    target.setTexture(propName, copyValue);
                                     break;
                                 case 35674 /* FLOAT_MAT2 */:
                                 case 35675 /* FLOAT_MAT3 */:
@@ -8115,7 +8340,9 @@ var paper;
                 var guiControllerB;
                 var guiControllerC;
                 var guiControllerD;
-                gui.onClick = this._componentOrPropertyGUIClickHandler;
+                if (gui !== this._guiComponent.inspector) {
+                    gui.onClick = this._componentOrPropertyGUIClickHandler;
+                }
                 var _loop_4 = function (info) {
                     switch (info.editType) {
                         case "UINT" /* UINT */:
@@ -8384,31 +8611,8 @@ var paper;
                 }
             };
             GUISystem.prototype.onUpdate = function () {
-                var i = 0;
-                while (this._bufferedGameObjects.length > 0 && i++ < 5) {
-                    var gameObject = this._bufferedGameObjects.shift();
-                    if (gameObject) {
-                        if (!this._addToHierarchy(gameObject)) {
-                            this._bufferedGameObjects.push(gameObject);
-                        }
-                    }
-                }
-                // Open and select folder.
-                if (!this._selectFolder) {
-                    var sceneOrGameObject = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
-                    if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
-                        this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
-                        this._selectFolder.selected = true;
-                        this._openFolder(this._selectFolder);
-                    }
-                }
-                this._guiComponent.inspector.updateDisplay();
-                var inspectorFolders = this._guiComponent.inspector.__folders;
-                if (inspectorFolders) {
-                    for (var k in inspectorFolders) {
-                        inspectorFolders[k].updateDisplay();
-                    }
-                }
+                var isHierarchyShowed = !this._guiComponent.hierarchy.closed && this._guiComponent.hierarchy.domElement.style.display !== "none";
+                var isInspectorShowed = !this._guiComponent.inspector.closed && this._guiComponent.inspector.domElement.style.display !== "none";
                 {
                     for (var _i = 0, _a = this._disposeCollecter.scenes; _i < _a.length; _i++) {
                         var scene = _a[_i];
@@ -8446,20 +8650,53 @@ var paper;
                             }
                         }
                     }
-                    // TODO
-                    // for (const gameObject of this._disposeCollecter.parentChangedGameObjects) {
-                    //     const folder = this._hierarchyFolders[gameObject.uuid];
-                    //     if (folder) {
-                    //         if (folder.parent) {
-                    //             try {
-                    //                 folder.parent.removeFolder(folder);
-                    //             }
-                    //             catch (e) {
-                    //             }
-                    //         }
-                    //         this._bufferedGameObjects.push(gameObject);
-                    //     }
-                    // }
+                    for (var _g = 0, _h = this._disposeCollecter.parentChangedGameObjects; _g < _h.length; _g++) {
+                        var gameObject = _h[_g];
+                        var folder = this._hierarchyFolders[gameObject.uuid];
+                        if (folder) {
+                            delete this._hierarchyFolders[gameObject.uuid];
+                            if (folder && folder.parent) {
+                                try {
+                                    folder.parent.removeFolder(folder);
+                                }
+                                catch (e) {
+                                }
+                            }
+                            this._bufferedGameObjects.push(gameObject);
+                        }
+                        else if (this._bufferedGameObjects.indexOf(gameObject) < 0) {
+                            this._bufferedGameObjects.push(gameObject);
+                        }
+                    }
+                }
+                if (isHierarchyShowed) {
+                    // Add folder.
+                    var i = 0;
+                    while (this._bufferedGameObjects.length > 0 && i++ < 5) {
+                        var gameObject = this._bufferedGameObjects.shift();
+                        if (gameObject) {
+                            if (!this._addToHierarchy(gameObject)) {
+                                this._bufferedGameObjects.push(gameObject);
+                            }
+                        }
+                    }
+                    if (!this._selectFolder) {
+                        var sceneOrGameObject = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
+                        if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
+                            this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
+                            this._selectFolder.selected = true;
+                            this._openFolder(this._selectFolder);
+                        }
+                    }
+                }
+                if (isInspectorShowed) {
+                    this._guiComponent.inspector.updateDisplay();
+                    var inspectorFolders = this._guiComponent.inspector.__folders;
+                    if (inspectorFolders) {
+                        for (var k in inspectorFolders) {
+                            inspectorFolders[k].updateDisplay();
+                        }
+                    }
                 }
             };
             return GUISystem;

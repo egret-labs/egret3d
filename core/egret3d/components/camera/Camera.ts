@@ -87,7 +87,7 @@ namespace egret3d {
         public opvalue: number = 1.0;
 
         /**
-         * 正交投影的竖向size
+         * 正交投影的尺寸。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
@@ -105,7 +105,7 @@ namespace egret3d {
          * - 归一化的。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.RECT)
+        @paper.editor.property(paper.editor.EditType.RECT, { step: 0.01 })
         public readonly viewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
 
         /**
@@ -149,6 +149,7 @@ namespace egret3d {
 
         /**
          * 计算相机视锥区域
+         * TODO
          */
         private _calcCameraFrame() {
             const vpp = _helpRectA;
@@ -163,21 +164,36 @@ namespace egret3d {
             const farRT = this._frameVectors[6];
             const nearRT = this._frameVectors[7];
 
-            const near_h = this.near * Math.tan(this.fov * 0.5);
-            const near_w = near_h * asp;
+            const near = this.near;
+            const far = this.far;
+            const matchFactor = stage.matchFactor;
+            const tan = Math.tan(this.fov * 0.5);
 
-            nearLT.set(-near_w, near_h, this.near);
-            nearLD.set(-near_w, -near_h, this.near);
-            nearRT.set(near_w, near_h, this.near);
-            nearRD.set(near_w, -near_h, this.near);
+            const nearHX = near * tan;
+            const nearWX = nearHX * asp;
+            const nearWY = near * tan;
+            const nearHY = nearWY / asp;
 
-            const far_h = this.far * Math.tan(this.fov * 0.5);
-            const far_w = far_h * asp;
+            const farHX = far * tan;
+            const farWX = farHX * asp;
+            const farWY = far * tan;
+            const farHY = farWY / asp;
 
-            farLT.set(-far_w, far_h, this.far);
-            farLD.set(-far_w, -far_h, this.far);
-            farRT.set(far_w, far_h, this.far);
-            farRD.set(far_w, -far_h, this.far);
+            const nearWidth = math.lerp(nearWY, nearWX, matchFactor);
+            const nearHeight = math.lerp(nearHY, nearHX, matchFactor);
+
+            const farWidth = math.lerp(farWY, farWX, matchFactor);
+            const farHeight = math.lerp(farHY, farHX, matchFactor);
+
+            nearLT.set(-nearWidth, nearHeight, near);
+            nearLD.set(-nearWidth, -nearHeight, near);
+            nearRT.set(nearWidth, nearHeight, near);
+            nearRD.set(nearWidth, -nearHeight, near);
+
+            farLT.set(-farWidth, farHeight, far);
+            farLD.set(-farWidth, -farHeight, far);
+            farRT.set(farWidth, farHeight, far);
+            farRD.set(farWidth, -farHeight, far);
 
             const worldMatrix = this.gameObject.transform.localToWorldMatrix;
             farLD.applyMatrix(worldMatrix);
@@ -190,7 +206,7 @@ namespace egret3d {
             nearRT.applyMatrix(worldMatrix);
         }
 
-        private _intersectPlane(boundingSphere: egret3d.Sphere, v0: Vector3, v1: Vector3, v2: Vector3) {
+        private _intersectPlane(boundingSphere: Sphere, v0: Vector3, v1: Vector3, v2: Vector3) {
             let subV0 = helpVector3A;
             let subV1 = helpVector3B;
             let cross = helpVector3C;
@@ -241,12 +257,40 @@ namespace egret3d {
          * TODO
          */
         public calcProjectMatrix(asp: number, matrix: Matrix4): Matrix4 {
+            const matchFactor = 1.0 - stage.matchFactor;
+
             if (this.opvalue > 0.0) {
-                Matrix4.perspectiveProjectLH(this.fov, asp, this.near, this.far, this._projectionMatrix);
+                const tan = Math.tan(this.fov * 0.5);
+
+                const topX = this.near * tan;
+                const heightX = 2.0 * topX;
+                const widthX = asp * heightX;
+                const leftX = -0.5 * widthX;
+
+                const leftY = -this.near * tan;
+                const widthY = 2.0 * -leftY;
+                const heightY = widthY / asp;
+                const topY = 0.5 * heightY;
+
+                const top = topX + (topY - topX) * matchFactor;
+                const left = leftX + (leftY - leftX) * matchFactor;
+                const width = widthX + (widthY - widthX) * matchFactor;
+                const height = heightX + (heightY - heightX) * matchFactor;
+
+                Matrix4.perspectiveProjectLH(left, left + width, top, top - height, this.near, this.far, this._projectionMatrix);
             }
 
             if (this.opvalue < 1.0) {
-                Matrix4.orthoProjectLH(this.size * asp, this.size, this.near, this.far, this._matProjO);
+                const widthX = this.size * asp;
+                const heightX = this.size;
+
+                const widthY = this.size;
+                const heightY = this.size / asp;
+
+                const width = widthX + (widthY - widthX) * matchFactor;
+                const height = heightX + (heightY - heightX) * matchFactor;
+
+                Matrix4.orthoProjectLH(width, height, this.near, this.far, this._matProjO);
             }
 
             if (this.opvalue === 0.0) {
@@ -273,12 +317,17 @@ namespace egret3d {
             }
 
             const vpp = _helpRectA;
-            const scaler = stage.scaler;
             const asp = this.calcViewPortPixel(vpp);
             const clipToWorldMatrix = this._updateClipToWorldMatrix(asp);
+
+            const backupZ = stagePosition.z;
+            const viewport = this.viewport;
+            const kX = viewport.w / vpp.w * 2.0;
+            const kY = viewport.h / vpp.h * 2.0;
+
             worldPosition.set(
-                stagePosition.x * scaler / vpp.w * 2.0 - 1.0,
-                1.0 - stagePosition.y * scaler / vpp.h * 2.0,
+                (stagePosition.x * kX - 1.0),
+                (1.0 - stagePosition.y * kY),
                 0.95,
             ).applyMatrix(clipToWorldMatrix);
 
@@ -293,7 +342,7 @@ namespace egret3d {
                     // worldPosition.subtract(vppos, forward.multiplyScalar(distanceToPlane - stagePosition.z));
                 }
                 else {
-                    worldPosition.multiplyScalar(-stagePosition.z / distanceToPlane).add(position);
+                    worldPosition.multiplyScalar(-backupZ / distanceToPlane).add(position);
                 }
             }
 
@@ -313,9 +362,11 @@ namespace egret3d {
             const vpp = _helpRectA;
             const asp = this.calcViewPortPixel(vpp);
             const worldToClipMatrix = this.calcProjectMatrix(asp, this._worldToClipMatrix).multiply(this.gameObject.transform.worldToLocalMatrix);
+            const viewport = this.viewport;
+
             stagePosition.applyMatrix(worldToClipMatrix, worldPosition);
-            stagePosition.x = (stagePosition.x + 1.0) * vpp.w * 0.5;
-            stagePosition.y = (1.0 - stagePosition.y) * vpp.h * 0.5;
+            stagePosition.x = (stagePosition.x + 1.0) * vpp.w * 0.5 / viewport.w;
+            stagePosition.y = (1.0 - stagePosition.y) * vpp.h * 0.5 / viewport.h;
             // stagePosition.z = TODO
 
             return stagePosition;
@@ -336,14 +387,18 @@ namespace egret3d {
             const asp = this.calcViewPortPixel(vpp);
             const clipToWorldMatrix = this._updateClipToWorldMatrix(asp);
 
+            const viewport = this.viewport;
+            const kX = viewport.w / vpp.w * 2.0;
+            const kY = viewport.h / vpp.h * 2.0;
+
             ray.origin.set(
-                stageX / vpp.w * 2.0 - 1.0,
-                1.0 - stageY / vpp.h * 2.0,
+                stageX * kX - 1.0,
+                1.0 - stageY * kY,
                 0.0,
             ).applyMatrix(clipToWorldMatrix);
             ray.direction.set(
-                stageX / vpp.w * 2.0 - 1.0,
-                1.0 - stageY / vpp.h * 2.0,
+                stageX * kX - 1.0,
+                1.0 - stageY * kY,
                 1.0,
             ).applyMatrix(clipToWorldMatrix).subtract(ray.origin).normalize();
 

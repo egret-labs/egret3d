@@ -1,5 +1,6 @@
 namespace paper {
-
+    Layer.Default;
+    
     /**
      * 实体。
      */

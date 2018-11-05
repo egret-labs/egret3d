@@ -6,6 +6,7 @@ namespace egret3d.particle {
     export const onRotationChanged: signals.Signal = new signals.Signal();
     export const onTextureSheetChanged: signals.Signal = new signals.Signal();
     export const onShapeChanged: signals.Signal = new signals.Signal();
+    export const onStartSize3DChanged: signals.Signal = new signals.Signal();
     export const onStartRotation3DChanged: signals.Signal = new signals.Signal();
     export const onSimulationSpaceChanged: signals.Signal = new signals.Signal();
     export const onScaleModeChanged: signals.Signal = new signals.Signal();
@@ -583,6 +584,8 @@ namespace egret3d.particle {
         public readonly gravityModifier: MinMaxCurve = new MinMaxCurve(); //TODO
 
         @paper.serializedField
+        private _startSize3D: boolean = false;
+        @paper.serializedField
         private _startRotation3D: boolean = false;
         @paper.serializedField
         private _simulationSpace: SimulationSpace = SimulationSpace.Local;
@@ -598,6 +601,7 @@ namespace egret3d.particle {
             this.startDelay.deserialize(element.startDelay);
             this.startLifetime.deserialize(element.startLifetime);
             this.startSpeed.deserialize(element.startSpeed);
+            this._startSize3D = element.startSize3D || false;
             this.startSizeX.deserialize(element.startSizeX);
             this.startSizeY.deserialize(element.startSizeY);
             this.startSizeZ.deserialize(element.startSizeZ);
@@ -613,6 +617,17 @@ namespace egret3d.particle {
             this._maxParticles = (element._maxParticles || element.maxParticles) || 0;
 
             return this;
+        }
+        public get startSize3D() {
+            return this._startSize3D;
+        }
+        public set startSize3D(value: boolean) {
+            if (this._startSize3D === value) {
+                return;
+            }
+
+            this._startSize3D = value;
+            onStartSize3DChanged.dispatch(this._component);
         }
         /**
          * 

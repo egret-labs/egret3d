@@ -15,7 +15,7 @@
 			"dom",
 			"es2015.promise"
 		],
-        "outFile": "bin/editor/editor.js"
+        "outFile": "bin/inspector.js"
     },
     "include": [
         "src",
