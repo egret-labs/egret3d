@@ -725,9 +725,9 @@ namespace egret3d {
                 return this;
             }
 
-            const p = 1.0 - t;
             for (let i = 0; i < 16; i++) {
-                this.rawData[i] = from.rawData[i] * p + to.rawData[i] * t;
+                const fV = from.rawData[i];
+                this.rawData[i] = fV + (to.rawData[i] - fV) * t;
             }
 
             return this;
@@ -795,7 +795,7 @@ namespace egret3d {
 
             switch (order) {
                 case EulerOrder.XYZ: {
-                    euler.y = Math.asin(floatClamp(m13, -1.0, 1.0));
+                    euler.y = Math.asin(math.clamp(m13, -1.0, 1.0));
 
                     if (Math.abs(m13) < 0.999999) {
                         euler.x = Math.atan2(-m23, m33);
@@ -809,7 +809,7 @@ namespace egret3d {
                 }
 
                 case EulerOrder.XZY: {
-                    euler.z = Math.asin(-floatClamp(m12, -1.0, 1.0));
+                    euler.z = Math.asin(-math.clamp(m12, -1.0, 1.0));
 
                     if (Math.abs(m12) < 0.999999) {
                         euler.x = Math.atan2(m32, m22);
@@ -823,7 +823,7 @@ namespace egret3d {
                 }
 
                 case EulerOrder.YXZ: {
-                    euler.x = Math.asin(-floatClamp(m23, -1.0, 1.0));
+                    euler.x = Math.asin(-math.clamp(m23, -1.0, 1.0));
 
                     if (Math.abs(m23) < 0.999999) {
                         euler.y = Math.atan2(m13, m33);
@@ -837,7 +837,7 @@ namespace egret3d {
                 }
 
                 case EulerOrder.YZX: {
-                    euler.z = Math.asin(floatClamp(m21, -1.0, 1.0));
+                    euler.z = Math.asin(math.clamp(m21, -1.0, 1.0));
 
                     if (Math.abs(m21) < 0.999999) {
                         euler.x = Math.atan2(-m23, m22);
@@ -851,7 +851,7 @@ namespace egret3d {
                 }
 
                 case EulerOrder.ZXY: {
-                    euler.x = Math.asin(floatClamp(m32, -1.0, 1.0));
+                    euler.x = Math.asin(math.clamp(m32, -1.0, 1.0));
 
                     if (Math.abs(m32) < 0.999999) {
                         euler.y = Math.atan2(- m31, m33);
@@ -865,7 +865,7 @@ namespace egret3d {
                 }
 
                 case EulerOrder.ZYX: {
-                    euler.y = Math.asin(-floatClamp(m31, -1.0, 1.0));
+                    euler.y = Math.asin(-math.clamp(m31, -1.0, 1.0));
 
                     if (Math.abs(m31) < 0.999999) {
                         euler.x = Math.atan2(m32, m33);

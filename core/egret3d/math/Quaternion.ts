@@ -229,6 +229,36 @@ namespace egret3d {
             return this.multiply(quaternion, this);
         }
         /**
+         * @internal
+         */
+        public lerp(t: number, from: Readonly<IVector4>, to?: Readonly<IVector4>) {
+            if (!to) {
+                to = from;
+                from = this;
+            }
+
+            if (t === 0.0) return this.copy(from);
+            if (t === 1.0) return this.copy(to);
+
+            const fX = from.x, fY = from.y, fZ = from.z, fW = from.w;
+            const tX = to.x, tY = to.y, tZ = to.z, tW = to.w;
+
+            if (fX * tX + fY * tY + fZ * tZ + fW * tW < 0.0) {
+                this.x = fX + (-tX - fX) * t;
+                this.y = fY + (-tY - fY) * t;
+                this.z = fZ + (-tZ - fZ) * t;
+                this.w = fW + (-tW - fW) * t;
+            }
+            else {
+                this.x = fX + (tX - fX) * t;
+                this.y = fY + (tY - fY) * t;
+                this.z = fZ + (tZ - fZ) * t;
+                this.w = fW + (tW - fW) * t;
+            }
+
+            return this;
+        }
+        /**
          * 将该四元数和目标四元数球形插值的结果写入该四元数。
          * - v = v * (1 - t) + to * t
          * - 插值因子不会被限制在 0 ~ 1。
@@ -287,11 +317,10 @@ namespace egret3d {
 
             if (sqrSinHalfTheta <= Const.EPSILON) { // Number.EPSILON
 
-                const s = 1.0 - t;
-                this.w = s * aw + t * this.w;
-                this.x = s * ax + t * this.x;
-                this.y = s * ay + t * this.y;
-                this.z = s * az + t * this.z;
+                this.w = aw + t * (this.w - aw);
+                this.x = ax + t * (this.x - ax);
+                this.y = ay + t * (this.y - ay);
+                this.z = az + t * (this.z - az);
 
                 return this.normalize();
             }
@@ -329,7 +358,7 @@ namespace egret3d {
          * 获取该四元数和一个四元数的夹角。（弧度制）
          */
         public getAngle(value: Readonly<IVector4>): number {
-            return 2.0 * Math.acos(Math.abs(egret3d.floatClamp(this.dot(value), -1.0, 1.0)));
+            return 2.0 * Math.acos(Math.abs(math.clamp(this.dot(value), -1.0, 1.0)));
         }
         /**
          * 将该四元数转换为欧拉旋转。（弧度制）

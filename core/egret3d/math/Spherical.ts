@@ -81,7 +81,7 @@ namespace egret3d {
             }
             else {
                 this.theta = Math.atan2((p1 as number), (p3 as number)); // TODO
-                this.phi = Math.acos(floatClamp((p2 as number) / this.radius, -1.0, 1.0));
+                this.phi = Math.acos(math.clamp((p2 as number) / this.radius, -1.0, 1.0));
             }
 
             return this;

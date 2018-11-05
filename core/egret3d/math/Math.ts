@@ -1,9 +1,17 @@
 namespace egret3d {
+    /**
+     * 
+     */
     export namespace math {
+        /**
+         * 
+         */
         export function euclideanModulo(n: number, m: number): number {
             return ((n % m) + m) % m;
         }
-
+        /**
+         * 
+         */
         export function clamp(v: number, min: number = 0.0, max: number = 1.0) {
             if (v < min) {
                 return min;
@@ -15,9 +23,11 @@ namespace egret3d {
                 return v;
             }
         }
-
+        /**
+         * 
+         */
         export function lerp(from: number, to: number, t: number) {
-            return from * (1.0 - t) + to * t;
+            return from + (to - from) * t;
         }
     }
     /**
@@ -53,22 +63,6 @@ namespace egret3d {
     /**
      * @deprecated
      */
-    export function floatClamp(v: number, min: number = 0.0, max: number = 1.0) {
-        if (v < min) {
-            return min;
-        }
-        else if (v > max) {
-            return max;
-        }
-        else {
-            return v;
-        }
-    }
-
-    export function numberLerp(fromV: number, toV: number, v: number) {
-        return fromV * (1 - v) + toV * v;
-    }
-
     export function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3) {
         let vp1 = planeVector.x;
         let vp2 = planeVector.y;
@@ -241,17 +235,4 @@ namespace egret3d {
     export function isPowerOfTwo(value: number): boolean {
         return (value & (value - 1)) === 0 && value !== 0;
     }
-
-    /**
-     * @deprecated
-     */
-    export const RAD_DEG: number = 180.0 / Math.PI;
-    /**
-     * @deprecated
-     */
-    export const DEG_RAD: number = Math.PI / 180.0;
-    /**
-     * @deprecated
-     */
-    export const EPSILON = 2.220446049250313e-16;
 }

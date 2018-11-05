@@ -162,7 +162,7 @@ namespace egret3d.particle {
                 const lastIndex = i === 0 ? 0 : i - 1;
                 const lastKeyFrame = this._keys[lastIndex];
                 const tt = (t - lastKeyFrame.time) / (curKeyFrame.time - lastKeyFrame.time);
-                return numberLerp(lastKeyFrame.value, curKeyFrame.value, tt);
+                return math.lerp(lastKeyFrame.value, curKeyFrame.value, tt);
             }
 
             throw "AnimationCurve: invalid t or keys.length is 0";
@@ -295,7 +295,7 @@ namespace egret3d.particle {
                     const lastIndex = i === 0 ? 0 : i - 1;
                     const lastKeyFrame = this.alphaKeys[lastIndex];
                     const tt = (t - lastKeyFrame.time) / (curKeyFrame.time - lastKeyFrame.time);
-                    out.a = numberLerp(lastKeyFrame.alpha, curKeyFrame.alpha, tt);
+                    out.a = math.lerp(lastKeyFrame.alpha, curKeyFrame.alpha, tt);
                     break;
                 }
             }
@@ -306,9 +306,9 @@ namespace egret3d.particle {
                     const lastIndex = i === 0 ? 0 : i - 1;
                     const lastKeyFrame = this.colorKeys[lastIndex];
                     const tt = (t - lastKeyFrame.time) / (colorKey.time - lastKeyFrame.time);
-                    out.r = numberLerp(lastKeyFrame.color.r, colorKey.color.r, tt);
-                    out.g = numberLerp(lastKeyFrame.color.g, colorKey.color.g, tt);
-                    out.b = numberLerp(lastKeyFrame.color.b, colorKey.color.b, tt);
+                    out.r = math.lerp(lastKeyFrame.color.r, colorKey.color.r, tt);
+                    out.g = math.lerp(lastKeyFrame.color.g, colorKey.color.g, tt);
+                    out.b = math.lerp(lastKeyFrame.color.b, colorKey.color.b, tt);
                     break;
                 }
             }

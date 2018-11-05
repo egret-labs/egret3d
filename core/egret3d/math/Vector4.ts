@@ -213,12 +213,10 @@ namespace egret3d {
             if (t === 0.0) return this.copy(from);
             if (t === 1.0) return this.copy(to);
 
-            const p = 1.0 - t;
-
-            this.x = from.x * p + to.x * t;
-            this.y = from.y * p + to.y * t;
-            this.z = from.z * p + to.z * t;
-            this.w = from.w * p + to.w * t;
+            this.x = from.x + (to.x - from.x) * t;
+            this.y = from.y + (to.y - from.y) * t;
+            this.z = from.z + (to.z - from.z) * t;
+            this.w = from.w + (to.w - from.w) * t;
 
             return this;
         }

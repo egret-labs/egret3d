@@ -582,10 +582,9 @@ namespace egret3d {
                 from = this;
             }
 
-            const p = 1.0 - t;
-            this.x = from.x * p + to.x * t;
-            this.y = from.y * p + to.y * t;
-            this.z = from.z * p + to.z * t;
+            this.x = from.x + (to.x - from.x) * t;
+            this.y = from.y + (to.y - from.y) * t;
+            this.z = from.z + (to.z - from.z) * t;
 
             return this;
         }

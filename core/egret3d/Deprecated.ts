@@ -2,6 +2,26 @@ namespace egret3d {
     /**
      * @deprecated
      */
+    export const RAD_DEG = Const.RAD_DEG;
+    /**
+     * @deprecated
+     */
+    export const DEG_RAD = Const.DEG_RAD;
+    /**
+     * @deprecated
+     */
+    export const EPSILON = Const.EPSILON;
+    /**
+     * @deprecated
+     */
+    export const floatClamp = math.clamp;
+    /**
+     * @deprecated
+     */
+    export const numberLerp = math.lerp;
+    /**
+     * @deprecated
+     */
     export type AABB = Box;
     /**
      * @deprecated
