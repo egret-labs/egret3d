@@ -4719,6 +4719,15 @@ var paper;
                 var guiComponent = this._guiComponent;
                 guiComponent.stats.update();
                 guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["web"]["WebGLRenderSystem"]).deltaTime, 200);
+                if (egret3d.inputCollecter.getKey("KeyH" /* KeyH */).isDown()) {
+                    var statsDOM = guiComponent.stats.dom;
+                    if (statsDOM.style.display !== "none") {
+                        statsDOM.style.display = "none";
+                    }
+                    else {
+                        statsDOM.style.display = "block";
+                    }
+                }
                 // TODO dc tc vc
                 var isMobile = paper.Application.isMobile;
                 if (this._isMobile !== isMobile) {
@@ -7195,7 +7204,22 @@ var paper;
                 };
                 var makeInfo = function (target, result) {
                     if (result === void 0) { result = []; }
-                    result.push({ uuid: target.uuid, linkid: target.extras.linkedID, rootid: target.extras.rootID, prefab: target.extras.prefab.name });
+                    result.push({
+                        uuid: target.uuid,
+                        linkid: target.extras.linkedID,
+                        rootid: target.extras.rootID,
+                        prefab: target.extras.prefab ? target.extras.prefab.name : undefined,
+                        components: (function () {
+                            var list = [];
+                            for (var _i = 0, _a = target.components; _i < _a.length; _i++) {
+                                var comp = _a[_i];
+                                if (comp.extras && comp.extras.linkedID) {
+                                    list.push({ uuid: comp.uuid, linkid: comp.extras.linkedID });
+                                }
+                            }
+                            return list;
+                        })()
+                    });
                     target.transform.children.forEach(function (transform) {
                         var obj = transform.gameObject;
                         if (isPrefabChild(obj) && !isPrefabRoot(obj)) {
@@ -7225,6 +7249,12 @@ var paper;
                     obj.extras.linkedID = undefined;
                     obj.extras.prefab = undefined;
                     obj.extras.rootID = undefined;
+                    for (var _i = 0, _a = obj.components; _i < _a.length; _i++) {
+                        var comp = _a[_i];
+                        if (comp.extras && comp.extras.linkedID) {
+                            comp.extras.linkedID = undefined;
+                        }
+                    }
                     _this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: null });
                 });
                 return true;
@@ -7237,8 +7267,18 @@ var paper;
                         var info = this.prefabInfos[k];
                         if (obj.uuid === info.uuid) {
                             obj.extras.linkedID = info.linkid;
-                            obj.extras.prefab = paper.Asset.find(info.prefab);
+                            obj.extras.prefab = info.prefab ? paper.Asset.find(info.prefab) : undefined;
                             obj.extras.rootID = info.rootid;
+                            for (var _i = 0, _a = obj.components; _i < _a.length; _i++) {
+                                var comp = _a[_i];
+                                c: for (var _b = 0, _c = info.components; _b < _c.length; _b++) {
+                                    var compInfo = _c[_b];
+                                    if (comp.uuid === compInfo.uuid) {
+                                        comp.extras.linkedID = compInfo.linkid;
+                                        break c;
+                                    }
+                                }
+                            }
                             this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: obj.extras.prefab });
                             break b;
                         }
