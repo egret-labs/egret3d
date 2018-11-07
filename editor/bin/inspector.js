@@ -4719,7 +4719,7 @@ var paper;
                 var guiComponent = this._guiComponent;
                 guiComponent.stats.update();
                 guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["web"]["WebGLRenderSystem"]).deltaTime, 200);
-                if (egret3d.inputCollecter.getKey("KeyH" /* KeyH */).isDown()) {
+                if (egret3d.inputCollecter.getKey("KeyH" /* KeyH */).isDown(false)) {
                     var statsDOM = guiComponent.stats.dom;
                     if (statsDOM.style.display !== "none") {
                         statsDOM.style.display = "none";
@@ -4780,8 +4780,6 @@ var paper;
          * @param classInstance 实例对象
          */
         function isCustom(classInstance) {
-            // let clzName = egret.getQualifiedClassName(classInstance);
-            // let clz = egret.getDefinitionByName(clzName);
             var clz = classInstance.constructor;
             return clz['__custom__'] ? true : false;
         }
@@ -4792,16 +4790,6 @@ var paper;
          */
         function getEditInfo(classInstance) {
             var retrunList = [];
-            // let clzName = egret.getQualifiedClassName(classInstance);
-            // let clz = egret.getDefinitionByName(clzName);
-            // let extend: string[] = clz.prototype.__types__;
-            // for (let i = extend.length - 1; i >= 0; i--) {
-            //     let clzName = extend[i];
-            //     let clz = egret.getDefinitionByName(clzName);
-            //     if (clz && clz.prototype.hasOwnProperty('__props__')) {
-            //         retrunList = retrunList.concat(clz.prototype['__props__']);
-            //     }
-            // }
             var proto = classInstance;
             while (proto) {
                 if (proto.constructor.prototype) {
@@ -4906,6 +4894,13 @@ var paper;
                 objs.forEach(function (obj) {
                     obj.activeSelf = true;
                 });
+            };
+            /**
+             * 定位对象到场景中心
+             * @param target 目标
+             */
+            Editor.locateGambeObject = function (target) {
+                paper.Application.systemManager.getSystem(editor.SceneSystem).lookAtSelected();
             };
             /**
              * 编辑场景
