@@ -16,7 +16,7 @@ namespace egret3d {
         private readonly _sortedRenderers: Egret2DRenderer[] = [];
 
         private _onSortRenderers(a: Egret2DRenderer, b: Egret2DRenderer) {
-            return a._order - b._order;
+            return b._order - a._order;
         }
 
         private _sortRenderers() {
