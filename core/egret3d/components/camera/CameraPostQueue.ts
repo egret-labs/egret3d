@@ -6,7 +6,8 @@ namespace egret3d {
 
         private readonly _camera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
         private readonly _drawCall: DrawCall = DrawCall.create();
-        private readonly _defaultMaterial: Material = egret3d.DefaultMaterials.MESH_BASIC.clone(); // TODO copy shader
+        private readonly _defaultMaterial: Material = egret3d.DefaultMaterials.MESH_BASIC.clone()
+            .setDepth(false, false); // TODO copy shader
         private readonly _webglSystem = paper.SystemManager.getInstance().getSystem(web.WebGLRenderSystem);   //TODO
         private readonly _webglState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
 

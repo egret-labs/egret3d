@@ -1,0 +1,152 @@
+{
+    "version": "3",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {
+        "KHR_techniques_webgl": {
+            "shaders": [
+                {
+                    "name": "composite_vert",
+                    "type": 35633,
+                    "uri": "shaders/unrealboom/composite_vert.glsl"
+                },
+                {
+                    "name": "composite_frag",
+                    "type": 35632,
+                    "uri": "shaders/unrealboom/composite_frag.glsl"
+                }
+            ],
+            "techniques": [
+                {
+                    "name": "composite",
+                    "attributes": {
+                        "position": {
+                            "semantic": "POSITION"
+                        },
+                        "normal": {
+                            "semantic": "NORMAL"
+                        },
+                        "uv": {
+                            "semantic": "TEXCOORD_0"
+                        },
+                        "color": {
+                            "semantic": "COLOR_0"
+                        },
+                        "morphTarget0": {
+                            "semantic": "WEIGHTS_0"
+                        },
+                        "morphTarget1": {
+                            "semantic": "WEIGHTS_1"
+                        },
+                        "morphTarget2": {
+                            "semantic": "WEIGHTS_2"
+                        },
+                        "morphTarget3": {
+                            "semantic": "WEIGHTS_3"
+                        },
+                        "morphNormal0": {
+                            "semantic": "MORPHNORMAL_0"
+                        },
+                        "morphNormal1": {
+                            "semantic": "MORPHNORMAL_1"
+                        },
+                        "morphNormal2": {
+                            "semantic": "MORPHNORMAL_2"
+                        },
+                        "morphNormal3": {
+                            "semantic": "MORPHNORMAL_3"
+                        },
+                        "morphTarget4": {
+                            "semantic": "WEIGHTS_4"
+                        },
+                        "morphTarget5": {
+                            "semantic": "WEIGHTS_5"
+                        },
+                        "morphTarget6": {
+                            "semantic": "WEIGHTS_6"
+                        },
+                        "morphTarget7": {
+                            "semantic": "WEIGHTS_7"
+                        },
+                        "skinIndex": {
+                            "semantic": "JOINTS_0"
+                        },
+                        "skinWeight": {
+                            "semantic": "MORPHTARGET_0"
+                        }
+                    },
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": 35676,
+                            "semantic": "MODEL"
+                        },
+                        "modelViewMatrix": {
+                            "type": 35676,
+                            "semantic": "MODELVIEW"
+                        },
+                        "projectionMatrix": {
+                            "type": 35676,
+                            "semantic": "PROJECTION"
+                        },
+                        "viewMatrix": {
+                            "type": 35676,
+                            "semantic": "VIEW"
+                        },
+                        "normalMatrix": {
+                            "type": 35675,
+                            "semantic": "MODELVIEWINVERSE"
+                        },
+                        "cameraPosition": {
+                            "type": 35665,
+                            "semantic": "_CAMERA_POS"
+                        },
+                        "blurTexture1": {
+                            "type": 35678
+                        },
+                        "blurTexture2": {
+                            "type": 35678
+                        },
+                        "blurTexture3": {
+                            "type": 35678
+                        },
+                        "blurTexture4": {
+                            "type": 35678
+                        },
+                        "blurTexture5": {
+                            "type": 35678
+                        },
+                        "dirtTexture": {
+                            "type": 35678
+                        },
+                        "bloomStrength": {
+                            "type": 5126
+                        },
+                        "bloomRadius": {
+                            "type": 5126
+                        },
+                        "bloomFactors[0]": {
+                            "type": 5126
+                        },
+                        "bloomTintColors[0]": {
+                            "type": 35665
+                        }
+                    },
+                    "states": {
+                        "enable": [],
+                        "functions": {}
+                    }
+                }
+            ]
+        },
+        "paper": {}
+    },
+    "extensionsRequired": [
+        "paper",
+        "KHR_techniques_webgl"
+    ],
+    "extensionsUsed": [
+        "paper",
+        "KHR_techniques_webgl"
+    ]
+}

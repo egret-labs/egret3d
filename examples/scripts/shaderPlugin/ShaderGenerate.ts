@@ -17,7 +17,6 @@ export class ColletCustomShaderCommand implements IShaderCommand {
     }
     public execute(shaderContext: ShaderGenerateContext) {
         //分析出vert，frag和chunk文件
-            console.log(this._root);
         const allShaders = ShaderUtils.filterFileList(this._root, /.glsl/);
         const chunkFiles: string[] = [];
         const libFiles: string[] = [];
@@ -114,7 +113,7 @@ export class ParseShaderCommand implements IShaderCommand {
         for (const file of shaderContext.libFiles) {
             const fileName = path.basename(file);
             const dirName = path.dirname(file);
-            const shaderName = fileName.substring(0, fileName.lastIndexOf("_"));
+            const shaderName = fileName.substring(0, fileName.indexOf("_"));
             const type = fileName.indexOf("frag") >= 0 ? gltf.ShaderStage.FRAGMENT_SHADER : gltf.ShaderStage.VERTEX_SHADER;
             const context = fs.readFileSync(file, "utf-8");
 
