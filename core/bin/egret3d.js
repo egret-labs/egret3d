@@ -1237,15 +1237,26 @@ var egret3d;
             this.z = x * yB - y * xB;
             return this;
         };
-        Vector3.prototype.lerp = function (t, from, to) {
-            if (!to) {
-                to = from;
-                from = this;
+        Vector3.prototype.lerp = function (p1, p2, p3) {
+            if (typeof p1 === "number") {
+                if (!p3) {
+                    p3 = p2;
+                    p2 = this;
+                }
+                this.x = p2.x + (p3.x - p2.x) * p1;
+                this.y = p2.y + (p3.y - p2.y) * p1;
+                this.z = p2.z + (p3.z - p2.z) * p1;
             }
-            var p = 1.0 - t;
-            this.x = from.x * p + to.x * t;
-            this.y = from.y * p + to.y * t;
-            this.z = from.z * p + to.z * t;
+            else {
+                if (typeof p2 === "number") {
+                    p3 = p2;
+                    p2 = p1;
+                    p1 = this;
+                }
+                this.x = p1.x + (p2.x - p1.x) * p3;
+                this.y = p1.y + (p2.y - p1.y) * p3;
+                this.z = p1.z + (p2.z - p1.z) * p3;
+            }
             return this;
         };
         Vector3.prototype.min = function (valueA, valueB) {
@@ -1997,20 +2008,28 @@ var egret3d;
         Vector4.prototype.dot = function (vector) {
             return this.x * vector.x + this.y * vector.y + this.z * vector.z + this.w * vector.w;
         };
-        Vector4.prototype.lerp = function (t, from, to) {
-            if (!to) {
-                to = from;
-                from = this;
+        Vector4.prototype.lerp = function (p1, p2, p3) {
+            if (typeof p1 === "number") {
+                if (!p3) {
+                    p3 = p2;
+                    p2 = this;
+                }
+                this.x = p2.x + (p3.x - p2.x) * p1;
+                this.y = p2.y + (p3.y - p2.y) * p1;
+                this.z = p2.z + (p3.z - p2.z) * p1;
+                this.w = p2.w + (p3.w - p2.w) * p1;
             }
-            if (t === 0.0)
-                return this.copy(from);
-            if (t === 1.0)
-                return this.copy(to);
-            var p = 1.0 - t;
-            this.x = from.x * p + to.x * t;
-            this.y = from.y * p + to.y * t;
-            this.z = from.z * p + to.z * t;
-            this.w = from.w * p + to.w * t;
+            else {
+                if (typeof p2 === "number") {
+                    p3 = p2;
+                    p2 = p1;
+                    p1 = this;
+                }
+                this.x = p1.x + (p2.x - p1.x) * p3;
+                this.y = p1.y + (p2.y - p1.y) * p3;
+                this.z = p1.z + (p2.z - p1.z) * p3;
+                this.w = p1.w + (p2.w - p1.w) * p3;
+            }
             return this;
         };
         /**
@@ -2826,26 +2845,27 @@ var egret3d;
         Matrix4.prototype.premultiply = function (matrix) {
             return this.multiply(matrix, this);
         };
-        Matrix4.prototype.lerp = function (t, from, to) {
-            if (!to) {
-                to = from;
-                from = this;
+        Matrix4.prototype.lerp = function (p1, p2, p3) {
+            if (typeof p2 === "number") {
+                p3 = p2;
+                p2 = p1;
+                p1 = this;
             }
-            if (t === 0.0) {
+            if (p3 === 0.0) {
                 for (var i = 0; i < 16; i++) {
-                    this.rawData[i] = from.rawData[i];
+                    this.rawData[i] = p1.rawData[i];
                 }
                 return this;
             }
-            else if (t === 1.0) {
+            else if (p3 === 1.0) {
                 for (var i = 0; i < 16; i++) {
-                    this.rawData[i] = to.rawData[i];
+                    this.rawData[i] = p2.rawData[i];
                 }
                 return this;
             }
-            var p = 1.0 - t;
             for (var i = 0; i < 16; i++) {
-                this.rawData[i] = from.rawData[i] * p + to.rawData[i] * t;
+                var fV = p1.rawData[i];
+                this.rawData[i] = fV + (p2.rawData[i] - fV) * p3;
             }
             return this;
         };
@@ -2914,7 +2934,7 @@ var egret3d;
             var m31 = rawData[2], m32 = rawData[6], m33 = rawData[10];
             switch (order) {
                 case 0 /* XYZ */: {
-                    euler.y = Math.asin(egret3d.floatClamp(m13, -1.0, 1.0));
+                    euler.y = Math.asin(egret3d.math.clamp(m13, -1.0, 1.0));
                     if (Math.abs(m13) < 0.999999) {
                         euler.x = Math.atan2(-m23, m33);
                         euler.z = Math.atan2(-m12, m11);
@@ -2926,7 +2946,7 @@ var egret3d;
                     break;
                 }
                 case 1 /* XZY */: {
-                    euler.z = Math.asin(-egret3d.floatClamp(m12, -1.0, 1.0));
+                    euler.z = Math.asin(-egret3d.math.clamp(m12, -1.0, 1.0));
                     if (Math.abs(m12) < 0.999999) {
                         euler.x = Math.atan2(m32, m22);
                         euler.y = Math.atan2(m13, m11);
@@ -2938,7 +2958,7 @@ var egret3d;
                     break;
                 }
                 case 2 /* YXZ */: {
-                    euler.x = Math.asin(-egret3d.floatClamp(m23, -1.0, 1.0));
+                    euler.x = Math.asin(-egret3d.math.clamp(m23, -1.0, 1.0));
                     if (Math.abs(m23) < 0.999999) {
                         euler.y = Math.atan2(m13, m33);
                         euler.z = Math.atan2(m21, m22);
@@ -2950,7 +2970,7 @@ var egret3d;
                     break;
                 }
                 case 3 /* YZX */: {
-                    euler.z = Math.asin(egret3d.floatClamp(m21, -1.0, 1.0));
+                    euler.z = Math.asin(egret3d.math.clamp(m21, -1.0, 1.0));
                     if (Math.abs(m21) < 0.999999) {
                         euler.x = Math.atan2(-m23, m22);
                         euler.y = Math.atan2(-m31, m11);
@@ -2962,7 +2982,7 @@ var egret3d;
                     break;
                 }
                 case 4 /* ZXY */: {
-                    euler.x = Math.asin(egret3d.floatClamp(m32, -1.0, 1.0));
+                    euler.x = Math.asin(egret3d.math.clamp(m32, -1.0, 1.0));
                     if (Math.abs(m32) < 0.999999) {
                         euler.y = Math.atan2(-m31, m33);
                         euler.z = Math.atan2(-m12, m22);
@@ -2974,7 +2994,7 @@ var egret3d;
                     break;
                 }
                 case 5 /* ZYX */: {
-                    euler.y = Math.asin(-egret3d.floatClamp(m31, -1.0, 1.0));
+                    euler.y = Math.asin(-egret3d.math.clamp(m31, -1.0, 1.0));
                     if (Math.abs(m31) < 0.999999) {
                         euler.x = Math.atan2(m32, m33);
                         euler.z = Math.atan2(m21, m11);
@@ -4128,8 +4148,8 @@ var egret3d;
         Color.prototype.multiply = function (valueA, valueB) {
             if (!valueB) {
                 valueB = valueA;
-                valueA = this;
             }
+            valueA = this;
             this.r = valueA.r * valueB.r;
             this.g = valueA.g * valueB.g;
             this.b = valueA.b * valueB.b;
@@ -4157,6 +4177,11 @@ var egret3d;
             this.a = t * (valueB.a - valueA.a) + valueA.a;
             return this;
         };
+        /**
+         * 所有颜色通道均为零的颜色。
+         * - 请注意不要修改该值。
+         */
+        Color.ZERO = new Color().set(0.0, 0.0, 0.0, 0.0);
         /**
          * 黑色。
          * - 请注意不要修改该值。
@@ -4820,6 +4845,53 @@ var egret3d;
         Quaternion.prototype.premultiply = function (quaternion) {
             return this.multiply(quaternion, this);
         };
+        /**
+         * @internal
+         */
+        Quaternion.prototype.lerp = function (p1, p2, p3) {
+            if (typeof p1 === "number") {
+                if (!p3) {
+                    p3 = p2;
+                    p2 = this;
+                }
+                var fX = p2.x, fY = p2.y, fZ = p2.z, fW = p2.w;
+                var tX = p3.x, tY = p3.y, tZ = p3.z, tW = p3.w;
+                if (fX * tX + fY * tY + fZ * tZ + fW * tW < 0.0) {
+                    this.x = fX + (-tX - fX) * p1;
+                    this.y = fY + (-tY - fY) * p1;
+                    this.z = fZ + (-tZ - fZ) * p1;
+                    this.w = fW + (-tW - fW) * p1;
+                }
+                else {
+                    this.x = fX + (tX - fX) * p1;
+                    this.y = fY + (tY - fY) * p1;
+                    this.z = fZ + (tZ - fZ) * p1;
+                    this.w = fW + (tW - fW) * p1;
+                }
+            }
+            else {
+                if (typeof p2 === "number") {
+                    p3 = p2;
+                    p2 = p1;
+                    p1 = this;
+                }
+                var fX = p1.x, fY = p1.y, fZ = p1.z, fW = p1.w;
+                var tX = p2.x, tY = p2.y, tZ = p2.z, tW = p2.w;
+                if (fX * tX + fY * tY + fZ * tZ + fW * tW < 0.0) {
+                    this.x = fX + (-tX - fX) * p3;
+                    this.y = fY + (-tY - fY) * p3;
+                    this.z = fZ + (-tZ - fZ) * p3;
+                    this.w = fW + (-tW - fW) * p3;
+                }
+                else {
+                    this.x = fX + (tX - fX) * p3;
+                    this.y = fY + (tY - fY) * p3;
+                    this.z = fZ + (tZ - fZ) * p3;
+                    this.w = fW + (tW - fW) * p3;
+                }
+            }
+            return this;
+        };
         Quaternion.prototype.slerp = function (t, from, to) {
             if (!to) {
                 to = from;
@@ -4855,11 +4927,10 @@ var egret3d;
             }
             var sqrSinHalfTheta = 1.0 - cosHalfTheta * cosHalfTheta;
             if (sqrSinHalfTheta <= 2.220446049250313e-16 /* EPSILON */) {
-                var s = 1.0 - t;
-                this.w = s * aw + t * this.w;
-                this.x = s * ax + t * this.x;
-                this.y = s * ay + t * this.y;
-                this.z = s * az + t * this.z;
+                this.w = aw + t * (this.w - aw);
+                this.x = ax + t * (this.x - ax);
+                this.y = ay + t * (this.y - ay);
+                this.z = az + t * (this.z - az);
                 return this.normalize();
             }
             var sinHalfTheta = Math.sqrt(sqrSinHalfTheta);
@@ -4892,7 +4963,7 @@ var egret3d;
          * 获取该四元数和一个四元数的夹角。（弧度制）
          */
         Quaternion.prototype.getAngle = function (value) {
-            return 2.0 * Math.acos(Math.abs(egret3d.floatClamp(this.dot(value), -1.0, 1.0)));
+            return 2.0 * Math.acos(Math.abs(egret3d.math.clamp(this.dot(value), -1.0, 1.0)));
         };
         /**
          * 将该四元数转换为欧拉旋转。（弧度制）
@@ -5768,12 +5839,21 @@ var paper;
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
+    /**
+     *
+     */
     var math;
     (function (math) {
+        /**
+         *
+         */
         function euclideanModulo(n, m) {
             return ((n % m) + m) % m;
         }
         math.euclideanModulo = euclideanModulo;
+        /**
+         *
+         */
         function clamp(v, min, max) {
             if (min === void 0) { min = 0.0; }
             if (max === void 0) { max = 1.0; }
@@ -5788,8 +5868,11 @@ var egret3d;
             }
         }
         math.clamp = clamp;
+        /**
+         *
+         */
         function lerp(from, to, t) {
-            return from * (1.0 - t) + to * t;
+            return from + (to - from) * t;
         }
         math.lerp = lerp;
     })(math = egret3d.math || (egret3d.math = {}));
@@ -5822,24 +5905,6 @@ var egret3d;
     /**
      * @deprecated
      */
-    function floatClamp(v, min, max) {
-        if (min === void 0) { min = 0.0; }
-        if (max === void 0) { max = 1.0; }
-        if (v < min) {
-            return min;
-        }
-        else if (v > max) {
-            return max;
-        }
-        else {
-            return v;
-        }
-    }
-    egret3d.floatClamp = floatClamp;
-    function numberLerp(fromV, toV, v) {
-        return fromV * (1 - v) + toV * v;
-    }
-    egret3d.numberLerp = numberLerp;
     function calPlaneLineIntersectPoint(planeVector, planePoint, lineVector, linePoint, out) {
         var vp1 = planeVector.x;
         var vp2 = planeVector.y;
@@ -6003,18 +6068,6 @@ var egret3d;
         return (value & (value - 1)) === 0 && value !== 0;
     }
     egret3d.isPowerOfTwo = isPowerOfTwo;
-    /**
-     * @deprecated
-     */
-    egret3d.RAD_DEG = 180.0 / Math.PI;
-    /**
-     * @deprecated
-     */
-    egret3d.DEG_RAD = Math.PI / 180.0;
-    /**
-     * @deprecated
-     */
-    egret3d.EPSILON = 2.220446049250313e-16;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -10182,7 +10235,7 @@ var egret3d;
                 mesh.name = "builtin/fullscreen_quad.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.FULLSCREEN_QUAD = mesh;
-                //后期渲染专用，UV反转一下，这样shader中就不用反转了
+                // 后期渲染专用，UV反转一下，这样shader中就不用反转了
                 var uvs = mesh.getUVs();
                 for (var i = 1, l = uvs.length; i < l; i += 2) {
                     uvs[i] = 1.0 - uvs[i];
@@ -12591,7 +12644,7 @@ var egret3d;
                 matrix.copy(this._projectionMatrix);
             }
             else {
-                matrix.lerp(this.opvalue, this._matProjO, this._projectionMatrix);
+                matrix.lerp(this._matProjO, this._projectionMatrix, this.opvalue);
             }
             return matrix;
         };
@@ -12854,7 +12907,8 @@ var egret3d;
             var _this = _super.call(this) || this;
             _this._camera = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.Camera);
             _this._drawCall = egret3d.DrawCall.create();
-            _this._defaultMaterial = egret3d.DefaultMaterials.MESH_BASIC.clone();
+            _this._defaultMaterial = egret3d.DefaultMaterials.MESH_BASIC.clone()
+                .setDepth(false, false); // TODO copy shader
             _this._webglSystem = paper.SystemManager.getInstance().getSystem(egret3d.web.WebGLRenderSystem); //TODO
             _this._webglState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.WebGLRenderState);
             _this._currentCamera = camera;
@@ -12874,6 +12928,9 @@ var egret3d;
             var camera = this._currentCamera;
             var stageViewport = egret3d.stage.viewport;
             if (!this._fullScreenRT || this._fullScreenRT.width !== stageViewport.w || this._fullScreenRT.height !== stageViewport.h) {
+                if (this._fullScreenRT) {
+                    this._fullScreenRT.dispose();
+                }
                 this._fullScreenRT = new egret3d.GlRenderTarget("fullScreenRT", stageViewport.w, stageViewport.h, true); //TODO    平台无关
             }
             this._webglSystem._renderCamera(camera, this._fullScreenRT);
@@ -12893,7 +12950,7 @@ var egret3d;
             var webglSystem = this._webglSystem;
             var webglState = this._webglState;
             webglSystem._viewport(camera.viewport, dest);
-            webglState.clear(true, true, egret3d.Color.WHITE);
+            webglState.clearBuffer(256 /* DEPTH_BUFFER_BIT */ | 16384 /* COLOR_BUFFER_BIT */, egret3d.Color.WHITE);
             webglSystem._draw(camera.context, this._drawCall, mat);
         };
         PostProcessRenderContext.prototype.clear = function () {
@@ -12918,6 +12975,9 @@ var egret3d;
     }(paper.BaseRelease));
     egret3d.PostProcessRenderContext = PostProcessRenderContext;
     __reflect(PostProcessRenderContext.prototype, "egret3d.PostProcessRenderContext");
+    /**
+     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
+     */
     var CameraPostProcessing = (function (_super) {
         __extends(CameraPostProcessing, _super);
         function CameraPostProcessing() {
@@ -13068,7 +13128,7 @@ var egret3d;
             }
             else {
                 this.theta = Math.atan2(p1, p3); // TODO
-                this.phi = Math.acos(egret3d.floatClamp(p2 / this.radius, -1.0, 1.0));
+                this.phi = Math.acos(egret3d.math.clamp(p2 / this.radius, -1.0, 1.0));
             }
             return this;
         };
@@ -13240,7 +13300,7 @@ var egret3d;
             return _this;
         }
         Egret2DRendererSystem.prototype._onSortRenderers = function (a, b) {
-            return a._order - b._order;
+            return b._order - a._order;
         };
         Egret2DRendererSystem.prototype._sortRenderers = function () {
             if (this._sortedDirty) {
@@ -16414,7 +16474,7 @@ var egret3d;
                     var lastIndex = i === 0 ? 0 : i - 1;
                     var lastKeyFrame = this._keys[lastIndex];
                     var tt = (t - lastKeyFrame.time) / (curKeyFrame.time - lastKeyFrame.time);
-                    return egret3d.numberLerp(lastKeyFrame.value, curKeyFrame.value, tt);
+                    return egret3d.math.lerp(lastKeyFrame.value, curKeyFrame.value, tt);
                 }
                 throw "AnimationCurve: invalid t or keys.length is 0";
             };
@@ -16554,7 +16614,7 @@ var egret3d;
                         var lastIndex = i === 0 ? 0 : i - 1;
                         var lastKeyFrame = this.alphaKeys[lastIndex];
                         var tt = (t - lastKeyFrame.time) / (curKeyFrame.time - lastKeyFrame.time);
-                        out.a = egret3d.numberLerp(lastKeyFrame.alpha, curKeyFrame.alpha, tt);
+                        out.a = egret3d.math.lerp(lastKeyFrame.alpha, curKeyFrame.alpha, tt);
                         break;
                     }
                 }
@@ -16564,9 +16624,9 @@ var egret3d;
                         var lastIndex = i === 0 ? 0 : i - 1;
                         var lastKeyFrame = this.colorKeys[lastIndex];
                         var tt = (t - lastKeyFrame.time) / (colorKey.time - lastKeyFrame.time);
-                        out.r = egret3d.numberLerp(lastKeyFrame.color.r, colorKey.color.r, tt);
-                        out.g = egret3d.numberLerp(lastKeyFrame.color.g, colorKey.color.g, tt);
-                        out.b = egret3d.numberLerp(lastKeyFrame.color.b, colorKey.color.b, tt);
+                        out.r = egret3d.math.lerp(lastKeyFrame.color.r, colorKey.color.r, tt);
+                        out.g = egret3d.math.lerp(lastKeyFrame.color.g, colorKey.color.g, tt);
+                        out.b = egret3d.math.lerp(lastKeyFrame.color.b, colorKey.color.b, tt);
                         break;
                     }
                 }
@@ -19093,6 +19153,9 @@ var egret3d;
                 // component.stop();
             };
             ParticleSystem.prototype.onUpdate = function (deltaTime) {
+                if (deltaTime > 0.3) {
+                    deltaTime = 0.3; //防止dt过大，引起周期错乱
+                }
                 for (var _i = 0, _a = this._groups[0].gameObjects; _i < _a.length; _i++) {
                     var gameObject = _a[_i];
                     gameObject.getComponent(particle.ParticleComponent).update(deltaTime);
@@ -19321,6 +19384,7 @@ var egret3d;
         __extends(WebGLRenderState, _super);
         function WebGLRenderState() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.clearColor = egret3d.Color.create();
             _this._stateEnables = [3042 /* BLEND */, 2884 /* CULL_FACE */, 2929 /* DEPTH_TEST */]; // TODO
             _this._programs = {};
             _this._vsShaders = {};
@@ -19421,23 +19485,19 @@ var egret3d;
             }
             return program;
         };
-        WebGLRenderState.prototype.clear = function (clearOptColor, clearOptDepath, clearColor) {
+        WebGLRenderState.prototype.clearBuffer = function (bufferBit, clearColor) {
             var webgl = WebGLCapabilities.webgl;
-            if (clearOptColor && clearOptDepath) {
-                webgl.depthMask(true);
-                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-                webgl.clearDepth(1.0);
-                webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
-            }
-            else if (clearOptDepath) {
+            if (bufferBit & 256 /* DEPTH_BUFFER_BIT */) {
                 webgl.depthMask(true);
                 webgl.clearDepth(1.0);
-                webgl.clear(webgl.DEPTH_BUFFER_BIT);
             }
-            else if (clearOptColor) {
+            if (bufferBit & 1024 /* STENCIL_BUFFER_BIT */) {
+                webgl.clearStencil(1.0);
+            }
+            if ((bufferBit & 16384 /* COLOR_BUFFER_BIT */) !== 0 && clearColor) {
                 webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-                webgl.clear(webgl.COLOR_BUFFER_BIT);
             }
+            webgl.clear(bufferBit);
         };
         return WebGLRenderState;
     }(paper.SingletonComponent));
@@ -21613,11 +21673,14 @@ var egret3d;
         };
         /**
          * 为该材质添加指定的 define。
-         * @param value define 字符串。
+         * @param defineString define 字符串。
          */
-        Material.prototype.addDefine = function (value) {
-            if (this._defines.indexOf(value) < 0) {
-                this._defines.push(value);
+        Material.prototype.addDefine = function (defineString, value) {
+            if (value !== undefined) {
+                defineString += " " + value;
+            }
+            if (this._defines.indexOf(defineString) < 0) {
+                this._defines.push(defineString);
                 this._defines.sort();
                 this._version++;
             }
@@ -21625,10 +21688,13 @@ var egret3d;
         };
         /**
          * 从该材质移除指定的 define。
-         * @param value define 字符串。
+         * @param defineString define 字符串。
          */
-        Material.prototype.removeDefine = function (value) {
-            var index = this._defines.indexOf(value);
+        Material.prototype.removeDefine = function (defineString, value) {
+            if (value !== undefined) {
+                defineString += " " + value;
+            }
+            var index = this._defines.indexOf(defineString);
             if (index >= 0) {
                 this._defines.splice(index, 1);
                 this._version++;
@@ -21954,6 +22020,26 @@ var egret3d;
             return this;
         };
         /**
+         *
+         */
+        Material.prototype.setStencil = function (value) {
+            if (!this._glTFTechnique.states) {
+                this._glTFTechnique.states = { enable: [], functions: {} };
+            }
+            var enables = this._glTFTechnique.states.enable;
+            var functions = this._glTFTechnique.states.functions;
+            var index = enables.indexOf(2960 /* STENCIL_TEST */);
+            if (value) {
+                if (index < 0) {
+                    enables.push(2960 /* STENCIL_TEST */);
+                }
+            }
+            else if (index >= 0) {
+                enables.splice(index);
+            }
+            return this;
+        };
+        /**
          * 清除该材质的所有图形 API 状态。
          */
         Material.prototype.clearStates = function () {
@@ -22020,11 +22106,11 @@ var egret3d;
         };
         /**
          * 设置该材质的 UV 变换矩阵。
-         * @param out 矩阵。
+         * @param matrix 矩阵。
          */
-        Material.prototype.setUVTTransform = function (value) {
+        Material.prototype.setUVTTransform = function (matrix) {
             var array = new Array(9); // TODO
-            value.toArray(array);
+            matrix.toArray(array);
             return this.setMatrixv("uvTransform" /* UVTransform */, array);
         };
         Material.prototype.getTexture = function (uniformName) {
@@ -24074,7 +24160,7 @@ var egret3d;
                 var webgl = egret3d.WebGLCapabilities.webgl;
                 light.updateShadow(camera);
                 light.renderTarget.use();
-                renderState.clear(true, true, egret3d.Color.WHITE);
+                renderState.clearBuffer(256 /* DEPTH_BUFFER_BIT */ | 16384 /* COLOR_BUFFER_BIT */, egret3d.Color.WHITE);
                 for (var i = 0, l = isPointLight ? 6 : 1; i < l; ++i) {
                     var context = camera.context;
                     if (isPointLight) {
@@ -24096,7 +24182,14 @@ var egret3d;
             WebGLRenderSystem.prototype._renderCamera = function (camera, renderTarget) {
                 var renderState = this._renderState;
                 this._viewport(camera.viewport, renderTarget);
-                renderState.clear(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+                var bufferBit = 256 /* DEPTH_BUFFER_BIT */ | 16384 /* COLOR_BUFFER_BIT */;
+                if (!camera.clearOption_Depth) {
+                    bufferBit &= ~256 /* DEPTH_BUFFER_BIT */;
+                }
+                if (!camera.clearOption_Color) {
+                    bufferBit &= ~16384 /* COLOR_BUFFER_BIT */;
+                }
+                renderState.clearBuffer(bufferBit, camera.backgroundColor);
                 //
                 var drawCalls = this._drawCallCollecter;
                 var opaqueCalls = drawCalls.opaqueCalls;
@@ -24215,7 +24308,7 @@ var egret3d;
                         case "_CAMERA_FORWARD" /* _CAMERA_FORWARD */:
                             webgl.uniform3fv(location_3, context.cameraForward);
                             break;
-                        case "CAMERA_UP" /* _CAMERA_UP */:
+                        case "_CAMERA_UP" /* _CAMERA_UP */:
                             webgl.uniform3fv(location_3, context.cameraUp);
                             break;
                         case "JOINTMATRIX" /* JOINTMATRIX */:
@@ -24523,7 +24616,7 @@ var egret3d;
                     }
                 }
                 else {
-                    renderState.clear(true, true, egret3d.Color.BLACK);
+                    renderState.clearBuffer(256 /* DEPTH_BUFFER_BIT */ | 16384 /* COLOR_BUFFER_BIT */, egret3d.Color.BLACK);
                 }
             };
             return WebGLRenderSystem;
@@ -25569,6 +25662,26 @@ window.paper = paper;
 window.egret3d = egret3d;
 var egret3d;
 (function (egret3d) {
+    /**
+     * @deprecated
+     */
+    egret3d.RAD_DEG = 57.29577951308232 /* RAD_DEG */;
+    /**
+     * @deprecated
+     */
+    egret3d.DEG_RAD = 0.017453292519943295 /* DEG_RAD */;
+    /**
+     * @deprecated
+     */
+    egret3d.EPSILON = 2.220446049250313e-16 /* EPSILON */;
+    /**
+     * @deprecated
+     */
+    egret3d.floatClamp = egret3d.math.clamp;
+    /**
+     * @deprecated
+     */
+    egret3d.numberLerp = egret3d.math.lerp;
     /**
      * @deprecated
      */

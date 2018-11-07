@@ -173,15 +173,9 @@ namespace egret3d {
 
             let raycastMesh = false;
             let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
-<<<<<<< HEAD:core/egret3d/components/SkinnedMeshRenderer/SkinnedMeshRenderer.ts
-            const worldMatrix = this.gameObject.transform.worldMatrix;
-            const localRay = helpRay.applyMatrix(_helpMatrix.inverse(worldMatrix), p1); // TODO transform inverse world matrix.
-            const aabb = this.aabb;
-=======
             const transform = this.gameObject.transform;
             const localRay = helpRay.applyMatrix(transform.worldToLocalMatrix, p1);
             const localBoundingBox = this.localBoundingBox;
->>>>>>> b6aab0416389a35f6a0ffc048d374a344dd0d723:core/egret3d/components/skinnedMeshRenderer/SkinnedMeshRenderer.ts
 
             if (p2) {
                 if (p2 === true) {
