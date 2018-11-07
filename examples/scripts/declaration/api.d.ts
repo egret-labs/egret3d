@@ -92,7 +92,7 @@ declare namespace plugins {
         /**
          * 可以用此接口进行文件创建
          */
-        createFile(relativeFilePath: string, contents: Buffer);
+        createFile(relativeFilePath: string, contents: Buffer, params?:any);
 
         /**
          * 构建配置

@@ -26,7 +26,7 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		vec2 shadowMapSize;
 	};
 
-	uniform float directionalLights[NUM_DIR_LIGHTS * 12];
+	uniform float directionalLights[NUM_DIR_LIGHTS * 11];
 
 	void getDirectionalDirectLightIrradiance( const in DirectionalLight directionalLight, const in GeometricContext geometry, out IncidentLight directLight ) {
 		directLight.direction = directionalLight.direction;

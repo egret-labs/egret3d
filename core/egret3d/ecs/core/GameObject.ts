@@ -1,4 +1,6 @@
 namespace paper {
+    Layer.Default;
+    
     /**
      * 实体。
      */
@@ -8,6 +10,7 @@ namespace paper {
          */
         public static readonly _instances: GameObject[] = [];
         private static _globalGameObject: GameObject | null = null;
+
         /**
          * 创建 GameObject，并添加到当前场景中。
          */
@@ -34,104 +37,6 @@ namespace paper {
             return gameObect;
         }
 
-        private static _raycast(
-            ray: Readonly<egret3d.Ray>, gameObject: GameObject,
-            maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false,
-            raycastInfos: egret3d.RaycastInfo[]
-        ) {
-            if (
-                (
-                    gameObject.hideFlags === paper.HideFlags.HideAndDontSave && gameObject.tag === paper.DefaultTags.EditorOnly &&
-                    (!gameObject.transform.parent || gameObject.transform.parent.gameObject.activeInHierarchy)
-                ) ? gameObject.activeSelf : !gameObject.activeInHierarchy
-            ) {
-                return;
-            }
-
-            const raycastInfo = egret3d.RaycastInfo.create();
-            raycastInfo.transform = null;
-            raycastInfo.collider = null;
-
-            if (gameObject.layer & cullingMask) {
-                if (raycastMesh) {
-                    if (
-                        gameObject.renderer && gameObject.renderer.enabled &&
-                        gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)
-                    ) {
-                        raycastInfo.transform = gameObject.transform;
-                    }
-                }
-                else {
-                    const boxCollider = gameObject.getComponent(egret3d.BoxCollider); // TODO 支持多碰撞区域
-                    if (boxCollider) {
-                        if (boxCollider.enabled && boxCollider.raycast(ray, raycastInfo)) {
-                            raycastInfo.transform = gameObject.transform;
-                            raycastInfo.collider = boxCollider;
-                        }
-                    }
-                    else {
-                        const sphereCollider = gameObject.getComponent(egret3d.SphereCollider); // TODO 支持多碰撞区域
-                        if (sphereCollider) {
-                            if (sphereCollider.enabled && sphereCollider.raycast(ray, raycastInfo)) {
-                                raycastInfo.transform = gameObject.transform;
-                                raycastInfo.collider = sphereCollider;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (raycastInfo.transform) {
-                if (maxDistance <= 0.0 || raycastInfo.distance <= maxDistance) {
-                    raycastInfos.push(raycastInfo);
-                }
-                else {
-                    raycastInfo.transform = null;
-                    raycastInfo.release();
-                }
-            }
-            else {
-                raycastInfo.transform = null;
-                raycastInfo.release();
-            }
-
-            if (!raycastInfo.transform) {
-                for (const child of gameObject.transform.children) {
-                    this._raycast(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
-                }
-            }
-        }
-
-        private static _sortRaycastInfo(a: egret3d.RaycastInfo, b: egret3d.RaycastInfo) {
-            // TODO renderQueue.
-            return a.distance - b.distance;
-        }
-        /**
-         * 用世界空间坐标系的射线检测指定的实体或变换组件列表。
-         * @param ray 世界空间坐标系的射线。
-         * @param gameObjectsOrTransforms 实体或变换组件列表。
-         * @param maxDistance 最大相交点检测距离。（）
-         * @param cullingMask 只对特定层的实体检测。
-         * @param raycastMesh 是否检测网格。
-         */
-        public static raycast(
-            ray: Readonly<egret3d.Ray>, gameObjectsOrTransforms: ReadonlyArray<GameObject | egret3d.Transform>,
-            maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false
-        ) {
-            const raycastInfos = [] as egret3d.RaycastInfo[];
-
-            for (const gameObjectOrTransform of gameObjectsOrTransforms) {
-                this._raycast(
-                    ray,
-                    gameObjectOrTransform instanceof GameObject ? gameObjectOrTransform : gameObjectOrTransform.gameObject,
-                    maxDistance, cullingMask, raycastMesh, raycastInfos
-                );
-            }
-
-            raycastInfos.sort(this._sortRaycastInfo);
-
-            return raycastInfos;
-        }
         /**
          * 全局实体。
          * - 全局实体不可被销毁。
@@ -145,46 +50,54 @@ namespace paper {
 
             return this._globalGameObject;
         }
+
         /**
          * 是否是静态模式。
          */
         @serializedField
         @editor.property(editor.EditType.CHECKBOX)
         public isStatic: boolean = false;
+
         /**
          * 
          */
         @serializedField
         public hideFlags: HideFlags = HideFlags.None;
+
         /**
          * 层级。
          * - 用于各种层遮罩。
          */
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.Layer) })
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).Layer) }) // TODO
         public layer: Layer = Layer.Default;
+
         /**
          * 名称。
          */
         @serializedField
         @editor.property(editor.EditType.TEXT)
         public name: string = "";
+
         /**
          * 标签。
          */
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum(paper.DefaultTags) })
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).DefaultTags) }) // TODO
         public tag: string = "";
+
         /**
          * 变换组件。
          * @readonly
          */
         public transform: egret3d.Transform = null!;
+
         /**
          * 渲染组件。
          * @readonly
          */
         public renderer: BaseRenderer | null = null;
+
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
@@ -201,9 +114,10 @@ namespace paper {
          * @internal
          */
         public _activeDirty: boolean = true;
-        private readonly _components: ComponentArray = [];
+        private readonly _components: (BaseComponent | undefined)[] = [];
         private readonly _cachedComponents: BaseComponent[] = [];
         private _scene: Scene | null = null;
+
         /**
          * 请使用 `paper.GameObject.create()` 创建实例。
          * @see paper.GameObject.create()
@@ -221,7 +135,7 @@ namespace paper {
         }
 
         private _destroy() {
-            this._scene!._removeGameObject(this);
+            this._scene!.removeGameObject(this);
 
             for (const child of this.transform.children) {
                 child.gameObject._destroy();
@@ -235,19 +149,19 @@ namespace paper {
                 this._removeComponent(component, null);
             }
 
-            GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).gameObjects.push(this);
-            // 销毁的第一时间就将组件和场景清除，场景的有无来判断实体是否已经销毁。
+            // 销毁的第一时间就将组件和场景清除，用场景的有无来判断实体是否已经销毁。
             this._components.length = 0;
             this._scene = null;
+            disposeCollecter.gameObjects.push(this);
         }
 
         private _addToScene(value: Scene): any {
             if (this._scene) {
-                this._scene._removeGameObject(this);
+                this._scene.removeGameObject(this);
             }
 
             this._scene = value;
-            this._scene._addGameObject(this);
+            this._scene.addGameObject(this);
         }
 
         private _canRemoveComponent(value: BaseComponent) {
@@ -265,8 +179,8 @@ namespace paper {
                     component = (component as GroupComponent).components[0]; // 只检查第一个。
                 }
 
-                const requireComponents = (component.constructor as ComponentClass<BaseComponent>).requireComponents;
-                if (requireComponents && requireComponents.indexOf(value.constructor as ComponentClass<BaseComponent>) >= 0) {
+                const requireComponents = (component.constructor as IComponentClass<BaseComponent>).requireComponents;
+                if (requireComponents && requireComponents.indexOf(value.constructor as IComponentClass<BaseComponent>) >= 0) {
                     console.warn(`Cannot remove the ${egret.getQualifiedClassName(value)} component from the game object (${this.path}), because it is required from the ${egret.getQualifiedClassName(component)} component.`);
                     return false;
                 }
@@ -283,10 +197,10 @@ namespace paper {
                 this.renderer = null;
             }
 
-            GameObject.globalGameObject.getOrAddComponent(DisposeCollecter).components.push(value);
+            disposeCollecter.components.push(value);
 
             if (groupComponent) {
-                groupComponent._removeComponent(value);
+                groupComponent.removeComponent(value);
 
                 if (groupComponent.components.length === 0) {
                     this._removeComponent(groupComponent, null);
@@ -301,11 +215,11 @@ namespace paper {
                 }
             }
             else {
-                delete this._components[(value.constructor as ComponentClass<BaseComponent>).__index];
+                delete this._components[(value.constructor as IComponentClass<BaseComponent>).__index];
             }
         }
 
-        private _getComponent(componentClass: ComponentClass<BaseComponent>) {
+        private _getComponent(componentClass: IComponentClass<BaseComponent>) {
             const componentIndex = componentClass.__index;
             return componentIndex < 0 ? null : this._components[componentIndex];
         }
@@ -322,14 +236,16 @@ namespace paper {
                         continue;
                     }
 
+                    const componentClass = component.constructor as IComponentClass<BaseComponent>;
+
                     if (component.enabled) {
-                        EventPool.dispatchEvent(currentActive ? EventPool.EventType.Enabled : EventPool.EventType.Disabled, component);
+                        component._dispatchEnabledEvent(currentActive);
                     }
 
                     if (component.constructor === GroupComponent) {
                         for (const componentInGroup of (component as GroupComponent).components) {
                             if (componentInGroup.enabled) {
-                                EventPool.dispatchEvent(currentActive ? EventPool.EventType.Enabled : EventPool.EventType.Disabled, componentInGroup);
+                                componentInGroup._dispatchEnabledEvent(currentActive);
                             }
                         }
                     }
@@ -340,6 +256,7 @@ namespace paper {
                 child.gameObject._activeInHierarchyDirty(prevActive);
             }
         }
+        
         /**
          * 实体被销毁后，内部卸载。
          * @internal
@@ -384,15 +301,15 @@ namespace paper {
             }
 
             this._destroy();
-            
+
             return true;
         }
         /**
          * 添加一个指定组件实例。
          * @param componentClass 组件类。
-         * @param config Behaviour 组件 `onAwake(config?: any)` 的可选参数。
+         * @param config BaseComponent 组件 `initialize(config?: any)` 方法或 Behaviour 组件 `onAwake(config?: any)` 方法的可选参数。
          */
-        public addComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, config?: any): T {
+        public addComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, config?: any): T {
             registerClass(componentClass);
             // SingletonComponent.
             if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
@@ -423,7 +340,7 @@ namespace paper {
             // Add component.
             if (existedComponent) {
                 if (existedComponent.constructor === GroupComponent) {
-                    (existedComponent as GroupComponent)._addComponent(component);
+                    (existedComponent as GroupComponent).addComponent(component);
                 }
                 else {
                     registerClass(GroupComponent);
@@ -431,8 +348,8 @@ namespace paper {
                     groupComponent.initialize();
                     groupComponent.componentIndex = componentIndex;
                     groupComponent.componentClass = componentClass;
-                    groupComponent._addComponent(existedComponent);
-                    groupComponent._addComponent(component);
+                    groupComponent.addComponent(existedComponent);
+                    groupComponent.addComponent(component);
                     this._components[componentIndex] = groupComponent;
                 }
             }
@@ -448,7 +365,7 @@ namespace paper {
             }
 
             if (component.isActiveAndEnabled) {
-                EventPool.dispatchEvent(EventPool.EventType.Enabled, component);
+                component._dispatchEnabledEvent(true);
             }
 
             return component;
@@ -458,9 +375,9 @@ namespace paper {
          * @param componentInstanceOrClass 组件类或组件实例。
          * @param isExtends 是否尝试移除全部派生自此组件的实例。
          */
-        public removeComponent<T extends BaseComponent>(componentInstanceOrClass: ComponentClass<T> | T, isExtends: boolean = false): void {
+        public removeComponent<T extends BaseComponent>(componentInstanceOrClass: IComponentClass<T> | T, isExtends: boolean = false): void {
             if (componentInstanceOrClass instanceof BaseComponent) {
-                const componentClass = componentInstanceOrClass.constructor as ComponentClass<T>;
+                const componentClass = componentInstanceOrClass.constructor as IComponentClass<T>;
                 // SingletonComponent.
                 if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
                     GameObject.globalGameObject.removeComponent(componentInstanceOrClass, isExtends);
@@ -540,7 +457,7 @@ namespace paper {
          * @param componentClass 组件类。
          * @param isExtends 是否尝试移除全部派生自此组件的实例。
          */
-        public removeAllComponents<T extends BaseComponent>(componentClass?: ComponentClass<T>, isExtends: boolean = false) {
+        public removeAllComponents<T extends BaseComponent>(componentClass?: IComponentClass<T>, isExtends: boolean = false) {
             if (componentClass) {
                 // SingletonComponent.
                 if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
@@ -604,7 +521,7 @@ namespace paper {
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        public getComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false): T | null {
+        public getComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
             // SingletonComponent.
             if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
                 return GameObject.globalGameObject.getComponent(componentClass, isExtends);
@@ -651,7 +568,7 @@ namespace paper {
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        public getComponents<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false): T[] {
+        public getComponents<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T[] {
             // SingletonComponent.
             if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
                 return GameObject.globalGameObject.getComponents(componentClass, isExtends);
@@ -691,12 +608,13 @@ namespace paper {
 
             return components;
         }
+
         /**
          * 获取一个自己或父级中指定的组件实例。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        public getComponentInParent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
+        public getComponentInParent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false) {
             let result: T | null = null;
             let parent = this.transform.parent;
 
@@ -707,12 +625,13 @@ namespace paper {
 
             return result;
         }
+
         /**
          * 获取一个自己或子（孙）级中指定的组件实例。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        public getComponentInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false): T | null {
+        public getComponentInChildren<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
             let component = this.getComponent(componentClass, isExtends);
             if (!component) {
                 for (const child of this.transform.children) {
@@ -725,12 +644,13 @@ namespace paper {
 
             return component;
         }
+
         /**
          * 获取全部自己和子（孙）级中指定的组件实例。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        public getComponentsInChildren<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false, components: T[] | null = null) {
+        public getComponentsInChildren<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false, components: T[] | null = null) {
             components = components || [];
 
             for (const component of this._components) {
@@ -757,14 +677,17 @@ namespace paper {
 
             return components;
         }
+
         /**
          * 从该实体已注册的全部组件中获取一个指定组件实例，如果未添加该组件，则添加该组件。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
+         * @param config BaseComponent 组件 `initialize(config?: any)` 方法或 Behaviour 组件 `onAwake(config?: any)` 方法的可选参数。
          */
-        public getOrAddComponent<T extends BaseComponent>(componentClass: ComponentClass<T>, isExtends: boolean = false) {
-            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, isExtends);
+        public getOrAddComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false, config?: any) {
+            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, config);
         }
+
         /**
          * 向该实体已激活的全部 Behaviour 组件发送消息。
          * @param methodName 
@@ -772,16 +695,17 @@ namespace paper {
          */
         public sendMessage(methodName: string, parameter?: any, requireReceiver: boolean = true) {
             for (const component of this._components) {
-                if (component && component.isActiveAndEnabled && component.constructor instanceof Behaviour) {
+                if (component && component.isActiveAndEnabled && component instanceof Behaviour) {
                     if (methodName in component) {
                         (component as any)[methodName](parameter);
                     }
-                    else if (requireReceiver) {
+                    else if (DEBUG && requireReceiver) {
                         console.warn(this.name, egret.getQualifiedClassName(component), methodName); // TODO
                     }
                 }
             }
         }
+
         /**
          * 向该实体和其父级的 Behaviour 组件发送消息。
          * @param methodName 
@@ -795,6 +719,7 @@ namespace paper {
                 parent.gameObject.sendMessage(methodName, parameter, requireReceiver);
             }
         }
+
         /**
          * 向该实体和的其子（孙）级的 Behaviour 组件发送消息。
          * @param methodName 
@@ -809,12 +734,14 @@ namespace paper {
                 }
             }
         }
+
         /**
          * 该实体是否已经被销毁。
          */
         public get isDestroyed() {
             return !this._scene;
         }
+
         /**
          * 该实体是否可以被销毁。
          * - 当此值为 `true` 时，将会被添加到全局场景，反之将被添加到激活场景。
@@ -848,6 +775,7 @@ namespace paper {
                 child.gameObject.dontDestroy = value;
             }
         }
+
         /**
          * 该实体自身的激活状态。
          */
@@ -870,6 +798,7 @@ namespace paper {
                 this._activeSelf = value;//TODO
             }
         }
+
         /**
          * 该实体在场景中的激活状态。
          */
@@ -889,6 +818,7 @@ namespace paper {
 
             return this._activeInHierarchy;
         }
+
         /**
          * 该实体的路径。
          */
@@ -907,6 +837,7 @@ namespace paper {
 
             return path;
         }
+
         /**
          * 该实体已添加的全部组件。
          */
@@ -932,8 +863,9 @@ namespace paper {
 
             return this._cachedComponents;
         }
+
         /**
-         * 该实体的父级。
+         * 该实体的父级实体。
          */
         public get parent() {
             return this.transform.parent ? this.transform.parent.gameObject : null;
@@ -941,12 +873,14 @@ namespace paper {
         public set parent(gameObject: GameObject | null) {
             this.transform.parent = gameObject ? gameObject.transform : null;
         }
+
         /**
          * 该实体所属的场景。
          */
         public get scene() {
             return this._scene!;
         }
+
         /**
          * 全局实体。
          * - 全局实体不可被销毁。
@@ -976,6 +910,15 @@ namespace paper {
          */
         public static findGameObjectsWithTag(tag: string, scene: Scene | null = null) {
             return (scene || Application.sceneManager.activeScene).findGameObjectsWithTag(tag);
+        }
+        /**
+         * @deprecated
+         */
+        public static raycast(
+            ray: Readonly<egret3d.Ray>, gameObjects: ReadonlyArray<GameObject>,
+            maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false
+        ) {
+            return egret3d.raycastAll(ray, gameObjects, maxDistance, cullingMask, raycastMesh);
         }
     }
 }

@@ -129,8 +129,12 @@ namespace egret3d {
                     const accessorIndex = attributes[attributeName];
                     if (accessorIndex !== undefined) {
                         const accessor = this.getAccessor(accessorIndex);
-                        const bufferOffset = this.getBufferOffset(accessor);
+                        let bufferOffset = this.getBufferOffset(accessor);
                         const subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
+                        if (offset > 0) {
+                            var accessorTypeCount = this.getAccessorTypeCount(accessor.type);
+                            bufferOffset += offset * accessorTypeCount * this.getComponentTypeCount(accessor.componentType);
+                        }
                         webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, subVertexBuffer);
                     }
                     else {

@@ -2,50 +2,67 @@ namespace egret3d {
     /**
      * 
      */
-    export const RAD_DEG: number = 180.0 / Math.PI;
+    export namespace math {
+        /**
+         * 
+         */
+        export function euclideanModulo(n: number, m: number): number {
+            return ((n % m) + m) % m;
+        }
+        /**
+         * 
+         */
+        export function clamp(v: number, min: number = 0.0, max: number = 1.0) {
+            if (v < min) {
+                return min;
+            }
+            else if (v > max) {
+                return max;
+            }
+            else {
+                return v;
+            }
+        }
+        /**
+         * 
+         */
+        export function lerp(from: number, to: number, t: number) {
+            return from + (to - from) * t;
+        }
+    }
     /**
-     * 
+     * 内联的数字常数枚举。
      */
-    export const DEG_RAD: number = Math.PI / 180.0;
-    /**
-     * 
-     */
-    export const EPSILON = 2.220446049250313e-16; // Number.EPSILON
+    export const enum Const {
+
+        /**
+         * 弧度制到角度制相乘的系数。
+         */
+        RAD_DEG = 57.29577951308232,
+
+        /**
+         * 角度制到弧度制相乘的系数。
+         */
+        DEG_RAD = 0.017453292519943295,
+
+        /**
+         * 大于零的最小正值。
+         * - https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
+         */
+        EPSILON = 2.2204460492503130808472633361816E-16,
+    }
 
     export function sign(value: number): number {
         if (value === 0 || value !== value) {
             return value;
         }
 
+
         return value > 0 ? 1 : -1;
     }
-
-    export function floatClamp(v: number, min: number = 0.0, max: number = 1.0) {
-        if (v < min)
-            return min;
-        else if (v > max)
-            return max;
-        else
-            return v;
-    }
-
-    export function numberLerp(fromV: number, toV: number, v: number) {
-        return fromV * (1 - v) + toV * v;
-    }
-
-    export function getNormal(a: Readonly<IVector3>, b: Readonly<IVector3>, c: Readonly<IVector3>, out: Vector3) {
-        out.subtract(c, b);
-        helpVector3A.subtract(a, b);
-        out.cross(helpVector3A);
-
-        const squaredLength = out.squaredLength;
-        if (squaredLength > 0.0) {
-            return out.multiplyScalar(1.0 / Math.sqrt(squaredLength));
-        }
-
-        return out.set(0.0, 0.0, 1.0);
-    }
-
+    /**
+     * @deprecated
+     */
     export function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3) {
         let vp1 = planeVector.x;
         let vp2 = planeVector.y;
@@ -101,7 +118,7 @@ namespace egret3d {
         return true;
     }
 
-    export function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<AABB>) {
+    export function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<Box>) {
         if (aabb.isEmpty) {
             return false;
         }
@@ -149,7 +166,7 @@ namespace egret3d {
         return satForAxes(axes);
     }
 
-    export function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<AABB>) {
+    export function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<Box>) {
         // We compute the minimum and maximum dot product values. If those values
         // are on the same side (back or front) of the plane, then there is no intersection.
         let vMin: number;
@@ -191,14 +208,14 @@ namespace egret3d {
         return Math.abs(plane.getDistance(sphere.center)) <= sphere.radius;
     }
 
-    export function aabbIntersectsSphere(aabb: Readonly<AABB>, sphere: Readonly<Sphere>) {
+    export function aabbIntersectsSphere(aabb: Readonly<Box>, sphere: Readonly<Sphere>) {
         // Find the point on the AABB closest to the sphere center.
         helpVector3A.copy(sphere.center).clamp(aabb.minimum, aabb.maximum);
         // If that point is inside the sphere, the AABB and sphere intersect.
         return helpVector3A.getSquaredDistance(sphere.center) <= (sphere.radius * sphere.radius);
     }
 
-    export function aabbIntersectsAABB(valueA: Readonly<AABB>, valueB: Readonly<AABB>) {
+    export function aabbIntersectsAABB(valueA: Readonly<Box>, valueB: Readonly<Box>) {
         const minA = valueA.minimum;
         const maxA = valueA.maximum;
         const minB = valueB.minimum;
@@ -213,5 +230,9 @@ namespace egret3d {
         const radiusSum = valueA.radius + valueB.radius;
 
         return valueA.center.getSquaredDistance(valueB.center) <= (radiusSum * radiusSum);
+    }
+
+    export function isPowerOfTwo(value: number): boolean {
+        return (value & (value - 1)) === 0 && value !== 0;
     }
 }

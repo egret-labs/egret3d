@@ -1,10 +1,10 @@
 namespace paper {
     /**
-     * 
+     * @private
      */
     export const DATA_VERSION: number = 3;
     /**
-     * 
+     * @private
      */
     export const DATA_VERSIONS = [DATA_VERSION];
 
@@ -21,7 +21,7 @@ namespace paper {
     let _serializeData: ISerializedData | null = null;
     let _defaultGameObject: GameObject | null = null;
     /**
-     * 
+     * @private
      */
     export function serialize(source: Scene | GameObject | BaseComponent, inline: boolean = false): ISerializedData {
         if (_serializeData) {
@@ -51,7 +51,7 @@ namespace paper {
         return serializeData;
     }
     /**
-     * 
+     * @private
      */
     export function clone(object: GameObject) {
         const data = serialize(object, true);
@@ -60,7 +60,7 @@ namespace paper {
         return deserializer.deserialize(data);
     }
     /**
-     * 
+     * @private
      */
     export function equal(source: any, target: any): boolean {
         const typeSource = typeof source;
@@ -127,7 +127,7 @@ namespace paper {
         }
 
         if (source.constructor === Object) {
-            for (let k of source) {
+            for (const k in source) {
                 if (!equal(source[k], target[k])) {
                     return false;
                 }
@@ -147,7 +147,7 @@ namespace paper {
         throw new Error("Unsupported data.");
     }
     /**
-     * 
+     * @private
      */
     export function serializeAsset(source: Asset): IAssetReference {
         if (!source.name) {
@@ -172,13 +172,13 @@ namespace paper {
      */
     export function serializeStruct(source: BaseObject): ISerializedStruct {
         const className = egret.getQualifiedClassName(source);
-        const target = { class: _findClassCode(className) || className } as ISerializedStruct;
+        const target = { class: className } as ISerializedStruct;
         _serializeChildren(source, target, null, null);
 
         return target;
     }
 
-    function _getSerializedKeys(serializedClass: BaseClass, keys: string[] | null = null) {
+    function _getSerializedKeys(serializedClass: IBaseClass, keys: string[] | null = null) {
         const serializeKeys = serializedClass.__serializeKeys;
         if (serializeKeys) {
             keys = keys || [];
@@ -195,19 +195,9 @@ namespace paper {
         return keys;
     }
 
-    function _findClassCode(name: string) {
-        for (let key in serializeClassMap) {
-            if (serializeClassMap[key] === name) {
-                return key;
-            }
-        }
-
-        return "";
-    }
-
     function _serializeReference(source: BaseObject): ISerializedObject {
         const className = egret.getQualifiedClassName(source);
-        return { uuid: source.uuid, class: _findClassCode(className) || className };
+        return { uuid: source.uuid, class: className };
     }
 
     function _findPrefabRoot(gameObject: GameObject) {
@@ -278,7 +268,7 @@ namespace paper {
                 }
             }
             else {
-                temp = _defaultGameObject!.getOrAddComponent(source.constructor as ComponentClass<BaseComponent>);
+                temp = _defaultGameObject!.getOrAddComponent(source.constructor as IComponentClass<BaseComponent>);
             }
 
             _serializeData!.components!.push(target as ISerializedObject);
@@ -294,7 +284,7 @@ namespace paper {
     }
 
     function _serializeChildren(source: BaseObject, target: ISerializedObject | ISerializedStruct, temp: GameObject | BaseComponent | null, ignoreKeys: string[] | null) {
-        const serializedKeys = _getSerializedKeys(<any>source.constructor as BaseClass);
+        const serializedKeys = _getSerializedKeys(<any>source.constructor as IBaseClass);
         if (!serializedKeys) {
             return;
         }

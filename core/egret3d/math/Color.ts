@@ -25,52 +25,57 @@ namespace egret3d {
      */
     export class Color extends paper.BaseRelease<Color> implements IColor, paper.ICCS<Color>, paper.ISerializable {
         /**
-         * 黑色
+         * 所有颜色通道均为零的颜色。
+         * - 请注意不要修改该值。
+         */
+        public static readonly ZERO: Readonly<Color> = new Color().set(0.0, 0.0, 0.0, 0.0);
+        /**
+         * 黑色。
+         * - 请注意不要修改该值。
          */
         public static readonly BLACK: Readonly<Color> = new Color().set(0.0, 0.0, 0.0, 1.0);
-
         /**
-         * 灰色
+         * 灰色。
+         * - 请注意不要修改该值。
          */
         public static readonly GRAY: Readonly<Color> = new Color().set(0.5, 0.5, 0.5, 1.0);
-
         /**
-         * 白色
+         * 白色。
+         * - 请注意不要修改该值。
          */
         public static readonly WHITE: Readonly<Color> = new Color().set(1.0, 1.0, 1.0, 1.0);
-
         /**
-         * 红色
+         * 红色。
+         * - 请注意不要修改该值。
          */
         public static readonly RED: Readonly<Color> = new Color().set(1.0, 0.0, 0.0, 1.0);
-
         /**
-         * 绿色
+         * 绿色。
+         * - 请注意不要修改该值。
          */
         public static readonly GREEN: Readonly<Color> = new Color().set(0.0, 1.0, 0.0, 1.0);
-
         /**
-         * 蓝色
+         * 蓝色。
+         * - 请注意不要修改该值。
          */
         public static readonly BLUE: Readonly<Color> = new Color().set(0.0, 0.0, 1.0, 1.0);
-
         /**
-         * 黄色
+         * 黄色。
+         * - 请注意不要修改该值。
          */
         public static readonly YELLOW: Readonly<Color> = new Color().set(1.0, 1.0, 0.0, 1.0);
-
         /**
-         * 靛蓝色
+         * 靛蓝色。
+         * - 请注意不要修改该值。
          */
         public static readonly INDIGO: Readonly<Color> = new Color().set(0.0, 1.0, 1.0, 1.0);
-
         /**
-         * 紫色
+         * 紫色。
+         * - 请注意不要修改该值。
          */
         public static readonly PURPLE: Readonly<Color> = new Color().set(1.0, 0.0, 1.0, 1.0);
 
         private static readonly _instances: Color[] = [];
-
         /**
          * 创建一个新的颜色对象实例
          * @param r 红色通道
@@ -78,7 +83,7 @@ namespace egret3d {
          * @param b 蓝色通道
          * @param a 透明通道
          */
-        public static create(r: number = 1.0, g: number = 1.0, b: number = 1.0, a: number = 1.0) {
+        public static create(r: number = 1.0, g: number = 1.0, b: number = 1.0, a: number = 1.0): Color {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!.set(r, g, b, a);
                 instance._released = false;
@@ -88,24 +93,9 @@ namespace egret3d {
             return new Color().set(r, g, b, a);
         }
 
-        /**
-         * 红色通道
-         */
         public r: number = 1.0;
-
-        /**
-         * 绿色通道
-         */
         public g: number = 1.0;
-
-        /**
-         * 蓝色通道
-         */
         public b: number = 1.0;
-
-        /**
-         * 透明通道
-         */
         public a: number = 1.0;
         /**
          * 请使用 `egret3d.Color.create()` 创建实例。
@@ -115,56 +105,35 @@ namespace egret3d {
             super();
         }
 
-        /**
-         * 序列化
-         * @returns 序列化后的数据
-         */
         public serialize() {
             return [this.r, this.g, this.b, this.a];
         }
 
-        /**
-         * 反序列化
-         * @param value 需要反序列化的数据
-         */
         public deserialize(value: Readonly<[number, number, number, number]>) {
             return this.fromArray(value);
         }
 
-        /**
-         * 复制一个颜色对象
-         * @returns 一个复制后的新的颜色对象
-         */
         public clone() {
             return Color.create(this.r, this.g, this.b, this.a);
         }
 
-        /**
-         * 拷贝一个颜色对象的值
-         * @param value 要拷贝的颜色对象
-         */
-        public copy(value: Readonly<Color>) {
+        public copy(value: Readonly<IColor>) {
             return this.set(value.r, value.g, value.b, value.a);
         }
 
-        /**
-         * 设置一个颜色对象的rgba
-         * @param r 红色通道
-         * @param g 绿色通道
-         * @param b 蓝色通道
-         * @param a 透明通道
-         * @returns 该对象本身
-         */
-        public set(r: number, g: number, b: number, a: number): Color {
+        public set(r: number, g: number, b: number, a?: number): this {
             this.r = r;
             this.g = g;
             this.b = b;
-            this.a = a;
+
+            if (a !== undefined) {
+                this.a = a;
+            }
 
             return this;
         }
 
-        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0): Color {
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
             this.r = value[0 + offset];
             this.g = value[1 + offset];
             this.b = value[2 + offset];
@@ -173,11 +142,43 @@ namespace egret3d {
             return this;
         }
 
-        public multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>): Color {
+        public fromHex(hex: uint): this {
+            this.r = (hex >> 16 & 255) / 255;
+            this.g = (hex >> 8 & 255) / 255;
+            this.b = (hex & 255) / 255;
+
+            return this;
+        }
+
+        // public fromHSL(h: number, s: number, l: number): this {
+        //     // h,s,l ranges are in 0.0 - 1.0
+        //     h = _Math.euclideanModulo(h, 1);
+        //     s = floatClamp(s, 0, 1);
+        //     l = floatClamp(l, 0, 1);
+
+        //     if (s === 0) {
+
+        //         this.r = this.g = this.b = l;
+
+        //     } else {
+
+        //         var p = l <= 0.5 ? l * (1 + s) : l + s - (l * s);
+        //         var q = (2 * l) - p;
+
+        //         this.r = hue2rgb(q, p, h + 1 / 3);
+        //         this.g = hue2rgb(q, p, h);
+        //         this.b = hue2rgb(q, p, h - 1 / 3);
+
+        //     }
+
+        //     return this;
+        // }
+
+        public multiply(valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this {
             if (!valueB) {
                 valueB = valueA;
-                valueA = this;
             }
+            valueA = this;
 
             this.r = valueA.r * valueB.r;
             this.g = valueA.g * valueB.g;
@@ -187,7 +188,7 @@ namespace egret3d {
             return this;
         }
 
-        public scale(value: number, source?: Readonly<Color>): Color {
+        public scale(value: number, source?: Readonly<IColor>): this {
             if (!source) {
                 source = this;
             }
@@ -200,7 +201,7 @@ namespace egret3d {
             return this;
         }
 
-        public lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>): Color {
+        public lerp(t: number, valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;

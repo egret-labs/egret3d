@@ -1,0 +1,137 @@
+{
+    "version": "3",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {
+        "KHR_techniques_webgl": {
+            "shaders": [
+                {
+                    "name": "luminosityhigh_vert",
+                    "type": 35633,
+                    "uri": "shaders/luminosityhigh_vert.glsl"
+                },
+                {
+                    "name": "luminosityhigh_frag",
+                    "type": 35632,
+                    "uri": "shaders/luminosityhigh_frag.glsl"
+                }
+            ],
+            "techniques": [
+                {
+                    "name": "luminosityhigh",
+                    "attributes": {
+                        "position": {
+                            "semantic": "POSITION"
+                        },
+                        "normal": {
+                            "semantic": "NORMAL"
+                        },
+                        "uv": {
+                            "semantic": "TEXCOORD_0"
+                        },
+                        "color": {
+                            "semantic": "COLOR_0"
+                        },
+                        "morphTarget0": {
+                            "semantic": "WEIGHTS_0"
+                        },
+                        "morphTarget1": {
+                            "semantic": "WEIGHTS_1"
+                        },
+                        "morphTarget2": {
+                            "semantic": "WEIGHTS_2"
+                        },
+                        "morphTarget3": {
+                            "semantic": "WEIGHTS_3"
+                        },
+                        "morphNormal0": {
+                            "semantic": "MORPHNORMAL_0"
+                        },
+                        "morphNormal1": {
+                            "semantic": "MORPHNORMAL_1"
+                        },
+                        "morphNormal2": {
+                            "semantic": "MORPHNORMAL_2"
+                        },
+                        "morphNormal3": {
+                            "semantic": "MORPHNORMAL_3"
+                        },
+                        "morphTarget4": {
+                            "semantic": "WEIGHTS_4"
+                        },
+                        "morphTarget5": {
+                            "semantic": "WEIGHTS_5"
+                        },
+                        "morphTarget6": {
+                            "semantic": "WEIGHTS_6"
+                        },
+                        "morphTarget7": {
+                            "semantic": "WEIGHTS_7"
+                        },
+                        "skinIndex": {
+                            "semantic": "JOINTS_0"
+                        },
+                        "skinWeight": {
+                            "semantic": "MORPHTARGET_0"
+                        }
+                    },
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": 35676,
+                            "semantic": "MODEL"
+                        },
+                        "modelViewMatrix": {
+                            "type": 35676,
+                            "semantic": "MODELVIEW"
+                        },
+                        "projectionMatrix": {
+                            "type": 35676,
+                            "semantic": "PROJECTION"
+                        },
+                        "viewMatrix": {
+                            "type": 35676,
+                            "semantic": "VIEW"
+                        },
+                        "normalMatrix": {
+                            "type": 35675,
+                            "semantic": "MODELVIEWINVERSE"
+                        },
+                        "cameraPosition": {
+                            "type": 35665,
+                            "semantic": "_CAMERA_POS"
+                        },
+                        "tDiffuse": {
+                            "type": 35678
+                        },
+                        "defaultColor": {
+                            "type": 35665
+                        },
+                        "defaultOpacity": {
+                            "type": 5126
+                        },
+                        "luminosityThreshold": {
+                            "type": 5126
+                        },
+                        "smoothWidth": {
+                            "type": 5126
+                        }
+                    },
+                    "states": {
+                        "enable": [],
+                        "functions": {}
+                    }
+                }
+            ]
+        },
+        "paper": {}
+    },
+    "extensionsRequired": [
+        "paper",
+        "KHR_techniques_webgl"
+    ],
+    "extensionsUsed": [
+        "paper",
+        "KHR_techniques_webgl"
+    ]
+}

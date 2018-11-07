@@ -49,11 +49,17 @@ namespace behaviors {
                 }
 
                 this._radian += deltaTime * this.rotateSpeed * 0.5;
-                transform.setLocalPosition(
+                // transform.setPosition(
+                //     target.x + Math.cos(this._radian) * this._radius,
+                //     position.y,
+                //     target.z + Math.sin(this._radian) * this._radius
+                // );
+
+                position.set(
                     target.x + Math.cos(this._radian) * this._radius,
                     position.y,
                     target.z + Math.sin(this._radian) * this._radius
-                );
+                ).update();
             }
 
             transform.lookAt(target);

@@ -7,18 +7,28 @@
     "native": 1,
     "path": "bin-release"
   },
-  "compilerVersion": "5.3.1",
-  "engineVersion": "5.3.1",
+  "compilerVersion": "5.3.2",
+  "engineVersion": "5.3.2",
   "eui": {},
   "modules": [
     {
       "name": "egret"
     },
     {
+      "name": "eui"
+    },
+    {
       "name": "assetsmanager"
     },
     {
+      "name": "dragonBones"
+    },
+    {
       "name": "promise"
+    },
+    {
+      "name": "zlib",
+      "path": "./libs/zlib"
     },
     {
       "name": "egret3d",

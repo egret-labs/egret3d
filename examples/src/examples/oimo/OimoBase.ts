@@ -1,56 +1,64 @@
-namespace OimoBase {
-    export async function start() {
-        // Create camera.
-        egret3d.Camera.main;
+namespace examples.oimo {
 
-        { // Create light.
-            const gameObject = paper.GameObject.create("light");
-            gameObject.transform.setLocalPosition(1.0, 10.0, -1.0);
-            gameObject.transform.lookAt(egret3d.Vector3.ZERO);
+    export class OimoBase {
+        async start() {
+            // Create camera.
+            egret3d.Camera.main;
 
-            const light = gameObject.addComponent(egret3d.DirectionalLight);
-            light.intensity = 0.5;
-        }
+            { // Create light.
+                const gameObject = paper.GameObject.create("Light");
+                gameObject.transform.setLocalPosition(1.0, 10.0, -1.0);
+                gameObject.transform.lookAt(egret3d.Vector3.ZERO);
 
-        { // Create ground.
-            const groundSize = egret3d.Vector3.create(10.0, 0.1, 10.0);
-            const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "ground");
-            gameObject.transform.setLocalScale(groundSize);
+                const light = gameObject.addComponent(egret3d.DirectionalLight);
+                light.intensity = 0.5;
+                light.castShadows = true;
+            }
 
-            const renderer = gameObject.getComponent(egret3d.MeshRenderer)!;
-            renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT);
-
-            const rigidbody = gameObject.addComponent(egret3d.oimo.Rigidbody);
-            const boxCollider = gameObject.addComponent(egret3d.oimo.BoxCollider);
-            rigidbody.type = egret3d.oimo.RigidbodyType.STATIC;
-            boxCollider.size = groundSize;
-            groundSize.release();
-        }
-
-        { // Create cubes.
-            const cubeSize = egret3d.Vector3.create(1.0, 1.0, 1.0);
-
-            for (let i = 0; i < 100; i++) {
-                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, `cube_${i}`);
-                gameObject.transform.setLocalPosition(
-                    Math.random() * 8.0 - 4.0,
-                    Math.random() * 8.0 + 4.0,
-                    Math.random() * 8.0 - 4.0
-                );
-                gameObject.transform.setLocalScale(cubeSize);
+            { // Create ground.
+                const groundSize = egret3d.Vector3.create(10.0, 0.1, 10.0);
+                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "Ground");
+                gameObject.transform.setLocalScale(groundSize);
 
                 const renderer = gameObject.getComponent(egret3d.MeshRenderer)!;
+                renderer.castShadows = true;
+                renderer.receiveShadows = true;
                 renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT);
 
                 const rigidbody = gameObject.addComponent(egret3d.oimo.Rigidbody);
                 const boxCollider = gameObject.addComponent(egret3d.oimo.BoxCollider);
-
-                boxCollider.size = cubeSize;
-                rigidbody.mass = 1.0;
+                rigidbody.type = egret3d.oimo.RigidbodyType.STATIC;
+                boxCollider.size = groundSize;
+                groundSize.release();
             }
-        }
 
-        paper.GameObject.globalGameObject.addComponent(TeleportRigidBodies);
+            { // Create cubes.
+
+                for (let i = 0; i < 100; i++) {
+                    const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, `Cube_${i}`);
+                    gameObject.transform.setLocalPosition(
+                        Math.random() * 8.0 - 4.0,
+                        Math.random() * 8.0 + 4.0,
+                        Math.random() * 8.0 - 4.0
+                    );
+                    const cubeSize = egret3d.Vector3.create(Math.random() * 1.5 + 0.5, Math.random() * 1.5 + 0.5, Math.random() * 1.5 + 0.5).release();
+                    gameObject.transform.setLocalScale(cubeSize);
+
+                    const renderer = gameObject.getComponent(egret3d.MeshRenderer)!;
+                    renderer.castShadows = true;
+                    renderer.receiveShadows = true;
+                    renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT);
+
+                    const rigidbody = gameObject.addComponent(egret3d.oimo.Rigidbody);
+                    const boxCollider = gameObject.addComponent(egret3d.oimo.BoxCollider);
+
+                    boxCollider.size = cubeSize;
+                    rigidbody.mass = 1.0;
+                }
+            }
+
+            paper.GameObject.globalGameObject.addComponent(TeleportRigidBodies);
+        }
     }
 
     class TeleportRigidBodies extends paper.Behaviour {

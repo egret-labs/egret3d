@@ -1,13 +1,13 @@
 namespace paper {
     /**
-     * 全局时间信息组件。
+     * 全局时钟信息组件。
      */
     export class Clock extends SingletonComponent {
-        public maxFixedSubSteps: number = 3;
+        public maxFixedSubSteps: uint = 3;
         public fixedDeltaTime: number = 1.0 / 50.0; // TODO same as fps.
         public timeScale = 1.0;
 
-        private _frameCount: number = 0;
+        private _frameCount: uint = 0;
         private _beginTime: number = 0.0;
         private _lastTime: number = 0.0;
         private _delayTime: number = 0.0;
@@ -17,8 +17,8 @@ namespace paper {
 
         public initialize() {
             super.initialize();
-
-            this._beginTime = Date.now() * 0.001;
+            Time = clock = this;
+            this._beginTime = this.now * 0.001;
         }
         /**
          * @internal
@@ -37,7 +37,7 @@ namespace paper {
                 }
             }
 
-            const now = time || Date.now() * 0.001;
+            const now = time || this.now * 0.001;
             this._frameCount += 1;
             this._unscaledTime = now - this._beginTime;
             this._unscaledDeltaTime = this._unscaledTime - this._lastTime;
@@ -45,38 +45,62 @@ namespace paper {
             this._fixedTime += this._unscaledDeltaTime;
         }
 
-        public get frameCount() {
+        public get frameCount(): uint {
             return this._frameCount;
+        }
+        /**
+         * 系统时间。（以毫秒为单位）
+         */
+        public get now(): uint {
+            if (window.performance) {
+                return window.performance.now();
+            }
+
+            if (Date.now) {
+                return Date.now();
+            }
+
+            return new Date().getTime();
         }
         /**
          * 从程序开始运行时的累计时间。（以秒为单位）
          */
-        public get time() {
+        public get time(): number {
             return this._unscaledTime * this.timeScale;
         }
         /**
          * 
          */
-        public get fixedTime() {
+        public get fixedTime(): number {
             return this._fixedTime;
         }
         /**
-         * 上一帧到当前帧流逝的时间。
+         * 上一帧到此帧流逝的时间。（以秒为单位）
          */
-        public get deltaTime() {
+        public get deltaTime(): number {
             return this._unscaledDeltaTime * this.timeScale;
         }
         /**
          * 
          */
-        public get unscaledTime() {
+        public get unscaledTime(): number {
             return this._unscaledTime;
         }
         /**
          * 
          */
-        public get unscaledDeltaTime() {
+        public get unscaledDeltaTime(): number {
             return this._unscaledDeltaTime;
         }
     }
+    /**
+     * 全局时钟信息组件实例。
+     */
+    export let clock: Clock = null!;
+
+    /**
+     * @deprecated 
+     * @see paper.clock
+     */
+    export let Time: Clock = null!;
 }

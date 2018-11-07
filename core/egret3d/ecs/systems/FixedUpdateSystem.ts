@@ -1,6 +1,7 @@
 namespace paper {
     /**
      * 固定更新系统。
+     * TODO
      */
     export class FixedUpdateSystem extends BaseSystem {
         protected readonly _interests = [

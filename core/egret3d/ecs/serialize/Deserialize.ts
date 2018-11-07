@@ -7,7 +7,7 @@ namespace paper {
     const KEY_EXTRAS: keyof GameObject = "extras";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
 
-    function _getDeserializedKeys(serializedClass: BaseClass, keys: { [key: string]: string } | null = null) {
+    function _getDeserializedKeys(serializedClass: IBaseClass, keys: { [key: string]: string } | null = null) {
         const serializeKeys = serializedClass.__serializeKeys;
         if (serializeKeys) {
             keys = keys || {};
@@ -27,7 +27,7 @@ namespace paper {
         return keys;
     }
 
-    function _getDeserializedIgnoreKeys(serializedClass: BaseClass, keys: string[] | null = null) {
+    function _getDeserializedIgnoreKeys(serializedClass: IBaseClass, keys: string[] | null = null) {
         if (serializedClass.__deserializeIgnore) {
             keys = keys || [];
 
@@ -63,41 +63,51 @@ namespace paper {
          */
         public readonly components: { [key: string]: BaseComponent } = {};
 
+        public root: Scene | GameObject | BaseComponent | null = null;
+
         private _keepUUID: boolean;
         private _makeLink: boolean;
         private readonly _deserializers: { [key: string]: Deserializer } = {};
+        private readonly _prefabRootMap: { [key: string]: { rootUUID: string, root: GameObject } } = {};
         private _rootTarget: Scene | GameObject | null = null;
 
         private _deserializeObject(source: ISerializedObject, target: BaseObject) {
-            const deserializedKeys = _getDeserializedKeys(<any>target.constructor as BaseClass);
-            const deserializedIgnoreKeys = _getDeserializedIgnoreKeys(<any>target.constructor as BaseClass);
+            const deserializedKeys = _getDeserializedKeys(<any>target.constructor as IBaseClass);
+            const deserializedIgnoreKeys = _getDeserializedIgnoreKeys(<any>target.constructor as IBaseClass);
 
             for (const k in source) {
-                if (k === KEY_CLASS) {
+                if (k === KEY_CLASS) { // 类名不需要反序列化。
                     continue;
                 }
 
-                if (!this._keepUUID && k === KEY_UUID) {
+                if (k === KEY_EXTRAS) {//不应该应用extras的值.
                     continue;
                 }
 
-                const kk = (deserializedKeys && k in deserializedKeys) ? deserializedKeys[k] : k;
-
-                if (
-                    deserializedIgnoreKeys &&
-                    deserializedIgnoreKeys.indexOf(kk) >= 0
-                ) {
+                if (!this._keepUUID && k === KEY_UUID) { // 是否需要记忆 UUID。
                     continue;
                 }
 
-                (target as any)[kk] = this._deserializeChild(source[k], (target as any)[kk]);
+                const retargetKey = (deserializedKeys && k in deserializedKeys) ? deserializedKeys[k] : k; // 重定向反序列化 key。
+
+                if (deserializedIgnoreKeys && deserializedIgnoreKeys.indexOf(retargetKey) >= 0) { // 忽略反序列化 key。
+                    continue;
+                }
+
+                const retarget = this._deserializeChild(source[k], (target as any)[retargetKey]);
+
+                if (retarget === undefined) { // 忽略 undefined。
+                    continue;
+                }
+
+                (target as any)[retargetKey] = retarget;
             }
 
             return target;
         }
 
-        private _createComponent(componentSource: ISerializedObject, source?: ISerializedObject, target?: GameObject) {
-            const className = serializeClassMap[componentSource.class] || componentSource.class;
+        private _deserializeComponent(componentSource: ISerializedObject, source?: ISerializedObject, target?: GameObject) {
+            const className = serializeClassMap[componentSource.class] || componentSource.class; // 废弃 serializeClassMap。
             const clazz = egret.getDefinitionByName(className);
             let componentTarget: BaseComponent | undefined = undefined;
 
@@ -126,6 +136,7 @@ namespace paper {
                         componentTarget = prefabDeserializer.components[linkedID];
                     }
                     else {
+                        // const enabled = componentSource._enabled === undefined ? true : componentSource._enabled;
                         componentTarget = (target || this._rootTarget as GameObject).addComponent(clazz);
                     }
 
@@ -138,11 +149,13 @@ namespace paper {
                     componentTarget.extras!.linkedID = componentSource.uuid;
                 }
             }
-            else {
-                componentTarget = (target || this._rootTarget as GameObject).addComponent(MissingComponent);
+            else { // Missing component.
+                componentTarget = target!.addComponent(MissingComponent);
                 (componentTarget as MissingComponent).missingObject = componentSource;
 
-                console.warn(`Class ${className} is not defined.`);
+                if (DEBUG) {
+                    console.warn(`Class ${className} is not defined.`);
+                }
             }
 
             this.components[componentSource.uuid] = componentTarget;
@@ -245,7 +258,7 @@ namespace paper {
                     else { // Map.
                         target = {};
 
-                        for (let k in source) {
+                        for (const k in source) {
                             target[k] = this._deserializeChild(source[k]);
                         }
 
@@ -332,6 +345,7 @@ namespace paper {
 
                                     if (target) { // Cache.
                                         this._deserializers[source.uuid] = Deserializer._lastDeserializer;
+                                        this._prefabRootMap[source.uuid] = { rootUUID: target.uuid, root: target };
                                     }
                                     else { // Missing prefab.
                                         target = GameObject.create(DefaultNames.MissingPrefab, DefaultTags.Untagged, this._rootTarget as Scene);
@@ -341,15 +355,11 @@ namespace paper {
                             else { // Prefab node.
                                 const prefabDeserializer = this._deserializers[extras.rootID!];
                                 target = prefabDeserializer.objects[linkedID];
-                                if (!target) {
-                                    // Delete node.
-                                }
                             }
                         }
                         else {
                             target = GameObject.create(DefaultNames.NoName, DefaultTags.Untagged, this._rootTarget as Scene);
-
-                            if (this._makeLink) { // TODO
+                            if (this._makeLink) { // 在editor模式下调用Prefab.createInstance方法始终会走到这里
                                 (target as GameObject).extras!.linkedID = source.uuid;
                                 if (root) {
                                     (target as GameObject).extras!.rootID = (root as GameObject).uuid;
@@ -385,9 +395,22 @@ namespace paper {
 
                         if (target.constructor === GameObject && KEY_COMPONENTS in source) { // 组件实例化。
                             for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
-                                this._createComponent(components[componentUUID.uuid], source, target as GameObject);
+                                this._deserializeComponent(components[componentUUID.uuid], source, target as GameObject);
                             }
                         }
+                    }
+                }
+                //重新设置rootid的值
+                for (let uuid in this._prefabRootMap) {
+                    let rootDeser=this._deserializers[uuid];
+                    for(let key in rootDeser.objects){
+                        let obj=rootDeser.objects[key]
+                        if(obj instanceof GameObject){
+                            if(obj.extras.linkedID&&obj.extras.rootID===this._prefabRootMap[uuid].rootUUID){
+                                obj.extras.rootID=this._prefabRootMap[uuid].root.uuid;
+                            }
+                        }
+
                     }
                 }
             }
@@ -405,14 +428,15 @@ namespace paper {
                         this._deserializeObject(componentSource, component);
                     }
                     else if (rootTarget && rootTarget.constructor === GameObject) { // 整个反序列化过程只反序列化组件。
-                        component = this._createComponent(componentSource);
+                        component = this._deserializeComponent(componentSource);
                         root = root || component;
                         this._deserializeObject(componentSource, component);
                     }
                 }
             }
-
             Deserializer._lastDeserializer = this;
+
+            this.root = root;
 
             return root as T;
         }

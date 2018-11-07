@@ -2,10 +2,14 @@ namespace behaviors {
     export abstract class BaseRaycast extends paper.Behaviour {
         protected static readonly _ray: egret3d.Ray = egret3d.Ray.create();
         protected _lineMesh: egret3d.Mesh | null = null;
+        protected _normalMesh: egret3d.Mesh | null = null;
 
-        public onStart() {
-            const meshFilter = this.gameObject.getComponent(egret3d.MeshFilter)!;
-            const meshRenderer = this.gameObject.getComponent(egret3d.MeshRenderer)!;
+        protected readonly _line: paper.GameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "Line");
+        protected readonly _normal: paper.GameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "Normal");
+
+        public onAwake() {
+            const meshFilter = this._line.getComponent(egret3d.MeshFilter)!;
+            const meshRenderer = this._line.getComponent(egret3d.MeshRenderer)!;
 
             this._lineMesh = meshFilter.mesh!;
             this._lineMesh.setIndices([2, 3], this._lineMesh.addSubMesh(2, 1, gltf.MeshPrimitiveMode.Points));
@@ -20,6 +24,10 @@ namespace behaviors {
                     .addDefine(egret3d.ShaderDefine.USE_COLOR)
                     .setFloat(egret3d.ShaderUniformName.Size, 10.0)
             ];
+
+            this._line.transform.parent = this.gameObject.transform;
+            this._normal.transform.parent = this.gameObject.transform;
+            this._normal.activeSelf = false;
         }
 
         protected _updateAngGetRay() {
@@ -38,62 +46,53 @@ namespace behaviors {
         public target: paper.GameObject | null = null;
 
         public onUpdate() {
-            const transform = this.gameObject.transform;
-            transform.setLocalScale(1.0);
+            const lineTransform = this._line.transform;
+            lineTransform.setLocalScale(1.0);
 
             if (this.target && this.target.renderer) {
                 const ray = this._updateAngGetRay();
-                const raycastInfo = egret3d.RaycastInfo.create();
+                const raycastInfo = egret3d.RaycastInfo.create().release();
+                raycastInfo.normal = egret3d.Vector3.create().release();
+
                 if (this.target.renderer.raycast(ray, raycastInfo, this.raycastMesh)) {
-                    transform.setLocalScale(1.0, 1.0, raycastInfo.distance);
+                    lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
+                    this._normal.activeSelf = true;
+                    this._normal.transform
+                        .setPosition(raycastInfo.position)
+                        .lookRotation(raycastInfo.normal)
+                        .setLocalScale(1.0, 1.0, raycastInfo.normal.length);
+                    return;
                 }
-
-                raycastInfo.release();
             }
+
+            this._normal.activeSelf = false;
         }
     }
 
-    export class RaycastBoxCollider extends BaseRaycast {
+    export class ColliderRaycast extends BaseRaycast {
         public target: paper.GameObject | null = null;
 
         public onUpdate() {
-            const transform = this.gameObject.transform;
-            transform.setLocalScale(1.0);
+            const lineTransform = this._line.transform;
+            lineTransform.setLocalScale(1.0);
 
             if (this.target) {
-                const boxCollider = this.target.getComponent(egret3d.BoxCollider)!;
                 const ray = this._updateAngGetRay();
-                const raycastInfo = egret3d.RaycastInfo.create();
+                const raycastInfo = egret3d.RaycastInfo.create().release();
+                raycastInfo.normal = egret3d.Vector3.create().release();
 
-                if (boxCollider.raycast(ray, raycastInfo)) {
-                    transform.setLocalScale(1.0, 1.0, raycastInfo.distance);
+                if (egret3d.raycast(ray, this.target, false, raycastInfo)) {
+                    lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
+                    this._normal.activeSelf = true;
+                    this._normal.transform
+                        .setPosition(raycastInfo.position)
+                        .lookRotation(raycastInfo.normal)
+                        .setLocalScale(1.0, 1.0, raycastInfo.normal.length);
+                    return;
                 }
-
-                raycastInfo.release();
             }
-        }
-    }
 
-    export class RaycastPlane extends BaseRaycast {
-        public target: paper.GameObject | null = null;
-
-        private readonly _plane: egret3d.Plane = egret3d.Plane.create();
-
-        public onUpdate() {
-            const transform = this.gameObject.transform;
-            transform.setLocalScale(1.0);
-
-            if (this.target) {
-                const plane = this._plane.fromPoint(this.target.transform.position, this.target.transform.getForward().release());
-                const ray = this._updateAngGetRay();
-                const raycastInfo = egret3d.RaycastInfo.create();
-
-                if (plane.raycast(ray, raycastInfo)) {
-                    transform.setLocalScale(1.0, 1.0, raycastInfo.distance);
-                }
-
-                raycastInfo.release();
-            }
+            this._normal.activeSelf = false;
         }
     }
 }

@@ -14,7 +14,7 @@ namespace paper.editor {
         public initialize() {
             {//TODO
                 const texture = new egret3d.GLTexture2D("builtin/camera_icon.image.json");
-                let image = new Image();
+                const image = new Image();
                 image.setAttribute('src', icons["camera"]);
                 image.onload = function () { texture.uploadImage(image, false, true, true, false); };
                 EditorDefaultTexture.CAMERA_ICON = texture;
@@ -23,7 +23,7 @@ namespace paper.editor {
 
             {//TODO
                 const texture = new egret3d.GLTexture2D("builtin/light_icon.image.json");
-                let image = new Image();
+                const image = new Image();
                 image.setAttribute('src', icons["light"]);
                 image.onload = function () { texture.uploadImage(image, false, true, true, false); };
                 EditorDefaultTexture.LIGHT_ICON = texture;

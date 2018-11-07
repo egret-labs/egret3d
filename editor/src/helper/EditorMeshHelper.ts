@@ -18,28 +18,36 @@ namespace paper.editor {
             return gameObject;
         }
 
-        public static createBox(name: string, color: egret3d.Color, opacity: number, scene: Scene) {
-            const box = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone(), paper.DefaultTags.EditorOnly, scene);
-            box.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend).opacity = opacity;
-
-            return box;
-        }
-
         public static createIcon(name: string, parent: paper.GameObject, icon: egret3d.Texture) {
             const material = new egret3d.Material(egret3d.DefaultShaders.TRANSPARENT);
-            material.renderQueue = paper.RenderQueue.Overlay;
+            material.renderQueue = paper.RenderQueue.Overlay - 1;
             material.setTexture(egret3d.ShaderUniformName.Map, icon);
             material.setColor(egret3d.ShaderUniformName.Diffuse, egret3d.Color.RED);
-            // const gameObject = this.createGameObject(name, null, null, parent.tag, parent.scene);
-            // const pick = this.createGameObject("pick", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone(), parent.tag, parent.scene);
-            // pick.transform.setParent(gameObject.transform);
-            // pick.activeSelf = false;
-            // pick.addComponent(GizmoPickComponent).pickTarget = parent;
             const iconObj = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material, parent.tag, parent.scene);
             iconObj.transform.setParent(parent.transform);
             iconObj.addComponent(GizmoPickComponent).pickTarget = parent;
-            // gameObject.transform.setParent(parent.transform);
             return iconObj;
+        }
+
+        public static createLine(name: string, color: egret3d.Color, opacity: number, scene: Scene) {
+            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.LINEDASHED.clone(), paper.DefaultTags.EditorOnly, scene);
+            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, opacity);
+
+            return gameObject;
+        }
+
+        public static createBox(name: string, color: egret3d.Color, opacity: number, scene: Scene) {
+            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone(), paper.DefaultTags.EditorOnly, scene);
+            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, opacity);
+
+            return gameObject;
+        }
+
+        public static createCircle(name: string, color: egret3d.Color, opacity: number, scene: Scene) {
+            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone(), paper.DefaultTags.EditorOnly, scene);
+            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, opacity);
+
+            return gameObject;
         }
 
         public static createCameraWireframed(name: string,
@@ -68,12 +76,16 @@ namespace paper.editor {
                     colors.push(colorCross.r, colorCross.g, colorCross.b, colorCross.a);
                 }
             }
+
             const mesh = new egret3d.Mesh(verticeCount, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
             mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
             mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, colors);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
 
-            const gameObject = this.createGameObject(name, mesh, egret3d.DefaultMaterials.LINEDASHED_COLOR.clone());
+            const material = egret3d.DefaultMaterials.LINEDASHED_COLOR.clone();
+            material.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent, 0.8);
+
+            const gameObject = this.createGameObject(name, mesh, material);
             return gameObject;
         }
     }

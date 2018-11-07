@@ -5,6 +5,7 @@ TODO
 docs
 
 *bin-debug
+*bin-release
 *modules
 *manifest.json
 *.res.json

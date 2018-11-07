@@ -14,7 +14,7 @@ namespace paper {
 
             if (
                 Application.playerMode === PlayerMode.Editor &&
-                !(component.constructor as ComponentClass<Behaviour>).executeInEditMode
+                !(component.constructor as IComponentClass<Behaviour>).executeInEditMode
             ) {
                 return;
             }

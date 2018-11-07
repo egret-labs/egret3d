@@ -443,7 +443,7 @@ declare namespace egret {
          * @language en_US
          */
         /**
-         * TextInput实例获得焦点
+         * TextInput实例获取焦点
          * @version Egret 2.4
          * @platform Web,Native
          * @language zh_CN
@@ -840,7 +840,7 @@ declare namespace egret {
          */
         /**
          * 从对象池中取出或创建一个新的事件实例。我们建议您尽可能使用Event.create()和Event.release() 这一对方法来创建和释放事件对象，
-         * 这一对方法会将事件实例在内部缓存下来供下次循环使用，减少对象的创建次数,从而获得更高的代码运行性能。<br/>
+         * 这一对方法会将事件实例在内部缓存下来供下次循环使用，减少对象的创建次数,从而获取更高的代码运行性能。<br/>
          * 注意：若使用此方法来创建自定义事件的实例，自定义的构造函数参数列表必须跟Event类一致。
          * @param EventClass Event类名。
          * @param type  事件的类型，可以作为 Event.type 访问。
@@ -882,7 +882,7 @@ declare namespace egret {
          */
         /**
          * 释放一个事件对象，并缓存到对象池。我们建议您尽可能使用Event.create()和Event.release() 这一对方法来创建和释放事件对象，
-         * 这一对方法会将事件实例在内部缓存下来供下次循环使用，减少对象的创建次数,从而获得更高的代码运行性能。<br/>
+         * 这一对方法会将事件实例在内部缓存下来供下次循环使用，减少对象的创建次数,从而获取更高的代码运行性能。<br/>
          * 注意：此方法只能传入由Event.create()创建的事件实例，传入非法对象实例可能会导致报错。
          * @example
          * <pre>
@@ -1163,7 +1163,7 @@ declare namespace egret {
         private $concatenatedMatrix;
         /**
          * @private
-         * 获得这个显示对象以及它所有父级对象的连接矩阵。
+         * 获取这个显示对象以及它所有父级对象的连接矩阵。
          */
         $getConcatenatedMatrix(): Matrix;
         private $invertedConcatenatedMatrix;
@@ -1309,7 +1309,7 @@ declare namespace egret {
         /**
          * 表示 DisplayObject 实例距其原始方向的旋转程度，以度为单位。
          * 从 0 到 180 的值表示顺时针方向旋转；从 0 到 -180 的值表示逆时针方向旋转。对于此范围之外的值，可以通过加上或
-         * 减去 360 获得该范围内的值。例如，myDisplayObject.rotation = 450语句与 myDisplayObject.rotation = 90 是相同的。
+         * 减去 360 获取该范围内的值。例如，myDisplayObject.rotation = 450语句与 myDisplayObject.rotation = 90 是相同的。
          * @default 0
          * @version Egret 2.4
          * @platform Web,Native
@@ -1742,7 +1742,7 @@ declare namespace egret {
         /**
          * 返回一个矩形，该矩形定义相对于 targetCoordinateSpace 对象坐标系的显示对象区域。
          * @param targetCoordinateSpace 定义要使用的坐标系的显示对象。
-         * @param resultRect 一个用于存储结果的可复用Rectangle实例，传入此参数能够减少内部创建对象的次数，从而获得更高的运行性能。
+         * @param resultRect 一个用于存储结果的可复用Rectangle实例，传入此参数能够减少内部创建对象的次数，从而获取更高的运行性能。
          * @returns 定义与 targetCoordinateSpace 对象坐标系统相关的显示对象面积的矩形。
          * @version Egret 2.4
          * @platform Web,Native
@@ -1787,7 +1787,7 @@ declare namespace egret {
          * 将从舞台（全局）坐标转换为显示对象的（本地）坐标。
          * @param stageX 舞台坐标x
          * @param stageY 舞台坐标y
-         * @param resultPoint 一个用于存储结果的可复用 Point 实例，传入此参数能够减少内部创建对象的次数，从而获得更高的运行性能。
+         * @param resultPoint 一个用于存储结果的可复用 Point 实例，传入此参数能够减少内部创建对象的次数，从而获取更高的运行性能。
          * @returns 具有相对于显示对象的坐标的 Point 对象。
          * @version Egret 2.4
          * @platform Web,Native
@@ -1809,7 +1809,7 @@ declare namespace egret {
          * 将显示对象的（本地）坐标转换为舞台（全局）坐标。
          * @param localX 本地坐标 x
          * @param localY 本地坐标 y
-         * @param resultPoint 一个用于存储结果的可复用 Point 实例，传入此参数能够减少内部创建对象的次数，从而获得更高的运行性能。
+         * @param resultPoint 一个用于存储结果的可复用 Point 实例，传入此参数能够减少内部创建对象的次数，从而获取更高的运行性能。
          * @returns 一个具有相对于舞台坐标的 Point 对象。
          * @version Egret 2.4
          * @platform Web,Native
@@ -6782,8 +6782,8 @@ declare namespace egret {
          */
         /**
          * 返回将 Matrix 对象表示的几何转换应用于指定点所产生的结果。
-         * @param pointX 想要获得其矩阵转换结果的点的x坐标。
-         * @param pointY 想要获得其矩阵转换结果的点的y坐标。
+         * @param pointX 想要获取其矩阵转换结果的点的x坐标。
+         * @param pointY 想要获取其矩阵转换结果的点的y坐标。
          * @param resultPoint 框架建议尽可能减少创建对象次数来优化性能，可以从外部传入一个复用的Point对象来存储结果，若不传入将创建一个新的Point对象返回。
          * @returns 由应用矩阵转换所产生的点。
          * @version Egret 2.4
@@ -6891,7 +6891,7 @@ declare namespace egret {
         /**
          * 如果给定预转换坐标空间中的点，则此方法返回发生转换后该点的坐标。
          * 与使用 transformPoint() 方法应用的标准转换不同，deltaTransformPoint() 方法的转换不考虑转换参数 tx 和 ty。
-         * @param point 想要获得其矩阵转换结果的点
+         * @param point 想要获取其矩阵转换结果的点
          * @returns 由应用矩阵转换所产生的点
          * @version Egret 2.4
          * @platform Web,Native
@@ -8978,7 +8978,7 @@ declare namespace egret {
      * 从这些继承的许多属性和方法不适用于 Stage 对象。
      * @event egret.Event.RESIZE 当stageWidth或stageHeight属性发生改变时调度
      * @event egret.Event.DEACTIVATE 当stage失去焦点后调度
-     * @event egret.Event.ACTIVATE 当stage获得焦点后调度
+     * @event egret.Event.ACTIVATE 当stage获取焦点后调度
      *
      * @version Egret 2.4
      * @platform Web,Native
@@ -10613,7 +10613,7 @@ declare namespace egret {
          * @language en_US
          */
         /**
-         * 获得焦点
+         * 获取焦点
          * @version Egret 2.4
          * @platform Web,Native
          * @language zh_CN

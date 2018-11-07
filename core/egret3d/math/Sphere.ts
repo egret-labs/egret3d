@@ -1,13 +1,13 @@
 namespace egret3d {
     /**
-     * 
+     * 几何球体。
      */
     export class Sphere extends paper.BaseRelease<Sphere> implements paper.ICCS<Sphere>, paper.ISerializable, IRaycast {
         private static readonly _instances: Sphere[] = [];
         /**
-         * 
-         * @param center 
-         * @param radius 
+         * 创建一个几何球体。
+         * @param center 球体中心点。
+         * @param radius 球体半径。
          */
         public static create(center: Readonly<IVector3> = Vector3.ZERO, radius: number = 0.0) {
             if (this._instances.length > 0) {
@@ -19,12 +19,14 @@ namespace egret3d {
             return new Sphere().set(center, radius);
         }
         /**
-         * 球半径。
+         * 球体半径。
          */
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public radius: number = 0.0;
         /**
-         * 中心坐标。
+         * 球体中心点。
          */
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
         public readonly center: Vector3 = Vector3.create();
         /**
          * 请使用 `egret3d.Sphere.create()` 创建实例。
@@ -60,6 +62,17 @@ namespace egret3d {
             return this;
         }
 
+        public applyMatrix(matrix: Readonly<Matrix4>) {
+            this.center.applyMatrix(matrix);
+            this.radius = this.radius * matrix.maxScaleOnAxis;
+
+            return this;
+        }
+        /**
+         * 根据点集设置球体信息。
+         * @param points 点集。
+         * @param center 中心点。（不设置则自动计算）
+         */
         public fromPoints(points: Readonly<ArrayLike<IVector3>>, center?: Readonly<IVector3>) {
             if (center) {
                 this.center.copy(center);
@@ -77,15 +90,10 @@ namespace egret3d {
 
             return this;
         }
-
-        public applyMatrix(matrix: Readonly<Matrix4>) {
-            this.center.applyMatrix(matrix);
-            this.radius = this.radius * matrix.getMaxScaleOnAxis();
-
-            return this;
-
-        }
-
+        /**
+         * 是否包含指定的点或其他球体。
+         * @param value 点或球体。
+         */
         public contains(value: Readonly<IVector3 | Sphere>) {
             if (value instanceof Sphere) {
                 const radiusDelta = this.radius - value.radius;
@@ -98,12 +106,16 @@ namespace egret3d {
 
             return this.center.getSquaredDistance(value as IVector3) <= this.radius * this.radius;
         }
+        /**
+         * 获取一个点到该球体的最近点。（如果该点在球体内部，则最近点就是该点）
+         * @param point 一个点。
+         * @param out 最近点。
+         */
+        public getClosestPointToPoint(point: Readonly<IVector3>, out?: Vector3) {
+            if (!out) {
+                out = egret3d.Vector3.create();
+            }
 
-        public getDistance(value: Readonly<IVector3>) {
-            return this.center.getDistance(value) - this.radius;
-        }
-
-        public clampPoint(point: Readonly<IVector3>, out: Vector3) {
             const squaredDistance = this.center.getSquaredDistance(point);
 
             if (squaredDistance > (this.radius * this.radius)) {
@@ -115,6 +127,13 @@ namespace egret3d {
             }
 
             return out;
+        }
+        /**
+         * 获取一点到该球体表面的最近距离。
+         * @param value 点。
+         */
+        public getDistance(value: Readonly<IVector3>) {
+            return this.center.getDistance(value) - this.radius;
         }
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
@@ -143,27 +162,15 @@ namespace egret3d {
             // else t0 is in front of the ray, so return the first collision point scaled by t0
 
             if (raycastInfo) {
-                ray.at(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
+                const normal = raycastInfo.normal;
+                const position = ray.getPointAt(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
+
+                if (normal) {
+                    normal.subtract(position, this.center).normalize();
+                }
             }
 
             return true;
-
-            // let center_ori = helpVec3_1;
-            // Vector3.subtract(center, this.origin, center_ori);
-            // let raydist = Vector3.dot(this.direction, center_ori);
-
-            // if (raydist < 0) return false; // 到圆心的向量在方向向量上的投影为负，夹角不在-90与90之间
-
-            // let orilen2 = Vector3.getSqrLength(center_ori);
-
-            // let rad2 = radius * radius;
-
-            // if (orilen2 < rad2) return true; // 射线起点在球里
-
-            // let d = rad2 - (orilen2 - raydist * raydist);
-            // if (d < 0) return false;
-
-            // return true;
         }
     }
 }

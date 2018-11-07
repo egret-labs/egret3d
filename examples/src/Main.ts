@@ -1,25 +1,105 @@
-function main(allScripts: string[]) {
+declare class Examples {
+    start(): Promise<void>;
+}
 
+async function main() {
+    if (RELEASE) {
+        // RES.processor.map("json", new JSONProcessor());
+    }
+    //  // Load resource config.
+    //  await RES.loadConfig("default.res.json", "http://10.1.1.240:8000/resource/sniper/");
+    //  // Load scene resource.
+    //  await RES.getResAsync("Assets/Scenes/venture101.scene.json");
+    //  // Create scene.
+    //  paper.Scene.create("Assets/Scenes/venture101.scene.json", false);
+    exampleStart();
+    // new examples.SceneTest().start();
+    // new examples.EUITest().start();
+}
 
-    const examples = allScripts
-        .filter(item => item.indexOf("examples") >= 0)
-        .map(item => item.split("/").pop().split(".")[0]);
+class JSONProcessor implements RES.processor.Processor {
+    private _mergedCache?: { [index: string]: any };
 
-    const current = getCurrentTest();
-    const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
-    const gui = guiComponent.hierarchy.addFolder("Examples");
-    gui.open();
-    const options = {
-        example: current,
-    };
-    gui.add(options, "example", examples).onChange((example: string) => {
+    async onLoadStart(host: RES.ProcessHost, resource: RES.ResourceInfo): Promise<any> {
+        const { type } = resource;
+        if (type === 'legacyResourceConfig') {
+            const data = host.load(resource, RES.processor.JsonProcessor);
+            return data;
+        }
+        else {
+            if (!this._mergedCache) {
+                const r = (host as any).resourceConfig['getResource']("1.jsonbin");
+                const data = await host.load(r, "bin");
 
-        location.href = getNewUrl(example);
-    });
+                if (!this._mergedCache) {
+                    const uint8 = new Uint8Array(data);
+                    const result = pako.inflate(uint8, { to: 'string' });
+                    this._mergedCache = JSON.parse(result);
+                }
+            }
 
-    window[current].start();
+            const result = this._mergedCache![resource.name];
+            if (!result) {
+                throw `missing resource ${resource.name}`;
+            }
 
-    function getNewUrl(example: string) {
+            return result;
+        }
+    }
+
+    onRemoveStart(host: RES.ProcessHost, resource: RES.ResourceInfo): void {
+    }
+
+    getData?(host: RES.ProcessHost, resource: RES.ResourceInfo, key: string, subkey: string) {
+        throw new Error("Method not implemented.");
+    }
+}
+
+function exampleStart() {
+    const exampleString = getCurrentExampleString();
+    let exampleClass: any;
+
+    if (exampleString.indexOf(".") > 0) { // Package
+        const params = exampleString.split(".");
+        exampleClass = (window as any).examples[params[0]][params[1]];
+    }
+    else {
+        exampleClass = (window as any).examples[exampleString];
+    }
+
+    createGUI(exampleString);
+
+    const exampleObj: Examples = new exampleClass();
+    exampleObj.start();
+
+    function createGUI(exampleString: string) {
+        const namespaceExamples = (window as any).examples;
+        const examples: string[] = [];
+
+        for (const k in namespaceExamples) {
+            const element = namespaceExamples[k];
+            if (element.constructor === Object) { // Package
+                for (const kB in element) {
+                    examples.push([k, kB].join("."));
+                }
+            }
+            else {
+                examples.push(k);
+            }
+        }
+
+        const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
+        const gui = guiComponent.hierarchy.addFolder("Examples");
+        const options = {
+            example: exampleString
+        };
+        gui.add(options, "example", examples).onChange((example: string) => {
+            location.href = getNewUrl(example);
+        });
+        gui.open();
+    }
+
+    function getNewUrl(exampleString: string[] | string) {
         let url = location.href;
         const index = url.indexOf("?");
         if (index !== -1) {
@@ -28,33 +108,28 @@ function main(allScripts: string[]) {
         if (url.indexOf(".html") === -1) {
             url += "index.html";
         }
-        url += "?example=" + example;
+        url += "?example=" + exampleString;
         return url;
     }
 
-    function getCurrentTest() {
-        var appFile;
-        var hasTest = false;
-        var str = location.search;
+    function getCurrentExampleString() {
+        let appFile = "Test";
+
+        let str = location.search;
         str = str.slice(1, str.length);
-        var totalArray = str.split("&");
-        for (var i = 0; i < totalArray.length; i++) {
-            var itemArray = totalArray[i].split("=");
+        const totalArray = str.split("&");
+        for (let i = 0; i < totalArray.length; i++) {
+            const itemArray = totalArray[i].split("=");
             if (itemArray.length === 2) {
-                var key = itemArray[0];
-                var value = itemArray[1];
+                const key = itemArray[0];
+                const value = itemArray[1];
                 if (key === "example") {
                     appFile = value;
-                    hasTest = true;
                     break;
                 }
             }
         }
-
-        if (!hasTest) {
-            appFile = examples.indexOf("Test") >= 0 ? "Test" : examples[0];
-        }
-
+        
         return appFile;
     }
 }

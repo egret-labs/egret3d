@@ -6,7 +6,6 @@ namespace paper {
         protected readonly _interests = [
             { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
         ];
-        private readonly _contactColliders: ContactColliders = GameObject.globalGameObject.getOrAddComponent(ContactColliders);
         private readonly _disposeCollecter: DisposeCollecter = GameObject.globalGameObject.getOrAddComponent(DisposeCollecter);
 
         public onRemoveComponent(component: Behaviour) {
@@ -16,7 +15,7 @@ namespace paper {
 
             if (
                 Application.playerMode === PlayerMode.Editor &&
-                !(component.constructor as ComponentClass<Behaviour>).executeInEditMode
+                !(component.constructor as IComponentClass<Behaviour>).executeInEditMode
             ) {
                 return;
             }
@@ -25,14 +24,11 @@ namespace paper {
         }
 
         public onUpdate() {
-            const gameObjectPool = GameObject._instances;
-
             for (const scene of this._disposeCollecter.scenes) {
                 scene.uninitialize();
             }
 
             for (const gameObject of this._disposeCollecter.gameObjects) {
-                // gameObjectPool.push(gameObject);
                 gameObject.uninitialize();
             }
 
@@ -42,10 +38,13 @@ namespace paper {
 
             for (const instance of this._disposeCollecter.releases) {
                 const instances = (instance.constructor as any)._instances as BaseRelease<any>[]; // TODO
+                if (instance.onClear) {
+                    instance.onClear();
+                }
+                
                 instances.push(instance);
             }
 
-            this._contactColliders.clear();
             this._disposeCollecter.clear();
         }
     }

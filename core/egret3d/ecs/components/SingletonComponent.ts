@@ -1,6 +1,7 @@
 namespace paper {
     /**
-     * 单例组件基类。
+     * 基础单例组件。
+     * - 全部单例组件的基类。
      */
     export abstract class SingletonComponent extends BaseComponent {
         /**

@@ -1,17 +1,31 @@
 namespace egret3d {
-
+    /**
+     * 
+     */
     export type RunEgretOptions = {
-        antialias: boolean;
         defaultScene?: string;
+        /**
+         * 舞台宽。
+         */
         contentWidth?: number;
+        /**
+         * 舞台高。
+         */
         contentHeight?: number;
+        /**
+         * 是否开启抗锯齿，默认关闭。
+         */
+        antialias: boolean;
+        /**
+         * 是否与画布背景色混合，默认不混合。
+         */
+        alpha: boolean;
 
         option?: RequiredRuntimeOptions;
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
 
         playerMode?: paper.PlayerMode;
-        isPlaying?: boolean;
     };
 
     export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number };
@@ -19,37 +33,35 @@ namespace egret3d {
     /**
      * 引擎启动入口
      */
-    export function runEgret(options: RunEgretOptions = { antialias: false }) {
+    export function runEgret(options: RunEgretOptions = { antialias: false, alpha: false }) {
         console.info("Egret version:", paper.Application.version);
         console.info("Egret start.");
 
+        // TODO
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
         egret.Capabilities["renderMode" + ""] = "webgl";
 
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas(options);
-        //TODO
-        options.canvas = canvas;
         options.option = requiredOptions;
+        options.canvas = canvas;
         options.webgl = <WebGLRenderingContext>canvas.getContext('webgl', options) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
-        WebGLCapabilities.canvas = options.canvas;
-        WebGLCapabilities.webgl = options.webgl;
 
-        InputManager.init(canvas);
-        stage.init(canvas, requiredOptions);
-
-        paper.Application.init(options);
-
+        paper.Application.initialize(options);
         const systemManager = paper.Application.systemManager;
-        systemManager.register(BeginSystem, paper.SystemOrder.Begin);
+        systemManager.register(web.BeginSystem, paper.SystemOrder.Begin, options);
+
         systemManager.register(AnimationSystem, paper.SystemOrder.Animation);
         systemManager.register(MeshRendererSystem, paper.SystemOrder.Renderer);
         systemManager.register(SkinnedMeshRendererSystem, paper.SystemOrder.Renderer);
         systemManager.register(particle.ParticleSystem, paper.SystemOrder.Renderer);
-        systemManager.register(Egret2DRendererSystem, paper.SystemOrder.Renderer);
-        systemManager.register(CameraAndLightSystem, paper.SystemOrder.Draw - 1);
-        systemManager.register(WebGLRenderSystem, paper.SystemOrder.Draw);
-        systemManager.register(EndSystem, paper.SystemOrder.End);
+        systemManager.register(Egret2DRendererSystem, paper.SystemOrder.Renderer, options);
+        systemManager.register(CameraAndLightSystem, paper.SystemOrder.Draw);
+
+        systemManager.register(web.WebGLRenderSystem, paper.SystemOrder.Draw, options);
+        systemManager.register(web.InputSystem, paper.SystemOrder.End, options);
+        systemManager.register(web.EndSystem, paper.SystemOrder.End, options);
+        // TODO
         systemManager._preRegisterSystems();
 
         console.info("Egret start complete.");
@@ -91,14 +103,9 @@ namespace egret3d {
     }
 }
 
-
-
-interface Window {
-
+declare interface Window {
     canvas: HTMLCanvasElement;
-
     paper: any;
-
     egret3d: any;
 }
 

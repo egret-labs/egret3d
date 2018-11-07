@@ -1,13 +1,22 @@
 namespace egret3d {
+
     /**
-     * 3×3矩阵
+     * 3×3 矩阵。
      */
     export class Matrix3 extends paper.BaseRelease<Matrix3> implements paper.ICCS<Matrix3>, paper.ISerializable {
+
+        public static readonly IDENTITY: Readonly<Matrix3> = new Matrix3();
+
         private static readonly _instances: Matrix3[] = [];
 
+        /**
+         * 创建一个矩阵。
+         * @param rawData 
+         * @param offsetOrByteOffset 
+         */
         public static create() {
             if (this._instances.length > 0) {
-                const instance = this._instances.pop()!;
+                const instance = this._instances.pop()!.identity();
                 instance._released = false;
                 return instance;
             }
@@ -16,42 +25,35 @@ namespace egret3d {
         }
 
         /**
-         * 矩阵原始数据
+         * 矩阵原始数据。
          * @readonly
          */
         public rawData: Float32Array = null!;
+
         /**
-         * @deprecated
+         * 请使用 `egret3d.Matrix3.create()` 创建实例。
+         * @see egret3d.Matrix3.create()
          */
-        public constructor(rawData: Float32Array | null = null) {
+        private constructor() {
             super();
 
-            if (rawData) {
-                this.rawData = rawData;
-            }
-            else {
-                this.rawData = new Float32Array(
-                    [
-                        1.0, 0.0, 0.0,
-                        0.0, 1.0, 0.0,
-                        0.0, 0.0, 1.0,
-                    ]
-                );
-            }
+            // if (rawData) {
+            //     this.rawData = rawData;
+            // }
+            // else {
+            // TODO
+            this.rawData = new Float32Array([
+                1.0, 0.0, 0.0,
+                0.0, 1.0, 0.0,
+                0.0, 0.0, 1.0,
+            ]);
+            // }
         }
 
-        /**
-         * 序列化
-         * @returns 序列化后的数据
-         */
         public serialize() {
             return this.rawData;
         }
 
-        /**
-         * 反序列化
-         * @param value 序列化后的数据
-         */
         public deserialize(value: Readonly<[
             number, number, number, number,
             number, number, number, number,
@@ -79,33 +81,84 @@ namespace egret3d {
             n21: number, n22: number, n23: number,
             n31: number, n32: number, n33: number,
         ): Matrix3 {
-            this.rawData[0] = n11;
-            this.rawData[3] = n12;
-            this.rawData[6] = n13;
-
-            this.rawData[1] = n21;
-            this.rawData[4] = n22;
-            this.rawData[7] = n23;
-
-            this.rawData[2] = n31;
-            this.rawData[5] = n32;
-            this.rawData[8] = n33;
+            const rawData = this.rawData;
+            rawData[0] = n11; rawData[1] = n21; rawData[2] = n31;
+            rawData[3] = n12; rawData[4] = n22; rawData[5] = n32;
+            rawData[6] = n13; rawData[7] = n23; rawData[8] = n33;
 
             return this;
         }
 
-        public identity(): Matrix3 {
+        public identity() {
+            const rawData = this.rawData;
+            rawData[0] = 1.0; rawData[1] = 0.0; rawData[2] = 0.0;
+            rawData[3] = 0.0; rawData[4] = 1.0; rawData[5] = 0.0;
+            rawData[6] = 0.0; rawData[7] = 0.0; rawData[8] = 1.0;
+
+            return this;
+        }
+
+        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+            for (let i = 0; i < 9; ++i) {
+                this.rawData[i] = value[i + offset];
+            }
+
+            return this;
+        }
+
+        public fromBuffer(value: ArrayBuffer, byteOffset: number = 0) {
+            this.rawData = new Float32Array(value, byteOffset, 9);
+
+            return this;
+        }
+
+        public fromScale(vector: Readonly<IVector3>) {
+            const rawData = this.rawData;
+            rawData[0] = vector.x; rawData[1] = 0.0; rawData[2] = 0.0;
+            rawData[3] = 0.0; rawData[4] = vector.y; rawData[5] = 0.0;
+            rawData[6] = 0.0; rawData[7] = 0.0; rawData[8] = vector.z;
+            
+            return this;
+        }
+
+        /**
+         * 通过 UV 变换设置该矩阵。
+         * @param tx 水平偏移。
+         * @param ty 垂直偏移。
+         * @param sx 水平重复。
+         * @param sy 垂直重复。
+         * @param rotation 旋转。（弧度制）
+         * @param cx 水平中心。
+         * @param cy 垂直中心。
+         */
+        public fromUVTransform(tx: number, ty: number, sx: number, sy: number, rotation: number, cx: number, cy: number) {
+            const c = Math.cos(rotation);
+            const s = Math.sin(rotation);
+
+            return this.set(
+                sx * c, sx * s, - sx * (c * cx + s * cy) + cx + tx,
+                - sy * s, sy * c, - sy * (- s * cx + c * cy) + cy + ty,
+                0.0, 0.0, 1.0
+            );
+        }
+
+        public fromMatrix4(value: Readonly<Matrix4>) {
+            const rawData = value.rawData;
             this.set(
-                1, 0, 0,
-                0, 1, 0,
-                0, 0, 1
+                rawData[0], rawData[4], rawData[8],
+                rawData[1], rawData[5], rawData[9],
+                rawData[2], rawData[6], rawData[10]
             );
 
             return this;
         }
 
-        public inverse(matrix: Matrix3): Matrix3 {
-            var me = matrix.rawData,
+        public inverse(input?: Matrix3) {
+            if (!input) {
+                input = this;
+            }
+
+            const me = input.rawData,
                 te = this.rawData,
 
                 n11 = me[0], n21 = me[1], n31 = me[2],
@@ -129,7 +182,7 @@ namespace egret3d {
 
             }
 
-            var detInv = 1 / det;
+            const detInv = 1 / det;
 
             te[0] = t11 * detInv;
             te[1] = (n31 * n23 - n33 * n21) * detInv;
@@ -147,60 +200,101 @@ namespace egret3d {
         }
 
         public getNormalMatrix(matrix4: Readonly<Matrix4>) {
-            return this.setFromMatrix4(matrix4).inverse(this).transpose();
+            return this.fromMatrix4(matrix4).inverse().transpose();
         }
 
         public transpose() {
+            let temp = 0.0;
+            const rawData = this.rawData;
 
-            var tmp, m = this.rawData;
-
-            tmp = m[1]; m[1] = m[3]; m[3] = tmp;
-            tmp = m[2]; m[2] = m[6]; m[6] = tmp;
-            tmp = m[5]; m[5] = m[7]; m[7] = tmp;
-
-            return this;
-        }
-
-        public setFromMatrix4(m: Readonly<Matrix4>) {
-
-            var me = m.rawData;
-            this.set(
-                me[0], me[4], me[8],
-                me[1], me[5], me[9],
-                me[2], me[6], me[10]
-            );
-            // this.set(
-            //     me[0], me[1], me[2],
-            //     me[4], me[5], me[6],
-            //     me[8], me[9], me[10]
-            // );
+            temp = rawData[1]; rawData[1] = rawData[3]; rawData[3] = temp;
+            temp = rawData[2]; rawData[2] = rawData[6]; rawData[6] = temp;
+            temp = rawData[5]; rawData[5] = rawData[7]; rawData[7] = temp;
 
             return this;
         }
+        /**
+         * 将该矩阵乘以一个矩阵。
+         * - v *= matrix
+         * @param matrix 一个矩阵。
+         */
+        public multiply(matrix: Readonly<Matrix3>): this;
+        /**
+         * 将两个矩阵相乘的结果写入该矩阵。
+         * - v = matrixA * matrixB
+         * @param matrixA 一个矩阵。
+         * @param matrixB 另一个矩阵。
+         */
+        public multiply(matrixA: Readonly<Matrix3>, matrixB: Readonly<Matrix3>): this;
+        public multiply(matrixA: Readonly<Matrix3>, matrixB?: Readonly<Matrix3>) {
+            if (!matrixB) {
+                matrixB = matrixA;
+                matrixA = this;
+            }
 
-        public determinant(): number {
-            var te = this.rawData;
+            const rawDataA = matrixA.rawData;
+            const rawDataB = matrixB.rawData;
+            const rawData = this.rawData;
 
-            var a = te[0], b = te[1], c = te[2],
-                d = te[3], e = te[4], f = te[5],
-                g = te[6], h = te[7], i = te[8];
+            const a11 = rawDataA[0], a12 = rawDataA[3], a13 = rawDataA[6];
+            const a21 = rawDataA[1], a22 = rawDataA[4], a23 = rawDataA[7];
+            const a31 = rawDataA[2], a32 = rawDataA[5], a33 = rawDataA[8];
+
+            const b11 = rawDataB[0], b12 = rawDataB[3], b13 = rawDataB[6];
+            const b21 = rawDataB[1], b22 = rawDataB[4], b23 = rawDataB[7];
+            const b31 = rawDataB[2], b32 = rawDataB[5], b33 = rawDataB[8];
+
+            rawData[0] = a11 * b11 + a12 * b21 + a13 * b31;
+            rawData[3] = a11 * b12 + a12 * b22 + a13 * b32;
+            rawData[6] = a11 * b13 + a12 * b23 + a13 * b33;
+
+            rawData[1] = a21 * b11 + a22 * b21 + a23 * b31;
+            rawData[4] = a21 * b12 + a22 * b22 + a23 * b32;
+            rawData[7] = a21 * b13 + a22 * b23 + a23 * b33;
+
+            rawData[2] = a31 * b11 + a32 * b21 + a33 * b31;
+            rawData[5] = a31 * b12 + a32 * b22 + a33 * b32;
+            rawData[8] = a31 * b13 + a32 * b23 + a33 * b33;
+
+            return this;
+        }
+        /**
+         * 将一个矩阵与该矩阵相乘的结果写入该矩阵。
+         * - v = matrix * v
+         * @param matrix 一个矩阵。
+         */
+        public premultiply(matrix: Readonly<Matrix3>): this {
+            return this.multiply(matrix, this);
+        }
+
+        /**
+         * 将该旋转矩阵转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        public toArray(array?: number[] | Float32Array, offset: number = 0) {
+            if (!array) {
+                array = [];
+            }
+
+            for (let i = 0; i < 9; ++i) {
+                array[i + offset] = this.rawData[i];
+            }
+
+            return array;
+        }
+
+        public get determinant() {
+            const rawData = this.rawData;
+            const a = rawData[0], b = rawData[1], c = rawData[2],
+                d = rawData[3], e = rawData[4], f = rawData[5],
+                g = rawData[6], h = rawData[7], i = rawData[8];
 
             return a * e * i - a * f * h - b * d * i + b * f * g + c * d * h - c * e * g;
         }
-
-        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0): Matrix3 {
-            for (let i = 0; i < 9; ++i) {
-                this.rawData[i] = value[i + offset];
-            }
-
-            return this;
-        }
-
-        public fromBuffer(value: ArrayBuffer, byteOffset: number = 0): Matrix3 {
-            this.rawData = new Float32Array(value, byteOffset, 9);
-
-            return this;
-        }
     }
-
+    /**
+     * @deprecated
+     */
+    export const helpMatrix3A = Matrix3.create();
 }

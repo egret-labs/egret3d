@@ -1,6 +1,6 @@
 {
   "name": "@egret/egret3d",
-  "version": "1.2.1",
+  "version": "1.3.0-dev-4",
   "compilerVersion": "5.3.1",
   "description": "egret 3d lib",
   "main": "bin/egret3d.js",
@@ -8,11 +8,11 @@
     "egret3d": "cli/lib/index.js"
   },
   "scripts": {
-    "build": "egret build",
-    "build-report": "egret build && node script/report.js",
-    "build-examples": "egret build && cd .. && cd examples && egret clean && cd .. && cd core",
+    "build": "egret build && node script/build.js",
+    "build-report": "egret build && node script/build.js && node script/report.js",
+    "build-examples": "egret build && node script/build.js && cd .. && cd examples && egret clean && cd .. && cd core",
     "build-shader": "node script/shaderCompiler.js",
-    "generate-shader": "node script/shaderGenerate.js",
+    "generate-shader": "node script/ShaderGenerate.js",
     "docs": "typedoc --out docs/test --tsconfig tsconfig.json --json api.json"
   },
   "author": "egret",

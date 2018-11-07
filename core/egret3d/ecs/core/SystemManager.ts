@@ -15,7 +15,7 @@ namespace paper {
             return this._instance;
         }
 
-        private constructor() {
+        private constructor() { 
         }
 
         private readonly _preSystems: { systemClass: { new(): BaseSystem }, order: number }[] = [];
@@ -26,16 +26,16 @@ namespace paper {
             const systemCount = this._systems.length;
 
             if (systemCount > 0) {
-                if (order < this._systems[0]._order) {
+                if (order < this._systems[0].order) {
                     return 0;
                 }
-                else if (order >= this._systems[systemCount - 1]._order) {
+                else if (order >= this._systems[systemCount - 1].order) {
                     return systemCount;
                 }
             }
 
             for (let i = 0; i < systemCount - 1; ++i) {
-                if (this._systems[i]._order <= order && order < this._systems[i + 1]._order) {
+                if (this._systems[i].order <= order && order < this._systems[i + 1].order) {
                     index = i + 1;
                     break;
                 }
@@ -55,10 +55,11 @@ namespace paper {
             return system;
         }
         /**
+         * TODO
          * @internal
          */
         public _preRegisterSystems() {
-            this._preSystems.sort((a, b) => { return a.order - b.order });
+            this._preSystems.sort((a, b) => { return a.order - b.order; });
 
             for (const pair of this._preSystems) {
                 this.register(pair.systemClass, pair.order);
@@ -69,7 +70,7 @@ namespace paper {
         /**
          * @internal
          */
-        public _update() {
+        public update() {
             for (const system of this._systems) {
                 if (system && system.enabled && !system._started) {
                     system._started = true;
@@ -79,13 +80,13 @@ namespace paper {
 
             for (const system of this._systems) {
                 if (system) {
-                    system._update();
+                    system.update();
                 }
             }
 
             for (const system of this._systems) {
                 if (system) {
-                    system._lateUpdate();
+                    system.lateUpdate();
                 }
             }
         }
@@ -105,7 +106,7 @@ namespace paper {
         /**
          * 为程序注册一个指定的系统。
          */
-        public register<T extends BaseSystem>(systemClass: { new(): T }, order: SystemOrder = SystemOrder.Update) {
+        public register<T extends BaseSystem>(systemClass: { new(): T }, order: SystemOrder = SystemOrder.Update, config?: any) {
             let system = this._checkRegister(systemClass);
             if (system) {
                 return system;
@@ -113,7 +114,7 @@ namespace paper {
 
             system = BaseSystem.create(systemClass, order) as T;
             this._systems.splice(this._getSystemInsertIndex(order), 0, system);
-            system._initialize();
+            system.initialize(config);
 
             return system;
         }

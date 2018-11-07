@@ -73,7 +73,7 @@ namespace egret3d.oimo {
         }
 
         private _addShapes() {
-            for (const shape of this.gameObject.getComponents(Collider as any, true) as Collider[]) {
+            for (const shape of this.gameObject.getComponents(BaseCollider as any, true) as BaseCollider[]) {
                 this.oimoRigidbody.addShape(shape.oimoShape);
                 // rigidbody._updateMass(rigidbody.oimoRigidbody);
             }

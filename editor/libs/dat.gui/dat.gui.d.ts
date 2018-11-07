@@ -61,6 +61,7 @@ declare namespace dat {
 
     interface GUIParams {
         autoPlace?: boolean;
+        scrollable?: boolean;
         closed?: boolean;
         closeOnTop?: boolean;
         load?: any;

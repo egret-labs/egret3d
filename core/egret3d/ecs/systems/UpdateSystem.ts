@@ -12,7 +12,7 @@ namespace paper {
 
             if (Application.playerMode === PlayerMode.Editor) {
                 for (const component of components) {
-                    if (component && (component.constructor as ComponentClass<Behaviour>).executeInEditMode) {
+                    if (component && (component.constructor as IComponentClass<Behaviour>).executeInEditMode) {
                         component.onUpdate && component.onUpdate(deltaTime);
                     }
                 }

@@ -3,10 +3,14 @@ namespace egret3d {
      * 四元数。
      */
     export class Quaternion extends Vector4 {
+        /**
+         * 恒等四元数。
+         */
         public static readonly IDENTITY: Readonly<Quaternion> = new Quaternion();
+
         protected static readonly _instances: Quaternion[] = [];
         /**
-         * 
+         * 创建一个四元数。
          */
         public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
             if (this._instances.length > 0) {
@@ -22,13 +26,15 @@ namespace egret3d {
             return Quaternion.create(this.x, this.y, this.z, this.w);
         }
         /**
-         * - 旋转矩阵。
+         * 通过旋转矩阵设置该四元数。
+         * - 旋转矩阵不应包含缩放值。
+         * @param rotateMatrix 旋转矩阵。
          */
-        public fromMatrix(matrix: Readonly<Matrix4>) {
+        public fromMatrix(rotateMatrix: Readonly<Matrix4>) {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
 
             // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
-            const rawData = matrix.rawData;
+            const rawData = rotateMatrix.rawData;
             const m11 = rawData[0], m12 = rawData[4], m13 = rawData[8];
             const m21 = rawData[1], m22 = rawData[5], m23 = rawData[9];
             const m31 = rawData[2], m32 = rawData[6], m33 = rawData[10];
@@ -69,13 +75,15 @@ namespace egret3d {
 
             return this;
         }
+        /**
+         * 通过欧拉旋转设置该四元数。
+         * @param euler 欧拉旋转。（弧度制）
+         * @param order 欧拉旋转顺序。
+         */
+        public fromEuler(euler: Readonly<IVector3>, order: EulerOrder = EulerOrder.YXZ) {
+            const { x, y, z } = euler;
 
-        public fromEuler(value: Readonly<IVector3>, order: EulerOrder = EulerOrder.YXZ) {
-            const { x, y, z } = value;
-
-            // http://www.mathworks.com/matlabcentral/fileexchange/
-            // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
-            //	content/SpinCalc.m
+            // http://www.mathworks.com/matlabcentral/fileexchange/20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/content/SpinCalc.m
 
             const cos = Math.cos;
             const sin = Math.sin;
@@ -135,14 +143,15 @@ namespace egret3d {
             return this;
         }
         /**
-         * - 向量必须已归一化。
+         * 通过旋转轴设置该四元数。
+         * - 假设旋转轴已被归一化。
+         * @param axis 旋转轴。
+         * @param angle 旋转角。（弧度制）
          */
-        public fromAxis(axis: Readonly<IVector3>, radian: number) {
+        public fromAxis(axis: Readonly<IVector3>, angle: number) {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
 
-            // assumes axis is normalized
-
-            const halfAngle = radian * 0.5, s = Math.sin(halfAngle);
+            const halfAngle = angle * 0.5, s = Math.sin(halfAngle);
             this.x = axis.x * s;
             this.y = axis.y * s;
             this.z = axis.z * s;
@@ -150,93 +159,193 @@ namespace egret3d {
 
             return this;
         }
+        /**
+         * 通过自起始方向到目标方向的旋转值设置该四元数。
+         * - 假设方向向量已被归一化。
+         * @param from 起始方向。
+         * @param to 目标方向。
+         */
+        public fromVectors(from: Readonly<IVector3>, to: Readonly<IVector3>) {
+            let r = (from as Vector3).dot(to) + 1.0;
+            const v1 = helpVector3A;
 
-        public inverse(source?: Readonly<IVector4>) {
-            if (!source) {
-                source = this;
+            if (r < Const.EPSILON) {
+                r = 0.0;
+
+                if (Math.abs(from.x) > Math.abs(from.z)) {
+                    v1.set(-from.y, from.x, 0.0);
+                }
+                else {
+                    v1.set(0.0, -from.z, from.y);
+                }
+            }
+            else {
+                v1.cross(from, to);
             }
 
-            this.x = source.x * -1;
-            this.y = source.y * -1;
-            this.z = source.z * -1;
-            this.w = source.w;
+            this.x = v1.x;
+            this.y = v1.y;
+            this.z = v1.z;
+            this.w = r;
 
-            return this;
+            return this.normalize();
         }
-
-        public dot(value: Readonly<IVector4>) {
-            return this.x * value.x + this.y * value.y + this.z * value.z + this.w * value.w;
-        }
-
-        public multiply(valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>) {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
+        /**
+         * 将该四元数乘以一个四元数。
+         * - v *= quaternion
+         * @param quaternion 一个四元数。
+         */
+        public multiply(quaternion: Readonly<IVector4>): this;
+        /**
+         * 将两个四元数相乘的结果写入该四元数。
+         * - v = quaternionA * quaternionB
+         * @param quaternionA 一个四元数。
+         * @param quaternionB 另一个四元数。
+         */
+        public multiply(quaternionA: Readonly<IVector4>, quaternionB?: Readonly<IVector4>): this;
+        public multiply(quaternionA: Readonly<IVector4>, quaternionB?: Readonly<IVector4>) {
+            if (!quaternionB) {
+                quaternionB = quaternionA;
+                quaternionA = this;
             }
-
-            const qax = valueA.x, qay = valueA.y, qaz = valueA.z, qaw = valueA.w;
-            const qbx = valueB.x, qby = valueB.y, qbz = valueB.z, qbw = valueB.w;
-
-            this.x = qax * qbw + qaw * qbx + qay * qbz - qaz * qby;
-            this.y = qay * qbw + qaw * qby + qaz * qbx - qax * qbz;
-            this.z = qaz * qbw + qaw * qbz + qax * qby - qay * qbx;
-            this.w = qaw * qbw - qax * qbx - qay * qby - qaz * qbz;
-
-            return this;
-        }
-
-        public premultiply(value: Readonly<IVector4>) {
-            return this.multiply(value, this);
-        }
-
-        public lerp(t: number, valueA: Readonly<IVector4>, valueB?: Readonly<IVector4>) {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
-            }
-
-            if (t === 0.0) return this.copy(valueA);
-            if (t === 1.0) return this.copy(valueB);
-
-            const x = valueA.x, y = valueA.y, z = valueA.z, w = valueA.w;
 
             // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
+            const ax = quaternionA.x, ay = quaternionA.y, az = quaternionA.z, aw = quaternionA.w;
+            const bx = quaternionB.x, by = quaternionB.y, bz = quaternionB.z, bw = quaternionB.w;
 
-            let cosHalfTheta = w * valueB.w + x * valueB.x + y * valueB.y + z * valueB.z;
+            this.x = ax * bw + aw * bx + ay * bz - az * by;
+            this.y = ay * bw + aw * by + az * bx - ax * bz;
+            this.z = az * bw + aw * bz + ax * by - ay * bx;
+            this.w = aw * bw - ax * bx - ay * by - az * bz;
+
+            return this;
+        }
+        /**
+         * 将一个四元数与该四元数相乘的结果写入该四元数。
+         * - v = quaternion * v
+         * @param quaternion 一个四元数。
+         */
+        public premultiply(quaternion: Readonly<IVector4>) {
+            return this.multiply(quaternion, this);
+        }
+        /**
+         * @internal
+         */
+        public lerp(p1: Readonly<IVector4> | number, p2: Readonly<IVector4> | number, p3?: number | Readonly<IVector4>) {
+            if (typeof p1 === "number") {
+                if (!p3) {
+                    p3 = p2;
+                    p2 = this;
+                }
+
+                const fX = (p2 as Readonly<IVector4>).x, fY = (p2 as Readonly<IVector4>).y, fZ = (p2 as Readonly<IVector4>).z, fW = (p2 as Readonly<IVector4>).w;
+                const tX = (p3 as Readonly<IVector4>).x, tY = (p3 as Readonly<IVector4>).y, tZ = (p3 as Readonly<IVector4>).z, tW = (p3 as Readonly<IVector4>).w;
+
+                if (fX * tX + fY * tY + fZ * tZ + fW * tW < 0.0) {
+                    this.x = fX + (-tX - fX) * p1;
+                    this.y = fY + (-tY - fY) * p1;
+                    this.z = fZ + (-tZ - fZ) * p1;
+                    this.w = fW + (-tW - fW) * p1;
+                }
+                else {
+                    this.x = fX + (tX - fX) * p1;
+                    this.y = fY + (tY - fY) * p1;
+                    this.z = fZ + (tZ - fZ) * p1;
+                    this.w = fW + (tW - fW) * p1;
+                }
+
+            }
+            else {
+                if (typeof p2 === "number") {
+                    p3 = p2;
+                    p2 = p1;
+                    p1 = this;
+                }
+
+                const fX = p1.x, fY = p1.y, fZ = p1.z, fW = p1.w;
+                const tX = p2.x, tY = p2.y, tZ = p2.z, tW = p2.w;
+
+                if (fX * tX + fY * tY + fZ * tZ + fW * tW < 0.0) {
+                    this.x = fX + (-tX - fX) * (p3 as number);
+                    this.y = fY + (-tY - fY) * (p3 as number);
+                    this.z = fZ + (-tZ - fZ) * (p3 as number);
+                    this.w = fW + (-tW - fW) * (p3 as number);
+                }
+                else {
+                    this.x = fX + (tX - fX) * (p3 as number);
+                    this.y = fY + (tY - fY) * (p3 as number);
+                    this.z = fZ + (tZ - fZ) * (p3 as number);
+                    this.w = fW + (tW - fW) * (p3 as number);
+                }
+            }
+
+            return this;
+        }
+        /**
+         * 将该四元数和目标四元数球形插值的结果写入该四元数。
+         * - v = v * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param t 插值因子。
+         * @param to 目标矩阵。
+         */
+        public slerp(t: number, to: Readonly<IVector4>): this;
+        /**
+         * 将两个四元数球形插值的结果写入该四元数。
+         * - v = from * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param t 插值因子。
+         * @param from 起始矩阵。
+         * @param to 目标矩阵。
+         */
+        public slerp(t: number, from: Readonly<IVector4>, to: Readonly<IVector4>): this;
+        public slerp(t: number, from: Readonly<IVector4>, to?: Readonly<IVector4>) {
+            if (!to) {
+                to = from;
+                from = this;
+            }
+
+            if (t === 0.0) return this.copy(from);
+            if (t === 1.0) return this.copy(to);
+
+            // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
+            const ax = from.x, ay = from.y, az = from.z, aw = from.w;
+            const bx = to.x, by = to.y, bz = to.z, bw = to.w;
+            let cosHalfTheta = aw * bw + ax * bx + ay * by + az * bz;
 
             if (cosHalfTheta < 0.0) {
-                this.w = -valueB.w;
-                this.x = -valueB.x;
-                this.y = -valueB.y;
-                this.z = -valueB.z;
+                this.w = -bw;
+                this.x = -bx;
+                this.y = -by;
+                this.z = -bz;
 
                 cosHalfTheta = -cosHalfTheta;
             }
             else {
-                this.copy(valueB);
+                this.w = bw;
+                this.x = bx;
+                this.y = by;
+                this.z = bz;
             }
 
             if (cosHalfTheta >= 1.0) {
-                this.w = w;
-                this.x = x;
-                this.y = y;
-                this.z = z;
+                this.w = aw;
+                this.x = ax;
+                this.y = ay;
+                this.z = az;
 
                 return this;
             }
 
             const sqrSinHalfTheta = 1.0 - cosHalfTheta * cosHalfTheta;
 
-            if (sqrSinHalfTheta <= egret3d.EPSILON) { // Number.EPSILON
+            if (sqrSinHalfTheta <= Const.EPSILON) { // Number.EPSILON
 
-                const s = 1.0 - t;
-                this.w = s * w + t * this.w;
-                this.x = s * x + t * this.x;
-                this.y = s * y + t * this.y;
-                this.z = s * z + t * this.z;
+                this.w = aw + t * (this.w - aw);
+                this.x = ax + t * (this.x - ax);
+                this.y = ay + t * (this.y - ay);
+                this.z = az + t * (this.z - az);
 
                 return this.normalize();
-
             }
 
             const sinHalfTheta = Math.sqrt(sqrSinHalfTheta);
@@ -244,31 +353,47 @@ namespace egret3d {
             const ratioA = Math.sin((1.0 - t) * halfTheta) / sinHalfTheta,
                 ratioB = Math.sin(t * halfTheta) / sinHalfTheta;
 
-            this.w = (w * ratioA + this.w * ratioB);
-            this.x = (x * ratioA + this.x * ratioB);
-            this.y = (y * ratioA + this.y * ratioB);
-            this.z = (z * ratioA + this.z * ratioB);
-        }
-        /**
-         * 
-         * @param eye 
-         * @param target 
-         * @param up 
-         */
-        public lookAt(eye: Readonly<IVector3>, target: Readonly<IVector3>, up: Readonly<IVector3>) {
-            return this.fromMatrix(helpMatrixA.lookAt(eye, target, up));
-        }
-        /**
-         * 
-         * @param value 
-         * @param up 
-         */
-        public lookRotation(value: Readonly<IVector3>, up: Readonly<IVector3>) {
-            return this.fromMatrix(helpMatrixA.lookRotation(value, up));
-        }
+            this.w = aw * ratioA + this.w * ratioB;
+            this.x = ax * ratioA + this.x * ratioB;
+            this.y = ay * ratioA + this.y * ratioB;
+            this.z = az * ratioA + this.z * ratioB;
 
-        public toEuler(value: Vector3, order: EulerOrder = EulerOrder.YXZ) {
-            return _helpMatrix.fromRotation(this).toEuler(value, order);
+            return this;
+        }
+        /**
+         * 设置该四元数，使其与起始点到目标点的方向相一致。
+         * @param from 起始点。
+         * @param to 目标点。
+         * @param up 
+         */
+        public lookAt(from: Readonly<IVector3>, to: Readonly<IVector3>, up: Readonly<IVector3>): this {
+            return this.fromMatrix(helpMatrixA.lookAt(from, to, up));
+        }
+        /**
+         * 设置该四元数，使其与目标方向相一致。
+         * @param vector 目标方向。
+         * @param up 
+         */
+        public lookRotation(vector: Readonly<IVector3>, up: Readonly<IVector3>): this {
+            return this.fromMatrix(helpMatrixA.lookRotation(vector, up));
+        }
+        /**
+         * 获取该四元数和一个四元数的夹角。（弧度制）
+         */
+        public getAngle(value: Readonly<IVector4>): number {
+            return 2.0 * Math.acos(Math.abs(math.clamp(this.dot(value), -1.0, 1.0)));
+        }
+        /**
+         * 将该四元数转换为欧拉旋转。（弧度制）
+         * @param out 欧拉旋转。
+         * @param order 欧拉旋转顺序。
+         */
+        public toEuler(out?: Vector3, order: EulerOrder = EulerOrder.YXZ): Vector3 {
+            if (!out) {
+                out = Vector3.create();
+            }
+
+            return _helpMatrix.fromRotation(this).toEuler(out, order);
         }
     }
 

@@ -18,9 +18,6 @@ namespace paper.editor {
 
         private _enableMove: boolean = true;
 
-        private bindTouch: egret3d.TouchDevice;
-        private bindMouse: egret3d.MouseDevice;
-
         private _lastMouseX: number;
         private _lastMouseY: number;
         private _mouseDown = false;
@@ -66,10 +63,6 @@ namespace paper.editor {
         }
 
         public onStart() {
-            this.bindTouch = egret3d.InputManager.touch;
-            this.bindMouse = egret3d.InputManager.mouse;
-            //
-            this.bindMouse.disableContextMenu();
         }
 
         public onEnable() {
@@ -128,10 +121,8 @@ namespace paper.editor {
             if (event.ctrlKey) {
                 move.x = -move.x;
                 const center = this.lookAtPoint;
-                const dis = this.gameObject.transform.getPosition().getDistance(center);
-                const normalMat = egret3d.Matrix3.create();
-                move.multiplyScalar(dis * this.moveSpped).applyMatrix3(normalMat.getNormalMatrix(this.gameObject.transform.getLocalMatrix()));
-                normalMat.release();
+                const dis = this.gameObject.transform.position.getDistance(center);
+                move.multiplyScalar(dis * this.moveSpped).applyQuaternion(this.gameObject.transform.rotation);
 
                 this.lookAtOffset.add(move);
             }
@@ -153,11 +144,11 @@ namespace paper.editor {
         }
 
         private move() {
-            let distanceX = this.distance * Math.sin(this._panRad) * Math.cos(this._tiltRad);
-            let distanceY = this.distance * (this._tiltRad === 0 ? 0 : Math.sin(this._tiltRad));
-            let distanceZ = this.distance * Math.cos(this._panRad) * Math.cos(this._tiltRad);
+            const distanceX = this.distance * Math.sin(this._panRad) * Math.cos(this._tiltRad);
+            const distanceY = this.distance * (this._tiltRad === 0 ? 0 : Math.sin(this._tiltRad));
+            const distanceZ = this.distance * Math.cos(this._panRad) * Math.cos(this._tiltRad);
 
-            let target: egret3d.Vector3 = egret3d.Vector3.create();
+            const target: egret3d.Vector3 = egret3d.Vector3.create();
             target.copy(this.lookAtPoint);
             target.add(this.lookAtOffset);
 

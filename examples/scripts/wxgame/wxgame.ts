@@ -3,17 +3,15 @@ import * as path from 'path';
 
 export class WxgamePlugin implements plugins.Command {
     async onFile(file: plugins.File) {
-        if (file.extname == '.js') {
+        if (file.extname === '.js') {
             const filename = file.origin;
             if (
                 filename === "libs/modules/promise/promise.js" || filename === 'libs/modules/promise/promise.min.js'
-                || filename === "libs/modules/editor/editor.js" || filename === 'libs/modules/editor/editor.min.js'
-                || filename === "libs/modules/oimo/oimo.js" || filename === 'libs/modules/oimo/oimo.min.js'
             ) {
                 return null;
             }
 
-            if (filename == 'libs/modules/egret/egret.js' || filename == 'libs/modules/egret/egret.min.js') {
+            if (filename === 'libs/modules/egret/egret.js' || filename === 'libs/modules/egret/egret.min.js') {
                 let content = file.contents.toString();
                 content += `;window.egret = egret;`;
                 content = content.replace(/definition = __global/, "definition = window");
@@ -22,30 +20,38 @@ export class WxgamePlugin implements plugins.Command {
             else {
                 let content = file.contents.toString();
                 if (
-                    filename == "libs/modules/res/res.js" ||
-                    filename == 'libs/modules/res/res.min.js' ||
-                    filename == 'libs/modules/assetsmanager/assetsmanager.min.js' ||
-                    filename == 'libs/modules/assetsmanager/assetsmanager.js'
+                    filename === "libs/modules/res/res.js" ||
+                    filename === 'libs/modules/res/res.min.js' ||
+                    filename === 'libs/modules/assetsmanager/assetsmanager.min.js' ||
+                    filename === 'libs/modules/assetsmanager/assetsmanager.js'
                 ) {
-                    content += ";window.RES = RES;"
+                    content += ";window.RES = RES;";
                 }
-                if (filename == "libs/modules/eui/eui.js" || filename == 'libs/modules/eui/eui.min.js') {
-                    content += ";window.eui = eui;"
+
+                if (filename === "libs/modules/eui/eui.js" || filename === 'libs/modules/eui/eui.min.js') {
+                    content += ";window.eui = eui;";
                 }
-                if (filename == 'libs/modules/dragonBones/dragonBones.js' || filename == 'libs/modules/dragonBones/dragonBones.min.js') {
+
+                if (filename === 'libs/modules/dragonBones/dragonBones.js' || filename === 'libs/modules/dragonBones/dragonBones.min.js') {
                     content += ';window.dragonBones = dragonBones';
                 }
+
                 content = "var egret3d = window.egret3d;" + content;
                 content = "var paper = window.paper;" + content;
                 content = "var egret = window.egret;" + content;
 
-                if (filename.indexOf('egret3d.js') >= 0 || filename.indexOf("egret3d.min.js") >= 0) {
+                if (filename.indexOf('egret3d.js') >= 0) {
                     content = " var RES = window.RES;" + content;
                     content = content.replace(new RegExp('egret.web', 'g'), "egret.wxgame");
                 }
+                else if (filename.indexOf("egret3d.min.js") >= 0) {
+                    content = " var RES = window.RES;" + content;
+                    content = content.replace(new RegExp('egret.web', 'g'), "egret.wxgame");
+                    content = content.replace(new RegExp('e.web', 'g'), "e.wxgame");
+                }
 
-                if (filename == 'main.js') {
-                    content += ";window.main = main;"
+                if (filename === 'main.js') {
+                    content += ";window.main = main;";
                 }
 
                 file.contents = new Buffer(content);
@@ -78,63 +84,16 @@ export class WxgamePlugin implements plugins.Command {
 
         //修改横竖屏
         let orientation;
-        if (projectConfig.orientation == '"landscape"') {
+        if (projectConfig.orientation === '"landscape"') {
             orientation = "landscape";
         }
         else {
             orientation = "portrait";
         }
+
         const gameJSONPath = path.join(pluginContext.outputDir, "game.json");
-        let gameJSONContent = JSON.parse(fs.readFileSync(gameJSONPath, { encoding: "utf8" }));
+        const gameJSONContent = JSON.parse(fs.readFileSync(gameJSONPath, { encoding: "utf8" }));
         gameJSONContent.deviceOrientation = orientation;
         fs.writeFileSync(gameJSONPath, JSON.stringify(gameJSONContent, null, "\t"));
-    }
-}
-
-export class ManifestWxgamePlugin implements plugins.Command {
-
-    async onFile(file: plugins.File) {
-        if (file.origin === 'manifest.js') {
-            const content = `require("js/lib.min.js");
-require('egret.wxgame.js');
-require("js/main.js");`;
-
-            file.contents = new Buffer(content);
-        }
-
-        return file;
-    }
-
-    async onFinish(pluginContext: plugins.CommandContext) {
-
-    }
-}
-
-export class ResourceFilterPlugin implements plugins.Command {
-    include?: string[];
-
-    constructor(include?: string[]) {
-        this.include = include;
-    }
-
-    async onFile(file: plugins.File) {
-        if (
-            !this.include ||
-            file.origin.indexOf(".res.json") >= 0 ||
-            file.origin.indexOf("resource") < 0
-        ) {
-            return file;
-        }
-
-        for (const name of this.include) {
-            if (file.origin.indexOf(name) >= 0) {
-                return file;
-            }
-        }
-
-        return null;
-    }
-
-    async onFinish(commandContext: plugins.CommandContext) {
     }
 }

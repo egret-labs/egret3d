@@ -1,26 +1,15 @@
 namespace egret3d {
     /**
-     * 射线检测接口。
-     */
-    export interface IRaycast {
-        /**
-         * 射线检测。
-         * @param ray 
-         * @param raycastInfo 是否将检测的详细数据写入 RaycastInfo。
-         */
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
-    }
-    /**
      * 射线。
      */
     export class Ray extends paper.BaseRelease<Ray> implements paper.ICCS<Ray>, paper.ISerializable {
         private static readonly _instances: Ray[] = [];
         /**
-         * 
-         * @param origin 
-         * @param direction 
+         * 创建一个射线。
+         * @param origin 射线的起点。
+         * @param direction 射线的方向。
          */
-        public static create(origin: Readonly<IVector3> = Vector3.ZERO, direction: Readonly<IVector3> = Vector3.FORWARD) {
+        public static create(origin: Readonly<IVector3> = Vector3.ZERO, direction: Readonly<IVector3> = Vector3.FORWARD): Ray {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!.set(origin, direction);
                 instance._released = false;
@@ -30,11 +19,11 @@ namespace egret3d {
             return new Ray().set(origin, direction);
         }
         /**
-         * 射线起始点
+         * 射线的起点。
          */
         public readonly origin: Vector3 = Vector3.create();
         /**
-         * 射线的方向向量
+         * 射线的方向。
          */
         public readonly direction: Vector3 = Vector3.create();
         /**
@@ -74,33 +63,101 @@ namespace egret3d {
 
             return this;
         }
-
-        public applyMatrix(value: Readonly<Matrix4>, ray?: Readonly<Ray>) {
-            this.origin.applyMatrix(value, (ray || this).origin);
-            this.direction.applyDirection(value, (ray || this).direction).normalize();
+        /**
+         * 设置该射线，使其从起点出发，经过终点。
+         * @param from 起点。
+         * @param to 终点。
+         */
+        public fromPoints(from: Readonly<IVector3>, to: Readonly<IVector3>): this {
+            this.direction.subtract(to, this.origin.copy(from)).normalize();
+            return this;
+        }
+        /**
+         * 将该射线乘以一个矩阵。
+         * - v *= matrix
+         * @param matrix 一个矩阵。
+         */
+        public applyMatrix(matrix: Readonly<Matrix4>): this;
+        /**
+         * 将输入射线与一个矩阵相乘的结果写入该射线。
+         * - v = input * matrix
+         * @param matrix 一个矩阵。
+         * @param input 输入射线。
+         */
+        public applyMatrix(matrix: Readonly<Matrix4>, input: Readonly<Ray>): this;
+        public applyMatrix(matrix: Readonly<Matrix4>, input?: Readonly<Ray>) {
+            this.origin.applyMatrix(matrix, (input || this).origin);
+            this.direction.applyDirection(matrix, (input || this).direction);
 
             return this;
         }
-
-        public getSquaredDistance(value: Readonly<IVector3>) {
-            const directionDistance = helpVector3A.subtract(value, this.origin).dot(this.direction);
-            // point behind the ray
-            if (directionDistance < 0.0) {
-                return this.origin.getSquaredDistance(value);
+        /**
+         * 获取一个点到该射线的最近点。
+         * @param point 一个点。
+         * @param out 最近点。
+         */
+        public getClosestPointToPoint(point: Readonly<IVector3>, out?: Vector3): Vector3 {
+            if (!out) {
+                out = Vector3.create();
             }
 
-            return this.at(directionDistance, helpVector3A).getSquaredDistance(value);
-        }
+            const origin = out !== this.origin ? this.origin : helpVector3A.copy(this.origin);
+            const direction = this.direction;
+            const directionDistance = out.subtract(point, origin).dot(direction);
 
-        public getDistance(value: Readonly<IVector3>) {
-            return Math.sqrt(this.getSquaredDistance(value));
-        }
+            if (directionDistance < 0.0) {
+                return out.copy(origin);
+            }
 
-        public getDistanceToPlane(value: Readonly<Plane>) {
-            const denominator = value.normal.dot(this.direction);
+            return out.copy(direction).multiplyScalar(directionDistance).add(origin);
+        }
+        /**
+         * 获取从该射线的起点沿着射线方向移动一段距离的一个点。
+         * - out = ray.origin + ray.direction * distanceDelta
+         * @param distanceDelta 移动距离。
+         * @param out 一个点。
+         */
+        public getPointAt(distanceDelta: number, out?: Vector3): Vector3 {
+            if (!out) {
+                out = Vector3.create();
+            }
+
+            const origin = out !== this.origin ? this.origin : helpVector3A.copy(this.origin);
+            return out.multiplyScalar(distanceDelta, this.direction).add(origin);
+        }
+        /**
+         * 获取一个点到该射线的最近距离的平方。
+         * @param point 一个点。
+         */
+        public getSquaredDistance(point: Readonly<IVector3>): number {
+            const origin = this.origin;
+            const directionDistance = helpVector3A.subtract(point, origin).dot(this.direction);
+            // point behind the ray
+            if (directionDistance < 0.0) {
+                return origin.getSquaredDistance(point);
+            }
+
+            return this.getPointAt(directionDistance, helpVector3A).getSquaredDistance(point);
+        }
+        /**
+         * 获取一个点到该射线的最近距离。
+         * @param point 一个点。
+         */
+        public getDistance(point: Readonly<IVector3>): number {
+            return Math.sqrt(this.getSquaredDistance(point));
+        }
+        /**
+         * 获取该射线起点到一个平面的最近距离。
+         * - 如果射线并不与平面相交，则返回 -1。
+         * @param plane 一个平面。
+         */
+        public getDistanceToPlane(plane: Readonly<Plane>): number {
+            const origin = this.origin;
+            const planeNormal = plane.normal;
+            const denominator = planeNormal.dot(this.direction);
             if (denominator === 0.0) {
                 // line is coplanar, return origin
-                if (value.getDistance(this.origin) === 0.0) {
+                if (plane.getDistance(origin) === 0.0) {
                     return 0.0;
                 }
 
@@ -108,163 +165,10 @@ namespace egret3d {
                 return -1.0;
             }
 
-            const t = -(this.origin.dot(value.normal) + value.constant) / denominator;
+            const t = -(origin.dot(planeNormal) + plane.constant) / denominator;
 
             // Return if the ray never intersects the plane
             return t >= 0.0 ? t : -1.0;
-        }
-
-        public at(value: number, out?: Vector3) {
-            if (!out) {
-                out = Vector3.create();
-            }
-
-            out.multiplyScalar(value, this.direction).add(this.origin);
-
-            return out;
-        }
-        /**
-         * @deprecated
-         */
-        public intersectTriangle(triangle: Readonly<Triangle>, backfaceCulling?: boolean, raycastInfo?: RaycastInfo): boolean;
-        public intersectTriangle(p1: Readonly<Vector3>, p2: Readonly<Vector3>, p3: Readonly<Vector3>, backfaceCulling?: boolean, raycastInfo?: RaycastInfo): boolean;
-        public intersectTriangle(p1: Readonly<Triangle | Vector3>, p2?: boolean | Readonly<Vector3>, p3?: RaycastInfo | Readonly<Vector3>, p4?: boolean, p5?: RaycastInfo) {
-            // // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
-            // const edge1 = helpVector3A;
-            // const edge2 = helpVector3B;
-            // const diff = helpVector3C;
-            // const normal = helpVector3D;
-
-            // edge1.subtract(p2, p1);
-            // edge2.subtract(p3, p1);
-            // normal.cross(edge1, edge2);
-
-            // // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
-            // // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
-            // //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
-            // //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
-            // //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
-            // let DdN = this.direction.dot(normal);
-            // let sign = 1.0;
-
-            // if (DdN > 0.0) {
-            //     if (backfaceCulling) return null;
-            // }
-            // else if (DdN < 0.0) {
-            //     sign = -1.0;
-            //     DdN = -DdN;
-            // }
-            // else {
-            //     return null;
-            // }
-
-            // diff.subtract(this.origin, p1);
-            // const DdQxE2 = sign * this.direction.dot(edge2.cross(diff, edge2));
-            // // b1 < 0, no intersection
-            // if (DdQxE2 < 0.0) {
-            //     return null;
-            // }
-
-            // const DdE1xQ = sign * this.direction.dot(edge1.cross(diff));
-            // // b2 < 0, no intersection
-            // if (DdE1xQ < 0.0) {
-            //     return null;
-            // }
-            // // b1+b2 > 1, no intersection
-            // if (DdQxE2 + DdE1xQ > DdN) {
-            //     return null;
-            // }
-            // // Line intersects triangle, check if ray does.
-            // const QdN = - sign * diff.dot(normal);
-            // // t < 0, no intersection
-            // if (QdN < 0) {
-            //     return null;
-            // }
-
-            // const pickInfo = new PickInfo();
-            // pickInfo.distance = QdN / DdN;
-            // pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
-            // pickInfo.textureCoordA.x = DdQxE2;
-            // pickInfo.textureCoordA.y = DdE1xQ;
-
-            // return pickInfo;
-            // TODO
-            const isA = p1 instanceof Triangle;
-            const edge1 = helpVector3A;
-            const edge2 = helpVector3B;
-            const pvec = helpVector3C;
-            const tvec = helpVector3D;
-            const qvec = helpVector3E;
-            const pA = isA ? (p1 as Readonly<Triangle>).a : p1 as Readonly<IVector3>;
-            const pB = isA ? (p1 as Readonly<Triangle>).b : p2 as Readonly<IVector3>;
-            const pC = isA ? (p1 as Readonly<Triangle>).c : p3 as Readonly<IVector3>;
-
-            edge1.subtract(pB, pA);
-            edge2.subtract(pC, pA);
-            pvec.cross(this.direction, edge2);
-
-            const det = pvec.dot(edge1);
-            if (det === 0.0) {
-                return false;
-            }
-
-            const invdet = 1.0 / det;
-
-            tvec.subtract(this.origin, pA);
-
-            const bu = pvec.dot(tvec) * invdet;
-            if (bu < 0.0 || bu > 1.0) {
-                return false;
-            }
-
-            qvec.cross(tvec, edge1);
-
-            const bv = qvec.dot(this.direction) * invdet;
-
-            if (bv < 0.0 || bu + bv > 1.0) {
-                return false;
-            }
-
-            const raycastInfo = isA ? p3 as RaycastInfo | undefined : p5;
-            if (raycastInfo) {
-                raycastInfo.textureCoordA.x = bu;
-                raycastInfo.textureCoordA.y = bv;
-                this.at(raycastInfo.distance = qvec.dot(edge2) * invdet, raycastInfo.position);
-            }
-
-            return true;
-        }
-    }
-    /**
-     * 射线检测信息。
-     */
-    export class RaycastInfo extends paper.BaseRelease<RaycastInfo>  {
-        private static readonly _instances: RaycastInfo[] = [];
-
-        public static create() {
-            if (this._instances.length > 0) {
-                return this._instances.pop()!;
-            }
-
-            return new RaycastInfo();
-        }
-
-        public subMeshIndex: number = -1;
-        public triangleIndex: number = -1;
-        public distance: number = 0.0;
-        public readonly position: Vector3 = new Vector3();
-        public readonly textureCoordA: Vector2 = new Vector2();
-        public readonly textureCoordB: Vector2 = new Vector2();
-        public transform: Transform | null = null;
-        public collider: BaseCollider | null = null;
-
-        public clear() {
-            this.subMeshIndex = -1;
-            this.triangleIndex = -1;
-            this.distance = 0.0;
-            // TODO
-            this.transform = null;
-            this.collider = null;
         }
     }
     /**

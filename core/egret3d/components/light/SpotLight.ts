@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 
+     * 聚光组件。
      */
     export class SpotLight extends BaseLight {
         /**
@@ -26,17 +26,23 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01 })
-        public penumbra: number = 0.0;
+        public penumbra: number = 1.0;
 
-        public update(camera: Camera, faceIndex: number) {
+        public renderTarget: BaseRenderTarget;
+
+        public updateShadow(camera: Camera) {
+            if (!this.renderTarget) {
+                this.renderTarget = new GlRenderTarget("SpotLight", this.shadowSize, this.shadowSize); //
+            }
             camera.near = this.shadowCameraNear;
             camera.far = this.shadowCameraFar;
-            camera.size = this.shadowCameraSize;
             camera.fov = this.angle;
             camera.opvalue = 1.0;
-            camera.gameObject.transform.getWorldMatrix().copy(this.gameObject.transform.getWorldMatrix()); //
+            camera.renderTarget = this.renderTarget;
+            camera.gameObject.transform.localToWorldMatrix.copy(this.gameObject.transform.localToWorldMatrix); //
 
-            super.update(camera, faceIndex);
+            this.viewPortPixel.set(0, 0, this.shadowSize, this.shadowSize);
+            this._updateShadowMatrix(camera);
         }
     }
 }

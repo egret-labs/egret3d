@@ -64,13 +64,13 @@ namespace egret3d {
             return this;
         }
 
-        public fromCartesianCoords(value: Readonly<IVector3>): this;
+        public fromCartesianCoords(vector3: Readonly<IVector3>): this;
         public fromCartesianCoords(x: number, y: number, z: number): this;
         public fromCartesianCoords(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
             if (p1.hasOwnProperty("x")) {
                 p3 = (p1 as Readonly<IVector3>).z;
                 p2 = (p1 as Readonly<IVector3>).y;
-                p1 = (p1 as Readonly<IVector3>).z;
+                p1 = (p1 as Readonly<IVector3>).x;
             }
 
             this.radius = Math.sqrt((p1 as number) * (p1 as number) + (p2 as number) * (p2 as number) + (p3 as number) * (p3 as number));
@@ -81,7 +81,7 @@ namespace egret3d {
             }
             else {
                 this.theta = Math.atan2((p1 as number), (p3 as number)); // TODO
-                this.phi = Math.acos(floatClamp((p2 as number) / this.radius, -1.0, 1.0));
+                this.phi = Math.acos(math.clamp((p2 as number) / this.radius, -1.0, 1.0));
             }
 
             return this;

@@ -1,10 +1,15 @@
 namespace egret3d {
-
+    /**
+     * 三维向量接口。
+     */
     export interface IVector3 extends IVector2 {
+        /**
+         * z 轴分量。
+         */
         z: number;
     }
     /**
-     * 
+     * 欧拉旋转顺序。
      */
     export const enum EulerOrder {
         XYZ,
@@ -15,56 +20,63 @@ namespace egret3d {
         ZYX,
     }
     /**
-     * 三维向量
+     * 三维向量。
      */
-    export class Vector3 extends paper.BaseRelease<AABB> implements IVector3, paper.ICCS<Vector3>, paper.ISerializable {
+    export class Vector3 extends paper.BaseRelease<Vector3> implements IVector3, paper.ICCS<Vector3>, paper.ISerializable {
         /**
-         * 零
+         * 零向量。
+         * - 请注意不要修改该值。
          */
-        public static readonly ZERO: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, 0.0);
-
+        public static readonly ZERO: Readonly<Vector3> = new Vector3(0.0, 0.0, 0.0);
         /**
-         * 三方向均为一的向量
+         * 三方向均为一的向量。
+         * - 请注意不要修改该值。
          */
-        public static readonly ONE: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(1.0, 1.0, 1.0);
+        public static readonly ONE: Readonly<Vector3> = new Vector3(1.0, 1.0, 1.0);
         /**
-         * 三方向均为负一的向量
+         * 三方向均为负一的向量。
+         * - 请注意不要修改该值。
          */
-        public static readonly MINUS_ONE: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(-1.0, -1.0, -1.0);
-
+        public static readonly MINUS_ONE: Readonly<Vector3> = new Vector3(-1.0, -1.0, -1.0);
         /**
-         * 上
+         * 上向量。
+         * - 请注意不要修改该值。
          */
-        public static readonly UP: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 1.0, 0.0);
-
+        public static readonly UP: Readonly<Vector3> = new Vector3(0.0, 1.0, 0.0);
         /**
-         * 下
+         * 下向量。
+         * - 请注意不要修改该值。
          */
-        public static readonly DOWN: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, -1.0, 0.0);
-
+        public static readonly DOWN: Readonly<Vector3> = new Vector3(0.0, -1.0, 0.0);
         /**
-         * 左
+         * 左向量。
+         * - 请注意不要修改该值。
          */
-        public static readonly LEFT: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(-1.0, 0.0, 0.0);
-
+        public static readonly LEFT: Readonly<Vector3> = new Vector3(-1.0, 0.0, 0.0);
         /**
-         * 右
+         * 右向量。
+         * - 请注意不要修改该值。
          */
-        public static readonly RIGHT: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(1.0, 0.0, 0.0);
-
+        public static readonly RIGHT: Readonly<Vector3> = new Vector3(1.0, 0.0, 0.0);
         /**
-         * 前
+         * 前向量。
+         * - 请注意不要修改该值。
          */
-        public static readonly FORWARD: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, 1.0);
-
+        public static readonly FORWARD: Readonly<Vector3> = new Vector3(0.0, 0.0, 1.0);
         /**
-         * 后
+         * 后向量。
+         * - 请注意不要修改该值。
          */
-        public static readonly BACK: Readonly<IVector3> & { clone: () => Vector3 } = new Vector3(0.0, 0.0, -1.0);
+        public static readonly BACK: Readonly<Vector3> = new Vector3(0.0, 0.0, -1.0);
 
         private static readonly _instances: Vector3[] = [];
-
-        public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0) {
+        /**
+         * 创建一个三维向量。
+         * @param x X 轴分量。
+         * @param y Y 轴分量。
+         * @param z Z 轴分量。
+         */
+        public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0): Vector3 {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!.set(x, y, z);
                 instance._released = false;
@@ -74,19 +86,8 @@ namespace egret3d {
             return new Vector3().set(x, y, z);
         }
 
-        /**
-         * X轴分量
-         */
         public x: number;
-
-        /**
-         * Y轴分量
-         */
         public y: number;
-
-        /**
-         * Z轴分量
-         */
         public z: number;
         /**
          * 请使用 `egret3d.Vector3.create()` 创建实例。
@@ -118,22 +119,6 @@ namespace egret3d {
             return Vector3.create(this.x, this.y, this.z);
         }
 
-        public equal(value: Readonly<IVector3>, threshold: number = 0.000001) {
-            if (Math.abs(this.x - value.x) > threshold) {
-                return false;
-            }
-
-            if (Math.abs(this.y - value.y) > threshold) {
-                return false;
-            }
-
-            if (Math.abs(this.z - value.z) > threshold) {
-                return false;
-            }
-
-            return true;
-        }
-
         public set(x: number, y: number, z: number) {
             this.x = x;
             this.y = y;
@@ -142,83 +127,231 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
-            this.x = value[offset];
-            this.y = value[offset + 1];
-            this.z = value[offset + 2];
+        public fromArray(array: Readonly<ArrayLike<number>>, offset: number = 0) {
+            this.x = array[offset];
+            this.y = array[offset + 1];
+            this.z = array[offset + 2];
 
             return this;
         }
 
-        public fromPlaneProjection(plane: Readonly<Plane>, source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
-            }
-
-            return this.add(helpVector3A.multiplyScalar(-plane.getDistance(source), plane.normal));
-        }
-
-        public applyMatrix3(matrix: Readonly<Matrix3>, source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
-            }
-
-            // const x = source.x, y = source.y, z = source.z;
-            // const rawData = matrix.rawData;
-
-            // const w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]);
-            // this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
-            // this.y = (rawData[1] * x + rawData[5] * y + rawData[9] * z + rawData[13]) * w;
-            // this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
-
-
-            var x = source.x, y = source.y, z = source.z;
-            var e = matrix.rawData;
-
-            this.x = e[0] * x + e[3] * y + e[6] * z;
-            this.y = e[1] * x + e[4] * y + e[7] * z;
-            this.z = e[2] * x + e[5] * y + e[8] * z;
+        public clear() {
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
 
             return this;
         }
-
-        public applyMatrix(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
+        /**
+         * 判断该向量是否和一个向量相等。
+         * @param value 一个向量。
+         * @param threshold 阈值。
+         */
+        public equal(value: Readonly<IVector3>, threshold: number = Const.EPSILON) {
+            if (
+                Math.abs(this.x - value.x) <= threshold &&
+                Math.abs(this.y - value.y) <= threshold &&
+                Math.abs(this.z - value.z) <= threshold
+            ) {
+                return true;
             }
 
-            const x = source.x, y = source.y, z = source.z;
+            return false;
+        }
+        /**
+         * 归一化该向量。
+         * - v /= v.length
+         */
+        public normalize(): this;
+        /**
+         * 将输入向量的归一化结果写入该向量。
+         * - v = input / input.length
+         * @param input 输入向量。
+         * @param defaultVector 当向量不能合法归一化时将指向何方向。
+         */
+        public normalize(input: Readonly<IVector3>, defaultVector?: Readonly<IVector3>): this;
+        public normalize(input?: Readonly<IVector3>, defaultVector: Readonly<IVector3> = Vector3.FORWARD) {
+            if (!input) {
+                input = this;
+            }
+
+            const x = input.x, y = input.y, z = input.z;
+            let l = Math.sqrt(x * x + y * y + z * z);
+
+            if (l > Const.EPSILON) {
+                l = 1.0 / l;
+                this.x = x * l;
+                this.y = y * l;
+                this.z = z * l;
+            }
+            else {
+                this.copy(defaultVector);
+            }
+
+            return this;
+        }
+        /**
+         * 反转该向量。
+         */
+        public negate(): this;
+        /**
+         * 将输入向量的反转结果写入该向量。
+         * @param input 输入向量。
+         */
+        public negate(input: Readonly<IVector3>): this;
+        public negate(input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
+            }
+
+            this.x = input.x * -1.0;
+            this.y = input.y * -1.0;
+            this.z = input.z * -1.0;
+
+            return this;
+        }
+        /**
+         * 通过一个球面坐标设置该向量。
+         * @param vector3 一个球面坐标。（球面半径、极角、赤道角）
+         */
+        public fromSphericalCoords(vector3: Readonly<IVector3>): this;
+        /**
+         * @param radius 从球面半径或球面一点到球原点的欧氏距离（直线距离）。
+         * @param phi 相对于 Y 轴的极角。
+         * @param theta 围绕 Y 轴的赤道角。
+         */
+        public fromSphericalCoords(radius: number, phi: number, theta: number): this;
+        public fromSphericalCoords(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
+            if (p1.hasOwnProperty("x")) {
+                p3 = (p1 as Readonly<IVector3>).z;
+                p2 = (p1 as Readonly<IVector3>).y;
+                p1 = (p1 as Readonly<IVector3>).x;
+            }
+
+            const sinPhiRadius = Math.sin(p2) * (p1 as number);
+            this.x = sinPhiRadius * Math.sin(p3);
+            this.y = Math.cos(p2) * (p1 as number);
+            this.z = sinPhiRadius * Math.cos(p3);
+
+            return this;
+        }
+        /**
+         * 将该向量乘以一个 3x3 矩阵。
+         * - v *= matrix
+         * @param matrix 一个 3x3 矩阵。
+         */
+        public applyMatrix3(matrix: Readonly<Matrix3>): this;
+        /**
+         * 将输入向量与一个 3x3 矩阵相乘的结果写入该向量。
+         * - v = input * matrix
+         * @param matrix 一个 3x3 矩阵。
+         * @param input 输入向量。
+         */
+        public applyMatrix3(matrix: Readonly<Matrix3>, input: Readonly<IVector3>): this;
+        public applyMatrix3(matrix: Readonly<Matrix3>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
+            }
+
+            const x = input.x, y = input.y, z = input.z;
             const rawData = matrix.rawData;
 
-            const w = 1.0 / (rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15]);
-            this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
-            this.y = (rawData[1] * x + rawData[5] * y + rawData[9] * z + rawData[13]) * w;
-            this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
+            this.x = rawData[0] * x + rawData[3] * y + rawData[6] * z;
+            this.y = rawData[1] * x + rawData[4] * y + rawData[7] * z;
+            this.z = rawData[2] * x + rawData[5] * y + rawData[8] * z;
 
             return this;
         }
-
-        public applyDirection(matrix: Readonly<Matrix4>, source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
+        /**
+         * 将该向量乘以一个矩阵。
+         * - v *= matrix
+         * @param matrix 一个矩阵。
+         */
+        public applyMatrix(matrix: Readonly<Matrix4>): this;
+        /**
+         * 将输入向量与一个矩阵相乘的结果写入该向量。
+         * - v = input * matrix
+         * @param matrix 一个矩阵。
+         * @param input 输入向量。
+         */
+        public applyMatrix(matrix: Readonly<Matrix4>, input: Readonly<IVector3>): this;
+        public applyMatrix(matrix: Readonly<Matrix4>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
             }
 
-            const x = source.x, y = source.y, z = source.z;
+            const x = input.x, y = input.y, z = input.z;
+            const rawData = matrix.rawData;
+            let w = rawData[3] * x + rawData[7] * y + rawData[11] * z + rawData[15];
+
+            if (w < -Const.EPSILON || Const.EPSILON < w) {
+                w = 1.0 / w;
+                this.x = (rawData[0] * x + rawData[4] * y + rawData[8] * z + rawData[12]) * w;
+                this.y = (rawData[1] * x + rawData[5] * y + rawData[9] * z + rawData[13]) * w;
+                this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
+            }
+            else {
+                this.x = 0.0;
+                this.y = 0.0;
+                this.z = 0.0;
+
+                if (DEBUG) {
+                    console.warn("Dividing by zero.");
+                }
+            }
+
+            return this;
+        }
+        /**
+         * 将该向量乘以一个矩阵。
+         * - v *= matrix
+         * - 矩阵的平移数据不会影响向量。
+         * - 结果被归一化。
+         * @param matrix 一个矩阵。
+         */
+        public applyDirection(matrix: Readonly<Matrix4>): this;
+        /**
+         * 将输入向量与一个矩阵相乘的结果写入该向量。
+         * - v = input * matrix
+         * - 矩阵的平移数据不会影响向量。
+         * - 结果被归一化。
+         * @param matrix 一个矩阵。
+         * @param input 输入向量。
+         */
+        public applyDirection(matrix: Readonly<Matrix4>, input: Readonly<IVector3>): this;
+        public applyDirection(matrix: Readonly<Matrix4>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
+            }
+
+            const x = input.x, y = input.y, z = input.z;
             const rawData = matrix.rawData;
 
             this.x = rawData[0] * x + rawData[4] * y + rawData[8] * z;
             this.y = rawData[1] * x + rawData[5] * y + rawData[9] * z;
             this.z = rawData[2] * x + rawData[6] * y + rawData[10] * z;
 
-            return this;
+            return this.normalize();
         }
-
-        public applyQuaternion(quaternion: Readonly<IVector4>, source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
+        /**
+         * 将该向量乘以一个四元数。
+         * - v *= quaternion
+         * @param quaternion 一个四元数。
+         */
+        public applyQuaternion(quaternion: Readonly<IVector4>): this;
+        /**
+         * 将输入向量与一个四元数相乘的结果写入该向量。
+         * - v = input * quaternion
+         * @param quaternion 一个四元数。
+         * @param input 输入向量。
+         */
+        public applyQuaternion(quaternion: Readonly<IVector4>, input: Readonly<IVector3>): this;
+        public applyQuaternion(quaternion: Readonly<IVector4>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
             }
 
-            const x = source.x, y = source.y, z = source.z;
+            const x = input.x, y = input.y, z = input.z;
             const qx = quaternion.x, qy = quaternion.y, qz = quaternion.z, qw = quaternion.w;
             // calculate quat * vector
             const ix = qw * x + qy * z - qz * y;
@@ -232,157 +365,261 @@ namespace egret3d {
 
             return this;
         }
-
-        public normalize(source?: Readonly<IVector3>, defaultAxis?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
+        /**
+         * 将该向量加上一个标量。
+         * - v += scalar
+         * @param scalar 标量。
+         */
+        public addScalar(scalar: number): this;
+        /**
+         * 将输入向量与标量相加的结果写入该向量。
+         * - v = input + scalar
+         * @param scalar 一个标量。
+         * @param input 输入向量。
+         */
+        public addScalar(scalar: number, input: Readonly<IVector3>): this;
+        public addScalar(scalar: number, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
             }
 
-            let l = Math.sqrt(source.x * source.x + source.y * source.y + source.z * source.z);
-            if (l > egret3d.EPSILON) {
-                l = 1.0 / l;
-                this.x *= l;
-                this.y *= l;
-                this.z *= l;
+            this.x = input.x + scalar;
+            this.y = input.y + scalar;
+            this.z = input.z + scalar;
+
+            return this;
+        }
+        /**
+         * 将该向量乘以一个标量。
+         * - v *= scalar
+         * @param scalar 标量。
+         */
+        public multiplyScalar(scalar: number): this;
+        /**
+         * 将输入向量与标量相乘的结果写入该向量。
+         * - v = input * scalar
+         * @param scalar 一个标量。
+         * @param input 输入向量。
+         */
+        public multiplyScalar(scalar: number, input: Readonly<IVector3>): this;
+        public multiplyScalar(scalar: number, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
             }
-            else {
-                if (!defaultAxis) {
-                    defaultAxis = Vector3.FORWARD;
+
+            this.x = scalar * input.x;
+            this.y = scalar * input.y;
+            this.z = scalar * input.z;
+
+            return this;
+        }
+        /**
+         * 将该向量加上一个向量。
+         * - v += vector
+         * @param vector 一个向量。
+         */
+        public add(vector: Readonly<IVector3>): this;
+        /**
+         * 将两个向量相加的结果写入该向量。
+         * - v = vectorA + vectorB
+         * @param vectorA 一个向量。
+         * @param vectorB 另一个向量。
+         */
+        public add(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3>): this;
+        public add(vectorA: Readonly<IVector3>, vectorB?: Readonly<IVector3>) {
+            if (!vectorB) {
+                vectorB = vectorA;
+                vectorA = this;
+            }
+
+            this.x = vectorA.x + vectorB.x;
+            this.y = vectorA.y + vectorB.y;
+            this.z = vectorA.z + vectorB.z;
+
+            return this;
+        }
+        /**
+         * 将该向量减去一个向量。
+         * - v -= vector
+         * @param vector 一个向量。
+         */
+        public subtract(vector: Readonly<IVector3>): this;
+        /**
+         * 将两个向量相减的结果写入该向量。
+         * - v = vectorA - vectorB
+         * @param vectorA 一个向量。
+         * @param vectorB 另一个向量。
+         */
+        public subtract(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3>): this;
+        public subtract(vectorA: Readonly<IVector3>, vectorB?: Readonly<IVector3>) {
+            if (!vectorB) {
+                vectorB = vectorA;
+                vectorA = this;
+            }
+
+            this.x = vectorA.x - vectorB.x;
+            this.y = vectorA.y - vectorB.y;
+            this.z = vectorA.z - vectorB.z;
+
+            return this;
+        }
+        /**
+         * 将该向量乘以一个向量。
+         * - v *= vector
+         * @param vector 一个向量。
+         */
+        public multiply(vector: Readonly<IVector3>): this;
+        /**
+         * 将该两个向量相乘的结果写入该向量。
+         * - v = vectorA * vectorA
+         * @param vectorA 一个向量。
+         * @param vectorB 另一个向量。
+         */
+        public multiply(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3>): this;
+        public multiply(vectorA: Readonly<IVector3>, vectorB?: Readonly<IVector3>) {
+            if (!vectorB) {
+                vectorB = vectorA;
+                vectorA = this;
+            }
+
+            this.x = vectorA.x * vectorB.x;
+            this.y = vectorA.y * vectorB.y;
+            this.z = vectorA.z * vectorB.z;
+
+            return this;
+        }
+        /**
+         * 将该向量除以一个向量。
+         * -  v /= vector
+         * - 假设除向量分量均不为零。
+         * @param vector 一个向量。
+         */
+        public divide(vector: Readonly<IVector3>): this;
+        /**
+         * 将两个向量相除的结果写入该向量。
+         * -  v = vectorA / vectorB
+         * - 假设除向量分量均不为零。
+         * @param vectorA 一个向量。
+         * @param vectorB 另一个向量。
+         */
+        public divide(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3>): this;
+        public divide(vectorA: Readonly<IVector3>, vectorB?: Readonly<IVector3>) {
+            if (!vectorB) {
+                vectorB = vectorA;
+                vectorA = this;
+            }
+
+            if (DEBUG && (vectorB.x === 0.0 || vectorB.y === 0.0 || vectorB.z === 0)) {
+                console.warn("Dividing by zero.");
+            }
+
+            this.x = vectorA.x / vectorB.x;
+            this.y = vectorA.y / vectorB.y;
+            this.z = vectorA.z / vectorB.z;
+
+            return this;
+        }
+        /**
+         * 将该向量与一个向量相点乘。
+         * - v · vector
+         * @param vector 一个向量。
+         */
+        public dot(vector: Readonly<IVector3>): number {
+            return this.x * vector.x + this.y * vector.y + this.z * vector.z;
+        }
+        /**
+         * 将该向量叉乘以一个向量。
+         * - v ×= vector
+         * @param vector 一个向量。
+         */
+        public cross(vector: Readonly<IVector3>): this;
+        /**
+         * 将两个向量相叉乘的结果写入该向量。
+         * - v = vectorA × vectorB
+         * @param vectorA 一个向量。
+         * @param vectorB 另一个向量。
+         */
+        public cross(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3>): this;
+        public cross(vectorA: Readonly<IVector3>, vectorB?: Readonly<IVector3>) {
+            if (!vectorB) {
+                vectorB = vectorA;
+                vectorA = this;
+            }
+
+            const x = vectorA.x;
+            const y = vectorA.y;
+            const z = vectorA.z;
+            const xB = vectorB.x;
+            const yB = vectorB.y;
+            const zB = vectorB.z;
+
+            this.x = y * zB - z * yB;
+            this.y = z * xB - x * zB;
+            this.z = x * yB - y * xB;
+
+            return this;
+        }
+        /**
+         * 将该向量和目标向量插值的结果写入该向量。
+         * - v = v * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param to 目标向量。
+         * @param t 插值因子。
+         */
+        public lerp(to: Readonly<IVector3>, t: number): this;
+        /**
+         * 将两个向量插值的结果写入该向量。
+         * - v = from * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param from 起始向量。
+         * @param to 目标向量。
+         * @param t 插值因子。
+         */
+        public lerp(from: Readonly<IVector3>, to: Readonly<IVector3>, t: number): this;
+        /**
+         * @deprecated
+         */
+        public lerp(t: number, to: Readonly<IVector3>): this;
+        /**
+         * @deprecated
+         */
+        public lerp(t: number, from: Readonly<IVector3>, to: Readonly<IVector3>): this;
+        public lerp(p1: Readonly<IVector3> | number, p2: Readonly<IVector3> | number, p3?: number | Readonly<IVector3>) {
+            if (typeof p1 === "number") {
+                if (!p3) {
+                    p3 = p2;
+                    p2 = this;
                 }
 
-                this.copy(defaultAxis);
-            }
-
-            return this;
-        }
-
-        public negate(source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
-            }
-
-            this.x = source.x * -1.0;
-            this.y = source.y * -1.0;
-            this.z = source.z * -1.0;
-
-            return this;
-        }
-
-        public addScalar(add: number, source?: Readonly<IVector3>) {
-            if (source) {
-                this.x = source.x + add;
-                this.y = source.y + add;
-                this.z = source.z + add;
+                this.x = (p2 as Readonly<IVector3>).x + ((p3 as Readonly<IVector3>).x - (p2 as Readonly<IVector3>).x) * p1;
+                this.y = (p2 as Readonly<IVector3>).y + ((p3 as Readonly<IVector3>).y - (p2 as Readonly<IVector3>).y) * p1;
+                this.z = (p2 as Readonly<IVector3>).z + ((p3 as Readonly<IVector3>).z - (p2 as Readonly<IVector3>).z) * p1;
             }
             else {
-                this.x += add;
-                this.y += add;
-                this.z += add;
+                if (typeof p2 === "number") {
+                    p3 = p2;
+                    p2 = p1;
+                    p1 = this;
+                }
+
+                this.x = (p1 as Readonly<IVector3>).x + ((p2 as Readonly<IVector3>).x - (p1 as Readonly<IVector3>).x) * (p3 as number);
+                this.y = (p1 as Readonly<IVector3>).y + ((p2 as Readonly<IVector3>).y - (p1 as Readonly<IVector3>).y) * (p3 as number);
+                this.z = (p1 as Readonly<IVector3>).z + ((p2 as Readonly<IVector3>).z - (p1 as Readonly<IVector3>).z) * (p3 as number);
             }
 
             return this;
         }
-
-        public add(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
-            if (valueB) {
-                this.x = valueA.x + valueB.x;
-                this.y = valueA.y + valueB.y;
-                this.z = valueA.z + valueB.z;
-            }
-            else {
-                this.x += valueA.x;
-                this.y += valueA.y;
-                this.z += valueA.z;
-            }
-
-            return this;
-        }
-
-        public subtract(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
-            if (valueB) {
-                this.x = valueA.x - valueB.x;
-                this.y = valueA.y - valueB.y;
-                this.z = valueA.z - valueB.z;
-            }
-            else {
-                this.x -= valueA.x;
-                this.y -= valueA.y;
-                this.z -= valueA.z;
-            }
-
-            return this;
-        }
-
-        public multiplyScalar(scale: number, source?: Readonly<IVector3>) {
-            if (source) {
-                this.x = scale * source.x;
-                this.y = scale * source.y;
-                this.z = scale * source.z;
-            }
-            else {
-                this.x *= scale;
-                this.y *= scale;
-                this.z *= scale;
-            }
-
-            return this;
-        }
-
-        public multiply(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
-            if (valueB) {
-                this.x = valueA.x * valueB.x;
-                this.y = valueA.y * valueB.y;
-                this.z = valueA.z * valueB.z;
-            }
-            else {
-                this.x *= valueA.x;
-                this.y *= valueA.y;
-                this.z *= valueA.z;
-            }
-
-            return this;
-        }
-
-        public dot(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
-            }
-
-            return valueA.x * valueB.x + valueA.y * valueB.y + valueA.z * valueB.z;
-        }
-
-        public cross(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
-            }
-
-            const x = valueA.x;
-            const y = valueA.y;
-            const z = valueA.z;
-
-            this.x = y * valueB.z - z * valueB.y;
-            this.y = z * valueB.x - x * valueB.z;
-            this.z = x * valueB.y - y * valueB.x;
-
-            return this;
-        }
-
-        public lerp(t: number, valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
-            }
-
-            const p = 1.0 - t;
-            this.x = valueA.x * p + valueB.x * t;
-            this.y = valueA.y * p + valueB.y * t;
-            this.z = valueA.z * p + valueB.z * t;
-
-            return this;
-        }
-
+        /**
+         * 将该向量与一个向量的分量取最小值。
+         * @param value 一个向量。
+         */
+        public min(value: Readonly<IVector3>): this;
+        /**
+         * 将两个向量的分量的最小值写入该向量。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
+        public min(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>): this;
         public min(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
             if (!valueB) {
                 valueB = valueA;
@@ -395,7 +632,17 @@ namespace egret3d {
 
             return this;
         }
-
+        /**
+         * 将该向量与一个向量的分量取最大值。
+         * @param value 一个向量。
+         */
+        public max(value: Readonly<IVector3>): this;
+        /**
+         * 将两个向量的分量的最大值写入该向量。
+         * @param valueA 一个向量。
+         * @param valueB 另一个向量。
+         */
+        public max(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>): this;
         public max(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
             if (!valueB) {
                 valueB = valueA;
@@ -408,142 +655,112 @@ namespace egret3d {
 
             return this;
         }
+        /**
+         * 限制该向量，使其在最小向量和最大向量之间。
+         * @param min 最小向量。
+         * @param max 最大向量。
+         */
+        public clamp(min: Readonly<IVector3>, max: Readonly<IVector3>): this;
+        /**
+         * 将限制输入向量在最小向量和最大向量之间的结果写入该向量。
+         * @param min 最小向量。
+         * @param max 最大向量。
+         * @param input 输入向量。
+         */
+        public clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, input: Readonly<IVector3>): this;
+        public clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
+            }
 
-        public clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
+            if (DEBUG && (min.x > max.x || min.y > max.y || min.z > max.z)) {
+                console.warn("Invalid arguments.");
             }
 
             // assumes min < max, componentwise
-            this.x = Math.max(min.x, Math.min(max.x, source.x));
-            this.y = Math.max(min.y, Math.min(max.y, source.y));
-            this.z = Math.max(min.z, Math.min(max.z, source.z));
+            this.x = Math.max(min.x, Math.min(max.x, input.x));
+            this.y = Math.max(min.y, Math.min(max.y, input.y));
+            this.z = Math.max(min.z, Math.min(max.z, input.z));
 
             return this;
         }
-
-        public divide(source?: Readonly<IVector3>) {
-            if (!source) {
-                source = this;
+        /**
+         * 沿着一个法线向量反射该向量。
+         * - 假设法线已被归一化。
+         * @param normal 一个法线向量。
+         */
+        public reflect(normal: Readonly<IVector3>): this;
+        /**
+         * 将沿着一个法线向量反射输入向量的结果写入该向量。
+         * @param normal 一个法线向量。
+         * @param input 输入向量。
+         */
+        public reflect(normal: Readonly<IVector3>, input: Readonly<IVector3>): this;
+        public reflect(normal: Readonly<IVector3>, input?: Readonly<IVector3>) {
+            if (!input) {
+                input = this;
             }
 
-            this.x /= source.x;
-            this.y /= source.y;
-            this.z /= source.z;
-
-            return this;
+            return this.subtract(input, _helpVector3.multiplyScalar(2.0 * this.dot(normal), normal));
         }
+        /**
+         * 获取该向量和一个向量的夹角。（弧度制）
+         * - 假设向量长度均不为零。
+         */
+        public getAngle(vector: Readonly<IVector3>): number {
+            const v = this.squaredLength * (vector as Vector3).squaredLength;
 
-        public getAngle(value: Readonly<IVector3>) {
-            const theta = this.dot(value) / (Math.sqrt(this.squaredLength * Vector3.getSqrLength(value)));
+            if (DEBUG && v === 0.0) {
+                console.warn("Dividing by zero.");
+            }
+
+            const theta = this.dot(vector) / Math.sqrt(v);
 
             // clamp, to handle numerical problems
-            return Math.acos(Math.max(- 1, Math.min(1, theta)));
+            return Math.acos(Math.max(-1.0, Math.min(1.0, theta)));
         }
-
-        public getSquaredDistance(value: Readonly<IVector3>): number {
-            return helpVector.subtract(value, this).squaredLength;
+        /**
+         * 获取两点的最近距离的平方。
+         * @param point 一个点。
+         */
+        public getSquaredDistance(point: Readonly<IVector3>): number {
+            return _helpVector3.subtract(point, this).squaredLength;
         }
-
-        public getDistance(value: Readonly<IVector3>): number {
-            return helpVector.subtract(value, this).length;
+        /**
+         * 获取两点的最近距离。
+         * @param point 一个点。
+         */
+        public getDistance(point: Readonly<IVector3>): number {
+            return _helpVector3.subtract(point, this).length;
         }
-
-        public closestToTriangle(triangle: Readonly<Triangle>, value?: Readonly<IVector3>) {
-            if (!value) {
-                value = this;
+        /**
+         * 将该向量转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        public toArray(array?: number[] | Float32Array, offset: number = 0) {
+            if (!array) {
+                array = [];
             }
 
-            const vab = helpVector3A;
-            const vac = helpVector3B;
-            const vbc = helpVector3C;
-            const vap = helpVector3D;
-            const vbp = helpVector3E;
-            const vcp = helpVector3F;
+            array[0 + offset] = this.x;
+            array[1 + offset] = this.y;
+            array[2 + offset] = this.z;
 
-            const a = triangle.a, b = triangle.b, c = triangle.c;
-            let v: number, w: number;
-
-            // algorithm thanks to Real-Time Collision Detection by Christer Ericson,
-            // published by Morgan Kaufmann Publishers, (c) 2005 Elsevier Inc.,
-            // under the accompanying license; see chapter 5.1.5 for detailed explanation.
-            // basically, we're distinguishing which of the voronoi regions of the triangle
-            // the point lies in with the minimum amount of redundant computation.
-
-            vab.subtract(b, a);
-            vac.subtract(c, a);
-            vap.subtract(value, a);
-            const d1 = vab.dot(vap);
-            const d2 = vac.dot(vap);
-            if (d1 <= 0 && d2 <= 0) {
-                // vertex region of A; barycentric coords (1, 0, 0)
-                return this.copy(a);
-            }
-
-            vbp.subtract(value, b);
-            const d3 = vab.dot(vbp);
-            const d4 = vac.dot(vbp);
-            if (d3 >= 0 && d4 <= d3) {
-
-                // vertex region of B; barycentric coords (0, 1, 0)
-                return this.copy(b);
-            }
-
-            const vc = d1 * d4 - d3 * d2;
-            if (vc <= 0 && d1 >= 0 && d3 <= 0) {
-
-                v = d1 / (d1 - d3);
-                // edge region of AB; barycentric coords (1-v, v, 0)
-                return this.multiplyScalar(v, vab).add(a);
-            }
-
-            vcp.subtract(value, c);
-            const d5 = vab.dot(vcp);
-            const d6 = vac.dot(vcp);
-            if (d6 >= 0 && d5 <= d6) {
-
-                // vertex region of C; barycentric coords (0, 0, 1)
-                return this.copy(c);
-            }
-
-            const vb = d5 * d2 - d1 * d6;
-            if (vb <= 0 && d2 >= 0 && d6 <= 0) {
-
-                w = d2 / (d2 - d6);
-                // edge region of AC; barycentric coords (1-w, 0, w)
-                return this.multiplyScalar(w, vac).add(a);
-            }
-
-            const va = d3 * d6 - d5 * d4;
-            if (va <= 0 && (d4 - d3) >= 0 && (d5 - d6) >= 0) {
-
-                vbc.subtract(c, b);
-                w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
-                // edge region of BC; barycentric coords (0, 1-w, w)
-                return this.multiplyScalar(w, vbc).add(b); // edge region of BC
-            }
-
-            // face region
-            const denom = 1 / (va + vb + vc);
-            // u = va * denom
-            v = vb * denom;
-            w = vc * denom;
-            return this.add(a, vac.multiplyScalar(w).add(vab.multiplyScalar(v)));
+            return array;
         }
-
-        public toArray(value: number[] | Float32Array, offset: number = 0) {
-            value[0 + offset] = this.x;
-            value[1 + offset] = this.y;
-            value[2 + offset] = this.z;
-
-            return value;
-        }
-
-        public get length() {
+        /**
+         * 该向量的长度。
+         * - 该值是实时计算的。
+         */
+        public get length(): number {
             return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
         }
-
-        public get squaredLength() {
+        /**
+         * 该向量的长度的平方。
+         * - 该值是实时计算的。
+         */
+        public get squaredLength(): number {
             return this.x * this.x + this.y * this.y + this.z * this.z;
         }
 
@@ -677,11 +894,11 @@ namespace egret3d {
          * @deprecated
          */
         public static getDistance(a: Readonly<IVector3>, b: Readonly<IVector3>) {
-            return this.getLength(this.subtract(a, b, helpVector));
+            return this.getLength(this.subtract(a, b, _helpVector3));
         }
     }
 
-    const helpVector = Vector3.create();
+    const _helpVector3 = Vector3.create();
     /**
      * @internal
      */
