@@ -311,7 +311,7 @@ namespace egret3d {
                 matrix.copy(this._projectionMatrix);
             }
             else {
-                matrix.lerp(this.opvalue, this._matProjO, this._projectionMatrix);
+                matrix.lerp(this._matProjO, this._projectionMatrix, this.opvalue);
             }
 
             return matrix;

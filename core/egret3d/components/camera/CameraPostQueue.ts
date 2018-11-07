@@ -6,7 +6,7 @@ namespace egret3d {
 
         private readonly _camera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
         private readonly _drawCall: DrawCall = DrawCall.create();
-        private readonly _defaultMaterial: Material = egret3d.DefaultMaterials.MESH_BASIC.clone();
+        private readonly _defaultMaterial: Material = egret3d.DefaultMaterials.MESH_BASIC.clone(); // TODO copy shader
         private readonly _webglSystem = paper.SystemManager.getInstance().getSystem(web.WebGLRenderSystem);   //TODO
         private readonly _webglState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
 
@@ -29,6 +29,10 @@ namespace egret3d {
             const camera = this._currentCamera;
             const stageViewport = stage.viewport;
             if (!this._fullScreenRT || this._fullScreenRT.width !== stageViewport.w || this._fullScreenRT.height !== stageViewport.h) {
+                if (this._fullScreenRT) {
+                    this._fullScreenRT.dispose();
+                }
+
                 this._fullScreenRT = new GlRenderTarget("fullScreenRT", stageViewport.w, stageViewport.h, true);//TODO    平台无关
             }
 
@@ -47,11 +51,11 @@ namespace egret3d {
             const webglSystem = this._webglSystem;
             const webglState = this._webglState;
             webglSystem._viewport(camera.viewport, dest);
-            webglState.clear(true, true, egret3d.Color.WHITE);
+            webglState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, egret3d.Color.WHITE);
             webglSystem._draw(camera.context, this._drawCall, mat);
         }
 
-        public clear(){
+        public clear() {
             this._fullScreenRT.dispose();
             this._fullScreenRT = null;
         }
@@ -70,7 +74,9 @@ namespace egret3d {
     export interface ICameraPostProcessing {
         render(context: PostProcessRenderContext): void;
     }
-
+    /**
+     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
+     */
     export abstract class CameraPostProcessing extends paper.BaseRelease<CameraPostProcessing> implements ICameraPostProcessing {
         public render(context: PostProcessRenderContext) {
 

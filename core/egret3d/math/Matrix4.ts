@@ -691,43 +691,44 @@ namespace egret3d {
          * 将该矩阵和目标矩阵插值的结果写入该矩阵。
          * - v = v * (1 - t) + to * t
          * - 插值因子不会被限制在 0 ~ 1。
-         * @param t 插值因子。
          * @param to 目标矩阵。
+         * @param t 插值因子。
          */
-        public lerp(t: number, to: Readonly<Matrix4>): this;
+        public lerp(to: Readonly<Matrix4>, t: number): this;
         /**
          * 将两个矩阵插值的结果写入该矩阵。
          * - v = from * (1 - t) + to * t
          * - 插值因子不会被限制在 0 ~ 1。
-         * @param t 插值因子。
          * @param from 起始矩阵。
          * @param to 目标矩阵。
+         * @param t 插值因子。
          */
-        public lerp(t: number, from: Readonly<Matrix4>, to: Readonly<Matrix4>): this;
-        public lerp(t: number, from: Readonly<Matrix4>, to?: Readonly<Matrix4>) {
-            if (!to) {
-                to = from;
-                from = this;
+        public lerp(from: Readonly<Matrix4>, to: Readonly<Matrix4>, t: number): this;
+        public lerp(p1: Readonly<Matrix4>, p2: number | Readonly<Matrix4>, p3?: number) {
+            if (typeof p2 === "number") {
+                p3 = p2;
+                p2 = p1;
+                p1 = this;
             }
 
-            if (t === 0.0) {
+            if (p3 === 0.0) {
                 for (let i = 0; i < 16; i++) {
-                    this.rawData[i] = from.rawData[i];
+                    this.rawData[i] = p1.rawData[i];
                 }
 
                 return this;
             }
-            else if (t === 1.0) {
+            else if (p3 === 1.0) {
                 for (let i = 0; i < 16; i++) {
-                    this.rawData[i] = to.rawData[i];
+                    this.rawData[i] = p2.rawData[i];
                 }
 
                 return this;
             }
 
             for (let i = 0; i < 16; i++) {
-                const fV = from.rawData[i];
-                this.rawData[i] = fV + (to.rawData[i] - fV) * t;
+                const fV = p1.rawData[i];
+                this.rawData[i] = fV + (p2.rawData[i] - fV) * p3;
             }
 
             return this;

@@ -231,29 +231,52 @@ namespace egret3d {
         /**
          * @internal
          */
-        public lerp(t: number, from: Readonly<IVector4>, to?: Readonly<IVector4>) {
-            if (!to) {
-                to = from;
-                from = this;
-            }
+        public lerp(p1: Readonly<IVector4> | number, p2: Readonly<IVector4> | number, p3?: number | Readonly<IVector4>) {
+            if (typeof p1 === "number") {
+                if (!p3) {
+                    p3 = p2;
+                    p2 = this;
+                }
 
-            if (t === 0.0) return this.copy(from);
-            if (t === 1.0) return this.copy(to);
+                const fX = (p2 as Readonly<IVector4>).x, fY = (p2 as Readonly<IVector4>).y, fZ = (p2 as Readonly<IVector4>).z, fW = (p2 as Readonly<IVector4>).w;
+                const tX = (p3 as Readonly<IVector4>).x, tY = (p3 as Readonly<IVector4>).y, tZ = (p3 as Readonly<IVector4>).z, tW = (p3 as Readonly<IVector4>).w;
 
-            const fX = from.x, fY = from.y, fZ = from.z, fW = from.w;
-            const tX = to.x, tY = to.y, tZ = to.z, tW = to.w;
+                if (fX * tX + fY * tY + fZ * tZ + fW * tW < 0.0) {
+                    this.x = fX + (-tX - fX) * p1;
+                    this.y = fY + (-tY - fY) * p1;
+                    this.z = fZ + (-tZ - fZ) * p1;
+                    this.w = fW + (-tW - fW) * p1;
+                }
+                else {
+                    this.x = fX + (tX - fX) * p1;
+                    this.y = fY + (tY - fY) * p1;
+                    this.z = fZ + (tZ - fZ) * p1;
+                    this.w = fW + (tW - fW) * p1;
+                }
 
-            if (fX * tX + fY * tY + fZ * tZ + fW * tW < 0.0) {
-                this.x = fX + (-tX - fX) * t;
-                this.y = fY + (-tY - fY) * t;
-                this.z = fZ + (-tZ - fZ) * t;
-                this.w = fW + (-tW - fW) * t;
             }
             else {
-                this.x = fX + (tX - fX) * t;
-                this.y = fY + (tY - fY) * t;
-                this.z = fZ + (tZ - fZ) * t;
-                this.w = fW + (tW - fW) * t;
+                if (typeof p2 === "number") {
+                    p3 = p2;
+                    p2 = p1;
+                    p1 = this;
+                }
+
+                const fX = p1.x, fY = p1.y, fZ = p1.z, fW = p1.w;
+                const tX = p2.x, tY = p2.y, tZ = p2.z, tW = p2.w;
+
+                if (fX * tX + fY * tY + fZ * tZ + fW * tW < 0.0) {
+                    this.x = fX + (-tX - fX) * (p3 as number);
+                    this.y = fY + (-tY - fY) * (p3 as number);
+                    this.z = fZ + (-tZ - fZ) * (p3 as number);
+                    this.w = fW + (-tW - fW) * (p3 as number);
+                }
+                else {
+                    this.x = fX + (tX - fX) * (p3 as number);
+                    this.y = fY + (tY - fY) * (p3 as number);
+                    this.z = fZ + (tZ - fZ) * (p3 as number);
+                    this.w = fW + (tW - fW) * (p3 as number);
+                }
             }
 
             return this;

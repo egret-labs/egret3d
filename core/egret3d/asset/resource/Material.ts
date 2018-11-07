@@ -217,11 +217,15 @@ namespace egret3d {
 
         /**
          * 为该材质添加指定的 define。
-         * @param value define 字符串。
+         * @param defineString define 字符串。
          */
-        public addDefine(value: string) {
-            if (this._defines.indexOf(value) < 0) {
-                this._defines.push(value);
+        public addDefine(defineString: string, value?: number) {
+            if (value !== undefined) {
+                defineString += " " + value;
+            }
+
+            if (this._defines.indexOf(defineString) < 0) {
+                this._defines.push(defineString);
                 this._defines.sort();
                 this._version++;
             }
@@ -231,10 +235,14 @@ namespace egret3d {
 
         /**
          * 从该材质移除指定的 define。
-         * @param value define 字符串。
+         * @param defineString define 字符串。
          */
-        public removeDefine(value: string) {
-            const index = this._defines.indexOf(value);
+        public removeDefine(defineString: string, value?: number) {
+            if (value !== undefined) {
+                defineString += " " + value;
+            }
+
+            const index = this._defines.indexOf(defineString);
             if (index >= 0) {
                 this._defines.splice(index, 1);
                 this._version++;
@@ -273,7 +281,7 @@ namespace egret3d {
             return this;
         }
 
-        setIntv(id: string, value: Float32Array) {
+        setIntv(id: string, value: Float32Array | ReadonlyArray<number>) {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
@@ -301,7 +309,7 @@ namespace egret3d {
             return this;
         }
 
-        setFloatv(id: string, value: Float32Array) {
+        setFloatv(id: string, value: Float32Array | ReadonlyArray<number>) {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
@@ -330,7 +338,7 @@ namespace egret3d {
             return this;
         }
 
-        setVector2v(id: string, value: Float32Array) {
+        setVector2v(id: string, value: Float32Array | ReadonlyArray<number>) {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
@@ -360,7 +368,7 @@ namespace egret3d {
             return this;
         }
 
-        setVector3v(id: string, value: Float32Array) {
+        setVector3v(id: string, value: Float32Array | ReadonlyArray<number>) {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
@@ -405,7 +413,7 @@ namespace egret3d {
             return this;
         }
 
-        setVector4v(id: string, value: Float32Array | [number, number, number, number]) {
+        setVector4v(id: string, value: Float32Array | ReadonlyArray<number>) {
             //兼容老键值
             if (id === "_MainTex_ST" && this._glTFTechnique.uniforms[ShaderUniformName.UVTransform]) {
                 id = ShaderUniformName.UVTransform;
@@ -444,7 +452,7 @@ namespace egret3d {
             return this;
         }
 
-        setMatrixv(id: string, value: Float32Array) {
+        setMatrixv(id: string, value: Float32Array | ReadonlyArray<number>) {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
@@ -463,7 +471,7 @@ namespace egret3d {
          * @param renderQueue 渲染顺序。
          * @param opacity 透明度。
          */
-        public setBlend(blend: gltf.BlendMode, renderQueue: paper.RenderQueue, opacity?: number) {
+        public setBlend(blend: gltf.BlendMode, renderQueue: paper.RenderQueue, opacity?: number): this {
             if (!this._glTFTechnique.states) {
                 this._glTFTechnique.states = { enable: [], functions: {} };
             }
@@ -612,11 +620,35 @@ namespace egret3d {
 
             return this;
         }
+        /**
+         * 
+         */
+        public setStencil(value: boolean): this {
+            if (!this._glTFTechnique.states) {
+                this._glTFTechnique.states = { enable: [], functions: {} };
+            }
+
+            const enables = this._glTFTechnique.states.enable!;
+            const functions = this._glTFTechnique.states.functions!;
+
+            const index = enables.indexOf(gltf.EnableState.STENCIL_TEST);
+
+            if (value) {
+                if (index < 0) {
+                    enables.push(gltf.EnableState.STENCIL_TEST);
+                }
+            }
+            else if (index >= 0) {
+                enables.splice(index);
+            }
+
+            return this;
+        }
 
         /**
          * 清除该材质的所有图形 API 状态。
          */
-        public clearStates() {
+        public clearStates(): this {
             if (this._glTFTechnique.states) {
                 delete this._glTFTechnique.states;
             }
@@ -715,11 +747,11 @@ namespace egret3d {
 
         /**
          * 设置该材质的 UV 变换矩阵。
-         * @param out 矩阵。
+         * @param matrix 矩阵。
          */
-        public setUVTTransform(value: Readonly<Matrix3>) {
+        public setUVTTransform(matrix: Readonly<Matrix3>): this {
             const array = new Array(9); // TODO
-            value.toArray(array);
+            matrix.toArray(array);
 
             return this.setMatrixv(ShaderUniformName.UVTransform, array as any);
         }

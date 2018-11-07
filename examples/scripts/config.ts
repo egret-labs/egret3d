@@ -26,7 +26,7 @@ const config: ResourceManagerConfig = {
                     break;
                 case "--shader":
                 case "-s":
-                    subRoot = `${commandLineParams[1]}/`;
+                    subRoot = `${commandLineParams[1] || ""}/`;
                     const shaderGenerate = new ShaderGenerateContext();
                     shaderGenerate.execute(bakeInfo.defaultRoot + subRoot);
                     break;

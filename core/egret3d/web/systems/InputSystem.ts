@@ -400,7 +400,7 @@ namespace egret3d.web {
             const downKeys = inputCollecter._downKeys;
             const holdKeys = inputCollecter._holdKeys;
             const upKeys = inputCollecter._upKeys;
-            const key = inputCollecter.getKey(event.code);
+            const key = inputCollecter.getKey(event.code as KeyCode);
             key.event = event;
 
             switch (event.type) {

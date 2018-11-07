@@ -39,7 +39,8 @@ namespace egret3d.web {
 
             light.updateShadow(camera);
             light.renderTarget.use();
-            renderState.clear(true, true, egret3d.Color.WHITE);
+            renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, egret3d.Color.WHITE);
+
             for (let i = 0, l = isPointLight ? 6 : 1; i < l; ++i) {
                 const context = camera.context;
                 if (isPointLight) {
@@ -62,7 +63,17 @@ namespace egret3d.web {
         public _renderCamera(camera: Camera, renderTarget: BaseRenderTarget) {
             const renderState = this._renderState;
             this._viewport(camera.viewport, renderTarget);
-            renderState.clear(camera.clearOption_Color, camera.clearOption_Depth, camera.backgroundColor);
+            let bufferBit = gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT;
+
+            if (!camera.clearOption_Depth) {
+                bufferBit &= ~gltf.BufferBit.DEPTH_BUFFER_BIT;
+            }
+
+            if (!camera.clearOption_Color) {
+                bufferBit &= ~gltf.BufferBit.COLOR_BUFFER_BIT;
+            }
+
+            renderState.clearBuffer(bufferBit, camera.backgroundColor);
             //
             const drawCalls = this._drawCallCollecter;
             const opaqueCalls = drawCalls.opaqueCalls;
@@ -518,7 +529,7 @@ namespace egret3d.web {
                 }
             }
             else {
-                renderState.clear(true, true, Color.BLACK);
+                renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, Color.BLACK);
             }
         }
     }

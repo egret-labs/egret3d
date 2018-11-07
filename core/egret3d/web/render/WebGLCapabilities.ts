@@ -272,6 +272,8 @@ namespace egret3d {
      * @private
      */
     export class WebGLRenderState extends paper.SingletonComponent {
+        public readonly clearColor: Color = Color.create();
+
         private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST]; // TODO
         private readonly _programs: { [key: string]: GlProgram } = {};
         private readonly _vsShaders: { [key: string]: WebGLShader } = {};
@@ -388,24 +390,23 @@ namespace egret3d {
             return program;
         }
 
-        public clear(clearOptColor: boolean, clearOptDepath: boolean, clearColor: Color) {
+        public clearBuffer(bufferBit: gltf.BufferBit, clearColor?: Readonly<IColor>) {
             const webgl = WebGLCapabilities.webgl!;
 
-            if (clearOptColor && clearOptDepath) {
-                webgl.depthMask(true);
-                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-                webgl.clearDepth(1.0);
-                webgl.clear(webgl.COLOR_BUFFER_BIT | webgl.DEPTH_BUFFER_BIT);
-            }
-            else if (clearOptDepath) {
+            if (bufferBit & gltf.BufferBit.DEPTH_BUFFER_BIT) {
                 webgl.depthMask(true);
                 webgl.clearDepth(1.0);
-                webgl.clear(webgl.DEPTH_BUFFER_BIT);
             }
-            else if (clearOptColor) {
+
+            if (bufferBit & gltf.BufferBit.STENCIL_BUFFER_BIT) {
+                webgl.clearStencil(1.0);
+            }
+
+            if ((bufferBit & gltf.BufferBit.COLOR_BUFFER_BIT) !== 0 && clearColor) {
                 webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-                webgl.clear(webgl.COLOR_BUFFER_BIT);
             }
+
+            webgl.clear(bufferBit);
         }
     }
 }

@@ -108,14 +108,14 @@ namespace egret3d {
              * @see egret3d.inputCollecter.getKey()
              */
             isPressed: function (key: string | number) {
-                return egret3d.inputCollecter.getKey(key).isHold();
+                return egret3d.inputCollecter.getKey(key as any).isHold();
             },
             /**
              * @deprecated
              * @see egret3d.inputCollecter.getKey()
              */
             wasPressed: function (key: string | number) {
-                return egret3d.inputCollecter.getKey(key).isUp();
+                return egret3d.inputCollecter.getKey(key as any).isUp();
             },
         },
     };

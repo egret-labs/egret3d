@@ -671,11 +671,11 @@ namespace egret3d {
         /**
          * 通过键名称创建或获取一个按键实例。
          */
-        public getKey(code: string | number) {
+        public getKey(code: KeyCode | number) {
             if (typeof code === "number") { // KeyCode.
                 const index = _keyCodeToCode.indexOf(code);
                 if (index >= 0) {
-                    code = _keyCodeToCode[index + 1] as string;
+                    code = _keyCodeToCode[index + 1] as KeyCode;
                 }
                 else {
                     if (DEBUG) {
@@ -688,7 +688,7 @@ namespace egret3d {
             else if (code.length === 1) { // Key.
                 const index = _keyToCode.indexOf(code);
                 if (index >= 0) {
-                    code = _keyToCode[index + 1];
+                    code = _keyToCode[index + 1] as KeyCode;
                 }
                 else {
                     if (DEBUG) {
@@ -706,7 +706,7 @@ namespace egret3d {
                 code = KeyCode.Unknown;
             }
 
-            code = code.toLowerCase();
+            code = code.toLowerCase() as KeyCode;
 
             const keys = this._keys;
             if (!(code in keys)) {

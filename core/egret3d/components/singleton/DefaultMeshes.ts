@@ -21,10 +21,9 @@ namespace egret3d {
         public static CUBE_LINE: Mesh;
 
         /**
-         * @internal
+         * 后期渲染使用的网格。
          */
         public static FULLSCREEN_QUAD: Mesh;
-
 
         public initialize() {
             super.initialize();
@@ -53,7 +52,7 @@ namespace egret3d {
                 paper.Asset.register(mesh);
                 DefaultMeshes.FULLSCREEN_QUAD = mesh;
 
-                //后期渲染专用，UV反转一下，这样shader中就不用反转了
+                // 后期渲染专用，UV反转一下，这样shader中就不用反转了
                 const uvs = mesh.getUVs();
                 for (let i = 1, l = uvs.length; i < l; i += 2) {
                     uvs[i] = 1.0 - uvs[i];

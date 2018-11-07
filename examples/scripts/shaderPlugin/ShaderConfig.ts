@@ -70,6 +70,7 @@ UNIFORM_TEMPLATE["projectionMatrix"] = { semantic: gltf.UniformSemanticType.PROJ
 UNIFORM_TEMPLATE["viewMatrix"] = { semantic: gltf.UniformSemanticType.VIEW };
 UNIFORM_TEMPLATE["normalMatrix"] = { semantic: gltf.UniformSemanticType.MODELVIEWINVERSE };
 UNIFORM_TEMPLATE["modelViewProjectionMatrix"] = { semantic: gltf.UniformSemanticType.MODELVIEWPROJECTION };
+
 UNIFORM_TEMPLATE["viewProjectionMatrix"] = { semantic: gltf.UniformSemanticType._VIEWPROJECTION };
 UNIFORM_TEMPLATE["cameraPosition"] = { semantic: gltf.UniformSemanticType._CAMERA_POS };
 UNIFORM_TEMPLATE["cameraForward"] = { semantic: gltf.UniformSemanticType._CAMERA_FORWARD };
@@ -82,11 +83,13 @@ UNIFORM_TEMPLATE["ltc_1"] = { semantic: "Unknown" };
 UNIFORM_TEMPLATE["ltc_2"] = { semantic: "Unknown" };
 UNIFORM_TEMPLATE["rectAreaLights[0]"] = { semantic: "Unknown" };//
 UNIFORM_TEMPLATE["hemisphereLights[0]"] = { semantic: "Unknown" };//
+
 // UNIFORM_TEMPLATE["bindMatrix"] = { semantic: gltf.UniformSemanticType._BINDMATRIX };
 // UNIFORM_TEMPLATE["bindMatrixInverse"] = { semantic: gltf.UniformSemanticType._BINDMATRIXINVERSE };
 // UNIFORM_TEMPLATE["boneTexture"] = {  semantic: gltf.UniformSemanticType._BONETEXTURE };
 // UNIFORM_TEMPLATE["boneTextureSize"] = { semantic: gltf.UniformSemanticType._BONETEXTURESIZE };
 UNIFORM_TEMPLATE["boneMatrices[0]"] = { semantic: gltf.UniformSemanticType.JOINTMATRIX };
+
 UNIFORM_TEMPLATE["directionalShadowMatrix[0]"] = { semantic: gltf.UniformSemanticType._DIRECTIONSHADOWMAT };
 UNIFORM_TEMPLATE["spotShadowMatrix[0]"] = { semantic: gltf.UniformSemanticType._SPOTSHADOWMAT };
 UNIFORM_TEMPLATE["pointShadowMatrix[0]"] = { semantic: gltf.UniformSemanticType._POINTSHADOWMAT };
@@ -106,7 +109,7 @@ UNIFORM_TEMPLATE["normalScale"] = { value: [1.0, 1.0] };
 UNIFORM_TEMPLATE["referencePosition"] = { semantic: gltf.UniformSemanticType._REFERENCEPOSITION };
 UNIFORM_TEMPLATE["nearDistance"] = { semantic: gltf.UniformSemanticType._NEARDICTANCE };
 UNIFORM_TEMPLATE["farDistance"] = { semantic: gltf.UniformSemanticType._FARDISTANCE };
-//fog
+// fog TODO
 UNIFORM_TEMPLATE["fogColor"] = { semantic: gltf.UniformSemanticType._FOG_COLOR };
 UNIFORM_TEMPLATE["fogDensity"] = { semantic: gltf.UniformSemanticType._FOG_DENSITY };
 UNIFORM_TEMPLATE["fogNear"] = { semantic: gltf.UniformSemanticType._FOG_NEAR };
@@ -147,8 +150,6 @@ UNIFORM_TEMPLATE["totalSize"] = { value: 1 };
 //用户自定义Attribute
 export const CUSTOM_ATTRIBUTE_TEMPLATE: { [key: string]: string } = {};
 // CUSTOM_ATTRIBUTE_TEMPLATE["position"] = "POSITION";
-
-
 
 
 //用户自定义Uniform

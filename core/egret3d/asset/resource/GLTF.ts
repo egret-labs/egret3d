@@ -6,7 +6,7 @@ namespace egret3d {
         extensions: {
             paper?: {
                 mipmap?: boolean;
-                format?: 6407 | 6408 | 6409;
+                format?: gltf.TextureFormat;
                 pixelSize?: number;
                 width?: number;
                 height?: number;
@@ -639,20 +639,35 @@ declare namespace gltf {
         BLEND = 3042,
         CULL_FACE = 2884,
         DEPTH_TEST = 2929,
+        STENCIL_TEST = 2960,
         POLYGON_OFFSET_FILL = 32823,
         SAMPLE_ALPHA_TO_COVERAGE = 32926,
     }
 
+    export const enum BufferBit {
+        DEPTH_BUFFER_BIT = 256,
+        STENCIL_BUFFER_BIT = 1024,
+        COLOR_BUFFER_BIT = 16384,
+    }
+
     export const enum BlendMode {
-        None,
-        Blend,
-        Blend_PreMultiply,
-        Add,
-        Add_PreMultiply,
-        Subtractive,
-        Subtractive_PreMultiply,
-        Multiply,
-        Multiply_PreMultiply,
+        None = 0,
+        Blend = 1,
+        Blend_PreMultiply = 2,
+        Additive = 3,
+        Additive_PreMultiply = 4,
+        Subtractive = 5,
+        Subtractive_PreMultiply = 6,
+        Multiply = 7,
+        Multiply_PreMultiply = 8,
+        /**
+         * @deprecated
+         */
+        Add = 3,
+        /**
+         * @deprecated
+         */
+        Add_PreMultiply = 4,
     }
 
     export const enum BlendEquation {
@@ -773,7 +788,7 @@ declare namespace gltf {
 
         _VIEWPROJECTION = "_VIEWPROJECTION",
         _CAMERA_POS = "_CAMERA_POS",
-        _CAMERA_UP = "CAMERA_UP",
+        _CAMERA_UP = "_CAMERA_UP",
         _CAMERA_FORWARD = "_CAMERA_FORWARD",
         _DIRECTLIGHTS = "_DIRECTLIGHTS",
         _POINTLIGHTS = "_POINTLIGHTS",
@@ -1526,7 +1541,7 @@ declare namespace gltf {
         /**
          * The shader stage.
          */
-        type: 35632 | 35633;
+        type: ShaderStage;
         /**
          * The index of the bufferView that contains the GLSL shader source. Use this instead of the shader's uri property.
          */
@@ -1564,7 +1579,7 @@ declare namespace gltf {
         /**
          * The uniform type.
          */
-        type: 5124 | 5126 | 35664 | 35665 | 35666 | 35667 | 35668 | 35669 | 35670 | 35671 | 35672 | 35673 | 35674 | 35675 | 35676 | 35678 | 35680;
+        type: UniformType;
         /**
          * Identifies a uniform with a well-known meaning.
          */
@@ -1682,11 +1697,11 @@ declare namespace gltf {
         /**
          * Integer values passed to `blendEquationSeparate()`.
          */
-        blendEquationSeparate?: (32774 | 32778 | 32779)[];
+        blendEquationSeparate?: BlendEquation[];
         /**
          * Integer values passed to `blendFuncSeparate()`.
          */
-        blendFuncSeparate?: (0 | 1 | 768 | 769 | 774 | 775 | 770 | 771 | 772 | 773 | 32769 | 32770 | 32771 | 32772 | 776)[];
+        blendFuncSeparate?: BlendFactor[];
         /**
          * Boolean values passed to `colorMask()`. [red, green, blue, alpha].
          */
@@ -1694,11 +1709,11 @@ declare namespace gltf {
         /**
          * Integer value passed to `cullFace()`.
          */
-        cullFace?: (1028 | 1029 | 1032)[];
+        cullFace?: CullFace[];
         /**
          * Integer values passed to `depthFunc()`.
          */
-        depthFunc?: (512 | 513 | 515 | 514 | 516 | 517 | 518 | 519)[];
+        depthFunc?: DepthFunc[];
         /**
          * Boolean value passed to `depthMask()`.
          */
@@ -1710,7 +1725,7 @@ declare namespace gltf {
         /**
          * Integer value passed to `frontFace()`.
          */
-        frontFace?: (2304 | 2305)[];
+        frontFace?: FrontFace[];
         /**
          * Floating-point value passed to `lineWidth()`.
          */
@@ -1730,7 +1745,7 @@ declare namespace gltf {
         /**
          * WebGL states to enable.
          */
-        enable?: (3042 | 2884 | 2929 | 32823 | 32926)[];
+        enable?: EnableState[];
         /**
          * Arguments for fixed-function rendering state functions other than `enable()`/`disable()`.
          */

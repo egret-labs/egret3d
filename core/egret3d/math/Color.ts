@@ -7,17 +7,14 @@ namespace egret3d {
          * 红色通道。（0.0 ~ 1.0）
          */
         r: number;
-
         /**
          * 绿色通道。（0.0 ~ 1.0）
          */
         g: number;
-
         /**
          * 蓝色通道。（0.0 ~ 1.0）
          */
         b: number;
-
         /**
          * 透明通道。（0.0 ~ 1.0）
          */
@@ -27,6 +24,11 @@ namespace egret3d {
      * 颜色。
      */
     export class Color extends paper.BaseRelease<Color> implements IColor, paper.ICCS<Color>, paper.ISerializable {
+        /**
+         * 所有颜色通道均为零的颜色。
+         * - 请注意不要修改该值。
+         */
+        public static readonly ZERO: Readonly<Color> = new Color().set(0.0, 0.0, 0.0, 0.0);
         /**
          * 黑色。
          * - 请注意不要修改该值。
@@ -115,7 +117,7 @@ namespace egret3d {
             return Color.create(this.r, this.g, this.b, this.a);
         }
 
-        public copy(value: Readonly<Color>) {
+        public copy(value: Readonly<IColor>) {
             return this.set(value.r, value.g, value.b, value.a);
         }
 
@@ -172,11 +174,11 @@ namespace egret3d {
         //     return this;
         // }
 
-        public multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>): this {
+        public multiply(valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this {
             if (!valueB) {
                 valueB = valueA;
-                valueA = this;
             }
+            valueA = this;
 
             this.r = valueA.r * valueB.r;
             this.g = valueA.g * valueB.g;
@@ -186,7 +188,7 @@ namespace egret3d {
             return this;
         }
 
-        public scale(value: number, source?: Readonly<Color>): this {
+        public scale(value: number, source?: Readonly<IColor>): this {
             if (!source) {
                 source = this;
             }
@@ -199,7 +201,7 @@ namespace egret3d {
             return this;
         }
 
-        public lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>): this {
+        public lerp(t: number, valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this {
             if (!valueB) {
                 valueB = valueA;
                 valueA = this;

@@ -563,28 +563,49 @@ namespace egret3d {
          * 将该向量和目标向量插值的结果写入该向量。
          * - v = v * (1 - t) + to * t
          * - 插值因子不会被限制在 0 ~ 1。
-         * @param t 插值因子。
          * @param to 目标向量。
+         * @param t 插值因子。
          */
-        public lerp(t: number, to: Readonly<IVector3>): this;
+        public lerp(to: Readonly<IVector3>, t: number): this;
         /**
          * 将两个向量插值的结果写入该向量。
          * - v = from * (1 - t) + to * t
          * - 插值因子不会被限制在 0 ~ 1。
-         * @param t 插值因子。
          * @param from 起始向量。
          * @param to 目标向量。
+         * @param t 插值因子。
+         */
+        public lerp(from: Readonly<IVector3>, to: Readonly<IVector3>, t: number): this;
+        /**
+         * @deprecated
+         */
+        public lerp(t: number, to: Readonly<IVector3>): this;
+        /**
+         * @deprecated
          */
         public lerp(t: number, from: Readonly<IVector3>, to: Readonly<IVector3>): this;
-        public lerp(t: number, from: Readonly<IVector3>, to?: Readonly<IVector3>) {
-            if (!to) {
-                to = from;
-                from = this;
-            }
+        public lerp(p1: Readonly<IVector3> | number, p2: Readonly<IVector3> | number, p3?: number | Readonly<IVector3>) {
+            if (typeof p1 === "number") {
+                if (!p3) {
+                    p3 = p2;
+                    p2 = this;
+                }
 
-            this.x = from.x + (to.x - from.x) * t;
-            this.y = from.y + (to.y - from.y) * t;
-            this.z = from.z + (to.z - from.z) * t;
+                this.x = (p2 as Readonly<IVector3>).x + ((p3 as Readonly<IVector3>).x - (p2 as Readonly<IVector3>).x) * p1;
+                this.y = (p2 as Readonly<IVector3>).y + ((p3 as Readonly<IVector3>).y - (p2 as Readonly<IVector3>).y) * p1;
+                this.z = (p2 as Readonly<IVector3>).z + ((p3 as Readonly<IVector3>).z - (p2 as Readonly<IVector3>).z) * p1;
+            }
+            else {
+                if (typeof p2 === "number") {
+                    p3 = p2;
+                    p2 = p1;
+                    p1 = this;
+                }
+
+                this.x = (p1 as Readonly<IVector3>).x + ((p2 as Readonly<IVector3>).x - (p1 as Readonly<IVector3>).x) * (p3 as number);
+                this.y = (p1 as Readonly<IVector3>).y + ((p2 as Readonly<IVector3>).y - (p1 as Readonly<IVector3>).y) * (p3 as number);
+                this.z = (p1 as Readonly<IVector3>).z + ((p2 as Readonly<IVector3>).z - (p1 as Readonly<IVector3>).z) * (p3 as number);
+            }
 
             return this;
         }
