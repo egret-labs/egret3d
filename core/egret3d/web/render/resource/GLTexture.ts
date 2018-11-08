@@ -142,6 +142,8 @@ namespace egret3d {
                 }
             }
 
+            // TEXTURE_MAX_ANISOTROPY_EXT TODO
+
             let wrap_s_param = webgl.CLAMP_TO_EDGE;
             let wrap_t_param = webgl.CLAMP_TO_EDGE;
 

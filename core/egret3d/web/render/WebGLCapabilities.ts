@@ -170,6 +170,13 @@ namespace egret3d {
             }
         }
     }
+    export enum ToneMapping {
+        None = 0,
+        LinearToneMapping = 1,
+        ReinhardToneMapping = 2,
+        Uncharted2ToneMapping = 3,
+        CineonToneMapping = 4,
+    }
     /**
      * @private
      */
@@ -216,6 +223,12 @@ namespace egret3d {
 
         public oes_standard_derivatives: boolean;
         public gl_oes_standard_derivatives: boolean;
+
+
+        //全局设置
+        public toneMapping: ToneMapping = ToneMapping.None;
+        public toneMappingExposure: number = 1.0;
+        public toneMappingWhitePoint: number = 1.0;
 
         public initialize(config: RunEgretOptions) {
             super.initialize();
@@ -408,7 +421,7 @@ namespace egret3d {
 
             webgl.clear(bufferBit);
         }
-        
+
         public copyFramebufferToTexture(screenPostion: Vector2, target: ITexture, level: number = 0) {
             const webgl = WebGLCapabilities.webgl!;
             webgl.activeTexture(webgl.TEXTURE_2D);
