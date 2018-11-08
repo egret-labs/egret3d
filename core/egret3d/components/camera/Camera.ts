@@ -1,10 +1,22 @@
 namespace egret3d {
-    const _helpRectA = new Rectangle();
+    /**
+     * // TODO
+     * @internal
+     */
+    export const enum MatrixDirty {
+        ALL = 0b111,
+        ProjectionMatrix = 0b001,
+        ClipToWorldMatrix = 0b010,
+        WorldToClipMatrix = 0b100,
+    }
     /**
      * 相机组件。
      */
     export class Camera extends paper.BaseComponent {
-
+        /**
+         * 在渲染阶段正在执行渲染的相机。
+         */
+        public static current: Camera | null = null;
         /**
          * 当前场景的主相机。
          * - 如果没有则创建一个。
@@ -28,7 +40,6 @@ namespace egret3d {
 
             return gameObject.getOrAddComponent(Camera);
         }
-
         /**
          * 编辑相机。
          * - 如果没有则创建一个。
@@ -72,7 +83,6 @@ namespace egret3d {
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((paper as any).CullingMask) }) // TODO
         public cullingMask: paper.CullingMask = paper.CullingMask.Everything;
-
         /**
          * 该相机渲染排序。
          * - 该值越低的相机优先绘制。
@@ -80,38 +90,32 @@ namespace egret3d {
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.INT)
         public order: number = 0;
-
         /**
          * 透视投影的视野。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: Math.PI, step: 0.01 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: Math.PI - 0.01, step: 0.01 })
         public fov: number = Math.PI * 0.25;
-
         /**
          * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间差值。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 1.0, step: 0.01 })
         public opvalue: number = 1.0;
-
         /**
          * 正交投影的尺寸。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public size: number = 2.0;
-
         /**
          * 该相机的背景色。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.COLOR)
         public readonly backgroundColor: Color = Color.create(0.15, 0.25, 0.5, 1.0);
-
         /**
-         * 该相机的渲染视口。
-         * - 归一化的。
+         * 该相机归一化的渲染视口。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.RECT, { step: 0.01 })
@@ -134,12 +138,18 @@ namespace egret3d {
          */
         public renderTarget: BaseRenderTarget | null = null;
 
+        private _viewPortDirty: boolean = false;
+        /**
+         * TODO transform 应拥有高性能的位置变更通知机制。
+         */
+        private _matrixDirty: MatrixDirty = MatrixDirty.ALL;
+
         @paper.serializedField
         private _near: number = 0.3;
         @paper.serializedField
         private _far: number = 1000.0;
-        private readonly _projectionMatrix: Matrix4 = Matrix4.create();
-        private readonly _matProjO: Matrix4 = Matrix4.create();
+        private readonly _pixelViewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
+        private readonly _perspectiveMatrix: Matrix4 = Matrix4.create();
         private readonly _worldToClipMatrix: Matrix4 = Matrix4.create();
         private readonly _clipToWorldMatrix: Matrix4 = Matrix4.create();
         private readonly _frameVectors: Vector3[] = [ // TODO 需要缓存为视锥
@@ -152,18 +162,12 @@ namespace egret3d {
             Vector3.create(),
             Vector3.create()
         ];
-
-        private _updateClipToWorldMatrix(asp: number) {
-            return this._clipToWorldMatrix.inverse(this.calcProjectMatrix(asp, this._worldToClipMatrix).multiply(this.gameObject.transform.worldToLocalMatrix));
-        }
-
         /**
          * 计算相机视锥区域
          * TODO
          */
         private _calcCameraFrame() {
-            const vpp = _helpRectA;
-            const asp = this.calcViewPortPixel(vpp);
+            const aspect = this.aspect;
 
             const farLD = this._frameVectors[0];
             const nearLD = this._frameVectors[1];
@@ -180,14 +184,14 @@ namespace egret3d {
             const tan = Math.tan(this.fov * 0.5);
 
             const nearHX = near * tan;
-            const nearWX = nearHX * asp;
+            const nearWX = nearHX * aspect;
             const nearWY = near * tan;
-            const nearHY = nearWY / asp;
+            const nearHY = nearWY / aspect;
 
             const farHX = far * tan;
-            const farWX = farHX * asp;
+            const farWX = farHX * aspect;
             const farWY = far * tan;
-            const farHY = farWY / asp;
+            const farHY = farWY / aspect;
 
             const nearWidth = math.lerp(nearWY, nearWX, matchFactor);
             const nearHeight = math.lerp(nearHY, nearHX, matchFactor);
@@ -252,9 +256,11 @@ namespace egret3d {
          * @internal
          */
         public _update(_delta: number) {
-            this._calcCameraFrame();
+            this._viewPortDirty = true;
+            this._matrixDirty = MatrixDirty.ALL;
 
-            this.context.updateCamera(this, this.gameObject.transform.localToWorldMatrix);
+            this._calcCameraFrame();
+            this.context.updateCameraTransform(this);
         }
 
         public initialize() {
@@ -263,78 +269,21 @@ namespace egret3d {
             this.context = new RenderContext();
             this.postProcessContext = new PostProcessRenderContext(this);
         }
-
-        /**
-         * TODO
-         */
-        public calcProjectMatrix(asp: number, matrix: Matrix4): Matrix4 {
-            const matchFactor = 1.0 - stage.matchFactor;
-
-            if (this.opvalue > 0.0) {
-                const tan = Math.tan(this.fov * 0.5);
-
-                const topX = this.near * tan;
-                const heightX = 2.0 * topX;
-                const widthX = asp * heightX;
-                const leftX = -0.5 * widthX;
-
-                const leftY = -this.near * tan;
-                const widthY = 2.0 * -leftY;
-                const heightY = widthY / asp;
-                const topY = 0.5 * heightY;
-
-                const top = topX + (topY - topX) * matchFactor;
-                const left = leftX + (leftY - leftX) * matchFactor;
-                const width = widthX + (widthY - widthX) * matchFactor;
-                const height = heightX + (heightY - heightX) * matchFactor;
-
-                Matrix4.perspectiveProjectLH(left, left + width, top, top - height, this.near, this.far, this._projectionMatrix);
-            }
-
-            if (this.opvalue < 1.0) {
-                const widthX = this.size * asp;
-                const heightX = this.size;
-
-                const widthY = this.size;
-                const heightY = this.size / asp;
-
-                const width = widthX + (widthY - widthX) * matchFactor;
-                const height = heightX + (heightY - heightX) * matchFactor;
-
-                Matrix4.orthoProjectLH(width, height, this.near, this.far, this._matProjO);
-            }
-
-            if (this.opvalue === 0.0) {
-                matrix.copy(this._matProjO);
-            }
-            else if (this.opvalue === 1.0) {
-                matrix.copy(this._projectionMatrix);
-            }
-            else {
-                matrix.lerp(this._matProjO, this._projectionMatrix, this.opvalue);
-            }
-
-            return matrix;
-        }
-
         /**
          * 将舞台坐标基于该相机的视角转换为世界坐标。
          * @param stagePosition 舞台坐标。
          * @param worldPosition 世界坐标。
          */
-        public stageToWorld(stagePosition: Readonly<IVector3>, worldPosition?: Vector3) {
+        public stageToWorld(stagePosition: Readonly<IVector3>, worldPosition?: Vector3): Vector3 {
             if (!worldPosition) {
                 worldPosition = Vector3.create();
             }
 
-            const vpp = _helpRectA;
-            const asp = this.calcViewPortPixel(vpp);
-            const clipToWorldMatrix = this._updateClipToWorldMatrix(asp);
-
             const backupZ = stagePosition.z;
-            const viewport = this.viewport;
-            const kX = viewport.w / vpp.w * 2.0;
-            const kY = viewport.h / vpp.h * 2.0;
+            const { w, h } = this.renderTargetSize;
+            const kX = 2.0 / w;
+            const kY = 2.0 / h;
+            const clipToWorldMatrix = this.clipToWorldMatrix;
 
             worldPosition.set(
                 (stagePosition.x * kX - 1.0),
@@ -359,7 +308,6 @@ namespace egret3d {
 
             return worldPosition;
         }
-
         /**
          * 将舞台坐标基于该相机的视角转换为世界坐标。
          * @param worldPosition 世界坐标。
@@ -370,14 +318,12 @@ namespace egret3d {
                 stagePosition = Vector3.create();
             }
 
-            const vpp = _helpRectA;
-            const asp = this.calcViewPortPixel(vpp);
-            const worldToClipMatrix = this.calcProjectMatrix(asp, this._worldToClipMatrix).multiply(this.gameObject.transform.worldToLocalMatrix);
-            const viewport = this.viewport;
+            const { w, h } = this.renderTargetSize;
+            const worldToClipMatrix = this.worldToClipMatrix;
 
             stagePosition.applyMatrix(worldToClipMatrix, worldPosition);
-            stagePosition.x = (stagePosition.x + 1.0) * vpp.w * 0.5 / viewport.w;
-            stagePosition.y = (1.0 - stagePosition.y) * vpp.h * 0.5 / viewport.h;
+            stagePosition.x = (stagePosition.x + 1.0) * w * 0.5;
+            stagePosition.y = (1.0 - stagePosition.y) * h * 0.5;
             // stagePosition.z = TODO
 
             return stagePosition;
@@ -394,13 +340,10 @@ namespace egret3d {
                 ray = Ray.create();
             }
 
-            const vpp = _helpRectA;
-            const asp = this.calcViewPortPixel(vpp);
-            const clipToWorldMatrix = this._updateClipToWorldMatrix(asp);
-
-            const viewport = this.viewport;
-            const kX = viewport.w / vpp.w * 2.0;
-            const kY = viewport.h / vpp.h * 2.0;
+            const { w, h } = this.renderTargetSize;
+            const kX = 2.0 / w;
+            const kY = 2.0 / h;
+            const clipToWorldMatrix = this.clipToWorldMatrix;
 
             ray.origin.set(
                 stageX * kX - 1.0,
@@ -419,28 +362,6 @@ namespace egret3d {
         /**
          * TODO
          */
-        public getPosAtXPanelInViewCoordinateByScreenPos(screenPos: Vector2, z: number, out: Vector2) {
-            const vpp = _helpRectA;
-            this.calcViewPortPixel(vpp);
-
-            const nearpos = helpVector3A;
-            nearpos.z = -this.near;
-            nearpos.x = screenPos.x - vpp.w * 0.5;
-            nearpos.y = vpp.h * 0.5 - screenPos.y;
-
-            const farpos = helpVector3B;
-            farpos.z = -this.far;
-            farpos.x = this.far * nearpos.x / this.near;
-            farpos.y = this.far * nearpos.y / this.near;
-
-            const rate = (nearpos.z - z) / (nearpos.z - farpos.z);
-            out.x = nearpos.x - (nearpos.x - farpos.x) * rate;
-            out.y = nearpos.y - (nearpos.y - farpos.y) * rate;
-        }
-
-        /**
-         * TODO
-         */
         public testFrustumCulling(node: paper.BaseRenderer) {
             const boundingSphere = node.boundingSphere;
             if (!this._intersectPlane(boundingSphere, this._frameVectors[0], this._frameVectors[1], this._frameVectors[5])) return false;
@@ -452,37 +373,8 @@ namespace egret3d {
 
             return true;
         }
-
         /**
-         * 获取该相机的像素渲染视口。
-         * TODO
-         */
-        public calcViewPortPixel(pixelViewport: IRectangle) {
-            let w: number;
-            let h: number;
-            const renderTarget = this.renderTarget;
-            const viewport = this.viewport;
-
-            if (renderTarget) {
-                w = renderTarget.width;
-                h = renderTarget.height;
-            }
-            else {
-                const stageViewPort = stage.viewport;
-                w = stageViewPort.w;
-                h = stageViewPort.h;
-            }
-
-            pixelViewport.x = w * viewport.x;
-            pixelViewport.y = h * viewport.y;
-            pixelViewport.w = w * viewport.w;
-            pixelViewport.h = h * viewport.h;
-
-            // asp
-            return pixelViewport.w / pixelViewport.h;
-        }
-        /**
-         * 该摄像机的视点到近裁剪面距离。
+         * 该相机的视点到近裁剪面距离。
          * - 该值过小会引起深度冲突。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: 3000.0 - 0.01, step: 1 })
@@ -501,7 +393,7 @@ namespace egret3d {
             this._near = value;
         }
         /**
-         * 该摄像机的视点到远裁剪面距离。
+         * 该相机的视点到远裁剪面距离。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.02, maximum: 3000.0, step: 1 })
         public get far(): number {
@@ -518,22 +410,128 @@ namespace egret3d {
 
             this._far = value;
         }
+        /**
+         * 
+         */
+        public get aspect(): number {
+            const { w, h } = this.pixelViewport;
+            return w / h;
+        }
+        /**
+         * 该相机渲染目标的尺寸。
+         */
+        public get renderTargetSize(): Readonly<ISize> {
+            let w: number;
+            let h: number;
+            const renderTarget = this.renderTarget;
+
+            if (renderTarget) {
+                w = renderTarget.width;
+                h = renderTarget.height;
+            }
+            else {
+                const stageViewPort = stage.viewport;
+                w = stageViewPort.w;
+                h = stageViewPort.h;
+            }
+
+            return { w, h };
+        }
+        /**
+         * 该相机像素化的渲染视口。
+         */
+        @paper.editor.property(paper.editor.EditType.RECT, { step: 1 })
+        public get pixelViewport(): Readonly<IRectangle> {
+            if (this._viewPortDirty) {
+                const { w, h } = this.renderTargetSize;
+                const viewport = this.viewport;
+                const pixelViewport = this._pixelViewport;
+
+                pixelViewport.x = w * viewport.x;
+                pixelViewport.y = h * viewport.y;
+                pixelViewport.w = w * viewport.w;
+                pixelViewport.h = h * viewport.h;
+
+                this._viewPortDirty = false;
+            }
+
+            return this._pixelViewport;
+        }
+        public set pixelViewport(value: Readonly<IRectangle>) {
+            const { w, h } = this.renderTargetSize;
+            this.viewport.set(value.x / w, value.y / h, value.w / w, value.h / h);
+            this._pixelViewport.copy(value);
+        }
+        /**
+         * 该相机的投影矩阵。
+         */
+        public get projectionMatrix(): Readonly<Matrix4> {
+            const perspectiveMatrix = this._perspectiveMatrix;
+            if (this._matrixDirty & MatrixDirty.ProjectionMatrix) {
+                perspectiveMatrix.fromProjection(
+                    this.fov, this._near, this._far,
+                    this.size,
+                    this.opvalue,
+                    this.aspect, stage.matchFactor
+                );
+                this._matrixDirty &= ~MatrixDirty.ProjectionMatrix;
+            }
+
+            return perspectiveMatrix;
+        }
+        /**
+         * 从世界变换到该相机裁切空间的矩阵。
+         */
+        public get worldToClipMatrix(): Readonly<Matrix4> {
+            if (this._matrixDirty & MatrixDirty.WorldToClipMatrix) {
+                this._worldToClipMatrix.multiply(this.projectionMatrix, this.gameObject.transform.worldToLocalMatrix);
+                this._matrixDirty &= ~MatrixDirty.WorldToClipMatrix;
+            }
+
+            return this._worldToClipMatrix;
+        }
+        /**
+         * 从该相机裁切空间变换到世界的矩阵。
+         */
+        public get clipToWorldMatrix(): Readonly<Matrix4> {
+            if (this._matrixDirty & MatrixDirty.ClipToWorldMatrix) {
+                this._clipToWorldMatrix.inverse(this.worldToClipMatrix);
+                this._matrixDirty &= ~MatrixDirty.ClipToWorldMatrix;
+            }
+
+            return this._clipToWorldMatrix;
+        }
 
         /**
          * @deprecated
          */
+        public getPosAtXPanelInViewCoordinateByScreenPos(screenPos: Vector2, z: number, out: Vector2) {
+            const { w, h } = this.renderTargetSize;
+
+            const nearpos = helpVector3A;
+            nearpos.z = -this.near;
+            nearpos.x = screenPos.x - w * 0.5;
+            nearpos.y = h * 0.5 - screenPos.y;
+
+            const farpos = helpVector3B;
+            farpos.z = -this.far;
+            farpos.x = this.far * nearpos.x / this.near;
+            farpos.y = this.far * nearpos.y / this.near;
+
+            const rate = (nearpos.z - z) / (nearpos.z - farpos.z);
+            out.x = nearpos.x - (nearpos.x - farpos.x) * rate;
+            out.y = nearpos.y - (nearpos.y - farpos.y) * rate;
+        }
+        /**
+         * @deprecated
+         */
         public calcScreenPosFromWorldPos(worldPos: Vector3, outScreenPos: Vector2) {
-            const vpp = _helpRectA;
-            const asp = this.calcViewPortPixel(vpp);
-
-            const matrixProject = helpMatrixB;
-            this.calcProjectMatrix(asp, matrixProject);
-
-            const matrixViewProject = helpMatrixC.multiply(matrixProject, this.gameObject.transform.worldToLocalMatrix);
+            const { w, h } = this.renderTargetSize;
+            const worldToClipMatrix = this.worldToClipMatrix;
             const ndcPos = helpVector3A;
-            matrixViewProject.transformVector3(worldPos, ndcPos);
-            outScreenPos.x = (ndcPos.x + 1.0) * vpp.w * 0.5;
-            outScreenPos.y = (1.0 - ndcPos.y) * vpp.h * 0.5;
+            worldToClipMatrix.transformVector3(worldPos, ndcPos);
+            outScreenPos.x = (ndcPos.x + 1.0) * w * 0.5;
+            outScreenPos.y = (1.0 - ndcPos.y) * h * 0.5;
         }
         /**
          * @deprecated

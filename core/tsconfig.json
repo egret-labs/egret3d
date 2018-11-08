@@ -69,6 +69,7 @@
         "egret3d/ecs/serialize/Deserialize.ts",
         "egret3d/ecs/serialize/Serialize.ts",
 
+        "egret3d/Interface.ts",
         "egret3d/components/Interface.ts",
         "egret3d/components/Transform.ts",
         "egret3d/components/singleton/Stage.ts",

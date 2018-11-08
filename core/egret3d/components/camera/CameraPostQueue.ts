@@ -1,24 +1,22 @@
 namespace egret3d {
-    export class PostProcessRenderContext extends paper.BaseRelease<PostProcessRenderContext> {
-        private _fullScreenRT: BaseRenderTarget;
-
-        private _currentCamera: Camera;
-
-        private readonly _camera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
+    export class PostProcessRenderContext {
+        private readonly _camera: Camera = null!;
+        private readonly _postProcessingCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera); // TODO 后期渲染专用相机
         private readonly _drawCall: DrawCall = DrawCall.create();
-        private readonly _defaultMaterial: Material = egret3d.DefaultMaterials.MESH_BASIC.clone()
-            .setDepth(false, false); // TODO copy shader
-        private readonly _webglSystem = paper.SystemManager.getInstance().getSystem(web.WebGLRenderSystem);   //TODO
-        private readonly _webglState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
+        private readonly _defaultMaterial: Material = egret3d.DefaultMaterials.MESH_BASIC.clone().setDepth(false, false); // TODO copy shader
+        private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
 
+        private _fullScreenRT: BaseRenderTarget = null!;
+        /**
+         * 禁止实例化。
+         */
         public constructor(camera: Camera) {
-            super();
-            this._currentCamera = camera;
+            this._camera = camera;
             //
-            this._camera.opvalue = 0.0;
-            this._camera.size = 1;
-            this._camera.near = 0.01;
-            this._camera.far = 1;
+            this._postProcessingCamera.opvalue = 0.0;
+            this._postProcessingCamera.size = 1;
+            this._postProcessingCamera.near = 0.01;
+            this._postProcessingCamera.far = 1;
             //
             this._drawCall.mesh = DefaultMeshes.FULLSCREEN_QUAD;
             this._drawCall.mesh._createBuffer();
@@ -26,34 +24,19 @@ namespace egret3d {
             this._drawCall.matrix = Matrix4.IDENTITY;
         }
 
-        public render() {//TODO
-            const camera = this._currentCamera;
-            const stageViewport = stage.viewport;
-            if (!this._fullScreenRT || this._fullScreenRT.width !== stageViewport.w || this._fullScreenRT.height !== stageViewport.h) {
-                if (this._fullScreenRT) {
-                    this._fullScreenRT.dispose();
-                }
-
-                this._fullScreenRT = new GlRenderTarget("fullScreenRT", stageViewport.w, stageViewport.h, true);//TODO    平台无关
+        public blit(src: Texture, material: Material | null = null, dest: BaseRenderTarget | null = null) {
+            if (!material) {
+                material = this._defaultMaterial;
+                material.setTexture(src);
             }
 
-            this._webglSystem._renderCamera(camera, this._fullScreenRT);
-            for (const postEffect of camera.postQueues) {
-                postEffect.render(this);
-            }
-        }
+            const postProcessingCamera = this._postProcessingCamera;
+            const renderState = this._renderState;
+            this._drawCall.material = material;
 
-        public blit(src: Texture, mat: Material | null = null, dest: BaseRenderTarget | null = null) {
-            if (!mat) {
-                mat = this._defaultMaterial;
-                mat.setTexture(src);
-            }
-            const camera = this._camera;
-            const webglSystem = this._webglSystem;
-            const webglState = this._webglState;
-            webglSystem._viewport(camera.viewport, dest);
-            webglState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, egret3d.Color.WHITE);
-            webglSystem._draw(camera.context, this._drawCall, mat);
+            renderState.updateViewport(postProcessingCamera.viewport, dest);
+            renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, egret3d.Color.WHITE);
+            renderState.draw(postProcessingCamera, this._drawCall);
         }
 
         public clear() {
@@ -62,10 +45,20 @@ namespace egret3d {
         }
 
         public get currentCamera() {
-            return this._currentCamera;
+            return this._camera;
         }
 
         public get fullScreenRT() {
+            const stageViewport = stage.viewport;
+
+            if (!this._fullScreenRT || this._fullScreenRT.width !== stageViewport.w || this._fullScreenRT.height !== stageViewport.h) {
+                if (this._fullScreenRT) {
+                    this._fullScreenRT.dispose();
+                }
+
+                this._fullScreenRT = new GlRenderTarget("fullScreenRT", stageViewport.w, stageViewport.h, true);//TODO    平台无关
+            }
+
             return this._fullScreenRT;
         }
     }
@@ -89,8 +82,8 @@ namespace egret3d {
         private _velocityFactor: number = 1.0;
         private _samples: number = 20;
         private _resolution: Vector2 = Vector2.create(1.0, 1.0);
-        private _viewProjectionInverseMatrix: Matrix4 = Matrix4.create();
-        private _previousViewProjectionMatrix: Matrix4 = Matrix4.create();
+        private readonly _clipToWorldMatrix: Matrix4 = Matrix4.create();
+
         public constructor() {
             super();
             this._resolution.set(stage.viewport.w, stage.viewport.h);
@@ -106,6 +99,8 @@ namespace egret3d {
             const stageViewport = stage.viewport;
             const material = this._material;
             const camera = context.currentCamera;
+            const worldToClipMatrix = camera.worldToClipMatrix;
+
             if (this._resolution.x !== stageViewport.w || this._resolution.y !== stageViewport.h) {
                 material.setVector2("resolution", this._resolution);
             }
@@ -113,13 +108,12 @@ namespace egret3d {
             material.setTexture("tDiffuse", context.fullScreenRT);
             material.setTexture("tColor", context.fullScreenRT);
 
-            this._viewProjectionInverseMatrix.copy(camera.context.matrix_vp).inverse();
-
-            material.setMatrix("viewProjectionInverseMatrix", this._viewProjectionInverseMatrix);
-            material.setMatrix("previousViewProjectionMatrix", this._previousViewProjectionMatrix);
+            material.setMatrix("viewProjectionInverseMatrix", camera.worldToClipMatrix);
+            material.setMatrix("previousViewProjectionMatrix", this._clipToWorldMatrix);
 
             context.blit(context.fullScreenRT, this._material);
-            this._previousViewProjectionMatrix.copy(camera.context.matrix_vp);
+
+            this._clipToWorldMatrix.copy(camera.clipToWorldMatrix);
         }
 
         public get velocityFactor() {

@@ -60,11 +60,6 @@ namespace egret3d {
      */
     export class DrawCallCollecter extends paper.SingletonComponent {
         /**
-         * 此帧的绘制总数。
-         */
-        @paper.editor.property(paper.editor.EditType.UINT)
-        public drawCallCount: number = 0;
-        /**
          * 此帧参与渲染的渲染组件列表。
          */
         public readonly renderers: (paper.BaseRenderer | null)[] = [];
@@ -89,7 +84,7 @@ namespace egret3d {
          */
         public readonly shadowCalls: DrawCall[] = [];
 
-        private _isRemoved: boolean = false;
+        private _drawCallsDirty: boolean = false;
         /**
          * 所有非透明的, 按照从近到远排序
          */
@@ -124,12 +119,12 @@ namespace egret3d {
          * @internal
          */
         public _update() {
-            if (this._isRemoved) {
+            if (this._drawCallsDirty) {
                 let index = 0;
                 let removeCount = 0;
                 const renderers = this.renderers;
                 const drawCalls = this.drawCalls;
-                this._isRemoved = false;
+                this._drawCallsDirty = false;
 
                 for (const renderer of renderers) {
                     if (renderer) {
@@ -184,7 +179,6 @@ namespace egret3d {
                     (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
                     (!renderer.frustumCulled || camera.testFrustumCulling(renderer))
                 ) {
-                    this.drawCallCount++; // TODO 编辑模式剔除编辑 drawcall
                     this.shadowCalls.push(drawCall);
                 }
             }
@@ -205,7 +199,6 @@ namespace egret3d {
                     (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
                     (!renderer.frustumCulled || camera.testFrustumCulling(renderer))
                 ) {
-                    this.drawCallCount++; // TODO 编辑模式剔除编辑 drawcall
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
                     if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent) {
                         this.transparentCalls.push(drawCall);
@@ -240,7 +233,7 @@ namespace egret3d {
             }
 
             this.renderers[index] = null;
-            this._isRemoved = true;
+            this._drawCallsDirty = true;
         }
         /**
          * 是否包含指定渲染组件的绘制信息列表。

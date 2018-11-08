@@ -124,6 +124,11 @@ namespace paper {
          */
         public onLateUpdate?(deltaTime: number): void;
         /**
+         * 该组件的实体拥有的渲染组件被渲染时执行。
+         * - 不能在该周期更改渲染组件的材质或其他可能引起绘制信息改变的操作。
+         */
+        public onBeforeRender?(): void;
+        /**
          * 该组件或所属的实体被禁用时执行。
          * @see paper.BaseComponent#enabled
          * @see paper.GameObject#activeSelf

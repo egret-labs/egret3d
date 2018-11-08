@@ -42,20 +42,21 @@ namespace egret3d {
         public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
 
         //
-        public readonly viewPortPixel: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
         public readonly cameraPosition: Float32Array = new Float32Array(3);
         public readonly cameraForward: Float32Array = new Float32Array(3);
         public readonly cameraUp: Float32Array = new Float32Array(3);
 
 
         // transforms
-        public readonly matrix_m: Matrix4 = Matrix4.create();
-        public readonly matrix_v: Matrix4 = Matrix4.create();
-        public readonly matrix_p: Matrix4 = Matrix4.create();
+        // public readonly matrix_m: Matrix4 = Matrix4.create();
+
+        // public readonly matrix_v: Matrix4 = Matrix4.create(); // worldToLocal
+        // public readonly matrix_p: Matrix4 = Matrix4.create(); // projection
+        // public readonly matrix_vp: Matrix4 = Matrix4.create(); // worldToClip
+        // TODO
         public readonly matrix_mv: Matrix4 = Matrix4.create();
-        public readonly matrix_vp: Matrix4 = Matrix4.create();
         public readonly matrix_mvp: Matrix4 = Matrix4.create();
-        public readonly matrix_mv_inverse: Matrix3 = Matrix3.create();//INVERS
+        public readonly matrix_mv_inverse: Matrix3 = Matrix3.create();
 
         public lightShadowCameraNear: number = 0;
         public lightShadowCameraFar: number = 0;
@@ -66,21 +67,17 @@ namespace egret3d {
         public fogNear: number = 0.0;
         public fogFar: number = 0.0;
 
-
+        public camera: Camera = null!;
         public drawCall: DrawCall = null!;
 
-        public updateCamera(camera: Camera, matrix: Matrix4) {
-            const asp = camera.calcViewPortPixel(this.viewPortPixel); // update viewport
-            camera.calcProjectMatrix(asp, this.matrix_p);
-
-            this.matrix_v.inverse(matrix); // TODO
-            this.matrix_vp.multiply(this.matrix_p, this.matrix_v);
-
-            const rawData = matrix.rawData;
+        public updateCameraTransform(camera: Camera, matrix?: Matrix4) {
+            const rawData = (matrix || camera.gameObject.transform.localToWorldMatrix).rawData;
+            this.camera = camera;
 
             if (this.cameraPosition[0] !== rawData[12] ||
                 this.cameraPosition[1] !== rawData[13] ||
-                this.cameraPosition[2] !== rawData[14]) {
+                this.cameraPosition[2] !== rawData[14]
+            ) {
                 this.cameraPosition[0] = rawData[12];
                 this.cameraPosition[1] = rawData[13];
                 this.cameraPosition[2] = rawData[14];
@@ -88,7 +85,8 @@ namespace egret3d {
 
             if (this.cameraUp[0] !== rawData[4] ||
                 this.cameraUp[1] !== rawData[5] ||
-                this.cameraUp[2] !== rawData[6]) {
+                this.cameraUp[2] !== rawData[6]
+            ) {
                 this.cameraUp[0] = rawData[4];
                 this.cameraUp[1] = rawData[5];
                 this.cameraUp[2] = rawData[6];
@@ -96,7 +94,8 @@ namespace egret3d {
 
             if (this.cameraForward[0] !== rawData[8] ||
                 this.cameraForward[1] !== rawData[9] ||
-                this.cameraForward[2] !== rawData[10]) {
+                this.cameraForward[2] !== rawData[10]
+            ) {
                 this.cameraForward[0] = -rawData[8];
                 this.cameraForward[1] = -rawData[9];
                 this.cameraForward[2] = -rawData[10];
@@ -156,12 +155,13 @@ namespace egret3d {
 
             let directLightIndex = 0, pointLightIndex = 0, spotLightIndex = 0, index = 0;
             let lightArray = this.directLightArray;
+            const cameraWorldToLocalMatrix = this.camera.transform.worldToLocalMatrix;
 
             for (const light of lights) {
                 switch (light.constructor) {
                     case DirectionalLight: {
                         light.gameObject.transform.getForward(_helpVector3);
-                        _helpVector3.applyDirection(this.matrix_v);
+                        _helpVector3.applyDirection(cameraWorldToLocalMatrix);
 
                         lightArray = this.directLightArray;
                         index = directLightIndex * LightSize.Directional;
@@ -181,7 +181,7 @@ namespace egret3d {
 
                     case PointLight: {
                         const position = light.gameObject.transform.position.clone().release();
-                        position.applyMatrix(this.matrix_v);
+                        position.applyMatrix(cameraWorldToLocalMatrix);
                         lightArray = this.pointLightArray;
                         index = pointLightIndex * LightSize.Point;
 
@@ -201,9 +201,9 @@ namespace egret3d {
 
                     case SpotLight: {
                         const position = light.gameObject.transform.position.clone().release();
-                        position.applyMatrix(this.matrix_v);
+                        position.applyMatrix(cameraWorldToLocalMatrix);
                         light.gameObject.transform.getForward(_helpVector3);
-                        _helpVector3.applyDirection(this.matrix_v);
+                        _helpVector3.applyDirection(cameraWorldToLocalMatrix);
 
                         lightArray = this.spotLightArray;
                         index = spotLightIndex * LightSize.Spot;
@@ -234,30 +234,30 @@ namespace egret3d {
                 }
 
                 if (light.castShadows) {
-                    lightArray[index++] = 1;
-                    lightArray[index++] = -light.shadowBias; // Left-hand.
-                    lightArray[index++] = light.shadowRadius;
-                    lightArray[index++] = light.shadowSize;
-                    lightArray[index++] = light.shadowSize;
+                    // lightArray[index++] = 1;
+                    // lightArray[index++] = -light.shadowBias; // Left-hand.
+                    // lightArray[index++] = light.shadowRadius;
+                    // lightArray[index++] = light.shadowSize;
+                    // lightArray[index++] = light.shadowSize;
 
-                    switch (light.constructor) {
-                        case DirectionalLight:
-                            this.directShadowMatrix.set(light.shadowMatrix.rawData, directLightIndex * 16);
-                            this.directShadowMaps[directLightIndex++] = light.renderTarget.texture;
-                            break;
+                    // switch (light.constructor) {
+                    //     case DirectionalLight:
+                    //         this.directShadowMatrix.set(light.shadowMatrix.rawData, directLightIndex * 16);
+                    //         this.directShadowMaps[directLightIndex++] = light.renderTarget.texture;
+                    //         break;
 
-                        case PointLight:
-                            lightArray[index++] = light.shadowCameraNear;
-                            lightArray[index++] = light.shadowCameraFar;
-                            this.pointShadowMatrix.set(light.shadowMatrix.rawData, pointLightIndex * 16);
-                            this.pointShadowMaps[pointLightIndex++] = light.renderTarget.texture;
-                            break;
+                    //     case PointLight:
+                    //         lightArray[index++] = light.shadowCameraNear;
+                    //         lightArray[index++] = light.shadowCameraFar;
+                    //         this.pointShadowMatrix.set(light.shadowMatrix.rawData, pointLightIndex * 16);
+                    //         this.pointShadowMaps[pointLightIndex++] = light.renderTarget.texture;
+                    //         break;
 
-                        case SpotLight:
-                            this.spotShadowMatrix.set(light.shadowMatrix.rawData, spotLightIndex * 16);
-                            this.spotShadowMaps[spotLightIndex++] = light.renderTarget.texture;
-                            break;
-                    }
+                    //     case SpotLight:
+                    //         this.spotShadowMatrix.set(light.shadowMatrix.rawData, spotLightIndex * 16);
+                    //         this.spotShadowMaps[spotLightIndex++] = light.renderTarget.texture;
+                    //         break;
+                    // }
                 }
                 else {
                     lightArray[index++] = 0;
@@ -284,27 +284,29 @@ namespace egret3d {
             }
         }
 
-        public updateLightDepth(light: BaseLight) {
-            const position = light.gameObject.transform.position;
-            //
-            this.lightPosition[0] = position.x;
-            this.lightPosition[1] = position.y;
-            this.lightPosition[2] = position.z;
-            //
-            this.lightShadowCameraNear = light.shadowCameraNear;
-            this.lightShadowCameraFar = light.shadowCameraFar;
-        }
+        // public updateLightDepth(light: BaseLight) {
+        //     const position = light.gameObject.transform.position;
+        //     //
+        //     this.lightPosition[0] = position.x;
+        //     this.lightPosition[1] = position.y;
+        //     this.lightPosition[2] = position.z;
+        //     //
+        //     this.lightShadowCameraNear = light.shadowCameraNear;
+        //     this.lightShadowCameraFar = light.shadowCameraFar;
+        // }
 
         public update(drawCall: DrawCall) {
             this.drawCall = drawCall;
             const renderer = drawCall.renderer;
             // const scene = renderer.gameObject.scene;
             const scene = paper.Scene.activeScene;
+            const worldToLocalMatrix = this.camera.transform.worldToLocalMatrix;
+            const worldToClipMatrix = this.camera.worldToClipMatrix;
             const matrix = drawCall.matrix || (renderer ? renderer.gameObject.transform.localToWorldMatrix : Matrix4.IDENTITY);
             this.drawCall = drawCall;
-            this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
-            this.matrix_mv.multiply(this.matrix_v, this.matrix_m);
-            this.matrix_mvp.multiply(this.matrix_vp, this.matrix_m);
+            // this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
+            this.matrix_mv.multiply(worldToLocalMatrix, matrix);
+            this.matrix_mvp.multiply(worldToClipMatrix, matrix);
             this.matrix_mv_inverse.getNormalMatrix(this.matrix_mv);
             //
             this.shaderContextDefine = "";

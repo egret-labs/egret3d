@@ -273,12 +273,17 @@ namespace egret3d {
      */
     export class WebGLRenderState extends paper.SingletonComponent {
         public readonly clearColor: Color = Color.create();
+        public renderTarget: BaseRenderTarget | null = null;
+
+        public render: (camera: Camera) => void = null!;
+        public draw: (camera: Camera, drawCall: DrawCall) => void = null!;
 
         private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST]; // TODO
         private readonly _programs: { [key: string]: GlProgram } = {};
         private readonly _vsShaders: { [key: string]: WebGLShader } = {};
         private readonly _fsShaders: { [key: string]: WebGLShader } = {};
         private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
+        private _renderSystem: IRenderSystem = null!;
         private _cacheProgram: GlProgram | null = null;
         private _cacheState: gltf.States | null = null;
 
@@ -316,13 +321,45 @@ namespace egret3d {
             return program;
         }
 
-        public clearState() {
-            for (const key in this._cacheStateEnable) {
-                delete this._cacheStateEnable[key];
+        public initialize(renderSystem: IRenderSystem) {
+            super.initialize();
+
+            if (renderSystem) {
+                this._renderSystem = renderSystem;
+                this.render = this._renderSystem.render.bind(this._renderSystem);
+                this.draw = this._renderSystem.draw.bind(this._renderSystem);
+            }
+        }
+
+        public updateRenderTarget(target: BaseRenderTarget | null) {
+            const webgl = WebGLCapabilities.webgl!;
+            this.renderTarget = target;
+
+            if (target) {
+                target.use();
+            }
+            else {
+                webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+            }
+        }
+
+        public updateViewport(viewport: Rectangle, target: BaseRenderTarget | null) { // TODO
+            const webgl = WebGLCapabilities.webgl!;
+
+            let w: number;
+            let h: number;
+            if (target) {
+                w = target.width;
+                h = target.height;
+            }
+            else {
+                const stageViewport = stage.viewport;
+                w = stageViewport.w;
+                h = stageViewport.h;
             }
 
-            this._cacheProgram = null;
-            this._cacheState = null;
+            webgl.viewport(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h);
+            webgl.depthRange(0.0, 1.0); //
         }
 
         public updateState(state: gltf.States | null) {
@@ -350,6 +387,15 @@ namespace egret3d {
                     }
                 }
             }
+        }
+
+        public clearState() {
+            for (const key in this._cacheStateEnable) {
+                delete this._cacheStateEnable[key];
+            }
+
+            this._cacheProgram = null;
+            this._cacheState = null;
         }
 
         public useProgram(program: GlProgram) {

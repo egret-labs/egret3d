@@ -159,29 +159,29 @@ namespace egret3d {
         }
     }
 
-    export class GlRenderTargetCube extends BaseRenderTarget {
-        public activeCubeFace: number = 0; // PX 0, NX 1, PY 2, NY 3, PZ 4, NZ 5
+    // export class GlRenderTargetCube extends BaseRenderTarget {
+    //     public activeCubeFace: number = 0; // PX 0, NX 1, PY 2, NY 3, PZ 4, NZ 5
 
-        constructor(name: string, width: number, height: number, depth: boolean = false, stencil: boolean = false) {
-            super(name, width, height, depth, stencil);
+    //     constructor(name: string, width: number, height: number, depth: boolean = false, stencil: boolean = false) {
+    //         super(name, width, height, depth, stencil);
 
-            const webgl = WebGLCapabilities.webgl;
-            this._texture = webgl.createTexture()!;
-            webgl.bindTexture(webgl.TEXTURE_CUBE_MAP, this.texture);
-            webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-            webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
+    //         const webgl = WebGLCapabilities.webgl;
+    //         this._texture = webgl.createTexture()!;
+    //         webgl.bindTexture(webgl.TEXTURE_CUBE_MAP, this.texture);
+    //         webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+    //         webgl.texParameteri(webgl.TEXTURE_CUBE_MAP, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
 
-            for (var i = 0; i < 6; i++) {
-                webgl.texImage2D(webgl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, webgl.RGBA, width, height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
-            }
+    //         for (var i = 0; i < 6; i++) {
+    //             webgl.texImage2D(webgl.TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, webgl.RGBA, width, height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
+    //         }
 
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + this.activeCubeFace, this.texture, 0);
-        }
+    //         webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + this.activeCubeFace, this.texture, 0);
+    //     }
 
-        use() {
-            const webgl = WebGLCapabilities.webgl;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + this.activeCubeFace, this.texture, 0);
-        }
-    }
+    //     use() {
+    //         const webgl = WebGLCapabilities.webgl;
+    //         webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
+    //         webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_CUBE_MAP_POSITIVE_X + this.activeCubeFace, this.texture, 0);
+    //     }
+    // }
 }

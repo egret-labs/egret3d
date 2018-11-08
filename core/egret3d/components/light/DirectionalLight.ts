@@ -3,20 +3,20 @@ namespace egret3d {
      * 平行光组件。
      */
     export class DirectionalLight extends BaseLight {
-        public renderTarget: BaseRenderTarget;
 
-        public updateShadow(camera: Camera) {
-            if (!this.renderTarget) {
-                this.renderTarget = new GlRenderTarget("DirectionalLight", this.shadowSize, this.shadowSize, true); // TODO
-            }
-            camera.near = this.shadowCameraNear;
-            camera.far = this.shadowCameraFar;
-            camera.size = this.shadowCameraSize;
-            camera.fov = Math.PI * 0.25;
-            camera.opvalue = 0.0;
-            camera.renderTarget = this.renderTarget;
-            this.viewPortPixel.set(0, 0, this.shadowSize, this.shadowSize);
-            this._updateShadowMatrix(camera);
+        public initialize() {
+            super.initialize();
+
+            // this.shadow.renderTarget = new GlRenderTarget("DirectionalLightShadow", this.shadow.size, this.shadow.size, true); // TODO
+            // this.shadow.update = this._updateShadow;
+        }
+
+        private _updateShadow(light: DirectionalLight, shadow: LightShadow) {
+            // shadow.camera.opvalue = 0.0; // Orthographic camera.
+            // shadow.camera.renderTarget = shadow.renderTarget;
+            // // shadow.viewPortPixel.set(0, 0, this.shadowSize, this.shadowSize);
+
+            // this._updateShadowMatrix(camera);
         }
     }
 }
