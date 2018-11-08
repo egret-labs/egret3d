@@ -39,9 +39,12 @@ namespace egret3d {
         }
 
         public onUpdate(deltaTime: number) {
-            const cameras = this._cameraAndLightCollecter.cameras;
+            const cameraAndLightCollecter = this._cameraAndLightCollecter;
+            const cameras = cameraAndLightCollecter.cameras;
+            cameraAndLightCollecter.lightDirty = false;
+
             if (cameras.length > 0) {
-                this._cameraAndLightCollecter.sortCameras();
+                cameraAndLightCollecter.sortCameras();
 
                 for (const component of cameras) {
                     component._update(deltaTime);

@@ -1,6 +1,6 @@
 namespace paper {
     Layer.Default;
-    
+
     /**
      * 实体。
      */
@@ -115,6 +115,10 @@ namespace paper {
          */
         public _activeDirty: boolean = true;
         private readonly _components: (BaseComponent | undefined)[] = [];
+        /**
+         * @internal
+         */
+        public readonly _beforeRenderBehaviors: Behaviour[] = [];
         private readonly _cachedComponents: BaseComponent[] = [];
         private _scene: Scene | null = null;
 
@@ -236,8 +240,6 @@ namespace paper {
                         continue;
                     }
 
-                    const componentClass = component.constructor as IComponentClass<BaseComponent>;
-
                     if (component.enabled) {
                         component._dispatchEnabledEvent(currentActive);
                     }
@@ -256,7 +258,7 @@ namespace paper {
                 child.gameObject._activeInHierarchyDirty(prevActive);
             }
         }
-        
+
         /**
          * 实体被销毁后，内部卸载。
          * @internal
@@ -336,6 +338,11 @@ namespace paper {
             }
             else if (component instanceof BaseRenderer) {
                 this.renderer = component;
+            }
+            else if (component instanceof Behaviour) {
+                if (component.onBeforeRender) {
+                    this._beforeRenderBehaviors.push(component);
+                }
             }
             // Add component.
             if (existedComponent) {

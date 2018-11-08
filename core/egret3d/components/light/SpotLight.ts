@@ -28,21 +28,18 @@ namespace egret3d {
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01 })
         public penumbra: number = 1.0;
 
-        public renderTarget: BaseRenderTarget;
-
         public updateShadow(camera: Camera) {
-            if (!this.renderTarget) {
-                this.renderTarget = new GlRenderTarget("SpotLight", this.shadowSize, this.shadowSize); //
-            }
-            camera.near = this.shadowCameraNear;
-            camera.far = this.shadowCameraFar;
-            camera.fov = this.angle;
-            camera.opvalue = 1.0;
-            camera.renderTarget = this.renderTarget;
-            camera.gameObject.transform.localToWorldMatrix.copy(this.gameObject.transform.localToWorldMatrix); //
+            // if (!this.renderTarget) {
+            //     this.renderTarget = new GlRenderTarget("SpotLight", this.shadowSize, this.shadowSize); //
+            // }
 
-            this.viewPortPixel.set(0, 0, this.shadowSize, this.shadowSize);
-            this._updateShadowMatrix(camera);
+            // camera.fov = this.angle;
+            // camera.opvalue = 1.0;
+            // camera.renderTarget = this.renderTarget;
+            // camera.gameObject.transform.localToWorldMatrix.copy(this.gameObject.transform.localToWorldMatrix); //
+
+            // this.viewPortPixel.set(0, 0, this.shadowSize, this.shadowSize);
+            // this._updateShadowMatrix(camera,);
         }
     }
 }

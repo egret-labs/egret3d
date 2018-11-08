@@ -388,6 +388,57 @@ namespace egret3d {
                 0.0, 0.0, 0.0, 1.0
             );
         }
+
+        public fromProjection(fov: number, near: number, far: number, size: number, opvalue: number, asp: number, matchFactor: number): Matrix4 {
+            const orthographicMatrix = _helpMatrix;
+            matchFactor = 1.0 - matchFactor;
+
+            if (opvalue > 0.0) {
+                const tan = Math.tan(fov * 0.5);
+
+                const topX = near * tan;
+                const heightX = 2.0 * topX;
+                const widthX = asp * heightX;
+                const leftX = -0.5 * widthX;
+
+                const leftY = -near * tan;
+                const widthY = 2.0 * -leftY;
+                const heightY = widthY / asp;
+                const topY = 0.5 * heightY;
+
+                const top = topX + (topY - topX) * matchFactor;
+                const left = leftX + (leftY - leftX) * matchFactor;
+                const width = widthX + (widthY - widthX) * matchFactor;
+                const height = heightX + (heightY - heightX) * matchFactor;
+
+                Matrix4.perspectiveProjectLH(left, left + width, top, top - height, near, far, this);
+            }
+
+            if (opvalue < 1.0) {
+                const widthX = size * asp;
+                const heightX = size;
+
+                const widthY = size;
+                const heightY = size / asp;
+
+                const width = widthX + (widthY - widthX) * matchFactor;
+                const height = heightX + (heightY - heightX) * matchFactor;
+
+                Matrix4.orthographicProjectLH(width, height, near, far, orthographicMatrix);
+            }
+
+            if (opvalue === 0.0) {
+                this.copy(orthographicMatrix);
+            }
+            else if (opvalue === 1.0) {
+                // this;
+            }
+            else {
+                this.lerp(orthographicMatrix, this, opvalue);
+            }
+
+            return this;
+        }
         /**
          * 通过 X、Y、Z 轴设置该矩阵。
          * @param axisX X 轴。
@@ -1005,7 +1056,7 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public static orthoProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix4): Matrix4 {
+        public static orthographicProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix4): Matrix4 {
             let hw = 2.0 / width;
             let hh = 2.0 / height;
             let id = 2.0 / (zfar - znear);

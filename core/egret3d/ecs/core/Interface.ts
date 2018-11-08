@@ -108,7 +108,7 @@ namespace paper {
          * @param deserializer Deserializer。
          * @returns 反序列化后的数据。
          */
-        deserialize(data: any, deserializer?: Deserializer): any;
+        deserialize(data: any, deserializer?: Deserializer): this | any;
     }
     /**
      * 基础对象类接口。

@@ -3,6 +3,11 @@ namespace egret3d {
      * 激活的摄像机和灯光。
      */
     export class CameraAndLightCollecter extends paper.SingletonComponent {
+        /**
+         * 
+         */
+        public lightDirty: boolean = false;
+
         public readonly cameras: Camera[] = [];
         public readonly lights: BaseLight[] = [];
 
@@ -23,6 +28,7 @@ namespace egret3d {
         }
 
         public updateLights(gameObjects: ReadonlyArray<paper.GameObject>) {
+            this.lightDirty = true;
             this.lights.length = 0;
 
             for (const gameObject of gameObjects) {
