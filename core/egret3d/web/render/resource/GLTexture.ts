@@ -1,19 +1,10 @@
 namespace egret3d {
-
-    export const enum TextureFormatEnum {
-        RGBA = 1, // WebGLRenderingContext.RGBA,
-        RGB = 2, // WebGLRenderingContext.RGB,
-        Gray = 3, // WebGLRenderingContext.LUMINANCE,
-        PVRTC4_RGB = 4,
-        PVRTC4_RGBA = 4,
-        PVRTC2_RGB = 4,
-        PVRTC2_RGBA = 4,
-    }
-
-    export interface ITexture {
+    export interface ITexture {//TODO 数据不完整
         texture: WebGLTexture;
         width: number;
         height: number;
+        mipmap: boolean;
+        format: gltf.TextureFormat;
         dispose(): void;
         caclByteLength(): number;
     }
@@ -25,12 +16,16 @@ namespace egret3d {
         public _texture: WebGLTexture;
         protected _width: number;
         protected _height: number;
+        protected _format: gltf.TextureFormat;
+        protected _mipmap: boolean;
 
-        public constructor(name: string = "", width: number = 0, height: number = 0) {
+        public constructor(name: string = "", width: number = 0, height: number = 0, format: gltf.TextureFormat = gltf.TextureFormat.RGBA, mipmap: boolean = false) {
             super(name);
 
             this._width = width;
             this._height = height;
+            this._format = format;
+            this._mipmap = mipmap;
 
             const webgl = WebGLCapabilities.webgl;
             if (webgl) {
@@ -47,6 +42,12 @@ namespace egret3d {
         public get height() {
             return this._height;
         }
+        public get mipmap() {
+            return this._mipmap;
+        }
+        public get format() {
+            return this._format;
+        }
     }
     /**
      * 
@@ -58,9 +59,9 @@ namespace egret3d {
             const width = 1;
             const height = 1;
             const data = new Uint8Array([r, g, b, 255]);
-            const texture = new GLTexture2D(name, width, height, TextureFormatEnum.RGBA);
+            const texture = new GLTexture2D(name, width, height, gltf.TextureFormat.RGBA);
             texture.uploadImage(data, mipmap, linear, true, false);
-            
+
             return texture;
         }
 
@@ -80,19 +81,15 @@ namespace egret3d {
                 }
             }
 
-            const texture = new GLTexture2D(name, width, height, TextureFormatEnum.RGBA);
+            const texture = new GLTexture2D(name, width, height, gltf.TextureFormat.RGBA);
             texture.uploadImage(data, mipmap, linear, true, true);
 
             return texture;
         }
         //
-        protected _mipmap: boolean = false;
-        protected _format: TextureFormatEnum;
         protected _reader: TextureReader;
-        constructor(name: string = "", width: number = 0, height: number = 0, format: TextureFormatEnum = TextureFormatEnum.RGBA) {
-            super(name, width, height);
-            //
-            this._format = format;
+        constructor(name: string = "", width: number = 0, height: number = 0, format: gltf.TextureFormat = gltf.TextureFormat.RGBA, mipmap: boolean = false) {
+            super(name, width, height, format, mipmap);
         }
 
         uploadImage(img: HTMLImageElement | Uint8Array, mipmap: boolean, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false) {
@@ -107,13 +104,13 @@ namespace egret3d {
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
 
-            let formatGL = webgl.RGBA;
-            if (this._format === TextureFormatEnum.RGB) {
-                formatGL = webgl.RGB;
-            }
-            else if (this._format === TextureFormatEnum.Gray) {
-                formatGL = webgl.LUMINANCE;
-            }
+            let formatGL = this._format;
+            // if (this._format === TextureFormatEnum.RGB) {
+            //     formatGL = webgl.RGB;
+            // }
+            // else if (this._format === TextureFormatEnum.Gray) {
+            //     formatGL = webgl.LUMINANCE;
+            // }
             //
             if (ArrayBuffer.isView(img)) {
                 webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, this._width, this._height, 0, formatGL, webgl.UNSIGNED_BYTE, img);
@@ -145,6 +142,8 @@ namespace egret3d {
                 }
             }
 
+            // TEXTURE_MAX_ANISOTROPY_EXT TODO
+
             let wrap_s_param = webgl.CLAMP_TO_EDGE;
             let wrap_t_param = webgl.CLAMP_TO_EDGE;
 
@@ -159,10 +158,10 @@ namespace egret3d {
 
         caclByteLength(): number {
             let pixellen = 1;
-            if (this._format === TextureFormatEnum.RGBA) {
+            if (this._format === gltf.TextureFormat.RGBA) {
                 pixellen = 4;
             }
-            else if (this._format === TextureFormatEnum.RGB) {
+            else if (this._format === gltf.TextureFormat.RGB) {
                 pixellen = 3;
             }
             let len = this.width * this.height * pixellen;
@@ -192,7 +191,7 @@ namespace egret3d {
                 }
                 return this._reader;
             }
-            if (this._format !== TextureFormatEnum.RGBA) {
+            if (this._format !== gltf.TextureFormat.RGBA) {
                 throw new Error("only rgba texture can read");
             }
             if (this._texture === null) {
@@ -259,81 +258,94 @@ namespace egret3d {
         }
     }
 
-    export class WriteableTexture2D implements ITexture {
-        public width: number = 0;
-        public height: number = 0;
-        public format: TextureFormatEnum;
-        public texture: WebGLTexture;
-
-        constructor(format: TextureFormatEnum = TextureFormatEnum.RGBA, width: number, height: number, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false) {
-            const webgl = WebGLCapabilities.webgl;
-            if (!webgl) {
-                return;
-            }
-
-            this.texture = webgl.createTexture()!;
-
-            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
-            webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
-
-            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
-            this.format = format;
-            let formatGL = webgl.RGBA;
-
-            if (format === TextureFormatEnum.RGB) {
-                formatGL = webgl.RGB;
-            }
-            else if (format === TextureFormatEnum.Gray) {
-                formatGL = webgl.LUMINANCE;
-            }
-
-            let data: Uint8Array = null as any;
-            webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, width, height, 0, formatGL, webgl.UNSIGNED_BYTE, data);
-            if (linear) {
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
-            }
-            else {
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
-            }
-            if (repeat) {
-                if (mirroredU) {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.MIRRORED_REPEAT);
-                }
-                else {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.REPEAT);
-                }
-
-                if (mirroredV) {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.MIRRORED_REPEAT);
-                }
-                else {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.REPEAT);
-                }
-            } else {
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
-            }
-        }
-
-        dispose() {
-            if (this.texture) {
-                WebGLCapabilities.webgl!.deleteTexture(this.texture);
-                this.texture = null as any;
-            }
-        }
-
-        caclByteLength(): number {
-            let pixellen = 1;
-            if (this.format === TextureFormatEnum.RGBA) {
-                pixellen = 4;
-            }
-            else if (this.format === TextureFormatEnum.RGB) {
-                pixellen = 3;
-            }
-            const len = this.width * this.height * pixellen;
-            return len;
-        }
+    /**
+    * @deprecated
+    */
+    export const enum TextureFormatEnum {
+        RGBA = 1, // WebGLRenderingContext.RGBA,
+        RGB = 2, // WebGLRenderingContext.RGB,
+        Gray = 3, // WebGLRenderingContext.LUMINANCE,
+        PVRTC4_RGB = 4,
+        PVRTC4_RGBA = 4,
+        PVRTC2_RGB = 4,
+        PVRTC2_RGBA = 4,
     }
+
+    // export class WriteableTexture2D implements ITexture {
+    //     public width: number = 0;
+    //     public height: number = 0;
+    //     public format: gltf.TextureFormat;
+    //     public texture: WebGLTexture;
+
+    //     constructor(format: gltf.TextureFormat = gltf.TextureFormat.RGBA, width: number, height: number, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false) {
+    //         const webgl = WebGLCapabilities.webgl;
+    //         if (!webgl) {
+    //             return;
+    //         }
+
+    //         this.texture = webgl.createTexture()!;
+
+    //         webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
+    //         webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
+
+    //         webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
+    //         this.format = format;
+    //         let formatGL = format;
+
+    //         // if (format === TextureFormatEnum.RGB) {
+    //         //     formatGL = webgl.RGB;
+    //         // }
+    //         // else if (format === TextureFormatEnum.Gray) {
+    //         //     formatGL = webgl.LUMINANCE;
+    //         // }
+
+    //         let data: Uint8Array = null as any;
+    //         webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, width, height, 0, formatGL, webgl.UNSIGNED_BYTE, data);
+    //         if (linear) {
+    //             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
+    //             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
+    //         }
+    //         else {
+    //             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+    //             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
+    //         }
+    //         if (repeat) {
+    //             if (mirroredU) {
+    //                 webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.MIRRORED_REPEAT);
+    //             }
+    //             else {
+    //                 webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.REPEAT);
+    //             }
+
+    //             if (mirroredV) {
+    //                 webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.MIRRORED_REPEAT);
+    //             }
+    //             else {
+    //                 webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.REPEAT);
+    //             }
+    //         } else {
+    //             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
+    //             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
+    //         }
+    //     }
+
+    //     dispose() {
+    //         if (this.texture) {
+    //             WebGLCapabilities.webgl!.deleteTexture(this.texture);
+    //             this.texture = null as any;
+    //         }
+    //     }
+
+    //     caclByteLength(): number {
+    //         let pixellen = 1;
+    //         if (this.format === gltf.TextureFormat.RGBA) {
+    //             pixellen = 4;
+    //         }
+    //         else if (this.format === gltf.TextureFormat.RGB) {
+    //             pixellen = 3;
+    //         }
+    //         const len = this.width * this.height * pixellen;
+    //         return len;
+    //     }
+    // }
 }

@@ -105,11 +105,11 @@ namespace egret3d {
                 const mipmap = data.mipmap;
                 const wrap = data.wrap;
 
-                let _textureFormat = egret3d.TextureFormatEnum.RGBA;
+                let _textureFormat = gltf.TextureFormat.RGBA;
                 if (format == "RGB") {
-                    _textureFormat = egret3d.TextureFormatEnum.RGB;
+                    _textureFormat = gltf.TextureFormat.RGB;
                 } else if (format == "Gray") {
-                    _textureFormat = egret3d.TextureFormatEnum.Gray;
+                    _textureFormat = gltf.TextureFormat.LUMINANCE;
                 }
 
                 let _linear: boolean = true;
@@ -159,7 +159,7 @@ namespace egret3d {
         onLoadStart(host, resource) {
 
             return host.load(resource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
-                const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, egret3d.TextureFormatEnum.RGBA);
+                const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, gltf.TextureFormat.RGBA);
                 texture.uploadImage(bitmapData.source, true, true, false, true);
                 paper.Asset.register(texture);
                 return texture;

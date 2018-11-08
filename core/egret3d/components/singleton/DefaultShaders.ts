@@ -41,7 +41,7 @@ namespace egret3d {
         public static SHADOW: Shader;
         public static SPRITE: Shader;
 
-        public static COPY:Shader;
+        public static COPY: Shader;
 
         private _createShader(name: string, config: GLTF, renderQueue?: number, states?: gltf.States, defines?: string[]) {
             const shader = new Shader(config, name);
@@ -168,7 +168,7 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.SPRITE = this._createShader("builtin/sprite.shader.json", egret3d.ShaderLib.sprite as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);
 
-            helpMaterial.clearStates().setDepth(false, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+            helpMaterial.clearStates().setDepth(false, false);
             DefaultShaders.COPY = this._createShader("builtin/copy.shader.json", egret3d.ShaderLib.copy as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);
             // // TODO
             // helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);

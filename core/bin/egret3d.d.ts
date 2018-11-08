@@ -7369,6 +7369,13 @@ declare namespace egret3d.particle {
     }
 }
 declare namespace egret3d {
+    enum ToneMapping {
+        None = 0,
+        LinearToneMapping = 1,
+        ReinhardToneMapping = 2,
+        Uncharted2ToneMapping = 3,
+        CineonToneMapping = 4,
+    }
     /**
      * @private
      */
@@ -7401,6 +7408,9 @@ declare namespace egret3d {
         textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
         oes_standard_derivatives: boolean;
         gl_oes_standard_derivatives: boolean;
+        toneMapping: ToneMapping;
+        toneMappingExposure: number;
+        toneMappingWhitePoint: number;
         initialize(config: RunEgretOptions): void;
     }
     /**
@@ -7421,6 +7431,7 @@ declare namespace egret3d {
         useProgram(program: GlProgram): boolean;
         getProgram(material: Material, technique: gltf.Technique, defines: string): GlProgram;
         clearBuffer(bufferBit: gltf.BufferBit, clearColor?: Readonly<IColor>): void;
+        copyFramebufferToTexture(screenPostion: Vector2, target: ITexture, level?: number): void;
     }
 }
 declare namespace egret3d {
@@ -11494,29 +11505,26 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    const enum TextureFormatEnum {
-        RGBA = 1,
-        RGB = 2,
-        Gray = 3,
-        PVRTC4_RGB = 4,
-        PVRTC4_RGBA = 4,
-        PVRTC2_RGB = 4,
-        PVRTC2_RGBA = 4,
-    }
     interface ITexture {
         texture: WebGLTexture;
         width: number;
         height: number;
+        mipmap: boolean;
+        format: gltf.TextureFormat;
         dispose(): void;
         caclByteLength(): number;
     }
     abstract class GLTexture extends egret3d.Texture implements ITexture {
         protected _width: number;
         protected _height: number;
-        constructor(name?: string, width?: number, height?: number);
+        protected _format: gltf.TextureFormat;
+        protected _mipmap: boolean;
+        constructor(name?: string, width?: number, height?: number, format?: gltf.TextureFormat, mipmap?: boolean);
         readonly texture: WebGLTexture;
         readonly width: number;
         readonly height: number;
+        readonly mipmap: boolean;
+        readonly format: gltf.TextureFormat;
     }
     /**
      *
@@ -11524,10 +11532,8 @@ declare namespace egret3d {
     class GLTexture2D extends GLTexture {
         static createColorTexture(name: string, r: number, g: number, b: number): GLTexture2D;
         static createGridTexture(name: string): GLTexture2D;
-        protected _mipmap: boolean;
-        protected _format: TextureFormatEnum;
         protected _reader: TextureReader;
-        constructor(name?: string, width?: number, height?: number, format?: TextureFormatEnum);
+        constructor(name?: string, width?: number, height?: number, format?: gltf.TextureFormat, mipmap?: boolean);
         uploadImage(img: HTMLImageElement | Uint8Array, mipmap: boolean, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
         caclByteLength(): number;
         dispose(): boolean;
@@ -11541,14 +11547,17 @@ declare namespace egret3d {
         constructor(texRGBA: WebGLTexture, width: number, height: number, gray?: boolean);
         getPixel(u: number, v: number): any;
     }
-    class WriteableTexture2D implements ITexture {
-        width: number;
-        height: number;
-        format: TextureFormatEnum;
-        texture: WebGLTexture;
-        constructor(format: TextureFormatEnum, width: number, height: number, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean);
-        dispose(): void;
-        caclByteLength(): number;
+    /**
+    * @deprecated
+    */
+    const enum TextureFormatEnum {
+        RGBA = 1,
+        RGB = 2,
+        Gray = 3,
+        PVRTC4_RGB = 4,
+        PVRTC4_RGBA = 4,
+        PVRTC2_RGB = 4,
+        PVRTC2_RGBA = 4,
     }
 }
 declare namespace egret3d {
