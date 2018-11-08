@@ -6,8 +6,7 @@ namespace egret3d {
 
         private readonly _camera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
         private readonly _drawCall: DrawCall = DrawCall.create();
-        private readonly _defaultMaterial: Material = egret3d.DefaultMaterials.MESH_BASIC.clone()
-            .setDepth(false, false); // TODO copy shader
+        private readonly _copyMaterial: Material = new Material(egret3d.DefaultShaders.COPY);//TODO全局唯一?
         private readonly _webglSystem = paper.SystemManager.getInstance().getSystem(web.WebGLRenderSystem);   //TODO
         private readonly _webglState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
 
@@ -45,7 +44,7 @@ namespace egret3d {
 
         public blit(src: Texture, mat: Material | null = null, dest: BaseRenderTarget | null = null) {
             if (!mat) {
-                mat = this._defaultMaterial;
+                mat = this._copyMaterial;
                 mat.setTexture(src);
             }
             const camera = this._camera;
@@ -54,6 +53,8 @@ namespace egret3d {
             webglSystem._viewport(camera.viewport, dest);
             webglState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, egret3d.Color.WHITE);
             webglSystem._draw(camera.context, this._drawCall, mat);
+            const webgl = WebGLCapabilities.webgl;
+            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
 
         public clear() {
@@ -84,7 +85,7 @@ namespace egret3d {
         }
     }
 
-    export class MotionBlueEffect extends CameraPostProcessing {
+    export class MotionBlurEffect extends CameraPostProcessing {
         private _material: Material;
         private _velocityFactor: number = 1.0;
         private _samples: number = 20;

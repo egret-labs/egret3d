@@ -809,17 +809,25 @@ declare namespace egret3d {
          * 将该向量和目标向量插值的结果写入该向量。
          * - v = v * (1 - t) + to * t
          * - 插值因子不会被限制在 0 ~ 1。
-         * @param t 插值因子。
          * @param to 目标向量。
+         * @param t 插值因子。
          */
-        lerp(t: number, to: Readonly<IVector3>): this;
+        lerp(to: Readonly<IVector3>, t: number): this;
         /**
          * 将两个向量插值的结果写入该向量。
          * - v = from * (1 - t) + to * t
          * - 插值因子不会被限制在 0 ~ 1。
-         * @param t 插值因子。
          * @param from 起始向量。
          * @param to 目标向量。
+         * @param t 插值因子。
+         */
+        lerp(from: Readonly<IVector3>, to: Readonly<IVector3>, t: number): this;
+        /**
+         * @deprecated
+         */
+        lerp(t: number, to: Readonly<IVector3>): this;
+        /**
+         * @deprecated
          */
         lerp(t: number, from: Readonly<IVector3>, to: Readonly<IVector3>): this;
         /**
@@ -1131,17 +1139,25 @@ declare namespace egret3d {
          * 将该向量和目标向量插值的结果写入该向量。
          * - v = v * (1 - t) + to * t
          * - 插值因子不会被限制在 0 ~ 1。
-         * @param t 插值因子。
          * @param to 目标矩阵。
+         * @param t 插值因子。
          */
-        lerp(t: number, to: Readonly<IVector4>): this;
+        lerp(to: Readonly<IVector4>, t: number): this;
         /**
          * 将两个向量插值的结果写入该向量。
          * - v = from * (1 - t) + to * t
          * - 插值因子不会被限制在 0 ~ 1。
-         * @param t 插值因子。
          * @param from 起始矩阵。
          * @param to 目标矩阵。
+         * @param t 插值因子。
+         */
+        lerp(from: Readonly<IVector4>, to: Readonly<IVector4>, t: number): this;
+        /**
+         * @deprecated
+         */
+        lerp(t: number, to: Readonly<IVector4>): this;
+        /**
+         * @deprecated
          */
         lerp(t: number, from: Readonly<IVector4>, to: Readonly<IVector4>): this;
         /**
@@ -1389,19 +1405,19 @@ declare namespace egret3d {
          * 将该矩阵和目标矩阵插值的结果写入该矩阵。
          * - v = v * (1 - t) + to * t
          * - 插值因子不会被限制在 0 ~ 1。
-         * @param t 插值因子。
          * @param to 目标矩阵。
+         * @param t 插值因子。
          */
-        lerp(t: number, to: Readonly<Matrix4>): this;
+        lerp(to: Readonly<Matrix4>, t: number): this;
         /**
          * 将两个矩阵插值的结果写入该矩阵。
          * - v = from * (1 - t) + to * t
          * - 插值因子不会被限制在 0 ~ 1。
-         * @param t 插值因子。
          * @param from 起始矩阵。
          * @param to 目标矩阵。
+         * @param t 插值因子。
          */
-        lerp(t: number, from: Readonly<Matrix4>, to: Readonly<Matrix4>): this;
+        lerp(from: Readonly<Matrix4>, to: Readonly<Matrix4>, t: number): this;
         /**
          * 设置该矩阵，使其 Z 轴正方向与起始点到目标点的方向相一致。
          * - 矩阵的缩放值将被覆盖。
@@ -1671,7 +1687,7 @@ declare namespace egret3d {
         extensions: {
             paper?: {
                 mipmap?: boolean;
-                format?: 6407 | 6408 | 6409;
+                format?: gltf.TextureFormat;
                 pixelSize?: number;
                 width?: number;
                 height?: number;
@@ -1965,19 +1981,33 @@ declare namespace gltf {
         BLEND = 3042,
         CULL_FACE = 2884,
         DEPTH_TEST = 2929,
+        STENCIL_TEST = 2960,
         POLYGON_OFFSET_FILL = 32823,
         SAMPLE_ALPHA_TO_COVERAGE = 32926,
+    }
+    const enum BufferBit {
+        DEPTH_BUFFER_BIT = 256,
+        STENCIL_BUFFER_BIT = 1024,
+        COLOR_BUFFER_BIT = 16384,
     }
     const enum BlendMode {
         None = 0,
         Blend = 1,
         Blend_PreMultiply = 2,
-        Add = 3,
-        Add_PreMultiply = 4,
+        Additive = 3,
+        Additive_PreMultiply = 4,
         Subtractive = 5,
         Subtractive_PreMultiply = 6,
         Multiply = 7,
         Multiply_PreMultiply = 8,
+        /**
+         * @deprecated
+         */
+        Add = 3,
+        /**
+         * @deprecated
+         */
+        Add_PreMultiply = 4,
     }
     const enum BlendEquation {
         FUNC_ADD = 32774,
@@ -2079,7 +2109,7 @@ declare namespace gltf {
         _RESOLUTION = "_RESOLUTION",
         _VIEWPROJECTION = "_VIEWPROJECTION",
         _CAMERA_POS = "_CAMERA_POS",
-        _CAMERA_UP = "CAMERA_UP",
+        _CAMERA_UP = "_CAMERA_UP",
         _CAMERA_FORWARD = "_CAMERA_FORWARD",
         _DIRECTLIGHTS = "_DIRECTLIGHTS",
         _POINTLIGHTS = "_POINTLIGHTS",
@@ -2798,7 +2828,7 @@ declare namespace gltf {
         /**
          * The shader stage.
          */
-        type: 35632 | 35633;
+        type: ShaderStage;
         /**
          * The index of the bufferView that contains the GLSL shader source. Use this instead of the shader's uri property.
          */
@@ -2835,7 +2865,7 @@ declare namespace gltf {
         /**
          * The uniform type.
          */
-        type: 5124 | 5126 | 35664 | 35665 | 35666 | 35667 | 35668 | 35669 | 35670 | 35671 | 35672 | 35673 | 35674 | 35675 | 35676 | 35678 | 35680;
+        type: UniformType;
         /**
          * Identifies a uniform with a well-known meaning.
          */
@@ -2950,11 +2980,11 @@ declare namespace gltf {
         /**
          * Integer values passed to `blendEquationSeparate()`.
          */
-        blendEquationSeparate?: (32774 | 32778 | 32779)[];
+        blendEquationSeparate?: BlendEquation[];
         /**
          * Integer values passed to `blendFuncSeparate()`.
          */
-        blendFuncSeparate?: (0 | 1 | 768 | 769 | 774 | 775 | 770 | 771 | 772 | 773 | 32769 | 32770 | 32771 | 32772 | 776)[];
+        blendFuncSeparate?: BlendFactor[];
         /**
          * Boolean values passed to `colorMask()`. [red, green, blue, alpha].
          */
@@ -2962,11 +2992,11 @@ declare namespace gltf {
         /**
          * Integer value passed to `cullFace()`.
          */
-        cullFace?: (1028 | 1029 | 1032)[];
+        cullFace?: CullFace[];
         /**
          * Integer values passed to `depthFunc()`.
          */
-        depthFunc?: (512 | 513 | 515 | 514 | 516 | 517 | 518 | 519)[];
+        depthFunc?: DepthFunc[];
         /**
          * Boolean value passed to `depthMask()`.
          */
@@ -2978,7 +3008,7 @@ declare namespace gltf {
         /**
          * Integer value passed to `frontFace()`.
          */
-        frontFace?: (2304 | 2305)[];
+        frontFace?: FrontFace[];
         /**
          * Floating-point value passed to `lineWidth()`.
          */
@@ -2998,7 +3028,7 @@ declare namespace gltf {
         /**
          * WebGL states to enable.
          */
-        enable?: (3042 | 2884 | 2929 | 32823 | 32926)[];
+        enable?: EnableState[];
         /**
          * Arguments for fixed-function rendering state functions other than `enable()`/`disable()`.
          */
@@ -3049,6 +3079,11 @@ declare namespace egret3d {
      * 颜色。
      */
     class Color extends paper.BaseRelease<Color> implements IColor, paper.ICCS<Color>, paper.ISerializable {
+        /**
+         * 所有颜色通道均为零的颜色。
+         * - 请注意不要修改该值。
+         */
+        static readonly ZERO: Readonly<Color>;
         /**
          * 黑色。
          * - 请注意不要修改该值。
@@ -3115,13 +3150,13 @@ declare namespace egret3d {
         serialize(): number[];
         deserialize(value: Readonly<[number, number, number, number]>): this;
         clone(): Color;
-        copy(value: Readonly<Color>): this;
+        copy(value: Readonly<IColor>): this;
         set(r: number, g: number, b: number, a?: number): this;
         fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
         fromHex(hex: uint): this;
-        multiply(valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
-        scale(value: number, source?: Readonly<Color>): this;
-        lerp(t: number, valueA: Readonly<Color>, valueB?: Readonly<Color>): this;
+        multiply(valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this;
+        scale(value: number, source?: Readonly<IColor>): this;
+        lerp(t: number, valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this;
     }
 }
 declare namespace egret3d {
@@ -3722,9 +3757,21 @@ declare namespace paper {
     }
 }
 declare namespace egret3d {
+    /**
+     *
+     */
     namespace math {
+        /**
+         *
+         */
         function euclideanModulo(n: number, m: number): number;
+        /**
+         *
+         */
         function clamp(v: number, min?: number, max?: number): number;
+        /**
+         *
+         */
         function lerp(from: number, to: number, t: number): number;
     }
     /**
@@ -3749,8 +3796,6 @@ declare namespace egret3d {
     /**
      * @deprecated
      */
-    function floatClamp(v: number, min?: number, max?: number): number;
-    function numberLerp(fromV: number, toV: number, v: number): number;
     function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3;
     function triangleIntersectsPlane(): void;
     function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<Box>): boolean;
@@ -3760,18 +3805,6 @@ declare namespace egret3d {
     function aabbIntersectsAABB(valueA: Readonly<Box>, valueB: Readonly<Box>): boolean;
     function sphereIntersectsSphere(valueA: Readonly<Sphere>, valueB: Readonly<Sphere>): boolean;
     function isPowerOfTwo(value: number): boolean;
-    /**
-     * @deprecated
-     */
-    const RAD_DEG: number;
-    /**
-     * @deprecated
-     */
-    const DEG_RAD: number;
-    /**
-     * @deprecated
-     */
-    const EPSILON = 2.220446049250313e-16;
 }
 declare namespace egret3d {
     /**
@@ -4970,6 +5003,10 @@ declare namespace egret3d {
         static LINE_Z: Mesh;
         static CIRCLE_LINE: Mesh;
         static CUBE_LINE: Mesh;
+        /**
+         * 后期渲染使用的网格。
+         */
+        static FULLSCREEN_QUAD: Mesh;
         initialize(): void;
         /**
          * 创建带有指定网格资源的实体。
@@ -5048,6 +5085,7 @@ declare namespace egret3d {
         static POINTS: Shader;
         static SHADOW: Shader;
         static SPRITE: Shader;
+        static COPY: Shader;
         private _createShader(name, config, renderQueue?, states?, defines?);
         initialize(): void;
     }
@@ -5541,7 +5579,7 @@ declare namespace egret3d {
         /**
          * 通过键名称创建或获取一个按键实例。
          */
-        getKey(code: string | number): Key;
+        getKey(code: KeyCode | number): Key;
         /**
          * 设备最大可支持的多点触摸数量。
          */
@@ -5827,7 +5865,7 @@ declare namespace egret3d {
         private _currentCamera;
         private readonly _camera;
         private readonly _drawCall;
-        private readonly _defaultMaterial;
+        private readonly _copyMaterial;
         private readonly _webglSystem;
         private readonly _webglState;
         constructor(camera: Camera);
@@ -5843,10 +5881,13 @@ declare namespace egret3d {
     interface ICameraPostProcessing {
         render(context: PostProcessRenderContext): void;
     }
+    /**
+     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
+     */
     abstract class CameraPostProcessing extends paper.BaseRelease<CameraPostProcessing> implements ICameraPostProcessing {
         render(context: PostProcessRenderContext): void;
     }
-    class MotionBlueEffect extends CameraPostProcessing {
+    class MotionBlurEffect extends CameraPostProcessing {
         private _material;
         private _velocityFactor;
         private _samples;
@@ -7366,6 +7407,7 @@ declare namespace egret3d {
      * @private
      */
     class WebGLRenderState extends paper.SingletonComponent {
+        readonly clearColor: Color;
         private readonly _stateEnables;
         private readonly _programs;
         private readonly _vsShaders;
@@ -7378,7 +7420,7 @@ declare namespace egret3d {
         updateState(state: gltf.States | null): void;
         useProgram(program: GlProgram): boolean;
         getProgram(material: Material, technique: gltf.Technique, defines: string): GlProgram;
-        clear(clearOptColor: boolean, clearOptDepath: boolean, clearColor: Color): void;
+        clearBuffer(bufferBit: gltf.BufferBit, clearColor?: Readonly<IColor>): void;
     }
 }
 declare namespace egret3d {
@@ -7911,27 +7953,27 @@ declare namespace egret3d {
         clone(): Material;
         /**
          * 为该材质添加指定的 define。
-         * @param value define 字符串。
+         * @param defineString define 字符串。
          */
-        addDefine(value: string): this;
+        addDefine(defineString: string, value?: number): this;
         /**
          * 从该材质移除指定的 define。
-         * @param value define 字符串。
+         * @param defineString define 字符串。
          */
-        removeDefine(value: string): this;
+        removeDefine(defineString: string, value?: number): this;
         setBoolean(id: string, value: boolean): this;
         setInt(id: string, value: number): this;
-        setIntv(id: string, value: Float32Array): this;
+        setIntv(id: string, value: Float32Array | ReadonlyArray<number>): this;
         setFloat(id: string, value: number): this;
-        setFloatv(id: string, value: Float32Array): this;
+        setFloatv(id: string, value: Float32Array | ReadonlyArray<number>): this;
         setVector2(id: string, value: Readonly<IVector2>): this;
-        setVector2v(id: string, value: Float32Array): this;
+        setVector2v(id: string, value: Float32Array | ReadonlyArray<number>): this;
         setVector3(id: string, value: Readonly<IVector3>): this;
-        setVector3v(id: string, value: Float32Array): this;
+        setVector3v(id: string, value: Float32Array | ReadonlyArray<number>): this;
         setVector4(id: string, value: Readonly<IVector4>): this;
-        setVector4v(id: string, value: Float32Array | [number, number, number, number]): this;
+        setVector4v(id: string, value: Float32Array | ReadonlyArray<number>): this;
         setMatrix(id: string, value: Readonly<Matrix4>): this;
-        setMatrixv(id: string, value: Float32Array): this;
+        setMatrixv(id: string, value: Float32Array | ReadonlyArray<number>): this;
         /**
          * 设置该材质的混合模式。
          * @param blend 混合模式。
@@ -7952,6 +7994,10 @@ declare namespace egret3d {
          * @param depthWrite 深度缓冲。
          */
         setDepth(depthTest: boolean, depthWrite: boolean): this;
+        /**
+         *
+         */
+        setStencil(value: boolean): this;
         /**
          * 清除该材质的所有图形 API 状态。
          */
@@ -7985,9 +8031,9 @@ declare namespace egret3d {
         getUVTransform(out?: Matrix3): Matrix3;
         /**
          * 设置该材质的 UV 变换矩阵。
-         * @param out 矩阵。
+         * @param matrix 矩阵。
          */
-        setUVTTransform(value: Readonly<Matrix3>): this;
+        setUVTTransform(matrix: Readonly<Matrix3>): this;
         /**
          * 获取该材质的主贴图。
          */
@@ -8035,6 +8081,120 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d.ShaderLib {
+    const copy: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {
+                        "position": {
+                            "semantic": string;
+                        };
+                        "normal": {
+                            "semantic": string;
+                        };
+                        "uv": {
+                            "semantic": string;
+                        };
+                        "color": {
+                            "semantic": string;
+                        };
+                        "morphTarget0": {
+                            "semantic": string;
+                        };
+                        "morphTarget1": {
+                            "semantic": string;
+                        };
+                        "morphTarget2": {
+                            "semantic": string;
+                        };
+                        "morphTarget3": {
+                            "semantic": string;
+                        };
+                        "morphNormal0": {
+                            "semantic": string;
+                        };
+                        "morphNormal1": {
+                            "semantic": string;
+                        };
+                        "morphNormal2": {
+                            "semantic": string;
+                        };
+                        "morphNormal3": {
+                            "semantic": string;
+                        };
+                        "morphTarget4": {
+                            "semantic": string;
+                        };
+                        "morphTarget5": {
+                            "semantic": string;
+                        };
+                        "morphTarget6": {
+                            "semantic": string;
+                        };
+                        "morphTarget7": {
+                            "semantic": string;
+                        };
+                        "skinIndex": {
+                            "semantic": string;
+                        };
+                        "skinWeight": {
+                            "semantic": string;
+                        };
+                    };
+                    "uniforms": {
+                        "modelMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "modelViewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "projectionMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "viewMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "normalMatrix": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "cameraPosition": {
+                            "type": number;
+                            "semantic": string;
+                        };
+                        "opacity": {
+                            "type": number;
+                            "value": number;
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                    };
+                    "states": {
+                        "enable": any[];
+                        "functions": {};
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+    };
     const cube: {
         "version": string;
         "asset": {
@@ -9655,7 +9815,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "normalScale": {
                             "type": number;
-                            "value": number[];
                         };
                         "specularMap": {
                             "type": number;
@@ -9960,7 +10119,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "normalScale": {
                             "type": number;
-                            "value": number[];
                         };
                         "roughnessMap": {
                             "type": number;
@@ -10248,7 +10406,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "normalScale": {
                             "type": number;
-                            "value": number[];
                         };
                     };
                     "states": {
@@ -11067,214 +11224,6 @@ declare namespace egret3d.ShaderLib {
         "extensionsRequired": string[];
         "extensionsUsed": string[];
     };
-    const test: {
-        "version": string;
-        "asset": {
-            "version": string;
-        };
-        "extensions": {
-            "KHR_techniques_webgl": {
-                "shaders": {
-                    "name": string;
-                    "type": number;
-                    "uri": string;
-                }[];
-                "techniques": {
-                    "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                        "uv2": {
-                            "semantic": string;
-                        };
-                    };
-                    "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "uvTransform": {
-                            "type": number;
-                            "value": number[];
-                        };
-                        "lightMapScaleOffset": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "refractionRatio": {
-                            "type": number;
-                            "value": any[];
-                        };
-                        "morphTargetInfluences[0]": {
-                            "type": number;
-                        };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
-                            "type": number;
-                        };
-                        "boneMatrices[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "logDepthBufFC": {
-                            "type": number;
-                        };
-                        "diffuse": {
-                            "type": number;
-                            "value": number[];
-                        };
-                        "opacity": {
-                            "type": number;
-                            "value": number;
-                        };
-                        "map": {
-                            "type": number;
-                        };
-                        "alphaMap": {
-                            "type": number;
-                        };
-                        "aoMap": {
-                            "type": number;
-                        };
-                        "aoMapIntensity": {
-                            "type": number;
-                            "value": number;
-                        };
-                        "lightMap": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "lightMapIntensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "reflectivity": {
-                            "type": number;
-                            "value": any[];
-                        };
-                        "envMapIntensity": {
-                            "type": number;
-                            "value": number;
-                        };
-                        "envMap": {
-                            "type": number;
-                        };
-                        "flipEnvMap": {
-                            "type": number;
-                            "value": number;
-                        };
-                        "maxMipLevel": {
-                            "type": number;
-                            "value": any[];
-                        };
-                        "fogColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogDensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogNear": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogFar": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "specularMap": {
-                            "type": number;
-                        };
-                        "clippingPlanes[0]": {
-                            "type": number;
-                        };
-                    };
-                    "states": {
-                        "enable": any[];
-                        "functions": {};
-                    };
-                }[];
-            };
-            "paper": {};
-        };
-        "extensionsRequired": string[];
-        "extensionsUsed": string[];
-    };
 }
 declare namespace egret3d.ShaderChunk {
     const alphamap_fragment = "#ifdef USE_ALPHAMAP\n\n diffuseColor.a *= texture2D( alphaMap, vUv ).g;\n\n#endif\n";
@@ -11756,6 +11705,26 @@ interface Window {
     egret3d: any;
 }
 declare namespace egret3d {
+    /**
+     * @deprecated
+     */
+    const RAD_DEG: Const;
+    /**
+     * @deprecated
+     */
+    const DEG_RAD: Const;
+    /**
+     * @deprecated
+     */
+    const EPSILON: Const;
+    /**
+     * @deprecated
+     */
+    const floatClamp: typeof math.clamp;
+    /**
+     * @deprecated
+     */
+    const numberLerp: typeof math.lerp;
     /**
      * @deprecated
      */
