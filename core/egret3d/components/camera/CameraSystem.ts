@@ -17,6 +17,7 @@ namespace egret3d {
         private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
 
         public onAwake() {
+            this._lightCamera.enabled = false; // Disable camera.
             this._lightCamera.hideFlags = paper.HideFlags.HideAndDontSave;
         }
 

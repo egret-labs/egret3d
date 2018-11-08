@@ -52,9 +52,9 @@ namespace paper {
          * 系统时间。（以毫秒为单位）
          */
         public get now(): uint {
-            if (window.performance) {
-                return window.performance.now();
-            }
+            // if (window.performance) {
+            //     return window.performance.now();
+            // }
 
             if (Date.now) {
                 return Date.now();
