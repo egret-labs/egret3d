@@ -335,6 +335,11 @@ declare namespace paper.editor {
         static readonly activeEditorModel: EditorModel;
         private static setActiveModel(model);
         private static activeScene(scene);
+        /**
+         * 定位对象到场景中心
+         * @param target 目标
+         */
+        static locateGambeObject(target: GameObject): void;
         private static currentEditInfo;
         /**
          * 编辑场景
