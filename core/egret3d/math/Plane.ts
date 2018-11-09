@@ -61,8 +61,8 @@ namespace egret3d {
             return this;
         }
 
-        public fromPoint(value: Readonly<IVector3>, normal: Vector3 = Vector3.UP) {
-            this.constant = -normal.dot(value);
+        public fromPoint(point: Readonly<IVector3>, normal: Vector3 = Vector3.UP) {
+            this.constant = -normal.dot(point);
             this.normal.copy(normal);
 
             return this;
@@ -98,6 +98,18 @@ namespace egret3d {
             return this;
         }
 
+        public applyMatrix(matrix: Readonly<Matrix4>, normalMatrix?: Readonly<Matrix3>) {
+            if (!normalMatrix) {
+                normalMatrix = helpMatrix3A.getNormalMatrix(matrix);
+            }
+
+            const referencePoint = this.getCoplanarPoint(helpVector3A).applyMatrix(matrix);
+            const normal = this.normal.applyMatrix3(normalMatrix).normalize();
+            this.constant = -referencePoint.dot(normal);
+
+            return this;
+        }
+
         public getDistance(value: Readonly<IVector3>) {
             return this.normal.dot(value) + this.constant;
         }
@@ -108,6 +120,14 @@ namespace egret3d {
             }
 
             return output.multiplyScalar(-this.getDistance(point), this.normal).add(point);
+        }
+
+        public getCoplanarPoint(output?: Vector3) {
+            if (!output) {
+                output = Vector3.create();
+            }
+
+            return output.copy(this.normal).multiplyScalar(-this.constant);
         }
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {

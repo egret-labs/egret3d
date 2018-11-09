@@ -135,6 +135,19 @@ namespace egret3d {
             return this;
         }
 
+        public fromMatrixPosition(matrix: Readonly<Matrix4>): this {
+            const array = matrix.rawData;
+            this.x = array[12];
+            this.y = array[13];
+            this.z = array[14];
+
+            return this.fromArray(matrix.rawData, 12);
+        }
+
+        public fromMatrixColumn(matrix: Readonly<Matrix4>, index: 0 | 1 | 2): this {
+            return this.fromArray(matrix.rawData, index * 4);
+        }
+
         public clear() {
             this.x = 0;
             this.y = 0;

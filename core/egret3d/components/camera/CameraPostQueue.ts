@@ -35,14 +35,11 @@ namespace egret3d {
             const backupRenderTarget = renderState.renderTarget;
             this._drawCall.material = material;
 
-            if (dest) {
-                renderState.updateRenderTarget(dest);
-            }
-
-            renderState.updateViewport(postProcessingCamera.viewport, dest);
+            renderState.updateViewport(postProcessingCamera.viewport, dest || backupRenderTarget);
             renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, egret3d.Color.WHITE);
             renderState.draw(postProcessingCamera, this._drawCall);
-            renderState.updateRenderTarget(backupRenderTarget);
+            
+            // renderState.updateViewport(postProcessingCamera.viewport, backupRenderTarget);
         }
 
         public clear() {

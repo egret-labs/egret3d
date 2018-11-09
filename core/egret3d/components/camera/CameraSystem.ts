@@ -42,7 +42,6 @@ namespace egret3d {
         public onUpdate(deltaTime: number) {
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
             const cameras = cameraAndLightCollecter.cameras;
-            cameraAndLightCollecter.lightDirty = false;
 
             if (cameras.length > 0) {
                 cameraAndLightCollecter.sortCameras();
@@ -53,6 +52,10 @@ namespace egret3d {
             }
 
             this._drawCallCollecter._update();
+        }
+
+        public onLateUpdate() {
+            this._cameraAndLightCollecter.lightDirty = false;
         }
     }
 }

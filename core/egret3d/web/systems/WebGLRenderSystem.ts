@@ -59,7 +59,6 @@ namespace egret3d.web {
             const renderState = this._renderState;
             const drawCallCollecter = this._drawCallCollecter;
             renderState.updateViewport(camera.viewport, renderTarget);
-            renderState.updateRenderTarget(renderTarget);
             let bufferBit = gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT;
             if (!camera.clearOption_Depth) {
                 bufferBit &= ~gltf.BufferBit.DEPTH_BUFFER_BIT;
@@ -484,8 +483,7 @@ namespace egret3d.web {
         }
 
         public onUpdate() {
-            const webgl = WebGLCapabilities.webgl;
-            if (!webgl) {
+            if (!WebGLCapabilities.webgl) {
                 return;
             }
 
