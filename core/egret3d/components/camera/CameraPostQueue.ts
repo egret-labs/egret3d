@@ -4,7 +4,6 @@ namespace egret3d {
         private readonly _postProcessingCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera); // TODO 后期渲染专用相机
         private readonly _drawCall: DrawCall = DrawCall.create();
         private readonly _copyMaterial: Material = new Material(egret3d.DefaultShaders.COPY);//TODO全局唯一?
-        private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
 
         private _fullScreenRT: BaseRenderTarget = null!;
         /**
@@ -31,14 +30,14 @@ namespace egret3d {
             }
 
             const postProcessingCamera = this._postProcessingCamera;
-            const renderState = this._renderState;
+            const renderState = paper.GameObject.globalGameObject.getComponent(WebGLRenderState)!;
             const backupRenderTarget = renderState.renderTarget;
             this._drawCall.material = material;
 
             renderState.updateViewport(postProcessingCamera.viewport, dest || backupRenderTarget);
             renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, egret3d.Color.WHITE);
             renderState.draw(postProcessingCamera, this._drawCall);
-            
+
             // renderState.updateViewport(postProcessingCamera.viewport, backupRenderTarget);
         }
 
@@ -111,7 +110,7 @@ namespace egret3d {
             material.setTexture("tDiffuse", context.fullScreenRT);
             material.setTexture("tColor", context.fullScreenRT);
 
-            material.setMatrix("viewProjectionInverseMatrix", camera.worldToClipMatrix);
+            material.setMatrix("viewProjectionInverseMatrix", worldToClipMatrix);
             material.setMatrix("previousViewProjectionMatrix", this._clipToWorldMatrix);
 
             context.blit(context.fullScreenRT, this._material);

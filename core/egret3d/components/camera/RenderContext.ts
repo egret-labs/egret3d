@@ -70,6 +70,104 @@ namespace egret3d {
         public camera: Camera = null!;
         public drawCall: DrawCall = null!;
 
+        /**
+         * 此帧的非透明绘制信息列表。
+         * - 已进行视锥剔除的。
+         */
+        public readonly opaqueCalls: DrawCall[] = [];
+        /**
+         * 此帧的透明绘制信息列表。
+         * - 已进行视锥剔除的。
+         */
+        public readonly transparentCalls: DrawCall[] = [];
+        /**
+         * 此帧的阴影绘制信息列表。
+         * - 已进行视锥剔除的。
+         */
+        public readonly shadowCalls: DrawCall[] = [];
+
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
+        
+        /**
+         * 所有非透明的, 按照从近到远排序
+         */
+        private _sortOpaque(a: DrawCall, b: DrawCall) {
+            const aMat = a.material;
+            const bMat = b.material;
+            if (aMat.renderQueue !== bMat.renderQueue) {
+                return aMat.renderQueue - bMat.renderQueue;
+            }
+            else if (aMat._glTFTechnique.program !== bMat._glTFTechnique.program) {
+                return aMat._glTFTechnique.program! - bMat._glTFTechnique.program!;
+            }
+            else if (aMat._id !== bMat._id) {
+                return aMat._id - bMat._id;
+            }
+            else {
+                return a.zdist - b.zdist;
+            }
+        }
+        /**
+         * 所有透明的，按照从远到近排序
+         */
+        private _sortFromFarToNear(a: DrawCall, b: DrawCall) {
+            if (a.material.renderQueue === b.material.renderQueue) {
+                return b.zdist - a.zdist;
+            }
+            else {
+                return a.material.renderQueue - b.material.renderQueue;
+            }
+        }
+
+        /**
+         * TODO
+         */
+        public shadowFrustumCulling(camera: Camera) {
+            this.shadowCalls.length = 0;
+
+            for (const drawCall of this._drawCallCollecter.drawCalls) {
+                const renderer = drawCall.renderer;
+                if (
+                    renderer.castShadows &&
+                    (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
+                    (!renderer.frustumCulled || camera.testFrustumCulling(renderer))
+                ) {
+                    this.shadowCalls.push(drawCall);
+                }
+            }
+
+            this.shadowCalls.sort(this._sortFromFarToNear);
+        }
+        /**
+         * TODO
+         */
+        public frustumCulling(camera: Camera) {
+            const cameraPosition = camera.gameObject.transform.position;
+            this.opaqueCalls.length = 0;
+            this.transparentCalls.length = 0;
+
+            for (const drawCall of this._drawCallCollecter.drawCalls) {
+                const renderer = drawCall.renderer;
+                if (
+                    (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
+                    (!renderer.frustumCulled || camera.testFrustumCulling(renderer))
+                ) {
+                    // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
+                    if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent) {
+                        this.transparentCalls.push(drawCall);
+                    }
+                    else {
+                        this.opaqueCalls.push(drawCall);
+                    }
+
+                    drawCall.zdist = renderer.gameObject.transform.position.getDistance(cameraPosition);
+                }
+            }
+
+            this.opaqueCalls.sort(this._sortOpaque);
+            this.transparentCalls.sort(this._sortFromFarToNear);
+        }
+
         public updateCameraTransform(camera: Camera, matrix?: Matrix4) {
             const rawData = (matrix || camera.gameObject.transform.localToWorldMatrix).rawData;
             this.camera = camera;

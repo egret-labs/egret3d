@@ -217,9 +217,9 @@ namespace egret3d {
                 input = this;
             }
 
-            this.x = input.x * -1.0;
-            this.y = input.y * -1.0;
-            this.z = input.z * -1.0;
+            this.x = -input.x;
+            this.y = -input.y;
+            this.z = -input.z;
 
             return this;
         }
@@ -714,7 +714,7 @@ namespace egret3d {
                 input = this;
             }
 
-            return this.subtract(input, _helpVector3.multiplyScalar(2.0 * this.dot(normal), normal));
+            return this.subtract(input, _helpVector3.multiplyScalar(2.0 * (input as Vector3).dot(normal), normal));
         }
         /**
          * 获取该向量和一个向量的夹角。（弧度制）

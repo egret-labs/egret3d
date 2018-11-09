@@ -15,7 +15,6 @@ namespace egret3d.web {
             ]
         ];
         private _egret2DOrderCount: number = 0;
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
         private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState, false, this); // Set interface.
         private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
@@ -57,7 +56,6 @@ namespace egret3d.web {
         // }
         private _render(camera: Camera, renderTarget: BaseRenderTarget | null) {
             const renderState = this._renderState;
-            const drawCallCollecter = this._drawCallCollecter;
             renderState.updateViewport(camera.viewport, renderTarget);
             let bufferBit = gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT;
             if (!camera.clearOption_Depth) {
@@ -69,8 +67,8 @@ namespace egret3d.web {
             }
             renderState.clearBuffer(bufferBit, camera.backgroundColor);
             // Draw.
-            const opaqueCalls = drawCallCollecter.opaqueCalls;
-            const transparentCalls = drawCallCollecter.transparentCalls;
+            const opaqueCalls = camera.context.opaqueCalls;
+            const transparentCalls = camera.context.transparentCalls;
             // Step 1 draw opaques.
             for (const drawCall of opaqueCalls) {
                 this.draw(camera, drawCall);
@@ -461,9 +459,7 @@ namespace egret3d.web {
 
         public render(camera: Camera) {
             Camera.current = camera;
-
-            const drawCallCollecter = this._drawCallCollecter;
-            drawCallCollecter.frustumCulling(camera);
+            camera._update();
 
             if (this._cameraAndLightCollecter.lightDirty) {
                 camera.context.updateLights(this._cameraAndLightCollecter.lights); // TODO 性能优化

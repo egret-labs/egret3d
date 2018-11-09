@@ -129,7 +129,7 @@ namespace egret3d {
 
         /**
          * 相机渲染上下文
-         * @internal
+         * @private
          */
         public context: RenderContext = null as any;
 
@@ -255,12 +255,13 @@ namespace egret3d {
         /**
          * @internal
          */
-        public _update(_delta: number) {
+        public _update() {
             this._viewPortDirty = true;
             this._matrixDirty = MatrixDirty.ALL;
 
             this._calcCameraFrame();
             this.context.updateCameraTransform(this);
+            this.context.frustumCulling(this);
         }
 
         public initialize() {
