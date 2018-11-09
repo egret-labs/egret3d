@@ -234,10 +234,6 @@ namespace paper {
                 return;
             }
 
-            if (!this._isBehaviour) {
-                return;
-            }
-
             if (
                 this._bufferedGameObjects.indexOf(gameObject) >= 0 ||
                 this._gameObjects.indexOf(gameObject) >= 0
