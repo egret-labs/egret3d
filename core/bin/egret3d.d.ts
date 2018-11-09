@@ -7431,7 +7431,10 @@ declare namespace egret3d {
         useProgram(program: GlProgram): boolean;
         getProgram(material: Material, technique: gltf.Technique, defines: string): GlProgram;
         clearBuffer(bufferBit: gltf.BufferBit, clearColor?: Readonly<IColor>): void;
+<<<<<<< HEAD
         copyFramebufferToTexture(screenPostion: Vector2, target: ITexture, level?: number): void;
+=======
+>>>>>>> 1.3
     }
 }
 declare namespace egret3d {

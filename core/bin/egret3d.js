@@ -12909,7 +12909,12 @@ var egret3d;
             var _this = _super.call(this) || this;
             _this._camera = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.Camera);
             _this._drawCall = egret3d.DrawCall.create();
+<<<<<<< HEAD
             _this._copyMaterial = new egret3d.Material(egret3d.DefaultShaders.COPY); //TODO全局唯一?
+=======
+            _this._defaultMaterial = egret3d.DefaultMaterials.MESH_BASIC.clone()
+                .setDepth(false, false); // TODO copy shader
+>>>>>>> 1.3
             _this._webglSystem = paper.SystemManager.getInstance().getSystem(egret3d.web.WebGLRenderSystem); //TODO
             _this._webglState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.WebGLRenderState);
             _this._currentCamera = camera;
@@ -13303,7 +13308,7 @@ var egret3d;
             return _this;
         }
         Egret2DRendererSystem.prototype._onSortRenderers = function (a, b) {
-            return a._order - b._order;
+            return b._order - a._order;
         };
         Egret2DRendererSystem.prototype._sortRenderers = function () {
             if (this._sortedDirty) {
@@ -19513,6 +19518,7 @@ var egret3d;
                 webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
             }
             webgl.clear(bufferBit);
+<<<<<<< HEAD
         };
         WebGLRenderState.prototype.copyFramebufferToTexture = function (screenPostion, target, level) {
             if (level === void 0) { level = 0; }
@@ -19520,6 +19526,8 @@ var egret3d;
             webgl.activeTexture(webgl.TEXTURE_2D);
             webgl.bindTexture(webgl.TEXTURE_2D, target.texture);
             webgl.copyTexImage2D(webgl.TEXTURE_2D, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0);
+=======
+>>>>>>> 1.3
         };
         return WebGLRenderState;
     }(paper.SingletonComponent));
