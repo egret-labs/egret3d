@@ -11613,16 +11613,11 @@ declare namespace egret3d {
         caclByteLength(): number;
     }
     abstract class GLTexture extends egret3d.Texture implements ITexture {
-        protected _width: number;
-        protected _height: number;
-        protected _format: gltf.TextureFormat;
-        protected _mipmap: boolean;
-        constructor(name?: string, width?: number, height?: number, format?: gltf.TextureFormat, mipmap?: boolean);
-        readonly texture: WebGLTexture;
         readonly width: number;
         readonly height: number;
-        readonly mipmap: boolean;
         readonly format: gltf.TextureFormat;
+        mipmap: boolean;
+        constructor(name?: string, width?: number, height?: number, format?: gltf.TextureFormat, mipmap?: boolean);
     }
     /**
      *
@@ -11660,8 +11655,8 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     abstract class BaseRenderTarget extends egret3d.Texture {
-        protected _width: number;
-        protected _height: number;
+        readonly width: number;
+        readonly height: number;
         protected _depth: boolean;
         protected _stencil: boolean;
         protected _mipmap: boolean;
@@ -11675,9 +11670,6 @@ declare namespace egret3d {
         generateMipmap(): boolean;
         dispose(): boolean;
         caclByteLength(): number;
-        readonly texture: WebGLTexture;
-        readonly width: number;
-        readonly height: number;
     }
     class GlRenderTarget extends BaseRenderTarget {
         protected createTexture(): void;

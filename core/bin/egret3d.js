@@ -23721,51 +23721,16 @@ var egret3d;
             if (format === void 0) { format = 6408 /* RGBA */; }
             if (mipmap === void 0) { mipmap = false; }
             var _this = _super.call(this, name) || this;
-            _this._width = width;
-            _this._height = height;
-            _this._format = format;
-            _this._mipmap = mipmap;
+            _this.width = width;
+            _this.height = height;
+            _this.format = format;
+            _this.mipmap = mipmap;
             var webgl = egret3d.WebGLCapabilities.webgl;
             if (webgl) {
-                _this._texture = webgl.createTexture();
+                _this.texture = webgl.createTexture();
             }
             return _this;
         }
-        Object.defineProperty(GLTexture.prototype, "texture", {
-            get: function () {
-                return this._texture;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GLTexture.prototype, "width", {
-            get: function () {
-                return this._width;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GLTexture.prototype, "height", {
-            get: function () {
-                return this._height;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GLTexture.prototype, "mipmap", {
-            get: function () {
-                return this._mipmap;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(GLTexture.prototype, "format", {
-            get: function () {
-                return this._format;
-            },
-            enumerable: true,
-            configurable: true
-        });
         return GLTexture;
     }(egret3d.Texture));
     egret3d.GLTexture = GLTexture;
@@ -23816,15 +23781,15 @@ var egret3d;
             if (repeat === void 0) { repeat = false; }
             if (mirroredU === void 0) { mirroredU = false; }
             if (mirroredV === void 0) { mirroredV = false; }
-            this._mipmap = mipmap;
+            this.mipmap = mipmap;
             var webgl = egret3d.WebGLCapabilities.webgl;
             if (!webgl) {
                 return;
             }
-            webgl.bindTexture(webgl.TEXTURE_2D, this._texture);
+            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
-            var formatGL = this._format;
+            var formatGL = this.format;
             // if (this._format === TextureFormatEnum.RGB) {
             //     formatGL = webgl.RGB;
             // }
@@ -23833,7 +23798,7 @@ var egret3d;
             // }
             //
             if (ArrayBuffer.isView(img)) {
-                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, this._width, this._height, 0, formatGL, webgl.UNSIGNED_BYTE, img);
+                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, this.width, this.height, 0, formatGL, webgl.UNSIGNED_BYTE, img);
             }
             else {
                 webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, formatGL, webgl.UNSIGNED_BYTE, img);
@@ -23871,14 +23836,14 @@ var egret3d;
         };
         GLTexture2D.prototype.caclByteLength = function () {
             var pixellen = 1;
-            if (this._format === 6408 /* RGBA */) {
+            if (this.format === 6408 /* RGBA */) {
                 pixellen = 4;
             }
-            else if (this._format === 6407 /* RGB */) {
+            else if (this.format === 6407 /* RGB */) {
                 pixellen = 3;
             }
             var len = this.width * this.height * pixellen;
-            if (this._mipmap) {
+            if (this.mipmap) {
                 len = len * (1 - Math.pow(0.25, 10)) / 0.75;
             }
             return len;
@@ -23887,9 +23852,8 @@ var egret3d;
             if (!_super.prototype.dispose.call(this)) {
                 return false;
             }
-            if (this._texture !== null) {
-                egret3d.WebGLCapabilities.webgl.deleteTexture(this._texture);
-                this._texture = null;
+            if (this.texture !== null) {
+                egret3d.WebGLCapabilities.webgl.deleteTexture(this.texture);
             }
             return true;
         };
@@ -23901,14 +23865,14 @@ var egret3d;
                 }
                 return this._reader;
             }
-            if (this._format !== 6408 /* RGBA */) {
+            if (this.format !== 6408 /* RGBA */) {
                 throw new Error("only rgba texture can read");
             }
-            if (this._texture === null) {
+            if (this.texture === null) {
                 return null;
             }
             if (this._reader === null)
-                this._reader = new TextureReader(this._texture, this._width, this._height, redOnly);
+                this._reader = new TextureReader(this.texture, this.width, this.height, redOnly);
             return this._reader;
         };
         return GLTexture2D;
@@ -24053,8 +24017,8 @@ var egret3d;
             if (mipmap === void 0) { mipmap = false; }
             if (linear === void 0) { linear = false; }
             var _this = _super.call(this, name) || this;
-            _this._width = width;
-            _this._height = height;
+            _this.width = width;
+            _this.height = height;
             _this._depth = depth;
             _this._stencil = stencil;
             _this._mipmap = mipmap;
@@ -24063,8 +24027,8 @@ var egret3d;
             return _this;
         }
         BaseRenderTarget.prototype.createFramebuffer = function () {
-            var width = this._width;
-            var height = this._height;
+            var width = this.width;
+            var height = this.height;
             var depth = this._depth;
             var stencil = this._stencil;
             var webgl = egret3d.WebGLCapabilities.webgl;
@@ -24107,40 +24071,19 @@ var egret3d;
             if (this._renderbuffer) {
                 webgl.deleteRenderbuffer(this._renderbuffer);
             }
-            if (this._texture !== null) {
-                webgl.deleteTexture(this._texture);
+            if (this.texture !== null) {
+                webgl.deleteTexture(this.texture);
             }
             if (this._fbo) {
                 webgl.deleteFramebuffer(this._fbo);
             }
             this._renderbuffer = null;
-            this._texture = null;
+            this.texture = null;
             this._fbo = null;
         };
         BaseRenderTarget.prototype.caclByteLength = function () {
             return this.width * this.height * 4;
         };
-        Object.defineProperty(BaseRenderTarget.prototype, "texture", {
-            get: function () {
-                return this._texture;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(BaseRenderTarget.prototype, "width", {
-            get: function () {
-                return this._width;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(BaseRenderTarget.prototype, "height", {
-            get: function () {
-                return this._height;
-            },
-            enumerable: true,
-            configurable: true
-        });
         return BaseRenderTarget;
     }(egret3d.Texture));
     egret3d.BaseRenderTarget = BaseRenderTarget;
@@ -24153,12 +24096,12 @@ var egret3d;
         GlRenderTarget.prototype.createTexture = function () {
             _super.prototype.createTexture.call(this);
             var webgl = egret3d.WebGLCapabilities.webgl;
-            this._texture = webgl.createTexture();
+            this.texture = webgl.createTexture();
             webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
             webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, 4);
-            webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, this._width, this._height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
-            var isPower2 = egret3d.isPowerOfTwo(this._width) && egret3d.isPowerOfTwo(this._height);
+            webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, this.width, this.height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
+            var isPower2 = egret3d.isPowerOfTwo(this.width) && egret3d.isPowerOfTwo(this.height);
             if (isPower2) {
                 if (this._linear) {
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
@@ -24613,7 +24556,7 @@ var egret3d;
                                 var unit = glUniform.textureUnits[0];
                                 webgl.uniform1i(location_3, unit);
                                 webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                webgl.bindTexture(webgl.TEXTURE_2D, context.lightmap._texture);
+                                webgl.bindTexture(webgl.TEXTURE_2D, context.lightmap.texture);
                             }
                             else {
                                 console.error("Error texture unit.");
@@ -24723,7 +24666,7 @@ var egret3d;
                                 var unit = glUniform.textureUnits[0];
                                 webgl.uniform1i(location_4, unit);
                                 webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                webgl.bindTexture(webgl.TEXTURE_2D, value._texture);
+                                webgl.bindTexture(webgl.TEXTURE_2D, value.texture);
                             }
                             else {
                                 console.error("Error texture unit");

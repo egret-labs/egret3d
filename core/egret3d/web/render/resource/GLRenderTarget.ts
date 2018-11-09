@@ -3,9 +3,9 @@ namespace egret3d {
         /**
          * @internal
          */
-        public _texture: WebGLTexture;
-        protected _width: number;
-        protected _height: number;
+        public texture: WebGLTexture;
+        readonly width: number;
+        readonly height: number;
         protected _depth: boolean;
         protected _stencil: boolean;
         protected _mipmap: boolean;
@@ -15,8 +15,8 @@ namespace egret3d {
 
         public constructor(name: string, width: number, height: number, depth: boolean = false, stencil: boolean = false, mipmap: boolean = false, linear: boolean = false) {
             super(name);
-            this._width = width;
-            this._height = height;
+            this.width = width;
+            this.height = height;
             this._depth = depth;
             this._stencil = stencil;
             this._mipmap = mipmap;
@@ -26,8 +26,8 @@ namespace egret3d {
         }
 
         protected createFramebuffer() {
-            const width = this._width;
-            const height = this._height;
+            const width = this.width;
+            const height = this.height;
             const depth = this._depth;
             const stencil = this._stencil;
             const webgl = WebGLCapabilities.webgl;
@@ -72,31 +72,19 @@ namespace egret3d {
             if (this._renderbuffer) {
                 webgl.deleteRenderbuffer(this._renderbuffer);
             }
-            if (this._texture !== null) {
-                webgl.deleteTexture(this._texture);
+            if (this.texture !== null) {
+                webgl.deleteTexture(this.texture);
             }
             if (this._fbo) {
                 webgl.deleteFramebuffer(this._fbo);
             }
             this._renderbuffer = null;
-            this._texture = null;
+            this.texture = null;
             this._fbo = null;
         }
 
         caclByteLength() {
             return this.width * this.height * 4;
-        }
-
-        public get texture() {
-            return this._texture;
-        }
-
-        public get width() {
-            return this._width;
-        }
-
-        public get height() {
-            return this._height;
         }
     }
 
@@ -105,13 +93,13 @@ namespace egret3d {
             super.createTexture();
 
             const webgl = WebGLCapabilities.webgl;
-            this._texture = webgl.createTexture()!;
+            this.texture = webgl.createTexture()!;
             webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
             webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, 4);
-            webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, this._width, this._height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
+            webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, this.width, this.height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
 
-            const isPower2 = isPowerOfTwo(this._width) && isPowerOfTwo(this._height);
+            const isPower2 = isPowerOfTwo(this.width) && isPowerOfTwo(this.height);
             if (isPower2) {
                 if (this._linear) {
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
