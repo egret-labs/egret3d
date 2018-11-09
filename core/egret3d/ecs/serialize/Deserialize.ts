@@ -421,9 +421,9 @@ namespace paper {
                     let component = this.components[uuid];
 
                     if (component) {
-                        if (component.constructor === MissingComponent) {
-                            continue;
-                        }
+                        // if (component.constructor === MissingComponent) {
+                        //     continue;
+                        // }
 
                         this._deserializeObject(componentSource, component);
                     }
