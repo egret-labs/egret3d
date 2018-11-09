@@ -221,6 +221,12 @@ namespace paper {
             else {
                 delete this._components[(value.constructor as IComponentClass<BaseComponent>).__index];
             }
+
+            if (value instanceof Behaviour) {
+                if (value.onBeforeRender) {
+                    this._beforeRenderBehaviors.splice(this._beforeRenderBehaviors.indexOf(value), 1);
+                }
+            }
         }
 
         private _getComponent(componentClass: IComponentClass<BaseComponent>) {
