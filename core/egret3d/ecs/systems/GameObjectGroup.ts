@@ -170,10 +170,6 @@ namespace paper {
             }
 
             if (!this._isBehaviour) {
-                if (gameObject === GameObject.globalGameObject) { // Pass global game object.
-                    return;
-                }
-
                 if (this._bufferedGameObjects.indexOf(gameObject) < 0 && this._gameObjects.indexOf(gameObject) < 0) {// Uninclude.
                     return;
                 }
@@ -210,10 +206,6 @@ namespace paper {
                 }
             }
             else {
-                if (gameObject === GameObject.globalGameObject) { // Pass global game object.
-                    return;
-                }
-
                 if (this._gameObjects.indexOf(gameObject) < 0) { // Uninclude.
                     return;
                 }
@@ -239,10 +231,6 @@ namespace paper {
 
         private _addGameObject(gameObject: GameObject) {
             if (!gameObject.activeInHierarchy) {
-                return;
-            }
-
-            if (!this._isBehaviour && gameObject === GameObject.globalGameObject) { // Pass global game object.
                 return;
             }
 
