@@ -296,7 +296,6 @@ namespace egret3d {
         private readonly _vsShaders: { [key: string]: WebGLShader } = {};
         private readonly _fsShaders: { [key: string]: WebGLShader } = {};
         private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
-        private _renderSystem: IRenderSystem = null!;
         private _cacheProgram: GlProgram | null = null;
         private _cacheState: gltf.States | null = null;
 
@@ -338,9 +337,8 @@ namespace egret3d {
             super.initialize();
 
             if (renderSystem) {
-                this._renderSystem = renderSystem;
-                this.render = this._renderSystem.render.bind(this._renderSystem);
-                this.draw = this._renderSystem.draw.bind(this._renderSystem);
+                this.render = renderSystem.render.bind(renderSystem);
+                this.draw = renderSystem.draw.bind(renderSystem);
             }
         }
 
@@ -470,9 +468,9 @@ namespace egret3d {
 
         public copyFramebufferToTexture(screenPostion: Vector2, target: ITexture, level: number = 0) {
             const webgl = WebGLCapabilities.webgl!;
-            webgl.activeTexture(webgl.TEXTURE_2D);
+            webgl.activeTexture(webgl.TEXTURE0);
             webgl.bindTexture(webgl.TEXTURE_2D, target.texture);
-            webgl.copyTexImage2D(webgl.TEXTURE_2D, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0);
+            webgl.copyTexImage2D(webgl.TEXTURE_2D, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0);//TODO
         }
     }
 }

@@ -4,7 +4,6 @@ namespace egret3d {
         private readonly _postProcessingCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera); // TODO 后期渲染专用相机
         private readonly _drawCall: DrawCall = DrawCall.create();
         private readonly _copyMaterial: Material = new Material(egret3d.DefaultShaders.COPY);//TODO全局唯一?
-        private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
 
         private _fullScreenRT: BaseRenderTarget = null!;
         /**
@@ -31,7 +30,7 @@ namespace egret3d {
             }
 
             const postProcessingCamera = this._postProcessingCamera;
-            const renderState = this._renderState;
+            const renderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
             const backupRenderTarget = renderState.renderTarget;
             this._drawCall.material = material;
 

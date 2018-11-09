@@ -20,7 +20,7 @@ namespace egret3d {
         /**
          * 此次绘制的渲染组件。
          */
-        public renderer: paper.BaseRenderer = null!;
+        public renderer: paper.BaseRenderer | null = null!;
         /**
          * 此次绘制的世界矩阵，没有则使用渲染组件所属实体的变换世界矩阵。
          */

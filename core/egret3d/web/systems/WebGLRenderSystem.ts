@@ -101,13 +101,11 @@ namespace egret3d.web {
         }
 
         public draw(camera: Camera, drawCall: DrawCall): void {
-            const gameObject = drawCall.renderer.gameObject;
-
-            if (gameObject._beforeRenderBehaviors.length > 0) {
+            if (drawCall.renderer && drawCall.renderer.gameObject._beforeRenderBehaviors.length > 0) {
                 let flag = false;
                 Camera.current = camera;
 
-                for (const behaviour of gameObject._beforeRenderBehaviors) {
+                for (const behaviour of drawCall.renderer.gameObject._beforeRenderBehaviors) {
                     flag = !behaviour.onBeforeRender() || flag;
                 }
 

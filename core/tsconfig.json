@@ -38,6 +38,7 @@
         "egret3d/math/Rectangle.ts",
         "egret3d/math/Sphere.ts",
         "egret3d/math/Spherical.ts",
+        "egret3d/math/Box2.ts",
         "egret3d/math/Box.ts",
         "egret3d/math/Curve.ts",
         "egret3d/math/Color.ts",
