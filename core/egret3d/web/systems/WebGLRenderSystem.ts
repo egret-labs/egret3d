@@ -291,7 +291,7 @@ namespace egret3d.web {
                             const unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location, unit);
                             webgl.activeTexture(webgl.TEXTURE0 + unit);
-                            webgl.bindTexture(webgl.TEXTURE_2D, (context.lightmap as GLTexture)._texture);
+                            webgl.bindTexture(webgl.TEXTURE_2D, (context.lightmap as GLTexture).texture);
                         }
                         else {
                             console.error("Error texture unit.");
@@ -409,7 +409,7 @@ namespace egret3d.web {
                             const unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location, unit);
                             webgl.activeTexture(webgl.TEXTURE0 + unit);
-                            webgl.bindTexture(webgl.TEXTURE_2D, (value as GLTexture)._texture);
+                            webgl.bindTexture(webgl.TEXTURE_2D, (value as GLTexture).texture);
                         }
                         else {
                             console.error("Error texture unit");

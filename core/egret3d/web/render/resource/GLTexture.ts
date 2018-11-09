@@ -13,40 +13,24 @@ namespace egret3d {
         /**
          * @internal
          */
-        public _texture: WebGLTexture;
-        protected _width: number;
-        protected _height: number;
-        protected _format: gltf.TextureFormat;
-        protected _mipmap: boolean;
+        readonly texture: WebGLTexture;
+        readonly width: number;
+        readonly height: number;
+        readonly format: gltf.TextureFormat;
+        mipmap: boolean;
 
         public constructor(name: string = "", width: number = 0, height: number = 0, format: gltf.TextureFormat = gltf.TextureFormat.RGBA, mipmap: boolean = false) {
             super(name);
 
-            this._width = width;
-            this._height = height;
-            this._format = format;
-            this._mipmap = mipmap;
+            this.width = width;
+            this.height = height;
+            this.format = format;
+            this.mipmap = mipmap;
 
             const webgl = WebGLCapabilities.webgl;
             if (webgl) {
-                this._texture = webgl.createTexture()!;
+                this.texture = webgl.createTexture()!;
             }
-        }
-
-        public get texture() {
-            return this._texture;
-        }
-        public get width() {
-            return this._width;
-        }
-        public get height() {
-            return this._height;
-        }
-        public get mipmap() {
-            return this._mipmap;
-        }
-        public get format() {
-            return this._format;
         }
     }
     /**
@@ -93,18 +77,18 @@ namespace egret3d {
         }
 
         uploadImage(img: HTMLImageElement | Uint8Array, mipmap: boolean, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false) {
-            this._mipmap = mipmap;
+            this.mipmap = mipmap;
             const webgl = WebGLCapabilities.webgl;
 
             if (!webgl) {
                 return;
             }
 
-            webgl.bindTexture(webgl.TEXTURE_2D, this._texture);
+            webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, premultiply ? 1 : 0);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
 
-            let formatGL = this._format;
+            let formatGL = this.format;
             // if (this._format === TextureFormatEnum.RGB) {
             //     formatGL = webgl.RGB;
             // }
@@ -113,7 +97,7 @@ namespace egret3d {
             // }
             //
             if (ArrayBuffer.isView(img)) {
-                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, this._width, this._height, 0, formatGL, webgl.UNSIGNED_BYTE, img);
+                webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, this.width, this.height, 0, formatGL, webgl.UNSIGNED_BYTE, img);
             }
             else {
                 webgl.texImage2D(webgl.TEXTURE_2D, 0, formatGL, formatGL, webgl.UNSIGNED_BYTE, img);
@@ -158,14 +142,14 @@ namespace egret3d {
 
         caclByteLength(): number {
             let pixellen = 1;
-            if (this._format === gltf.TextureFormat.RGBA) {
+            if (this.format === gltf.TextureFormat.RGBA) {
                 pixellen = 4;
             }
-            else if (this._format === gltf.TextureFormat.RGB) {
+            else if (this.format === gltf.TextureFormat.RGB) {
                 pixellen = 3;
             }
             let len = this.width * this.height * pixellen;
-            if (this._mipmap) {
+            if (this.mipmap) {
                 len = len * (1 - Math.pow(0.25, 10)) / 0.75;
             }
             return len;
@@ -176,9 +160,8 @@ namespace egret3d {
                 return false;
             }
 
-            if (this._texture !== null) {
-                WebGLCapabilities.webgl!.deleteTexture(this._texture);
-                this._texture = null!;
+            if (this.texture !== null) {
+                WebGLCapabilities.webgl!.deleteTexture(this.texture);
             }
 
             return true;
@@ -191,14 +174,14 @@ namespace egret3d {
                 }
                 return this._reader;
             }
-            if (this._format !== gltf.TextureFormat.RGBA) {
+            if (this.format !== gltf.TextureFormat.RGBA) {
                 throw new Error("only rgba texture can read");
             }
-            if (this._texture === null) {
+            if (this.texture === null) {
                 return null as any;
             }
             if (this._reader === null)
-                this._reader = new TextureReader(this._texture, this._width, this._height, redOnly);
+                this._reader = new TextureReader(this.texture, this.width, this.height, redOnly);
 
             return this._reader;
         }
