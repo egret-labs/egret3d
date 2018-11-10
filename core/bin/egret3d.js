@@ -851,6 +851,70 @@ var egret3d;
             }
             return this;
         };
+        Vector2.prototype.add = function (vectorA, vectorB) {
+            if (!vectorB) {
+                vectorB = vectorA;
+                vectorA = this;
+            }
+            this.x = vectorA.x + vectorB.x;
+            this.y = vectorA.y + vectorB.y;
+            return this;
+        };
+        Vector2.prototype.subtract = function (vectorA, vectorB) {
+            if (!vectorB) {
+                vectorB = vectorA;
+                vectorA = this;
+            }
+            this.x = vectorA.x - vectorB.x;
+            this.y = vectorA.y - vectorB.y;
+            return this;
+        };
+        Vector2.prototype.addScalar = function (scalar, input) {
+            if (!input) {
+                input = this;
+            }
+            this.x = input.x + scalar;
+            this.y = input.y + scalar;
+            return this;
+        };
+        Vector2.prototype.multiplyScalar = function (scalar, input) {
+            if (!input) {
+                input = this;
+            }
+            this.x = scalar * input.x;
+            this.y = scalar * input.y;
+            return this;
+        };
+        Vector2.prototype.min = function (valueA, valueB) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+            this.x = Math.min(valueA.x, valueB.x);
+            this.y = Math.min(valueA.y, valueB.y);
+            return this;
+        };
+        Vector2.prototype.max = function (valueA, valueB) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+            this.x = Math.max(valueA.x, valueB.x);
+            this.y = Math.max(valueA.y, valueB.y);
+            return this;
+        };
+        Vector2.prototype.clamp = function (min, max, input) {
+            if (!input) {
+                input = this;
+            }
+            if (true && (min.x > max.x || min.y > max.y)) {
+                console.warn("Invalid arguments.");
+            }
+            // assumes min < max, componentwise
+            this.x = Math.max(min.x, Math.min(max.x, input.x));
+            this.y = Math.max(min.y, Math.min(max.y, input.y));
+            return this;
+        };
         Object.defineProperty(Vector2.prototype, "length", {
             /**
              * 该向量的长度。
@@ -947,12 +1011,17 @@ var egret3d;
         };
         Vector2.ZERO = new Vector2(0.0, 0.0);
         Vector2.ONE = new Vector2(1.0, 1.0);
+        Vector2.MINUS_ONE = new Vector2(-1.0, -1.0);
         Vector2._instances = [];
         return Vector2;
     }(paper.BaseRelease));
     egret3d.Vector2 = Vector2;
     __reflect(Vector2.prototype, "egret3d.Vector2", ["egret3d.IVector2", "paper.ICCS", "paper.ISerializable"]);
     var _helpVector2A = new Vector2();
+    /**
+     * @internal
+     */
+    egret3d.helpVector2A = Vector2.create();
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -5415,7 +5484,7 @@ var egret3d;
                     min.z <= vMin.z && vMax.z <= max.z;
             }
             return (pointOrBox.x > min.x) && (pointOrBox.x < max.x) &&
-                (pointOrBox.y > min.y) && (pointOrBox.x < max.y) &&
+                (pointOrBox.y > min.y) && (pointOrBox.y < max.y) &&
                 (pointOrBox.z > min.z) && (pointOrBox.z < max.z);
         };
         Box.prototype.raycast = function (ray, raycastInfo) {
@@ -6817,7 +6886,6 @@ var egret3d;
             this._postProcessingCamera = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.Camera); // TODO 后期渲染专用相机
             this._drawCall = egret3d.DrawCall.create();
             this._copyMaterial = new egret3d.Material(egret3d.DefaultShaders.COPY); //TODO全局唯一?
-            this._renderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.WebGLRenderState);
             this._fullScreenRT = null;
             this._camera = camera;
             //
@@ -6839,7 +6907,7 @@ var egret3d;
                 material.setTexture(src);
             }
             var postProcessingCamera = this._postProcessingCamera;
-            var renderState = this._renderState;
+            var renderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.WebGLRenderState);
             var backupRenderTarget = renderState.renderTarget;
             this._drawCall.material = material;
             if (dest) {
@@ -15364,6 +15432,22 @@ var egret3d;
             this.h = element[3];
             return this;
         };
+        Rectangle.prototype.contains = function (pointOrRect) {
+            var minX = this.x;
+            var minY = this.y;
+            var maxX = this.x + this.w;
+            var maxY = this.y + this.h;
+            if (pointOrRect instanceof Rectangle) {
+                var vMinX = pointOrRect.x;
+                var vMinY = pointOrRect.y;
+                var vMaxX = pointOrRect.x + pointOrRect.w;
+                var vMaxY = pointOrRect.y + pointOrRect.h;
+                return minX <= vMinX && vMaxX <= maxX &&
+                    minY <= vMinY && vMaxY <= maxY;
+            }
+            return (pointOrRect.x > minX) && (pointOrRect.x < maxX) &&
+                (pointOrRect.y > minY) && (pointOrRect.y < maxY);
+        };
         Rectangle._instances = [];
         return Rectangle;
     }(paper.BaseRelease));
@@ -20553,7 +20637,6 @@ var egret3d;
             _this._vsShaders = {};
             _this._fsShaders = {};
             _this._cacheStateEnable = {};
-            _this._renderSystem = null;
             _this._cacheProgram = null;
             _this._cacheState = null;
             return _this;
@@ -20588,9 +20671,8 @@ var egret3d;
         WebGLRenderState.prototype.initialize = function (renderSystem) {
             _super.prototype.initialize.call(this);
             if (renderSystem) {
-                this._renderSystem = renderSystem;
-                this.render = this._renderSystem.render.bind(this._renderSystem);
-                this.draw = this._renderSystem.draw.bind(this._renderSystem);
+                this.render = renderSystem.render.bind(renderSystem);
+                this.draw = renderSystem.draw.bind(renderSystem);
             }
         };
         WebGLRenderState.prototype.updateRenderTarget = function (target) {
@@ -20700,9 +20782,9 @@ var egret3d;
         WebGLRenderState.prototype.copyFramebufferToTexture = function (screenPostion, target, level) {
             if (level === void 0) { level = 0; }
             var webgl = WebGLCapabilities.webgl;
-            webgl.activeTexture(webgl.TEXTURE_2D);
+            webgl.activeTexture(webgl.TEXTURE0);
             webgl.bindTexture(webgl.TEXTURE_2D, target.texture);
-            webgl.copyTexImage2D(webgl.TEXTURE_2D, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0);
+            webgl.copyTexImage2D(webgl.TEXTURE_2D, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0); //TODO
         };
         return WebGLRenderState;
     }(paper.SingletonComponent));
@@ -24378,11 +24460,10 @@ var egret3d;
                 }
             };
             WebGLRenderSystem.prototype.draw = function (camera, drawCall) {
-                var gameObject = drawCall.renderer.gameObject;
-                if (gameObject._beforeRenderBehaviors.length > 0) {
+                if (drawCall.renderer && drawCall.renderer.gameObject._beforeRenderBehaviors.length > 0) {
                     var flag = false;
                     egret3d.Camera.current = camera;
-                    for (var _i = 0, _a = gameObject._beforeRenderBehaviors; _i < _a.length; _i++) {
+                    for (var _i = 0, _a = drawCall.renderer.gameObject._beforeRenderBehaviors; _i < _a.length; _i++) {
                         var behaviour = _a[_i];
                         flag = !behaviour.onBeforeRender() || flag;
                     }

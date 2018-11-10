@@ -10,9 +10,6 @@ namespace egret3d {
     }
 
     export abstract class GLTexture extends egret3d.Texture implements ITexture {
-        /**
-         * @internal
-         */
         readonly texture: WebGLTexture;
         readonly width: number;
         readonly height: number;

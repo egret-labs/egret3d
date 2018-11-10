@@ -434,6 +434,7 @@ declare namespace egret3d {
     class Vector2 extends paper.BaseRelease<Vector2> implements IVector2, paper.ICCS<Vector2>, paper.ISerializable {
         static readonly ZERO: Readonly<Vector2>;
         static readonly ONE: Readonly<Vector2>;
+        static readonly MINUS_ONE: Readonly<Vector2>;
         private static readonly _instances;
         /**
          * 创建一个二维向量。
@@ -469,6 +470,64 @@ declare namespace egret3d {
          * @param defaultVector 当向量不能合法归一化时将指向何方向。
          */
         normalize(input: Readonly<IVector2>, defaultVector?: Readonly<IVector2>): this;
+        /**
+         * 将该向量加上一个向量。
+         * - v += vector
+         * @param vector 一个向量。
+         */
+        add(vector: Readonly<IVector2>): this;
+        /**
+         * 将两个向量相加的结果写入该向量。
+         * - v = vectorA + vectorB
+         * @param vectorA 一个向量。
+         * @param vectorB 另一个向量。
+         */
+        add(vectorA: Readonly<IVector2>, vectorB: Readonly<IVector2>): this;
+        /**
+         * 将该向量减去一个向量。
+         * - v -= vector
+         * @param vector 一个向量。
+         */
+        subtract(vector: Readonly<IVector2>): this;
+        /**
+         * 将两个向量相减的结果写入该向量。
+         * - v = vectorA - vectorB
+         * @param vectorA 一个向量。
+         * @param vectorB 另一个向量。
+         */
+        subtract(vectorA: Readonly<IVector2>, vectorB: Readonly<IVector2>): this;
+        /**
+         * 将该向量加上一个标量。
+         * - v += scalar
+         * @param scalar 标量。
+         */
+        addScalar(scalar: number): this;
+        /**
+         * 将输入向量与标量相加的结果写入该向量。
+         * - v = input + scalar
+         * @param scalar 一个标量。
+         * @param input 输入向量。
+         */
+        addScalar(scalar: number, input: Readonly<IVector2>): this;
+        multiplyScalar(scalar: number): this;
+        multiplyScalar(scalar: number, input: Readonly<IVector2>): this;
+        min(value: Readonly<IVector2>): this;
+        min(valueA: Readonly<IVector2>, valueB: Readonly<IVector2>): this;
+        max(value: Readonly<IVector2>): this;
+        max(valueA: Readonly<IVector2>, valueB: Readonly<IVector2>): this;
+        /**
+         * 限制该向量，使其在最小向量和最大向量之间。
+         * @param min 最小向量。
+         * @param max 最大向量。
+         */
+        clamp(min: Readonly<IVector2>, max: Readonly<IVector2>): this;
+        /**
+         * 将限制输入向量在最小向量和最大向量之间的结果写入该向量。
+         * @param min 最小向量。
+         * @param max 最大向量。
+         * @param input 输入向量。
+         */
+        clamp(min: Readonly<IVector2>, max: Readonly<IVector2>, input: Readonly<IVector2>): this;
         /**
          * 该向量的长度。
          * - 该值是实时计算的。
@@ -4092,7 +4151,6 @@ declare namespace egret3d {
         private readonly _postProcessingCamera;
         private readonly _drawCall;
         private readonly _copyMaterial;
-        private readonly _renderState;
         private _fullScreenRT;
         /**
          * 禁止实例化。
@@ -5462,7 +5520,7 @@ declare namespace egret3d {
         /**
          * 此次绘制的渲染组件。
          */
-        renderer: paper.BaseRenderer;
+        renderer: paper.BaseRenderer | null;
         /**
          * 此次绘制的世界矩阵，没有则使用渲染组件所属实体的变换世界矩阵。
          */
@@ -6565,6 +6623,7 @@ declare namespace egret3d {
         set(x: number, y: number, w: number, h: number): this;
         serialize(): number[];
         deserialize(element: number[]): this;
+        contains(pointOrRect: Readonly<IVector2 | Rectangle>): boolean;
     }
 }
 declare namespace egret3d {
@@ -7742,7 +7801,6 @@ declare namespace egret3d {
         private readonly _vsShaders;
         private readonly _fsShaders;
         private readonly _cacheStateEnable;
-        private _renderSystem;
         private _cacheProgram;
         private _cacheState;
         private _getWebGLProgram(vs, fs, customDefines);
@@ -11613,6 +11671,7 @@ declare namespace egret3d {
         caclByteLength(): number;
     }
     abstract class GLTexture extends egret3d.Texture implements ITexture {
+        readonly texture: WebGLTexture;
         readonly width: number;
         readonly height: number;
         readonly format: gltf.TextureFormat;
