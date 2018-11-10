@@ -1,83 +1,15 @@
 namespace egret3d {
-    export class PostProcessRenderContext {
-        private readonly _camera: Camera = null!;
-        private readonly _postProcessingCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera); // TODO 后期渲染专用相机
-        private readonly _drawCall: DrawCall = DrawCall.create();
-        private readonly _copyMaterial: Material = new Material(egret3d.DefaultShaders.COPY);//TODO全局唯一?
-
-        private _fullScreenRT: BaseRenderTarget = null!;
-        /**
-         * 禁止实例化。
-         */
-        public constructor(camera: Camera) {
-            this._camera = camera;
-            //
-            this._postProcessingCamera.opvalue = 0.0;
-            this._postProcessingCamera.size = 1;
-            this._postProcessingCamera.near = 0.01;
-            this._postProcessingCamera.far = 1;
-            //
-            this._drawCall.mesh = DefaultMeshes.FULLSCREEN_QUAD;
-            this._drawCall.mesh._createBuffer();
-            this._drawCall.subMeshIndex = 0;
-            this._drawCall.matrix = Matrix4.IDENTITY;
-        }
-
-        public blit(src: Texture, material: Material | null = null, dest: BaseRenderTarget | null = null) {
-            if (!material) {
-                material = this._copyMaterial;
-                material.setTexture(src);
-            }
-
-            const postProcessingCamera = this._postProcessingCamera;
-            const renderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
-            const backupRenderTarget = renderState.renderTarget;
-            this._drawCall.material = material;
-
-            if (dest) {
-                renderState.updateRenderTarget(dest);
-            }
-
-            renderState.updateViewport(postProcessingCamera.viewport, dest);
-            renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, egret3d.Color.WHITE);
-            renderState.draw(postProcessingCamera, this._drawCall);
-            renderState.updateRenderTarget(backupRenderTarget);
-        }
-
-        public clear() {
-            this._fullScreenRT.dispose();
-            this._fullScreenRT = null;
-        }
-
-        public get currentCamera() {
-            return this._camera;
-        }
-
-        public get fullScreenRT() {
-            const stageViewport = stage.viewport;
-
-            if (!this._fullScreenRT || this._fullScreenRT.width !== stageViewport.w || this._fullScreenRT.height !== stageViewport.h) {
-                if (this._fullScreenRT) {
-                    this._fullScreenRT.dispose();
-                }
-
-                this._fullScreenRT = new GlRenderTarget("fullScreenRT", stageViewport.w, stageViewport.h, true);//TODO    平台无关
-            }
-
-            return this._fullScreenRT;
-        }
-    }
     /**
      * TODO 平台无关。
      */
     export interface ICameraPostProcessing {
-        render(context: PostProcessRenderContext): void;
+        render(camera: Camera): void;
     }
     /**
      * @beta 这是一个试验性质的 API，有可能会被删除或修改。
      */
     export abstract class CameraPostProcessing extends paper.BaseRelease<CameraPostProcessing> implements ICameraPostProcessing {
-        public render(context: PostProcessRenderContext) {
+        public render(camera: Camera) {
 
         }
     }
@@ -100,10 +32,10 @@ namespace egret3d {
             this._material.setFloat("velocityFactor", this._velocityFactor);
         }
 
-        public render(context: PostProcessRenderContext) {
+        public render(camera: Camera) {
+            const context = camera.context;
             const stageViewport = stage.viewport;
             const material = this._material;
-            const camera = context.currentCamera;
             const worldToClipMatrix = camera.worldToClipMatrix;
 
             if (this._resolution.x !== stageViewport.w || this._resolution.y !== stageViewport.h) {

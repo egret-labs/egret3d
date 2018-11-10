@@ -120,19 +120,15 @@ namespace egret3d {
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.RECT, { step: 0.01 })
         public readonly viewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
-
+        /**
+         * 相机渲染上下文
+         * @private
+         */
+        public readonly context: CameraRenderContext = new CameraRenderContext(this);
         /**
          * TODO 功能完善后开放此接口
          */
         public readonly postQueues: ICameraPostProcessing[] = [];
-        public postProcessContext: PostProcessRenderContext = null as any;
-
-        /**
-         * 相机渲染上下文
-         * @internal
-         */
-        public context: RenderContext = null as any;
-
         /**
          * 渲染目标，如果为null，则为画布
          */
@@ -260,14 +256,7 @@ namespace egret3d {
             this._matrixDirty = MatrixDirty.ALL;
 
             this._calcCameraFrame();
-            this.context.updateCameraTransform(this);
-        }
-
-        public initialize() {
-            super.initialize();
-
-            this.context = new RenderContext();
-            this.postProcessContext = new PostProcessRenderContext(this);
+            this.context.updateCameraTransform();
         }
         /**
          * 将舞台坐标基于该相机的视角转换为世界坐标。

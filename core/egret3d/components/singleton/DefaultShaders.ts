@@ -40,7 +40,6 @@ namespace egret3d {
         public static POINTS: Shader;
         public static SHADOW: Shader;
         public static SPRITE: Shader;
-
         public static COPY: Shader;
 
         private _createShader(name: string, config: GLTF, renderQueue?: number, states?: gltf.States, defines?: string[]) {

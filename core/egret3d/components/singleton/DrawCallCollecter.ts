@@ -20,9 +20,9 @@ namespace egret3d {
         /**
          * 此次绘制的渲染组件。
          */
-        public renderer: paper.BaseRenderer | null = null!;
+        public renderer: paper.BaseRenderer | null = null;
         /**
-         * 此次绘制的世界矩阵，没有则使用渲染组件所属实体的变换世界矩阵。
+         * 此次绘制的世界矩阵。
          */
         public matrix: Matrix4 | null = null;
         /**
@@ -32,11 +32,11 @@ namespace egret3d {
         /**
          * 此次绘制的网格资源。
          */
-        public mesh: Mesh = null!;
+        public mesh: Mesh | null = null;
         /**
          * 此次绘制的材质资源。
          */
-        public material: Material = null!;
+        public material: Material | null = null;
         /**
          * 
          */
@@ -47,11 +47,11 @@ namespace egret3d {
         }
 
         public onClear() {
-            this.renderer = null!;
-            this.matrix = null!;
+            this.renderer = null;
+            this.matrix = null;
             this.subMeshIndex = -1;
-            this.mesh = null!;
-            this.material = null!;
+            this.mesh = null;
+            this.material = null;
             this.zdist = -1;
         }
     }

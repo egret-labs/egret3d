@@ -50,32 +50,15 @@ namespace egret3d {
         private readonly _localToParentMatrix: Matrix4 = Matrix4.create();
         private readonly _worldToLocalMatrix: Matrix4 = Matrix4.create();
         private readonly _localToWorldMatrix: Matrix4 = Matrix4.create();
-        // private readonly _observers: ITransformObserver[] = []; // TODO
         /**
          * @internal
          */
         public readonly _children: Transform[] = [];
+        private readonly _observers: ITransformObserver[] = [];
         /**
          * @internal
          */
         public _parent: Transform | null = null;
-        /**
-         * @private
-         */
-        public constructor() {
-            super();
-
-            this._localPosition.onUpdateTarget = this._position.onUpdateTarget = this;
-            this._localPosition.onUpdate = this._position.onUpdate = this._onPositionUpdate;
-            this._localRotation.onUpdateTarget = this._rotation.onUpdateTarget = this;
-            this._localRotation.onUpdate = this._rotation.onUpdate = this._onRotationUpdate;
-            this._localEuler.onUpdateTarget = this._euler.onUpdateTarget = this;
-            this._localEuler.onUpdate = this._euler.onUpdate = this._onEulerUpdate;
-            this._localEulerAngles.onUpdateTarget = this._eulerAngles.onUpdateTarget = this;
-            this._localEulerAngles.onUpdate = this._eulerAngles.onUpdate = this._onEulerAnglesUpdate;
-            this._localScale.onUpdateTarget = this._scale.onUpdateTarget = this;
-            this._localScale.onUpdate = this._scale.onUpdate = this._onScaleUpdate;
-        }
 
         private _removeFromChildren(value: Transform) {
             let index = 0;
@@ -100,10 +83,10 @@ namespace egret3d {
             return rotation.multiply(scale);
         }
 
-        private _setRotationAndScale(value: Readonly<Matrix3>) {
-            const rotationAndScale = this._getRotationAndScale().inverse().multiply(value);
-            this._localScale.set(rotationAndScale.rawData[0], rotationAndScale.rawData[4], rotationAndScale.rawData[8]).update();
-        }
+        // private _setRotationAndScale(value: Readonly<Matrix3>) {
+        //     const rotationAndScale = this._getRotationAndScale().inverse().multiply(value);
+        //     this._localScale.set(rotationAndScale.rawData[0], rotationAndScale.rawData[4], rotationAndScale.rawData[8]).update();
+        // }
 
         private _dirtify(isLocalDirty: ConstrainBoolean, dirty: TransformDirty) {
             if (isLocalDirty) {
@@ -117,7 +100,6 @@ namespace egret3d {
 
 
                 if (DEBUG) {
-
                     if (dirty & TransformDirty.Position) {
                         let isError = false;
                         const localPosition = this._localPosition;
@@ -211,6 +193,14 @@ namespace egret3d {
 
                 if (this.gameObject.renderer) { // TODO
                     this.gameObject.renderer._boundingSphereDirty = true;
+                }
+            }
+
+            const observers = this._observers;
+
+            if (observers.length > 0) {
+                for (const observer of this._observers) {
+                    observer.onTransformChange();
                 }
             }
         }
@@ -315,6 +305,28 @@ namespace egret3d {
             }
         }
 
+        public initialize() {
+            super.initialize();
+
+            this._localPosition.onUpdateTarget = this._position.onUpdateTarget = this;
+            this._localPosition.onUpdate = this._position.onUpdate = this._onPositionUpdate;
+            this._localRotation.onUpdateTarget = this._rotation.onUpdateTarget = this;
+            this._localRotation.onUpdate = this._rotation.onUpdate = this._onRotationUpdate;
+            this._localEuler.onUpdateTarget = this._euler.onUpdateTarget = this;
+            this._localEuler.onUpdate = this._euler.onUpdate = this._onEulerUpdate;
+            this._localEulerAngles.onUpdateTarget = this._eulerAngles.onUpdateTarget = this;
+            this._localEulerAngles.onUpdate = this._eulerAngles.onUpdate = this._onEulerAnglesUpdate;
+            this._localScale.onUpdateTarget = this._scale.onUpdateTarget = this;
+            this._localScale.onUpdate = this._scale.onUpdate = this._onScaleUpdate;
+        }
+
+        public uninitialize() {
+            super.uninitialize();
+
+            this._children.length = 0;
+            this._observers.length = 0;
+        }
+
         /**
          * @internal
          */
@@ -351,6 +363,16 @@ namespace egret3d {
             let i = this._children.length;
             while (i--) {
                 this._children[i].gameObject.destroy();
+            }
+        }
+        /**
+         * 
+         * @param observer 
+         */
+        public registerObserver(observer: ITransformObserver): void {
+            const observers = this._observers;
+            if (observers.indexOf(observer) < 0) {
+                observers.push(observer);
             }
         }
         /**

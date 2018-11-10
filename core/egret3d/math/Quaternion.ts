@@ -253,7 +253,6 @@ namespace egret3d {
                     this.z = fZ + (tZ - fZ) * p1;
                     this.w = fW + (tW - fW) * p1;
                 }
-
             }
             else {
                 if (typeof p2 === "number") {

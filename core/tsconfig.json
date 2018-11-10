@@ -71,7 +71,6 @@
         "egret3d/ecs/serialize/Serialize.ts",
 
         "egret3d/Interface.ts",
-        "egret3d/components/Interface.ts",
         "egret3d/components/Transform.ts",
         "egret3d/components/singleton/Stage.ts",
         "egret3d/components/singleton/DefaultMeshes.ts",
@@ -90,7 +89,7 @@
         "egret3d/components/camera/CameraSystem.ts",
         "egret3d/components/camera/Camera.ts",
         "egret3d/components/camera/CameraPostQueue.ts",
-        "egret3d/components/camera/RenderContext.ts",
+        "egret3d/components/camera/CameraRenderContext.ts",
         "egret3d/components/egret2DRenderer/Egret2DRenderer.ts",
         "egret3d/components/egret2DRenderer/Egret2DRendererSystem.ts",
         "egret3d/components/egret2DRenderer/Renderer.ts",

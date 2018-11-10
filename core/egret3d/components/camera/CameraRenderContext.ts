@@ -6,73 +6,155 @@ namespace egret3d {
     }
     const _helpVector3 = Vector3.create();
     /**
-     * @internal
+     * 摄像机渲染上下文。
      */
-    export class RenderContext {
+    export class CameraRenderContext {
+        /**
+         * 进入渲染周期后缓存的相机世界坐标。
+         */
+        public readonly cameraPosition: Float32Array = new Float32Array(3);
+        /**
+         * 进入渲染周期后缓存的相机世界前方向。
+         */
+        public readonly cameraForward: Float32Array = new Float32Array(3);
+        /**
+         * 进入渲染周期后缓存的相机世界上方向。
+         */
+        public readonly cameraUp: Float32Array = new Float32Array(3);
         /**
          * 
          */
-        public lightCount: number = 0;
-        public directLightCount: number = 0;
-        public pointLightCount: number = 0;
-        public spotLightCount: number = 0;
-
-        public shaderContextDefine: string = "";
+        public readonly camera: Camera = null!;
         /**
          * 
          */
-        public lightmap: Texture | null = null;
-        public lightmapUV: number = 1;
+        public drawCall: DrawCall = null!;
+        /**
+         * 
+         */
+        public lightmapUV: uint = 1;
         public lightmapIntensity: number = 1.0;
-        public lightmapScaleOffset: Float32Array = new Float32Array(4);
+        public readonly lightmapScaleOffset: Float32Array = new Float32Array(4);
+        public lightmap: Texture | null = null;
+        /**
+         * 
+         */
+        public lightCount: uint = 0;
+        public directLightCount: uint = 0;
+        public pointLightCount: uint = 0;
+        public spotLightCount: uint = 0;
 
-        //TODO
+        // public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0]);
         // 12: dirX, dirY, dirZ, colorR, colorG, colorB, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
         public directLightArray: Float32Array = new Float32Array(0);
         // 16: x, y, z, colorR, colorG, colorB, distance, decay, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY, shadowCameraNear, shadowCameraFar,
         public pointLightArray: Float32Array = new Float32Array(0);
         // 18: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, distance, decay, coneCos, penumbraCos, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
         public spotLightArray: Float32Array = new Float32Array(0);
-        public directShadowMatrix: Float32Array = new Float32Array(0);
-        public spotShadowMatrix: Float32Array = new Float32Array(0);
-        public pointShadowMatrix: Float32Array = new Float32Array(0);
+
+        public lightShadowCameraNear: number = 0.0;
+        public lightShadowCameraFar: number = 0.0;
 
         public readonly directShadowMaps: (WebGLTexture | null)[] = [];
         public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
         public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
 
-        //
-        public readonly cameraPosition: Float32Array = new Float32Array(3);
-        public readonly cameraForward: Float32Array = new Float32Array(3);
-        public readonly cameraUp: Float32Array = new Float32Array(3);
+        public directShadowMatrix: Float32Array = new Float32Array(0);
+        public spotShadowMatrix: Float32Array = new Float32Array(0);
+        public pointShadowMatrix: Float32Array = new Float32Array(0);
 
-
-        // transforms
-        // public readonly matrix_m: Matrix4 = Matrix4.create();
-
-        // public readonly matrix_v: Matrix4 = Matrix4.create(); // worldToLocal
-        // public readonly matrix_p: Matrix4 = Matrix4.create(); // projection
-        // public readonly matrix_vp: Matrix4 = Matrix4.create(); // worldToClip
-        // TODO
         public readonly matrix_mv: Matrix4 = Matrix4.create();
         public readonly matrix_mvp: Matrix4 = Matrix4.create();
         public readonly matrix_mv_inverse: Matrix3 = Matrix3.create();
 
-        public lightShadowCameraNear: number = 0;
-        public lightShadowCameraFar: number = 0;
-        public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0]);
-
-        public fogColor: Float32Array = new Float32Array(3);
         public fogDensity: number = 0.0;
         public fogNear: number = 0.0;
         public fogFar: number = 0.0;
+        public readonly fogColor: Float32Array = new Float32Array(3);
 
-        public camera: Camera = null!;
-        public drawCall: DrawCall = null!;
+        private readonly _postProcessingCamera: Camera = null!;
+        private readonly _postProcessDrawCall: DrawCall = DrawCall.create();
 
-        public updateCameraTransform(camera: Camera, matrix?: Matrix4) {
-            const rawData = (matrix || camera.gameObject.transform.localToWorldMatrix).rawData;
+        private _fullScreenRT: BaseRenderTarget = null!;
+        /**
+         * 禁止实例化。
+         */
+        public constructor(camera: Camera) {
             this.camera = camera;
+
+            {
+                const gameObjectName = "PostProcessing Camera";
+                const transform = paper.GameObject.globalGameObject.transform.find(gameObjectName);
+                let gameObject: paper.GameObject | null = null;
+
+                if (transform) {
+                    gameObject = transform.gameObject;
+                    this._postProcessingCamera = gameObject.getComponent(egret3d.Camera)!;
+                }
+                else {
+                    gameObject = paper.GameObject.create(gameObjectName, paper.DefaultTags.Untagged, paper.Scene.globalScene);
+                    gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
+                    gameObject.parent = paper.GameObject.globalGameObject;
+
+                    const postProcessingCamera = gameObject.addComponent(egret3d.Camera);
+                    postProcessingCamera.enabled = false;
+                    postProcessingCamera.opvalue = 0.0;
+                    postProcessingCamera.size = 1.0;
+                    postProcessingCamera.near = 0.01;
+                    postProcessingCamera.far = 1.0;
+                    this._postProcessingCamera = postProcessingCamera;
+                }
+            }
+
+            //
+            this._postProcessDrawCall.matrix = Matrix4.IDENTITY;
+            this._postProcessDrawCall.subMeshIndex = 0;
+            this._postProcessDrawCall.mesh = DefaultMeshes.FULLSCREEN_QUAD;
+            this._postProcessDrawCall.mesh._createBuffer(); //
+        }
+
+        public blit(src: Texture, material: Material | null = null, dest: BaseRenderTarget | null = null) {
+            if (!material) {
+                material = DefaultMaterials.COPY;
+                material.setTexture(src);
+            }
+
+            const postProcessingCamera = this._postProcessingCamera;
+            const renderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState);
+            const backupRenderTarget = renderState.renderTarget;
+            this._postProcessDrawCall.material = material;
+
+            if (dest) {
+                renderState.updateRenderTarget(dest);
+            }
+
+            renderState.updateViewport(postProcessingCamera.viewport, dest);
+            renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, egret3d.Color.WHITE);
+            renderState.draw(postProcessingCamera, this._postProcessDrawCall);
+            renderState.updateRenderTarget(backupRenderTarget);
+        }
+
+        // public clear() {
+        //     this._fullScreenRT.dispose();
+        //     this._fullScreenRT = null;
+        // }
+
+        public get fullScreenRT() {
+            const stageViewport = stage.viewport;
+
+            if (!this._fullScreenRT || this._fullScreenRT.width !== stageViewport.w || this._fullScreenRT.height !== stageViewport.h) {
+                if (this._fullScreenRT) {
+                    this._fullScreenRT.dispose();
+                }
+
+                this._fullScreenRT = new GlRenderTarget("fullScreenRT", stageViewport.w, stageViewport.h, true);//TODO    平台无关
+            }
+
+            return this._fullScreenRT;
+        }
+
+        public updateCameraTransform() {
+            const rawData = this.camera.gameObject.transform.localToWorldMatrix.rawData;
 
             if (this.cameraPosition[0] !== rawData[12] ||
                 this.cameraPosition[1] !== rawData[13] ||
@@ -295,66 +377,63 @@ namespace egret3d {
         //     this.lightShadowCameraFar = light.shadowCameraFar;
         // }
 
-        public update(drawCall: DrawCall) {
-            this.drawCall = drawCall;
+        public updateDrawCall(drawCall: DrawCall) {
             const renderer = drawCall.renderer;
             // const scene = renderer.gameObject.scene;
             const scene = paper.Scene.activeScene;
             const worldToLocalMatrix = this.camera.transform.worldToLocalMatrix;
             const worldToClipMatrix = this.camera.worldToClipMatrix;
-            const matrix = drawCall.matrix || (renderer ? renderer.gameObject.transform.localToWorldMatrix : Matrix4.IDENTITY);
+            const matrix = drawCall.matrix;
+
             this.drawCall = drawCall;
-            // this.matrix_m.copy(matrix); // clone matrix because getWorldMatrix returns a reference
             this.matrix_mv.multiply(worldToLocalMatrix, matrix);
             this.matrix_mvp.multiply(worldToClipMatrix, matrix);
             this.matrix_mv_inverse.getNormalMatrix(this.matrix_mv);
             //
-            this.shaderContextDefine = "";
+            let shaderContextDefine = "";
 
             if (
                 renderer &&
                 renderer.lightmapIndex >= 0 &&
                 scene.lightmaps.length > renderer.lightmapIndex
             ) {
-                this.lightmap = scene.lightmaps[renderer.lightmapIndex];
                 this.lightmapUV = drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0;
                 this.lightmapIntensity = scene.lightmapIntensity;
-                this.lightmapScaleOffset[0] = renderer.lightmapScaleOffset.x;
-                this.lightmapScaleOffset[1] = renderer.lightmapScaleOffset.y;
-                this.lightmapScaleOffset[2] = renderer.lightmapScaleOffset.z;
-                this.lightmapScaleOffset[3] = renderer.lightmapScaleOffset.w;
-                this.shaderContextDefine += "#define USE_LIGHTMAP \n";
+                renderer.lightmapScaleOffset.toArray(this.lightmapScaleOffset);
+                this.lightmap = scene.lightmaps[renderer.lightmapIndex];
+                shaderContextDefine += "#define USE_LIGHTMAP \n";
             }
 
             if (this.lightCount > 0) {
                 if (this.directLightCount > 0) {
-                    this.shaderContextDefine += "#define NUM_DIR_LIGHTS " + this.directLightCount + "\n";
+                    shaderContextDefine += "#define NUM_DIR_LIGHTS " + this.directLightCount + "\n";
                 }
 
                 if (this.pointLightCount > 0) {
-                    this.shaderContextDefine += "#define NUM_POINT_LIGHTS " + this.pointLightCount + "\n";
+                    shaderContextDefine += "#define NUM_POINT_LIGHTS " + this.pointLightCount + "\n";
                 }
 
                 if (this.spotLightCount > 0) {
-                    this.shaderContextDefine += "#define NUM_SPOT_LIGHTS " + this.spotLightCount + "\n";
+                    shaderContextDefine += "#define NUM_SPOT_LIGHTS " + this.spotLightCount + "\n";
                 }
 
                 if (renderer && renderer.receiveShadows) {
-                    this.shaderContextDefine += "#define USE_SHADOWMAP \n";
-                    this.shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
+                    shaderContextDefine += "#define USE_SHADOWMAP \n";
+                    shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
             }
 
             const fog = scene.fog;
+
             if (fog.mode !== FogMode.NONE) {
                 this.fogColor[0] = fog.color.r;
                 this.fogColor[1] = fog.color.g;
                 this.fogColor[2] = fog.color.b;
-                this.shaderContextDefine += "#define USE_FOG \n";//TODO 根据参数生成define
+                shaderContextDefine += "#define USE_FOG \n";//TODO 根据参数生成define
 
                 if (fog.mode === FogMode.FOG_EXP2) {
                     this.fogDensity = fog.density;
-                    this.shaderContextDefine += "#define FOG_EXP2 \n";//TODO 根据参数生成define
+                    shaderContextDefine += "#define FOG_EXP2 \n";//TODO 根据参数生成define
                 }
                 else {
                     this.fogNear = fog.near;
@@ -363,8 +442,10 @@ namespace egret3d {
             }
 
             if (renderer && renderer.constructor === SkinnedMeshRenderer && !(renderer as SkinnedMeshRenderer).forceCPUSkin) {
-                this.shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, (renderer as SkinnedMeshRenderer).bones.length)} \n`;
+                shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, (renderer as SkinnedMeshRenderer).bones.length)} \n`;
             }
+
+            return shaderContextDefine;
         }
     }
 }
