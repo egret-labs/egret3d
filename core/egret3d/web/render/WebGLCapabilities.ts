@@ -364,7 +364,7 @@ namespace egret3d {
             }
 
             webgl.viewport(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h);
-            webgl.depthRange(0.0, 1.0); //
+            webgl.depthRange(0.0, 1.0); // TODO
         }
 
         public updateState(state: gltf.States | null) {
