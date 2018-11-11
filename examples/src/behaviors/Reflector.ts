@@ -29,10 +29,11 @@ namespace behaviors {
         public textureHeight: uint = 1024;
         public clipBias: number = 0.03;
 
+        @paper.editor.property(paper.editor.EditType.COLOR)
         public readonly color: egret3d.Color = egret3d.Color.create();
 
         private readonly _renderState: egret3d.WebGLRenderState = paper.GameObject.globalGameObject.getComponent(egret3d.WebGLRenderState)!;
-        private readonly _renderTarget: egret3d.GlRenderTarget = new egret3d.GlRenderTarget("", this.textureWidth, this.textureHeight, true);
+        private readonly _renderTarget: egret3d.GlRenderTarget = new egret3d.GlRenderTarget("xxxxxx", this.textureWidth, this.textureHeight, true, false, false, false);
 
         public onStart() {
             if (!Reflector._reflectorCamera) {
@@ -53,20 +54,6 @@ namespace behaviors {
                 .setMatrix("textureMatrix", _textureMatrix);
         }
 
-        // private _calculateReflectionMatrix(plane: Readonly<egret3d.Vector4>, out: egret3d.Matrix4) {
-        //     const { x, y, z, w } = plane;
-        //     out.set(
-        //         1.0 - 2.0 * x * x, -2.0 * x * y, -2.0 * x * z, -2.0 * w * x,
-        //         -2.0 * y * x, 1.0 - 2.0 * y * y, -2.0 * y * z, -2.0 * w * y,
-        //         -2.0 * z * x, -2.0 * z * y, 1.0 - 2.0 * z * z, -2.0 * w * z,
-        //         0.0, 0.0, 0.0, 1.0,
-        //     );
-
-        //     return out;
-        // }
-
-        // private readonly _testCube = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
-
         public onBeforeRender() {
             const currentCamera = egret3d.Camera.current!;
             const reflectorCamera = Reflector._reflectorCamera!;
@@ -83,7 +70,6 @@ namespace behaviors {
             const view = _view.subtract(reflectorPosition, cameraPosition);
 
             if (view.dot(normal) > 0.0) {
-                // this._testCube.transform.position = egret3d.Vector3.ZERO;
                 return true; //
             }
 
@@ -98,9 +84,6 @@ namespace behaviors {
             const target = _target.subtract(reflectorPosition, lookAtPosition).reflect(normal).add(reflectorPosition);
             view.reflect(normal).negate().add(reflectorPosition);
 
-            // this._testCube.transform.position = target;
-            // this._testCube.transform.lookAt(target, up);
-
             reflectorCamera.transform.position = view;
             reflectorCamera.transform.lookAt(target, up);
             reflectorCamera.opvalue = currentCamera.opvalue;
@@ -111,27 +94,27 @@ namespace behaviors {
 
             // virtualCamera.userData.recursion = 0; TODO
 
-            // const projectionMatrix = reflectorCamera.projectionMatrix;
+            const projectionMatrix = reflectorCamera.projectionMatrix;
 
-            // // Update the texture matrix
-            // _textureMatrix
-            //     .set(
-            //         0.5, 0.0, 0.0, 0.5,
-            //         0.0, 0.5, 0.0, 0.5,
-            //         0.0, 0.0, 0.5, 0.5,
-            //         0.0, 0.0, 0.0, 1.0
-            //     )
-            //     .multiply(projectionMatrix)
-            //     .multiply(reflectorCamera.gameObject.transform.worldToLocalMatrix)
-            //     .multiply(transform.localToWorldMatrix);
+            // Update the texture matrix
+            _textureMatrix
+                .set(
+                    0.5, 0.0, 0.0, 0.5,
+                    0.0, 0.5, 0.0, 0.5,
+                    0.0, 0.0, 0.5, 0.5,
+                    0.0, 0.0, 0.0, 1.0
+                )
+                .multiply(projectionMatrix)
+                .multiply(reflectorCamera.gameObject.transform.worldToLocalMatrix)
+                .multiply(transform.localToWorldMatrix);
 
-            // _q.x = (egret3d.sign(clipPlane.x) + projectionMatrix.rawData[8]) / projectionMatrix.rawData[0];
-            // _q.y = (egret3d.sign(clipPlane.y) + projectionMatrix.rawData[9]) / projectionMatrix.rawData[5];
-            // _q.z = -1.0;
-            // _q.w = (1.0 + projectionMatrix.rawData[10]) / projectionMatrix.rawData[14];
+            _q.x = (egret3d.sign(clipPlane.x) + projectionMatrix.rawData[8]) / projectionMatrix.rawData[0];
+            _q.y = (egret3d.sign(clipPlane.y) + projectionMatrix.rawData[9]) / projectionMatrix.rawData[5];
+            _q.z = -1.0;
+            _q.w = (1.0 + projectionMatrix.rawData[10]) / projectionMatrix.rawData[14];
 
-            // // // Calculate the scaled plane vector
-            // clipPlane.multiplyScalar(2.0 / clipPlane.dot(_q));
+            // Calculate the scaled plane vector
+            clipPlane.multiplyScalar(2.0 / clipPlane.dot(_q));
 
             // // Replacing the third row of the projection matrix
             // projectionMatrix.rawData[2] = clipPlane.x;
@@ -139,17 +122,18 @@ namespace behaviors {
             // projectionMatrix.rawData[10] = clipPlane.z + 1.0 - this.clipBias;
             // projectionMatrix.rawData[14] = clipPlane.w;
 
-            // // // Render
-            // const renderState = this._renderState;
-            // const backupViewPort = _viewPort.copy(renderState.viewPort);
-            // const backupRenderTarget = renderState.renderTarget;
+            // Render
+            const renderState = this._renderState;
+            const backupViewPort = _viewPort.copy(renderState.viewPort);
+            const backupRenderTarget = renderState.renderTarget;
 
-            // reflectorCamera.renderTarget = this._renderTarget;
-            // renderState.render(reflectorCamera);
-            // renderState.updateViewport(backupViewPort, backupRenderTarget);
+            reflectorCamera.renderTarget = this._renderTarget;
+            renderState.render(reflectorCamera);
 
-            // const reflectorMaterial = this.gameObject.renderer!.material!;
-            // reflectorMaterial.setColor("color", this.color).setTexture("tDiffuse", this._renderTarget);
+            const reflectorMaterial = this.gameObject.renderer!.material!;
+            reflectorMaterial.setColor("color", this.color).setTexture("tDiffuse", this._renderTarget);
+
+            renderState.updateViewport(backupViewPort, backupRenderTarget);
 
             return true;
         }

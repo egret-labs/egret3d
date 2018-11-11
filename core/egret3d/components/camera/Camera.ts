@@ -255,7 +255,6 @@ namespace egret3d {
         public uninitialize() {
             super.uninitialize();
 
-            this.transform.unregisterObserver(this);
             stage.onScreenResize.remove(this._onStageResize, this);
             stage.onResize.remove(this._onStageResize, this);
         }

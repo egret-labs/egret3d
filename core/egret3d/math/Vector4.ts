@@ -218,6 +218,12 @@ namespace egret3d {
                     p3 = p1;
                     p1 = this;
                 }
+                else { 
+                    const temp = p1;
+                    p1 = p2;
+                    p2 = p3;
+                    p3 = temp;
+                }
             }
             else if (typeof p2 === "number") {
                 p3 = p2;

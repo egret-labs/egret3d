@@ -1322,6 +1322,12 @@ var egret3d;
                     p3 = p1;
                     p1 = this;
                 }
+                else {
+                    var temp = p1;
+                    p1 = p2;
+                    p2 = p3;
+                    p3 = temp;
+                }
             }
             else if (typeof p2 === "number") {
                 p3 = p2;
@@ -2087,6 +2093,12 @@ var egret3d;
                 if (!p3) {
                     p3 = p1;
                     p1 = this;
+                }
+                else {
+                    var temp = p1;
+                    p1 = p2;
+                    p2 = p3;
+                    p3 = temp;
                 }
             }
             else if (typeof p2 === "number") {
@@ -5140,6 +5152,12 @@ var egret3d;
                     p3 = p1;
                     p1 = this;
                 }
+                else {
+                    var temp = p1;
+                    p1 = p2;
+                    p2 = p3;
+                    p3 = temp;
+                }
             }
             else if (typeof p2 === "number") {
                 p3 = p2;
@@ -5167,6 +5185,12 @@ var egret3d;
                 if (!p3) {
                     p3 = p1;
                     p1 = this;
+                }
+                else {
+                    var temp = p1;
+                    p1 = p2;
+                    p2 = p3;
+                    p3 = temp;
                 }
             }
             else if (typeof p2 === "number") {
@@ -8443,6 +8467,9 @@ var paper;
             }
             else {
                 delete this._components[value.constructor.__index];
+            }
+            if (this.transform && value.hasOwnProperty("onTransformChange")) {
+                this.transform.unregisterObserver(value);
             }
             if (value instanceof paper.Behaviour) {
                 if (value.onBeforeRender) {
@@ -13845,7 +13872,6 @@ var egret3d;
          * TODO
          */
         Camera.prototype._calcCameraFrame = function () {
-            var aspect = this.aspect;
             var farLD = this._frameVectors[0];
             var nearLD = this._frameVectors[1];
             var farRD = this._frameVectors[2];
@@ -13854,9 +13880,10 @@ var egret3d;
             var nearLT = this._frameVectors[5];
             var farRT = this._frameVectors[6];
             var nearRT = this._frameVectors[7];
-            var near = this.near;
-            var far = this.far;
             var matchFactor = egret3d.stage.matchFactor;
+            var aspect = this.aspect;
+            var near = this._near;
+            var far = this._far;
             var tan = Math.tan(this._fov * 0.5);
             var nearHX = near * tan;
             var nearWX = nearHX * aspect;
@@ -13930,7 +13957,6 @@ var egret3d;
         };
         Camera.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
-            this.transform.unregisterObserver(this);
             egret3d.stage.onScreenResize.remove(this._onStageResize, this);
             egret3d.stage.onResize.remove(this._onStageResize, this);
         };
@@ -14067,8 +14093,8 @@ var egret3d;
                 return this._far;
             },
             set: function (value) {
-                if (value <= this.near) {
-                    value = this.near + 0.01;
+                if (value <= this._near) {
+                    value = this._near + 0.01;
                 }
                 if (value >= 10000.0) {
                     value = 10000.0;
@@ -20812,7 +20838,7 @@ var egret3d;
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
             }
             webgl.viewport(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h);
-            webgl.depthRange(0.0, 1.0); //
+            webgl.depthRange(0.0, 1.0); // TODO
         };
         WebGLRenderState.prototype.updateState = function (state) {
             if (this._cacheState === state) {

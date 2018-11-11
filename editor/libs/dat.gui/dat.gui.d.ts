@@ -5,6 +5,8 @@
 
 declare namespace dat {
     class GUI {
+        static toggleHide(): void;
+        static hide: boolean;
         instance?: any; // Modify add instance.
         onClick?: (gui: GUI) => void; // Modify add onClick.
 

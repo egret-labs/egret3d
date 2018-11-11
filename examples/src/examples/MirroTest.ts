@@ -12,10 +12,14 @@ namespace examples {
 
             const plane = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.PLANE, "Plane");
             plane.renderer!.material = egret3d.Material.create(RES.getRes("shaders/reflector.shader.json"));
-            // plane.renderer!.material = egret3d.DefaultMaterials.MESH_BASIC.clone()
-            //     .setTexture(egret3d.DefaultTextures.GRAY)
-            //     .setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.5);
             plane.addComponent(behaviors.Reflector);
+            plane.transform.translate(0.0, 0.0, 1.0);
+        
+            { 
+                const plane = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.PLANE, "Plane");
+                plane.renderer!.material = egret3d.Material.create(egret3d.DefaultShaders.TRANSPARENT);
+                plane.renderer!.material!.opacity = 0.5;
+            }
 
             const cubeA = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
             cubeA.name = "cubeA";

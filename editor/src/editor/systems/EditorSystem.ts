@@ -10,6 +10,20 @@ namespace paper.editor {
         private _isMobile: boolean = false;
         private readonly _guiComponent: GUIComponent | null = Application.playerMode === PlayerMode.Editor ? null : GameObject.globalGameObject.getOrAddComponent(GUIComponent);
 
+        private _fpsHided: boolean = false;
+
+        private _hideFPS() {
+            const guiComponent = this._guiComponent!;
+            const statsDOM = guiComponent.stats.dom;
+
+            if (this._fpsHided) {
+                statsDOM.style.display = "block";
+            }
+            else {
+                statsDOM.style.display = "none";
+            }
+        }
+
         public onAwake() {
             GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
             //
@@ -76,6 +90,14 @@ namespace paper.editor {
                     // );
                     guiComponent.hierarchy.close();
                     guiComponent.inspector.close();
+
+                    if (!dat.GUI.hide) {
+                        dat.GUI.toggleHide();
+                    }
+
+                    if (!this._fpsHided) {
+                        this._hideFPS();
+                    }
                 }
                 else {
                     hierarchy[0].appendChild(guiComponent.hierarchy.domElement);
@@ -99,13 +121,7 @@ namespace paper.editor {
             );
 
             if (egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyH).isDown(false)) {
-                const statsDOM = guiComponent.stats.dom;
-                if (statsDOM.style.display !== "none") {
-                    statsDOM.style.display = "none";
-                }
-                else {
-                    statsDOM.style.display = "block";
-                }
+                this._hideFPS();
             }
 
             // TODO dc tc vc
@@ -125,6 +141,14 @@ namespace paper.editor {
                         if (guiComponent.inspector.onClick) {
                             guiComponent.inspector.onClick(guiComponent.inspector);
                         }
+                    }
+
+                    if (!dat.GUI.hide) {
+                        dat.GUI.toggleHide();
+                    }
+
+                    if (!this._fpsHided) {
+                        this._hideFPS();
                     }
                 }
                 else {

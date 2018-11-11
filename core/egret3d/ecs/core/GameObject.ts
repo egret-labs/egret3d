@@ -222,6 +222,10 @@ namespace paper {
                 delete this._components[(value.constructor as IComponentClass<BaseComponent>).__index];
             }
 
+            if (this.transform && value.hasOwnProperty("onTransformChange")) { // TODO 字符串依赖。
+                this.transform.unregisterObserver(value as any);
+            }
+
             if (value instanceof Behaviour) {
                 if (value.onBeforeRender) {
                     this._beforeRenderBehaviors.splice(this._beforeRenderBehaviors.indexOf(value), 1);
