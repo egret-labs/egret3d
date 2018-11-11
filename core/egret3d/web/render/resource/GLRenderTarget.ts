@@ -99,20 +99,20 @@ namespace egret3d {
             webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, 4);
             webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, this.width, this.height, 0, webgl.RGBA, webgl.UNSIGNED_BYTE, null);
 
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
             const isPower2 = isPowerOfTwo(this.width) && isPowerOfTwo(this.height);
             if (isPower2) {
                 if (this._linear) {
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR_MIPMAP_LINEAR);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, this._mipmap ? webgl.LINEAR_MIPMAP_LINEAR : webgl.LINEAR);
                 }
                 else {
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST_MIPMAP_NEAREST);
+                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, this._mipmap ? webgl.NEAREST_MIPMAP_NEAREST : webgl.NEAREST);
                 }
             }
             else {
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
                 if (this._linear) {
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.LINEAR);
