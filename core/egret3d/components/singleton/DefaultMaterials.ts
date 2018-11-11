@@ -39,6 +39,10 @@ namespace egret3d {
          * @internal
          */
         public static SHADOW_DISTANCE: Material;
+        /**
+         * @internal
+         */
+        public static COPY: Material;
 
         private _createMaterial(name: string, shader: Shader, renderQueue: paper.RenderQueue = paper.RenderQueue.Geometry) {
             const material = new Material(shader);
@@ -79,6 +83,8 @@ namespace egret3d {
                 .addDefine(ShaderDefine.DEPTH_PACKING_3201);
 
             DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", DefaultShaders.DISTANCE_RGBA);
+
+            DefaultMaterials.COPY = this._createMaterial("builtin/copy.mat.json", DefaultShaders.COPY);
         }
     }
 }

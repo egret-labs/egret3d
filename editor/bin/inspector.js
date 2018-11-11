@@ -5136,10 +5136,7 @@ var paper;
                     cameraViewFrustum.transform.position = selectedCamera.gameObject.transform.position;
                     cameraViewFrustum.transform.rotation = selectedCamera.gameObject.transform.rotation;
                     var mesh = cameraViewFrustum.getComponent(egret3d.MeshFilter).mesh;
-                    var cameraProject = egret3d.Matrix4.create();
-                    var viewPortPixel = { x: 0, y: 0, w: 0, h: 0 };
-                    selectedCamera.calcViewPortPixel(viewPortPixel); // update viewport
-                    selectedCamera.calcProjectMatrix(viewPortPixel.w / viewPortPixel.h, cameraProject);
+                    var cameraProject = selectedCamera.projectionMatrix;
                     var positions = mesh.getVertices();
                     // center / target
                     setPoint(cameraProject, positions, 0, 0, -1, [38, 41]);
@@ -5168,7 +5165,6 @@ var paper;
                     setPoint(cameraProject, positions, 0, -1, -1, [48]);
                     setPoint(cameraProject, positions, 0, 1, -1, [49]);
                     mesh.uploadVertexBuffer("POSITION" /* POSITION */);
-                    cameraProject.release();
                 }
             };
             SceneSystem.prototype._updateLights = function () {

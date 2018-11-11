@@ -286,6 +286,7 @@ namespace egret3d {
      */
     export class WebGLRenderState extends paper.SingletonComponent {
         public readonly clearColor: Color = Color.create();
+        public readonly viewPort: Rectangle = Rectangle.create();
         public renderTarget: BaseRenderTarget | null = null;
 
         public render: (camera: Camera) => void = null!;
@@ -342,31 +343,24 @@ namespace egret3d {
             }
         }
 
-        public updateRenderTarget(target: BaseRenderTarget | null) {
+        public updateViewport(viewport: Readonly<Rectangle>, target: BaseRenderTarget | null) { // TODO
             const webgl = WebGLCapabilities.webgl!;
+            let w: number;
+            let h: number;
+
+            this.viewPort.copy(viewport);
             this.renderTarget = target;
 
             if (target) {
-                target.use();
-            }
-            else {
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-            }
-        }
-
-        public updateViewport(viewport: Rectangle, target: BaseRenderTarget | null) { // TODO
-            const webgl = WebGLCapabilities.webgl!;
-
-            let w: number;
-            let h: number;
-            if (target) {
                 w = target.width;
                 h = target.height;
+                target.use();
             }
             else {
                 const stageViewport = stage.viewport;
                 w = stageViewport.w;
                 h = stageViewport.h;
+                webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
             }
 
             webgl.viewport(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h);

@@ -99,7 +99,7 @@ namespace examples.postprocessing {
         private readonly _renderTargetsHorizontal: egret3d.GlRenderTarget[] = [];
         private readonly _renderTargetsVertical: egret3d.GlRenderTarget[] = [];
         private readonly _separableBlurMaterials: egret3d.Material[] = [];
-        private readonly _defaultMaterial:egret3d.Material = egret3d.DefaultMaterials.MESH_BASIC.clone();
+        private readonly _defaultMaterial: egret3d.Material = egret3d.DefaultMaterials.MESH_BASIC.clone();
         private readonly _copyMaterial: egret3d.Material = new egret3d.Material(egret3d.DefaultShaders.COPY)
             .setBlend(gltf.BlendMode.Additive, paper.RenderQueue.Transparent);
         private _renderTargetBright: egret3d.GlRenderTarget = null!;
@@ -160,15 +160,17 @@ namespace examples.postprocessing {
                 .setDepth(true, true);
         }
 
-        public render(context: egret3d.PostProcessRenderContext) {
+        public render(camera: egret3d.Camera) {
+            const context = camera.context;
+            const postProcessingRenderTarget = camera.postProcessingRenderTarget;
             const backClearColor = this._renderState.clearColor.clone().release();
 
-            context.blit(context.fullScreenRT, this._defaultMaterial);
+            context.blit(postProcessingRenderTarget, this._defaultMaterial);
             // 1. Extract Bright Areas
             this._materialHighPassFilter
-                .setTexture("tDiffuse", context.fullScreenRT)
+                .setTexture("tDiffuse", postProcessingRenderTarget)
                 .setFloat("luminosityThreshold", this.threshold);
-            context.blit(context.fullScreenRT, this._materialHighPassFilter, this._renderTargetBright);
+            context.blit(postProcessingRenderTarget, this._materialHighPassFilter, this._renderTargetBright);
 
             // 2. Blur All the mips progressively
             let inputRenderTarget = this._renderTargetBright;
@@ -181,12 +183,12 @@ namespace examples.postprocessing {
                 separableBlurMaterial
                     .setTexture("colorTexture", inputRenderTarget)
                     .setVector2("direction", this.blurDirectionX);
-                context.blit(context.fullScreenRT, separableBlurMaterial, renderTargetHorizontal);
+                context.blit(postProcessingRenderTarget, separableBlurMaterial, renderTargetHorizontal);
 
                 separableBlurMaterial
                     .setTexture("colorTexture", renderTargetHorizontal)
                     .setVector2("direction", this.blurDirectionY);
-                context.blit(context.fullScreenRT, separableBlurMaterial, renderTargetVertical);
+                context.blit(postProcessingRenderTarget, separableBlurMaterial, renderTargetVertical);
 
                 inputRenderTarget = renderTargetVertical;
             }
@@ -196,7 +198,7 @@ namespace examples.postprocessing {
                 .setFloat("bloomStrength", this.strength)
                 .setFloat("bloomRadius", this.radius);
 
-            context.blit(context.fullScreenRT, this._compositeMaterial, this._renderTargetsHorizontal[0]);
+            context.blit(postProcessingRenderTarget, this._compositeMaterial, this._renderTargetsHorizontal[0]);
             this._copyMaterial.setTexture(this._renderTargetsHorizontal[0]);
             // this._renderState.clearBuffer(gltf.BufferBit.COLOR_BUFFER_BIT, backClearColor);
             context.blit(this._renderTargetsHorizontal[0]);

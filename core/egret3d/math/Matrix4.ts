@@ -546,6 +546,42 @@ namespace egret3d {
 
             return this;
         }
+
+        public extractRotation(input?: Readonly<Matrix4>): this {
+            if (!input) {
+                input = this;
+            }
+
+            const rawData = this.rawData;
+            const inputRawData = input.rawData;
+            const helpVector = _helpVector3A;
+
+            const scaleX = 1.0 / helpVector.fromMatrixColumn(input, 0).length;
+            const scaleY = 1.0 / helpVector.fromMatrixColumn(input, 1).length;
+            const scaleZ = 1.0 / helpVector.fromMatrixColumn(input, 2).length;
+
+            rawData[0] = inputRawData[0] * scaleX;
+            rawData[1] = inputRawData[1] * scaleX;
+            rawData[2] = inputRawData[2] * scaleX;
+            rawData[3] = 0.0;
+
+            rawData[4] = inputRawData[4] * scaleY;
+            rawData[5] = inputRawData[5] * scaleY;
+            rawData[6] = inputRawData[6] * scaleY;
+            rawData[7] = 0.0;
+
+            rawData[8] = inputRawData[8] * scaleZ;
+            rawData[9] = inputRawData[9] * scaleZ;
+            rawData[10] = inputRawData[10] * scaleZ;
+            rawData[11] = 0.0;
+
+            rawData[12] = 0.0;
+            rawData[13] = 0.0;
+            rawData[14] = 0.0;
+            rawData[15] = 1.0;
+            
+            return this;
+        }
         /**
          * 转置该矩阵。
          */

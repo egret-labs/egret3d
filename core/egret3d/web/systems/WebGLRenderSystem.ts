@@ -15,7 +15,6 @@ namespace egret3d.web {
             ]
         ];
         private _egret2DOrderCount: number = 0;
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
         private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState, false, this); // Set interface.
         private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
@@ -57,9 +56,7 @@ namespace egret3d.web {
         // }
         private _render(camera: Camera, renderTarget: BaseRenderTarget | null) {
             const renderState = this._renderState;
-            const drawCallCollecter = this._drawCallCollecter;
             renderState.updateViewport(camera.viewport, renderTarget);
-            renderState.updateRenderTarget(renderTarget);
             let bufferBit = gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT;
             if (!camera.clearOption_Depth) {
                 bufferBit &= ~gltf.BufferBit.DEPTH_BUFFER_BIT;
@@ -70,8 +67,8 @@ namespace egret3d.web {
             }
             renderState.clearBuffer(bufferBit, camera.backgroundColor);
             // Draw.
-            const opaqueCalls = drawCallCollecter.opaqueCalls;
-            const transparentCalls = drawCallCollecter.transparentCalls;
+            const opaqueCalls = camera.context.opaqueCalls;
+            const transparentCalls = camera.context.transparentCalls;
             // Step 1 draw opaques.
             for (const drawCall of opaqueCalls) {
                 this.draw(camera, drawCall);
@@ -116,14 +113,14 @@ namespace egret3d.web {
 
             const material = drawCall.material;
             const context = camera.context;
-            context.update(drawCall);
+            const shaderContextDefine = context.updateDrawCall(drawCall);
             //
             const webgl = WebGLCapabilities.webgl!;
             const technique = material._glTFTechnique;
             const techniqueState = technique.states || null;
             const renderState = this._renderState;
             // Get program.
-            const program = renderState.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
+            const program = renderState.getProgram(material, technique, shaderContextDefine + material.shaderDefine);
             // Use program.
             const force = renderState.useProgram(program);
             // Update states.
@@ -160,14 +157,14 @@ namespace egret3d.web {
             }
         }
 
-        private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique) {
+        private _updateContextUniforms(program: GlProgram, context: CameraRenderContext, technique: gltf.Technique) {
             const webgl = WebGLCapabilities.webgl!;
             const uniforms = technique.uniforms;
             const glUniforms = program.contextUniforms;
             // TODO
             const camera = context.camera;
             const drawCall = context.drawCall;
-            const matrix = drawCall.matrix || drawCall.renderer!.gameObject.transform.localToWorldMatrix;
+            const matrix = drawCall.matrix;
 
             for (const glUniform of glUniforms) {
                 const uniform = uniforms[glUniform.name];
@@ -307,7 +304,7 @@ namespace egret3d.web {
                         break;
 
                     case gltf.UniformSemanticType._REFERENCEPOSITION:
-                        webgl.uniform3fv(location, context.lightPosition);
+                        // webgl.uniform3fv(location, context.lightPosition); // TODO
                         break;
                     case gltf.UniformSemanticType._NEARDICTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraNear);
@@ -460,9 +457,7 @@ namespace egret3d.web {
 
         public render(camera: Camera) {
             Camera.current = camera;
-
-            const drawCallCollecter = this._drawCallCollecter;
-            drawCallCollecter.frustumCulling(camera);
+            camera._update();
 
             if (this._cameraAndLightCollecter.lightDirty) {
                 camera.context.updateLights(this._cameraAndLightCollecter.lights); // TODO 性能优化
@@ -472,18 +467,16 @@ namespace egret3d.web {
                 this._render(camera, camera.renderTarget);
             }
             else {
-                const postProcessContext = camera.postProcessContext;
-                this._render(camera, postProcessContext.fullScreenRT);
+                this._render(camera, camera.postProcessingRenderTarget);
 
                 for (const postEffect of camera.postQueues) {
-                    postEffect.render(postProcessContext);
+                    postEffect.render(camera);
                 }
             }
         }
 
         public onUpdate() {
-            const webgl = WebGLCapabilities.webgl;
-            if (!webgl) {
+            if (!WebGLCapabilities.webgl) {
                 return;
             }
 

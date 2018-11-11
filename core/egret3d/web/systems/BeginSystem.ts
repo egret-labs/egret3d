@@ -14,9 +14,12 @@ namespace egret3d.web {
             const parentElement = canvas.parentElement;
             canvas.width = viewport.w;
             canvas.height = viewport.h;
+            // canvas.width = viewport.w * window.devicePixelRatio;
+            // canvas.height = viewport.h * window.devicePixelRatio;
             canvas.style.top = (parentElement ? parentElement.offsetTop : 0) + "px";
             canvas.style.position = "absolute";
             canvas.style[egret.web.getPrefixStyleName("transformOrigin")] = "0% 0% 0px";
+            // canvas.scale(window.devicePixelRatio, window.devicePixelRatio);
 
             if (stage.rotated) {
                 // canvas.style.width = h + "px";

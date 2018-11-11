@@ -670,6 +670,8 @@ declare namespace egret3d {
         clone(): Vector3;
         set(x: number, y: number, z: number): this;
         fromArray(array: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromMatrixPosition(matrix: Readonly<Matrix4>): this;
+        fromMatrixColumn(matrix: Readonly<Matrix4>, index: 0 | 1 | 2): this;
         clear(): this;
         /**
          * 判断该向量是否和一个向量相等。
@@ -1411,6 +1413,7 @@ declare namespace egret3d {
          * @param scale 缩放向量。
          */
         decompose(translation?: Vector3 | null, rotation?: Quaternion | null, scale?: Vector3 | null): this;
+        extractRotation(input?: Readonly<Matrix4>): this;
         /**
          * 转置该矩阵。
          */
@@ -3467,7 +3470,7 @@ declare namespace egret3d {
          * @param t 插值因子。
          * @param to 目标矩阵。
          */
-        slerp(t: number, to: Readonly<IVector4>): this;
+        slerp(to: Readonly<IVector4>, t: number): this;
         /**
          * 将两个四元数球形插值的结果写入该四元数。
          * - v = from * (1 - t) + to * t
@@ -3476,6 +3479,11 @@ declare namespace egret3d {
          * @param from 起始矩阵。
          * @param to 目标矩阵。
          */
+        slerp(from: Readonly<IVector4>, to: Readonly<IVector4>, t: number): this;
+        /**
+         * @deprecated
+         */
+        slerp(t: number, to: Readonly<IVector4>): this;
         slerp(t: number, from: Readonly<IVector4>, to: Readonly<IVector4>): this;
         /**
          * 设置该四元数，使其与起始点到目标点的方向相一致。
@@ -4146,43 +4154,104 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    class PostProcessRenderContext {
-        private readonly _camera;
+    /**
+     * 摄像机渲染上下文。
+     */
+    class CameraRenderContext {
+        /**
+         * 进入渲染周期后缓存的相机世界坐标。
+         */
+        readonly cameraPosition: Float32Array;
+        /**
+         * 进入渲染周期后缓存的相机世界前方向。
+         */
+        readonly cameraForward: Float32Array;
+        /**
+         * 进入渲染周期后缓存的相机世界上方向。
+         */
+        readonly cameraUp: Float32Array;
+        /**
+         *
+         */
+        readonly camera: Camera;
+        /**
+         *
+         */
+        drawCall: DrawCall;
+        /**
+         *
+         */
+        lightmapUV: uint;
+        lightmapIntensity: number;
+        readonly lightmapScaleOffset: Float32Array;
+        lightmap: Texture | null;
+        /**
+         *
+         */
+        lightCount: uint;
+        directLightCount: uint;
+        pointLightCount: uint;
+        spotLightCount: uint;
+        directLightArray: Float32Array;
+        pointLightArray: Float32Array;
+        spotLightArray: Float32Array;
+        lightShadowCameraNear: number;
+        lightShadowCameraFar: number;
+        readonly directShadowMaps: (WebGLTexture | null)[];
+        readonly pointShadowMaps: (WebGLTexture | null)[];
+        readonly spotShadowMaps: (WebGLTexture | null)[];
+        directShadowMatrix: Float32Array;
+        spotShadowMatrix: Float32Array;
+        pointShadowMatrix: Float32Array;
+        readonly matrix_mv: Matrix4;
+        readonly matrix_mvp: Matrix4;
+        readonly matrix_mv_inverse: Matrix3;
+        fogDensity: number;
+        fogNear: number;
+        fogFar: number;
+        readonly fogColor: Float32Array;
         private readonly _postProcessingCamera;
-        private readonly _drawCall;
-        private readonly _copyMaterial;
-        private _fullScreenRT;
+        private readonly _postProcessDrawCall;
+        /**
+         * 此帧的非透明绘制信息列表。
+         * - 已进行视锥剔除的。
+         */
+        readonly opaqueCalls: DrawCall[];
+        /**
+         * 此帧的透明绘制信息列表。
+         * - 已进行视锥剔除的。
+         */
+        readonly transparentCalls: DrawCall[];
+        /**
+         * 此帧的阴影绘制信息列表。
+         * - 已进行视锥剔除的。
+         */
+        readonly shadowCalls: DrawCall[];
+        private readonly _drawCallCollecter;
         /**
          * 禁止实例化。
          */
         constructor(camera: Camera);
+        /**
+         * 所有非透明的, 按照从近到远排序
+         */
+        private _sortOpaque(a, b);
+        /**
+         * 所有透明的，按照从远到近排序
+         */
+        private _sortFromFarToNear(a, b);
+        /**
+         * TODO
+         */
+        shadowFrustumCulling(camera: Camera): void;
+        /**
+         * TODO
+         */
+        frustumCulling(): void;
         blit(src: Texture, material?: Material | null, dest?: BaseRenderTarget | null): void;
-        clear(): void;
-        readonly currentCamera: Camera;
-        readonly fullScreenRT: BaseRenderTarget;
-    }
-    /**
-     * TODO 平台无关。
-     */
-    interface ICameraPostProcessing {
-        render(context: PostProcessRenderContext): void;
-    }
-    /**
-     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
-     */
-    abstract class CameraPostProcessing extends paper.BaseRelease<CameraPostProcessing> implements ICameraPostProcessing {
-        render(context: PostProcessRenderContext): void;
-    }
-    class MotionBlurEffect extends CameraPostProcessing {
-        private _material;
-        private _velocityFactor;
-        private _samples;
-        private _resolution;
-        private readonly _clipToWorldMatrix;
-        constructor();
-        render(context: PostProcessRenderContext): void;
-        velocityFactor: number;
-        samples: number;
+        updateCameraTransform(): void;
+        updateLights(lights: ReadonlyArray<BaseLight>): void;
+        updateDrawCall(drawCall: DrawCall): string;
     }
 }
 declare namespace paper {
@@ -4885,6 +4954,15 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
+     *
+     */
+    interface ITransformObserver {
+        /**
+         *
+         */
+        onTransformChange(): void;
+    }
+    /**
      * 渲染系统接口。
      */
     interface IRenderSystem {
@@ -4899,14 +4977,6 @@ declare namespace egret3d {
          * @param drawCall
          */
         draw(camera: Camera, drawCall: DrawCall): void;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 变换组件观察者接口。
-     */
-    interface ITransformObserver {
-        transformDirty: boolean;
     }
 }
 declare namespace egret3d {
@@ -4931,13 +5001,9 @@ declare namespace egret3d {
         private readonly _localToParentMatrix;
         private readonly _worldToLocalMatrix;
         private readonly _localToWorldMatrix;
-        /**
-         * @private
-         */
-        constructor();
+        private readonly _observers;
         private _removeFromChildren(value);
         private _getRotationAndScale();
-        private _setRotationAndScale(value);
         private _dirtify(isLocalDirty, dirty);
         private _updateMatrix(isWorldSpace);
         private _updateEuler(isWorldSpace, order?);
@@ -4947,10 +5013,22 @@ declare namespace egret3d {
         protected _onEulerUpdate(euler: Readonly<Vector3>): void;
         protected _onEulerAnglesUpdate(euler: Readonly<Vector3>): void;
         protected _onScaleUpdate(scale: Readonly<Vector3>): void;
+        initialize(): void;
+        uninitialize(): void;
         /**
          * 销毁该组件所有子（孙）级变换组件。
          */
         destroyChildren(): void;
+        /**
+         *
+         * @param observer
+         */
+        registerObserver(observer: ITransformObserver): void;
+        /**
+         *
+         * @param observer
+         */
+        unregisterObserver(observer: ITransformObserver): void;
         /**
          * 该组件是否包含某个子（孙）级变换组件。
          */
@@ -5396,6 +5474,10 @@ declare namespace egret3d {
          * 用于表示纹理丢失的紫色纹理
          */
         static MISSING: Texture;
+        /**
+         * 后期渲染的纹理。
+         */
+        static POST_PROCESSING: BaseRenderTarget;
         initialize(): void;
     }
 }
@@ -5522,7 +5604,7 @@ declare namespace egret3d {
          */
         renderer: paper.BaseRenderer | null;
         /**
-         * 此次绘制的世界矩阵，没有则使用渲染组件所属实体的变换世界矩阵。
+         * 此次绘制的世界矩阵。
          */
         matrix: Matrix4 | null;
         /**
@@ -5532,11 +5614,11 @@ declare namespace egret3d {
         /**
          * 此次绘制的网格资源。
          */
-        mesh: Mesh;
+        mesh: Mesh | null;
         /**
          * 此次绘制的材质资源。
          */
-        material: Material;
+        material: Material | null;
         /**
          *
          */
@@ -5557,38 +5639,7 @@ declare namespace egret3d {
          * - 未进行视锥剔除的。
          */
         readonly drawCalls: (DrawCall | null)[];
-        /**
-         * 此帧的非透明绘制信息列表。
-         * - 已进行视锥剔除的。
-         */
-        readonly opaqueCalls: DrawCall[];
-        /**
-         * 此帧的透明绘制信息列表。
-         * - 已进行视锥剔除的。
-         */
-        readonly transparentCalls: DrawCall[];
-        /**
-         * 此帧的阴影绘制信息列表。
-         * - 已进行视锥剔除的。
-         */
-        readonly shadowCalls: DrawCall[];
         private _drawCallsDirty;
-        /**
-         * 所有非透明的, 按照从近到远排序
-         */
-        private _sortOpaque(a, b);
-        /**
-         * 所有透明的，按照从远到近排序
-         */
-        private _sortFromFarToNear(a, b);
-        /**
-         * TODO
-         */
-        shadowFrustumCulling(camera: Camera): void;
-        /**
-         * TODO
-         */
-        frustumCulling(camera: Camera): void;
         /**
          * 移除指定渲染组件的绘制信息列表。
          */
@@ -6091,7 +6142,7 @@ declare namespace egret3d {
     /**
      * 相机组件。
      */
-    class Camera extends paper.BaseComponent {
+    class Camera extends paper.BaseComponent implements ITransformObserver {
         /**
          * 在渲染阶段正在执行渲染的相机。
          */
@@ -6128,18 +6179,6 @@ declare namespace egret3d {
          */
         order: number;
         /**
-         * 透视投影的视野。
-         */
-        fov: number;
-        /**
-         * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间差值。
-         */
-        opvalue: number;
-        /**
-         * 正交投影的尺寸。
-         */
-        size: number;
-        /**
          * 该相机的背景色。
          */
         readonly backgroundColor: Color;
@@ -6148,33 +6187,40 @@ declare namespace egret3d {
          */
         readonly viewport: Rectangle;
         /**
+         * 相机渲染上下文
+         * @private
+         */
+        readonly context: CameraRenderContext;
+        /**
          * TODO 功能完善后开放此接口
          */
         readonly postQueues: ICameraPostProcessing[];
-        postProcessContext: PostProcessRenderContext;
-        /**
-         * 渲染目标，如果为null，则为画布
-         */
-        renderTarget: BaseRenderTarget | null;
-        private _viewPortDirty;
+        private _viewportDirty;
         /**
          * TODO transform 应拥有高性能的位置变更通知机制。
          */
         private _matrixDirty;
+        private _opvalue;
+        private _fov;
         private _near;
         private _far;
+        private _size;
         private readonly _pixelViewport;
         private readonly _perspectiveMatrix;
         private readonly _worldToClipMatrix;
         private readonly _clipToWorldMatrix;
         private readonly _frameVectors;
+        private _renderTarget;
         /**
          * 计算相机视锥区域
          * TODO
          */
         private _calcCameraFrame();
         private _intersectPlane(boundingSphere, v0, v1, v2);
+        private _onStageResize();
         initialize(): void;
+        uninitialize(): void;
+        onTransformChange(): void;
         /**
          * 将舞台坐标基于该相机的视角转换为世界坐标。
          * @param stagePosition 舞台坐标。
@@ -6199,6 +6245,10 @@ declare namespace egret3d {
          */
         testFrustumCulling(node: paper.BaseRenderer): boolean;
         /**
+         * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间差值。
+         */
+        opvalue: number;
+        /**
          * 该相机的视点到近裁剪面距离。
          * - 该值过小会引起深度冲突。
          */
@@ -6207,6 +6257,14 @@ declare namespace egret3d {
          * 该相机的视点到远裁剪面距离。
          */
         far: number;
+        /**
+         * 透视投影的视野。
+         */
+        fov: number;
+        /**
+         * 正交投影的尺寸。
+         */
+        size: number;
         /**
          *
          */
@@ -6232,6 +6290,14 @@ declare namespace egret3d {
          */
         readonly clipToWorldMatrix: Readonly<Matrix4>;
         /**
+         * 渲染目标，如果为null，则为画布
+         */
+        renderTarget: BaseRenderTarget | null;
+        /**
+         *
+         */
+        readonly postProcessingRenderTarget: BaseRenderTarget;
+        /**
          * @deprecated
          */
         getPosAtXPanelInViewCoordinateByScreenPos(screenPos: Vector2, z: number, out: Vector2): void;
@@ -6247,6 +6313,31 @@ declare namespace egret3d {
          * @deprecated
          */
         createRayByScreen(screenPosX: number, screenPosY: number, ray?: Ray): Ray;
+    }
+}
+declare namespace egret3d {
+    /**
+     * TODO 平台无关。
+     */
+    interface ICameraPostProcessing {
+        render(camera: Camera): void;
+    }
+    /**
+     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
+     */
+    abstract class CameraPostProcessing extends paper.BaseRelease<CameraPostProcessing> implements ICameraPostProcessing {
+        render(camera: Camera): void;
+    }
+    class MotionBlurEffect extends CameraPostProcessing {
+        private _material;
+        private _velocityFactor;
+        private _samples;
+        private _resolution;
+        private readonly _clipToWorldMatrix;
+        constructor();
+        render(camera: Camera): void;
+        velocityFactor: number;
+        samples: number;
     }
 }
 declare namespace egret3d {
@@ -6285,8 +6376,6 @@ declare namespace egret3d {
         fromCartesianCoords(x: number, y: number, z: number): this;
         makeSafe(): this;
     }
-}
-declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
@@ -7793,6 +7882,7 @@ declare namespace egret3d {
      */
     class WebGLRenderState extends paper.SingletonComponent {
         readonly clearColor: Color;
+        readonly viewPort: Rectangle;
         renderTarget: BaseRenderTarget | null;
         render: (camera: Camera) => void;
         draw: (camera: Camera, drawCall: DrawCall) => void;
@@ -7805,8 +7895,7 @@ declare namespace egret3d {
         private _cacheState;
         private _getWebGLProgram(vs, fs, customDefines);
         initialize(renderSystem: IRenderSystem): void;
-        updateRenderTarget(target: BaseRenderTarget | null): void;
-        updateViewport(viewport: Rectangle, target: BaseRenderTarget | null): void;
+        updateViewport(viewport: Readonly<Rectangle>, target: BaseRenderTarget | null): void;
         updateState(state: gltf.States | null): void;
         clearState(): void;
         useProgram(program: GlProgram): boolean;
@@ -7926,12 +8015,14 @@ declare namespace egret3d {
         clone(): Plane;
         copy(value: Readonly<Plane>): this;
         set(normal: Readonly<IVector3>, constant: number): this;
-        fromPoint(value: Readonly<IVector3>, normal?: Vector3): this;
+        fromPoint(point: Readonly<IVector3>, normal?: Vector3): this;
         fromPoints(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>, valueC: Readonly<IVector3>): this;
         normalize(input?: Readonly<Plane>): this;
         negate(input?: Readonly<Plane>): this;
+        applyMatrix(matrix: Readonly<Matrix4>, normalMatrix?: Readonly<Matrix3>): this;
         getDistance(value: Readonly<IVector3>): number;
         getProjectionPoint(point: Readonly<IVector3>, output?: Vector3): Vector3;
+        getCoplanarPoint(output?: Vector3): Vector3;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
 }

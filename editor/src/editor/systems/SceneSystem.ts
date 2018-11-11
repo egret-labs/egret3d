@@ -94,10 +94,7 @@ namespace paper.editor {
                 cameraViewFrustum.transform.rotation = selectedCamera.gameObject.transform.rotation;
 
                 const mesh = cameraViewFrustum.getComponent(egret3d.MeshFilter)!.mesh!;
-                const cameraProject = egret3d.Matrix4.create();
-                const viewPortPixel: egret3d.IRectangle = { x: 0, y: 0, w: 0, h: 0 };
-                selectedCamera.calcViewPortPixel(viewPortPixel); // update viewport
-                selectedCamera.calcProjectMatrix(viewPortPixel.w / viewPortPixel.h, cameraProject);
+                const cameraProject = selectedCamera.projectionMatrix;
 
                 const positions = mesh.getVertices()!;
                 // center / target
@@ -129,8 +126,6 @@ namespace paper.editor {
                 setPoint(cameraProject, positions, 0, 1, -1, [49]);
 
                 mesh.uploadVertexBuffer(gltf.MeshAttributeType.POSITION);
-
-                cameraProject.release();
             }
         }
 
@@ -395,7 +390,7 @@ namespace paper.editor {
 
             {
                 let i = this._modelComponent.selectedGameObjects.length;
-                while (i--) { 
+                while (i--) {
                     const gameObject = this._modelComponent.selectedGameObjects[0];
                     if (gameObject.isDestroyed) {
                         this._modelComponent.unselect(gameObject);

@@ -1,5 +1,14 @@
 namespace egret3d {
     /**
+     * 
+     */
+    export interface ITransformObserver {
+        /**
+         * 
+         */
+        onTransformChange(): void;
+    }
+    /**
      * 渲染系统接口。
      */
     export interface IRenderSystem {

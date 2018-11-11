@@ -39,20 +39,19 @@ namespace egret3d {
             }
         }
 
-        public onUpdate(deltaTime: number) {
+        public onUpdate() {
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
             const cameras = cameraAndLightCollecter.cameras;
-            cameraAndLightCollecter.lightDirty = false;
 
             if (cameras.length > 0) {
                 cameraAndLightCollecter.sortCameras();
-
-                for (const component of cameras) {
-                    component._update(deltaTime);
-                }
             }
 
             this._drawCallCollecter._update();
+        }
+
+        public onLateUpdate() {
+            this._cameraAndLightCollecter.lightDirty = false;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace egret3d {
     /**
      * 相机组件。
      */
-    export class Camera extends paper.BaseComponent {
+    export class Camera extends paper.BaseComponent implements ITransformObserver {
         /**
          * 在渲染阶段正在执行渲染的相机。
          */
@@ -91,24 +91,6 @@ namespace egret3d {
         @paper.editor.property(paper.editor.EditType.INT)
         public order: number = 0;
         /**
-         * 透视投影的视野。
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: Math.PI - 0.01, step: 0.01 })
-        public fov: number = Math.PI * 0.25;
-        /**
-         * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间差值。
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 1.0, step: 0.01 })
-        public opvalue: number = 1.0;
-        /**
-         * 正交投影的尺寸。
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public size: number = 2.0;
-        /**
          * 该相机的背景色。
          */
         @paper.serializedField
@@ -120,34 +102,29 @@ namespace egret3d {
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.RECT, { step: 0.01 })
         public readonly viewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
-
+        /**
+         * 相机渲染上下文
+         * @private
+         */
+        public readonly context: CameraRenderContext = new CameraRenderContext(this);
         /**
          * TODO 功能完善后开放此接口
          */
         public readonly postQueues: ICameraPostProcessing[] = [];
-        public postProcessContext: PostProcessRenderContext = null as any;
 
-        /**
-         * 相机渲染上下文
-         * @internal
-         */
-        public context: RenderContext = null as any;
-
-        /**
-         * 渲染目标，如果为null，则为画布
-         */
-        public renderTarget: BaseRenderTarget | null = null;
-
-        private _viewPortDirty: boolean = false;
+        private _viewportDirty: boolean = true;
         /**
          * TODO transform 应拥有高性能的位置变更通知机制。
          */
         private _matrixDirty: MatrixDirty = MatrixDirty.ALL;
 
+        private _opvalue: number = 1.0;
+        private _fov: number = Math.PI * 0.25;
         @paper.serializedField
         private _near: number = 0.3;
         @paper.serializedField
         private _far: number = 1000.0;
+        private _size: number = 1.0;
         private readonly _pixelViewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
         private readonly _perspectiveMatrix: Matrix4 = Matrix4.create();
         private readonly _worldToClipMatrix: Matrix4 = Matrix4.create();
@@ -162,6 +139,7 @@ namespace egret3d {
             Vector3.create(),
             Vector3.create()
         ];
+        private _renderTarget: BaseRenderTarget | null = null;
         /**
          * 计算相机视锥区域
          * TODO
@@ -181,7 +159,7 @@ namespace egret3d {
             const near = this.near;
             const far = this.far;
             const matchFactor = stage.matchFactor;
-            const tan = Math.tan(this.fov * 0.5);
+            const tan = Math.tan(this._fov * 0.5);
 
             const nearHX = near * tan;
             const nearWX = nearHX * aspect;
@@ -255,19 +233,35 @@ namespace egret3d {
         /**
          * @internal
          */
-        public _update(_delta: number) {
-            this._viewPortDirty = true;
-            this._matrixDirty = MatrixDirty.ALL;
-
+        public _update() {
             this._calcCameraFrame();
-            this.context.updateCameraTransform(this);
+            this.context.updateCameraTransform();
+            this.context.frustumCulling();
+        }
+
+        private _onStageResize(): void {
+            this._viewportDirty = true;
+            this._matrixDirty = MatrixDirty.ALL;
         }
 
         public initialize() {
             super.initialize();
 
-            this.context = new RenderContext();
-            this.postProcessContext = new PostProcessRenderContext(this);
+            this.transform.registerObserver(this);
+            stage.onScreenResize.add(this._onStageResize, this);
+            stage.onResize.add(this._onStageResize, this);
+        }
+
+        public uninitialize() {
+            super.uninitialize();
+
+            this.transform.unregisterObserver(this);
+            stage.onScreenResize.remove(this._onStageResize, this);
+            stage.onResize.remove(this._onStageResize, this);
+        }
+
+        public onTransformChange() {
+            this._matrixDirty = MatrixDirty.ALL;
         }
         /**
          * 将舞台坐标基于该相机的视角转换为世界坐标。
@@ -297,7 +291,7 @@ namespace egret3d {
             const distanceToPlane = worldPosition.subtract(position).dot(forward);
 
             if (distanceToPlane < -Const.EPSILON || Const.EPSILON < distanceToPlane) {
-                if (this.opvalue === 0.0) {
+                if (this._opvalue === 0.0) {
                     // TODO
                     // worldPosition.subtract(vppos, forward.multiplyScalar(distanceToPlane - stagePosition.z));
                 }
@@ -373,6 +367,23 @@ namespace egret3d {
 
             return true;
         }
+
+        /**
+         * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间差值。
+         */
+        @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 1.0, step: 0.01 })
+        public get opvalue(): number {
+            return this._opvalue;
+        }
+        public set opvalue(value: number) {
+            if (this._opvalue === value) {
+                return;
+            }
+
+            this._opvalue = value;
+            this._matrixDirty = MatrixDirty.ALL;
+        }
         /**
          * 该相机的视点到近裁剪面距离。
          * - 该值过小会引起深度冲突。
@@ -391,6 +402,7 @@ namespace egret3d {
             }
 
             this._near = value;
+            this._matrixDirty = MatrixDirty.ALL;
         }
         /**
          * 该相机的视点到远裁剪面距离。
@@ -409,6 +421,39 @@ namespace egret3d {
             }
 
             this._far = value;
+            this._matrixDirty = MatrixDirty.ALL;
+        }
+        /**
+         * 透视投影的视野。
+         */
+        @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: Math.PI - 0.01, step: 0.01 })
+        public get fov(): number {
+            return this._fov;
+        }
+        public set fov(value: number) {
+            if (this._fov === value) {
+                return;
+            }
+
+            this._fov = value;
+            this._matrixDirty = MatrixDirty.ALL;
+        }
+        /**
+         * 正交投影的尺寸。
+         */
+        @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        public get size() {
+            return this._size;
+        }
+        public set size(value: number) {
+            if (this._size === value) {
+                return;
+            }
+
+            this._size = value;
+            this._matrixDirty = MatrixDirty.ALL;
         }
         /**
          * 
@@ -430,9 +475,9 @@ namespace egret3d {
                 h = renderTarget.height;
             }
             else {
-                const stageViewPort = stage.viewport;
-                w = stageViewPort.w;
-                h = stageViewPort.h;
+                const stageViewport = stage.viewport;
+                w = stageViewport.w;
+                h = stageViewport.h;
             }
 
             return { w, h };
@@ -442,25 +487,25 @@ namespace egret3d {
          */
         @paper.editor.property(paper.editor.EditType.RECT, { step: 1 })
         public get pixelViewport(): Readonly<IRectangle> {
-            if (this._viewPortDirty) {
+            const pixelViewport = this._pixelViewport;
+
+            if (this._viewportDirty) {
                 const { w, h } = this.renderTargetSize;
                 const viewport = this.viewport;
-                const pixelViewport = this._pixelViewport;
-
                 pixelViewport.x = w * viewport.x;
                 pixelViewport.y = h * viewport.y;
                 pixelViewport.w = w * viewport.w;
                 pixelViewport.h = h * viewport.h;
-
-                this._viewPortDirty = false;
+                this._viewportDirty = false;
             }
 
-            return this._pixelViewport;
+            return pixelViewport;
         }
         public set pixelViewport(value: Readonly<IRectangle>) {
             const { w, h } = this.renderTargetSize;
             this.viewport.set(value.x / w, value.y / h, value.w / w, value.h / h);
             this._pixelViewport.copy(value);
+            this._matrixDirty = MatrixDirty.ALL;
         }
         /**
          * 该相机的投影矩阵。
@@ -469,9 +514,9 @@ namespace egret3d {
             const perspectiveMatrix = this._perspectiveMatrix;
             if (this._matrixDirty & MatrixDirty.ProjectionMatrix) {
                 perspectiveMatrix.fromProjection(
-                    this.fov, this._near, this._far,
-                    this.size,
-                    this.opvalue,
+                    this._fov, this._near, this._far,
+                    this._size,
+                    this._opvalue,
                     this.aspect, stage.matchFactor
                 );
                 this._matrixDirty &= ~MatrixDirty.ProjectionMatrix;
@@ -500,6 +545,28 @@ namespace egret3d {
             }
 
             return this._clipToWorldMatrix;
+        }
+        /**
+         * 渲染目标，如果为null，则为画布
+         */
+        public get renderTarget(): BaseRenderTarget | null {
+            return this._renderTarget;
+        }
+        public set renderTarget(value: BaseRenderTarget | null) {
+            if (this._renderTarget === value) {
+                return;
+            }
+
+            this._renderTarget = value;
+
+            this._viewportDirty = true;
+            this._matrixDirty = MatrixDirty.ALL;
+        }
+        /**
+         * 
+         */
+        public get postProcessingRenderTarget(): BaseRenderTarget {
+            return this._renderTarget || DefaultTextures.POST_PROCESSING;
         }
 
         /**
