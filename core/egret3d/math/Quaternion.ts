@@ -279,7 +279,7 @@ namespace egret3d {
                 }
             }
 
-            return this;
+            return this.normalize();
         }
         /**
          * 将该四元数和目标四元数球形插值的结果写入该四元数。
