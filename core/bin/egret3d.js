@@ -14392,7 +14392,7 @@ var egret3d;
             _this._velocityFactor = 1.0;
             _this._samples = 20;
             _this._resolution = egret3d.Vector2.create(1.0, 1.0);
-            _this._clipToWorldMatrix = egret3d.Matrix4.create();
+            _this._worldToClipMatrix = egret3d.Matrix4.create();
             _this._resolution.set(egret3d.stage.viewport.w, egret3d.stage.viewport.h);
             _this._material = new egret3d.Material(new egret3d.Shader(egret3d.ShaderLib.motionBlur, "motionBlur"));
             _this._material.setDepth(false, false);
@@ -14404,18 +14404,20 @@ var egret3d;
         MotionBlurEffect.prototype.render = function (camera) {
             var context = camera.context;
             var stageViewport = egret3d.stage.viewport;
-            var worldToClipMatrix = camera.worldToClipMatrix;
+            var clipToWorldMatrix = camera.clipToWorldMatrix;
             var material = this._material;
             var postProcessingRenderTarget = camera.postProcessingRenderTarget;
             if (this._resolution.x !== stageViewport.w || this._resolution.y !== stageViewport.h) {
+                this._resolution.x = stageViewport.w;
+                this._resolution.y = stageViewport.h;
                 material.setVector2("resolution", this._resolution);
             }
             material.setTexture("tDiffuse", postProcessingRenderTarget);
             material.setTexture("tColor", postProcessingRenderTarget);
-            material.setMatrix("viewProjectionInverseMatrix", worldToClipMatrix);
-            material.setMatrix("previousViewProjectionMatrix", this._clipToWorldMatrix);
+            material.setMatrix("viewProjectionInverseMatrix", clipToWorldMatrix);
+            material.setMatrix("previousViewProjectionMatrix", this._worldToClipMatrix);
             context.blit(postProcessingRenderTarget, this._material);
-            this._clipToWorldMatrix.copy(camera.clipToWorldMatrix);
+            this._worldToClipMatrix.copy(camera.worldToClipMatrix);
         };
         Object.defineProperty(MotionBlurEffect.prototype, "velocityFactor", {
             get: function () {
