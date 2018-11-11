@@ -457,10 +457,11 @@ namespace egret3d.particle {
             for (const _primitive of renderer.batchMesh.glTFMesh.primitives) {
                 const drawCall = DrawCall.create();
                 drawCall.renderer = renderer;
+                drawCall.matrix = gameObject.transform.localToWorldMatrix;
                 drawCall.subMeshIndex = subMeshIndex++;
                 drawCall.mesh = renderer.batchMesh;
-                drawCall.material = renderer.batchMaterial || DefaultMaterials.MISSING,
-                    drawCallCollecter.drawCalls.push(drawCall);
+                drawCall.material = renderer.batchMaterial || DefaultMaterials.MISSING;
+                drawCallCollecter.drawCalls.push(drawCall);
             }
         }
 

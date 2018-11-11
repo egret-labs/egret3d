@@ -18,6 +18,7 @@ namespace egret3d {
     export class Vector2 extends paper.BaseRelease<Vector2> implements IVector2, paper.ICCS<Vector2>, paper.ISerializable {
         public static readonly ZERO: Readonly<Vector2> = new Vector2(0.0, 0.0);
         public static readonly ONE: Readonly<Vector2> = new Vector2(1.0, 1.0);
+        public static readonly MINUS_ONE: Readonly<Vector2> = new Vector2(-1.0, -1.0);
 
         private static readonly _instances: Vector2[] = [];
         /**
@@ -117,6 +118,143 @@ namespace egret3d {
             return this;
         }
         /**
+         * 将该向量加上一个向量。
+         * - v += vector
+         * @param vector 一个向量。
+         */
+        public add(vector: Readonly<IVector2>): this;
+        /**
+         * 将两个向量相加的结果写入该向量。
+         * - v = vectorA + vectorB
+         * @param vectorA 一个向量。
+         * @param vectorB 另一个向量。
+         */
+        public add(vectorA: Readonly<IVector2>, vectorB: Readonly<IVector2>): this;
+        public add(vectorA: Readonly<IVector2>, vectorB?: Readonly<IVector2>) {
+            if (!vectorB) {
+                vectorB = vectorA;
+                vectorA = this;
+            }
+
+            this.x = vectorA.x + vectorB.x;
+            this.y = vectorA.y + vectorB.y;
+
+            return this;
+        }
+        /**
+         * 将该向量减去一个向量。
+         * - v -= vector
+         * @param vector 一个向量。
+         */
+        public subtract(vector: Readonly<IVector2>): this;
+        /**
+         * 将两个向量相减的结果写入该向量。
+         * - v = vectorA - vectorB
+         * @param vectorA 一个向量。
+         * @param vectorB 另一个向量。
+         */
+        public subtract(vectorA: Readonly<IVector2>, vectorB: Readonly<IVector2>): this;
+        public subtract(vectorA: Readonly<IVector2>, vectorB?: Readonly<IVector2>) {
+            if (!vectorB) {
+                vectorB = vectorA;
+                vectorA = this;
+            }
+
+            this.x = vectorA.x - vectorB.x;
+            this.y = vectorA.y - vectorB.y;
+
+            return this;
+        }
+        /**
+         * 将该向量加上一个标量。
+         * - v += scalar
+         * @param scalar 标量。
+         */
+        public addScalar(scalar: number): this;
+        /**
+         * 将输入向量与标量相加的结果写入该向量。
+         * - v = input + scalar
+         * @param scalar 一个标量。
+         * @param input 输入向量。
+         */
+        public addScalar(scalar: number, input: Readonly<IVector2>): this;
+        public addScalar(scalar: number, input?: Readonly<IVector2>) {
+            if (!input) {
+                input = this;
+            }
+
+            this.x = input.x + scalar;
+            this.y = input.y + scalar;
+
+            return this;
+        }
+        public multiplyScalar(scalar: number): this;
+        public multiplyScalar(scalar: number, input: Readonly<IVector2>): this;
+        public multiplyScalar(scalar: number, input?: Readonly<IVector2>) {
+            if (!input) {
+                input = this;
+            }
+
+            this.x = scalar * input.x;
+            this.y = scalar * input.y;
+
+            return this;
+        }
+        public min(value: Readonly<IVector2>): this;
+        public min(valueA: Readonly<IVector2>, valueB: Readonly<IVector2>): this;
+        public min(valueA: Readonly<IVector2>, valueB?: Readonly<IVector2>) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+
+            this.x = Math.min(valueA.x, valueB.x);
+            this.y = Math.min(valueA.y, valueB.y);
+
+            return this;
+        }
+        public max(value: Readonly<IVector2>): this;
+        public max(valueA: Readonly<IVector2>, valueB: Readonly<IVector2>): this;
+        public max(valueA: Readonly<IVector2>, valueB?: Readonly<IVector2>) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+
+            this.x = Math.max(valueA.x, valueB.x);
+            this.y = Math.max(valueA.y, valueB.y);
+
+            return this;
+        }
+        /**
+         * 限制该向量，使其在最小向量和最大向量之间。
+         * @param min 最小向量。
+         * @param max 最大向量。
+         */
+        public clamp(min: Readonly<IVector2>, max: Readonly<IVector2>): this;
+        /**
+         * 将限制输入向量在最小向量和最大向量之间的结果写入该向量。
+         * @param min 最小向量。
+         * @param max 最大向量。
+         * @param input 输入向量。
+         */
+        public clamp(min: Readonly<IVector2>, max: Readonly<IVector2>, input: Readonly<IVector2>): this;
+        public clamp(min: Readonly<IVector2>, max: Readonly<IVector2>, input?: Readonly<IVector2>) {
+            if (!input) {
+                input = this;
+            }
+
+            if (DEBUG && (min.x > max.x || min.y > max.y)) {
+                console.warn("Invalid arguments.");
+            }
+
+            // assumes min < max, componentwise
+            this.x = Math.max(min.x, Math.min(max.x, input.x));
+            this.y = Math.max(min.y, Math.min(max.y, input.y));
+
+            return this;
+        }
+        /**
          * 该向量的长度。
          * - 该值是实时计算的。
          */
@@ -207,4 +345,8 @@ namespace egret3d {
     }
 
     const _helpVector2A = new Vector2();
+    /**
+     * @internal
+     */
+    export const helpVector2A = Vector2.create();
 }

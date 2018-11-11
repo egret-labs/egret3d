@@ -81,5 +81,25 @@ namespace egret3d {
 
             return this;
         }
+
+        public contains(pointOrRect: Readonly<IVector2 | Rectangle>): boolean {
+            const minX = this.x;
+            const minY = this.y;
+            const maxX = this.x + this.w;
+            const maxY = this.y + this.h;
+
+            if (pointOrRect instanceof Rectangle) {
+                const vMinX = pointOrRect.x;
+                const vMinY = pointOrRect.y;
+                const vMaxX = pointOrRect.x + pointOrRect.w;
+                const vMaxY = pointOrRect.y + pointOrRect.h;
+
+                return minX <= vMinX && vMaxX <= maxX &&
+                    minY <= vMinY && vMaxY <= maxY;
+            }
+
+            return ((pointOrRect as IVector2).x > minX) && ((pointOrRect as IVector2).x < maxX) &&
+                ((pointOrRect as IVector2).y > minY) && ((pointOrRect as IVector2).y < maxY);
+        }
     }
 }

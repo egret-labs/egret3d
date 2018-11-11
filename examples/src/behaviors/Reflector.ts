@@ -2,7 +2,6 @@ namespace behaviors {
     const _reflectorPlane = egret3d.Plane.create();
     const _normal = egret3d.Vector3.create();
     const _up = egret3d.Vector3.create();
-    const _rotationMatrix = egret3d.Matrix4.create();
     const _lookAtPosition = egret3d.Vector3.create(0.0, 0.0, -1);
     const _clipPlane = egret3d.Vector4.create();
 
@@ -112,45 +111,45 @@ namespace behaviors {
 
             // virtualCamera.userData.recursion = 0; TODO
 
-            const projectionMatrix = reflectorCamera.projectionMatrix;
+            // const projectionMatrix = reflectorCamera.projectionMatrix;
 
-            // Update the texture matrix
-            _textureMatrix
-                .set(
-                    0.5, 0.0, 0.0, 0.5,
-                    0.0, 0.5, 0.0, 0.5,
-                    0.0, 0.0, 0.5, 0.5,
-                    0.0, 0.0, 0.0, 1.0
-                )
-                .multiply(projectionMatrix)
-                .multiply(reflectorCamera.gameObject.transform.worldToLocalMatrix)
-                .multiply(transform.localToWorldMatrix);
+            // // Update the texture matrix
+            // _textureMatrix
+            //     .set(
+            //         0.5, 0.0, 0.0, 0.5,
+            //         0.0, 0.5, 0.0, 0.5,
+            //         0.0, 0.0, 0.5, 0.5,
+            //         0.0, 0.0, 0.0, 1.0
+            //     )
+            //     .multiply(projectionMatrix)
+            //     .multiply(reflectorCamera.gameObject.transform.worldToLocalMatrix)
+            //     .multiply(transform.localToWorldMatrix);
 
-            _q.x = (egret3d.sign(clipPlane.x) + projectionMatrix.rawData[8]) / projectionMatrix.rawData[0];
-            _q.y = (egret3d.sign(clipPlane.y) + projectionMatrix.rawData[9]) / projectionMatrix.rawData[5];
-            _q.z = -1.0;
-            _q.w = (1.0 + projectionMatrix.rawData[10]) / projectionMatrix.rawData[14];
+            // _q.x = (egret3d.sign(clipPlane.x) + projectionMatrix.rawData[8]) / projectionMatrix.rawData[0];
+            // _q.y = (egret3d.sign(clipPlane.y) + projectionMatrix.rawData[9]) / projectionMatrix.rawData[5];
+            // _q.z = -1.0;
+            // _q.w = (1.0 + projectionMatrix.rawData[10]) / projectionMatrix.rawData[14];
 
-            // // Calculate the scaled plane vector
-            clipPlane.multiplyScalar(2.0 / clipPlane.dot(_q));
+            // // // Calculate the scaled plane vector
+            // clipPlane.multiplyScalar(2.0 / clipPlane.dot(_q));
 
-            // Replacing the third row of the projection matrix
-            projectionMatrix.rawData[2] = clipPlane.x;
-            projectionMatrix.rawData[6] = clipPlane.y;
-            projectionMatrix.rawData[10] = clipPlane.z + 1.0 - this.clipBias;
-            projectionMatrix.rawData[14] = clipPlane.w;
+            // // Replacing the third row of the projection matrix
+            // projectionMatrix.rawData[2] = clipPlane.x;
+            // projectionMatrix.rawData[6] = clipPlane.y;
+            // projectionMatrix.rawData[10] = clipPlane.z + 1.0 - this.clipBias;
+            // projectionMatrix.rawData[14] = clipPlane.w;
 
-            // // Render
-            const renderState = this._renderState;
-            const backupViewPort = _viewPort.copy(renderState.viewPort);
-            const backupRenderTarget = renderState.renderTarget;
+            // // // Render
+            // const renderState = this._renderState;
+            // const backupViewPort = _viewPort.copy(renderState.viewPort);
+            // const backupRenderTarget = renderState.renderTarget;
 
-            reflectorCamera.renderTarget = this._renderTarget;
-            renderState.render(reflectorCamera);
-            renderState.updateViewport(backupViewPort, backupRenderTarget);
+            // reflectorCamera.renderTarget = this._renderTarget;
+            // renderState.render(reflectorCamera);
+            // renderState.updateViewport(backupViewPort, backupRenderTarget);
 
-            const reflectorMaterial = this.gameObject.renderer!.material!;
-            reflectorMaterial.setColor("color", this.color).setTexture("tDiffuse", this._renderTarget);
+            // const reflectorMaterial = this.gameObject.renderer!.material!;
+            // reflectorMaterial.setColor("color", this.color).setTexture("tDiffuse", this._renderTarget);
 
             return true;
         }

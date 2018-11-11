@@ -98,13 +98,11 @@ namespace egret3d.web {
         }
 
         public draw(camera: Camera, drawCall: DrawCall): void {
-            const gameObject = drawCall.renderer.gameObject;
-
-            if (gameObject._beforeRenderBehaviors.length > 0) {
+            if (drawCall.renderer && drawCall.renderer.gameObject._beforeRenderBehaviors.length > 0) {
                 let flag = false;
                 Camera.current = camera;
 
-                for (const behaviour of gameObject._beforeRenderBehaviors) {
+                for (const behaviour of drawCall.renderer.gameObject._beforeRenderBehaviors) {
                     flag = !behaviour.onBeforeRender() || flag;
                 }
 
@@ -115,14 +113,14 @@ namespace egret3d.web {
 
             const material = drawCall.material;
             const context = camera.context;
-            context.update(drawCall);
+            const shaderContextDefine = context.updateDrawCall(drawCall);
             //
             const webgl = WebGLCapabilities.webgl!;
             const technique = material._glTFTechnique;
             const techniqueState = technique.states || null;
             const renderState = this._renderState;
             // Get program.
-            const program = renderState.getProgram(material, technique, context.shaderContextDefine + material.shaderDefine);
+            const program = renderState.getProgram(material, technique, shaderContextDefine + material.shaderDefine);
             // Use program.
             const force = renderState.useProgram(program);
             // Update states.
@@ -159,14 +157,14 @@ namespace egret3d.web {
             }
         }
 
-        private _updateContextUniforms(program: GlProgram, context: RenderContext, technique: gltf.Technique) {
+        private _updateContextUniforms(program: GlProgram, context: CameraRenderContext, technique: gltf.Technique) {
             const webgl = WebGLCapabilities.webgl!;
             const uniforms = technique.uniforms;
             const glUniforms = program.contextUniforms;
             // TODO
             const camera = context.camera;
             const drawCall = context.drawCall;
-            const matrix = drawCall.matrix || drawCall.renderer!.gameObject.transform.localToWorldMatrix;
+            const matrix = drawCall.matrix;
 
             for (const glUniform of glUniforms) {
                 const uniform = uniforms[glUniform.name];
@@ -306,7 +304,7 @@ namespace egret3d.web {
                         break;
 
                     case gltf.UniformSemanticType._REFERENCEPOSITION:
-                        webgl.uniform3fv(location, context.lightPosition);
+                        // webgl.uniform3fv(location, context.lightPosition); // TODO
                         break;
                     case gltf.UniformSemanticType._NEARDICTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraNear);
@@ -469,11 +467,10 @@ namespace egret3d.web {
                 this._render(camera, camera.renderTarget);
             }
             else {
-                const postProcessContext = camera.postProcessContext;
-                this._render(camera, postProcessContext.fullScreenRT);
+                this._render(camera, camera.postProcessingRenderTarget);
 
                 for (const postEffect of camera.postQueues) {
-                    postEffect.render(postProcessContext);
+                    postEffect.render(camera);
                 }
             }
         }
