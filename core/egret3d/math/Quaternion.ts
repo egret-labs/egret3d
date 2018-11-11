@@ -234,52 +234,33 @@ namespace egret3d {
         public lerp(p1: Readonly<IVector4> | number, p2: Readonly<IVector4> | number, p3?: number | Readonly<IVector4>) {
             if (typeof p1 === "number") {
                 if (!p3) {
-                    p3 = p2;
-                    p2 = this;
-                }
-
-                const fX = (p2 as Readonly<IVector4>).x, fY = (p2 as Readonly<IVector4>).y, fZ = (p2 as Readonly<IVector4>).z, fW = (p2 as Readonly<IVector4>).w;
-                const tX = (p3 as Readonly<IVector4>).x, tY = (p3 as Readonly<IVector4>).y, tZ = (p3 as Readonly<IVector4>).z, tW = (p3 as Readonly<IVector4>).w;
-
-                if (fX * tX + fY * tY + fZ * tZ + fW * tW < 0.0) {
-                    this.x = fX + (-tX - fX) * p1;
-                    this.y = fY + (-tY - fY) * p1;
-                    this.z = fZ + (-tZ - fZ) * p1;
-                    this.w = fW + (-tW - fW) * p1;
-                }
-                else {
-                    this.x = fX + (tX - fX) * p1;
-                    this.y = fY + (tY - fY) * p1;
-                    this.z = fZ + (tZ - fZ) * p1;
-                    this.w = fW + (tW - fW) * p1;
-                }
-
-            }
-            else {
-                if (typeof p2 === "number") {
-                    p3 = p2;
-                    p2 = p1;
+                    p3 = p1;
                     p1 = this;
                 }
-
-                const fX = p1.x, fY = p1.y, fZ = p1.z, fW = p1.w;
-                const tX = p2.x, tY = p2.y, tZ = p2.z, tW = p2.w;
-
-                if (fX * tX + fY * tY + fZ * tZ + fW * tW < 0.0) {
-                    this.x = fX + (-tX - fX) * (p3 as number);
-                    this.y = fY + (-tY - fY) * (p3 as number);
-                    this.z = fZ + (-tZ - fZ) * (p3 as number);
-                    this.w = fW + (-tW - fW) * (p3 as number);
-                }
-                else {
-                    this.x = fX + (tX - fX) * (p3 as number);
-                    this.y = fY + (tY - fY) * (p3 as number);
-                    this.z = fZ + (tZ - fZ) * (p3 as number);
-                    this.w = fW + (tW - fW) * (p3 as number);
-                }
+            }
+            else if (typeof p2 === "number") {
+                p3 = p2;
+                p2 = p1;
+                p1 = this;
             }
 
-            return this;
+            const fX = (p1 as Readonly<IVector4>).x, fY = (p1 as Readonly<IVector4>).y, fZ = (p1 as Readonly<IVector4>).z, fW = (p1 as Readonly<IVector4>).w;
+            const tX = (p2 as Readonly<IVector4>).x, tY = (p2 as Readonly<IVector4>).y, tZ = (p2 as Readonly<IVector4>).z, tW = (p2 as Readonly<IVector4>).w;
+
+            if (fX * tX + fY * tY + fZ * tZ + fW * tW < 0.0) {
+                this.x = fX + (-tX - fX) * (p3 as number);
+                this.y = fY + (-tY - fY) * (p3 as number);
+                this.z = fZ + (-tZ - fZ) * (p3 as number);
+                this.w = fW + (-tW - fW) * (p3 as number);
+            }
+            else {
+                this.x = fX + (tX - fX) * (p3 as number);
+                this.y = fY + (tY - fY) * (p3 as number);
+                this.z = fZ + (tZ - fZ) * (p3 as number);
+                this.w = fW + (tW - fW) * (p3 as number);
+            }
+
+            return this.normalize();
         }
         /**
          * 将该四元数和目标四元数球形插值的结果写入该四元数。
@@ -288,7 +269,7 @@ namespace egret3d {
          * @param t 插值因子。
          * @param to 目标矩阵。
          */
-        public slerp(t: number, to: Readonly<IVector4>): this;
+        public slerp(to: Readonly<IVector4>, t: number): this;
         /**
          * 将两个四元数球形插值的结果写入该四元数。
          * - v = from * (1 - t) + to * t
@@ -297,66 +278,72 @@ namespace egret3d {
          * @param from 起始矩阵。
          * @param to 目标矩阵。
          */
+        public slerp(from: Readonly<IVector4>, to: Readonly<IVector4>, t: number): this;
+        /**
+         * @deprecated
+         */
+        public slerp(t: number, to: Readonly<IVector4>): this;
         public slerp(t: number, from: Readonly<IVector4>, to: Readonly<IVector4>): this;
-        public slerp(t: number, from: Readonly<IVector4>, to?: Readonly<IVector4>) {
-            if (!to) {
-                to = from;
-                from = this;
+        public slerp(p1: Readonly<IVector4> | number, p2: Readonly<IVector4> | number, p3?: number | Readonly<IVector4>) {
+            if (typeof p1 === "number") {
+                if (!p3) {
+                    p3 = p1;
+                    p1 = this;
+                }
+            }
+            else if (typeof p2 === "number") {
+                p3 = p2;
+                p2 = p1;
+                p1 = this;
             }
 
-            if (t === 0.0) return this.copy(from);
-            if (t === 1.0) return this.copy(to);
+            if (p1 === 0.0) return this.copy(p2 as Readonly<IVector4>);
+            if (p1 === 1.0) return this.copy(p3 as Readonly<IVector4>);
 
             // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
-            const ax = from.x, ay = from.y, az = from.z, aw = from.w;
-            const bx = to.x, by = to.y, bz = to.z, bw = to.w;
-            let cosHalfTheta = aw * bw + ax * bx + ay * by + az * bz;
+            const fX = (p1 as Readonly<IVector4>).x, fY = (p1 as Readonly<IVector4>).y, fZ = (p1 as Readonly<IVector4>).z, fW = (p1 as Readonly<IVector4>).w;
+            const tX = (p2 as Readonly<IVector4>).x, tY = (p2 as Readonly<IVector4>).y, tZ = (p2 as Readonly<IVector4>).z, tW = (p2 as Readonly<IVector4>).w;
+            let cosHalfTheta = fW * tW + fX * tX + fY * tY + fZ * tZ;
 
             if (cosHalfTheta < 0.0) {
-                this.w = -bw;
-                this.x = -bx;
-                this.y = -by;
-                this.z = -bz;
+                this.w = -tW;
+                this.x = -tX;
+                this.y = -tY;
+                this.z = -tZ;
 
                 cosHalfTheta = -cosHalfTheta;
             }
             else {
-                this.w = bw;
-                this.x = bx;
-                this.y = by;
-                this.z = bz;
+                this.w = tW;
+                this.x = tX;
+                this.y = tY;
+                this.z = tZ;
             }
 
             if (cosHalfTheta >= 1.0) {
-                this.w = aw;
-                this.x = ax;
-                this.y = ay;
-                this.z = az;
+                this.w = fW;
+                this.x = fX;
+                this.y = fY;
+                this.z = fZ;
 
                 return this;
             }
 
             const sqrSinHalfTheta = 1.0 - cosHalfTheta * cosHalfTheta;
 
-            if (sqrSinHalfTheta <= Const.EPSILON) { // Number.EPSILON
-
-                this.w = aw + t * (this.w - aw);
-                this.x = ax + t * (this.x - ax);
-                this.y = ay + t * (this.y - ay);
-                this.z = az + t * (this.z - az);
-
-                return this.normalize();
+            if (sqrSinHalfTheta < Const.EPSILON) { //
+                return this.lerp(p1 as Readonly<IVector4>, this);
             }
 
             const sinHalfTheta = Math.sqrt(sqrSinHalfTheta);
             const halfTheta = Math.atan2(sinHalfTheta, cosHalfTheta);
-            const ratioA = Math.sin((1.0 - t) * halfTheta) / sinHalfTheta,
-                ratioB = Math.sin(t * halfTheta) / sinHalfTheta;
+            const ratioA = Math.sin((1.0 - <number>p1) * halfTheta) / sinHalfTheta,
+                ratioB = Math.sin(<number>p1 * halfTheta) / sinHalfTheta;
 
-            this.w = aw * ratioA + this.w * ratioB;
-            this.x = ax * ratioA + this.x * ratioB;
-            this.y = ay * ratioA + this.y * ratioB;
-            this.z = az * ratioA + this.z * ratioB;
+            this.w = fW * ratioA + this.w * ratioB;
+            this.x = fX * ratioA + this.x * ratioB;
+            this.y = fY * ratioA + this.y * ratioB;
+            this.z = fZ * ratioA + this.z * ratioB;
 
             return this;
         }

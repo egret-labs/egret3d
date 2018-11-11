@@ -600,25 +600,20 @@ namespace egret3d {
         public lerp(p1: Readonly<IVector3> | number, p2: Readonly<IVector3> | number, p3?: number | Readonly<IVector3>) {
             if (typeof p1 === "number") {
                 if (!p3) {
-                    p3 = p2;
-                    p2 = this;
-                }
-
-                this.x = (p2 as Readonly<IVector3>).x + ((p3 as Readonly<IVector3>).x - (p2 as Readonly<IVector3>).x) * p1;
-                this.y = (p2 as Readonly<IVector3>).y + ((p3 as Readonly<IVector3>).y - (p2 as Readonly<IVector3>).y) * p1;
-                this.z = (p2 as Readonly<IVector3>).z + ((p3 as Readonly<IVector3>).z - (p2 as Readonly<IVector3>).z) * p1;
-            }
-            else {
-                if (typeof p2 === "number") {
-                    p3 = p2;
-                    p2 = p1;
+                    p3 = p1;
                     p1 = this;
                 }
 
-                this.x = (p1 as Readonly<IVector3>).x + ((p2 as Readonly<IVector3>).x - (p1 as Readonly<IVector3>).x) * (p3 as number);
-                this.y = (p1 as Readonly<IVector3>).y + ((p2 as Readonly<IVector3>).y - (p1 as Readonly<IVector3>).y) * (p3 as number);
-                this.z = (p1 as Readonly<IVector3>).z + ((p2 as Readonly<IVector3>).z - (p1 as Readonly<IVector3>).z) * (p3 as number);
             }
+            else if (typeof p2 === "number") {
+                p3 = p2;
+                p2 = p1;
+                p1 = this;
+            }
+
+            this.x = (p1 as Readonly<IVector3>).x + ((p2 as Readonly<IVector3>).x - (p1 as Readonly<IVector3>).x) * (p3 as number);
+            this.y = (p1 as Readonly<IVector3>).y + ((p2 as Readonly<IVector3>).y - (p1 as Readonly<IVector3>).y) * (p3 as number);
+            this.z = (p1 as Readonly<IVector3>).z + ((p2 as Readonly<IVector3>).z - (p1 as Readonly<IVector3>).z) * (p3 as number);
 
             return this;
         }
