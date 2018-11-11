@@ -145,7 +145,6 @@ namespace egret3d {
          * TODO
          */
         private _calcCameraFrame() {
-            const aspect = this.aspect;
 
             const farLD = this._frameVectors[0];
             const nearLD = this._frameVectors[1];
@@ -156,9 +155,10 @@ namespace egret3d {
             const farRT = this._frameVectors[6];
             const nearRT = this._frameVectors[7];
 
-            const near = this.near;
-            const far = this.far;
             const matchFactor = stage.matchFactor;
+            const aspect = this.aspect;
+            const near = this._near;
+            const far = this._far;
             const tan = Math.tan(this._fov * 0.5);
 
             const nearHX = near * tan;
@@ -412,8 +412,8 @@ namespace egret3d {
             return this._far;
         }
         public set far(value: number) {
-            if (value <= this.near) {
-                value = this.near + 0.01;
+            if (value <= this._near) {
+                value = this._near + 0.01;
             }
 
             if (value >= 10000.0) {
