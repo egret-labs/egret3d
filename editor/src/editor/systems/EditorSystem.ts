@@ -22,6 +22,8 @@ namespace paper.editor {
             else {
                 statsDOM.style.display = "none";
             }
+
+            this._fpsHided = !this._fpsHided;
         }
 
         public onAwake() {
@@ -164,6 +166,14 @@ namespace paper.editor {
                         if (guiComponent.inspector.onClick) {
                             guiComponent.inspector.onClick(guiComponent.inspector);
                         }
+                    }
+
+                    if (dat.GUI.hide) {
+                        dat.GUI.toggleHide();
+                    }
+
+                    if (this._fpsHided) {
+                        this._hideFPS();
                     }
                 }
 
