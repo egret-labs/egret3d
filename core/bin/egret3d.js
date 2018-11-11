@@ -6998,7 +6998,8 @@ var egret3d;
                     postProcessingCamera.opvalue = 0.0;
                     postProcessingCamera.size = 1.0;
                     postProcessingCamera.near = 0.01;
-                    postProcessingCamera.far = 1.0;
+                    postProcessingCamera.far = 2.0;
+                    gameObject.transform.setLocalPosition(0, 0, -1);
                     this._postProcessingCamera = postProcessingCamera;
                 }
             }
@@ -7093,6 +7094,7 @@ var egret3d;
             postProcessDrawCall.material = material;
             renderState.updateViewport(postProcessingCamera.viewport, dest);
             renderState.clearBuffer(256 /* DEPTH_BUFFER_BIT */ | 16384 /* COLOR_BUFFER_BIT */, egret3d.Color.WHITE);
+            postProcessingCamera.projectionMatrix.identity(); // TODO
             renderState.draw(postProcessingCamera, postProcessDrawCall);
         };
         CameraRenderContext.prototype.updateCameraTransform = function () {

@@ -223,6 +223,7 @@ namespace egret3d {
 
             renderState.updateViewport(postProcessingCamera.viewport, dest);
             renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, egret3d.Color.WHITE);
+            postProcessingCamera.projectionMatrix.identity(); // TODO
             renderState.draw(postProcessingCamera, postProcessDrawCall);
         }
 
