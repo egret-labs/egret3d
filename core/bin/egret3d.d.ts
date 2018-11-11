@@ -10073,6 +10073,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "normalScale": {
                             "type": number;
+                            "value": number[];
                         };
                         "specularMap": {
                             "type": number;
@@ -10377,6 +10378,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "normalScale": {
                             "type": number;
+                            "value": number[];
                         };
                         "roughnessMap": {
                             "type": number;
@@ -10664,6 +10666,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "normalScale": {
                             "type": number;
+                            "value": number[];
                         };
                     };
                     "states": {
