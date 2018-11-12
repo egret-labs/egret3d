@@ -6,6 +6,7 @@ namespace paper {
     const KEY_COMPONENTS: keyof GameObject = "components";
     const KEY_EXTRAS: keyof GameObject = "extras";
     const KEY_CHILDREN: keyof egret3d.Transform = "children";
+    const KEY_MISSINGOBJECT: keyof MissingComponent = 'missingObject';
 
     function _getDeserializedKeys(serializedClass: IBaseClass, keys: { [key: string]: string } | null = null) {
         const serializeKeys = serializedClass.__serializeKeys;
@@ -85,6 +86,11 @@ namespace paper {
                 }
 
                 if (!this._keepUUID && k === KEY_UUID) { // 是否需要记忆 UUID。
+                    continue;
+                }
+
+                if (k === KEY_MISSINGOBJECT) {//丢失的对象数据直接赋值
+                    (target as any)[k] = source[k];
                     continue;
                 }
 
@@ -402,12 +408,12 @@ namespace paper {
                 }
                 //重新设置rootid的值
                 for (let uuid in this._prefabRootMap) {
-                    let rootDeser=this._deserializers[uuid];
-                    for(let key in rootDeser.objects){
-                        let obj=rootDeser.objects[key]
-                        if(obj instanceof GameObject){
-                            if(obj.extras.linkedID&&obj.extras.rootID===this._prefabRootMap[uuid].rootUUID){
-                                obj.extras.rootID=this._prefabRootMap[uuid].root.uuid;
+                    let rootDeser = this._deserializers[uuid];
+                    for (let key in rootDeser.objects) {
+                        let obj = rootDeser.objects[key]
+                        if (obj instanceof GameObject) {
+                            if (obj.extras.linkedID && obj.extras.rootID === this._prefabRootMap[uuid].rootUUID) {
+                                obj.extras.rootID = this._prefabRootMap[uuid].root.uuid;
                             }
                         }
 
@@ -422,9 +428,8 @@ namespace paper {
 
                     if (component) {
                         // if (component.constructor === MissingComponent) {
-                        //     continue;
+                        //     continue;;
                         // }
-
                         this._deserializeObject(componentSource, component);
                     }
                     else if (rootTarget && rootTarget.constructor === GameObject) { // 整个反序列化过程只反序列化组件。
