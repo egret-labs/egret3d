@@ -42,9 +42,14 @@ namespace egret3d {
         public onUpdate() {
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
             const cameras = cameraAndLightCollecter.cameras;
+            const lights = cameraAndLightCollecter.lights;
 
             if (cameras.length > 0) {
                 cameraAndLightCollecter.sortCameras();
+            }
+
+            if (lights.length > 0) {
+                cameraAndLightCollecter.lightDirty = true;
             }
 
             this._drawCallCollecter._update();

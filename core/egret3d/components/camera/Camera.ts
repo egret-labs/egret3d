@@ -101,7 +101,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.RECT, { step: 0.01 })
-        public readonly viewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
+        public readonly viewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0); // TODO dirty
         /**
          * 相机渲染上下文
          * @private

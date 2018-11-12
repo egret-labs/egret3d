@@ -227,7 +227,7 @@ namespace egret3d.web {
                         }
                         break;
                     case gltf.UniformSemanticType._AMBIENTLIGHTCOLOR:
-                        const currenAmbientColor = paper.Scene.activeScene.ambientColor;
+                        const currenAmbientColor = drawCall.renderer ? drawCall.renderer!.gameObject.scene.ambientColor : paper.Scene.activeScene.ambientColor;
                         webgl.uniform3f(location, currenAmbientColor.r, currenAmbientColor.g, currenAmbientColor.b);
                         // webgl.uniform3fv(location, context.ambientLightColor);
                         break;
