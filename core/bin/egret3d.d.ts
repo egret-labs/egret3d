@@ -6333,7 +6333,7 @@ declare namespace egret3d {
         private _velocityFactor;
         private _samples;
         private _resolution;
-        private readonly _clipToWorldMatrix;
+        private readonly _worldToClipMatrix;
         constructor();
         render(camera: Camera): void;
         velocityFactor: number;

@@ -19,7 +19,7 @@ namespace egret3d {
         private _velocityFactor: number = 1.0;
         private _samples: number = 20;
         private _resolution: Vector2 = Vector2.create(1.0, 1.0);
-        private readonly _clipToWorldMatrix: Matrix4 = Matrix4.create();
+        private readonly _worldToClipMatrix: Matrix4 = Matrix4.create();
 
         public constructor() {
             super();
@@ -35,23 +35,25 @@ namespace egret3d {
         public render(camera: Camera) {
             const context = camera.context;
             const stageViewport = stage.viewport;
-            const worldToClipMatrix = camera.worldToClipMatrix;
+            const clipToWorldMatrix = camera.clipToWorldMatrix;
             const material = this._material;
             const postProcessingRenderTarget = camera.postProcessingRenderTarget;
 
             if (this._resolution.x !== stageViewport.w || this._resolution.y !== stageViewport.h) {
+                this._resolution.x = stageViewport.w;
+                this._resolution.y = stageViewport.h;
                 material.setVector2("resolution", this._resolution);
             }
 
             material.setTexture("tDiffuse", postProcessingRenderTarget);
             material.setTexture("tColor", postProcessingRenderTarget);
 
-            material.setMatrix("viewProjectionInverseMatrix", worldToClipMatrix);
-            material.setMatrix("previousViewProjectionMatrix", this._clipToWorldMatrix);
+            material.setMatrix("viewProjectionInverseMatrix", clipToWorldMatrix);
+            material.setMatrix("previousViewProjectionMatrix", this._worldToClipMatrix);
 
             context.blit(postProcessingRenderTarget, this._material);
 
-            this._clipToWorldMatrix.copy(camera.clipToWorldMatrix);
+            this._worldToClipMatrix.copy(camera.worldToClipMatrix);
         }
 
         public get velocityFactor() {
