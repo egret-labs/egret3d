@@ -5497,6 +5497,8 @@ declare namespace egret3d {
         static LINEDASHED: Shader;
         static VERTEX_COLOR: Shader;
         static MATERIAL_COLOR: Shader;
+        static TRANSPARENT_COLOR: Shader;
+        static TRANSPARENT_ADDITIVE_COLOR: Shader;
         static TRANSPARENT: Shader;
         static TRANSPARENT_DOUBLESIDE: Shader;
         static TRANSPARENT_ADDITIVE: Shader;
