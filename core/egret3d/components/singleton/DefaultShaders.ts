@@ -15,6 +15,8 @@ namespace egret3d {
         public static LINEDASHED: Shader;
         public static VERTEX_COLOR: Shader;
         public static MATERIAL_COLOR: Shader;
+        public static TRANSPARENT_COLOR: Shader;
+        public static TRANSPARENT_ADDITIVE_COLOR: Shader;
 
         public static TRANSPARENT: Shader;
         public static TRANSPARENT_DOUBLESIDE: Shader;
@@ -121,6 +123,12 @@ namespace egret3d {
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states);
+            
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent);
+            DefaultShaders.TRANSPARENT_COLOR = this._createShader("builtin/transparent_color.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
+            
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK).setBlend(gltf.BlendMode.Additive, paper.RenderQueue.Transparent);
+            DefaultShaders.TRANSPARENT_ADDITIVE_COLOR = this._createShader("builtin/transparent_additive_color.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpMaterial.glTFTechnique.states);
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", egret3d.ShaderLib.particle as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_COLOR]);

@@ -453,8 +453,8 @@ namespace egret3d {
 
         public updateDrawCall(drawCall: DrawCall) {
             const renderer = drawCall.renderer;
-            // const scene = renderer.gameObject.scene;
-            const scene = paper.Scene.activeScene;
+            const scene = renderer ? renderer.gameObject.scene : this.camera.gameObject.scene;
+            // const scene = paper.Scene.activeScene;
             const worldToLocalMatrix = this.camera.transform.worldToLocalMatrix;
             const worldToClipMatrix = this.camera.worldToClipMatrix;
             const matrix = drawCall.matrix;
