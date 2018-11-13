@@ -9530,6 +9530,7 @@ var paper;
     var KEY_COMPONENTS = "components";
     var KEY_EXTRAS = "extras";
     var KEY_CHILDREN = "children";
+    var KEY_MISSINGOBJECT = 'missingObject';
     function _getDeserializedKeys(serializedClass, keys) {
         if (keys === void 0) { keys = null; }
         var serializeKeys = serializedClass.__serializeKeys;
@@ -9594,6 +9595,10 @@ var paper;
                     continue;
                 }
                 if (!this._keepUUID && k === KEY_UUID) {
+                    continue;
+                }
+                if (k === KEY_MISSINGOBJECT) {
+                    target[k] = source[k];
                     continue;
                 }
                 var retargetKey = (deserializedKeys && k in deserializedKeys) ? deserializedKeys[k] : k; // 重定向反序列化 key。
@@ -9885,7 +9890,7 @@ var paper;
                     var component = this.components[uuid];
                     if (component) {
                         // if (component.constructor === MissingComponent) {
-                        //     continue;
+                        //     continue;;
                         // }
                         this._deserializeObject(componentSource, component);
                     }
@@ -13725,8 +13730,12 @@ var egret3d;
         CameraAndLightSystem.prototype.onUpdate = function () {
             var cameraAndLightCollecter = this._cameraAndLightCollecter;
             var cameras = cameraAndLightCollecter.cameras;
+            var lights = cameraAndLightCollecter.lights;
             if (cameras.length > 0) {
                 cameraAndLightCollecter.sortCameras();
+            }
+            if (lights.length > 0) {
+                cameraAndLightCollecter.lightDirty = true;
             }
             this._drawCallCollecter._update();
         };
@@ -13786,7 +13795,7 @@ var egret3d;
             /**
              * 该相机归一化的渲染视口。
              */
-            _this.viewport = egret3d.Rectangle.create(0.0, 0.0, 1.0, 1.0);
+            _this.viewport = egret3d.Rectangle.create(0.0, 0.0, 1.0, 1.0); // TODO dirty
             /**
              * 相机渲染上下文
              * @private
@@ -24736,7 +24745,7 @@ var egret3d;
                             }
                             break;
                         case "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */:
-                            var currenAmbientColor = paper.Scene.activeScene.ambientColor;
+                            var currenAmbientColor = drawCall.renderer ? drawCall.renderer.gameObject.scene.ambientColor : paper.Scene.activeScene.ambientColor;
                             webgl.uniform3f(location_3, currenAmbientColor.r, currenAmbientColor.g, currenAmbientColor.b);
                             // webgl.uniform3fv(location, context.ambientLightColor);
                             break;
