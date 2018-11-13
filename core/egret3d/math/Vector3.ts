@@ -135,6 +135,19 @@ namespace egret3d {
             return this;
         }
 
+        public fromMatrixPosition(matrix: Readonly<Matrix4>): this {
+            const array = matrix.rawData;
+            this.x = array[12];
+            this.y = array[13];
+            this.z = array[14];
+
+            return this.fromArray(matrix.rawData, 12);
+        }
+
+        public fromMatrixColumn(matrix: Readonly<Matrix4>, index: 0 | 1 | 2): this {
+            return this.fromArray(matrix.rawData, index * 4);
+        }
+
         public clear() {
             this.x = 0;
             this.y = 0;
@@ -204,9 +217,9 @@ namespace egret3d {
                 input = this;
             }
 
-            this.x = input.x * -1.0;
-            this.y = input.y * -1.0;
-            this.z = input.z * -1.0;
+            this.x = -input.x;
+            this.y = -input.y;
+            this.z = -input.z;
 
             return this;
         }
@@ -587,25 +600,25 @@ namespace egret3d {
         public lerp(p1: Readonly<IVector3> | number, p2: Readonly<IVector3> | number, p3?: number | Readonly<IVector3>) {
             if (typeof p1 === "number") {
                 if (!p3) {
-                    p3 = p2;
-                    p2 = this;
-                }
-
-                this.x = (p2 as Readonly<IVector3>).x + ((p3 as Readonly<IVector3>).x - (p2 as Readonly<IVector3>).x) * p1;
-                this.y = (p2 as Readonly<IVector3>).y + ((p3 as Readonly<IVector3>).y - (p2 as Readonly<IVector3>).y) * p1;
-                this.z = (p2 as Readonly<IVector3>).z + ((p3 as Readonly<IVector3>).z - (p2 as Readonly<IVector3>).z) * p1;
-            }
-            else {
-                if (typeof p2 === "number") {
-                    p3 = p2;
-                    p2 = p1;
+                    p3 = p1;
                     p1 = this;
                 }
-
-                this.x = (p1 as Readonly<IVector3>).x + ((p2 as Readonly<IVector3>).x - (p1 as Readonly<IVector3>).x) * (p3 as number);
-                this.y = (p1 as Readonly<IVector3>).y + ((p2 as Readonly<IVector3>).y - (p1 as Readonly<IVector3>).y) * (p3 as number);
-                this.z = (p1 as Readonly<IVector3>).z + ((p2 as Readonly<IVector3>).z - (p1 as Readonly<IVector3>).z) * (p3 as number);
+                else { 
+                    const temp = p1;
+                    p1 = p2;
+                    p2 = p3;
+                    p3 = temp;
+                }
             }
+            else if (typeof p2 === "number") {
+                p3 = p2;
+                p2 = p1;
+                p1 = this;
+            }
+
+            this.x = (p1 as Readonly<IVector3>).x + ((p2 as Readonly<IVector3>).x - (p1 as Readonly<IVector3>).x) * (p3 as number);
+            this.y = (p1 as Readonly<IVector3>).y + ((p2 as Readonly<IVector3>).y - (p1 as Readonly<IVector3>).y) * (p3 as number);
+            this.z = (p1 as Readonly<IVector3>).z + ((p2 as Readonly<IVector3>).z - (p1 as Readonly<IVector3>).z) * (p3 as number);
 
             return this;
         }
@@ -701,7 +714,7 @@ namespace egret3d {
                 input = this;
             }
 
-            return this.subtract(input, _helpVector3.multiplyScalar(2.0 * this.dot(normal), normal));
+            return this.subtract(input, _helpVector3.multiplyScalar(2.0 * (input as Vector3).dot(normal), normal));
         }
         /**
          * 获取该向量和一个向量的夹角。（弧度制）

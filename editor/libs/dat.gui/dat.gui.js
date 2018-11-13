@@ -1699,10 +1699,10 @@ var SUPPORTS_LOCAL_STORAGE = function () {
 var SAVE_DIALOGUE = void 0;
 var autoPlaceVirgin = true;
 var autoPlaceContainer = void 0;
-var hide = false;
 var hideableGuis = [];
 var GUI = function GUI(pars) {
   var _this = this;
+  GUI.hide = false;
   var params = pars || {};
   this.domElement = document.createElement('div');
   this.__ul = document.createElement('ul');
@@ -1947,9 +1947,9 @@ var GUI = function GUI(pars) {
   }
 };
 GUI.toggleHide = function () {
-  hide = !hide;
+  GUI.hide = !GUI.hide;
   Common.each(hideableGuis, function (gui) {
-    gui.domElement.style.display = hide ? 'none' : '';
+    gui.domElement.style.display = GUI.hide ? 'none' : '';
   });
 };
 GUI.CLASS_AUTO_PLACE = 'a';

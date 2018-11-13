@@ -88,16 +88,36 @@ namespace paper {
         Default = 0x000002,
         UI = 0x000004,
         UserLayer1 = 0x000008,
+
         UserLayer2 = 0x000010,
         UserLayer3 = 0x000020,
         UserLayer4 = 0x000040,
         UserLayer5 = 0x000080,
-        UserLayer6 = 0x0000f0,
+        UserLayer6 = 0x0000F0,
+
         UserLayer7 = 0x000100,
         UserLayer8 = 0x000200,
         UserLayer9 = 0x000400,
         UserLayer10 = 0x000800,
-        UserLayer11 = 0x000f00,
+        UserLayer11 = 0x000F00,
+
+        UserLayer12 = 0x001000,
+        UserLayer13 = 0x002000,
+        UserLayer14 = 0x004000,
+        UserLayer15 = 0x008000,
+        UserLayer16 = 0x00F000,
+
+        UserLayer17 = 0x010000,
+        UserLayer18 = 0x020000,
+        UserLayer19 = 0x040000,
+        UserLayer20 = 0x080000,
+        UserLayer21 = 0x0F0000,
+
+        UserLayer22 = 0x100000,
+        UserLayer23 = 0x200000,
+        UserLayer24 = 0x400000,
+        UserLayer25 = 0x800000,
+        UserLayer26 = 0xF00000,
     }
 
     /**
@@ -119,17 +139,38 @@ namespace paper {
         Nothing = 0x000001,
         Default = 0x000002,
         UI = 0x000004,
+        
         UserLayer1 = 0x000008,
+
         UserLayer2 = 0x000010,
         UserLayer3 = 0x000020,
         UserLayer4 = 0x000040,
         UserLayer5 = 0x000080,
-        UserLayer6 = 0x0000f0,
+        UserLayer6 = 0x0000F0,
+
         UserLayer7 = 0x000100,
         UserLayer8 = 0x000200,
         UserLayer9 = 0x000400,
         UserLayer10 = 0x000800,
-        UserLayer11 = 0x000f00,
+        UserLayer11 = 0x000F00,
+
+        UserLayer12 = 0x001000,
+        UserLayer13 = 0x002000,
+        UserLayer14 = 0x004000,
+        UserLayer15 = 0x008000,
+        UserLayer16 = 0x00F000,
+
+        UserLayer17 = 0x010000,
+        UserLayer18 = 0x020000,
+        UserLayer19 = 0x040000,
+        UserLayer20 = 0x080000,
+        UserLayer21 = 0x0F0000,
+
+        UserLayer22 = 0x100000,
+        UserLayer23 = 0x200000,
+        UserLayer24 = 0x400000,
+        UserLayer25 = 0x800000,
+        UserLayer26 = 0xF00000,
     }
     // /**
     //  * 

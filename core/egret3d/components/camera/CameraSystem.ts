@@ -17,6 +17,7 @@ namespace egret3d {
         private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
 
         public onAwake() {
+            this._lightCamera.enabled = false; // Disable camera.
             this._lightCamera.hideFlags = paper.HideFlags.HideAndDontSave;
         }
 
@@ -38,17 +39,24 @@ namespace egret3d {
             }
         }
 
-        public onUpdate(deltaTime: number) {
-            const cameras = this._cameraAndLightCollecter.cameras;
-            if (cameras.length > 0) {
-                this._cameraAndLightCollecter.sortCameras();
+        public onUpdate() {
+            const cameraAndLightCollecter = this._cameraAndLightCollecter;
+            const cameras = cameraAndLightCollecter.cameras;
+            const lights = cameraAndLightCollecter.lights;
 
-                for (const component of cameras) {
-                    component._update(deltaTime);
-                }
+            if (cameras.length > 0) {
+                cameraAndLightCollecter.sortCameras();
+            }
+
+            if (lights.length > 0) {
+                cameraAndLightCollecter.lightDirty = true;
             }
 
             this._drawCallCollecter._update();
+        }
+
+        public onLateUpdate() {
+            this._cameraAndLightCollecter.lightDirty = false;
         }
     }
 }

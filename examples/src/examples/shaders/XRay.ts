@@ -43,15 +43,28 @@ namespace examples.shaders {
             this._camera = egret3d.Camera.main.gameObject;
 
             const xRay = RES.getRes("shaders/xray.shader.json");
-            this.gameObject.renderer!.material = egret3d.Material.create(xRay).setBlend(gltf.BlendMode.Add, paper.RenderQueue.Transparent).setDepth(true, false);
+            const meshFileter = this.gameObject.getComponent(egret3d.MeshFilter)!;
+            if(meshFileter && meshFileter.mesh && meshFileter.mesh.glTFMesh){
+                // meshFileter.mesh!.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+                // this.gameObject.renderer!.material!.glTFTechnique.states!.functions!.lineWidth = [2];
+                // this.gameObject.renderer!.material!.setOpacity(0.6);
+            }
+            
+            if(this.gameObject.renderer && this.gameObject.renderer!.material){
+                this.gameObject.renderer!.material = egret3d.Material.create(xRay).setBlend(gltf.BlendMode.Add, paper.RenderQueue.Transparent).setDepth(true, false);
+            }
+            
         }
 
         public onUpdate() {
-            this.gameObject.renderer!.material!
+            if(this.gameObject.renderer && this.gameObject.renderer!.material){
+                this.gameObject.renderer!.material!
                 .setFloat("p", this.p)
                 .setFloat("c", this.c)
                 .setColor("glowColor", this.glowColor)
                 .setVector3("viewVector", egret3d.Vector3.create().subtract(this._camera!.transform.position, this.gameObject.transform.position).release());
+            }
+            
         }
     }
 }

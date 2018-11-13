@@ -215,27 +215,26 @@ namespace egret3d {
         public lerp(p1: Readonly<IVector4> | number, p2: Readonly<IVector4> | number, p3?: number | Readonly<IVector4>) {
             if (typeof p1 === "number") {
                 if (!p3) {
-                    p3 = p2;
-                    p2 = this;
-                }
-
-                this.x = (p2 as Readonly<IVector4>).x + ((p3 as Readonly<IVector4>).x - (p2 as Readonly<IVector4>).x) * p1;
-                this.y = (p2 as Readonly<IVector4>).y + ((p3 as Readonly<IVector4>).y - (p2 as Readonly<IVector4>).y) * p1;
-                this.z = (p2 as Readonly<IVector4>).z + ((p3 as Readonly<IVector4>).z - (p2 as Readonly<IVector4>).z) * p1;
-                this.w = (p2 as Readonly<IVector4>).w + ((p3 as Readonly<IVector4>).w - (p2 as Readonly<IVector4>).w) * p1;
-            }
-            else {
-                if (typeof p2 === "number") {
-                    p3 = p2;
-                    p2 = p1;
+                    p3 = p1;
                     p1 = this;
                 }
-
-                this.x = (p1 as Readonly<IVector4>).x + ((p2 as Readonly<IVector4>).x - (p1 as Readonly<IVector4>).x) * (p3 as number);
-                this.y = (p1 as Readonly<IVector4>).y + ((p2 as Readonly<IVector4>).y - (p1 as Readonly<IVector4>).y) * (p3 as number);
-                this.z = (p1 as Readonly<IVector4>).z + ((p2 as Readonly<IVector4>).z - (p1 as Readonly<IVector4>).z) * (p3 as number);
-                this.w = (p1 as Readonly<IVector4>).w + ((p2 as Readonly<IVector4>).w - (p1 as Readonly<IVector4>).w) * (p3 as number);
+                else { 
+                    const temp = p1;
+                    p1 = p2;
+                    p2 = p3;
+                    p3 = temp;
+                }
             }
+            else if (typeof p2 === "number") {
+                p3 = p2;
+                p2 = p1;
+                p1 = this;
+            }
+
+            this.x = (p1 as Readonly<IVector4>).x + ((p2 as Readonly<IVector4>).x - (p1 as Readonly<IVector4>).x) * <number>p3;
+            this.y = (p1 as Readonly<IVector4>).y + ((p2 as Readonly<IVector4>).y - (p1 as Readonly<IVector4>).y) * <number>p3;
+            this.z = (p1 as Readonly<IVector4>).z + ((p2 as Readonly<IVector4>).z - (p1 as Readonly<IVector4>).z) * <number>p3;
+            this.w = (p1 as Readonly<IVector4>).w + ((p2 as Readonly<IVector4>).w - (p1 as Readonly<IVector4>).w) * <number>p3;
 
             return this;
         }

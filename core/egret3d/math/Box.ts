@@ -296,7 +296,7 @@ namespace egret3d {
             }
 
             return ((pointOrBox as IVector3).x > min.x) && ((pointOrBox as IVector3).x < max.x) &&
-                ((pointOrBox as IVector3).y > min.y) && ((pointOrBox as IVector3).x < max.y) &&
+                ((pointOrBox as IVector3).y > min.y) && ((pointOrBox as IVector3).y < max.y) &&
                 ((pointOrBox as IVector3).z > min.z) && ((pointOrBox as IVector3).z < max.z);
         }
 

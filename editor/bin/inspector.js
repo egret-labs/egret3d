@@ -1883,10 +1883,10 @@ var SUPPORTS_LOCAL_STORAGE = function () {
 var SAVE_DIALOGUE = void 0;
 var autoPlaceVirgin = true;
 var autoPlaceContainer = void 0;
-var hide = false;
 var hideableGuis = [];
 var GUI = function GUI(pars) {
   var _this = this;
+  GUI.hide = false;
   var params = pars || {};
   this.domElement = document.createElement('div');
   this.__ul = document.createElement('ul');
@@ -2131,9 +2131,9 @@ var GUI = function GUI(pars) {
   }
 };
 GUI.toggleHide = function () {
-  hide = !hide;
+  GUI.hide = !GUI.hide;
   Common.each(hideableGuis, function (gui) {
-    gui.domElement.style.display = hide ? 'none' : '';
+    gui.domElement.style.display = GUI.hide ? 'none' : '';
   });
 };
 GUI.CLASS_AUTO_PLACE = 'a';
@@ -4643,8 +4643,20 @@ var paper;
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this._isMobile = false;
                 _this._guiComponent = paper.Application.playerMode === 2 /* Editor */ ? null : paper.GameObject.globalGameObject.getOrAddComponent(editor.GUIComponent);
+                _this._fpsHided = false;
                 return _this;
             }
+            EditorSystem.prototype._hideFPS = function () {
+                var guiComponent = this._guiComponent;
+                var statsDOM = guiComponent.stats.dom;
+                if (this._fpsHided) {
+                    statsDOM.style.display = "block";
+                }
+                else {
+                    statsDOM.style.display = "none";
+                }
+                this._fpsHided = !this._fpsHided;
+            };
             EditorSystem.prototype.onAwake = function () {
                 paper.GameObject.globalGameObject.getOrAddComponent(editor.EditorDefaultTexture);
                 //
@@ -4704,6 +4716,12 @@ var paper;
                         // );
                         guiComponent_1.hierarchy.close();
                         guiComponent_1.inspector.close();
+                        if (!dat.GUI.hide) {
+                            dat.GUI.toggleHide();
+                        }
+                        if (!this._fpsHided) {
+                            this._hideFPS();
+                        }
                     }
                     else {
                         hierarchy_1[0].appendChild(guiComponent_1.hierarchy.domElement);
@@ -4720,13 +4738,7 @@ var paper;
                 guiComponent.stats.update();
                 guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["web"]["WebGLRenderSystem"]).deltaTime, 200);
                 if (egret3d.inputCollecter.getKey("KeyH" /* KeyH */).isDown(false)) {
-                    var statsDOM = guiComponent.stats.dom;
-                    if (statsDOM.style.display !== "none") {
-                        statsDOM.style.display = "none";
-                    }
-                    else {
-                        statsDOM.style.display = "block";
-                    }
+                    this._hideFPS();
                 }
                 // TODO dc tc vc
                 var isMobile = paper.Application.isMobile;
@@ -4744,6 +4756,12 @@ var paper;
                                 guiComponent.inspector.onClick(guiComponent.inspector);
                             }
                         }
+                        if (!dat.GUI.hide) {
+                            dat.GUI.toggleHide();
+                        }
+                        if (!this._fpsHided) {
+                            this._hideFPS();
+                        }
                     }
                     else {
                         if (guiComponent.hierarchy.closed) {
@@ -4757,6 +4775,12 @@ var paper;
                             if (guiComponent.inspector.onClick) {
                                 guiComponent.inspector.onClick(guiComponent.inspector);
                             }
+                        }
+                        if (dat.GUI.hide) {
+                            dat.GUI.toggleHide();
+                        }
+                        if (this._fpsHided) {
+                            this._hideFPS();
                         }
                     }
                     this._isMobile = isMobile;
@@ -5136,10 +5160,7 @@ var paper;
                     cameraViewFrustum.transform.position = selectedCamera.gameObject.transform.position;
                     cameraViewFrustum.transform.rotation = selectedCamera.gameObject.transform.rotation;
                     var mesh = cameraViewFrustum.getComponent(egret3d.MeshFilter).mesh;
-                    var cameraProject = egret3d.Matrix4.create();
-                    var viewPortPixel = { x: 0, y: 0, w: 0, h: 0 };
-                    selectedCamera.calcViewPortPixel(viewPortPixel); // update viewport
-                    selectedCamera.calcProjectMatrix(viewPortPixel.w / viewPortPixel.h, cameraProject);
+                    var cameraProject = selectedCamera.projectionMatrix;
                     var positions = mesh.getVertices();
                     // center / target
                     setPoint(cameraProject, positions, 0, 0, -1, [38, 41]);
@@ -5168,7 +5189,6 @@ var paper;
                     setPoint(cameraProject, positions, 0, -1, -1, [48]);
                     setPoint(cameraProject, positions, 0, 1, -1, [49]);
                     mesh.uploadVertexBuffer("POSITION" /* POSITION */);
-                    cameraProject.release();
                 }
             };
             SceneSystem.prototype._updateLights = function () {

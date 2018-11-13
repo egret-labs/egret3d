@@ -128,6 +128,14 @@ namespace egret3d {
                 this.setRenderQueue(paper.RenderQueue.Geometry);
             }
 
+            if (!this._glTFTechnique.states.enable) {
+                this._glTFTechnique.states.enable = [];
+            }
+
+            if (!this._glTFTechnique.states.functions) {
+                this._glTFTechnique.states.functions = {};
+            }
+
             const materialDefines = glTFMaterial.extensions.paper.defines;
 
             if (materialDefines && materialDefines.length > 0) {
@@ -560,7 +568,7 @@ namespace egret3d {
                 this._glTFTechnique.states = { enable: [], functions: {} };
             }
 
-            const enables = this._glTFTechnique.states.enable!;
+            const enables = this._glTFTechnique.states.enable;
             const functions = this._glTFTechnique.states.functions!;
             const index = enables.indexOf(gltf.EnableState.CULL_FACE);
 

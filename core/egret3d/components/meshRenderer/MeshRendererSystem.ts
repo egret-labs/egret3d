@@ -53,6 +53,7 @@ namespace egret3d {
             for (const primitive of filter.mesh.glTFMesh.primitives) {
                 const drawCall = DrawCall.create();
                 drawCall.renderer = renderer;
+                drawCall.matrix = gameObject.transform.localToWorldMatrix;
                 drawCall.subMeshIndex = subMeshIndex++;
                 drawCall.mesh = filter.mesh;
                 drawCall.material = materials[primitive.material!] || DefaultMaterials.MISSING;

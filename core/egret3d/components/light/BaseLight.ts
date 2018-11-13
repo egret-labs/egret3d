@@ -30,67 +30,37 @@ namespace egret3d {
          * 
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public shadowRadius: number = 0.5;
-        /**
-         * 
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01 })
-        public shadowBias: number = 0.01;
-        /**
-         * 
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.UINT)
-        public shadowSize: number = 512;
-        /**
-         * 
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public shadowCameraNear: number = 1.0;
-        /**
-         * 
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public shadowCameraFar: number = 100.0;
-        /**
-         * 
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public shadowCameraSize: number = 30;
+        @paper.editor.property(paper.editor.EditType.NESTED)
+        public readonly shadow: LightShadow = LightShadow.create();
 
-        public readonly viewPortPixel: Rectangle = Rectangle.create();
-        /**
-         * @internal
-         */
-        public readonly shadowMatrix: Matrix4 = Matrix4.create();
-        public renderTarget: BaseRenderTarget;
+        // protected _updateShadowMatrix(camera: Camera) {
+        //     // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
+        //     const matrix = this.shadowMatrix;
+        //     matrix.set(
+        //         0.5, 0.0, 0.0, 0.5,
+        //         0.0, 0.5, 0.0, 0.5,
+        //         0.0, 0.0, 0.5, 0.5,
+        //         0.0, 0.0, 0.0, 1.0
+        //     );
 
-        protected _updateShadowMatrix(camera: Camera) {
-            // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
-            const matrix = this.shadowMatrix;
-            matrix.set(
-                0.5, 0.0, 0.0, 0.5,
-                0.0, 0.5, 0.0, 0.5,
-                0.0, 0.0, 0.5, 0.5,
-                0.0, 0.0, 0.0, 1.0
-            );
+        //     const context = camera.context;
+        //     context.updateCameraTransform(camera, this.gameObject.transform.localToWorldMatrix);
+        //     context.updateLightDepth(this);
 
-            const context = camera.context;
-            context.updateCamera(camera, this.gameObject.transform.localToWorldMatrix);
-            context.updateLightDepth(this);
-            matrix.multiply(context.matrix_p).multiply(context.matrix_v);
-        }
-        public updateShadow(camera: Camera) {
-        }
-        /**
-         * @internal
-         */
-        public updateFace(camera: Camera, faceIndex: number) {
-        }
+        //     helpMatrixA.fromProjection(
+        //         camera.fov, this.shadowCameraNear, this.shadowCameraFar,
+        //         this.shadowSize, camera.opvalue,
+        //         camera.aspect, stage.matchFactor
+        //     );
+
+        //     matrix.multiply(helpMatrixA).multiply(this.gameObject.transform.worldToLocalMatrix);
+        // }
+        // public updateShadow(camera: Camera) {
+        // }
+        // /**
+        //  * @internal
+        //  */
+        // public updateFace(camera: Camera, faceIndex: number) {
+        // }
     }
 }

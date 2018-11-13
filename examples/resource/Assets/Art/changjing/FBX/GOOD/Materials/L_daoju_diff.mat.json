@@ -14,7 +14,8 @@
                             0,
                             1
                         ]                    }                },                "paper":{                    "renderQueue":2450,                    "defines":[
-                        "USE_MAP"
+                        "USE_MAP",
+                        "ALPHATEST 0.5"
                     ]                }            }        }
     ],    "extensionsRequired":[
         "KHR_techniques_webgl",

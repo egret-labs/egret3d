@@ -38,10 +38,11 @@ void main() {
 
 	// accumulation (baked indirect lighting only)
 	#ifdef USE_LIGHTMAP
-		//    lowp vec4 lightmapTex = texture2D(lightMap, vUv2);
+			lowp vec4 lightmapTex = texture2D(lightMap, vUv2);
 		//    highp float power =pow( 2.0 ,lightmapTex.a * 255.0 - 128.0);
-		//    reflectedLight.indirectDiffuse +=lightmapTex.rgb * power * lightMapIntensity * 1.2;//EGRET
-		reflectedLight.indirectDiffuse += texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;
+		   	highp float power = 5.0 * lightmapTex.a;
+		   	reflectedLight.indirectDiffuse +=lightmapTex.rgb * power * lightMapIntensity;//EGRET
+		// reflectedLight.indirectDiffuse += texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;
 
 	#else
 
