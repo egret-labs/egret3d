@@ -20,87 +20,8 @@
             "techniques": [
                 {
                     "name": "luminosityhigh",
-                    "attributes": {
-                        "position": {
-                            "semantic": "POSITION"
-                        },
-                        "normal": {
-                            "semantic": "NORMAL"
-                        },
-                        "uv": {
-                            "semantic": "TEXCOORD_0"
-                        },
-                        "color": {
-                            "semantic": "COLOR_0"
-                        },
-                        "morphTarget0": {
-                            "semantic": "WEIGHTS_0"
-                        },
-                        "morphTarget1": {
-                            "semantic": "WEIGHTS_1"
-                        },
-                        "morphTarget2": {
-                            "semantic": "WEIGHTS_2"
-                        },
-                        "morphTarget3": {
-                            "semantic": "WEIGHTS_3"
-                        },
-                        "morphNormal0": {
-                            "semantic": "MORPHNORMAL_0"
-                        },
-                        "morphNormal1": {
-                            "semantic": "MORPHNORMAL_1"
-                        },
-                        "morphNormal2": {
-                            "semantic": "MORPHNORMAL_2"
-                        },
-                        "morphNormal3": {
-                            "semantic": "MORPHNORMAL_3"
-                        },
-                        "morphTarget4": {
-                            "semantic": "WEIGHTS_4"
-                        },
-                        "morphTarget5": {
-                            "semantic": "WEIGHTS_5"
-                        },
-                        "morphTarget6": {
-                            "semantic": "WEIGHTS_6"
-                        },
-                        "morphTarget7": {
-                            "semantic": "WEIGHTS_7"
-                        },
-                        "skinIndex": {
-                            "semantic": "JOINTS_0"
-                        },
-                        "skinWeight": {
-                            "semantic": "MORPHTARGET_0"
-                        }
-                    },
+                    "attributes": {},
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": 35676,
-                            "semantic": "MODEL"
-                        },
-                        "modelViewMatrix": {
-                            "type": 35676,
-                            "semantic": "MODELVIEW"
-                        },
-                        "projectionMatrix": {
-                            "type": 35676,
-                            "semantic": "PROJECTION"
-                        },
-                        "viewMatrix": {
-                            "type": 35676,
-                            "semantic": "VIEW"
-                        },
-                        "normalMatrix": {
-                            "type": 35675,
-                            "semantic": "MODELVIEWINVERSE"
-                        },
-                        "cameraPosition": {
-                            "type": 35665,
-                            "semantic": "_CAMERA_POS"
-                        },
                         "tDiffuse": {
                             "type": 35678
                         },

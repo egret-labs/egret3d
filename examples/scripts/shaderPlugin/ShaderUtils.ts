@@ -97,11 +97,12 @@ export function parseUniformType(string: string, name: string): gltf.UniformType
     return gltf.UniformType.STRUCT;
 }
 
-export function parseAttribute(name: string): gltf.Attribute {
+export function parseAttribute(name: string): gltf.Attribute | null {
     const attribute: gltf.Attribute = { semantic: "Unknown" };
     //系统内置的
     if (name in shaderConfig.ATTRIBUTE_TEMPLATE) {
-        attribute.semantic = shaderConfig.ATTRIBUTE_TEMPLATE[name];
+        // attribute.semantic = shaderConfig.ATTRIBUTE_TEMPLATE[name];
+        return null;
     }
     //用户自定义的
     else if (name in shaderConfig.CUSTOM_ATTRIBUTE_TEMPLATE) {
@@ -111,16 +112,19 @@ export function parseAttribute(name: string): gltf.Attribute {
     return attribute;
 }
 
-export function parseUniform(string: string, name: string): gltf.Uniform {
+export function parseUniform(string: string, name: string): gltf.Uniform | null {
     const uniform: gltf.Uniform = { type: gltf.UniformType.INT };
     //系统内置的
     if (name in shaderConfig.UNIFORM_TEMPLATE) {
         if (shaderConfig.UNIFORM_TEMPLATE[name].semantic) {
-            uniform.semantic = shaderConfig.UNIFORM_TEMPLATE[name].semantic;
+            return null;
         }
-        else {
-            uniform.value = [];
-        }
+        // if (shaderConfig.UNIFORM_TEMPLATE[name].semantic) {
+        //     uniform.semantic = shaderConfig.UNIFORM_TEMPLATE[name].semantic;
+        // }
+        // else {
+        //     uniform.value = [];
+        // }
         if (shaderConfig.UNIFORM_TEMPLATE[name].value) {
             uniform.value = shaderConfig.UNIFORM_TEMPLATE[name].value;
         }

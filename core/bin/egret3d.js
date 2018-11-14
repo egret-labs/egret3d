@@ -24764,7 +24764,7 @@ var egret3d;
                 //     }
                 // }
                 // Update static uniforms.
-                this._updateContextUniforms(program, context, technique);
+                this._updateGlobalUniforms(program, context);
                 // Update uniforms.
                 this._updateUniforms(program, material, technique, force);
                 // Update attributes.
@@ -24784,7 +24784,7 @@ var egret3d;
                     webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
                 }
             };
-            WebGLRenderSystem.prototype._updateContextUniforms = function (program, context, technique) {
+            WebGLRenderSystem.prototype._updateGlobalUniforms = function (program, context) {
                 var webgl = egret3d.WebGLCapabilities.webgl;
                 var glUniforms = program.contextUniforms;
                 // TODO
@@ -24830,7 +24830,7 @@ var egret3d;
                             webgl.uniform3fv(location_3, context.cameraUp);
                             break;
                         case "JOINTMATRIX" /* JOINTMATRIX */:
-                            webgl.uniformMatrix4fv(location_3, false, context.drawCall.renderer.boneMatrices);
+                            webgl.uniformMatrix4fv(location_3, false, drawCall.renderer.boneMatrices);
                             break;
                         case "_DIRECTLIGHTS" /* _DIRECTLIGHTS */:
                             if (context.directLightCount > 0) {
@@ -24850,7 +24850,6 @@ var egret3d;
                         case "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */:
                             var currenAmbientColor = drawCall.renderer ? drawCall.renderer.gameObject.scene.ambientColor : paper.Scene.activeScene.ambientColor;
                             webgl.uniform3f(location_3, currenAmbientColor.r, currenAmbientColor.g, currenAmbientColor.b);
-                            // webgl.uniform3fv(location, context.ambientLightColor);
                             break;
                         case "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */:
                             webgl.uniformMatrix4fv(location_3, false, context.directShadowMatrix);

@@ -19,7 +19,7 @@ UNIFORM_TYPE_MAP[" mat3"] = gltf.UniformType.FLOAT_MAT3;
 UNIFORM_TYPE_MAP[" mat4"] = gltf.UniformType.FLOAT_MAT4;
 UNIFORM_TYPE_MAP[" sampler2D"] = gltf.UniformType.SAMPLER_2D;
 UNIFORM_TYPE_MAP[" samplerCube"] = gltf.UniformType.SAMPLER_CUBE;
-/*****************************************系统内置*****************************************************/
+/*****************************************系统内置Attribute*****************************************************/
 export const ATTRIBUTE_TEMPLATE: { [key: string]: string } = {};
 ATTRIBUTE_TEMPLATE["corner"] = gltf.AttributeSemanticType._CORNER;
 ATTRIBUTE_TEMPLATE["position"] = gltf.AttributeSemanticType.POSITION;
@@ -52,7 +52,6 @@ ATTRIBUTE_TEMPLATE["random0"] = gltf.AttributeSemanticType._RANDOM0;
 ATTRIBUTE_TEMPLATE["random1"] = gltf.AttributeSemanticType._RANDOM1;
 ATTRIBUTE_TEMPLATE["startWorldPosition"] = gltf.AttributeSemanticType._WORLD_POSITION;
 ATTRIBUTE_TEMPLATE["startWorldRotation"] = gltf.AttributeSemanticType._WORLD_ROTATION;
-
 //LINE
 ATTRIBUTE_TEMPLATE["lineDistance"] = gltf.AttributeSemanticType._INSTANCE_DISTANCE;
 ATTRIBUTE_TEMPLATE["instanceStart"] = gltf.AttributeSemanticType._INSTANCE_START;
@@ -62,7 +61,7 @@ ATTRIBUTE_TEMPLATE["instanceColorEnd"] = gltf.AttributeSemanticType._INSTANCE_CO
 ATTRIBUTE_TEMPLATE["instanceDistanceStart"] = gltf.AttributeSemanticType._INSTANCE_DISTANCE_START;
 ATTRIBUTE_TEMPLATE["instanceDistanceEnd"] = gltf.AttributeSemanticType._INSTANCE_DISTANCE_END;
 
-
+/*****************************************系统内置Uniform*****************************************************/
 export const UNIFORM_TEMPLATE: { [key: string]: { semantic?: string, value?: {} } } = {};
 UNIFORM_TEMPLATE["modelMatrix"] = { semantic: gltf.UniformSemanticType.MODEL };
 UNIFORM_TEMPLATE["modelViewMatrix"] = { semantic: gltf.UniformSemanticType.MODELVIEW };
@@ -100,11 +99,6 @@ UNIFORM_TEMPLATE["lightMap"] = { semantic: gltf.UniformSemanticType._LIGHTMAPTEX
 UNIFORM_TEMPLATE["lightMapIntensity"] = { semantic: gltf.UniformSemanticType._LIGHTMAPINTENSITY };
 UNIFORM_TEMPLATE["lightMapScaleOffset"] = { semantic: gltf.UniformSemanticType._LIGHTMAP_SCALE_OFFSET };
 
-//
-UNIFORM_TEMPLATE["specular"] = { value: [1.0, 1.0, 1.0] };
-UNIFORM_TEMPLATE["shininess"] = { value: 30.0 };
-UNIFORM_TEMPLATE["opacity"] = { value: 1.0 };
-UNIFORM_TEMPLATE["normalScale"] = { value: [1.0, 1.0] };
 
 UNIFORM_TEMPLATE["referencePosition"] = { semantic: gltf.UniformSemanticType._REFERENCEPOSITION };
 UNIFORM_TEMPLATE["nearDistance"] = { semantic: gltf.UniformSemanticType._NEARDICTANCE };
@@ -114,6 +108,15 @@ UNIFORM_TEMPLATE["fogColor"] = { semantic: gltf.UniformSemanticType._FOG_COLOR }
 UNIFORM_TEMPLATE["fogDensity"] = { semantic: gltf.UniformSemanticType._FOG_DENSITY };
 UNIFORM_TEMPLATE["fogNear"] = { semantic: gltf.UniformSemanticType._FOG_NEAR };
 UNIFORM_TEMPLATE["fogFar"] = { semantic: gltf.UniformSemanticType._FOG_FAR };
+
+//
+UNIFORM_TEMPLATE["toneMappingExposure"] = { semantic: gltf.UniformSemanticType._TONE_MAPPING_EXPOSURE };
+UNIFORM_TEMPLATE["toneMappingWhitePoint"] = { semantic: gltf.UniformSemanticType._TONE_MAPPING_WHITE_POINT };
+//
+UNIFORM_TEMPLATE["specular"] = { value: [1.0, 1.0, 1.0] };
+UNIFORM_TEMPLATE["shininess"] = { value: 30.0 };
+UNIFORM_TEMPLATE["opacity"] = { value: 1.0 };
+UNIFORM_TEMPLATE["normalScale"] = { value: [1.0, 1.0] };
 
 UNIFORM_TEMPLATE["uvTransform"] = { value: [1, 0, 0, 0, 1, 0, 0, 0, 1] };
 UNIFORM_TEMPLATE["refractionRatio"] = { value: 0 };

@@ -86,13 +86,13 @@ export class LoadCommonShaderCommand implements IShaderCommand {
         const commonFile = `${this._commonDir}common.glsl`;
         const commonVertDefFile = `${this._commonDir}common_vert_def.glsl`;
         const commonFragDefFile = `${this._commonDir}common_frag_def.glsl`;
-        if (!fs.existsSync(commonFile)){
+        if (!fs.existsSync(commonFile)) {
             console.warn("缺少: common.glsl");
         }
-        if (!fs.existsSync(commonVertDefFile)){
+        if (!fs.existsSync(commonVertDefFile)) {
             console.warn("缺少: common_vert_def.glsl");
         }
-        if (!fs.existsSync(commonFragDefFile)){
+        if (!fs.existsSync(commonFragDefFile)) {
             console.warn("缺少: common_frag_def.glsl");
         }
         //
@@ -132,8 +132,6 @@ export class ParseShaderCommand implements IShaderCommand {
         let attrReg = new RegExp("attribute ([\\w])+ ([\\w])+;", "g");
         let uniformReg = new RegExp("uniform ([\\w])+ ([\\w\\[\\]\\* ])+;", "g");
 
-        const globalVertStr = shaderContext.shaderChunks["common_vert_def"];
-        const globalFragStr = shaderContext.shaderChunks["common_frag_def"];
         for (const name in shaderContext.shaders) {
             console.log("处理:" + name);
             const vertName = shaderContext.shaders[name].vert;
@@ -150,8 +148,8 @@ export class ParseShaderCommand implements IShaderCommand {
 
             const orginVert = shaderContext.shaderLibs[vertName];
             const orginFrag = shaderContext.shaderLibs[fragName];
-            const vertShader = ShaderUtils.parseIncludes(globalVertStr + orginVert.context, shaderContext.shaderChunks);
-            const fragShader = ShaderUtils.parseIncludes(globalFragStr + orginFrag.context, shaderContext.shaderChunks);
+            const vertShader = ShaderUtils.parseIncludes(orginVert.context, shaderContext.shaderChunks);
+            const fragShader = ShaderUtils.parseIncludes(orginFrag.context, shaderContext.shaderChunks);
 
             const all = vertShader + fragShader;
 
@@ -168,7 +166,14 @@ export class ParseShaderCommand implements IShaderCommand {
             if (attrMatchResult) {
                 for (const attrStr of attrMatchResult) {
                     const attName = ShaderUtils.parseAttributeName(attrStr);
-                    technique.attributes[attName] = ShaderUtils.parseAttribute(attName);
+                    const result = ShaderUtils.parseAttribute(attName);
+                    if (result) {
+                        technique.attributes[attName] = result;
+                    }
+                    else {
+                        //系统内置的Attribute，不用写进去
+                    }
+                    // technique.attributes[attName] = ShaderUtils.parseAttribute(attName);
                 }
             }
             //寻找所有unifrom
@@ -176,7 +181,14 @@ export class ParseShaderCommand implements IShaderCommand {
             if (uniformMatchResult) {
                 for (const uniformStr of uniformMatchResult) {
                     const uniformName = ShaderUtils.parseUniformName(uniformStr);
-                    technique.uniforms[uniformName] = ShaderUtils.parseUniform(uniformStr, uniformName);
+                    const result = ShaderUtils.parseUniform(uniformStr, uniformName);
+                    if (result) {
+                        technique.uniforms[uniformName] = result;
+                    }
+                    else {
+                        //系统内置的Uniform,不用写进去
+                    }
+                    // technique.uniforms[uniformName] = ShaderUtils.parseUniform(uniformStr, uniformName);
                 }
             }
             asset.extensions.KHR_techniques_webgl!.techniques = [technique];
@@ -261,7 +273,7 @@ export class GenerateGLTFCommand implements IShaderCommand {
             if (!fs.existsSync(path.dirname(outPath))) {
                 fs.mkdirSync(path.dirname(outPath));
             }
-            console.log("生成:" +outPath);
+            console.log("生成:" + outPath);
             const shaders = asset.extensions.KHR_techniques_webgl!.shaders;
             const tempUri0 = shaders[0].uri;
             const tempUri1 = shaders[1].uri;
@@ -270,7 +282,7 @@ export class GenerateGLTFCommand implements IShaderCommand {
             shaders[1].uri = dir + shaders[1].name + ".glsl";
             fs.writeFileSync(outPath, JSON.stringify(asset, null, 4));
             shaders[0].uri = tempUri0;
-            shaders[1].uri = tempUri1;            
+            shaders[1].uri = tempUri1;
         }
     }
 }
@@ -287,7 +299,7 @@ export class ShaderGenerateContext {
     //要输出的shader数据
     public shaderAssets: { [key: string]: gltf.GLTFEgret } = {};
 
-    public execute(root: string) {
+    public execute(root: string, isEngine: boolean = false) {
         this.root = root;
         this.chunkFiles = [];
         this.libFiles = [];
@@ -297,16 +309,16 @@ export class ShaderGenerateContext {
         this.shaderAssets = {};
 
         let comanders: IShaderCommand[] = [];
-        if (false) {
-            comanders.push(new ColletEngineShaderCommand("egret3d/asset/default/chunks/", "egret3d/asset/default/shaders/"));
+        if (isEngine) {
+            comanders.push(new ColletEngineShaderCommand(root + "chunks/", root + "shaders/"));
             comanders.push(new ParseShaderCommand());
-            comanders.push(new GenerateChunksCommand("egret3d/asset/default/", "ShaderChunk", "egret3d"));
-            comanders.push(new GenerateLibsCommand("egret3d/asset/default/", "ShaderLib", "egret3d"));
-            // comanders.push(new GenerateGLTFCommand("egret3d/asset/default/shadersGLTF/"));
+            comanders.push(new GenerateChunksCommand(root, "ShaderChunk", "egret3d"));
+            comanders.push(new GenerateLibsCommand(root, "ShaderLib", "egret3d"));
+            // comanders.push(new GenerateGLTFCommand(root + "shadersGLTF/"));
         }
         else {
             comanders.push(new ColletCustomShaderCommand(this.root));
-            comanders.push(new LoadCommonShaderCommand("scripts/shaderPlugin/"));
+            // comanders.push(new LoadCommonShaderCommand("scripts/shaderPlugin/"));
             comanders.push(new ParseShaderCommand());
             comanders.push(new GenerateGLTFCommand());
         }
@@ -318,4 +330,4 @@ export class ShaderGenerateContext {
 }
 //------------------------------------------------------------------------
 // let shaderContext: ShaderGenerateContext = new ShaderGenerateContext();
-// shaderContext.execute("shaders/");
+// shaderContext.execute("egret3d/asset/default/", true);

@@ -19,7 +19,7 @@ exports.UNIFORM_TYPE_MAP[" mat3"] = 35675 /* FLOAT_MAT3 */;
 exports.UNIFORM_TYPE_MAP[" mat4"] = 35676 /* FLOAT_MAT4 */;
 exports.UNIFORM_TYPE_MAP[" sampler2D"] = 35678 /* SAMPLER_2D */;
 exports.UNIFORM_TYPE_MAP[" samplerCube"] = 35680 /* SAMPLER_CUBE */;
-/*****************************************系统内置*****************************************************/
+/*****************************************系统内置Attribute*****************************************************/
 exports.ATTRIBUTE_TEMPLATE = {};
 exports.ATTRIBUTE_TEMPLATE["corner"] = "_CORNER" /* _CORNER */;
 exports.ATTRIBUTE_TEMPLATE["position"] = "POSITION" /* POSITION */;
@@ -60,6 +60,7 @@ exports.ATTRIBUTE_TEMPLATE["instanceColorStart"] = "_INSTANCE_COLOR_START" /* _I
 exports.ATTRIBUTE_TEMPLATE["instanceColorEnd"] = "_INSTANCE_COLOR_END" /* _INSTANCE_COLOR_END */;
 exports.ATTRIBUTE_TEMPLATE["instanceDistanceStart"] = "_INSTANCE_DISTANCE_START" /* _INSTANCE_DISTANCE_START */;
 exports.ATTRIBUTE_TEMPLATE["instanceDistanceEnd"] = "_INSTANCE_DISTANCE_END" /* _INSTANCE_DISTANCE_END */;
+/*****************************************系统内置Uniform*****************************************************/
 exports.UNIFORM_TEMPLATE = {};
 exports.UNIFORM_TEMPLATE["modelMatrix"] = { semantic: "MODEL" /* MODEL */ };
 exports.UNIFORM_TEMPLATE["modelViewMatrix"] = { semantic: "MODELVIEW" /* MODELVIEW */ };

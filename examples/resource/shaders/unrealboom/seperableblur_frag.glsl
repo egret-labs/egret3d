@@ -1,4 +1,3 @@
-#include <common>
 varying vec2 vUv;
 uniform sampler2D colorTexture;
 uniform vec2 texSize;

@@ -302,7 +302,7 @@ var ShaderGenerateContext = /** @class */ (function () {
             comanders.push(new ParseShaderCommand());
             comanders.push(new GenerateChunksCommand(root, "ShaderChunk", "egret3d"));
             comanders.push(new GenerateLibsCommand(root, "ShaderLib", "egret3d"));
-            comanders.push(new GenerateGLTFCommand(root + "shadersGLTF/"));
+            // comanders.push(new GenerateGLTFCommand(root + "shadersGLTF/"));
         }
         else {
             comanders.push(new ColletCustomShaderCommand(this.root));
