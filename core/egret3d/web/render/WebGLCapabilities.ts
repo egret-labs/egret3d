@@ -98,7 +98,7 @@ namespace egret3d {
         return shader;
     }
 
-    function _extractAttributes(webgl: WebGLRenderingContext, program: GlProgram) {
+    function _extractAttributes(webgl: WebGLRenderingContext, program: GlProgram, technique: gltf.Technique) {
         const webglProgram = program.program;
         const attributes = program.attributes;
         const totalAttributes = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_ATTRIBUTES);
@@ -106,7 +106,17 @@ namespace egret3d {
         for (let i = 0; i < totalAttributes; i++) {
             const attribData = webgl.getActiveAttrib(webglProgram, i)!;
             const location = webgl.getAttribLocation(webglProgram, attribData.name);
-            attributes.push({ name: attribData.name, type: attribData.type, size: attribData.size, location });
+            let semantic = "";
+            if (!technique.attributes[attribData.name]) {
+                semantic = globalAttributeSemantic[attribData.name];
+                if (!semantic) {
+                    console.error("未知Uniform定义：" + attribData.name);
+                }
+            }
+            else {
+                semantic = technique.attributes[attribData.name].semantic;
+            }
+            attributes.push({ name: attribData.name, type: attribData.type, size: attribData.size, location, semantic });
         }
     }
 
@@ -118,15 +128,23 @@ namespace egret3d {
 
         for (let i = 0; i < totalUniforms; i++) {
             const uniformData = webgl.getActiveUniform(webglProgram, i)!;
-            const techniqueUniform = technique.uniforms[uniformData.name];
             const location = webgl.getUniformLocation(webglProgram, uniformData.name)!;
+            const techniqueUniform = technique.uniforms[uniformData.name];
 
+            let semantic = "";
             if (!techniqueUniform) {
-                console.error("缺少Uniform定义：" + uniformData.name);
+                semantic = globalUniformSemantic[uniformData.name];
+                if (!semantic) {
+                    //不在自定义中，也不在全局Uniform中
+                    console.error("未知Uniform定义：" + uniformData.name);
+                }
+            }
+            else {
+                semantic = techniqueUniform.semantic;
             }
 
-            if (techniqueUniform.semantic) {
-                contextUniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, location });
+            if (semantic) {
+                contextUniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, semantic, location });
             }
             else {
                 uniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, location });
@@ -176,6 +194,98 @@ namespace egret3d {
         ReinhardToneMapping = 2,
         Uncharted2ToneMapping = 3,
         CineonToneMapping = 4,
+    }
+
+    /**
+     * 内置提供的全局Attribute
+     * @internal
+     */
+    export const globalAttributeSemantic: { [key: string]: gltf.AttributeSemanticType } = {
+        "corner": gltf.AttributeSemanticType._CORNER,
+        "position": gltf.AttributeSemanticType.POSITION,
+        "normal": gltf.AttributeSemanticType.NORMAL,
+        "uv": gltf.AttributeSemanticType.TEXCOORD_0,
+        "uv2": gltf.AttributeSemanticType.TEXCOORD_1,
+        "color": gltf.AttributeSemanticType.COLOR_0,
+
+        // "morphTarget0": gltf.AttributeSemanticType.MORPHTARGET_0,
+        // "morphTarget1": gltf.AttributeSemanticType.MORPHTARGET_1,
+        // "morphTarget2": gltf.AttributeSemanticType.MORPHTARGET_2,
+        // "morphTarget3": gltf.AttributeSemanticType.MORPHTARGET_3,
+        // "morphTarget4": gltf.AttributeSemanticType.MORPHTARGET_4,
+        // "morphTarget5": gltf.AttributeSemanticType.MORPHTARGET_5,
+        // "morphTarget6": gltf.AttributeSemanticType.MORPHTARGET_6,
+        // "morphTarget7": gltf.AttributeSemanticType.MORPHTARGET_7,
+        // "morphNormal0": gltf.AttributeSemanticType.MORPHNORMAL_0,
+        // "morphNormal1": gltf.AttributeSemanticType.MORPHNORMAL_1,
+        // "morphNormal2": gltf.AttributeSemanticType.MORPHNORMAL_2,
+        // "morphNormal3": gltf.AttributeSemanticType.MORPHNORMAL_3,
+
+        "skinIndex": gltf.AttributeSemanticType.JOINTS_0,
+        "skinWeight": gltf.AttributeSemanticType.WEIGHTS_0,
+
+        "startPosition": gltf.AttributeSemanticType._START_POSITION,
+        "startVelocity": gltf.AttributeSemanticType._START_VELOCITY,
+        "startColor": gltf.AttributeSemanticType._START_COLOR,
+        "startSize": gltf.AttributeSemanticType._START_SIZE,
+        "startRotation": gltf.AttributeSemanticType._START_ROTATION,
+        "time": gltf.AttributeSemanticType._TIME,
+        "random0": gltf.AttributeSemanticType._RANDOM0,
+        "random1": gltf.AttributeSemanticType._RANDOM1,
+        "startWorldPosition": gltf.AttributeSemanticType._WORLD_POSITION,
+        "startWorldRotation": gltf.AttributeSemanticType._WORLD_ROTATION,
+
+        "lineDistance": gltf.AttributeSemanticType._INSTANCE_DISTANCE,
+        "instanceStart": gltf.AttributeSemanticType._INSTANCE_START,
+        "instanceEnd": gltf.AttributeSemanticType._INSTANCE_END,
+        "instanceColorStart": gltf.AttributeSemanticType._INSTANCE_COLOR_START,
+        "instanceColorEnd": gltf.AttributeSemanticType._INSTANCE_COLOR_END,
+        "instanceDistanceStart": gltf.AttributeSemanticType._INSTANCE_DISTANCE_START,
+        "instanceDistanceEnd": gltf.AttributeSemanticType._INSTANCE_DISTANCE_END,
+    }
+
+    /**
+     * 内置提供的全局Uniform
+     * @internal
+     */
+    export const globalUniformSemantic: { [key: string]: gltf.UniformSemanticType } = {
+        "modelMatrix": gltf.UniformSemanticType.MODEL,
+        "modelViewMatrix": gltf.UniformSemanticType.MODELVIEW,
+        "projectionMatrix": gltf.UniformSemanticType.PROJECTION,
+        "viewMatrix": gltf.UniformSemanticType.VIEW,
+        "normalMatrix": gltf.UniformSemanticType.MODELVIEWINVERSE,
+        "modelViewProjectionMatrix": gltf.UniformSemanticType.MODELVIEWPROJECTION,
+        "viewProjectionMatrix": gltf.UniformSemanticType._VIEWPROJECTION,
+        "cameraPosition": gltf.UniformSemanticType._CAMERA_POS,
+        "cameraForward": gltf.UniformSemanticType._CAMERA_FORWARD,
+        "cameraUp": gltf.UniformSemanticType._CAMERA_UP,
+        "ambientLightColor": gltf.UniformSemanticType._AMBIENTLIGHTCOLOR,
+        "directionalLights[0]": gltf.UniformSemanticType._DIRECTLIGHTS,
+        "pointLights[0]": gltf.UniformSemanticType._POINTLIGHTS,
+        "spotLights[0]": gltf.UniformSemanticType._SPOTLIGHTS,
+        "boneMatrices[0]": gltf.UniformSemanticType.JOINTMATRIX,
+
+        "directionalShadowMatrix[0]": gltf.UniformSemanticType._DIRECTIONSHADOWMAT,
+        "spotShadowMatrix[0]": gltf.UniformSemanticType._SPOTSHADOWMAT,
+        "pointShadowMatrix[0]": gltf.UniformSemanticType._POINTSHADOWMAT,
+        "directionalShadowMap[0]": gltf.UniformSemanticType._DIRECTIONSHADOWMAP,
+        "spotShadowMap[0]": gltf.UniformSemanticType._SPOTSHADOWMAP,
+        "pointShadowMap[0]": gltf.UniformSemanticType._POINTSHADOWMAP,
+        "lightMap": gltf.UniformSemanticType._LIGHTMAPTEX,
+        "lightMapIntensity": gltf.UniformSemanticType._LIGHTMAPINTENSITY,
+        "lightMapScaleOffset": gltf.UniformSemanticType._LIGHTMAP_SCALE_OFFSET,
+
+        "referencePosition": gltf.UniformSemanticType._REFERENCEPOSITION,
+        "nearDistance": gltf.UniformSemanticType._NEARDICTANCE,
+        "farDistance": gltf.UniformSemanticType._FARDISTANCE,
+
+        "fogColor": gltf.UniformSemanticType._FOG_COLOR,
+        "fogDensity": gltf.UniformSemanticType._FOG_DENSITY,
+        "fogNear": gltf.UniformSemanticType._FOG_NEAR,
+        "fogFar": gltf.UniformSemanticType._FOG_FAR,
+
+        "toneMappingExposure": gltf.UniformSemanticType._TONE_MAPPING_EXPOSURE,
+        "toneMappingWhitePoint": gltf.UniformSemanticType._TONE_MAPPING_WHITE_POINT,
     }
     /**
      * @private
@@ -428,7 +538,7 @@ namespace egret3d {
                 if (webglProgram) {
                     program = new GlProgram(webglProgram);
                     this._programs[name] = program;
-                    _extractAttributes(webgl, program);
+                    _extractAttributes(webgl, program, technique);
                     _extractUniforms(webgl, program, technique);
                     _extractTextureUnits(program);
                 }

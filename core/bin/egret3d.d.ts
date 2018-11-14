@@ -2190,6 +2190,8 @@ declare namespace gltf {
         _REFERENCEPOSITION = "_REFERENCEPOSITION",
         _NEARDICTANCE = "_NEARDICTANCE",
         _FARDISTANCE = "_FARDISTANCE",
+        _TONE_MAPPING_EXPOSURE = "_TONE_MAPPING_EXPOSURE",
+        _TONE_MAPPING_WHITE_POINT = "_TONE_MAPPING_WHITE_POINT",
         _FOG_COLOR = "_FOG_COLOR",
         _FOG_DENSITY = "_FOG_DENSITY",
         _FOG_NEAR = "_FOG_NEAR",
@@ -8355,87 +8357,8 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "opacity": {
                             "type": number;
                             "value": number;
@@ -8469,87 +8392,8 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "tCube": {
                             "type": number;
                         };
@@ -8586,87 +8430,8 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "uvTransform": {
                             "type": number;
                             "value": number[];
@@ -8688,10 +8453,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTextureSize": {
                             "type": number;
-                        };
-                        "boneMatrices[0]": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "logDepthBufFC": {
                             "type": number;
@@ -8735,87 +8496,8 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "uvTransform": {
                             "type": number;
                             "value": number[];
@@ -8837,22 +8519,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTextureSize": {
                             "type": number;
-                        };
-                        "boneMatrices[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "referencePosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "nearDistance": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "farDistance": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "map": {
                             "type": number;
@@ -8889,87 +8555,8 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "tEquirect": {
                             "type": number;
                         };
@@ -8999,115 +8586,14 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                        "instanceStart": {
-                            "semantic": string;
-                        };
-                        "instanceEnd": {
-                            "semantic": string;
-                        };
-                        "instanceColorStart": {
-                            "semantic": string;
-                        };
-                        "instanceColorEnd": {
-                            "semantic": string;
-                        };
-                        "instanceDistanceStart": {
-                            "semantic": string;
-                        };
-                        "instanceDistanceEnd": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "logDepthBufFC": {
                             "type": number;
                         };
                         "linewidth": {
                             "type": number;
                             "value": number;
-                        };
-                        "resolution": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "dashScale": {
                             "type": number;
@@ -9128,22 +8614,6 @@ declare namespace egret3d.ShaderLib {
                         "gapSize": {
                             "type": number;
                             "value": number;
-                        };
-                        "fogColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogDensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogNear": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogFar": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "clippingPlanes[0]": {
                             "type": number;
@@ -9174,90 +8644,8 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                        "lineDistance": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "scale": {
                             "type": number;
                             "value": number;
@@ -9280,22 +8668,6 @@ declare namespace egret3d.ShaderLib {
                         "totalSize": {
                             "type": number;
                             "value": number;
-                        };
-                        "fogColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogDensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogNear": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogFar": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "clippingPlanes[0]": {
                             "type": number;
@@ -9326,101 +8698,14 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                        "uv2": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "uvTransform": {
                             "type": number;
                             "value": number[];
                         };
-                        "lightMapScaleOffset": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "refractionRatio": {
                             "type": number;
-                            "value": any[];
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
@@ -9430,10 +8715,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTextureSize": {
                             "type": number;
-                        };
-                        "boneMatrices[0]": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "logDepthBufFC": {
                             "type": number;
@@ -9459,17 +8740,8 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                             "value": number;
                         };
-                        "lightMap": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "lightMapIntensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "reflectivity": {
                             "type": number;
-                            "value": any[];
                         };
                         "envMapIntensity": {
                             "type": number;
@@ -9484,23 +8756,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "maxMipLevel": {
                             "type": number;
-                            "value": any[];
-                        };
-                        "fogColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogDensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogNear": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogFar": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "specularMap": {
                             "type": number;
@@ -9534,133 +8789,14 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                        "uv2": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "uvTransform": {
                             "type": number;
                             "value": number[];
                         };
-                        "lightMapScaleOffset": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "refractionRatio": {
                             "type": number;
-                            "value": any[];
-                        };
-                        "ambientLightColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "directionalLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "pointLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "spotLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "ltc_1": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "ltc_2": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "rectAreaLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "hemisphereLights[0]": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
@@ -9670,22 +8806,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTextureSize": {
                             "type": number;
-                        };
-                        "boneMatrices[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "directionalShadowMatrix[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "spotShadowMatrix[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "pointShadowMatrix[0]": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "logDepthBufFC": {
                             "type": number;
@@ -9715,20 +8835,11 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                             "value": number;
                         };
-                        "lightMap": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "lightMapIntensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "emissiveMap": {
                             "type": number;
                         };
                         "reflectivity": {
                             "type": number;
-                            "value": any[];
                         };
                         "envMapIntensity": {
                             "type": number;
@@ -9743,35 +8854,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "maxMipLevel": {
                             "type": number;
-                            "value": any[];
-                        };
-                        "fogColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogDensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogNear": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogFar": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "directionalShadowMap[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "spotShadowMap[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "pointShadowMap[0]": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "specularMap": {
                             "type": number;
@@ -9805,97 +8887,11 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                        "uv2": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "uvTransform": {
                             "type": number;
                             "value": number[];
-                        };
-                        "lightMapScaleOffset": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "displacementMap": {
                             "type": number;
@@ -9908,7 +8904,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "refractionRatio": {
                             "type": number;
-                            "value": any[];
                         };
                         "morphTargetInfluences[0]": {
                             "type": number;
@@ -9918,22 +8913,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTextureSize": {
                             "type": number;
-                        };
-                        "boneMatrices[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "directionalShadowMatrix[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "spotShadowMatrix[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "pointShadowMatrix[0]": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "logDepthBufFC": {
                             "type": number;
@@ -9971,20 +8950,11 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                             "value": number;
                         };
-                        "lightMap": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "lightMapIntensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "emissiveMap": {
                             "type": number;
                         };
                         "reflectivity": {
                             "type": number;
-                            "value": any[];
                         };
                         "envMapIntensity": {
                             "type": number;
@@ -9999,70 +8969,9 @@ declare namespace egret3d.ShaderLib {
                         };
                         "maxMipLevel": {
                             "type": number;
-                            "value": any[];
                         };
                         "gradientMap": {
                             "type": number;
-                        };
-                        "fogColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogDensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogNear": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogFar": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "ambientLightColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "directionalLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "pointLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "spotLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "ltc_1": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "ltc_2": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "rectAreaLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "hemisphereLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "directionalShadowMap[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "spotShadowMap[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "pointShadowMap[0]": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "bumpMap": {
                             "type": number;
@@ -10109,97 +9018,11 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                        "uv2": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "uvTransform": {
                             "type": number;
                             "value": number[];
-                        };
-                        "lightMapScaleOffset": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "displacementMap": {
                             "type": number;
@@ -10218,22 +9041,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTextureSize": {
                             "type": number;
-                        };
-                        "boneMatrices[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "directionalShadowMatrix[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "spotShadowMatrix[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "pointShadowMatrix[0]": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "logDepthBufFC": {
                             "type": number;
@@ -10275,20 +9082,11 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                             "value": number;
                         };
-                        "lightMap": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "lightMapIntensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "emissiveMap": {
                             "type": number;
                         };
                         "reflectivity": {
                             "type": number;
-                            "value": any[];
                         };
                         "envMapIntensity": {
                             "type": number;
@@ -10303,71 +9101,9 @@ declare namespace egret3d.ShaderLib {
                         };
                         "maxMipLevel": {
                             "type": number;
-                            "value": any[];
                         };
                         "refractionRatio": {
                             "type": number;
-                            "value": any[];
-                        };
-                        "fogColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogDensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogNear": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogFar": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "ambientLightColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "directionalLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "pointLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "spotLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "ltc_1": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "ltc_2": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "rectAreaLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "hemisphereLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "directionalShadowMap[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "spotShadowMap[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "pointShadowMap[0]": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "bumpMap": {
                             "type": number;
@@ -10417,96 +9153,13 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "tDiffuse": {
                             "type": number;
                         };
                         "tColor": {
                             "type": number;
-                        };
-                        "resolution": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "viewProjectionInverseMatrix": {
                             "type": number;
@@ -10543,87 +9196,8 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "uvTransform": {
                             "type": number;
                             "value": number[];
@@ -10645,10 +9219,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "boneTextureSize": {
                             "type": number;
-                        };
-                        "boneMatrices[0]": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "logDepthBufFC": {
                             "type": number;
@@ -10696,120 +9266,8 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                        "corner": {
-                            "semantic": string;
-                        };
-                        "startPosition": {
-                            "semantic": string;
-                        };
-                        "startVelocity": {
-                            "semantic": string;
-                        };
-                        "startColor": {
-                            "semantic": string;
-                        };
-                        "startSize": {
-                            "semantic": string;
-                        };
-                        "startRotation": {
-                            "semantic": string;
-                        };
-                        "time": {
-                            "semantic": string;
-                        };
-                        "random0": {
-                            "semantic": string;
-                        };
-                        "random1": {
-                            "semantic": string;
-                        };
-                        "startWorldPosition": {
-                            "semantic": string;
-                        };
-                        "startWorldRotation": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "u_currentTime": {
                             "type": number;
                         };
@@ -10835,18 +9293,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "u_sizeScale": {
                             "type": number;
-                        };
-                        "viewProjectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraForward": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraUp": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "u_lengthScale": {
                             "type": number;
@@ -11011,87 +9457,8 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "size": {
                             "type": number;
                         };
@@ -11119,22 +9486,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "map": {
                             "type": number;
-                        };
-                        "fogColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogDensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogNear": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogFar": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "clippingPlanes[0]": {
                             "type": number;
@@ -11165,165 +9516,14 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "directionalShadowMatrix[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "spotShadowMatrix[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "pointShadowMatrix[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "color": {
                             "type": number;
                         };
                         "opacity": {
                             "type": number;
                             "value": number;
-                        };
-                        "fogColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogDensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogNear": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogFar": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "ambientLightColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "directionalLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "pointLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "spotLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "ltc_1": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "ltc_2": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "rectAreaLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "hemisphereLights[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "directionalShadowMap[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "spotShadowMap[0]": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "pointShadowMap[0]": {
-                            "type": number;
-                            "semantic": string;
                         };
                     };
                     "states": {
@@ -11351,87 +9551,8 @@ declare namespace egret3d.ShaderLib {
                 }[];
                 "techniques": {
                     "name": string;
-                    "attributes": {
-                        "position": {
-                            "semantic": string;
-                        };
-                        "normal": {
-                            "semantic": string;
-                        };
-                        "uv": {
-                            "semantic": string;
-                        };
-                        "color": {
-                            "semantic": string;
-                        };
-                        "morphTarget0": {
-                            "semantic": string;
-                        };
-                        "morphTarget1": {
-                            "semantic": string;
-                        };
-                        "morphTarget2": {
-                            "semantic": string;
-                        };
-                        "morphTarget3": {
-                            "semantic": string;
-                        };
-                        "morphNormal0": {
-                            "semantic": string;
-                        };
-                        "morphNormal1": {
-                            "semantic": string;
-                        };
-                        "morphNormal2": {
-                            "semantic": string;
-                        };
-                        "morphNormal3": {
-                            "semantic": string;
-                        };
-                        "morphTarget4": {
-                            "semantic": string;
-                        };
-                        "morphTarget5": {
-                            "semantic": string;
-                        };
-                        "morphTarget6": {
-                            "semantic": string;
-                        };
-                        "morphTarget7": {
-                            "semantic": string;
-                        };
-                        "skinIndex": {
-                            "semantic": string;
-                        };
-                        "skinWeight": {
-                            "semantic": string;
-                        };
-                    };
+                    "attributes": {};
                     "uniforms": {
-                        "modelMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "modelViewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "projectionMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "viewMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "normalMatrix": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "cameraPosition": {
-                            "type": number;
-                            "semantic": string;
-                        };
                         "rotation": {
                             "type": number;
                         };
@@ -11455,22 +9576,6 @@ declare namespace egret3d.ShaderLib {
                         };
                         "map": {
                             "type": number;
-                        };
-                        "fogColor": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogDensity": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogNear": {
-                            "type": number;
-                            "semantic": string;
-                        };
-                        "fogFar": {
-                            "type": number;
-                            "semantic": string;
                         };
                         "clippingPlanes[0]": {
                             "type": number;
@@ -11841,6 +9946,7 @@ declare namespace egret3d {
         size: number;
         type: number;
         location: number;
+        semantic: string;
     }
     /**
      * @private
@@ -11850,6 +9956,7 @@ declare namespace egret3d {
         size: number;
         type: number;
         location: WebGLUniformLocation;
+        semantic?: string;
         textureUnits?: number[];
     }
     /**

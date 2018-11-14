@@ -135,7 +135,7 @@ namespace egret3d.web {
             //     }
             // }
             // Update static uniforms.
-            this._updateContextUniforms(program, context, technique);
+            this._updateGlobalUniforms(program, context);
             // Update uniforms.
             this._updateUniforms(program, material, technique, force);
             // Update attributes.
@@ -157,9 +157,8 @@ namespace egret3d.web {
             }
         }
 
-        private _updateContextUniforms(program: GlProgram, context: CameraRenderContext, technique: gltf.Technique) {
+        private _updateGlobalUniforms(program: GlProgram, context: CameraRenderContext) {
             const webgl = WebGLCapabilities.webgl!;
-            const uniforms = technique.uniforms;
             const glUniforms = program.contextUniforms;
             // TODO
             const camera = context.camera;
@@ -167,13 +166,13 @@ namespace egret3d.web {
             const matrix = drawCall.matrix;
 
             for (const glUniform of glUniforms) {
-                const uniform = uniforms[glUniform.name];
-                if (!uniform.semantic) {
+                const semantic = glUniform.semantic;
+                if (!semantic) {
                     continue;
                 }
 
                 const location = glUniform.location;
-                switch (uniform.semantic) {
+                switch (semantic) {
                     case gltf.UniformSemanticType.MODEL:
                         webgl.uniformMatrix4fv(location, false, matrix.rawData);
                         break;
@@ -208,7 +207,7 @@ namespace egret3d.web {
                         break;
 
                     case gltf.UniformSemanticType.JOINTMATRIX:
-                        webgl.uniformMatrix4fv(location, false, (context.drawCall.renderer as SkinnedMeshRenderer).boneMatrices!);
+                        webgl.uniformMatrix4fv(location, false, (drawCall.renderer as SkinnedMeshRenderer).boneMatrices!);
                         break;
 
                     case gltf.UniformSemanticType._DIRECTLIGHTS:
@@ -229,7 +228,6 @@ namespace egret3d.web {
                     case gltf.UniformSemanticType._AMBIENTLIGHTCOLOR:
                         const currenAmbientColor = drawCall.renderer ? drawCall.renderer!.gameObject.scene.ambientColor : paper.Scene.activeScene.ambientColor;
                         webgl.uniform3f(location, currenAmbientColor.r, currenAmbientColor.g, currenAmbientColor.b);
-                        // webgl.uniform3fv(location, context.ambientLightColor);
                         break;
 
                     case gltf.UniformSemanticType._DIRECTIONSHADOWMAT:
@@ -326,7 +324,7 @@ namespace egret3d.web {
                         break;
 
                     default:
-                        console.warn("不识别的Uniform语义:" + uniform.semantic);
+                        console.warn("不识别的Uniform语义:" + semantic);
                         break;
                 }
             }
@@ -353,7 +351,6 @@ namespace egret3d.web {
 
                 const location = glUniform.location;
                 const value = uniform.value;
-
                 switch (uniform.type) {
                     case gltf.UniformType.BOOL:
                     case gltf.UniformType.INT:
@@ -430,13 +427,13 @@ namespace egret3d.web {
             const primitive = mesh.glTFMesh.primitives[subMeshIndex];
             // vbo.
             const webglAttributes = program.attributes;
-            const attributes = technique.attributes;
+            // const attributes = technique.attributes;
             webgl.bindBuffer(webgl.ARRAY_BUFFER, mesh._vbo);
 
             for (const glAttribute of webglAttributes) {
-                const attribute = attributes[glAttribute.name];
+                // const attribute = attributes[glAttribute.name];
                 const location = glAttribute.location;
-                const accessorIndex = primitive.attributes[attribute.semantic];
+                const accessorIndex = primitive.attributes[glAttribute.semantic];
                 if (accessorIndex !== undefined) {
                     const accessor = mesh.getAccessor(accessorIndex);
                     const bufferOffset = mesh.getBufferOffset(accessor);

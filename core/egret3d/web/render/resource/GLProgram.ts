@@ -7,6 +7,7 @@ namespace egret3d {
         size: number;
         type: number;
         location: number;
+        semantic: string;
     }
     /**
      * @private
@@ -16,6 +17,7 @@ namespace egret3d {
         size: number;
         type: number;
         location: WebGLUniformLocation;
+        semantic?: string;
         textureUnits?: number[];
     }
     // 运行时 draw call 排序优化使用。
