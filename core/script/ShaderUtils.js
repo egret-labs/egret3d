@@ -56,7 +56,9 @@ function parseIncludes(string, shaderChunks) {
     function replace(_match, include) {
         var replace = shaderChunks[include];
         if (replace === undefined) {
-            throw new Error('Can not resolve #include <' + include + '>');
+            console.warn('Can not resolve #include <' + include + '>');
+            return "";
+            // throw new Error('Can not resolve #include <' + include + '>');
         }
         return parseIncludes(replace, shaderChunks);
     }

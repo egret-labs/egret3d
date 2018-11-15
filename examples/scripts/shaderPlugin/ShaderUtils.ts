@@ -54,7 +54,9 @@ export function parseIncludes(string: string, shaderChunks: { [key: string]: str
     function replace(_match: string, include: string) {
         const replace = shaderChunks[include];
         if (replace === undefined) {
-            throw new Error('Can not resolve #include <' + include + '>');
+            console.warn('Can not resolve #include <' + include + '>');
+            return "";
+            // throw new Error('Can not resolve #include <' + include + '>');
         }
 
         return parseIncludes(replace, shaderChunks);
