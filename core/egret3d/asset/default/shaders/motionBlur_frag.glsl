@@ -1,5 +1,4 @@
 varying vec2 vUv;
-uniform sampler2D tDiffuse;
 uniform sampler2D tColor;
 uniform vec2 resolution;
 uniform mat4 viewProjectionInverseMatrix;
@@ -11,7 +10,7 @@ float unpack_depth(const in vec4 color) {
 }
 void main() {
 	
-    float zOverW = unpack_depth( texture2D( tDiffuse, vUv ) );
+    float zOverW = unpack_depth( texture2D( tColor, vUv ) );
     //float zOverW = 1.0;
 
 	// H is the viewport position at this pixel in the range -1 to 1.  

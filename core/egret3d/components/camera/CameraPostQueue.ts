@@ -45,7 +45,6 @@ namespace egret3d {
                 material.setVector2("resolution", this._resolution);
             }
 
-            material.setTexture("tDiffuse", postProcessingRenderTarget);
             material.setTexture("tColor", postProcessingRenderTarget);
 
             material.setMatrix("viewProjectionInverseMatrix", clipToWorldMatrix);
