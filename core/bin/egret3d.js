@@ -7306,8 +7306,8 @@ var egret3d;
         // }
         CameraRenderContext.prototype.updateDrawCall = function (drawCall) {
             var renderer = drawCall.renderer;
-            // const scene = renderer.gameObject.scene;
-            var scene = paper.Scene.activeScene;
+            var scene = renderer ? renderer.gameObject.scene : this.camera.gameObject.scene;
+            // const scene = paper.Scene.activeScene;
             var worldToLocalMatrix = this.camera.transform.worldToLocalMatrix;
             var worldToClipMatrix = this.camera.worldToClipMatrix;
             var matrix = drawCall.matrix;
@@ -12019,6 +12019,10 @@ var egret3d;
             DefaultShaders.VERTEX_COLOR = this._createShader("builtin/vertcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */, "USE_COLOR" /* USE_COLOR */]);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpMaterial.glTFTechnique.states);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(1 /* Blend */, 3000 /* Transparent */);
+            DefaultShaders.TRANSPARENT_COLOR = this._createShader("builtin/transparent_color.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* BACK */).setBlend(3 /* Additive */, 3000 /* Transparent */);
+            DefaultShaders.TRANSPARENT_ADDITIVE_COLOR = this._createShader("builtin/transparent_additive_color.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", egret3d.ShaderLib.particle, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_COLOR" /* USE_COLOR */]);
             helpMaterial.clearStates().setDepth(true, false).setBlend(1 /* Blend */, 3000 /* Transparent */);
