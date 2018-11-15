@@ -20604,10 +20604,37 @@ var egret3d;
         }
         return "lowp";
     }
-    function _getConstDefines(maxPrecision) {
-        var defines = "#extension GL_OES_standard_derivatives : enable \n";
-        defines += "precision " + maxPrecision + " float; \n";
-        defines += "precision " + maxPrecision + " int; \n";
+    function _getToneMappingFunction(toneMapping) {
+        var toneMappingName;
+        switch (toneMapping) {
+            case ToneMapping.LinearToneMapping:
+                toneMappingName = 'Linear';
+                break;
+            case ToneMapping.ReinhardToneMapping:
+                toneMappingName = 'Reinhard';
+                break;
+            case ToneMapping.Uncharted2ToneMapping:
+                toneMappingName = 'Uncharted2';
+                break;
+            case ToneMapping.CineonToneMapping:
+                toneMappingName = 'OptimizedCineon';
+                break;
+            default:
+                throw new Error('unsupported toneMapping: ' + toneMapping);
+        }
+        return 'vec3 toneMapping( vec3 color ) { return ' + toneMappingName + 'ToneMapping( color ); }';
+    }
+    function _getCommonExtensions(capabilities) {
+        var extensions = "";
+        if (capabilities.gl_oes_standard_derivatives) {
+            extensions += "#extension GL_OES_standard_derivatives : enable \n";
+        }
+        return extensions;
+    }
+    function _getCommonDefines(capabilities) {
+        var defines = "";
+        defines += "precision " + capabilities.maxPrecision + " float; \n";
+        defines += "precision " + capabilities.maxPrecision + " int; \n";
         return defines;
     }
     function _replace(_match, include) {
@@ -20615,6 +20642,9 @@ var egret3d;
             throw new Error("Can not resolve #include <" + include + ">");
         }
         return _parseIncludes(egret3d.ShaderChunk[include]);
+    }
+    function _filterEmptyLine(string) {
+        return string !== '';
     }
     function _parseIncludes(string) {
         return string.replace(_pattern, _replace);
@@ -20629,6 +20659,28 @@ var egret3d;
             return unroll;
         }
         return string.replace(pattern, replace);
+    }
+    function _prefixVertex(customDefines) {
+        var prefixContext = [
+            WebGLCapabilities.commonDefines,
+            customDefines,
+            egret3d.ShaderChunk.common_vert_def,
+            '\n'
+        ].filter(_filterEmptyLine).join('\n');
+        return prefixContext;
+    }
+    function _prefixFragment(customDefines) {
+        var prefixContext = [
+            WebGLCapabilities.commonExtensions,
+            WebGLCapabilities.commonDefines,
+            customDefines,
+            egret3d.ShaderChunk.common_frag_def,
+            WebGLCapabilities.toneMapping === ToneMapping.None ? '' : '#define TONE_MAPPING',
+            WebGLCapabilities.toneMapping === ToneMapping.None ? '' : egret3d.ShaderChunk.tonemapping_pars_fragment,
+            WebGLCapabilities.toneMapping === ToneMapping.None ? '' : _getToneMappingFunction(WebGLCapabilities.toneMapping),
+            '\n'
+        ].filter(_filterEmptyLine).join('\n');
+        return prefixContext;
     }
     function _getWebGLShader(type, webgl, gltfShader, defines) {
         var shader = webgl.createShader(type);
@@ -20826,10 +20878,6 @@ var egret3d;
         function WebGLCapabilities() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this.precision = "highp";
-            //全局设置
-            _this.toneMapping = ToneMapping.None;
-            _this.toneMappingExposure = 1.0;
-            _this.toneMappingWhitePoint = 1.0;
             return _this;
         }
         WebGLCapabilities.prototype.initialize = function (config) {
@@ -20856,7 +20904,8 @@ var egret3d;
             // GL_OES_standard_derivatives
             this.gl_oes_standard_derivatives = !!_getExtension(webgl, "GL_OES_standard_derivatives");
             //TODO
-            WebGLCapabilities.commonDefines = _getConstDefines(this.maxPrecision);
+            WebGLCapabilities.commonExtensions = _getCommonExtensions(this);
+            WebGLCapabilities.commonDefines = _getCommonDefines(this);
             egret3d.SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
             console.info("WebGL version:", this.version);
             console.info("Maximum shader precision:", this.maxPrecision);
@@ -20875,7 +20924,12 @@ var egret3d;
          * @deprecated
          */
         WebGLCapabilities.webgl = null;
+        WebGLCapabilities.commonExtensions = "";
         WebGLCapabilities.commonDefines = "";
+        //全局设置
+        WebGLCapabilities.toneMapping = ToneMapping.None;
+        WebGLCapabilities.toneMappingExposure = 1.0;
+        WebGLCapabilities.toneMappingWhitePoint = 1.0;
         return WebGLCapabilities;
     }(paper.SingletonComponent));
     egret3d.WebGLCapabilities = WebGLCapabilities;
@@ -20907,13 +20961,15 @@ var egret3d;
             var key = vs.name + customDefines;
             var vertexShader = this._vsShaders[key];
             if (!vertexShader) {
-                vertexShader = _getWebGLShader(webgl.VERTEX_SHADER, webgl, vs, WebGLCapabilities.commonDefines + customDefines + egret3d.ShaderChunk.common_vert_def);
+                var prefixVertex = _prefixVertex(customDefines);
+                vertexShader = _getWebGLShader(webgl.VERTEX_SHADER, webgl, vs, prefixVertex);
                 this._vsShaders[key] = vertexShader;
             }
             key = fs.name + customDefines;
             var fragmentShader = this._fsShaders[key];
             if (!fragmentShader) {
-                fragmentShader = _getWebGLShader(webgl.FRAGMENT_SHADER, webgl, fs, WebGLCapabilities.commonDefines + customDefines + egret3d.ShaderChunk.common_frag_def);
+                var prefixFragment = _prefixFragment(customDefines);
+                fragmentShader = _getWebGLShader(webgl.FRAGMENT_SHADER, webgl, fs, prefixFragment);
                 this._fsShaders[key] = fragmentShader;
             }
             webgl.attachShader(program, vertexShader);
@@ -24916,9 +24972,6 @@ var egret3d;
                         case "_LIGHTMAP_SCALE_OFFSET" /* _LIGHTMAP_SCALE_OFFSET */:
                             webgl.uniform4fv(location_3, context.lightmapScaleOffset);
                             break;
-                        case "_REFERENCEPOSITION" /* _REFERENCEPOSITION */:
-                            // webgl.uniform3fv(location, context.lightPosition); // TODO
-                            break;
                         case "_NEARDICTANCE" /* _NEARDICTANCE */:
                             webgl.uniform1f(location_3, context.lightShadowCameraNear);
                             break;
@@ -24936,6 +24989,12 @@ var egret3d;
                             break;
                         case "_FOG_FAR" /* _FOG_FAR */:
                             webgl.uniform1f(location_3, context.fogFar);
+                            break;
+                        case "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */:
+                            webgl.uniform1f(location_3, egret3d.WebGLCapabilities.toneMappingExposure);
+                            break;
+                        case "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */:
+                            webgl.uniform1f(location_3, egret3d.WebGLCapabilities.toneMappingWhitePoint);
                             break;
                         default:
                             console.warn("不识别的Uniform语义:" + semantic);

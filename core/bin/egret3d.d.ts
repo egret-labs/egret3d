@@ -7856,7 +7856,11 @@ declare namespace egret3d {
          * @deprecated
          */
         static webgl: WebGLRenderingContext | null;
+        static commonExtensions: string;
         static commonDefines: string;
+        static toneMapping: ToneMapping;
+        static toneMappingExposure: number;
+        static toneMappingWhitePoint: number;
         version: number;
         precision: string;
         maxPrecision: string;
@@ -7876,9 +7880,6 @@ declare namespace egret3d {
         textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
         oes_standard_derivatives: boolean;
         gl_oes_standard_derivatives: boolean;
-        toneMapping: ToneMapping;
-        toneMappingExposure: number;
-        toneMappingWhitePoint: number;
         initialize(config: RunEgretOptions): void;
     }
     /**

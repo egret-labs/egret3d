@@ -42,10 +42,41 @@ namespace egret3d {
         return "lowp";
     }
 
-    function _getConstDefines(maxPrecision: string) {
-        let defines = "#extension GL_OES_standard_derivatives : enable \n";
-        defines += "precision " + maxPrecision + " float; \n";
-        defines += "precision " + maxPrecision + " int; \n";
+    function _getToneMappingFunction(toneMapping: ToneMapping) {
+        var toneMappingName;
+        switch (toneMapping) {
+            case ToneMapping.LinearToneMapping:
+                toneMappingName = 'Linear';
+                break;
+            case ToneMapping.ReinhardToneMapping:
+                toneMappingName = 'Reinhard';
+                break;
+            case ToneMapping.Uncharted2ToneMapping:
+                toneMappingName = 'Uncharted2';
+                break;
+            case ToneMapping.CineonToneMapping:
+                toneMappingName = 'OptimizedCineon';
+                break;
+            default:
+                throw new Error('unsupported toneMapping: ' + toneMapping);
+        }
+
+        return 'vec3 toneMapping( vec3 color ) { return ' + toneMappingName + 'ToneMapping( color ); }';
+    }
+
+    function _getCommonExtensions(capabilities: WebGLCapabilities) {
+        let extensions = "";
+        if (capabilities.gl_oes_standard_derivatives) {
+            extensions += "#extension GL_OES_standard_derivatives : enable \n";
+        }
+
+        return extensions;
+    }
+
+    function _getCommonDefines(capabilities: WebGLCapabilities) {
+        let defines = "";
+        defines += "precision " + capabilities.maxPrecision + " float; \n";
+        defines += "precision " + capabilities.maxPrecision + " int; \n";
 
         return defines;
     }
@@ -56,6 +87,10 @@ namespace egret3d {
         }
 
         return _parseIncludes((egret3d.ShaderChunk as any)[include]);
+    }
+
+    function _filterEmptyLine(string) {
+        return string !== '';
     }
 
     function _parseIncludes(string: string): string {
@@ -73,6 +108,32 @@ namespace egret3d {
         }
 
         return string.replace(pattern, replace);
+    }
+
+    function _prefixVertex(customDefines: string) {
+        const prefixContext = [
+            WebGLCapabilities.commonDefines,
+            customDefines,
+            ShaderChunk.common_vert_def,
+            '\n'
+        ].filter(_filterEmptyLine).join('\n');
+
+        return prefixContext;
+    }
+
+    function _prefixFragment(customDefines: string) {
+        const prefixContext = [
+            WebGLCapabilities.commonExtensions,
+            WebGLCapabilities.commonDefines,
+            customDefines,
+            ShaderChunk.common_frag_def,
+            WebGLCapabilities.toneMapping === ToneMapping.None ? '' : '#define TONE_MAPPING',
+            WebGLCapabilities.toneMapping === ToneMapping.None ? '' : ShaderChunk.tonemapping_pars_fragment,
+            WebGLCapabilities.toneMapping === ToneMapping.None ? '' : _getToneMappingFunction(WebGLCapabilities.toneMapping),
+            '\n'
+        ].filter(_filterEmptyLine).join('\n');
+
+        return prefixContext;
 
     }
 
@@ -299,7 +360,13 @@ namespace egret3d {
          * @deprecated
          */
         public static webgl: WebGLRenderingContext | null = null;
+        public static commonExtensions: string = "";
         public static commonDefines: string = "";
+
+        //全局设置
+        public static toneMapping: ToneMapping = ToneMapping.None;
+        public static toneMappingExposure: number = 1.0;
+        public static toneMappingWhitePoint: number = 1.0;
 
         public version: number;
 
@@ -333,12 +400,6 @@ namespace egret3d {
 
         public oes_standard_derivatives: boolean;
         public gl_oes_standard_derivatives: boolean;
-
-
-        //全局设置
-        public toneMapping: ToneMapping = ToneMapping.None;
-        public toneMappingExposure: number = 1.0;
-        public toneMappingWhitePoint: number = 1.0;
 
         public initialize(config: RunEgretOptions) {
             super.initialize();
@@ -377,7 +438,8 @@ namespace egret3d {
             this.gl_oes_standard_derivatives = !!_getExtension(webgl, "GL_OES_standard_derivatives");
 
             //TODO
-            WebGLCapabilities.commonDefines = _getConstDefines(this.maxPrecision);
+            WebGLCapabilities.commonExtensions = _getCommonExtensions(this);
+            WebGLCapabilities.commonDefines = _getCommonDefines(this);
 
             SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
 
@@ -417,14 +479,16 @@ namespace egret3d {
             let key = vs.name + customDefines;
             let vertexShader = this._vsShaders[key];
             if (!vertexShader) {
-                vertexShader = _getWebGLShader(webgl.VERTEX_SHADER, webgl, vs, WebGLCapabilities.commonDefines + customDefines + ShaderChunk.common_vert_def)!;
+                const prefixVertex = _prefixVertex(customDefines);
+                vertexShader = _getWebGLShader(webgl.VERTEX_SHADER, webgl, vs, prefixVertex)!;
                 this._vsShaders[key] = vertexShader;
             }
 
             key = fs.name + customDefines;
             let fragmentShader = this._fsShaders[key];
             if (!fragmentShader) {
-                fragmentShader = _getWebGLShader(webgl.FRAGMENT_SHADER, webgl, fs, WebGLCapabilities.commonDefines + customDefines + ShaderChunk.common_frag_def)!;
+                const prefixFragment = _prefixFragment(customDefines);
+                fragmentShader = _getWebGLShader(webgl.FRAGMENT_SHADER, webgl, fs, prefixFragment)!;
                 this._fsShaders[key] = fragmentShader;
             }
 

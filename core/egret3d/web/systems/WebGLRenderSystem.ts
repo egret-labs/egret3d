@@ -300,10 +300,6 @@ namespace egret3d.web {
                     case gltf.UniformSemanticType._LIGHTMAP_SCALE_OFFSET:
                         webgl.uniform4fv(location, context.lightmapScaleOffset);
                         break;
-
-                    case gltf.UniformSemanticType._REFERENCEPOSITION:
-                        // webgl.uniform3fv(location, context.lightPosition); // TODO
-                        break;
                     case gltf.UniformSemanticType._NEARDICTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraNear);
                         break;
@@ -321,6 +317,12 @@ namespace egret3d.web {
                         break;
                     case gltf.UniformSemanticType._FOG_FAR:
                         webgl.uniform1f(location, context.fogFar);
+                        break;
+                    case gltf.UniformSemanticType._TONE_MAPPING_EXPOSURE:
+                        webgl.uniform1f(location, WebGLCapabilities.toneMappingExposure);
+                        break;
+                    case gltf.UniformSemanticType._TONE_MAPPING_WHITE_POINT:
+                        webgl.uniform1f(location, WebGLCapabilities.toneMappingWhitePoint);
                         break;
 
                     default:
