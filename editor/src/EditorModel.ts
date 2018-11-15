@@ -85,13 +85,13 @@ namespace paper.editor {
 
             if (valueEditType !== null) {
                 let newPropertyData = {
-                    propName,
+                    propName:[propName],
                     copyValue: this.serializeProperty(propNewValue, valueEditType),
                     valueEditType
                 };
 
                 let prePropertyData = {
-                    propName,
+                    propName:[propName],
                     copyValue: this.serializeProperty(propOldValue, valueEditType),
                     valueEditType
                 };
