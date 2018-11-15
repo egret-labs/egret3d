@@ -36,12 +36,12 @@ namespace egret3d {
         }
 
         public serialize() {
-            return [this.normal.x, this.normal.y, this.normal.z, this.constant];
+            return this.toArray();
         }
 
         public deserialize(value: Readonly<[number, number, number, number]>) {
-            this.constant = value[3];
             this.normal.fromArray(value);
+            this.constant = value[3];
 
             return this;
         }
@@ -148,6 +148,17 @@ namespace egret3d {
             }
 
             return false;
+        }
+
+        public toArray(array?: number[] | Float32Array, offset: number = 0) {
+            if (!array) {
+                array = [];
+            }
+
+            this.normal.toArray(array, offset);
+            array[offset + 3] = this.constant;
+
+            return array;
         }
     }
     /**

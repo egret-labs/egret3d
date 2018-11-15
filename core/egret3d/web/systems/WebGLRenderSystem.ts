@@ -57,15 +57,7 @@ namespace egret3d.web {
         private _render(camera: Camera, renderTarget: BaseRenderTarget | null) {
             const renderState = this._renderState;
             renderState.updateViewport(camera.viewport, renderTarget);
-            let bufferBit = gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT;
-            if (!camera.clearOption_Depth) {
-                bufferBit &= ~gltf.BufferBit.DEPTH_BUFFER_BIT;
-            }
-
-            if (!camera.clearOption_Color) {
-                bufferBit &= ~gltf.BufferBit.COLOR_BUFFER_BIT;
-            }
-            renderState.clearBuffer(bufferBit, camera.backgroundColor);
+            renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
             // Draw.
             const opaqueCalls = camera.context.opaqueCalls;
             const transparentCalls = camera.context.transparentCalls;
@@ -127,11 +119,11 @@ namespace egret3d.web {
             renderState.updateState(techniqueState);
             //  TODO
             // if (techniqueState && context.drawCall.renderer.transform._worldMatrixDeterminant < 0) {
-            //     if (techniqueState.functions!.frontFace[0] === 2305) { // CCW TODO 枚举
-            //         webgl.frontFace(2304);
+            //     if (techniqueState.functions!.frontFace[0] === CCW) {
+            //         webgl.frontFace(CW);
             //     }
             //     else {
-            //         webgl.frontFace(2305);
+            //         webgl.frontFace(CCW);
             //     }
             // }
             // Update static uniforms.
@@ -188,7 +180,7 @@ namespace egret3d.web {
                         break;
 
                     case gltf.UniformSemanticType.VIEW:
-                        webgl.uniformMatrix4fv(location, false, camera.transform.worldToLocalMatrix.rawData);
+                        webgl.uniformMatrix4fv(location, false, camera.worldToCameraMatrix.rawData);
                         break;
                     case gltf.UniformSemanticType.PROJECTION:
                         webgl.uniformMatrix4fv(location, false, camera.projectionMatrix.rawData);
@@ -509,7 +501,7 @@ namespace egret3d.web {
                 }
             }
             else {
-                renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, Color.BLACK);
+                renderState.clearBuffer(gltf.BufferMask.Depth | gltf.BufferMask.Color, Color.BLACK);
             }
         }
     }

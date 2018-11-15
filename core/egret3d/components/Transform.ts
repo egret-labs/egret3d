@@ -190,10 +190,6 @@ namespace egret3d {
                 for (const child of this._children) {
                     child._dirtify(false, dirty);
                 }
-
-                if (this.gameObject.renderer) { // TODO
-                    this.gameObject.renderer._boundingSphereDirty = true;
-                }
             }
 
             const observers = this._observers;

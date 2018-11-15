@@ -136,7 +136,7 @@ namespace paper {
                         componentTarget = prefabDeserializer.components[linkedID];
                     }
                     else {
-                        // const enabled = componentSource._enabled === undefined ? true : componentSource._enabled;
+                        // const enabled = componentSource._enabled === undefined ? true : componentSource._enabled; // TODO
                         componentTarget = (target || this._rootTarget as GameObject).addComponent(clazz);
                     }
 
@@ -402,12 +402,12 @@ namespace paper {
                 }
                 //重新设置rootid的值
                 for (let uuid in this._prefabRootMap) {
-                    let rootDeser=this._deserializers[uuid];
-                    for(let key in rootDeser.objects){
-                        let obj=rootDeser.objects[key]
-                        if(obj instanceof GameObject){
-                            if(obj.extras.linkedID&&obj.extras.rootID===this._prefabRootMap[uuid].rootUUID){
-                                obj.extras.rootID=this._prefabRootMap[uuid].root.uuid;
+                    let rootDeser = this._deserializers[uuid];
+                    for (let key in rootDeser.objects) {
+                        let obj = rootDeser.objects[key]
+                        if (obj instanceof GameObject) {
+                            if (obj.extras.linkedID && obj.extras.rootID === this._prefabRootMap[uuid].rootUUID) {
+                                obj.extras.rootID = this._prefabRootMap[uuid].root.uuid;
                             }
                         }
 

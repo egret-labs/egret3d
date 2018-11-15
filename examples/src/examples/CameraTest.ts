@@ -38,8 +38,6 @@ namespace examples {
 
             this._shapeA.graphics.lineStyle(2, 0x000000, 1);
             this._shapeA.graphics.drawCircle(0.0, 0.0, 50.0);
-            this._shapeB.x = 10.0;
-            this._shapeB.y = 10.0;
             (this.gameObject.renderer as egret3d.Egret2DRenderer).stage.addChild(this._shapeA);
             (this.gameObject.renderer as egret3d.Egret2DRenderer).stage.addChild(this._shapeB);
         }
@@ -57,7 +55,7 @@ namespace examples {
 
             this._shapeB.graphics.clear();
             this._shapeB.graphics.lineStyle(2, 0x000000, 1);
-            this._shapeB.graphics.drawRect(0.0, 0.0, egret3d.stage.viewport.w - 20.0, egret3d.stage.viewport.h - 20.0);
+            this._shapeB.graphics.drawRect(10.0, 10.0, egret3d.stage.viewport.w - 20.0, egret3d.stage.viewport.h - 20.0);
         }
     }
 

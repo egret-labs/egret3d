@@ -21,11 +21,14 @@
         "libs/signals/signals.d.ts",
         "libs/egret.d.ts",
         "libs/resourcemanager.d.ts",
+
+        "libs/paper/customenum.ts",
+
         "egret3d/ecs/core/InterFace.ts",
         "egret3d/ecs/core/Decorators.ts",
-        "egret3d/editor/EditorDecorators.ts",
-        "egret3d/ecs/core/Layer.ts",
         "egret3d/ecs/core/BaseObject.ts",
+        "egret3d/editor/EditorDecorators.ts",
+
         "egret3d/math/Math.ts",
         "egret3d/math/Vector2.ts",
         "egret3d/math/Vector3.ts",
@@ -33,14 +36,17 @@
         "egret3d/math/Matrix3.ts",
         "egret3d/math/Matrix4.ts",
         "egret3d/math/Quaternion.ts",
-        "egret3d/math/Plane.ts",
+        "egret3d/math/Color.ts",
         "egret3d/math/Triangle.ts",
+        "egret3d/math/Plane.ts",
         "egret3d/math/Rectangle.ts",
         "egret3d/math/Sphere.ts",
         "egret3d/math/Spherical.ts",
         "egret3d/math/Box.ts",
         "egret3d/math/Curve.ts",
-        "egret3d/math/Color.ts",
+        "egret3d/math/Ray.ts",
+        "egret3d/math/Frustum.ts",
+
         "egret3d/ecs/core/Asset.ts",
         "egret3d/ecs/core/Prefab.ts",
         "egret3d/ecs/core/RawScene.ts",
@@ -70,6 +76,7 @@
         "egret3d/ecs/serialize/Serialize.ts",
 
         "egret3d/Interface.ts",
+
         "egret3d/components/Transform.ts",
         "egret3d/components/singleton/Stage.ts",
         "egret3d/components/singleton/DefaultMeshes.ts",
@@ -112,8 +119,8 @@
         "egret3d/components/particle/ParticleRenderer.ts",
         "egret3d/components/particle/ParticleSystem.ts",
         "egret3d/components/audio/Audio.ts",
-        "egret3d/web/render/WebGLCapabilities.ts",
-        "egret3d/math/Ray.ts",
+        "egret3d/components/StaticBatchingUtility.ts",
+
         "egret3d/asset/resource/GLTF.ts",
         "egret3d/asset/resource/BaseMesh.ts",
         "egret3d/asset/resource/MeshBuilder.ts",
@@ -123,11 +130,13 @@
         "egret3d/asset/default/ShaderLib.ts",
         "egret3d/asset/default/ShaderChunk.ts",
         "egret3d/asset/Fog.ts",
+        
         "egret3d/res-processor/ResProcessor.ts",
         "egret3d/util/regexputil.ts",
         "egret3d/util/stream.ts",
         "egret3d/util/utils.ts",
 
+        "egret3d/web/render/WebGLCapabilities.ts",
         "egret3d/web/render/resource/Mesh.ts",
         "egret3d/web/render/resource/GLTexture.ts",
         "egret3d/web/render/resource/GLRenderTarget.ts",
@@ -136,7 +145,7 @@
         "egret3d/web/systems/WebGLRenderSystem.ts",
         "egret3d/web/systems/InputSystem.ts",
         "egret3d/web/systems/EndSystem.ts",
-        "egret3d/components/StaticBatchingUtility.ts",
+
         "egret3d/Profile.ts",
         "egret3d/RunEgret.ts",
         "egret3d/Deprecated.ts"

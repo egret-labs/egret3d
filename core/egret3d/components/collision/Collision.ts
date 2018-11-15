@@ -28,7 +28,7 @@ namespace egret3d {
 
     function _raycastAll(
         ray: Readonly<Ray>, gameObject: Readonly<paper.GameObject>,
-        maxDistance: number = 0.0, cullingMask: paper.CullingMask = paper.CullingMask.Everything, raycastMesh: boolean = false,
+        maxDistance: number = 0.0, cullingMask: paper.Layer = paper.Layer.Everything, raycastMesh: boolean = false,
         raycastInfos: RaycastInfo[]
     ) {
         if (
@@ -185,7 +185,7 @@ namespace egret3d {
      */
     export function raycastAll(
         ray: Readonly<Ray>, gameObjectsOrComponents: ReadonlyArray<paper.GameObject | paper.BaseComponent>,
-        maxDistance: number = 0.0, cullingMask: paper.CullingMask = paper.CullingMask.Everything, raycastMesh: boolean = false
+        maxDistance: number = 0.0, cullingMask: paper.Layer = paper.Layer.Everything, raycastMesh: boolean = false
     ) {
         const raycastInfos = [] as RaycastInfo[];
 

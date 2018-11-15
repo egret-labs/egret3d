@@ -555,6 +555,80 @@ namespace egret3d {
 /**
  * 
  */
+namespace gltf {
+    /**
+     * 绘制缓存掩码。
+     */
+    export const enum BufferMask {
+        None = 0,
+        Depth = 256,
+        Stencil = 1024,
+        Color = 16384,
+
+        DepthAndStencil = Depth | Stencil,
+        DepthAndColor = Depth | Color,
+        StencilAndColor = Stencil | Color,
+        All = Depth | Stencil | Color,
+    }
+
+    export const enum BlendMode {
+        None = 0,
+        Blend = 1,
+        Blend_PreMultiply = 2,
+        Additive = 3,
+        Additive_PreMultiply = 4,
+        Subtractive = 5,
+        Subtractive_PreMultiply = 6,
+        Multiply = 7,
+        Multiply_PreMultiply = 8,
+        /**
+         * @deprecated
+         */
+        Add = 3,
+        /**
+         * @deprecated
+         */
+        Add_PreMultiply = 4,
+    }
+
+    export const enum BlendEquation {
+        Add = 32774,
+        Subtract = 32778,
+        ReverseSubtract = 32779,
+    }
+
+    export const enum BlendFactor {
+        ZERO = 0,
+        ONE = 1,
+        SRC_COLOR = 768,
+        ONE_MINUS_SRC_COLOR = 769,
+        DST_COLOR = 774,
+        ONE_MINUS_DST_COLOR = 775,
+        SRC_ALPHA = 770,
+        ONE_MINUS_SRC_ALPHA = 771,
+        DST_ALPHA = 772,
+        ONE_MINUS_DST_ALPHA = 773,
+        CONSTANT_COLOR = 32769,
+        ONE_MINUS_CONSTANT_COLOR = 32770,
+        CONSTANT_ALPHA = 32771,
+        ONE_MINUS_CONSTANT_ALPHA = 32772,
+        SRC_ALPHA_SATURATE = 776,
+    }
+
+    export const enum CullFace {
+        Front = 1028,
+        Back = 1029,
+        FrontAndBack = 1032,
+    }
+
+    export const enum FrontFace {
+        CW = 2304,
+        CCW = 2305,
+    }
+}
+/**
+ * 
+ */
 declare namespace gltf {
     /**
      * glTF index.
@@ -625,14 +699,14 @@ declare namespace gltf {
     export const enum TextureFormat {
         RGB = 6407,
         RGBA = 6408,
-        LUMINANCE = 6409,
+        Luminance = 6409,
     }
     /**
      * The shader stage.  All valid values correspond to WebGL enums.
      */
     export const enum ShaderStage {
-        FRAGMENT_SHADER = 35632,
-        VERTEX_SHADER = 35633,
+        Fragment = 35632,
+        Vertex = 35633,
     }
 
     export const enum EnableState {
@@ -642,67 +716,6 @@ declare namespace gltf {
         STENCIL_TEST = 2960,
         POLYGON_OFFSET_FILL = 32823,
         SAMPLE_ALPHA_TO_COVERAGE = 32926,
-    }
-
-    export const enum BufferBit {
-        DEPTH_BUFFER_BIT = 256,
-        STENCIL_BUFFER_BIT = 1024,
-        COLOR_BUFFER_BIT = 16384,
-    }
-
-    export const enum BlendMode {
-        None = 0,
-        Blend = 1,
-        Blend_PreMultiply = 2,
-        Additive = 3,
-        Additive_PreMultiply = 4,
-        Subtractive = 5,
-        Subtractive_PreMultiply = 6,
-        Multiply = 7,
-        Multiply_PreMultiply = 8,
-        /**
-         * @deprecated
-         */
-        Add = 3,
-        /**
-         * @deprecated
-         */
-        Add_PreMultiply = 4,
-    }
-
-    export const enum BlendEquation {
-        FUNC_ADD = 32774,
-        FUNC_SUBTRACT = 32778,
-        FUNC_REVERSE_SUBTRACT = 32779,
-    }
-
-    export const enum BlendFactor {
-        ZERO = 0,
-        ONE = 1,
-        SRC_COLOR = 768,
-        ONE_MINUS_SRC_COLOR = 769,
-        DST_COLOR = 774,
-        ONE_MINUS_DST_COLOR = 775,
-        SRC_ALPHA = 770,
-        ONE_MINUS_SRC_ALPHA = 771,
-        DST_ALPHA = 772,
-        ONE_MINUS_DST_ALPHA = 773,
-        CONSTANT_COLOR = 32769,
-        ONE_MINUS_CONSTANT_COLOR = 32770,
-        CONSTANT_ALPHA = 32771,
-        ONE_MINUS_CONSTANT_ALPHA = 32772,
-        SRC_ALPHA_SATURATE = 776,
-    }
-
-    export const enum CullFace {
-        FRONT = 1028,
-        BACK = 1029,
-        FRONT_AND_BACK = 1032,
-    }
-
-    export const enum FrontFace {
-        CW = 2304,
-        CCW = 2305,
     }
 
     export const enum DepthFunc {

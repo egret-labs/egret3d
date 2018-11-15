@@ -6,19 +6,22 @@ namespace egret3d {
     }
     const _helpVector3 = Vector3.create();
     /**
-     * 摄像机渲染上下文。
+     * 相机渲染上下文。
      */
     export class CameraRenderContext {
         /**
          * 进入渲染周期后缓存的相机世界坐标。
+         * @private
          */
         public readonly cameraPosition: Float32Array = new Float32Array(3);
         /**
          * 进入渲染周期后缓存的相机世界前方向。
+         * @private
          */
         public readonly cameraForward: Float32Array = new Float32Array(3);
         /**
          * 进入渲染周期后缓存的相机世界上方向。
+         * @private
          */
         public readonly cameraUp: Float32Array = new Float32Array(3);
         /**
@@ -118,6 +121,7 @@ namespace egret3d {
                     postProcessingCamera.size = 1.0;
                     postProcessingCamera.near = 0.01;
                     postProcessingCamera.far = 1.0;
+                    postProcessingCamera.projectionMatrix = Matrix4.IDENTITY;
                     this._postProcessingCamera = postProcessingCamera;
                 }
             }
@@ -222,13 +226,12 @@ namespace egret3d {
             postProcessDrawCall.material = material;
 
             renderState.updateViewport(postProcessingCamera.viewport, dest);
-            renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, egret3d.Color.WHITE);
-            postProcessingCamera.projectionMatrix.identity(); // TODO
+            renderState.clearBuffer(gltf.BufferMask.Depth | gltf.BufferMask.Color, egret3d.Color.WHITE);
             renderState.draw(postProcessingCamera, postProcessDrawCall);
         }
 
         public updateCameraTransform() {
-            const rawData = this.camera.gameObject.transform.localToWorldMatrix.rawData;
+            const rawData = this.camera.cameraToWorldMatrix.rawData;
 
             if (this.cameraPosition[0] !== rawData[12] ||
                 this.cameraPosition[1] !== rawData[13] ||
@@ -311,13 +314,13 @@ namespace egret3d {
 
             let directLightIndex = 0, pointLightIndex = 0, spotLightIndex = 0, index = 0;
             let lightArray = this.directLightArray;
-            const cameraWorldToLocalMatrix = this.camera.transform.worldToLocalMatrix;
+            const worldToCameraMatrix = this.camera.worldToCameraMatrix;
 
             for (const light of lights) {
                 switch (light.constructor) {
                     case DirectionalLight: {
                         light.gameObject.transform.getForward(_helpVector3);
-                        _helpVector3.applyDirection(cameraWorldToLocalMatrix);
+                        _helpVector3.applyDirection(worldToCameraMatrix);
 
                         lightArray = this.directLightArray;
                         index = directLightIndex * LightSize.Directional;
@@ -337,7 +340,7 @@ namespace egret3d {
 
                     case PointLight: {
                         const position = light.gameObject.transform.position.clone().release();
-                        position.applyMatrix(cameraWorldToLocalMatrix);
+                        position.applyMatrix(worldToCameraMatrix);
                         lightArray = this.pointLightArray;
                         index = pointLightIndex * LightSize.Point;
 
@@ -357,9 +360,9 @@ namespace egret3d {
 
                     case SpotLight: {
                         const position = light.gameObject.transform.position.clone().release();
-                        position.applyMatrix(cameraWorldToLocalMatrix);
+                        position.applyMatrix(worldToCameraMatrix);
                         light.gameObject.transform.getForward(_helpVector3);
-                        _helpVector3.applyDirection(cameraWorldToLocalMatrix);
+                        _helpVector3.applyDirection(worldToCameraMatrix);
 
                         lightArray = this.spotLightArray;
                         index = spotLightIndex * LightSize.Spot;
@@ -455,26 +458,26 @@ namespace egret3d {
             const renderer = drawCall.renderer;
             // const scene = renderer.gameObject.scene;
             const scene = paper.Scene.activeScene;
-            const worldToLocalMatrix = this.camera.transform.worldToLocalMatrix;
+            const worldToCameraMatrix = this.camera.worldToCameraMatrix;
             const worldToClipMatrix = this.camera.worldToClipMatrix;
             const matrix = drawCall.matrix;
 
             this.drawCall = drawCall;
-            this.matrix_mv.multiply(worldToLocalMatrix, matrix);
+            this.matrix_mv.multiply(worldToCameraMatrix, matrix);
             this.matrix_mvp.multiply(worldToClipMatrix, matrix);
             this.matrix_mv_inverse.getNormalMatrix(this.matrix_mv);
             //
             let shaderContextDefine = "";
 
             if (
-                renderer &&
-                renderer.lightmapIndex >= 0 &&
-                scene.lightmaps.length > renderer.lightmapIndex
+                renderer && renderer.constructor === MeshRenderer &&
+                (renderer as MeshRenderer).lightmapIndex >= 0 &&
+                scene.lightmaps.length > (renderer as MeshRenderer).lightmapIndex
             ) {
                 this.lightmapUV = drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0;
                 this.lightmapIntensity = scene.lightmapIntensity;
-                renderer.lightmapScaleOffset.toArray(this.lightmapScaleOffset);
-                this.lightmap = scene.lightmaps[renderer.lightmapIndex];
+                (renderer as MeshRenderer).lightmapScaleOffset.toArray(this.lightmapScaleOffset);
+                this.lightmap = scene.lightmaps[(renderer as MeshRenderer).lightmapIndex];
                 shaderContextDefine += "#define USE_LIGHTMAP \n";
             }
 

@@ -124,7 +124,7 @@ namespace egret3d {
             else {
                 //默认状态
                 this.setDepth(true, true);
-                this.setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+                this.setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
                 this.setRenderQueue(paper.RenderQueue.Geometry);
             }
 
@@ -489,42 +489,42 @@ namespace egret3d {
 
             switch (blend) {
                 case gltf.BlendMode.Add:
-                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
                     functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
                     break;
 
                 case gltf.BlendMode.Add_PreMultiply:
-                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
                     functions.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE];
                     break;
 
                 case gltf.BlendMode.Blend:
-                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
                     functions.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
                     break;
 
                 case gltf.BlendMode.Blend_PreMultiply:
-                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
                     functions.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA];
                     break;
 
                 case gltf.BlendMode.Subtractive:
-                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
                     functions.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.ONE_MINUS_SRC_COLOR, gltf.BlendFactor.ZERO, gltf.BlendFactor.ONE_MINUS_SRC_COLOR];
                     break;
 
                 case gltf.BlendMode.Subtractive_PreMultiply:
-                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
                     functions.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.ZERO, gltf.BlendFactor.ONE_MINUS_SRC_COLOR, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
                     break;
 
                 case gltf.BlendMode.Multiply:
-                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
                     functions.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_COLOR, gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_COLOR];
                     break;
 
                 case gltf.BlendMode.Multiply_PreMultiply:
-                    functions.blendEquationSeparate = [gltf.BlendEquation.FUNC_ADD, gltf.BlendEquation.FUNC_ADD];
+                    functions.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
                     functions.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_COLOR, gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_ALPHA];
                     break;
 
@@ -563,7 +563,7 @@ namespace egret3d {
          * @param frontFace 正面的顶点顺序。
          * @param cullFace 剔除模式。
          */
-        public setCullFace(cullEnabled: boolean, frontFace: gltf.FrontFace = gltf.FrontFace.CCW, cullFace: gltf.CullFace = gltf.CullFace.BACK) {
+        public setCullFace(cullEnabled: boolean, frontFace: gltf.FrontFace = gltf.FrontFace.CCW, cullFace: gltf.CullFace = gltf.CullFace.Back) {
             if (!this._glTFTechnique.states) {
                 this._glTFTechnique.states = { enable: [], functions: {} };
             }

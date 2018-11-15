@@ -1,3 +1,10 @@
+namespace paper {
+    /**
+     * @deprecated
+     */
+    export type CullingMask = Layer;
+}
+
 namespace egret3d {
     /**
      * @deprecated

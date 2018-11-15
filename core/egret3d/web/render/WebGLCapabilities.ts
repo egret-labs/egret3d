@@ -441,19 +441,19 @@ namespace egret3d {
             return program;
         }
 
-        public clearBuffer(bufferBit: gltf.BufferBit, clearColor?: Readonly<IColor>) {
+        public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>) {
             const webgl = WebGLCapabilities.webgl!;
 
-            if (bufferBit & gltf.BufferBit.DEPTH_BUFFER_BIT) {
+            if (bufferBit & gltf.BufferMask.Depth) {
                 webgl.depthMask(true);
                 webgl.clearDepth(1.0);
             }
 
-            if (bufferBit & gltf.BufferBit.STENCIL_BUFFER_BIT) {
+            if (bufferBit & gltf.BufferMask.Stencil) {
                 webgl.clearStencil(1.0);
             }
 
-            if ((bufferBit & gltf.BufferBit.COLOR_BUFFER_BIT) !== 0 && clearColor) {
+            if ((bufferBit & gltf.BufferMask.Color) !== 0 && clearColor) {
                 webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
             }
 

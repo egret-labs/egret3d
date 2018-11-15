@@ -138,7 +138,7 @@ namespace egret3d {
         helpInverseMatrix.copy(combineInstance.root.transform.worldToLocalMatrix);
 
         const meshAttribute = combineInstance.meshAttribute;
-        const lightmapScaleOffset = combineInstance.root.renderer.lightmapScaleOffset;
+        const lightmapScaleOffset = (combineInstance.root.renderer as MeshRenderer).lightmapScaleOffset;
         const newAttribute: gltf.MeshAttributeType[] = [];
         const tempIndexBuffers: number[][] = [];
         const tempVertexBuffers: { [key: string]: number[] } = {};

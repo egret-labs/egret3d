@@ -19,7 +19,7 @@ namespace egret3d {
         private _matchFactor: number = 1.0;
         private readonly _screenSize: ISize = { w: 1024, h: 1024 };
         private readonly _size: ISize = { w: 1024, h: 1024 };
-        private readonly _viewport: IRectangle = { x: 0, y: 0, w: 0, h: 0 };
+        private readonly _viewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
 
         private _updateViewport() {
             const screenSize = this._screenSize;
@@ -59,10 +59,10 @@ namespace egret3d {
             super.initialize();
 
             stage = this;
-            this._size.w = config.size.w || 2.0;
-            this._size.h = config.size.h || 2.0;
-            this._screenSize.w = config.screenSize.w || 2.0;
-            this._screenSize.h = config.screenSize.h || 2.0;
+            this._size.w = config.size.w || 1.0;
+            this._size.h = config.size.h || 1.0;
+            this._screenSize.w = config.screenSize.w || 1.0;
+            this._screenSize.h = config.screenSize.h || 1.0;
             this._updateViewport();
         }
         /**
@@ -123,8 +123,8 @@ namespace egret3d {
             return this._screenSize;
         }
         public set screenSize(value: Readonly<ISize>) {
-            this._screenSize.w = value.w || 2.0;
-            this._screenSize.h = value.h || 2.0;
+            this._screenSize.w = value.w || 1.0;
+            this._screenSize.h = value.h || 1.0;
             this._updateViewport();
             this.onScreenResize.dispatch();
         }
@@ -136,8 +136,8 @@ namespace egret3d {
             return this._size;
         }
         public set size(value: Readonly<ISize>) {
-            this._size.w = value.w || 2.0;
-            this._size.h = value.h || 2.0;
+            this._size.w = value.w || 1.0;
+            this._size.h = value.h || 1.0;
             this._updateViewport();
             this.onResize.dispatch();
         }
@@ -145,7 +145,7 @@ namespace egret3d {
          * 渲染视口。
          */
         @paper.editor.property(paper.editor.EditType.RECT, { readonly: true })
-        public get viewport(): Readonly<IRectangle> {
+        public get viewport(): Readonly<Rectangle> {
             return this._viewport;
         }
 
