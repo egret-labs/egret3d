@@ -122,6 +122,10 @@ namespace egret3d {
                 }
             }
 
+            //TODO
+            this.camera._readRenderTarget = new GlRenderTarget("builtin/post_processing1.image.json", stage.viewport.w, stage.viewport.h, true); 
+            this.camera._writeRenderTarget = new GlRenderTarget("builtin/post_processing2.image.json", stage.viewport.w, stage.viewport.h, true); 
+
             //
             this._postProcessDrawCall.matrix = Matrix4.IDENTITY;
             this._postProcessDrawCall.subMeshIndex = 0;

@@ -7026,6 +7026,9 @@ var egret3d;
                     this._postProcessingCamera = postProcessingCamera;
                 }
             }
+            //TODO
+            this.camera._readRenderTarget = new egret3d.GlRenderTarget("builtin/post_processing1.image.json", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true);
+            this.camera._writeRenderTarget = new egret3d.GlRenderTarget("builtin/post_processing2.image.json", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true);
             //
             this._postProcessDrawCall.matrix = egret3d.Matrix4.IDENTITY;
             this._postProcessDrawCall.subMeshIndex = 0;
@@ -13834,6 +13837,14 @@ var egret3d;
                 egret3d.Vector3.create()
             ];
             _this._renderTarget = null;
+            /**
+             * @internal
+             */
+            _this._readRenderTarget = null;
+            /**
+             * @internal
+             */
+            _this._writeRenderTarget = null;
             return _this;
         }
         Object.defineProperty(Camera, "main", {
@@ -14277,7 +14288,8 @@ var egret3d;
              *
              */
             get: function () {
-                return this._renderTarget || egret3d.DefaultTextures.POST_PROCESSING;
+                // return this._renderTarget || DefaultTextures.POST_PROCESSING;
+                return this._readRenderTarget;
             },
             enumerable: true,
             configurable: true
@@ -14425,6 +14437,7 @@ var egret3d;
                 this._resolution.y = stageViewport.h;
                 material.setVector2("resolution", this._resolution);
             }
+            //
             material.setTexture("tColor", postProcessingRenderTarget);
             material.setMatrix("viewProjectionInverseMatrix", clipToWorldMatrix);
             material.setMatrix("previousViewProjectionMatrix", this._worldToClipMatrix);
@@ -20799,6 +20812,8 @@ var egret3d;
             _this._cacheProgram = null;
             _this._cacheState = null;
             return _this;
+            // public copyTextureToTexture(position: Vector2, src: ITexture, dest: ITexture, level: number = 0) {
+            // }
         }
         WebGLRenderState.prototype._getWebGLProgram = function (vs, fs, customDefines) {
             var webgl = WebGLCapabilities.webgl;
@@ -24970,11 +24985,21 @@ var egret3d;
                     this._render(camera, camera.renderTarget);
                 }
                 else {
-                    this._render(camera, camera.postProcessingRenderTarget);
+                    //TODO这里为空了
+                    if (!camera._readRenderTarget) {
+                        camera._readRenderTarget = new egret3d.GlRenderTarget("builtin/post_processing1.image.json", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true);
+                    }
+                    if (!camera._writeRenderTarget) {
+                        camera._writeRenderTarget = new egret3d.GlRenderTarget("builtin/post_processing1.image.json", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true);
+                    }
+                    this._render(camera, camera._readRenderTarget);
                     for (var _i = 0, _a = camera.postQueues; _i < _a.length; _i++) {
                         var postEffect = _a[_i];
                         postEffect.render(camera);
                     }
+                    var temp = camera._readRenderTarget;
+                    camera._readRenderTarget = camera._writeRenderTarget;
+                    camera._writeRenderTarget = temp;
                 }
             };
             WebGLRenderSystem.prototype.onUpdate = function () {

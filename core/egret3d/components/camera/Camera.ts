@@ -140,6 +140,15 @@ namespace egret3d {
             Vector3.create()
         ];
         private _renderTarget: BaseRenderTarget | null = null;
+
+        /**
+         * @internal
+         */
+        public _readRenderTarget: BaseRenderTarget | null = null;
+        /**
+         * @internal
+         */
+        public _writeRenderTarget: BaseRenderTarget | null = null;
         /**
          * 计算相机视锥区域
          * TODO
@@ -565,7 +574,8 @@ namespace egret3d {
          * 
          */
         public get postProcessingRenderTarget(): BaseRenderTarget {
-            return this._renderTarget || DefaultTextures.POST_PROCESSING;
+            // return this._renderTarget || DefaultTextures.POST_PROCESSING;
+            return this._readRenderTarget;
         }
 
         /**

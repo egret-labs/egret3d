@@ -20,7 +20,6 @@ namespace egret3d {
         private _samples: number = 20;
         private _resolution: Vector2 = Vector2.create(1.0, 1.0);
         private readonly _worldToClipMatrix: Matrix4 = Matrix4.create();
-
         public constructor() {
             super();
             this._resolution.set(stage.viewport.w, stage.viewport.h);
@@ -45,6 +44,7 @@ namespace egret3d {
                 material.setVector2("resolution", this._resolution);
             }
 
+            //
             material.setTexture("tColor", postProcessingRenderTarget);
 
             material.setMatrix("viewProjectionInverseMatrix", clipToWorldMatrix);
