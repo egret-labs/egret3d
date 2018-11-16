@@ -299,11 +299,15 @@ namespace paper.editor {
                         }
                     }
                     else if (!event.ctrlKey && !event.shiftKey) {
-                        if (this._modelComponent.selectedGameObject) {
+                        if (this._modelComponent.selectedGameObject && !defaultPointer.downPosition.equal(SceneSystem._defalutPosition)) {
                             this._modelComponent.select(Scene.activeScene);
                         }
                     }
                 }
+            }
+
+            if (defaultPointer.isUp(egret3d.PointerButtonsType.LeftMouse, false) || defaultPointer.isUp(egret3d.PointerButtonsType.RightMouse, false) ) {
+                this.clearDefaultPointerDownPosition();
             }
 
             {
@@ -412,6 +416,13 @@ namespace paper.editor {
 
             this._updateCameras();
             this._updateLights();
+        }
+
+        private static readonly _defalutPosition = egret3d.Vector3.create(-1,-1,-1);
+
+        private clearDefaultPointerDownPosition(){
+            const defaultPointer = egret3d.inputCollecter.defaultPointer;
+            defaultPointer.downPosition.copy( SceneSystem._defalutPosition);
         }
     }
 }
