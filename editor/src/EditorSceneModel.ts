@@ -35,8 +35,8 @@ namespace paper.editor {
             this.cameraObject = egret3d.Camera.editor.gameObject;
             // this.cameraObject = GameObject.create("EditorCamera", DefaultTags.EditorOnly, Application.sceneManager.editorScene);
             const camera = this.cameraObject.getOrAddComponent(egret3d.Camera);
-            camera.near = 0.1;
-            camera.far = 500.0;
+            camera.near = 0.01;
+            camera.far = 10000;
             camera.backgroundColor.set(0.13, 0.28, 0.51, 1.00);
             this.cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
             this.cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
