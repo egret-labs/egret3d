@@ -167,25 +167,27 @@ namespace egret3d {
                 return materialA.renderQueue - materialB.renderQueue;
             }
         }
-
         /**
          * TODO
          */
-        public shadowFrustumCulling(camera: Camera) {
-            this.shadowCalls.length = 0;
+        public shadowFrustumCulling() {
+            const camera = this.camera;
+            const cameraFrustum = camera.frustum;
+            const shadowDrawCalls = this.shadowCalls;
+            shadowDrawCalls.length = 0;
 
             for (const drawCall of this._drawCallCollecter.drawCalls) {
                 const renderer = drawCall!.renderer!;
                 if (
                     renderer.castShadows &&
                     (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
-                    (!renderer.frustumCulled || camera.testFrustumCulling(renderer))
+                    (!renderer.frustumCulled || math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))
                 ) {
-                    this.shadowCalls.push(drawCall!);
+                    shadowDrawCalls.push(drawCall!);
                 }
             }
 
-            this.shadowCalls.sort(this._sortFromFarToNear);
+            shadowDrawCalls.sort(this._sortFromFarToNear);
         }
         /**
          * TODO
@@ -193,29 +195,33 @@ namespace egret3d {
         public frustumCulling() {
             const camera = this.camera;
             const cameraPosition = camera.gameObject.transform.position;
-            this.opaqueCalls.length = 0;
-            this.transparentCalls.length = 0;
+            const cameraFrustum = camera.frustum;
+            const opaqueCalls = this.opaqueCalls;
+            const transparentCalls = this.transparentCalls;
+
+            opaqueCalls.length = 0;
+            transparentCalls.length = 0;
 
             for (const drawCall of this._drawCallCollecter.drawCalls) {
                 const renderer = drawCall!.renderer!;
                 if (
                     (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
-                    (!renderer.frustumCulled || camera.testFrustumCulling(renderer))
+                    (!renderer.frustumCulled || math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))
                 ) {
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
                     if (drawCall!.material!.renderQueue >= paper.RenderQueue.Transparent) {
-                        this.transparentCalls.push(drawCall!);
+                        transparentCalls.push(drawCall!);
                     }
                     else {
-                        this.opaqueCalls.push(drawCall!);
+                        opaqueCalls.push(drawCall!);
                     }
 
                     drawCall!.zdist = renderer.gameObject.transform.position.getDistance(cameraPosition);
                 }
             }
 
-            this.opaqueCalls.sort(this._sortOpaque);
-            this.transparentCalls.sort(this._sortFromFarToNear);
+            opaqueCalls.sort(this._sortOpaque);
+            transparentCalls.sort(this._sortFromFarToNear);
         }
 
         public blit(src: Texture, material: Material | null = null, dest: BaseRenderTarget | null = null) {

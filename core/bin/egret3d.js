@@ -4353,6 +4353,20 @@ var egret3d;
             return from + (to - from) * t;
         }
         math.lerp = lerp;
+        function frustumIntersectsSphere(frustum, sphere) {
+            var planes = frustum.planes;
+            var center = sphere.center;
+            var negRadius = -sphere.radius;
+            for (var _i = 0, planes_1 = planes; _i < planes_1.length; _i++) {
+                var plane = planes_1[_i];
+                var distance = plane.getDistance(center);
+                if (distance < negRadius) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        math.frustumIntersectsSphere = frustumIntersectsSphere;
     })(math = egret3d.math || (egret3d.math = {}));
     /**
      * 内联的数字常数枚举。
@@ -4380,38 +4394,8 @@ var egret3d;
         return value > 0 ? 1 : -1;
     }
     egret3d.sign = sign;
-    /**
-     * @deprecated
-     */
-    function calPlaneLineIntersectPoint(planeVector, planePoint, lineVector, linePoint, out) {
-        var vp1 = planeVector.x;
-        var vp2 = planeVector.y;
-        var vp3 = planeVector.z;
-        var n1 = planePoint.x;
-        var n2 = planePoint.y;
-        var n3 = planePoint.z;
-        var v1 = lineVector.x;
-        var v2 = lineVector.y;
-        var v3 = lineVector.z;
-        var m1 = linePoint.x;
-        var m2 = linePoint.y;
-        var m3 = linePoint.z;
-        var vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
-        if (vpt === 0) {
-            return null;
-        }
-        else {
-            var t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
-            out.x = m1 + v1 * t;
-            out.y = m2 + v2 * t;
-            out.z = m3 + v3 * t;
-        }
-        return out;
-    }
-    egret3d.calPlaneLineIntersectPoint = calPlaneLineIntersectPoint;
-    function triangleIntersectsPlane() {
-    }
-    egret3d.triangleIntersectsPlane = triangleIntersectsPlane;
+    // export function triangleIntersectsPlane() {
+    // }
     function satForAxes(axes) {
         var v0 = egret3d.helpVector3A;
         var v1 = egret3d.helpVector3B;
@@ -7185,67 +7169,110 @@ var paper;
     paper.GroupComponent = GroupComponent;
     __reflect(GroupComponent.prototype, "paper.GroupComponent");
 })(paper || (paper = {}));
-// namespace egret3d {
-//     class Frustum extends paper.BaseRelease<Frustum> implements paper.ICCS<Frustum>, paper.ISerializable {
-//         private static readonly _instances: Frustum[] = [];
-//         /**
-//          * 创建一个几何立方体。
-//          * @param minimum 最小点。
-//          * @param maximum 最大点。
-//          */
-//         public static create(planes: Readonly<[Plane, Plane, Plane, Plane, Plane, Plane]>) {
-//             if (this._instances.length > 0) {
-//                 const instance = this._instances.pop()!.set(planes);
-//                 instance._released = false;
-//                 return instance;
-//             }
-//             return new Frustum();
-//         }
-//         public readonly planes: Readonly<[Plane, Plane, Plane, Plane, Plane, Plane]> = [
-//             Plane.create(),
-//             Plane.create(),
-//             Plane.create(),
-//             Plane.create(),
-//             Plane.create(),
-//             Plane.create(),
-//         ];
-//         /**
-//          * 请使用 `egret3d.Frustum.create()` 创建实例。
-//          * @see egret3d.Frustum.create()
-//          */
-//         private constructor() {
-//             super();
-//         }
-//         public serialize() {
-//             let index = 0;
-//             const array = [];
-//             for (const plane of this.planes) {
-//                 plane.toArray(array, index++);
-//             }
-//             return array;
-//         }
-//         public deserialize(value: ReadonlyArray<number>) {
-//             return this.fromArray(value);
-//         }
-//         public clone() {
-//             return Frustum.create(this.planes);
-//         }
-//         public copy(value: Readonly<Frustum>) {
-//             return this.set(value.planes);
-//         }
-//         public set(planes: Readonly<[Plane, Plane, Plane, Plane, Plane, Plane]>): this {
-//             this.r = r;
-//             this.g = g;
-//             this.b = b;
-//             if (a !== undefined) {
-//                 this.a = a;
-//             }
-//             return this;
-//         }
-//         public fromArray(array: ReadonlyArray<number>, offset: number = 0) {
-//         }
-//     }
-// } 
+var egret3d;
+(function (egret3d) {
+    var _helpVector3 = egret3d.Vector3.create();
+    /**
+     *
+     */
+    var Frustum = (function (_super) {
+        __extends(Frustum, _super);
+        /**
+         * 请使用 `egret3d.Frustum.create()` 创建实例。
+         * @see egret3d.Frustum.create()
+         */
+        function Frustum() {
+            var _this = _super.call(this) || this;
+            /**
+             *
+             */
+            _this.planes = [
+                egret3d.Plane.create(),
+                egret3d.Plane.create(),
+                egret3d.Plane.create(),
+                egret3d.Plane.create(),
+                egret3d.Plane.create(),
+                egret3d.Plane.create(),
+            ];
+            return _this;
+        }
+        /**
+         *
+         */
+        Frustum.create = function () {
+            if (this._instances.length > 0) {
+                var instance = this._instances.pop();
+                instance._released = false;
+                return instance;
+            }
+            return new Frustum();
+        };
+        Frustum.prototype.serialize = function () {
+            var index = 0;
+            var array = [];
+            for (var _i = 0, _a = this.planes; _i < _a.length; _i++) {
+                var plane = _a[_i];
+                plane.toArray(array, index++);
+            }
+            return array;
+        };
+        Frustum.prototype.deserialize = function (value) {
+            return this.fromArray(value);
+        };
+        Frustum.prototype.clone = function () {
+            return Frustum.create().set(this.planes);
+        };
+        Frustum.prototype.copy = function (value) {
+            return this.set(value.planes);
+        };
+        Frustum.prototype.set = function (planes) {
+            var index = 0;
+            for (var _i = 0, planes_2 = planes; _i < planes_2.length; _i++) {
+                var plane = planes_2[_i];
+                this.planes[index++].copy(plane);
+            }
+            return this;
+        };
+        Frustum.prototype.fromArray = function (array, offset) {
+            if (offset === void 0) { offset = 0; }
+            for (var _i = 0, _a = this.planes; _i < _a.length; _i++) {
+                var plane = _a[_i];
+                plane.fromArray(array, offset);
+                offset += 4;
+            }
+            return this;
+        };
+        Frustum.prototype.fromMatrix = function (matrix) {
+            var planes = this.planes;
+            var me = matrix.rawData;
+            var me0 = me[0], me1 = me[1], me2 = me[2], me3 = me[3];
+            var me4 = me[4], me5 = me[5], me6 = me[6], me7 = me[7];
+            var me8 = me[8], me9 = me[9], me10 = me[10], me11 = me[11];
+            var me12 = me[12], me13 = me[13], me14 = me[14], me15 = me[15];
+            var helpVector3 = _helpVector3;
+            planes[0].set(helpVector3.set(me3 - me0, me7 - me4, me11 - me8), me15 - me12).normalize();
+            planes[1].set(helpVector3.set(me3 + me0, me7 + me4, me11 + me8), me15 + me12).normalize();
+            planes[2].set(helpVector3.set(me3 + me1, me7 + me5, me11 + me9), me15 + me13).normalize();
+            planes[3].set(helpVector3.set(me3 - me1, me7 - me5, me11 - me9), me15 - me13).normalize();
+            planes[4].set(helpVector3.set(me3 - me2, me7 - me6, me11 - me10), me15 - me14).normalize();
+            planes[5].set(helpVector3.set(me3 + me2, me7 + me6, me11 + me10), me15 + me14).normalize();
+            return this;
+        };
+        Frustum.prototype.containsPoint = function (point) {
+            for (var _i = 0, _a = this.planes; _i < _a.length; _i++) {
+                var plane = _a[_i];
+                if (plane.getDistance(point) < 0.0) {
+                    return false;
+                }
+            }
+            return true;
+        };
+        Frustum._instances = [];
+        return Frustum;
+    }(paper.BaseRelease));
+    egret3d.Frustum = Frustum;
+    __reflect(Frustum.prototype, "egret3d.Frustum", ["paper.ICCS", "paper.ISerializable"]);
+})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     /**
@@ -7921,6 +7948,12 @@ var egret3d;
             this.normal.copy(normal);
             return this;
         };
+        Plane.prototype.fromArray = function (array, offset) {
+            if (offset === void 0) { offset = 0; }
+            this.normal.fromArray(array, offset);
+            this.constant = array[offset + 3];
+            return this;
+        };
         Plane.prototype.fromPoint = function (point, normal) {
             if (normal === void 0) { normal = egret3d.Vector3.UP; }
             this.constant = -normal.dot(point);
@@ -7936,8 +7969,8 @@ var egret3d;
             if (!input) {
                 input = this;
             }
-            var inverseNormalLength = input.normal.length;
-            this.constant = input.constant * (1.0 / inverseNormalLength);
+            var inverseNormalLength = 1.0 / input.normal.length;
+            this.constant = input.constant * inverseNormalLength;
             this.normal.multiplyScalar(inverseNormalLength, input.normal);
             return this;
         };
@@ -7958,8 +7991,8 @@ var egret3d;
             this.constant = -referencePoint.dot(normal);
             return this;
         };
-        Plane.prototype.getDistance = function (value) {
-            return this.normal.dot(value) + this.constant;
+        Plane.prototype.getDistance = function (point) {
+            return this.normal.dot(point) + this.constant;
         };
         Plane.prototype.getProjectionPoint = function (point, output) {
             if (!output) {
@@ -11966,6 +11999,7 @@ var egret3d;
             _this._size = 1.0;
             _this._viewport = egret3d.Rectangle.create(0.0, 0.0, 1.0, 1.0);
             _this._pixelViewport = egret3d.Rectangle.create(0.0, 0.0, 1.0, 1.0);
+            _this._frustum = egret3d.Frustum.create();
             _this._viewportMatrix = egret3d.Matrix4.create();
             _this._cullingMatrix = egret3d.Matrix4.create();
             _this._projectionMatrix = egret3d.Matrix4.create();
@@ -11973,16 +12007,6 @@ var egret3d;
             _this._worldToCameraMatrix = egret3d.Matrix4.create();
             _this._worldToClipMatrix = egret3d.Matrix4.create();
             _this._clipToWorldMatrix = egret3d.Matrix4.create();
-            _this._frameVectors = [
-                egret3d.Vector3.create(),
-                egret3d.Vector3.create(),
-                egret3d.Vector3.create(),
-                egret3d.Vector3.create(),
-                egret3d.Vector3.create(),
-                egret3d.Vector3.create(),
-                egret3d.Vector3.create(),
-                egret3d.Vector3.create()
-            ];
             _this._renderTarget = null;
             return _this;
         }
@@ -12031,82 +12055,15 @@ var egret3d;
             configurable: true
         });
         /**
-         * 计算相机视锥区域
-         * TODO
-         */
-        Camera.prototype._calcCameraFrame = function () {
-            var farLD = this._frameVectors[0];
-            var nearLD = this._frameVectors[1];
-            var farRD = this._frameVectors[2];
-            var nearRD = this._frameVectors[3];
-            var farLT = this._frameVectors[4];
-            var nearLT = this._frameVectors[5];
-            var farRT = this._frameVectors[6];
-            var nearRT = this._frameVectors[7];
-            var matchFactor = egret3d.stage.matchFactor;
-            var aspect = this.aspect;
-            var near = this._near;
-            var far = this._far;
-            var tan = Math.tan(this._fov * 0.5);
-            var nearHX = near * tan;
-            var nearWX = nearHX * aspect;
-            var nearWY = near * tan;
-            var nearHY = nearWY / aspect;
-            var farHX = far * tan;
-            var farWX = farHX * aspect;
-            var farWY = far * tan;
-            var farHY = farWY / aspect;
-            var nearWidth = egret3d.math.lerp(nearWY, nearWX, matchFactor);
-            var nearHeight = egret3d.math.lerp(nearHY, nearHX, matchFactor);
-            var farWidth = egret3d.math.lerp(farWY, farWX, matchFactor);
-            var farHeight = egret3d.math.lerp(farHY, farHX, matchFactor);
-            nearLT.set(-nearWidth, nearHeight, near);
-            nearLD.set(-nearWidth, -nearHeight, near);
-            nearRT.set(nearWidth, nearHeight, near);
-            nearRD.set(nearWidth, -nearHeight, near);
-            farLT.set(-farWidth, farHeight, far);
-            farLD.set(-farWidth, -farHeight, far);
-            farRT.set(farWidth, farHeight, far);
-            farRD.set(farWidth, -farHeight, far);
-            var worldMatrix = this.gameObject.transform.localToWorldMatrix;
-            farLD.applyMatrix(worldMatrix);
-            nearLD.applyMatrix(worldMatrix);
-            farRD.applyMatrix(worldMatrix);
-            nearRD.applyMatrix(worldMatrix);
-            farLT.applyMatrix(worldMatrix);
-            nearLT.applyMatrix(worldMatrix);
-            farRT.applyMatrix(worldMatrix);
-            nearRT.applyMatrix(worldMatrix);
-        };
-        Camera.prototype._intersectPlane = function (boundingSphere, v0, v1, v2) {
-            var subV0 = egret3d.helpVector3A;
-            var subV1 = egret3d.helpVector3B;
-            var cross = egret3d.helpVector3C;
-            var hitPoint = egret3d.helpVector3D;
-            var distVec = egret3d.helpVector3E;
-            var center = boundingSphere.center;
-            subV0.subtract(v1, v0);
-            subV1.subtract(v2, v1);
-            cross.cross(subV0, subV1);
-            egret3d.calPlaneLineIntersectPoint(cross, v0, cross, center, hitPoint);
-            distVec.subtract(hitPoint, center);
-            var val = distVec.dot(cross);
-            if (val <= 0) {
-                return true;
-            }
-            var dist = hitPoint.getDistance(center);
-            if (dist < boundingSphere.radius) {
-                return true;
-            }
-            return false;
-        };
-        /**
          * @internal
          */
         Camera.prototype._update = function () {
-            this._calcCameraFrame();
-            this.context.updateCameraTransform();
-            this.context.frustumCulling();
+            if (this._dirtyMask & 32 /* FrustumCulling */) {
+                this._frustum.fromMatrix(this.cullingMatrix);
+                this._dirtyMask &= ~32 /* FrustumCulling */;
+            }
+            this.context.updateCameraTransform(); // TODO
+            this.context.frustumCulling(); // TODO
         };
         Camera.prototype._onStageResize = function () {
             this._dirtyMask |= 16 /* PixelViewport */;
@@ -12206,25 +12163,6 @@ var egret3d;
         };
         Camera.prototype.resetWorldToCameraMatrix = function () {
             this._nativeTransform = false;
-        };
-        /**
-         * TODO
-         */
-        Camera.prototype.testFrustumCulling = function (node) {
-            var boundingSphere = node.boundingSphere;
-            if (!this._intersectPlane(boundingSphere, this._frameVectors[0], this._frameVectors[1], this._frameVectors[5]))
-                return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVectors[1], this._frameVectors[3], this._frameVectors[7]))
-                return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVectors[3], this._frameVectors[2], this._frameVectors[6]))
-                return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVectors[2], this._frameVectors[0], this._frameVectors[4]))
-                return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVectors[5], this._frameVectors[7], this._frameVectors[6]))
-                return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVectors[0], this._frameVectors[2], this._frameVectors[3]))
-                return false;
-            return true;
         };
         Object.defineProperty(Camera.prototype, "opvalue", {
             /**
@@ -12427,6 +12365,16 @@ var egret3d;
                 if (!this._nativeProjection) {
                     this._dirtyMask |= 13 /* ProjectionAndClipMatrix */;
                 }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Camera.prototype, "frustum", {
+            /**
+             *
+             */
+            get: function () {
+                return this._frustum;
             },
             enumerable: true,
             configurable: true
@@ -12942,18 +12890,21 @@ var egret3d;
         /**
          * TODO
          */
-        CameraRenderContext.prototype.shadowFrustumCulling = function (camera) {
-            this.shadowCalls.length = 0;
+        CameraRenderContext.prototype.shadowFrustumCulling = function () {
+            var camera = this.camera;
+            var cameraFrustum = camera.frustum;
+            var shadowDrawCalls = this.shadowCalls;
+            shadowDrawCalls.length = 0;
             for (var _i = 0, _a = this._drawCallCollecter.drawCalls; _i < _a.length; _i++) {
                 var drawCall = _a[_i];
                 var renderer = drawCall.renderer;
                 if (renderer.castShadows &&
                     (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
-                    (!renderer.frustumCulled || camera.testFrustumCulling(renderer))) {
-                    this.shadowCalls.push(drawCall);
+                    (!renderer.frustumCulled || egret3d.math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))) {
+                    shadowDrawCalls.push(drawCall);
                 }
             }
-            this.shadowCalls.sort(this._sortFromFarToNear);
+            shadowDrawCalls.sort(this._sortFromFarToNear);
         };
         /**
          * TODO
@@ -12961,25 +12912,28 @@ var egret3d;
         CameraRenderContext.prototype.frustumCulling = function () {
             var camera = this.camera;
             var cameraPosition = camera.gameObject.transform.position;
-            this.opaqueCalls.length = 0;
-            this.transparentCalls.length = 0;
+            var cameraFrustum = camera.frustum;
+            var opaqueCalls = this.opaqueCalls;
+            var transparentCalls = this.transparentCalls;
+            opaqueCalls.length = 0;
+            transparentCalls.length = 0;
             for (var _i = 0, _a = this._drawCallCollecter.drawCalls; _i < _a.length; _i++) {
                 var drawCall = _a[_i];
                 var renderer = drawCall.renderer;
                 if ((camera.cullingMask & renderer.gameObject.layer) !== 0 &&
-                    (!renderer.frustumCulled || camera.testFrustumCulling(renderer))) {
+                    (!renderer.frustumCulled || egret3d.math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))) {
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
                     if (drawCall.material.renderQueue >= 3000 /* Transparent */) {
-                        this.transparentCalls.push(drawCall);
+                        transparentCalls.push(drawCall);
                     }
                     else {
-                        this.opaqueCalls.push(drawCall);
+                        opaqueCalls.push(drawCall);
                     }
                     drawCall.zdist = renderer.gameObject.transform.position.getDistance(cameraPosition);
                 }
             }
-            this.opaqueCalls.sort(this._sortOpaque);
-            this.transparentCalls.sort(this._sortFromFarToNear);
+            opaqueCalls.sort(this._sortOpaque);
+            transparentCalls.sort(this._sortFromFarToNear);
         };
         CameraRenderContext.prototype.blit = function (src, material, dest) {
             if (material === void 0) { material = null; }

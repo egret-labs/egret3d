@@ -3235,6 +3235,7 @@ declare namespace egret3d {
          *
          */
         function lerp(from: number, to: number, t: number): number;
+        function frustumIntersectsSphere(frustum: Readonly<Frustum>, sphere: Readonly<Sphere>): boolean;
     }
     /**
      * 内联的数字常数枚举。
@@ -3255,11 +3256,6 @@ declare namespace egret3d {
         EPSILON = 2.220446049250313e-16,
     }
     function sign(value: number): number;
-    /**
-     * @deprecated
-     */
-    function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3): Vector3 | null;
-    function triangleIntersectsPlane(): void;
     function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<Box>): boolean;
     function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<Box>): boolean;
     function planeIntersectsSphere(plane: Readonly<Plane>, sphere: Readonly<Sphere>): boolean;
@@ -4267,6 +4263,35 @@ declare namespace egret3d {
 }
 declare namespace paper {
 }
+declare namespace egret3d {
+    /**
+     *
+     */
+    class Frustum extends paper.BaseRelease<Frustum> implements paper.ICCS<Frustum>, paper.ISerializable {
+        private static readonly _instances;
+        /**
+         *
+         */
+        static create(): Frustum;
+        /**
+         *
+         */
+        readonly planes: Readonly<[Plane, Plane, Plane, Plane, Plane, Plane]>;
+        /**
+         * 请使用 `egret3d.Frustum.create()` 创建实例。
+         * @see egret3d.Frustum.create()
+         */
+        private constructor();
+        serialize(): number[];
+        deserialize(value: ReadonlyArray<number>): this;
+        clone(): Frustum;
+        copy(value: Readonly<Frustum>): this;
+        set(planes: Readonly<[Plane, Plane, Plane, Plane, Plane, Plane]>): this;
+        fromArray(array: ReadonlyArray<number>, offset?: number): this;
+        fromMatrix(matrix: Readonly<Matrix4>): this;
+        containsPoint(point: Readonly<IVector3>): boolean;
+    }
+}
 declare namespace paper {
     /**
      * 已丢失或不支持的组件数据备份。
@@ -4575,12 +4600,13 @@ declare namespace egret3d {
         clone(): Plane;
         copy(value: Readonly<Plane>): this;
         set(normal: Readonly<IVector3>, constant: number): this;
+        fromArray(array: Readonly<ArrayLike<number>>, offset?: uint): this;
         fromPoint(point: Readonly<IVector3>, normal?: Vector3): this;
         fromPoints(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>, valueC: Readonly<IVector3>): this;
         normalize(input?: Readonly<Plane>): this;
         negate(input?: Readonly<Plane>): this;
         applyMatrix(matrix: Readonly<Matrix4>, normalMatrix?: Readonly<Matrix3>): this;
-        getDistance(value: Readonly<IVector3>): number;
+        getDistance(point: Readonly<IVector3>): number;
         getProjectionPoint(point: Readonly<IVector3>, output?: Vector3): Vector3;
         getCoplanarPoint(output?: Vector3): Vector3;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
@@ -5673,6 +5699,7 @@ declare namespace egret3d {
         private _size;
         private readonly _viewport;
         private readonly _pixelViewport;
+        private readonly _frustum;
         private readonly _viewportMatrix;
         private readonly _cullingMatrix;
         private readonly _projectionMatrix;
@@ -5680,14 +5707,7 @@ declare namespace egret3d {
         private readonly _worldToCameraMatrix;
         private readonly _worldToClipMatrix;
         private readonly _clipToWorldMatrix;
-        private readonly _frameVectors;
         private _renderTarget;
-        /**
-         * 计算相机视锥区域
-         * TODO
-         */
-        private _calcCameraFrame();
-        private _intersectPlane(boundingSphere, v0, v1, v2);
         private _onStageResize();
         initialize(): void;
         uninitialize(): void;
@@ -5714,10 +5734,6 @@ declare namespace egret3d {
         resetCullingMatrix(): void;
         resetProjectionMatrix(): void;
         resetWorldToCameraMatrix(): void;
-        /**
-         * TODO
-         */
-        testFrustumCulling(node: paper.BaseRenderer): boolean;
         /**
          * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间插值。
          */
@@ -5755,6 +5771,10 @@ declare namespace egret3d {
          * 该相机像素化的渲染视口。
          */
         pixelViewport: Readonly<IRectangle>;
+        /**
+         *
+         */
+        readonly frustum: Readonly<Frustum>;
         /**
          * 该相机的裁切矩阵。
          */
@@ -5933,7 +5953,7 @@ declare namespace egret3d {
         /**
          * TODO
          */
-        shadowFrustumCulling(camera: Camera): void;
+        shadowFrustumCulling(): void;
         /**
          * TODO
          */

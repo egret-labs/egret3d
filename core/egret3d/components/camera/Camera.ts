@@ -115,6 +115,7 @@ namespace egret3d {
         private _size: number = 1.0;
         private readonly _viewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
         private readonly _pixelViewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
+        private readonly _frustum: Frustum = Frustum.create();
         private readonly _viewportMatrix: Matrix4 = Matrix4.create();
         private readonly _cullingMatrix: Matrix4 = Matrix4.create();
         private readonly _projectionMatrix: Matrix4 = Matrix4.create();
@@ -122,113 +123,18 @@ namespace egret3d {
         private readonly _worldToCameraMatrix: Matrix4 = Matrix4.create();
         private readonly _worldToClipMatrix: Matrix4 = Matrix4.create();
         private readonly _clipToWorldMatrix: Matrix4 = Matrix4.create();
-        private readonly _frameVectors: Vector3[] = [ // TODO 需要缓存为视锥
-            Vector3.create(),
-            Vector3.create(),
-            Vector3.create(),
-            Vector3.create(),
-            Vector3.create(),
-            Vector3.create(),
-            Vector3.create(),
-            Vector3.create()
-        ];
         private _renderTarget: BaseRenderTarget | null = null;
-        /**
-         * 计算相机视锥区域
-         * TODO
-         */
-        private _calcCameraFrame() {
-            const farLD = this._frameVectors[0];
-            const nearLD = this._frameVectors[1];
-            const farRD = this._frameVectors[2];
-            const nearRD = this._frameVectors[3];
-            const farLT = this._frameVectors[4];
-            const nearLT = this._frameVectors[5];
-            const farRT = this._frameVectors[6];
-            const nearRT = this._frameVectors[7];
-
-            const matchFactor = stage.matchFactor;
-            const aspect = this.aspect;
-            const near = this._near;
-            const far = this._far;
-            const tan = Math.tan(this._fov * 0.5);
-
-            const nearHX = near * tan;
-            const nearWX = nearHX * aspect;
-            const nearWY = near * tan;
-            const nearHY = nearWY / aspect;
-
-            const farHX = far * tan;
-            const farWX = farHX * aspect;
-            const farWY = far * tan;
-            const farHY = farWY / aspect;
-
-            const nearWidth = math.lerp(nearWY, nearWX, matchFactor);
-            const nearHeight = math.lerp(nearHY, nearHX, matchFactor);
-
-            const farWidth = math.lerp(farWY, farWX, matchFactor);
-            const farHeight = math.lerp(farHY, farHX, matchFactor);
-
-            nearLT.set(-nearWidth, nearHeight, near);
-            nearLD.set(-nearWidth, -nearHeight, near);
-            nearRT.set(nearWidth, nearHeight, near);
-            nearRD.set(nearWidth, -nearHeight, near);
-
-            farLT.set(-farWidth, farHeight, far);
-            farLD.set(-farWidth, -farHeight, far);
-            farRT.set(farWidth, farHeight, far);
-            farRD.set(farWidth, -farHeight, far);
-
-            const worldMatrix = this.gameObject.transform.localToWorldMatrix;
-            farLD.applyMatrix(worldMatrix);
-            nearLD.applyMatrix(worldMatrix);
-            farRD.applyMatrix(worldMatrix);
-            nearRD.applyMatrix(worldMatrix);
-            farLT.applyMatrix(worldMatrix);
-            nearLT.applyMatrix(worldMatrix);
-            farRT.applyMatrix(worldMatrix);
-            nearRT.applyMatrix(worldMatrix);
-        }
-
-        private _intersectPlane(boundingSphere: Sphere, v0: Vector3, v1: Vector3, v2: Vector3) {
-            let subV0 = helpVector3A;
-            let subV1 = helpVector3B;
-            let cross = helpVector3C;
-            let hitPoint = helpVector3D;
-            let distVec = helpVector3E;
-
-            let center = boundingSphere.center;
-
-            subV0.subtract(v1, v0);
-            subV1.subtract(v2, v1);
-            cross.cross(subV0, subV1);
-
-            calPlaneLineIntersectPoint(cross, v0, cross, center, hitPoint);
-
-            distVec.subtract(hitPoint, center);
-
-            let val = distVec.dot(cross);
-
-            if (val <= 0) {
-                return true;
-            }
-
-            let dist = hitPoint.getDistance(center);
-
-            if (dist < boundingSphere.radius) {
-                return true;
-            }
-
-            return false;
-        }
-
         /**
          * @internal
          */
         public _update() {
-            this._calcCameraFrame();
-            this.context.updateCameraTransform();
-            this.context.frustumCulling();
+            if (this._dirtyMask & DirtyMask.FrustumCulling) {
+                this._frustum.fromMatrix(this.cullingMatrix);
+                this._dirtyMask &= ~DirtyMask.FrustumCulling;
+            }
+
+            this.context.updateCameraTransform(); // TODO
+            this.context.frustumCulling(); // TODO
         }
 
         private _onStageResize(): void {
@@ -363,22 +269,6 @@ namespace egret3d {
         public resetWorldToCameraMatrix() {
             this._nativeTransform = false;
         }
-
-        /**
-         * TODO
-         */
-        public testFrustumCulling(node: paper.BaseRenderer) {
-            const boundingSphere = node.boundingSphere;
-            if (!this._intersectPlane(boundingSphere, this._frameVectors[0], this._frameVectors[1], this._frameVectors[5])) return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVectors[1], this._frameVectors[3], this._frameVectors[7])) return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVectors[3], this._frameVectors[2], this._frameVectors[6])) return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVectors[2], this._frameVectors[0], this._frameVectors[4])) return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVectors[5], this._frameVectors[7], this._frameVectors[6])) return false;
-            if (!this._intersectPlane(boundingSphere, this._frameVectors[0], this._frameVectors[2], this._frameVectors[3])) return false;
-
-            return true;
-        }
-
         /**
          * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间插值。
          */
@@ -587,6 +477,12 @@ namespace egret3d {
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
             }
+        }
+        /**
+         * 
+         */
+        public get frustum(): Readonly<Frustum> {
+            return this._frustum;
         }
         /**
          * 该相机的裁切矩阵。

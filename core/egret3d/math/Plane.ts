@@ -61,6 +61,13 @@ namespace egret3d {
             return this;
         }
 
+        public fromArray(array: Readonly<ArrayLike<number>>, offset: uint = 0) {
+            this.normal.fromArray(array, offset);
+            this.constant = array[offset + 3];
+
+            return this;
+        }
+
         public fromPoint(point: Readonly<IVector3>, normal: Vector3 = Vector3.UP) {
             this.constant = -normal.dot(point);
             this.normal.copy(normal);
@@ -80,8 +87,8 @@ namespace egret3d {
                 input = this;
             }
 
-            const inverseNormalLength = input.normal.length;
-            this.constant = input.constant * (1.0 / inverseNormalLength);
+            const inverseNormalLength = 1.0 / input.normal.length;
+            this.constant = input.constant * inverseNormalLength;
             this.normal.multiplyScalar(inverseNormalLength, input.normal);
 
             return this;
@@ -110,8 +117,8 @@ namespace egret3d {
             return this;
         }
 
-        public getDistance(value: Readonly<IVector3>) {
-            return this.normal.dot(value) + this.constant;
+        public getDistance(point: Readonly<IVector3>) {
+            return this.normal.dot(point) + this.constant;
         }
 
         public getProjectionPoint(point: Readonly<IVector3>, output?: Vector3) {
