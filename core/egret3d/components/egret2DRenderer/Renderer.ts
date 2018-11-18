@@ -46,8 +46,8 @@ module egret.web {
 
         private drawCmdManager: egret.web.WebGLDrawCmdManager;
         private vao: egret.web.WebGLVertexArrayObject;
-        private vertexBuffer;
-        private indexBuffer;
+        private vertexBuffer: any;
+        private indexBuffer: any;
 
         private egretWebGLRenderContext: WebGLRenderContext;
 
@@ -64,7 +64,7 @@ module egret.web {
             egret.sys.canvasRenderer = new egret.CanvasRenderer();
             egret.sys.customHitTestBuffer = new egret.web.WebGLRenderBuffer(3, 3);
             egret.sys.canvasHitTestBuffer = new egret.web.CanvasRenderBuffer(3, 3);
-            egret.Capabilities['$renderMode'] = "webgl";
+            (egret.Capabilities as any)['$renderMode'] = "webgl";
 
             this.vertexBuffer = context.createBuffer();
             this.indexBuffer = context.createBuffer();
@@ -88,7 +88,7 @@ module egret.web {
 
             // 目前只使用0号材质单元，默认开启
             gl.activeTexture(gl.TEXTURE0);
-            this.currentProgram = null;
+            this.currentProgram = null!;
         }
         /**
          * @internal
@@ -109,11 +109,11 @@ module egret.web {
             let length = this.drawCmdManager.drawDataLen;
             let offset = 0;
             for (let i = 0; i < length; i++) {
-                let data = this.drawCmdManager.drawData[i];
+                let data = (this.drawCmdManager.drawData as any)[i];
                 if (!data) {
                     continue;
                 }
-                offset = this.drawData(data, offset);
+                offset = this.drawData(data, offset)!;
                 // 计算draw call
                 if (data.type == DRAWABLE_TYPE.ACT_BUFFER) {
                     this._activatedBuffer = data.buffer;
@@ -159,7 +159,7 @@ module egret.web {
                             program = EgretWebGLProgram.getProgram(gl, EgretShaderLib.default_vert, EgretShaderLib.blur_frag, "blur");
                         } else if (filter.type === "blurY") {
                             program = EgretWebGLProgram.getProgram(gl, EgretShaderLib.default_vert, EgretShaderLib.blur_frag, "blur");
-                        } else if (filter.type === "glow") {
+                        } else {//if (filter.type === "glow")
                             program = EgretWebGLProgram.getProgram(gl, EgretShaderLib.default_vert, EgretShaderLib.glow_frag, "glow");
                         }
                     } else {
@@ -300,7 +300,7 @@ module egret.web {
             }
         }
 
-        private syncUniforms(program: EgretWebGLProgram, filter: Filter, data): void {
+        private syncUniforms(program: EgretWebGLProgram, filter: Filter, data: any): void {
             let uniforms = program.uniforms;
             for (let key in uniforms) {
                 if (key === "projectionVector") {

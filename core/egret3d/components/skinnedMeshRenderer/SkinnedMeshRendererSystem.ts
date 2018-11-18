@@ -13,7 +13,7 @@ namespace egret3d {
                 componentClass: SkinnedMeshRenderer,
                 listeners: [
                     {
-                        type: SkinnedMeshRenderer.onMeshChanged, listener: (component: SkinnedMeshRenderer) => {
+                        type: SkinnedMeshRenderer.onMeshChanged, listener: (component: paper.BaseComponent) => {
                             this._updateDrawCalls(component.gameObject);
 
                             if (component.gameObject.renderer) {
@@ -22,7 +22,7 @@ namespace egret3d {
                         }
                     },
                     {
-                        type: SkinnedMeshRenderer.onMaterialsChanged, listener: (component: SkinnedMeshRenderer) => {
+                        type: SkinnedMeshRenderer.onMaterialsChanged, listener: (component: paper.BaseComponent) => {
                             this._updateDrawCalls(component.gameObject);
                         }
                     },

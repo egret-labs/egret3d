@@ -62,9 +62,9 @@ namespace egret3d {
         return string.replace(_pattern, _replace);
     }
 
-    function _unrollLoops(string) {
-        var pattern = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
-        function replace(match, start, end, snippet) {
+    function _unrollLoops(string: string) {
+        const pattern = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
+        function replace(match: string, start: string, end: string, snippet: string) {
             var unroll = '';
             for (var i = parseInt(start); i < parseInt(end); i++) {
                 unroll += snippet.replace(/\[ i \]/g, '[ ' + i + ' ]');
@@ -77,7 +77,7 @@ namespace egret3d {
     }
 
     function _getWebGLShader(type: number, webgl: WebGLRenderingContext, gltfShader: gltf.Shader, defines: string) {
-        const shader = webgl.createShader(type);
+        const shader = webgl.createShader(type)!;
         let shaderContent = _parseIncludes(gltfShader.uri!);
         shaderContent = _unrollLoops(shaderContent);
         webgl.shaderSource(shader, defines + shaderContent);
@@ -233,8 +233,8 @@ namespace egret3d {
         public initialize(config: RunEgretOptions) {
             super.initialize();
 
-            WebGLCapabilities.canvas = config.canvas;
-            WebGLCapabilities.webgl = config.webgl;
+            WebGLCapabilities.canvas = config.canvas!;
+            WebGLCapabilities.webgl = config.webgl!;
             const webgl = WebGLCapabilities.webgl;
             if (!webgl) {
                 return;
@@ -302,7 +302,7 @@ namespace egret3d {
 
         private _getWebGLProgram(vs: gltf.Shader, fs: gltf.Shader, customDefines: string) {
             const webgl = WebGLCapabilities.webgl!;
-            const program = webgl.createProgram();
+            const program = webgl.createProgram()!;
 
             let key = vs.name + customDefines;
             let vertexShader = this._vsShaders[key];

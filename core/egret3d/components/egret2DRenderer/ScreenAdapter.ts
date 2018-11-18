@@ -13,7 +13,7 @@ namespace egret3d {
      */
     export interface IScreenAdapter {
         $dirty: boolean;
-        calculateScaler(canvasWidth: number, canvasHeight: number, out: { w: number, h: number, s: number });
+        calculateScaler(canvasWidth: number, canvasHeight: number, out: { w: number, h: number, s: number }): void;
     }
 
     /**

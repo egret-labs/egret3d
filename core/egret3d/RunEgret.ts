@@ -38,8 +38,8 @@ namespace egret3d {
         console.info("Egret start.");
 
         // TODO
-        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
-        egret.Capabilities["renderMode" + ""] = "webgl";
+        egret.Sound = egret.web ? egret.web.HtmlSound : (egret as any)['wxgame']['HtmlSound']; //TODO:Sound
+        (egret.Capabilities as any)["renderMode" + ""] = "webgl";
 
         const requiredOptions = getOptions(options);
         const canvas = getMainCanvas(options);
@@ -96,8 +96,8 @@ namespace egret3d {
             return {
                 antialias: options.antialias,
                 antialiasSamples: 4,
-                contentWidth: parseInt(div.getAttribute("data-content-width")),
-                contentHeight: parseInt(div.getAttribute("data-content-height"))
+                contentWidth: parseInt(div.getAttribute("data-content-width")!),
+                contentHeight: parseInt(div.getAttribute("data-content-height")!)
             } as RequiredRuntimeOptions;
         }
     }

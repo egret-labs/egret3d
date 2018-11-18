@@ -42,10 +42,7 @@ namespace paper {
 
             for (const instance of this._disposeCollecter.releases) {
                 const instances = (instance.constructor as any)._instances as BaseRelease<any>[]; // TODO
-                if (instance.onClear) {
-                    instance.onClear();
-                }
-
+                instance.onClear && instance.onClear();
                 instances.push(instance);
             }
 

@@ -95,7 +95,7 @@ namespace egret3d.web {
                 Camera.current = camera;
 
                 for (const behaviour of drawCall.renderer.gameObject._beforeRenderBehaviors) {
-                    flag = !behaviour.onBeforeRender() || flag;
+                    flag = !behaviour.onBeforeRender!() || flag;
                 }
 
                 if (flag) {

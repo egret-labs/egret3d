@@ -39,7 +39,7 @@ namespace egret3d {
             this.stage.addChild(this.root);
 
             if (!this._renderer) {
-                this._renderer = egret.web.Renderer.getInstance(WebGLCapabilities.webgl);
+                this._renderer = egret.web.Renderer.getInstance(WebGLCapabilities.webgl!);
             }
 
             let stage = this.stage;
@@ -50,7 +50,7 @@ namespace egret3d {
             // TODO
             const webInput = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem)!.webInput;
             if (webInput) {
-                egret.web.$cacheTextAdapter(webInput, stage, WebGLCapabilities.canvas.parentNode as HTMLDivElement, WebGLCapabilities.canvas);
+                egret.web.$cacheTextAdapter(webInput, stage, WebGLCapabilities.canvas!.parentNode as HTMLDivElement, WebGLCapabilities.canvas);
             }
         }
 

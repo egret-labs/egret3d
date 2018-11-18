@@ -100,9 +100,10 @@ namespace paper {
     export function deprecated(version: string) {
         return (target: any, key: string, descriptor: PropertyDescriptor) => {
             const method = descriptor.value as Function;
-            descriptor.value = (...arg) => {
+            descriptor.value = (...arg: any[]) => {
+                // TODO 装饰动态、静态、getter setter 等。
                 console.warn(`${target.name}.${key}在${version}版本中已被废弃`);
-                return method.apply(this, arg);
+                return method.apply(descriptor, arg);
             };
         };
     }

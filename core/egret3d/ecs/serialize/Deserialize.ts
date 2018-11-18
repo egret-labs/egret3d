@@ -400,17 +400,19 @@ namespace paper {
                         }
                     }
                 }
+
                 //重新设置rootid的值
-                for (let uuid in this._prefabRootMap) {
-                    let rootDeser = this._deserializers[uuid];
-                    for (let key in rootDeser.objects) {
-                        let obj = rootDeser.objects[key]
+                for (const uuid in this._prefabRootMap) {
+                    const rootDeser = this._deserializers[uuid];
+
+                    for (const key in rootDeser.objects) {
+                        const obj = rootDeser.objects[key];
+
                         if (obj instanceof GameObject) {
-                            if (obj.extras.linkedID && obj.extras.rootID === this._prefabRootMap[uuid].rootUUID) {
-                                obj.extras.rootID = this._prefabRootMap[uuid].root.uuid;
+                            if (obj.extras!.linkedID && obj.extras!.rootID === this._prefabRootMap[uuid].rootUUID) {
+                                obj.extras!.rootID = this._prefabRootMap[uuid].root.uuid;
                             }
                         }
-
                     }
                 }
             }

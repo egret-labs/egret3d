@@ -147,7 +147,7 @@ namespace egret3d {
          * 将输入向量的反转结果写入该向量。
          * @param input 输入向量。
          */
-        public inverse(input: Readonly<IVector3>): this;
+        public inverse(input: Readonly<IVector4>): this;
         public inverse(input?: Readonly<IVector4>) {
             if (!input) {
                 input = this;
@@ -218,7 +218,7 @@ namespace egret3d {
                     p3 = p1;
                     p1 = this;
                 }
-                else { 
+                else {
                     const temp = p1;
                     p1 = p2;
                     p2 = p3;

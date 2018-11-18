@@ -274,12 +274,13 @@ namespace egret3d {
                 // TODO 差值三个顶点的法线，而不是使用三角形法线。或者可以选择使用使用三角形法线还是顶点法线。
                 const normals = this.getNormals()!;
                 const indices = this.getIndices();
+                const normal = raycastInfo!.normal!;
 
                 if (indices) {
-                    raycastInfo!.normal.fromArray(normals, indices[raycastInfo!.triangleIndex * 3] * 3);
+                    normal.fromArray(normals, indices[raycastInfo!.triangleIndex * 3] * 3);
                 }
                 else {
-                    raycastInfo!.normal.fromArray(normals, raycastInfo!.triangleIndex * 9);
+                    normal.fromArray(normals, raycastInfo!.triangleIndex * 9);
                 }
             }
 
@@ -380,7 +381,7 @@ namespace egret3d {
          * @param value 属性数据。
          * @param offset 顶点偏移。（默认从第一个点开始）
          */
-        public setAttributes(attributeType: gltf.MeshAttribute, value: Readonly<ArrayLike<number>>, offset: number = 0) {
+        public setAttributes(attributeType: gltf.MeshAttribute, value: ReadonlyArray<number>, offset: number = 0) {
             const target = this.getAttributes(attributeType, offset);
             if (target) {
                 for (let i = 0, l = Math.min(value.length, target.length); i < l; i++) {
@@ -414,7 +415,7 @@ namespace egret3d {
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
          * @param offset 索引偏移。（默认不偏移）
          */
-        public setIndices(value: Readonly<ArrayLike<number>>, subMeshIndex: number = 0, offset: number = 0) {
+        public setIndices(value: ReadonlyArray<number>, subMeshIndex: number = 0, offset: number = 0) {
             const target = this.getIndices(subMeshIndex);
             if (target) {
                 for (let i = 0, l = Math.min(value.length, target.length); i < l; i++) {

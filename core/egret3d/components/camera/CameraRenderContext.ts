@@ -137,16 +137,17 @@ namespace egret3d {
          * 所有非透明的, 按照从近到远排序
          */
         private _sortOpaque(a: DrawCall, b: DrawCall) {
-            const aMat = a.material;
-            const bMat = b.material;
-            if (aMat.renderQueue !== bMat.renderQueue) {
-                return aMat.renderQueue - bMat.renderQueue;
+            const materialA = a.material!;
+            const materialB = b.material!;
+
+            if (materialA.renderQueue !== materialB.renderQueue) {
+                return materialA.renderQueue - materialB.renderQueue;
             }
-            else if (aMat._glTFTechnique.program !== bMat._glTFTechnique.program) {
-                return aMat._glTFTechnique.program! - bMat._glTFTechnique.program!;
+            else if (materialA._glTFTechnique.program !== materialB._glTFTechnique.program) {
+                return materialA._glTFTechnique.program! - materialB._glTFTechnique.program!;
             }
-            else if (aMat._id !== bMat._id) {
-                return aMat._id - bMat._id;
+            else if (materialA._id !== materialB._id) {
+                return materialA._id - materialB._id;
             }
             else {
                 return a.zdist - b.zdist;
@@ -156,11 +157,14 @@ namespace egret3d {
          * 所有透明的，按照从远到近排序
          */
         private _sortFromFarToNear(a: DrawCall, b: DrawCall) {
-            if (a.material.renderQueue === b.material.renderQueue) {
+            const materialA = a.material!;
+            const materialB = b.material!;
+
+            if (materialA.renderQueue === materialB.renderQueue) {
                 return b.zdist - a.zdist;
             }
             else {
-                return a.material.renderQueue - b.material.renderQueue;
+                return materialA.renderQueue - materialB.renderQueue;
             }
         }
 
@@ -171,13 +175,13 @@ namespace egret3d {
             this.shadowCalls.length = 0;
 
             for (const drawCall of this._drawCallCollecter.drawCalls) {
-                const renderer = drawCall.renderer;
+                const renderer = drawCall!.renderer!;
                 if (
                     renderer.castShadows &&
                     (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
                     (!renderer.frustumCulled || camera.testFrustumCulling(renderer))
                 ) {
-                    this.shadowCalls.push(drawCall);
+                    this.shadowCalls.push(drawCall!);
                 }
             }
 
@@ -193,20 +197,20 @@ namespace egret3d {
             this.transparentCalls.length = 0;
 
             for (const drawCall of this._drawCallCollecter.drawCalls) {
-                const renderer = drawCall.renderer;
+                const renderer = drawCall!.renderer!;
                 if (
                     (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
                     (!renderer.frustumCulled || camera.testFrustumCulling(renderer))
                 ) {
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
-                    if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent) {
-                        this.transparentCalls.push(drawCall);
+                    if (drawCall!.material!.renderQueue >= paper.RenderQueue.Transparent) {
+                        this.transparentCalls.push(drawCall!);
                     }
                     else {
-                        this.opaqueCalls.push(drawCall);
+                        this.opaqueCalls.push(drawCall!);
                     }
 
-                    drawCall.zdist = renderer.gameObject.transform.position.getDistance(cameraPosition);
+                    drawCall!.zdist = renderer.gameObject.transform.position.getDistance(cameraPosition);
                 }
             }
 

@@ -54,7 +54,7 @@ namespace egret3d {
                 const vC = _helpVector3C;
                 const mA = _helpMatrix;
 
-                const mesh = this._mesh;
+                const mesh = this._mesh!;
                 const indices = mesh.getIndices()!;
                 const vertices = mesh.getVertices()!;
                 const joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array;

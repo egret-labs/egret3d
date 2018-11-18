@@ -8,7 +8,7 @@ namespace egret3d {
             {
                 componentClass: MeshFilter,
                 listeners: [{
-                    type: MeshFilter.onMeshChanged, listener: (component: MeshFilter) => {
+                    type: MeshFilter.onMeshChanged, listener: (component: paper.BaseComponent) => {
                         this._updateDrawCalls(component.gameObject);
 
                         if (component.gameObject.renderer) {
@@ -20,7 +20,7 @@ namespace egret3d {
             {
                 componentClass: MeshRenderer,
                 listeners: [{
-                    type: MeshRenderer.onMaterialsChanged, listener: (component: MeshRenderer) => {
+                    type: MeshRenderer.onMaterialsChanged, listener: (component: paper.BaseComponent) => {
                         this._updateDrawCalls(component.gameObject);
                     }
                 }]

@@ -506,8 +506,8 @@ namespace egret3d {
             if (rotation || scale) {
                 const helpVector3A = _helpVector3A;
                 let sx = helpVector3A.set(rawData[0], rawData[1], rawData[2]).length;
-                let sy = helpVector3A.set(rawData[4], rawData[5], rawData[6]).length;
-                let sz = helpVector3A.set(rawData[8], rawData[9], rawData[10]).length;
+                const sy = helpVector3A.set(rawData[4], rawData[5], rawData[6]).length;
+                const sz = helpVector3A.set(rawData[8], rawData[9], rawData[10]).length;
 
                 // if determine is negative, we need to invert one scale
                 const det = this.determinant;
@@ -579,7 +579,7 @@ namespace egret3d {
             rawData[13] = 0.0;
             rawData[14] = 0.0;
             rawData[15] = 1.0;
-            
+
             return this;
         }
         /**
@@ -815,7 +815,7 @@ namespace egret3d {
 
             for (let i = 0; i < 16; i++) {
                 const fV = p1.rawData[i];
-                this.rawData[i] = fV + (p2.rawData[i] - fV) * p3;
+                this.rawData[i] = fV + (p2.rawData[i] - fV) * <number>p3;
             }
 
             return this;
@@ -1068,10 +1068,8 @@ namespace egret3d {
 
             return out;
         }
-        /**
-         * @deprecated
-         */
-        public static perspectiveProjectLH(left: number, right: number, top: number, bottom: number, near: number, far: number, out: Matrix4): Matrix4 {
+
+        private static perspectiveProjectLH(left: number, right: number, top: number, bottom: number, near: number, far: number, out: Matrix4): Matrix4 {
             const x = 2 * near / (right - left);
             const y = 2 * near / (top - bottom);
             out.rawData[0] = x;
@@ -1089,14 +1087,12 @@ namespace egret3d {
 
             return out;
         }
-        /**
-         * @deprecated
-         */
-        public static orthographicProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix4): Matrix4 {
-            let hw = 2.0 / width;
-            let hh = 2.0 / height;
-            let id = 2.0 / (zfar - znear);
-            let nid = (znear + zfar) / (znear - zfar);
+
+        private static orthographicProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix4): Matrix4 {
+            const hw = 2.0 / width;
+            const hh = 2.0 / height;
+            const id = 2.0 / (zfar - znear);
+            const nid = (znear + zfar) / (znear - zfar);
 
             out.rawData[0] = hw;
             out.rawData[1] = 0;

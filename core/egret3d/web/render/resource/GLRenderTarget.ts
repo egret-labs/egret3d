@@ -81,6 +81,8 @@ namespace egret3d {
             this._renderbuffer = null;
             this.texture = null;
             this._fbo = null;
+
+            return true;
         }
 
         caclByteLength() {

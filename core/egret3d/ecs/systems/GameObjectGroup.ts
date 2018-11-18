@@ -127,7 +127,8 @@ namespace paper {
             this._interestConfig = interestConfig;
 
             for (const config of this._interestConfig) {
-                const isUnessential = config.type && (config.type & InterestType.Unessential) !== 0;
+                const isUnessential = (config.type !== undefined) && (config.type & InterestType.Unessential) !== 0;
+
                 if (Array.isArray(config.componentClass)) {
                     for (const componentClass of config.componentClass) {
                         this._addListener(componentClass, isUnessential);

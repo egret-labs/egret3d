@@ -18,7 +18,7 @@ namespace egret3d.web {
             // canvas.height = viewport.h * window.devicePixelRatio;
             canvas.style.top = (parentElement ? parentElement.offsetTop : 0) + "px";
             canvas.style.position = "absolute";
-            canvas.style[egret.web.getPrefixStyleName("transformOrigin")] = "0% 0% 0px";
+            canvas.style[egret.web.getPrefixStyleName("transformOrigin") as any] = "0% 0% 0px";
             // canvas.scale(window.devicePixelRatio, window.devicePixelRatio);
 
             if (stage.rotated) {
@@ -26,7 +26,7 @@ namespace egret3d.web {
                 // canvas.style.height = w + "px";
                 canvas.style.left = (parentElement ? parentElement.offsetLeft : 0) + screenSize.w + "px";
                 const transform = `matrix(0,${screenSize.h / canvas.width},${-screenSize.w / canvas.height},0,0,0)`;
-                canvas.style[egret.web.getPrefixStyleName("transform")] = transform;
+                canvas.style[egret.web.getPrefixStyleName("transform") as any] = transform;
             }
             else {
                 // canvas.style.width = w + "px";
@@ -34,7 +34,7 @@ namespace egret3d.web {
                 // canvas.style[egret.web.getPrefixStyleName("transform")] = null;
                 canvas.style.left = (parentElement ? parentElement.offsetLeft : 0) + "px";
                 const transform = `matrix(${screenSize.w / canvas.width},0,0,${screenSize.h / canvas.height},0,0)`;
-                canvas.style[egret.web.getPrefixStyleName("transform")] = transform;
+                canvas.style[egret.web.getPrefixStyleName("transform") as any] = transform;
             }
         }
 

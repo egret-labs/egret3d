@@ -53,7 +53,7 @@ namespace egret3d {
                 DefaultMeshes.FULLSCREEN_QUAD = mesh;
 
                 // 后期渲染专用，UV反转一下，这样shader中就不用反转了
-                const uvs = mesh.getUVs();
+                const uvs = mesh.getUVs()!;
                 for (let i = 1, l = uvs.length; i < l; i += 2) {
                     uvs[i] = 1.0 - uvs[i];
                 }

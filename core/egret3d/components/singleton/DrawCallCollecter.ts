@@ -24,7 +24,7 @@ namespace egret3d {
         /**
          * 此次绘制的世界矩阵。
          */
-        public matrix: Matrix4 | null = null;
+        public matrix: Matrix4 = null!;
         /**
          * 此次绘制的子网格索引。
          */
@@ -32,11 +32,11 @@ namespace egret3d {
         /**
          * 此次绘制的网格资源。
          */
-        public mesh: Mesh | null = null;
+        public mesh: Mesh = null!;
         /**
          * 此次绘制的材质资源。
          */
-        public material: Material | null = null;
+        public material: Material = null!;
         /**
          * 
          */
@@ -48,10 +48,10 @@ namespace egret3d {
 
         public onClear() {
             this.renderer = null;
-            this.matrix = null;
+            this.matrix = null!;
             this.subMeshIndex = -1;
-            this.mesh = null;
-            this.material = null;
+            this.mesh = null!;
+            this.material = null!;
             this.zdist = -1;
         }
     }
