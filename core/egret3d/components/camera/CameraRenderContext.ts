@@ -10,21 +10,6 @@ namespace egret3d {
      */
     export class CameraRenderContext {
         /**
-         * 进入渲染周期后缓存的相机世界坐标。
-         * @private
-         */
-        public readonly cameraPosition: Float32Array = new Float32Array(3);
-        /**
-         * 进入渲染周期后缓存的相机世界前方向。
-         * @private
-         */
-        public readonly cameraForward: Float32Array = new Float32Array(3);
-        /**
-         * 进入渲染周期后缓存的相机世界上方向。
-         * @private
-         */
-        public readonly cameraUp: Float32Array = new Float32Array(3);
-        /**
          * 
          */
         public readonly camera: Camera = null!;
@@ -78,23 +63,37 @@ namespace egret3d {
         private readonly _postProcessingCamera: Camera = null!;
         private readonly _postProcessDrawCall: DrawCall = DrawCall.create();
 
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
+        /**
+         * @internal
+         */
+        public readonly cameraPosition: Float32Array = new Float32Array(3);
+        /**
+         * @internal
+         */
+        public readonly cameraForward: Float32Array = new Float32Array(3);
+        /**
+         * @internal
+         */
+        public readonly cameraUp: Float32Array = new Float32Array(3);
         /**
          * 此帧的非透明绘制信息列表。
          * - 已进行视锥剔除的。
+         * @internal
          */
         public readonly opaqueCalls: DrawCall[] = [];
         /**
          * 此帧的透明绘制信息列表。
          * - 已进行视锥剔除的。
+         * @internal
          */
         public readonly transparentCalls: DrawCall[] = [];
         /**
          * 此帧的阴影绘制信息列表。
          * - 已进行视锥剔除的。
+         * @internal
          */
         public readonly shadowCalls: DrawCall[] = [];
-
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
         /**
          * 禁止实例化。
          */
@@ -168,9 +167,9 @@ namespace egret3d {
             }
         }
         /**
-         * TODO
+         * @internal
          */
-        public shadowFrustumCulling() {
+        public _shadowFrustumCulling() {
             const camera = this.camera;
             const cameraFrustum = camera.frustum;
             const shadowDrawCalls = this.shadowCalls;
@@ -190,9 +189,9 @@ namespace egret3d {
             shadowDrawCalls.sort(this._sortFromFarToNear);
         }
         /**
-         * TODO
+         * @internal
          */
-        public frustumCulling() {
+        public _frustumCulling() {
             const camera = this.camera;
             const cameraPosition = camera.gameObject.transform.position;
             const cameraFrustum = camera.frustum;
@@ -243,32 +242,17 @@ namespace egret3d {
         public updateCameraTransform() {
             const rawData = this.camera.cameraToWorldMatrix.rawData;
 
-            if (this.cameraPosition[0] !== rawData[12] ||
-                this.cameraPosition[1] !== rawData[13] ||
-                this.cameraPosition[2] !== rawData[14]
-            ) {
-                this.cameraPosition[0] = rawData[12];
-                this.cameraPosition[1] = rawData[13];
-                this.cameraPosition[2] = rawData[14];
-            }
+            this.cameraPosition[0] = rawData[12];
+            this.cameraPosition[1] = rawData[13];
+            this.cameraPosition[2] = rawData[14];
 
-            if (this.cameraUp[0] !== rawData[4] ||
-                this.cameraUp[1] !== rawData[5] ||
-                this.cameraUp[2] !== rawData[6]
-            ) {
-                this.cameraUp[0] = rawData[4];
-                this.cameraUp[1] = rawData[5];
-                this.cameraUp[2] = rawData[6];
-            }
+            this.cameraUp[0] = rawData[4];
+            this.cameraUp[1] = rawData[5];
+            this.cameraUp[2] = rawData[6];
 
-            if (this.cameraForward[0] !== rawData[8] ||
-                this.cameraForward[1] !== rawData[9] ||
-                this.cameraForward[2] !== rawData[10]
-            ) {
-                this.cameraForward[0] = -rawData[8];
-                this.cameraForward[1] = -rawData[9];
-                this.cameraForward[2] = -rawData[10];
-            }
+            this.cameraForward[0] = -rawData[8];
+            this.cameraForward[1] = -rawData[9];
+            this.cameraForward[2] = -rawData[10];
         }
 
         public updateLights(lights: ReadonlyArray<BaseLight>) {

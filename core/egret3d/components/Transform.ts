@@ -231,12 +231,12 @@ namespace egret3d {
 
         private _updateEuler(isWorldSpace: boolean, order?: EulerOrder) {
             if (isWorldSpace) {
-                this.localToWorldMatrix.toEuler(this._euler, order);
+                this.rotation.toEuler(this._euler, order);
                 this._eulerAngles.multiplyScalar(Const.RAD_DEG, this._euler);
                 this._worldDirty &= ~TransformDirty.Euler;
             }
             else {
-                this.localToParentMatrix.toEuler(this._localEuler, order);
+                this.localRotation.toEuler(this._localEuler, order);
                 this._localEulerAngles.multiplyScalar(Const.RAD_DEG, this._localEuler);
                 this._localDirty &= ~TransformDirty.Euler;
             }
@@ -737,9 +737,10 @@ namespace egret3d {
             return this._localScale;
         }
         public set localScale(value: Readonly<Vector3>) {
-            this._localScale.x = value.x;
-            this._localScale.y = value.y;
-            this._localScale.z = value.z;
+            // TODO
+            this._localScale.x = value.x || 0.000001;
+            this._localScale.y = value.y || 0.000001;
+            this._localScale.z = value.z || 0.000001;
 
             this._dirtify(true, TransformDirty.Scale);
         }

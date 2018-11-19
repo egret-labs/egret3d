@@ -1,19 +1,22 @@
 namespace egret3d {
     const enum DirtyMask {
-        ProjectionMatrix = 0b000001,
+        ProjectionMatrix = 0b00000001,
 
-        TransformMatrix = 0b000010,
+        TransformMatrix = 0b00000010,
 
-        ClipToWorldMatrix = 0b000100,
-        WorldToClipMatrix = 0b001000,
+        ClipToWorldMatrix = 0b00000100,
+        WorldToClipMatrix = 0b00001000,
 
-        PixelViewport = 0b010000,
-        FrustumCulling = 0b100000,
+        CullingMatrix = 0b00010000,
+
+        PixelViewport = 0b00100000,
+        CullingFrustum = 0b01000000,
 
         ClipMatrix = ClipToWorldMatrix | WorldToClipMatrix,
         ProjectionAndClipMatrix = ProjectionMatrix | ClipMatrix,
+        Culling = CullingMatrix | CullingFrustum,
 
-        All = ProjectionAndClipMatrix | PixelViewport | FrustumCulling,
+        All = ProjectionAndClipMatrix | PixelViewport | Culling,
     }
     /**
      * 相机组件。
@@ -28,7 +31,7 @@ namespace egret3d {
          * 当前场景的主相机。
          * - 如果没有则创建一个。
          */
-        public static get main() {
+        public static get main(): Camera {
             const scene = paper.Application.sceneManager.activeScene;
 
             let gameObject = scene.findWithTag(paper.DefaultTags.MainCamera);
@@ -51,7 +54,7 @@ namespace egret3d {
          * 编辑相机。
          * - 如果没有则创建一个。
          */
-        public static get editor() {
+        public static get editor(): Camera {
             let gameObject = paper.Application.sceneManager.editorScene.find(paper.DefaultNames.EditorCamera);
             if (!gameObject) {
                 gameObject = paper.GameObject.create(paper.DefaultNames.EditorCamera, paper.DefaultTags.EditorOnly, paper.Application.sceneManager.editorScene);
@@ -128,13 +131,9 @@ namespace egret3d {
          * @internal
          */
         public _update() {
-            if (this._dirtyMask & DirtyMask.FrustumCulling) {
-                this._frustum.fromMatrix(this.cullingMatrix);
-                this._dirtyMask &= ~DirtyMask.FrustumCulling;
-            }
+            this.context._frustumCulling();
 
             this.context.updateCameraTransform(); // TODO
-            this.context.frustumCulling(); // TODO
         }
 
         private _onStageResize(): void {
@@ -145,7 +144,7 @@ namespace egret3d {
             }
 
             if (!this._nativeCulling) {
-                this._dirtyMask |= DirtyMask.FrustumCulling;
+                this._dirtyMask |= DirtyMask.Culling;
             }
         }
 
@@ -167,6 +166,10 @@ namespace egret3d {
         public onTransformChange() {
             if (!this._nativeTransform) {
                 this._dirtyMask |= DirtyMask.ClipMatrix;
+
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
             }
         }
         /**
@@ -213,7 +216,7 @@ namespace egret3d {
          * @param worldPosition 世界坐标。
          * @param stagePosition 舞台坐标。
          */
-        public worldToStage(worldPosition: Readonly<IVector3>, stagePosition?: Vector3) {
+        public worldToStage(worldPosition: Readonly<IVector3>, stagePosition?: Vector3): Vector3 {
             if (!stagePosition) {
                 stagePosition = Vector3.create();
             }
@@ -234,7 +237,7 @@ namespace egret3d {
          * @param stageY 舞台垂直坐标。
          * @param ray 射线。
          */
-        public stageToRay(stageX: number, stageY: number, ray?: Ray) {
+        public stageToRay(stageX: number, stageY: number, ray?: Ray): Ray {
             if (!ray) {
                 ray = Ray.create();
             }
@@ -257,17 +260,29 @@ namespace egret3d {
 
             return ray;
         }
-
-        public resetCullingMatrix() {
+        /**
+         * 
+         */
+        public resetCullingMatrix(): this {
             this._nativeCulling = false;
-        }
 
-        public resetProjectionMatrix() {
+            return this;
+        }
+        /**
+         * 
+         */
+        public resetProjectionMatrix(): this {
             this._nativeProjection = false;
-        }
 
-        public resetWorldToCameraMatrix() {
+            return this;
+        }
+        /**
+         * 
+         */
+        public resetWorldToCameraMatrix(): this {
             this._nativeTransform = false;
+
+            return this;
         }
         /**
          * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间插值。
@@ -286,10 +301,10 @@ namespace egret3d {
 
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
-            }
 
-            if (!this._nativeCulling) {
-                this._dirtyMask |= DirtyMask.FrustumCulling;
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
             }
         }
         /**
@@ -314,10 +329,10 @@ namespace egret3d {
 
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
-            }
 
-            if (!this._nativeCulling) {
-                this._dirtyMask |= DirtyMask.FrustumCulling;
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
             }
         }
         /**
@@ -341,10 +356,10 @@ namespace egret3d {
 
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
-            }
 
-            if (!this._nativeCulling) {
-                this._dirtyMask |= DirtyMask.FrustumCulling;
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
             }
         }
         /**
@@ -364,10 +379,10 @@ namespace egret3d {
 
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
-            }
 
-            if (!this._nativeCulling) {
-                this._dirtyMask |= DirtyMask.FrustumCulling;
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
             }
         }
         /**
@@ -387,10 +402,10 @@ namespace egret3d {
 
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
-            }
 
-            if (!this._nativeCulling) {
-                this._dirtyMask |= DirtyMask.FrustumCulling;
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
             }
         }
         /**
@@ -439,8 +454,13 @@ namespace egret3d {
             viewport.h = viewport.h || 1.0;
 
             this._dirtyMask |= DirtyMask.PixelViewport;
+
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
+
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
             }
         }
         /**
@@ -476,24 +496,36 @@ namespace egret3d {
 
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
+
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
             }
         }
         /**
          * 
          */
         public get frustum(): Readonly<Frustum> {
+            if (this._dirtyMask & DirtyMask.CullingFrustum) {
+                this._frustum.fromMatrix(this.cullingMatrix);
+                this._dirtyMask &= ~DirtyMask.CullingFrustum;
+            }
             return this._frustum;
         }
         /**
-         * 该相机的裁切矩阵。
+         * 该相机在世界空间坐标系的裁切矩阵。
          */
         public get cullingMatrix(): Readonly<Matrix4> {
-            if (this._nativeCulling) {
-                return this._cullingMatrix;
+            if (!this._nativeCulling) {
+                if (this._dirtyMask & DirtyMask.CullingMatrix) {
+                    this._cullingMatrix.multiply(this.projectionMatrix, this.worldToCameraMatrix);
+                    this._dirtyMask &= ~DirtyMask.CullingMatrix;
+                }
             }
 
-            return this.projectionMatrix;
+            return this._cullingMatrix;
         }
+
         public set cullingMatrix(value: Readonly<Matrix4>) {
             const cullingMatrix = this._cullingMatrix;
             if (cullingMatrix !== value) {
@@ -501,7 +533,7 @@ namespace egret3d {
             }
 
             this._nativeCulling = true;
-            this._dirtyMask |= DirtyMask.FrustumCulling;
+            this._dirtyMask |= DirtyMask.CullingFrustum;
         }
         /**
          * 该相机的投影矩阵。
@@ -533,11 +565,10 @@ namespace egret3d {
 
             this._nativeProjection = true;
 
-            if (!this._nativeCulling) {
-                this._dirtyMask |= DirtyMask.FrustumCulling;
-            }
-
             this._dirtyMask |= DirtyMask.ClipMatrix;
+            if (!this._nativeCulling) {
+                this._dirtyMask |= DirtyMask.Culling;
+            }
         }
         /**
          * 从该相机空间坐标系到世界空间坐标系的变换矩阵。
@@ -573,8 +604,13 @@ namespace egret3d {
             this._nativeTransform = true;
 
             this._dirtyMask |= DirtyMask.TransformMatrix;
+
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
+            }
+
+            if (!this._nativeCulling) {
+                this._dirtyMask |= DirtyMask.Culling;
             }
         }
         /**
@@ -615,10 +651,10 @@ namespace egret3d {
 
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
-            }
 
-            if (!this._nativeCulling) {
-                this._dirtyMask |= DirtyMask.FrustumCulling;
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
             }
         }
         /**

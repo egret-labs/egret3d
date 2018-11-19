@@ -2685,7 +2685,7 @@ var egret3d;
                 var left = leftX + (leftY - leftX) * matchFactor;
                 var width = widthX + (widthY - widthX) * matchFactor;
                 var height = heightX + (heightY - heightX) * matchFactor;
-                Matrix4.perspectiveProjectLH(left, left + width, top_1, top_1 - height, near, far, this);
+                Matrix4._perspectiveProjectMatrix(left, left + width, top_1, top_1 - height, near, far, this);
             }
             if (opvalue < 1.0) {
                 var widthX = size * asp;
@@ -3198,18 +3198,18 @@ var egret3d;
             out.z = z;
             return out;
         };
-        Matrix4.perspectiveProjectLH = function (left, right, top, bottom, near, far, out) {
-            var x = 2 * near / (right - left);
-            var y = 2 * near / (top - bottom);
-            out.rawData[0] = x;
+        Matrix4._perspectiveProjectMatrix = function (left, right, top, bottom, near, far, out) {
+            var iDeltaZ = 1.0 / (near - far);
+            var doubleNear = 2.0 * near;
+            out.rawData[0] = doubleNear / (right - left);
             out.rawData[1] = out.rawData[2] = out.rawData[3] = 0.0;
             out.rawData[4] = out.rawData[6] = out.rawData[7] = 0.0;
-            out.rawData[5] = y;
+            out.rawData[5] = doubleNear / (top - bottom);
             out.rawData[8] = out.rawData[9] = 0.0;
-            out.rawData[10] = (far + near) / (far - near);
+            out.rawData[10] = (far + near) * -iDeltaZ;
             out.rawData[11] = 1.0;
             out.rawData[12] = out.rawData[13] = out.rawData[15] = 0.0;
-            out.rawData[14] = -2 * (near * far) / (far - near);
+            out.rawData[14] = doubleNear * far * iDeltaZ;
             return out;
         };
         Matrix4.orthographicProjectLH = function (width, height, znear, zfar, out) {
@@ -9270,12 +9270,12 @@ var egret3d;
         };
         Transform.prototype._updateEuler = function (isWorldSpace, order) {
             if (isWorldSpace) {
-                this.localToWorldMatrix.toEuler(this._euler, order);
+                this.rotation.toEuler(this._euler, order);
                 this._eulerAngles.multiplyScalar(57.29577951308232 /* RAD_DEG */, this._euler);
                 this._worldDirty &= ~8 /* Euler */;
             }
             else {
-                this.localToParentMatrix.toEuler(this._localEuler, order);
+                this.localRotation.toEuler(this._localEuler, order);
                 this._localEulerAngles.multiplyScalar(57.29577951308232 /* RAD_DEG */, this._localEuler);
                 this._localDirty &= ~8 /* Euler */;
             }
@@ -11945,11 +11945,13 @@ var egret3d;
         DirtyMask[DirtyMask["TransformMatrix"] = 2] = "TransformMatrix";
         DirtyMask[DirtyMask["ClipToWorldMatrix"] = 4] = "ClipToWorldMatrix";
         DirtyMask[DirtyMask["WorldToClipMatrix"] = 8] = "WorldToClipMatrix";
-        DirtyMask[DirtyMask["PixelViewport"] = 16] = "PixelViewport";
-        DirtyMask[DirtyMask["FrustumCulling"] = 32] = "FrustumCulling";
+        DirtyMask[DirtyMask["CullingMatrix"] = 16] = "CullingMatrix";
+        DirtyMask[DirtyMask["PixelViewport"] = 32] = "PixelViewport";
+        DirtyMask[DirtyMask["CullingFrustum"] = 64] = "CullingFrustum";
         DirtyMask[DirtyMask["ClipMatrix"] = 12] = "ClipMatrix";
         DirtyMask[DirtyMask["ProjectionAndClipMatrix"] = 13] = "ProjectionAndClipMatrix";
-        DirtyMask[DirtyMask["All"] = 61] = "All";
+        DirtyMask[DirtyMask["Culling"] = 80] = "Culling";
+        DirtyMask[DirtyMask["All"] = 125] = "All";
     })(DirtyMask || (DirtyMask = {}));
     /**
      * 相机组件。
@@ -11991,7 +11993,7 @@ var egret3d;
             _this._nativeCulling = false;
             _this._nativeProjection = false;
             _this._nativeTransform = false;
-            _this._dirtyMask = 61 /* All */;
+            _this._dirtyMask = 125 /* All */;
             _this._opvalue = 1.0;
             _this._fov = Math.PI * 0.25;
             _this._near = 0.3;
@@ -12058,20 +12060,16 @@ var egret3d;
          * @internal
          */
         Camera.prototype._update = function () {
-            if (this._dirtyMask & 32 /* FrustumCulling */) {
-                this._frustum.fromMatrix(this.cullingMatrix);
-                this._dirtyMask &= ~32 /* FrustumCulling */;
-            }
+            this.context._frustumCulling();
             this.context.updateCameraTransform(); // TODO
-            this.context.frustumCulling(); // TODO
         };
         Camera.prototype._onStageResize = function () {
-            this._dirtyMask |= 16 /* PixelViewport */;
+            this._dirtyMask |= 32 /* PixelViewport */;
             if (!this._nativeProjection) {
                 this._dirtyMask |= 13 /* ProjectionAndClipMatrix */;
             }
             if (!this._nativeCulling) {
-                this._dirtyMask |= 32 /* FrustumCulling */;
+                this._dirtyMask |= 80 /* Culling */;
             }
         };
         Camera.prototype.initialize = function () {
@@ -12088,6 +12086,9 @@ var egret3d;
         Camera.prototype.onTransformChange = function () {
             if (!this._nativeTransform) {
                 this._dirtyMask |= 12 /* ClipMatrix */;
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= 80 /* Culling */;
+                }
             }
         };
         /**
@@ -12178,9 +12179,9 @@ var egret3d;
                 this._opvalue = value;
                 if (!this._nativeProjection) {
                     this._dirtyMask |= 13 /* ProjectionAndClipMatrix */;
-                }
-                if (!this._nativeCulling) {
-                    this._dirtyMask |= 32 /* FrustumCulling */;
+                    if (!this._nativeCulling) {
+                        this._dirtyMask |= 80 /* Culling */;
+                    }
                 }
             },
             enumerable: true,
@@ -12204,9 +12205,9 @@ var egret3d;
                 this._near = value;
                 if (!this._nativeProjection) {
                     this._dirtyMask |= 13 /* ProjectionAndClipMatrix */;
-                }
-                if (!this._nativeCulling) {
-                    this._dirtyMask |= 32 /* FrustumCulling */;
+                    if (!this._nativeCulling) {
+                        this._dirtyMask |= 80 /* Culling */;
+                    }
                 }
             },
             enumerable: true,
@@ -12229,9 +12230,9 @@ var egret3d;
                 this._far = value;
                 if (!this._nativeProjection) {
                     this._dirtyMask |= 13 /* ProjectionAndClipMatrix */;
-                }
-                if (!this._nativeCulling) {
-                    this._dirtyMask |= 32 /* FrustumCulling */;
+                    if (!this._nativeCulling) {
+                        this._dirtyMask |= 80 /* Culling */;
+                    }
                 }
             },
             enumerable: true,
@@ -12251,9 +12252,9 @@ var egret3d;
                 this._fov = value;
                 if (!this._nativeProjection) {
                     this._dirtyMask |= 13 /* ProjectionAndClipMatrix */;
-                }
-                if (!this._nativeCulling) {
-                    this._dirtyMask |= 32 /* FrustumCulling */;
+                    if (!this._nativeCulling) {
+                        this._dirtyMask |= 80 /* Culling */;
+                    }
                 }
             },
             enumerable: true,
@@ -12273,9 +12274,9 @@ var egret3d;
                 this._size = value;
                 if (!this._nativeProjection) {
                     this._dirtyMask |= 13 /* ProjectionAndClipMatrix */;
-                }
-                if (!this._nativeCulling) {
-                    this._dirtyMask |= 32 /* FrustumCulling */;
+                    if (!this._nativeCulling) {
+                        this._dirtyMask |= 80 /* Culling */;
+                    }
                 }
             },
             enumerable: true,
@@ -12328,9 +12329,12 @@ var egret3d;
                 }
                 viewport.w = viewport.w || 1.0;
                 viewport.h = viewport.h || 1.0;
-                this._dirtyMask |= 16 /* PixelViewport */;
+                this._dirtyMask |= 32 /* PixelViewport */;
                 if (!this._nativeProjection) {
                     this._dirtyMask |= 13 /* ProjectionAndClipMatrix */;
+                    if (!this._nativeCulling) {
+                        this._dirtyMask |= 80 /* Culling */;
+                    }
                 }
             },
             enumerable: true,
@@ -12342,14 +12346,14 @@ var egret3d;
              */
             get: function () {
                 var pixelViewport = this._pixelViewport;
-                if (this._dirtyMask & 16 /* PixelViewport */) {
+                if (this._dirtyMask & 32 /* PixelViewport */) {
                     var _a = this.renderTargetSize, w = _a.w, h = _a.h;
                     var viewport = this._viewport;
                     pixelViewport.x = w * viewport.x;
                     pixelViewport.y = h * viewport.y;
                     pixelViewport.w = w * viewport.w;
                     pixelViewport.h = h * viewport.h;
-                    this._dirtyMask &= ~16 /* PixelViewport */;
+                    this._dirtyMask &= ~32 /* PixelViewport */;
                 }
                 return pixelViewport;
             },
@@ -12364,6 +12368,9 @@ var egret3d;
                 this._viewport.set(pixelViewport.x / w, pixelViewport.y / h, (pixelViewport.w || 1.0) / w, (pixelViewport.h || 1.0) / h);
                 if (!this._nativeProjection) {
                     this._dirtyMask |= 13 /* ProjectionAndClipMatrix */;
+                    if (!this._nativeCulling) {
+                        this._dirtyMask |= 80 /* Culling */;
+                    }
                 }
             },
             enumerable: true,
@@ -12374,6 +12381,10 @@ var egret3d;
              *
              */
             get: function () {
+                if (this._dirtyMask & 64 /* CullingFrustum */) {
+                    this._frustum.fromMatrix(this.cullingMatrix);
+                    this._dirtyMask &= ~64 /* CullingFrustum */;
+                }
                 return this._frustum;
             },
             enumerable: true,
@@ -12381,13 +12392,16 @@ var egret3d;
         });
         Object.defineProperty(Camera.prototype, "cullingMatrix", {
             /**
-             * 该相机的裁切矩阵。
+             * 该相机在世界空间坐标系的裁切矩阵。
              */
             get: function () {
-                if (this._nativeCulling) {
-                    return this._cullingMatrix;
+                if (!this._nativeCulling) {
+                    if (this._dirtyMask & 16 /* CullingMatrix */) {
+                        this._cullingMatrix.multiply(this.projectionMatrix, this.worldToCameraMatrix);
+                        this._dirtyMask &= ~16 /* CullingMatrix */;
+                    }
                 }
-                return this.projectionMatrix;
+                return this._cullingMatrix;
             },
             set: function (value) {
                 var cullingMatrix = this._cullingMatrix;
@@ -12395,7 +12409,7 @@ var egret3d;
                     cullingMatrix.copy(value);
                 }
                 this._nativeCulling = true;
-                this._dirtyMask |= 32 /* FrustumCulling */;
+                this._dirtyMask |= 64 /* CullingFrustum */;
             },
             enumerable: true,
             configurable: true
@@ -12421,10 +12435,10 @@ var egret3d;
                     projectionMatrix.copy(value);
                 }
                 this._nativeProjection = true;
-                if (!this._nativeCulling) {
-                    this._dirtyMask |= 32 /* FrustumCulling */;
-                }
                 this._dirtyMask |= 12 /* ClipMatrix */;
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= 80 /* Culling */;
+                }
             },
             enumerable: true,
             configurable: true
@@ -12465,6 +12479,9 @@ var egret3d;
                 this._dirtyMask |= 2 /* TransformMatrix */;
                 if (!this._nativeProjection) {
                     this._dirtyMask |= 13 /* ProjectionAndClipMatrix */;
+                }
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= 80 /* Culling */;
                 }
             },
             enumerable: true,
@@ -12513,9 +12530,9 @@ var egret3d;
                 this._renderTarget = value;
                 if (!this._nativeProjection) {
                     this._dirtyMask |= 13 /* ProjectionAndClipMatrix */;
-                }
-                if (!this._nativeCulling) {
-                    this._dirtyMask |= 32 /* FrustumCulling */;
+                    if (!this._nativeCulling) {
+                        this._dirtyMask |= 80 /* Culling */;
+                    }
                 }
             },
             enumerable: true,
@@ -12750,21 +12767,6 @@ var egret3d;
          */
         function CameraRenderContext(camera) {
             /**
-             * 进入渲染周期后缓存的相机世界坐标。
-             * @private
-             */
-            this.cameraPosition = new Float32Array(3);
-            /**
-             * 进入渲染周期后缓存的相机世界前方向。
-             * @private
-             */
-            this.cameraForward = new Float32Array(3);
-            /**
-             * 进入渲染周期后缓存的相机世界上方向。
-             * @private
-             */
-            this.cameraUp = new Float32Array(3);
-            /**
              *
              */
             this.camera = null;
@@ -12826,6 +12828,18 @@ var egret3d;
              */
             this.shadowCalls = [];
             this._drawCallCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.DrawCallCollecter);
+            /**
+             * @internal
+             */
+            this.cameraPosition = new Float32Array(3);
+            /**
+             * @internal
+             */
+            this.cameraForward = new Float32Array(3);
+            /**
+             * @internal
+             */
+            this.cameraUp = new Float32Array(3);
             this.camera = camera;
             {
                 var gameObjectName = "PostProcessing Camera";
@@ -12888,9 +12902,9 @@ var egret3d;
             }
         };
         /**
-         * TODO
+         * @internal
          */
-        CameraRenderContext.prototype.shadowFrustumCulling = function () {
+        CameraRenderContext.prototype._shadowFrustumCulling = function () {
             var camera = this.camera;
             var cameraFrustum = camera.frustum;
             var shadowDrawCalls = this.shadowCalls;
@@ -12907,9 +12921,9 @@ var egret3d;
             shadowDrawCalls.sort(this._sortFromFarToNear);
         };
         /**
-         * TODO
+         * @internal
          */
-        CameraRenderContext.prototype.frustumCulling = function () {
+        CameraRenderContext.prototype._frustumCulling = function () {
             var camera = this.camera;
             var cameraPosition = camera.gameObject.transform.position;
             var cameraFrustum = camera.frustum;
@@ -12952,27 +12966,15 @@ var egret3d;
         };
         CameraRenderContext.prototype.updateCameraTransform = function () {
             var rawData = this.camera.cameraToWorldMatrix.rawData;
-            if (this.cameraPosition[0] !== rawData[12] ||
-                this.cameraPosition[1] !== rawData[13] ||
-                this.cameraPosition[2] !== rawData[14]) {
-                this.cameraPosition[0] = rawData[12];
-                this.cameraPosition[1] = rawData[13];
-                this.cameraPosition[2] = rawData[14];
-            }
-            if (this.cameraUp[0] !== rawData[4] ||
-                this.cameraUp[1] !== rawData[5] ||
-                this.cameraUp[2] !== rawData[6]) {
-                this.cameraUp[0] = rawData[4];
-                this.cameraUp[1] = rawData[5];
-                this.cameraUp[2] = rawData[6];
-            }
-            if (this.cameraForward[0] !== rawData[8] ||
-                this.cameraForward[1] !== rawData[9] ||
-                this.cameraForward[2] !== rawData[10]) {
-                this.cameraForward[0] = -rawData[8];
-                this.cameraForward[1] = -rawData[9];
-                this.cameraForward[2] = -rawData[10];
-            }
+            this.cameraPosition[0] = rawData[12];
+            this.cameraPosition[1] = rawData[13];
+            this.cameraPosition[2] = rawData[14];
+            this.cameraUp[0] = rawData[4];
+            this.cameraUp[1] = rawData[5];
+            this.cameraUp[2] = rawData[6];
+            this.cameraForward[0] = -rawData[8];
+            this.cameraForward[1] = -rawData[9];
+            this.cameraForward[2] = -rawData[10];
         };
         CameraRenderContext.prototype.updateLights = function (lights) {
             var allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;

@@ -1525,7 +1525,7 @@ declare namespace egret3d {
          * @deprecated
          */
         transformNormal(value: Vector3, out?: Vector3): Vector3;
-        private static perspectiveProjectLH(left, right, top, bottom, near, far, out);
+        private static _perspectiveProjectMatrix(left, right, top, bottom, near, far, out);
         private static orthographicProjectLH(width, height, znear, zfar, out);
     }
 }
@@ -5776,7 +5776,7 @@ declare namespace egret3d {
          */
         readonly frustum: Readonly<Frustum>;
         /**
-         * 该相机的裁切矩阵。
+         * 该相机在世界空间坐标系的裁切矩阵。
          */
         cullingMatrix: Readonly<Matrix4>;
         /**
@@ -5866,21 +5866,6 @@ declare namespace egret3d {
      */
     class CameraRenderContext {
         /**
-         * 进入渲染周期后缓存的相机世界坐标。
-         * @private
-         */
-        readonly cameraPosition: Float32Array;
-        /**
-         * 进入渲染周期后缓存的相机世界前方向。
-         * @private
-         */
-        readonly cameraForward: Float32Array;
-        /**
-         * 进入渲染周期后缓存的相机世界上方向。
-         * @private
-         */
-        readonly cameraUp: Float32Array;
-        /**
          *
          */
         readonly camera: Camera;
@@ -5950,14 +5935,6 @@ declare namespace egret3d {
          * 所有透明的，按照从远到近排序
          */
         private _sortFromFarToNear(a, b);
-        /**
-         * TODO
-         */
-        shadowFrustumCulling(): void;
-        /**
-         * TODO
-         */
-        frustumCulling(): void;
         blit(src: Texture, material?: Material | null, dest?: BaseRenderTarget | null): void;
         updateCameraTransform(): void;
         updateLights(lights: ReadonlyArray<BaseLight>): void;

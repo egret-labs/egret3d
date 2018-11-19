@@ -411,7 +411,7 @@ namespace egret3d {
                 const width = widthX + (widthY - widthX) * matchFactor;
                 const height = heightX + (heightY - heightX) * matchFactor;
 
-                Matrix4.perspectiveProjectLH(left, left + width, top, top - height, near, far, this);
+                Matrix4._perspectiveProjectMatrix(left, left + width, top, top - height, near, far, this);
             }
 
             if (opvalue < 1.0) {
@@ -875,6 +875,7 @@ namespace egret3d {
             if (!euler) {
                 euler = Vector3.create();
             }
+
             // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
             const rawData = this.rawData;
             const m11 = rawData[0], m12 = rawData[4], m13 = rawData[8];
@@ -1069,21 +1070,22 @@ namespace egret3d {
             return out;
         }
 
-        private static perspectiveProjectLH(left: number, right: number, top: number, bottom: number, near: number, far: number, out: Matrix4): Matrix4 {
-            const x = 2 * near / (right - left);
-            const y = 2 * near / (top - bottom);
-            out.rawData[0] = x;
+        private static _perspectiveProjectMatrix(left: number, right: number, top: number, bottom: number, near: number, far: number, out: Matrix4): Matrix4 {
+            const iDeltaZ = 1.0 / (near - far);
+            const doubleNear = 2.0 * near;
+
+            out.rawData[0] = doubleNear / (right - left);
             out.rawData[1] = out.rawData[2] = out.rawData[3] = 0.0;
 
             out.rawData[4] = out.rawData[6] = out.rawData[7] = 0.0;
-            out.rawData[5] = y;
+            out.rawData[5] = doubleNear / (top - bottom);
 
             out.rawData[8] = out.rawData[9] = 0.0;
-            out.rawData[10] = (far + near) / (far - near);
+            out.rawData[10] = (far + near) * -iDeltaZ;
             out.rawData[11] = 1.0;
 
             out.rawData[12] = out.rawData[13] = out.rawData[15] = 0.0;
-            out.rawData[14] = -2 * (near * far) / (far - near);
+            out.rawData[14] = doubleNear * far * iDeltaZ;
 
             return out;
         }
