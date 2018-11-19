@@ -82,7 +82,7 @@ namespace paper.editor {
                 const pickY = EditorMeshHelper.createGameObject("Y", egret3d.MeshBuilder.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const pickZ = EditorMeshHelper.createGameObject("Z", egret3d.MeshBuilder.createTorus(1.0, 0.1, 4, 12, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                 const pickE = EditorMeshHelper.createGameObject("E", egret3d.MeshBuilder.createTorus(1.25, 0.1, 4, 24, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                const pickXYZE = EditorMeshHelper.createGameObject("XYZE", egret3d.MeshBuilder.createSphere(0.7, 10, 8), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                const pickXYZE = EditorMeshHelper.createGameObject("XYZE", egret3d.MeshBuilder.createSphere(1, 0, 0), egret3d.DefaultMaterials.MESH_BASIC.clone());
 
                 this._highlights[pickX.uuid] = [axisX];
                 this._highlights[pickY.uuid] = [axisY];
@@ -585,7 +585,7 @@ namespace paper.editor {
                         material.opacity = 1.0;
                     }
                     else {
-                        material.opacity = 0.2;
+                        material.opacity = 0.3;
                     }
                 }
             }
