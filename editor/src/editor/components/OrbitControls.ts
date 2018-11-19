@@ -6,8 +6,7 @@ namespace paper.editor {
     export class OrbitControls extends Behaviour {
         public lookAtPoint: egret3d.Vector3 = egret3d.Vector3.create(0.0, 0.0, 0.0);
         public lookAtOffset: egret3d.Vector3 = egret3d.Vector3.create();
-        private defaultDistance: number = 30;
-        public distance: number = this.defaultDistance;
+        public distance: number = 30;
 
         public minPanAngle: number = -Infinity;
         public maxPanAngle: number = Infinity;
@@ -140,8 +139,8 @@ namespace paper.editor {
         }
 
         private _mouseWheelHandler = (event: WheelEvent) => {
-            let wheelDelta = event.wheelDelta > 0 ? 2 : -2;
-            wheelDelta *= this.distance / this.defaultDistance;
+            let wheelDelta = event.wheelDelta > 0 ? 0.1 : -0.1;
+            wheelDelta *= this.distance
             this.distance = Math.max(this.distance - wheelDelta, 1);
             event.preventDefault();
         }
