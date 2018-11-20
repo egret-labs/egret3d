@@ -466,11 +466,22 @@ namespace egret3d.web {
                 this._render(camera, camera.renderTarget);
             }
             else {
-                this._render(camera, camera.postProcessingRenderTarget);
+                //TODO这里为空了
+                if(!camera._readRenderTarget){
+                    camera._readRenderTarget = new GlRenderTarget("builtin/post_processing1.image.json", stage.viewport.w, stage.viewport.h, true); 
+                }
+                if(!camera._writeRenderTarget){
+                    camera._writeRenderTarget = new GlRenderTarget("builtin/post_processing1.image.json", stage.viewport.w, stage.viewport.h, true); 
+                }
+                this._render(camera, camera._readRenderTarget);
 
                 for (const postEffect of camera.postQueues) {
                     postEffect.render(camera);
                 }
+
+                const temp = camera._readRenderTarget;
+                camera._readRenderTarget = camera._writeRenderTarget;
+                camera._writeRenderTarget = temp;
             }
         }
 

@@ -85,13 +85,13 @@ namespace paper.editor {
 
             if (valueEditType !== null) {
                 let newPropertyData = {
-                    propName,
+                    propName:[propName],
                     copyValue: this.serializeProperty(propNewValue, valueEditType),
                     valueEditType
                 };
 
                 let prePropertyData = {
-                    propName,
+                    propName:[propName],
                     copyValue: this.serializeProperty(propOldValue, valueEditType),
                     valueEditType
                 };
@@ -785,54 +785,25 @@ namespace paper.editor {
 
         public async modifyMaterialPropertyValues(target: egret3d.Material, valueList: any[]): Promise<void> {
             for (const propertyValue of valueList) {
-                const { propName, copyValue, uniformType } = propertyValue;
+                const { propName, copyValue, extraData } = propertyValue;
 
-                switch (uniformType) {
-                    case gltf.UniformType.BOOL:
-                        target.setBoolean(propName, copyValue);
-                        break;
-                    case gltf.UniformType.INT:
-                        target.setInt(propName, copyValue);
-                    case gltf.UniformType.FLOAT:
-                        target.setFloat(propName, copyValue);
-                        break;
-                    case gltf.UniformType.BOOL_VEC2:
-                    case gltf.UniformType.INT_VEC2:
-                    case gltf.UniformType.FLOAT_VEC2:
-                        target.setVector2v(propName, copyValue);
-                        break;
-                    case gltf.UniformType.BOOL_VEC3:
-                    case gltf.UniformType.INT_VEC3:
-                    case gltf.UniformType.FLOAT_VEC3:
-                        target.setVector3v(propName, copyValue);
-                        break;
-                    case gltf.UniformType.BOOL_VEC4:
-                    case gltf.UniformType.INT_VEC4:
-                    case gltf.UniformType.FLOAT_VEC4:
-                        target.setVector4v(propName, copyValue);
-                        break;
-                    case gltf.UniformType.SAMPLER_2D:
-                        target.setTexture(propName, copyValue);
-                        break;
-                    case gltf.UniformType.FLOAT_MAT2:
-                    case gltf.UniformType.FLOAT_MAT3:
-                    case gltf.UniformType.FLOAT_MAT4:
-                        target.setMatrixv(propName, copyValue);
-                        break;
-                    default:
-                        break;
+                if (extraData.uniformType) {
+                    this.modifyMaterialUniformProperty(target,extraData.uniformType,propName,copyValue);
+                }else if(extraData.gltfStateConfig){
+                    this.modifyMaterialGltfStates(target,propName,copyValue);
                 }
 
                 if (propName === "renderQueue") {
                     (target.config.materials![0] as egret3d.GLTFMaterial).extensions.paper.renderQueue = copyValue;
                 }
 
-                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: copyValue }));
+                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: [propName], propValue: copyValue }));
             }
 
+            //modify gltf config
             const _glTFMaterial = target.config.materials![0] as egret3d.GLTFMaterial;
             const gltfUnifromMap = _glTFMaterial.extensions.KHR_techniques_webgl.values!;
-            const uniformMap = target._glTFTechnique.uniforms;
+            const uniformMap = target.glTFTechnique.uniforms;
             for (const key in uniformMap) {
                 if (uniformMap[key].semantic === undefined) {
                     const value = uniformMap[key].value;
@@ -849,6 +820,54 @@ namespace paper.editor {
             }
         }
 
+        private modifyMaterialUniformProperty(target: egret3d.Material,uniformType:gltf.UniformType,propName:string,copyValue:any)
+        {
+            switch (uniformType) {
+                case gltf.UniformType.BOOL:
+                    target.setBoolean(propName, copyValue);
+                    break;
+                case gltf.UniformType.INT:
+                    target.setInt(propName, copyValue);
+                case gltf.UniformType.FLOAT:
+                    target.setFloat(propName, copyValue);
+                    break;
+                case gltf.UniformType.BOOL_VEC2:
+                case gltf.UniformType.INT_VEC2:
+                case gltf.UniformType.FLOAT_VEC2:
+                    target.setVector2v(propName, copyValue);
+                    break;
+                case gltf.UniformType.BOOL_VEC3:
+                case gltf.UniformType.INT_VEC3:
+                case gltf.UniformType.FLOAT_VEC3:
+                    target.setVector3v(propName, copyValue);
+                    break;
+                case gltf.UniformType.BOOL_VEC4:
+                case gltf.UniformType.INT_VEC4:
+                case gltf.UniformType.FLOAT_VEC4:
+                    target.setVector4v(propName, copyValue);
+                    break;
+                case gltf.UniformType.SAMPLER_2D:
+                    target.setTexture(propName, copyValue);
+                    break;
+                case gltf.UniformType.FLOAT_MAT2:
+                case gltf.UniformType.FLOAT_MAT3:
+                case gltf.UniformType.FLOAT_MAT4:
+                    target.setMatrixv(propName, copyValue);
+                    break;
+                default:
+                    break;
+            }
+        }
 
+        private modifyMaterialGltfStates(target:egret3d.Material,propName:string,copyValue:any)
+        {
+            if (propName === "enable") {
+                target.glTFTechnique.states!.enable = copyValue;
+            }else{
+                target.glTFTechnique.states!.functions![propName] = copyValue;
+            }
+
+            (target.config.materials![0] as egret3d.GLTFMaterial).extensions.paper.states = target.glTFTechnique.states;
+        }
     }
 }

@@ -10,8 +10,8 @@ namespace paper.editor {
 
         public minPanAngle: number = -Infinity;
         public maxPanAngle: number = Infinity;
-        public minTileAngle: number = -90;
-        public maxTileAngle: number = 90;
+        public minTileAngle: number = -89.9999999;
+        public maxTileAngle: number = 89.9999999;
 
         public moveSpped: number = 0.001;
         public scaleSpeed: number = 0.2;
@@ -139,7 +139,9 @@ namespace paper.editor {
         }
 
         private _mouseWheelHandler = (event: WheelEvent) => {
-            this.distance = Math.max(this.distance - (event.wheelDelta > 0 ? 2 : -2), 1);
+            let wheelDelta = event.wheelDelta > 0 ? 0.1 : -0.1;
+            wheelDelta *= this.distance
+            this.distance = Math.max(this.distance - wheelDelta, 1);
             event.preventDefault();
         }
 
