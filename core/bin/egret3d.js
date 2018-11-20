@@ -6672,15 +6672,20 @@ var egret3d;
                 subMeshIndex++;
             }
             if (hit && raycastInfo.normal) {
-                // TODO 差值三个顶点的法线，而不是使用三角形法线。或者可以选择使用使用三角形法线还是顶点法线。
-                var normals = this.getNormals();
-                var indices = this.getIndices();
                 var normal = raycastInfo.normal;
-                if (indices) {
-                    normal.fromArray(normals, indices[raycastInfo.triangleIndex * 3] * 3);
+                var normals = this.getNormals();
+                if (normals) {
+                    // TODO 三顶点的法线插值。
+                    var indices = this.getIndices();
+                    if (indices) {
+                        normal.fromArray(normals, indices[raycastInfo.triangleIndex * 3] * 3);
+                    }
+                    else {
+                        normal.fromArray(normals, raycastInfo.triangleIndex * 9);
+                    }
                 }
                 else {
-                    normal.fromArray(normals, raycastInfo.triangleIndex * 9);
+                    helpTriangleB.getNormal(normal);
                 }
             }
             return hit;
@@ -9688,9 +9693,10 @@ var egret3d;
                 return this._localScale;
             },
             set: function (value) {
-                this._localScale.x = value.x;
-                this._localScale.y = value.y;
-                this._localScale.z = value.z;
+                // TODO
+                this._localScale.x = value.x || 0.000001;
+                this._localScale.y = value.y || 0.000001;
+                this._localScale.z = value.z || 0.000001;
                 this._dirtify(true, 4 /* Scale */);
             },
             enumerable: true,
@@ -12156,14 +12162,26 @@ var egret3d;
             ray.direction.set(stageX * kX - 1.0, 1.0 - stageY * kY, 1.0).applyMatrix(clipToWorldMatrix).subtract(ray.origin).normalize();
             return ray;
         };
+        /**
+         *
+         */
         Camera.prototype.resetCullingMatrix = function () {
             this._nativeCulling = false;
+            return this;
         };
+        /**
+         *
+         */
         Camera.prototype.resetProjectionMatrix = function () {
             this._nativeProjection = false;
+            return this;
         };
+        /**
+         *
+         */
         Camera.prototype.resetWorldToCameraMatrix = function () {
             this._nativeTransform = false;
+            return this;
         };
         Object.defineProperty(Camera.prototype, "opvalue", {
             /**
@@ -12812,21 +12830,6 @@ var egret3d;
             this.fogColor = new Float32Array(3);
             this._postProcessingCamera = null;
             this._postProcessDrawCall = egret3d.DrawCall.create();
-            /**
-             * 此帧的非透明绘制信息列表。
-             * - 已进行视锥剔除的。
-             */
-            this.opaqueCalls = [];
-            /**
-             * 此帧的透明绘制信息列表。
-             * - 已进行视锥剔除的。
-             */
-            this.transparentCalls = [];
-            /**
-             * 此帧的阴影绘制信息列表。
-             * - 已进行视锥剔除的。
-             */
-            this.shadowCalls = [];
             this._drawCallCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.DrawCallCollecter);
             /**
              * @internal
@@ -12840,6 +12843,24 @@ var egret3d;
              * @internal
              */
             this.cameraUp = new Float32Array(3);
+            /**
+             * 此帧的非透明绘制信息列表。
+             * - 已进行视锥剔除的。
+             * @internal
+             */
+            this.opaqueCalls = [];
+            /**
+             * 此帧的透明绘制信息列表。
+             * - 已进行视锥剔除的。
+             * @internal
+             */
+            this.transparentCalls = [];
+            /**
+             * 此帧的阴影绘制信息列表。
+             * - 已进行视锥剔除的。
+             * @internal
+             */
+            this.shadowCalls = [];
             this.camera = camera;
             {
                 var gameObjectName = "PostProcessing Camera";
@@ -24437,7 +24458,7 @@ var egret3d;
                 var screenWidth = isWX ? window.innerWidth : this._canvas.parentElement.clientWidth;
                 var screenHeight = isWX ? window.innerHeight : this._canvas.parentElement.clientHeight;
                 globalGameObject.addComponent(egret3d.Stage, {
-                    size: { w: config.option.contentWidth, h: config.option.contentHeight },
+                    size: { w: config.contentWidth, h: config.contentHeight },
                     screenSize: { w: screenWidth, h: screenHeight },
                 });
                 globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities, false, config); // TODO 下放到渲染系统初始化，但贴图对 webgl 有依赖。
@@ -25559,17 +25580,46 @@ var egret3d;
      * 引擎启动入口
      */
     function runEgret(options) {
-        if (options === void 0) { options = { antialias: false, alpha: false }; }
+        if (!options) {
+            options = {};
+        }
         console.info("Egret version:", paper.Application.version);
         console.info("Egret start.");
         // TODO
         egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
         egret.Capabilities["renderMode" + ""] = "webgl";
-        var requiredOptions = getOptions(options);
         var canvas = getMainCanvas(options);
-        options.option = requiredOptions;
+        if (options.alpha === undefined) {
+            options.alpha = false;
+        }
+        if (options.antialias === undefined) {
+            options.antialias = true;
+        }
+        if (options.antialiasSamples === undefined) {
+            options.antialiasSamples = 4;
+        }
+        if (options.contentWidth === undefined) {
+            var defaultWidth = 1136;
+            if (window.canvas) {
+                options.contentWidth = defaultWidth;
+            }
+            else {
+                var div = document.getElementsByClassName("egret-player")[0];
+                options.contentWidth = parseInt(div.getAttribute("data-content-width")) || defaultWidth;
+            }
+        }
+        if (options.contentHeight === undefined) {
+            var defaultHeight = 640;
+            if (window.canvas) {
+                options.contentHeight = defaultHeight;
+            }
+            else {
+                var div = document.getElementsByClassName("egret-player")[0];
+                options.contentHeight = parseInt(div.getAttribute("data-content-height")) || defaultHeight;
+            }
+        }
         options.canvas = canvas;
-        options.webgl = canvas.getContext('webgl', options) || canvas.getContext("experimental-webgl", options);
+        options.webgl = canvas.getContext("webgl", options) || canvas.getContext("experimental-webgl", options);
         paper.Application.initialize(options);
         var systemManager = paper.Application.systemManager;
         systemManager.register(egret3d.web.BeginSystem, 0 /* Begin */, options);
@@ -25599,25 +25649,6 @@ var egret3d;
             var canvas = document.createElement("canvas");
             div.appendChild(canvas);
             return canvas;
-        }
-    }
-    function getOptions(options) {
-        if (window.canvas) {
-            return {
-                antialias: options.antialias,
-                antialiasSamples: 4,
-                contentWidth: options.contentWidth || 640,
-                contentHeight: options.contentHeight || 1136
-            };
-        }
-        else {
-            var div = document.getElementsByClassName("egret-player")[0];
-            return {
-                antialias: options.antialias,
-                antialiasSamples: 4,
-                contentWidth: parseInt(div.getAttribute("data-content-width")),
-                contentHeight: parseInt(div.getAttribute("data-content-height"))
-            };
         }
     }
 })(egret3d || (egret3d = {}));

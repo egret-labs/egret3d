@@ -601,8 +601,7 @@ namespace egret3d {
                 worldToCameraMatrix.copy(value);
             }
 
-            this._nativeTransform = true;
-
+            this._nativeTransform = true; 
             this._dirtyMask |= DirtyMask.TransformMatrix;
 
             if (!this._nativeProjection) {

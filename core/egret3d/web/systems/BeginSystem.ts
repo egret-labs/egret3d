@@ -47,7 +47,7 @@ namespace egret3d.web {
             const screenHeight = isWX ? window.innerHeight : this._canvas.parentElement!.clientHeight;
 
             globalGameObject.addComponent(Stage, {
-                size: { w: config.option!.contentWidth, h: config.option!.contentHeight },
+                size: { w: config.contentWidth!, h: config.contentHeight! },
                 screenSize: { w: screenWidth, h: screenHeight },
             });
 

@@ -271,16 +271,22 @@ namespace egret3d {
             }
 
             if (hit && raycastInfo!.normal) {
-                // TODO 差值三个顶点的法线，而不是使用三角形法线。或者可以选择使用使用三角形法线还是顶点法线。
-                const normals = this.getNormals()!;
-                const indices = this.getIndices();
                 const normal = raycastInfo!.normal!;
+                const normals = this.getNormals();
 
-                if (indices) {
-                    normal.fromArray(normals, indices[raycastInfo!.triangleIndex * 3] * 3);
+                if (normals) {
+                    // TODO 三顶点的法线插值。
+                    const indices = this.getIndices();
+
+                    if (indices) {
+                        normal.fromArray(normals, indices[raycastInfo!.triangleIndex * 3] * 3);
+                    }
+                    else {
+                        normal.fromArray(normals, raycastInfo!.triangleIndex * 9);
+                    }
                 }
-                else {
-                    normal.fromArray(normals, raycastInfo!.triangleIndex * 9);
+                else { 
+                    helpTriangleB.getNormal(normal);
                 }
             }
 

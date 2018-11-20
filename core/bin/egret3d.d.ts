@@ -5731,9 +5731,18 @@ declare namespace egret3d {
          * @param ray 射线。
          */
         stageToRay(stageX: number, stageY: number, ray?: Ray): Ray;
-        resetCullingMatrix(): void;
-        resetProjectionMatrix(): void;
-        resetWorldToCameraMatrix(): void;
+        /**
+         *
+         */
+        resetCullingMatrix(): this;
+        /**
+         *
+         */
+        resetProjectionMatrix(): this;
+        /**
+         *
+         */
+        resetWorldToCameraMatrix(): this;
         /**
          * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间插值。
          */
@@ -5907,21 +5916,6 @@ declare namespace egret3d {
         readonly fogColor: Float32Array;
         private readonly _postProcessingCamera;
         private readonly _postProcessDrawCall;
-        /**
-         * 此帧的非透明绘制信息列表。
-         * - 已进行视锥剔除的。
-         */
-        readonly opaqueCalls: DrawCall[];
-        /**
-         * 此帧的透明绘制信息列表。
-         * - 已进行视锥剔除的。
-         */
-        readonly transparentCalls: DrawCall[];
-        /**
-         * 此帧的阴影绘制信息列表。
-         * - 已进行视锥剔除的。
-         */
-        readonly shadowCalls: DrawCall[];
         private readonly _drawCallCollecter;
         /**
          * 禁止实例化。
@@ -11693,22 +11687,17 @@ declare namespace egret3d {
          */
         contentHeight?: number;
         /**
-         * 是否开启抗锯齿，默认关闭。
+         * 是否开启抗锯齿，默认开启。
          */
-        antialias: boolean;
+        antialias?: boolean;
         /**
          * 是否与画布背景色混合，默认不混合。
          */
-        alpha: boolean;
-        option?: RequiredRuntimeOptions;
+        alpha?: boolean;
+        antialiasSamples?: number;
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
         playerMode?: paper.PlayerMode;
-    };
-    type RequiredRuntimeOptions = {
-        antialias: boolean;
-        contentWidth: number;
-        contentHeight: number;
     };
     /**
      * 引擎启动入口
