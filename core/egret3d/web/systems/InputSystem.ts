@@ -473,7 +473,7 @@ namespace egret3d.web {
             // Context menu event.
             window.addEventListener("contextmenu", this._onContextMenu);
             // Mouse wheel event.
-            canvas.addEventListener("mousewheel", this._onMouseWheelEvent);
+            canvas.addEventListener("mousewheel", this._onMouseWheelEvent as any);
             // Key events.
             window.addEventListener("keydown", this._onKeyEvent);
             window.addEventListener("keyup", this._onKeyEvent);
@@ -501,7 +501,7 @@ namespace egret3d.web {
             // Context menu event.
             window.removeEventListener("contextmenu", this._onContextMenu);
             // Mouse wheel event.
-            canvas.removeEventListener("mousewheel", this._onMouseWheelEvent);
+            canvas.removeEventListener("mousewheel", this._onMouseWheelEvent as any);
             // Key events.
             window.removeEventListener("keydown", this._onKeyEvent);
             window.removeEventListener("keyup", this._onKeyEvent);

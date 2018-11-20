@@ -152,7 +152,7 @@ namespace egret3d {
         }
 
         public recalculateLocalBox() {
-            // TODO 蒙皮网格的 aabb 需要能自定义。
+            // TODO 蒙皮网格的 aabb 需要能自定义，或者强制更新。
             if (this._mesh) {
                 this._localBoundingBox.clear();
 
@@ -200,6 +200,59 @@ namespace egret3d {
             }
 
             return false;
+        }
+        /**
+         * 实时获取网格资源的指定三角形顶点位置。
+         * - 采用 CPU 蒙皮。
+         */
+        public getTriangle(triangleIndex: uint, triangle?: Triangle): Triangle {
+            if (!triangle) {
+                triangle = Triangle.create();
+            }
+
+            const mesh = this._mesh!;
+            const indices = mesh.getIndices()!;
+            const vertices = mesh._rawVertices || mesh.getVertices()!;
+            const joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)!;
+            const weights = mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)!;
+            const boneMatrices = this.boneMatrices!;
+            const vA = _helpVector3A;
+            const vB = _helpVector3B;
+            const vC = _helpVector3C;
+
+            for (let i = 0; i < 3; ++i) {
+                const index = indices[triangleIndex * 3 + i];
+                const vertexIndex = index * 3;
+                const jointIndex = index * 4;
+
+                vA.fromArray(vertices, vertexIndex);
+                vB.clear();
+
+                for (let i = 0; i < 4; ++i) {
+                    const weight = weights![jointIndex + i];
+                    if (weight <= 0.0) {
+                        continue;
+                    }
+
+                    vB.add(vC.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + i] * 16), vA).multiplyScalar(weight));
+                }
+
+                switch (i) {
+                    case 0:
+                        triangle.a.copy(vB);
+                        break;
+
+                    case 1:
+                        triangle.b.copy(vB);
+                        break;
+
+                    case 2:
+                        triangle.c.copy(vB);
+                        break;
+                }
+            }
+
+            return triangle;
         }
         /**
          * 该渲染组件的骨骼列表。

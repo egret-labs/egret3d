@@ -27,7 +27,10 @@ namespace egret3d {
          * @internal
          */
         public _rawVertices: Float32Array | null = null;
-        private _skinnedVertices: Float32Array | null = null;
+        /**
+         * @internal
+         */
+        public _skinnedVertices: Float32Array | null = null;
         /**
          * 请使用 `egret3d.Mesh.create()` 创建实例。
          * @see egret3d.Mesh.create()
@@ -285,7 +288,7 @@ namespace egret3d {
                         normal.fromArray(normals, raycastInfo!.triangleIndex * 9);
                     }
                 }
-                else { 
+                else {
                     helpTriangleB.getNormal(normal);
                 }
             }
