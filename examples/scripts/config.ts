@@ -76,8 +76,7 @@ const config: ResourceManagerConfig = {
                         nameSelector,
                         groupSelector: p => null
                     }),
-
-                    new CompilePlugin({ libraryType: "release" }),
+                    new CompilePlugin({ libraryType: "release", defines: { RELEASE: true, DEBUG: false } }),
                     new ExmlPlugin("commonjs"),
                     new InspectorFilterPlugin(inspectorFilterEnabled),
                     new UglifyPlugin([
