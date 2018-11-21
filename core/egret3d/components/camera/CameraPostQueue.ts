@@ -27,22 +27,22 @@ namespace egret3d {
             this._material = new Material(new Shader(egret3d.ShaderLib.motionBlur as any, "motionBlur"));
             this._material.setDepth(false, false);
             this._material.setCullFace(false);
-            this._material.setVector2("resolution", this._resolution);
+            // this._material.setVector2("resolution", this._resolution);
             this._material.setFloat("velocityFactor", this._velocityFactor);
         }
 
         public render(camera: Camera) {
             const context = camera.context;
-            const stageViewport = stage.viewport;
+            // const stageViewport = stage.viewport;
             const clipToWorldMatrix = camera.clipToWorldMatrix;
             const material = this._material;
             const postProcessingRenderTarget = camera.postProcessingRenderTarget;
 
-            if (this._resolution.x !== stageViewport.w || this._resolution.y !== stageViewport.h) {
-                this._resolution.x = stageViewport.w;
-                this._resolution.y = stageViewport.h;
-                material.setVector2("resolution", this._resolution);
-            }
+            // if (this._resolution.x !== stageViewport.w || this._resolution.y !== stageViewport.h) {
+            //     this._resolution.x = stageViewport.w;
+            //     this._resolution.y = stageViewport.h;
+            //     material.setVector2("resolution", this._resolution);
+            // }
 
             //
             material.setTexture("tColor", postProcessingRenderTarget);

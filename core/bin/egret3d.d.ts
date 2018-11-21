@@ -7714,6 +7714,9 @@ declare namespace egret3d.particle {
         pause(withChildren?: boolean): void;
         stop(withChildren?: boolean): void;
         clear(withChildren?: boolean): void;
+        /**
+         * 播放速度    不能小于0
+         */
         timeScale: number;
         readonly isPlaying: boolean;
         readonly isPaused: boolean;

@@ -14422,21 +14422,21 @@ var egret3d;
             _this._material = new egret3d.Material(new egret3d.Shader(egret3d.ShaderLib.motionBlur, "motionBlur"));
             _this._material.setDepth(false, false);
             _this._material.setCullFace(false);
-            _this._material.setVector2("resolution", _this._resolution);
+            // this._material.setVector2("resolution", this._resolution);
             _this._material.setFloat("velocityFactor", _this._velocityFactor);
             return _this;
         }
         MotionBlurEffect.prototype.render = function (camera) {
             var context = camera.context;
-            var stageViewport = egret3d.stage.viewport;
+            // const stageViewport = stage.viewport;
             var clipToWorldMatrix = camera.clipToWorldMatrix;
             var material = this._material;
             var postProcessingRenderTarget = camera.postProcessingRenderTarget;
-            if (this._resolution.x !== stageViewport.w || this._resolution.y !== stageViewport.h) {
-                this._resolution.x = stageViewport.w;
-                this._resolution.y = stageViewport.h;
-                material.setVector2("resolution", this._resolution);
-            }
+            // if (this._resolution.x !== stageViewport.w || this._resolution.y !== stageViewport.h) {
+            //     this._resolution.x = stageViewport.w;
+            //     this._resolution.y = stageViewport.h;
+            //     material.setVector2("resolution", this._resolution);
+            // }
             //
             material.setTexture("tColor", postProcessingRenderTarget);
             material.setMatrix("viewProjectionInverseMatrix", clipToWorldMatrix);
@@ -19799,11 +19799,25 @@ var egret3d;
                 }
             };
             Object.defineProperty(ParticleComponent.prototype, "timeScale", {
+                /**
+                 * 播放速度    不能小于0
+                 */
                 get: function () {
                     return this._timeScale;
                 },
                 set: function (value) {
+                    if (value < 0.0) {
+                        value = 0.0;
+                    }
                     this._timeScale = value;
+                    var children = this.gameObject.transform.children;
+                    for (var _i = 0, children_5 = children; _i < children_5.length; _i++) {
+                        var child = children_5[_i];
+                        var particleComp = child.gameObject.getComponent(ParticleComponent);
+                        if (particleComp) {
+                            particleComp.timeScale = value;
+                        }
+                    }
                 },
                 enumerable: true,
                 configurable: true

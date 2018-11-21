@@ -149,9 +149,22 @@ namespace egret3d.particle {
         }
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public set timeScale(value: number) {
+            if (value < 0.0) {
+                value = 0.0;
+            }
             this._timeScale = value;
-        }
 
+            const children = this.gameObject.transform.children;
+            for (const child of children) {
+                const particleComp = child.gameObject.getComponent(ParticleComponent);
+                if (particleComp) {
+                    particleComp.timeScale = value;
+                }
+            }
+        }
+        /**
+         * 播放速度    不能小于0
+         */
         public get timeScale() {
             return this._timeScale;
         }
