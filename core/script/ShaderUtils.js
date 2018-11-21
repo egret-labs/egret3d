@@ -150,6 +150,31 @@ function parseUniform(string, name) {
     return uniform;
 }
 exports.parseUniform = parseUniform;
+function checkValid(asset) {
+    //先检查顶点和片段是否都在
+    var KHR_techniques_webgl = asset.extensions.KHR_techniques_webgl;
+    {
+        var shaders = KHR_techniques_webgl.shaders;
+        if (shaders.length !== 2) {
+            console.warn("缺少顶点或者片段着色器");
+            return false;
+        }
+        if (shaders[0].type === shaders[1].type) {
+            console.warn("两个着色器类型相同");
+            return false;
+        }
+        if (shaders[0].type !== 35633 /* VERTEX_SHADER */ && shaders[0].type !== 35632 /* FRAGMENT_SHADER */) {
+            console.warn(shaders[0].name + "着色器类型错误");
+            return false;
+        }
+        if (shaders[1].type !== 35633 /* VERTEX_SHADER */ && shaders[1].type !== 35632 /* FRAGMENT_SHADER */) {
+            console.warn(shaders[1].name + "着色器类型错误");
+            return false;
+        }
+    }
+    return true;
+}
+exports.checkValid = checkValid;
 function parseShader(file) {
     var buffer = fs.readFileSync(file);
     var string = buffer.toString()

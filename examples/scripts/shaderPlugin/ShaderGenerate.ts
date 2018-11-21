@@ -280,7 +280,30 @@ export class GenerateGLTFCommand implements IShaderCommand {
             dir = path.relative(shaderContext.root, dir).split('\\').join("/") + "/";
             shaders[0].uri = dir + shaders[0].name + ".glsl";
             shaders[1].uri = dir + shaders[1].name + ".glsl";
+            if(fs.existsSync(outPath)){
+                //如果存在的话
+                const oldFile = fs.readFileSync(outPath, "utf-8");
+                const oldAsset = JSON.parse(oldFile) as gltf.GLTFEgret;
+                for(let i = 0, l = oldAsset.extensions.KHR_techniques_webgl!.techniques.length; i < l; i++){
+                    if(i >= asset.extensions!.KHR_techniques_webgl!.techniques.length){
+                        continue;
+                    }
+                    const oldTechnique = oldAsset.extensions.KHR_techniques_webgl!.techniques[i];
+                    const newTechnique = asset.extensions.KHR_techniques_webgl!.techniques[i];
+
+                    //Uniform Value和State覆盖
+                    for(let uniformName in oldTechnique.uniforms){
+                        if(newTechnique.uniforms[uniformName]){
+                            newTechnique.uniforms[uniformName].value = oldTechnique.uniforms[uniformName].value;
+                        }
+                    }
+
+                    newTechnique.states = oldTechnique.states;
+                }
+            }
+            ShaderUtils.checkValid(asset);
             fs.writeFileSync(outPath, JSON.stringify(asset, null, 4));
+            //还原一下uri
             shaders[0].uri = tempUri0;
             shaders[1].uri = tempUri1;
         }

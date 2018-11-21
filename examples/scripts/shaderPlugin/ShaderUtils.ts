@@ -153,6 +153,35 @@ export function parseUniform(string: string, name: string): gltf.Uniform | null 
     return uniform;
 }
 
+export function checkValid(asset: gltf.GLTFEgret) {
+    //先检查顶点和片段是否都在
+    const KHR_techniques_webgl = asset.extensions.KHR_techniques_webgl!;
+    {
+        const shaders = KHR_techniques_webgl.shaders;
+        if (shaders.length !== 2) {
+            console.warn("缺少顶点或者片段着色器");
+            return false;
+        }
+
+        if (shaders[0].type === shaders[1].type) {
+            console.warn("两个着色器类型相同");
+            return false;
+        }
+
+        if (shaders[0].type !== gltf.ShaderStage.VERTEX_SHADER && shaders[0].type !== gltf.ShaderStage.FRAGMENT_SHADER) {
+            console.warn(shaders[0].name + "着色器类型错误");
+            return false;
+        }
+
+        if (shaders[1].type !== gltf.ShaderStage.VERTEX_SHADER && shaders[1].type !== gltf.ShaderStage.FRAGMENT_SHADER) {
+            console.warn(shaders[1].name + "着色器类型错误");
+            return false;
+        }
+    }
+
+    return true;
+}
+
 export function parseShader(file: string) {
     var buffer = fs.readFileSync(file);
     var string = buffer.toString()
