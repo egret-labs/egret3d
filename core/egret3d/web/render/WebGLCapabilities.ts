@@ -399,7 +399,6 @@ namespace egret3d {
         public textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
 
         public oes_standard_derivatives: boolean;
-        public gl_oes_standard_derivatives: boolean;
 
         public initialize(config: RunEgretOptions) {
             super.initialize();
@@ -424,12 +423,13 @@ namespace egret3d {
 
             this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
 
+
             this.floatTextures = !!_getExtension(webgl, "OES_texture_float");
 
             this.anisotropyExt = _getExtension(webgl, "EXT_texture_filter_anisotropic");
 
             this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
-
+            
             this.maxAnisotropy = (this.anisotropyExt !== null) ? webgl.getParameter(this.anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
 
             // use dfdx and dfdy must enable OES_standard_derivatives
@@ -458,7 +458,7 @@ namespace egret3d {
         public readonly viewPort: Rectangle = Rectangle.create();
         public renderTarget: BaseRenderTarget | null = null;
 
-        public render: (camera: Camera) => void = null!;
+        public render: (camera: Camera, material?: Material) => void = null!;
         public draw: (camera: Camera, drawCall: DrawCall) => void = null!;
 
         private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST]; // TODO

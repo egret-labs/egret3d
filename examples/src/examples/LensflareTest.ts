@@ -30,7 +30,7 @@ namespace examples {
             cube.renderer!.material!.setTexture(RES.getRes("logo.png"));
 
             const lensflareObj = paper.GameObject.create("Lensflare");
-            const lensflareCom = lensflareObj.addComponent(behaviors.Lensflare);
+            const lensflareCom = lensflareObj.addComponent(behaviors.LensflareEffect);
             lensflareCom.addElement({ texture: lensflare0, size: 700, distance: 0, color: egret3d.Color.create(0.55, 0.9, 1.0, 1.0), rotate: true, angle: 0 });
             lensflareCom.addElement({ texture: lensflare3, size: 60, distance: 0.6, color: egret3d.Color.WHITE.clone(), rotate: false, angle: 0 });
             lensflareCom.addElement({ texture: lensflare3, size: 70, distance: 0.7, color: egret3d.Color.WHITE.clone(), rotate: false, angle: 0 });

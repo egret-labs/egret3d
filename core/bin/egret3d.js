@@ -24779,7 +24779,7 @@ var egret3d;
             // }
             // webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
             // }
-            WebGLRenderSystem.prototype._render = function (camera, renderTarget) {
+            WebGLRenderSystem.prototype._render = function (camera, renderTarget, material) {
                 var renderState = this._renderState;
                 renderState.updateViewport(camera.viewport, renderTarget);
                 var bufferBit = 256 /* DEPTH_BUFFER_BIT */ | 16384 /* COLOR_BUFFER_BIT */;
@@ -24796,12 +24796,12 @@ var egret3d;
                 // Step 1 draw opaques.
                 for (var _i = 0, opaqueCalls_1 = opaqueCalls; _i < opaqueCalls_1.length; _i++) {
                     var drawCall = opaqueCalls_1[_i];
-                    this.draw(camera, drawCall);
+                    this.draw(camera, drawCall, material);
                 }
                 // Step 2 draw transparents.
                 for (var _a = 0, transparentCalls_1 = transparentCalls; _a < transparentCalls_1.length; _a++) {
                     var drawCall = transparentCalls_1[_a];
-                    this.draw(camera, drawCall);
+                    this.draw(camera, drawCall, material);
                 }
                 //
                 if (renderTarget) {
@@ -24822,7 +24822,7 @@ var egret3d;
                     }
                 }
             };
-            WebGLRenderSystem.prototype.draw = function (camera, drawCall) {
+            WebGLRenderSystem.prototype.draw = function (camera, drawCall, drawMaterial) {
                 if (drawCall.renderer && drawCall.renderer.gameObject._beforeRenderBehaviors.length > 0) {
                     var flag = false;
                     egret3d.Camera.current = camera;
@@ -24834,7 +24834,7 @@ var egret3d;
                         return;
                     }
                 }
-                var material = drawCall.material;
+                var material = drawMaterial || drawCall.material;
                 var context = camera.context;
                 var shaderContextDefine = context.updateDrawCall(drawCall);
                 //
@@ -25155,7 +25155,7 @@ var egret3d;
                     webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
                 }
             };
-            WebGLRenderSystem.prototype.render = function (camera) {
+            WebGLRenderSystem.prototype.render = function (camera, material) {
                 egret3d.Camera.current = camera;
                 camera._update();
                 if (this._cameraAndLightCollecter.lightDirty) {
@@ -25163,7 +25163,7 @@ var egret3d;
                 }
                 //
                 if (camera.postQueues.length === 0) {
-                    this._render(camera, camera.renderTarget);
+                    this._render(camera, camera.renderTarget, material);
                 }
                 else {
                     //TODO这里为空了
@@ -25173,7 +25173,7 @@ var egret3d;
                     if (!camera._writeRenderTarget) {
                         camera._writeRenderTarget = new egret3d.GlRenderTarget("builtin/post_processing1.image.json", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true);
                     }
-                    this._render(camera, camera._readRenderTarget);
+                    this._render(camera, camera._readRenderTarget, material);
                     for (var _i = 0, _a = camera.postQueues; _i < _a.length; _i++) {
                         var postEffect = _a[_i];
                         postEffect.render(camera);

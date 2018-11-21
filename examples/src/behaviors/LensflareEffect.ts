@@ -1,5 +1,5 @@
 namespace behaviors {
-    export class Lensflare extends paper.Behaviour {
+    export class LensflareEffect extends paper.Behaviour {
         public static TEXTURE_SIZE = egret3d.Vector2.create(16, 16);
         private readonly _elements: LensflareElement[] = [];
         private readonly _renderState: egret3d.WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.WebGLRenderState, false, this); // Set interface.
@@ -10,8 +10,8 @@ namespace behaviors {
         private readonly _drawCall1b: egret3d.DrawCall = egret3d.DrawCall.create();
         private readonly _drawCallLensflare: egret3d.DrawCall = egret3d.DrawCall.create();
         private readonly _meshLensflare: egret3d.Mesh = egret3d.MeshBuilder.createPlane(2, 2);
-        private _tempMap: egret3d.GLTexture2D = new egret3d.GLTexture2D("tempMap", Lensflare.TEXTURE_SIZE.x, Lensflare.TEXTURE_SIZE.y, gltf.TextureFormat.RGB);;
-        private _occlusionMap: egret3d.GLTexture2D = new egret3d.GLTexture2D("occlusionMap", Lensflare.TEXTURE_SIZE.x, Lensflare.TEXTURE_SIZE.y, gltf.TextureFormat.RGB);;
+        private _tempMap: egret3d.GLTexture2D = new egret3d.GLTexture2D("tempMap", LensflareEffect.TEXTURE_SIZE.x, LensflareEffect.TEXTURE_SIZE.y, gltf.TextureFormat.RGB);;
+        private _occlusionMap: egret3d.GLTexture2D = new egret3d.GLTexture2D("occlusionMap", LensflareEffect.TEXTURE_SIZE.x, LensflareEffect.TEXTURE_SIZE.y, gltf.TextureFormat.RGB);;
 
         private readonly _positionScreen: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _scale: egret3d.Vector2 = egret3d.Vector2.create();
@@ -23,8 +23,8 @@ namespace behaviors {
         @paper.editor.property(paper.editor.EditType.COLOR)
         public color: egret3d.Color = egret3d.Color.create(0.55, 0.9, 1.0, 1.0);
         public onAwake() {
-            this._tempMap.uploadImage(new Uint8Array(Lensflare.TEXTURE_SIZE.x * Lensflare.TEXTURE_SIZE.y * 3), false, false, false);
-            this._occlusionMap.uploadImage(new Uint8Array(Lensflare.TEXTURE_SIZE.x * Lensflare.TEXTURE_SIZE.y * 3), false, false, false);
+            this._tempMap.uploadImage(new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), false, false, false);
+            this._occlusionMap.uploadImage(new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), false, false, false);
 
             this._material1a.setDepth(true, false);
             this._material1b.setDepth(false, false).setTexture(this._tempMap);
@@ -75,7 +75,7 @@ namespace behaviors {
             const validArea = this._validArea;
             const positionScreen = this._positionScreen;
             const screenPositionPixels = this._screenPositionPixels;
-            const textureSize = Lensflare.TEXTURE_SIZE;
+            const textureSize = LensflareEffect.TEXTURE_SIZE;
 
             viewport.copy(camera.pixelViewport);
 

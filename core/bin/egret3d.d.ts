@@ -7884,7 +7884,6 @@ declare namespace egret3d {
         textureFloat: boolean;
         textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
         oes_standard_derivatives: boolean;
-        gl_oes_standard_derivatives: boolean;
         initialize(config: RunEgretOptions): void;
     }
     /**
@@ -7894,7 +7893,7 @@ declare namespace egret3d {
         readonly clearColor: Color;
         readonly viewPort: Rectangle;
         renderTarget: BaseRenderTarget | null;
-        render: (camera: Camera) => void;
+        render: (camera: Camera, material?: Material) => void;
         draw: (camera: Camera, drawCall: DrawCall) => void;
         private readonly _stateEnables;
         private readonly _programs;

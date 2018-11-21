@@ -54,7 +54,7 @@ namespace egret3d.web {
 
         // webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         // }
-        private _render(camera: Camera, renderTarget: BaseRenderTarget | null) {
+        private _render(camera: Camera, renderTarget: BaseRenderTarget | null, material?: Material) {
             const renderState = this._renderState;
             renderState.updateViewport(camera.viewport, renderTarget);
             let bufferBit = gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT;
@@ -71,11 +71,11 @@ namespace egret3d.web {
             const transparentCalls = camera.context.transparentCalls;
             // Step 1 draw opaques.
             for (const drawCall of opaqueCalls) {
-                this.draw(camera, drawCall);
+                this.draw(camera, drawCall, material);
             }
             // Step 2 draw transparents.
             for (const drawCall of transparentCalls) {
-                this.draw(camera, drawCall);
+                this.draw(camera, drawCall, material);
             }
             //
             if (renderTarget) {
@@ -97,7 +97,7 @@ namespace egret3d.web {
             }
         }
 
-        public draw(camera: Camera, drawCall: DrawCall): void {
+        public draw(camera: Camera, drawCall: DrawCall, drawMaterial?: Material): void {
             if (drawCall.renderer && drawCall.renderer.gameObject._beforeRenderBehaviors.length > 0) {
                 let flag = false;
                 Camera.current = camera;
@@ -111,7 +111,7 @@ namespace egret3d.web {
                 }
             }
 
-            const material = drawCall.material;
+            const material = drawMaterial || drawCall.material;
             const context = camera.context;
             const shaderContextDefine = context.updateDrawCall(drawCall);
             //
@@ -454,7 +454,7 @@ namespace egret3d.web {
             }
         }
 
-        public render(camera: Camera) {
+        public render(camera: Camera, material?: Material) {
             Camera.current = camera;
             camera._update();
 
@@ -463,17 +463,17 @@ namespace egret3d.web {
             }
             //
             if (camera.postQueues.length === 0) {
-                this._render(camera, camera.renderTarget);
+                this._render(camera, camera.renderTarget, material);
             }
             else {
                 //TODO这里为空了
-                if(!camera._readRenderTarget){
-                    camera._readRenderTarget = new GlRenderTarget("builtin/post_processing1.image.json", stage.viewport.w, stage.viewport.h, true); 
+                if (!camera._readRenderTarget) {
+                    camera._readRenderTarget = new GlRenderTarget("builtin/post_processing1.image.json", stage.viewport.w, stage.viewport.h, true);
                 }
-                if(!camera._writeRenderTarget){
-                    camera._writeRenderTarget = new GlRenderTarget("builtin/post_processing1.image.json", stage.viewport.w, stage.viewport.h, true); 
+                if (!camera._writeRenderTarget) {
+                    camera._writeRenderTarget = new GlRenderTarget("builtin/post_processing1.image.json", stage.viewport.w, stage.viewport.h, true);
                 }
-                this._render(camera, camera._readRenderTarget);
+                this._render(camera, camera._readRenderTarget, material);
 
                 for (const postEffect of camera.postQueues) {
                     postEffect.render(camera);
