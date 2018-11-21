@@ -193,18 +193,21 @@ declare namespace paper.editor {
     function parse(value: string): UUID;
     function generateUuid(): string;
 }
-declare namespace paper.editor {
+declare namespace paper {
     /**
-     * 状态组
-     * @author 杨宁
+     * 默认标识和自定义标识。
      */
-    class StateGroup extends BaseState {
-        private stateList;
-        static create(stateList: BaseState[]): StateGroup;
-        redo(): boolean;
-        undo(): boolean;
-        serialize(): any;
-        deserialize(data: any): void;
+    const enum DefaultTags {
+    }
+    /**
+     * 内置层级和自定义层级。
+     */
+    const enum Layer {
+    }
+    /**
+     * 渲染排序。
+     */
+    const enum RenderQueue {
     }
 }
 declare namespace paper.editor {
@@ -300,6 +303,8 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
+}
+declare namespace paper.editor {
     /**
      * 检测一个实例对象是否为已被自定义
      * @param classInstance 实例对象
@@ -372,45 +377,6 @@ declare namespace paper.editor {
         static removeEventListener(type: string, fun: Function, thisObj: any): void;
         static dispatchEvent(event: BaseEvent): void;
         private static initEditEnvironment();
-    }
-}
-declare namespace paper.editor {
-    /**
-     * TODO
-     */
-    class SceneSystem extends BaseSystem {
-        protected readonly _interests: {
-            componentClass: typeof egret3d.Transform;
-        }[][];
-        private readonly _cameraAndLightCollecter;
-        private readonly _modelComponent;
-        private readonly _keyEscape;
-        private readonly _keyDelete;
-        private readonly _keyE;
-        private readonly _keyW;
-        private readonly _keyR;
-        private readonly _keyX;
-        private readonly _keyF;
-        private _orbitControls;
-        private _transformController;
-        private _boxesDrawer;
-        private _boxColliderDrawer;
-        private _sphereColliderDrawer;
-        private _cylinderColliderDrawer;
-        private _skeletonDrawer;
-        private _cameraViewFrustum;
-        private _worldAxisesDrawer;
-        private _gridDrawer;
-        private _onGameObjectHovered;
-        private _onGameObjectSelectChanged;
-        private _onGameObjectSelected;
-        private _onGameObjectUnselected;
-        private _updateCameras();
-        private _updateLights();
-        lookAtSelected(): void;
-        onEnable(): void;
-        onDisable(): void;
-        onUpdate(): void;
     }
 }
 declare namespace paper.editor {
@@ -806,4 +772,55 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
+    /**
+     * 状态组
+     * @author 杨宁
+     */
+    class StateGroup extends BaseState {
+        private stateList;
+        static create(stateList: BaseState[]): StateGroup;
+        redo(): boolean;
+        undo(): boolean;
+        serialize(): any;
+        deserialize(data: any): void;
+    }
+}
+declare namespace paper.editor {
+    /**
+     * TODO
+     */
+    class SceneSystem extends BaseSystem {
+        protected readonly _interests: {
+            componentClass: typeof egret3d.Transform;
+        }[][];
+        private readonly _cameraAndLightCollecter;
+        private readonly _modelComponent;
+        private readonly _keyEscape;
+        private readonly _keyDelete;
+        private readonly _keyE;
+        private readonly _keyW;
+        private readonly _keyR;
+        private readonly _keyX;
+        private readonly _keyF;
+        private _orbitControls;
+        private _transformController;
+        private _boxesDrawer;
+        private _boxColliderDrawer;
+        private _sphereColliderDrawer;
+        private _cylinderColliderDrawer;
+        private _skeletonDrawer;
+        private _cameraViewFrustum;
+        private _worldAxisesDrawer;
+        private _gridDrawer;
+        private _onGameObjectHovered;
+        private _onGameObjectSelectChanged;
+        private _onGameObjectSelected;
+        private _onGameObjectUnselected;
+        private _updateCameras();
+        private _updateLights();
+        lookAtSelected(): void;
+        onEnable(): void;
+        onDisable(): void;
+        onUpdate(): void;
+    }
 }

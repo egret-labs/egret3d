@@ -27,6 +27,54 @@ namespace egret3d {
             }
         }
 
+        /**
+         * 实时获取网格资源的指定三角形顶点位置。
+         * - 采用 CPU 蒙皮。
+         */
+        public getTriangle(triangleIndex: uint, triangle?: Triangle): Triangle {
+            if (!triangle) {
+                triangle = Triangle.create();
+            }
+
+            const meshFilter = this.gameObject.getComponent(MeshFilter);
+            if (!meshFilter) {
+                return triangle;
+            }
+
+            const mesh = meshFilter.mesh;
+            if (!mesh) {
+                return triangle;
+            }
+
+            const localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
+            const indices = mesh.getIndices();
+            const vertices = mesh.getVertices()!;
+
+            for (let i = 0; i < 3; ++i) {
+                const index = indices ? indices[triangleIndex * 3 + i] : triangleIndex * 9 + i;
+                const vertexIndex = index * 3;
+
+                switch (i) {
+                    case 0:
+                        triangle.a.fromArray(vertices, vertexIndex);
+                        triangle.a.applyMatrix(localToWorldMatrix);
+                        break;
+
+                    case 1:
+                        triangle.b.fromArray(vertices, vertexIndex);
+                        triangle.b.applyMatrix(localToWorldMatrix);
+                        break;
+
+                    case 2:
+                        triangle.c.fromArray(vertices, vertexIndex);
+                        triangle.c.applyMatrix(localToWorldMatrix);
+                        break;
+                }
+            }
+
+            return triangle;
+        }
+
         public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
             const meshFilter = this.gameObject.getComponent(MeshFilter);
             if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh) {

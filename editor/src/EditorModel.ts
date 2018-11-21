@@ -832,7 +832,7 @@ namespace paper.editor {
 
             const _glTFMaterial = target.config.materials![0] as egret3d.GLTFMaterial;
             const gltfUnifromMap = _glTFMaterial.extensions.KHR_techniques_webgl.values!;
-            const uniformMap = target._glTFTechnique.uniforms;
+            const uniformMap = target.glTFTechnique.uniforms;
             for (const key in uniformMap) {
                 if (uniformMap[key].semantic === undefined) {
                     const value = uniformMap[key].value;

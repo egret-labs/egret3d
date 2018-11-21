@@ -226,8 +226,8 @@ namespace egret3d {
                                         raycastInfo.triangleIndex = i / 3;
                                         raycastInfo.distance = helpRaycastInfo.distance;
                                         raycastInfo.position.copy(helpRaycastInfo.position);
-                                        raycastInfo.textureCoordA.copy(helpRaycastInfo.textureCoordA);
-                                        raycastInfo.textureCoordB.copy(helpRaycastInfo.textureCoordB);
+                                        raycastInfo.coord.copy(helpRaycastInfo.coord);
+                                        // raycastInfo.textureCoordB.copy(helpRaycastInfo.textureCoordB); TODO
                                         hit = true;
 
                                         if (raycastInfo.normal) {
@@ -252,8 +252,8 @@ namespace egret3d {
                                             raycastInfo.triangleIndex = i / 9;
                                             raycastInfo.distance = helpRaycastInfo.distance;
                                             raycastInfo.position.copy(helpRaycastInfo.position);
-                                            raycastInfo.textureCoordA.copy(helpRaycastInfo.textureCoordA);
-                                            raycastInfo.textureCoordB.copy(helpRaycastInfo.textureCoordB);
+                                            raycastInfo.coord.copy(helpRaycastInfo.coord);
+                                            // raycastInfo.textureCoordB.copy(helpRaycastInfo.textureCoordB); TODO
                                             hit = true;
 
                                             if (raycastInfo.normal) {
@@ -275,22 +275,22 @@ namespace egret3d {
 
             if (hit && raycastInfo!.normal) {
                 const normal = raycastInfo!.normal!;
-                const normals = this.getNormals();
+                // const normals = this.getNormals();
 
-                if (normals) {
-                    // TODO 三顶点的法线插值。
-                    const indices = this.getIndices();
+                // if (normals) {
+                //     // TODO 三顶点的法线插值。
+                //     const indices = this.getIndices();
 
-                    if (indices) {
-                        normal.fromArray(normals, indices[raycastInfo!.triangleIndex * 3] * 3);
-                    }
-                    else {
-                        normal.fromArray(normals, raycastInfo!.triangleIndex * 9);
-                    }
-                }
-                else {
+                //     if (indices) {
+                //         normal.fromArray(normals, indices[raycastInfo!.triangleIndex * 3] * 3);
+                //     }
+                //     else {
+                //         normal.fromArray(normals, raycastInfo!.triangleIndex * 9);
+                //     }
+                // }
+                // else {
                     helpTriangleB.getNormal(normal);
-                }
+                // }
             }
 
             return hit;

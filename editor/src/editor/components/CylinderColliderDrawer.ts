@@ -18,11 +18,11 @@ namespace paper.editor {
                     const gameObject = EditorMeshHelper.createGameObject(`CylinderCollider_${i}`);
                     gameObject.parent = this.gameObject;
                     EditorMeshHelper.createCircle("Top", egret3d.Color.YELLOW, 0.4, Scene.editorScene).transform
-                        .setParent(gameObject.transform).setLocalPosition(0.0, 0.5, 0.0).setLocalEuler(0.0, 0.0, Math.PI * 0.5);
+                        .setParent(gameObject.transform).setLocalPosition(0.0, 0.5, 0.0).setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
                     EditorMeshHelper.createLine("Height", egret3d.Color.YELLOW, 0.4, Scene.editorScene).transform
                         .setParent(gameObject.transform).setLocalPosition(0.0, -0.5, 0.0);
                     EditorMeshHelper.createCircle("Bottom", egret3d.Color.YELLOW, 0.4, Scene.editorScene).transform
-                        .setParent(gameObject.transform).setLocalPosition(0.0, -0.5, 0.0).setLocalEuler(0.0, 0.0, -Math.PI * 0.5);
+                        .setParent(gameObject.transform).setLocalPosition(0.0, -0.5, 0.0).setLocalEuler(-Math.PI * 0.5, 0.0, 0.0);
 
                     this._drawer.push(gameObject);
                 }

@@ -4,6 +4,7 @@ namespace egret3d {
      * 提供默认的几何网格资源的快速访问方式，以及创建几何网格或几何网格实体的方法。
      */
     export class DefaultMeshes extends paper.SingletonComponent {
+        public static TRIANGLE: Mesh;
         public static QUAD: Mesh;
         public static QUAD_PARTICLE: Mesh;
         public static PLANE: Mesh;
@@ -27,7 +28,26 @@ namespace egret3d {
 
         public initialize() {
             super.initialize();
-            // TODO 颜色切线，球体，更多类型。
+            // TODO 颜色，更多类型。
+
+            { // TRIANGLE.
+                const mesh = new Mesh(3, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/triangle.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.TRIANGLE = mesh;
+
+                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                    0.0, 0.5, 0.0,
+                    -0.5, -0.5, 0.0,
+                    0.5, -0.5, 0.0,
+                ]);
+                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+                ]);
+            }
 
             { // QUAD.
                 const mesh = MeshBuilder.createPlane();

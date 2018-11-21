@@ -2086,6 +2086,9 @@ var egret3d;
         }
         /**
          * 创建一个三角形实例。
+         * -   a
+         * -  /·\
+         * - b - c
          * @param a 点 A。
          * @param b 点 B。
          * @param c 点 C。
@@ -2103,15 +2106,17 @@ var egret3d;
         };
         /**
          * 通过三个点确定一个三角形，获取该三角形的法线。
+         * -   a
+         * -  /·\
+         * - b - c
          * @param a 点 A。
          * @param b 点 B。
          * @param c 点 C。
          * @param out 法线结果。
          */
         Triangle.getNormal = function (a, b, c, out) {
-            // out.subtract(c, b); // Right-hand coordinates system.
-            out.subtract(b, c); // Left-hand coordinates system.
-            out.cross(egret3d.helpVector3A.subtract(a, b));
+            out.subtract(c, a);
+            out.cross(egret3d.helpVector3A.subtract(b, a));
             var squaredLength = out.squaredLength;
             if (squaredLength > 0.0) {
                 return out.multiplyScalar(1.0 / Math.sqrt(squaredLength));
@@ -2144,20 +2149,12 @@ var egret3d;
             return this;
         };
         Triangle.prototype.fromArray = function (array, offsetA, offsetB, offsetC) {
-            if (offsetA === void 0) { offsetA = 0; }
-            if (offsetB === void 0) { offsetB = -1; }
-            if (offsetC === void 0) { offsetC = -1; }
+            if (offsetA === undefined) {
+                offsetA = 0;
+            }
             this.a.fromArray(array, offsetA);
-            this.b.fromArray(array, offsetB >= 0 ? offsetB : offsetA + 3);
-            this.c.fromArray(array, offsetC >= 0 ? offsetC : offsetA + 6);
-        };
-        /**
-         * 获取该三角形的面积。
-         */
-        Triangle.prototype.getArea = function () {
-            egret3d.helpVector3A.subtract(this.c, this.b);
-            egret3d.helpVector3B.subtract(this.a, this.b);
-            return egret3d.helpVector3A.cross(egret3d.helpVector3B).length * 0.5;
+            this.b.fromArray(array, offsetB !== undefined ? offsetB : offsetA + 3);
+            this.c.fromArray(array, offsetC !== undefined ? offsetC : offsetA + 6);
         };
         /**
          * 获取该三角形的中心点。
@@ -2178,6 +2175,21 @@ var egret3d;
                 out = egret3d.Vector3.create();
             }
             return Triangle.getNormal(this.a, this.b, this.c, out);
+        };
+        /**
+         *
+         * @param u
+         * @param v
+         * @param out
+         */
+        Triangle.prototype.getPointAt = function (u, v, out) {
+            if (!out) {
+                out = egret3d.Vector3.create();
+            }
+            out.x = egret3d.math.lerp(this.a.x, this.c.x, u) + egret3d.math.lerp(0.0, this.b.x - this.a.x, v);
+            out.y = egret3d.math.lerp(this.a.y, this.b.y, v) + egret3d.math.lerp(0.0, this.c.y - this.a.y, u);
+            out.z = egret3d.math.lerp(this.a.z, this.c.z, u) + egret3d.math.lerp(0.0, this.b.z - this.a.z, v);
+            return out;
         };
         /**
          * 获取一个点到该三角形的最近点。
@@ -2244,7 +2256,7 @@ var egret3d;
                 return out.multiplyScalar(w, vbc).add(b); // edge region of BC
             }
             // face region
-            var denom = 1 / (va + vb + vc);
+            var denom = 1.0 / (va + vb + vc);
             // u = va * denom
             v = vb * denom;
             w = vc * denom;
@@ -2252,94 +2264,81 @@ var egret3d;
         };
         Triangle.prototype.raycast = function (ray, raycastInfo) {
             // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
-            // const edge1 = helpVector3A;
-            // const edge2 = helpVector3B;
-            // const diff = helpVector3C;
-            // const normal = helpVector3D;
-            // edge1.subtract(p2, p1);
-            // edge2.subtract(p3, p1);
-            // normal.cross(edge1, edge2);
-            // // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
-            // // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
-            // //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
-            // //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
-            // //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
-            // let DdN = this.direction.dot(normal);
-            // let sign = 1.0;
-            // if (DdN > 0.0) {
-            //     if (backfaceCulling) return null;
-            // }
-            // else if (DdN < 0.0) {
-            //     sign = -1.0;
-            //     DdN = -DdN;
-            // }
-            // else {
-            //     return null;
-            // }
-            // diff.subtract(this.origin, p1);
-            // const DdQxE2 = sign * this.direction.dot(edge2.cross(diff, edge2));
-            // // b1 < 0, no intersection
-            // if (DdQxE2 < 0.0) {
-            //     return null;
-            // }
-            // const DdE1xQ = sign * this.direction.dot(edge1.cross(diff));
-            // // b2 < 0, no intersection
-            // if (DdE1xQ < 0.0) {
-            //     return null;
-            // }
-            // // b1+b2 > 1, no intersection
-            // if (DdQxE2 + DdE1xQ > DdN) {
-            //     return null;
-            // }
-            // // Line intersects triangle, check if ray does.
-            // const QdN = - sign * diff.dot(normal);
-            // // t < 0, no intersection
-            // if (QdN < 0) {
-            //     return null;
-            // }
-            // const pickInfo = new PickInfo();
-            // pickInfo.distance = QdN / DdN;
-            // pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
-            // pickInfo.textureCoordA.x = DdQxE2;
-            // pickInfo.textureCoordA.y = DdE1xQ;
-            // return pickInfo;
-            // TODO
             var edge1 = egret3d.helpVector3A;
             var edge2 = egret3d.helpVector3B;
-            var pvec = egret3d.helpVector3C;
-            var tvec = egret3d.helpVector3D;
-            var qvec = egret3d.helpVector3E;
+            var diff = egret3d.helpVector3C;
+            var normal = egret3d.helpVector3D;
+            var rayDirection = ray.direction;
+            var rayOrigin = ray.origin;
             var pA = this.a;
             var pB = this.b;
             var pC = this.c;
-            edge1.subtract(pB, pA);
-            edge2.subtract(pC, pA);
-            pvec.cross(ray.direction, edge2);
-            var det = pvec.dot(edge1);
-            if (det === 0.0) {
+            edge1.subtract(pC, pA);
+            edge2.subtract(pB, pA);
+            normal.cross(edge1, edge2);
+            // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
+            // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
+            //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
+            //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
+            //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
+            var DdN = rayDirection.dot(normal);
+            var sign = 1.0;
+            if (DdN > 0.0) {
+                if (!raycastInfo || raycastInfo.backfaceCulling)
+                    return false;
+            }
+            else if (DdN < 0.0) {
+                sign = -1.0;
+                DdN = -DdN;
+            }
+            else {
                 return false;
             }
-            var invdet = 1.0 / det;
-            tvec.subtract(ray.origin, pA);
-            var bu = pvec.dot(tvec) * invdet;
-            if (bu < 0.0 || bu > 1.0) {
+            diff.subtract(rayOrigin, pA);
+            var DdQxE2 = sign * rayDirection.dot(edge2.cross(diff, edge2));
+            // b1 < 0, no intersection
+            if (DdQxE2 < 0.0) {
                 return false;
             }
-            qvec.cross(tvec, edge1);
-            var bv = qvec.dot(ray.direction) * invdet;
-            if (bv < 0.0 || bu + bv > 1.0) {
+            var DdE1xQ = sign * rayDirection.dot(edge1.cross(diff));
+            // b2 < 0, no intersection
+            if (DdE1xQ < 0.0) {
+                return false;
+            }
+            // b1+b2 > 1, no intersection
+            if (DdQxE2 + DdE1xQ > DdN) {
+                return false;
+            }
+            // Line intersects triangle, check if ray does.
+            var QdN = -sign * diff.dot(normal);
+            // t < 0, no intersection
+            if (QdN < 0.0) {
                 return false;
             }
             if (raycastInfo) {
-                raycastInfo.textureCoordA.x = bu;
-                raycastInfo.textureCoordA.y = bv;
-                ray.getPointAt(raycastInfo.distance = qvec.dot(edge2) * invdet, raycastInfo.position);
+                DdN = 1.0 / DdN;
+                ray.getPointAt(raycastInfo.distance = QdN * DdN, raycastInfo.position);
+                raycastInfo.coord.x = DdQxE2 * DdN;
+                raycastInfo.coord.y = DdE1xQ * DdN;
                 if (raycastInfo.normal) {
-                    this.getNormal(raycastInfo.normal);
+                    raycastInfo.normal.copy(normal);
                 }
             }
             return true;
         };
+        Object.defineProperty(Triangle.prototype, "area", {
+            /**
+             * 获取该三角形的面积。
+             * - 该值是实时计算的。
+             */
+            get: function () {
+                egret3d.helpVector3A.subtract(this.c, this.a);
+                egret3d.helpVector3B.subtract(this.b, this.a);
+                return egret3d.helpVector3A.cross(egret3d.helpVector3B).length * 0.5;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Triangle._instances = [];
         return Triangle;
     }(paper.BaseRelease));
@@ -3815,6 +3814,7 @@ var egret3d;
         __extends(RaycastInfo, _super);
         function RaycastInfo() {
             var _this = _super.call(this) || this;
+            _this.backfaceCulling = true;
             _this.subMeshIndex = -1;
             _this.triangleIndex = -1;
             /**
@@ -3825,13 +3825,17 @@ var egret3d;
              * 相交的点。
              */
             _this.position = egret3d.Vector3.create();
-            _this.textureCoordA = egret3d.Vector2.create();
-            _this.textureCoordB = egret3d.Vector2.create();
+            /**
+             *
+             */
+            _this.coord = egret3d.Vector2.create();
             /**
              * 相交的法线。
              * - 提供法线向量将计算法线。
              */
             _this.normal = null;
+            _this.textureCoordA = null;
+            _this.textureCoordB = null;
             /**
              * 相交的变换组件。（如果有的话）
              */
@@ -3858,13 +3862,17 @@ var egret3d;
             return new RaycastInfo();
         };
         RaycastInfo.prototype.onClear = function () {
+            this.clear();
+        };
+        RaycastInfo.prototype.clear = function () {
             this.subMeshIndex = -1;
             this.triangleIndex = -1;
             this.distance = 0.0;
             this.position.set(0.0, 0.0, 0.0);
-            this.textureCoordA.set(0.0, 0.0);
-            this.textureCoordB.set(0.0, 0.0);
+            this.coord.set(0.0, 0.0);
             this.normal = null;
+            this.textureCoordA = null;
+            this.textureCoordB = null;
             this.transform = null;
             this.collider = null;
             this.rigidbody = null;
@@ -6136,6 +6144,45 @@ var egret3d;
                 }
             }
         };
+        /**
+         * 实时获取网格资源的指定三角形顶点位置。
+         * - 采用 CPU 蒙皮。
+         */
+        MeshRenderer.prototype.getTriangle = function (triangleIndex, triangle) {
+            if (!triangle) {
+                triangle = egret3d.Triangle.create();
+            }
+            var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
+            if (!meshFilter) {
+                return triangle;
+            }
+            var mesh = meshFilter.mesh;
+            if (!mesh) {
+                return triangle;
+            }
+            var localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
+            var indices = mesh.getIndices();
+            var vertices = mesh.getVertices();
+            for (var i = 0; i < 3; ++i) {
+                var index = indices ? indices[triangleIndex * 3 + i] : triangleIndex * 9 + i;
+                var vertexIndex = index * 3;
+                switch (i) {
+                    case 0:
+                        triangle.a.fromArray(vertices, vertexIndex);
+                        triangle.a.applyMatrix(localToWorldMatrix);
+                        break;
+                    case 1:
+                        triangle.b.fromArray(vertices, vertexIndex);
+                        triangle.b.applyMatrix(localToWorldMatrix);
+                        break;
+                    case 2:
+                        triangle.c.fromArray(vertices, vertexIndex);
+                        triangle.c.applyMatrix(localToWorldMatrix);
+                        break;
+                }
+            }
+            return triangle;
+        };
         MeshRenderer.prototype.raycast = function (p1, p2, p3) {
             var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
             if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh) {
@@ -6478,6 +6525,9 @@ var egret3d;
              * @internal
              */
             _this._rawVertices = null;
+            /**
+             * @internal
+             */
             _this._skinnedVertices = null;
             if (typeof vertexCountOrConfig === "number") {
                 vertexCountOrConfig = vertexCountOrConfig || 3;
@@ -6630,8 +6680,8 @@ var egret3d;
                                         raycastInfo.triangleIndex = i / 3;
                                         raycastInfo.distance = helpRaycastInfo.distance;
                                         raycastInfo.position.copy(helpRaycastInfo.position);
-                                        raycastInfo.textureCoordA.copy(helpRaycastInfo.textureCoordA);
-                                        raycastInfo.textureCoordB.copy(helpRaycastInfo.textureCoordB);
+                                        raycastInfo.coord.copy(helpRaycastInfo.coord);
+                                        // raycastInfo.textureCoordB.copy(helpRaycastInfo.textureCoordB); TODO
                                         hit = true;
                                         if (raycastInfo.normal) {
                                             helpTriangleB.copy(helpTriangleA);
@@ -6653,8 +6703,8 @@ var egret3d;
                                             raycastInfo.triangleIndex = i / 9;
                                             raycastInfo.distance = helpRaycastInfo.distance;
                                             raycastInfo.position.copy(helpRaycastInfo.position);
-                                            raycastInfo.textureCoordA.copy(helpRaycastInfo.textureCoordA);
-                                            raycastInfo.textureCoordB.copy(helpRaycastInfo.textureCoordB);
+                                            raycastInfo.coord.copy(helpRaycastInfo.coord);
+                                            // raycastInfo.textureCoordB.copy(helpRaycastInfo.textureCoordB); TODO
                                             hit = true;
                                             if (raycastInfo.normal) {
                                                 helpTriangleB.copy(helpTriangleA);
@@ -6673,20 +6723,20 @@ var egret3d;
             }
             if (hit && raycastInfo.normal) {
                 var normal = raycastInfo.normal;
-                var normals = this.getNormals();
-                if (normals) {
-                    // TODO 三顶点的法线插值。
-                    var indices = this.getIndices();
-                    if (indices) {
-                        normal.fromArray(normals, indices[raycastInfo.triangleIndex * 3] * 3);
-                    }
-                    else {
-                        normal.fromArray(normals, raycastInfo.triangleIndex * 9);
-                    }
-                }
-                else {
-                    helpTriangleB.getNormal(normal);
-                }
+                // const normals = this.getNormals();
+                // if (normals) {
+                //     // TODO 三顶点的法线插值。
+                //     const indices = this.getIndices();
+                //     if (indices) {
+                //         normal.fromArray(normals, indices[raycastInfo!.triangleIndex * 3] * 3);
+                //     }
+                //     else {
+                //         normal.fromArray(normals, raycastInfo!.triangleIndex * 9);
+                //     }
+                // }
+                // else {
+                helpTriangleB.getNormal(normal);
+                // }
             }
             return hit;
         };
@@ -8607,7 +8657,7 @@ var paper;
             return this.components[uuid] || this.objects[uuid];
         };
         /**
-         * @internal
+         * @private
          */
         Deserializer.prototype.deserialize = function (data, keepUUID, makeLink, rootTarget) {
             if (keepUUID === void 0) { keepUUID = false; }
@@ -10439,7 +10489,24 @@ var egret3d;
         }
         DefaultMeshes.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
-            // TODO 颜色切线，球体，更多类型。
+            // TODO 颜色，更多类型。
+            {
+                var mesh = new egret3d.Mesh(3, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
+                mesh._isBuiltin = true;
+                mesh.name = "builtin/triangle.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.TRIANGLE = mesh;
+                mesh.setAttributes("POSITION" /* POSITION */, [
+                    0.0, 0.5, 0.0,
+                    -0.5, -0.5, 0.0,
+                    0.5, -0.5, 0.0,
+                ]);
+                mesh.setAttributes("COLOR_0" /* COLOR_0 */, [
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+                    1.0, 1.0, 1.0, 1.0,
+                ]);
+            }
             {
                 var mesh = egret3d.MeshBuilder.createPlane();
                 mesh._isBuiltin = true;
@@ -15839,7 +15906,7 @@ var egret3d;
             this._mesh = null;
         };
         SkinnedMeshRenderer.prototype.recalculateLocalBox = function () {
-            // TODO 蒙皮网格的 aabb 需要能自定义。
+            // TODO 蒙皮网格的 aabb 需要能自定义，或者强制更新。
             if (this._mesh) {
                 this._localBoundingBox.clear();
                 var vertices = this._mesh._rawVertices || this._mesh.getVertices(); // T pose mesh aabb.
@@ -15849,6 +15916,50 @@ var egret3d;
                     this._localBoundingBox.add(position);
                 }
             }
+        };
+        /**
+         * 实时获取网格资源的指定三角形顶点位置。
+         * - 采用 CPU 蒙皮。
+         */
+        SkinnedMeshRenderer.prototype.getTriangle = function (triangleIndex, triangle) {
+            if (!triangle) {
+                triangle = egret3d.Triangle.create();
+            }
+            var mesh = this._mesh;
+            var indices = mesh.getIndices();
+            var vertices = mesh._rawVertices || mesh.getVertices();
+            var joints = mesh.getAttributes("JOINTS_0" /* JOINTS_0 */);
+            var weights = mesh.getAttributes("WEIGHTS_0" /* WEIGHTS_0 */);
+            var boneMatrices = this.boneMatrices;
+            var vA = _helpVector3A;
+            var vB = _helpVector3B;
+            var vC = _helpVector3C;
+            for (var i = 0; i < 3; ++i) {
+                var index = indices[triangleIndex * 3 + i];
+                var vertexIndex = index * 3;
+                var jointIndex = index * 4;
+                vA.fromArray(vertices, vertexIndex);
+                vB.clear();
+                for (var i_1 = 0; i_1 < 4; ++i_1) {
+                    var weight = weights[jointIndex + i_1];
+                    if (weight <= 0.0) {
+                        continue;
+                    }
+                    vB.add(vC.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + i_1] * 16), vA).multiplyScalar(weight));
+                }
+                switch (i) {
+                    case 0:
+                        triangle.a.copy(vB);
+                        break;
+                    case 1:
+                        triangle.b.copy(vB);
+                        break;
+                    case 2:
+                        triangle.c.copy(vB);
+                        break;
+                }
+            }
+            return triangle;
         };
         SkinnedMeshRenderer.prototype.raycast = function (p1, p2, p3) {
             if (!this._mesh) {

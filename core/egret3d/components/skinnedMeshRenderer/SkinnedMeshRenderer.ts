@@ -165,42 +165,6 @@ namespace egret3d {
                 }
             }
         }
-
-        public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
-            if (!this._mesh) {
-                return false;
-            }
-
-            let raycastMesh = false;
-            let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
-            const transform = this.gameObject.transform;
-            const localRay = helpRay.applyMatrix(transform.worldToLocalMatrix, p1);
-            const localBoundingBox = this.localBoundingBox;
-
-            if (p2) {
-                if (p2 === true) {
-                    raycastMesh = true;
-                }
-                else {
-                    raycastMesh = p3 || false;
-                    raycastInfo = p2;
-                }
-            }
-
-            if (raycastMesh) {
-                return localBoundingBox.raycast(localRay) && this._mesh.raycast(p1, raycastInfo, this.forceCPUSkin ? null : this.boneMatrices);
-            }
-            else if (localBoundingBox.raycast(localRay, raycastInfo)) {
-                if (raycastInfo) { // Update local raycast info to world.
-                    raycastInfo.position.applyMatrix(transform.localToWorldMatrix);
-                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
-                }
-
-                return true;
-            }
-
-            return false;
-        }
         /**
          * 实时获取网格资源的指定三角形顶点位置。
          * - 采用 CPU 蒙皮。
@@ -253,6 +217,42 @@ namespace egret3d {
             }
 
             return triangle;
+        }
+
+        public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
+            if (!this._mesh) {
+                return false;
+            }
+
+            let raycastMesh = false;
+            let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
+            const transform = this.gameObject.transform;
+            const localRay = helpRay.applyMatrix(transform.worldToLocalMatrix, p1);
+            const localBoundingBox = this.localBoundingBox;
+
+            if (p2) {
+                if (p2 === true) {
+                    raycastMesh = true;
+                }
+                else {
+                    raycastMesh = p3 || false;
+                    raycastInfo = p2;
+                }
+            }
+
+            if (raycastMesh) {
+                return localBoundingBox.raycast(localRay) && this._mesh.raycast(p1, raycastInfo, this.forceCPUSkin ? null : this.boneMatrices);
+            }
+            else if (localBoundingBox.raycast(localRay, raycastInfo)) {
+                if (raycastInfo) { // Update local raycast info to world.
+                    raycastInfo.position.applyMatrix(transform.localToWorldMatrix);
+                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
+                }
+
+                return true;
+            }
+
+            return false;
         }
         /**
          * 该渲染组件的骨骼列表。

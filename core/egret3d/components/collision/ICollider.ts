@@ -68,6 +68,7 @@ namespace egret3d {
             return new RaycastInfo();
         }
 
+        public backfaceCulling: boolean = true;
         public subMeshIndex: number = -1;
         public triangleIndex: number = -1;
         /**
@@ -78,13 +79,17 @@ namespace egret3d {
          * 相交的点。
          */
         public readonly position: Vector3 = Vector3.create();
-        public readonly textureCoordA: Vector2 = Vector2.create();
-        public readonly textureCoordB: Vector2 = Vector2.create();
+        /**
+         * 
+         */
+        public readonly coord: Vector2 = Vector2.create();
         /**
          * 相交的法线。
          * - 提供法线向量将计算法线。
          */
         public normal: Vector3 | null = null;
+        public textureCoordA: Vector2 | null = null;
+        public textureCoordB: Vector2 | null = null;
         /**
          * 相交的变换组件。（如果有的话）
          */
@@ -103,13 +108,18 @@ namespace egret3d {
         }
 
         public onClear() {
+            this.clear();
+        }
+
+        public clear() {
             this.subMeshIndex = -1;
             this.triangleIndex = -1;
             this.distance = 0.0;
             this.position.set(0.0, 0.0, 0.0);
-            this.textureCoordA.set(0.0, 0.0);
-            this.textureCoordB.set(0.0, 0.0);
+            this.coord.set(0.0, 0.0);
             this.normal = null;
+            this.textureCoordA = null;
+            this.textureCoordB = null;
             this.transform = null;
             this.collider = null;
             this.rigidbody = null;

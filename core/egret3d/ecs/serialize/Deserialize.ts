@@ -289,7 +289,7 @@ namespace paper {
             return this.components[uuid] || this.objects[uuid] as GameObject;
         }
         /**
-         * @internal
+         * @private
          */
         public deserialize<T extends (Scene | GameObject | BaseComponent)>(
             data: ISerializedData,

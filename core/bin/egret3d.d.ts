@@ -1245,6 +1245,9 @@ declare namespace egret3d {
         private static readonly _instances;
         /**
          * 创建一个三角形实例。
+         * -   a
+         * -  /·\
+         * - b - c
          * @param a 点 A。
          * @param b 点 B。
          * @param c 点 C。
@@ -1252,6 +1255,9 @@ declare namespace egret3d {
         static create(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): Triangle;
         /**
          * 通过三个点确定一个三角形，获取该三角形的法线。
+         * -   a
+         * -  /·\
+         * - b - c
          * @param a 点 A。
          * @param b 点 B。
          * @param c 点 C。
@@ -1282,10 +1288,6 @@ declare namespace egret3d {
         set(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): this;
         fromArray(array: Readonly<ArrayLike<number>>, offsetA?: number, offsetB?: number, offsetC?: number): void;
         /**
-         * 获取该三角形的面积。
-         */
-        getArea(): number;
-        /**
          * 获取该三角形的中心点。
          * @param out 输出。
          */
@@ -1296,12 +1298,24 @@ declare namespace egret3d {
          */
         getNormal(out?: Vector3): Vector3;
         /**
+         *
+         * @param u
+         * @param v
+         * @param out
+         */
+        getPointAt(u: number, v: number, out?: Vector3): Vector3;
+        /**
          * 获取一个点到该三角形的最近点。
          * @param point 一个点。
          * @param out 最近点。
          */
         getClosestPointToPoint(point: Readonly<IVector3>, out?: Vector3): Vector3;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        /**
+         * 获取该三角形的面积。
+         * - 该值是实时计算的。
+         */
+        readonly area: number;
     }
 }
 declare namespace egret3d {
@@ -1814,6 +1828,7 @@ declare namespace egret3d {
          * 创建一个射线检测信息实例。
          */
         static create(): RaycastInfo;
+        backfaceCulling: boolean;
         subMeshIndex: number;
         triangleIndex: number;
         /**
@@ -1824,13 +1839,17 @@ declare namespace egret3d {
          * 相交的点。
          */
         readonly position: Vector3;
-        readonly textureCoordA: Vector2;
-        readonly textureCoordB: Vector2;
+        /**
+         *
+         */
+        readonly coord: Vector2;
         /**
          * 相交的法线。
          * - 提供法线向量将计算法线。
          */
         normal: Vector3 | null;
+        textureCoordA: Vector2 | null;
+        textureCoordB: Vector2 | null;
         /**
          * 相交的变换组件。（如果有的话）
          */
@@ -1845,6 +1864,7 @@ declare namespace egret3d {
         rigidbody: any | null;
         private constructor();
         onClear(): void;
+        clear(): void;
     }
 }
 declare namespace egret3d {
@@ -3913,6 +3933,11 @@ declare namespace egret3d {
          */
         protected readonly _lightmapScaleOffset: egret3d.Vector4;
         recalculateLocalBox(): void;
+        /**
+         * 实时获取网格资源的指定三角形顶点位置。
+         * - 采用 CPU 蒙皮。
+         */
+        getTriangle(triangleIndex: uint, triangle?: Triangle): Triangle;
         raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
         /**
          * 该组件的光照图索引。
@@ -4013,7 +4038,6 @@ declare namespace egret3d {
             [key: string]: gltf.AccessorType;
         };
         protected _glTFMesh: gltf.Mesh | null;
-        private _skinnedVertices;
         /**
          * 请使用 `egret3d.Mesh.create()` 创建实例。
          * @see egret3d.Mesh.create()
@@ -4698,6 +4722,10 @@ declare namespace paper {
         private _deserializeComponent(componentSource, source?, target?);
         private _deserializeChild(source, target?);
         getAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent | null;
+        /**
+         * @private
+         */
+        deserialize<T extends (Scene | GameObject | BaseComponent)>(data: ISerializedData, keepUUID?: boolean, makeLink?: boolean, rootTarget?: Scene | GameObject | null): T | null;
     }
 }
 declare namespace paper {
@@ -5196,6 +5224,7 @@ declare namespace egret3d {
      * 提供默认的几何网格资源的快速访问方式，以及创建几何网格或几何网格实体的方法。
      */
     class DefaultMeshes extends paper.SingletonComponent {
+        static TRIANGLE: Mesh;
         static QUAD: Mesh;
         static QUAD_PARTICLE: Mesh;
         static PLANE: Mesh;
@@ -6649,6 +6678,11 @@ declare namespace egret3d {
         initialize(reset?: boolean): void;
         uninitialize(): void;
         recalculateLocalBox(): void;
+        /**
+         * 实时获取网格资源的指定三角形顶点位置。
+         * - 采用 CPU 蒙皮。
+         */
+        getTriangle(triangleIndex: uint, triangle?: Triangle): Triangle;
         raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
         /**
          * 该渲染组件的骨骼列表。
