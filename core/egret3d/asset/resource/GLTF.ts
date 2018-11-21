@@ -2,6 +2,20 @@ namespace egret3d {
     /**
      * 
      */
+    export interface GLTF extends gltf.GLTF {
+        version: string;
+        extensions: {
+            KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
+            paper?: {
+                shaders?: gltf.Shader[], // TODO
+            };
+        };
+        extensionsUsed: string[];
+        extensionsRequired: string[];
+    }
+    /**
+     * 
+     */
     export interface GLTFTexture extends gltf.Texture {
         extensions: {
             paper?: {
@@ -25,20 +39,6 @@ namespace egret3d {
                 states?: gltf.States;
             }
         };
-    }
-    /**
-     * 
-     */
-    export interface GLTF extends gltf.GLTF {
-        version: string;
-        extensions: {
-            KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
-            paper?: {
-                shaders?: gltf.Shader[], // TODO
-            };
-        };
-        extensionsUsed: string[];
-        extensionsRequired: string[];
     }
     /**
      * 
@@ -100,7 +100,9 @@ namespace egret3d {
          */
         events: GLTFFrameEvent[];
     }
-
+    /**
+     * 
+     */
     export interface GLTFAnimationChannel extends gltf.AnimationChannel {
         extensions?: {
             paper: {
@@ -138,9 +140,6 @@ namespace egret3d {
      * glTF 资源。
      */
     export class GLTFAsset extends paper.Asset {
-        /**
-         * 
-         */
         private static _createConfig() {
             const config = {
                 version: "4",
@@ -481,13 +480,13 @@ namespace egret3d {
         /**
          * 通过 Accessor 获取指定 BufferLength。
          */
-        public getBufferLength(accessor: gltf.Accessor) {
+        public getBufferLength(accessor: gltf.Accessor): uint {
             return this.getAccessorTypeCount(accessor.type) * this.getComponentTypeCount(accessor.componentType) * accessor.count;
         }
         /**
          * 通过 Accessor 获取指定 BufferOffset。
          */
-        public getBufferOffset(accessor: gltf.Accessor) {
+        public getBufferOffset(accessor: gltf.Accessor): uint {
             const bufferView = this.getBufferView(accessor);
             // const buffer = this.buffers[bufferView.buffer];
 
@@ -496,7 +495,7 @@ namespace egret3d {
         /**
          * 通过 Accessor 获取指定 Buffer。
          */
-        public getBuffer(accessor: gltf.Accessor) {
+        public getBuffer(accessor: gltf.Accessor): Uint32Array {
             const bufferView = this.getBufferView(accessor);
             // this.config.buffers[bufferView.buffer];
             return this.buffers[bufferView.buffer];
@@ -504,57 +503,25 @@ namespace egret3d {
         /**
          * 通过 Accessor 获取指定 BufferView。
          */
-        public getBufferView(accessor: gltf.Accessor) {
+        public getBufferView(accessor: gltf.Accessor): gltf.BufferView {
             return this.config.bufferViews![accessor.bufferView || 0];
         }
         /**
          * 通过 Accessor 索引，获取指定 Accessor。
          */
-        public getAccessor(index: gltf.GLTFIndex) {
+        public getAccessor(index: gltf.GLTFIndex): gltf.Accessor {
             return this.config.accessors![index];
         }
         /**
          * 获取节点。
          */
-        public getNode(index: gltf.GLTFIndex) {
+        public getNode(index: gltf.GLTFIndex): gltf.Node {
             return this.config.nodes![index];
-        }
-        /*
-         * 获取动画剪辑。
-         */
-        public getAnimationClip(name: string) {
-            if (
-                !this.config.animations ||
-                this.config.animations.length === 0
-
-            ) { // TODO 动画数据暂不合并。
-                return null;
-            }
-
-            const animation = this.config.animations[0] as GLTFAnimation;
-            if (animation.extensions.paper.clips.length === 0) {
-                return null;
-            }
-
-            if (!name) {
-                return animation.extensions.paper.clips[0];
-            }
-
-            for (const animation of this.config.animations) {
-                for (const animationClip of animation.extensions.paper.clips) {
-                    if (animationClip.name === name) {
-                        return animationClip;
-                    }
-                }
-            }
-
-            return null;
         }
     }
 }
-/**
- * 
- */
+
+// For keep const enum.
 namespace gltf {
     /**
      * 绘制缓存掩码。
@@ -626,9 +593,7 @@ namespace gltf {
         CCW = 2305,
     }
 }
-/**
- * 
- */
+
 declare namespace gltf {
     /**
      * glTF index.

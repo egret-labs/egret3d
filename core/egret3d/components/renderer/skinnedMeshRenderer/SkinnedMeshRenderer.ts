@@ -55,35 +55,38 @@ namespace egret3d {
                 const mA = _helpMatrix;
 
                 const mesh = this._mesh!;
-                const indices = mesh.getIndices()!;
-                const vertices = mesh.getVertices()!;
-                const joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)! as Float32Array;
-                const weights = mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)! as Float32Array;
+                const joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0);
+                const weights = mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0);
 
-                if (!mesh._rawVertices) {
-                    mesh._rawVertices = new Float32Array(vertices.length);
-                    mesh._rawVertices.set(vertices);
-                }
+                if (joints && weights) {
+                    const indices = mesh.getIndices()!;
+                    const vertices = mesh.getVertices()!;
 
-                for (const index of <any>indices as number[]) {
-                    const vertexIndex = index * 3;
-                    const jointIndex = index * 4;
-                    vA.fromArray(mesh._rawVertices, vertexIndex);
-                    vB.clear();
-
-                    for (let i = 0; i < 4; ++i) {
-                        const weight = weights![jointIndex + i];
-                        if (weight <= 0.0) {
-                            continue;
-                        }
-
-                        vB.add(vC.applyMatrix(mA.fromArray(boneMatrices, joints![jointIndex + i] * 16), vA).multiplyScalar(weight));
+                    if (!mesh._rawVertices) {
+                        mesh._rawVertices = new Float32Array(vertices.length);
+                        mesh._rawVertices.set(vertices);
                     }
 
-                    vB.toArray(vertices, vertexIndex);
-                }
+                    for (const index of <any>indices as number[]) {
+                        const vertexIndex = index * 3;
+                        const jointIndex = index * 4;
+                        vA.fromArray(mesh._rawVertices, vertexIndex);
+                        vB.clear();
 
-                mesh.uploadVertexBuffer();
+                        for (let i = 0; i < 4; ++i) {
+                            const weight = weights![jointIndex + i];
+                            if (weight <= 0.01) {
+                                continue;
+                            }
+
+                            vB.add(vC.applyMatrix(mA.fromArray(boneMatrices, joints![jointIndex + i] * 16), vA).multiplyScalar(weight));
+                        }
+
+                        vB.toArray(vertices, vertexIndex);
+                    }
+
+                    mesh.uploadVertexBuffer();
+                }
             }
         }
 
@@ -94,6 +97,7 @@ namespace egret3d {
                 return;
             }
 
+            // TODO cache 剔除，脏标记。
             this._bones.length = 0;
             this._rootBone = null;
             this.boneMatrices = null;
@@ -167,56 +171,65 @@ namespace egret3d {
         }
         /**
          * 实时获取网格资源的指定三角形顶点位置。
-         * - 采用 CPU 蒙皮。
+         * - 采用 CPU 蒙皮指定顶点。
          */
         public getTriangle(triangleIndex: uint, triangle?: Triangle): Triangle {
             if (!triangle) {
                 triangle = Triangle.create();
             }
 
-            const mesh = this._mesh!;
-            const indices = mesh.getIndices()!;
-            const vertices = mesh._rawVertices || mesh.getVertices()!;
-            const joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)!;
-            const weights = mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)!;
-            const boneMatrices = this.boneMatrices!;
-            const vA = _helpVector3A;
-            const vB = _helpVector3B;
-            const vC = _helpVector3C;
-
-            for (let i = 0; i < 3; ++i) {
-                const index = indices[triangleIndex * 3 + i];
-                const vertexIndex = index * 3;
-                const jointIndex = index * 4;
-
-                vA.fromArray(vertices, vertexIndex);
-                vB.clear();
-
-                for (let i = 0; i < 4; ++i) {
-                    const weight = weights![jointIndex + i];
-                    if (weight <= 0.0) {
-                        continue;
-                    }
-
-                    vB.add(vC.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + i] * 16), vA).multiplyScalar(weight));
-                }
-
-                switch (i) {
-                    case 0:
-                        triangle.a.copy(vB);
-                        break;
-
-                    case 1:
-                        triangle.b.copy(vB);
-                        break;
-
-                    case 2:
-                        triangle.c.copy(vB);
-                        break;
-                }
+            const mesh = this._mesh;
+            if (!mesh) {
+                return triangle;
             }
 
-            return triangle;
+            const joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0);
+            const weights = mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0);
+            const boneMatrices = this.boneMatrices;
+
+            if (joints && weights && boneMatrices) {
+                const indices = mesh.getIndices()!;
+                const vertices = mesh._rawVertices || mesh.getVertices()!;
+                const vA = _helpVector3A;
+                const vB = _helpVector3B;
+                const vC = _helpVector3C;
+
+                for (let i = 0; i < 3; ++i) {
+                    const index = indices[triangleIndex * 3 + i];
+                    const vertexIndex = index * 3;
+                    const jointIndex = index * 4;
+
+                    vA.fromArray(vertices, vertexIndex);
+                    vB.clear();
+
+                    for (let i = 0; i < 4; ++i) {
+                        const weight = weights![jointIndex + i];
+                        if (weight <= 0.01) {
+                            continue;
+                        }
+
+                        vB.add(vC.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + i] * 16), vA).multiplyScalar(weight));
+                    }
+
+                    switch (i) {
+                        case 0:
+                            triangle.a.copy(vB);
+                            break;
+
+                        case 1:
+                            triangle.b.copy(vB);
+                            break;
+
+                        case 2:
+                            triangle.c.copy(vB);
+                            break;
+                    }
+                }
+
+                return triangle;
+            }
+
+            return super.getTriangle(triangleIndex, triangle);
         }
 
         public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {

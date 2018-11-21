@@ -222,19 +222,21 @@ namespace egret3d {
         onLoadStart(host, resource) {
             return host.load(resource, "bin").then((result) => {
                 const parseResult = egret3d.GLTFAsset.parseFromBinary(result instanceof ArrayBuffer ? new Uint32Array(result) : result);
-                let glb: egret3d.GLTFAsset;
+                let glb: GLTFAsset;
 
                 if (parseResult.config.meshes) {
-                    glb = new egret3d.Mesh(parseResult.config, parseResult.buffers, resource.name);
+                    glb = new Mesh(parseResult.config, parseResult.buffers, resource.name);
                 }
                 else {
-                    glb = new egret3d.GLTFAsset();
+                    glb = new AnimationAsset();
                     glb.name = resource.name;
                     glb.config = parseResult.config;
                     for (const b of parseResult.buffers) {
                         glb.buffers.push(b);
                     }
                 }
+
+                glb.initialize();
 
                 paper.Asset.register(glb);
                 return glb;

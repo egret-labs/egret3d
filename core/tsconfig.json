@@ -55,6 +55,7 @@
         "egret3d/ecs/core/SystemManager.ts",
         "egret3d/ecs/core/ScenesManager.ts",
         "egret3d/ecs/core/Application.ts",
+
         "egret3d/ecs/components/BaseComponent.ts",
         "egret3d/ecs/components/SingletonComponent.ts",
         "egret3d/ecs/components/GroupComponent.ts",
@@ -63,6 +64,7 @@
         "egret3d/ecs/components/Behaviour.ts",
         "egret3d/ecs/components/Time.ts",
         "egret3d/ecs/components/DisposeCollecter.ts",
+
         "egret3d/ecs/systems/GameObjectGroup.ts",
         "egret3d/ecs/systems/BaseSystem.ts",
         "egret3d/ecs/systems/EnableSystem.ts",
@@ -78,6 +80,7 @@
         "egret3d/Interface.ts",
 
         "egret3d/components/Transform.ts",
+
         "egret3d/components/singleton/Stage.ts",
         "egret3d/components/singleton/DefaultMeshes.ts",
         "egret3d/components/singleton/DefaultTextures.ts",
@@ -87,49 +90,61 @@
         "egret3d/components/singleton/DrawCallCollecter.ts",
         "egret3d/components/singleton/ContactCollecter.ts",
         "egret3d/components/singleton/InputCollecter.ts",
+
         "egret3d/components/collision/ICollider.ts",
+        "egret3d/components/collision/RaycastInfo.ts",
         "egret3d/components/collision/BoxCollider.ts",
         "egret3d/components/collision/SphereCollider.ts",
         "egret3d/components/collision/CylinderCollider.ts",
         "egret3d/components/collision/Collision.ts",
+
         "egret3d/components/camera/CameraSystem.ts",
         "egret3d/components/camera/Camera.ts",
         "egret3d/components/camera/CameraPostQueue.ts",
         "egret3d/components/camera/CameraRenderContext.ts",
-        "egret3d/components/egret2DRenderer/Egret2DRenderer.ts",
-        "egret3d/components/egret2DRenderer/Egret2DRendererSystem.ts",
-        "egret3d/components/egret2DRenderer/Renderer.ts",
-        "egret3d/components/egret2DRenderer/ScreenAdapter.ts",
+
         "egret3d/components/light/Shadow.ts",
         "egret3d/components/light/BaseLight.ts",
         "egret3d/components/light/DirectionalLight.ts",
         "egret3d/components/light/PointLight.ts",
         "egret3d/components/light/SpotLight.ts",
-        "egret3d/components/meshRenderer/MeshFilter.ts",
-        "egret3d/components/meshRenderer/MeshRenderer.ts",
-        "egret3d/components/meshRenderer/MeshRendererSystem.ts",
-        "egret3d/components/skinnedMeshRenderer/SkinnedMeshRenderer.ts",
-        "egret3d/components/skinnedMeshRenderer/SkinnedMeshRendererSystem.ts",
+
+        "egret3d/components/renderer/DrawCall.ts",
+        "egret3d/components/renderer/Fog.ts",
+        "egret3d/components/renderer/meshRenderer/MeshFilter.ts",
+        "egret3d/components/renderer/meshRenderer/MeshRenderer.ts",
+        "egret3d/components/renderer/meshRenderer/MeshRendererSystem.ts",
+        "egret3d/components/renderer/skinnedMeshRenderer/SkinnedMeshRenderer.ts",
+        "egret3d/components/renderer/skinnedMeshRenderer/SkinnedMeshRendererSystem.ts",
+        "egret3d/components/renderer/egret2DRenderer/Egret2DRenderer.ts",
+        "egret3d/components/renderer/egret2DRenderer/Egret2DRendererSystem.ts",
+        "egret3d/components/renderer/egret2DRenderer/Renderer.ts",
+        "egret3d/components/renderer/egret2DRenderer/ScreenAdapter.ts",
+
         "egret3d/components/animation/Animation.ts",
         "egret3d/components/animation/AnimationSystem.ts",
+
         "egret3d/components/particle/ParticleHelper.ts",
         "egret3d/components/particle/ParticleModules.ts",
         "egret3d/components/particle/ParticleBatcher.ts",
         "egret3d/components/particle/ParticleComponent.ts",
         "egret3d/components/particle/ParticleRenderer.ts",
         "egret3d/components/particle/ParticleSystem.ts",
+
         "egret3d/components/audio/Audio.ts",
+
         "egret3d/components/StaticBatchingUtility.ts",
 
         "egret3d/asset/resource/GLTF.ts",
         "egret3d/asset/resource/BaseMesh.ts",
-        "egret3d/asset/resource/MeshBuilder.ts",
+        "egret3d/asset/resource/Animation.ts",
         "egret3d/asset/resource/Texture.ts",
         "egret3d/asset/resource/Shader.ts",
         "egret3d/asset/resource/Material.ts",
+        "egret3d/asset/resource/MeshBuilder.ts",
+
         "egret3d/asset/default/ShaderLib.ts",
         "egret3d/asset/default/ShaderChunk.ts",
-        "egret3d/asset/Fog.ts",
         
         "egret3d/res-processor/ResProcessor.ts",
         "egret3d/util/regexputil.ts",
@@ -141,6 +156,7 @@
         "egret3d/web/render/resource/GLTexture.ts",
         "egret3d/web/render/resource/GLRenderTarget.ts",
         "egret3d/web/render/resource/GLProgram.ts",
+
         "egret3d/web/systems/BeginSystem.ts",
         "egret3d/web/systems/WebGLRenderSystem.ts",
         "egret3d/web/systems/InputSystem.ts",

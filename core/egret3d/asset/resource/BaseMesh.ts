@@ -2,6 +2,7 @@ namespace egret3d {
     const _helpVector3A = Vector3.create();
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
+    const _helpQuaternion = Quaternion.create();
     const _helpMatrix = Matrix4.create();
     const _helpTriangleA = Triangle.create();
     const _helpTriangleB = Triangle.create();
@@ -23,11 +24,21 @@ namespace egret3d {
         protected readonly _customAttributeTypes: { [key: string]: gltf.AccessorType } = {};
         protected _glTFMesh: gltf.Mesh | null = null;
         /**
+         * @internal
+         */
+        public _inverseBindMatrices: Float32Array | null = null;
+        /**
+         * x, y, z, rx, ry, rz, rw, sx, sy, sz.
+         * @internal
+         */
+        public _bindTransforms: Float32Array | null = null;
+        /**
          * Backuped raw vertices when CPU skinned.
          * @internal
          */
         public _rawVertices: Float32Array | null = null;
         /**
+         * CPU skinned vertices.
          * @internal
          */
         public _skinnedVertices: Float32Array | null = null;
@@ -112,10 +123,56 @@ namespace egret3d {
                 this._attributeNames.push(k);
             }
         }
+
+        public initialize(): void {
+            super.initialize();
+
+            const config = this.config;
+
+            // Mast be skinned mesh if has skin.
+            if (config.skins && config.skins.length > 0) {
+                const skin = config.skins![0];
+                // Skinned mesh mast has inverseBindMatrices.
+                const inverseBindMatrices = this._inverseBindMatrices = this.createTypeArrayFromAccessor(this.getAccessor(skin.inverseBindMatrices!));
+                const bindTransforms = this._bindTransforms = new Float32Array(inverseBindMatrices.length / 16 * 12);
+                const bindMatrix = _helpMatrix;
+                const position = _helpVector3A;
+                const rotation = _helpQuaternion;
+                const scale = _helpVector3B;
+
+                for (let i = 0, iT = 0, l = inverseBindMatrices.length; i < l; i += 16) {
+                    bindMatrix
+                        .fromArray(inverseBindMatrices, i)
+                        .inverse()
+                        .decompose(position, rotation, scale);
+                    position.toArray(bindTransforms, iT); iT += 3;
+                    rotation.toArray(bindTransforms, iT); iT += 4;
+                    scale.toArray(bindTransforms, iT); iT += 3;
+                }
+            }
+        }
+
+        public dispose() {
+            if (!super.dispose()) {
+                return false;
+            }
+
+            this._drawMode = gltf.DrawMode.Static;
+            this._attributeNames.length = 0;
+            // this._customAttributeTypes
+            this._glTFMesh = null;
+            this._inverseBindMatrices = null;
+            this._bindTransforms = null;
+            this._rawVertices = null;
+            this._skinnedVertices = null;
+
+            return true;
+        }
         /**
          * 克隆该网格。
          */
         public clone() {
+            // TODO
             const value = new Mesh(this.vertexCount, 0, this._attributeNames, this._customAttributeTypes, this.drawMode);
 
             for (const primitive of this._glTFMesh!.primitives) {
@@ -177,7 +234,7 @@ namespace egret3d {
 
                             for (let i = 0; i < 4; ++i) {
                                 const weight = weights![jointIndex + i];
-                                if (weight <= 0.0) {
+                                if (weight <= 0.1) {
                                     continue;
                                 }
 
@@ -289,7 +346,7 @@ namespace egret3d {
                 //     }
                 // }
                 // else {
-                    helpTriangleB.getNormal(normal);
+                helpTriangleB.getNormal(normal);
                 // }
             }
 

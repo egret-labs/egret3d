@@ -147,6 +147,10 @@ namespace egret3d.web {
             else {
                 webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
             }
+
+            if (DEBUG && drawCall.drawCount >= 0) {
+                drawCall.drawCount++;
+            }
         }
 
         private _updateContextUniforms(program: GlProgram, context: CameraRenderContext, technique: gltf.Technique) {
