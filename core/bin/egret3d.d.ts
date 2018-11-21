@@ -7705,6 +7705,7 @@ declare namespace egret3d.particle {
          * 序列帧变化模块。
          */
         readonly textureSheetAnimation: TextureSheetAnimationModule;
+        private _timeScale;
         private readonly _batcher;
         private _clean(cleanPlayState?);
         initialize(): void;
@@ -7713,6 +7714,7 @@ declare namespace egret3d.particle {
         pause(withChildren?: boolean): void;
         stop(withChildren?: boolean): void;
         clear(withChildren?: boolean): void;
+        timeScale: number;
         readonly isPlaying: boolean;
         readonly isPaused: boolean;
         readonly isAlive: boolean;

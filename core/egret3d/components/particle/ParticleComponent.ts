@@ -51,6 +51,8 @@ namespace egret3d.particle {
          * @internal
          */
         public _isPaused: boolean = false;
+
+        private _timeScale: number = 1.0;
         private readonly _batcher: ParticleBatcher = new ParticleBatcher();
 
         private _clean(cleanPlayState: boolean = false) {//TODO
@@ -82,7 +84,7 @@ namespace egret3d.particle {
          * @internal 
          */
         public update(elapsedTime: number) {
-            this._batcher.update(elapsedTime);
+            this._batcher.update(elapsedTime * this._timeScale);
         }
 
         public play(withChildren: boolean = true) {
@@ -144,6 +146,14 @@ namespace egret3d.particle {
                     }
                 }
             }
+        }
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        public set timeScale(value: number) {
+            this._timeScale = value;
+        }
+
+        public get timeScale() {
+            return this._timeScale;
         }
 
         public get isPlaying() {

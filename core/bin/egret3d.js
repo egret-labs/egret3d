@@ -19698,6 +19698,7 @@ var egret3d;
                  * @internal
                  */
                 _this._isPaused = false;
+                _this._timeScale = 1.0;
                 _this._batcher = new particle.ParticleBatcher();
                 return _this;
             }
@@ -19729,7 +19730,7 @@ var egret3d;
              * @internal
              */
             ParticleComponent.prototype.update = function (elapsedTime) {
-                this._batcher.update(elapsedTime);
+                this._batcher.update(elapsedTime * this._timeScale);
             };
             ParticleComponent.prototype.play = function (withChildren) {
                 if (withChildren === void 0) { withChildren = true; }
@@ -19797,6 +19798,16 @@ var egret3d;
                     }
                 }
             };
+            Object.defineProperty(ParticleComponent.prototype, "timeScale", {
+                get: function () {
+                    return this._timeScale;
+                },
+                set: function (value) {
+                    this._timeScale = value;
+                },
+                enumerable: true,
+                configurable: true
+            });
             Object.defineProperty(ParticleComponent.prototype, "isPlaying", {
                 get: function () {
                     return this._isPlaying;
@@ -19849,6 +19860,9 @@ var egret3d;
             __decorate([
                 paper.serializedField
             ], ParticleComponent.prototype, "textureSheetAnimation", void 0);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            ], ParticleComponent.prototype, "timeScale", null);
             return ParticleComponent;
         }(paper.BaseComponent));
         particle.ParticleComponent = ParticleComponent;
