@@ -66,7 +66,7 @@ namespace egret3d {
 
     function _getCommonExtensions(capabilities: WebGLCapabilities) {
         let extensions = "";
-        if (capabilities.gl_oes_standard_derivatives) {
+        if (capabilities.oes_standard_derivatives) {
             extensions += "#extension GL_OES_standard_derivatives : enable \n";
         }
 
@@ -434,9 +434,6 @@ namespace egret3d {
 
             // use dfdx and dfdy must enable OES_standard_derivatives
             this.oes_standard_derivatives = !!_getExtension(webgl, "OES_standard_derivatives");
-            // GL_OES_standard_derivatives
-            this.gl_oes_standard_derivatives = !!_getExtension(webgl, "GL_OES_standard_derivatives");
-
             //TODO
             WebGLCapabilities.commonExtensions = _getCommonExtensions(this);
             WebGLCapabilities.commonDefines = _getCommonDefines(this);

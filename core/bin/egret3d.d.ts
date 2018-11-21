@@ -9156,9 +9156,6 @@ declare namespace egret3d.ShaderLib {
                     "name": string;
                     "attributes": {};
                     "uniforms": {
-                        "tDiffuse": {
-                            "type": number;
-                        };
                         "tColor": {
                             "type": number;
                         };
