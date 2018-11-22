@@ -71,11 +71,11 @@ namespace egret3d.web {
             const transparentCalls = camera.context.transparentCalls;
             // Step 1 draw opaques.
             for (const drawCall of opaqueCalls) {
-                this.draw(camera, drawCall, material);
+                this.draw(drawCall, material);
             }
             // Step 2 draw transparents.
             for (const drawCall of transparentCalls) {
-                this.draw(camera, drawCall, material);
+                this.draw(drawCall, material);
             }
             //
             if (renderTarget) {
@@ -97,10 +97,10 @@ namespace egret3d.web {
             }
         }
 
-        public draw(camera: Camera, drawCall: DrawCall, drawMaterial?: Material): void {
+        public draw(drawCall: DrawCall, drawMaterial?: Material): void {
+            const camera = Camera.current;
             if (drawCall.renderer && drawCall.renderer.gameObject._beforeRenderBehaviors.length > 0) {
                 let flag = false;
-                Camera.current = camera;
 
                 for (const behaviour of drawCall.renderer.gameObject._beforeRenderBehaviors) {
                     flag = !behaviour.onBeforeRender() || flag;
@@ -455,34 +455,42 @@ namespace egret3d.web {
         }
 
         public render(camera: Camera, material?: Material) {
+            const isChanged = Camera.current !== camera;
             Camera.current = camera;
-            camera._update();
+            if (isChanged) {
+                camera._update();
 
-            if (this._cameraAndLightCollecter.lightDirty) {
-                camera.context.updateLights(this._cameraAndLightCollecter.lights); // TODO 性能优化
-            }
-            //
-            if (camera.postQueues.length === 0) {
-                this._render(camera, camera.renderTarget, material);
+                if (this._cameraAndLightCollecter.lightDirty) {
+                    camera.context.updateLights(this._cameraAndLightCollecter.lights); // TODO 性能优化
+                }
+                //
+                if (camera.postQueues.length === 0) {
+                    this._render(camera, camera.renderTarget, material);
+                }
+                else {
+                    //TODO这里为空了
+                    if (!camera._readRenderTarget) {
+                        camera._readRenderTarget = new GlRenderTarget("builtin/post_processing1.image.json", stage.viewport.w, stage.viewport.h, true);
+                    }
+                    if (!camera._writeRenderTarget) {
+                        camera._writeRenderTarget = new GlRenderTarget("builtin/post_processing1.image.json", stage.viewport.w, stage.viewport.h, true);
+                    }
+                    this._render(camera, camera._readRenderTarget, material);
+
+                    for (const postEffect of camera.postQueues) {
+                        postEffect.render(camera);
+                    }
+
+                    const temp = camera._readRenderTarget;
+                    camera._readRenderTarget = camera._writeRenderTarget;
+                    camera._writeRenderTarget = temp;
+                }
             }
             else {
-                //TODO这里为空了
-                if (!camera._readRenderTarget) {
-                    camera._readRenderTarget = new GlRenderTarget("builtin/post_processing1.image.json", stage.viewport.w, stage.viewport.h, true);
-                }
-                if (!camera._writeRenderTarget) {
-                    camera._writeRenderTarget = new GlRenderTarget("builtin/post_processing1.image.json", stage.viewport.w, stage.viewport.h, true);
-                }
-                this._render(camera, camera._readRenderTarget, material);
-
-                for (const postEffect of camera.postQueues) {
-                    postEffect.render(camera);
-                }
-
-                const temp = camera._readRenderTarget;
-                camera._readRenderTarget = camera._writeRenderTarget;
-                camera._writeRenderTarget = temp;
+                this._render(camera, camera.renderTarget, material);
             }
+            //
+            Camera.current = null;
         }
 
         public onUpdate() {

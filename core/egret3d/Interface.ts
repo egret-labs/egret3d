@@ -22,6 +22,6 @@ namespace egret3d {
          * @param camera 
          * @param drawCall 
          */
-        draw(camera: Camera, drawCall: DrawCall): void;
+        draw(drawCall: DrawCall): void;
     }
 }

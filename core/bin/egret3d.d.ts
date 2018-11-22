@@ -4978,7 +4978,7 @@ declare namespace egret3d {
          * @param camera
          * @param drawCall
          */
-        draw(camera: Camera, drawCall: DrawCall): void;
+        draw(drawCall: DrawCall): void;
     }
 }
 declare namespace egret3d {
@@ -7894,7 +7894,7 @@ declare namespace egret3d {
         readonly viewPort: Rectangle;
         renderTarget: BaseRenderTarget | null;
         render: (camera: Camera, material?: Material) => void;
-        draw: (camera: Camera, drawCall: DrawCall) => void;
+        draw: (drawCall: DrawCall) => void;
         private readonly _stateEnables;
         private readonly _programs;
         private readonly _vsShaders;

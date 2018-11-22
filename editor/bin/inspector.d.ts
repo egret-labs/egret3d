@@ -411,6 +411,8 @@ declare namespace paper.editor {
         onEnable(): void;
         onDisable(): void;
         onUpdate(): void;
+        private static readonly _defalutPosition;
+        private clearDefaultPointerDownPosition();
     }
 }
 declare namespace paper.editor {
@@ -550,6 +552,8 @@ declare namespace paper.editor {
         private findFromChildren(source, as, refs, parent, key);
         getAllGameObjectsFromPrefabInstance(gameObj: paper.GameObject, objs?: paper.GameObject[] | null): GameObject[] | null;
         modifyMaterialPropertyValues(target: egret3d.Material, valueList: any[]): Promise<void>;
+        private modifyMaterialUniformProperty(target, uniformType, propName, copyValue);
+        private modifyMaterialGltfStates(target, propName, copyValue);
     }
 }
 declare namespace paper.editor {

@@ -106,7 +106,7 @@ namespace behaviors {
                 this._material1a.setVector2("tscale", scale);
                 this._material1a.setVector3("screenPosition", positionScreen);
 
-                renderState.draw(camera, this._drawCall1a);
+                renderState.draw(this._drawCall1a);
 
                 // copy result to occlusionMap
                 renderState.copyFramebufferToTexture(screenPositionPixels, this._occlusionMap);
@@ -115,7 +115,7 @@ namespace behaviors {
                 this._material1b.setVector2("tscale", scale);
                 this._material1b.setVector3("screenPosition", positionScreen);
 
-                renderState.draw(camera, this._drawCall1b);
+                renderState.draw(this._drawCall1b);
 
                 // render elements
                 const elements = this._elements;
@@ -147,7 +147,7 @@ namespace behaviors {
                     const temp = egret3d.Vector3.create(positionScreen.x + vecX * element.distance, positionScreen.y + vecY * element.distance, 0.0).release();
                     material2.setVector3("screenPosition", temp);
 
-                    renderState.draw(camera, this._drawCallLensflare);
+                    renderState.draw(this._drawCallLensflare);
                 }
             }
             else {
