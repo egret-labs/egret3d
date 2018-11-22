@@ -45,7 +45,7 @@ namespace egret3d {
         const canvas = getMainCanvas(options);
         options.option = requiredOptions;
         options.canvas = canvas;
-        options.webgl = <WebGLRenderingContext>canvas.getContext('webgl', options) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
+        options.webgl = <WebGLRenderingContext>canvas.getContext('webgl', options.option) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", options.option);
 
         paper.Application.initialize(options);
         const systemManager = paper.Application.systemManager;
@@ -85,6 +85,7 @@ namespace egret3d {
     function getOptions(options: RunEgretOptions): RequiredRuntimeOptions {
         if (window.canvas) {
             return {
+                alpha: false,
                 antialias: options.antialias,
                 antialiasSamples: 4,
                 contentWidth: options.contentWidth || 640,
@@ -94,6 +95,7 @@ namespace egret3d {
         else {
             const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
             return {
+                alpha: false,
                 antialias: options.antialias,
                 antialiasSamples: 4,
                 contentWidth: parseInt(div.getAttribute("data-content-width")),
