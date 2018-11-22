@@ -26216,7 +26216,7 @@ var egret3d;
         var canvas = getMainCanvas(options);
         options.option = requiredOptions;
         options.canvas = canvas;
-        options.webgl = canvas.getContext('webgl', options) || canvas.getContext("experimental-webgl", options);
+        options.webgl = canvas.getContext('webgl', options.option) || canvas.getContext("experimental-webgl", options.option);
         paper.Application.initialize(options);
         var systemManager = paper.Application.systemManager;
         systemManager.register(egret3d.web.BeginSystem, 0 /* Begin */, options);
@@ -26251,6 +26251,7 @@ var egret3d;
     function getOptions(options) {
         if (window.canvas) {
             return {
+                alpha: false,
                 antialias: options.antialias,
                 antialiasSamples: 4,
                 contentWidth: options.contentWidth || 640,
@@ -26260,6 +26261,7 @@ var egret3d;
         else {
             var div = document.getElementsByClassName("egret-player")[0];
             return {
+                alpha: false,
                 antialias: options.antialias,
                 antialiasSamples: 4,
                 contentWidth: parseInt(div.getAttribute("data-content-width")),
