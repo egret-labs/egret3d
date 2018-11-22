@@ -101,8 +101,8 @@ namespace egret3d {
             if (raycastMesh ? localBoundingBox.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo) : localBoundingBox.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) { // Update local raycast info to world.
                     const localToWorldMatrix = transform.localToWorldMatrix;
-                    raycastInfo.position.applyMatrix(localToWorldMatrix);
-                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
+                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
+                    raycastInfo.transform = transform;
 
                     const normal = raycastInfo.normal;
                     if (normal) {

@@ -191,6 +191,15 @@ namespace egret3d {
             return this.normalize();
         }
         /**
+         * 将该四元数转换为恒等四元数。
+         */
+        public identity(): this {
+            this.x = this.y = this.z = 0.0;
+            this.w = 1.0;
+
+            return this;
+        }
+        /**
          * 将该四元数乘以一个四元数。
          * - v *= quaternion
          * @param quaternion 一个四元数。
@@ -228,9 +237,7 @@ namespace egret3d {
         public premultiply(quaternion: Readonly<IVector4>) {
             return this.multiply(quaternion, this);
         }
-        /**
-         * @internal
-         */
+
         public lerp(p1: Readonly<IVector4> | number, p2: Readonly<IVector4> | number, p3?: number | Readonly<IVector4>) {
             if (typeof p1 === "number") {
                 if (!p3) {
@@ -289,6 +296,9 @@ namespace egret3d {
          * @deprecated
          */
         public slerp(t: number, to: Readonly<IVector4>): this;
+        /**
+         * @deprecated
+         */
         public slerp(t: number, from: Readonly<IVector4>, to: Readonly<IVector4>): this;
         public slerp(p1: Readonly<IVector4> | number, p2: Readonly<IVector4> | number, p3?: number | Readonly<IVector4>) {
             if (typeof p1 === "number") {

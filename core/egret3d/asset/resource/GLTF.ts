@@ -55,16 +55,6 @@ namespace egret3d {
                  */
                 frameCount: number;
                 /**
-                 * 骨骼名称列表。
-                 */
-                joints: string[];
-                /**
-                 * 动画重定向。
-                 */
-                retarget?: {
-                    joints: string[];
-                };
-                /**
                  * 动画剪辑列表。
                  */
                 clips: GLTFAnimationClip[];
@@ -91,14 +81,14 @@ namespace egret3d {
          * 持续时间。（以秒为单位）
          */
         duration: number;
-        /**
-         * 遮罩名称列表。
-         */
-        mask: number[];
-        /**
-         * 事件列表。
-         */
-        events: GLTFFrameEvent[];
+        // /**
+        //  * 遮罩名称列表。
+        //  */
+        // mask: number[];
+        // /**
+        //  * 事件列表。
+        //  */
+        // events: GLTFFrameEvent[];
     }
     /**
      * 
@@ -111,31 +101,31 @@ namespace egret3d {
             }
         };
     }
-    /**
-     * 帧事件反序列化。
-     */
-    export interface GLTFFrameEvent {
-        /**
-         * 事件名称。
-         */
-        name: string;
-        /**
-         * 事件位置。（%）
-         */
-        position: number;
-        /**
-         * 事件 int 变量。
-         */
-        intVariable: number;
-        /**
-         * 事件 float 变量。
-         */
-        floatVariable: number;
-        /**
-         * 事件 string 变量。
-         */
-        stringVariable: string;
-    }
+    // /**
+    //  * 帧事件反序列化。
+    //  */
+    // export interface GLTFFrameEvent {
+    //     /**
+    //      * 事件名称。
+    //      */
+    //     name: string;
+    //     /**
+    //      * 事件位置。（%）
+    //      */
+    //     position: number;
+    //     /**
+    //      * 事件 int 变量。
+    //      */
+    //     intVariable: number;
+    //     /**
+    //      * 事件 float 变量。
+    //      */
+    //     floatVariable: number;
+    //     /**
+    //      * 事件 string 变量。
+    //      */
+    //     stringVariable: string;
+    // }
     /**
      * glTF 资源。
      */

@@ -757,7 +757,7 @@ namespace egret3d {
          * 设置该材质的 UV 变换矩阵。
          * @param matrix 矩阵。
          */
-        public setUVTTransform(matrix: Readonly<Matrix3>): this {
+        public setUVTransform(matrix: Readonly<Matrix3>): this {
             const array = new Array(9); // TODO
             matrix.toArray(array);
 

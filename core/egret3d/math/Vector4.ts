@@ -131,10 +131,7 @@ namespace egret3d {
                 this.w = w * l;
             }
             else {
-                this.x = 0.0;
-                this.y = 0.0;
-                this.z = 0.0;
-                this.w = 1.0;
+                this.clear();
             }
 
             return this;

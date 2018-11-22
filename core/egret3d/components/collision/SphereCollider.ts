@@ -27,8 +27,9 @@ namespace egret3d {
             if (this.sphere.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) {
                     const localToWorldMatrix = transform.localToWorldMatrix;
-                    raycastInfo.position.applyMatrix(localToWorldMatrix);
-                    raycastInfo.distance = ray.origin.getDistance(raycastInfo.position);
+                    raycastInfo.distance = ray.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
+                    raycastInfo.transform = transform;
+                    raycastInfo.collider = this;
 
                     const normal = raycastInfo.normal;
                     if (normal) {

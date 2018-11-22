@@ -18,12 +18,13 @@ namespace egret3d {
         }
 
         public backfaceCulling: boolean = true;
-        public subMeshIndex: number = -1;
-        public triangleIndex: number = -1;
+        public subMeshIndex: int = -1;
+        public triangleIndex: int = -1;
         /**
          * 交点到射线起始点的距离。
+         * - 如果未相交则为 -1.0。
          */
-        public distance: number = 0.0;
+        public distance: number = -1.0;
         /**
          * 相交的点。
          */
@@ -60,10 +61,30 @@ namespace egret3d {
             this.clear();
         }
 
-        public clear() {
+        public copy(value: Readonly<this>): this {
+            this.subMeshIndex = value.subMeshIndex;
+            this.triangleIndex = value.triangleIndex;
+            this.distance = value.distance;
+            this.position.copy(value.position);
+            this.coord.copy(value.coord);
+
+            if (this.normal && value.normal) {
+                this.normal.copy(value.normal!);
+            }
+
+            // this.textureCoordA = null;
+            // this.textureCoordB = null;
+            this.transform = value.transform;
+            this.collider = value.collider;
+            this.rigidbody = value.rigidbody;
+
+            return this;
+        }
+
+        public clear(): this {
             this.subMeshIndex = -1;
             this.triangleIndex = -1;
-            this.distance = 0.0;
+            this.distance = -1.0;
             this.position.set(0.0, 0.0, 0.0);
             this.coord.set(0.0, 0.0);
             this.normal = null;
@@ -72,6 +93,8 @@ namespace egret3d {
             this.transform = null;
             this.collider = null;
             this.rigidbody = null;
+
+            return this;
         }
     }
 }

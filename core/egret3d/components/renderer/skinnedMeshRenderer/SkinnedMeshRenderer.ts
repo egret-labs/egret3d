@@ -19,13 +19,12 @@ namespace egret3d {
          */
         public forceCPUSkin: boolean = false;
         /**
-         * @internal
+         * 
          */
         public boneMatrices: Float32Array | null = null;
 
         private readonly _bones: (Transform | null)[] = [];
         private _rootBone: Transform | null = null;
-        private _inverseBindMatrices: Float32Array | null = null;
         /**
          * @internal
          */
@@ -37,8 +36,9 @@ namespace egret3d {
          */
         public _update() {
             // TODO cache 剔除，脏标记。
+            const mesh = this._mesh!;
             const bones = this._bones;
-            const inverseBindMatrices = this._inverseBindMatrices!;
+            const inverseBindMatrices = mesh._inverseBindMatrices!;
             const boneMatrices = this.boneMatrices!;
 
             for (let i = 0, l = bones.length; i < l; ++i) {
@@ -54,39 +54,36 @@ namespace egret3d {
                 const vC = _helpVector3C;
                 const mA = _helpMatrix;
 
-                const mesh = this._mesh!;
-                const joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0);
-                const weights = mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0);
+                const indices = mesh.getIndices()!;
+                const vertices = mesh.getVertices()!;
+                const joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)!;
+                const weights = mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)!;
 
-                if (joints && weights) {
-                    const indices = mesh.getIndices()!;
-                    const vertices = mesh.getVertices()!;
+                if (!mesh._rawVertices) {
+                    mesh._rawVertices = new Float32Array(vertices.length);
+                    mesh._rawVertices.set(vertices);
+                }
 
-                    if (!mesh._rawVertices) {
-                        mesh._rawVertices = new Float32Array(vertices.length);
-                        mesh._rawVertices.set(vertices);
-                    }
+                for (const index of <any>indices as number[]) {
+                    const vertexIndex = index * 3;
+                    const jointIndex = index * 4;
+                    vA.fromArray(mesh._rawVertices, vertexIndex);
+                    vB.clear();
 
-                    for (const index of <any>indices as number[]) {
-                        const vertexIndex = index * 3;
-                        const jointIndex = index * 4;
-                        vA.fromArray(mesh._rawVertices, vertexIndex);
-                        vB.clear();
-
-                        for (let i = 0; i < 4; ++i) {
-                            const weight = weights![jointIndex + i];
-                            if (weight <= 0.01) {
-                                continue;
-                            }
-
-                            vB.add(vC.applyMatrix(mA.fromArray(boneMatrices, joints![jointIndex + i] * 16), vA).multiplyScalar(weight));
+                    for (let i = 0; i < 4; ++i) {
+                        const weight = weights![jointIndex + i];
+                        if (weight <= 0.01) {
+                            continue;
                         }
 
-                        vB.toArray(vertices, vertexIndex);
+                        vB.add(vC.applyMatrix(mA.fromArray(boneMatrices, joints![jointIndex + i] * 16), vA).multiplyScalar(weight));
                     }
 
-                    mesh.uploadVertexBuffer();
+                    vB.toArray(vertices, vertexIndex);
                 }
+
+                mesh.uploadVertexBuffer();
+
             }
         }
 
@@ -101,7 +98,6 @@ namespace egret3d {
             this._bones.length = 0;
             this._rootBone = null;
             this.boneMatrices = null;
-            this._inverseBindMatrices = null;
 
             if (this._mesh) {
                 const config = this._mesh.config;
@@ -128,7 +124,6 @@ namespace egret3d {
                     }
                 }
 
-                this._inverseBindMatrices = this._mesh.createTypeArrayFromAccessor(this._mesh.getAccessor(skin.inverseBindMatrices!));
                 this.boneMatrices = new Float32Array(this._bones.length * 16);
 
                 if (this._bones.length > SkinnedMeshRendererSystem.maxBoneCount) {
@@ -150,7 +145,6 @@ namespace egret3d {
             this._bones.length = 0;
             this._rootBone = null;
             this.boneMatrices = null;
-            this._inverseBindMatrices = null;
             this._retargetBoneNames = null;
             this._mesh = null;
         }
@@ -183,53 +177,49 @@ namespace egret3d {
                 return triangle;
             }
 
-            const joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0);
-            const weights = mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0);
-            const boneMatrices = this.boneMatrices;
+            const boneMatrices = this.boneMatrices!;
+            const indices = mesh.getIndices()!;
+            const vertices = mesh._rawVertices || mesh.getVertices()!;
+            const joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0)!;
+            const weights = mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0)!;
 
-            if (joints && weights && boneMatrices) {
-                const indices = mesh.getIndices()!;
-                const vertices = mesh._rawVertices || mesh.getVertices()!;
-                const vA = _helpVector3A;
-                const vB = _helpVector3B;
-                const vC = _helpVector3C;
+            const vA = _helpVector3A;
+            const vB = _helpVector3B;
+            const vC = _helpVector3C;
 
-                for (let i = 0; i < 3; ++i) {
-                    const index = indices[triangleIndex * 3 + i];
-                    const vertexIndex = index * 3;
-                    const jointIndex = index * 4;
+            for (let i = 0; i < 3; ++i) {
+                const index = indices[triangleIndex * 3 + i];
+                const vertexIndex = index * 3;
+                const jointIndex = index * 4;
 
-                    vA.fromArray(vertices, vertexIndex);
-                    vB.clear();
+                vA.fromArray(vertices, vertexIndex);
+                vB.clear();
 
-                    for (let i = 0; i < 4; ++i) {
-                        const weight = weights![jointIndex + i];
-                        if (weight <= 0.01) {
-                            continue;
-                        }
-
-                        vB.add(vC.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + i] * 16), vA).multiplyScalar(weight));
+                for (let i = 0; i < 4; ++i) {
+                    const weight = weights![jointIndex + i];
+                    if (weight <= 0.01) {
+                        continue;
                     }
 
-                    switch (i) {
-                        case 0:
-                            triangle.a.copy(vB);
-                            break;
-
-                        case 1:
-                            triangle.b.copy(vB);
-                            break;
-
-                        case 2:
-                            triangle.c.copy(vB);
-                            break;
-                    }
+                    vB.add(vC.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + i] * 16), vA).multiplyScalar(weight));
                 }
 
-                return triangle;
+                switch (i) {
+                    case 0:
+                        triangle.a.copy(vB);
+                        break;
+
+                    case 1:
+                        triangle.b.copy(vB);
+                        break;
+
+                    case 2:
+                        triangle.c.copy(vB);
+                        break;
+                }
             }
 
-            return super.getTriangle(triangleIndex, triangle);
+            return triangle;
         }
 
         public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
@@ -254,12 +244,18 @@ namespace egret3d {
             }
 
             if (raycastMesh) {
-                return localBoundingBox.raycast(localRay) && this._mesh.raycast(p1, raycastInfo, this.forceCPUSkin ? null : this.boneMatrices);
+                if (localBoundingBox.raycast(localRay) && this._mesh.raycast(p1, raycastInfo, this.forceCPUSkin ? null : this.boneMatrices)) {
+                    if (raycastInfo) {
+                        raycastInfo.transform = transform;
+                    }
+
+                    return true;
+                }
             }
             else if (localBoundingBox.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) { // Update local raycast info to world.
-                    raycastInfo.position.applyMatrix(transform.localToWorldMatrix);
-                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
+                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position.applyMatrix(transform.localToWorldMatrix));
+                    raycastInfo.transform = transform;
                 }
 
                 return true;

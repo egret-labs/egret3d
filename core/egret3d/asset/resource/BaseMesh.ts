@@ -42,6 +42,7 @@ namespace egret3d {
          * @internal
          */
         public _skinnedVertices: Float32Array | null = null;
+        private _boneIndices: { [key: string]: uint } | null = null;
         /**
          * 请使用 `egret3d.Mesh.create()` 创建实例。
          * @see egret3d.Mesh.create()
@@ -134,7 +135,7 @@ namespace egret3d {
                 const skin = config.skins![0];
                 // Skinned mesh mast has inverseBindMatrices.
                 const inverseBindMatrices = this._inverseBindMatrices = this.createTypeArrayFromAccessor(this.getAccessor(skin.inverseBindMatrices!));
-                const bindTransforms = this._bindTransforms = new Float32Array(inverseBindMatrices.length / 16 * 12);
+                const bindTransforms = this._bindTransforms = new Float32Array(inverseBindMatrices.length / 16 * 10);
                 const bindMatrix = _helpMatrix;
                 const position = _helpVector3A;
                 const rotation = _helpQuaternion;
@@ -165,6 +166,7 @@ namespace egret3d {
             this._bindTransforms = null;
             this._rawVertices = null;
             this._skinnedVertices = null;
+            this._boneIndices = null;
 
             return true;
         }
@@ -534,6 +536,21 @@ namespace egret3d {
          */
         public get attributeNames(): ReadonlyArray<string> {
             return this._attributeNames;
+        }
+        /**
+         * 
+         */
+        public get boneIndices() {
+            const config = this.config;
+            if (!this._boneIndices && config.skins) {
+                const nodeIndices = this._boneIndices = {} as { [key: string]: uint };
+                for (const joint of config.skins![0].joints) {
+                    const node = config.nodes![joint];
+                    nodeIndices[node.name!] = joint;
+                }
+            }
+
+            return this._boneIndices;
         }
         /**
          * 获取该网格的 glTF mesh 数据。

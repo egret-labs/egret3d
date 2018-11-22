@@ -94,6 +94,7 @@ namespace egret3d {
             super();
         }
 
+        public boneIndex: int;
         public glTFChannel: GLTFAnimationChannel;
         public glTFSampler: gltf.AnimationSampler;
         public blendLayer: BlendLayer | null;
@@ -284,7 +285,7 @@ namespace egret3d {
         /**
          * @private
          */
-        public animationAsset: GLTFAsset = null!;
+        public animationAsset: AnimationAsset = null!;
         /**
          * 播放的动画数据。
          */
@@ -313,6 +314,10 @@ namespace egret3d {
         // TODO cache.
         private readonly _channels: AnimationChannel[] = [];
         private _animationComponent: Animation = null as any;
+        /**
+         * @internal
+         */
+        public _mesh: BaseMesh | null = null;
 
         private _onUpdateTranslation(channel: AnimationChannel, animationState: AnimationState) {
             const interpolation = channel.glTFSampler.interpolation;
@@ -344,25 +349,25 @@ namespace egret3d {
             }
 
             const isArray = Array.isArray(channel.components);
-            // const blendLayer = channel.blendLayer!;
-            // const blendWeight = blendLayer.blendWeight;
+            const blendLayer = channel.blendLayer!;
+            const blendWeight = blendLayer.blendWeight;
             const blendTarget = (isArray ? (channel.components as Transform[])[0].localPosition : (channel.components as Transform).localPosition) as Vector3;
 
-            // if (blendLayer.dirty > 1) {
-            //     blendTarget.x += x * blendWeight;
-            //     blendTarget.y += y * blendWeight;
-            //     blendTarget.z += z * blendWeight;
-            // }
-            // else if (blendWeight !== 1.0) {
-            //     blendTarget.x = x * blendWeight;
-            //     blendTarget.y = y * blendWeight;
-            //     blendTarget.z = z * blendWeight;
-            // }
-            // else {
-            blendTarget.x = x;
-            blendTarget.y = y;
-            blendTarget.z = z;
-            // }
+            if (blendLayer.dirty > 1) {
+                blendTarget.x += x * blendWeight;
+                blendTarget.y += y * blendWeight;
+                blendTarget.z += z * blendWeight;
+            }
+            else if (blendWeight !== 1.0) {
+                blendTarget.x = x * blendWeight;
+                blendTarget.y = y * blendWeight;
+                blendTarget.z = z * blendWeight;
+            }
+            else {
+                blendTarget.x = x;
+                blendTarget.y = y;
+                blendTarget.z = z;
+            }
 
             if (isArray) {
                 for (const component of channel.components as Transform[]) {
@@ -370,6 +375,16 @@ namespace egret3d {
                 }
             }
             else {
+
+                const mesh = animationState._mesh;
+                if (mesh) {
+                    const bindTransform = mesh._bindTransforms!;
+                    let offset = channel.boneIndex * 10;
+                    blendTarget.x += bindTransform[offset++];
+                    blendTarget.y += bindTransform[offset++];
+                    blendTarget.z += bindTransform[offset++];
+                }
+
                 blendTarget.update();
             }
         }
@@ -416,12 +431,14 @@ namespace egret3d {
             //     blendTarget.y += y * blendWeight;
             //     blendTarget.z += z * blendWeight;
             //     blendTarget.w += w * blendWeight;
+            //     blendTarget.normalize();
             // }
             // else if (blendWeight !== 1.0) {
             //     blendTarget.x = x * blendWeight;
             //     blendTarget.y = y * blendWeight;
             //     blendTarget.z = z * blendWeight;
             //     blendTarget.w = w * blendWeight;
+            //     blendTarget.normalize();
             // }
             // else {
             blendTarget.x = x;
@@ -519,7 +536,7 @@ namespace egret3d {
         /**
          * @internal
          */
-        public initialize(animationComponent: Animation, animationAsset: GLTFAsset, animationClip: GLTFAnimationClip) {
+        public initialize(animationComponent: Animation, animationAsset: AnimationAsset, animationClip: GLTFAnimationClip) {
             const assetConfig = animationAsset.config;
             //
             this.animationAsset = animationAsset;
@@ -533,15 +550,26 @@ namespace egret3d {
             if (this.animation.channels) {
                 const rootGameObject = this._animationComponent.gameObject;
                 const children = rootGameObject.transform.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
-                children["__root__"] = rootGameObject.transform;
-
-                for (const glTFChannel of this.animation.channels) {
-                    const node = this.animationAsset.getNode(glTFChannel.target.node || 0);
-                    if (!(node.name! in children)) {
+                children["__root__"] = rootGameObject.transform; //
+                //
+                let skinnedMeshRenderer: SkinnedMeshRenderer | null = null;
+                for (const child of animationComponent.gameObject.transform.children) {
+                    if (!child.gameObject.renderer || child.gameObject.renderer.constructor !== SkinnedMeshRenderer) {
                         continue;
                     }
 
-                    const transforms = children[node.name!];
+                    skinnedMeshRenderer = child.gameObject.renderer as SkinnedMeshRenderer;
+                    this._mesh = skinnedMeshRenderer.mesh!;
+                    animationAsset._modify(this._mesh);
+                }
+
+                for (const glTFChannel of this.animation.channels) {
+                    const nodeName = this.animationAsset.getNode(glTFChannel.target.node!).name!;
+                    if (!(nodeName! in children)) {
+                        continue;
+                    }
+
+                    const transforms = children[nodeName!];
                     const channel = _animationChannels.length > 0 ? _animationChannels.pop()! : AnimationChannel.create();
                     const pathName = glTFChannel.target.path;
                     channel.glTFChannel = glTFChannel;
@@ -550,19 +578,26 @@ namespace egret3d {
                     channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input));
                     channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output));
 
+                    if (this._mesh) {
+                        channel.boneIndex = this._mesh.boneIndices![nodeName];
+                    }
+                    else {
+                        channel.boneIndex = -1;
+                    }
+
                     switch (pathName) {
                         case "translation":
-                            channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name!);
+                            channel.blendLayer = this._animationComponent._getBlendlayer(pathName, nodeName);
                             channel.updateTarget = this._onUpdateTranslation;
                             break;
 
                         case "rotation":
-                            channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name!);
+                            channel.blendLayer = this._animationComponent._getBlendlayer(pathName, nodeName);
                             channel.updateTarget = this._onUpdateRotation;
                             break;
 
                         case "scale":
-                            channel.blendLayer = this._animationComponent._getBlendlayer(pathName, node.name!);
+                            channel.blendLayer = this._animationComponent._getBlendlayer(pathName, nodeName);
                             channel.updateTarget = this._onUpdateScale;
                             break;
 
@@ -714,7 +749,7 @@ namespace egret3d {
          * 动画数据列表。
          */
         @paper.serializedField
-        private readonly _animations: GLTFAsset[] = [];
+        private readonly _animations: AnimationAsset[] = [];
         /**
          * 混合节点列表。
          */
@@ -847,7 +882,7 @@ namespace egret3d {
             fadeTime: number, playTimes: number = -1,
             layer: number = 0, additive: boolean = false,
         ): AnimationState | null {
-            let animationAsset: GLTFAsset | null = null;
+            let animationAsset: AnimationAsset | null = null;
             let animationClip: GLTFAnimationClip | null = null;
 
             for (const animation of this._animations) {
@@ -925,10 +960,10 @@ namespace egret3d {
         /**
          * 动画数据列表。
          */
-        public get animations(): ReadonlyArray<GLTFAsset> {
+        public get animations(): ReadonlyArray<AnimationAsset> {
             return this._animations;
         }
-        public set animations(animations: ReadonlyArray<GLTFAsset>) {
+        public set animations(animations: ReadonlyArray<AnimationAsset>) {
             for (let i = 0, l = animations.length; i < l; i++) {
                 this._animations[i] = animations[i];
             }
