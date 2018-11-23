@@ -1,6 +1,10 @@
 namespace behaviors {
     export abstract class BaseRaycast extends paper.Behaviour {
         protected static readonly _ray: egret3d.Ray = egret3d.Ray.create();
+
+        public readonly raycastInfo: egret3d.RaycastInfo = egret3d.RaycastInfo.create();
+        public readonly normal: egret3d.Vector3 = egret3d.Vector3.create();
+
         protected _lineMesh: egret3d.Mesh | null = null;
         protected _normalMesh: egret3d.Mesh | null = null;
 
@@ -46,21 +50,23 @@ namespace behaviors {
         public target: paper.GameObject | null = null;
 
         public onUpdate() {
+            const raycastInfo = this.raycastInfo;
             const lineTransform = this._line.transform;
             lineTransform.setLocalScale(1.0);
+            raycastInfo.clear();
+            raycastInfo.normal = this.normal;
 
             if (this.target && this.target.renderer) {
                 const ray = this._updateAngGetRay();
-                const raycastInfo = egret3d.RaycastInfo.create().release();
-                raycastInfo.normal = egret3d.Vector3.create().release();
 
                 if (this.target.renderer.raycast(ray, raycastInfo, this.raycastMesh)) {
+
                     lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
                     this._normal.activeSelf = true;
                     this._normal.transform
                         .setPosition(raycastInfo.position)
-                        .lookRotation(raycastInfo.normal)
-                        .setLocalScale(1.0, 1.0, raycastInfo.normal.length);
+                        .lookRotation(raycastInfo.normal!)
+                        .setLocalScale(1.0, 1.0, raycastInfo.normal!.length);
                     return;
                 }
             }
@@ -73,21 +79,22 @@ namespace behaviors {
         public target: paper.GameObject | null = null;
 
         public onUpdate() {
+            const raycastInfo = this.raycastInfo;
             const lineTransform = this._line.transform;
             lineTransform.setLocalScale(1.0);
+            raycastInfo.clear();
+            raycastInfo.normal = this.normal;
 
             if (this.target) {
                 const ray = this._updateAngGetRay();
-                const raycastInfo = egret3d.RaycastInfo.create().release();
-                raycastInfo.normal = egret3d.Vector3.create().release();
 
                 if (egret3d.raycast(ray, this.target, false, raycastInfo)) {
                     lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
                     this._normal.activeSelf = true;
                     this._normal.transform
                         .setPosition(raycastInfo.position)
-                        .lookRotation(raycastInfo.normal)
-                        .setLocalScale(1.0, 1.0, raycastInfo.normal.length);
+                        .lookRotation(raycastInfo.normal!)
+                        .setLocalScale(1.0, 1.0, raycastInfo.normal!.length);
                     return;
                 }
             }

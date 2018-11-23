@@ -52,7 +52,7 @@ namespace examples {
         public onAwake() {
             const material = this.gameObject.renderer!.material!;
             this._uvTransformMatrix.fromUVTransform(this._offset.x, this._offset.y, this._repeat.x, this._repeat.y, 0.0, 0.0, 0.0);
-            material.setUVTTransform(this._uvTransformMatrix);
+            material.setUVTransform(this._uvTransformMatrix);
         }
 
         public onUpdate() {
@@ -61,7 +61,7 @@ namespace examples {
             this._offset.x = (time) % 1;
             this._offset.y = (time) % 1;
             this._uvTransformMatrix.fromUVTransform(this._offset.x, this._offset.y, this._repeat.x, this._repeat.y, 0.0, 0.0, 0.0);
-            material.setUVTTransform(this._uvTransformMatrix);
+            material.setUVTransform(this._uvTransformMatrix);
         }
 
     }

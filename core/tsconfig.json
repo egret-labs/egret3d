@@ -121,6 +121,7 @@
         "egret3d/components/renderer/egret2DRenderer/Renderer.ts",
         "egret3d/components/renderer/egret2DRenderer/ScreenAdapter.ts",
 
+        "egret3d/components/animation/AnimationState.ts",
         "egret3d/components/animation/Animation.ts",
         "egret3d/components/animation/AnimationSystem.ts",
 

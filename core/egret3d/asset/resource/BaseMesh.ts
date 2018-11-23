@@ -19,19 +19,11 @@ namespace egret3d {
      */
     export abstract class BaseMesh extends GLTFAsset implements egret3d.IRaycast {
         protected _drawMode: gltf.DrawMode = gltf.DrawMode.Static;
-        protected _vertexCount: number = 0;
+        protected _vertexCount: uint = 0;
         protected readonly _attributeNames: string[] = [];
         protected readonly _customAttributeTypes: { [key: string]: gltf.AccessorType } = {};
         protected _glTFMesh: gltf.Mesh | null = null;
-        /**
-         * @internal
-         */
-        public _inverseBindMatrices: Float32Array | null = null;
-        /**
-         * x, y, z, rx, ry, rz, rw, sx, sy, sz.
-         * @internal
-         */
-        public _bindTransforms: Float32Array | null = null;
+        protected _inverseBindMatrices: Float32Array | null = null;
         /**
          * Backuped raw vertices when CPU skinned.
          * @internal
@@ -42,20 +34,20 @@ namespace egret3d {
          * @internal
          */
         public _skinnedVertices: Float32Array | null = null;
-        private _boneIndices: { [key: string]: uint } | null = null;
+        protected _boneIndices: { [key: string]: uint } | null = null;
         /**
          * 请使用 `egret3d.Mesh.create()` 创建实例。
          * @see egret3d.Mesh.create()
          * @deprecated
          */
         public constructor(
-            vertexCount: number, indexCount: number,
+            vertexCount: uint, indexCount: uint,
             attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
             drawMode?: gltf.DrawMode
         )
         public constructor(config: GLTF, buffers: Uint32Array[], name: string)
         public constructor(
-            vertexCountOrConfig: number | GLTF, indexCountOrBuffers?: number | Uint32Array[],
+            vertexCountOrConfig: uint | GLTF, indexCountOrBuffers?: uint | Uint32Array[],
             attributeNamesOrName?: gltf.MeshAttribute[] | null | string, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
             drawMode?: gltf.DrawMode
         ) {
@@ -100,8 +92,8 @@ namespace egret3d {
                 this.buffers[0] = new Float32Array(vertexBufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
                 this._drawMode = drawMode || gltf.DrawMode.Static;
 
-                if (indexCountOrBuffers as number > 0) { // Indices.
-                    this.addSubMesh(indexCountOrBuffers as number, 0);
+                if (indexCountOrBuffers as uint > 0) { // Indices.
+                    this.addSubMesh(indexCountOrBuffers as uint, 0);
                 }
                 else {
                     this.config.meshes![0].primitives[0].material = 0;
@@ -125,34 +117,6 @@ namespace egret3d {
             }
         }
 
-        public initialize(): void {
-            super.initialize();
-
-            const config = this.config;
-
-            // Mast be skinned mesh if has skin.
-            if (config.skins && config.skins.length > 0) {
-                const skin = config.skins![0];
-                // Skinned mesh mast has inverseBindMatrices.
-                const inverseBindMatrices = this._inverseBindMatrices = this.createTypeArrayFromAccessor(this.getAccessor(skin.inverseBindMatrices!));
-                const bindTransforms = this._bindTransforms = new Float32Array(inverseBindMatrices.length / 16 * 10);
-                const bindMatrix = _helpMatrix;
-                const position = _helpVector3A;
-                const rotation = _helpQuaternion;
-                const scale = _helpVector3B;
-
-                for (let i = 0, iT = 0, l = inverseBindMatrices.length; i < l; i += 16) {
-                    bindMatrix
-                        .fromArray(inverseBindMatrices, i)
-                        .inverse()
-                        .decompose(position, rotation, scale);
-                    position.toArray(bindTransforms, iT); iT += 3;
-                    rotation.toArray(bindTransforms, iT); iT += 4;
-                    scale.toArray(bindTransforms, iT); iT += 3;
-                }
-            }
-        }
-
         public dispose() {
             if (!super.dispose()) {
                 return false;
@@ -163,7 +127,6 @@ namespace egret3d {
             // this._customAttributeTypes
             this._glTFMesh = null;
             this._inverseBindMatrices = null;
-            this._bindTransforms = null;
             this._rawVertices = null;
             this._skinnedVertices = null;
             this._boneIndices = null;
@@ -228,7 +191,7 @@ namespace egret3d {
 
                         castVertices = this._skinnedVertices;
 
-                        for (const index of <any>indices! as number[]) {
+                        for (const index of <any>indices! as uint[]) {
                             const vertexIndex = index * 3;
                             const jointIndex = index * 4;
                             p0.fromArray(vertices, vertexIndex);
@@ -357,7 +320,7 @@ namespace egret3d {
         /**
          * 
          */
-        public addSubMesh(indexCount: number, materialIndex: number = 0, randerMode?: gltf.MeshPrimitiveMode) {
+        public addSubMesh(indexCount: uint, materialIndex: uint = 0, randerMode?: gltf.MeshPrimitiveMode): uint {
             const { accessors } = this.config;
             const primitives = this.config.meshes![0].primitives;
             const subMeshIndex = this.buffers.length === primitives.length + 1 ? primitives.length : 0;
@@ -390,8 +353,8 @@ namespace egret3d {
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点数。（默认全部顶点）
          */
-        public getVertices(offset: number = 0, count: number = 0) {
-            return this.getAttributes(gltf.MeshAttributeType.POSITION, offset, count) as Float32Array | null;
+        public getVertices(offset: uint = 0, count: uint = 0): Float32Array | null {
+            return this.getAttributes(gltf.MeshAttributeType.POSITION, offset, count);
         }
         /**
          * 获取该网格顶点的 UV 属性数据。
@@ -399,8 +362,8 @@ namespace egret3d {
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点数。（默认全部顶点）
          */
-        public getUVs(offset: number = 0, count: number = 0) {
-            return this.getAttributes(gltf.MeshAttributeType.TEXCOORD_0, offset, count) as Float32Array | null;
+        public getUVs(offset: uint = 0, count: uint = 0): Float32Array | null {
+            return this.getAttributes(gltf.MeshAttributeType.TEXCOORD_0, offset, count);
         }
         /**
          * 获取该网格顶点的颜色属性数据。
@@ -408,8 +371,8 @@ namespace egret3d {
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点数。（默认全部顶点）
          */
-        public getColors(offset: number = 0, count: number = 0) {
-            return this.getAttributes(gltf.MeshAttributeType.COLOR_0, offset, count) as Float32Array | null;
+        public getColors(offset: uint = 0, count: uint = 0): Float32Array | null {
+            return this.getAttributes(gltf.MeshAttributeType.COLOR_0, offset, count);
         }
         /**
          * 获取该网格顶点的法线属性数据。
@@ -417,8 +380,8 @@ namespace egret3d {
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点数。（默认全部顶点）
          */
-        public getNormals(offset: number = 0, count: number = 0) {
-            return this.getAttributes(gltf.MeshAttributeType.NORMAL, offset, count) as Float32Array | null;
+        public getNormals(offset: uint = 0, count: uint = 0): Float32Array | null {
+            return this.getAttributes(gltf.MeshAttributeType.NORMAL, offset, count);
         }
         /**
          * 获取该网格顶点的切线属性数据。
@@ -426,8 +389,8 @@ namespace egret3d {
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点数。（默认全部顶点）
          */
-        public getTangents(offset: number = 0, count: number = 0) {
-            return this.getAttributes(gltf.MeshAttributeType.TANGENT, offset, count) as Float32Array | null;
+        public getTangents(offset: uint = 0, count: uint = 0): Float32Array | null {
+            return this.getAttributes(gltf.MeshAttributeType.TANGENT, offset, count);
         }
         /**
          * 获取该网格顶点的指定属性数据。
@@ -435,7 +398,7 @@ namespace egret3d {
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点总数。（默认全部顶点）
          */
-        public getAttributes(attributeType: gltf.MeshAttribute, offset: number = 0, count: number = 0) {
+        public getAttributes(attributeType: gltf.MeshAttribute, offset: uint = 0, count: uint = 0): Float32Array | Uint16Array | null {
             const accessorIndex = this._glTFMesh!.primitives[0].attributes[attributeType];
             if (accessorIndex === undefined) {
                 return null;
@@ -449,7 +412,7 @@ namespace egret3d {
          * @param value 属性数据。
          * @param offset 顶点偏移。（默认从第一个点开始）
          */
-        public setAttributes(attributeType: gltf.MeshAttribute, value: ReadonlyArray<number>, offset: number = 0) {
+        public setAttributes(attributeType: gltf.MeshAttribute, value: ReadonlyArray<number>, offset: uint = 0): Float32Array | Uint16Array | null {
             const target = this.getAttributes(attributeType, offset);
             if (target) {
                 for (let i = 0, l = Math.min(value.length, target.length); i < l; i++) {
@@ -463,14 +426,14 @@ namespace egret3d {
          * 获取该网格的顶点索引数据。
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
          */
-        public getIndices(subMeshIndex: number = 0) {
+        public getIndices(subMeshIndex: uint = 0): Uint16Array | null {
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh!.primitives.length) {
                 const accessorIndex = this._glTFMesh!.primitives[subMeshIndex].indices;
                 if (accessorIndex === undefined) {
                     return null;
                 }
 
-                return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex)) as Uint16Array;
+                return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex));
             }
 
             console.warn("Error arguments.");
@@ -483,7 +446,7 @@ namespace egret3d {
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
          * @param offset 索引偏移。（默认不偏移）
          */
-        public setIndices(value: ReadonlyArray<number>, subMeshIndex: number = 0, offset: number = 0) {
+        public setIndices(value: ReadonlyArray<uint>, subMeshIndex: uint = 0, offset: uint = 0): Uint16Array | null {
             const target = this.getIndices(subMeshIndex);
             if (target) {
                 for (let i = 0, l = Math.min(value.length, target.length); i < l; i++) {
@@ -504,16 +467,16 @@ namespace egret3d {
          * @param offset 顶点偏移。（默认不偏移）
          * @param count 顶点总数。（默认全部顶点）
          */
-        public abstract uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: number, count?: number): void;
+        public abstract uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: uint, count?: uint): void;
         /**
          * 当修改该网格的顶点索引后，调用此方法来更新顶点索引的缓冲区。
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
          */
-        public abstract uploadSubIndexBuffer(subMeshIndex?: number): void;
+        public abstract uploadSubIndexBuffer(subMeshIndex?: uint): void;
         /**
          * 该网格的渲染模式。
          */
-        public get drawMode() {
+        public get drawMode(): gltf.DrawMode {
             return this._drawMode;
         }
         public set drawMode(value: gltf.DrawMode) {
@@ -522,13 +485,13 @@ namespace egret3d {
         /**
          * 该网格的子网格总数。
          */
-        public get subMeshCount() {
+        public get subMeshCount(): uint {
             return this._glTFMesh!.primitives.length;
         }
         /**
          * 该网格的顶点总数。
          */
-        public get vertexCount() {
+        public get vertexCount(): uint {
             return this._vertexCount;
         }
         /**
@@ -538,9 +501,9 @@ namespace egret3d {
             return this._attributeNames;
         }
         /**
-         * 
+         * @internal
          */
-        public get boneIndices() {
+        public get boneIndices(): Readonly<{ [key: string]: uint }> | null {
             const config = this.config;
             if (!this._boneIndices && config.skins) {
                 const nodeIndices = this._boneIndices = {} as { [key: string]: uint };
@@ -553,9 +516,22 @@ namespace egret3d {
             return this._boneIndices;
         }
         /**
+         * @internal
+         */
+        public get inverseBindMatrices(): Float32Array | null {
+            const config = this.config;
+            if (!this._inverseBindMatrices && config.skins) {
+                // Mast be skinned mesh if has skin.
+                // Skinned mesh mast has inverseBindMatrices.
+                this._inverseBindMatrices = this.createTypeArrayFromAccessor(this.getAccessor(config.skins![0].inverseBindMatrices!));
+            }
+
+            return this._inverseBindMatrices;
+        }
+        /**
          * 获取该网格的 glTF mesh 数据。
          */
-        public get glTFMesh() {
+        public get glTFMesh(): gltf.Mesh | null {
             return this._glTFMesh!;
         }
     }

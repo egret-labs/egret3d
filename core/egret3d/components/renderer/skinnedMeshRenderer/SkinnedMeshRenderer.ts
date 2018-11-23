@@ -38,7 +38,7 @@ namespace egret3d {
             // TODO cache 剔除，脏标记。
             const mesh = this._mesh!;
             const bones = this._bones;
-            const inverseBindMatrices = mesh._inverseBindMatrices!;
+            const inverseBindMatrices = mesh.inverseBindMatrices!;
             const boneMatrices = this.boneMatrices!;
 
             for (let i = 0, l = bones.length; i < l; ++i) {
