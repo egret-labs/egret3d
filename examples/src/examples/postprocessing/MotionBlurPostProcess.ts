@@ -1,5 +1,5 @@
 namespace examples.postprocessing {
-    export class MotionBlurPostProcess extends egret3d.CameraPostProcessing {
+    export class MotionBlurPostProcess extends egret3d.CameraPostprocessing {
         private _depathMaterial: egret3d.Material;
         private _material: egret3d.Material;
         private _velocityFactor: number = 1.0;

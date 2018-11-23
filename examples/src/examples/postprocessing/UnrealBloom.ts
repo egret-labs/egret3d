@@ -52,28 +52,16 @@ namespace examples.postprocessing {
         @paper.editor.property(paper.editor.EditType.NESTED)
         public readonly unrealBloomPass: UnrealBloomPass = new UnrealBloomPass();
 
-        public onEnable() {
-            const camera = this.gameObject.getComponent(egret3d.Camera);
-
-            if (camera && camera.postQueues.indexOf(this.unrealBloomPass) < 0) {
-                camera.postQueues.push(this.unrealBloomPass);
-            }
-
+        public onEnable() {            
+            this.gameObject.addComponent(UnrealBloomPass);
         }
 
         public onDisable() {
-            const camera = this.gameObject.getComponent(egret3d.Camera);
-
-            if (camera) {
-                const index = camera.postQueues.indexOf(this.unrealBloomPass);
-                if (index >= 0) {
-                    camera.postQueues.splice(index);
-                }
-            }
+            this.gameObject.removeComponent(UnrealBloomPass);
         }
     }
 
-    class UnrealBloomPass extends egret3d.CameraPostProcessing {
+    class UnrealBloomPass extends egret3d.CameraPostprocessing {
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.1, maximum: 2.0 })
         public exposure: number = 1.0;
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 1.0 })

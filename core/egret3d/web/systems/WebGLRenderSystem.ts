@@ -464,21 +464,25 @@ namespace egret3d.web {
                     camera.context.updateLights(this._cameraAndLightCollecter.lights); // TODO 性能优化
                 }
                 //
-                if (camera.postQueues.length === 0) {
+                const postProcessings: egret3d.CameraPostprocessing[] = camera.gameObject.getComponents(egret3d.CameraPostprocessing as any, true);
+                let isAnyActivated = false;
+                if (postProcessings.length > 0) {
+                    for (const postprocessing of postProcessings) {
+                        if (postprocessing.isActiveAndEnabled) {
+                            isAnyActivated = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isAnyActivated) {
                     this._render(camera, camera.renderTarget, material);
                 }
                 else {
-                    //TODO这里为空了
-                    if (!camera._readRenderTarget) {
-                        camera._readRenderTarget = new GlRenderTarget("builtin/post_processing1.image.json", stage.viewport.w, stage.viewport.h, true);
-                    }
-                    if (!camera._writeRenderTarget) {
-                        camera._writeRenderTarget = new GlRenderTarget("builtin/post_processing1.image.json", stage.viewport.w, stage.viewport.h, true);
-                    }
                     this._render(camera, camera._readRenderTarget, material);
-
-                    for (const postEffect of camera.postQueues) {
-                        postEffect.render(camera);
+                    for (const postprocessing of postProcessings) {
+                        if (postprocessing.isActiveAndEnabled) {
+                            postprocessing.render(camera);
+                        }
                     }
 
                     const temp = camera._readRenderTarget;

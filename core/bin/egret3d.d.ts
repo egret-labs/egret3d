@@ -6195,10 +6195,6 @@ declare namespace egret3d {
          * @private
          */
         readonly context: CameraRenderContext;
-        /**
-         * TODO 功能完善后开放此接口
-         */
-        readonly postQueues: ICameraPostProcessing[];
         private _viewportDirty;
         /**
          * TODO transform 应拥有高性能的位置变更通知机制。
@@ -6329,16 +6325,17 @@ declare namespace egret3d {
     /**
      * @beta 这是一个试验性质的 API，有可能会被删除或修改。
      */
-    abstract class CameraPostProcessing extends paper.BaseRelease<CameraPostProcessing> implements ICameraPostProcessing {
+    abstract class CameraPostprocessing extends paper.BaseComponent {
         render(camera: Camera): void;
     }
-    class MotionBlurEffect extends CameraPostProcessing {
+    class MotionBlurEffect extends CameraPostprocessing {
         private _material;
         private _velocityFactor;
         private _samples;
-        private _resolution;
+        private readonly _resolution;
         private readonly _worldToClipMatrix;
-        constructor();
+        initialize(): void;
+        uninitialize(): void;
         render(camera: Camera): void;
         velocityFactor: number;
         samples: number;

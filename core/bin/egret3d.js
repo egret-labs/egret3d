@@ -7026,9 +7026,6 @@ var egret3d;
                     this._postProcessingCamera = postProcessingCamera;
                 }
             }
-            //TODO
-            this.camera._readRenderTarget = new egret3d.GlRenderTarget("builtin/post_processing1.image.json", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true);
-            this.camera._writeRenderTarget = new egret3d.GlRenderTarget("builtin/post_processing2.image.json", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true);
             //
             this._postProcessDrawCall.matrix = egret3d.Matrix4.IDENTITY;
             this._postProcessDrawCall.subMeshIndex = 0;
@@ -13811,10 +13808,6 @@ var egret3d;
              * @private
              */
             _this.context = new egret3d.CameraRenderContext(_this);
-            /**
-             * TODO 功能完善后开放此接口
-             */
-            _this.postQueues = [];
             _this._viewportDirty = true;
             /**
              * TODO transform 应拥有高性能的位置变更通知机制。
@@ -13975,15 +13968,29 @@ var egret3d;
         Camera.prototype._onStageResize = function () {
             this._viewportDirty = true;
             this._matrixDirty = 7 /* ALL */;
+            //TODO
+            // this._readRenderTarget.resize();
+            // this._writeRenderTarget.resize();
         };
         Camera.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
+            //TODO
+            this._readRenderTarget = new egret3d.GlRenderTarget("readRenderTarget", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true);
+            this._writeRenderTarget = new egret3d.GlRenderTarget("writeRenderTarget", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true);
             this.transform.registerObserver(this);
             egret3d.stage.onScreenResize.add(this._onStageResize, this);
             egret3d.stage.onResize.add(this._onStageResize, this);
         };
         Camera.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
+            if (this._readRenderTarget) {
+                this._readRenderTarget.dispose();
+            }
+            if (this._writeRenderTarget) {
+                this._writeRenderTarget.dispose();
+            }
+            this._readRenderTarget = null;
+            this._writeRenderTarget = null;
             egret3d.stage.onScreenResize.remove(this._onStageResize, this);
             egret3d.stage.onResize.remove(this._onStageResize, this);
         };
@@ -14402,44 +14409,47 @@ var egret3d;
     /**
      * @beta 这是一个试验性质的 API，有可能会被删除或修改。
      */
-    var CameraPostProcessing = (function (_super) {
-        __extends(CameraPostProcessing, _super);
-        function CameraPostProcessing() {
+    var CameraPostprocessing = (function (_super) {
+        __extends(CameraPostprocessing, _super);
+        function CameraPostprocessing() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        CameraPostProcessing.prototype.render = function (camera) {
+        CameraPostprocessing.prototype.render = function (camera) {
         };
-        return CameraPostProcessing;
-    }(paper.BaseRelease));
-    egret3d.CameraPostProcessing = CameraPostProcessing;
-    __reflect(CameraPostProcessing.prototype, "egret3d.CameraPostProcessing", ["egret3d.ICameraPostProcessing"]);
+        return CameraPostprocessing;
+    }(paper.BaseComponent));
+    egret3d.CameraPostprocessing = CameraPostprocessing;
+    __reflect(CameraPostprocessing.prototype, "egret3d.CameraPostprocessing");
     var MotionBlurEffect = (function (_super) {
         __extends(MotionBlurEffect, _super);
         function MotionBlurEffect() {
-            var _this = _super.call(this) || this;
+            var _this = _super !== null && _super.apply(this, arguments) || this;
             _this._velocityFactor = 1.0;
             _this._samples = 20;
             _this._resolution = egret3d.Vector2.create(1.0, 1.0);
             _this._worldToClipMatrix = egret3d.Matrix4.create();
-            _this._resolution.set(egret3d.stage.viewport.w, egret3d.stage.viewport.h);
-            _this._material = new egret3d.Material(new egret3d.Shader(egret3d.ShaderLib.motionBlur, "motionBlur"));
-            _this._material.setDepth(false, false);
-            _this._material.setCullFace(false);
-            // this._material.setVector2("resolution", this._resolution);
-            _this._material.setFloat("velocityFactor", _this._velocityFactor);
             return _this;
         }
+        MotionBlurEffect.prototype.initialize = function () {
+            this._resolution.set(egret3d.stage.viewport.w, egret3d.stage.viewport.h);
+            this._material = new egret3d.Material(new egret3d.Shader(egret3d.ShaderLib.motionBlur, "motionBlur"));
+            this._material.setDepth(false, false);
+            this._material.setCullFace(false);
+            // this._material.setVector2("resolution", this._resolution);
+            this._material.setFloat("velocityFactor", this._velocityFactor);
+        };
+        MotionBlurEffect.prototype.uninitialize = function () {
+            if (this._material) {
+                this._material.dispose();
+            }
+            this._resolution.release();
+            this._worldToClipMatrix.release();
+        };
         MotionBlurEffect.prototype.render = function (camera) {
             var context = camera.context;
-            // const stageViewport = stage.viewport;
             var clipToWorldMatrix = camera.clipToWorldMatrix;
             var material = this._material;
             var postProcessingRenderTarget = camera.postProcessingRenderTarget;
-            // if (this._resolution.x !== stageViewport.w || this._resolution.y !== stageViewport.h) {
-            //     this._resolution.x = stageViewport.w;
-            //     this._resolution.y = stageViewport.h;
-            //     material.setVector2("resolution", this._resolution);
-            // }
             //
             material.setTexture("tColor", postProcessingRenderTarget);
             material.setMatrix("viewProjectionInverseMatrix", clipToWorldMatrix);
@@ -14475,7 +14485,7 @@ var egret3d;
             configurable: true
         });
         return MotionBlurEffect;
-    }(CameraPostProcessing));
+    }(CameraPostprocessing));
     egret3d.MotionBlurEffect = MotionBlurEffect;
     __reflect(MotionBlurEffect.prototype, "egret3d.MotionBlurEffect");
 })(egret3d || (egret3d = {}));
@@ -25167,21 +25177,27 @@ var egret3d;
                         camera.context.updateLights(this._cameraAndLightCollecter.lights); // TODO 性能优化
                     }
                     //
-                    if (camera.postQueues.length === 0) {
+                    var postProcessings = camera.gameObject.getComponents(egret3d.CameraPostprocessing, true);
+                    var isAnyActivated = false;
+                    if (postProcessings.length > 0) {
+                        for (var _i = 0, postProcessings_1 = postProcessings; _i < postProcessings_1.length; _i++) {
+                            var postprocessing = postProcessings_1[_i];
+                            if (postprocessing.isActiveAndEnabled) {
+                                isAnyActivated = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (!isAnyActivated) {
                         this._render(camera, camera.renderTarget, material);
                     }
                     else {
-                        //TODO这里为空了
-                        if (!camera._readRenderTarget) {
-                            camera._readRenderTarget = new egret3d.GlRenderTarget("builtin/post_processing1.image.json", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true);
-                        }
-                        if (!camera._writeRenderTarget) {
-                            camera._writeRenderTarget = new egret3d.GlRenderTarget("builtin/post_processing1.image.json", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true);
-                        }
                         this._render(camera, camera._readRenderTarget, material);
-                        for (var _i = 0, _a = camera.postQueues; _i < _a.length; _i++) {
-                            var postEffect = _a[_i];
-                            postEffect.render(camera);
+                        for (var _a = 0, postProcessings_2 = postProcessings; _a < postProcessings_2.length; _a++) {
+                            var postprocessing = postProcessings_2[_a];
+                            if (postprocessing.isActiveAndEnabled) {
+                                postprocessing.render(camera);
+                            }
                         }
                         var temp = camera._readRenderTarget;
                         camera._readRenderTarget = camera._writeRenderTarget;

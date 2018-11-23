@@ -87,7 +87,7 @@
         "egret3d/components/collision/Collision.ts",
         "egret3d/components/camera/CameraSystem.ts",
         "egret3d/components/camera/Camera.ts",
-        "egret3d/components/camera/CameraPostQueue.ts",
+        "egret3d/components/camera/CameraPostprocessing.ts",
         "egret3d/components/camera/CameraRenderContext.ts",
         "egret3d/components/egret2DRenderer/Egret2DRenderer.ts",
         "egret3d/components/egret2DRenderer/Egret2DRendererSystem.ts",

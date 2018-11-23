@@ -12,10 +12,11 @@ namespace examples {
             // Create camera.
             const camera = egret3d.Camera.main;
             camera.backgroundColor.copy(egret3d.Color.BLACK);
-            const motionBlur = new postprocessing.MotionBlurPostProcess();
-            motionBlur.velocityFactor = 1.0;
-            motionBlur.samples = 32;
-            camera.postQueues.push(motionBlur);
+            // const motionBlur = new postprocessing.MotionBlurPostProcess();
+            // motionBlur.velocityFactor = 1.0;
+            // motionBlur.samples = 32;
+            // camera.postQueues.push(motionBlur);
+            camera.gameObject.addComponent(postprocessing.MotionBlurPostProcess);
 
             camera.gameObject.addComponent(RotationScript);
 

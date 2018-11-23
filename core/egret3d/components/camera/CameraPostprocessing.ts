@@ -8,20 +8,20 @@ namespace egret3d {
     /**
      * @beta 这是一个试验性质的 API，有可能会被删除或修改。
      */
-    export abstract class CameraPostProcessing extends paper.BaseRelease<CameraPostProcessing> implements ICameraPostProcessing {
+    export abstract class CameraPostprocessing extends paper.BaseComponent {
         public render(camera: Camera) {
 
         }
     }
 
-    export class MotionBlurEffect extends CameraPostProcessing {
+    export class MotionBlurEffect extends CameraPostprocessing {
         private _material: Material;
         private _velocityFactor: number = 1.0;
         private _samples: number = 20;
-        private _resolution: Vector2 = Vector2.create(1.0, 1.0);
+        private readonly _resolution: Vector2 = Vector2.create(1.0, 1.0);
         private readonly _worldToClipMatrix: Matrix4 = Matrix4.create();
-        public constructor() {
-            super();
+        
+        public initialize() {
             this._resolution.set(stage.viewport.w, stage.viewport.h);
 
             this._material = new Material(new Shader(egret3d.ShaderLib.motionBlur as any, "motionBlur"));
@@ -31,18 +31,20 @@ namespace egret3d {
             this._material.setFloat("velocityFactor", this._velocityFactor);
         }
 
+        public uninitialize() {
+            if (this._material) {
+                this._material.dispose();
+            }
+
+            this._resolution.release();
+            this._worldToClipMatrix.release();
+        }
+
         public render(camera: Camera) {
             const context = camera.context;
-            // const stageViewport = stage.viewport;
             const clipToWorldMatrix = camera.clipToWorldMatrix;
             const material = this._material;
             const postProcessingRenderTarget = camera.postProcessingRenderTarget;
-
-            // if (this._resolution.x !== stageViewport.w || this._resolution.y !== stageViewport.h) {
-            //     this._resolution.x = stageViewport.w;
-            //     this._resolution.y = stageViewport.h;
-            //     material.setVector2("resolution", this._resolution);
-            // }
 
             //
             material.setTexture("tColor", postProcessingRenderTarget);

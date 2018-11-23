@@ -107,10 +107,6 @@ namespace egret3d {
          * @private
          */
         public readonly context: CameraRenderContext = new CameraRenderContext(this);
-        /**
-         * TODO 功能完善后开放此接口
-         */
-        public readonly postQueues: ICameraPostProcessing[] = [];
 
         private _viewportDirty: boolean = true;
         /**
@@ -251,10 +247,17 @@ namespace egret3d {
         private _onStageResize(): void {
             this._viewportDirty = true;
             this._matrixDirty = MatrixDirty.ALL;
+
+            //TODO
+            // this._readRenderTarget.resize();
+            // this._writeRenderTarget.resize();
         }
 
         public initialize() {
             super.initialize();
+            //TODO
+            this._readRenderTarget = new GlRenderTarget("readRenderTarget", stage.viewport.w, stage.viewport.h, true);
+            this._writeRenderTarget = new GlRenderTarget("writeRenderTarget", stage.viewport.w, stage.viewport.h, true);
 
             this.transform.registerObserver(this);
             stage.onScreenResize.add(this._onStageResize, this);
@@ -263,6 +266,16 @@ namespace egret3d {
 
         public uninitialize() {
             super.uninitialize();
+
+            if (this._readRenderTarget) {
+                this._readRenderTarget.dispose();
+            }
+            if (this._writeRenderTarget) {
+                this._writeRenderTarget.dispose();
+            }
+
+            this._readRenderTarget = null;
+            this._writeRenderTarget = null;
 
             stage.onScreenResize.remove(this._onStageResize, this);
             stage.onResize.remove(this._onStageResize, this);
