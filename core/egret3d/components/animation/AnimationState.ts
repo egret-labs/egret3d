@@ -17,7 +17,6 @@ namespace egret3d {
             return new TargetBlendLayer().clear();
         }
 
-        public additive: boolean;
         public dirty: uint;
         public layer: int;
         public leftWeight: number;
@@ -33,7 +32,6 @@ namespace egret3d {
         }
 
         public clear() {
-            this.additive = false;
             this.dirty = 0;
             this.layer = 0;
             this.leftWeight = 0.0;
@@ -44,12 +42,13 @@ namespace egret3d {
         }
 
         public updateLayerAndWeight(animationState: AnimationState) {
+            const additive = animationState.additive;
             const animationLayer = animationState.layer;
             let animationWeight = animationState._globalWeight;
 
             if (this.dirty > 0) {
                 if (this.leftWeight > Const.EPSILON) {
-                    if (this.additive && this.layer !== animationLayer) {
+                    if (!additive && this.layer !== animationLayer) {
                         if (this.layerWeight >= this.leftWeight) {
                             this.leftWeight = 0.0;
 
@@ -73,7 +72,6 @@ namespace egret3d {
                 return false;
             }
 
-            this.additive = animationState.additive;
             this.dirty++;
             this.layer = animationLayer;
             this.leftWeight = 1.0;
@@ -145,6 +143,12 @@ namespace egret3d {
 
             return beginIndex;
         }
+    }
+    /**
+     * 
+     */
+    export class AnimationLayer extends paper.BaseRelease<AnimationLayer> {
+        
     }
     /**
      * 动画混合节点。
@@ -324,6 +328,7 @@ namespace egret3d {
         private _animationComponent: Animation = null as any;
 
         private _onUpdateTranslation(channel: AnimationChannel, animationState: AnimationState) {
+            const additive = animationState.additive;
             const interpolation = channel.glTFSampler.interpolation;
             const currentTime = animationState._currentTime;
             const outputBuffer = channel.outputBuffer;
@@ -350,6 +355,12 @@ namespace egret3d {
                 x = outputBuffer[0];
                 y = outputBuffer[1];
                 z = outputBuffer[2];
+            }
+
+            if (additive) {
+                x -= outputBuffer[0];
+                y -= outputBuffer[1];
+                z -= outputBuffer[2];
             }
 
             const isArray = Array.isArray(channel.components);
@@ -384,6 +395,7 @@ namespace egret3d {
         }
 
         private _onUpdateRotation(channel: AnimationChannel, animationState: AnimationState) {
+            const additive = animationState.additive;
             const interpolation = channel.glTFSampler.interpolation;
             const currentTime = animationState._currentTime;
             const outputBuffer = channel.outputBuffer;
@@ -456,6 +468,7 @@ namespace egret3d {
         }
 
         private _onUpdateScale(channel: AnimationChannel, animationState: AnimationState) {
+            const additive = animationState.additive;
             const interpolation = channel.glTFSampler.interpolation;
             const currentTime = animationState._currentTime;
             const outputBuffer = channel.outputBuffer;
@@ -484,20 +497,26 @@ namespace egret3d {
                 z = outputBuffer[2];
             }
 
+            if (additive) {
+                x -= outputBuffer[0];
+                y -= outputBuffer[1];
+                z -= outputBuffer[2];
+            }
+
             const isArray = Array.isArray(channel.components);
             const blendLayer = channel.blendLayer!;
             const blendWeight = blendLayer.blendWeight;
             const blendTarget = (isArray ? (channel.components as Transform[])[0].localScale : (channel.components as Transform).localScale) as Vector3;
 
             if (blendLayer.dirty > 1) {
-                blendTarget.x += (x - 1.0) * blendWeight;
-                blendTarget.y += (y - 1.0) * blendWeight;
-                blendTarget.z += (z - 1.0) * blendWeight;
+                blendTarget.x += x * blendWeight;
+                blendTarget.y += y * blendWeight;
+                blendTarget.z += z * blendWeight;
             }
             else if (blendWeight !== 1.0) {
-                blendTarget.x = (x - 1.0) * blendWeight + 1.0;
-                blendTarget.y = (y - 1.0) * blendWeight + 1.0;
-                blendTarget.z = (z - 1.0) * blendWeight + 1.0;
+                blendTarget.x = x * blendWeight;
+                blendTarget.y = y * blendWeight;
+                blendTarget.z = z * blendWeight;
             }
             else {
                 blendTarget.x = x;

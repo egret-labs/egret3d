@@ -17195,6 +17195,7 @@ var egret3d;
             return _this;
         }
         AnimationState.prototype._onUpdateTranslation = function (channel, animationState) {
+            var additive = animationState.additive;
             var interpolation = channel.glTFSampler.interpolation;
             var currentTime = animationState._currentTime;
             var outputBuffer = channel.outputBuffer;
@@ -17218,6 +17219,11 @@ var egret3d;
                 x = outputBuffer[0];
                 y = outputBuffer[1];
                 z = outputBuffer[2];
+            }
+            if (additive) {
+                x -= outputBuffer[0];
+                y -= outputBuffer[1];
+                z -= outputBuffer[2];
             }
             var isArray = Array.isArray(channel.components);
             var blendLayer = channel.blendLayer;
@@ -17249,6 +17255,7 @@ var egret3d;
             }
         };
         AnimationState.prototype._onUpdateRotation = function (channel, animationState) {
+            var additive = animationState.additive;
             var interpolation = channel.glTFSampler.interpolation;
             var currentTime = animationState._currentTime;
             var outputBuffer = channel.outputBuffer;
@@ -17314,6 +17321,7 @@ var egret3d;
             }
         };
         AnimationState.prototype._onUpdateScale = function (channel, animationState) {
+            var additive = animationState.additive;
             var interpolation = channel.glTFSampler.interpolation;
             var currentTime = animationState._currentTime;
             var outputBuffer = channel.outputBuffer;
@@ -17338,19 +17346,24 @@ var egret3d;
                 y = outputBuffer[1];
                 z = outputBuffer[2];
             }
+            if (additive) {
+                x -= outputBuffer[0];
+                y -= outputBuffer[1];
+                z -= outputBuffer[2];
+            }
             var isArray = Array.isArray(channel.components);
             var blendLayer = channel.blendLayer;
             var blendWeight = blendLayer.blendWeight;
             var blendTarget = (isArray ? channel.components[0].localScale : channel.components.localScale);
             if (blendLayer.dirty > 1) {
-                blendTarget.x += (x - 1.0) * blendWeight;
-                blendTarget.y += (y - 1.0) * blendWeight;
-                blendTarget.z += (z - 1.0) * blendWeight;
+                blendTarget.x += x * blendWeight;
+                blendTarget.y += y * blendWeight;
+                blendTarget.z += z * blendWeight;
             }
             else if (blendWeight !== 1.0) {
-                blendTarget.x = (x - 1.0) * blendWeight + 1.0;
-                blendTarget.y = (y - 1.0) * blendWeight + 1.0;
-                blendTarget.z = (z - 1.0) * blendWeight + 1.0;
+                blendTarget.x = x * blendWeight;
+                blendTarget.y = y * blendWeight;
+                blendTarget.z = z * blendWeight;
             }
             else {
                 blendTarget.x = x;
