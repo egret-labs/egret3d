@@ -150,7 +150,7 @@ namespace examples.postprocessing {
 
         public render(camera: egret3d.Camera) {
             const context = camera.context;
-            const postProcessingRenderTarget = camera.postProcessingRenderTarget;
+            const postProcessingRenderTarget = camera.postprocessingRenderTarget;
             const backClearColor = this._renderState.clearColor.clone().release();
 
             context.blit(postProcessingRenderTarget, this._defaultMaterial);

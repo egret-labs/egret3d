@@ -336,7 +336,7 @@ namespace egret3d {
         }
 
         let indicesCount = 0;
-        for (let i = 0; i < tempIndexBuffers.length; i++) {
+        for (let i = 1; i < tempIndexBuffers.length; i++) {
             const subLen = tempIndexBuffers[i].length;
             //第一个submesh在构造函数中已经添加，需要手动添加后续的
             combineMesh.addSubMesh(indicesCount, subLen, i);

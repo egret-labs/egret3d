@@ -14293,12 +14293,11 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Camera.prototype, "postProcessingRenderTarget", {
+        Object.defineProperty(Camera.prototype, "postprocessingRenderTarget", {
             /**
              *
              */
             get: function () {
-                // return this._renderTarget || DefaultTextures.POST_PROCESSING;
                 return this._readRenderTarget;
             },
             enumerable: true,
@@ -14449,7 +14448,7 @@ var egret3d;
             var context = camera.context;
             var clipToWorldMatrix = camera.clipToWorldMatrix;
             var material = this._material;
-            var postProcessingRenderTarget = camera.postProcessingRenderTarget;
+            var postProcessingRenderTarget = camera.postprocessingRenderTarget;
             //
             material.setTexture("tColor", postProcessingRenderTarget);
             material.setMatrix("viewProjectionInverseMatrix", clipToWorldMatrix);
@@ -23059,7 +23058,7 @@ var egret3d;
         ShaderChunk.uv2_vertex = "#if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )\n\n #ifdef USE_LIGHTMAP//Egret\n  vUv2 = vec2(uv2.x * lightMapScaleOffset.x + lightMapScaleOffset.z, 1.0 - ((1.0 - uv2.y) * lightMapScaleOffset.y + lightMapScaleOffset.w));\n #else \n  vUv2 = uv2;\n #endif\n\n#endif";
         ShaderChunk.uv_pars_fragment = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n\n#endif";
         ShaderChunk.uv_pars_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n\n varying vec2 vUv;\n uniform mat3 uvTransform;\n\n#endif\n";
-        ShaderChunk.uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n #if defined FLIP_V \n  vUv = ( uvTransform * vec3( uv.x, 1.0 - uv.y, 1 ) ).xy;//modify egret\n #else\n  vUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n #endif\n#endif";
+        ShaderChunk.uv_vertex = "#if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP ) || defined( USE_ROUGHNESSMAP ) || defined( USE_METALNESSMAP )\n #if defined FLIP_V \n  vUv = ( uvTransform * vec3( uv.x, 1.0 - uv.y, 1.0 ) ).xy;//modify egret\n #else\n  vUv = ( uvTransform * vec3( uv, 1.0 ) ).xy;\n #endif\n#endif";
         ShaderChunk.worldpos_vertex = "#if defined( USE_ENVMAP ) || defined( DISTANCE ) || defined ( USE_SHADOWMAP )\n\n vec4 worldPosition = modelMatrix * vec4( transformed, 1.0 );\n\n#endif\n";
     })(ShaderChunk = egret3d.ShaderChunk || (egret3d.ShaderChunk = {}));
 })(egret3d || (egret3d = {}));
@@ -26056,7 +26055,7 @@ var egret3d;
             }
         }
         var indicesCount = 0;
-        for (var i = 0; i < tempIndexBuffers.length; i++) {
+        for (var i = 1; i < tempIndexBuffers.length; i++) {
             var subLen = tempIndexBuffers[i].length;
             //第一个submesh在构造函数中已经添加，需要手动添加后续的
             combineMesh.addSubMesh(indicesCount, subLen, i);

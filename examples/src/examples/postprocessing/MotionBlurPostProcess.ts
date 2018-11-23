@@ -25,7 +25,7 @@ namespace examples.postprocessing {
             const depthMaterial = this._depathMaterial;
             const material = this._material;
             const renderState = this._renderState;
-            const postProcessingRenderTarget = camera.postProcessingRenderTarget;
+            const postProcessingRenderTarget = camera.postprocessingRenderTarget;
 
             if(!this._depthRenderTarget){                
                 this._depthRenderTarget  = new egret3d.GlRenderTarget("depthRenderTarget", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true, false, false, true);
@@ -53,15 +53,16 @@ namespace examples.postprocessing {
 
             this._preMatrix.copy(preMatrix);
         }
-
+        
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.1})
         public get velocityFactor() {
             return this._velocityFactor;
         }
 
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 1 })
         public get samples() {
             return this._samples;
         }
-
         public set velocityFactor(value: number) {
             if (this._velocityFactor !== value) {
                 this._velocityFactor = value;

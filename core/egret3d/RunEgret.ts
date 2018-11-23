@@ -86,7 +86,7 @@ namespace egret3d {
         if (window.canvas) {
             return {
                 alpha: false,
-                antialias: options.antialias,
+                antialias: true,
                 antialiasSamples: 4,
                 contentWidth: options.contentWidth || 640,
                 contentHeight: options.contentHeight || 1136
@@ -96,7 +96,7 @@ namespace egret3d {
             const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
             return {
                 alpha: false,
-                antialias: options.antialias,
+                antialias: true,
                 antialiasSamples: 4,
                 contentWidth: parseInt(div.getAttribute("data-content-width")),
                 contentHeight: parseInt(div.getAttribute("data-content-height"))

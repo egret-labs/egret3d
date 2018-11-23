@@ -44,7 +44,7 @@ namespace egret3d {
             const context = camera.context;
             const clipToWorldMatrix = camera.clipToWorldMatrix;
             const material = this._material;
-            const postProcessingRenderTarget = camera.postProcessingRenderTarget;
+            const postProcessingRenderTarget = camera.postprocessingRenderTarget;
 
             //
             material.setTexture("tColor", postProcessingRenderTarget);

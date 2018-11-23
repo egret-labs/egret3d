@@ -26,8 +26,9 @@ void main() {
 	// Convert to nonhomogeneous points [-1,1] by dividing by w.  
 	previousPos /= previousPos.w;  
 	// Use this frame's position and last frame's to compute the pixel velocity.  
-	vec2 velocity = velocityFactor * ( currentPos.xy - previousPos.xy ) * 0.5;
-	//velocity = .01 *  normalize( velocity )
+	// vec2 velocity = velocityFactor * ( currentPos.xy - previousPos.xy ) * 0.5;
+	// float dis =pow(length(H) * 0.5 , 3.0);
+	vec2 velocity = ( currentPos.xy - previousPos.xy ) * velocityFactor * 0.5;
 	vec4 finalColor = vec4( 0.0 );
 	vec2 offset = vec2( 0.0 ); 
 	float weight = 0.0;
@@ -36,7 +37,7 @@ void main() {
 	#else
 		const int samples = 20;
 	#endif
-	
+	// const int samples = 20;
 	for( int i = 0; i < samples; i++ ) {  
 		offset = velocity * ( float( i ) / ( float( samples ) - 1.0 ) - 0.5 );
 		vec4 c = texture2D( tColor, vUv + offset );
@@ -44,8 +45,9 @@ void main() {
 	}  
 	finalColor /= float( samples );
 	gl_FragColor = vec4( finalColor.rgb, 1.0 );
-	//gl_FragColor = vec4( velocity, 0., 1. );
-	//gl_FragColor.xyz = previousPos.xyz;
+	// gl_FragColor = vec4( velocity, 0., 1. );
+	// gl_FragColor.xyz = currentPos.xyz;
 	//gl_FragColor = vec4( gl_FragCoord.xy / resolution, 0., 1. );
 	//gl_FragColor = vec4( vec3( zOverW ), 1. );
+	// gl_FragColor = vec4( vec3( pow(length(H) * 0.5 , 3.0)), 1. );
 }

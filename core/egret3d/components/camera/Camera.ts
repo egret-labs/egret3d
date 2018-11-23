@@ -586,8 +586,7 @@ namespace egret3d {
         /**
          * 
          */
-        public get postProcessingRenderTarget(): BaseRenderTarget {
-            // return this._renderTarget || DefaultTextures.POST_PROCESSING;
+        public get postprocessingRenderTarget(): BaseRenderTarget {
             return this._readRenderTarget;
         }
 
