@@ -21,7 +21,7 @@ namespace examples {
             camera.gameObject.addComponent(RotationScript);
 
             for (let i = 0; i < 500; i++) {
-                const cube = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
+                const cube = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CYLINDER);
                 cube.name = "cube" + i;
                 const renderer = cube.getComponent(egret3d.MeshRenderer)!;
                 const ranColor = egret3d.Color.create(Math.random(), Math.random(), Math.random());

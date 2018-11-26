@@ -18,8 +18,8 @@ namespace egret3d {
         private _material: Material;
         private _velocityFactor: number = 1.0;
         private _samples: number = 20;
+        private _worldToClipMatrix: Matrix4 | null = null;
         private readonly _resolution: Vector2 = Vector2.create(1.0, 1.0);
-        private readonly _worldToClipMatrix: Matrix4 = Matrix4.create();
         
         public initialize() {
             this._resolution.set(stage.viewport.w, stage.viewport.h);
@@ -45,6 +45,10 @@ namespace egret3d {
             const clipToWorldMatrix = camera.clipToWorldMatrix;
             const material = this._material;
             const postProcessingRenderTarget = camera.postprocessingRenderTarget;
+
+            if(!this._worldToClipMatrix){
+                this._worldToClipMatrix = camera.worldToClipMatrix.clone();
+            }
 
             //
             material.setTexture("tColor", postProcessingRenderTarget);
