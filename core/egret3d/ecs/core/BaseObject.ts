@@ -13,18 +13,15 @@ namespace paper {
      * 可以被 paper.DisposeCollecter 收集，并在此帧末尾释放的基础对象。
      */
     export abstract class BaseRelease<T extends BaseRelease<T>> {
-
         /**
          * 
          */
         public onUpdateTarget?: any;
-
         /**
          * 是否已被释放。
          * - 将对象从对象池取出时，需要设置此值为 `false`。
          */
         protected _released?: boolean;
-
         /**
          * 更新该对象，使得该对象的 `onUpdate` 被执行。
          */

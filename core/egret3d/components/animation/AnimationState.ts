@@ -1,27 +1,32 @@
 namespace egret3d {
     const _helpQuaternion = Quaternion.create();
     /**
-     * 目标混合层。
-     * @internal
+     * @private
      */
-    export class TargetBlendLayer extends paper.BaseRelease<TargetBlendLayer> {
-        private static _instances = [] as TargetBlendLayer[];
-
-        public static create() {
+    export class AnimationFadeState extends paper.BaseRelease<AnimationFadeState> {
+        private static readonly _instances: AnimationFadeState[] = [];
+        public static create(): AnimationFadeState {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!;
                 instance._released = false;
                 return instance;
             }
 
-            return new TargetBlendLayer().clear();
+            return new AnimationFadeState().clear();
         }
 
-        public dirty: uint;
-        public layer: int;
-        public leftWeight: number;
-        public layerWeight: number;
-        public blendWeight: number;
+        /**
+         * -1: Fade in, 0: Fade complete, 1: Fade out;
+         */
+        public fadeState: -1 | 0 | 1;
+        /**
+         * -1: Fade start, 0: Fading, 1: Fade complete;
+         */
+        public subFadeState: -1 | 0 | 1;
+        public progress: number;
+        public time: number;
+        public totalTime: number;
+        public readonly states: AnimationState[] = [];
 
         private constructor() {
             super();
@@ -32,303 +37,120 @@ namespace egret3d {
         }
 
         public clear() {
-            this.dirty = 0;
-            this.layer = 0;
-            this.leftWeight = 0.0;
-            this.layerWeight = 0.0;
-            this.blendWeight = 0.0;
+            this.fadeState = -1;
+            this.subFadeState = -1;
+            this.progress = 0.0;
+            this.time = 0.0;
+            this.totalTime = 0.0;
+            this.states.length = 0;
 
             return this;
         }
 
-        public updateLayerAndWeight(animationState: AnimationState) {
-            const additive = animationState.additive;
-            const animationLayer = animationState.layer;
-            let animationWeight = animationState._globalWeight;
-
-            if (this.dirty > 0) {
-                if (this.leftWeight > Const.EPSILON) {
-                    if (!additive && this.layer !== animationLayer) {
-                        if (this.layerWeight >= this.leftWeight) {
-                            this.leftWeight = 0.0;
-
-                            return false;
-                        }
-
-                        this.layer = animationLayer;
-                        this.leftWeight -= this.layerWeight;
-                        // this.layerWeight = animationWeight * this.leftWeight;
-                        this.layerWeight = 0.0;
-                    }
-
-                    animationWeight *= this.leftWeight;
-                    this.dirty++;
-                    this.blendWeight = animationWeight;
-                    this.layerWeight += animationWeight;
-
-                    return true;
-                }
-
-                return false;
-            }
-
-            this.dirty++;
-            this.layer = animationLayer;
-            this.leftWeight = 1.0;
-            this.layerWeight = animationWeight;
-            this.blendWeight = animationWeight;
-
-            return true;
+        public fadeOut(totalTime: number): this {
+            return this;
         }
     }
     /**
-     * 动画通道。
-     * @internal
+     * 动画状态。
      */
-    export class AnimationChannel extends paper.BaseRelease<AnimationChannel> {
-        private static _instances = [] as AnimationChannel[];
-
-        public static create() {
+    export class AnimationState extends paper.BaseRelease<AnimationState> {
+        private static readonly _instances: AnimationState[] = [];
+        public static create(): AnimationState {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!;
                 instance._released = false;
                 return instance;
             }
 
-            return new AnimationChannel();
+            return new AnimationState().clear();
         }
+        /**
+         * 动画总播放次数。
+         */
+        public playTimes: uint;
+        /**
+         * 动画当前播放次数。
+         */
+        public currentPlayTimes: uint;
+        /**
+         * 
+         */
+        public weight: number;
+        /**
+         * @private
+         */
+        public animationNode: AnimationNode;
+        /**
+         * @private
+         */
+        public animationAsset: AnimationAsset;
+        /**
+         * 播放的动画数据。
+         */
+        public animation: GLTFAnimation;
+        /**
+         * 播放的动画剪辑。
+         */
+        public animationClip: GLTFAnimationClip;
+        /**
+         * 是否允许播放。
+         * @internal
+         */
+        public _playheadEnabled: boolean;
+        /**
+         * 播放状态。
+         * -1: start, 0: playing, 1: complete;
+         * @internal
+         */
+        public _playState: -1 | 0 | 1;
+        /**
+         * 本地播放时间。
+         * @internal
+         */
+        public _time: number;
+        /**
+         * 当前动画时间。
+         * @internal
+         */
+        public _currentTime: number;
+        /**
+         * @internal
+         */
+        public readonly _channels: AnimationChannel[] = [];
 
         private constructor() {
             super();
         }
 
-        public blendLayer: TargetBlendLayer | null;
-        public components: paper.BaseComponent | paper.BaseComponent[];
-        public glTFChannel: GLTFAnimationChannel;
-        public glTFSampler: gltf.AnimationSampler;
-        public inputBuffer: Float32Array;
-        public outputBuffer: Float32Array;
-        public updateTarget: ((channel: AnimationChannel, animationState: AnimationState) => void) | null = null;
-
-        public getFrameIndex(currentTime: number): uint {
-            const inputBuffer = this.inputBuffer;
-            const frameCount = inputBuffer.length;
-
-            if (DEBUG && frameCount === 0) {
-                throw new Error();
-            }
-
-            if (frameCount === 1) {
-                return -1;
-            }
-            else if (currentTime <= inputBuffer[0]) {
-                return 0;
-            }
-            else if (currentTime >= inputBuffer[frameCount - 1]) {
-                return frameCount - 2;
-            }
-
-            let beginIndex = 0;
-            let endIndex = frameCount - 1;
-
-            while (endIndex - beginIndex > 1) {
-                const middleIndex = beginIndex + ((endIndex - beginIndex) * 0.5) >> 0;
-                if (currentTime >= inputBuffer[middleIndex]) {
-                    beginIndex = middleIndex;
-                }
-                else {
-                    endIndex = middleIndex;
-                }
-            }
-
-            return beginIndex;
-        }
-    }
-    /**
-     * 
-     */
-    export class AnimationLayer extends paper.BaseRelease<AnimationLayer> {
-        
-    }
-    /**
-     * 动画混合节点。
-     */
-    export abstract class BlendNode {
-        /**
-         * @private
-         */
-        public additive: boolean = false;
-        /**
-         * 动画混合模式。（根节点有效）
-         */
-        public layer: int = 0;
-        /**
-         * 节点权重。
-         */
-        public weight: number = 1.0;
-        /**
-         * 淡入淡出的时间。
-         */
-        public fadeTotalTime: number = 1.0;
-        /**
-         * 父节点。
-         */
-        public parent: BlendNode | null = null;
-        /**
-         * -1: Fade in, 0: Fade complete, 1: Fade out;
-         * @internal
-         */
-        public _fadeState: int = -1;
-        /**
-         * -1: Fade start, 0: Fading, 1: Fade complete;
-         * @internal
-         */
-        public _subFadeState: int = -1;
-        /**
-         * 累计权重。
-         * @internal
-         */
-        public _globalWeight: number = 0.0;
-        /**
-         * 融合进度。
-         * @internal
-         */
-        public _fadeProgress: number = 0.0;
-        /**
-         * 本地融合时间。
-         */
-        protected _fadeTime: number = 0.0;
-
-        protected _onFadeStateChange() {
-        }
-        /**
-         * @internal
-         */
-        public _update(deltaTime: number) {
-            if (this._fadeState !== 0 || this._subFadeState !== 0) {
-                const isFadeOut = this._fadeState > 0;
-
-                if (this._subFadeState < 0) { // Fade start event.
-                    this._subFadeState = 0;
-                    this._onFadeStateChange();
-                }
-
-                if (deltaTime < 0.0) {
-                    deltaTime = -deltaTime;
-                }
-
-                this._fadeTime += deltaTime;
-
-                if (this._fadeTime >= this.fadeTotalTime) { // Fade complete.
-                    this._subFadeState = 1;
-                    this._fadeProgress = isFadeOut ? 0.0 : 1.0;
-                }
-                else if (this._fadeTime > 0.0) { // Fading.
-                    this._fadeProgress = isFadeOut ? (1.0 - this._fadeTime / this.fadeTotalTime) : (this._fadeTime / this.fadeTotalTime);
-                }
-                else { // Before fade.
-                    this._fadeProgress = isFadeOut ? 1.0 : 0.0;
-                }
-
-                if (this._subFadeState > 0) { // Fade complete event.
-                    if (!isFadeOut) {
-                        this._fadeState = 0;
-                        this._subFadeState = 0;
-                        this._onFadeStateChange();
-                    }
-                }
-            }
-
-            this._globalWeight = this.weight * this._fadeProgress;
-            if (this.parent) {
-                this._globalWeight *= this.parent._globalWeight;
-            }
+        public onClear() {
+            this.clear();
         }
 
-        public fadeOut(fadeOutTime: number) {
-            if (fadeOutTime < 0.0 || fadeOutTime !== fadeOutTime) {
-                fadeOutTime = 0.0;
+        public clear() {
+            for (const channel of this._channels) {
+                channel.release();
             }
 
-            if (this._fadeState > 0) {
-                if (fadeOutTime > this.fadeTotalTime - this._fadeTime) { // If the animation is already in fade out, the new fade out will be ignored.
-                    return;
-                }
-            }
-            else {
-                this._fadeState = 1;
-                this._subFadeState = -1;
+            this.playTimes = 0;
+            this.currentPlayTimes = 0;
+            this.weight = 0.0;
+            this.animationNode = null!;
+            this.animationAsset = null!;
+            this.animation = null!;
+            this.animationClip = null!;
 
-                if (fadeOutTime <= 0.0 || this._fadeProgress <= 0.0) {
-                    this._fadeProgress = Const.EPSILON; // Modify fade progress to different value.
-                }
-            }
+            this._playheadEnabled = true;
+            this._playState = -1;
+            this._time = 0.0;
+            this._currentTime = 0.0;
+            this._channels.length = 0;
 
-            this.fadeTotalTime = this._fadeProgress > Const.EPSILON ? fadeOutTime / this._fadeProgress : 0.0;
-            this._fadeTime = this.fadeTotalTime * (1.0 - this._fadeProgress);
+            return this;
         }
-    }
-    /**
-     * 动画混合树节点。
-     */
-    export class BlendTree extends BlendNode {
-        private readonly _blendNodes: BlendNode[] = [];
-    }
-    /**
-     * 动画状态。
-     */
-    export class AnimationState extends BlendNode {
-        /**
-         * @private
-         */
-        public layer: int = 0;
-        /**
-         * 动画总播放次数。
-         */
-        public playTimes: uint = 0;
-        /**
-         * 动画当前播放次数。
-         */
-        public currentPlayTimes: uint = 0;
-        /**
-         * 播放速度。
-         */
-        public timeScale: number = 1.0;
-        /**
-         * @private
-         */
-        public animationAsset: AnimationAsset = null!;
-        /**
-         * 播放的动画数据。
-         */
-        public animation: GLTFAnimation = null!;
-        /**
-         * 播放的动画剪辑。
-         */
-        public animationClip: GLTFAnimationClip = null!;
-        /**
-         * 是否允许播放。
-         */
-        private _isPlaying: boolean = true;
-        /**
-         * 播放状态。
-         * -1: start, 0: playing, 1: complete;
-         */
-        private _playState: int = -1;
-        /**
-         * 本地播放时间。
-         */
-        private _time: number = 0.0;
-        /**
-         * 当前动画时间。
-         */
-        private _currentTime: number = 0.0;
-        // TODO cache.
-        private readonly _channels: AnimationChannel[] = [];
-        private _animationComponent: Animation = null as any;
 
-        private _onUpdateTranslation(channel: AnimationChannel, animationState: AnimationState) {
-            const additive = animationState.additive;
+        private _onUpdateTranslation(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) {
+            const additive = animationlayer.additive;
             const interpolation = channel.glTFSampler.interpolation;
             const currentTime = animationState._currentTime;
             const outputBuffer = channel.outputBuffer;
@@ -394,8 +216,7 @@ namespace egret3d {
             }
         }
 
-        private _onUpdateRotation(channel: AnimationChannel, animationState: AnimationState) {
-            const additive = animationState.additive;
+        private _onUpdateRotation(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) {
             const interpolation = channel.glTFSampler.interpolation;
             const currentTime = animationState._currentTime;
             const outputBuffer = channel.outputBuffer;
@@ -467,8 +288,8 @@ namespace egret3d {
             }
         }
 
-        private _onUpdateScale(channel: AnimationChannel, animationState: AnimationState) {
-            const additive = animationState.additive;
+        private _onUpdateScale(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) {
+            const additive = animationlayer.additive;
             const interpolation = channel.glTFSampler.interpolation;
             const currentTime = animationState._currentTime;
             const outputBuffer = channel.outputBuffer;
@@ -534,7 +355,7 @@ namespace egret3d {
             }
         }
 
-        private _onUpdateActive(channel: AnimationChannel, animationState: AnimationState) {
+        private _onUpdateActive(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) {
             const currentTime = animationState._currentTime;
             const outputBuffer = channel.outputBuffer;
             const frameIndex = channel.getFrameIndex(currentTime);
@@ -553,19 +374,16 @@ namespace egret3d {
         /**
          * @internal
          */
-        public initialize(animationComponent: Animation, animationAsset: AnimationAsset, animationClip: GLTFAnimationClip) {
+        public _initialize(animation: Animation, animationNode: AnimationNode, animationAsset: AnimationAsset, animationClip: GLTFAnimationClip) {
             const assetConfig = animationAsset.config;
-            //
+
             this.animationAsset = animationAsset;
-            this.animationClip = animationClip;
             this.animation = (assetConfig.animations as GLTFAnimation[])[0]; // TODO 动画数据暂不合并。
-            //
-            this._fadeTime = 0.0;
-            this._time = 0.0;
-            this._animationComponent = animationComponent;
+            this.animationClip = animationClip;
+            this.animationNode = animationNode;
 
             if (this.animation.channels) {
-                const rootGameObject = this._animationComponent.gameObject;
+                const rootGameObject = animation.gameObject;
                 const children = rootGameObject.transform.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
                 children["__root__"] = rootGameObject.transform; //
 
@@ -586,17 +404,17 @@ namespace egret3d {
 
                     switch (pathName) {
                         case "translation":
-                            channel.blendLayer = this._animationComponent._getBlendlayer(pathName, nodeName);
+                            channel.blendLayer = animation._getBlendlayer(pathName, nodeName);
                             channel.updateTarget = this._onUpdateTranslation;
                             break;
 
                         case "rotation":
-                            channel.blendLayer = this._animationComponent._getBlendlayer(pathName, nodeName);
+                            channel.blendLayer = animation._getBlendlayer(pathName, nodeName);
                             channel.updateTarget = this._onUpdateRotation;
                             break;
 
                         case "scale":
-                            channel.blendLayer = this._animationComponent._getBlendlayer(pathName, nodeName);
+                            channel.blendLayer = animation._getBlendlayer(pathName, nodeName);
                             channel.updateTarget = this._onUpdateScale;
                             break;
 
@@ -625,101 +443,34 @@ namespace egret3d {
                 }
             }
         }
-        /**
-         * @internal
-         */
-        public _update(deltaTime: number) {
-            super._update(deltaTime);
-
-            // Update time.
-            if (this._isPlaying) { // 11
-                deltaTime *= this.timeScale * this._animationComponent.timeScale;
-                this._time += deltaTime;
-            }
-
-            // const isBlendDirty = this._fadeState !== 0 || this._subFadeState === 0;
-            const prevPlayState = this._playState;
-            // const prevPlayTimes = this.currentPlayTimes;
-            // const prevTime = this._currentTime;
-            const duration = this.animationClip.duration;
-            const totalTime = this.playTimes * duration;
-
-            if (this.playTimes > 0 && (this._time >= totalTime || this._time <= -totalTime)) {
-                if (this._playState <= 0 && this._isPlaying) {
-                    this._playState = 1;
-                }
-
-                this.currentPlayTimes = this.playTimes;
-
-                if (this._time >= totalTime) {
-                    // currentTime = duration + Const.EPSILON; // Precision problem.
-                    this._currentTime = duration; // TODO CHECK.
-                }
-                else {
-                    this._currentTime = 0.0;
-                }
-            }
-            else {
-                if (this._playState !== 0 && this._isPlaying) {
-                    this._playState = 0;
-                }
-
-                if (this._time < 0.0) {
-                    this._time = -this._time;
-                    this.currentPlayTimes = Math.floor(this._time / duration);
-                    this._currentTime = duration - (this._time % duration);
-                }
-                else {
-                    this.currentPlayTimes = Math.floor(this._time / duration);
-                    this._currentTime = this._time % duration;
-                }
-            }
-
-            this._currentTime += this.animationClip.position;
-
-            if (this.weight !== 0.0) {
-                for (const channel of this._channels) {
-                    if (!channel.updateTarget) {
-                        continue;
-                    }
-
-                    const blendLayer = channel.blendLayer;
-                    if (!blendLayer || blendLayer.updateLayerAndWeight(this)) {
-                        channel.updateTarget(channel, this);
-                    }
-                }
-            }
-
-            if (prevPlayState !== this._playState && this._playState === 1) {
-                this._animationComponent._dispatchEvent("complete", this); // TODO buffer event.
-
-                const animationNames = this._animationComponent._animationNames;
-                if (animationNames.length > 0) {
-                    const animationName = animationNames.shift();
-                    this._animationComponent.play(animationName);
-                }
-            }
-        }
 
         public play() {
-            this._isPlaying = true;
+            this._playheadEnabled = true;
         }
 
         public stop() {
-            this._isPlaying = false;
-        }
-
-        public fateOut(): void {
-            this._fadeState = 1;
-            this._subFadeState = -1;
+            this._playheadEnabled = false;
         }
 
         public get isPlaying() {
-            return this._isPlaying && this._playState !== 1;
+            return this._playheadEnabled && this._playState !== 1;
         }
 
         public get isCompleted() {
             return this._playState === 1;
+        }
+        /**
+         * 播放速度。
+         */
+        public get timeScale(): number {
+            return this.animationNode.timeScale;
+        }
+        public set timeScale(value: number) {
+            if (DEBUG && value !== value) {
+                throw new Error();
+            }
+
+            this.animationNode.timeScale = value;
         }
 
         public get totalTime() {

@@ -14,28 +14,22 @@ namespace egret3d {
         @paper.editor.property(paper.editor.EditType.FLOAT)
         public timeScale: number = 1.0;
         /**
-         * 动画数据列表。
-         */
-        @paper.serializedField
-        private readonly _animations: AnimationAsset[] = [];
-        /**
-         * 混合节点列表。
-         */
-        private readonly _blendNodes: BlendNode[] = [];
-        /**
          * @internal
          */
         public readonly _animationNames: string[] = [];
+        @paper.serializedField
+        private readonly _animations: AnimationAsset[] = [];
         /**
-         * 骨骼姿势列表。
          * @internal
          */
-        private readonly _blendLayers: { [key: string]: { [key: string]: TargetBlendLayer } } = {};
+        public readonly _animationFadeStates: AnimationFadeState[][] = [];
         /**
-         * 最后一个播放的动画状态。
-         * - 当进行动画混合时，该值通常没有任何意义。
+         * @internal
          */
-        private _lastAnimationState: AnimationState | null = null;
+        public readonly _blendLayers: { [key: string]: BlendLayer } = {};
+        @paper.serializedField
+        private _animationController: AnimationController | null = null;
+        private _lastAnimationLayer: AnimationLayer | null = null;
         /**
          * TODO more event type.
          * sendMessage.
@@ -52,94 +46,23 @@ namespace egret3d {
          * @internal
          */
         public _getBlendlayer(type: string, name: string) {
-            if (!(type in this._blendLayers)) {
-                this._blendLayers[type] = {};
-            }
+            const typeAndName = type + "/" + name;
+            const blendLayers = this._blendLayers;
 
-            const blendLayers = this._blendLayers[type];
-
-            if (!(name in blendLayers)) {
-                blendLayers[name] = TargetBlendLayer.create();
+            if (!(typeAndName in blendLayers)) {
+                blendLayers[name] = BlendLayer.create();
             }
 
             return blendLayers[name];
-        }
-        /**
-         * @internal
-         */
-        public _update(globalTime: number) {
-            const blendNodes = this._blendNodes;
-            const blendNodeCount = blendNodes.length;
-
-            for (const k in this._blendLayers) { // Reset blendLayers.
-                const blendLayers = this._blendLayers[k];
-
-                for (const kB in blendLayers) {
-                    blendLayers[kB].clear();
-                }
-            }
-
-            if (blendNodeCount === 1) {
-                const blendNode = blendNodes[0];
-
-                if (blendNode._fadeState > 0 && blendNode._subFadeState > 0) {
-                    blendNodes.length = 0;
-
-                    if (this._lastAnimationState === blendNode) {
-                        this._lastAnimationState = null;
-                    }
-                }
-                else {
-                    blendNode._update(globalTime);
-                }
-            }
-            else if (blendNodeCount > 1) {
-                for (let i = 0, r = 0; i < blendNodeCount; ++i) {
-                    const blendNode = blendNodes[i];
-
-                    if (blendNode._fadeState > 0 && blendNode._subFadeState > 0) {
-                        r++;
-                        if (this._lastAnimationState === blendNode) {
-                            this._lastAnimationState = null;
-                        }
-                    }
-                    else {
-                        if (r > 0) {
-                            blendNodes[i - r] = blendNode;
-                        }
-
-                        blendNode._update(globalTime);
-                    }
-
-                    if (i === blendNodeCount - 1 && r > 0) {
-                        blendNodes.length -= r;
-
-                        if (this._lastAnimationState === null && blendNodes.length > 0) {
-                            const blendNode = blendNodes[blendNodes.length - 1];
-
-                            if (blendNode instanceof AnimationState) {
-                                this._lastAnimationState = blendNode;
-                            }
-                        }
-                    }
-                }
-            }
-            else {
-
-            }
         }
 
         public uninitialize() {
             super.uninitialize();
 
-            for (const k in this._blendLayers) {
-                const blendLayers = this._blendLayers[k];
-
-                for (const kB in blendLayers) {
-                    blendLayers[kB].release();
-                }
-
-                delete this._blendLayers[k];
+            const blendLayers = this._blendLayers;
+            for (const k in blendLayers) {
+                blendLayers[k].release();
+                delete blendLayers[k];
             }
         }
         /**
@@ -148,21 +71,22 @@ namespace egret3d {
         public fadeIn(
             animationName: string | null = null,
             fadeTime: number, playTimes: number = -1,
-            layer: number = 0, additive: boolean = false,
+            layerIndex: uint = 0, layerAdditive: boolean = false,
         ): AnimationState | null {
+            // 
             let animationAsset: AnimationAsset | null = null;
             let animationClip: GLTFAnimationClip | null = null;
 
-            for (const animation of this._animations) {
-                animationAsset = animation;
+            for (const eachAnimationAsset of this._animations) {
+                animationAsset = eachAnimationAsset;
                 if (animationName) {
-                    animationClip = animation.getAnimationClip(animationName);
+                    animationClip = eachAnimationAsset.getAnimationClip(animationName);
                     if (animationClip !== null) {
                         break;
                     }
                 }
                 else {
-                    animationClip = animation.getAnimationClip("");
+                    animationClip = eachAnimationAsset.getAnimationClip("");
                     break;
                 }
             }
@@ -170,42 +94,40 @@ namespace egret3d {
             if (!animationAsset || !animationClip) {
                 return null;
             }
-
-            for (const blendNode of this._blendNodes) {
-                if ((!blendNode.parent && blendNode.layer === layer)) {
-                    blendNode.fadeOut(fadeTime);
-                }
+            //
+            if (!this._animationController) {
+                this._animationController = AnimationController.create();
             }
 
-            const animationState = new AnimationState();
-            animationState.initialize(this, animationAsset, animationClip);
-            animationState.additive = additive;
-            animationState.layer = layer;
-            animationState.fadeTotalTime = fadeTime;
+            const animationController = this._animationController;
+            const animationLayer = animationController.getLayer(layerIndex);
+            animationLayer.additive = layerAdditive;
+            layerIndex = animationController.layers.indexOf(animationLayer);
+            const animationNode: AnimationNode = {
+                asset: "",
+                clip: "",
+                timeScale: 1.0,
+            };
+            //
+            const animationFadeStates = this._animationFadeStates;
+            if (layerIndex >= animationFadeStates.length) {
+                animationFadeStates[layerIndex] = [];
+            }
+
+            for (const fadeStates of animationFadeStates[layerIndex]) {
+                fadeStates.fadeOut(fadeTime);
+            }
+
+            const lastFadeState = AnimationFadeState.create();
+            lastFadeState.totalTime = fadeTime;
+            animationFadeStates[layerIndex].push(lastFadeState);
+            //
+            const animationState = AnimationState.create();
+            animationState._initialize(this, animationNode, animationAsset, animationClip);
             animationState.playTimes = playTimes < 0 ? (animationClip.playTimes || 0) : playTimes;
-
-            let isAdded = false;
-            const blendNodes = this._blendNodes;
-            if (blendNodes.length > 0) {
-                for (let i = 0, l = blendNodes.length; i < l; ++i) {
-                    if (animationState.layer > blendNodes[i].layer) {
-                        isAdded = true;
-                        blendNodes.splice(i, 0, animationState);
-                        break;
-                    }
-                    else if (i !== l - 1 && animationState.layer > blendNodes[i + 1].layer) {
-                        isAdded = true;
-                        blendNodes.splice(i + 1, 0, animationState);
-                        break;
-                    }
-                }
-            }
-
-            if (!isAdded) {
-                blendNodes.push(animationState);
-            }
-
-            this._lastAnimationState = animationState;
+            lastFadeState.states.push(animationState);
+            //
+            this._lastAnimationLayer = animationLayer;
 
             return animationState;
         }
@@ -233,9 +155,12 @@ namespace egret3d {
          * 
          */
         public stop(): void {
-            for (const blendNode of this._blendNodes) {
-                if (!blendNode.parent && blendNode instanceof AnimationState) {
-                    blendNode.stop();
+            const animationFadeStates = this._animationFadeStates;
+            for (const fadeStates of animationFadeStates) {
+                for (const fadeState of fadeStates) {
+                    for (const animationState of fadeState.states) {
+                        animationState.stop();
+                    }
                 }
             }
         }
@@ -243,7 +168,8 @@ namespace egret3d {
          * 
          */
         public get lastAnimationnName(): string {
-            return this._lastAnimationState ? this._lastAnimationState.animationClip.name : "";
+            const lastAnimationState = this.lastAnimationState;
+            return lastAnimationState ? lastAnimationState.animationClip.name : "";
         }
         /**
          * 动画数据列表。
@@ -259,8 +185,25 @@ namespace egret3d {
         /**
          * 
          */
+        public get animationController() {
+            return this._animationController;
+        }
+        /**
+         * 
+         */
         public get lastAnimationState(): AnimationState | null {
-            return this._lastAnimationState;
+            const animationController = this._animationController;
+            const lastAnimationLayer = this._lastAnimationLayer;
+            if (animationController && lastAnimationLayer) {
+                const layerIndex = animationController.layers.indexOf(lastAnimationLayer);
+                const animationFadeStates = this._animationFadeStates;
+                if (animationFadeStates.length > layerIndex) {
+                    const fadeStates = animationFadeStates[layerIndex];
+                    return fadeStates.length > 0 ? fadeStates[fadeStates.length - 1].states[0] : null;
+                }
+            }
+
+            return null;
         }
     }
 }

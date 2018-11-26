@@ -29,6 +29,7 @@ namespace paper {
      */
     export const enum DefaultNames {
         NoName = "NoName",
+        Default = "Default",
         Global = "Global",
         MainCamera = "Main Camera",
         EditorCamera = "Editor Camera",

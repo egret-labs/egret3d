@@ -7,7 +7,10 @@ namespace egret3d {
         extensions: {
             KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
             paper?: {
-                shaders?: gltf.Shader[], // TODO
+                animationControllers?: {
+                    parameters: AnimationParameter[];
+                    layers: AnimationLayer[];
+                }[];
             };
         };
         extensionsUsed: string[];
@@ -130,7 +133,7 @@ namespace egret3d {
      * glTF 资源。
      */
     export class GLTFAsset extends paper.Asset {
-        private static _createConfig() {
+        protected static _createConfig() {
             const config = {
                 version: "4",
                 asset: {
@@ -390,6 +393,10 @@ namespace egret3d {
                 default:
                     throw new Error();
             }
+        }
+
+        public createAnimationController() {
+
         }
         /**
          * 

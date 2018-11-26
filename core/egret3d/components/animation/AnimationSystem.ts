@@ -6,6 +6,8 @@ namespace egret3d {
         protected readonly _interests = [
             { componentClass: Animation }
         ];
+        private _animation: Animation | null = null;
+        private _animationLayer: AnimationLayer | null = null;
 
         public onAddComponent(component: Animation) {
             if (component.autoPlay && (!component.lastAnimationState || !component.lastAnimationState.isPlaying)) {
@@ -14,9 +16,162 @@ namespace egret3d {
         }
 
         public onUpdate(deltaTime: number) {
-            // TODO 应将组件功能尽量移到系统，视野剔除
             for (const gameObject of this._groups[0].gameObjects) {
-                gameObject.getComponent(Animation)!._update(deltaTime);
+                const animation = this._animation = gameObject.getComponent(Animation)!;
+                const animationController = animation.animationController!;
+                const animationLayers = animationController.layers;
+                const animationFadeStates = animation._animationFadeStates;
+                const blendlayers = animation._blendLayers;
+                let layerIndex = 0;
+
+                for (const k in blendlayers) { // Reset blendLayers.
+                    const blendLayer = blendlayers[k];
+                    blendLayer.clear();
+                }
+
+                for (const fadeStates of animationFadeStates) {
+                    this._animationLayer = animationLayers[layerIndex++];
+                    
+                    for (let i = 0, r = 0, l = fadeStates.length; i < l; ++i) {
+                        const fadeState = fadeStates[i];
+                        const sFadeState = fadeState.fadeState;
+                        const sSubFadeState = fadeState.subFadeState;
+
+                        if (sFadeState === 1 && sSubFadeState === 1) {
+                            r++;
+                        }
+                        else {
+                            if (r > 0) {
+                                fadeStates[i - r] = fadeState;
+                            }
+
+                            if (sFadeState !== 0 || sSubFadeState !== 0) {
+                                this._updateAnimationFadeState(fadeState, deltaTime);
+                            }
+
+                            for (const animationState of fadeState.states) {
+                                this._updateAnimationState(fadeState, animationState, deltaTime);
+                            }
+                        }
+
+                        if (i === l - 1 && r > 0) {
+                            fadeStates.length -= r;
+                        }
+                    }
+                }
+            }
+        }
+
+        private _updateAnimationFadeState(animationFadeState: AnimationFadeState, deltaTime: number) {
+            if (deltaTime < 0.0) {
+                deltaTime = -deltaTime;
+            }
+
+            const isFadeOut = animationFadeState.fadeState === 1;
+            const totalTime = animationFadeState.totalTime;
+            const time = animationFadeState.time += deltaTime;
+
+            if (animationFadeState.subFadeState === -1) { // Fade start event.
+                animationFadeState.subFadeState = 0;
+            }
+
+            if (time >= totalTime) { // Fade complete.
+                animationFadeState.subFadeState = 1;
+                animationFadeState.progress = isFadeOut ? 0.0 : 1.0;
+            }
+            else if (time > 0.0) { // Fading.
+                animationFadeState.progress = isFadeOut ? (1.0 - time / totalTime) : (time / totalTime);
+            }
+            else { // Before fade.
+                animationFadeState.progress = isFadeOut ? 1.0 : 0.0;
+            }
+
+            if (animationFadeState.subFadeState === 1) { // Fade complete event.
+                if (!isFadeOut) {
+                    animationFadeState.fadeState = 0;
+                    animationFadeState.subFadeState = 0; //
+                }
+            }
+        }
+
+        private _updateAnimationState(animationFadeState: AnimationFadeState, animationState: AnimationState, deltaTime: number) {
+            const animation = this._animation!;
+            const animationLayer = this._animationLayer!;
+            const animationNode = animationState.animationNode;
+
+            let weight = animationLayer.weight * animationFadeState.progress * animationState.weight;
+            // if (this.parent) {
+            //     this._globalWeight *= this.parent._globalWeight;
+            // }
+
+            // Update time.
+            if (animationState._playheadEnabled) {
+                deltaTime *= animation.timeScale * animationState.timeScale;
+                animationState._time += deltaTime;
+            }
+
+            // const isBlendDirty = this._fadeState !== 0 || this._subFadeState === 0;
+            const prevPlayState = animationState._playState;
+            // const prevPlayTimes = this.currentPlayTimes;
+            // const prevTime = this._currentTime;
+            const playTimes = animationState.playTimes;
+            const duration = animationState.animationClip.duration;
+            const totalTime = playTimes * duration;
+
+            if (playTimes > 0 && (animationState._time >= totalTime || animationState._time <= -totalTime)) {
+                if (animationState._playState <= 0 && animationState._playheadEnabled) {
+                    animationState._playState = 1;
+                }
+
+                animationState.currentPlayTimes = playTimes;
+
+                if (animationState._time >= totalTime) {
+                    // currentTime = duration + Const.EPSILON; // Precision problem.
+                    animationState._currentTime = duration; // TODO CHECK.
+                }
+                else {
+                    animationState._currentTime = 0.0;
+                }
+            }
+            else {
+                if (animationState._playState !== 0 && animationState._playheadEnabled) {
+                    animationState._playState = 0;
+                }
+
+                if (animationState._time < 0.0) {
+                    animationState._time = -animationState._time;
+                    animationState.currentPlayTimes = (animationState._time / duration) >> 0;
+                    animationState._currentTime = duration - (animationState._time % duration);
+                }
+                else {
+                    animationState.currentPlayTimes = (animationState._time / duration) >> 0;
+                    animationState._currentTime = animationState._time % duration;
+                }
+            }
+
+            animationState._currentTime += animationState.animationClip.position;
+
+            if (weight !== 0.0) {
+                for (const channel of animationState._channels) {
+                    if (!channel.updateTarget) {
+                        continue;
+                    }
+
+                    const blendLayer = channel.blendLayer;
+                    if (!blendLayer || blendLayer.updateLayerAndWeight(animationLayer, animationState)) {
+                        channel.updateTarget(channel, animationLayer, animationState);
+                    }
+                }
+            }
+
+            if (prevPlayState !== animationState._playState && animationState._playState === 1) {
+                animation._dispatchEvent("complete", animationState); // TODO buffer event.
+
+                // const animationNames = this._animationComponent._animationNames;
+                // if (animationNames.length > 0) {
+                //     const animationName = animationNames.shift();
+                //     this._animationComponent.play(animationName);
+                // }
             }
         }
     }
