@@ -6160,7 +6160,7 @@ var egret3d;
             /**
              * TODO
              */
-            _this.cullingMask = 4294967295 /* Everything */;
+            _this.cullingMask = 4294967295 /* CullingMaskEverything */;
             /**
              * 该灯光的强度。
              */
@@ -6371,39 +6371,49 @@ var paper;
         RenderQueue[RenderQueue["Overlay"] = 4000] = "Overlay";
     })(RenderQueue = paper.RenderQueue || (paper.RenderQueue = {}));
     /**
-     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
-     * 这个属性可以实现相机的选择性剔除。
+     * 内置层级和自定义层级。
      */
     var Layer;
     (function (Layer) {
-        Layer[Layer["Default"] = 2] = "Default";
-        Layer[Layer["UI"] = 4] = "UI";
-        Layer[Layer["UserLayer1"] = 8] = "UserLayer1";
-        Layer[Layer["UserLayer2"] = 16] = "UserLayer2";
-        Layer[Layer["UserLayer3"] = 32] = "UserLayer3";
-        Layer[Layer["UserLayer4"] = 64] = "UserLayer4";
-        Layer[Layer["UserLayer5"] = 128] = "UserLayer5";
-        Layer[Layer["UserLayer6"] = 256] = "UserLayer6";
-        Layer[Layer["UserLayer7"] = 512] = "UserLayer7";
-        Layer[Layer["UserLayer8"] = 1024] = "UserLayer8";
-        Layer[Layer["UserLayer9"] = 2048] = "UserLayer9";
-        Layer[Layer["UserLayer10"] = 4096] = "UserLayer10";
-        Layer[Layer["UserLayer11"] = 8192] = "UserLayer11";
-        Layer[Layer["UserLayer12"] = 16384] = "UserLayer12";
-        Layer[Layer["UserLayer13"] = 32768] = "UserLayer13";
-        Layer[Layer["UserLayer14"] = 65536] = "UserLayer14";
-        Layer[Layer["UserLayer15"] = 131072] = "UserLayer15";
-        Layer[Layer["UserLayer16"] = 262144] = "UserLayer16";
-        Layer[Layer["UserLayer17"] = 524288] = "UserLayer17";
-        Layer[Layer["UserLayer18"] = 1048576] = "UserLayer18";
-        Layer[Layer["UserLayer19"] = 2097152] = "UserLayer19";
-        Layer[Layer["UserLayer20"] = 4194304] = "UserLayer20";
-        Layer[Layer["UserLayer21"] = 8388608] = "UserLayer21";
-        Layer[Layer["UserLayer22"] = 16777216] = "UserLayer22";
-        Layer[Layer["UserLayer23"] = 33554432] = "UserLayer23";
-        Layer[Layer["UserLayer24"] = 67108864] = "UserLayer24";
-        Layer[Layer["UserLayer25"] = 134217728] = "UserLayer25";
-        Layer[Layer["UserLayer26"] = 268435456] = "UserLayer26";
+        Layer[Layer["CullingMaskNothing"] = 0] = "CullingMaskNothing";
+        Layer[Layer["CullingMaskEverything"] = 4294967295] = "CullingMaskEverything";
+        Layer[Layer["BuiltinLayer0"] = 1] = "BuiltinLayer0";
+        Layer[Layer["BuiltinLayer1"] = 2] = "BuiltinLayer1";
+        Layer[Layer["BuiltinLayer2"] = 4] = "BuiltinLayer2";
+        Layer[Layer["BuiltinLayer3"] = 8] = "BuiltinLayer3";
+        Layer[Layer["BuiltinLayer4"] = 16] = "BuiltinLayer4";
+        Layer[Layer["BuiltinLayer5"] = 32] = "BuiltinLayer5";
+        Layer[Layer["BuiltinLayer6"] = 64] = "BuiltinLayer6";
+        Layer[Layer["BuiltinLayer7"] = 128] = "BuiltinLayer7";
+        Layer[Layer["UserLayer8"] = 256] = "UserLayer8";
+        Layer[Layer["UserLayer9"] = 512] = "UserLayer9";
+        Layer[Layer["UserLayer10"] = 1024] = "UserLayer10";
+        Layer[Layer["UserLayer11"] = 2048] = "UserLayer11";
+        Layer[Layer["UserLayer12"] = 4096] = "UserLayer12";
+        Layer[Layer["UserLayer13"] = 8192] = "UserLayer13";
+        Layer[Layer["UserLayer14"] = 16384] = "UserLayer14";
+        Layer[Layer["UserLayer15"] = 32768] = "UserLayer15";
+        Layer[Layer["UserLayer16"] = 65536] = "UserLayer16";
+        Layer[Layer["UserLayer17"] = 131072] = "UserLayer17";
+        Layer[Layer["UserLayer18"] = 262144] = "UserLayer18";
+        Layer[Layer["UserLayer19"] = 524288] = "UserLayer19";
+        Layer[Layer["UserLayer20"] = 1048576] = "UserLayer20";
+        Layer[Layer["UserLayer21"] = 2097152] = "UserLayer21";
+        Layer[Layer["UserLayer22"] = 4194304] = "UserLayer22";
+        Layer[Layer["UserLayer23"] = 8388608] = "UserLayer23";
+        Layer[Layer["UserLayer24"] = 16777216] = "UserLayer24";
+        Layer[Layer["UserLayer25"] = 33554432] = "UserLayer25";
+        Layer[Layer["UserLayer26"] = 67108864] = "UserLayer26";
+        Layer[Layer["UserLayer27"] = 134217728] = "UserLayer27";
+        Layer[Layer["UserLayer28"] = 268435456] = "UserLayer28";
+        Layer[Layer["UserLayer29"] = 536870912] = "UserLayer29";
+        Layer[Layer["UserLayer30"] = 1073741824] = "UserLayer30";
+        Layer[Layer["UserLayer31"] = 2147483648] = "UserLayer31";
+        Layer[Layer["Default"] = 1] = "Default";
+        Layer[Layer["TransparentFX"] = 2] = "TransparentFX";
+        Layer[Layer["IgnoreRayCast"] = 4] = "IgnoreRayCast";
+        Layer[Layer["Water"] = 16] = "Water";
+        Layer[Layer["UI"] = 32] = "UI";
     })(Layer = paper.Layer || (paper.Layer = {}));
     /**
      * culling mask
@@ -8285,7 +8295,7 @@ var paper;
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
-    2 /* Default */;
+    1 /* Default */;
     /**
      * 实体。
      */
@@ -8313,7 +8323,7 @@ var paper;
              * 层级。
              * - 用于各种层遮罩。
              */
-            _this.layer = 2 /* Default */;
+            _this.layer = 1 /* Default */;
             /**
              * 名称。
              */
@@ -8521,7 +8531,7 @@ var paper;
         GameObject.prototype.uninitialize = function () {
             this.isStatic = false;
             this.hideFlags = 0 /* None */;
-            this.layer = 2 /* Default */;
+            this.layer = 1 /* Default */;
             this.name = "";
             this.tag = "";
             this.transform = null;
@@ -9161,7 +9171,7 @@ var paper;
          */
         GameObject.raycast = function (ray, gameObjects, maxDistance, cullingMask, raycastMesh) {
             if (maxDistance === void 0) { maxDistance = 0.0; }
-            if (cullingMask === void 0) { cullingMask = 4294967295 /* Everything */; }
+            if (cullingMask === void 0) { cullingMask = 4294967295 /* CullingMaskEverything */; }
             if (raycastMesh === void 0) { raycastMesh = false; }
             return egret3d.raycastAll(ray, gameObjects, maxDistance, cullingMask, raycastMesh);
         };
@@ -13547,7 +13557,7 @@ var egret3d;
     }
     function _raycastAll(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos) {
         if (maxDistance === void 0) { maxDistance = 0.0; }
-        if (cullingMask === void 0) { cullingMask = 4294967295 /* Everything */; }
+        if (cullingMask === void 0) { cullingMask = 4294967295 /* CullingMaskEverything */; }
         if (raycastMesh === void 0) { raycastMesh = false; }
         if ((gameObject.hideFlags === 3 /* HideAndDontSave */ && gameObject.tag === "EditorOnly" /* EditorOnly */ &&
             (!gameObject.transform.parent || gameObject.transform.parent.gameObject.activeInHierarchy)) ? gameObject.activeSelf : !gameObject.activeInHierarchy) {
@@ -13680,7 +13690,7 @@ var egret3d;
      */
     function raycastAll(ray, gameObjectsOrComponents, maxDistance, cullingMask, raycastMesh) {
         if (maxDistance === void 0) { maxDistance = 0.0; }
-        if (cullingMask === void 0) { cullingMask = 4294967295 /* Everything */; }
+        if (cullingMask === void 0) { cullingMask = 4294967295 /* CullingMaskEverything */; }
         if (raycastMesh === void 0) { raycastMesh = false; }
         var raycastInfos = [];
         for (var _i = 0, gameObjectsOrComponents_1 = gameObjectsOrComponents; _i < gameObjectsOrComponents_1.length; _i++) {
@@ -13789,7 +13799,7 @@ var egret3d;
              * - camera.cullingMask |= paper.CullingMask.UI;
              * - camera.cullingMask &= ~paper.CullingMask.UI;
              */
-            _this.cullingMask = 4294967295 /* Everything */;
+            _this.cullingMask = 4294967295 /* CullingMaskEverything */;
             /**
              * 该相机渲染排序。
              * - 该值越低的相机优先绘制。
@@ -13879,7 +13889,7 @@ var egret3d;
                     gameObject.transform.setLocalPosition(0.0, 10.0, -10.0);
                     gameObject.transform.lookAt(egret3d.Vector3.ZERO);
                     var camera = gameObject.addComponent(Camera);
-                    camera.cullingMask &= ~4 /* UI */; // TODO 更明确的 UI 编辑方案。
+                    camera.cullingMask &= ~32 /* UI */; // TODO 更明确的 UI 编辑方案。
                     camera.far = 10000.0;
                 }
                 return gameObject.getOrAddComponent(Camera);
@@ -14425,8 +14435,8 @@ var egret3d;
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this._velocityFactor = 1.0;
             _this._samples = 20;
+            _this._worldToClipMatrix = null;
             _this._resolution = egret3d.Vector2.create(1.0, 1.0);
-            _this._worldToClipMatrix = egret3d.Matrix4.create();
             return _this;
         }
         MotionBlurEffect.prototype.initialize = function () {
@@ -14436,8 +14446,6 @@ var egret3d;
             this._material.setCullFace(false);
             // this._material.setVector2("resolution", this._resolution);
             this._material.setFloat("velocityFactor", this._velocityFactor);
-            var camera = this.gameObject.getComponent(egret3d.Camera);
-            this._worldToClipMatrix.copy(camera.worldToClipMatrix);
         };
         MotionBlurEffect.prototype.uninitialize = function () {
             if (this._material) {
@@ -14451,6 +14459,9 @@ var egret3d;
             var clipToWorldMatrix = camera.clipToWorldMatrix;
             var material = this._material;
             var postProcessingRenderTarget = camera.postprocessingRenderTarget;
+            if (!this._worldToClipMatrix) {
+                this._worldToClipMatrix = camera.worldToClipMatrix.clone();
+            }
             //
             material.setTexture("tColor", postProcessingRenderTarget);
             material.setMatrix("viewProjectionInverseMatrix", clipToWorldMatrix);

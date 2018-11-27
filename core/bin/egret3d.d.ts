@@ -3840,7 +3840,7 @@ declare namespace egret3d {
         /**
          * TODO
          */
-        cullingMask: paper.CullingMask;
+        cullingMask: paper.Layer;
         /**
          * 该灯光的强度。
          */
@@ -3942,38 +3942,48 @@ declare namespace paper {
         Overlay = 4000,
     }
     /**
-     * 这里暂未实现用户自定义层级，但用户可以使用预留的UserLayer。
-     * 这个属性可以实现相机的选择性剔除。
+     * 内置层级和自定义层级。
      */
     const enum Layer {
-        Default = 2,
-        UI = 4,
-        UserLayer1 = 8,
-        UserLayer2 = 16,
-        UserLayer3 = 32,
-        UserLayer4 = 64,
-        UserLayer5 = 128,
-        UserLayer6 = 256,
-        UserLayer7 = 512,
-        UserLayer8 = 1024,
-        UserLayer9 = 2048,
-        UserLayer10 = 4096,
-        UserLayer11 = 8192,
-        UserLayer12 = 16384,
-        UserLayer13 = 32768,
-        UserLayer14 = 65536,
-        UserLayer15 = 131072,
-        UserLayer16 = 262144,
-        UserLayer17 = 524288,
-        UserLayer18 = 1048576,
-        UserLayer19 = 2097152,
-        UserLayer20 = 4194304,
-        UserLayer21 = 8388608,
-        UserLayer22 = 16777216,
-        UserLayer23 = 33554432,
-        UserLayer24 = 67108864,
-        UserLayer25 = 134217728,
-        UserLayer26 = 268435456,
+        CullingMaskNothing = 0,
+        CullingMaskEverything = 4294967295,
+        BuiltinLayer0 = 1,
+        BuiltinLayer1 = 2,
+        BuiltinLayer2 = 4,
+        BuiltinLayer3 = 8,
+        BuiltinLayer4 = 16,
+        BuiltinLayer5 = 32,
+        BuiltinLayer6 = 64,
+        BuiltinLayer7 = 128,
+        UserLayer8 = 256,
+        UserLayer9 = 512,
+        UserLayer10 = 1024,
+        UserLayer11 = 2048,
+        UserLayer12 = 4096,
+        UserLayer13 = 8192,
+        UserLayer14 = 16384,
+        UserLayer15 = 32768,
+        UserLayer16 = 65536,
+        UserLayer17 = 131072,
+        UserLayer18 = 262144,
+        UserLayer19 = 524288,
+        UserLayer20 = 1048576,
+        UserLayer21 = 2097152,
+        UserLayer22 = 4194304,
+        UserLayer23 = 8388608,
+        UserLayer24 = 16777216,
+        UserLayer25 = 33554432,
+        UserLayer26 = 67108864,
+        UserLayer27 = 134217728,
+        UserLayer28 = 268435456,
+        UserLayer29 = 536870912,
+        UserLayer30 = 1073741824,
+        UserLayer31 = 2147483648,
+        Default = 1,
+        TransparentFX = 2,
+        IgnoreRayCast = 4,
+        Water = 16,
+        UI = 32,
     }
     /**
      * culling mask
@@ -4834,7 +4844,7 @@ declare namespace paper {
         /**
          * @deprecated
          */
-        static raycast(ray: Readonly<egret3d.Ray>, gameObjects: ReadonlyArray<GameObject>, maxDistance?: number, cullingMask?: CullingMask, raycastMesh?: boolean): egret3d.RaycastInfo[];
+        static raycast(ray: Readonly<egret3d.Ray>, gameObjects: ReadonlyArray<GameObject>, maxDistance?: number, cullingMask?: Layer, raycastMesh?: boolean): egret3d.RaycastInfo[];
     }
 }
 declare namespace paper {
@@ -6138,7 +6148,7 @@ declare namespace egret3d {
      * @param cullingMask 只对特定层的实体检测。
      * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      */
-    function raycastAll(ray: Readonly<Ray>, gameObjectsOrComponents: ReadonlyArray<paper.GameObject | paper.BaseComponent>, maxDistance?: number, cullingMask?: paper.CullingMask, raycastMesh?: boolean): RaycastInfo[];
+    function raycastAll(ray: Readonly<Ray>, gameObjectsOrComponents: ReadonlyArray<paper.GameObject | paper.BaseComponent>, maxDistance?: number, cullingMask?: paper.Layer, raycastMesh?: boolean): RaycastInfo[];
 }
 declare namespace egret3d {
 }
@@ -6176,7 +6186,7 @@ declare namespace egret3d {
          * - camera.cullingMask |= paper.CullingMask.UI;
          * - camera.cullingMask &= ~paper.CullingMask.UI;
          */
-        cullingMask: paper.CullingMask;
+        cullingMask: paper.Layer;
         /**
          * 该相机渲染排序。
          * - 该值越低的相机优先绘制。
@@ -6332,8 +6342,8 @@ declare namespace egret3d {
         private _material;
         private _velocityFactor;
         private _samples;
+        private _worldToClipMatrix;
         private readonly _resolution;
-        private readonly _worldToClipMatrix;
         initialize(): void;
         uninitialize(): void;
         render(camera: Camera): void;

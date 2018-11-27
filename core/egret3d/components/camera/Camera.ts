@@ -52,7 +52,7 @@ namespace egret3d {
                 gameObject.transform.lookAt(Vector3.ZERO);
 
                 const camera = gameObject.addComponent(Camera);
-                camera.cullingMask &= ~paper.CullingMask.UI; // TODO 更明确的 UI 编辑方案。
+                camera.cullingMask &= ~paper.Layer.UI; // TODO 更明确的 UI 编辑方案。
                 camera.far = 10000.0;
             }
 
@@ -82,7 +82,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((paper as any).CullingMask) }) // TODO
-        public cullingMask: paper.CullingMask = paper.CullingMask.Everything;
+        public cullingMask: paper.Layer = paper.Layer.CullingMaskEverything;
         /**
          * 该相机渲染排序。
          * - 该值越低的相机优先绘制。

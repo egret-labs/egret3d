@@ -7,7 +7,7 @@ namespace egret3d {
          * TODO
          */
         @paper.serializedField
-        public cullingMask: paper.CullingMask = paper.CullingMask.Everything;
+        public cullingMask: paper.Layer = paper.Layer.CullingMaskEverything;
         /**
          * 该灯光的强度。
          */

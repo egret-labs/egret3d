@@ -933,7 +933,7 @@ namespace paper {
          */
         public static raycast(
             ray: Readonly<egret3d.Ray>, gameObjects: ReadonlyArray<GameObject>,
-            maxDistance: number = 0.0, cullingMask: CullingMask = CullingMask.Everything, raycastMesh: boolean = false
+            maxDistance: number = 0.0, cullingMask: Layer = Layer.CullingMaskEverything, raycastMesh: boolean = false
         ) {
             return egret3d.raycastAll(ray, gameObjects, maxDistance, cullingMask, raycastMesh);
         }
