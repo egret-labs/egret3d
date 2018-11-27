@@ -235,12 +235,12 @@ namespace egret3d {
 
         private _updateEuler(isWorldSpace: boolean, order?: EulerOrder) {
             if (isWorldSpace) {
-                this.localToWorldMatrix.toEuler(this._euler, order);
+                this.rotation.toEuler(this._euler, order);
                 this._eulerAngles.multiplyScalar(Const.RAD_DEG, this._euler);
                 this._worldDirty &= ~TransformDirty.Euler;
             }
             else {
-                this.localToParentMatrix.toEuler(this._localEuler, order);
+                this.localRotation.toEuler(this._localEuler, order);
                 this._localEulerAngles.multiplyScalar(Const.RAD_DEG, this._localEuler);
                 this._localDirty &= ~TransformDirty.Euler;
             }
