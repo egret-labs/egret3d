@@ -10,15 +10,15 @@ namespace egret3d {
         private _animationLayer: AnimationLayer | null = null;
 
         private _updateChannelEnd(animation: Animation) {
-            const animationFadeStates = animation._animationFadeStates;
-            const blendLayers: BlendLayer[] = [];
+            const animationFadeStates = animation._fadeStates;
+            const blendLayers: AnimationBinder[] = [];
             const channelss: AnimationChannel[][] = [];
 
             for (let i = animationFadeStates.length - 1; i >= 0; i--) {
                 for (const fadeState of animationFadeStates[i]) {
                     for (const animationState of fadeState.states) {
                         for (const channel of animationState.channels) {
-                            const blendLayer = channel.blendLayer;
+                            const blendLayer = channel.binder;
                             channel.isEnd = false;
 
                             if (blendLayer) {
@@ -132,13 +132,13 @@ namespace egret3d {
 
             if (forceUpdate || weight !== 0.0) {
                 for (const channel of animationState.channels) {
-                    if (!channel.updateTarget) {
+                    const target = channel.binder;
+                    if (!target.updateTarget) {
                         continue;
                     }
 
-                    const blendLayer = channel.blendLayer;
-                    if (!blendLayer || blendLayer.updateLayerAndWeight(animationLayer, animationState)) {
-                        channel.updateTarget(channel, animationLayer, animationState);
+                    if (target.updateBlend(animationLayer, animationState)) {
+                        target.updateTarget(channel, animationLayer, animationState);
                     }
                 }
             }
@@ -165,8 +165,8 @@ namespace egret3d {
                 const animation = this._animation = gameObject.getComponent(Animation)!;
                 const animationController = animation.animationController!;
                 const animationLayers = animationController.layers;
-                const animationFadeStates = animation._animationFadeStates;
-                const blendlayers = animation._blendLayers;
+                const animationFadeStates = animation._fadeStates;
+                const blendlayers = animation._binders;
 
                 for (const k in blendlayers) { // Reset blendLayers.
                     const blendLayer = blendlayers[k];

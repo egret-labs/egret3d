@@ -20,13 +20,11 @@ namespace egret3d {
         }
 
         public isEnd: boolean;
-        public components: paper.BaseComponent | paper.BaseComponent[];
         public glTFChannel: GLTFAnimationChannel;
         public glTFSampler: gltf.AnimationSampler;
         public inputBuffer: Float32Array;
         public outputBuffer: Float32Array;
-        public updateTarget: ((channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) => void) | null = null;
-        public blendLayer: BlendLayer | null;
+        public binder: AnimationBinder;
 
         public getFrameIndex(currentTime: number): uint {
             const inputBuffer = this.inputBuffer;

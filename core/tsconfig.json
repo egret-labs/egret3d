@@ -122,8 +122,8 @@
         "egret3d/components/renderer/egret2DRenderer/ScreenAdapter.ts",
 
         "egret3d/components/animation/Animation.ts",
-        "egret3d/components/animation/AnimationLayer.ts",
         "egret3d/components/animation/AnimationState.ts",
+        "egret3d/components/animation/AnimationBinder.ts",
         "egret3d/components/animation/AnimationChannel.ts",
         "egret3d/components/animation/AnimationSystem.ts",
 
@@ -140,7 +140,7 @@
 
         "egret3d/asset/resource/GLTF.ts",
         "egret3d/asset/resource/BaseMesh.ts",
-        "egret3d/asset/resource/Animation.ts",
+        "egret3d/asset/resource/AnimationAsset.ts",
         "egret3d/asset/resource/AnimationController.ts",
         "egret3d/asset/resource/Texture.ts",
         "egret3d/asset/resource/Shader.ts",

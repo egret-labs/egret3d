@@ -26,11 +26,11 @@ namespace egret3d {
         /**
          * @internal
          */
-        public readonly _animationFadeStates: AnimationFadeState[][] = [];
+        public readonly _fadeStates: AnimationFadeState[][] = [];
         /**
          * @internal
          */
-        public readonly _blendLayers: { [key: string]: BlendLayer } = {};
+        public readonly _binders: { [key: string]: AnimationBinder } = {};
         @paper.serializedField
         private _animationController: AnimationController | null = null;
         private _lastAnimationLayer: AnimationLayer | null = null;
@@ -49,12 +49,12 @@ namespace egret3d {
         /**
          * @internal
          */
-        public _getBlendlayer(name: string, type: string) {
-            const blendLayers = this._blendLayers;
+        public _getBinder(name: string, type: string) {
+            const blendLayers = this._binders;
             name += "/" + type;
 
             if (!(name in blendLayers)) {
-                blendLayers[name] = BlendLayer.create();
+                blendLayers[name] = AnimationBinder.create();
             }
 
             return blendLayers[name];
@@ -63,22 +63,22 @@ namespace egret3d {
         public uninitialize() {
             super.uninitialize();
 
-            const animationFadeStates = this._animationFadeStates;
-            for (const fadeStates of animationFadeStates) {
+            const fadeStatess = this._fadeStates;
+            for (const fadeStates of fadeStatess) {
                 for (const fadeState of fadeStates) {
                     fadeState.release();
                 }
             }
 
-            const blendLayers = this._blendLayers;
-            for (const k in blendLayers) {
-                blendLayers[k].release();
-                delete blendLayers[k];
+            const targets = this._binders;
+            for (const k in targets) {
+                targets[k].release();
+                delete targets[k];
             }
 
             this._animationNames.length = 0;
             this._animations.length = 0;
-            this._animationFadeStates.length = 0;
+            this._fadeStates.length = 0;
             // this._blendLayers;
             this._animationController = null;
             this._lastAnimationLayer = null;
@@ -128,18 +128,18 @@ namespace egret3d {
                 timeScale: 1.0,
             };
             //
-            const animationFadeStates = this._animationFadeStates;
-            if (layerIndex >= animationFadeStates.length) {
-                animationFadeStates[layerIndex] = [];
+            const fadeStatess = this._fadeStates;
+            if (layerIndex >= fadeStatess.length) {
+                fadeStatess[layerIndex] = [];
             }
 
-            for (const fadeStates of animationFadeStates[layerIndex]) {
+            for (const fadeStates of fadeStatess[layerIndex]) {
                 fadeStates.fadeOut(fadeTime);
             }
 
             const lastFadeState = AnimationFadeState.create();
             lastFadeState.totalTime = fadeTime;
-            animationFadeStates[layerIndex].push(lastFadeState);
+            fadeStatess[layerIndex].push(lastFadeState);
             //
             const animationState = AnimationState.create();
             animationState._initialize(this, animationLayer, animationNode, animationAsset, animationClip);
@@ -175,8 +175,8 @@ namespace egret3d {
          * 
          */
         public stop(): void {
-            const animationFadeStates = this._animationFadeStates;
-            for (const fadeStates of animationFadeStates) {
+            const fadeStatess = this._fadeStates;
+            for (const fadeStates of fadeStatess) {
                 for (const fadeState of fadeStates) {
                     for (const animationState of fadeState.states) {
                         animationState.stop();
@@ -216,9 +216,9 @@ namespace egret3d {
             const lastAnimationLayer = this._lastAnimationLayer;
             if (animationController && lastAnimationLayer) {
                 const layerIndex = animationController.layers.indexOf(lastAnimationLayer);
-                const animationFadeStates = this._animationFadeStates;
-                if (animationFadeStates.length > layerIndex) {
-                    const fadeStates = animationFadeStates[layerIndex];
+                const fadeStatess = this._fadeStates;
+                if (fadeStatess.length > layerIndex) {
+                    const fadeStates = fadeStatess[layerIndex];
                     return fadeStates.length > 0 ? fadeStates[fadeStates.length - 1].states[0] : null;
                 }
             }

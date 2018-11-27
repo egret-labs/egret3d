@@ -1,6 +1,4 @@
 namespace egret3d {
-    const _helpQuaternionA = Quaternion.create();
-    const _helpQuaternionB = Quaternion.create();
     /**
      * @private
      */
@@ -15,7 +13,6 @@ namespace egret3d {
 
             return new AnimationFadeState().clear();
         }
-
         /**
          * -1: Fade in, 0: Fade complete, 1: Fade out;
          */
@@ -100,7 +97,7 @@ namespace egret3d {
          */
         public weight: number;
         /**
-         * 
+         * @private
          */
         public readonly channels: AnimationChannel[] = [];
         /**
@@ -175,283 +172,6 @@ namespace egret3d {
 
             return this;
         }
-
-        private _onUpdateTranslation(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) {
-            const additive = animationlayer.additive;
-            const interpolation = channel.glTFSampler.interpolation;
-            const currentTime = animationState._currentTime;
-            const outputBuffer = channel.outputBuffer;
-            const frameIndex = channel.getFrameIndex(currentTime);
-
-            let x: number, y: number, z: number;
-
-            if (frameIndex >= 0) {
-                let offset = frameIndex * 3;
-                x = outputBuffer[offset++];
-                y = outputBuffer[offset++];
-                z = outputBuffer[offset++];
-
-                if (!interpolation || interpolation !== "STEP") {
-                    const inputBuffer = channel.inputBuffer;
-                    const frameStart = inputBuffer[frameIndex];
-                    const progress = (currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
-                    x += (outputBuffer[offset++] - x) * progress;
-                    y += (outputBuffer[offset++] - y) * progress;
-                    z += (outputBuffer[offset++] - z) * progress;
-                }
-            }
-            else {
-                x = outputBuffer[0];
-                y = outputBuffer[1];
-                z = outputBuffer[2];
-            }
-
-            if (additive) {
-                x -= outputBuffer[0];
-                y -= outputBuffer[1];
-                z -= outputBuffer[2];
-            }
-
-            const isArray = Array.isArray(channel.components);
-            const blendLayer = channel.blendLayer!;
-            const blendWeight = blendLayer.weight;
-            const blendTarget = (isArray ? (channel.components as Transform[])[0].localPosition : (channel.components as Transform).localPosition) as Vector3;
-
-            if (blendLayer.dirty > 1) {
-                blendTarget.x += x * blendWeight;
-                blendTarget.y += y * blendWeight;
-                blendTarget.z += z * blendWeight;
-            }
-            else {
-                if (blendWeight !== 1.0) {
-                    blendTarget.x = x * blendWeight;
-                    blendTarget.y = y * blendWeight;
-                    blendTarget.z = z * blendWeight;
-                }
-                else {
-                    blendTarget.x = x;
-                    blendTarget.y = y;
-                    blendTarget.z = z;
-                }
-            }
-
-            if (channel.isEnd && blendLayer.totalWeight < 1.0 - Const.EPSILON) {
-                const weight = 1.0 - blendLayer.totalWeight;
-                const pose = blendLayer.additivePose as Vector3;
-                blendTarget.x += pose.x * weight;
-                blendTarget.y += pose.y * weight;
-                blendTarget.z += pose.z * weight;
-            }
-
-            if (isArray) {
-                for (const component of channel.components as Transform[]) {
-                    component.localPosition = blendTarget;
-                }
-            }
-            else {
-                blendTarget.update();
-            }
-        }
-
-        private _onUpdateRotation(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) {
-            const helpQuaternionA = _helpQuaternionA;
-            const helpQuaternionB = _helpQuaternionB;
-            const additive = animationlayer.additive;
-            const interpolation = channel.glTFSampler.interpolation;
-            const currentTime = animationState._currentTime;
-            const outputBuffer = channel.outputBuffer;
-            const frameIndex = channel.getFrameIndex(currentTime);
-
-            let x: number, y: number, z: number, w: number;
-
-            if (frameIndex >= 0) {
-                let offset = frameIndex * 4;
-                x = outputBuffer[offset++];
-                y = outputBuffer[offset++];
-                z = outputBuffer[offset++];
-                w = outputBuffer[offset++];
-
-                if (!interpolation || interpolation !== "STEP") {
-                    const inputBuffer = channel.inputBuffer;
-                    const frameStart = inputBuffer[frameIndex];
-                    const progress = (currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
-                    x += (outputBuffer[offset++] - x) * progress;
-                    y += (outputBuffer[offset++] - y) * progress;
-                    z += (outputBuffer[offset++] - z) * progress;
-                    w += (outputBuffer[offset++] - w) * progress;
-                }
-            }
-            else {
-                x = outputBuffer[0];
-                y = outputBuffer[1];
-                z = outputBuffer[2];
-                w = outputBuffer[3];
-            }
-
-            if (additive) {
-                helpQuaternionA.fromArray(outputBuffer).multiply(helpQuaternionB.set(x, y, z, w)).inverse();
-            }
-
-            const isArray = Array.isArray(channel.components);
-            const blendLayer = channel.blendLayer!;
-            let blendWeight = blendLayer.weight;
-            const blendTarget = (isArray ? (channel.components as Transform[])[0].localRotation : (channel.components as Transform).localRotation) as Quaternion;
-
-            if (blendLayer.dirty > 1) {
-                if (additive) {
-                    blendTarget.multiply(helpQuaternionA.lerp(Quaternion.IDENTITY, helpQuaternionA, blendWeight));
-                }
-                else {
-                    if (_helpQuaternionA.set(x, y, z, w).dot(blendTarget) < 0.0) {
-                        blendWeight = -blendWeight;
-                    }
-
-                    blendTarget.x += x * blendWeight;
-                    blendTarget.y += y * blendWeight;
-                    blendTarget.z += z * blendWeight;
-                    blendTarget.w += w * blendWeight;
-                }
-            }
-            else if (additive) { // TODO
-                const pose = blendLayer.additivePose as Quaternion;
-                blendTarget.x = pose.x;
-                blendTarget.y = pose.y;
-                blendTarget.z = pose.z;
-                blendTarget.w = pose.w;
-
-                if (blendWeight !== 1.0) {
-                    blendTarget.multiply(helpQuaternionA.lerp(Quaternion.IDENTITY, helpQuaternionA, blendWeight));
-                }
-                else {
-                    blendTarget.multiply(helpQuaternionA);
-                }
-            }
-            else if (blendWeight !== 1.0) {
-                blendTarget.x = x * blendWeight;
-                blendTarget.y = y * blendWeight;
-                blendTarget.z = z * blendWeight;
-                blendTarget.w = w * blendWeight;
-            }
-            else {
-                blendTarget.x = x;
-                blendTarget.y = y;
-                blendTarget.z = z;
-                blendTarget.w = w;
-            }
-
-            // if (channel.isEnd && blendLayer.totalWeight < 1.0 - Const.EPSILON) { TODO
-            //     const weight = 1.0 - blendLayer.totalWeight;
-            //     const pose = blendLayer.additivePose as Vector3;
-            //     blendTarget.x += pose.x * weight;
-            //     blendTarget.y += pose.y * weight;
-            //     blendTarget.z += pose.z * weight;
-            // }
-
-            blendTarget.normalize();
-
-            if (isArray) {
-                for (const component of channel.components as Transform[]) {
-                    component.localRotation = blendTarget;
-                }
-            }
-            else {
-                blendTarget.update();
-            }
-        }
-
-        private _onUpdateScale(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) {
-            const additive = animationlayer.additive;
-            const interpolation = channel.glTFSampler.interpolation;
-            const currentTime = animationState._currentTime;
-            const outputBuffer = channel.outputBuffer;
-            const frameIndex = channel.getFrameIndex(currentTime);
-
-            let x: number, y: number, z: number;
-
-            if (frameIndex >= 0) {
-                let offset = frameIndex * 3;
-                x = outputBuffer[offset++];
-                y = outputBuffer[offset++];
-                z = outputBuffer[offset++];
-
-                if (!interpolation || interpolation !== "STEP") {
-                    const inputBuffer = channel.inputBuffer;
-                    const frameStart = inputBuffer[frameIndex];
-                    const progress = (animationState._currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
-                    x += (outputBuffer[offset++] - x) * progress;
-                    y += (outputBuffer[offset++] - y) * progress;
-                    z += (outputBuffer[offset++] - z) * progress;
-                }
-            }
-            else {
-                x = outputBuffer[0];
-                y = outputBuffer[1];
-                z = outputBuffer[2];
-            }
-
-            if (additive) {
-                x -= outputBuffer[0];
-                y -= outputBuffer[1];
-                z -= outputBuffer[2];
-            }
-
-            const isArray = Array.isArray(channel.components);
-            const blendLayer = channel.blendLayer!;
-            const blendWeight = blendLayer.weight;
-            const blendTarget = (isArray ? (channel.components as Transform[])[0].localScale : (channel.components as Transform).localScale) as Vector3;
-
-            if (blendLayer.dirty > 1) {
-                blendTarget.x += x * blendWeight;
-                blendTarget.y += y * blendWeight;
-                blendTarget.z += z * blendWeight;
-            }
-            else {
-                if (blendWeight !== 1.0) {
-                    blendTarget.x = x * blendWeight;
-                    blendTarget.y = y * blendWeight;
-                    blendTarget.z = z * blendWeight;
-                }
-                else {
-                    blendTarget.x = x;
-                    blendTarget.y = y;
-                    blendTarget.z = z;
-                }
-            }
-
-            if (channel.isEnd && blendLayer.totalWeight < 1.0 - Const.EPSILON) {
-                const weight = 1.0 - blendLayer.totalWeight;
-                const pose = blendLayer.additivePose as Vector3;
-                blendTarget.x += pose.x * weight;
-                blendTarget.y += pose.y * weight;
-                blendTarget.z += pose.z * weight;
-            }
-
-            if (isArray) {
-                for (const component of channel.components as Transform[]) {
-                    component.localScale = blendTarget;
-                }
-            }
-            else {
-                blendTarget.update();
-            }
-        }
-
-        private _onUpdateActive(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) {
-            const currentTime = animationState._currentTime;
-            const outputBuffer = channel.outputBuffer;
-            const frameIndex = channel.getFrameIndex(currentTime);
-            //
-            const activeSelf = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]) !== 0;
-
-            if (Array.isArray(channel.components)) {
-                for (const component of channel.components as Transform[]) {
-                    component.gameObject.activeSelf = activeSelf;
-                }
-            }
-            else {
-                (channel.components as Transform).gameObject.activeSelf = activeSelf;
-            }
-        }
         /**
          * @internal
          */
@@ -474,37 +194,37 @@ namespace egret3d {
                         continue;
                     }
 
+                    const pathName = glTFChannel.target.path;
                     const transforms = children[nodeName!];
                     const channel = AnimationChannel.create();
-                    const pathName = glTFChannel.target.path;
+                    const binder = animation._getBinder(nodeName, pathName);
+
                     channel.glTFChannel = glTFChannel;
                     channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
-                    channel.components = transforms; // TODO 更多组件
                     channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input));
                     channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output));
+                    channel.binder = binder;
+                    binder.components = transforms; // TODO 更多组件
 
                     switch (pathName) {
                         case "translation":
-                            channel.blendLayer = animation._getBlendlayer(nodeName, pathName);
-                            channel.updateTarget = this._onUpdateTranslation;
-                            if (!channel.blendLayer.additivePose) {
-                                channel.blendLayer.additivePose = Vector3.create().copy((transforms as Transform).localPosition);
+                            binder.updateTarget = AnimationBinder.onUpdateTranslation;
+                            if (!binder.bindPose) {
+                                binder.bindPose = Vector3.create().copy((transforms as Transform).localPosition);
                             }
                             break;
 
                         case "rotation":
-                            channel.blendLayer = animation._getBlendlayer(nodeName, pathName);
-                            channel.updateTarget = this._onUpdateRotation;
-                            if (!channel.blendLayer.additivePose) {
-                                channel.blendLayer.additivePose = Quaternion.create().copy((transforms as Transform).localRotation);
+                            binder.updateTarget = AnimationBinder.onUpdateRotation;
+                            if (!binder.bindPose) {
+                                binder.bindPose = Quaternion.create().copy((transforms as Transform).localRotation);
                             }
                             break;
 
                         case "scale":
-                            channel.blendLayer = animation._getBlendlayer(nodeName, pathName);
-                            channel.updateTarget = this._onUpdateScale;
-                            if (!channel.blendLayer.additivePose) {
-                                channel.blendLayer.additivePose = Vector3.create().copy((transforms as Transform).localScale);
+                            binder.updateTarget = AnimationBinder.onUpdateScale;
+                            if (!binder.bindPose) {
+                                binder.bindPose = Vector3.create().copy((transforms as Transform).localScale);
                             }
                             break;
 
@@ -517,7 +237,7 @@ namespace egret3d {
                                 case "paper.GameObject":
                                     switch (channel.glTFChannel.extensions!.paper.property) {
                                         case "activeSelf":
-                                            channel.updateTarget = this._onUpdateActive;
+                                            binder.updateTarget = AnimationBinder.onUpdateActive;
                                             break;
                                     }
                                     break;
@@ -571,5 +291,4 @@ namespace egret3d {
             return this._currentTime;
         }
     }
-
 }

@@ -7100,23 +7100,6 @@ declare namespace egret3d {
     /**
      * @private
      */
-    class BlendLayer extends paper.BaseRelease<BlendLayer> {
-        private static _instances;
-        static create(): BlendLayer;
-        dirty: uint;
-        totalWeight: number;
-        weight: number;
-        additivePose: any | null;
-        private constructor();
-        onClear(): void;
-        clear(): this;
-        updateLayerAndWeight(animationLayer: AnimationLayer, animationState: AnimationState): boolean;
-    }
-}
-declare namespace egret3d {
-    /**
-     * @private
-     */
     class AnimationFadeState extends paper.BaseRelease<AnimationFadeState> {
         private static readonly _instances;
         static create(): AnimationFadeState;
@@ -7156,7 +7139,7 @@ declare namespace egret3d {
          */
         weight: number;
         /**
-         *
+         * @private
          */
         readonly channels: AnimationChannel[];
         /**
@@ -7178,10 +7161,6 @@ declare namespace egret3d {
         private constructor();
         onClear(): void;
         clear(): this;
-        private _onUpdateTranslation(channel, animationlayer, animationState);
-        private _onUpdateRotation(channel, animationlayer, animationState);
-        private _onUpdateScale(channel, animationlayer, animationState);
-        private _onUpdateActive(channel, animationlayer, animationState);
         play(): void;
         stop(): void;
         readonly isPlaying: boolean;
@@ -7198,18 +7177,39 @@ declare namespace egret3d {
     /**
      * @private
      */
+    class AnimationBinder extends paper.BaseRelease<AnimationBinder> {
+        private static _instances;
+        static create(): AnimationBinder;
+        static onUpdateTranslation(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState): void;
+        static onUpdateRotation(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState): void;
+        static onUpdateScale(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState): void;
+        static onUpdateActive(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState): void;
+        dirty: uint;
+        totalWeight: number;
+        weight: number;
+        components: paper.BaseComponent | paper.BaseComponent[];
+        bindPose: any;
+        updateTarget: (channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) => void;
+        private constructor();
+        onClear(): void;
+        clear(): this;
+        updateBlend(animationLayer: AnimationLayer, animationState: AnimationState): boolean;
+    }
+}
+declare namespace egret3d {
+    /**
+     * @private
+     */
     class AnimationChannel extends paper.BaseRelease<AnimationChannel> {
         private static _instances;
         static create(): AnimationChannel;
         private constructor();
         isEnd: boolean;
-        components: paper.BaseComponent | paper.BaseComponent[];
         glTFChannel: GLTFAnimationChannel;
         glTFSampler: gltf.AnimationSampler;
         inputBuffer: Float32Array;
         outputBuffer: Float32Array;
-        updateTarget: ((channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) => void) | null;
-        blendLayer: BlendLayer | null;
+        binder: AnimationBinder;
         getFrameIndex(currentTime: number): uint;
     }
 }
