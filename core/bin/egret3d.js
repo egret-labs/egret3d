@@ -10453,12 +10453,12 @@ var egret3d;
         };
         Transform.prototype._updateEuler = function (isWorldSpace, order) {
             if (isWorldSpace) {
-                this.localToWorldMatrix.toEuler(this._euler, order);
+                this.rotation.toEuler(this._euler, order);
                 this._eulerAngles.multiplyScalar(57.29577951308232 /* RAD_DEG */, this._euler);
                 this._worldDirty &= ~8 /* Euler */;
             }
             else {
-                this.localToParentMatrix.toEuler(this._localEuler, order);
+                this.localRotation.toEuler(this._localEuler, order);
                 this._localEulerAngles.multiplyScalar(57.29577951308232 /* RAD_DEG */, this._localEuler);
                 this._localDirty &= ~8 /* Euler */;
             }
@@ -14367,7 +14367,7 @@ var egret3d;
         ], Camera.prototype, "clearOption_Depth", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.CullingMask) }) // TODO
+            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.Layer) }) // TODO
         ], Camera.prototype, "cullingMask", void 0);
         __decorate([
             paper.serializedField,

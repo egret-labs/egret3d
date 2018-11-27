@@ -95,7 +95,6 @@ namespace paper {
         BuiltinLayer5 = 0x0000020,
         BuiltinLayer6 = 0x0000040,
         BuiltinLayer7 = 0x0000080,
-
         UserLayer8 = 0x00000100,
         UserLayer9 = 0x00000200,
         UserLayer10 = 0x00000400,

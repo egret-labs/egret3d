@@ -127,8 +127,10 @@ namespace behaviors {
             const backupViewPort = _viewPort.copy(renderState.viewPort);
             const backupRenderTarget = renderState.renderTarget;
 
+            const saveCamera = egret3d.Camera.current;
             reflectorCamera.renderTarget = this._renderTarget;
             renderState.render(reflectorCamera);
+            egret3d.Camera.current = saveCamera;
 
             const reflectorMaterial = this.gameObject.renderer!.material!;
             reflectorMaterial.setColor("color", this.color).setTexture("tDiffuse", this._renderTarget);
