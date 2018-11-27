@@ -16,10 +16,9 @@ namespace egret3d {
         }
 
         public dirty: uint;
-        public layer: int;
-        public leftWeight: number;
-        public layerWeight: number;
-        public blendWeight: number;
+        public totalWeight: number;
+        public weight: number;
+        public additivePose: any | null;
 
         private constructor() {
             super();
@@ -27,42 +26,26 @@ namespace egret3d {
 
         public onClear() {
             this.clear();
+            
+            this.additivePose = null;
         }
 
         public clear() {
             this.dirty = 0;
-            this.layer = 0;
-            this.leftWeight = 0.0;
-            this.layerWeight = 0.0;
-            this.blendWeight = 0.0;
+            this.totalWeight = 0.0;
+            this.weight = 1.0;
 
             return this;
         }
 
         public updateLayerAndWeight(animationLayer: AnimationLayer, animationState: AnimationState) {
-            const additive = animationState.additive;
-            const animationLayer = animationState.layer;
-            let animationWeight = animationState._globalWeight;
+            const globalWeight = animationState._globalWeight;
 
             if (this.dirty > 0) {
-                if (this.leftWeight > Const.EPSILON) {
-                    if (!additive && this.layer !== animationLayer) {
-                        if (this.layerWeight >= this.leftWeight) {
-                            this.leftWeight = 0.0;
-
-                            return false;
-                        }
-
-                        this.layer = animationLayer;
-                        this.leftWeight -= this.layerWeight;
-                        // this.layerWeight = animationWeight * this.leftWeight;
-                        this.layerWeight = 0.0;
-                    }
-
-                    animationWeight *= this.leftWeight;
+                if (this.totalWeight < 1.0 - Const.EPSILON) {
                     this.dirty++;
-                    this.blendWeight = animationWeight;
-                    this.layerWeight += animationWeight;
+                    this.totalWeight += globalWeight;
+                    this.weight = globalWeight; // TODO
 
                     return true;
                 }
@@ -71,10 +54,8 @@ namespace egret3d {
             }
 
             this.dirty++;
-            this.layer = animationLayer;
-            this.leftWeight = 1.0;
-            this.layerWeight = animationWeight;
-            this.blendWeight = animationWeight;
+            this.totalWeight += globalWeight;
+            this.weight = globalWeight;
 
             return true;
         }

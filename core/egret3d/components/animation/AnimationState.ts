@@ -1,5 +1,6 @@
 namespace egret3d {
-    const _helpQuaternion = Quaternion.create();
+    const _helpQuaternionA = Quaternion.create();
+    const _helpQuaternionB = Quaternion.create();
     /**
      * @private
      */
@@ -37,6 +38,10 @@ namespace egret3d {
         }
 
         public clear() {
+            for (const state of this.states) {
+                state.release();
+            }
+
             this.fadeState = -1;
             this.subFadeState = -1;
             this.progress = 0.0;
@@ -48,6 +53,23 @@ namespace egret3d {
         }
 
         public fadeOut(totalTime: number): this {
+            if (this.fadeState > 0) {
+                if (totalTime > this.totalTime - this.time) { // If the animation is already in fade out, the new fade out will be ignored.
+                    return this;
+                }
+            }
+            else {
+                this.fadeState = 1;
+                this.subFadeState = -1;
+
+                if (totalTime <= 0.0 || this.progress <= 0.0) {
+                    this.progress = Const.EPSILON; // Modify fade progress to different value.
+                }
+            }
+
+            this.totalTime = this.progress > Const.EPSILON ? totalTime / this.progress : 0.0;
+            this.time = this.totalTime * (1.0 - this.progress);
+
             return this;
         }
     }
@@ -77,6 +99,10 @@ namespace egret3d {
          * 
          */
         public weight: number;
+        /**
+         * 
+         */
+        public readonly channels: AnimationChannel[] = [];
         /**
          * @private
          */
@@ -117,7 +143,7 @@ namespace egret3d {
         /**
          * @internal
          */
-        public readonly _channels: AnimationChannel[] = [];
+        public _globalWeight: number;
 
         private constructor() {
             super();
@@ -128,13 +154,14 @@ namespace egret3d {
         }
 
         public clear() {
-            for (const channel of this._channels) {
+            for (const channel of this.channels) {
                 channel.release();
             }
 
             this.playTimes = 0;
             this.currentPlayTimes = 0;
-            this.weight = 0.0;
+            this.weight = 1.0;
+            this.channels.length = 0;
             this.animationNode = null!;
             this.animationAsset = null!;
             this.animation = null!;
@@ -144,7 +171,7 @@ namespace egret3d {
             this._playState = -1;
             this._time = 0.0;
             this._currentTime = 0.0;
-            this._channels.length = 0;
+            this._globalWeight = 0.0;
 
             return this;
         }
@@ -187,7 +214,7 @@ namespace egret3d {
 
             const isArray = Array.isArray(channel.components);
             const blendLayer = channel.blendLayer!;
-            const blendWeight = blendLayer.blendWeight;
+            const blendWeight = blendLayer.weight;
             const blendTarget = (isArray ? (channel.components as Transform[])[0].localPosition : (channel.components as Transform).localPosition) as Vector3;
 
             if (blendLayer.dirty > 1) {
@@ -195,15 +222,25 @@ namespace egret3d {
                 blendTarget.y += y * blendWeight;
                 blendTarget.z += z * blendWeight;
             }
-            else if (blendWeight !== 1.0) {
-                blendTarget.x = x * blendWeight;
-                blendTarget.y = y * blendWeight;
-                blendTarget.z = z * blendWeight;
-            }
             else {
-                blendTarget.x = x;
-                blendTarget.y = y;
-                blendTarget.z = z;
+                if (blendWeight !== 1.0) {
+                    blendTarget.x = x * blendWeight;
+                    blendTarget.y = y * blendWeight;
+                    blendTarget.z = z * blendWeight;
+                }
+                else {
+                    blendTarget.x = x;
+                    blendTarget.y = y;
+                    blendTarget.z = z;
+                }
+            }
+
+            if (channel.isEnd && blendLayer.totalWeight < 1.0 - Const.EPSILON) {
+                const weight = 1.0 - blendLayer.totalWeight;
+                const pose = blendLayer.additivePose as Vector3;
+                blendTarget.x += pose.x * weight;
+                blendTarget.y += pose.y * weight;
+                blendTarget.z += pose.z * weight;
             }
 
             if (isArray) {
@@ -217,6 +254,9 @@ namespace egret3d {
         }
 
         private _onUpdateRotation(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) {
+            const helpQuaternionA = _helpQuaternionA;
+            const helpQuaternionB = _helpQuaternionB;
+            const additive = animationlayer.additive;
             const interpolation = channel.glTFSampler.interpolation;
             const currentTime = animationState._currentTime;
             const outputBuffer = channel.outputBuffer;
@@ -248,28 +288,49 @@ namespace egret3d {
                 w = outputBuffer[3];
             }
 
+            if (additive) {
+                helpQuaternionA.fromArray(outputBuffer).multiply(helpQuaternionB.set(x, y, z, w)).inverse();
+            }
+
             const isArray = Array.isArray(channel.components);
             const blendLayer = channel.blendLayer!;
-            let blendWeight = blendLayer.blendWeight;
+            let blendWeight = blendLayer.weight;
             const blendTarget = (isArray ? (channel.components as Transform[])[0].localRotation : (channel.components as Transform).localRotation) as Quaternion;
 
             if (blendLayer.dirty > 1) {
-                if (_helpQuaternion.set(-x, -y, -z, w).dot(blendTarget) < 0.0) {
-                    blendWeight = -blendWeight;
+                if (additive) {
+                    blendTarget.multiply(helpQuaternionA.lerp(Quaternion.IDENTITY, helpQuaternionA, blendWeight));
                 }
+                else {
+                    if (_helpQuaternionA.set(x, y, z, w).dot(blendTarget) < 0.0) {
+                        blendWeight = -blendWeight;
+                    }
 
-                blendTarget.x += x * blendWeight;
-                blendTarget.y += y * blendWeight;
-                blendTarget.z += z * blendWeight;
-                blendTarget.w += w * blendWeight;
-                blendTarget.normalize();
+                    blendTarget.x += x * blendWeight;
+                    blendTarget.y += y * blendWeight;
+                    blendTarget.z += z * blendWeight;
+                    blendTarget.w += w * blendWeight;
+                }
+            }
+            else if (additive) { // TODO
+                const pose = blendLayer.additivePose as Quaternion;
+                blendTarget.x = pose.x;
+                blendTarget.y = pose.y;
+                blendTarget.z = pose.z;
+                blendTarget.w = pose.w;
+
+                if (blendWeight !== 1.0) {
+                    blendTarget.multiply(helpQuaternionA.lerp(Quaternion.IDENTITY, helpQuaternionA, blendWeight));
+                }
+                else {
+                    blendTarget.multiply(helpQuaternionA);
+                }
             }
             else if (blendWeight !== 1.0) {
                 blendTarget.x = x * blendWeight;
                 blendTarget.y = y * blendWeight;
                 blendTarget.z = z * blendWeight;
                 blendTarget.w = w * blendWeight;
-                blendTarget.normalize();
             }
             else {
                 blendTarget.x = x;
@@ -277,6 +338,16 @@ namespace egret3d {
                 blendTarget.z = z;
                 blendTarget.w = w;
             }
+
+            // if (channel.isEnd && blendLayer.totalWeight < 1.0 - Const.EPSILON) { TODO
+            //     const weight = 1.0 - blendLayer.totalWeight;
+            //     const pose = blendLayer.additivePose as Vector3;
+            //     blendTarget.x += pose.x * weight;
+            //     blendTarget.y += pose.y * weight;
+            //     blendTarget.z += pose.z * weight;
+            // }
+
+            blendTarget.normalize();
 
             if (isArray) {
                 for (const component of channel.components as Transform[]) {
@@ -326,7 +397,7 @@ namespace egret3d {
 
             const isArray = Array.isArray(channel.components);
             const blendLayer = channel.blendLayer!;
-            const blendWeight = blendLayer.blendWeight;
+            const blendWeight = blendLayer.weight;
             const blendTarget = (isArray ? (channel.components as Transform[])[0].localScale : (channel.components as Transform).localScale) as Vector3;
 
             if (blendLayer.dirty > 1) {
@@ -334,15 +405,25 @@ namespace egret3d {
                 blendTarget.y += y * blendWeight;
                 blendTarget.z += z * blendWeight;
             }
-            else if (blendWeight !== 1.0) {
-                blendTarget.x = x * blendWeight;
-                blendTarget.y = y * blendWeight;
-                blendTarget.z = z * blendWeight;
-            }
             else {
-                blendTarget.x = x;
-                blendTarget.y = y;
-                blendTarget.z = z;
+                if (blendWeight !== 1.0) {
+                    blendTarget.x = x * blendWeight;
+                    blendTarget.y = y * blendWeight;
+                    blendTarget.z = z * blendWeight;
+                }
+                else {
+                    blendTarget.x = x;
+                    blendTarget.y = y;
+                    blendTarget.z = z;
+                }
+            }
+
+            if (channel.isEnd && blendLayer.totalWeight < 1.0 - Const.EPSILON) {
+                const weight = 1.0 - blendLayer.totalWeight;
+                const pose = blendLayer.additivePose as Vector3;
+                blendTarget.x += pose.x * weight;
+                blendTarget.y += pose.y * weight;
+                blendTarget.z += pose.z * weight;
             }
 
             if (isArray) {
@@ -359,7 +440,7 @@ namespace egret3d {
             const currentTime = animationState._currentTime;
             const outputBuffer = channel.outputBuffer;
             const frameIndex = channel.getFrameIndex(currentTime);
-
+            //
             const activeSelf = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]) !== 0;
 
             if (Array.isArray(channel.components)) {
@@ -374,7 +455,7 @@ namespace egret3d {
         /**
          * @internal
          */
-        public _initialize(animation: Animation, animationNode: AnimationNode, animationAsset: AnimationAsset, animationClip: GLTFAnimationClip) {
+        public _initialize(animation: Animation, animationLayer: AnimationLayer, animationNode: AnimationNode, animationAsset: AnimationAsset, animationClip: GLTFAnimationClip) {
             const assetConfig = animationAsset.config;
 
             this.animationAsset = animationAsset;
@@ -404,18 +485,27 @@ namespace egret3d {
 
                     switch (pathName) {
                         case "translation":
-                            channel.blendLayer = animation._getBlendlayer(pathName, nodeName);
+                            channel.blendLayer = animation._getBlendlayer(nodeName, pathName);
                             channel.updateTarget = this._onUpdateTranslation;
+                            if (!channel.blendLayer.additivePose) {
+                                channel.blendLayer.additivePose = Vector3.create().copy((transforms as Transform).localPosition);
+                            }
                             break;
 
                         case "rotation":
-                            channel.blendLayer = animation._getBlendlayer(pathName, nodeName);
+                            channel.blendLayer = animation._getBlendlayer(nodeName, pathName);
                             channel.updateTarget = this._onUpdateRotation;
+                            if (!channel.blendLayer.additivePose) {
+                                channel.blendLayer.additivePose = Quaternion.create().copy((transforms as Transform).localRotation);
+                            }
                             break;
 
                         case "scale":
-                            channel.blendLayer = animation._getBlendlayer(pathName, nodeName);
+                            channel.blendLayer = animation._getBlendlayer(nodeName, pathName);
                             channel.updateTarget = this._onUpdateScale;
+                            if (!channel.blendLayer.additivePose) {
+                                channel.blendLayer.additivePose = Vector3.create().copy((transforms as Transform).localScale);
+                            }
                             break;
 
                         case "weights":
@@ -439,7 +529,7 @@ namespace egret3d {
                             break;
                     }
 
-                    this._channels.push(channel);
+                    this.channels.push(channel);
                 }
             }
         }

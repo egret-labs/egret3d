@@ -531,7 +531,7 @@ namespace egret3d {
         /**
          * 获取该网格的 glTF mesh 数据。
          */
-        public get glTFMesh(): gltf.Mesh | null {
+        public get glTFMesh(): gltf.Mesh {
             return this._glTFMesh!;
         }
     }

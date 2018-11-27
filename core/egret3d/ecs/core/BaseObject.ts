@@ -32,9 +32,9 @@ namespace paper {
 
             return this;
         }
-
         /**
          * 在此帧末尾释放该对象。
+         * - 释放该对象后，必须清除所有对该对象的显示引用。（该问题必须引起足够的重视）
          * - 不能在静态解释阶段执行。
          */
         public release() {
@@ -51,12 +51,10 @@ namespace paper {
 
             return this;
         }
-
         /**
          * 
          */
         public onUpdate?(v: T): void;
-
         /**
          * 在此帧末尾释放时调用。
          */

@@ -61,7 +61,7 @@ namespace egret3d {
             this.clear();
         }
 
-        public copy(value: Readonly<this>): this {
+        public copy(value: Readonly<RaycastInfo>): this {
             this.subMeshIndex = value.subMeshIndex;
             this.triangleIndex = value.triangleIndex;
             this.distance = value.distance;

@@ -123,7 +123,6 @@
 
         "egret3d/components/animation/Animation.ts",
         "egret3d/components/animation/AnimationLayer.ts",
-        "egret3d/components/animation/AnimationTree.ts",
         "egret3d/components/animation/AnimationState.ts",
         "egret3d/components/animation/AnimationChannel.ts",
         "egret3d/components/animation/AnimationSystem.ts",

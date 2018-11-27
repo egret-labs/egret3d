@@ -9,56 +9,34 @@ namespace egret3d {
         private _animation: Animation | null = null;
         private _animationLayer: AnimationLayer | null = null;
 
-        public onAddComponent(component: Animation) {
-            if (component.autoPlay && (!component.lastAnimationState || !component.lastAnimationState.isPlaying)) {
-                component.play();
-            }
-        }
+        private _updateChannelEnd(animation: Animation) {
+            const animationFadeStates = animation._animationFadeStates;
+            const blendLayers: BlendLayer[] = [];
+            const channelss: AnimationChannel[][] = [];
 
-        public onUpdate(deltaTime: number) {
-            for (const gameObject of this._groups[0].gameObjects) {
-                const animation = this._animation = gameObject.getComponent(Animation)!;
-                const animationController = animation.animationController!;
-                const animationLayers = animationController.layers;
-                const animationFadeStates = animation._animationFadeStates;
-                const blendlayers = animation._blendLayers;
-                let layerIndex = 0;
+            for (let i = animationFadeStates.length - 1; i >= 0; i--) {
+                for (const fadeState of animationFadeStates[i]) {
+                    for (const animationState of fadeState.states) {
+                        for (const channel of animationState.channels) {
+                            const blendLayer = channel.blendLayer;
+                            channel.isEnd = false;
 
-                for (const k in blendlayers) { // Reset blendLayers.
-                    const blendLayer = blendlayers[k];
-                    blendLayer.clear();
-                }
+                            if (blendLayer) {
+                                let index = blendLayers.indexOf(blendLayer);
+                                if (index < 0) {
+                                    index = blendLayers.length;
+                                    blendLayers.push(blendLayer);
+                                }
 
-                for (const fadeStates of animationFadeStates) {
-                    this._animationLayer = animationLayers[layerIndex++];
-                    
-                    for (let i = 0, r = 0, l = fadeStates.length; i < l; ++i) {
-                        const fadeState = fadeStates[i];
-                        const sFadeState = fadeState.fadeState;
-                        const sSubFadeState = fadeState.subFadeState;
-
-                        if (sFadeState === 1 && sSubFadeState === 1) {
-                            r++;
-                        }
-                        else {
-                            if (r > 0) {
-                                fadeStates[i - r] = fadeState;
+                                (channelss[index] = channelss[index] || []).push(channel);
                             }
-
-                            if (sFadeState !== 0 || sSubFadeState !== 0) {
-                                this._updateAnimationFadeState(fadeState, deltaTime);
-                            }
-
-                            for (const animationState of fadeState.states) {
-                                this._updateAnimationState(fadeState, animationState, deltaTime);
-                            }
-                        }
-
-                        if (i === l - 1 && r > 0) {
-                            fadeStates.length -= r;
                         }
                     }
                 }
+            }
+
+            for (const channels of channelss) {
+                channels[channels.length - 1].isEnd = true;
             }
         }
 
@@ -94,15 +72,16 @@ namespace egret3d {
             }
         }
 
-        private _updateAnimationState(animationFadeState: AnimationFadeState, animationState: AnimationState, deltaTime: number) {
+        private _updateAnimationState(animationFadeState: AnimationFadeState, animationState: AnimationState, deltaTime: number, forceUpdate: boolean) {
             const animation = this._animation!;
             const animationLayer = this._animationLayer!;
-            const animationNode = animationState.animationNode;
+            // const animationNode = animationState.animationNode;
 
             let weight = animationLayer.weight * animationFadeState.progress * animationState.weight;
-            // if (this.parent) {
+            // if (this.parent) { TODO
             //     this._globalWeight *= this.parent._globalWeight;
             // }
+            animationState._globalWeight = weight;
 
             // Update time.
             if (animationState._playheadEnabled) {
@@ -151,8 +130,8 @@ namespace egret3d {
 
             animationState._currentTime += animationState.animationClip.position;
 
-            if (weight !== 0.0) {
-                for (const channel of animationState._channels) {
+            if (forceUpdate || weight !== 0.0) {
+                for (const channel of animationState.channels) {
                     if (!channel.updateTarget) {
                         continue;
                     }
@@ -172,6 +151,68 @@ namespace egret3d {
                 //     const animationName = animationNames.shift();
                 //     this._animationComponent.play(animationName);
                 // }
+            }
+        }
+
+        public onAddComponent(component: Animation) {
+            if (component.autoPlay && (!component.lastAnimationState || !component.lastAnimationState.isPlaying)) {
+                component.play();
+            }
+        }
+
+        public onUpdate(deltaTime: number) {
+            for (const gameObject of this._groups[0].gameObjects) {
+                const animation = this._animation = gameObject.getComponent(Animation)!;
+                const animationController = animation.animationController!;
+                const animationLayers = animationController.layers;
+                const animationFadeStates = animation._animationFadeStates;
+                const blendlayers = animation._blendLayers;
+
+                for (const k in blendlayers) { // Reset blendLayers.
+                    const blendLayer = blendlayers[k];
+                    blendLayer.clear();
+                }
+
+                if (animation._statesDirty) {
+                    this._updateChannelEnd(animation);
+                    animation._statesDirty = false;
+                }
+
+                for (let i = animationFadeStates.length - 1; i >= 0; i--) {
+                    const fadeStates = animationFadeStates[i];
+                    this._animationLayer = animationLayers[i];
+
+                    for (let i = 0, r = 0, l = fadeStates.length; i < l; ++i) {
+                        let forceUpdate = false;
+                        const fadeState = fadeStates[i];
+                        const sFadeState = fadeState.fadeState;
+                        const sSubFadeState = fadeState.subFadeState;
+
+                        if (sFadeState === 1 && sSubFadeState === 1) {
+                            r++;
+                            fadeState.release();
+                        }
+                        else {
+                            if (r > 0) {
+                                fadeStates[i - r] = fadeState;
+                            }
+
+                            if (sFadeState !== 0 || sSubFadeState !== 0) {
+                                forceUpdate = true;
+                                this._updateAnimationFadeState(fadeState, deltaTime);
+                            }
+
+                            for (const animationState of fadeState.states) {
+                                this._updateAnimationState(fadeState, animationState, deltaTime, forceUpdate);
+                            }
+                        }
+
+                        if (i === l - 1 && r > 0) {
+                            fadeStates.length -= r;
+                            animation._statesDirty = true;
+                        }
+                    }
+                }
             }
         }
     }

@@ -134,6 +134,7 @@ namespace egret3d {
         public getLayer(index: uint): AnimationLayer {
             const layers = this.layers;
             if (index >= layers.length) {
+                index = layers.length;
                 this.createLayer(paper.DefaultNames.NoName);
             }
 

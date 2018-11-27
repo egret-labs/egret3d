@@ -16,6 +16,10 @@ namespace egret3d {
         /**
          * @internal
          */
+        public _statesDirty: boolean = false;
+        /**
+         * @internal
+         */
         public readonly _animationNames: string[] = [];
         @paper.serializedField
         private readonly _animations: AnimationAsset[] = [];
@@ -45,11 +49,11 @@ namespace egret3d {
         /**
          * @internal
          */
-        public _getBlendlayer(type: string, name: string) {
-            const typeAndName = type + "/" + name;
+        public _getBlendlayer(name: string, type: string) {
             const blendLayers = this._blendLayers;
+            name += "/" + type;
 
-            if (!(typeAndName in blendLayers)) {
+            if (!(name in blendLayers)) {
                 blendLayers[name] = BlendLayer.create();
             }
 
@@ -59,11 +63,25 @@ namespace egret3d {
         public uninitialize() {
             super.uninitialize();
 
+            const animationFadeStates = this._animationFadeStates;
+            for (const fadeStates of animationFadeStates) {
+                for (const fadeState of fadeStates) {
+                    fadeState.release();
+                }
+            }
+
             const blendLayers = this._blendLayers;
             for (const k in blendLayers) {
                 blendLayers[k].release();
                 delete blendLayers[k];
             }
+
+            this._animationNames.length = 0;
+            this._animations.length = 0;
+            this._animationFadeStates.length = 0;
+            // this._blendLayers;
+            this._animationController = null;
+            this._lastAnimationLayer = null;
         }
         /**
          * 
@@ -92,6 +110,7 @@ namespace egret3d {
             }
 
             if (!animationAsset || !animationClip) {
+                console.warn(`There is no animation clip named "${animationName}" in the "${this.gameObject.path}" gameObject.`, animationName, this.gameObject.path);
                 return null;
             }
             //
@@ -123,10 +142,11 @@ namespace egret3d {
             animationFadeStates[layerIndex].push(lastFadeState);
             //
             const animationState = AnimationState.create();
-            animationState._initialize(this, animationNode, animationAsset, animationClip);
+            animationState._initialize(this, animationLayer, animationNode, animationAsset, animationClip);
             animationState.playTimes = playTimes < 0 ? (animationClip.playTimes || 0) : playTimes;
             lastFadeState.states.push(animationState);
             //
+            this._statesDirty = true;
             this._lastAnimationLayer = animationLayer;
 
             return animationState;
