@@ -85,7 +85,7 @@ namespace paper.editor {
                         comp.extras.linkedID=undefined;
                     }
                 }
-                this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: null });
+                this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: ['prefab'], propValue: null });
             });
             return true;
         }
@@ -107,7 +107,7 @@ namespace paper.editor {
                                 }
                             }
                         }
-                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: obj.extras!.prefab });
+                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: ['prefab'], propValue: obj.extras!.prefab });
                         break b;
                     }
                 }

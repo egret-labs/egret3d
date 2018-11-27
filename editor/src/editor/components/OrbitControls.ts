@@ -10,8 +10,8 @@ namespace paper.editor {
 
         public minPanAngle: number = -Infinity;
         public maxPanAngle: number = Infinity;
-        public minTileAngle: number = -89.9999999;
-        public maxTileAngle: number = 89.9999999;
+        public minTileAngle: number = -89.99;//因为lookAt方法默认以y轴（0，1，0）为基础叉乘z轴求出x轴方向，当值为90度时叉乘不成立
+        public maxTileAngle: number = 89.99;
 
         public moveSpped: number = 0.001;
         public scaleSpeed: number = 0.2;
@@ -156,7 +156,6 @@ namespace paper.editor {
 
             this.gameObject.transform.setPosition(target.x + distanceX, target.y + distanceY, target.z + distanceZ);
             this.gameObject.transform.lookAt(target);
-
             target.release();
         }
 
