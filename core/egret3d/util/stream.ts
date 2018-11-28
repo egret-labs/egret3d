@@ -129,7 +129,7 @@ namespace egret3d.io {
             return num;
         }
 
-        readUint8Array(target: Uint8Array = null, offset: number = 0, length: number = -1): Uint8Array {
+        readUint8Array(target: Uint8Array, offset: number = 0, length: number = -1): Uint8Array {
             if (length < 0) length = target.length;
             for (let i = 0; i < length; i++) {
                 target[i] = this._data.getUint8(this._seek);
@@ -147,7 +147,7 @@ namespace egret3d.io {
             return target;
         }
 
-        readUint16Array(target: Uint16Array = null, offset: number = 0, length: number = -1): Uint16Array {
+        readUint16Array(target: Uint16Array, offset: number = 0, length: number = -1): Uint16Array {
             if (length < 0) length = target.length;
             for (let i = 0; i < length; i++) {
                 target[i] = this.readUInt16();
@@ -155,7 +155,7 @@ namespace egret3d.io {
             return target;
         }
 
-        readSingleArray(target: Float32Array = null, offset: number = 0, length: number = -1): Float32Array {
+        readSingleArray(target: Float32Array, offset: number = 0, length: number = -1): Float32Array {
             if (length < 0) length = target.length;
             // console.log(this._data.byteLength, this._data.byteOffset);
             for (let i = 0; i < length; i++) {
@@ -182,7 +182,7 @@ namespace egret3d.io {
             return this.readUInt8();
         }
 
-        readBytes(target: Uint8Array = null, offset: number = 0, length: number = -1): Uint8Array {
+        readBytes(target: Uint8Array, offset: number = 0, length: number = -1): Uint8Array {
             return this.readUint8Array(target, offset, length);
         }
 

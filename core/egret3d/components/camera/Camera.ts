@@ -678,7 +678,7 @@ namespace egret3d {
          * 
          */
         public get postprocessingRenderTarget(): BaseRenderTarget {
-            return this._readRenderTarget;
+            return this._readRenderTarget!;
         }
 
         /**
