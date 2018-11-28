@@ -631,10 +631,10 @@ namespace egret3d {
             webgl.clear(bufferBit);
         }
 
-        public copyFramebufferToTexture(screenPostion: Vector2, target: ITexture, level: number = 0) {
+        public copyFramebufferToTexture(screenPostion: Vector2, target: egret3d.Texture, level: number = 0) {
             const webgl = WebGLCapabilities.webgl!;
             webgl.activeTexture(webgl.TEXTURE0);
-            webgl.bindTexture(webgl.TEXTURE_2D, target.texture);
+            webgl.bindTexture(webgl.TEXTURE_2D, target._source);
             webgl.copyTexImage2D(webgl.TEXTURE_2D, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0);//TODO
         }
     }

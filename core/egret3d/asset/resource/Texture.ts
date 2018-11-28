@@ -3,6 +3,81 @@ namespace egret3d {
      * 纹理资源。
      */
     export class Texture extends GLTFAsset {
+        public static create(name: string, source: GLTF, width?: number, height?: number): Texture
+        public static create(name: string, source: ArrayBufferView | TexImageSource, width: number, height: number, format?: gltf.TextureFormat): Texture
+        public static create(name: string, source: GLTF | ArrayBufferView | TexImageSource, width: number, height: number,
+            format?: gltf.TextureFormat, mipmap?: boolean,
+            wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap,
+            magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter,
+            flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment,
+            type?: gltf.TextureDataType, anisotropy?: number,
+        ): Texture
+        public static create(name: string, source: GLTF | ArrayBufferView | TexImageSource | null, width: number, height: number,
+            format?: gltf.TextureFormat, mipmap?: boolean,
+            wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap,
+            magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter,
+            flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment,
+            type?: gltf.TextureDataType, anisotropy?: number): Texture {
+
+            return new Texture(name, source, width, height,
+                format, mipmap,
+                wrapS, wrapT,
+                magFilter, minFilter,
+                flipY, premultiplyAlpha, unpackAlignment,
+                type, anisotropy);
+        }
+        public static createByBitmapData(name: string, bitmapData: egret.BitmapData, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean): Texture {
+            let magFilter = gltf.TextureFilter.LINEAR;
+            let minFilter = gltf.TextureFilter.LINEAR;
+            let wrapS = repeat ? gltf.TextureWrap.REPEAT : gltf.TextureWrap.CLAMP_TO_EDGE;
+            let wrapT = repeat ? gltf.TextureWrap.REPEAT : gltf.TextureWrap.CLAMP_TO_EDGE;
+            if (mipmap) {
+                magFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
+                minFilter = linear ? gltf.TextureFilter.LINEAR_MIPMAP_LINEAR : gltf.TextureFilter.NEAREST_MIPMAP_NEAREST;
+            }
+            else {
+                magFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
+                minFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
+            }
+            const texture = egret3d.Texture.create(name, bitmapData.source, bitmapData.source.width, bitmapData.source.height,
+                format, mipmap, wrapS, wrapT, magFilter, minFilter);
+
+            return texture;
+        }
+        public static createColorTexture(name: string, r: number, g: number, b: number) {
+            const mipmap = true;
+            const width = 1;
+            const height = 1;
+            const data = new Uint8Array([r, g, b, 255]);
+            const texture = Texture.create(name, data, width, height,
+                gltf.TextureFormat.RGBA, mipmap,
+                gltf.TextureWrap.CLAMP_TO_EDGE, gltf.TextureWrap.CLAMP_TO_EDGE,
+                gltf.TextureFilter.LINEAR, gltf.TextureFilter.LINEAR_MIPMAP_LINEAR);
+
+            return texture;
+        }
+
+        public static createGridTexture(name: string) {
+            const mipmap = true;
+            const width = 128;
+            const height = 128;
+            const data = new Uint8Array(width * height * 4);
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const seek = (y * width + x) * 4;
+                    const bool = ((x - width * 0.5) * (y - height * 0.5)) > 0;
+                    data[seek] = data[seek + 1] = data[seek + 2] = bool ? 0 : 255;
+                    data[seek + 3] = 255;
+                }
+            }
+            const texture = Texture.create(name, data, width, height,
+                gltf.TextureFormat.RGBA, mipmap,
+                gltf.TextureWrap.REPEAT, gltf.TextureWrap.REPEAT,
+                gltf.TextureFilter.LINEAR, gltf.TextureFilter.LINEAR_MIPMAP_LINEAR);
+
+            return texture;
+        }
 
         protected _gltfTexture: GLTFTexture | null = null;
         protected _image: gltf.Image;
@@ -12,25 +87,23 @@ namespace egret3d {
          */
         public _dirty: boolean = false;
 
-        /**
-         * @internal
-         */
-        public constructor(name: string, bufferOrConfig: GLTF, width?: number, height?: number)
-        public constructor(name: string, bufferOrConfig: ArrayBufferView | TexImageSource, width: number, height: number, format?: gltf.TextureFormat)
-        public constructor(name: string, bufferOrConfig: GLTF | ArrayBufferView | TexImageSource, width: number, height: number,
-            format?: gltf.TextureFormat, mipmap?: boolean, flipY?: boolean,
-            premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment,
-            wrapS?: gltf.TextureWrapS, wrapT?: gltf.TextureWrapT,
-            mapFilter?: gltf.TextureMagFilter, minFilter?: gltf.TextureMinFilter,
+        public _source: any = null;
+
+        public constructor(name: string, source: GLTF | ArrayBufferView | TexImageSource | null,
+            width: number, height: number,
+            format?: gltf.TextureFormat, mipmap?: boolean,
+            wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap,
+            magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter,
+            flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment,
             type?: gltf.TextureDataType, anisotropy?: number,
         ) {
             super(name);
 
-            if (ArrayBuffer.isView(bufferOrConfig)) {
+            if (ArrayBuffer.isView(source)) {
                 this.config = GLTFAsset.createTextureConfig(); // TODO
             }
-            else if (bufferOrConfig.hasOwnProperty("version")) {
-                this.config = bufferOrConfig as GLTF;
+            else if (source && source.hasOwnProperty("version")) {
+                this.config = source as GLTF;
             }
             else {
                 this.config = GLTFAsset.createTextureConfig(); // TODO                
@@ -41,27 +114,26 @@ namespace egret3d {
             // Sampler
             {
                 this._sampler = this.config.samplers![this._gltfTexture.sampler as number];
-                this._sampler.wrapS = wrapS || gltf.TextureWrapS.REPEAT;
-                this._sampler.wrapT = wrapT || gltf.TextureWrapT.REPEAT;
-                this._sampler.magFilter = mapFilter || gltf.TextureMagFilter.NEAREST;
-                this._sampler.minFilter = minFilter || gltf.TextureMinFilter.NEAREST;
+                this._sampler.wrapS = wrapS || gltf.TextureWrap.REPEAT;
+                this._sampler.wrapT = wrapT || gltf.TextureWrap.REPEAT;
+                this._sampler.magFilter = magFilter || gltf.TextureFilter.NEAREST;
+                this._sampler.minFilter = minFilter || gltf.TextureFilter.NEAREST;
             }
             let w = width;
             let h = height;
             {
                 this._image = this.config.images![this._gltfTexture.source as number];
-                if (ArrayBuffer.isView(bufferOrConfig)) {
-                    this._image.uri = bufferOrConfig;
+                if (ArrayBuffer.isView(source)) {
+                    this._image.uri = source;
                 }
-                else {
-                    const img = bufferOrConfig as TexImageSource;
-                    this._image.uri = img;
+                else if (source) {
+                    const img = this._image.uri = source as TexImageSource;
                     w = img.width;
                     h = img.height;
                 }
             }
-            paperExtension.width = width;
-            paperExtension.height = height;
+            paperExtension.width = w;
+            paperExtension.height = h;
 
             paperExtension.format = format || gltf.TextureFormat.RGBA;
             paperExtension.premultiplyAlpha = premultiplyAlpha || false;
@@ -78,6 +150,18 @@ namespace egret3d {
 
         public caclByteLength(): number {
             return 0;
+        }
+
+        public get width(): number {
+            return this._gltfTexture!.extensions.paper!.width!;
+        }
+
+        public get height(): number {
+            return this._gltfTexture!.extensions.paper!.height!;
+        }
+
+        public get format(): number {
+            return this._gltfTexture!.extensions.paper!.format!;
         }
 
         public get gltfTexture(): GLTFTexture {

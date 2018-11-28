@@ -217,7 +217,7 @@ namespace egret3d {
         public static createTextureConfig() {
             const config = this._createConfig();
             config.images = [];
-            config.samplers = [{ magFilter: gltf.TextureMagFilter.NEAREST, minFilter: gltf.TextureMinFilter.NEAREST, wrapS: gltf.TextureWrapS.REPEAT, wrapT: gltf.TextureWrapT.REPEAT }];
+            config.samplers = [{ magFilter: gltf.TextureFilter.NEAREST, minFilter: gltf.TextureFilter.NEAREST, wrapS: gltf.TextureWrap.REPEAT, wrapT: gltf.TextureWrap.REPEAT }];
             config.textures = [{ sampler: 0, source: 0 }];
 
             return config;
@@ -683,12 +683,7 @@ declare namespace gltf {
         UNSIGNED_SHORT_5_5_5_1 = 32820,
     }
 
-    export const enum TextureMagFilter {
-        NEAREST = 9728,
-        LINEAR = 9729,
-    }
-
-    export const enum TextureMinFilter {
+    export const enum TextureFilter {
         NEAREST = 9728,
         LINEAR = 9729,
         NEAREST_MIPMAP_NEAREST = 9984,
@@ -697,13 +692,7 @@ declare namespace gltf {
         LINEAR_MIPMAP_LINEAR = 9987,
     }
 
-    export const enum TextureWrapS {
-        CLAMP_TO_EDGE = 33071,
-        MIRRORED_REPEAT = 33648,
-        REPEAT = 10497,
-    }
-
-    export const enum TextureWrapT {
+    export const enum TextureWrap {
         CLAMP_TO_EDGE = 33071,
         MIRRORED_REPEAT = 33648,
         REPEAT = 10497,

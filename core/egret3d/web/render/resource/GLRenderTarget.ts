@@ -14,7 +14,7 @@ namespace egret3d {
         protected _renderbuffer: WebGLRenderbuffer;
 
         public constructor(name: string, width: number, height: number, depth: boolean = false, stencil: boolean = false, mipmap: boolean = false, linear: boolean = false) {
-            super(name);
+            super(name, null, width, height);
             this.width = width;
             this.height = height;
             this._depth = depth;
@@ -103,7 +103,7 @@ namespace egret3d {
 
             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
-            const isPower2 = isPowerOfTwo(this.width) && isPowerOfTwo(this.height);
+            const isPower2 = math.isPowerOfTwo(this.width) && math.isPowerOfTwo(this.height);
             if (isPower2) {
                 if (this._linear) {
                     webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.LINEAR);
