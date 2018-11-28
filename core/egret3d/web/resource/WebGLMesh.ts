@@ -154,6 +154,6 @@ namespace egret3d {
             }
         }
     }
-
+    // Retarget.
     egret3d.Mesh = WebGLMesh;
 }

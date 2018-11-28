@@ -10177,10 +10177,44 @@ declare namespace egret3d {
         updateViewport(viewport: Readonly<Rectangle>, target: BaseRenderTarget | null): void;
         updateState(state: gltf.States | null): void;
         clearState(): void;
-        useProgram(program: GlProgram): boolean;
-        getProgram(material: Material, technique: gltf.Technique, defines: string): GlProgram;
+        useProgram(program: WebGLProgramBinder): boolean;
+        getProgram(material: Material, technique: gltf.Technique, defines: string): WebGLProgramBinder;
         clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void;
         copyFramebufferToTexture(screenPostion: Vector2, target: ITexture, level?: number): void;
+    }
+}
+declare namespace egret3d {
+    /**
+     * @private
+     */
+    interface WebGLActiveAttribute {
+        name: string;
+        size: number;
+        type: number;
+        location: number;
+        semantic: string;
+    }
+    /**
+     * @private
+     */
+    interface WebGLActiveUniform {
+        name: string;
+        size: number;
+        type: number;
+        location: WebGLUniformLocation;
+        semantic?: string;
+        textureUnits?: number[];
+    }
+    /**
+     * @private
+     */
+    class WebGLProgramBinder {
+        readonly id: uint;
+        readonly attributes: WebGLActiveAttribute[];
+        readonly contextUniforms: WebGLActiveUniform[];
+        readonly uniforms: WebGLActiveUniform[];
+        readonly program: WebGLProgram;
+        constructor(webglProgram: WebGLProgram);
     }
 }
 declare namespace egret3d {
@@ -10260,40 +10294,6 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-}
-declare namespace egret3d {
-    /**
-     * @private
-     */
-    interface WebGLActiveAttribute {
-        name: string;
-        size: number;
-        type: number;
-        location: number;
-        semantic: string;
-    }
-    /**
-     * @private
-     */
-    interface WebGLActiveUniform {
-        name: string;
-        size: number;
-        type: number;
-        location: WebGLUniformLocation;
-        semantic?: string;
-        textureUnits?: number[];
-    }
-    /**
-     * @private
-     */
-    class GlProgram {
-        readonly id: number;
-        readonly attributes: WebGLActiveAttribute[];
-        readonly contextUniforms: WebGLActiveUniform[];
-        readonly uniforms: WebGLActiveUniform[];
-        readonly program: WebGLProgram;
-        constructor(webglProgram: WebGLProgram);
-    }
 }
 declare namespace egret3d.web {
 }

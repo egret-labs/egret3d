@@ -1,4 +1,6 @@
 namespace egret3d {
+    // 运行时 draw call 排序优化使用。
+    let _hashCode: uint = 0;
     /**
      * @private
      */
@@ -20,13 +22,11 @@ namespace egret3d {
         semantic?: string;
         textureUnits?: number[];
     }
-    // 运行时 draw call 排序优化使用。
-    let _hashCode: number = 0;
     /**
      * @private
      */
-    export class GlProgram {
-        public readonly id: number = _hashCode++;
+    export class WebGLProgramBinder {
+        public readonly id: uint = _hashCode++;
         public readonly attributes: WebGLActiveAttribute[] = [];
         public readonly contextUniforms: WebGLActiveUniform[] = [];
         public readonly uniforms: WebGLActiveUniform[] = [];

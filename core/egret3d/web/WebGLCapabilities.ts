@@ -159,7 +159,7 @@ namespace egret3d {
         return shader;
     }
 
-    function _extractAttributes(webgl: WebGLRenderingContext, program: GlProgram, technique: gltf.Technique) {
+    function _extractAttributes(webgl: WebGLRenderingContext, program: WebGLProgramBinder, technique: gltf.Technique) {
         const webglProgram = program.program;
         const attributes = program.attributes;
         const totalAttributes = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_ATTRIBUTES);
@@ -181,7 +181,7 @@ namespace egret3d {
         }
     }
 
-    function _extractUniforms(webgl: WebGLRenderingContext, program: GlProgram, technique: gltf.Technique) {
+    function _extractUniforms(webgl: WebGLRenderingContext, program: WebGLProgramBinder, technique: gltf.Technique) {
         const webglProgram = program.program;
         const contextUniforms = program.contextUniforms;
         const uniforms = program.uniforms;
@@ -213,7 +213,7 @@ namespace egret3d {
         }
     }
 
-    function _extractTextureUnits(program: GlProgram) {
+    function _extractTextureUnits(program: WebGLProgramBinder) {
         const activeUniforms = program.contextUniforms.concat(program.uniforms);
         const samplerArrayKeys: string[] = [];
         const samplerKeys: string[] = [];
@@ -249,6 +249,9 @@ namespace egret3d {
             }
         }
     }
+    /**
+     * 
+     */
     export enum ToneMapping {
         None = 0,
         LinearToneMapping = 1,
@@ -462,11 +465,11 @@ namespace egret3d {
         public draw: (drawCall: DrawCall) => void = null!;
 
         private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST]; // TODO
-        private readonly _programs: { [key: string]: GlProgram } = {};
+        private readonly _programs: { [key: string]: WebGLProgramBinder } = {};
         private readonly _vsShaders: { [key: string]: WebGLShader } = {};
         private readonly _fsShaders: { [key: string]: WebGLShader } = {};
         private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
-        private _cacheProgram: GlProgram | null = null;
+        private _cacheProgram: WebGLProgramBinder | null = null;
         private _cacheState: gltf.States | null = null;
 
         private _getWebGLProgram(vs: gltf.Shader, fs: gltf.Shader, customDefines: string) {
@@ -574,7 +577,7 @@ namespace egret3d {
             this._cacheState = null;
         }
 
-        public useProgram(program: GlProgram) {
+        public useProgram(program: WebGLProgramBinder) {
             if (this._cacheProgram !== program) {
                 this._cacheProgram = program;
                 WebGLCapabilities.webgl!.useProgram(program.program);
@@ -597,7 +600,7 @@ namespace egret3d {
             if (!program) {
                 const webglProgram = this._getWebGLProgram(vertexShader, fragShader, defines);
                 if (webglProgram) {
-                    program = new GlProgram(webglProgram);
+                    program = new WebGLProgramBinder(webglProgram);
                     this._programs[name] = program;
                     _extractAttributes(webgl, program, technique);
                     _extractUniforms(webgl, program, technique);

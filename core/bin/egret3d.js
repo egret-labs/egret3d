@@ -25132,7 +25132,7 @@ var egret3d;
             if (!program) {
                 var webglProgram = this._getWebGLProgram(vertexShader, fragShader, defines);
                 if (webglProgram) {
-                    program = new egret3d.GlProgram(webglProgram);
+                    program = new egret3d.WebGLProgramBinder(webglProgram);
                     this._programs[name] = program;
                     _extractAttributes(webgl, program, technique);
                     _extractUniforms(webgl, program, technique);
@@ -25169,6 +25169,26 @@ var egret3d;
     }(paper.SingletonComponent));
     egret3d.WebGLRenderState = WebGLRenderState;
     __reflect(WebGLRenderState.prototype, "egret3d.WebGLRenderState");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    // 运行时 draw call 排序优化使用。
+    var _hashCode = 0;
+    /**
+     * @private
+     */
+    var WebGLProgramBinder = (function () {
+        function WebGLProgramBinder(webglProgram) {
+            this.id = _hashCode++;
+            this.attributes = [];
+            this.contextUniforms = [];
+            this.uniforms = [];
+            this.program = webglProgram;
+        }
+        return WebGLProgramBinder;
+    }());
+    egret3d.WebGLProgramBinder = WebGLProgramBinder;
+    __reflect(WebGLProgramBinder.prototype, "egret3d.WebGLProgramBinder");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -25782,27 +25802,8 @@ var egret3d;
     }(egret3d.Mesh));
     egret3d.WebGLMesh = WebGLMesh;
     __reflect(WebGLMesh.prototype, "egret3d.WebGLMesh");
+    // Retarget.
     egret3d.Mesh = WebGLMesh;
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    // 运行时 draw call 排序优化使用。
-    var _hashCode = 0;
-    /**
-     * @private
-     */
-    var GlProgram = (function () {
-        function GlProgram(webglProgram) {
-            this.id = _hashCode++;
-            this.attributes = [];
-            this.contextUniforms = [];
-            this.uniforms = [];
-            this.program = webglProgram;
-        }
-        return GlProgram;
-    }());
-    egret3d.GlProgram = GlProgram;
-    __reflect(GlProgram.prototype, "egret3d.GlProgram");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
