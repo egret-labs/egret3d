@@ -13,15 +13,17 @@ namespace egret3d {
 
         }
     }
-
+    
+    // TODO remove
     export class MotionBlurEffect extends CameraPostprocessing {
         private _material: Material;
         private _velocityFactor: number = 1.0;
         private _samples: number = 20;
         private _worldToClipMatrix: Matrix4 | null = null;
         private readonly _resolution: Vector2 = Vector2.create(1.0, 1.0);
-        
+
         public initialize() {
+            super.initialize();
             this._resolution.set(stage.viewport.w, stage.viewport.h);
 
             this._material = new Material(new Shader(egret3d.ShaderLib.motionBlur as any, "motionBlur"));
@@ -32,12 +34,17 @@ namespace egret3d {
         }
 
         public uninitialize() {
+            super.initialize();
+
             if (this._material) {
                 this._material.dispose();
             }
 
             this._resolution.release();
-            this._worldToClipMatrix.release();
+
+            if (this._worldToClipMatrix) {
+                this._worldToClipMatrix.release();
+            }
         }
 
         public render(camera: Camera) {
@@ -46,7 +53,7 @@ namespace egret3d {
             const material = this._material;
             const postProcessingRenderTarget = camera.postprocessingRenderTarget;
 
-            if(!this._worldToClipMatrix){
+            if (!this._worldToClipMatrix) {
                 this._worldToClipMatrix = camera.worldToClipMatrix.clone();
             }
 

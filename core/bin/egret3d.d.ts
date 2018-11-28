@@ -399,6 +399,11 @@ declare namespace paper {
 }
 declare namespace paper {
     /**
+     * 生成 uuid 的方式。
+     * @private
+     */
+    let createUUID: () => string;
+    /**
      * 可以被 paper.DisposeCollecter 收集，并在此帧末尾释放的基础对象。
      */
     abstract class BaseRelease<T extends BaseRelease<T>> {
@@ -424,7 +429,7 @@ declare namespace paper {
         /**
          *
          */
-        onUpdate?(v: T): void;
+        onUpdate?(object: T): void;
         /**
          * 在此帧末尾释放时调用。
          */
@@ -1051,92 +1056,170 @@ declare namespace egret3d {
     }
 }
 declare namespace paper.editor {
-    /**属性信息 */
+    /**
+     * 属性信息。
+     */
     class PropertyInfo {
-        /**属性名称 */
+        /**
+         * 属性名称。
+         */
         name: string;
-        /**编辑类型 */
+        /**
+         * 编辑类型。
+         */
         editType: EditType;
-        /**属性配置 */
+        /**
+         * 属性配置。
+         */
         option: PropertyOption | undefined;
         constructor(name: string, editType: EditType, option?: PropertyOption);
     }
-    /**属性配置 */
-    type PropertyOption = {
-        readonly?: boolean;
-        minimum?: number;
-        maximum?: number;
-        step?: number;
-        /**赋值函数*/
-        set?: string;
-        /**下拉项*/
-        listItems?: {
-            label: string;
-            value: any;
-        }[];
+    /**
+     * 下拉列表项。
+     */
+    type ListItem = {
+        label: string;
+        value: any;
     };
     /**
-     * 编辑类型
+     * 属性配置。
+     */
+    type PropertyOption = {
+        readonly?: boolean;
+        /**
+         * UINT, INT, FLOAT 类型的最小值。
+         */
+        minimum?: number;
+        /**
+         * UINT, INT, FLOAT 类型的最大值。
+         */
+        maximum?: number;
+        /**
+         * UINT, INT, FLOAT 类型的步进值。
+         */
+        step?: number;
+        /**
+         * 赋值函数
+         */
+        set?: string;
+        /**
+         * 下拉项。
+         */
+        listItems?: ListItem[] | string | ((value: any) => ListItem[]);
+    };
+    /**
+     * 编辑类型。
      */
     const enum EditType {
-        /**数字输入 */
-        UINT = "UINT",
-        INT = "INT",
-        FLOAT = "FLOAT",
-        /**文本输入 */
-        TEXT = "TEXT",
-        /**选中框 */
+        /**
+         * 选中框。
+         */
         CHECKBOX = "CHECKBOX",
-        /** Size.*/
-        SIZE = "SIZE",
-        /**vertor2 */
-        VECTOR2 = "VECTOR2",
-        /**vertor3 */
-        VECTOR3 = "VECTOR3",
-        /**vertor4 */
-        VECTOR4 = "VECTOR4",
-        /**Quaternion */
-        QUATERNION = "QUATERNION",
-        /**颜色选择器 */
-        COLOR = "COLOR",
-        /**下拉 */
+        /**
+         * 正整数。
+         */
+        UINT = "UINT",
+        /**
+         * 整数。
+         */
+        INT = "INT",
+        /**
+         * 浮点数。
+         */
+        FLOAT = "FLOAT",
+        /**
+         * 文本。
+         */
+        TEXT = "TEXT",
+        /**
+         * 下拉列表。
+         */
         LIST = "LIST",
-        /**Rect */
+        /**
+         * 数组。
+         */
+        ARRAY = "ARRAY",
+        /**
+         * 尺寸。
+         */
+        SIZE = "SIZE",
+        /**
+         * 矩形。
+         */
         RECT = "RECT",
-        /**材质 */
+        /**
+         * 二维向量。
+         */
+        VECTOR2 = "VECTOR2",
+        /**
+         * 三维向量。
+         */
+        VECTOR3 = "VECTOR3",
+        /**
+         * 四维向量。
+         */
+        VECTOR4 = "VECTOR4",
+        /**
+         * 四元数。
+         */
+        QUATERNION = "QUATERNION",
+        /**
+         * 颜色选择器。
+         */
+        COLOR = "COLOR",
+        /**
+         * 着色器。
+         */
+        SHADER = "SHADER",
+        /**
+         * 材质。
+         */
         MATERIAL = "MATERIAL",
-        /**材质数组 */
+        /**
+         * 材质数组。
+         */
         MATERIAL_ARRAY = "MATERIAL_ARRAY",
-        /**游戏对象 */
+        /**
+         * 贴图。
+         */
+        TEXTUREDESC = "TEXTUREDESC",
+        /**
+         * 网格。
+         */
+        MESH = "MESH",
+        /**
+         * 实体。
+         */
         GAMEOBJECT = "GAMEOBJECT",
-        /**变换 TODO 不需要*/
-        TRANSFROM = "TRANSFROM",
-        /**组件 */
+        /**
+         * 组件。
+         */
         COMPONENT = "COMPONENT",
         /**声音 */
         SOUND = "SOUND",
-        /**Mesh */
-        MESH = "MESH",
-        /**shader */
-        SHADER = "SHADER",
-        /**数组 */
-        ARRAY = "ARRAY",
-        /***/
+        /**
+         * 按钮。
+         */
         BUTTON = "BUTTON",
-        /***/
-        NESTED = "NESTED",
-        /**贴图 */
-        TEXTUREDESC = "TEXTUREDESC",
-        /**矩阵 */
+        /**
+         * 3x3 矩阵。
+         */
         MAT3 = "MAT3",
+        /**
+         * 内嵌的。
+         */
+        NESTED = "NESTED",
+        /**变换 TODO remove*/
+        TRANSFROM = "TRANSFROM",
     }
     /**
-     * 装饰器:自定义
+     * 自定义装饰器。
      */
     function custom(): (target: any) => void;
     /**
-     * 装饰器:属性
-     * @param editType 编辑类型
+     * 属性装饰器。
+     * @param editType 编辑类型。
+     * @param option 配置。
      */
     function property(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
     /**
@@ -3271,6 +3354,10 @@ declare namespace paper {
      * 场景资源。
      */
     class RawScene extends BasePrefabAsset {
+        /**
+         * @private
+         */
+        createInstance(keepUUID?: boolean): Scene | null;
     }
 }
 declare namespace paper {

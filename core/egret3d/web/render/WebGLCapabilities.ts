@@ -89,7 +89,7 @@ namespace egret3d {
         return _parseIncludes((egret3d.ShaderChunk as any)[include]);
     }
 
-    function _filterEmptyLine(string) {
+    function _filterEmptyLine(string: string) {
         return string !== '';
     }
 
@@ -192,7 +192,7 @@ namespace egret3d {
             const location = webgl.getUniformLocation(webglProgram, uniformData.name)!;
             const techniqueUniform = technique.uniforms[uniformData.name];
 
-            let semantic = "";
+            let semantic: string | undefined = "";
             if (!techniqueUniform) {
                 semantic = globalUniformSemantic[uniformData.name];
                 if (!semantic) {

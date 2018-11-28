@@ -5,22 +5,22 @@ namespace egret3d {
      */
     export let resRoot: string = "";
 
-    function promisify(loader: egret.HttpRequest | egret.Sound, resource: RES.ResourceInfo): Promise<any> {
+    // function promisify(loader: egret.HttpRequest | egret.Sound | any, resource: RES.ResourceInfo): Promise<any> {
 
-        return new Promise((resolve, reject) => {
-            let onSuccess = () => {
-                let texture = loader['data'] ? loader['data'] : loader['response'];
-                resolve(texture);
-            }
+    //     return new Promise((resolve, reject) => {
+    //         let onSuccess = () => {
+    //             let texture = loader['data'] ? loader['data'] : loader['response'];
+    //             resolve(texture);
+    //         }
 
-            let onError = () => {
-                let e = new RES.ResourceManagerError(1001, resource.url);
-                reject(e);
-            }
-            loader.addEventListener(egret.Event.COMPLETE, onSuccess, this);
-            loader.addEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
-        });
-    }
+    //         let onError = () => {
+    //             let e = new RES.ResourceManagerError(1001, resource.url);
+    //             reject(e);
+    //         }
+    //         loader.addEventListener(egret.Event.COMPLETE, onSuccess, this);
+    //         loader.addEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
+    //     });
+    // }
 
     export const BitmapDataProcessor: RES.processor.Processor = {
 
@@ -57,8 +57,8 @@ namespace egret3d {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, 'json') as egret3d.GLTF;
 
-            if (result.extensions.KHR_techniques_webgl.shaders && result.extensions.KHR_techniques_webgl.shaders.length === 2) {
-                const shaders = result.extensions.KHR_techniques_webgl.shaders;
+            if (result.extensions.KHR_techniques_webgl!.shaders && result.extensions.KHR_techniques_webgl!.shaders.length === 2) {
+                const shaders = result.extensions.KHR_techniques_webgl!.shaders;
                 for (const shader of shaders) {
                     const source = (RES.host.resourceConfig as any)["getResource"](shader.uri);
                     if (source) {
@@ -88,17 +88,19 @@ namespace egret3d {
         }
     };
 
+    // TODO
     type ImgDescConfig = {
-        name: string,
-        filterMode: string,
-        format: string,
-        mipmap: boolean,
-        wrap: string
+        name: string;
+        filterMode: string;
+        format: string;
+        mipmap: boolean;
+        wrap: string;
+        premultiply: any;
     }
 
     export const TextureDescProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
-            return host.load(resource, "json").then((data: ImgDescConfig) => {
+            return host.load(resource, "json").then((data: ImgDescConfig): any => {
                 const name = data.name;
                 const filterMode = data.filterMode;
                 const format = data.format;
@@ -106,9 +108,9 @@ namespace egret3d {
                 const wrap = data.wrap;
 
                 let _textureFormat = gltf.TextureFormat.RGBA;
-                if (format == "RGB") {
+                if (format === "RGB") {
                     _textureFormat = gltf.TextureFormat.RGB;
-                } else if (format == "Gray") {
+                } else if (format === "Gray") {
                     _textureFormat = gltf.TextureFormat.Luminance;
                 }
 
@@ -139,7 +141,7 @@ namespace egret3d {
                 }
 
                 if (resRoot) {
-                    return getResByURL(name, resRoot).then((bitmapData: egret.BitmapData) => {
+                    return getResByURL(name, resRoot).then((bitmapData: any) => {
                         const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, _textureFormat);
                         texture.uploadImage(bitmapData.source, mipmap, _linear, _premultiply, _repeat);
                         paper.Asset.register(texture);
@@ -184,7 +186,7 @@ namespace egret3d {
                     if (techniqueRes) {
                         const shader = await host.load(techniqueRes, "Shader");
                     }
-                    const values = mat.extensions.KHR_techniques_webgl.values;
+                    const values = mat.extensions.KHR_techniques_webgl.values!;
                     for (const key in values) {
                         const value = values[key];
                         if (value && typeof value === "string") { // A string value must be texture uri.
@@ -297,7 +299,7 @@ namespace egret3d {
     };
 
     function loadSubAssets(data: paper.ISerializedData, resource: RES.ResourceInfo) {
-        return Promise.all(data.assets.map(((item) => {
+        return Promise.all(data.assets!.map(((item) => {
             const host = RES.host;
             const r = (host.resourceConfig as any)["getResource"](item);
             if (r) {

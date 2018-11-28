@@ -716,7 +716,7 @@ var paper;
     var _hashCount = 1;
     /**
      * 生成 uuid 的方式。
-     * @internal
+     * @private
      */
     paper.createUUID = function () {
         return (_hashCount++).toString();
@@ -1661,7 +1661,9 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
-        /**属性信息 */
+        /**
+         * 属性信息。
+         */
         var PropertyInfo = (function () {
             function PropertyInfo(name, editType, option) {
                 this.name = name;
@@ -1673,63 +1675,113 @@ var paper;
         editor.PropertyInfo = PropertyInfo;
         __reflect(PropertyInfo.prototype, "paper.editor.PropertyInfo");
         /**
-         * 编辑类型
+         * 编辑类型。
          */
         var EditType;
         (function (EditType) {
-            /**数字输入 */
-            EditType["UINT"] = "UINT";
-            EditType["INT"] = "INT";
-            EditType["FLOAT"] = "FLOAT";
-            /**文本输入 */
-            EditType["TEXT"] = "TEXT";
-            /**选中框 */
+            /**
+             * 选中框。
+             */
             EditType["CHECKBOX"] = "CHECKBOX";
-            /** Size.*/
-            EditType["SIZE"] = "SIZE";
-            /**vertor2 */
-            EditType["VECTOR2"] = "VECTOR2";
-            /**vertor3 */
-            EditType["VECTOR3"] = "VECTOR3";
-            /**vertor4 */
-            EditType["VECTOR4"] = "VECTOR4";
-            /**Quaternion */
-            EditType["QUATERNION"] = "QUATERNION";
-            /**颜色选择器 */
-            EditType["COLOR"] = "COLOR";
-            /**下拉 */
+            /**
+             * 正整数。
+             */
+            EditType["UINT"] = "UINT";
+            /**
+             * 整数。
+             */
+            EditType["INT"] = "INT";
+            /**
+             * 浮点数。
+             */
+            EditType["FLOAT"] = "FLOAT";
+            /**
+             * 文本。
+             */
+            EditType["TEXT"] = "TEXT";
+            /**
+             * 下拉列表。
+             */
             EditType["LIST"] = "LIST";
-            /**Rect */
+            /**
+             * 数组。
+             */
+            EditType["ARRAY"] = "ARRAY";
+            /**
+             * 尺寸。
+             */
+            EditType["SIZE"] = "SIZE";
+            /**
+             * 矩形。
+             */
             EditType["RECT"] = "RECT";
-            /**材质 */
+            /**
+             * 二维向量。
+             */
+            EditType["VECTOR2"] = "VECTOR2";
+            /**
+             * 三维向量。
+             */
+            EditType["VECTOR3"] = "VECTOR3";
+            /**
+             * 四维向量。
+             */
+            EditType["VECTOR4"] = "VECTOR4";
+            /**
+             * 四元数。
+             */
+            EditType["QUATERNION"] = "QUATERNION";
+            /**
+             * 颜色选择器。
+             */
+            EditType["COLOR"] = "COLOR";
+            /**
+             * 着色器。
+             */
+            EditType["SHADER"] = "SHADER";
+            /**
+             * 材质。
+             */
             EditType["MATERIAL"] = "MATERIAL";
-            /**材质数组 */
+            /**
+             * 材质数组。
+             */
             EditType["MATERIAL_ARRAY"] = "MATERIAL_ARRAY";
-            /**游戏对象 */
+            /**
+             * 贴图。
+             */
+            EditType["TEXTUREDESC"] = "TEXTUREDESC";
+            /**
+             * 网格。
+             */
+            EditType["MESH"] = "MESH";
+            /**
+             * 实体。
+             */
             EditType["GAMEOBJECT"] = "GAMEOBJECT";
-            /**变换 TODO 不需要*/
-            EditType["TRANSFROM"] = "TRANSFROM";
-            /**组件 */
+            /**
+             * 组件。
+             */
             EditType["COMPONENT"] = "COMPONENT";
             /**声音 */
             EditType["SOUND"] = "SOUND";
-            /**Mesh */
-            EditType["MESH"] = "MESH";
-            /**shader */
-            EditType["SHADER"] = "SHADER";
-            /**数组 */
-            EditType["ARRAY"] = "ARRAY";
-            /***/
+            /**
+             * 按钮。
+             */
             EditType["BUTTON"] = "BUTTON";
-            /***/
-            EditType["NESTED"] = "NESTED";
-            /**贴图 */
-            EditType["TEXTUREDESC"] = "TEXTUREDESC";
-            /**矩阵 */
+            /**
+             * 3x3 矩阵。
+             */
             EditType["MAT3"] = "MAT3";
+            /**
+             * 内嵌的。
+             */
+            EditType["NESTED"] = "NESTED";
+            /**变换 TODO remove*/
+            EditType["TRANSFROM"] = "TRANSFROM";
         })(EditType = editor.EditType || (editor.EditType = {}));
         /**
-         * 装饰器:自定义
+         * 自定义装饰器。
          */
         function custom() {
             return function (target) {
@@ -1738,8 +1790,9 @@ var paper;
         }
         editor.custom = custom;
         /**
-         * 装饰器:属性
-         * @param editType 编辑类型
+         * 属性装饰器。
+         * @param editType 编辑类型。
+         * @param option 配置。
          */
         function property(editType, option) {
             return function (target, property) {
@@ -4661,7 +4714,7 @@ var paper;
             return _super !== null && _super.apply(this, arguments) || this;
         }
         /**
-         * @internal
+         * @private
          */
         RawScene.prototype.createInstance = function (keepUUID) {
             if (keepUUID === void 0) { keepUUID = false; }
@@ -23693,21 +23746,20 @@ var egret3d;
      * @internal
      */
     egret3d.resRoot = "";
-    function promisify(loader, resource) {
-        var _this = this;
-        return new Promise(function (resolve, reject) {
-            var onSuccess = function () {
-                var texture = loader['data'] ? loader['data'] : loader['response'];
-                resolve(texture);
-            };
-            var onError = function () {
-                var e = new RES.ResourceManagerError(1001, resource.url);
-                reject(e);
-            };
-            loader.addEventListener(egret.Event.COMPLETE, onSuccess, _this);
-            loader.addEventListener(egret.IOErrorEvent.IO_ERROR, onError, _this);
-        });
-    }
+    // function promisify(loader: egret.HttpRequest | egret.Sound | any, resource: RES.ResourceInfo): Promise<any> {
+    //     return new Promise((resolve, reject) => {
+    //         let onSuccess = () => {
+    //             let texture = loader['data'] ? loader['data'] : loader['response'];
+    //             resolve(texture);
+    //         }
+    //         let onError = () => {
+    //             let e = new RES.ResourceManagerError(1001, resource.url);
+    //             reject(e);
+    //         }
+    //         loader.addEventListener(egret.Event.COMPLETE, onSuccess, this);
+    //         loader.addEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
+    //     });
+    // }
     egret3d.BitmapDataProcessor = {
         onLoadStart: function (host, resource) {
             var _this = this;
@@ -23792,10 +23844,10 @@ var egret3d;
                 var mipmap = data.mipmap;
                 var wrap = data.wrap;
                 var _textureFormat = 6408 /* RGBA */;
-                if (format == "RGB") {
+                if (format === "RGB") {
                     _textureFormat = 6407 /* RGB */;
                 }
-                else if (format == "Gray") {
+                else if (format === "Gray") {
                     _textureFormat = 6409 /* Luminance */;
                 }
                 var _linear = true;
@@ -25894,7 +25946,6 @@ var egret3d;
                 }
             };
             WebGLRenderSystem.prototype.draw = function (drawCall, drawMaterial) {
-                var camera = egret3d.Camera.current;
                 if (drawCall.renderer && drawCall.renderer.gameObject._beforeRenderBehaviors.length > 0) {
                     var flag = false;
                     for (var _i = 0, _a = drawCall.renderer.gameObject._beforeRenderBehaviors; _i < _a.length; _i++) {
@@ -25905,8 +25956,9 @@ var egret3d;
                         return;
                     }
                 }
-                var material = drawMaterial || drawCall.material;
+                var camera = egret3d.Camera.current;
                 var context = camera.context;
+                var material = drawMaterial || drawCall.material;
                 var shaderContextDefine = context.updateDrawCall(drawCall);
                 //
                 var webgl = egret3d.WebGLCapabilities.webgl;
