@@ -108,7 +108,7 @@ namespace paper.editor {
 
                 Application.systemManager.register(GUISystem, SystemOrder.LaterUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
 
-                console.info("通过 H 键切换 Inspector 的显示与隐藏。");
+                console.info(`小提示：通过 H 键切换 Inspector 的显示与隐藏。`);
             }
         }
 

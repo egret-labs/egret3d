@@ -90,7 +90,6 @@ namespace egret3d.web {
         }
 
         public draw(drawCall: DrawCall, drawMaterial?: Material): void {
-            const camera = Camera.current;
             if (drawCall.renderer && drawCall.renderer.gameObject._beforeRenderBehaviors.length > 0) {
                 let flag = false;
 
@@ -103,8 +102,9 @@ namespace egret3d.web {
                 }
             }
 
-            const material = drawMaterial || drawCall.material;
+            const camera = Camera.current!;
             const context = camera.context;
+            const material = drawMaterial || drawCall.material;
             const shaderContextDefine = context.updateDrawCall(drawCall);
             //
             const webgl = WebGLCapabilities.webgl!;

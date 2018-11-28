@@ -306,8 +306,8 @@ namespace paper.editor {
                 }
             }
 
-            if (defaultPointer.isUp(egret3d.PointerButtonsType.LeftMouse, false) || defaultPointer.isUp(egret3d.PointerButtonsType.RightMouse, false) ) {
-                this.clearDefaultPointerDownPosition();
+            if (defaultPointer.isUp(egret3d.PointerButtonsType.LeftMouse, false) || defaultPointer.isUp(egret3d.PointerButtonsType.RightMouse, false)) {
+                this._clearDefaultPointerDownPosition();
             }
 
             {
@@ -418,11 +418,11 @@ namespace paper.editor {
             this._updateLights();
         }
 
-        private static readonly _defalutPosition = egret3d.Vector3.create(-1,-1,-1);
+        private static readonly _defalutPosition = egret3d.Vector3.create(-1, -1, -1);
 
-        private clearDefaultPointerDownPosition(){
+        private _clearDefaultPointerDownPosition() {
             const defaultPointer = egret3d.inputCollecter.defaultPointer;
-            defaultPointer.downPosition.copy( SceneSystem._defalutPosition);
+            defaultPointer.downPosition.copy(SceneSystem._defalutPosition);
         }
     }
 }

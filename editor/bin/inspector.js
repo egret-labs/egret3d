@@ -3009,8 +3009,8 @@ var paper;
                 this.cameraObject = egret3d.Camera.editor.gameObject;
                 // this.cameraObject = GameObject.create("EditorCamera", DefaultTags.EditorOnly, Application.sceneManager.editorScene);
                 var camera = this.cameraObject.getOrAddComponent(egret3d.Camera);
-                camera.near = 0.1;
-                camera.far = 500.0;
+                camera.near = 0.01;
+                camera.far = 10000;
                 camera.backgroundColor.set(0.13, 0.28, 0.51, 1.00);
                 this.cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
                 this.cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
@@ -3666,8 +3666,8 @@ var paper;
                 _this.distance = 30;
                 _this.minPanAngle = -Infinity;
                 _this.maxPanAngle = Infinity;
-                _this.minTileAngle = -90;
-                _this.maxTileAngle = 90;
+                _this.minTileAngle = -89.99; //因为lookAt方法默认以y轴（0，1，0）为基础叉乘z轴求出x轴方向，当值为90度时叉乘不成立
+                _this.maxTileAngle = 89.99;
                 _this.moveSpped = 0.001;
                 _this.scaleSpeed = 0.2;
                 _this._enableMove = true;
@@ -3713,7 +3713,9 @@ var paper;
                     event.preventDefault();
                 };
                 _this._mouseWheelHandler = function (event) {
-                    _this.distance = Math.max(_this.distance - (event.wheelDelta > 0 ? 2 : -2), 1);
+                    var wheelDelta = event.wheelDelta > 0 ? 0.1 : -0.1;
+                    wheelDelta *= _this.distance;
+                    _this.distance = Math.max(_this.distance - wheelDelta, 1);
                     event.preventDefault();
                 };
                 return _this;
@@ -3991,6 +3993,7 @@ var paper;
                 _this._plane = egret3d.Plane.create();
                 _this._quad = editor.EditorMeshHelper.createGameObject("Plane", egret3d.DefaultMeshes.QUAD, egret3d.DefaultMaterials.MESH_BASIC_DOUBLESIDE.clone().setBlend(1 /* Blend */, 3000 /* Transparent */).setOpacity(0.5));
                 _this._highlights = {};
+                _this._highlightvalue = {};
                 _this._dir = { "X": egret3d.Vector3.RIGHT, "Y": egret3d.Vector3.UP, "Z": egret3d.Vector3.FORWARD };
                 _this._mode = null;
                 _this._hovered = null;
@@ -4052,12 +4055,13 @@ var paper;
                     var pickY = editor.EditorMeshHelper.createGameObject("Y", egret3d.MeshBuilder.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickZ = editor.EditorMeshHelper.createGameObject("Z", egret3d.MeshBuilder.createTorus(1.0, 0.1, 4, 12, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickE = editor.EditorMeshHelper.createGameObject("E", egret3d.MeshBuilder.createTorus(1.25, 0.1, 4, 24, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickXYZE = editor.EditorMeshHelper.createGameObject("XYZE", egret3d.MeshBuilder.createSphere(0.7, 10, 8), egret3d.DefaultMaterials.MESH_BASIC.clone());
+                    var pickXYZE = editor.EditorMeshHelper.createGameObject("XYZE", egret3d.MeshBuilder.createSphere(1, 0, 0), egret3d.DefaultMaterials.MESH_BASIC.clone(), "" /* Untagged */);
                     this._highlights[pickX.uuid] = [axisX];
                     this._highlights[pickY.uuid] = [axisY];
                     this._highlights[pickZ.uuid] = [axisZ];
                     this._highlights[pickE.uuid] = [axisE];
-                    this._highlights[pickXYZE.uuid] = [axisXYZE];
+                    this._highlights[pickXYZE.uuid] = [axisXYZE, pickXYZE];
+                    this._highlightvalue[pickXYZE.uuid] = { high: 0.2, low: 0, default: 0 };
                     rotate.transform.setParent(this.gameObject.transform);
                     axisX.transform.setParent(rotate.transform);
                     axisY.transform.setParent(rotate.transform);
@@ -4068,7 +4072,7 @@ var paper;
                     pickY.transform.setParent(rotate.transform).gameObject.activeSelf = false;
                     pickZ.transform.setParent(rotate.transform).gameObject.activeSelf = false;
                     pickE.transform.setParent(rotate.transform).gameObject.activeSelf = false;
-                    pickXYZE.transform.setParent(rotate.transform).gameObject.activeSelf = false;
+                    pickXYZE.transform.setParent(rotate.transform).gameObject.activeSelf = true;
                     axisX.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.RED);
                     axisY.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.GREEN);
                     axisZ.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.BLUE);
@@ -4078,7 +4082,7 @@ var paper;
                     pickY.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.GREEN);
                     pickZ.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.BLUE);
                     pickE.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.YELLOW);
-                    pickXYZE.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */ - 1, 0.8).setColor(egret3d.Color.GRAY);
+                    pickXYZE.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */ - 1, 0).setColor(egret3d.Color.BLACK);
                 }
                 {
                     var scale = this.scale;
@@ -4484,10 +4488,14 @@ var paper;
                             }
                             var material = child.gameObject.renderer.material;
                             if (highlights.indexOf(child.gameObject) >= 0) {
-                                material.opacity = 1.0;
+                                this._highlightvalue[child.gameObject.uuid] ?
+                                    material.opacity = this._highlightvalue[child.gameObject.uuid].high :
+                                    material.opacity = 1.0;
                             }
                             else {
-                                material.opacity = 0.2;
+                                this._highlightvalue[child.gameObject.uuid] ?
+                                    material.opacity = this._highlightvalue[child.gameObject.uuid].low :
+                                    material.opacity = 0.3;
                             }
                         }
                     }
@@ -4497,7 +4505,9 @@ var paper;
                             if (!child.gameObject.renderer) {
                                 continue;
                             }
-                            child.gameObject.renderer.material.opacity = 0.8;
+                            this._highlightvalue[child.gameObject.uuid] ?
+                                child.gameObject.renderer.material.opacity = this._highlightvalue[child.gameObject.uuid].default :
+                                child.gameObject.renderer.material.opacity = 0.8;
                         }
                     }
                 },
@@ -5842,12 +5852,12 @@ var paper;
                 var valueEditType = editor.getEditType(target, propName);
                 if (valueEditType !== null) {
                     var newPropertyData = {
-                        propName: propName,
+                        propName: [propName],
                         copyValue: this.serializeProperty(propNewValue, valueEditType),
                         valueEditType: valueEditType
                     };
                     var prePropertyData = {
-                        propName: propName,
+                        propName: [propName],
                         copyValue: this.serializeProperty(propOldValue, valueEditType),
                         valueEditType: valueEditType
                     };
@@ -6499,50 +6509,21 @@ var paper;
             };
             EditorModel.prototype.modifyMaterialPropertyValues = function (target, valueList) {
                 return __awaiter(this, void 0, void 0, function () {
-                    var _i, valueList_1, propertyValue, propName, copyValue, uniformType, _glTFMaterial, gltfUnifromMap, uniformMap, key, value;
+                    var _i, valueList_1, propertyValue, propName, copyValue, extraData, _glTFMaterial, gltfUnifromMap, uniformMap, key, value;
                     return __generator(this, function (_a) {
                         for (_i = 0, valueList_1 = valueList; _i < valueList_1.length; _i++) {
                             propertyValue = valueList_1[_i];
-                            propName = propertyValue.propName, copyValue = propertyValue.copyValue, uniformType = propertyValue.uniformType;
-                            switch (uniformType) {
-                                case 35670 /* BOOL */:
-                                    target.setBoolean(propName, copyValue);
-                                    break;
-                                case 5124 /* INT */:
-                                    target.setInt(propName, copyValue);
-                                case 5126 /* FLOAT */:
-                                    target.setFloat(propName, copyValue);
-                                    break;
-                                case 35671 /* BOOL_VEC2 */:
-                                case 35667 /* INT_VEC2 */:
-                                case 35664 /* FLOAT_VEC2 */:
-                                    target.setVector2v(propName, copyValue);
-                                    break;
-                                case 35672 /* BOOL_VEC3 */:
-                                case 35668 /* INT_VEC3 */:
-                                case 35665 /* FLOAT_VEC3 */:
-                                    target.setVector3v(propName, copyValue);
-                                    break;
-                                case 35673 /* BOOL_VEC4 */:
-                                case 35669 /* INT_VEC4 */:
-                                case 35666 /* FLOAT_VEC4 */:
-                                    target.setVector4v(propName, copyValue);
-                                    break;
-                                case 35678 /* SAMPLER_2D */:
-                                    target.setTexture(propName, copyValue);
-                                    break;
-                                case 35674 /* FLOAT_MAT2 */:
-                                case 35675 /* FLOAT_MAT3 */:
-                                case 35676 /* FLOAT_MAT4 */:
-                                    target.setMatrixv(propName, copyValue);
-                                    break;
-                                default:
-                                    break;
+                            propName = propertyValue.propName, copyValue = propertyValue.copyValue, extraData = propertyValue.extraData;
+                            if (extraData.uniformType) {
+                                this.modifyMaterialUniformProperty(target, extraData.uniformType, propName, copyValue);
+                            }
+                            else if (extraData.gltfStateConfig) {
+                                this.modifyMaterialGltfStates(target, propName, copyValue);
                             }
                             if (propName === "renderQueue") {
                                 target.config.materials[0].extensions.paper.renderQueue = copyValue;
                             }
-                            this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: propName, propValue: copyValue }));
+                            this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: target, propName: [propName], propValue: copyValue }));
                         }
                         _glTFMaterial = target.config.materials[0];
                         gltfUnifromMap = _glTFMaterial.extensions.KHR_techniques_webgl.values;
@@ -6564,6 +6545,52 @@ var paper;
                         return [2 /*return*/];
                     });
                 });
+            };
+            EditorModel.prototype.modifyMaterialUniformProperty = function (target, uniformType, propName, copyValue) {
+                switch (uniformType) {
+                    case 35670 /* BOOL */:
+                        target.setBoolean(propName, copyValue);
+                        break;
+                    case 5124 /* INT */:
+                        target.setInt(propName, copyValue);
+                    case 5126 /* FLOAT */:
+                        target.setFloat(propName, copyValue);
+                        break;
+                    case 35671 /* BOOL_VEC2 */:
+                    case 35667 /* INT_VEC2 */:
+                    case 35664 /* FLOAT_VEC2 */:
+                        target.setVector2v(propName, copyValue);
+                        break;
+                    case 35672 /* BOOL_VEC3 */:
+                    case 35668 /* INT_VEC3 */:
+                    case 35665 /* FLOAT_VEC3 */:
+                        target.setVector3v(propName, copyValue);
+                        break;
+                    case 35673 /* BOOL_VEC4 */:
+                    case 35669 /* INT_VEC4 */:
+                    case 35666 /* FLOAT_VEC4 */:
+                        target.setVector4v(propName, copyValue);
+                        break;
+                    case 35678 /* SAMPLER_2D */:
+                        target.setTexture(propName, copyValue);
+                        break;
+                    case 35674 /* FLOAT_MAT2 */:
+                    case 35675 /* FLOAT_MAT3 */:
+                    case 35676 /* FLOAT_MAT4 */:
+                        target.setMatrixv(propName, copyValue);
+                        break;
+                    default:
+                        break;
+                }
+            };
+            EditorModel.prototype.modifyMaterialGltfStates = function (target, propName, copyValue) {
+                if (propName === "enable") {
+                    target.glTFTechnique.states.enable = copyValue;
+                }
+                else {
+                    target.glTFTechnique.states.functions[propName] = copyValue;
+                }
+                target.config.materials[0].extensions.paper.states = target.glTFTechnique.states;
             };
             return EditorModel;
         }(editor.EventDispatcher));
@@ -7413,7 +7440,7 @@ var paper;
                             comp.extras.linkedID = undefined;
                         }
                     }
-                    _this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: null });
+                    _this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: ['prefab'], propValue: null });
                 });
                 return true;
             };
@@ -7437,7 +7464,7 @@ var paper;
                                     }
                                 }
                             }
-                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: 'prefab', propValue: obj.extras.prefab });
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: obj, propName: ['prefab'], propValue: obj.extras.prefab });
                             break b;
                         }
                     }
@@ -8664,11 +8691,14 @@ var paper;
                             }
                         }
                         else if (!event_3.ctrlKey && !event_3.shiftKey) {
-                            if (this._modelComponent.selectedGameObject) {
+                            if (this._modelComponent.selectedGameObject && !defaultPointer.downPosition.equal(SceneSystem._defalutPosition)) {
                                 this._modelComponent.select(paper.Scene.activeScene);
                             }
                         }
                     }
+                }
+                if (defaultPointer.isUp(1 /* LeftMouse */, false) || defaultPointer.isUp(2 /* RightMouse */, false)) {
+                    this.clearDefaultPointerDownPosition();
                 }
                 {
                     var event_4 = defaultPointer.event;
@@ -8763,6 +8793,11 @@ var paper;
                 this._updateCameras();
                 this._updateLights();
             };
+            SceneSystem.prototype.clearDefaultPointerDownPosition = function () {
+                var defaultPointer = egret3d.inputCollecter.defaultPointer;
+                defaultPointer.downPosition.copy(SceneSystem._defalutPosition);
+            };
+            SceneSystem._defalutPosition = egret3d.Vector3.create(-1, -1, -1);
             return SceneSystem;
         }(paper.BaseSystem));
         editor.SceneSystem = SceneSystem;

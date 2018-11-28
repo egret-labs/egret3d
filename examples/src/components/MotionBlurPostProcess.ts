@@ -1,4 +1,5 @@
-namespace examples.postprocessing {
+namespace components {
+
     export class MotionBlurPostProcess extends egret3d.CameraPostprocessing {
         private _velocityFactor: number = 1.0;
         private _samples: number = 20;
@@ -11,24 +12,32 @@ namespace examples.postprocessing {
         private readonly _renderState: egret3d.WebGLRenderState = paper.GameObject.globalGameObject.getComponent(egret3d.WebGLRenderState)!;
 
         public initialize() {
+            super.initialize();
+
             this._resolution.set(egret3d.stage.viewport.w, egret3d.stage.viewport.h);
 
-            this._depathMaterial.setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.BACK);
+            this._depathMaterial.setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
             this._material.setDepth(true, true).setCullFace(false).setFloat("velocityFactor", this._velocityFactor);
         }
 
         public uninitialize() {
+            super.uninitialize();
+
             if (this._depthRenderTarget) {
                 this._depthRenderTarget.dispose();
             }
+
             if (this._depathMaterial) {
                 this._depathMaterial.dispose();
             }
+
             if (this._material) {
                 this._material.dispose();
             }
+
             this._resolution.release();
-            if(this._preMatrix){
+
+            if (this._preMatrix) {
                 this._preMatrix.release();
             }
         }
@@ -49,7 +58,7 @@ namespace examples.postprocessing {
             // const preMatrix = camera.transform.worldToLocalMatrix.clone().multiply(camera.projectionMatrix).release();
             // const currentMatrix = preMatrix.clone().inverse();
 
-            if(!this._preMatrix){
+            if (!this._preMatrix) {
                 this._preMatrix = camera.worldToClipMatrix.clone();
             }
 

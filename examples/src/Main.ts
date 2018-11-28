@@ -1,4 +1,4 @@
-declare class Examples {
+interface Example {
     start(): Promise<void>;
 }
 
@@ -69,7 +69,7 @@ function exampleStart() {
 
     createGUI(exampleString);
 
-    const exampleObj: Examples = new exampleClass();
+    const exampleObj: Example = new exampleClass();
     exampleObj.start();
 
     function createGUI(exampleString: string) {
@@ -129,7 +129,7 @@ function exampleStart() {
                 }
             }
         }
-        
+
         return appFile;
     }
 }

@@ -4,7 +4,7 @@ namespace paper {
      */
     export class RawScene extends BasePrefabAsset {
         /**
-         * @internal
+         * @private
          */
         public createInstance(keepUUID: boolean = false) {
             if (!this._raw) {

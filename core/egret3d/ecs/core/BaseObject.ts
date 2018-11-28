@@ -1,14 +1,12 @@
 namespace paper {
     let _hashCount: number = 1;
-
     /**
      * 生成 uuid 的方式。
-     * @internal
+     * @private
      */
     export let createUUID = () => {
         return (_hashCount++).toString();
     };
-
     /**
      * 可以被 paper.DisposeCollecter 收集，并在此帧末尾释放的基础对象。
      */
@@ -54,13 +52,12 @@ namespace paper {
         /**
          * 
          */
-        public onUpdate?(v: T): void;
+        public onUpdate?(object: T): void;
         /**
          * 在此帧末尾释放时调用。
          */
         public onClear?(): void;
     }
-
     /**
      * 基础对象。
      */
