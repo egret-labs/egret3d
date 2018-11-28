@@ -18,4 +18,4 @@ Egret3D 是白鹭引擎于2018年5月份推出的用于支持3D游戏开发的�
 
 路线图
 =================
-您可以在[这里](http://developer.egret.com/cn/docs/3d/roadmap)查看 Egret3D 的后续计划
+您可以在[这里](http://developer.egret.com/cn/docs/3d/tutorials/roadmap/README.html)查看 Egret3D 的后续计划
