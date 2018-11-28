@@ -8,13 +8,17 @@ namespace egret3d {
         private static _instances = [] as AnimationBinder[];
 
         public static create() {
+            let instance: AnimationBinder;
             if (this._instances.length > 0) {
-                const instance = this._instances.pop()!;
+                instance = this._instances.pop()!;
                 instance._released = false;
-                return instance;
+            }
+            else {
+                instance = new AnimationBinder();
+                instance.onClear();
             }
 
-            return new AnimationBinder().clear();
+            return instance;
         }
 
         public static onUpdateTranslation(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) {

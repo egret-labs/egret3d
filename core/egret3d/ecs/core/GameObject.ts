@@ -718,7 +718,7 @@ namespace paper {
          * @param methodName 
          * @param parameter
          */
-        public sendMessage(methodName: string, parameter?: any, requireReceiver: boolean = true) {
+        public sendMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
             for (const component of this._components) {
                 if (component && component.isActiveAndEnabled && component instanceof Behaviour) {
                     if (methodName in component) {
@@ -736,7 +736,7 @@ namespace paper {
          * @param methodName 
          * @param parameter 
          */
-        public sendMessageUpwards(methodName: string, parameter?: any, requireReceiver: boolean = true) {
+        public sendMessageUpwards<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
             this.sendMessage(methodName, parameter, requireReceiver);
             //
             const parent = this.transform.parent;
@@ -750,7 +750,7 @@ namespace paper {
          * @param methodName 
          * @param parameter 
          */
-        public broadcastMessage(methodName: string, parameter?: any, requireReceiver: boolean = true) {
+        public broadcastMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
             this.sendMessage(methodName, parameter, requireReceiver);
 
             for (const child of this.transform.children) {

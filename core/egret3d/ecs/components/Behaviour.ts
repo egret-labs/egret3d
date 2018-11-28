@@ -107,7 +107,7 @@ namespace paper {
         /**
          * 
          */
-        public onAnimationEvent?(type: string, animationState: egret3d.AnimationState, eventObject: any): void;
+        public onAnimationEvent?(animationEvent: egret3d.AnimationEvent): void;
         /**
          * 程序运行时每帧执行。
          * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）

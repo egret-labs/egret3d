@@ -6,6 +6,8 @@ namespace egret3d {
         protected readonly _interests = [
             { componentClass: Animation }
         ];
+
+        private readonly _events: any[] = [];
         private _animation: Animation | null = null;
         private _animationLayer: AnimationLayer | null = null;
 
@@ -91,8 +93,8 @@ namespace egret3d {
 
             // const isBlendDirty = this._fadeState !== 0 || this._subFadeState === 0;
             const prevPlayState = animationState._playState;
-            // const prevPlayTimes = this.currentPlayTimes;
-            // const prevTime = this._currentTime;
+            const prevPlayTimes = animationState.currentPlayTimes;
+            const prevTime = animationState._currentTime;
             const playTimes = animationState.playTimes;
             const duration = animationState.animationClip.duration;
             const totalTime = playTimes * duration;
@@ -143,14 +145,20 @@ namespace egret3d {
                 }
             }
 
-            if (prevPlayState !== animationState._playState && animationState._playState === 1) {
-                animation._dispatchEvent("complete", animationState); // TODO buffer event.
+            if (animationState.currentPlayTimes !== prevPlayTimes) {
+                this._events; // TODO buffer event.
 
                 // const animationNames = this._animationComponent._animationNames;
                 // if (animationNames.length > 0) {
                 //     const animationName = animationNames.shift();
                 //     this._animationComponent.play(animationName);
                 // }
+
+                animation.gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.LoopComplete, animationState), false);
+
+                if (animationState._playState === 1) {
+                    animation.gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.Complete, animationState), false);
+                }
             }
         }
 

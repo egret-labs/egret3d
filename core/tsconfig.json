@@ -125,6 +125,7 @@
         "egret3d/components/animation/AnimationState.ts",
         "egret3d/components/animation/AnimationBinder.ts",
         "egret3d/components/animation/AnimationChannel.ts",
+        "egret3d/components/animation/AnimationEvent.ts",
         "egret3d/components/animation/AnimationSystem.ts",
 
         "egret3d/components/particle/ParticleHelper.ts",
