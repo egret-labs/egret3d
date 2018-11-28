@@ -11031,9 +11031,9 @@ var egret3d;
             DefaultShaders.VERTEX_COLOR = this._createShader("builtin/vertcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_MAP" /* USE_MAP */, "USE_COLOR" /* USE_COLOR */]);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpMaterial.glTFTechnique.states);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, gltf.CullFace.BACK).setBlend(1 /* Blend */, 3000 /* Transparent */);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(1 /* Blend */, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT_COLOR = this._createShader("builtin/transparent_color.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, gltf.CullFace.BACK).setBlend(3 /* Additive */, 3000 /* Transparent */);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(3 /* Additive */, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT_ADDITIVE_COLOR = this._createShader("builtin/transparent_additive_color.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpMaterial.glTFTechnique.states);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", egret3d.ShaderLib.particle, 2000 /* Geometry */, helpMaterial.glTFTechnique.states, ["USE_COLOR" /* USE_COLOR */]);
@@ -13545,6 +13545,7 @@ var egret3d;
     }(paper.BaseComponent));
     egret3d.CameraPostprocessing = CameraPostprocessing;
     __reflect(CameraPostprocessing.prototype, "egret3d.CameraPostprocessing");
+    // TODO remove
     var MotionBlurEffect = (function (_super) {
         __extends(MotionBlurEffect, _super);
         function MotionBlurEffect() {
@@ -13556,6 +13557,7 @@ var egret3d;
             return _this;
         }
         MotionBlurEffect.prototype.initialize = function () {
+            _super.prototype.initialize.call(this);
             this._resolution.set(egret3d.stage.viewport.w, egret3d.stage.viewport.h);
             this._material = new egret3d.Material(new egret3d.Shader(egret3d.ShaderLib.motionBlur, "motionBlur"));
             this._material.setDepth(false, false);
@@ -13564,11 +13566,14 @@ var egret3d;
             this._material.setFloat("velocityFactor", this._velocityFactor);
         };
         MotionBlurEffect.prototype.uninitialize = function () {
+            _super.prototype.initialize.call(this);
             if (this._material) {
                 this._material.dispose();
             }
             this._resolution.release();
-            this._worldToClipMatrix.release();
+            if (this._worldToClipMatrix) {
+                this._worldToClipMatrix.release();
+            }
         };
         MotionBlurEffect.prototype.render = function (camera) {
             var context = camera.context;
@@ -24294,7 +24299,6 @@ var egret3d;
                 return num;
             };
             BinReader.prototype.readUint8Array = function (target, offset, length) {
-                if (target === void 0) { target = null; }
                 if (offset === void 0) { offset = 0; }
                 if (length === void 0) { length = -1; }
                 if (length < 0)
@@ -24316,7 +24320,6 @@ var egret3d;
                 return target;
             };
             BinReader.prototype.readUint16Array = function (target, offset, length) {
-                if (target === void 0) { target = null; }
                 if (offset === void 0) { offset = 0; }
                 if (length === void 0) { length = -1; }
                 if (length < 0)
@@ -24327,7 +24330,6 @@ var egret3d;
                 return target;
             };
             BinReader.prototype.readSingleArray = function (target, offset, length) {
-                if (target === void 0) { target = null; }
                 if (offset === void 0) { offset = 0; }
                 if (length === void 0) { length = -1; }
                 if (length < 0)
@@ -24357,7 +24359,6 @@ var egret3d;
                 return this.readUInt8();
             };
             BinReader.prototype.readBytes = function (target, offset, length) {
-                if (target === void 0) { target = null; }
                 if (offset === void 0) { offset = 0; }
                 if (length === void 0) { length = -1; }
                 return this.readUint8Array(target, offset, length);

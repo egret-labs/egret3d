@@ -9991,14 +9991,14 @@ declare namespace egret3d.io {
         readUInt16(): number;
         readInt32(): number;
         readUInt32(): number;
-        readUint8Array(target?: Uint8Array, offset?: number, length?: number): Uint8Array;
+        readUint8Array(target: Uint8Array, offset?: number, length?: number): Uint8Array;
         readUint8ArrayByOffset(target: Uint8Array, offset: number, length?: number): Uint8Array;
-        readUint16Array(target?: Uint16Array, offset?: number, length?: number): Uint16Array;
-        readSingleArray(target?: Float32Array, offset?: number, length?: number): Float32Array;
+        readUint16Array(target: Uint16Array, offset?: number, length?: number): Uint16Array;
+        readSingleArray(target: Float32Array, offset?: number, length?: number): Float32Array;
         position: number;
         readBoolean(): boolean;
         readByte(): number;
-        readBytes(target?: Uint8Array, offset?: number, length?: number): Uint8Array;
+        readBytes(target: Uint8Array, offset?: number, length?: number): Uint8Array;
         readUnsignedShort(): number;
         readUnsignedInt(): number;
         readFloat(): number;

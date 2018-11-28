@@ -12,9 +12,9 @@ namespace examples {
             const gameObject = paper.Prefab.create("Assets/C_xiaohuangren_D_01_ANIM.prefab.json")!;
             const animation = gameObject.getComponentInChildren(egret3d.Animation)!;
             animation.play("run01");
-            
+
             //
-            gameObject.addComponent(behaviors.AnimationController);
+            gameObject.addComponent(behaviors.AnimationPlayer);
             //
             egret3d.Camera.main.gameObject.addComponent(behaviors.RotateComponent);
         }

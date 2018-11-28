@@ -1,7 +1,7 @@
 namespace paper.editor {
     const containerHTML = `
-    <div class="egret-hierarchy" style="margin: auto;height: 100%;"></div>
-    <div class="egret-inspector" style="margin: auto;height: 100%;"></div>
+    <div class="egret-hierarchy" style="margin: auto;height: 100%;background: #000000;"></div>
+    <div class="egret-inspector" style="margin: auto;height: 100%;background: #000000;"></div>
 `;
     /**
      * @internal

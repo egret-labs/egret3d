@@ -299,7 +299,17 @@ namespace paper.editor {
                         break;
 
                     case paper.editor.EditType.LIST:
-                        gui.add(gui.instance, info.name, info.option!.listItems!).listen();
+                        let listItems = info.option!.listItems;
+                        if (listItems) {
+                            if (typeof listItems === "string") {
+                                listItems = gui.instance[listItems] as paper.editor.ListItem[];
+                            }
+                            else if (listItems instanceof Function) {
+                                listItems = listItems(gui.instance);
+                            }
+
+                            gui.add(gui.instance, info.name, listItems).listen();
+                        }
                         break;
 
                     case paper.editor.EditType.VECTOR2: {

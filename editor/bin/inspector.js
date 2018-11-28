@@ -4573,7 +4573,7 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
-        var containerHTML = "\n    <div class=\"egret-hierarchy\" style=\"margin: auto;height: 100%;\"></div>\n    <div class=\"egret-inspector\" style=\"margin: auto;height: 100%;\"></div>\n";
+        var containerHTML = "\n    <div class=\"egret-hierarchy\" style=\"margin: auto;height: 100%;background: #000000;\"></div>\n    <div class=\"egret-inspector\" style=\"margin: auto;height: 100%;background: #000000;\"></div>\n";
         /**
          * @internal
          */
@@ -4668,7 +4668,7 @@ var paper;
                         inspector_1[0].appendChild(guiComponent_1.inspector.domElement);
                     }
                     paper.Application.systemManager.register(editor.GUISystem, 6000 /* LaterUpdate */ + 1); // Make sure the GUISystem update after the SceneSystem.
-                    console.info("通过 H 键切换 Inspector 的显示与隐藏。");
+                    console.info("\u5C0F\u63D0\u793A\uFF1A\u901A\u8FC7 H \u952E\u5207\u6362 Inspector \u7684\u663E\u793A\u4E0E\u9690\u85CF\u3002");
                 }
             };
             EditorSystem.prototype.onUpdate = function () {
@@ -5005,7 +5005,16 @@ var paper;
                             gui.add(gui.instance, info.name).listen();
                             break;
                         case "LIST" /* LIST */:
-                            gui.add(gui.instance, info.name, info.option.listItems).listen();
+                            var listItems = info.option.listItems;
+                            if (listItems) {
+                                if (typeof listItems === "string") {
+                                    listItems = gui.instance[listItems];
+                                }
+                                else if (listItems instanceof Function) {
+                                    listItems = listItems(gui.instance);
+                                }
+                                gui.add(gui.instance, info.name, listItems).listen();
+                            }
                             break;
                         case "VECTOR2" /* VECTOR2 */: {
                             guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
@@ -8698,7 +8707,7 @@ var paper;
                     }
                 }
                 if (defaultPointer.isUp(1 /* LeftMouse */, false) || defaultPointer.isUp(2 /* RightMouse */, false)) {
-                    this.clearDefaultPointerDownPosition();
+                    this._clearDefaultPointerDownPosition();
                 }
                 {
                     var event_4 = defaultPointer.event;
@@ -8793,7 +8802,7 @@ var paper;
                 this._updateCameras();
                 this._updateLights();
             };
-            SceneSystem.prototype.clearDefaultPointerDownPosition = function () {
+            SceneSystem.prototype._clearDefaultPointerDownPosition = function () {
                 var defaultPointer = egret3d.inputCollecter.defaultPointer;
                 defaultPointer.downPosition.copy(SceneSystem._defalutPosition);
             };
