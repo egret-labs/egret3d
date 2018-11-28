@@ -9,7 +9,53 @@ namespace egret3d {
         caclByteLength(): number;
     }
 
+    export class GLTexture1 extends egret3d.Texture {
+
+        public webglTexture: WebGLTexture | null = null;
+        public uploadTexture(index: number) {
+            const webgl = WebGLCapabilities.webgl!;
+            if (!this.webglTexture) {
+                this.webglTexture = webgl.createTexture();
+
+                const image = this._image;
+                const sampler = this._sampler;
+                const paperExtension = this._gltfTexture!.extensions.paper!;
+
+                webgl.activeTexture(webgl.TEXTURE0 + index);
+                webgl.bindTexture(webgl.TEXTURE_2D, this.webglTexture);
+                webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, paperExtension.premultiplyAlpha ? 1 : 0);
+                webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, paperExtension.flipY ? 1 : 0);
+
+                const isPowerOfTwo = math.isPowerOfTwo(paperExtension.width!) && math.isPowerOfTwo(paperExtension.height!);
+                const minFilter = sampler.minFilter!;
+                const canGenerateMipmap = isPowerOfTwo && minFilter !== gltf.TextureMinFilter.NEAREST && minFilter !== gltf.TextureMinFilter.LINEAR;
+
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, sampler.magFilter!);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, sampler.minFilter!);
+
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, sampler.wrapS!);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, sampler.wrapT!);
+
+                if (ArrayBuffer.isView(image.uri)) {
+                    webgl.texImage2D(webgl.TEXTURE_2D, 0, paperExtension.format!, paperExtension.width!, paperExtension.height!, 0, paperExtension.format!, paperExtension.type!, image.uri);
+                }
+                else {
+                    webgl.texImage2D(webgl.TEXTURE_2D, 0, paperExtension.format!, paperExtension.format!, webgl.UNSIGNED_BYTE, image.uri as TexImageSource);
+                }
+
+                if (canGenerateMipmap) {
+                    webgl.generateMipmap(webgl.TEXTURE_2D);
+                }
+            }
+
+            this._dirty = false;
+        }
+    }
+
     export abstract class GLTexture extends egret3d.Texture implements ITexture {
+        public static create() {
+
+        }
         readonly texture: WebGLTexture;
         readonly width: number;
         readonly height: number;

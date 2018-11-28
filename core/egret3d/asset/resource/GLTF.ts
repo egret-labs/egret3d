@@ -23,10 +23,14 @@ namespace egret3d {
         extensions: {
             paper?: {
                 mipmap?: boolean;
+                flipY?: boolean;
+                premultiplyAlpha?: boolean;
                 format?: gltf.TextureFormat;
-                pixelSize?: number;
                 width?: number;
                 height?: number;
+                anisotropy?: number;
+                type?: gltf.TextureDataType;
+                unpackAlignment?: gltf.TextureAlignment;
             }
         };
     }
@@ -207,6 +211,14 @@ namespace egret3d {
                 primitives: [{ attributes: {} }],
                 extensions: { paper: {} },
             }];
+
+            return config;
+        }
+        public static createTextureConfig() {
+            const config = this._createConfig();
+            config.images = [];
+            config.samplers = [{ magFilter: gltf.TextureMagFilter.NEAREST, minFilter: gltf.TextureMinFilter.NEAREST, wrapS: gltf.TextureWrapS.REPEAT, wrapT: gltf.TextureWrapT.REPEAT }];
+            config.textures = [{ sampler: 0, source: 0 }];
 
             return config;
         }
@@ -662,6 +674,46 @@ declare namespace gltf {
         RGB = 6407,
         RGBA = 6408,
         Luminance = 6409,
+    }
+
+    export const enum TextureDataType {
+        UNSIGNED_BYTE = 5121,
+        UNSIGNED_SHORT_5_6_5 = 33635,
+        UNSIGNED_SHORT_4_4_4_4 = 32819,
+        UNSIGNED_SHORT_5_5_5_1 = 32820,
+    }
+
+    export const enum TextureMagFilter {
+        NEAREST = 9728,
+        LINEAR = 9729,
+    }
+
+    export const enum TextureMinFilter {
+        NEAREST = 9728,
+        LINEAR = 9729,
+        NEAREST_MIPMAP_NEAREST = 9984,
+        LINEAR_MIPMAP_NEAREST = 9985,
+        NEAREST_MIPMAP_LINEAR = 9986,
+        LINEAR_MIPMAP_LINEAR = 9987,
+    }
+
+    export const enum TextureWrapS {
+        CLAMP_TO_EDGE = 33071,
+        MIRRORED_REPEAT = 33648,
+        REPEAT = 10497,
+    }
+
+    export const enum TextureWrapT {
+        CLAMP_TO_EDGE = 33071,
+        MIRRORED_REPEAT = 33648,
+        REPEAT = 10497,
+    }
+
+    export const enum TextureAlignment {
+        One = 1,
+        Two = 2,
+        Four = 4,
+        Eight = 8,
     }
     /**
      * The shader stage.  All valid values correspond to WebGL enums.
@@ -1130,7 +1182,7 @@ declare namespace gltf {
         /**
          * The uri of the image.
          */
-        uri?: string;
+        uri?: string | ArrayBufferView | TexImageSource;
         /**
          * The image's MIME type.
          */

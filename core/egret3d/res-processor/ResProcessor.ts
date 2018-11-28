@@ -30,17 +30,17 @@ namespace egret3d {
 
             loader.load(resource.root + resource.url);
             return new Promise((resolve, reject) => {
-                let onSuccess = () => {
-                    let bitmapData = loader.data;
+                const onSuccess = () => {
+                    const bitmapData = loader.data;
                     loader.removeEventListener(egret.Event.COMPLETE, onSuccess, this);
                     loader.removeEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
                     resolve(bitmapData);
                 }
 
-                let onError = () => {
+                const onError = () => {
                     loader.removeEventListener(egret.Event.COMPLETE, onSuccess, this);
                     loader.removeEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
-                    let e = new RES.ResourceManagerError(1001, resource.url);
+                    const e = new RES.ResourceManagerError(1001, resource.url);
                     reject(e);
                 }
                 loader.addEventListener(egret.Event.COMPLETE, onSuccess, this);
@@ -57,8 +57,8 @@ namespace egret3d {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, 'json') as egret3d.GLTF;
 
-            if (result.extensions.KHR_techniques_webgl!.shaders && result.extensions.KHR_techniques_webgl!.shaders.length === 2) {
-                const shaders = result.extensions.KHR_techniques_webgl!.shaders;
+            const shaders = result.extensions.KHR_techniques_webgl!.shaders;
+            if (shaders && shaders.length === 2) {
                 for (const shader of shaders) {
                     const source = (RES.host.resourceConfig as any)["getResource"](shader.uri);
                     if (source) {
@@ -82,7 +82,7 @@ namespace egret3d {
             return glTF;
         },
         onRemoveStart(host, resource) {
-            let data = host.get(resource);
+            const data = host.get(resource);
             data.dispose();
             return Promise.resolve();
         }
@@ -128,7 +128,7 @@ namespace egret3d {
                 if (data["premultiply"] !== undefined) {
                     _premultiply = data["premultiply"] > 0;
                 }
-
+                
                 const imgResource = (RES.host.resourceConfig as any)["getResource"](name);
                 if (imgResource) {
                     return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
