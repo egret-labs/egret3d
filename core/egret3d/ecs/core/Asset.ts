@@ -58,9 +58,14 @@ namespace paper {
          */
         public abstract caclByteLength(): number;
         /**
+         * 该资源内部初始化。
+         */
+        public initialize(): void {
+        }
+        /**
          * 释放资源。
          */
-        public dispose(disposeChildren?: boolean) {
+        public dispose(disposeChildren?: boolean): boolean {
             if (this._isBuiltin) {
                 console.warn("Cannot dispose builtin asset.", this.name);
                 return false;

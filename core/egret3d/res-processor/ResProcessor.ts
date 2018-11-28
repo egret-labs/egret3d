@@ -1,6 +1,7 @@
 namespace egret3d {
     /**
      * TODO
+     * @internal
      */
     export let resRoot: string = "";
 
@@ -18,9 +19,8 @@ namespace egret3d {
             }
             loader.addEventListener(egret.Event.COMPLETE, onSuccess, this);
             loader.addEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
-        })
+        });
     }
-
 
     export const BitmapDataProcessor: RES.processor.Processor = {
 
@@ -109,7 +109,7 @@ namespace egret3d {
                 if (format == "RGB") {
                     _textureFormat = gltf.TextureFormat.RGB;
                 } else if (format == "Gray") {
-                    _textureFormat = gltf.TextureFormat.LUMINANCE;
+                    _textureFormat = gltf.TextureFormat.Luminance;
                 }
 
                 let _linear: boolean = true;
@@ -221,20 +221,9 @@ namespace egret3d {
     export const MeshProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
             return host.load(resource, "bin").then((result) => {
-                const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
-                let glb: egret3d.GLTFAsset;
-
-                if (parseResult.config.meshes) {
-                    glb = new egret3d.Mesh(parseResult.config, parseResult.buffers, resource.name);
-                }
-                else {
-                    glb = new egret3d.GLTFAsset();
-                    glb.name = resource.name;
-                    glb.config = parseResult.config;
-                    for (const b of parseResult.buffers) {
-                        glb.buffers.push(b);
-                    }
-                }
+                const parseResult = egret3d.GLTFAsset.parseFromBinary(result instanceof ArrayBuffer ? new Uint32Array(result) : result)!;
+                const glb = new Mesh(parseResult.config, parseResult.buffers, resource.name);
+                glb.initialize();
 
                 paper.Asset.register(glb);
                 return glb;
@@ -250,8 +239,8 @@ namespace egret3d {
     export const AnimationProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
             return host.load(resource, "bin").then((result) => {
-                const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
-                const animation: egret3d.GLTFAsset = new egret3d.GLTFAsset();
+                const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result))!;
+                const animation = new egret3d.AnimationAsset();
                 animation.name = resource.name;
                 animation.config = parseResult.config;
 

@@ -190,10 +190,6 @@ namespace egret3d {
                 for (const child of this._children) {
                     child._dirtify(false, dirty);
                 }
-
-                if (this.gameObject.renderer) { // TODO
-                    this.gameObject.renderer._boundingSphereDirty = true;
-                }
             }
 
             const observers = this._observers;
@@ -718,15 +714,16 @@ namespace egret3d {
          */
         public setLocalScale(x: number, y?: number, z?: number): this;
         public setLocalScale(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
+            const EPSILON = Const.EPSILON;
             if (p1.hasOwnProperty("x")) {
-                this._localScale.x = (p1 as Readonly<IVector3>).x;
-                this._localScale.y = (p1 as Readonly<IVector3>).y;
-                this._localScale.z = (p1 as Readonly<IVector3>).z;
+                this._localScale.x = (p1 as Readonly<IVector3>).x || EPSILON;
+                this._localScale.y = (p1 as Readonly<IVector3>).y || EPSILON;
+                this._localScale.z = (p1 as Readonly<IVector3>).z || EPSILON;
             }
             else {
-                this._localScale.x = p1 as number;
-                this._localScale.y = p2 !== undefined ? p2 : p1 as number;
-                this._localScale.z = p3 !== undefined ? p3 : p1 as number;
+                this._localScale.x = (p1 as number) || EPSILON;
+                this._localScale.y = (p2 !== undefined ? p2 : p1 as number) || EPSILON;
+                this._localScale.z = (p3 !== undefined ? p3 : p1 as number) || EPSILON;
             }
 
             this._dirtify(true, TransformDirty.Scale);
@@ -741,9 +738,10 @@ namespace egret3d {
             return this._localScale;
         }
         public set localScale(value: Readonly<Vector3>) {
-            this._localScale.x = value.x;
-            this._localScale.y = value.y;
-            this._localScale.z = value.z;
+            const EPSILON = Const.EPSILON;
+            this._localScale.x = value.x || EPSILON;
+            this._localScale.y = value.y || EPSILON;
+            this._localScale.z = value.z || EPSILON;
 
             this._dirtify(true, TransformDirty.Scale);
         }

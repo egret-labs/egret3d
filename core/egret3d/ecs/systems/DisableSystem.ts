@@ -21,6 +21,10 @@ namespace paper {
             }
 
             component.onDisable && component.onDisable();
+
+            if (disposeCollecter.components.indexOf(component) >= 0) { // TODO onDestroy 如果不是 enabled 就不派发
+                component.onDestroy && component.onDestroy();
+            }
         }
 
         public onUpdate() {
@@ -38,10 +42,7 @@ namespace paper {
 
             for (const instance of this._disposeCollecter.releases) {
                 const instances = (instance.constructor as any)._instances as BaseRelease<any>[]; // TODO
-                if (instance.onClear) {
-                    instance.onClear();
-                }
-                
+                instance.onClear && instance.onClear();
                 instances.push(instance);
             }
 

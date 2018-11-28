@@ -7,10 +7,10 @@ namespace egret3d.particle {
             {
                 componentClass: ParticleComponent,
                 listeners: [
-                    { type: onStartSize3DChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, onStartSize3DChanged); } },
-                    { type: onStartRotation3DChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, onStartRotation3DChanged); } },
-                    { type: onSimulationSpaceChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, onSimulationSpaceChanged); } },
-                    { type: onScaleModeChanged, listener: (comp: ParticleComponent) => { this._onMainUpdate(comp, onScaleModeChanged); } },
+                    { type: onStartSize3DChanged, listener: (comp: paper.BaseComponent) => { this._onMainUpdate(comp as ParticleComponent, onStartSize3DChanged); } },
+                    { type: onStartRotation3DChanged, listener: (comp: paper.BaseComponent) => { this._onMainUpdate(comp as ParticleComponent, onStartRotation3DChanged); } },
+                    { type: onSimulationSpaceChanged, listener: (comp: paper.BaseComponent) => { this._onMainUpdate(comp as ParticleComponent, onSimulationSpaceChanged); } },
+                    { type: onScaleModeChanged, listener: (comp: paper.BaseComponent) => { this._onMainUpdate(comp as ParticleComponent, onScaleModeChanged); } },
                     { type: onVelocityChanged, listener: this._onVelocityOverLifetime.bind(this) },
                     { type: onColorChanged, listener: this._onColorOverLifetime.bind(this) },
                     { type: onSizeChanged, listener: this._onSizeOverLifetime.bind(this) },
@@ -21,11 +21,11 @@ namespace egret3d.particle {
             {
                 componentClass: ParticleRenderer,
                 listeners: [
-                    { type: ParticleRenderer.onMeshChanged, listener: (comp: ParticleRenderer) => { this._updateDrawCalls(comp.gameObject); } },
-                    { type: ParticleRenderer.onMaterialsChanged, listener: (comp: ParticleRenderer) => { this._updateDrawCalls(comp.gameObject); } },
+                    { type: ParticleRenderer.onMeshChanged, listener: (comp: paper.BaseComponent) => { this._updateDrawCalls(comp.gameObject); } },
+                    { type: ParticleRenderer.onMaterialsChanged, listener: (comp: paper.BaseComponent) => { this._updateDrawCalls(comp.gameObject); } },
                     // { type: ParticleRendererEventType.LengthScaleChanged, listener: (comp: ParticleRenderer) => { this._onRenderUpdate(comp, ParticleRendererEventType.LengthScaleChanged); } },
                     // { type: ParticleRendererEventType.VelocityScaleChanged, listener: (comp: ParticleRenderer) => { this._onRenderUpdate(comp, ParticleRendererEventType.VelocityScaleChanged); } },
-                    { type: ParticleRenderer.onRenderModeChanged, listener: (comp: ParticleRenderer) => { this._onRenderUpdate(comp, ParticleRenderer.onRenderModeChanged); } },
+                    { type: ParticleRenderer.onRenderModeChanged, listener: (comp: paper.BaseComponent) => { this._onRenderUpdate(comp as ParticleRenderer, ParticleRenderer.onRenderModeChanged); } },
                 ]
             }
         ];

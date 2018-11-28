@@ -122,7 +122,7 @@ namespace egret3d {
      */
     function _combineInstance(combineInstance: CombineInstance): void {
         const combineMesh = _combineMesh(combineInstance);
-        const combineRoot = combineInstance.root;
+        const combineRoot = combineInstance.root!;
         //把合成好的放入root中，重新绘制
         const meshFilter = combineRoot.getComponent(MeshFilter)!;
         meshFilter.mesh = combineMesh;
@@ -135,10 +135,10 @@ namespace egret3d {
      */
     function _combineMesh(combineInstance: CombineInstance): Mesh {
         //
-        helpInverseMatrix.copy(combineInstance.root.transform.worldToLocalMatrix);
+        helpInverseMatrix.copy(combineInstance.root!.transform.worldToLocalMatrix);
 
         const meshAttribute = combineInstance.meshAttribute;
-        const lightmapScaleOffset = combineInstance.root.renderer.lightmapScaleOffset;
+        const lightmapScaleOffset = (combineInstance.root!.renderer as MeshRenderer).lightmapScaleOffset;
         const newAttribute: gltf.MeshAttributeType[] = [];
         const tempIndexBuffers: number[][] = [];
         const tempVertexBuffers: { [key: string]: number[] } = {};

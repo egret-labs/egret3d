@@ -124,9 +124,14 @@ namespace egret3d {
 
             if (raycastInfo) {
                 const localToWorldMatrix = transform.localToWorldMatrix;
-                raycastInfo.position.set(p1x + min * dx, p1y + min * dy, p1z + min * dz).add(this.center);
-                raycastInfo.position.applyMatrix(localToWorldMatrix);
-                raycastInfo.distance = ray.origin.getDistance(raycastInfo.position);
+                raycastInfo.distance = ray.origin.getDistance(
+                    raycastInfo.position
+                        .set(p1x + min * dx, p1y + min * dy, p1z + min * dz)
+                        .add(this.center)
+                        .applyMatrix(localToWorldMatrix)
+                );
+                raycastInfo.transform = transform;
+                raycastInfo.collider = this;
 
                 const normal = raycastInfo.normal;
                 if (normal) {

@@ -241,10 +241,10 @@ namespace egret3d {
                 p1 = (p1 as Readonly<IVector3>).x;
             }
 
-            const sinPhiRadius = Math.sin(p2) * (p1 as number);
-            this.x = sinPhiRadius * Math.sin(p3);
-            this.y = Math.cos(p2) * (p1 as number);
-            this.z = sinPhiRadius * Math.cos(p3);
+            const sinPhiRadius = Math.sin(<number>p2) * (p1 as number);
+            this.x = sinPhiRadius * Math.sin(<number>p3);
+            this.y = Math.cos(<number>p2) * (p1 as number);
+            this.z = sinPhiRadius * Math.cos(<number>p3);
 
             return this;
         }
@@ -603,7 +603,7 @@ namespace egret3d {
                     p3 = p1;
                     p1 = this;
                 }
-                else { 
+                else {
                     const temp = p1;
                     p1 = p2;
                     p2 = p3;
@@ -789,18 +789,8 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public static normalize(v: IVector3) {
-            let num: number = Vector3.getLength(v);
-            if (num > Number.MIN_VALUE) {
-                v.x = v.x / num;
-                v.y = v.y / num;
-                v.z = v.z / num;
-            } else {
-                v.x = 1.0;
-                v.y = 0.0;
-                v.z = 0.0;
-            }
-            return v;
+        public static normalize(v: Vector3) {
+            return v.normalize();
         }
         /**
          * @deprecated

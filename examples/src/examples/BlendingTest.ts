@@ -6,11 +6,11 @@ namespace examples {
             await RES.loadConfig("default.res.json", "resource/");
 
             const textures = [
-                await RES.getResAsync("UV_Grid_Sm.jpg"),
-                await RES.getResAsync("sprite0.jpg"),
-                await RES.getResAsync("sprite0.png"),
-                await RES.getResAsync("lensflare0.png"),
-                await RES.getResAsync("lensflare0_alpha.png"),
+                await RES.getResAsync("textures/UV_Grid_Sm.jpg"),
+                await RES.getResAsync("textures/sprite0.jpg"),
+                await RES.getResAsync("textures/sprite0.png"),
+                await RES.getResAsync("textures/lensflare/lensflare0.png"),
+                await RES.getResAsync("textures/lensflare/lensflare0_alpha.png"),
             ] as egret3d.Texture[];
 
             // Create camera.

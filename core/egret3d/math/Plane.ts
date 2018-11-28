@@ -36,12 +36,12 @@ namespace egret3d {
         }
 
         public serialize() {
-            return [this.normal.x, this.normal.y, this.normal.z, this.constant];
+            return this.toArray();
         }
 
         public deserialize(value: Readonly<[number, number, number, number]>) {
-            this.constant = value[3];
             this.normal.fromArray(value);
+            this.constant = value[3];
 
             return this;
         }
@@ -57,6 +57,13 @@ namespace egret3d {
         public set(normal: Readonly<IVector3>, constant: number) {
             this.constant = constant;
             this.normal.copy(normal);
+
+            return this;
+        }
+
+        public fromArray(array: Readonly<ArrayLike<number>>, offset: uint = 0) {
+            this.normal.fromArray(array, offset);
+            this.constant = array[offset + 3];
 
             return this;
         }
@@ -80,8 +87,8 @@ namespace egret3d {
                 input = this;
             }
 
-            const inverseNormalLength = input.normal.length;
-            this.constant = input.constant * (1.0 / inverseNormalLength);
+            const inverseNormalLength = 1.0 / input.normal.length;
+            this.constant = input.constant * inverseNormalLength;
             this.normal.multiplyScalar(inverseNormalLength, input.normal);
 
             return this;
@@ -110,8 +117,8 @@ namespace egret3d {
             return this;
         }
 
-        public getDistance(value: Readonly<IVector3>) {
-            return this.normal.dot(value) + this.constant;
+        public getDistance(point: Readonly<IVector3>) {
+            return this.normal.dot(point) + this.constant;
         }
 
         public getProjectionPoint(point: Readonly<IVector3>, output?: Vector3) {
@@ -148,6 +155,17 @@ namespace egret3d {
             }
 
             return false;
+        }
+
+        public toArray(array?: number[] | Float32Array, offset: number = 0) {
+            if (!array) {
+                array = [];
+            }
+
+            this.normal.toArray(array, offset);
+            array[offset + 3] = this.constant;
+
+            return array;
         }
     }
     /**

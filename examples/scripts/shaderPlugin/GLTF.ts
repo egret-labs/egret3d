@@ -1095,7 +1095,7 @@ export interface Attribute {
     extras?: any;
     [k: string]: any;
 }
-export type UniformValue = any;
+export type UniformValue = number[] | number | string;
 /**
  * A uniform input to a technique, and an optional semantic and value.
  */

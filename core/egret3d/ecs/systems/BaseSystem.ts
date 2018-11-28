@@ -35,7 +35,7 @@ namespace paper {
         /**
          * 
          */
-        protected readonly _interests: ReadonlyArray<InterestConfig> | ReadonlyArray<ReadonlyArray<InterestConfig>> = [];
+        protected readonly _interests: ReadonlyArray<InterestConfig | ReadonlyArray<InterestConfig>> = [];
         /**
          * 
          */

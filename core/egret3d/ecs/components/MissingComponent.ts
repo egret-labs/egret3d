@@ -6,12 +6,13 @@ namespace paper {
         /**
          * 丢失的组件类名
          */
-        @editor.property(editor.EditType.TEXT,{readonly:true})
-        public get missingClass():string{
-            if(this.missingObject){
+        @editor.property(editor.EditType.TEXT, { readonly: true })
+        public get missingClass(): string {
+            if (this.missingObject) {
                 return this.missingObject.class;
             }
-            return ''
+
+            return '';
         }
         /**
          * 已丢失或不支持的组件数据。

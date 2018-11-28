@@ -2,6 +2,23 @@ namespace egret3d {
     /**
      * 
      */
+    export interface GLTF extends gltf.GLTF {
+        version: string;
+        extensions: {
+            KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
+            paper?: {
+                animationControllers?: {
+                    parameters: AnimationParameter[];
+                    layers: AnimationLayer[];
+                }[];
+            };
+        };
+        extensionsUsed: string[];
+        extensionsRequired: string[];
+    }
+    /**
+     * 
+     */
     export interface GLTFTexture extends gltf.Texture {
         extensions: {
             paper?: {
@@ -29,20 +46,6 @@ namespace egret3d {
     /**
      * 
      */
-    export interface GLTF extends gltf.GLTF {
-        version: string;
-        extensions: {
-            KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
-            paper?: {
-                shaders?: gltf.Shader[], // TODO
-            };
-        };
-        extensionsUsed: string[];
-        extensionsRequired: string[];
-    }
-    /**
-     * 
-     */
     export interface GLTFAnimation extends gltf.Animation {
         extensions: {
             paper: {
@@ -54,16 +57,6 @@ namespace egret3d {
                  * 动画帧数。
                  */
                 frameCount: number;
-                /**
-                 * 骨骼名称列表。
-                 */
-                joints: string[];
-                /**
-                 * 动画重定向。
-                 */
-                retarget?: {
-                    joints: string[];
-                };
                 /**
                  * 动画剪辑列表。
                  */
@@ -91,16 +84,18 @@ namespace egret3d {
          * 持续时间。（以秒为单位）
          */
         duration: number;
-        /**
-         * 遮罩名称列表。
-         */
-        mask: number[];
-        /**
-         * 事件列表。
-         */
-        events: GLTFFrameEvent[];
+        // /**
+        //  * 遮罩名称列表。
+        //  */
+        // mask: number[];
+        // /**
+        //  * 事件列表。
+        //  */
+        // events: GLTFFrameEvent[];
     }
-
+    /**
+     * 
+     */
     export interface GLTFAnimationChannel extends gltf.AnimationChannel {
         extensions?: {
             paper: {
@@ -109,39 +104,36 @@ namespace egret3d {
             }
         };
     }
-    /**
-     * 帧事件反序列化。
-     */
-    export interface GLTFFrameEvent {
-        /**
-         * 事件名称。
-         */
-        name: string;
-        /**
-         * 事件位置。（%）
-         */
-        position: number;
-        /**
-         * 事件 int 变量。
-         */
-        intVariable: number;
-        /**
-         * 事件 float 变量。
-         */
-        floatVariable: number;
-        /**
-         * 事件 string 变量。
-         */
-        stringVariable: string;
-    }
+    // /**
+    //  * 帧事件反序列化。
+    //  */
+    // export interface GLTFFrameEvent {
+    //     /**
+    //      * 事件名称。
+    //      */
+    //     name: string;
+    //     /**
+    //      * 事件位置。（%）
+    //      */
+    //     position: number;
+    //     /**
+    //      * 事件 int 变量。
+    //      */
+    //     intVariable: number;
+    //     /**
+    //      * 事件 float 变量。
+    //      */
+    //     floatVariable: number;
+    //     /**
+    //      * 事件 string 变量。
+    //      */
+    //     stringVariable: string;
+    // }
     /**
      * glTF 资源。
      */
     export class GLTFAsset extends paper.Asset {
-        /**
-         * 
-         */
-        private static _createConfig() {
+        protected static _createConfig() {
             const config = {
                 version: "4",
                 asset: {
@@ -402,6 +394,10 @@ namespace egret3d {
                     throw new Error();
             }
         }
+
+        public createAnimationController() {
+
+        }
         /**
          * 
          */
@@ -481,13 +477,13 @@ namespace egret3d {
         /**
          * 通过 Accessor 获取指定 BufferLength。
          */
-        public getBufferLength(accessor: gltf.Accessor) {
+        public getBufferLength(accessor: gltf.Accessor): uint {
             return this.getAccessorTypeCount(accessor.type) * this.getComponentTypeCount(accessor.componentType) * accessor.count;
         }
         /**
          * 通过 Accessor 获取指定 BufferOffset。
          */
-        public getBufferOffset(accessor: gltf.Accessor) {
+        public getBufferOffset(accessor: gltf.Accessor): uint {
             const bufferView = this.getBufferView(accessor);
             // const buffer = this.buffers[bufferView.buffer];
 
@@ -496,7 +492,7 @@ namespace egret3d {
         /**
          * 通过 Accessor 获取指定 Buffer。
          */
-        public getBuffer(accessor: gltf.Accessor) {
+        public getBuffer(accessor: gltf.Accessor): Uint32Array {
             const bufferView = this.getBufferView(accessor);
             // this.config.buffers[bufferView.buffer];
             return this.buffers[bufferView.buffer];
@@ -504,57 +500,97 @@ namespace egret3d {
         /**
          * 通过 Accessor 获取指定 BufferView。
          */
-        public getBufferView(accessor: gltf.Accessor) {
+        public getBufferView(accessor: gltf.Accessor): gltf.BufferView {
             return this.config.bufferViews![accessor.bufferView || 0];
         }
         /**
          * 通过 Accessor 索引，获取指定 Accessor。
          */
-        public getAccessor(index: gltf.GLTFIndex) {
+        public getAccessor(index: gltf.GLTFIndex): gltf.Accessor {
             return this.config.accessors![index];
         }
         /**
          * 获取节点。
          */
-        public getNode(index: gltf.GLTFIndex) {
+        public getNode(index: gltf.GLTFIndex): gltf.Node {
             return this.config.nodes![index];
-        }
-        /*
-         * 获取动画剪辑。
-         */
-        public getAnimationClip(name: string) {
-            if (
-                !this.config.animations ||
-                this.config.animations.length === 0
-
-            ) { // TODO 动画数据暂不合并。
-                return null;
-            }
-
-            const animation = this.config.animations[0] as GLTFAnimation;
-            if (animation.extensions.paper.clips.length === 0) {
-                return null;
-            }
-
-            if (!name) {
-                return animation.extensions.paper.clips[0];
-            }
-
-            for (const animation of this.config.animations) {
-                for (const animationClip of animation.extensions.paper.clips) {
-                    if (animationClip.name === name) {
-                        return animationClip;
-                    }
-                }
-            }
-
-            return null;
         }
     }
 }
-/**
- * 
- */
+
+// For keep const enum.
+namespace gltf {
+    /**
+     * 绘制缓存掩码。
+     */
+    export const enum BufferMask {
+        None = 0,
+        Depth = 256,
+        Stencil = 1024,
+        Color = 16384,
+
+        DepthAndStencil = Depth | Stencil,
+        DepthAndColor = Depth | Color,
+        StencilAndColor = Stencil | Color,
+        All = Depth | Stencil | Color,
+    }
+
+    export const enum BlendMode {
+        None = 0,
+        Blend = 1,
+        Blend_PreMultiply = 2,
+        Additive = 3,
+        Additive_PreMultiply = 4,
+        Subtractive = 5,
+        Subtractive_PreMultiply = 6,
+        Multiply = 7,
+        Multiply_PreMultiply = 8,
+        /**
+         * @deprecated
+         */
+        Add = 3,
+        /**
+         * @deprecated
+         */
+        Add_PreMultiply = 4,
+    }
+
+    export const enum BlendEquation {
+        Add = 32774,
+        Subtract = 32778,
+        ReverseSubtract = 32779,
+    }
+
+    export const enum BlendFactor {
+        ZERO = 0,
+        ONE = 1,
+        SRC_COLOR = 768,
+        ONE_MINUS_SRC_COLOR = 769,
+        DST_COLOR = 774,
+        ONE_MINUS_DST_COLOR = 775,
+        SRC_ALPHA = 770,
+        ONE_MINUS_SRC_ALPHA = 771,
+        DST_ALPHA = 772,
+        ONE_MINUS_DST_ALPHA = 773,
+        CONSTANT_COLOR = 32769,
+        ONE_MINUS_CONSTANT_COLOR = 32770,
+        CONSTANT_ALPHA = 32771,
+        ONE_MINUS_CONSTANT_ALPHA = 32772,
+        SRC_ALPHA_SATURATE = 776,
+    }
+
+    export const enum CullFace {
+        Front = 1028,
+        Back = 1029,
+        FrontAndBack = 1032,
+    }
+
+    export const enum FrontFace {
+        CW = 2304,
+        CCW = 2305,
+    }
+}
+
 declare namespace gltf {
     /**
      * glTF index.
@@ -625,14 +661,14 @@ declare namespace gltf {
     export const enum TextureFormat {
         RGB = 6407,
         RGBA = 6408,
-        LUMINANCE = 6409,
+        Luminance = 6409,
     }
     /**
      * The shader stage.  All valid values correspond to WebGL enums.
      */
     export const enum ShaderStage {
-        FRAGMENT_SHADER = 35632,
-        VERTEX_SHADER = 35633,
+        Fragment = 35632,
+        Vertex = 35633,
     }
 
     export const enum EnableState {
@@ -642,67 +678,6 @@ declare namespace gltf {
         STENCIL_TEST = 2960,
         POLYGON_OFFSET_FILL = 32823,
         SAMPLE_ALPHA_TO_COVERAGE = 32926,
-    }
-
-    export const enum BufferBit {
-        DEPTH_BUFFER_BIT = 256,
-        STENCIL_BUFFER_BIT = 1024,
-        COLOR_BUFFER_BIT = 16384,
-    }
-
-    export const enum BlendMode {
-        None = 0,
-        Blend = 1,
-        Blend_PreMultiply = 2,
-        Additive = 3,
-        Additive_PreMultiply = 4,
-        Subtractive = 5,
-        Subtractive_PreMultiply = 6,
-        Multiply = 7,
-        Multiply_PreMultiply = 8,
-        /**
-         * @deprecated
-         */
-        Add = 3,
-        /**
-         * @deprecated
-         */
-        Add_PreMultiply = 4,
-    }
-
-    export const enum BlendEquation {
-        FUNC_ADD = 32774,
-        FUNC_SUBTRACT = 32778,
-        FUNC_REVERSE_SUBTRACT = 32779,
-    }
-
-    export const enum BlendFactor {
-        ZERO = 0,
-        ONE = 1,
-        SRC_COLOR = 768,
-        ONE_MINUS_SRC_COLOR = 769,
-        DST_COLOR = 774,
-        ONE_MINUS_DST_COLOR = 775,
-        SRC_ALPHA = 770,
-        ONE_MINUS_SRC_ALPHA = 771,
-        DST_ALPHA = 772,
-        ONE_MINUS_DST_ALPHA = 773,
-        CONSTANT_COLOR = 32769,
-        ONE_MINUS_CONSTANT_COLOR = 32770,
-        CONSTANT_ALPHA = 32771,
-        ONE_MINUS_CONSTANT_ALPHA = 32772,
-        SRC_ALPHA_SATURATE = 776,
-    }
-
-    export const enum CullFace {
-        FRONT = 1028,
-        BACK = 1029,
-        FRONT_AND_BACK = 1032,
-    }
-
-    export const enum FrontFace {
-        CW = 2304,
-        CCW = 2305,
     }
 
     export const enum DepthFunc {

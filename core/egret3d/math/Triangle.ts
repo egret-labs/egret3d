@@ -6,6 +6,9 @@ namespace egret3d {
         private static readonly _instances: Triangle[] = [];
         /**
          * 创建一个三角形实例。
+         * -   a
+         * -  /·\
+         * - b - c
          * @param a 点 A。
          * @param b 点 B。
          * @param c 点 C。
@@ -21,15 +24,17 @@ namespace egret3d {
         }
         /**
          * 通过三个点确定一个三角形，获取该三角形的法线。
+         * -   a
+         * -  /·\
+         * - b - c
          * @param a 点 A。
          * @param b 点 B。
          * @param c 点 C。
          * @param out 法线结果。
          */
         public static getNormal(a: Readonly<IVector3>, b: Readonly<IVector3>, c: Readonly<IVector3>, out: Vector3) {
-            // out.subtract(c, b); // Right-hand coordinates system.
-            out.subtract(b, c); // Left-hand coordinates system.
-            out.cross(helpVector3A.subtract(a, b));
+            out.subtract(c, a);
+            out.cross(helpVector3A.subtract(b, a));
 
             const squaredLength = out.squaredLength;
             if (squaredLength > 0.0) {
@@ -86,19 +91,14 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(array: Readonly<ArrayLike<number>>, offsetA: number = 0, offsetB: number = -1, offsetC: number = -1) {
-            this.a.fromArray(array, offsetA);
-            this.b.fromArray(array, offsetB >= 0 ? offsetB : offsetA + 3);
-            this.c.fromArray(array, offsetC >= 0 ? offsetC : offsetA + 6);
-        }
-        /**
-         * 获取该三角形的面积。
-         */
-        public getArea() {
-            helpVector3A.subtract(this.c, this.b);
-            helpVector3B.subtract(this.a, this.b);
+        public fromArray(array: Readonly<ArrayLike<number>>, offsetA?: number, offsetB?: number, offsetC?: number) {
+            if (offsetA === undefined) {
+                offsetA = 0;
+            }
 
-            return helpVector3A.cross(helpVector3B).length * 0.5;
+            this.a.fromArray(array, offsetA);
+            this.b.fromArray(array, offsetB !== undefined ? offsetB : offsetA + 3);
+            this.c.fromArray(array, offsetC !== undefined ? offsetC : offsetA + 6);
         }
         /**
          * 获取该三角形的中心点。
@@ -121,6 +121,23 @@ namespace egret3d {
             }
 
             return Triangle.getNormal(this.a, this.b, this.c, out);
+        }
+        /**
+         * 
+         * @param u 
+         * @param v 
+         * @param out 
+         */
+        public getPointAt(u: number, v: number, out?: Vector3): Vector3 {
+            if (!out) {
+                out = Vector3.create();
+            }
+
+            out.x = math.lerp(this.a.x, this.c.x, u) + math.lerp(0.0, this.b.x - this.a.x, v);
+            out.y = math.lerp(this.a.y, this.b.y, v) + math.lerp(0.0, this.c.y - this.a.y, u);
+            out.z = math.lerp(this.a.z, this.c.z, u) + math.lerp(0.0, this.b.z - this.a.z, v);
+
+            return out;
         }
         /**
          * 获取一个点到该三角形的最近点。
@@ -202,7 +219,7 @@ namespace egret3d {
             }
 
             // face region
-            const denom = 1 / (va + vb + vc);
+            const denom = 1.0 / (va + vb + vc);
             // u = va * denom
             v = vb * denom;
             w = vc * denom;
@@ -211,109 +228,84 @@ namespace egret3d {
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
             // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
-            // const edge1 = helpVector3A;
-            // const edge2 = helpVector3B;
-            // const diff = helpVector3C;
-            // const normal = helpVector3D;
-
-            // edge1.subtract(p2, p1);
-            // edge2.subtract(p3, p1);
-            // normal.cross(edge1, edge2);
-
-            // // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
-            // // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
-            // //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
-            // //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
-            // //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
-            // let DdN = this.direction.dot(normal);
-            // let sign = 1.0;
-
-            // if (DdN > 0.0) {
-            //     if (backfaceCulling) return null;
-            // }
-            // else if (DdN < 0.0) {
-            //     sign = -1.0;
-            //     DdN = -DdN;
-            // }
-            // else {
-            //     return null;
-            // }
-
-            // diff.subtract(this.origin, p1);
-            // const DdQxE2 = sign * this.direction.dot(edge2.cross(diff, edge2));
-            // // b1 < 0, no intersection
-            // if (DdQxE2 < 0.0) {
-            //     return null;
-            // }
-
-            // const DdE1xQ = sign * this.direction.dot(edge1.cross(diff));
-            // // b2 < 0, no intersection
-            // if (DdE1xQ < 0.0) {
-            //     return null;
-            // }
-            // // b1+b2 > 1, no intersection
-            // if (DdQxE2 + DdE1xQ > DdN) {
-            //     return null;
-            // }
-            // // Line intersects triangle, check if ray does.
-            // const QdN = - sign * diff.dot(normal);
-            // // t < 0, no intersection
-            // if (QdN < 0) {
-            //     return null;
-            // }
-
-            // const pickInfo = new PickInfo();
-            // pickInfo.distance = QdN / DdN;
-            // pickInfo.position.multiplyScalar(pickInfo.distance, this.direction).add(this.origin);
-            // pickInfo.textureCoordA.x = DdQxE2;
-            // pickInfo.textureCoordA.y = DdE1xQ;
-
-            // return pickInfo;
-            // TODO
             const edge1 = helpVector3A;
             const edge2 = helpVector3B;
-            const pvec = helpVector3C;
-            const tvec = helpVector3D;
-            const qvec = helpVector3E;
+            const diff = helpVector3C;
+            const normal = helpVector3D;
+            const rayDirection = ray.direction;
+            const rayOrigin = ray.origin;
             const pA = this.a;
             const pB = this.b;
             const pC = this.c;
 
-            edge1.subtract(pB, pA);
-            edge2.subtract(pC, pA);
-            pvec.cross(ray.direction, edge2);
+            edge1.subtract(pC, pA);
+            edge2.subtract(pB, pA);
+            normal.cross(edge1, edge2);
 
-            const det = pvec.dot(edge1);
-            if (det === 0.0) {
+            // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
+            // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
+            //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
+            //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
+            //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
+            let DdN = rayDirection.dot(normal);
+            let sign = 1.0;
+
+            if (DdN > 0.0) {
+                if (!raycastInfo || raycastInfo.backfaceCulling) return false;
+            }
+            else if (DdN < 0.0) {
+                sign = -1.0;
+                DdN = -DdN;
+            }
+            else {
                 return false;
             }
 
-            const invdet = 1.0 / det;
-            tvec.subtract(ray.origin, pA);
-
-            const bu = pvec.dot(tvec) * invdet;
-            if (bu < 0.0 || bu > 1.0) {
+            diff.subtract(rayOrigin, pA);
+            const DdQxE2 = sign * rayDirection.dot(edge2.cross(diff, edge2));
+            // b1 < 0, no intersection
+            if (DdQxE2 < 0.0) {
                 return false;
             }
 
-            qvec.cross(tvec, edge1);
-
-            const bv = qvec.dot(ray.direction) * invdet;
-            if (bv < 0.0 || bu + bv > 1.0) {
+            const DdE1xQ = sign * rayDirection.dot(edge1.cross(diff));
+            // b2 < 0, no intersection
+            if (DdE1xQ < 0.0) {
+                return false;
+            }
+            // b1+b2 > 1, no intersection
+            if (DdQxE2 + DdE1xQ > DdN) {
+                return false;
+            }
+            // Line intersects triangle, check if ray does.
+            const QdN = -sign * diff.dot(normal);
+            // t < 0, no intersection
+            if (QdN < 0.0) {
                 return false;
             }
 
             if (raycastInfo) {
-                raycastInfo.textureCoordA.x = bu;
-                raycastInfo.textureCoordA.y = bv;
-                ray.getPointAt(raycastInfo.distance = qvec.dot(edge2) * invdet, raycastInfo.position);
-                
+                DdN = 1.0 / DdN;
+                raycastInfo.coord.x = DdQxE2 * DdN;
+                raycastInfo.coord.y = DdE1xQ * DdN;
+                ray.getPointAt(raycastInfo.distance = QdN * DdN, raycastInfo.position);
+
                 if (raycastInfo.normal) {
-                    this.getNormal(raycastInfo.normal);
+                    raycastInfo.normal.copy(normal);
                 }
             }
 
             return true;
+        }
+        /**
+         * 获取该三角形的面积。
+         * - 该值是实时计算的。
+         */
+        public get area(): number {
+            helpVector3A.subtract(this.c, this.a);
+            helpVector3B.subtract(this.b, this.a);
+
+            return helpVector3A.cross(helpVector3B).length * 0.5;
         }
     }
 }

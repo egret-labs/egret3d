@@ -25,8 +25,15 @@
                         "textureMatrix": {
                             "type": 35676
                         },
+                        "viewProjectionMatrix": {
+                            "type": 35676,
+                            "semantic": "_VIEWPROJECTION"
+                        },
                         "color": {
                             "type": 35665
+                        },
+                        "map": {
+                            "type": 35678
                         },
                         "tDiffuse": {
                             "type": 35678

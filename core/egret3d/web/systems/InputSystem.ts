@@ -273,6 +273,12 @@ namespace egret3d.web {
 
             const touch = event.changedTouches[0];
 
+            if (!touch) {
+                // WX BUG.
+                console.error("WX touch error.", event.type);
+                return;
+            }
+
             (event as any).isPrimary = true; // TODO
             (event as any).pointerId = touch.identifier + 2;
             (event as any).pressure = (touch as any).force || 0.5; // TODO egret build bug
@@ -473,7 +479,7 @@ namespace egret3d.web {
             // Context menu event.
             window.addEventListener("contextmenu", this._onContextMenu);
             // Mouse wheel event.
-            canvas.addEventListener("mousewheel", this._onMouseWheelEvent);
+            canvas.addEventListener("mousewheel", this._onMouseWheelEvent as any);
             // Key events.
             window.addEventListener("keydown", this._onKeyEvent);
             window.addEventListener("keyup", this._onKeyEvent);
@@ -501,7 +507,7 @@ namespace egret3d.web {
             // Context menu event.
             window.removeEventListener("contextmenu", this._onContextMenu);
             // Mouse wheel event.
-            canvas.removeEventListener("mousewheel", this._onMouseWheelEvent);
+            canvas.removeEventListener("mousewheel", this._onMouseWheelEvent as any);
             // Key events.
             window.removeEventListener("keydown", this._onKeyEvent);
             window.removeEventListener("keyup", this._onKeyEvent);

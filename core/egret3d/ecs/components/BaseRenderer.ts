@@ -2,7 +2,7 @@ namespace paper {
     /**
      * 基础渲染组件。
      */
-    export abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast {
+    export abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast, egret3d.ITransformObserver {
         /**
          * 当渲染组件的材质列表改变时派发事件。
          */
@@ -17,21 +17,11 @@ namespace paper {
          * @internal
          */
         public _localBoundingBoxDirty: boolean = true;
-        /**
-         * @internal
-         */
-        public _boundingSphereDirty: boolean = true;
+        private _boundingSphereDirty: boolean = true;
         @serializedField
         protected _receiveShadows: boolean = false;
         @serializedField
         protected _castShadows: boolean = false;
-        @serializedField
-        protected _lightmapIndex: number = -1;
-        /**
-         * 如果该属性合并到 UV2 中，会破坏网格共享，共享的网格无法拥有不同的 lightmap UV。
-         */
-        @serializedField
-        protected readonly _lightmapScaleOffset: egret3d.Vector4 = egret3d.Vector4.create();
         protected readonly _boundingSphere: egret3d.Sphere = egret3d.Sphere.create();
         protected readonly _localBoundingBox: egret3d.Box = egret3d.Box.create();
         @paper.serializedField
@@ -46,10 +36,20 @@ namespace paper {
             this._boundingSphere.radius *= worldMatrix.maxScaleOnAxis;
         }
 
+        public initialize() {
+            super.initialize();
+
+            this.gameObject.transform.registerObserver(this);
+        }
+
         public uninitialize() {
             super.uninitialize();
 
             this._materials.length = 0;
+        }
+
+        public onTransformChange() {
+            this._boundingSphereDirty = true;
         }
 
         /**
@@ -88,25 +88,6 @@ namespace paper {
             this._castShadows = value;
         }
         /**
-         * 该组件的光照图索引。
-         */
-        @editor.property(editor.EditType.INT, { minimum: -1 })
-        public get lightmapIndex() {
-            return this._lightmapIndex;
-        }
-        public set lightmapIndex(value: number) {
-            if (value === this._lightmapIndex) {
-                return;
-            }
-
-            this._lightmapIndex = value;
-        }
-
-        public get lightmapScaleOffset() {
-            return this._lightmapScaleOffset;
-        }
-
-        /**
          * 该组件的本地包围盒。
          */
         public get localBoundingBox(): Readonly<egret3d.Box> {
@@ -117,7 +98,6 @@ namespace paper {
 
             return this._localBoundingBox;
         }
-
         /**
          * 基于该组件本地包围盒生成的世界包围球，用于摄像机视锥剔除。
          */
@@ -129,7 +109,6 @@ namespace paper {
 
             return this._boundingSphere;
         }
-
         /**
          * 该组件的材质列表。
          */
@@ -154,7 +133,6 @@ namespace paper {
 
             BaseRenderer.onMaterialsChanged.dispatch(this);
         }
-
         /**
          * 该组件材质列表中的第一个材质。
          */

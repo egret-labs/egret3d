@@ -10,14 +10,7 @@ namespace behaviors {
     const _q = egret3d.Vector4.create();
     const _viewPort = egret3d.Rectangle.create();
 
-    const _textureMatrix = egret3d.Matrix4.create()
-        .set(
-            0.5, 0.0, 0.0, 0.5,
-            0.0, 0.5, 0.0, 0.5,
-            0.0, 0.0, 0.5, 0.5,
-            0.0, 0.0, 0.0, 1.0
-        );
-
+    const _textureMatrix = egret3d.Matrix4.create();
 
     export class Reflector extends paper.Behaviour {
         private static _reflectorCamera: egret3d.Camera | null = null;
@@ -25,15 +18,18 @@ namespace behaviors {
 
         @paper.editor.property(paper.editor.EditType.UINT)
         public recursion: uint = 1;
-        public textureWidth: uint = 1024;
-        public textureHeight: uint = 1024;
-        public clipBias: number = 0.03;
+
+        public textureWidth: uint = 1500;
+        public textureHeight: uint = 969;
+
+        // @paper.editor.property(paper.editor.EditType.FLOAT)
+        public clipBias: number = 0.003;
 
         @paper.editor.property(paper.editor.EditType.COLOR)
-        public readonly color: egret3d.Color = egret3d.Color.create();
+        public readonly color: egret3d.Color = egret3d.Color.create(0.0, 0.0, 0.0, 1.0);
 
         private readonly _renderState: egret3d.WebGLRenderState = paper.GameObject.globalGameObject.getComponent(egret3d.WebGLRenderState)!;
-        private readonly _renderTarget: egret3d.GlRenderTarget = new egret3d.GlRenderTarget("xxxxxx", this.textureWidth, this.textureHeight, true, false, false, false);
+        private readonly _renderTarget: egret3d.GlRenderTarget = new egret3d.GlRenderTarget("xxxxxx", this.textureWidth, this.textureHeight, true);
 
         public onStart() {
             if (!Reflector._reflectorCamera) {
@@ -43,13 +39,13 @@ namespace behaviors {
                 const reflectorCamera = gameObject.addComponent(egret3d.Camera);
                 reflectorCamera.enabled = false;
                 // reflectorCamera.hideFlags = paper.HideFlags.HideAndDontSave;
+                reflectorCamera.backgroundColor.set(0.0, 0.0, 0.0, 1.0);
                 Reflector._reflectorCamera = reflectorCamera;
             }
 
             const reflectorMaterial = this.gameObject.renderer!.material!;
             reflectorMaterial
                 .setRenderQueue(-1000)
-                .setTexture("tDiffuse", egret3d.DefaultTextures.GRAY)
                 .setColor("color", this.color)
                 .setMatrix("textureMatrix", _textureMatrix);
         }
@@ -86,17 +82,18 @@ namespace behaviors {
 
             reflectorCamera.transform.position = view;
             reflectorCamera.transform.lookAt(target, up);
-            reflectorCamera.opvalue = currentCamera.opvalue;
-            reflectorCamera.fov = currentCamera.fov;
-            reflectorCamera.near = currentCamera.near; // 
-            reflectorCamera.far = currentCamera.far;
-            reflectorCamera.size = currentCamera.size; // 
+            // reflectorCamera.opvalue = currentCamera.opvalue;
+            // reflectorCamera.fov = currentCamera.fov;
+            // reflectorCamera.near = currentCamera.near; // 
+            // reflectorCamera.far = currentCamera.far;
+            // reflectorCamera.size = currentCamera.size; // 
 
             // virtualCamera.userData.recursion = 0; TODO
 
             const projectionMatrix = reflectorCamera.projectionMatrix;
 
             // Update the texture matrix
+            // const matrix = egret3d.Matrix4.create().copy(transform.localToWorldMatrix).fromTranslate(egret3d.Vector3.ZERO, true).release();
             _textureMatrix
                 .set(
                     0.5, 0.0, 0.0, 0.5,
@@ -116,7 +113,7 @@ namespace behaviors {
             // Calculate the scaled plane vector
             clipPlane.multiplyScalar(2.0 / clipPlane.dot(_q));
 
-            // // Replacing the third row of the projection matrix
+            // Replacing the third row of the projection matrix
             // projectionMatrix.rawData[2] = clipPlane.x;
             // projectionMatrix.rawData[6] = clipPlane.y;
             // projectionMatrix.rawData[10] = clipPlane.z + 1.0 - this.clipBias;
@@ -129,11 +126,12 @@ namespace behaviors {
 
             const saveCamera = egret3d.Camera.current;
             reflectorCamera.renderTarget = this._renderTarget;
+
             renderState.render(reflectorCamera);
             egret3d.Camera.current = saveCamera;
 
             const reflectorMaterial = this.gameObject.renderer!.material!;
-            reflectorMaterial.setColor("color", this.color).setTexture("tDiffuse", this._renderTarget);
+            reflectorMaterial.setTexture("tDiffuse", this._renderTarget).setColor("color", this.color);
 
             renderState.updateViewport(backupViewPort, backupRenderTarget);
 

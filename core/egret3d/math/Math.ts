@@ -29,6 +29,21 @@ namespace egret3d {
         export function lerp(from: number, to: number, t: number) {
             return from + (to - from) * t;
         }
+
+        export function frustumIntersectsSphere(frustum: Readonly<Frustum>, sphere: Readonly<Sphere>) {
+            const planes = frustum.planes;
+            const center = sphere.center;
+            const negRadius = -sphere.radius;
+
+            for (const plane of planes) {
+                const distance = plane.getDistance(center);
+                if (distance < negRadius) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
     /**
      * 内联的数字常数枚举。
@@ -60,37 +75,10 @@ namespace egret3d {
 
         return value > 0 ? 1 : -1;
     }
-    /**
-     * @deprecated
-     */
-    export function calPlaneLineIntersectPoint(planeVector: Vector3, planePoint: Vector3, lineVector: Vector3, linePoint: Vector3, out: Vector3) {
-        let vp1 = planeVector.x;
-        let vp2 = planeVector.y;
-        let vp3 = planeVector.z;
-        let n1 = planePoint.x;
-        let n2 = planePoint.y;
-        let n3 = planePoint.z;
-        let v1 = lineVector.x;
-        let v2 = lineVector.y;
-        let v3 = lineVector.z;
-        let m1 = linePoint.x;
-        let m2 = linePoint.y;
-        let m3 = linePoint.z;
-        let vpt = v1 * vp1 + v2 * vp2 + v3 * vp3;
-        if (vpt === 0) {
-            return null;
-        } else {
-            let t = ((n1 - m1) * vp1 + (n2 - m2) * vp2 + (n3 - m3) * vp3) / vpt;
-            out.x = m1 + v1 * t;
-            out.y = m2 + v2 * t;
-            out.z = m3 + v3 * t;
-        }
-        return out;
-    }
 
-    export function triangleIntersectsPlane() {
+    // export function triangleIntersectsPlane() {
 
-    }
+    // }
 
     function satForAxes(axes: Readonly<number[]>) {
         const v0 = helpVector3A;

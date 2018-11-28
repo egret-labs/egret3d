@@ -1,0 +1,49 @@
+{
+    "version": "3",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {
+        "KHR_techniques_webgl": {
+            "shaders": [
+                {
+                    "name": "a_vert",
+                    "type": 35633,
+                    "uri": "lensflare/shaders/a_vert.glsl"
+                },
+                {
+                    "name": "a_frag",
+                    "type": 35632,
+                    "uri": "lensflare/shaders/a_frag.glsl"
+                }
+            ],
+            "techniques": [
+                {
+                    "name": "a",
+                    "attributes": {},
+                    "uniforms": {
+                        "screenPosition": {
+                            "type": 35665
+                        },
+                        "tscale": {
+                            "type": 35664
+                        }
+                    },
+                    "states": {
+                        "enable": [],
+                        "functions": {}
+                    }
+                }
+            ]
+        },
+        "paper": {}
+    },
+    "extensionsRequired": [
+        "paper",
+        "KHR_techniques_webgl"
+    ],
+    "extensionsUsed": [
+        "paper",
+        "KHR_techniques_webgl"
+    ]
+}

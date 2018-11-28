@@ -1,0 +1,61 @@
+{
+    "version": "3",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {
+        "KHR_techniques_webgl": {
+            "shaders": [
+                {
+                    "name": "lensflare_vert",
+                    "type": 35633,
+                    "uri": "lensflare/shaders/lensflare_vert.glsl"
+                },
+                {
+                    "name": "lensflare_frag",
+                    "type": 35632,
+                    "uri": "lensflare/shaders/lensflare_frag.glsl"
+                }
+            ],
+            "techniques": [
+                {
+                    "name": "lensflare",
+                    "attributes": {},
+                    "uniforms": {
+                        "screenPosition": {
+                            "type": 35665
+                        },
+                        "tscale": {
+                            "type": 35664
+                        },
+                        "occlusionMap": {
+                            "type": 35678
+                        },
+                        "radian": {
+                            "type": 5126
+                        },
+                        "map": {
+                            "type": 35678
+                        },
+                        "color": {
+                            "type": 35665
+                        }
+                    },
+                    "states": {
+                        "enable": [],
+                        "functions": {}
+                    }
+                }
+            ]
+        },
+        "paper": {}
+    },
+    "extensionsRequired": [
+        "paper",
+        "KHR_techniques_webgl"
+    ],
+    "extensionsUsed": [
+        "paper",
+        "KHR_techniques_webgl"
+    ]
+}

@@ -106,7 +106,7 @@ namespace paper.editor {
          * @param target 目标
          */
         public static locateGambeObject(target:GameObject){
-            paper.Application.systemManager.getSystem(SceneSystem).lookAtSelected();
+            paper.Application.systemManager.getSystem(SceneSystem)!.lookAtSelected();
         }
         private static currentEditInfo: { url: string, type: string };
         /**

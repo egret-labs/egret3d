@@ -13,39 +13,74 @@ namespace egret3d {
          */
         contentHeight?: number;
         /**
-         * 是否开启抗锯齿，默认关闭。
+         * 是否开启抗锯齿，默认开启。
          */
-        antialias: boolean;
+        antialias?: boolean;
         /**
          * 是否与画布背景色混合，默认不混合。
          */
-        alpha: boolean;
+        alpha?: boolean;
 
-        option?: RequiredRuntimeOptions;
+        antialiasSamples?: number;
+
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
 
         playerMode?: paper.PlayerMode;
     };
-
-    export type RequiredRuntimeOptions = { antialias: boolean, contentWidth: number, contentHeight: number };
-
     /**
      * 引擎启动入口
      */
-    export function runEgret(options: RunEgretOptions = { antialias: false, alpha: false }) {
+    export function runEgret(options?: RunEgretOptions) {
+        if (!options) {
+            options = {};
+        }
+
         console.info("Egret version:", paper.Application.version);
         console.info("Egret start.");
 
         // TODO
-        egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
-        egret.Capabilities["renderMode" + ""] = "webgl";
+        egret.Sound = egret.web ? egret.web.HtmlSound : (egret as any)['wxgame']['HtmlSound']; //TODO:Sound
+        (egret.Capabilities as any)["renderMode" + ""] = "webgl";
 
-        const requiredOptions = getOptions(options);
         const canvas = getMainCanvas(options);
-        options.option = requiredOptions;
+
+        if (options.alpha === undefined) {
+            options.alpha = false;
+        }
+
+        if (options.antialias === undefined) {
+            options.antialias = true;
+        }
+
+        if (options.antialiasSamples === undefined) {
+            options.antialiasSamples = 4;
+        }
+
+        if (options.contentWidth === undefined) {
+            const defaultWidth = 1136;
+            if (window.canvas) {
+                options.contentWidth = defaultWidth;
+            }
+            else {
+                const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0]!;
+                options.contentWidth = parseInt(div.getAttribute("data-content-width")!) || defaultWidth;
+            }
+        }
+
+        if (options.contentHeight === undefined) {
+            const defaultHeight = 640;
+            if (window.canvas) {
+                options.contentHeight = defaultHeight;
+            }
+            else {
+                const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0]!;
+                options.contentHeight = parseInt(div.getAttribute("data-content-height")!) || defaultHeight;
+            }
+        }
+
         options.canvas = canvas;
-        options.webgl = <WebGLRenderingContext>canvas.getContext('webgl', options.option) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", options.option);
+        options.webgl = <WebGLRenderingContext>canvas.getContext("webgl", options) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
 
         paper.Application.initialize(options);
         const systemManager = paper.Application.systemManager;
@@ -79,28 +114,6 @@ namespace egret3d {
             const canvas = document.createElement("canvas");
             div.appendChild(canvas);
             return canvas;
-        }
-    }
-
-    function getOptions(options: RunEgretOptions): RequiredRuntimeOptions {
-        if (window.canvas) {
-            return {
-                alpha: false,
-                antialias: true,
-                antialiasSamples: 4,
-                contentWidth: options.contentWidth || 640,
-                contentHeight: options.contentHeight || 1136
-            } as RequiredRuntimeOptions;
-        }
-        else {
-            const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
-            return {
-                alpha: false,
-                antialias: true,
-                antialiasSamples: 4,
-                contentWidth: parseInt(div.getAttribute("data-content-width")),
-                contentHeight: parseInt(div.getAttribute("data-content-height"))
-            } as RequiredRuntimeOptions;
         }
     }
 }
