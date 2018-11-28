@@ -145,9 +145,13 @@ namespace egret3d {
                 }
             }
 
-            if (animationState.currentPlayTimes !== prevPlayTimes) {
-                this._events; // TODO buffer event.
+            // this._events; // TODO buffer event.
 
+            if (prevPlayState === -1 && animationState._playState !== -1) {
+                animation.gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.Start, animationState), false);
+            }
+
+            if (animationState.currentPlayTimes !== prevPlayTimes) {
                 // const animationNames = this._animationComponent._animationNames;
                 // if (animationNames.length > 0) {
                 //     const animationName = animationNames.shift();

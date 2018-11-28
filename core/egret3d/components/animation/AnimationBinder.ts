@@ -327,8 +327,6 @@ namespace egret3d {
             this.dirty = 0;
             this.totalWeight = 0.0;
             this.weight = 1.0;
-
-            return this;
         }
 
         public updateBlend(animationLayer: AnimationLayer, animationState: AnimationState) {

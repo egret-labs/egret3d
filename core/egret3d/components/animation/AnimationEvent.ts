@@ -3,7 +3,7 @@ namespace egret3d {
      * 动画事件类型。
      */
     export const enum AnimationEventType {
-        Play,
+        Start,
         LoopComplete,
         Complete,
         KeyFrame,
@@ -32,7 +32,7 @@ namespace egret3d {
             return instance;
         }
 
-        public type: AnimationEventType = AnimationEventType.Play;
+        public type: AnimationEventType = AnimationEventType.Start;
         public animationState: AnimationState = null!;
         public keyFrameEvent: GLTFKeyFrameEvent | null = null;
 

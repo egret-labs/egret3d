@@ -5,13 +5,17 @@ namespace egret3d {
     export class AnimationFadeState extends paper.BaseRelease<AnimationFadeState> {
         private static readonly _instances: AnimationFadeState[] = [];
         public static create(): AnimationFadeState {
+            let instance: AnimationFadeState;
             if (this._instances.length > 0) {
-                const instance = this._instances.pop()!;
+                instance = this._instances.pop()!;
                 instance._released = false;
-                return instance;
+            }
+            else {
+                instance = new AnimationFadeState();
+                instance.onClear();
             }
 
-            return new AnimationFadeState().clear();
+            return instance;
         }
         /**
          * -1: Fade in, 0: Fade complete, 1: Fade out;
@@ -31,10 +35,6 @@ namespace egret3d {
         }
 
         public onClear() {
-            this.clear();
-        }
-
-        public clear() {
             for (const state of this.states) {
                 state.release();
             }
@@ -45,8 +45,6 @@ namespace egret3d {
             this.time = 0.0;
             this.totalTime = 0.0;
             this.states.length = 0;
-
-            return this;
         }
 
         public fadeOut(totalTime: number): this {
@@ -84,6 +82,7 @@ namespace egret3d {
             }
             else {
                 instance = new AnimationState();
+                instance.onClear();
             }
 
             return instance;

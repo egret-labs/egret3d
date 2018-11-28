@@ -4269,31 +4269,6 @@ var paper;
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
-    // /**
-    //  * 帧事件反序列化。
-    //  */
-    // export interface GLTFFrameEvent {
-    //     /**
-    //      * 事件名称。
-    //      */
-    //     name: string;
-    //     /**
-    //      * 事件位置。（%）
-    //      */
-    //     position: number;
-    //     /**
-    //      * 事件 int 变量。
-    //      */
-    //     intVariable: number;
-    //     /**
-    //      * 事件 float 变量。
-    //      */
-    //     floatVariable: number;
-    //     /**
-    //      * 事件 string 变量。
-    //      */
-    //     stringVariable: string;
-    // }
     /**
      * glTF 资源。
      */
@@ -12178,6 +12153,62 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
+     * 立方体碰撞组件。
+     */
+    var BoxCollider = (function (_super) {
+        __extends(BoxCollider, _super);
+        function BoxCollider() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.colliderType = egret3d.ColliderType.Box;
+            /**
+             * 描述该组件的立方体。
+             */
+            _this.box = egret3d.Box.ONE.clone();
+            return _this;
+        }
+        BoxCollider.prototype.raycast = function (ray, raycastInfo) {
+            var transform = this.gameObject.transform;
+            var localRay = egret3d.helpRay.applyMatrix(transform.worldToLocalMatrix, ray);
+            if (this.box.raycast(localRay, raycastInfo)) {
+                if (raycastInfo) {
+                    var localToWorldMatrix = transform.localToWorldMatrix;
+                    raycastInfo.distance = ray.origin.getDistance(raycastInfo.position.applyMatrix(transform.localToWorldMatrix));
+                    raycastInfo.transform = transform;
+                    raycastInfo.collider = this;
+                    var normal = raycastInfo.normal;
+                    if (normal) {
+                        normal.applyDirection(localToWorldMatrix);
+                    }
+                }
+                return true;
+            }
+            return false;
+        };
+        Object.defineProperty(BoxCollider.prototype, "aabb", {
+            /**
+             * @deprecated
+             */
+            get: function () {
+                return this.box;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        __decorate([
+            paper.serializedField("aabb"),
+            paper.editor.property("NESTED" /* NESTED */)
+        ], BoxCollider.prototype, "box", void 0);
+        BoxCollider = __decorate([
+            paper.allowMultiple
+        ], BoxCollider);
+        return BoxCollider;
+    }(paper.BaseComponent));
+    egret3d.BoxCollider = BoxCollider;
+    __reflect(BoxCollider.prototype, "egret3d.BoxCollider", ["egret3d.IBoxCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
      * 几何球体。
      */
     var Sphere = (function (_super) {
@@ -12335,54 +12366,6 @@ var egret3d;
     }(paper.BaseRelease));
     egret3d.Sphere = Sphere;
     __reflect(Sphere.prototype, "egret3d.Sphere", ["paper.ICCS", "paper.ISerializable", "egret3d.IRaycast"]);
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * 球体碰撞组件。
-     */
-    var SphereCollider = (function (_super) {
-        __extends(SphereCollider, _super);
-        function SphereCollider() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.colliderType = egret3d.ColliderType.Sphere;
-            /**
-             * 描述该组件的球体。
-             */
-            _this.sphere = egret3d.Sphere.create(egret3d.Vector3.ZERO, 0.5);
-            return _this;
-        }
-        SphereCollider.prototype.raycast = function (ray, raycastInfo) {
-            var transform = this.gameObject.transform;
-            var worldToLocalMatrix = transform.worldToLocalMatrix;
-            var localRay = egret3d.helpRay.applyMatrix(transform.worldToLocalMatrix, ray);
-            if (this.sphere.raycast(localRay, raycastInfo)) {
-                if (raycastInfo) {
-                    var localToWorldMatrix = transform.localToWorldMatrix;
-                    raycastInfo.distance = ray.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
-                    raycastInfo.transform = transform;
-                    raycastInfo.collider = this;
-                    var normal = raycastInfo.normal;
-                    if (normal) {
-                        // normal.applyDirection(localToWorldMatrix);
-                        normal.applyMatrix3(egret3d.helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
-                    }
-                }
-                return true;
-            }
-            return false;
-        };
-        __decorate([
-            paper.serializedField,
-            paper.editor.property("NESTED" /* NESTED */)
-        ], SphereCollider.prototype, "sphere", void 0);
-        SphereCollider = __decorate([
-            paper.allowMultiple
-        ], SphereCollider);
-        return SphereCollider;
-    }(paper.BaseComponent));
-    egret3d.SphereCollider = SphereCollider;
-    __reflect(SphereCollider.prototype, "egret3d.SphereCollider", ["egret3d.ISphereCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -14054,12 +14037,12 @@ var egret3d;
                 }
             }
             var fog = scene.fog;
-            if (fog.mode !== 0 /* NONE */) {
+            if (fog.mode !== 0 /* None */) {
                 this.fogColor[0] = fog.color.r;
                 this.fogColor[1] = fog.color.g;
                 this.fogColor[2] = fog.color.b;
                 shaderContextDefine += "#define USE_FOG \n"; //TODO 根据参数生成define
-                if (fog.mode === 2 /* FOG_EXP2 */) {
+                if (fog.mode === 2 /* FogEXP2 */) {
                     this.fogDensity = fog.density;
                     shaderContextDefine += "#define FOG_EXP2 \n"; //TODO 根据参数生成define
                 }
@@ -14686,9 +14669,9 @@ var egret3d;
      */
     var FogMode;
     (function (FogMode) {
-        FogMode[FogMode["NONE"] = 0] = "NONE";
-        FogMode[FogMode["FOG"] = 1] = "FOG";
-        FogMode[FogMode["FOG_EXP2"] = 2] = "FOG_EXP2";
+        FogMode[FogMode["None"] = 0] = "None";
+        FogMode[FogMode["Fog"] = 1] = "Fog";
+        FogMode[FogMode["FogEXP2"] = 2] = "FogEXP2";
     })(FogMode = egret3d.FogMode || (egret3d.FogMode = {}));
     /**
      * 雾。
@@ -14701,7 +14684,7 @@ var egret3d;
             /**
              * 雾的模式。
              */
-            this.mode = 0 /* NONE */;
+            this.mode = 0 /* None */;
             /**
              * 雾的强度。
              */
@@ -15091,6 +15074,9 @@ var paper;
          * @param config BaseComponent 组件 `initialize(config?: any)` 方法或 Behaviour 组件 `onAwake(config?: any)` 方法的可选参数。
          */
         GameObject.prototype.addComponent = function (componentClass, config) {
+            if (true && !componentClass) {
+                throw new Error();
+            }
             paper.registerClass(componentClass);
             // SingletonComponent.
             if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
@@ -15160,6 +15146,9 @@ var paper;
          */
         GameObject.prototype.removeComponent = function (componentInstanceOrClass, isExtends) {
             if (isExtends === void 0) { isExtends = false; }
+            if (true && !componentInstanceOrClass) {
+                throw new Error();
+            }
             if (componentInstanceOrClass instanceof paper.BaseComponent) {
                 var componentClass = componentInstanceOrClass.constructor;
                 // SingletonComponent.
@@ -17125,19 +17114,6 @@ var egret3d;
             return _this;
         }
         /**
-         * TODO more event type.
-         * sendMessage.
-         * @internal
-         */
-        Animation.prototype._dispatchEvent = function (type, animationState, eventObject) {
-            for (var _i = 0, _a = this.gameObject.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
-                var component = _a[_i];
-                if (component.onAnimationEvent) {
-                    component.onAnimationEvent(type, animationState, eventObject);
-                }
-            }
-        };
-        /**
          * @internal
          */
         Animation.prototype._getBinder = function (name, type) {
@@ -17355,17 +17331,18 @@ var egret3d;
             return _this;
         }
         AnimationFadeState.create = function () {
+            var instance;
             if (this._instances.length > 0) {
-                var instance = this._instances.pop();
+                instance = this._instances.pop();
                 instance._released = false;
-                return instance;
             }
-            return new AnimationFadeState().clear();
+            else {
+                instance = new AnimationFadeState();
+                instance.onClear();
+            }
+            return instance;
         };
         AnimationFadeState.prototype.onClear = function () {
-            this.clear();
-        };
-        AnimationFadeState.prototype.clear = function () {
             for (var _i = 0, _a = this.states; _i < _a.length; _i++) {
                 var state = _a[_i];
                 state.release();
@@ -17376,7 +17353,6 @@ var egret3d;
             this.time = 0.0;
             this.totalTime = 0.0;
             this.states.length = 0;
-            return this;
         };
         AnimationFadeState.prototype.fadeOut = function (totalTime) {
             if (this.fadeState > 0) {
@@ -17414,17 +17390,18 @@ var egret3d;
             return _this;
         }
         AnimationState.create = function () {
+            var instance;
             if (this._instances.length > 0) {
-                var instance = this._instances.pop();
+                instance = this._instances.pop();
                 instance._released = false;
-                return instance;
             }
-            return new AnimationState().clear();
+            else {
+                instance = new AnimationState();
+                instance.onClear();
+            }
+            return instance;
         };
         AnimationState.prototype.onClear = function () {
-            this.clear();
-        };
-        AnimationState.prototype.clear = function () {
             for (var _i = 0, _a = this.channels; _i < _a.length; _i++) {
                 var channel = _a[_i];
                 channel.release();
@@ -17442,7 +17419,6 @@ var egret3d;
             this._time = 0.0;
             this._currentTime = 0.0;
             this._globalWeight = 0.0;
-            return this;
         };
         /**
          * @internal
@@ -17583,12 +17559,16 @@ var egret3d;
             return _super.call(this) || this;
         }
         AnimationBinder.create = function () {
+            var instance;
             if (this._instances.length > 0) {
-                var instance = this._instances.pop();
+                instance = this._instances.pop();
                 instance._released = false;
-                return instance;
             }
-            return new AnimationBinder().clear();
+            else {
+                instance = new AnimationBinder();
+                instance.onClear();
+            }
+            return instance;
         };
         AnimationBinder.onUpdateTranslation = function (channel, animationlayer, animationState) {
             var additive = animationlayer.additive;
@@ -17856,7 +17836,6 @@ var egret3d;
             this.dirty = 0;
             this.totalWeight = 0.0;
             this.weight = 1.0;
-            return this;
         };
         AnimationBinder.prototype.updateBlend = function (animationLayer, animationState) {
             var globalWeight = animationState._globalWeight;
@@ -17891,12 +17870,15 @@ var egret3d;
             return _super.call(this) || this;
         }
         AnimationChannel.create = function () {
+            var instance;
             if (this._instances.length > 0) {
-                var instance = this._instances.pop();
+                instance = this._instances.pop();
                 instance._released = false;
-                return instance;
             }
-            return new AnimationChannel();
+            else {
+                instance = new AnimationChannel();
+            }
+            return instance;
         };
         AnimationChannel.prototype.getFrameIndex = function (currentTime) {
             var inputBuffer = this.inputBuffer;
@@ -17935,6 +17917,52 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
+     * 动画事件类型。
+     */
+    var AnimationEventType;
+    (function (AnimationEventType) {
+        AnimationEventType[AnimationEventType["Start"] = 0] = "Start";
+        AnimationEventType[AnimationEventType["LoopComplete"] = 1] = "LoopComplete";
+        AnimationEventType[AnimationEventType["Complete"] = 2] = "Complete";
+        AnimationEventType[AnimationEventType["KeyFrame"] = 3] = "KeyFrame";
+        AnimationEventType[AnimationEventType["Sound"] = 4] = "Sound";
+    })(AnimationEventType = egret3d.AnimationEventType || (egret3d.AnimationEventType = {}));
+    /**
+     * 动画事件。
+     */
+    var AnimationEvent = (function (_super) {
+        __extends(AnimationEvent, _super);
+        function AnimationEvent() {
+            var _this = _super.call(this) || this;
+            _this.type = 0 /* Start */;
+            _this.animationState = null;
+            _this.keyFrameEvent = null;
+            return _this;
+        }
+        AnimationEvent.create = function (type, animationState, keyFrameEvent) {
+            if (keyFrameEvent === void 0) { keyFrameEvent = null; }
+            var instance = null;
+            if (this._instances.length > 0) {
+                instance = this._instances.pop();
+                instance._released = false;
+            }
+            else {
+                instance = new AnimationEvent();
+            }
+            instance.type = type;
+            instance.animationState = animationState;
+            instance.keyFrameEvent = keyFrameEvent;
+            return instance;
+        };
+        AnimationEvent._instances = [];
+        return AnimationEvent;
+    }(paper.BaseRelease));
+    egret3d.AnimationEvent = AnimationEvent;
+    __reflect(AnimationEvent.prototype, "egret3d.AnimationEvent");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
      * 动画系统。
      */
     var AnimationSystem = (function (_super) {
@@ -17944,6 +17972,7 @@ var egret3d;
             _this._interests = [
                 { componentClass: egret3d.Animation }
             ];
+            _this._events = [];
             _this._animation = null;
             _this._animationLayer = null;
             return _this;
@@ -18021,8 +18050,8 @@ var egret3d;
             }
             // const isBlendDirty = this._fadeState !== 0 || this._subFadeState === 0;
             var prevPlayState = animationState._playState;
-            // const prevPlayTimes = this.currentPlayTimes;
-            // const prevTime = this._currentTime;
+            var prevPlayTimes = animationState.currentPlayTimes;
+            var prevTime = animationState._currentTime;
             var playTimes = animationState.playTimes;
             var duration = animationState.animationClip.duration;
             var totalTime = playTimes * duration;
@@ -18066,13 +18095,20 @@ var egret3d;
                     }
                 }
             }
-            if (prevPlayState !== animationState._playState && animationState._playState === 1) {
-                animation._dispatchEvent("complete", animationState); // TODO buffer event.
+            // this._events; // TODO buffer event.
+            if (prevPlayState === -1 && animationState._playState !== -1) {
+                animation.gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(0 /* Start */, animationState), false);
+            }
+            if (animationState.currentPlayTimes !== prevPlayTimes) {
                 // const animationNames = this._animationComponent._animationNames;
                 // if (animationNames.length > 0) {
                 //     const animationName = animationNames.shift();
                 //     this._animationComponent.play(animationName);
                 // }
+                animation.gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(1 /* LoopComplete */, animationState), false);
+                if (animationState._playState === 1) {
+                    animation.gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(2 /* Complete */, animationState), false);
+                }
             }
         };
         AnimationSystem.prototype.onAddComponent = function (component) {
@@ -27049,56 +27085,48 @@ window.egret3d = egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 立方体碰撞组件。
+     * 球体碰撞组件。
      */
-    var BoxCollider = (function (_super) {
-        __extends(BoxCollider, _super);
-        function BoxCollider() {
+    var SphereCollider = (function (_super) {
+        __extends(SphereCollider, _super);
+        function SphereCollider() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.colliderType = egret3d.ColliderType.Box;
+            _this.colliderType = egret3d.ColliderType.Sphere;
             /**
-             * 描述该组件的立方体。
+             * 描述该组件的球体。
              */
-            _this.box = egret3d.Box.ONE.clone();
+            _this.sphere = egret3d.Sphere.create(egret3d.Vector3.ZERO, 0.5);
             return _this;
         }
-        BoxCollider.prototype.raycast = function (ray, raycastInfo) {
+        SphereCollider.prototype.raycast = function (ray, raycastInfo) {
             var transform = this.gameObject.transform;
+            var worldToLocalMatrix = transform.worldToLocalMatrix;
             var localRay = egret3d.helpRay.applyMatrix(transform.worldToLocalMatrix, ray);
-            if (this.box.raycast(localRay, raycastInfo)) {
+            if (this.sphere.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) {
                     var localToWorldMatrix = transform.localToWorldMatrix;
-                    raycastInfo.distance = ray.origin.getDistance(raycastInfo.position.applyMatrix(transform.localToWorldMatrix));
+                    raycastInfo.distance = ray.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
                     raycastInfo.transform = transform;
                     raycastInfo.collider = this;
                     var normal = raycastInfo.normal;
                     if (normal) {
-                        normal.applyDirection(localToWorldMatrix);
+                        // normal.applyDirection(localToWorldMatrix);
+                        normal.applyMatrix3(egret3d.helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
                     }
                 }
                 return true;
             }
             return false;
         };
-        Object.defineProperty(BoxCollider.prototype, "aabb", {
-            /**
-             * @deprecated
-             */
-            get: function () {
-                return this.box;
-            },
-            enumerable: true,
-            configurable: true
-        });
         __decorate([
-            paper.serializedField("aabb"),
+            paper.serializedField,
             paper.editor.property("NESTED" /* NESTED */)
-        ], BoxCollider.prototype, "box", void 0);
-        BoxCollider = __decorate([
+        ], SphereCollider.prototype, "sphere", void 0);
+        SphereCollider = __decorate([
             paper.allowMultiple
-        ], BoxCollider);
-        return BoxCollider;
+        ], SphereCollider);
+        return SphereCollider;
     }(paper.BaseComponent));
-    egret3d.BoxCollider = BoxCollider;
-    __reflect(BoxCollider.prototype, "egret3d.BoxCollider", ["egret3d.IBoxCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
+    egret3d.SphereCollider = SphereCollider;
+    __reflect(SphereCollider.prototype, "egret3d.SphereCollider", ["egret3d.ISphereCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
 })(egret3d || (egret3d = {}));

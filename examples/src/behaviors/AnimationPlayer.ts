@@ -1,6 +1,6 @@
 namespace behaviors {
     /**
-     * 动画
+     * 
      */
     export class AnimationPlayer extends paper.Behaviour {
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 10.0 })

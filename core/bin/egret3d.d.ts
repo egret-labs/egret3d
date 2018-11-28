@@ -2089,7 +2089,7 @@ declare namespace egret3d {
         };
     }
     /**
-     * 动画剪辑反序列化。
+     *
      */
     interface GLTFAnimationClip {
         /**
@@ -2119,6 +2119,31 @@ declare namespace egret3d {
                 property: string;
             };
         };
+    }
+    /**
+     *
+     */
+    interface GLTFKeyFrameEvent {
+        /**
+         * 事件名称。
+         */
+        name: string;
+        /**
+         * 事件位置。（%）
+         */
+        position: number;
+        /**
+         * 事件 int 变量。
+         */
+        intVariable?: number;
+        /**
+         * 事件 float 变量。
+         */
+        floatVariable?: number;
+        /**
+         * 事件 string 变量。
+         */
+        stringVariable?: string;
     }
     /**
      * glTF 资源。
@@ -4421,7 +4446,7 @@ declare namespace paper {
         /**
          *
          */
-        onAnimationEvent?(type: string, animationState: egret3d.AnimationState, eventObject: any): void;
+        onAnimationEvent?(animationEvent: egret3d.AnimationEvent): void;
         /**
          * 程序运行时每帧执行。
          * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
@@ -5877,6 +5902,29 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
+     * 立方体碰撞组件接口。
+     */
+    interface IBoxCollider extends ICollider {
+        readonly box: Box;
+    }
+    /**
+     * 立方体碰撞组件。
+     */
+    class BoxCollider extends paper.BaseComponent implements IBoxCollider, IRaycast {
+        readonly colliderType: ColliderType;
+        /**
+         * 描述该组件的立方体。
+         */
+        readonly box: Box;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        /**
+         * @deprecated
+         */
+        readonly aabb: Box;
+    }
+}
+declare namespace egret3d {
+    /**
      * 几何球体。
      */
     class Sphere extends paper.BaseRelease<Sphere> implements paper.ICCS<Sphere>, paper.ISerializable, IRaycast {
@@ -5928,26 +5976,6 @@ declare namespace egret3d {
          * @param value 点。
          */
         getDistance(value: Readonly<IVector3>): number;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 球体碰撞组件接口。
-     * TODO 使用碰撞接口
-     */
-    interface ISphereCollider extends ICollider {
-        readonly sphere: Sphere;
-    }
-    /**
-     * 球体碰撞组件。
-     */
-    class SphereCollider extends paper.BaseComponent implements ISphereCollider, IRaycast {
-        readonly colliderType: ColliderType;
-        /**
-         * 描述该组件的球体。
-         */
-        readonly sphere: Sphere;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
 }
@@ -6539,9 +6567,9 @@ declare namespace egret3d {
      * 雾的模式。
      */
     const enum FogMode {
-        NONE = 0,
-        FOG = 1,
-        FOG_EXP2 = 2,
+        None = 0,
+        Fog = 1,
+        FogEXP2 = 2,
     }
     /**
      * 雾。
@@ -6726,19 +6754,19 @@ declare namespace paper {
          * @param methodName
          * @param parameter
          */
-        sendMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
+        sendMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver?: boolean): void;
         /**
          * 向该实体和其父级的 Behaviour 组件发送消息。
          * @param methodName
          * @param parameter
          */
-        sendMessageUpwards(methodName: string, parameter?: any, requireReceiver?: boolean): void;
+        sendMessageUpwards<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver?: boolean): void;
         /**
          * 向该实体和的其子（孙）级的 Behaviour 组件发送消息。
          * @param methodName
          * @param parameter
          */
-        broadcastMessage(methodName: string, parameter?: any, requireReceiver?: boolean): void;
+        broadcastMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver?: boolean): void;
         /**
          * 该实体是否已经被销毁。
          */
@@ -7205,7 +7233,6 @@ declare namespace egret3d {
         readonly states: AnimationState[];
         private constructor();
         onClear(): void;
-        clear(): this;
         fadeOut(totalTime: number): this;
     }
     /**
@@ -7233,6 +7260,10 @@ declare namespace egret3d {
         /**
          * @private
          */
+        animationLayer: AnimationLayer;
+        /**
+         * @private
+         */
         animationNode: AnimationNode;
         /**
          * @private
@@ -7248,7 +7279,6 @@ declare namespace egret3d {
         animationClip: GLTFAnimationClip;
         private constructor();
         onClear(): void;
-        clear(): this;
         play(): void;
         stop(): void;
         readonly isPlaying: boolean;
@@ -7280,7 +7310,7 @@ declare namespace egret3d {
         updateTarget: (channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) => void;
         private constructor();
         onClear(): void;
-        clear(): this;
+        clear(): void;
         updateBlend(animationLayer: AnimationLayer, animationState: AnimationState): boolean;
     }
 }
@@ -7303,12 +7333,36 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
+     * 动画事件类型。
+     */
+    const enum AnimationEventType {
+        Start = 0,
+        LoopComplete = 1,
+        Complete = 2,
+        KeyFrame = 3,
+        Sound = 4,
+    }
+    /**
+     * 动画事件。
+     */
+    class AnimationEvent extends paper.BaseRelease<AnimationEvent> {
+        private static _instances;
+        static create(type: AnimationEventType, animationState: AnimationState, keyFrameEvent?: GLTFKeyFrameEvent | null): AnimationEvent;
+        type: AnimationEventType;
+        animationState: AnimationState;
+        keyFrameEvent: GLTFKeyFrameEvent | null;
+        private constructor();
+    }
+}
+declare namespace egret3d {
+    /**
      * 动画系统。
      */
     class AnimationSystem extends paper.BaseSystem {
         protected readonly _interests: {
             componentClass: typeof Animation;
         }[];
+        private readonly _events;
         private _animation;
         private _animationLayer;
         private _updateChannelEnd(animation);
@@ -10324,24 +10378,21 @@ interface Window {
 }
 declare namespace egret3d {
     /**
-     * 立方体碰撞组件接口。
+     * 球体碰撞组件接口。
+     * TODO 使用碰撞接口
      */
-    interface IBoxCollider extends ICollider {
-        readonly box: Box;
+    interface ISphereCollider extends ICollider {
+        readonly sphere: Sphere;
     }
     /**
-     * 立方体碰撞组件。
+     * 球体碰撞组件。
      */
-    class BoxCollider extends paper.BaseComponent implements IBoxCollider, IRaycast {
+    class SphereCollider extends paper.BaseComponent implements ISphereCollider, IRaycast {
         readonly colliderType: ColliderType;
         /**
-         * 描述该组件的立方体。
+         * 描述该组件的球体。
          */
-        readonly box: Box;
+        readonly sphere: Sphere;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
-        /**
-         * @deprecated
-         */
-        readonly aabb: Box;
     }
 }
