@@ -11,7 +11,7 @@ namespace egret3d.oimo {
         @paper.serializedField
         public distance: number = 10.0;
         @paper.serializedField
-        public collisionMask: paper.CullingMask = paper.CullingMask.Everything;
+        public collisionMask: paper.Layer = paper.Layer.Everything;
 
         private _hitted: boolean = false;
         private _mesh: Mesh = null!;
@@ -20,7 +20,7 @@ namespace egret3d.oimo {
             const meshFilter = this.gameObject.getOrAddComponent(MeshFilter);
             const meshRender = this.gameObject.getOrAddComponent(MeshRenderer);
 
-            this._mesh = new Mesh(4, 0, _attributes);
+            this._mesh = Mesh.create(4, 0, _attributes);
             const vertices = this._mesh.getVertices()!;
             const colors = this._mesh.getColors()!;
 
@@ -47,7 +47,7 @@ namespace egret3d.oimo {
             this._mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
 
             if (!_material) {
-                _material = new Material(DefaultShaders.LINEDASHED);
+                _material = Material.create(DefaultShaders.LINEDASHED);
             }
 
             meshRender.materials = [_material];
@@ -92,7 +92,7 @@ namespace egret3d.oimo {
             else if (this._hitted) {
                 this._hitted = false;
 
-                const vertices = this._mesh.getVertices();
+                const vertices = this._mesh.getVertices()!;
                 const colors = this._mesh.getColors()!;
 
                 vertices[3] = 0.0;

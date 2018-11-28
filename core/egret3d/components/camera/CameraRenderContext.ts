@@ -128,7 +128,6 @@ namespace egret3d {
             this._postProcessDrawCall.matrix = Matrix4.IDENTITY;
             this._postProcessDrawCall.subMeshIndex = 0;
             this._postProcessDrawCall.mesh = DefaultMeshes.FULLSCREEN_QUAD;
-            this._postProcessDrawCall.mesh._createBuffer(); //
         }
 
         /**

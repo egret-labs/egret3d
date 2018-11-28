@@ -19,7 +19,7 @@ namespace paper.editor {
         }
 
         public static createIcon(name: string, parent: paper.GameObject, icon: egret3d.Texture) {
-            const material = new egret3d.Material(egret3d.DefaultShaders.TRANSPARENT);
+            const material = egret3d.Material.create(egret3d.DefaultShaders.TRANSPARENT);
             material.renderQueue = paper.RenderQueue.Overlay - 1;
             material.setTexture(egret3d.ShaderUniformName.Map, icon);
             material.setColor(egret3d.ShaderUniformName.Diffuse, egret3d.Color.RED);
@@ -77,7 +77,7 @@ namespace paper.editor {
                 }
             }
 
-            const mesh = new egret3d.Mesh(verticeCount, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
+            const mesh = egret3d.Mesh.create(verticeCount, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
             mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
             mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, colors);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;

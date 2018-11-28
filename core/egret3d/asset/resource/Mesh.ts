@@ -2,7 +2,7 @@ namespace egret3d {
     const _helpVector3A = Vector3.create();
     const _helpVector3B = Vector3.create();
     const _helpVector3C = Vector3.create();
-    const _helpQuaternion = Quaternion.create();
+    // const _helpQuaternion = Quaternion.create();
     const _helpMatrix = Matrix4.create();
     const _helpTriangleA = Triangle.create();
     const _helpTriangleB = Triangle.create();
@@ -17,7 +17,30 @@ namespace egret3d {
      * 基础网格。
      * - 所有网格的基类。
      */
-    export abstract class BaseMesh extends GLTFAsset implements egret3d.IRaycast {
+    export class Mesh extends GLTFAsset implements egret3d.IRaycast {
+        /**
+         * 创建一个网格。
+         * @param vertexCount 
+         * @param indexCount 
+         * @param attributeNames 
+         * @param attributeTypes 
+         * @param drawMode 
+         */
+        public static create(
+            vertexCount: number, indexCount: number,
+            attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
+            drawMode?: gltf.DrawMode
+        ): Mesh;
+        public static create(config: GLTF, buffers: Uint32Array[], name: string): Mesh;
+        public static create(
+            vertexCountOrConfig: number | GLTF, indexCountOrBuffers?: number | Uint32Array[],
+            attributeNamesOrName?: gltf.MeshAttribute[] | null | string, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
+            drawMode?: gltf.DrawMode
+        ) {
+            // Retarget.
+            return new egret3d.Mesh(vertexCountOrConfig as any, indexCountOrBuffers as any, attributeNamesOrName as any, attributeTypes, drawMode);
+        }
+
         protected _drawMode: gltf.DrawMode = gltf.DrawMode.Static;
         protected _vertexCount: uint = 0;
         protected readonly _attributeNames: string[] = [];
@@ -38,15 +61,14 @@ namespace egret3d {
         /**
          * 请使用 `egret3d.Mesh.create()` 创建实例。
          * @see egret3d.Mesh.create()
-         * @deprecated
          */
-        public constructor(
+        protected constructor(
             vertexCount: uint, indexCount: uint,
             attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
             drawMode?: gltf.DrawMode
         )
-        public constructor(config: GLTF, buffers: Uint32Array[], name: string)
-        public constructor(
+        protected constructor(config: GLTF, buffers: Uint32Array[], name: string)
+        protected constructor(
             vertexCountOrConfig: uint | GLTF, indexCountOrBuffers?: uint | Uint32Array[],
             attributeNamesOrName?: gltf.MeshAttribute[] | null | string, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
             drawMode?: gltf.DrawMode
@@ -138,7 +160,7 @@ namespace egret3d {
          */
         public clone() {
             // TODO
-            const value = new Mesh(this.vertexCount, 0, this._attributeNames, this._customAttributeTypes, this.drawMode);
+            const value = Mesh.create(this.vertexCount, 0, this._attributeNames, this._customAttributeTypes, this.drawMode);
 
             for (const primitive of this._glTFMesh!.primitives) {
                 if (primitive.indices !== undefined) {
@@ -457,22 +479,17 @@ namespace egret3d {
             return target;
         }
         /**
-         * 创建顶点和顶点索引缓冲区。
-         * @internal TODO 应是引擎层可见。
-         */
-        public abstract _createBuffer(): void;
-        /**
          * 当修改该网格的顶点属性后，调用此方法来更新顶点属性的缓冲区。
          * @param uploadAttributes 
          * @param offset 顶点偏移。（默认不偏移）
          * @param count 顶点总数。（默认全部顶点）
          */
-        public abstract uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: uint, count?: uint): void;
+        public uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: uint, count?: uint): void { }
         /**
          * 当修改该网格的顶点索引后，调用此方法来更新顶点索引的缓冲区。
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
          */
-        public abstract uploadSubIndexBuffer(subMeshIndex?: uint): void;
+        public uploadSubIndexBuffer(subMeshIndex?: uint): void { }
         /**
          * 该网格的渲染模式。
          */

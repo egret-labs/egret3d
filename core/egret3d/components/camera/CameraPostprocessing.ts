@@ -13,7 +13,7 @@ namespace egret3d {
 
         }
     }
-    
+
     // TODO remove
     export class MotionBlurEffect extends CameraPostprocessing {
         private _material: Material;
@@ -26,7 +26,7 @@ namespace egret3d {
             super.initialize();
             this._resolution.set(stage.viewport.w, stage.viewport.h);
 
-            this._material = new Material(new Shader(egret3d.ShaderLib.motionBlur as any, "motionBlur"));
+            this._material = Material.create(new Shader(egret3d.ShaderLib.motionBlur as any, "motionBlur"));
             this._material.setDepth(false, false);
             this._material.setCullFace(false);
             // this._material.setVector2("resolution", this._resolution);

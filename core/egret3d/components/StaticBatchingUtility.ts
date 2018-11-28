@@ -316,7 +316,7 @@ namespace egret3d {
             meshFilter.mesh = null;
         }
 
-        const combineMesh = new Mesh(combineInstance.vertexCount, combineInstance.indexBufferTotalSize, newAttribute, undefined, gltf.DrawMode.Dynamic);
+        const combineMesh = Mesh.create(combineInstance.vertexCount, combineInstance.indexBufferTotalSize, newAttribute, undefined, gltf.DrawMode.Dynamic);
 
         const newVertexBuffers = combineMesh.buffers[0] as Float32Array;
         const newIndexBuffers = combineMesh.buffers[1] as Uint16Array;

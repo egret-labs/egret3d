@@ -46,7 +46,6 @@ namespace egret3d {
                 return;
             }
 
-            filter.mesh._createBuffer(); // TODO 更合适的时机。
             drawCallCollecter.renderers.push(renderer);
 
             let subMeshIndex = 0;

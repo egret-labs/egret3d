@@ -208,7 +208,7 @@ namespace egret3d {
                 }
             }
 
-            const material = new egret3d.Material(result, resource.name);
+            const material = egret3d.Material.create(result, resource.name);
             paper.Asset.register(material);
 
             return material;
@@ -224,7 +224,7 @@ namespace egret3d {
         onLoadStart(host, resource) {
             return host.load(resource, "bin").then((result) => {
                 const parseResult = egret3d.GLTFAsset.parseFromBinary(result instanceof ArrayBuffer ? new Uint32Array(result) : result)!;
-                const glb = new Mesh(parseResult.config, parseResult.buffers, resource.name);
+                const glb = Mesh.create(parseResult.config, parseResult.buffers, resource.name);
                 glb.initialize();
 
                 paper.Asset.register(glb);

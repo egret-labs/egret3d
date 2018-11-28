@@ -450,7 +450,6 @@ namespace egret3d.particle {
                 console.error("ParticleSystem : error renderMode");
             }
 
-            renderer.batchMesh._createBuffer();
             this._drawCallCollecter.renderers.push(renderer);
             //
             let subMeshIndex = 0;

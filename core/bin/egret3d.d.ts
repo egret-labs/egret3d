@@ -442,6 +442,181 @@ declare namespace paper {
         uuid: string;
     }
 }
+declare namespace paper.editor {
+    /**
+     * 属性信息。
+     */
+    class PropertyInfo {
+        /**
+         * 属性名称。
+         */
+        name: string;
+        /**
+         * 编辑类型。
+         */
+        editType: EditType;
+        /**
+         * 属性配置。
+         */
+        option: PropertyOption | undefined;
+        constructor(name: string, editType: EditType, option?: PropertyOption);
+    }
+    /**
+     * 下拉列表项。
+     */
+    type ListItem = {
+        label: string;
+        value: any;
+    };
+    /**
+     * 属性配置。
+     */
+    type PropertyOption = {
+        readonly?: boolean;
+        /**
+         * UINT, INT, FLOAT 类型的最小值。
+         */
+        minimum?: number;
+        /**
+         * UINT, INT, FLOAT 类型的最大值。
+         */
+        maximum?: number;
+        /**
+         * UINT, INT, FLOAT 类型的步进值。
+         */
+        step?: number;
+        /**
+         * 赋值函数
+         */
+        set?: string;
+        /**
+         * 下拉项。
+         */
+        listItems?: ListItem[] | string | ((value: any) => ListItem[]);
+    };
+    /**
+     * 编辑类型。
+     */
+    const enum EditType {
+        /**
+         * 选中框。
+         */
+        CHECKBOX = "CHECKBOX",
+        /**
+         * 正整数。
+         */
+        UINT = "UINT",
+        /**
+         * 整数。
+         */
+        INT = "INT",
+        /**
+         * 浮点数。
+         */
+        FLOAT = "FLOAT",
+        /**
+         * 文本。
+         */
+        TEXT = "TEXT",
+        /**
+         * 下拉列表。
+         */
+        LIST = "LIST",
+        /**
+         * 数组。
+         */
+        ARRAY = "ARRAY",
+        /**
+         * 尺寸。
+         */
+        SIZE = "SIZE",
+        /**
+         * 矩形。
+         */
+        RECT = "RECT",
+        /**
+         * 二维向量。
+         */
+        VECTOR2 = "VECTOR2",
+        /**
+         * 三维向量。
+         */
+        VECTOR3 = "VECTOR3",
+        /**
+         * 四维向量。
+         */
+        VECTOR4 = "VECTOR4",
+        /**
+         * 四元数。
+         */
+        QUATERNION = "QUATERNION",
+        /**
+         * 颜色选择器。
+         */
+        COLOR = "COLOR",
+        /**
+         * 着色器。
+         */
+        SHADER = "SHADER",
+        /**
+         * 材质。
+         */
+        MATERIAL = "MATERIAL",
+        /**
+         * 材质数组。
+         */
+        MATERIAL_ARRAY = "MATERIAL_ARRAY",
+        /**
+         * 贴图。
+         */
+        TEXTUREDESC = "TEXTUREDESC",
+        /**
+         * 网格。
+         */
+        MESH = "MESH",
+        /**
+         * 实体。
+         */
+        GAMEOBJECT = "GAMEOBJECT",
+        /**
+         * 组件。
+         */
+        COMPONENT = "COMPONENT",
+        /**声音 */
+        SOUND = "SOUND",
+        /**
+         * 按钮。
+         */
+        BUTTON = "BUTTON",
+        /**
+         * 3x3 矩阵。
+         */
+        MAT3 = "MAT3",
+        /**
+         * 内嵌的。
+         */
+        NESTED = "NESTED",
+        /**变换 TODO remove*/
+        TRANSFROM = "TRANSFROM",
+    }
+    /**
+     * 自定义装饰器。
+     */
+    function custom(): (target: any) => void;
+    /**
+     * 属性装饰器。
+     * @param editType 编辑类型。
+     * @param option 配置。
+     */
+    function property(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
+    /**
+     * 从枚举中生成装饰器列表项。
+     */
+    function getItemsFromEnum(enumObject: any): {
+        label: string;
+        value: any;
+    }[];
+}
 declare namespace egret3d {
     /**
      * 二维向量接口。
@@ -1055,301 +1230,6 @@ declare namespace egret3d {
         static getDistance(a: Readonly<IVector3>, b: Readonly<IVector3>): number;
     }
 }
-declare namespace paper.editor {
-    /**
-     * 属性信息。
-     */
-    class PropertyInfo {
-        /**
-         * 属性名称。
-         */
-        name: string;
-        /**
-         * 编辑类型。
-         */
-        editType: EditType;
-        /**
-         * 属性配置。
-         */
-        option: PropertyOption | undefined;
-        constructor(name: string, editType: EditType, option?: PropertyOption);
-    }
-    /**
-     * 下拉列表项。
-     */
-    type ListItem = {
-        label: string;
-        value: any;
-    };
-    /**
-     * 属性配置。
-     */
-    type PropertyOption = {
-        readonly?: boolean;
-        /**
-         * UINT, INT, FLOAT 类型的最小值。
-         */
-        minimum?: number;
-        /**
-         * UINT, INT, FLOAT 类型的最大值。
-         */
-        maximum?: number;
-        /**
-         * UINT, INT, FLOAT 类型的步进值。
-         */
-        step?: number;
-        /**
-         * 赋值函数
-         */
-        set?: string;
-        /**
-         * 下拉项。
-         */
-        listItems?: ListItem[] | string | ((value: any) => ListItem[]);
-    };
-    /**
-     * 编辑类型。
-     */
-    const enum EditType {
-        /**
-         * 选中框。
-         */
-        CHECKBOX = "CHECKBOX",
-        /**
-         * 正整数。
-         */
-        UINT = "UINT",
-        /**
-         * 整数。
-         */
-        INT = "INT",
-        /**
-         * 浮点数。
-         */
-        FLOAT = "FLOAT",
-        /**
-         * 文本。
-         */
-        TEXT = "TEXT",
-        /**
-         * 下拉列表。
-         */
-        LIST = "LIST",
-        /**
-         * 数组。
-         */
-        ARRAY = "ARRAY",
-        /**
-         * 尺寸。
-         */
-        SIZE = "SIZE",
-        /**
-         * 矩形。
-         */
-        RECT = "RECT",
-        /**
-         * 二维向量。
-         */
-        VECTOR2 = "VECTOR2",
-        /**
-         * 三维向量。
-         */
-        VECTOR3 = "VECTOR3",
-        /**
-         * 四维向量。
-         */
-        VECTOR4 = "VECTOR4",
-        /**
-         * 四元数。
-         */
-        QUATERNION = "QUATERNION",
-        /**
-         * 颜色选择器。
-         */
-        COLOR = "COLOR",
-        /**
-         * 着色器。
-         */
-        SHADER = "SHADER",
-        /**
-         * 材质。
-         */
-        MATERIAL = "MATERIAL",
-        /**
-         * 材质数组。
-         */
-        MATERIAL_ARRAY = "MATERIAL_ARRAY",
-        /**
-         * 贴图。
-         */
-        TEXTUREDESC = "TEXTUREDESC",
-        /**
-         * 网格。
-         */
-        MESH = "MESH",
-        /**
-         * 实体。
-         */
-        GAMEOBJECT = "GAMEOBJECT",
-        /**
-         * 组件。
-         */
-        COMPONENT = "COMPONENT",
-        /**声音 */
-        SOUND = "SOUND",
-        /**
-         * 按钮。
-         */
-        BUTTON = "BUTTON",
-        /**
-         * 3x3 矩阵。
-         */
-        MAT3 = "MAT3",
-        /**
-         * 内嵌的。
-         */
-        NESTED = "NESTED",
-        /**变换 TODO remove*/
-        TRANSFROM = "TRANSFROM",
-    }
-    /**
-     * 自定义装饰器。
-     */
-    function custom(): (target: any) => void;
-    /**
-     * 属性装饰器。
-     * @param editType 编辑类型。
-     * @param option 配置。
-     */
-    function property(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
-    /**
-     * 从枚举中生成装饰器列表项。
-     */
-    function getItemsFromEnum(enumObject: any): {
-        label: string;
-        value: any;
-    }[];
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    interface IVector4 extends IVector3 {
-        /**
-         * w 轴分量。
-         */
-        w: number;
-    }
-    /**
-     *
-     */
-    class Vector4 extends paper.BaseRelease<Vector4> implements IVector4, paper.ICCS<Vector4>, paper.ISerializable {
-        protected static readonly _instances: Vector4[];
-        /**
-         *
-         */
-        static create(x?: number, y?: number, z?: number, w?: number): Vector4;
-        x: number;
-        y: number;
-        z: number;
-        w: number;
-        /**
-         * 请使用 `egret3d.Vector4.create(); egret3d.Quaternion.create()` 创建实例。
-         * @see egret3d.Quaternion.create()
-         * @see egret3d.Vector4.create()
-         * @deprecated
-         */
-        constructor(x?: number, y?: number, z?: number, w?: number);
-        serialize(): number[];
-        deserialize(value: Readonly<[number, number, number, number]>): this;
-        copy(value: Readonly<IVector4>): this;
-        clone(): Vector4;
-        set(x: number, y: number, z: number, w: number): this;
-        clear(): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        /**
-         * 判断该向量是否和一个向量相等。
-         * @param value 一个向量。
-         * @param threshold 阈值。
-         */
-        equal(value: Readonly<IVector4>, threshold?: number): boolean;
-        /**
-         * 归一化该向量。
-         * - v /= v.length
-         */
-        normalize(): this;
-        /**
-         * 将输入向量的归一化结果写入该向量。
-         * - v = input / input.length
-         * @param input 输入向量。
-         */
-        normalize(input: Readonly<IVector4>): this;
-        /**
-         * 反转该向量。
-         */
-        inverse(): this;
-        /**
-         * 将输入向量的反转结果写入该向量。
-         * @param input 输入向量。
-         */
-        inverse(input: Readonly<IVector4>): this;
-        /**
-         * 向量与标量相乘运算。
-         * - `v.multiplyScalar(scalar)` 将该向量与标量相乘，相当于 v *= scalar。
-         * - `v.multiplyScalar(scalar, input)` 将输入向量与标量相乘的结果写入该向量，相当于 v = input * scalar。
-         * @param scalar 标量。
-         * @param input 输入向量。
-         */
-        multiplyScalar(scalar: number, input?: Readonly<IVector4>): this;
-        /**
-         * 将该向量与一个向量相点乘。
-         * - v · vector
-         * @param vector 一个向量。
-         */
-        dot(vector: Readonly<IVector4>): number;
-        /**
-         * 将该向量和目标向量插值的结果写入该向量。
-         * - v = v * (1 - t) + to * t
-         * - 插值因子不会被限制在 0 ~ 1。
-         * @param to 目标矩阵。
-         * @param t 插值因子。
-         */
-        lerp(to: Readonly<IVector4>, t: number): this;
-        /**
-         * 将两个向量插值的结果写入该向量。
-         * - v = from * (1 - t) + to * t
-         * - 插值因子不会被限制在 0 ~ 1。
-         * @param from 起始矩阵。
-         * @param to 目标矩阵。
-         * @param t 插值因子。
-         */
-        lerp(from: Readonly<IVector4>, to: Readonly<IVector4>, t: number): this;
-        /**
-         * @deprecated
-         */
-        lerp(t: number, to: Readonly<IVector4>): this;
-        /**
-         * @deprecated
-         */
-        lerp(t: number, from: Readonly<IVector4>, to: Readonly<IVector4>): this;
-        /**
-         * 将该向量转换为数组。
-         * @param array 数组。
-         * @param offset 数组偏移。
-         */
-        toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
-        /**
-         * 该向量的长度。
-         * - 该值是实时计算的。
-         */
-        readonly length: number;
-        /**
-         * 该向量的长度的平方。
-         * - 该值是实时计算的。
-         */
-        readonly squaredLength: number;
-    }
-}
 declare namespace paper {
     /**
      * 资源基类。
@@ -1382,6 +1262,149 @@ declare namespace paper {
          * 释放资源。
          */
         dispose(disposeChildren?: boolean): boolean;
+    }
+}
+declare namespace paper {
+    /**
+     * 基础组件。
+     * - 所有组件的基类。
+     * - 在纯粹的实体组件系统中，组件通常应只包含数据，不应有业务逻辑、行为和生命周期。
+     */
+    abstract class BaseComponent extends BaseObject {
+        /**
+         * 所有已注册的组件类。
+         */
+        private static readonly _allComponents;
+        /**
+         * 所有已注册的单例组件类。
+         */
+        private static readonly _allSingletonComponents;
+        /**
+         *
+         */
+        hideFlags: HideFlags;
+        /**
+         * 该组件的实体。
+         */
+        readonly gameObject: GameObject;
+        /**
+         * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
+         */
+        extras?: ComponentExtras;
+        protected _enabled: boolean;
+        /**
+         * 禁止实例化组件。
+         * @protected
+         */
+        constructor();
+        /**
+         * 添加组件后，组件内部初始化时执行。
+         * - 重写此方法时，必须调用 `super.initialize()`。
+         * @param config 实体添加该组件时可以传递的初始化数据。
+         */
+        initialize(config?: any): void;
+        /**
+         * 移除组件后，组件内部卸载时执行。
+         * - 重写此方法时，必须调用 `super.uninitialize()`。
+         */
+        uninitialize(): void;
+        /**
+         * 该组件是否已被销毁。
+         */
+        readonly isDestroyed: boolean;
+        /**
+         * 该组件自身的激活状态。
+         */
+        enabled: boolean;
+        /**
+         * 该组件在场景的激活状态。
+         */
+        readonly isActiveAndEnabled: boolean;
+        /**
+         * 该组件所属实体的变换组件。
+         */
+        readonly transform: egret3d.Transform;
+    }
+}
+declare namespace egret3d {
+    /**
+     * 三角形。
+     */
+    class Triangle extends paper.BaseRelease<Triangle> implements paper.ICCS<Triangle>, paper.ISerializable, IRaycast {
+        private static readonly _instances;
+        /**
+         * 创建一个三角形实例。
+         * -   a
+         * -  /·\
+         * - b - c
+         * @param a 点 A。
+         * @param b 点 B。
+         * @param c 点 C。
+         */
+        static create(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): Triangle;
+        /**
+         * 通过三个点确定一个三角形，获取该三角形的法线。
+         * -   a
+         * -  /·\
+         * - b - c
+         * @param a 点 A。
+         * @param b 点 B。
+         * @param c 点 C。
+         * @param out 法线结果。
+         */
+        static getNormal(a: Readonly<IVector3>, b: Readonly<IVector3>, c: Readonly<IVector3>, out: Vector3): Vector3;
+        /**
+         * 点 A。
+         */
+        readonly a: Vector3;
+        /**
+         * 点 B。
+         */
+        readonly b: Vector3;
+        /**
+         * 点 C。
+         */
+        readonly c: Vector3;
+        /**
+         * 请使用 `egret3d.Triangle.create()` 创建实例。
+         * @see egret3d.Triangle.create()
+         */
+        private constructor();
+        serialize(): number[];
+        deserialize(element: Readonly<[number, number, number, number, number, number, number, number, number]>): void;
+        copy(value: Readonly<Triangle>): this;
+        clone(): Triangle;
+        set(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): this;
+        fromArray(array: Readonly<ArrayLike<number>>, offsetA?: number, offsetB?: number, offsetC?: number): void;
+        /**
+         * 获取该三角形的中心点。
+         * @param out 输出。
+         */
+        getCenter(out?: Vector3): Vector3;
+        /**
+         * 获取该三角形的法线。
+         * @param out 输出。
+         */
+        getNormal(out?: Vector3): Vector3;
+        /**
+         *
+         * @param u
+         * @param v
+         * @param out
+         */
+        getPointAt(u: number, v: number, out?: Vector3): Vector3;
+        /**
+         * 获取一个点到该三角形的最近点。
+         * @param point 一个点。
+         * @param out 最近点。
+         */
+        getClosestPointToPoint(point: Readonly<IVector3>, out?: Vector3): Vector3;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        /**
+         * 获取该三角形的面积。
+         * - 该值是实时计算的。
+         */
+        readonly area: number;
     }
 }
 declare namespace egret3d {
@@ -1611,260 +1634,47 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
-     * 基础组件。
-     * - 所有组件的基类。
-     * - 在纯粹的实体组件系统中，组件通常应只包含数据，不应有业务逻辑、行为和生命周期。
+     * 基础预制体资源。
+     * - 预制体资源和场景资源的基类。
      */
-    abstract class BaseComponent extends BaseObject {
-        /**
-         * 所有已注册的组件类。
-         */
-        private static readonly _allComponents;
-        /**
-         * 所有已注册的单例组件类。
-         */
-        private static readonly _allSingletonComponents;
-        /**
-         *
-         */
-        hideFlags: HideFlags;
-        /**
-         * 该组件的实体。
-         */
-        readonly gameObject: GameObject;
-        /**
-         * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
-         */
-        extras?: ComponentExtras;
-        protected _enabled: boolean;
-        /**
-         * 禁止实例化组件。
-         * @protected
-         */
-        constructor();
-        /**
-         * 添加组件后，组件内部初始化时执行。
-         * - 重写此方法时，必须调用 `super.initialize()`。
-         * @param config 实体添加该组件时可以传递的初始化数据。
-         */
-        initialize(config?: any): void;
-        /**
-         * 移除组件后，组件内部卸载时执行。
-         * - 重写此方法时，必须调用 `super.uninitialize()`。
-         */
-        uninitialize(): void;
-        /**
-         * 该组件是否已被销毁。
-         */
-        readonly isDestroyed: boolean;
-        /**
-         * 该组件自身的激活状态。
-         */
-        enabled: boolean;
-        /**
-         * 该组件在场景的激活状态。
-         */
-        readonly isActiveAndEnabled: boolean;
-        /**
-         * 该组件所属实体的变换组件。
-         */
-        readonly transform: egret3d.Transform;
+    abstract class BasePrefabAsset extends Asset {
+        protected _raw: ISerializedData;
+        dispose(): boolean;
+        caclByteLength(): number;
     }
-}
-declare namespace egret3d {
     /**
-     * 三角形。
+     * 预制体资源。
      */
-    class Triangle extends paper.BaseRelease<Triangle> implements paper.ICCS<Triangle>, paper.ISerializable, IRaycast {
-        private static readonly _instances;
+    class Prefab extends BasePrefabAsset {
         /**
-         * 创建一个三角形实例。
-         * -   a
-         * -  /·\
-         * - b - c
-         * @param a 点 A。
-         * @param b 点 B。
-         * @param c 点 C。
+         * 通过预置体资源创建一个实体实例到激活或指定的场景。
+         * @param name 资源的名称。
          */
-        static create(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): Triangle;
+        static create(name: string): GameObject | null;
         /**
-         * 通过三个点确定一个三角形，获取该三角形的法线。
-         * -   a
-         * -  /·\
-         * - b - c
-         * @param a 点 A。
-         * @param b 点 B。
-         * @param c 点 C。
-         * @param out 法线结果。
+         * @param name 资源的名称。
+         * @param x X 坐标。
+         * @param y Y 坐标。
+         * @param z Z 坐标。
          */
-        static getNormal(a: Readonly<IVector3>, b: Readonly<IVector3>, c: Readonly<IVector3>, out: Vector3): Vector3;
+        static create(name: string, x: number, y: number, z: number): GameObject | null;
         /**
-         * 点 A。
+         * @param name 资源的名称。
+         * @param scene 指定的场景。
          */
-        readonly a: Vector3;
+        static create(name: string, scene: Scene): GameObject | null;
         /**
-         * 点 B。
+         * @param name 资源的名称。
+         * @param x X 坐标。
+         * @param y Y 坐标。
+         * @param z Z 坐标。
+         * @param scene 指定的场景。
          */
-        readonly b: Vector3;
-        /**
-         * 点 C。
-         */
-        readonly c: Vector3;
-        /**
-         * 请使用 `egret3d.Triangle.create()` 创建实例。
-         * @see egret3d.Triangle.create()
-         */
-        private constructor();
-        serialize(): number[];
-        deserialize(element: Readonly<[number, number, number, number, number, number, number, number, number]>): void;
-        copy(value: Readonly<Triangle>): this;
-        clone(): Triangle;
-        set(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): this;
-        fromArray(array: Readonly<ArrayLike<number>>, offsetA?: number, offsetB?: number, offsetC?: number): void;
-        /**
-         * 获取该三角形的中心点。
-         * @param out 输出。
-         */
-        getCenter(out?: Vector3): Vector3;
-        /**
-         * 获取该三角形的法线。
-         * @param out 输出。
-         */
-        getNormal(out?: Vector3): Vector3;
-        /**
-         *
-         * @param u
-         * @param v
-         * @param out
-         */
-        getPointAt(u: number, v: number, out?: Vector3): Vector3;
-        /**
-         * 获取一个点到该三角形的最近点。
-         * @param point 一个点。
-         * @param out 最近点。
-         */
-        getClosestPointToPoint(point: Readonly<IVector3>, out?: Vector3): Vector3;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
-        /**
-         * 获取该三角形的面积。
-         * - 该值是实时计算的。
-         */
-        readonly area: number;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 四元数。
-     */
-    class Quaternion extends Vector4 {
-        /**
-         * 恒等四元数。
-         */
-        static readonly IDENTITY: Readonly<Quaternion>;
-        protected static readonly _instances: Quaternion[];
-        /**
-         * 创建一个四元数。
-         */
-        static create(x?: number, y?: number, z?: number, w?: number): Quaternion;
-        clone(): Quaternion;
-        /**
-         * 通过旋转矩阵设置该四元数。
-         * - 旋转矩阵不应包含缩放值。
-         * @param rotateMatrix 旋转矩阵。
-         */
-        fromMatrix(rotateMatrix: Readonly<Matrix4>): this;
-        /**
-         * 通过欧拉旋转设置该四元数。
-         * @param euler 欧拉旋转。（弧度制）
-         * @param order 欧拉旋转顺序。
-         */
-        fromEuler(euler: Readonly<IVector3>, order?: EulerOrder): this;
-        /**
-         * 通过旋转轴设置该四元数。
-         * - 假设旋转轴已被归一化。
-         * @param axis 旋转轴。
-         * @param angle 旋转角。（弧度制）
-         */
-        fromAxis(axis: Readonly<IVector3>, angle: number): this;
-        /**
-         * 通过自起始方向到目标方向的旋转值设置该四元数。
-         * - 假设方向向量已被归一化。
-         * @param from 起始方向。
-         * @param to 目标方向。
-         */
-        fromVectors(from: Readonly<IVector3>, to: Readonly<IVector3>): this;
-        /**
-         * 将该四元数转换为恒等四元数。
-         */
-        identity(): this;
-        /**
-         * 将该四元数乘以一个四元数。
-         * - v *= quaternion
-         * @param quaternion 一个四元数。
-         */
-        multiply(quaternion: Readonly<IVector4>): this;
-        /**
-         * 将两个四元数相乘的结果写入该四元数。
-         * - v = quaternionA * quaternionB
-         * @param quaternionA 一个四元数。
-         * @param quaternionB 另一个四元数。
-         */
-        multiply(quaternionA: Readonly<IVector4>, quaternionB?: Readonly<IVector4>): this;
-        /**
-         * 将一个四元数与该四元数相乘的结果写入该四元数。
-         * - v = quaternion * v
-         * @param quaternion 一个四元数。
-         */
-        premultiply(quaternion: Readonly<IVector4>): this;
-        lerp(p1: Readonly<IVector4> | number, p2: Readonly<IVector4> | number, p3?: number | Readonly<IVector4>): this;
-        /**
-         * 将该四元数和目标四元数球形插值的结果写入该四元数。
-         * - v = v * (1 - t) + to * t
-         * - 插值因子不会被限制在 0 ~ 1。
-         * @param t 插值因子。
-         * @param to 目标矩阵。
-         */
-        slerp(to: Readonly<IVector4>, t: number): this;
-        /**
-         * 将两个四元数球形插值的结果写入该四元数。
-         * - v = from * (1 - t) + to * t
-         * - 插值因子不会被限制在 0 ~ 1。
-         * @param t 插值因子。
-         * @param from 起始矩阵。
-         * @param to 目标矩阵。
-         */
-        slerp(from: Readonly<IVector4>, to: Readonly<IVector4>, t: number): this;
+        static create(name: string, x: number, y: number, z: number, scene: Scene): GameObject | null;
         /**
          * @deprecated
          */
-        slerp(t: number, to: Readonly<IVector4>): this;
-        /**
-         * @deprecated
-         */
-        slerp(t: number, from: Readonly<IVector4>, to: Readonly<IVector4>): this;
-        /**
-         * 设置该四元数，使其与起始点到目标点的方向相一致。
-         * @param from 起始点。
-         * @param to 目标点。
-         * @param up
-         */
-        lookAt(from: Readonly<IVector3>, to: Readonly<IVector3>, up: Readonly<IVector3>): this;
-        /**
-         * 设置该四元数，使其与目标方向相一致。
-         * @param vector 目标方向。
-         * @param up
-         */
-        lookRotation(vector: Readonly<IVector3>, up: Readonly<IVector3>): this;
-        /**
-         * 获取该四元数和一个四元数的夹角。（弧度制）
-         */
-        getAngle(value: Readonly<IVector4>): number;
-        /**
-         * 将该四元数转换为欧拉旋转。（弧度制）
-         * @param out 欧拉旋转。
-         * @param order 欧拉旋转顺序。
-         */
-        toEuler(out?: Vector3, order?: EulerOrder): Vector3;
+        createInstance(scene?: Scene | null, keepUUID?: boolean): GameObject | null;
     }
 }
 declare namespace paper {
@@ -1977,49 +1787,124 @@ declare namespace egret3d {
         clear(): this;
     }
 }
-declare namespace paper {
+declare namespace egret3d {
     /**
-     * 基础预制体资源。
-     * - 预制体资源和场景资源的基类。
+     *
      */
-    abstract class BasePrefabAsset extends Asset {
-        protected _raw: ISerializedData;
-        dispose(): boolean;
-        caclByteLength(): number;
+    interface IVector4 extends IVector3 {
+        /**
+         * w 轴分量。
+         */
+        w: number;
     }
     /**
-     * 预制体资源。
+     *
      */
-    class Prefab extends BasePrefabAsset {
+    class Vector4 extends paper.BaseRelease<Vector4> implements IVector4, paper.ICCS<Vector4>, paper.ISerializable {
+        protected static readonly _instances: Vector4[];
         /**
-         * 通过预置体资源创建一个实体实例到激活或指定的场景。
-         * @param name 资源的名称。
+         *
          */
-        static create(name: string): GameObject | null;
+        static create(x?: number, y?: number, z?: number, w?: number): Vector4;
+        x: number;
+        y: number;
+        z: number;
+        w: number;
         /**
-         * @param name 资源的名称。
-         * @param x X 坐标。
-         * @param y Y 坐标。
-         * @param z Z 坐标。
+         * 请使用 `egret3d.Vector4.create(); egret3d.Quaternion.create()` 创建实例。
+         * @see egret3d.Quaternion.create()
+         * @see egret3d.Vector4.create()
+         * @deprecated
          */
-        static create(name: string, x: number, y: number, z: number): GameObject | null;
+        constructor(x?: number, y?: number, z?: number, w?: number);
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number, number]>): this;
+        copy(value: Readonly<IVector4>): this;
+        clone(): Vector4;
+        set(x: number, y: number, z: number, w: number): this;
+        clear(): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
         /**
-         * @param name 资源的名称。
-         * @param scene 指定的场景。
+         * 判断该向量是否和一个向量相等。
+         * @param value 一个向量。
+         * @param threshold 阈值。
          */
-        static create(name: string, scene: Scene): GameObject | null;
+        equal(value: Readonly<IVector4>, threshold?: number): boolean;
         /**
-         * @param name 资源的名称。
-         * @param x X 坐标。
-         * @param y Y 坐标。
-         * @param z Z 坐标。
-         * @param scene 指定的场景。
+         * 归一化该向量。
+         * - v /= v.length
          */
-        static create(name: string, x: number, y: number, z: number, scene: Scene): GameObject | null;
+        normalize(): this;
+        /**
+         * 将输入向量的归一化结果写入该向量。
+         * - v = input / input.length
+         * @param input 输入向量。
+         */
+        normalize(input: Readonly<IVector4>): this;
+        /**
+         * 反转该向量。
+         */
+        inverse(): this;
+        /**
+         * 将输入向量的反转结果写入该向量。
+         * @param input 输入向量。
+         */
+        inverse(input: Readonly<IVector4>): this;
+        /**
+         * 向量与标量相乘运算。
+         * - `v.multiplyScalar(scalar)` 将该向量与标量相乘，相当于 v *= scalar。
+         * - `v.multiplyScalar(scalar, input)` 将输入向量与标量相乘的结果写入该向量，相当于 v = input * scalar。
+         * @param scalar 标量。
+         * @param input 输入向量。
+         */
+        multiplyScalar(scalar: number, input?: Readonly<IVector4>): this;
+        /**
+         * 将该向量与一个向量相点乘。
+         * - v · vector
+         * @param vector 一个向量。
+         */
+        dot(vector: Readonly<IVector4>): number;
+        /**
+         * 将该向量和目标向量插值的结果写入该向量。
+         * - v = v * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param to 目标矩阵。
+         * @param t 插值因子。
+         */
+        lerp(to: Readonly<IVector4>, t: number): this;
+        /**
+         * 将两个向量插值的结果写入该向量。
+         * - v = from * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param from 起始矩阵。
+         * @param to 目标矩阵。
+         * @param t 插值因子。
+         */
+        lerp(from: Readonly<IVector4>, to: Readonly<IVector4>, t: number): this;
         /**
          * @deprecated
          */
-        createInstance(scene?: Scene | null, keepUUID?: boolean): GameObject | null;
+        lerp(t: number, to: Readonly<IVector4>): this;
+        /**
+         * @deprecated
+         */
+        lerp(t: number, from: Readonly<IVector4>, to: Readonly<IVector4>): this;
+        /**
+         * 将该向量转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
+        /**
+         * 该向量的长度。
+         * - 该值是实时计算的。
+         */
+        readonly length: number;
+        /**
+         * 该向量的长度的平方。
+         * - 该值是实时计算的。
+         */
+        readonly squaredLength: number;
     }
 }
 declare namespace egret3d {
@@ -3374,6 +3259,52 @@ declare namespace gltf {
         extras?: any;
     }
 }
+declare namespace egret3d {
+    /**
+     *
+     */
+    namespace math {
+        /**
+         *
+         */
+        function euclideanModulo(n: number, m: number): number;
+        /**
+         *
+         */
+        function clamp(v: number, min?: number, max?: number): number;
+        /**
+         *
+         */
+        function lerp(from: number, to: number, t: number): number;
+        function frustumIntersectsSphere(frustum: Readonly<Frustum>, sphere: Readonly<Sphere>): boolean;
+    }
+    /**
+     * 内联的数字常数枚举。
+     */
+    const enum Const {
+        /**
+         * 弧度制到角度制相乘的系数。
+         */
+        RAD_DEG = 57.29577951308232,
+        /**
+         * 角度制到弧度制相乘的系数。
+         */
+        DEG_RAD = 0.017453292519943295,
+        /**
+         * 大于零的最小正值。
+         * - https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
+         */
+        EPSILON = 2.220446049250313e-16,
+    }
+    function sign(value: number): number;
+    function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<Box>): boolean;
+    function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<Box>): boolean;
+    function planeIntersectsSphere(plane: Readonly<Plane>, sphere: Readonly<Sphere>): boolean;
+    function aabbIntersectsSphere(aabb: Readonly<Box>, sphere: Readonly<Sphere>): boolean;
+    function aabbIntersectsAABB(valueA: Readonly<Box>, valueB: Readonly<Box>): boolean;
+    function sphereIntersectsSphere(valueA: Readonly<Sphere>, valueB: Readonly<Sphere>): boolean;
+    function isPowerOfTwo(value: number): boolean;
+}
 declare namespace paper {
     /**
      * 场景资源。
@@ -3490,6 +3421,129 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
+     * 四元数。
+     */
+    class Quaternion extends Vector4 {
+        /**
+         * 恒等四元数。
+         */
+        static readonly IDENTITY: Readonly<Quaternion>;
+        protected static readonly _instances: Quaternion[];
+        /**
+         * 创建一个四元数。
+         */
+        static create(x?: number, y?: number, z?: number, w?: number): Quaternion;
+        clone(): Quaternion;
+        /**
+         * 通过旋转矩阵设置该四元数。
+         * - 旋转矩阵不应包含缩放值。
+         * @param rotateMatrix 旋转矩阵。
+         */
+        fromMatrix(rotateMatrix: Readonly<Matrix4>): this;
+        /**
+         * 通过欧拉旋转设置该四元数。
+         * @param euler 欧拉旋转。（弧度制）
+         * @param order 欧拉旋转顺序。
+         */
+        fromEuler(euler: Readonly<IVector3>, order?: EulerOrder): this;
+        /**
+         * 通过旋转轴设置该四元数。
+         * - 假设旋转轴已被归一化。
+         * @param axis 旋转轴。
+         * @param angle 旋转角。（弧度制）
+         */
+        fromAxis(axis: Readonly<IVector3>, angle: number): this;
+        /**
+         * 通过自起始方向到目标方向的旋转值设置该四元数。
+         * - 假设方向向量已被归一化。
+         * @param from 起始方向。
+         * @param to 目标方向。
+         */
+        fromVectors(from: Readonly<IVector3>, to: Readonly<IVector3>): this;
+        /**
+         * 将该四元数转换为恒等四元数。
+         */
+        identity(): this;
+        /**
+         * 将该四元数乘以一个四元数。
+         * - v *= quaternion
+         * @param quaternion 一个四元数。
+         */
+        multiply(quaternion: Readonly<IVector4>): this;
+        /**
+         * 将两个四元数相乘的结果写入该四元数。
+         * - v = quaternionA * quaternionB
+         * @param quaternionA 一个四元数。
+         * @param quaternionB 另一个四元数。
+         */
+        multiply(quaternionA: Readonly<IVector4>, quaternionB?: Readonly<IVector4>): this;
+        /**
+         * 将一个四元数与该四元数相乘的结果写入该四元数。
+         * - v = quaternion * v
+         * @param quaternion 一个四元数。
+         */
+        premultiply(quaternion: Readonly<IVector4>): this;
+        lerp(p1: Readonly<IVector4> | number, p2: Readonly<IVector4> | number, p3?: number | Readonly<IVector4>): this;
+        /**
+         * 将该四元数和目标四元数球形插值的结果写入该四元数。
+         * - v = v * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param t 插值因子。
+         * @param to 目标矩阵。
+         */
+        slerp(to: Readonly<IVector4>, t: number): this;
+        /**
+         * 将两个四元数球形插值的结果写入该四元数。
+         * - v = from * (1 - t) + to * t
+         * - 插值因子不会被限制在 0 ~ 1。
+         * @param t 插值因子。
+         * @param from 起始矩阵。
+         * @param to 目标矩阵。
+         */
+        slerp(from: Readonly<IVector4>, to: Readonly<IVector4>, t: number): this;
+        /**
+         * @deprecated
+         */
+        slerp(t: number, to: Readonly<IVector4>): this;
+        /**
+         * @deprecated
+         */
+        slerp(t: number, from: Readonly<IVector4>, to: Readonly<IVector4>): this;
+        /**
+         * 设置该四元数，使其与起始点到目标点的方向相一致。
+         * @param from 起始点。
+         * @param to 目标点。
+         * @param up
+         */
+        lookAt(from: Readonly<IVector3>, to: Readonly<IVector3>, up: Readonly<IVector3>): this;
+        /**
+         * 设置该四元数，使其与目标方向相一致。
+         * @param vector 目标方向。
+         * @param up
+         */
+        lookRotation(vector: Readonly<IVector3>, up: Readonly<IVector3>): this;
+        /**
+         * 获取该四元数和一个四元数的夹角。（弧度制）
+         */
+        getAngle(value: Readonly<IVector4>): number;
+        /**
+         * 将该四元数转换为欧拉旋转。（弧度制）
+         * @param out 欧拉旋转。
+         * @param order 欧拉旋转顺序。
+         */
+        toEuler(out?: Vector3, order?: EulerOrder): Vector3;
+    }
+}
+declare namespace paper {
+    /**
+     * 基础单例组件。
+     * - 全部单例组件的基类。
+     */
+    abstract class SingletonComponent extends BaseComponent {
+    }
+}
+declare namespace egret3d {
+    /**
      * 颜色接口。
      */
     interface IColor {
@@ -3593,93 +3647,6 @@ declare namespace egret3d {
         scale(value: number, source?: Readonly<IColor>): this;
         lerp(t: number, valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this;
     }
-}
-declare namespace paper {
-    /**
-     * 基础单例组件。
-     * - 全部单例组件的基类。
-     */
-    abstract class SingletonComponent extends BaseComponent {
-    }
-}
-declare namespace egret3d {
-    /**
-     * 3×3 矩阵。
-     */
-    class Matrix3 extends paper.BaseRelease<Matrix3> implements paper.ICCS<Matrix3>, paper.ISerializable {
-        static readonly IDENTITY: Readonly<Matrix3>;
-        private static readonly _instances;
-        /**
-         * 创建一个矩阵。
-         * @param rawData
-         * @param offsetOrByteOffset
-         */
-        static create(): Matrix3;
-        /**
-         * 矩阵原始数据。
-         * @readonly
-         */
-        rawData: Float32Array;
-        /**
-         * 请使用 `egret3d.Matrix3.create()` 创建实例。
-         * @see egret3d.Matrix3.create()
-         */
-        private constructor();
-        serialize(): Float32Array;
-        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): Matrix3;
-        copy(value: Readonly<Matrix3>): this;
-        clone(): Matrix3;
-        set(n11: number, n12: number, n13: number, n21: number, n22: number, n23: number, n31: number, n32: number, n33: number): Matrix3;
-        identity(): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
-        fromBuffer(value: ArrayBuffer, byteOffset?: number): this;
-        fromScale(vector: Readonly<IVector3>): this;
-        /**
-         * 通过 UV 变换设置该矩阵。
-         * @param tx 水平偏移。
-         * @param ty 垂直偏移。
-         * @param sx 水平重复。
-         * @param sy 垂直重复。
-         * @param rotation 旋转。（弧度制）
-         * @param cx 水平中心。
-         * @param cy 垂直中心。
-         */
-        fromUVTransform(tx: number, ty: number, sx: number, sy: number, rotation: number, cx: number, cy: number): Matrix3;
-        fromMatrix4(value: Readonly<Matrix4>): this;
-        inverse(input?: Matrix3): this;
-        getNormalMatrix(matrix4: Readonly<Matrix4>): this;
-        transpose(): this;
-        /**
-         * 将该矩阵乘以一个矩阵。
-         * - v *= matrix
-         * @param matrix 一个矩阵。
-         */
-        multiply(matrix: Readonly<Matrix3>): this;
-        /**
-         * 将两个矩阵相乘的结果写入该矩阵。
-         * - v = matrixA * matrixB
-         * @param matrixA 一个矩阵。
-         * @param matrixB 另一个矩阵。
-         */
-        multiply(matrixA: Readonly<Matrix3>, matrixB: Readonly<Matrix3>): this;
-        /**
-         * 将一个矩阵与该矩阵相乘的结果写入该矩阵。
-         * - v = matrix * v
-         * @param matrix 一个矩阵。
-         */
-        premultiply(matrix: Readonly<Matrix3>): this;
-        /**
-         * 将该旋转矩阵转换为数组。
-         * @param array 数组。
-         * @param offset 数组偏移。
-         */
-        toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
-        readonly determinant: number;
-    }
-    /**
-     * @deprecated
-     */
-    const helpMatrix3A: Matrix3;
 }
 declare namespace paper {
     /**
@@ -3817,6 +3784,23 @@ declare namespace paper {
         readonly groups: ReadonlyArray<GameObjectGroup>;
     }
 }
+declare namespace paper {
+    /**
+     * 默认标识和自定义标识。
+     */
+    const enum DefaultTags {
+    }
+    /**
+     * 内置层级和自定义层级。
+     */
+    const enum Layer {
+    }
+    /**
+     * 渲染排序。
+     */
+    const enum RenderQueue {
+    }
+}
 declare namespace egret3d {
     /**
      * 几何立方体。
@@ -3945,52 +3929,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     *
-     */
-    namespace math {
-        /**
-         *
-         */
-        function euclideanModulo(n: number, m: number): number;
-        /**
-         *
-         */
-        function clamp(v: number, min?: number, max?: number): number;
-        /**
-         *
-         */
-        function lerp(from: number, to: number, t: number): number;
-        function frustumIntersectsSphere(frustum: Readonly<Frustum>, sphere: Readonly<Sphere>): boolean;
-    }
-    /**
-     * 内联的数字常数枚举。
-     */
-    const enum Const {
-        /**
-         * 弧度制到角度制相乘的系数。
-         */
-        RAD_DEG = 57.29577951308232,
-        /**
-         * 角度制到弧度制相乘的系数。
-         */
-        DEG_RAD = 0.017453292519943295,
-        /**
-         * 大于零的最小正值。
-         * - https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
-         */
-        EPSILON = 2.220446049250313e-16,
-    }
-    function sign(value: number): number;
-    function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<Box>): boolean;
-    function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<Box>): boolean;
-    function planeIntersectsSphere(plane: Readonly<Plane>, sphere: Readonly<Sphere>): boolean;
-    function aabbIntersectsSphere(aabb: Readonly<Box>, sphere: Readonly<Sphere>): boolean;
-    function aabbIntersectsAABB(valueA: Readonly<Box>, valueB: Readonly<Box>): boolean;
-    function sphereIntersectsSphere(valueA: Readonly<Sphere>, valueB: Readonly<Sphere>): boolean;
-    function isPowerOfTwo(value: number): boolean;
-}
-declare namespace egret3d {
-    /**
      * 灯光组件。
      */
     abstract class BaseLight extends paper.BaseComponent {
@@ -4041,21 +3979,91 @@ declare namespace egret3d {
         readonly lightmapScaleOffset: Vector4;
     }
 }
-declare namespace paper {
+declare namespace egret3d {
     /**
-     * 默认标识和自定义标识。
+     * 3×3 矩阵。
      */
-    const enum DefaultTags {
+    class Matrix3 extends paper.BaseRelease<Matrix3> implements paper.ICCS<Matrix3>, paper.ISerializable {
+        static readonly IDENTITY: Readonly<Matrix3>;
+        private static readonly _instances;
+        /**
+         * 创建一个矩阵。
+         * @param rawData
+         * @param offsetOrByteOffset
+         */
+        static create(): Matrix3;
+        /**
+         * 矩阵原始数据。
+         * @readonly
+         */
+        rawData: Float32Array;
+        /**
+         * 请使用 `egret3d.Matrix3.create()` 创建实例。
+         * @see egret3d.Matrix3.create()
+         */
+        private constructor();
+        serialize(): Float32Array;
+        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): Matrix3;
+        copy(value: Readonly<Matrix3>): this;
+        clone(): Matrix3;
+        set(n11: number, n12: number, n13: number, n21: number, n22: number, n23: number, n31: number, n32: number, n33: number): Matrix3;
+        identity(): this;
+        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromBuffer(value: ArrayBuffer, byteOffset?: number): this;
+        fromScale(vector: Readonly<IVector3>): this;
+        /**
+         * 通过 UV 变换设置该矩阵。
+         * @param tx 水平偏移。
+         * @param ty 垂直偏移。
+         * @param sx 水平重复。
+         * @param sy 垂直重复。
+         * @param rotation 旋转。（弧度制）
+         * @param cx 水平中心。
+         * @param cy 垂直中心。
+         */
+        fromUVTransform(tx: number, ty: number, sx: number, sy: number, rotation: number, cx: number, cy: number): Matrix3;
+        fromMatrix4(value: Readonly<Matrix4>): this;
+        inverse(input?: Matrix3): this;
+        getNormalMatrix(matrix4: Readonly<Matrix4>): this;
+        transpose(): this;
+        /**
+         * 将该矩阵乘以一个矩阵。
+         * - v *= matrix
+         * @param matrix 一个矩阵。
+         */
+        multiply(matrix: Readonly<Matrix3>): this;
+        /**
+         * 将两个矩阵相乘的结果写入该矩阵。
+         * - v = matrixA * matrixB
+         * @param matrixA 一个矩阵。
+         * @param matrixB 另一个矩阵。
+         */
+        multiply(matrixA: Readonly<Matrix3>, matrixB: Readonly<Matrix3>): this;
+        /**
+         * 将一个矩阵与该矩阵相乘的结果写入该矩阵。
+         * - v = matrix * v
+         * @param matrix 一个矩阵。
+         */
+        premultiply(matrix: Readonly<Matrix3>): this;
+        /**
+         * 将该旋转矩阵转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
+        readonly determinant: number;
     }
     /**
-     * 内置层级和自定义层级。
+     * @deprecated
      */
-    const enum Layer {
-    }
+    const helpMatrix3A: Matrix3;
+}
+declare namespace egret3d {
     /**
-     * 渲染排序。
+     * 纹理资源。
      */
-    const enum RenderQueue {
+    class Texture extends paper.Asset {
+        caclByteLength(): number;
     }
 }
 declare namespace egret3d {
@@ -4063,7 +4071,19 @@ declare namespace egret3d {
      * 基础网格。
      * - 所有网格的基类。
      */
-    abstract class BaseMesh extends GLTFAsset implements egret3d.IRaycast {
+    class Mesh extends GLTFAsset implements egret3d.IRaycast {
+        /**
+         * 创建一个网格。
+         * @param vertexCount
+         * @param indexCount
+         * @param attributeNames
+         * @param attributeTypes
+         * @param drawMode
+         */
+        static create(vertexCount: number, indexCount: number, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
+            [key: string]: gltf.AccessorType;
+        } | null, drawMode?: gltf.DrawMode): Mesh;
+        static create(config: GLTF, buffers: Uint32Array[], name: string): Mesh;
         protected _drawMode: gltf.DrawMode;
         protected _vertexCount: uint;
         protected readonly _attributeNames: string[];
@@ -4078,12 +4098,11 @@ declare namespace egret3d {
         /**
          * 请使用 `egret3d.Mesh.create()` 创建实例。
          * @see egret3d.Mesh.create()
-         * @deprecated
          */
-        constructor(vertexCount: uint, indexCount: uint, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
+        protected constructor(vertexCount: uint, indexCount: uint, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
             [key: string]: gltf.AccessorType;
         } | null, drawMode?: gltf.DrawMode);
-        constructor(config: GLTF, buffers: Uint32Array[], name: string);
+        protected constructor(config: GLTF, buffers: Uint32Array[], name: string);
         dispose(): boolean;
         /**
          * 克隆该网格。
@@ -4167,12 +4186,12 @@ declare namespace egret3d {
          * @param offset 顶点偏移。（默认不偏移）
          * @param count 顶点总数。（默认全部顶点）
          */
-        abstract uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: uint, count?: uint): void;
+        uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: uint, count?: uint): void;
         /**
          * 当修改该网格的顶点索引后，调用此方法来更新顶点索引的缓冲区。
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
          */
-        abstract uploadSubIndexBuffer(subMeshIndex?: uint): void;
+        uploadSubIndexBuffer(subMeshIndex?: uint): void;
         /**
          * 该网格的渲染模式。
          */
@@ -4193,14 +4212,6 @@ declare namespace egret3d {
          * 获取该网格的 glTF mesh 数据。
          */
         readonly glTFMesh: gltf.Mesh;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 纹理资源。
-     */
-    class Texture extends paper.Asset {
-        caclByteLength(): number;
     }
 }
 declare namespace egret3d {
@@ -8170,219 +8181,6 @@ declare namespace egret3d {
         makeSafe(): this;
     }
 }
-declare namespace paper {
-    /**
-     * @deprecated
-     */
-    type CullingMask = Layer;
-}
-declare namespace egret3d {
-    /**
-     * @deprecated
-     */
-    const RAD_DEG: Const;
-    /**
-     * @deprecated
-     */
-    const DEG_RAD: Const;
-    /**
-     * @deprecated
-     */
-    const EPSILON: Const;
-    /**
-     * @deprecated
-     */
-    const floatClamp: typeof math.clamp;
-    /**
-     * @deprecated
-     */
-    const numberLerp: typeof math.lerp;
-    /**
-     * @deprecated
-     */
-    type AABB = Box;
-    /**
-     * @deprecated
-     */
-    const AABB: typeof Box;
-    /**
-     * @deprecated
-     */
-    type Matrix = Matrix4;
-    /**
-     * @deprecated
-     */
-    const Matrix: typeof Matrix4;
-    /**
-     * @deprecated
-     */
-    const Prefab: typeof paper.Prefab;
-    /**
-     * @deprecated
-     */
-    type Prefab = paper.Prefab;
-    /**
-     * @deprecated
-     */
-    const RawScene: typeof paper.RawScene;
-    /**
-     * @deprecated
-     */
-    type RawScene = paper.RawScene;
-    /**
-     * @deprecated
-     */
-    const InputManager: {
-        mouse: {
-            isPressed: (button: number) => boolean;
-            wasPressed: (button: number) => boolean;
-            wasReleased: (button: number) => boolean;
-        };
-        touch: {
-            getTouch: (button: number) => Pointer;
-        };
-        keyboard: {
-            isPressed: (key: string | number) => boolean;
-            wasPressed: (key: string | number) => boolean;
-        };
-    };
-}
-declare namespace egret3d {
-    /**
-     * 动画资源。
-     */
-    class AnimationAsset extends GLTFAsset {
-        getAnimationClip(name: string): GLTFAnimationClip | null;
-    }
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    interface StateMachineNode {
-        _parent?: StateMachineNode;
-    }
-    /**
-     *
-     */
-    interface StateMachine extends StateMachineNode {
-        name: string;
-        nodes: StateMachineNode[];
-    }
-    /**
-     *
-     */
-    const enum AnimationBlendType {
-        E1D = 0,
-    }
-    /**
-     *
-     */
-    interface AnimationParameter {
-        type: int;
-        value: boolean | int | number;
-    }
-    /**
-     *
-     */
-    interface AnimationLayer {
-        additive: boolean;
-        weight: number;
-        name: string;
-        source: string | null;
-        machine: StateMachine;
-    }
-    /**
-     *
-     */
-    interface AnimationBaseNode extends StateMachineNode {
-        timeScale: number;
-        positionX?: number;
-        positionY?: number;
-    }
-    /**
-     *
-     */
-    interface AnimationTree extends AnimationBaseNode {
-        blendType: AnimationBlendType;
-        name: string;
-        parameters: string[];
-        nodes: AnimationBaseNode[];
-    }
-    /**
-     *
-     */
-    interface AnimationNode extends AnimationBaseNode {
-        asset: string;
-        clip: string;
-    }
-    /**
-     *
-     */
-    class AnimationController extends GLTFAsset {
-        static create(): AnimationController;
-        createLayer(name: string): AnimationLayer;
-        createAnimationTree(machineOrTreen: StateMachine | AnimationTree, name: string): AnimationTree;
-        createAnimationNode(machineOrTreen: StateMachine | AnimationTree, asset: string, clip: string): AnimationNode;
-        getLayer(index: uint): AnimationLayer;
-        readonly layers: AnimationLayer[];
-    }
-}
-declare namespace paper {
-    /**
-     * 应用程序运行模式。
-     */
-    const enum PlayerMode {
-        Player = 0,
-        DebugPlayer = 1,
-        Editor = 2,
-    }
-    /**
-     * 应用程序。
-     */
-    class ECS {
-        private static _instance;
-        /**
-         * 应用程序单例。
-         */
-        static getInstance(): ECS;
-        private constructor();
-        /**
-         * 当应用程序的播放模式改变时派发事件。
-         */
-        readonly onPlayerModeChange: signals.Signal;
-        /**
-         * 引擎版本。
-         */
-        readonly version: string;
-        /**
-         * 系统管理器。
-         */
-        readonly systemManager: SystemManager;
-        /**
-         * 场景管理器。
-         */
-        readonly sceneManager: SceneManager;
-        private _isFocused;
-        private _isRunning;
-        private _playerMode;
-        private _bindUpdate;
-        private _update();
-        private _updatePlayerMode();
-        /**
-         *
-         */
-        readonly isMobile: boolean;
-        /**
-         * 运行模式。
-         */
-        playerMode: PlayerMode;
-    }
-    /**
-     * 应用程序单例。
-     */
-    const Application: ECS;
-}
 declare namespace egret3d {
     /**
      * Shader 通用宏定义。
@@ -8436,7 +8234,7 @@ declare namespace egret3d {
         /**
          *
          */
-        renderQueue: paper.RenderQueue | number;
+        renderQueue: paper.RenderQueue | uint;
         private _cacheDefines;
         private readonly _textures;
         /**
@@ -8467,8 +8265,8 @@ declare namespace egret3d {
          */
         removeDefine(defineString: string, value?: number): this;
         setBoolean(id: string, value: boolean): this;
-        setInt(id: string, value: number): this;
-        setIntv(id: string, value: Float32Array | ReadonlyArray<number>): this;
+        setInt(id: string, value: int): this;
+        setIntv(id: string, value: Float32Array | ReadonlyArray<int>): this;
         setFloat(id: string, value: number): this;
         setFloatv(id: string, value: Float32Array | ReadonlyArray<number>): this;
         setVector2(id: string, value: Readonly<IVector2>): this;
@@ -8583,6 +8381,219 @@ declare namespace egret3d {
          * @deprecated
          */
         setShader(value: Shader): this | undefined;
+    }
+}
+declare namespace paper {
+    /**
+     * @deprecated
+     */
+    type CullingMask = Layer;
+}
+declare namespace egret3d {
+    /**
+     * @deprecated
+     */
+    const RAD_DEG: Const;
+    /**
+     * @deprecated
+     */
+    const DEG_RAD: Const;
+    /**
+     * @deprecated
+     */
+    const EPSILON: Const;
+    /**
+     * @deprecated
+     */
+    const floatClamp: typeof math.clamp;
+    /**
+     * @deprecated
+     */
+    const numberLerp: typeof math.lerp;
+    /**
+     * @deprecated
+     */
+    type AABB = Box;
+    /**
+     * @deprecated
+     */
+    const AABB: typeof Box;
+    /**
+     * @deprecated
+     */
+    type Matrix = Matrix4;
+    /**
+     * @deprecated
+     */
+    const Matrix: typeof Matrix4;
+    /**
+     * @deprecated
+     */
+    const Prefab: typeof paper.Prefab;
+    /**
+     * @deprecated
+     */
+    type Prefab = paper.Prefab;
+    /**
+     * @deprecated
+     */
+    const RawScene: typeof paper.RawScene;
+    /**
+     * @deprecated
+     */
+    type RawScene = paper.RawScene;
+    /**
+     * @deprecated
+     */
+    const InputManager: {
+        mouse: {
+            isPressed: (button: number) => boolean;
+            wasPressed: (button: number) => boolean;
+            wasReleased: (button: number) => boolean;
+        };
+        touch: {
+            getTouch: (button: number) => Pointer;
+        };
+        keyboard: {
+            isPressed: (key: string | number) => boolean;
+            wasPressed: (key: string | number) => boolean;
+        };
+    };
+}
+declare namespace paper {
+    /**
+     * 应用程序运行模式。
+     */
+    const enum PlayerMode {
+        Player = 0,
+        DebugPlayer = 1,
+        Editor = 2,
+    }
+    /**
+     * 应用程序。
+     */
+    class ECS {
+        private static _instance;
+        /**
+         * 应用程序单例。
+         */
+        static getInstance(): ECS;
+        private constructor();
+        /**
+         * 当应用程序的播放模式改变时派发事件。
+         */
+        readonly onPlayerModeChange: signals.Signal;
+        /**
+         * 引擎版本。
+         */
+        readonly version: string;
+        /**
+         * 系统管理器。
+         */
+        readonly systemManager: SystemManager;
+        /**
+         * 场景管理器。
+         */
+        readonly sceneManager: SceneManager;
+        private _isFocused;
+        private _isRunning;
+        private _playerMode;
+        private _bindUpdate;
+        private _update();
+        private _updatePlayerMode();
+        /**
+         *
+         */
+        readonly isMobile: boolean;
+        /**
+         * 运行模式。
+         */
+        playerMode: PlayerMode;
+    }
+    /**
+     * 应用程序单例。
+     */
+    const Application: ECS;
+}
+declare namespace egret3d {
+    /**
+     * 动画资源。
+     */
+    class AnimationAsset extends GLTFAsset {
+        getAnimationClip(name: string): GLTFAnimationClip | null;
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    interface StateMachineNode {
+        _parent?: StateMachineNode;
+    }
+    /**
+     *
+     */
+    interface StateMachine extends StateMachineNode {
+        name: string;
+        nodes: StateMachineNode[];
+    }
+    /**
+     *
+     */
+    const enum AnimationBlendType {
+        E1D = 0,
+    }
+    /**
+     *
+     */
+    interface AnimationParameter {
+        type: int;
+        value: boolean | int | number;
+    }
+    /**
+     *
+     */
+    interface AnimationLayer {
+        additive: boolean;
+        weight: number;
+        name: string;
+        source: string | null;
+        machine: StateMachine;
+    }
+    /**
+     *
+     */
+    interface AnimationBaseNode extends StateMachineNode {
+        timeScale: number;
+        positionX?: number;
+        positionY?: number;
+    }
+    /**
+     *
+     */
+    interface AnimationTree extends AnimationBaseNode {
+        blendType: AnimationBlendType;
+        name: string;
+        parameters: string[];
+        nodes: AnimationBaseNode[];
+    }
+    /**
+     *
+     */
+    interface AnimationNode extends AnimationBaseNode {
+        asset: string;
+        clip: string;
+    }
+    /**
+     *
+     */
+    class AnimationController extends GLTFAsset {
+        static create(): AnimationController;
+        createLayer(name: string): AnimationLayer;
+        createAnimationTree(machineOrTreen: StateMachine | AnimationTree, name: string): AnimationTree;
+        createAnimationNode(machineOrTreen: StateMachine | AnimationTree, asset: string, clip: string): AnimationNode;
+        getLayer(index: uint): AnimationLayer;
+        readonly layers: AnimationLayer[];
     }
 }
 declare namespace egret3d {
@@ -10173,29 +10184,6 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    /**
-     * 网格。
-     */
-    class Mesh extends BaseMesh {
-        /**
-         * 创建一个网格。
-         * @param vertexCount
-         * @param indexCount
-         * @param attributeNames
-         * @param attributeTypes
-         * @param drawMode
-         */
-        static create(vertexCount: number, indexCount: number, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
-            [key: string]: gltf.AccessorType;
-        } | null, drawMode?: gltf.DrawMode): Mesh;
-        static create(config: GLTF, buffers: Uint32Array[], name: string): Mesh;
-        dispose(): boolean;
-        _createBuffer(): void;
-        uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]) | null, offset?: number, count?: number): void;
-        uploadSubIndexBuffer(subMeshIndex?: number): void;
-    }
-}
-declare namespace egret3d {
     interface ITexture {
         texture: WebGLTexture;
         width: number;
@@ -10270,6 +10258,8 @@ declare namespace egret3d {
         use(): void;
         generateMipmap(): boolean;
     }
+}
+declare namespace egret3d {
 }
 declare namespace egret3d {
     /**

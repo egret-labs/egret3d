@@ -131,7 +131,7 @@ namespace egret3d.web {
             // Update uniforms.
             this._updateUniforms(program, material, technique, force);
             // Update attributes.
-            this._updateAttributes(program, drawCall.mesh, drawCall.subMeshIndex, technique, force);
+            this._updateAttributes(program, drawCall.mesh as WebGLMesh, drawCall.subMeshIndex, technique, force);
             // Draw.
             const mesh = drawCall.mesh;
             const glTFMesh = mesh.glTFMesh;
@@ -412,10 +412,14 @@ namespace egret3d.web {
             }
         }
 
-        private _updateAttributes(program: GlProgram, mesh: Mesh, subMeshIndex: number, technique: gltf.Technique, forceUpdate: boolean) {
+        private _updateAttributes(program: GlProgram, mesh: WebGLMesh, subMeshIndex: number, technique: gltf.Technique, forceUpdate: boolean) {
             const needUpdate = forceUpdate || this._cacheSubMeshIndex !== subMeshIndex || this._cacheMesh !== mesh;
             if (!needUpdate) {
                 return;
+            }
+
+            if (!mesh.vbo) {
+                mesh.createBuffer();
             }
 
             this._cacheSubMeshIndex = subMeshIndex;
@@ -426,7 +430,7 @@ namespace egret3d.web {
             // vbo.
             const webglAttributes = program.attributes;
             // const attributes = technique.attributes;
-            webgl.bindBuffer(webgl.ARRAY_BUFFER, mesh._vbo);
+            webgl.bindBuffer(webgl.ARRAY_BUFFER, mesh.vbo);
 
             for (const glAttribute of webglAttributes) {
                 // const attribute = attributes[glAttribute.name];
@@ -444,7 +448,7 @@ namespace egret3d.web {
                 }
             }
             // ibo.
-            const ibo = mesh._ibos[subMeshIndex];
+            const ibo = mesh.ibos[subMeshIndex];
             if (ibo) {
                 webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
             }

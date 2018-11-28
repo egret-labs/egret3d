@@ -71,7 +71,7 @@ namespace egret3d {
         public initialize() {
             super.initialize();
             //
-            const helpMaterial = new Material(new Shader(egret3d.ShaderLib.meshbasic as any, ""));
+            const helpMaterial = Material.create(new Shader(egret3d.ShaderLib.meshbasic as any, ""));
             //
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
             DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);

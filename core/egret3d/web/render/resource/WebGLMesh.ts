@@ -1,37 +1,10 @@
 namespace egret3d {
     /**
-     * 网格。
+     * @internal
      */
-    export class Mesh extends BaseMesh {
-        /**
-         * 创建一个网格。
-         * @param vertexCount 
-         * @param indexCount 
-         * @param attributeNames 
-         * @param attributeTypes 
-         * @param drawMode 
-         */
-        public static create(
-            vertexCount: number, indexCount: number,
-            attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
-            drawMode?: gltf.DrawMode
-        ): Mesh;
-        public static create(config: GLTF, buffers: Uint32Array[], name: string): Mesh;
-        public static create(
-            vertexCountOrConfig: number | GLTF, indexCountOrBuffers?: number | Uint32Array[],
-            attributeNamesOrName?: gltf.MeshAttribute[] | null | string, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
-            drawMode?: gltf.DrawMode
-        ) {
-            return new Mesh(vertexCountOrConfig as any, indexCountOrBuffers as any, attributeNamesOrName as any, attributeTypes, drawMode);
-        }
-        /**
-         * @internal
-         */
-        public readonly _ibos: WebGLBuffer[] = [];
-        /**
-         * @internal
-         */
-        public _vbo: WebGLBuffer | null = null;
+    export class WebGLMesh extends Mesh {
+        public readonly ibos: WebGLBuffer[] = [];
+        public vbo: WebGLBuffer | null = null;
 
         public dispose() {
             if (!super.dispose()) {
@@ -40,24 +13,24 @@ namespace egret3d {
 
             const webgl = WebGLCapabilities.webgl;
             if (webgl) {
-                for (const ibo of this._ibos) {
+                for (const ibo of this.ibos) {
                     webgl.deleteBuffer(ibo);
                 }
 
-                if (this._vbo) {
-                    webgl.deleteBuffer(this._vbo);
+                if (this.vbo) {
+                    webgl.deleteBuffer(this.vbo);
                 }
             }
 
-            this._ibos.length = 0;
-            this._vbo = null;
+            this.ibos.length = 0;
+            this.vbo = null;
 
             return true;
         }
 
-        public _createBuffer() {
+        public createBuffer() {
             const webgl = WebGLCapabilities.webgl;
-            if (this._vbo || !webgl) {
+            if (this.vbo || !webgl) {
                 return;
             }
 
@@ -66,7 +39,7 @@ namespace egret3d {
             const vbo = webgl.createBuffer();
 
             if (vbo) {
-                this._vbo = vbo;
+                this.vbo = vbo;
 
                 const attributeNames: gltf.MeshAttribute[] = [];
                 for (const k in this._glTFMesh!.primitives[0].attributes) {
@@ -76,10 +49,10 @@ namespace egret3d {
                 let subMeshIndex = 0;
                 for (const primitive of this._glTFMesh!.primitives) {
                     if (primitive.indices !== undefined) {
-                        if (this._ibos.length === subMeshIndex) {
+                        if (this.ibos.length === subMeshIndex) {
                             const ibo = webgl.createBuffer();
                             if (ibo) {
-                                this._ibos.push(ibo);
+                                this.ibos.push(ibo);
                                 webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
                                 webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this.getBufferLength(this.getAccessor(primitive.indices)), this.drawMode);
                                 this.uploadSubIndexBuffer(subMeshIndex);
@@ -92,14 +65,14 @@ namespace egret3d {
                             console.error("Error arguments.");
                         }
                     }
-                    else if (this._ibos.length > 0) {
+                    else if (this.ibos.length > 0) {
                         console.error("Error arguments.");
                     }
 
                     subMeshIndex++;
                 }
 
-                webgl.bindBuffer(webgl.ARRAY_BUFFER, this._vbo);
+                webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
                 webgl.bufferData(webgl.ARRAY_BUFFER, vertexBuffer.byteLength, this.drawMode);
                 this.uploadVertexBuffer(attributeNames);
             }
@@ -110,12 +83,12 @@ namespace egret3d {
 
         public uploadVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]) | null = null, offset: number = 0, count: number = 0) {
             const webgl = WebGLCapabilities.webgl;
-            if (!this._vbo || !webgl) {
+            if (!this.vbo || !webgl) {
                 return;
             }
 
             const { attributes } = this._glTFMesh!.primitives[0];
-            webgl.bindBuffer(webgl.ARRAY_BUFFER, this._vbo);
+            webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
 
             if (!uploadAttributes) {
                 uploadAttributes = [];
@@ -132,7 +105,7 @@ namespace egret3d {
                         let bufferOffset = this.getBufferOffset(accessor);
                         const subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
                         if (offset > 0) {
-                            var accessorTypeCount = this.getAccessorTypeCount(accessor.type);
+                            const accessorTypeCount = this.getAccessorTypeCount(accessor.type);
                             bufferOffset += offset * accessorTypeCount * this.getComponentTypeCount(accessor.componentType);
                         }
                         webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, subVertexBuffer);
@@ -158,7 +131,7 @@ namespace egret3d {
 
         public uploadSubIndexBuffer(subMeshIndex: number = 0) {
             const webgl = WebGLCapabilities.webgl;
-            if (!this._vbo || !webgl) {
+            if (!this.vbo || !webgl) {
                 return;
             }
 
@@ -168,7 +141,7 @@ namespace egret3d {
                 if (primitive.indices !== undefined) {
                     const accessor = this.getAccessor(primitive.indices);
                     const subIndexBuffer = this.createTypeArrayFromAccessor(accessor);
-                    const ibo = this._ibos[subMeshIndex];
+                    const ibo = this.ibos[subMeshIndex];
                     webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
                     webgl.bufferSubData(webgl.ELEMENT_ARRAY_BUFFER, 0, subIndexBuffer);
                 }
@@ -181,4 +154,6 @@ namespace egret3d {
             }
         }
     }
+
+    egret3d.Mesh = WebGLMesh;
 }
