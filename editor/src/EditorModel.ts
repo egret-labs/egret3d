@@ -810,7 +810,7 @@ namespace paper.editor {
                     if (Array.isArray(value)) {
                         gltfUnifromMap[key] = value.concat();
                     }
-                    else if (value instanceof egret3d.GLTexture2D) {
+                    else if (value instanceof egret3d.Texture) {
                         gltfUnifromMap[key] = value.name;
                     }
                     else {

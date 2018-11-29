@@ -5,7 +5,7 @@ namespace components {
         private _samples: number = 20;
         private _resolution: egret3d.Vector2 = egret3d.Vector2.create(1.0, 1.0);
 
-        private _depthRenderTarget: egret3d.GlRenderTarget | null = null;
+        private _depthRenderTarget: egret3d.RenderTexture | null = null;
         private _preMatrix: egret3d.Matrix4 | null = null;
         private readonly _depathMaterial: egret3d.Material = egret3d.Material.create(RES.getRes("shaders/motionBlur/blurDepth.shader.json"));
         private readonly _material: egret3d.Material = egret3d.Material.create(RES.getRes("shaders/motionBlur/motionBlur.shader.json"));
@@ -50,7 +50,7 @@ namespace components {
             const postProcessingRenderTarget = camera.postprocessingRenderTarget;
 
             if (!this._depthRenderTarget) {
-                this._depthRenderTarget = new egret3d.GlRenderTarget("depthRenderTarget", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true, false, false, true);
+                this._depthRenderTarget = egret3d.RenderTexture.create("depthRenderTarget", egret3d.stage.viewport.w, egret3d.stage.viewport.h, true, false, false, true);
             }
 
             depthMaterial.setFloat("mNear", camera.near).setFloat("mFar", camera.far);

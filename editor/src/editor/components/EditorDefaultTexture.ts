@@ -13,19 +13,21 @@ namespace paper.editor {
 
         public initialize() {
             {//TODO
-                const texture = new egret3d.GLTexture2D("builtin/camera_icon.image.json");
                 const image = new Image();
                 image.setAttribute('src', icons["camera"]);
-                image.onload = function () { texture.uploadImage(image, false, true, true, false); };
+                // image.onload = function () { texture.uploadImage(image, false, true, true, false); };
+                // const texture = new egret3d.GLTexture2D("builtin/camera_icon.image.json");
+                const texture = egret3d.Texture.createByImage("builtin/camera_icon.image.json", image, gltf.TextureFormat.RGBA,false, true, false);
                 EditorDefaultTexture.CAMERA_ICON = texture;
                 Asset.register(texture);
             }
 
             {//TODO
-                const texture = new egret3d.GLTexture2D("builtin/light_icon.image.json");
                 const image = new Image();
                 image.setAttribute('src', icons["light"]);
-                image.onload = function () { texture.uploadImage(image, false, true, true, false); };
+                // const texture = new egret3d.GLTexture2D("builtin/light_icon.image.json");
+                // image.onload = function () { texture.uploadImage(image, false, true, true, false); };
+                const texture = egret3d.Texture.createByImage("builtin/light_icon.image.json", image, gltf.TextureFormat.RGBA, false, true, false);
                 EditorDefaultTexture.LIGHT_ICON = texture;
                 Asset.register(texture);
             }

@@ -40,7 +40,7 @@ namespace paper.editor {
             camera.backgroundColor.set(0.13, 0.28, 0.51, 1.00);
             this.cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
             this.cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
-            paper.GameObject.globalGameObject.sendMessage("bootstrap");
+            // paper.GameObject.globalGameObject.sendMessage("bootstrap");
 
             // this.editorCameraScript = this.cameraObject.addComponent(EditorCameraScript);
             // this.editorCameraScript.moveSpeed = 10;

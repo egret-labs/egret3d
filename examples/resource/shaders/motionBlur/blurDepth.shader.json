@@ -27,10 +27,6 @@
                         },
                         "mFar": {
                             "type": 5126
-                        },
-                        "opacity": {
-                            "type": 5126,
-                            "value": 1
                         }
                     },
                     "states": {

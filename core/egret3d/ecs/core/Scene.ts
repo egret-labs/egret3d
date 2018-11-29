@@ -103,7 +103,7 @@ namespace paper {
          * 该场景的光照贴图列表。
          */
         @serializedField
-        public readonly lightmaps: egret3d.Texture[] = [];
+        public readonly lightmaps: egret3d.BaseTexture[] = [];
 
         private readonly _gameObjects: GameObject[] = [];
         /**

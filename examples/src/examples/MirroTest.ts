@@ -8,13 +8,13 @@ namespace examples {
             //
             await RES.getResAsync("shaders/reflector.shader.json");
             //
-            await RES.getResAsync("New_Pic_GunEditBG.jpg");
+            await RES.getResAsync("textures/UV_Grid_Sm.jpg");
             // Create camera.
             egret3d.Camera.main;
 
             const plane = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.PLANE, "Plane");
             plane.renderer!.material = egret3d.Material.create(RES.getRes("shaders/reflector.shader.json"));
-            plane.renderer!.material!.setTexture(RES.getRes("New_Pic_GunEditBG.jpg"));
+            plane.renderer!.material!.setTexture(RES.getRes("textures/UV_Grid_Sm.jpg"));
             plane.addComponent(behaviors.Reflector);
             plane.transform.setLocalEuler(Math.PI * 0.5, 0.0, 0.0).setLocalScale(10.0, 10.0, 10.0);
 

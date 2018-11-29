@@ -9,12 +9,12 @@
                 {
                     "name": "b_vert",
                     "type": 35633,
-                    "uri": "lensflare/shaders/b_vert.glsl"
+                    "uri": "shaders/lensflare/b_vert.glsl"
                 },
                 {
                     "name": "b_frag",
                     "type": 35632,
-                    "uri": "lensflare/shaders/b_frag.glsl"
+                    "uri": "shaders/lensflare/b_frag.glsl"
                 }
             ],
             "techniques": [

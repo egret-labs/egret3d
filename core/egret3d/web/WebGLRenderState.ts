@@ -239,7 +239,7 @@ namespace egret3d.web {
             return program;
         }
 
-        public updateViewport(viewport: Readonly<Rectangle>, target: BaseRenderTarget | null) { // TODO
+        public updateViewport(viewport: Readonly<Rectangle>, target: BaseRenderTexture | null) { // TODO
             const webgl = WebGLCapabilities.webgl!;
             let w: number;
             let h: number;
@@ -250,7 +250,8 @@ namespace egret3d.web {
             if (target) {
                 w = target.width;
                 h = target.height;
-                target.use();
+                // target.use();
+                target.activateRenderTexture();
             }
             else {
                 const stageViewport = stage.viewport;
@@ -282,10 +283,16 @@ namespace egret3d.web {
             webgl.clear(bufferBit);
         }
 
-        public copyFramebufferToTexture(screenPostion: Vector2, target: ITexture, level: number = 0) {
+        public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: number = 0) {
             const webgl = WebGLCapabilities.webgl!;
-            webgl.activeTexture(webgl.TEXTURE0);
-            webgl.bindTexture(webgl.TEXTURE_2D, target.texture);
+            if (target._dirty) {
+                target.setupTexture(0);
+            }
+            else {
+                webgl.activeTexture(webgl.TEXTURE0);
+                webgl.bindTexture(webgl.TEXTURE_2D, (target as WebGLTexture).webglTexture);
+            }
+
             webgl.copyTexImage2D(webgl.TEXTURE_2D, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0);//TODO
         }
 

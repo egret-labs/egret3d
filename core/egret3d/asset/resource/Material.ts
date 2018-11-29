@@ -30,7 +30,7 @@ namespace egret3d {
           * @internal
           */
         private readonly _defines: Array<string> = [];
-        private readonly _textures: Texture[] = []; // TODO
+        private readonly _textures: BaseTexture[] = []; // TODO
         /**
          * @internal
          */
@@ -740,12 +740,12 @@ namespace egret3d {
         /**
          * 获取该材质的主贴图。
          */
-        public getTexture(): Texture | null;
+        public getTexture(): BaseTexture | null;
         /**
          * 获取该材质的指定贴图。
          * @param uniformName uniform 名称。
          */
-        public getTexture(uniformName: string): Texture | null;
+        public getTexture(uniformName: string): BaseTexture | null;
         public getTexture(uniformName?: string) {
             if (!uniformName) {
                 uniformName = ShaderUniformName.Map;
@@ -766,18 +766,18 @@ namespace egret3d {
          * 设置该材质的主贴图。
          * @param value 贴图。 
          */
-        public setTexture(value: Texture | null): this;
+        public setTexture(value: BaseTexture | null): this;
         /**
          * 设置该材质的指定贴图。
          * @param uniformName uniform 名称。
          * @param value 贴图。
          */
-        public setTexture(uniformName: string, value: Texture | null): this;
-        public setTexture(p1: Texture | null | string, p2?: Texture | null) {
+        public setTexture(uniformName: string, value: BaseTexture | null): this;
+        public setTexture(p1: BaseTexture | null | string, p2?: BaseTexture | null) {
             let uniformName: string;
-            if (p1 === null || p1 instanceof Texture) {
+            if (p1 === null || p1 instanceof BaseTexture) {
                 uniformName = ShaderUniformName.Map;
-                p2 = p1 as Texture | null;
+                p2 = p1 as BaseTexture | null;
             }
             else {
                 uniformName = p1;
@@ -811,7 +811,7 @@ namespace egret3d {
                 console.error("Invalid glTF technique uniform.");
             }
 
-            if (p2 instanceof BaseRenderTarget) {
+            if (p2 instanceof BaseRenderTexture) {
                 this.addDefine(ShaderDefine.FLIP_V);
             }
 
