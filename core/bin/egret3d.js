@@ -26323,6 +26323,8 @@ var egret3d;
                     }
                 }
                 // Render 2D.
+                var webgl = web.WebGLCapabilities.webgl;
+                webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1); //TODO 解决字体模糊
                 for (var _b = 0, _c = this._groups[1].gameObjects; _b < _c.length; _b++) {
                     var gameObject = _c[_b];
                     var egret2DRenderer = gameObject.getComponent(egret3d.Egret2DRenderer);
