@@ -3,7 +3,7 @@ namespace egret3d.web {
      * @internal
      */
     export class WebGLMesh extends Mesh {
-        public readonly ibos: WebGLBuffer[] = [];
+        public readonly ibos: (WebGLBuffer | null)[] = [];
         public vbo: WebGLBuffer | null = null;
 
         public dispose() {
@@ -15,12 +15,10 @@ namespace egret3d.web {
                 const webgl = WebGLCapabilities.webgl!;
 
                 for (const ibo of this.ibos) {
-                    webgl.deleteBuffer(ibo);
+                    ibo && webgl.deleteBuffer(ibo);
                 }
 
-                if (this.vbo) {
-                    webgl.deleteBuffer(this.vbo);
-                }
+                webgl.deleteBuffer(this.vbo);
             }
 
             this.ibos.length = 0;
@@ -46,26 +44,19 @@ namespace egret3d.web {
                 let subMeshIndex = 0;
                 for (const primitive of this._glTFMesh!.primitives) {
                     if (primitive.indices !== undefined) {
-                        if (this.ibos.length === subMeshIndex) {
-                            const ibo = webgl.createBuffer();
-                            if (ibo) {
-                                this.ibos.push(ibo);
-                                webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
-                                webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this.getBufferLength(this.getAccessor(primitive.indices)), this.drawMode);
-                                this.uploadSubIndexBuffer(subMeshIndex);
-                            }
-                            else {
-                                console.error("Create webgl element buffer error.");
-                            }
+                        const ibo = webgl.createBuffer();
+                        if (ibo) {
+                            this.ibos[subMeshIndex] = ibo;
+                            webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
+                            webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this.getBufferLength(this.getAccessor(primitive.indices)), this.drawMode);
+                            this.uploadSubIndexBuffer(subMeshIndex);
                         }
                         else {
-                            console.error("Error arguments.");
+                            this.ibos[subMeshIndex] = null;
+                            console.error("Create webgl element buffer error.");
                         }
                     }
-                    else if (this.ibos.length > 0) {
-                        console.error("Error arguments.");
-                    }
-
+                    
                     subMeshIndex++;
                 }
 

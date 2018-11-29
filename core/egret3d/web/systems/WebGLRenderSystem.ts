@@ -54,7 +54,7 @@ namespace egret3d.web {
 
         // webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         // }
-        private _render(camera: Camera, renderTarget: BaseRenderTarget | null, material?: Material) {
+        private _render(camera: Camera, renderTarget: BaseRenderTarget | null, material: Material | null) {
             const renderState = this._renderState;
             renderState.updateViewport(camera.viewport, renderTarget);
             renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
@@ -89,7 +89,7 @@ namespace egret3d.web {
             }
         }
 
-        public draw(drawCall: DrawCall, drawMaterial?: Material): void {
+        public draw(drawCall: DrawCall, drawMaterial: Material | null = null): void {
             if (drawCall.renderer && drawCall.renderer.gameObject._beforeRenderBehaviors.length > 0) {
                 let flag = false;
 
@@ -440,7 +440,7 @@ namespace egret3d.web {
                     const accessor = mesh.getAccessor(accessorIndex);
                     const bufferOffset = mesh.getBufferOffset(accessor);
                     const typeCount = mesh.getAccessorTypeCount(accessor.type);
-                    webgl.vertexAttribPointer(location, typeCount, accessor.componentType, accessor.normalized ? true : false, 0, bufferOffset);//TODO normalized应该来源于mesh，应该还没有
+                    webgl.vertexAttribPointer(location, typeCount, accessor.componentType, accessor.normalized !== undefined ? accessor.normalized : false, 0, bufferOffset);//TODO normalized应该来源于mesh，应该还没有
                     webgl.enableVertexAttribArray(location);
                 }
                 else {
@@ -454,9 +454,10 @@ namespace egret3d.web {
             }
         }
 
-        public render(camera: Camera, material?: Material) {
+        public render(camera: Camera, material: Material | null = null) {
             const isChanged = Camera.current !== camera;
             Camera.current = camera;
+
             if (isChanged) {
                 camera._update();
 
@@ -464,8 +465,9 @@ namespace egret3d.web {
                     camera.context.updateLights(this._cameraAndLightCollecter.lights); // TODO 性能优化
                 }
                 //
-                const postProcessings: CameraPostprocessing[] = camera.gameObject.getComponents(CameraPostprocessing as any, true);
                 let isAnyActivated = false;
+                const postProcessings = camera.gameObject.getComponents(CameraPostprocessing as any, true) as CameraPostprocessing[];
+
                 if (postProcessings.length > 0) {
                     for (const postprocessing of postProcessings) {
                         if (postprocessing.isActiveAndEnabled) {
@@ -474,6 +476,7 @@ namespace egret3d.web {
                         }
                     }
                 }
+
                 if (!isAnyActivated) {
                     this._render(camera, camera.renderTarget, material);
                 }

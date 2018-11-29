@@ -14,8 +14,7 @@ namespace egret3d {
         gltf.MeshAttributeType.TEXCOORD_0,
     ];
     /**
-     * 基础网格。
-     * - 所有网格的基类。
+     * 网格资源。
      */
     export class Mesh extends GLTFAsset implements egret3d.IRaycast {
         /**
@@ -62,12 +61,6 @@ namespace egret3d {
          * 请使用 `egret3d.Mesh.create()` 创建实例。
          * @see egret3d.Mesh.create()
          */
-        protected constructor(
-            vertexCount: uint, indexCount: uint,
-            attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
-            drawMode?: gltf.DrawMode
-        )
-        protected constructor(config: GLTF, buffers: Uint32Array[], name: string)
         protected constructor(
             vertexCountOrConfig: uint | GLTF, indexCountOrBuffers?: uint | Uint32Array[],
             attributeNamesOrName?: gltf.MeshAttribute[] | null | string, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
@@ -546,7 +539,7 @@ namespace egret3d {
             return this._inverseBindMatrices;
         }
         /**
-         * 获取该网格的 glTF mesh 数据。
+         * 获取该网格的 glTF 网格数据。
          */
         public get glTFMesh(): gltf.Mesh {
             return this._glTFMesh!;

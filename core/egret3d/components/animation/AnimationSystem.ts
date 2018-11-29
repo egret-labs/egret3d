@@ -134,13 +134,14 @@ namespace egret3d {
 
             if (forceUpdate || weight !== 0.0) {
                 for (const channel of animationState.channels) {
-                    const target = channel.binder;
-                    if (!target.updateTarget) {
+                    if (!channel.updateTarget) {
                         continue;
                     }
 
-                    if (target.updateBlend(animationLayer, animationState)) {
-                        target.updateTarget(channel, animationLayer, animationState);
+                    const binder = channel.binder;
+
+                    if (!binder || binder.updateBlend(animationLayer, animationState)) {
+                        channel.updateTarget(animationLayer, animationState);
                     }
                 }
             }
@@ -152,16 +153,16 @@ namespace egret3d {
             }
 
             if (animationState.currentPlayTimes !== prevPlayTimes) {
-                // const animationNames = this._animationComponent._animationNames;
-                // if (animationNames.length > 0) {
-                //     const animationName = animationNames.shift();
-                //     this._animationComponent.play(animationName);
-                // }
-
                 animation.gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.LoopComplete, animationState), false);
 
                 if (animationState._playState === 1) {
-                    animation.gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.Complete, animationState), false);
+                    const clipNames = animationLayer._clipNames;
+                    if (clipNames && clipNames.length > 0) {
+                        animation.play(clipNames.shift()!);
+                    }
+                    else {
+                        animation.gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.Complete, animationState), false);
+                    }
                 }
             }
         }

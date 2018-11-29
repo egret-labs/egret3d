@@ -73,7 +73,9 @@ namespace egret3d {
      */
     export class AnimationState extends paper.BaseRelease<AnimationState> {
         private static readonly _instances: AnimationState[] = [];
-
+        /**
+         * @internal
+         */
         public static create(): AnimationState {
             let instance: AnimationState;
             if (this._instances.length > 0) {
@@ -124,7 +126,6 @@ namespace egret3d {
          */
         public animationClip: GLTFAnimationClip;
         // public parent: AnimationState | null;
-
         /**
          * 是否允许播放。
          * @internal
@@ -186,20 +187,40 @@ namespace egret3d {
             this.animationClip = animationClip;
             this.animationNode = animationNode;
 
-            if (this.animation.channels) {
-                const rootGameObject = animation.gameObject;
-                const children = rootGameObject.transform.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
-                children["__root__"] = rootGameObject.transform; //
+            if (!this.animation.channels) {
+                return;
+            }
 
-                for (const glTFChannel of this.animation.channels) {
-                    const nodeName = this.animationAsset.getNode(glTFChannel.target.node!).name!;
-                    if (!(nodeName! in children)) {
+            const rootGameObject = animation.gameObject;
+            const children = rootGameObject.transform.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
+            children["__root__"] = rootGameObject.transform; // 
+
+            for (const glTFChannel of this.animation.channels) {
+                const nodeIndex = glTFChannel.target.node;
+                const pathName = glTFChannel.target.path;
+
+                if (nodeIndex === undefined) {
+                    const channel = AnimationChannel.create();
+                    channel.components = animation;
+
+                    switch (pathName) {
+                        case "frameEvent":
+                            channel.updateTarget = channel.onUpdateTranslation;
+                            break;
+
+                        default:
+                            console.warn("Unknown animation channel.", pathName);
+                            break;
+                    }
+                }
+                else {
+                    const nodeName = this.animationAsset.getNode(nodeIndex).name!;
+                    if (!(nodeName in children)) {
                         continue;
                     }
 
-                    const pathName = glTFChannel.target.path;
-                    const transforms = children[nodeName!];
                     const channel = AnimationChannel.create();
+                    const transforms = children[nodeName];
                     const binder = animation._getBinder(nodeName, pathName);
 
                     channel.glTFChannel = glTFChannel;
@@ -207,25 +228,26 @@ namespace egret3d {
                     channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input));
                     channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output));
                     channel.binder = binder;
-                    binder.components = transforms; // TODO 更多组件
+                    channel.components = transforms; // TODO 更多组件
+                    this.channels.push(channel);
 
                     switch (pathName) {
                         case "translation":
-                            binder.updateTarget = AnimationBinder.onUpdateTranslation;
+                            channel.updateTarget = channel.onUpdateTranslation;
                             if (!binder.bindPose) {
                                 binder.bindPose = Vector3.create().copy((transforms as Transform).localPosition);
                             }
                             break;
 
                         case "rotation":
-                            binder.updateTarget = AnimationBinder.onUpdateRotation;
+                            channel.updateTarget = channel.onUpdateRotation;
                             if (!binder.bindPose) {
                                 binder.bindPose = Quaternion.create().copy((transforms as Transform).localRotation);
                             }
                             break;
 
                         case "scale":
-                            binder.updateTarget = AnimationBinder.onUpdateScale;
+                            channel.updateTarget = channel.onUpdateScale;
                             if (!binder.bindPose) {
                                 binder.bindPose = Vector3.create().copy((transforms as Transform).localScale);
                             }
@@ -240,40 +262,50 @@ namespace egret3d {
                                 case "paper.GameObject":
                                     switch (channel.glTFChannel.extensions!.paper.property) {
                                         case "activeSelf":
-                                            binder.updateTarget = AnimationBinder.onUpdateActive;
+                                            channel.updateTarget = channel.onUpdateActive;
                                             break;
                                     }
+                                    break;
+
+                                default:
+                                    console.warn("Unknown animation channel.", channel.glTFChannel.extensions!.paper.type);
                                     break;
                             }
                             break;
 
                         default:
-                            console.warn("Unknown animation channel.", channel.glTFChannel.target.path);
+                            console.warn("Unknown animation channel.", pathName);
                             break;
                     }
-
-                    this.channels.push(channel);
                 }
             }
         }
-
+        /**
+         * 继续该动画状态的播放。
+         */
         public play() {
             this._playheadEnabled = true;
         }
-
+        /**
+         * 停止该动画状态的播放。
+         */
         public stop() {
             this._playheadEnabled = false;
         }
-
+        /**
+         * 该动画状态是否正在播放。
+         */
         public get isPlaying() {
             return this._playheadEnabled && this._playState !== 1;
         }
-
+        /**
+         * 该动画状态是否播放完毕。
+         */
         public get isCompleted() {
             return this._playState === 1;
         }
         /**
-         * 播放速度。
+         * 该动画状态的播放速度。
          */
         public get timeScale(): number {
             return this.animationNode.timeScale;
@@ -285,11 +317,15 @@ namespace egret3d {
 
             this.animationNode.timeScale = value;
         }
-
+        /**
+         * 该动画状态的总播放时间。
+         */
         public get totalTime() {
             return this.animationClip.duration;
         }
-
+        /**
+         * 该动画状态的当前播放时间。
+         */
         public get currentTime() {
             return this._currentTime;
         }

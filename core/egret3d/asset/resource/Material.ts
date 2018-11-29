@@ -6,7 +6,7 @@ namespace egret3d {
      */
     export class Material extends GLTFAsset {
         /**
-         * 创建一个材质实例。
+         * 创建一个材质。
          */
         public static create(shader?: Shader | string): Material;
         public static create(config: GLTF, name: string): Material;
@@ -710,7 +710,7 @@ namespace egret3d {
          * 获取该材质的 UV 变换矩阵。
          * @param out 矩阵。
          */
-        public getUVTransform(out?: Matrix3) {
+        public getUVTransform(out?: Matrix3): Matrix3 {
             if (!out) {
                 out = Matrix3.create();
             }

@@ -37,7 +37,7 @@ namespace egret3d {
         extensions: {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
             paper: {
-                renderQueue: number;
+                renderQueue: uint;
                 defines?: string[];
                 states?: gltf.States;
             }
@@ -99,7 +99,7 @@ namespace egret3d {
         /**
          * 播放次数。
          */
-        playTimes?: number;
+        playTimes?: uint;
         /**
          * 开始时间。（以秒为单位）
          */
@@ -336,7 +336,7 @@ namespace egret3d {
         /**
          * 根据指定 Accessor 创建二进制数组。
          */
-        public createTypeArrayFromAccessor(accessor: gltf.Accessor, offset: number = 0, count: number = 0) {
+        public createTypeArrayFromAccessor(accessor: gltf.Accessor, offset: uint = 0, count: uint = 0) {
             const accessorTypeCount = this.getAccessorTypeCount(accessor.type);
             const bufferCount = accessorTypeCount * Math.min(accessor.count - offset, count || accessor.count);
             const bufferView = this.getBufferView(accessor);
@@ -374,14 +374,10 @@ namespace egret3d {
                     throw new Error();
             }
         }
-
-        public createAnimationController() {
-
-        }
         /**
          * 
          */
-        public getComponentTypeCount(type: gltf.ComponentType): number {
+        public getComponentTypeCount(type: gltf.ComponentType): uint {
             switch (type) {
                 case gltf.ComponentType.Byte:
                 case gltf.ComponentType.UnsignedByte:
@@ -405,7 +401,7 @@ namespace egret3d {
         /**
          * 
          */
-        public getAccessorTypeCount(type: gltf.AccessorType): number {
+        public getAccessorTypeCount(type: gltf.AccessorType): uint {
             switch (type) {
                 case gltf.AccessorType.SCALAR:
                     return 1;
@@ -575,7 +571,7 @@ declare namespace gltf {
     /**
      * glTF index.
      */
-    export type GLTFIndex = number;
+    export type GLTFIndex = uint;
     /**
      * BufferView target.
      */

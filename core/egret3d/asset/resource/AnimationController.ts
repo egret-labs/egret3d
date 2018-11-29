@@ -1,32 +1,32 @@
 namespace egret3d {
     /**
-     * 
+     * @private
      */
     export interface StateMachineNode {
         _parent?: StateMachineNode;
     }
     /**
-     * 
+     * @private
      */
     export interface StateMachine extends StateMachineNode {
         name: string;
         nodes: StateMachineNode[];
     }
     /**
-     * 
+     * @private
      */
     export const enum AnimationBlendType {
         E1D = 0,
     }
     /**
-     * 
+     * @private
      */
     export interface AnimationParameter {
         type: int;
         value: boolean | int | number;
     }
     /**
-     * 
+     * @private
      */
     export interface AnimationLayer {
         additive: boolean;
@@ -34,9 +34,13 @@ namespace egret3d {
         name: string;
         source: string | null;
         machine: StateMachine;
+        /**
+         * @private
+         */
+        _clipNames?: string[];
     }
     /**
-     * 
+     * @private
      */
     export interface AnimationBaseNode extends StateMachineNode {
         timeScale: number;
@@ -44,7 +48,7 @@ namespace egret3d {
         positionY?: number;
     }
     /**
-     * 
+     * @private
      */
     export interface AnimationTree extends AnimationBaseNode {
         blendType: AnimationBlendType;
@@ -53,14 +57,14 @@ namespace egret3d {
         nodes: AnimationBaseNode[];
     }
     /**
-     * 
+     * @private
      */
     export interface AnimationNode extends AnimationBaseNode {
         asset: string;
         clip: string;
     }
     /**
-     * 
+     * @private
      */
     export class AnimationController extends GLTFAsset {
         public static create(): AnimationController {

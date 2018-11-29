@@ -17,10 +17,6 @@ namespace egret3d {
          * @internal
          */
         public _statesDirty: boolean = false;
-        /**
-         * @internal
-         */
-        public readonly _animationNames: string[] = [];
         @paper.serializedField
         private readonly _animations: AnimationAsset[] = [];
         /**
@@ -58,25 +54,30 @@ namespace egret3d {
                 }
             }
 
-            const targets = this._binders;
-            for (const k in targets) {
-                targets[k].release();
-                delete targets[k];
+            const binders = this._binders;
+            for (const k in binders) {
+                binders[k].release();
+                delete binders[k];
             }
 
-            this._animationNames.length = 0;
             this._animations.length = 0;
             this._fadeStates.length = 0;
-            // this._blendLayers;
+            // this._binders;
             this._animationController = null;
             this._lastAnimationLayer = null;
         }
         /**
-         * 
+         * 融合播放一个指定的动画。
+         * @param animationClipName 动画剪辑的名称。
+         * @param fadeTime 融合的时间。
+         * @param playTimes 播放次数。（-1：采用动画数据配置，0：循环播放，N：循环播放 N 次）
+         * @param layerIndex 动画层索引。
+         * @param layerAdditive 动画层混合方式是否为叠加。
          */
+
         public fadeIn(
-            animationName: string | null = null,
-            fadeTime: number, playTimes: number = -1,
+            animationClipName: string,
+            fadeTime: number, playTimes: int = -1,
             layerIndex: uint = 0, layerAdditive: boolean = false,
         ): AnimationState | null {
             // 
@@ -85,8 +86,8 @@ namespace egret3d {
 
             for (const eachAnimationAsset of this._animations) {
                 animationAsset = eachAnimationAsset;
-                if (animationName) {
-                    animationClip = eachAnimationAsset.getAnimationClip(animationName);
+                if (animationClipName) {
+                    animationClip = eachAnimationAsset.getAnimationClip(animationClipName);
                     if (animationClip !== null) {
                         break;
                     }
@@ -98,7 +99,7 @@ namespace egret3d {
             }
 
             if (!animationAsset || !animationClip) {
-                console.warn(`There is no animation clip named "${animationName}" in the "${this.gameObject.path}" gameObject.`, animationName, this.gameObject.path);
+                console.warn(`There is no animation clip named "${animationClipName}" in the "${this.gameObject.path}" gameObject.`, animationClipName, this.gameObject.path);
                 return null;
             }
             //
@@ -140,24 +141,40 @@ namespace egret3d {
             return animationState;
         }
         /**
-         * 
+         * 播放一个指定的动画。
+         * @param animationClipNameOrNames 
+         * @param playTimes 播放次数。（-1：采用动画数据配置，0：循环播放，N：循环播放 N 次）
          */
-        public play(animationNameOrNames: string | string[] | null = null, playTimes: number = -1): AnimationState | null {
-            this._animationNames.length = 0;
-
-            if (Array.isArray(animationNameOrNames)) {
-                if (animationNameOrNames.length > 0) {
-                    for (const animationName of animationNameOrNames) {
-                        this._animationNames.push(animationName);
-                    }
-
-                    return this.fadeIn(this._animationNames.shift(), 0.0, playTimes);
-                }
-
-                return this.fadeIn(null, 0.0, playTimes);
+        public play(animationClipNameOrNames: string | (string[]) | null = null, playTimes: int = -1): AnimationState | null {
+            if (!this._animationController) {
+                this._animationController = AnimationController.create();
             }
 
-            return this.fadeIn(animationNameOrNames, 0.0, playTimes);
+            const animationController = this._animationController;
+            const animationLayer = animationController.getLayer(0);
+            //
+            if (!animationLayer._clipNames) {
+                animationLayer._clipNames = [];
+            }
+
+            const clipNames = animationLayer._clipNames;
+            clipNames.length = 0;
+            if (Array.isArray(animationClipNameOrNames)) {
+                if (animationClipNameOrNames.length > 0) {
+                    for (const animationName of animationClipNameOrNames) {
+                        clipNames.push(animationName);
+                    }
+                    animationClipNameOrNames = clipNames.shift()!;
+                }
+                else {
+                    animationClipNameOrNames = "";
+                }
+            }
+            else if (!animationClipNameOrNames) {
+                animationClipNameOrNames = "";
+            }
+
+            return this.fadeIn(animationClipNameOrNames, 0.0, playTimes);
         }
         /**
          * 
