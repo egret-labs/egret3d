@@ -244,7 +244,7 @@ namespace egret3d.web {
                             for (let i = 0, l = units.length; i < l; i++) {
                                 if (context.directShadowMaps[i]) {
                                     const unit = units[i];
-                                    const texture = context.directShadowMaps[i] as Texture;
+                                    const texture = context.directShadowMaps[i] as GLTexture2D;
                                     if (texture._dirty) {
                                         texture.uploadTexture(unit);
                                     }
@@ -265,7 +265,7 @@ namespace egret3d.web {
                             for (let i = 0, l = units.length; i < l; i++) {
                                 if (context.pointShadowMaps[i]) {
                                     const unit = units[i];
-                                    const texture = context.pointShadowMaps[i] as Texture;
+                                    const texture = context.pointShadowMaps[i] as GLTexture2D;
                                     if (texture._dirty) {
                                         texture.uploadTexture(unit);
                                     }
@@ -286,7 +286,7 @@ namespace egret3d.web {
                             for (let i = 0, l = units.length; i < l; i++) {
                                 if (context.spotShadowMaps[i]) {
                                     const unit = units[i];
-                                    const texture = context.spotShadowMaps[i] as Texture;
+                                    const texture = context.spotShadowMaps[i] as GLTexture2D;
                                     if (texture._dirty) {
                                         texture.uploadTexture(unit);
                                     }
@@ -301,7 +301,7 @@ namespace egret3d.web {
 
                     case gltf.UniformSemanticType._LIGHTMAPTEX:
                         if (glUniform.textureUnits && glUniform.textureUnits.length === 1 && context.lightmap) {
-                            const texture = context.lightmap as Texture;
+                            const texture = context.lightmap as GLTexture2D;
                             const unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location, unit);
                             if (texture._dirty) {
@@ -426,7 +426,7 @@ namespace egret3d.web {
                         break;
                     case gltf.UniformType.SAMPLER_2D:
                         if (glUniform.textureUnits && glUniform.textureUnits.length === 1) {
-                            const texture = value as Texture;
+                            const texture = value as GLTexture2D;
                             const unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location, unit);
                             if (texture._dirty) {

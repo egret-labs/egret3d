@@ -3315,20 +3315,22 @@ var paper;
             }
             EditorDefaultTexture.prototype.initialize = function () {
                 {
-                    var texture_1 = new egret3d.GLTexture2D("builtin/camera_icon.image.json");
-                    var image_1 = new Image();
-                    image_1.setAttribute('src', icons["camera"]);
-                    image_1.onload = function () { texture_1.uploadImage(image_1, false, true, true, false); };
-                    EditorDefaultTexture.CAMERA_ICON = texture_1;
-                    paper.Asset.register(texture_1);
+                    var image = new Image();
+                    image.setAttribute('src', icons["camera"]);
+                    // image.onload = function () { texture.uploadImage(image, false, true, true, false); };
+                    // const texture = new egret3d.GLTexture2D("builtin/camera_icon.image.json");
+                    var texture = egret3d.Texture2D.createByImage("builtin/camera_icon.image.json", image, 6408 /* RGBA */, false, true, false);
+                    EditorDefaultTexture.CAMERA_ICON = texture;
+                    paper.Asset.register(texture);
                 }
                 {
-                    var texture_2 = new egret3d.GLTexture2D("builtin/light_icon.image.json");
-                    var image_2 = new Image();
-                    image_2.setAttribute('src', icons["light"]);
-                    image_2.onload = function () { texture_2.uploadImage(image_2, false, true, true, false); };
-                    EditorDefaultTexture.LIGHT_ICON = texture_2;
-                    paper.Asset.register(texture_2);
+                    var image = new Image();
+                    image.setAttribute('src', icons["light"]);
+                    // const texture = new egret3d.GLTexture2D("builtin/light_icon.image.json");
+                    // image.onload = function () { texture.uploadImage(image, false, true, true, false); };
+                    var texture = egret3d.Texture2D.createByImage("builtin/light_icon.image.json", image, 6408 /* RGBA */, false, true, false);
+                    EditorDefaultTexture.LIGHT_ICON = texture;
+                    paper.Asset.register(texture);
                 }
             };
             return EditorDefaultTexture;
@@ -4668,7 +4670,7 @@ var paper;
                         inspector_1[0].appendChild(guiComponent_1.inspector.domElement);
                     }
                     paper.Application.systemManager.register(editor.GUISystem, 6000 /* LaterUpdate */ + 1); // Make sure the GUISystem update after the SceneSystem.
-                    console.info("通过 H 键切换 Inspector 的显示与隐藏。");
+                    console.info("\u5C0F\u63D0\u793A\uFF1A\u901A\u8FC7 H \u952E\u5207\u6362 Inspector \u7684\u663E\u793A\u4E0E\u9690\u85CF\u3002");
                 }
             };
             EditorSystem.prototype.onUpdate = function () {
@@ -6534,7 +6536,7 @@ var paper;
                                 if (Array.isArray(value)) {
                                     gltfUnifromMap[key] = value.concat();
                                 }
-                                else if (value instanceof egret3d.GLTexture2D) {
+                                else if (value instanceof egret3d.Texture2D) {
                                     gltfUnifromMap[key] = value.name;
                                 }
                                 else {
@@ -8698,7 +8700,7 @@ var paper;
                     }
                 }
                 if (defaultPointer.isUp(1 /* LeftMouse */, false) || defaultPointer.isUp(2 /* RightMouse */, false)) {
-                    this.clearDefaultPointerDownPosition();
+                    this._clearDefaultPointerDownPosition();
                 }
                 {
                     var event_4 = defaultPointer.event;
@@ -8793,7 +8795,7 @@ var paper;
                 this._updateCameras();
                 this._updateLights();
             };
-            SceneSystem.prototype.clearDefaultPointerDownPosition = function () {
+            SceneSystem.prototype._clearDefaultPointerDownPosition = function () {
                 var defaultPointer = egret3d.inputCollecter.defaultPointer;
                 defaultPointer.downPosition.copy(SceneSystem._defalutPosition);
             };

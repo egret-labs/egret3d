@@ -10,8 +10,8 @@ namespace behaviors {
         private readonly _drawCall1b: egret3d.DrawCall = egret3d.DrawCall.create();
         private readonly _drawCallLensflare: egret3d.DrawCall = egret3d.DrawCall.create();
         private readonly _meshLensflare: egret3d.Mesh = egret3d.MeshBuilder.createPlane(2, 2);
-        private _tempMap: egret3d.GLTexture2D = new egret3d.GLTexture2D("tempMap", LensflareEffect.TEXTURE_SIZE.x, LensflareEffect.TEXTURE_SIZE.y, gltf.TextureFormat.RGB);;
-        private _occlusionMap: egret3d.GLTexture2D = new egret3d.GLTexture2D("occlusionMap", LensflareEffect.TEXTURE_SIZE.x, LensflareEffect.TEXTURE_SIZE.y, gltf.TextureFormat.RGB);;
+        private _tempMap: egret3d.Texture2D | null = null;
+        private _occlusionMap: egret3d.Texture2D | null = null;
 
         private readonly _positionScreen: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _scale: egret3d.Vector2 = egret3d.Vector2.create();
@@ -23,8 +23,10 @@ namespace behaviors {
         @paper.editor.property(paper.editor.EditType.COLOR)
         public color: egret3d.Color = egret3d.Color.create(0.55, 0.9, 1.0, 1.0);
         public onAwake() {
-            this._tempMap.uploadImage(new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), false, false, false);
-            this._occlusionMap.uploadImage(new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), false, false, false);
+            this._tempMap = egret3d.Texture2D.create("tempMap", new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), LensflareEffect.TEXTURE_SIZE.x, LensflareEffect.TEXTURE_SIZE.y, gltf.TextureFormat.RGB, false, gltf.TextureWrap.CLAMP_TO_EDGE, gltf.TextureWrap.CLAMP_TO_EDGE);
+            this._occlusionMap = egret3d.Texture2D.create("occlusionMap", new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), LensflareEffect.TEXTURE_SIZE.x, LensflareEffect.TEXTURE_SIZE.y, gltf.TextureFormat.RGB, false, gltf.TextureWrap.CLAMP_TO_EDGE, gltf.TextureWrap.CLAMP_TO_EDGE);
+            // this._tempMap.uploadImage(new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), false, false, false);
+            // this._occlusionMap.uploadImage(new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), false, false, false);
 
             this._material1a.setDepth(true, false);
             this._material1b.setDepth(false, false).setTexture(this._tempMap);
@@ -55,8 +57,12 @@ namespace behaviors {
 
         public onDestroy() {
             this._elements.length = 0;
-            this._tempMap.dispose();
-            this._occlusionMap.dispose();
+            if (this._tempMap) {
+                this._tempMap.dispose();
+            }
+            if (this._occlusionMap) {
+                this._occlusionMap.dispose();
+            }
 
             this._material1a.dispose();
             this._material1b.dispose();
@@ -100,7 +106,7 @@ namespace behaviors {
             if (validArea.contains(screenPositionPixels)) {
 
                 // save current RGB to temp texture
-                renderState.copyFramebufferToTexture(screenPositionPixels, this._tempMap as egret3d.ITexture);
+                renderState.copyFramebufferToTexture(screenPositionPixels, this._tempMap as egret3d.Texture);
 
                 // render pink quad
                 this._material1a.setVector2("tscale", scale);
@@ -109,7 +115,7 @@ namespace behaviors {
                 renderState.draw(this._drawCall1a);
 
                 // copy result to occlusionMap
-                renderState.copyFramebufferToTexture(screenPositionPixels, this._occlusionMap);
+                renderState.copyFramebufferToTexture(screenPositionPixels, this._occlusionMap!);
 
                 // restore graphics
                 this._material1b.setVector2("tscale", scale);

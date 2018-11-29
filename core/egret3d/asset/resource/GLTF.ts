@@ -216,9 +216,9 @@ namespace egret3d {
         }
         public static createTextureConfig() {
             const config = this._createConfig();
-            config.images = [];
+            config.images = [{}];
             config.samplers = [{ magFilter: gltf.TextureFilter.NEAREST, minFilter: gltf.TextureFilter.NEAREST, wrapS: gltf.TextureWrap.REPEAT, wrapT: gltf.TextureWrap.REPEAT }];
-            config.textures = [{ sampler: 0, source: 0 }];
+            config.textures = [{ sampler: 0, source: 0, extensions: { paper: {} } }];
 
             return config;
         }
@@ -854,6 +854,7 @@ declare namespace gltf {
         WEIGHTS_0 = "WEIGHTS_0",
     }
 
+    export type ImageSource = ImageBitmap | ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement;
     export type MeshAttribute = AttributeSemanticType | string;
     /**
      * Indices of those attributes that deviate from their initialization value.
@@ -1171,7 +1172,7 @@ declare namespace gltf {
         /**
          * The uri of the image.
          */
-        uri?: string | ArrayBufferView | TexImageSource;
+        uri?: string | ArrayBufferView | ImageSource;
         /**
          * The image's MIME type.
          */

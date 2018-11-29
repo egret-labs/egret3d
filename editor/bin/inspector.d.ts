@@ -825,6 +825,6 @@ declare namespace paper.editor {
         onDisable(): void;
         onUpdate(): void;
         private static readonly _defalutPosition;
-        private clearDefaultPointerDownPosition();
+        private _clearDefaultPointerDownPosition();
     }
 }

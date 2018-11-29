@@ -109,339 +109,6 @@ declare namespace signals {
         removeAll(): void;
     }
 }
-// Type definitions for JS-Signals 1.0
-// Project: http://millermedeiros.github.io/js-signals/
-// Definitions by: Diullei Gomes <https://github.com/diullei>
-// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
-// TypeScript Version: 2.3
-
-declare var signals: signals.SignalWrapper;
-
-declare namespace signals {
-    interface SignalWrapper<T = any> {
-        Signal: Signal<T>;
-    }
-
-    interface SignalBinding<T = any> {
-        active: boolean;
-        context: any;
-        params: any;
-        detach(): Function;
-        execute(paramsArr?: any[]): any;
-        getListener(): (...params: T[]) => void;
-        getSignal(): Signal<T>;
-        isBound(): boolean;
-        isOnce(): boolean;
-    }
-
-    interface Signal<T = any> {
-        /**
-         * Custom event broadcaster
-         * <br />- inspired by Robert Penner's AS3 Signals.
-         * @author Miller Medeiros
-         */
-        new (): Signal<T>;
-
-        /**
-         * If Signal is active and should broadcast events.
-         */
-        active: boolean;
-
-        /**
-         * If Signal should keep record of previously dispatched parameters and automatically
-         * execute listener during add()/addOnce() if Signal was already dispatched before.
-         */
-        memorize: boolean;
-
-        /**
-         * Signals Version Number
-         */
-        VERSION: string;
-
-        /**
-         * Add a listener to the signal.
-         *
-         * @param listener Signal handler function.
-         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
-         * @param priority The priority level of the event listener.
-         *        Listeners with higher priority will be executed before listeners with lower priority.
-         *        Listeners with same priority level will be executed at the same order as they were added. (default = 0)
-         */
-        add(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
-
-        /**
-         * Add listener to the signal that should be removed after first execution (will be executed only once).
-         *
-         * @param listener Signal handler function.
-         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
-         * @param priority The priority level of the event listener.
-         *                 Listeners with higher priority will be executed before listeners with lower priority.
-         *                 Listeners with same priority level will be executed at the same order as they were added. (default = 0)
-         */
-        addOnce(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
-
-        /**
-         * Dispatch/Broadcast Signal to all listeners added to the queue.
-         *
-         * @param params Parameters that should be passed to each handler.
-         */
-        dispatch(...params: T[]): void;
-
-        /**
-         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
-         */
-        dispose(): void;
-
-        /**
-         * Forget memorized arguments.
-         */
-        forget(): void;
-
-        /**
-         * Returns a number of listeners attached to the Signal.
-         */
-        getNumListeners(): number;
-
-        /**
-         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
-         */
-        halt(): void;
-
-        /**
-         * Check if listener was attached to Signal.
-         */
-        has(listener: (...params: T[]) => void, context?: any): boolean;
-
-        /**
-         * Remove a single listener from the dispatch queue.
-         */
-        remove(listener: (...params: T[]) => void, context?: any): Function;
-
-        removeAll(): void;
-    }
-}
-// Type definitions for JS-Signals 1.0
-// Project: http://millermedeiros.github.io/js-signals/
-// Definitions by: Diullei Gomes <https://github.com/diullei>
-// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
-// TypeScript Version: 2.3
-
-declare var signals: signals.SignalWrapper;
-
-declare namespace signals {
-    interface SignalWrapper<T = any> {
-        Signal: Signal<T>;
-    }
-
-    interface SignalBinding<T = any> {
-        active: boolean;
-        context: any;
-        params: any;
-        detach(): Function;
-        execute(paramsArr?: any[]): any;
-        getListener(): (...params: T[]) => void;
-        getSignal(): Signal<T>;
-        isBound(): boolean;
-        isOnce(): boolean;
-    }
-
-    interface Signal<T = any> {
-        /**
-         * Custom event broadcaster
-         * <br />- inspired by Robert Penner's AS3 Signals.
-         * @author Miller Medeiros
-         */
-        new (): Signal<T>;
-
-        /**
-         * If Signal is active and should broadcast events.
-         */
-        active: boolean;
-
-        /**
-         * If Signal should keep record of previously dispatched parameters and automatically
-         * execute listener during add()/addOnce() if Signal was already dispatched before.
-         */
-        memorize: boolean;
-
-        /**
-         * Signals Version Number
-         */
-        VERSION: string;
-
-        /**
-         * Add a listener to the signal.
-         *
-         * @param listener Signal handler function.
-         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
-         * @param priority The priority level of the event listener.
-         *        Listeners with higher priority will be executed before listeners with lower priority.
-         *        Listeners with same priority level will be executed at the same order as they were added. (default = 0)
-         */
-        add(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
-
-        /**
-         * Add listener to the signal that should be removed after first execution (will be executed only once).
-         *
-         * @param listener Signal handler function.
-         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
-         * @param priority The priority level of the event listener.
-         *                 Listeners with higher priority will be executed before listeners with lower priority.
-         *                 Listeners with same priority level will be executed at the same order as they were added. (default = 0)
-         */
-        addOnce(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
-
-        /**
-         * Dispatch/Broadcast Signal to all listeners added to the queue.
-         *
-         * @param params Parameters that should be passed to each handler.
-         */
-        dispatch(...params: T[]): void;
-
-        /**
-         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
-         */
-        dispose(): void;
-
-        /**
-         * Forget memorized arguments.
-         */
-        forget(): void;
-
-        /**
-         * Returns a number of listeners attached to the Signal.
-         */
-        getNumListeners(): number;
-
-        /**
-         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
-         */
-        halt(): void;
-
-        /**
-         * Check if listener was attached to Signal.
-         */
-        has(listener: (...params: T[]) => void, context?: any): boolean;
-
-        /**
-         * Remove a single listener from the dispatch queue.
-         */
-        remove(listener: (...params: T[]) => void, context?: any): Function;
-
-        removeAll(): void;
-    }
-}
-// Type definitions for JS-Signals 1.0
-// Project: http://millermedeiros.github.io/js-signals/
-// Definitions by: Diullei Gomes <https://github.com/diullei>
-// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
-// TypeScript Version: 2.3
-
-declare var signals: signals.SignalWrapper;
-
-declare namespace signals {
-    interface SignalWrapper<T = any> {
-        Signal: Signal<T>;
-    }
-
-    interface SignalBinding<T = any> {
-        active: boolean;
-        context: any;
-        params: any;
-        detach(): Function;
-        execute(paramsArr?: any[]): any;
-        getListener(): (...params: T[]) => void;
-        getSignal(): Signal<T>;
-        isBound(): boolean;
-        isOnce(): boolean;
-    }
-
-    interface Signal<T = any> {
-        /**
-         * Custom event broadcaster
-         * <br />- inspired by Robert Penner's AS3 Signals.
-         * @author Miller Medeiros
-         */
-        new (): Signal<T>;
-
-        /**
-         * If Signal is active and should broadcast events.
-         */
-        active: boolean;
-
-        /**
-         * If Signal should keep record of previously dispatched parameters and automatically
-         * execute listener during add()/addOnce() if Signal was already dispatched before.
-         */
-        memorize: boolean;
-
-        /**
-         * Signals Version Number
-         */
-        VERSION: string;
-
-        /**
-         * Add a listener to the signal.
-         *
-         * @param listener Signal handler function.
-         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
-         * @param priority The priority level of the event listener.
-         *        Listeners with higher priority will be executed before listeners with lower priority.
-         *        Listeners with same priority level will be executed at the same order as they were added. (default = 0)
-         */
-        add(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
-
-        /**
-         * Add listener to the signal that should be removed after first execution (will be executed only once).
-         *
-         * @param listener Signal handler function.
-         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
-         * @param priority The priority level of the event listener.
-         *                 Listeners with higher priority will be executed before listeners with lower priority.
-         *                 Listeners with same priority level will be executed at the same order as they were added. (default = 0)
-         */
-        addOnce(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
-
-        /**
-         * Dispatch/Broadcast Signal to all listeners added to the queue.
-         *
-         * @param params Parameters that should be passed to each handler.
-         */
-        dispatch(...params: T[]): void;
-
-        /**
-         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
-         */
-        dispose(): void;
-
-        /**
-         * Forget memorized arguments.
-         */
-        forget(): void;
-
-        /**
-         * Returns a number of listeners attached to the Signal.
-         */
-        getNumListeners(): number;
-
-        /**
-         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
-         */
-        halt(): void;
-
-        /**
-         * Check if listener was attached to Signal.
-         */
-        has(listener: (...params: T[]) => void, context?: any): boolean;
-
-        /**
-         * Remove a single listener from the dispatch queue.
-         */
-        remove(listener: (...params: T[]) => void, context?: any): Function;
-
-        removeAll(): void;
-    }
-}
 declare type int = number;
 declare type uint = number;
 declare type float = number;
@@ -2380,10 +2047,14 @@ declare namespace egret3d {
         extensions: {
             paper?: {
                 mipmap?: boolean;
+                flipY?: boolean;
+                premultiplyAlpha?: boolean;
                 format?: gltf.TextureFormat;
-                pixelSize?: number;
                 width?: number;
                 height?: number;
+                anisotropy?: number;
+                type?: gltf.TextureDataType;
+                unpackAlignment?: gltf.TextureAlignment;
             };
         };
     }
@@ -2469,6 +2140,7 @@ declare namespace egret3d {
          *
          */
         static createMeshConfig(): GLTF;
+        static createTextureConfig(): GLTF;
         /**
          *
          */
@@ -2668,6 +2340,31 @@ declare namespace gltf {
         RGBA = 6408,
         Luminance = 6409,
     }
+    const enum TextureDataType {
+        UNSIGNED_BYTE = 5121,
+        UNSIGNED_SHORT_5_6_5 = 33635,
+        UNSIGNED_SHORT_4_4_4_4 = 32819,
+        UNSIGNED_SHORT_5_5_5_1 = 32820,
+    }
+    const enum TextureFilter {
+        NEAREST = 9728,
+        LINEAR = 9729,
+        NEAREST_MIPMAP_NEAREST = 9984,
+        LINEAR_MIPMAP_NEAREST = 9985,
+        NEAREST_MIPMAP_LINEAR = 9986,
+        LINEAR_MIPMAP_LINEAR = 9987,
+    }
+    const enum TextureWrap {
+        CLAMP_TO_EDGE = 33071,
+        MIRRORED_REPEAT = 33648,
+        REPEAT = 10497,
+    }
+    const enum TextureAlignment {
+        One = 1,
+        Two = 2,
+        Four = 4,
+        Eight = 8,
+    }
     /**
      * The shader stage.  All valid values correspond to WebGL enums.
      */
@@ -2797,6 +2494,7 @@ declare namespace gltf {
         JOINTS_0 = "JOINTS_0",
         WEIGHTS_0 = "WEIGHTS_0",
     }
+    type ImageSource = ImageBitmap | ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement;
     type MeshAttribute = AttributeSemanticType | string;
     /**
      * Indices of those attributes that deviate from their initialization value.
@@ -3100,7 +2798,7 @@ declare namespace gltf {
         /**
          * The uri of the image.
          */
-        uri?: string;
+        uri?: string | ArrayBufferView | ImageSource;
         /**
          * The image's MIME type.
          */
@@ -4269,6 +3967,7 @@ declare namespace egret3d {
          */
         function lerp(from: number, to: number, t: number): number;
         function frustumIntersectsSphere(frustum: Readonly<Frustum>, sphere: Readonly<Sphere>): boolean;
+        function isPowerOfTwo(value: number): boolean;
     }
     /**
      * 内联的数字常数枚举。
@@ -4295,7 +3994,6 @@ declare namespace egret3d {
     function aabbIntersectsSphere(aabb: Readonly<Box>, sphere: Readonly<Sphere>): boolean;
     function aabbIntersectsAABB(valueA: Readonly<Box>, valueB: Readonly<Box>): boolean;
     function sphereIntersectsSphere(valueA: Readonly<Sphere>, valueB: Readonly<Sphere>): boolean;
-    function isPowerOfTwo(value: number): boolean;
 }
 declare namespace egret3d {
     /**
@@ -4507,8 +4205,28 @@ declare namespace egret3d {
     /**
      * 纹理资源。
      */
-    class Texture extends paper.Asset {
+    class Texture extends GLTFAsset {
+        protected _gltfTexture: GLTFTexture | null;
+        protected _image: gltf.Image;
+        protected _sampler: gltf.Sampler;
+        _source: any;
+        protected constructor(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource | null, width: number, height: number, format?: gltf.TextureFormat, mipmap?: boolean, wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap, magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter, flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment, type?: gltf.TextureDataType, anisotropy?: number);
+        uploadTexture(index: number): void;
         caclByteLength(): number;
+        readonly width: number;
+        readonly height: number;
+        readonly format: number;
+        readonly gltfTexture: GLTFTexture;
+    }
+    class Texture2D extends Texture {
+        static create(name: string, source: GLTF, width?: number, height?: number): Texture2D;
+        static create(name: string, source: ArrayBufferView | gltf.ImageSource, width: number, height: number, format?: gltf.TextureFormat): Texture2D;
+        static create(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource, width: number, height: number, format?: gltf.TextureFormat, mipmap?: boolean, wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap, magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter, flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment, type?: gltf.TextureDataType, anisotropy?: number): Texture2D;
+        static createByImage(name: string, image: gltf.ImageSource, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean): Texture2D;
+        static createByBitmapData(name: string, bitmapData: egret.BitmapData, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean): Texture2D;
+        static createColorTexture(name: string, r: number, g: number, b: number): Texture2D;
+        static createGridTexture(name: string): Texture2D;
+        uploadTexture(index: number): void;
     }
 }
 declare namespace egret3d {
@@ -10324,14 +10042,14 @@ declare namespace egret3d.io {
         readUInt16(): number;
         readInt32(): number;
         readUInt32(): number;
-        readUint8Array(target?: Uint8Array, offset?: number, length?: number): Uint8Array;
+        readUint8Array(target: Uint8Array, offset?: number, length?: number): Uint8Array;
         readUint8ArrayByOffset(target: Uint8Array, offset: number, length?: number): Uint8Array;
-        readUint16Array(target?: Uint16Array, offset?: number, length?: number): Uint16Array;
-        readSingleArray(target?: Float32Array, offset?: number, length?: number): Float32Array;
+        readUint16Array(target: Uint16Array, offset?: number, length?: number): Uint16Array;
+        readSingleArray(target: Float32Array, offset?: number, length?: number): Float32Array;
         position: number;
         readBoolean(): boolean;
         readByte(): number;
-        readBytes(target?: Uint8Array, offset?: number, length?: number): Uint8Array;
+        readBytes(target: Uint8Array, offset?: number, length?: number): Uint8Array;
         readUnsignedShort(): number;
         readUnsignedInt(): number;
         readFloat(): number;
@@ -10448,7 +10166,7 @@ declare namespace egret3d {
         useProgram(program: GlProgram): boolean;
         getProgram(material: Material, technique: gltf.Technique, defines: string): GlProgram;
         clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void;
-        copyFramebufferToTexture(screenPostion: Vector2, target: ITexture, level?: number): void;
+        copyFramebufferToTexture(screenPostion: Vector2, target: egret3d.Texture, level?: number): void;
     }
 }
 declare namespace egret3d {
@@ -10475,36 +10193,9 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    interface ITexture {
-        texture: WebGLTexture;
-        width: number;
-        height: number;
-        mipmap: boolean;
-        format: gltf.TextureFormat;
-        dispose(): void;
-        caclByteLength(): number;
-    }
-    abstract class GLTexture extends egret3d.Texture implements ITexture {
-        readonly texture: WebGLTexture;
-        readonly width: number;
-        readonly height: number;
-        readonly format: gltf.TextureFormat;
-        mipmap: boolean;
-        constructor(name?: string, width?: number, height?: number, format?: gltf.TextureFormat, mipmap?: boolean);
-    }
     /**
      *
      */
-    class GLTexture2D extends GLTexture {
-        static createColorTexture(name: string, r: number, g: number, b: number): GLTexture2D;
-        static createGridTexture(name: string): GLTexture2D;
-        protected _reader: TextureReader;
-        constructor(name?: string, width?: number, height?: number, format?: gltf.TextureFormat, mipmap?: boolean);
-        uploadImage(img: HTMLImageElement | Uint8Array, mipmap: boolean, linear: boolean, premultiply?: boolean, repeat?: boolean, mirroredU?: boolean, mirroredV?: boolean): void;
-        caclByteLength(): number;
-        dispose(): boolean;
-        getReader(redOnly?: boolean): TextureReader;
-    }
     class TextureReader {
         readonly gray: boolean;
         readonly width: number;

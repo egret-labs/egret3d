@@ -1,15 +1,8 @@
 namespace egret3d {
-    // export interface ITexture {//TODO 数据不完整
-    //     texture: WebGLTexture;
-    //     width: number;
-    //     height: number;
-    //     mipmap: boolean;
-    //     format: gltf.TextureFormat;
-    //     dispose(): void;
-    //     caclByteLength(): number;
-    // }
-
-    class GLTexture2D extends egret3d.Texture {
+    /**
+     * @internal
+     */
+    export class GLTexture2D extends egret3d.Texture2D {
         private _filterFallback(f: gltf.TextureFilter): gltf.TextureFilter {
             if (f === gltf.TextureFilter.NEAREST || f === gltf.TextureFilter.NEAREST_MIPMAP_NEAREST || f === gltf.TextureFilter.NEAREST_MIPMAP_LINEAR) {
                 return gltf.TextureFilter.NEAREST;
@@ -50,6 +43,9 @@ namespace egret3d {
             //TODO EXT_texture_filter_anisotropic
         }
         public uploadTexture(index: number) {
+            if (!this._image || this._image.uri) {
+                return;
+            }
             const webgl = WebGLCapabilities.webgl!;
             if (!this._source) {
                 this._source = webgl.createTexture();
@@ -70,7 +66,7 @@ namespace egret3d {
                 webgl.texImage2D(webgl.TEXTURE_2D, 0, paperExtension.format!, paperExtension.width!, paperExtension.height!, 0, paperExtension.format!, paperExtension.type!, image.uri);
             }
             else {
-                webgl.texImage2D(webgl.TEXTURE_2D, 0, paperExtension.format!, paperExtension.format!, webgl.UNSIGNED_BYTE, image.uri as TexImageSource);
+                webgl.texImage2D(webgl.TEXTURE_2D, 0, paperExtension.format!, paperExtension.format!, webgl.UNSIGNED_BYTE, image.uri as gltf.ImageSource);
             }
 
             const minFilter = sampler.minFilter!;
@@ -83,7 +79,7 @@ namespace egret3d {
         }
     }
 
-    egret3d.Texture = GLTexture2D;
+    egret3d.Texture2D = GLTexture2D;
 
     // export abstract class GLTexture extends egret3d.Texture implements ITexture {
     //     readonly texture: WebGLTexture;

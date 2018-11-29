@@ -4379,9 +4379,9 @@ var egret3d;
         };
         GLTFAsset.createTextureConfig = function () {
             var config = this._createConfig();
-            config.images = [];
+            config.images = [{}];
             config.samplers = [{ magFilter: 9728 /* NEAREST */, minFilter: 9728 /* NEAREST */, wrapS: 10497 /* REPEAT */, wrapT: 10497 /* REPEAT */ }];
-            config.textures = [{ sampler: 0, source: 0 }];
+            config.textures = [{ sampler: 0, source: 0, extensions: { paper: {} } }];
             return config;
         };
         /**
@@ -7111,49 +7111,6 @@ var egret3d;
             _this._dirty = true;
             return _this;
         }
-        Texture.create = function (name, source, width, height, format, mipmap, wrapS, wrapT, magFilter, minFilter, flipY, premultiplyAlpha, unpackAlignment, type, anisotropy) {
-            return new Texture(name, source, width, height, format, mipmap, wrapS, wrapT, magFilter, minFilter, flipY, premultiplyAlpha, unpackAlignment, type, anisotropy);
-        };
-        Texture.createByBitmapData = function (name, bitmapData, format, mipmap, linear, repeat) {
-            var magFilter = 9729 /* LINEAR */;
-            var minFilter = 9729 /* LINEAR */;
-            var wrapS = repeat ? 10497 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
-            var wrapT = repeat ? 10497 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
-            if (mipmap) {
-                magFilter = linear ? 9729 /* LINEAR */ : 9728 /* NEAREST */;
-                minFilter = linear ? 9987 /* LINEAR_MIPMAP_LINEAR */ : 9984 /* NEAREST_MIPMAP_NEAREST */;
-            }
-            else {
-                magFilter = linear ? 9729 /* LINEAR */ : 9728 /* NEAREST */;
-                minFilter = linear ? 9729 /* LINEAR */ : 9728 /* NEAREST */;
-            }
-            var texture = egret3d.Texture.create(name, bitmapData.source, bitmapData.source.width, bitmapData.source.height, format, mipmap, wrapS, wrapT, magFilter, minFilter);
-            return texture;
-        };
-        Texture.createColorTexture = function (name, r, g, b) {
-            var mipmap = true;
-            var width = 1;
-            var height = 1;
-            var data = new Uint8Array([r, g, b, 255]);
-            var texture = Texture.create(name, data, width, height, 6408 /* RGBA */, mipmap, 33071 /* CLAMP_TO_EDGE */, 33071 /* CLAMP_TO_EDGE */, 9729 /* LINEAR */, 9987 /* LINEAR_MIPMAP_LINEAR */);
-            return texture;
-        };
-        Texture.createGridTexture = function (name) {
-            var mipmap = true;
-            var width = 128;
-            var height = 128;
-            var data = new Uint8Array(width * height * 4);
-            for (var y = 0; y < height; y++) {
-                for (var x = 0; x < width; x++) {
-                    var seek = (y * width + x) * 4;
-                    var bool = ((x - width * 0.5) * (y - height * 0.5)) > 0;
-                    data[seek] = data[seek + 1] = data[seek + 2] = bool ? 0 : 255;
-                    data[seek + 3] = 255;
-                }
-            }
-            var texture = Texture.create(name, data, width, height, 6408 /* RGBA */, mipmap, 10497 /* REPEAT */, 10497 /* REPEAT */, 9729 /* LINEAR */, 9987 /* LINEAR_MIPMAP_LINEAR */);
-            return texture;
-        };
         Texture.prototype.uploadTexture = function (index) { };
         Texture.prototype.caclByteLength = function () {
             return 0;
@@ -7190,6 +7147,75 @@ var egret3d;
     }(egret3d.GLTFAsset));
     egret3d.Texture = Texture;
     __reflect(Texture.prototype, "egret3d.Texture");
+    var Texture2D = (function (_super) {
+        __extends(Texture2D, _super);
+        function Texture2D() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        Texture2D.create = function (name, source, width, height, format, mipmap, wrapS, wrapT, magFilter, minFilter, flipY, premultiplyAlpha, unpackAlignment, type, anisotropy) {
+            return new egret3d.Texture2D(name, source, width, height, format, mipmap, wrapS, wrapT, magFilter, minFilter, flipY, premultiplyAlpha, unpackAlignment, type, anisotropy);
+        };
+        Texture2D.createByImage = function (name, image, format, mipmap, linear, repeat) {
+            var magFilter = 9729 /* LINEAR */;
+            var minFilter = 9729 /* LINEAR */;
+            var wrapS = repeat ? 10497 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
+            var wrapT = repeat ? 10497 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
+            if (mipmap) {
+                magFilter = linear ? 9729 /* LINEAR */ : 9728 /* NEAREST */;
+                minFilter = linear ? 9987 /* LINEAR_MIPMAP_LINEAR */ : 9984 /* NEAREST_MIPMAP_NEAREST */;
+            }
+            else {
+                magFilter = linear ? 9729 /* LINEAR */ : 9728 /* NEAREST */;
+                minFilter = linear ? 9729 /* LINEAR */ : 9728 /* NEAREST */;
+            }
+            var texture = egret3d.Texture2D.create(name, image, image.width, image.height, format, mipmap, wrapS, wrapT, magFilter, minFilter);
+            return texture;
+        };
+        Texture2D.createByBitmapData = function (name, bitmapData, format, mipmap, linear, repeat) {
+            var magFilter = 9729 /* LINEAR */;
+            var minFilter = 9729 /* LINEAR */;
+            var wrapS = repeat ? 10497 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
+            var wrapT = repeat ? 10497 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
+            if (mipmap) {
+                magFilter = linear ? 9729 /* LINEAR */ : 9728 /* NEAREST */;
+                minFilter = linear ? 9987 /* LINEAR_MIPMAP_LINEAR */ : 9984 /* NEAREST_MIPMAP_NEAREST */;
+            }
+            else {
+                magFilter = linear ? 9729 /* LINEAR */ : 9728 /* NEAREST */;
+                minFilter = linear ? 9729 /* LINEAR */ : 9728 /* NEAREST */;
+            }
+            var texture = egret3d.Texture2D.create(name, bitmapData.source, bitmapData.source.width, bitmapData.source.height, format, mipmap, wrapS, wrapT, magFilter, minFilter);
+            return texture;
+        };
+        Texture2D.createColorTexture = function (name, r, g, b) {
+            var mipmap = true;
+            var width = 1;
+            var height = 1;
+            var data = new Uint8Array([r, g, b, 255]);
+            var texture = Texture2D.create(name, data, width, height, 6408 /* RGBA */, mipmap, 33071 /* CLAMP_TO_EDGE */, 33071 /* CLAMP_TO_EDGE */, 9729 /* LINEAR */, 9987 /* LINEAR_MIPMAP_LINEAR */);
+            return texture;
+        };
+        Texture2D.createGridTexture = function (name) {
+            var mipmap = true;
+            var width = 128;
+            var height = 128;
+            var data = new Uint8Array(width * height * 4);
+            for (var y = 0; y < height; y++) {
+                for (var x = 0; x < width; x++) {
+                    var seek = (y * width + x) * 4;
+                    var bool = ((x - width * 0.5) * (y - height * 0.5)) > 0;
+                    data[seek] = data[seek + 1] = data[seek + 2] = bool ? 0 : 255;
+                    data[seek + 3] = 255;
+                }
+            }
+            var texture = Texture2D.create(name, data, width, height, 6408 /* RGBA */, mipmap, 10497 /* REPEAT */, 10497 /* REPEAT */, 9729 /* LINEAR */, 9987 /* LINEAR_MIPMAP_LINEAR */);
+            return texture;
+        };
+        Texture2D.prototype.uploadTexture = function (index) { };
+        return Texture2D;
+    }(Texture));
+    egret3d.Texture2D = Texture2D;
+    __reflect(Texture2D.prototype, "egret3d.Texture2D");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -11057,25 +11083,25 @@ var egret3d;
         DefaultTextures.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             {
-                var texture = egret3d.Texture.createColorTexture("builtin/white.image.json", 255, 255, 255);
+                var texture = egret3d.Texture2D.createColorTexture("builtin/white.image.json", 255, 255, 255);
                 texture._isBuiltin = true;
                 DefaultTextures.WHITE = texture;
                 paper.Asset.register(texture);
             }
             {
-                var texture = egret3d.Texture.createColorTexture("builtin/gray.image.json", 128, 128, 128);
+                var texture = egret3d.Texture2D.createColorTexture("builtin/gray.image.json", 128, 128, 128);
                 texture._isBuiltin = true;
                 DefaultTextures.GRAY = texture;
                 paper.Asset.register(texture);
             }
             {
-                var texture = egret3d.Texture.createGridTexture("builtin/grid.image.json");
+                var texture = egret3d.Texture2D.createGridTexture("builtin/grid.image.json");
                 texture._isBuiltin = true;
                 DefaultTextures.GRID = texture;
                 paper.Asset.register(texture);
             }
             {
-                var texture = egret3d.Texture.createColorTexture("builtin/missing.image.json", 255, 0, 255);
+                var texture = egret3d.Texture2D.createColorTexture("builtin/missing.image.json", 255, 0, 255);
                 texture._isBuiltin = true;
                 DefaultTextures.MISSING = texture;
                 paper.Asset.register(texture);
@@ -24000,7 +24026,7 @@ var egret3d;
                     return host.load(imgResource, "bitmapdata").then(function (bitmapData) {
                         // const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, _textureFormat);
                         // texture.uploadImage(bitmapData.source, mipmap, _linear, _premultiply, _repeat);                        
-                        var texture = egret3d.Texture.createByBitmapData(resource.name, bitmapData, textureFormat, mipmap, linear, repeat);
+                        var texture = egret3d.Texture2D.createByBitmapData(resource.name, bitmapData, textureFormat, mipmap, linear, repeat);
                         paper.Asset.register(texture);
                         return texture;
                     });
@@ -24009,7 +24035,7 @@ var egret3d;
                     return getResByURL(name, egret3d.resRoot).then(function (bitmapData) {
                         // const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, textureFormat);
                         // texture.uploadImage(bitmapData.source, mipmap, linear, _premultiply, repeat);
-                        var texture = egret3d.Texture.createByBitmapData(resource.name, bitmapData, textureFormat, mipmap, linear, repeat);
+                        var texture = egret3d.Texture2D.createByBitmapData(resource.name, bitmapData, textureFormat, mipmap, linear, repeat);
                         paper.Asset.register(texture);
                         return texture;
                     });
@@ -24027,7 +24053,7 @@ var egret3d;
             return host.load(resource, "bitmapdata").then(function (bitmapData) {
                 // const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, gltf.TextureFormat.RGBA);
                 // texture.uploadImage(bitmapData.source, true, true, false, true);
-                var texture = egret3d.Texture.createByBitmapData(resource.name, bitmapData, 6408 /* RGBA */, true, true, true);
+                var texture = egret3d.Texture2D.createByBitmapData(resource.name, bitmapData, 6408 /* RGBA */, true, true, true);
                 paper.Asset.register(texture);
                 return texture;
             });
@@ -25428,6 +25454,9 @@ var egret3d;
     //     dispose(): void;
     //     caclByteLength(): number;
     // }
+    /**
+     * @internal
+     */
     var GLTexture2D = (function (_super) {
         __extends(GLTexture2D, _super);
         function GLTexture2D() {
@@ -25466,6 +25495,7 @@ var egret3d;
             //TODO EXT_texture_filter_anisotropic
         };
         GLTexture2D.prototype.uploadTexture = function (index) {
+            _super.prototype.uploadTexture.call(this, index);
             var webgl = egret3d.WebGLCapabilities.webgl;
             if (!this._source) {
                 this._source = webgl.createTexture();
@@ -25493,9 +25523,10 @@ var egret3d;
             this._dirty = false;
         };
         return GLTexture2D;
-    }(egret3d.Texture));
-    __reflect(GLTexture2D.prototype, "GLTexture2D");
-    egret3d.Texture = GLTexture2D;
+    }(egret3d.Texture2D));
+    egret3d.GLTexture2D = GLTexture2D;
+    __reflect(GLTexture2D.prototype, "egret3d.GLTexture2D");
+    egret3d.Texture2D = GLTexture2D;
     // export abstract class GLTexture extends egret3d.Texture implements ITexture {
     //     readonly texture: WebGLTexture;
     //     readonly width: number;
