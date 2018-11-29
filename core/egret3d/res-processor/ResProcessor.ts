@@ -134,7 +134,7 @@ namespace egret3d {
                     return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
                         // const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, _textureFormat);
                         // texture.uploadImage(bitmapData.source, mipmap, _linear, _premultiply, _repeat);                        
-                        const texture = egret3d.Texture2D.createByBitmapData(resource.name, bitmapData, textureFormat, mipmap, linear, repeat);
+                        const texture = egret3d.Texture.createByBitmapData(resource.name, bitmapData, textureFormat, mipmap, linear, repeat);
                         paper.Asset.register(texture);
                         return texture;
 
@@ -145,7 +145,7 @@ namespace egret3d {
                     return getResByURL(name, resRoot).then((bitmapData: any) => {
                         // const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, textureFormat);
                         // texture.uploadImage(bitmapData.source, mipmap, linear, _premultiply, repeat);
-                        const texture = egret3d.Texture2D.createByBitmapData(resource.name, bitmapData, textureFormat, mipmap, linear, repeat);
+                        const texture = egret3d.Texture.createByBitmapData(resource.name, bitmapData, textureFormat, mipmap, linear, repeat);
                         paper.Asset.register(texture);
                         return texture;
                     });
@@ -165,14 +165,14 @@ namespace egret3d {
             return host.load(resource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
                 // const texture = new egret3d.GLTexture2D(resource.name, bitmapData.source.width, bitmapData.source.height, gltf.TextureFormat.RGBA);
                 // texture.uploadImage(bitmapData.source, true, true, false, true);
-                const texture = egret3d.Texture2D.createByBitmapData(resource.name, bitmapData, gltf.TextureFormat.RGBA, true, true, true);
+                const texture = egret3d.Texture.createByBitmapData(resource.name, bitmapData, gltf.TextureFormat.RGBA, true, true, true);
                 paper.Asset.register(texture);
                 return texture;
             })
         },
         onRemoveStart(host, resource) {
             // let data: egret3d.GLTexture2D = host.get(resource);
-            const data: egret3d.Texture = host.get(resource);
+            const data: egret3d.BaseTexture = host.get(resource);
             data.dispose();
             return Promise.resolve();
         }

@@ -54,7 +54,7 @@ namespace egret3d.web {
 
         // webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         // }
-        private _render(camera: Camera, renderTarget: BaseRenderTarget | null, material?: Material) {
+        private _render(camera: Camera, renderTarget: BaseRenderTexture | null, material?: Material) {
             const renderState = this._renderState;
             renderState.updateViewport(camera.viewport, renderTarget);
             renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
@@ -75,6 +75,7 @@ namespace egret3d.web {
                     renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
                 }
             }
+            
             // Render 2D.
             for (const gameObject of this._groups[1].gameObjects) {
                 const egret2DRenderer = gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer;
@@ -244,13 +245,13 @@ namespace egret3d.web {
                             for (let i = 0, l = units.length; i < l; i++) {
                                 if (context.directShadowMaps[i]) {
                                     const unit = units[i];
-                                    const texture = context.directShadowMaps[i] as Texture2D;
+                                    const texture = context.directShadowMaps[i] as WebGLTexture;
                                     if (texture._dirty) {
-                                        texture.uploadTexture(unit);
+                                        texture.setupTexture(unit);
                                     }
                                     else {
                                         webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                        webgl.bindTexture(webgl.TEXTURE_2D, texture._source);
+                                        webgl.bindTexture(webgl.TEXTURE_2D, texture.webglTexture);
                                     }
                                 }
                             }
@@ -265,13 +266,13 @@ namespace egret3d.web {
                             for (let i = 0, l = units.length; i < l; i++) {
                                 if (context.pointShadowMaps[i]) {
                                     const unit = units[i];
-                                    const texture = context.pointShadowMaps[i] as Texture2D;
+                                    const texture = context.pointShadowMaps[i] as WebGLTexture;
                                     if (texture._dirty) {
-                                        texture.uploadTexture(unit);
+                                        texture.setupTexture(unit);
                                     }
                                     else {
                                         webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                        webgl.bindTexture(webgl.TEXTURE_2D, texture._source);
+                                        webgl.bindTexture(webgl.TEXTURE_2D, texture.webglTexture);
                                     }
                                 }
                             }
@@ -286,13 +287,13 @@ namespace egret3d.web {
                             for (let i = 0, l = units.length; i < l; i++) {
                                 if (context.spotShadowMaps[i]) {
                                     const unit = units[i];
-                                    const texture = context.spotShadowMaps[i] as Texture2D;
+                                    const texture = context.spotShadowMaps[i] as WebGLTexture;
                                     if (texture._dirty) {
-                                        texture.uploadTexture(unit);
+                                        texture.setupTexture(unit);
                                     }
                                     else {
                                         webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                        webgl.bindTexture(webgl.TEXTURE_2D, texture._source);
+                                        webgl.bindTexture(webgl.TEXTURE_2D, texture.webglTexture);
                                     }
                                 }
                             }
@@ -301,15 +302,15 @@ namespace egret3d.web {
 
                     case gltf.UniformSemanticType._LIGHTMAPTEX:
                         if (glUniform.textureUnits && glUniform.textureUnits.length === 1 && context.lightmap) {
-                            const texture = context.lightmap as Texture2D;
+                            const texture = context.lightmap as WebGLTexture;
                             const unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location, unit);
                             if (texture._dirty) {
-                                texture.uploadTexture(unit);
+                                texture.setupTexture(unit);
                             }
                             else {
                                 webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                webgl.bindTexture(webgl.TEXTURE_2D, texture._source);
+                                webgl.bindTexture(webgl.TEXTURE_2D, texture.webglTexture);
                             }
                         }
                         else {
@@ -426,15 +427,15 @@ namespace egret3d.web {
                         break;
                     case gltf.UniformType.SAMPLER_2D:
                         if (glUniform.textureUnits && glUniform.textureUnits.length === 1) {
-                            const texture = value as Texture2D;
+                            const texture = value as WebGLTexture;
                             const unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location, unit);
                             if (texture._dirty) {
-                                texture.uploadTexture(unit);
+                                texture.setupTexture(unit);
                             }
                             else {
                                 webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                webgl.bindTexture(webgl.TEXTURE_2D, texture._source);
+                                webgl.bindTexture(webgl.TEXTURE_2D, texture.webglTexture);
                             }
                         }
                         else {

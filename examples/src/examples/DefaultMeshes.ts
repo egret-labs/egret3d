@@ -44,7 +44,7 @@ namespace examples {
             });
             gui.add(options, "texture").onChange(async (v: boolean) => {
                 if (v) {
-                    meshRenderer.material!.setTexture(await RES.getResAsync("UV_Grid_Sm.jpg"));
+                    meshRenderer.material!.setTexture(await RES.getResAsync("textures/UV_Grid_Sm.jpg"));
                 }
                 else {
                     meshRenderer.material!.setTexture(null);

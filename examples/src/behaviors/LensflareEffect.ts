@@ -3,15 +3,15 @@ namespace behaviors {
         public static TEXTURE_SIZE = egret3d.Vector2.create(16, 16);
         private readonly _elements: LensflareElement[] = [];
         private readonly _renderState: egret3d.RenderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.RenderState, false, this); // Set interface.
-        private readonly _material1a: egret3d.Material = egret3d.Material.create(RES.getRes("lensflare/shaders/a.shader.json"));
-        private readonly _material1b: egret3d.Material = egret3d.Material.create(RES.getRes("lensflare/shaders/b.shader.json"));
-        private readonly _materialLensflare: egret3d.Material = egret3d.Material.create(RES.getRes("lensflare/shaders/lensflare.shader.json"));
+        private readonly _material1a: egret3d.Material = egret3d.Material.create(RES.getRes("shaders/lensflare/a.shader.json"));
+        private readonly _material1b: egret3d.Material = egret3d.Material.create(RES.getRes("shaders/lensflare/b.shader.json"));
+        private readonly _materialLensflare: egret3d.Material = egret3d.Material.create(RES.getRes("shaders/lensflare/lensflare.shader.json"));
         private readonly _drawCall1a: egret3d.DrawCall = egret3d.DrawCall.create();
         private readonly _drawCall1b: egret3d.DrawCall = egret3d.DrawCall.create();
         private readonly _drawCallLensflare: egret3d.DrawCall = egret3d.DrawCall.create();
         private readonly _meshLensflare: egret3d.Mesh = egret3d.MeshBuilder.createPlane(2, 2);
-        private _tempMap: egret3d.Texture2D | null = null;
-        private _occlusionMap: egret3d.Texture2D | null = null;
+        private _tempMap: egret3d.Texture | null = null;
+        private _occlusionMap: egret3d.Texture | null = null;
 
         private readonly _positionScreen: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _scale: egret3d.Vector2 = egret3d.Vector2.create();
@@ -23,8 +23,8 @@ namespace behaviors {
         @paper.editor.property(paper.editor.EditType.COLOR)
         public color: egret3d.Color = egret3d.Color.create(0.55, 0.9, 1.0, 1.0);
         public onAwake() {
-            this._tempMap = egret3d.Texture2D.create("tempMap", new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), LensflareEffect.TEXTURE_SIZE.x, LensflareEffect.TEXTURE_SIZE.y, gltf.TextureFormat.RGB, false, gltf.TextureWrap.CLAMP_TO_EDGE, gltf.TextureWrap.CLAMP_TO_EDGE);
-            this._occlusionMap = egret3d.Texture2D.create("occlusionMap", new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), LensflareEffect.TEXTURE_SIZE.x, LensflareEffect.TEXTURE_SIZE.y, gltf.TextureFormat.RGB, false, gltf.TextureWrap.CLAMP_TO_EDGE, gltf.TextureWrap.CLAMP_TO_EDGE);
+            this._tempMap = egret3d.Texture.create("tempMap", new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), LensflareEffect.TEXTURE_SIZE.x, LensflareEffect.TEXTURE_SIZE.y, gltf.TextureFormat.RGB, false, gltf.TextureWrap.CLAMP_TO_EDGE, gltf.TextureWrap.CLAMP_TO_EDGE);
+            this._occlusionMap = egret3d.Texture.create("occlusionMap", new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), LensflareEffect.TEXTURE_SIZE.x, LensflareEffect.TEXTURE_SIZE.y, gltf.TextureFormat.RGB, false, gltf.TextureWrap.CLAMP_TO_EDGE, gltf.TextureWrap.CLAMP_TO_EDGE);
             // this._tempMap.uploadImage(new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), false, false, false);
             // this._occlusionMap.uploadImage(new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), false, false, false);
 

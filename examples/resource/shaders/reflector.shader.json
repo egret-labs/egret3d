@@ -25,10 +25,6 @@
                         "textureMatrix": {
                             "type": 35676
                         },
-                        "viewProjectionMatrix": {
-                            "type": 35676,
-                            "semantic": "_VIEWPROJECTION"
-                        },
                         "color": {
                             "type": 35665
                         },

@@ -29,7 +29,7 @@ namespace behaviors {
         public readonly color: egret3d.Color = egret3d.Color.create(0.0, 0.0, 0.0, 1.0);
 
         private readonly _renderState: egret3d.RenderState = paper.GameObject.globalGameObject.getComponent(egret3d.RenderState)!;
-        private readonly _renderTarget: egret3d.GlRenderTarget = new egret3d.GlRenderTarget("xxxxxx", this.textureWidth, this.textureHeight, true);
+        private readonly _renderTarget: egret3d.RenderTexture = egret3d.RenderTexture.create("xxxxxx", this.textureWidth, this.textureHeight, true);
 
         public onStart() {
             if (!Reflector._reflectorCamera) {

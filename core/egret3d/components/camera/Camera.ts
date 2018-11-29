@@ -122,16 +122,16 @@ namespace egret3d {
         private readonly _worldToCameraMatrix: Matrix4 = Matrix4.create();
         private readonly _worldToClipMatrix: Matrix4 = Matrix4.create();
         private readonly _clipToWorldMatrix: Matrix4 = Matrix4.create();
-        private _renderTarget: BaseRenderTarget | null = null;
+        private _renderTarget: BaseRenderTexture | null = null;
 
         /**
          * @internal
          */
-        public _readRenderTarget: BaseRenderTarget | null = null;
+        public _readRenderTarget: BaseRenderTexture | null = null;
         /**
          * @internal
          */
-        public _writeRenderTarget: BaseRenderTarget | null = null;
+        public _writeRenderTarget: BaseRenderTexture | null = null;
         /**
          * @internal
          */
@@ -156,8 +156,8 @@ namespace egret3d {
         public initialize() {
             super.initialize();
             //TODO
-            this._readRenderTarget = new GlRenderTarget("readRenderTarget", stage.viewport.w, stage.viewport.h, true);
-            this._writeRenderTarget = new GlRenderTarget("writeRenderTarget", stage.viewport.w, stage.viewport.h, true);
+            this._readRenderTarget = RenderTexture.create("readRenderTarget", stage.viewport.w, stage.viewport.h, true);
+            this._writeRenderTarget = RenderTexture.create("writeRenderTarget", stage.viewport.w, stage.viewport.h, true);
 
             this.transform.registerObserver(this);
             stage.onScreenResize.add(this._onStageResize, this);
@@ -656,10 +656,10 @@ namespace egret3d {
          * 该相机的渲染目标。
          * - 未设置该值则直接绘制到舞台。
          */
-        public get renderTarget(): BaseRenderTarget | null {
+        public get renderTarget(): BaseRenderTexture | null {
             return this._renderTarget;
         }
-        public set renderTarget(value: BaseRenderTarget | null) {
+        public set renderTarget(value: BaseRenderTexture | null) {
             if (this._renderTarget === value) {
                 return;
             }
@@ -677,7 +677,7 @@ namespace egret3d {
         /**
          * 
          */
-        public get postprocessingRenderTarget(): BaseRenderTarget {
+        public get postprocessingRenderTarget(): BaseRenderTexture {
             return this._readRenderTarget!;
         }
 

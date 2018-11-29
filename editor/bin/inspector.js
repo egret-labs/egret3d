@@ -3319,7 +3319,7 @@ var paper;
                     image.setAttribute('src', icons["camera"]);
                     // image.onload = function () { texture.uploadImage(image, false, true, true, false); };
                     // const texture = new egret3d.GLTexture2D("builtin/camera_icon.image.json");
-                    var texture = egret3d.Texture2D.createByImage("builtin/camera_icon.image.json", image, 6408 /* RGBA */, false, true, false);
+                    var texture = egret3d.Texture.createByImage("builtin/camera_icon.image.json", image, 6408 /* RGBA */, false, true, false);
                     EditorDefaultTexture.CAMERA_ICON = texture;
                     paper.Asset.register(texture);
                 }
@@ -3328,7 +3328,7 @@ var paper;
                     image.setAttribute('src', icons["light"]);
                     // const texture = new egret3d.GLTexture2D("builtin/light_icon.image.json");
                     // image.onload = function () { texture.uploadImage(image, false, true, true, false); };
-                    var texture = egret3d.Texture2D.createByImage("builtin/light_icon.image.json", image, 6408 /* RGBA */, false, true, false);
+                    var texture = egret3d.Texture.createByImage("builtin/light_icon.image.json", image, 6408 /* RGBA */, false, true, false);
                     EditorDefaultTexture.LIGHT_ICON = texture;
                     paper.Asset.register(texture);
                 }
@@ -6545,7 +6545,7 @@ var paper;
                                 if (Array.isArray(value)) {
                                     gltfUnifromMap[key] = value.concat();
                                 }
-                                else if (value instanceof egret3d.Texture2D) {
+                                else if (value instanceof egret3d.Texture) {
                                     gltfUnifromMap[key] = value.name;
                                 }
                                 else {

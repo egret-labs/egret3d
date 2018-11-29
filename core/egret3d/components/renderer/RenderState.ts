@@ -5,7 +5,7 @@ namespace egret3d {
     export class RenderState extends paper.SingletonComponent {
         public readonly clearColor: Color = Color.create();
         public readonly viewPort: Rectangle = Rectangle.create();
-        public renderTarget: BaseRenderTarget | null = null;
+        public renderTarget: RenderTexture | null = null;
 
         public render: (camera: Camera, material?: Material) => void = null!;
         public draw: (drawCall: DrawCall) => void = null!;
@@ -19,7 +19,7 @@ namespace egret3d {
             }
         }
 
-        public updateViewport(viewport: Readonly<Rectangle>, target: BaseRenderTarget | null): void { }
+        public updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null): void { }
         public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void { }
         public copyFramebufferToTexture(screenPostion: Vector2, target: Texture, level: number = 0): void { }
     }

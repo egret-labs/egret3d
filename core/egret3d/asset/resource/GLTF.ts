@@ -23,14 +23,17 @@ namespace egret3d {
         extensions: {
             paper?: {
                 mipmap?: boolean;
-                flipY?: boolean;
-                premultiplyAlpha?: boolean;
+                flipY?: 0 | 1;
+                premultiplyAlpha?: 0 | 1;
                 format?: gltf.TextureFormat;
                 width?: number;
                 height?: number;
                 anisotropy?: number;
                 type?: gltf.TextureDataType;
                 unpackAlignment?: gltf.TextureAlignment;
+                //
+                depthBuffer?: boolean;
+                stencilBuffer?: boolean;
             }
         };
     }

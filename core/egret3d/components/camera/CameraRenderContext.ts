@@ -23,7 +23,7 @@ namespace egret3d {
         public lightmapUV: uint = 1;
         public lightmapIntensity: number = 1.0;
         public readonly lightmapScaleOffset: Float32Array = new Float32Array(4);
-        public lightmap: Texture | null = null;
+        public lightmap: BaseTexture | null = null;
         /**
          * 
          */
@@ -221,7 +221,7 @@ namespace egret3d {
             transparentCalls.sort(this._sortFromFarToNear);
         }
 
-        public blit(src: Texture, material: Material | null = null, dest: BaseRenderTarget | null = null) {
+        public blit(src: BaseTexture, material: Material | null = null, dest: BaseRenderTexture | null = null) {
             if (!material) {
                 material = DefaultMaterials.COPY;
                 material.setTexture(src);

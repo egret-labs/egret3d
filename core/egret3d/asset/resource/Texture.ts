@@ -2,7 +2,7 @@ namespace egret3d {
     /**
      * 纹理资源。
      */
-    export class Texture extends GLTFAsset {
+    export abstract class BaseTexture extends GLTFAsset {
         protected _gltfTexture: GLTFTexture | null = null;
         protected _image: gltf.Image;
         protected _sampler: gltf.Sampler;
@@ -10,8 +10,6 @@ namespace egret3d {
          * @internal
          */
         public _dirty: boolean = false;
-
-        public _source: any = null;
 
         protected constructor(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource | null,
             width: number, height: number,
@@ -60,21 +58,17 @@ namespace egret3d {
             paperExtension.height = h;
 
             paperExtension.format = format || gltf.TextureFormat.RGBA;
-            paperExtension.premultiplyAlpha = premultiplyAlpha || false;
+            paperExtension.premultiplyAlpha = premultiplyAlpha ? 1 : 0;
             paperExtension.unpackAlignment = unpackAlignment || gltf.TextureAlignment.Four;
             paperExtension.mipmap = mipmap || false;
-            paperExtension.flipY = flipY || false;
+            paperExtension.flipY = flipY ? 1 : 0;
             paperExtension.type = type || gltf.TextureDataType.UNSIGNED_BYTE;
             paperExtension.anisotropy = anisotropy || 1;
 
             this._dirty = true;
         }
 
-        public uploadTexture(index: number): void { }
-
-        public caclByteLength(): number {
-            return 0;
-        }
+        public setupTexture(index?: number): void { }
 
         public get width(): number {
             return this._gltfTexture!.extensions.paper!.width!;
@@ -93,31 +87,31 @@ namespace egret3d {
         }
     }
 
-    export class Texture2D extends Texture {
-        public static create(name: string, source: GLTF, width?: number, height?: number): Texture2D;
-        public static create(name: string, source: ArrayBufferView | gltf.ImageSource, width: number, height: number, format?: gltf.TextureFormat): Texture2D;
+    export class Texture extends BaseTexture {
+        public static create(name: string, source: GLTF, width?: number, height?: number): Texture;
+        public static create(name: string, source: ArrayBufferView | gltf.ImageSource, width: number, height: number, format?: gltf.TextureFormat): Texture;
         public static create(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource, width: number, height: number,
             format?: gltf.TextureFormat, mipmap?: boolean,
             wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap,
             magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter,
             flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment,
             type?: gltf.TextureDataType, anisotropy?: number,
-        ): Texture2D;
+        ): Texture;
         public static create(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource | null, width: number, height: number,
             format?: gltf.TextureFormat, mipmap?: boolean,
             wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap,
             magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter,
             flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment,
-            type?: gltf.TextureDataType, anisotropy?: number): Texture2D {
+            type?: gltf.TextureDataType, anisotropy?: number): Texture {
 
-            return new egret3d.Texture2D(name, source, width, height,
+            return new egret3d.Texture(name, source, width, height,
                 format, mipmap,
                 wrapS, wrapT,
                 magFilter, minFilter,
                 flipY, premultiplyAlpha, unpackAlignment,
                 type, anisotropy);
         }
-        public static createByImage(name: string, image: gltf.ImageSource, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean): Texture2D {
+        public static createByImage(name: string, image: gltf.ImageSource, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean): Texture {
             let magFilter = gltf.TextureFilter.LINEAR;
             let minFilter = gltf.TextureFilter.LINEAR;
             const wrapS = repeat ? gltf.TextureWrap.REPEAT : gltf.TextureWrap.CLAMP_TO_EDGE;
@@ -130,12 +124,12 @@ namespace egret3d {
                 magFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
                 minFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
             }
-            const texture = egret3d.Texture2D.create(name, image, image.width, image.height,
+            const texture = egret3d.Texture.create(name, image, image.width, image.height,
                 format, mipmap, wrapS, wrapT, magFilter, minFilter);
 
             return texture;
         }
-        public static createByBitmapData(name: string, bitmapData: egret.BitmapData, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean): Texture2D {
+        public static createByBitmapData(name: string, bitmapData: egret.BitmapData, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean): Texture {
             let magFilter = gltf.TextureFilter.LINEAR;
             let minFilter = gltf.TextureFilter.LINEAR;
             const wrapS = repeat ? gltf.TextureWrap.REPEAT : gltf.TextureWrap.CLAMP_TO_EDGE;
@@ -148,17 +142,17 @@ namespace egret3d {
                 magFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
                 minFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
             }
-            const texture = egret3d.Texture2D.create(name, bitmapData.source, bitmapData.source.width, bitmapData.source.height,
+            const texture = egret3d.Texture.create(name, bitmapData.source, bitmapData.source.width, bitmapData.source.height,
                 format, mipmap, wrapS, wrapT, magFilter, minFilter);
 
             return texture;
         }
-        public static createColorTexture(name: string, r: number, g: number, b: number): Texture2D {
+        public static createColorTexture(name: string, r: number, g: number, b: number): Texture {
             const mipmap = true;
             const width = 1;
             const height = 1;
             const data = new Uint8Array([r, g, b, 255]);
-            const texture = Texture2D.create(name, data, width, height,
+            const texture = Texture.create(name, data, width, height,
                 gltf.TextureFormat.RGBA, mipmap,
                 gltf.TextureWrap.CLAMP_TO_EDGE, gltf.TextureWrap.CLAMP_TO_EDGE,
                 gltf.TextureFilter.LINEAR, gltf.TextureFilter.LINEAR_MIPMAP_LINEAR);
@@ -166,7 +160,7 @@ namespace egret3d {
             return texture;
         }
 
-        public static createGridTexture(name: string): Texture2D {
+        public static createGridTexture(name: string): Texture {
             const mipmap = true;
             const width = 128;
             const height = 128;
@@ -180,16 +174,12 @@ namespace egret3d {
                     data[seek + 3] = 255;
                 }
             }
-            const texture = Texture2D.create(name, data, width, height,
+            const texture = Texture.create(name, data, width, height,
                 gltf.TextureFormat.RGBA, mipmap,
                 gltf.TextureWrap.REPEAT, gltf.TextureWrap.REPEAT,
                 gltf.TextureFilter.LINEAR, gltf.TextureFilter.LINEAR_MIPMAP_LINEAR);
 
             return texture;
         }
-
-
-        public uploadTexture(index: number): void { }
-
     }
 }
