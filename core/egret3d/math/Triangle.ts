@@ -91,7 +91,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(array: Readonly<ArrayLike<number>>, offsetA?: number, offsetB?: number, offsetC?: number) {
+        public fromArray(array: ArrayLike<number>, offsetA?: number, offsetB?: number, offsetC?: number) {
             if (offsetA === undefined) {
                 offsetA = 0;
             }

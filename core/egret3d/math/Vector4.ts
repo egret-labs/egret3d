@@ -80,7 +80,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+        public fromArray(value: ArrayLike<number>, offset: number = 0) {
             this.x = value[offset];
             this.y = value[offset + 1];
             this.z = value[offset + 2];

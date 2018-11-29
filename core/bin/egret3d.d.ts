@@ -150,7 +150,7 @@ declare namespace paper {
      * 默认标识和自定义标识。
      */
     const enum DefaultTags {
-        Untagged = "",
+        Untagged = "Untagged",
         Respawn = "Respawn",
         Finish = "Finish",
         EditorOnly = "EditorOnly",
@@ -660,7 +660,7 @@ declare namespace egret3d {
         clone(): Vector2;
         set(x: number, y: number): this;
         clear(): this;
-        fromArray(array: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromArray(array: ArrayLike<number>, offset?: number): this;
         /**
          * 归一化该向量。
          * - v /= v.length
@@ -906,7 +906,7 @@ declare namespace egret3d {
         copy(value: Readonly<IVector3>): this;
         clone(): Vector3;
         set(x: number, y: number, z: number): this;
-        fromArray(array: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromArray(array: ArrayLike<number>, offset?: number): this;
         fromMatrixPosition(matrix: Readonly<Matrix4>): this;
         fromMatrixColumn(matrix: Readonly<Matrix4>, index: 0 | 1 | 2): this;
         clear(): this;
@@ -1384,9 +1384,8 @@ declare namespace egret3d {
         extensions: {
             paper: {
                 frameRate: number;
-                frameCount: number;
-                events: GLTFAnimationFrameEvent[];
                 clips: GLTFAnimationClip[];
+                events?: GLTFAnimationFrameEvent[];
             };
         };
     }
@@ -1409,6 +1408,10 @@ declare namespace egret3d {
          * 事件名称。
          */
         name: string;
+        /**
+         *
+         */
+        position: number;
         /**
          * 事件 int 变量。
          */
@@ -2759,7 +2762,7 @@ declare namespace egret3d {
          * @param rawData
          * @param offsetOrByteOffset
          */
-        static create(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset?: number): Matrix4;
+        static create(rawData?: ArrayLike<number>, offsetOrByteOffset?: number): Matrix4;
         /**
          * 矩阵原始数据。
          * @readonly
@@ -2770,7 +2773,7 @@ declare namespace egret3d {
          * @see egret3d.Matrix4.create()
          * @deprecated
          */
-        constructor(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset?: number);
+        constructor(rawData?: ArrayLike<number>, offsetOrByteOffset?: number);
         serialize(): Float32Array;
         deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): this;
         copy(value: Readonly<Matrix4>): this;
@@ -2780,7 +2783,7 @@ declare namespace egret3d {
          * 将该矩阵转换为恒等矩阵。
          */
         identity(): this;
-        fromArray(array: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromArray(array: ArrayLike<number>, offset?: number): this;
         fromBuffer(buffer: ArrayBuffer, byteOffset?: number): this;
         /**
          * 通过平移向量设置该矩阵。
@@ -3017,7 +3020,7 @@ declare namespace egret3d {
         copy(value: Readonly<Triangle>): this;
         clone(): Triangle;
         set(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): this;
-        fromArray(array: Readonly<ArrayLike<number>>, offsetA?: number, offsetB?: number, offsetC?: number): void;
+        fromArray(array: ArrayLike<number>, offsetA?: number, offsetB?: number, offsetC?: number): void;
         /**
          * 获取该三角形的中心点。
          * @param out 输出。
@@ -3169,7 +3172,8 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 纹理资源。
+     * 基础纹理资源。
+     * - 纹理资源的基类。
      */
     abstract class BaseTexture extends GLTFAsset {
         protected _gltfTexture: GLTFTexture | null;
@@ -3182,6 +3186,9 @@ declare namespace egret3d {
         readonly format: number;
         readonly gltfTexture: GLTFTexture;
     }
+    /**
+     * 纹理资源。
+     */
     class Texture extends BaseTexture {
         static create(name: string, source: GLTF, width?: number, height?: number): Texture;
         static create(name: string, source: ArrayBufferView | gltf.ImageSource, width: number, height: number, format?: gltf.TextureFormat): Texture;
@@ -3228,7 +3235,7 @@ declare namespace egret3d {
         clone(): Vector4;
         set(x: number, y: number, z: number, w: number): this;
         clear(): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromArray(value: ArrayLike<number>, offset?: number): this;
         /**
          * 判断该向量是否和一个向量相等。
          * @param value 一个向量。
@@ -3321,6 +3328,7 @@ declare namespace paper {
          * @private
          */
         createInstance(keepUUID?: boolean): Scene | null;
+        readonly name: string;
     }
 }
 declare namespace paper {
@@ -3480,7 +3488,7 @@ declare namespace egret3d {
         clone(): Color;
         copy(value: Readonly<IColor>): this;
         set(r: number, g: number, b: number, a?: number): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromArray(value: ArrayLike<number>, offset?: number): this;
         fromHex(hex: uint): this;
         multiply(valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this;
         scale(value: number, source?: Readonly<IColor>): this;
@@ -3536,12 +3544,12 @@ declare namespace egret3d {
         copy(value: Readonly<Box>): this;
         clear(): this;
         set(minimum?: Readonly<IVector3> | null, maximum?: Readonly<IVector3> | null): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromArray(value: ArrayLike<number>, offset?: number): this;
         /**
          * 设置该立方体，使得全部点都在立方体内。
          * @param points 全部点。
          */
-        fromPoints(points: Readonly<ArrayLike<IVector3>>): this;
+        fromPoints(points: ArrayLike<IVector3>): this;
         /**
          * 将该立方体乘以一个矩阵。
          * - v *= matrix
@@ -3795,7 +3803,7 @@ declare namespace egret3d {
         clone(): Matrix3;
         set(n11: number, n12: number, n13: number, n21: number, n22: number, n23: number, n31: number, n32: number, n33: number): Matrix3;
         identity(): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromArray(value: ArrayLike<number>, offset?: number): this;
         fromBuffer(value: ArrayBuffer, byteOffset?: number): this;
         fromScale(vector: Readonly<IVector3>): this;
         /**
@@ -4120,12 +4128,18 @@ declare namespace paper {
     }
 }
 declare namespace egret3d {
+    /**
+     *
+     */
     abstract class BaseRenderTexture extends egret3d.BaseTexture {
         protected _mipmap: boolean;
         protected constructor(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource | null, width: number, height: number, format?: gltf.TextureFormat, mipmap?: boolean, wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap, magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter, flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment, type?: gltf.TextureDataType, anisotropy?: number, depth?: boolean, stencil?: boolean);
         activateRenderTexture(index?: number): void;
         generateMipmap(): boolean;
     }
+    /**
+     *
+     */
     class RenderTexture extends egret3d.BaseRenderTexture {
         static create(name: string, width: number, height: number, depth?: boolean, stencil?: boolean, mipmap?: boolean, linear?: boolean): RenderTexture;
     }
@@ -4291,7 +4305,7 @@ declare namespace egret3d {
         /**
          *
          */
-        readonly planes: Readonly<[Plane, Plane, Plane, Plane, Plane, Plane]>;
+        readonly planes: [Plane, Plane, Plane, Plane, Plane, Plane];
         /**
          * 请使用 `egret3d.Frustum.create()` 创建实例。
          * @see egret3d.Frustum.create()
@@ -4301,7 +4315,7 @@ declare namespace egret3d {
         deserialize(value: ReadonlyArray<number>): this;
         clone(): Frustum;
         copy(value: Readonly<Frustum>): this;
-        set(planes: Readonly<[Plane, Plane, Plane, Plane, Plane, Plane]>): this;
+        set(planes: [Plane, Plane, Plane, Plane, Plane, Plane]): this;
         fromArray(array: ReadonlyArray<number>, offset?: number): this;
         fromMatrix(matrix: Readonly<Matrix4>): this;
         containsPoint(point: Readonly<IVector3>): boolean;
@@ -4615,7 +4629,7 @@ declare namespace egret3d {
         clone(): Plane;
         copy(value: Readonly<Plane>): this;
         set(normal: Readonly<IVector3>, constant: number): this;
-        fromArray(array: Readonly<ArrayLike<number>>, offset?: uint): this;
+        fromArray(array: ArrayLike<number>, offset?: uint): this;
         fromPoint(point: Readonly<IVector3>, normal?: Vector3): this;
         fromPoints(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>, valueC: Readonly<IVector3>): this;
         normalize(input?: Readonly<Plane>): this;
@@ -5948,7 +5962,7 @@ declare namespace egret3d {
          * @param points 点集。
          * @param center 中心点。（不设置则自动计算）
          */
-        fromPoints(points: Readonly<ArrayLike<IVector3>>, center?: Readonly<IVector3>): this;
+        fromPoints(points: ArrayLike<IVector3>, center?: Readonly<IVector3>): this;
         /**
          * 是否包含指定的点或其他球体。
          * @param value 点或球体。
@@ -7336,15 +7350,12 @@ declare namespace egret3d {
         components: paper.BaseComponent | paper.BaseComponent[];
         updateTarget: ((animationlayer: AnimationLayer, animationState: AnimationState) => void) | null;
         binder: AnimationBinder | null;
-        frameIndex?: uint;
         private constructor();
         onClear(): void;
-        private _crossFrameEvent(frameIndex, events, animationState);
         onUpdateTranslation(animationlayer: AnimationLayer, animationState: AnimationState): void;
         onUpdateRotation(animationlayer: AnimationLayer, animationState: AnimationState): void;
         onUpdateScale(animationlayer: AnimationLayer, animationState: AnimationState): void;
         onUpdateActive(animationlayer: AnimationLayer, animationState: AnimationState): void;
-        onUpdateFrameEvent(animationlayer: AnimationLayer, animationState: AnimationState): void;
         getFrameIndex(currentTime: number): uint;
     }
 }
@@ -8553,7 +8564,7 @@ declare namespace egret3d {
         copy(value: Readonly<Ray>): this;
         clone(): Ray;
         set(origin: Readonly<IVector3>, direction: Readonly<IVector3>): this;
-        fromArray(value: Readonly<ArrayLike<number>>, offset?: number): this;
+        fromArray(value: ArrayLike<number>, offset?: number): this;
         /**
          * 设置该射线，使其从起点出发，经过终点。
          * @param from 起点。
@@ -10222,11 +10233,7 @@ declare namespace egret3d.web {
 }
 declare namespace egret3d.web {
 }
-declare type GlobalWeblGLTexture = WebGLTexture;
 declare namespace egret3d.web {
-    interface IWebGLTexture {
-        webglTexture: GlobalWeblGLTexture | null;
-    }
     /**
      *
      */
@@ -10252,10 +10259,6 @@ declare namespace egret3d.web {
     }
 }
 declare namespace egret3d.web {
-    interface IWebGLRenderTexture {
-        frameBuffer: WebGLFramebuffer | null;
-        renderBuffer: WebGLRenderbuffer | null;
-    }
 }
 declare namespace egret3d.web {
 }

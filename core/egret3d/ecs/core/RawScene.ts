@@ -21,5 +21,9 @@ namespace paper {
 
             return scene;
         }
+
+        public get name(): string {
+            return this._raw.objects![0].name;
+        }
     }
 }

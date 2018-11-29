@@ -57,7 +57,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+        public fromArray(value: ArrayLike<number>, offset: number = 0) {
             this.origin.fromArray(value, offset);
             this.direction.fromArray(value, offset + 3);
 

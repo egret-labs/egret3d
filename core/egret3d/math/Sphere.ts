@@ -73,7 +73,7 @@ namespace egret3d {
          * @param points 点集。
          * @param center 中心点。（不设置则自动计算）
          */
-        public fromPoints(points: Readonly<ArrayLike<IVector3>>, center?: Readonly<IVector3>) {
+        public fromPoints(points: ArrayLike<IVector3>, center?: Readonly<IVector3>) {
             if (center) {
                 this.center.copy(center);
             }

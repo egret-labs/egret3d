@@ -91,7 +91,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+        public fromArray(value: ArrayLike<number>, offset: number = 0) {
             this._minimum.fromArray(value, offset);
             this._maximum.fromArray(value, offset + 3);
 
@@ -105,7 +105,7 @@ namespace egret3d {
          * 设置该立方体，使得全部点都在立方体内。
          * @param points 全部点。
          */
-        public fromPoints(points: Readonly<ArrayLike<IVector3>>): this {
+        public fromPoints(points: ArrayLike<IVector3>): this {
             this.clear();
 
             for (const point of points as IVector3[]) {

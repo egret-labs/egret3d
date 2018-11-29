@@ -40,7 +40,7 @@ namespace paper {
      * 默认标识和自定义标识。
      */
     export const enum DefaultTags {
-        Untagged = "",
+        Untagged = "Untagged",
         Respawn = "Respawn",
         Finish = "Finish",
         EditorOnly = "EditorOnly",

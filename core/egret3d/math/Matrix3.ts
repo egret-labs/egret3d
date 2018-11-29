@@ -98,7 +98,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(value: Readonly<ArrayLike<number>>, offset: number = 0) {
+        public fromArray(value: ArrayLike<number>, offset: number = 0) {
             for (let i = 0; i < 9; ++i) {
                 this.rawData[i] = value[i + offset];
             }

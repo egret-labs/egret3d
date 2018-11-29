@@ -24,14 +24,17 @@ namespace paper {
          * @param name 场景资源的名称。
          */
         public static create(name: string, combineStaticObjects: boolean = true) {
-            const exScene = Application.sceneManager.getScene(name);
-            if (exScene) {
-                console.warn("The scene with the same name already exists.");
-                return exScene;
-            }
-
             const rawScene = Asset.find<RawScene>(name);
+
             if (rawScene && rawScene instanceof RawScene) {
+                if (rawScene) {
+                    const existedScene = Application.sceneManager.getScene(rawScene.name);
+                    if (existedScene) {
+                        console.warn("The scene with the same name already exists.");
+                        return existedScene;
+                    }
+                }
+
                 const scene = rawScene.createInstance();
 
                 if (scene) {

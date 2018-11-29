@@ -61,7 +61,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(array: Readonly<ArrayLike<number>>, offset: uint = 0) {
+        public fromArray(array: ArrayLike<number>, offset: uint = 0) {
             this.normal.fromArray(array, offset);
             this.constant = array[offset + 3];
 

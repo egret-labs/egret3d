@@ -121,7 +121,6 @@ namespace paper {
         public readonly _beforeRenderBehaviors: Behaviour[] = [];
         private readonly _cachedComponents: BaseComponent[] = [];
         private _scene: Scene | null = null;
-
         /**
          * 请使用 `paper.GameObject.create()` 创建实例。
          * @see paper.GameObject.create()

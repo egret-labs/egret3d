@@ -524,7 +524,7 @@ var paper;
      */
     var DefaultTags;
     (function (DefaultTags) {
-        DefaultTags["Untagged"] = "";
+        DefaultTags["Untagged"] = "Untagged";
         DefaultTags["Respawn"] = "Respawn";
         DefaultTags["Finish"] = "Finish";
         DefaultTags["EditorOnly"] = "EditorOnly";
@@ -4156,7 +4156,8 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 纹理资源。
+     * 基础纹理资源。
+     * - 纹理资源的基类。
      */
     var BaseTexture = (function (_super) {
         __extends(BaseTexture, _super);
@@ -4244,6 +4245,9 @@ var egret3d;
     }(egret3d.GLTFAsset));
     egret3d.BaseTexture = BaseTexture;
     __reflect(BaseTexture.prototype, "egret3d.BaseTexture");
+    /**
+     * 纹理资源。
+     */
     var Texture = (function (_super) {
         __extends(Texture, _super);
         function Texture() {
@@ -4548,6 +4552,13 @@ var paper;
             }
             return scene;
         };
+        Object.defineProperty(RawScene.prototype, "name", {
+            get: function () {
+                return this._raw.objects[0].name;
+            },
+            enumerable: true,
+            configurable: true
+        });
         return RawScene;
     }(paper.BasePrefabAsset));
     paper.RawScene = RawScene;
@@ -6713,6 +6724,9 @@ var paper;
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
+    /**
+     *
+     */
     var BaseRenderTexture = (function (_super) {
         __extends(BaseRenderTexture, _super);
         function BaseRenderTexture(name, source, width, height, format, mipmap, wrapS, wrapT, magFilter, minFilter, flipY, premultiplyAlpha, unpackAlignment, type, anisotropy, depth, stencil) {
@@ -6732,6 +6746,9 @@ var egret3d;
     }(egret3d.BaseTexture));
     egret3d.BaseRenderTexture = BaseRenderTexture;
     __reflect(BaseRenderTexture.prototype, "egret3d.BaseRenderTexture");
+    /**
+     *
+     */
     var RenderTexture = (function (_super) {
         __extends(RenderTexture, _super);
         function RenderTexture() {
@@ -8806,7 +8823,7 @@ var paper;
                                         this._prefabRootMap[source.uuid] = { rootUUID: target.uuid, root: target };
                                     }
                                     else {
-                                        target = paper.GameObject.create("Missing Prefab" /* MissingPrefab */, "" /* Untagged */, this._rootTarget);
+                                        target = paper.GameObject.create("Missing Prefab" /* MissingPrefab */, "Untagged" /* Untagged */, this._rootTarget);
                                     }
                                 }
                             }
@@ -8816,7 +8833,7 @@ var paper;
                             }
                         }
                         else {
-                            target = paper.GameObject.create("NoName" /* NoName */, "" /* Untagged */, this._rootTarget);
+                            target = paper.GameObject.create("NoName" /* NoName */, "Untagged" /* Untagged */, this._rootTarget);
                             if (this._makeLink) {
                                 target.extras.linkedID = source.uuid;
                                 if (root) {
@@ -8928,7 +8945,7 @@ var paper;
             console.warn("The deserialization is not complete.");
         }
         if (!_defaultGameObject) {
-            _defaultGameObject = paper.GameObject.create("NoName" /* NoName */, "" /* Untagged */, paper.Application.sceneManager.globalScene);
+            _defaultGameObject = paper.GameObject.create("NoName" /* NoName */, "Untagged" /* Untagged */, paper.Application.sceneManager.globalScene);
             _defaultGameObject.parent = paper.GameObject.globalGameObject;
         }
         _inline = inline;
@@ -13516,7 +13533,7 @@ var egret3d;
                     this._postProcessingCamera = gameObject.getComponent(egret3d.Camera);
                 }
                 else {
-                    gameObject = paper.GameObject.create(gameObjectName, "" /* Untagged */, paper.Scene.globalScene);
+                    gameObject = paper.GameObject.create(gameObjectName, "Untagged" /* Untagged */, paper.Scene.globalScene);
                     // gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
                     gameObject.parent = paper.GameObject.globalGameObject; // TODO remove
                     var postProcessingCamera = gameObject.addComponent(egret3d.Camera);
@@ -14013,13 +14030,15 @@ var paper;
          */
         Scene.create = function (name, combineStaticObjects) {
             if (combineStaticObjects === void 0) { combineStaticObjects = true; }
-            var exScene = paper.Application.sceneManager.getScene(name);
-            if (exScene) {
-                console.warn("The scene with the same name already exists.");
-                return exScene;
-            }
             var rawScene = paper.Asset.find(name);
             if (rawScene && rawScene instanceof paper.RawScene) {
+                if (rawScene) {
+                    var existedScene = paper.Application.sceneManager.getScene(rawScene.name);
+                    if (existedScene) {
+                        console.warn("The scene with the same name already exists.");
+                        return existedScene;
+                    }
+                }
                 var scene = rawScene.createInstance();
                 if (scene) {
                     if (combineStaticObjects && paper.Application.playerMode !== 2 /* Editor */) {
@@ -14563,7 +14582,7 @@ var paper;
          */
         function GameObject(name, tag, scene) {
             if (name === void 0) { name = "NoName" /* NoName */; }
-            if (tag === void 0) { tag = "" /* Untagged */; }
+            if (tag === void 0) { tag = "Untagged" /* Untagged */; }
             if (scene === void 0) { scene = null; }
             var _this = _super.call(this) || this;
             /**
@@ -14630,7 +14649,7 @@ var paper;
          */
         GameObject.create = function (name, tag, scene) {
             if (name === void 0) { name = "NoName" /* NoName */; }
-            if (tag === void 0) { tag = "" /* Untagged */; }
+            if (tag === void 0) { tag = "Untagged" /* Untagged */; }
             if (scene === void 0) { scene = null; }
             var gameObect;
             // if (this._instances.length > 0) {
@@ -17344,7 +17363,7 @@ var egret3d;
             this._playheadEnabled = true;
             this._playState = -1;
             this._time = 0.0;
-            this._currentTime = 0.0;
+            this._currentTime = -1.0;
             this._globalWeight = 0.0;
         };
         /**
@@ -17356,82 +17375,79 @@ var egret3d;
             this.animation = assetConfig.animations[0]; // TODO 动画数据暂不合并。
             this.animationClip = animationClip;
             this.animationNode = animationNode;
-            if (!this.animation.channels) {
-                return;
-            }
-            var rootGameObject = animation.gameObject;
-            var children = rootGameObject.transform.getAllChildren({});
-            children["__root__"] = rootGameObject.transform; // 
-            for (var _i = 0, _a = this.animation.channels; _i < _a.length; _i++) {
-                var glTFChannel = _a[_i];
-                var nodeIndex = glTFChannel.target.node;
-                var pathName = glTFChannel.target.path;
-                if (nodeIndex === undefined) {
-                    var channel = egret3d.AnimationChannel.create();
-                    channel.components = animation;
-                    switch (pathName) {
-                        case "frameEvent":
-                            channel.updateTarget = channel.onUpdateTranslation;
-                            break;
-                        default:
-                            console.warn("Unknown animation channel.", pathName);
-                            break;
+            if (this.animation.channels) {
+                var rootGameObject = animation.gameObject;
+                var children = rootGameObject.transform.getAllChildren({});
+                children["__root__"] = rootGameObject.transform; // 
+                for (var _i = 0, _a = this.animation.channels; _i < _a.length; _i++) {
+                    var glTFChannel = _a[_i];
+                    var nodeIndex = glTFChannel.target.node;
+                    var pathName = glTFChannel.target.path;
+                    if (nodeIndex === undefined) {
+                        // const channel = AnimationChannel.create();
+                        // channel.components = animation;
+                        // this.channels.push(channel);
+                        switch (pathName) {
+                            default:
+                                console.warn("Unknown animation channel.", pathName);
+                                break;
+                        }
                     }
-                }
-                else {
-                    var nodeName = this.animationAsset.getNode(nodeIndex).name;
-                    if (!(nodeName in children)) {
-                        continue;
-                    }
-                    var channel = egret3d.AnimationChannel.create();
-                    var transforms = children[nodeName];
-                    var binder = animation._getBinder(nodeName, pathName);
-                    channel.glTFChannel = glTFChannel;
-                    channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
-                    channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input));
-                    channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output));
-                    channel.binder = binder;
-                    channel.components = transforms; // TODO 更多组件
-                    this.channels.push(channel);
-                    switch (pathName) {
-                        case "translation":
-                            channel.updateTarget = channel.onUpdateTranslation;
-                            if (!binder.bindPose) {
-                                binder.bindPose = egret3d.Vector3.create().copy(transforms.localPosition);
-                            }
-                            break;
-                        case "rotation":
-                            channel.updateTarget = channel.onUpdateRotation;
-                            if (!binder.bindPose) {
-                                binder.bindPose = egret3d.Quaternion.create().copy(transforms.localRotation);
-                            }
-                            break;
-                        case "scale":
-                            channel.updateTarget = channel.onUpdateScale;
-                            if (!binder.bindPose) {
-                                binder.bindPose = egret3d.Vector3.create().copy(transforms.localScale);
-                            }
-                            break;
-                        case "weights":
-                            // TODO
-                            break;
-                        case "custom":
-                            switch (channel.glTFChannel.extensions.paper.type) {
-                                case "paper.GameObject":
-                                    switch (channel.glTFChannel.extensions.paper.property) {
-                                        case "activeSelf":
-                                            channel.updateTarget = channel.onUpdateActive;
-                                            break;
-                                    }
-                                    break;
-                                default:
-                                    console.warn("Unknown animation channel.", channel.glTFChannel.extensions.paper.type);
-                                    break;
-                            }
-                            break;
-                        default:
-                            console.warn("Unknown animation channel.", pathName);
-                            break;
+                    else {
+                        var nodeName = this.animationAsset.getNode(nodeIndex).name;
+                        if (!(nodeName in children)) {
+                            continue;
+                        }
+                        var channel = egret3d.AnimationChannel.create();
+                        var transforms = children[nodeName];
+                        var binder = animation._getBinder(nodeName, pathName);
+                        channel.glTFChannel = glTFChannel;
+                        channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
+                        channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input));
+                        channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output));
+                        channel.binder = binder;
+                        channel.components = transforms; // TODO 更多组件
+                        this.channels.push(channel);
+                        switch (pathName) {
+                            case "translation":
+                                channel.updateTarget = channel.onUpdateTranslation;
+                                if (!binder.bindPose) {
+                                    binder.bindPose = egret3d.Vector3.create().copy(transforms.localPosition);
+                                }
+                                break;
+                            case "rotation":
+                                channel.updateTarget = channel.onUpdateRotation;
+                                if (!binder.bindPose) {
+                                    binder.bindPose = egret3d.Quaternion.create().copy(transforms.localRotation);
+                                }
+                                break;
+                            case "scale":
+                                channel.updateTarget = channel.onUpdateScale;
+                                if (!binder.bindPose) {
+                                    binder.bindPose = egret3d.Vector3.create().copy(transforms.localScale);
+                                }
+                                break;
+                            case "weights":
+                                // TODO
+                                break;
+                            case "custom":
+                                switch (channel.glTFChannel.extensions.paper.type) {
+                                    case "paper.GameObject":
+                                        switch (channel.glTFChannel.extensions.paper.property) {
+                                            case "activeSelf":
+                                                channel.updateTarget = channel.onUpdateActive;
+                                                break;
+                                        }
+                                        break;
+                                    default:
+                                        console.warn("Unknown animation channel.", channel.glTFChannel.extensions.paper.type);
+                                        break;
+                                }
+                                break;
+                            default:
+                                console.warn("Unknown animation channel.", pathName);
+                                break;
+                        }
                     }
                 }
             }
@@ -17590,15 +17606,6 @@ var egret3d;
             this.isEnd = false;
             this.updateTarget = null;
             this.binder = null;
-            this.frameIndex = undefined;
-        };
-        AnimationChannel.prototype._crossFrameEvent = function (frameIndex, events, animationState) {
-            var components = this.components;
-            var outputBuffer = this.outputBuffer;
-            var eventIndices = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]);
-            if (eventIndices >= 0) {
-                components.gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(3 /* KeyFrame */, animationState, events[eventIndices]), false);
-            }
         };
         AnimationChannel.prototype.onUpdateTranslation = function (animationlayer, animationState) {
             var additive = animationlayer.additive;
@@ -17787,7 +17794,7 @@ var egret3d;
                 if (!interpolation || interpolation !== "STEP") {
                     var inputBuffer = this.inputBuffer;
                     var frameStart = inputBuffer[frameIndex];
-                    var progress = (animationState._currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
+                    var progress = (currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
                     x += (outputBuffer[offset++] - x) * progress;
                     y += (outputBuffer[offset++] - y) * progress;
                     z += (outputBuffer[offset++] - z) * progress;
@@ -17859,39 +17866,6 @@ var egret3d;
                 else {
                     components.gameObject.activeSelf = activeSelf;
                 }
-            }
-        };
-        AnimationChannel.prototype.onUpdateFrameEvent = function (animationlayer, animationState) {
-            var events = animationState.animation.extensions.paper.events;
-            if (!events) {
-                return;
-            }
-            var currentTime = animationState._currentTime;
-            var frameIndex = this.getFrameIndex(currentTime);
-            if (this.frameIndex !== frameIndex) {
-                var inputBuffer = this.inputBuffer;
-                var frameCount = this.inputBuffer.length;
-                var begin = animationState.animationClip.position;
-                var end = begin + animationState.animationClip.duration;
-                var crossedFrameIndex = this.frameIndex !== undefined ? this.frameIndex : 0;
-                // TODO isReverse
-                while (crossedFrameIndex >= 0) {
-                    if (crossedFrameIndex < frameCount - 1) {
-                        crossedFrameIndex++;
-                    }
-                    else {
-                        crossedFrameIndex = 0;
-                    }
-                    var framePosition = inputBuffer[crossedFrameIndex];
-                    if (begin <= framePosition && framePosition <= end) {
-                        this._crossFrameEvent(crossedFrameIndex, events, animationState);
-                    }
-                    // TODO Add loop complete event before first frame.
-                    if (crossedFrameIndex === frameIndex) {
-                        break;
-                    }
-                }
-                this.frameIndex = frameIndex;
             }
         };
         AnimationChannel.prototype.getFrameIndex = function (currentTime) {
@@ -18050,6 +18024,7 @@ var egret3d;
         };
         AnimationSystem.prototype._updateAnimationState = function (animationFadeState, animationState, deltaTime, forceUpdate) {
             var animation = this._animation;
+            var gameObject = animation.gameObject;
             var animationLayer = this._animationLayer;
             // const animationNode = animationState.animationNode;
             var weight = animationLayer.weight * animationFadeState.progress * animationState.weight;
@@ -18069,17 +18044,17 @@ var egret3d;
             var playTimes = animationState.playTimes;
             var duration = animationState.animationClip.duration;
             var totalTime = playTimes * duration;
+            var currentTime = 0.0;
             if (playTimes > 0 && (animationState._time >= totalTime || animationState._time <= -totalTime)) {
                 if (animationState._playState <= 0 && animationState._playheadEnabled) {
                     animationState._playState = 1;
                 }
                 animationState.currentPlayTimes = playTimes;
                 if (animationState._time >= totalTime) {
-                    // currentTime = duration + Const.EPSILON; // Precision problem.
-                    animationState._currentTime = duration; // TODO CHECK.
+                    currentTime = duration;
                 }
                 else {
-                    animationState._currentTime = 0.0;
+                    currentTime = 0.0;
                 }
             }
             else {
@@ -18089,14 +18064,15 @@ var egret3d;
                 if (animationState._time < 0.0) {
                     animationState._time = -animationState._time;
                     animationState.currentPlayTimes = (animationState._time / duration) >> 0;
-                    animationState._currentTime = duration - (animationState._time % duration);
+                    currentTime = duration - (animationState._time % duration);
                 }
                 else {
                     animationState.currentPlayTimes = (animationState._time / duration) >> 0;
-                    animationState._currentTime = animationState._time % duration;
+                    currentTime = animationState._time % duration;
                 }
             }
-            animationState._currentTime += animationState.animationClip.position;
+            currentTime += animationState.animationClip.position;
+            animationState._currentTime = currentTime;
             if (forceUpdate || weight !== 0.0) {
                 for (var _i = 0, _a = animationState.channels; _i < _a.length; _i++) {
                     var channel = _a[_i];
@@ -18111,17 +18087,76 @@ var egret3d;
             }
             // this._events; // TODO buffer event.
             if (prevPlayState === -1 && animationState._playState !== -1) {
-                animation.gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(0 /* Start */, animationState), false);
+                gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(0 /* Start */, animationState), false);
+            }
+            //
+            var loopEvent = false;
+            var frameEvents = animationState.animation.extensions.paper.events;
+            if (deltaTime !== 0.0 && frameEvents) {
+                if (deltaTime > 0.0) {
+                    if (prevTime < currentTime) {
+                        for (var _b = 0, frameEvents_1 = frameEvents; _b < frameEvents_1.length; _b++) {
+                            var event_4 = frameEvents_1[_b];
+                            if (prevTime < event_4.position && event_4.position <= currentTime) {
+                                gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(3 /* KeyFrame */, animationState, event_4), false);
+                            }
+                        }
+                    }
+                    else {
+                        for (var _c = 0, frameEvents_2 = frameEvents; _c < frameEvents_2.length; _c++) {
+                            var event_5 = frameEvents_2[_c];
+                            if (prevTime < event_5.position) {
+                                gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(3 /* KeyFrame */, animationState, event_5), false);
+                            }
+                        }
+                        gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(1 /* LoopComplete */, animationState), false);
+                        for (var _d = 0, frameEvents_3 = frameEvents; _d < frameEvents_3.length; _d++) {
+                            var event_6 = frameEvents_3[_d];
+                            if (event_6.position <= currentTime) {
+                                gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(3 /* KeyFrame */, animationState, event_6), false);
+                            }
+                        }
+                        loopEvent = true;
+                    }
+                }
+                else {
+                    if (prevTime > currentTime) {
+                        for (var _e = 0, frameEvents_4 = frameEvents; _e < frameEvents_4.length; _e++) {
+                            var event_7 = frameEvents_4[_e];
+                            if (currentTime <= event_7.position && event_7.position < prevTime) {
+                                gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(3 /* KeyFrame */, animationState, event_7), false);
+                            }
+                        }
+                    }
+                    else {
+                        for (var _f = 0, frameEvents_5 = frameEvents; _f < frameEvents_5.length; _f++) {
+                            var event_8 = frameEvents_5[_f];
+                            if (event_8.position < prevTime) {
+                                gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(3 /* KeyFrame */, animationState, event_8), false);
+                            }
+                        }
+                        gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(1 /* LoopComplete */, animationState), false);
+                        for (var _g = 0, frameEvents_6 = frameEvents; _g < frameEvents_6.length; _g++) {
+                            var event_9 = frameEvents_6[_g];
+                            if (currentTime <= event_9.position) {
+                                gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(3 /* KeyFrame */, animationState, event_9), false);
+                            }
+                        }
+                        loopEvent = true;
+                    }
+                }
             }
             if (animationState.currentPlayTimes !== prevPlayTimes) {
-                animation.gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(1 /* LoopComplete */, animationState), false);
+                if (!loopEvent) {
+                    gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(1 /* LoopComplete */, animationState), false);
+                }
                 if (animationState._playState === 1) {
                     var clipNames = animationLayer._clipNames;
                     if (clipNames && clipNames.length > 0) {
                         animation.play(clipNames.shift());
                     }
                     else {
-                        animation.gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(2 /* Complete */, animationState), false);
+                        gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(2 /* Complete */, animationState), false);
                     }
                 }
             }
@@ -18136,6 +18171,9 @@ var egret3d;
                 var gameObject = _a[_i];
                 var animation = this._animation = gameObject.getComponent(egret3d.Animation);
                 var animationController = animation.animationController;
+                if (!animationController) {
+                    continue;
+                }
                 var animationLayers = animationController.layers;
                 var animationFadeStates = animation._fadeStates;
                 var blendlayers = animation._binders;

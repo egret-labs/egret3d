@@ -20,7 +20,7 @@ namespace egret3d {
         /**
          * 
          */
-        public readonly planes: Readonly<[Plane, Plane, Plane, Plane, Plane, Plane]> = [
+        public readonly planes: [Plane, Plane, Plane, Plane, Plane, Plane] = [
             Plane.create(),
             Plane.create(),
             Plane.create(),
@@ -59,7 +59,7 @@ namespace egret3d {
             return this.set(value.planes);
         }
 
-        public set(planes: Readonly<[Plane, Plane, Plane, Plane, Plane, Plane]>) {
+        public set(planes: [Plane, Plane, Plane, Plane, Plane, Plane]) {
             let index = 0;
             for (const plane of planes) {
                 this.planes[index++].copy(plane);

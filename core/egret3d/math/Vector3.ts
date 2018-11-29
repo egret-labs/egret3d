@@ -127,7 +127,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(array: Readonly<ArrayLike<number>>, offset: number = 0) {
+        public fromArray(array: ArrayLike<number>, offset: number = 0) {
             this.x = array[offset];
             this.y = array[offset + 1];
             this.z = array[offset + 2];

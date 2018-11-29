@@ -21,7 +21,7 @@ namespace egret3d {
          * @param rawData 
          * @param offsetOrByteOffset 
          */
-        public static create(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset: number = 0): Matrix4 {
+        public static create(rawData?: ArrayLike<number>, offsetOrByteOffset: number = 0): Matrix4 {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!;
                 instance._released = false;
@@ -53,7 +53,7 @@ namespace egret3d {
          * @see egret3d.Matrix4.create()
          * @deprecated
          */
-        public constructor(rawData?: Readonly<ArrayLike<number>> | ArrayBuffer, offsetOrByteOffset: number = 0) {
+        public constructor(rawData?: ArrayLike<number>, offsetOrByteOffset: number = 0) {
             super();
 
             if (rawData && rawData instanceof ArrayBuffer) {
@@ -61,7 +61,7 @@ namespace egret3d {
             }
             else {
                 this.rawData = new Float32Array(16);
-                this.fromArray(rawData as Readonly<ArrayLike<number>> || _array);
+                this.fromArray(rawData || _array);
             }
         }
 
@@ -127,7 +127,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(array: Readonly<ArrayLike<number>>, offset: number = 0): this {
+        public fromArray(array: ArrayLike<number>, offset: number = 0): this {
             for (let i = 0; i < 16; ++i) {
                 this.rawData[i] = array[i + offset];
             }
