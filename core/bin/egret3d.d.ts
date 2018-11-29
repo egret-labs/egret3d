@@ -6230,6 +6230,7 @@ declare namespace egret3d {
         spotLightArray: Float32Array;
         lightShadowCameraNear: number;
         lightShadowCameraFar: number;
+        lightCastShadows: boolean;
         readonly directShadowMaps: (WebGLTexture | null)[];
         readonly pointShadowMaps: (WebGLTexture | null)[];
         readonly spotShadowMaps: (WebGLTexture | null)[];

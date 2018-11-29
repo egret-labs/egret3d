@@ -731,7 +731,12 @@ namespace egret3d {
             return (this.bufferMask & gltf.BufferMask.Color) !== 0;
         }
         public set clearOption_Color(value: boolean) {
-            this.bufferMask |= gltf.BufferMask.Color;
+            if (value) {
+                this.bufferMask |= gltf.BufferMask.Color;
+            }
+            else {
+                this.bufferMask &= ~gltf.BufferMask.Color;
+            }
         }
         /**
          * @deprecated
@@ -740,7 +745,12 @@ namespace egret3d {
             return (this.bufferMask & gltf.BufferMask.Depth) !== 0;
         }
         public set clearOption_Depth(value: boolean) {
-            this.bufferMask |= gltf.BufferMask.Depth;
+            if (value) {
+                this.bufferMask |= gltf.BufferMask.Depth;
+            }
+            else {
+                this.bufferMask &= ~gltf.BufferMask.Depth;
+            }
         }
     }
 }

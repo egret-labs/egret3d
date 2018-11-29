@@ -13248,7 +13248,12 @@ var egret3d;
                 return (this.bufferMask & 16384 /* Color */) !== 0;
             },
             set: function (value) {
-                this.bufferMask |= 16384 /* Color */;
+                if (value) {
+                    this.bufferMask |= 16384 /* Color */;
+                }
+                else {
+                    this.bufferMask &= ~16384 /* Color */;
+                }
             },
             enumerable: true,
             configurable: true
@@ -13261,7 +13266,12 @@ var egret3d;
                 return (this.bufferMask & 256 /* Depth */) !== 0;
             },
             set: function (value) {
-                this.bufferMask |= 256 /* Depth */;
+                if (value) {
+                    this.bufferMask |= 256 /* Depth */;
+                }
+                else {
+                    this.bufferMask &= ~256 /* Depth */;
+                }
             },
             enumerable: true,
             configurable: true
@@ -13460,6 +13470,7 @@ var egret3d;
             this.spotLightArray = new Float32Array(0);
             this.lightShadowCameraNear = 0.0;
             this.lightShadowCameraFar = 0.0;
+            this.lightCastShadows = false;
             this.directShadowMaps = [];
             this.pointShadowMaps = [];
             this.spotShadowMaps = [];
@@ -13647,6 +13658,7 @@ var egret3d;
         };
         CameraRenderContext.prototype.updateLights = function (lights) {
             var allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
+            this.lightCastShadows = false;
             for (var _i = 0, lights_1 = lights; _i < lights_1.length; _i++) {
                 var light = lights_1[_i];
                 if (light instanceof egret3d.DirectionalLight) {
@@ -13773,6 +13785,7 @@ var egret3d;
                     //         this.spotShadowMaps[spotLightIndex++] = light.renderTarget.texture;
                     //         break;
                     // }
+                    this.lightCastShadows = true;
                 }
                 else {
                     lightArray[index++] = 0;
@@ -13837,7 +13850,7 @@ var egret3d;
                 if (this.spotLightCount > 0) {
                     shaderContextDefine += "#define NUM_SPOT_LIGHTS " + this.spotLightCount + "\n";
                 }
-                if (renderer && renderer.receiveShadows) {
+                if (renderer && renderer.receiveShadows && this.lightCastShadows) {
                     shaderContextDefine += "#define USE_SHADOWMAP \n";
                     shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
