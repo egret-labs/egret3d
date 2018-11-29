@@ -229,7 +229,7 @@ namespace egret3d {
 
             const postProcessingCamera = this._postProcessingCamera;
             const postProcessDrawCall = this._postProcessDrawCall;
-            const renderState = paper.GameObject.globalGameObject.getComponent(WebGLRenderState)!;
+            const renderState = paper.GameObject.globalGameObject.getComponent(RenderState)!;
             postProcessDrawCall.material = material;
 
             renderState.updateViewport(postProcessingCamera.viewport, dest);

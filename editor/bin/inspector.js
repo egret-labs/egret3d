@@ -3014,7 +3014,7 @@ var paper;
                 camera.backgroundColor.set(0.13, 0.28, 0.51, 1.00);
                 this.cameraObject.transform.setLocalPosition(0.0, 10.0, -10.0);
                 this.cameraObject.transform.lookAt(egret3d.Vector3.ZERO);
-                paper.GameObject.globalGameObject.sendMessage("bootstrap");
+                // paper.GameObject.globalGameObject.sendMessage("bootstrap");
                 // this.editorCameraScript = this.cameraObject.addComponent(EditorCameraScript);
                 // this.editorCameraScript.moveSpeed = 10;
                 // this.editorCameraScript.rotateSpeed = 0.5;
@@ -3390,7 +3390,7 @@ var paper;
                     vertices.push(k, 0, -halfSize);
                     vertices.push(k, 0, halfSize);
                 }
-                var mesh = new egret3d.Mesh(vertices.length, 0, ["POSITION" /* POSITION */]);
+                var mesh = egret3d.Mesh.create(vertices.length, 0, ["POSITION" /* POSITION */]);
                 mesh.setAttributes("POSITION" /* POSITION */, vertices);
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
                 var gameObject = editor.EditorMeshHelper.createGameObject(name, mesh, egret3d.DefaultMaterials.MESH_BASIC.clone());
@@ -3798,7 +3798,7 @@ var paper;
             OrbitControls.prototype.onStart = function () {
             };
             OrbitControls.prototype.onEnable = function () {
-                var canvas = egret3d.WebGLCapabilities.canvas;
+                var canvas = egret3d.web.WebGLCapabilities.canvas; //TODO
                 if (canvas) {
                     canvas.addEventListener("mousedown", this._mouseDownHandler);
                     canvas.addEventListener("mouseup", this._mouseUpHandler);
@@ -3809,7 +3809,7 @@ var paper;
                 }
             };
             OrbitControls.prototype.onDisable = function () {
-                var canvas = egret3d.WebGLCapabilities.canvas;
+                var canvas = egret3d.web.WebGLCapabilities.canvas; //TODO
                 if (canvas) {
                     canvas.removeEventListener("mousedown", this._mouseDownHandler);
                     canvas.removeEventListener("mouseup", this._mouseUpHandler);
@@ -5656,7 +5656,7 @@ var paper;
                 return gameObject;
             };
             EditorMeshHelper.createIcon = function (name, parent, icon) {
-                var material = new egret3d.Material(egret3d.DefaultShaders.TRANSPARENT);
+                var material = egret3d.Material.create(egret3d.DefaultShaders.TRANSPARENT);
                 material.renderQueue = 4000 /* Overlay */ - 1;
                 material.setTexture("map" /* Map */, icon);
                 material.setColor("diffuse" /* Diffuse */, egret3d.Color.RED);
@@ -5706,7 +5706,7 @@ var paper;
                         colors.push(colorCross.r, colorCross.g, colorCross.b, colorCross.a);
                     }
                 }
-                var mesh = new egret3d.Mesh(verticeCount, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
+                var mesh = egret3d.Mesh.create(verticeCount, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
                 mesh.setAttributes("POSITION" /* POSITION */, vertices);
                 mesh.setAttributes("COLOR_0" /* COLOR_0 */, colors);
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;

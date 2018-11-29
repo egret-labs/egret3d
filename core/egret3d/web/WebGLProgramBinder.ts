@@ -1,8 +1,8 @@
-namespace egret3d {
+namespace egret3d.web {
     // 运行时 draw call 排序优化使用。
     let _hashCode: uint = 0;
     /**
-     * @private
+     * @internal
      */
     export interface WebGLActiveAttribute {
         name: string;
@@ -12,7 +12,7 @@ namespace egret3d {
         semantic: string;
     }
     /**
-     * @private
+     * @internal
      */
     export interface WebGLActiveUniform {
         name: string;
@@ -23,7 +23,7 @@ namespace egret3d {
         textureUnits?: number[];
     }
     /**
-     * @private
+     * @internal
      */
     export class WebGLProgramBinder {
         public readonly id: uint = _hashCode++;

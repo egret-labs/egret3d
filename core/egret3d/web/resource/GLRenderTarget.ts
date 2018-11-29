@@ -30,7 +30,7 @@ namespace egret3d {
             const height = this.height;
             const depth = this._depth;
             const stencil = this._stencil;
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = web.WebGLCapabilities.webgl!;
             this._fbo = webgl.createFramebuffer()!;
             (this._fbo as any)["width"] = width;
             (this._fbo as any)["height"] = height;
@@ -68,7 +68,7 @@ namespace egret3d {
             if (!super.dispose()) {
                 return false;
             }
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = web.WebGLCapabilities.webgl!;
             if (this._renderbuffer) {
                 webgl.deleteRenderbuffer(this._renderbuffer);
             }
@@ -94,7 +94,7 @@ namespace egret3d {
         protected createTexture() {
             super.createTexture();
 
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = web.WebGLCapabilities.webgl!;
             this.texture = webgl.createTexture()!;
             webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
@@ -133,13 +133,13 @@ namespace egret3d {
         }
 
         use() {
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = web.WebGLCapabilities.webgl!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
         }
 
         generateMipmap() {
             if (this._mipmap) {
-                const webgl = WebGLCapabilities.webgl!;
+                const webgl = web.WebGLCapabilities.webgl!;
                 webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
                 webgl.generateMipmap(webgl.TEXTURE_2D);
                 webgl.bindTexture(webgl.TEXTURE_2D, null);

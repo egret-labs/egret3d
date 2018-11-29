@@ -2,7 +2,7 @@ namespace behaviors {
     export class LensflareEffect extends paper.Behaviour {
         public static TEXTURE_SIZE = egret3d.Vector2.create(16, 16);
         private readonly _elements: LensflareElement[] = [];
-        private readonly _renderState: egret3d.WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.WebGLRenderState, false, this); // Set interface.
+        private readonly _renderState: egret3d.RenderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.RenderState, false, this); // Set interface.
         private readonly _material1a: egret3d.Material = egret3d.Material.create(RES.getRes("lensflare/shaders/a.shader.json"));
         private readonly _material1b: egret3d.Material = egret3d.Material.create(RES.getRes("lensflare/shaders/b.shader.json"));
         private readonly _materialLensflare: egret3d.Material = egret3d.Material.create(RES.getRes("lensflare/shaders/lensflare.shader.json"));

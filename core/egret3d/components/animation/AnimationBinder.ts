@@ -304,6 +304,24 @@ namespace egret3d {
             }
         }
 
+        public static onUpdateFrameEvent(channel: AnimationChannel, animationlayer: AnimationLayer, animationState: AnimationState) { 
+            const currentTime = animationState._currentTime;
+            const outputBuffer = channel.outputBuffer;
+            const binder = channel.binder;
+            const frameIndex = channel.getFrameIndex(currentTime);
+            //
+            const activeSelf = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]) !== 0;
+
+            if (Array.isArray(binder.components)) {
+                for (const component of binder.components as Transform[]) {
+                    component.gameObject.activeSelf = activeSelf;
+                }
+            }
+            else {
+                (binder.components as Transform).gameObject.activeSelf = activeSelf;
+            }
+        }
+
         public dirty: uint;
         public totalWeight: number;
         public weight: number;

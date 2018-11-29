@@ -12,7 +12,7 @@ namespace egret3d {
         }
 
         private _setTexturexParameters(isPowerOfTwo: boolean, sampler: gltf.Sampler) {
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = web.WebGLCapabilities.webgl!;
             const magFilter = sampler.magFilter!;
             const minFilter = sampler.minFilter!;
             const wrapS = sampler.wrapS!;
@@ -43,10 +43,10 @@ namespace egret3d {
             //TODO EXT_texture_filter_anisotropic
         }
         public uploadTexture(index: number) {
-            if (!this._image || this._image.uri) {
+            if (!this._image || !this._image.uri) {
                 return;
             }
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = web.WebGLCapabilities.webgl!;
             if (!this._source) {
                 this._source = webgl.createTexture();
             }
@@ -270,7 +270,7 @@ namespace egret3d {
             const readData = new Uint8Array(this.width * this.height * 4);
             readData[0] = 2;
 
-            const webgl = WebGLCapabilities.webgl;
+            const webgl = web.WebGLCapabilities.webgl;
             if (webgl) {
                 const fbo = webgl.createFramebuffer();
                 const fbold = webgl.getParameter(webgl.FRAMEBUFFER_BINDING);
