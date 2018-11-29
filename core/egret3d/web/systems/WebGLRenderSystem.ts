@@ -77,6 +77,8 @@ namespace egret3d.web {
             }
             
             // Render 2D.
+            const webgl = WebGLCapabilities.webgl!;
+            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);//TODO 解决字体模糊
             for (const gameObject of this._groups[1].gameObjects) {
                 const egret2DRenderer = gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer;
                 if (camera.cullingMask & egret2DRenderer.gameObject.layer) {

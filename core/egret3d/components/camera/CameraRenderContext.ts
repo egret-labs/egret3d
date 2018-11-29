@@ -42,6 +42,7 @@ namespace egret3d {
 
         public lightShadowCameraNear: number = 0.0;
         public lightShadowCameraFar: number = 0.0;
+        public lightCastShadows: boolean = false;
 
         public readonly directShadowMaps: (WebGLTexture | null)[] = [];
         public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
@@ -259,7 +260,7 @@ namespace egret3d {
 
         public updateLights(lights: ReadonlyArray<BaseLight>) {
             let allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
-
+            this.lightCastShadows = false;
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
                 if (light instanceof DirectionalLight) {
                     directLightCount++;
@@ -413,6 +414,8 @@ namespace egret3d {
                     //         this.spotShadowMaps[spotLightIndex++] = light.renderTarget.texture;
                     //         break;
                     // }
+
+                    this.lightCastShadows = true;
                 }
                 else {
                     lightArray[index++] = 0;
@@ -490,7 +493,7 @@ namespace egret3d {
                     shaderContextDefine += "#define NUM_SPOT_LIGHTS " + this.spotLightCount + "\n";
                 }
 
-                if (renderer && renderer.receiveShadows) {
+                if (renderer && renderer.receiveShadows && this.lightCastShadows) {
                     shaderContextDefine += "#define USE_SHADOWMAP \n";
                     shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 }
