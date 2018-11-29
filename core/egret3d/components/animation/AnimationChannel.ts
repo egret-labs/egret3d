@@ -247,7 +247,7 @@ namespace egret3d {
                 if (!interpolation || interpolation !== "STEP") {
                     const inputBuffer = this.inputBuffer;
                     const frameStart = inputBuffer[frameIndex];
-                    const progress = (animationState._currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
+                    const progress = (currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
                     x += (outputBuffer[offset++] - x) * progress;
                     y += (outputBuffer[offset++] - y) * progress;
                     z += (outputBuffer[offset++] - z) * progress;

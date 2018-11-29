@@ -173,7 +173,7 @@ namespace egret3d {
             this._playheadEnabled = true;
             this._playState = -1;
             this._time = 0.0;
-            this._currentTime = 0.0;
+            this._currentTime = -1.0;
             this._globalWeight = 0.0;
         }
         /**

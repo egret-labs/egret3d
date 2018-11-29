@@ -109,8 +109,7 @@ namespace egret3d {
                 animationState.currentPlayTimes = playTimes;
 
                 if (animationState._time >= totalTime) {
-                    // currentTime = duration + Const.EPSILON; // Precision problem.
-                    currentTime = duration; // TODO CHECK.
+                    currentTime = duration;
                 }
                 else {
                     currentTime = 0.0;
@@ -148,19 +147,6 @@ namespace egret3d {
                     }
                 }
             }
-            //
-            const frameEvents = animationState.animation.extensions.paper.events;
-            if (deltaTime !== 0.0 && frameEvents) {
-                for (const event of frameEvents) {
-                    if (prevTime <= event.position && event.position < currentTime) {
-                        gameObject.sendMessage(
-                            "onAnimationEvent",
-                            AnimationEvent.create(AnimationEventType.KeyFrame, animationState, event),
-                            false
-                        );
-                    }
-                }
-            }
 
             // this._events; // TODO buffer event.
 
@@ -168,8 +154,93 @@ namespace egret3d {
                 gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.Start, animationState), false);
             }
 
+            //
+            let loopEvent = false;
+            const frameEvents = animationState.animation.extensions.paper.events;
+
+            if (deltaTime !== 0.0 && frameEvents) {
+                if (deltaTime > 0.0) {
+                    if (prevTime < currentTime) {
+                        for (const event of frameEvents) {
+                            if (prevTime < event.position && event.position <= currentTime) {
+                                gameObject.sendMessage(
+                                    "onAnimationEvent",
+                                    AnimationEvent.create(AnimationEventType.KeyFrame, animationState, event),
+                                    false
+                                );
+                            }
+                        }
+                    }
+                    else {
+                        for (const event of frameEvents) {
+                            if (prevTime < event.position) {
+                                gameObject.sendMessage(
+                                    "onAnimationEvent",
+                                    AnimationEvent.create(AnimationEventType.KeyFrame, animationState, event),
+                                    false
+                                );
+                            }
+                        }
+
+                        gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.LoopComplete, animationState), false);
+
+                        for (const event of frameEvents) {
+                            if (event.position <= currentTime) {
+                                gameObject.sendMessage(
+                                    "onAnimationEvent",
+                                    AnimationEvent.create(AnimationEventType.KeyFrame, animationState, event),
+                                    false
+                                );
+                            }
+                        }
+
+                        loopEvent = true;
+                    }
+                }
+                else {
+                    if (prevTime > currentTime) {
+                        for (const event of frameEvents) {
+                            if (currentTime <= event.position && event.position < prevTime) {
+                                gameObject.sendMessage(
+                                    "onAnimationEvent",
+                                    AnimationEvent.create(AnimationEventType.KeyFrame, animationState, event),
+                                    false
+                                );
+                            }
+                        }
+                    }
+                    else {
+                        for (const event of frameEvents) {
+                            if (event.position < prevTime) {
+                                gameObject.sendMessage(
+                                    "onAnimationEvent",
+                                    AnimationEvent.create(AnimationEventType.KeyFrame, animationState, event),
+                                    false
+                                );
+                            }
+                        }
+
+                        gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.LoopComplete, animationState), false);
+
+                        for (const event of frameEvents) {
+                            if (currentTime <= event.position) {
+                                gameObject.sendMessage(
+                                    "onAnimationEvent",
+                                    AnimationEvent.create(AnimationEventType.KeyFrame, animationState, event),
+                                    false
+                                );
+                            }
+                        }
+
+                        loopEvent = true;
+                    }
+                }
+            }
+
             if (animationState.currentPlayTimes !== prevPlayTimes) {
-                gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.LoopComplete, animationState), false);
+                if (!loopEvent) {
+                    gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.LoopComplete, animationState), false);
+                }
 
                 if (animationState._playState === 1) {
                     const clipNames = animationLayer._clipNames;
@@ -193,6 +264,10 @@ namespace egret3d {
             for (const gameObject of this._groups[0].gameObjects) {
                 const animation = this._animation = gameObject.getComponent(Animation)!;
                 const animationController = animation.animationController!;
+                if (!animationController) {
+                    continue;
+                }
+
                 const animationLayers = animationController.layers;
                 const animationFadeStates = animation._fadeStates;
                 const blendlayers = animation._binders;
