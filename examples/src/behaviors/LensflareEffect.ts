@@ -3,9 +3,9 @@ namespace behaviors {
         public static TEXTURE_SIZE = egret3d.Vector2.create(16, 16);
         private readonly _elements: LensflareElement[] = [];
         private readonly _renderState: egret3d.WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.WebGLRenderState, false, this); // Set interface.
-        private readonly _material1a: egret3d.Material = new egret3d.Material(RES.getRes("lensflare/shaders/a.shader.json"));
-        private readonly _material1b: egret3d.Material = new egret3d.Material(RES.getRes("lensflare/shaders/b.shader.json"));
-        private readonly _materialLensflare: egret3d.Material = new egret3d.Material(RES.getRes("lensflare/shaders/lensflare.shader.json"));
+        private readonly _material1a: egret3d.Material = egret3d.Material.create(RES.getRes("lensflare/shaders/a.shader.json"));
+        private readonly _material1b: egret3d.Material = egret3d.Material.create(RES.getRes("lensflare/shaders/b.shader.json"));
+        private readonly _materialLensflare: egret3d.Material = egret3d.Material.create(RES.getRes("lensflare/shaders/lensflare.shader.json"));
         private readonly _drawCall1a: egret3d.DrawCall = egret3d.DrawCall.create();
         private readonly _drawCall1b: egret3d.DrawCall = egret3d.DrawCall.create();
         private readonly _drawCallLensflare: egret3d.DrawCall = egret3d.DrawCall.create();
@@ -37,7 +37,7 @@ namespace behaviors {
             const meshRenderer = this.gameObject.addComponent(egret3d.MeshRenderer);
             meshRenderer.frustumCulled = false;
             //最后渲染
-            meshRenderer.material = new egret3d.Material(egret3d.DefaultShaders.TRANSPARENT).setOpacity(0).setRenderQueue(paper.RenderQueue.Overlay + Infinity);
+            meshRenderer.material = egret3d.Material.create(egret3d.DefaultShaders.TRANSPARENT).setOpacity(0).setRenderQueue(paper.RenderQueue.Overlay + Infinity);
 
             this._drawCall1a.subMeshIndex = 0;
             this._drawCall1a.matrix = egret3d.Matrix4.create();

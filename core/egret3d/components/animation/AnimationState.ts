@@ -5,13 +5,17 @@ namespace egret3d {
     export class AnimationFadeState extends paper.BaseRelease<AnimationFadeState> {
         private static readonly _instances: AnimationFadeState[] = [];
         public static create(): AnimationFadeState {
+            let instance: AnimationFadeState;
             if (this._instances.length > 0) {
-                const instance = this._instances.pop()!;
+                instance = this._instances.pop()!;
                 instance._released = false;
-                return instance;
+            }
+            else {
+                instance = new AnimationFadeState();
+                instance.onClear();
             }
 
-            return new AnimationFadeState().clear();
+            return instance;
         }
         /**
          * -1: Fade in, 0: Fade complete, 1: Fade out;
@@ -31,10 +35,6 @@ namespace egret3d {
         }
 
         public onClear() {
-            this.clear();
-        }
-
-        public clear() {
             for (const state of this.states) {
                 state.release();
             }
@@ -45,8 +45,6 @@ namespace egret3d {
             this.time = 0.0;
             this.totalTime = 0.0;
             this.states.length = 0;
-
-            return this;
         }
 
         public fadeOut(totalTime: number): this {
@@ -75,14 +73,19 @@ namespace egret3d {
      */
     export class AnimationState extends paper.BaseRelease<AnimationState> {
         private static readonly _instances: AnimationState[] = [];
+
         public static create(): AnimationState {
+            let instance: AnimationState;
             if (this._instances.length > 0) {
-                const instance = this._instances.pop()!;
+                instance = this._instances.pop()!;
                 instance._released = false;
-                return instance;
+            }
+            else {
+                instance = new AnimationState();
+                instance.onClear();
             }
 
-            return new AnimationState().clear();
+            return instance;
         }
         /**
          * 动画总播放次数。
@@ -103,6 +106,10 @@ namespace egret3d {
         /**
          * @private
          */
+        public animationLayer: AnimationLayer;
+        /**
+         * @private
+         */
         public animationNode: AnimationNode;
         /**
          * @private
@@ -116,6 +123,8 @@ namespace egret3d {
          * 播放的动画剪辑。
          */
         public animationClip: GLTFAnimationClip;
+        // public parent: AnimationState | null;
+
         /**
          * 是否允许播放。
          * @internal
@@ -147,10 +156,6 @@ namespace egret3d {
         }
 
         public onClear() {
-            this.clear();
-        }
-
-        public clear() {
             for (const channel of this.channels) {
                 channel.release();
             }
@@ -169,8 +174,6 @@ namespace egret3d {
             this._time = 0.0;
             this._currentTime = 0.0;
             this._globalWeight = 0.0;
-
-            return this;
         }
         /**
          * @internal

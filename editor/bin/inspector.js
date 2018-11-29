@@ -4575,7 +4575,7 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
-        var containerHTML = "\n    <div class=\"egret-hierarchy\" style=\"margin: auto;height: 100%;\"></div>\n    <div class=\"egret-inspector\" style=\"margin: auto;height: 100%;\"></div>\n";
+        var containerHTML = "\n    <div class=\"egret-hierarchy\" style=\"margin: auto;height: 100%;background: #000000;\"></div>\n    <div class=\"egret-inspector\" style=\"margin: auto;height: 100%;background: #000000;\"></div>\n";
         /**
          * @internal
          */
@@ -5007,7 +5007,16 @@ var paper;
                             gui.add(gui.instance, info.name).listen();
                             break;
                         case "LIST" /* LIST */:
-                            gui.add(gui.instance, info.name, info.option.listItems).listen();
+                            var listItems = info.option.listItems;
+                            if (listItems) {
+                                if (typeof listItems === "string") {
+                                    listItems = gui.instance[listItems];
+                                }
+                                else if (listItems instanceof Function) {
+                                    listItems = listItems(gui.instance);
+                                }
+                                gui.add(gui.instance, info.name, listItems).listen();
+                            }
                             break;
                         case "VECTOR2" /* VECTOR2 */: {
                             guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();

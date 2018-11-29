@@ -1,6 +1,6 @@
 namespace egret3d {
     //TODO 运行时DrawCall排序优化使用
-    let _hashCode: number = 0;
+    let _hashCode: uint = 0;
     /**
      * 材质资源。
      */
@@ -16,15 +16,15 @@ namespace egret3d {
         /**
          * 
          */
-        public renderQueue: paper.RenderQueue | number = paper.RenderQueue.Geometry;
+        public renderQueue: paper.RenderQueue | uint = paper.RenderQueue.Geometry;
         /**
           * @internal
           */
-        public _id: number = _hashCode++;
+        public _id: uint = _hashCode++;
         /**
           * @internal
           */
-        public _version: number = 0;
+        public _version: uint = 0;
         private _cacheDefines: string = "";
         /**
           * @internal
@@ -220,7 +220,7 @@ namespace egret3d {
          * 克隆。
          */
         public clone() {
-            return new Material(this._shader).copy(this);
+            return Material.create(this._shader).copy(this);
         }
 
         /**
@@ -274,7 +274,7 @@ namespace egret3d {
             return this;
         }
 
-        setInt(id: string, value: number) {
+        setInt(id: string, value: int) {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value !== value) {
@@ -289,7 +289,7 @@ namespace egret3d {
             return this;
         }
 
-        setIntv(id: string, value: Float32Array | ReadonlyArray<number>) {
+        setIntv(id: string, value: Float32Array | ReadonlyArray<int>) {
             let uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;

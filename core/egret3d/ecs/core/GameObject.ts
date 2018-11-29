@@ -322,6 +322,10 @@ namespace paper {
          * @param config BaseComponent 组件 `initialize(config?: any)` 方法或 Behaviour 组件 `onAwake(config?: any)` 方法的可选参数。
          */
         public addComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, config?: any): T {
+            if (DEBUG && !componentClass) {
+                throw new Error();
+            }
+
             registerClass(componentClass);
             // SingletonComponent.
             if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
@@ -393,6 +397,10 @@ namespace paper {
          * @param isExtends 是否尝试移除全部派生自此组件的实例。
          */
         public removeComponent<T extends BaseComponent>(componentInstanceOrClass: IComponentClass<T> | T, isExtends: boolean = false): void {
+            if (DEBUG && !componentInstanceOrClass) {
+                throw new Error();
+            }
+
             if (componentInstanceOrClass instanceof BaseComponent) {
                 const componentClass = componentInstanceOrClass.constructor as IComponentClass<T>;
                 // SingletonComponent.
@@ -710,7 +718,7 @@ namespace paper {
          * @param methodName 
          * @param parameter
          */
-        public sendMessage(methodName: string, parameter?: any, requireReceiver: boolean = true) {
+        public sendMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
             for (const component of this._components) {
                 if (component && component.isActiveAndEnabled && component instanceof Behaviour) {
                     if (methodName in component) {
@@ -728,7 +736,7 @@ namespace paper {
          * @param methodName 
          * @param parameter 
          */
-        public sendMessageUpwards(methodName: string, parameter?: any, requireReceiver: boolean = true) {
+        public sendMessageUpwards<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
             this.sendMessage(methodName, parameter, requireReceiver);
             //
             const parent = this.transform.parent;
@@ -742,7 +750,7 @@ namespace paper {
          * @param methodName 
          * @param parameter 
          */
-        public broadcastMessage(methodName: string, parameter?: any, requireReceiver: boolean = true) {
+        public broadcastMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
             this.sendMessage(methodName, parameter, requireReceiver);
 
             for (const child of this.transform.children) {

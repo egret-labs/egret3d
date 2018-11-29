@@ -3,9 +3,9 @@ namespace egret3d {
      * 雾的模式。
      */
     export const enum FogMode {
-        NONE,
-        FOG,
-        FOG_EXP2
+        None,
+        Fog,
+        FogEXP2
     }
     /**
      * 雾。
@@ -21,7 +21,7 @@ namespace egret3d {
          * 雾的模式。
          */
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((egret3d as any).FogMode) }) // TODO
-        public mode: FogMode = FogMode.NONE;
+        public mode: FogMode = FogMode.None;
         /**
          * 雾的强度。
          */
@@ -61,7 +61,7 @@ namespace egret3d {
             this.near = data[2];
             this.far = data[3];
             this.color.fromArray(data, 4);
-            
+
             return this;
         }
     }

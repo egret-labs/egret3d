@@ -69,7 +69,7 @@ namespace egret3d {
         };
     }
     /**
-     * 动画剪辑反序列化。
+     * 
      */
     export interface GLTFAnimationClip {
         /**
@@ -108,31 +108,31 @@ namespace egret3d {
             }
         };
     }
-    // /**
-    //  * 帧事件反序列化。
-    //  */
-    // export interface GLTFFrameEvent {
-    //     /**
-    //      * 事件名称。
-    //      */
-    //     name: string;
-    //     /**
-    //      * 事件位置。（%）
-    //      */
-    //     position: number;
-    //     /**
-    //      * 事件 int 变量。
-    //      */
-    //     intVariable: number;
-    //     /**
-    //      * 事件 float 变量。
-    //      */
-    //     floatVariable: number;
-    //     /**
-    //      * 事件 string 变量。
-    //      */
-    //     stringVariable: string;
-    // }
+    /**
+     * 
+     */
+    export interface GLTFKeyFrameEvent {
+        /**
+         * 事件名称。
+         */
+        name: string;
+        /**
+         * 事件位置。（%）
+         */
+        position: number;
+        /**
+         * 事件 int 变量。
+         */
+        intVariable?: number;
+        /**
+         * 事件 float 变量。
+         */
+        floatVariable?: number;
+        /**
+         * 事件 string 变量。
+         */
+        stringVariable?: string;
+    }
     /**
      * glTF 资源。
      */

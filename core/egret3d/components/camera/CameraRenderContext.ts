@@ -128,7 +128,6 @@ namespace egret3d {
             this._postProcessDrawCall.matrix = Matrix4.IDENTITY;
             this._postProcessDrawCall.subMeshIndex = 0;
             this._postProcessDrawCall.mesh = DefaultMeshes.FULLSCREEN_QUAD;
-            this._postProcessDrawCall.mesh._createBuffer(); //
         }
 
         /**
@@ -499,13 +498,13 @@ namespace egret3d {
 
             const fog = scene.fog;
 
-            if (fog.mode !== FogMode.NONE) {
+            if (fog.mode !== FogMode.None) {
                 this.fogColor[0] = fog.color.r;
                 this.fogColor[1] = fog.color.g;
                 this.fogColor[2] = fog.color.b;
                 shaderContextDefine += "#define USE_FOG \n";//TODO 根据参数生成define
 
-                if (fog.mode === FogMode.FOG_EXP2) {
+                if (fog.mode === FogMode.FogEXP2) {
                     this.fogDensity = fog.density;
                     shaderContextDefine += "#define FOG_EXP2 \n";//TODO 根据参数生成define
                 }

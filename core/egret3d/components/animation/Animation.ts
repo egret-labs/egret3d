@@ -35,18 +35,6 @@ namespace egret3d {
         private _animationController: AnimationController | null = null;
         private _lastAnimationLayer: AnimationLayer | null = null;
         /**
-         * TODO more event type.
-         * sendMessage.
-         * @internal
-         */
-        public _dispatchEvent(type: string, animationState: AnimationState, eventObject?: any) {
-            for (const component of this.gameObject.getComponents(paper.Behaviour as any, true) as paper.Behaviour[]) {
-                if (component.onAnimationEvent) {
-                    component.onAnimationEvent(type, animationState, eventObject);
-                }
-            }
-        }
-        /**
          * @internal
          */
         public _getBinder(name: string, type: string) {

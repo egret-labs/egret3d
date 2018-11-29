@@ -6,13 +6,16 @@ namespace egret3d {
         private static _instances = [] as AnimationChannel[];
 
         public static create() {
+            let instance: AnimationChannel;
             if (this._instances.length > 0) {
-                const instance = this._instances.pop()!;
+                instance = this._instances.pop()!;
                 instance._released = false;
-                return instance;
+            }
+            else {
+                instance = new AnimationChannel();
             }
 
-            return new AnimationChannel();
+            return instance;
         }
 
         private constructor() {

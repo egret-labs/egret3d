@@ -43,8 +43,7 @@ namespace egret3d {
             if (!renderer.mesh || renderer.materials.length === 0) {
                 return;
             }
-
-            renderer.mesh._createBuffer();
+            
             this._drawCallCollecter.renderers.push(renderer);
             //
             let subMeshIndex = 0;

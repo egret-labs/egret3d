@@ -100,7 +100,7 @@
 //         private readonly _renderTargetsVertical: egret3d.GlRenderTarget[] = [];
 //         private readonly _separableBlurMaterials: egret3d.Material[] = [];
 //         private readonly _defaultMaterial: egret3d.Material = egret3d.DefaultMaterials.MESH_BASIC.clone();
-//         private readonly _copyMaterial: egret3d.Material = new egret3d.Material(egret3d.DefaultShaders.COPY)
+//         private readonly _copyMaterial: egret3d.Material = egret3d.Material.create(egret3d.DefaultShaders.COPY)
 //             .setBlend(gltf.BlendMode.Additive, paper.RenderQueue.Transparent);
 //         private _renderTargetBright: egret3d.GlRenderTarget = null!;
 
