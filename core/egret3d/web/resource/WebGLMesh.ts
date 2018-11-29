@@ -1,4 +1,4 @@
-namespace egret3d {
+namespace egret3d.web {
     /**
      * @internal
      */

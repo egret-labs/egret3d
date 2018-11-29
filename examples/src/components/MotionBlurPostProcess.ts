@@ -9,7 +9,7 @@ namespace components {
         private _preMatrix: egret3d.Matrix4 | null = null;
         private readonly _depathMaterial: egret3d.Material = egret3d.Material.create(RES.getRes("shaders/motionBlur/blurDepth.shader.json"));
         private readonly _material: egret3d.Material = egret3d.Material.create(RES.getRes("shaders/motionBlur/motionBlur.shader.json"));
-        private readonly _renderState: egret3d.WebGLRenderState = paper.GameObject.globalGameObject.getComponent(egret3d.WebGLRenderState)!;
+        private readonly _renderState: egret3d.RenderState = paper.GameObject.globalGameObject.getComponent(egret3d.RenderState)!;
 
         public initialize() {
             super.initialize();

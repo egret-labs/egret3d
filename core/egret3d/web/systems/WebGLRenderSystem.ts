@@ -16,7 +16,7 @@ namespace egret3d.web {
         ];
         private _egret2DOrderCount: number = 0;
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
-        private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(WebGLRenderState, false, this); // Set interface.
+        private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(RenderState, false, this) as WebGLRenderState; // Set interface.
         private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
         //
         private _cacheMaterialVerision: number = -1;
@@ -29,14 +29,14 @@ namespace egret3d.web {
         // const camera = this._lightCamera;
         // const renderState = this._renderState;
         // const isPointLight = light.constructor === PointLight;
-        // const shadowMaterial = isPointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
+        // const shadowMaterial = isPointLight ? DefaultMaterials.SHADOW_DISTANCE : DefaultMaterials.SHADOW_DEPTH;
         // const drawCalls = this._drawCallCollecter;
         // const shadowCalls = drawCalls.shadowCalls;
         // const webgl = WebGLCapabilities.webgl!;
 
         // light.updateShadow(camera);
         // light.renderTarget.use();
-        // renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, egret3d.Color.WHITE);
+        // renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, Color.WHITE);
 
         // for (let i = 0, l = isPointLight ? 6 : 1; i < l; ++i) {
         //     const context = camera.context;
@@ -464,7 +464,7 @@ namespace egret3d.web {
                     camera.context.updateLights(this._cameraAndLightCollecter.lights); // TODO 性能优化
                 }
                 //
-                const postProcessings: egret3d.CameraPostprocessing[] = camera.gameObject.getComponents(egret3d.CameraPostprocessing as any, true);
+                const postProcessings: CameraPostprocessing[] = camera.gameObject.getComponents(CameraPostprocessing as any, true);
                 let isAnyActivated = false;
                 if (postProcessings.length > 0) {
                     for (const postprocessing of postProcessings) {

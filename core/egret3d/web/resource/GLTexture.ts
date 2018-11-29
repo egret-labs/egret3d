@@ -24,7 +24,7 @@ namespace egret3d {
             this.format = format;
             this.mipmap = mipmap;
 
-            const webgl = WebGLCapabilities.webgl;
+            const webgl = web.WebGLCapabilities.webgl;
             if (webgl) {
                 this.texture = webgl.createTexture()!;
             }
@@ -75,7 +75,7 @@ namespace egret3d {
 
         uploadImage(img: HTMLImageElement | Uint8Array, mipmap: boolean, linear: boolean, premultiply: boolean = true, repeat: boolean = false, mirroredU: boolean = false, mirroredV: boolean = false) {
             this.mipmap = mipmap;
-            const webgl = WebGLCapabilities.webgl;
+            const webgl = web.WebGLCapabilities.webgl;
 
             if (!webgl) {
                 return;
@@ -158,7 +158,7 @@ namespace egret3d {
             }
 
             if (this.texture !== null) {
-                WebGLCapabilities.webgl!.deleteTexture(this.texture);
+                web.WebGLCapabilities.webgl!.deleteTexture(this.texture);
             }
 
             return true;
@@ -198,7 +198,7 @@ namespace egret3d {
             const readData = new Uint8Array(this.width * this.height * 4);
             readData[0] = 2;
 
-            const webgl = WebGLCapabilities.webgl;
+            const webgl = web.WebGLCapabilities.webgl;
             if (webgl) {
                 const fbo = webgl.createFramebuffer();
                 const fbold = webgl.getParameter(webgl.FRAMEBUFFER_BINDING);

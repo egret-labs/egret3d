@@ -158,6 +158,7 @@
         "egret3d/util/utils.ts",
 
         "egret3d/web/WebGLCapabilities.ts",
+        "egret3d/web/WebGLRenderState.ts",
         "egret3d/web/WebGLProgramBinder.ts",
         "egret3d/web/resource/GLTexture.ts",
         "egret3d/web/resource/GLRenderTarget.ts",

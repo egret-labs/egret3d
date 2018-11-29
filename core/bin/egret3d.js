@@ -1203,6 +1203,85 @@ var egret3d;
      */
     egret3d.helpVector2A = Vector2.create();
 })(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    /**
+     * 资源基类。
+     */
+    var Asset = (function (_super) {
+        __extends(Asset, _super);
+        /**
+         * TODO
+         * remove
+         * @param name
+         */
+        function Asset(name) {
+            if (name === void 0) { name = ""; }
+            var _this = _super.call(this) || this;
+            /**
+             * 资源名称。
+             * @readonly
+             */
+            _this.name = "";
+            /**
+             * @internal
+             */
+            _this._isBuiltin = false;
+            _this.name = name;
+            return _this;
+        }
+        /**
+         * @private
+         */
+        Asset.register = function (asset) {
+            if (!this._assets[asset.name]) {
+                this._assets[asset.name] = asset;
+            }
+            else if (this._assets[asset.name] !== asset) {
+                console.warn("Replace existing asset.", asset.name);
+                this._assets[asset.name] = asset;
+            }
+        };
+        /**
+         * 查找已加载的指定资源。
+         */
+        Asset.find = function (name) {
+            var result = this._assets[name];
+            if (!result) {
+                return RES.getRes(name);
+            }
+            return result;
+        };
+        /**
+         * 该资源内部初始化。
+         */
+        Asset.prototype.initialize = function () {
+        };
+        /**
+         * 释放资源。
+         */
+        Asset.prototype.dispose = function (disposeChildren) {
+            if (this._isBuiltin) {
+                console.warn("Cannot dispose builtin asset.", this.name);
+                return false;
+            }
+            delete Asset._assets[this.name];
+            this.name = "";
+            return true;
+        };
+        /**
+         * TODO RES 需要有注册的功能，并拥有查询所有指定类型资源的功能。
+         * Asset 类型需要引擎枚举，paper 空间还是引擎空间。
+         * 空间结构
+         * 引擎、res、ecs、2d、3d，其他
+         * @internal
+         */
+        Asset._assets = {};
+        return Asset;
+    }(paper.BaseObject));
+    paper.Asset = Asset;
+    __reflect(Asset.prototype, "paper.Asset");
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -1826,85 +1905,6 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
-    /**
-     * 资源基类。
-     */
-    var Asset = (function (_super) {
-        __extends(Asset, _super);
-        /**
-         * TODO
-         * remove
-         * @param name
-         */
-        function Asset(name) {
-            if (name === void 0) { name = ""; }
-            var _this = _super.call(this) || this;
-            /**
-             * 资源名称。
-             * @readonly
-             */
-            _this.name = "";
-            /**
-             * @internal
-             */
-            _this._isBuiltin = false;
-            _this.name = name;
-            return _this;
-        }
-        /**
-         * @private
-         */
-        Asset.register = function (asset) {
-            if (!this._assets[asset.name]) {
-                this._assets[asset.name] = asset;
-            }
-            else if (this._assets[asset.name] !== asset) {
-                console.warn("Replace existing asset.", asset.name);
-                this._assets[asset.name] = asset;
-            }
-        };
-        /**
-         * 查找已加载的指定资源。
-         */
-        Asset.find = function (name) {
-            var result = this._assets[name];
-            if (!result) {
-                return RES.getRes(name);
-            }
-            return result;
-        };
-        /**
-         * 该资源内部初始化。
-         */
-        Asset.prototype.initialize = function () {
-        };
-        /**
-         * 释放资源。
-         */
-        Asset.prototype.dispose = function (disposeChildren) {
-            if (this._isBuiltin) {
-                console.warn("Cannot dispose builtin asset.", this.name);
-                return false;
-            }
-            delete Asset._assets[this.name];
-            this.name = "";
-            return true;
-        };
-        /**
-         * TODO RES 需要有注册的功能，并拥有查询所有指定类型资源的功能。
-         * Asset 类型需要引擎枚举，paper 空间还是引擎空间。
-         * 空间结构
-         * 引擎、res、ecs、2d、3d，其他
-         * @internal
-         */
-        Asset._assets = {};
-        return Asset;
-    }(paper.BaseObject));
-    paper.Asset = Asset;
-    __reflect(Asset.prototype, "paper.Asset");
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
     var _createEnabled = null;
     /**
      * 基础组件。
@@ -2117,293 +2117,310 @@ var paper;
     paper.BaseComponent = BaseComponent;
     __reflect(BaseComponent.prototype, "paper.BaseComponent");
 })(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
+var paper;
+(function (paper) {
     /**
-     * 三角形。
+     * 基础预制体资源。
+     * - 预制体资源和场景资源的基类。
      */
-    var Triangle = (function (_super) {
-        __extends(Triangle, _super);
-        /**
-         * 请使用 `egret3d.Triangle.create()` 创建实例。
-         * @see egret3d.Triangle.create()
-         */
-        function Triangle() {
-            var _this = _super.call(this) || this;
-            /**
-             * 点 A。
-             */
-            _this.a = egret3d.Vector3.create();
-            /**
-             * 点 B。
-             */
-            _this.b = egret3d.Vector3.create();
-            /**
-             * 点 C。
-             */
-            _this.c = egret3d.Vector3.create();
+    var BasePrefabAsset = (function (_super) {
+        __extends(BasePrefabAsset, _super);
+        function BasePrefabAsset() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._raw = null;
             return _this;
         }
         /**
-         * 创建一个三角形实例。
-         * -   a
-         * -  /·\
-         * - b - c
-         * @param a 点 A。
-         * @param b 点 B。
-         * @param c 点 C。
+         * @internal
          */
-        Triangle.create = function (a, b, c) {
-            if (a === void 0) { a = egret3d.Vector3.ZERO; }
-            if (b === void 0) { b = egret3d.Vector3.ZERO; }
-            if (c === void 0) { c = egret3d.Vector3.ZERO; }
+        BasePrefabAsset.prototype.parse = function (json) {
+            this._raw = json;
+        };
+        BasePrefabAsset.prototype.dispose = function () {
+            if (!_super.prototype.dispose.call(this)) {
+                return false;
+            }
+            this._raw = null;
+            return true;
+        };
+        BasePrefabAsset.prototype.caclByteLength = function () {
+            return 0;
+        };
+        return BasePrefabAsset;
+    }(paper.Asset));
+    paper.BasePrefabAsset = BasePrefabAsset;
+    __reflect(BasePrefabAsset.prototype, "paper.BasePrefabAsset");
+    /**
+     * 预制体资源。
+     */
+    var Prefab = (function (_super) {
+        __extends(Prefab, _super);
+        function Prefab() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        Prefab.create = function (name, xOrScene, y, z, scene) {
+            var prefab = paper.Asset.find(name);
+            if (prefab && prefab instanceof Prefab) {
+                if (xOrScene !== undefined && xOrScene !== null) {
+                    if (xOrScene instanceof paper.Scene) {
+                        var gameObject = prefab.createInstance(xOrScene);
+                        if (gameObject) {
+                            gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
+                        }
+                        return gameObject;
+                    }
+                    else {
+                        var gameObject = prefab.createInstance(scene || null);
+                        if (gameObject) {
+                            gameObject.transform.setLocalPosition(xOrScene, y, z);
+                        }
+                        return gameObject;
+                    }
+                }
+                else {
+                    var gameObject = prefab.createInstance();
+                    if (gameObject) {
+                        gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
+                    }
+                    return gameObject;
+                }
+            }
+            else {
+                console.warn("The prefab don't exists.", name);
+            }
+            return null;
+        };
+        /**
+         * @deprecated
+         */
+        Prefab.prototype.createInstance = function (scene, keepUUID) {
+            if (!this._raw) {
+                return null;
+            }
+            var isEditor = paper.Application.playerMode === 2 /* Editor */;
+            var deserializer = new paper.Deserializer();
+            var gameObject = deserializer.deserialize(this._raw, keepUUID, isEditor, scene);
+            if (gameObject && isEditor) {
+                if (!gameObject.extras.prefab) {
+                    gameObject.extras.prefab = this;
+                }
+            }
+            return gameObject;
+        };
+        return Prefab;
+    }(BasePrefabAsset));
+    paper.Prefab = Prefab;
+    __reflect(Prefab.prototype, "paper.Prefab");
+})(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     *
+     */
+    var Vector4 = (function (_super) {
+        __extends(Vector4, _super);
+        /**
+         * 请使用 `egret3d.Vector4.create(); egret3d.Quaternion.create()` 创建实例。
+         * @see egret3d.Quaternion.create()
+         * @see egret3d.Vector4.create()
+         * @deprecated
+         */
+        function Vector4(x, y, z, w) {
+            if (x === void 0) { x = 0.0; }
+            if (y === void 0) { y = 0.0; }
+            if (z === void 0) { z = 0.0; }
+            if (w === void 0) { w = 1.0; }
+            var _this = _super.call(this) || this;
+            _this.x = x;
+            _this.y = y;
+            _this.z = z;
+            _this.w = w;
+            return _this;
+        }
+        /**
+         *
+         */
+        Vector4.create = function (x, y, z, w) {
+            if (x === void 0) { x = 0.0; }
+            if (y === void 0) { y = 0.0; }
+            if (z === void 0) { z = 0.0; }
+            if (w === void 0) { w = 1.0; }
             if (this._instances.length > 0) {
-                var instance = this._instances.pop().set(a, b, c);
+                var instance = this._instances.pop().set(x, y, z, w);
                 instance._released = false;
                 return instance;
             }
-            return new Triangle().set(a, b, c);
+            return new Vector4().set(x, y, z, w);
         };
-        /**
-         * 通过三个点确定一个三角形，获取该三角形的法线。
-         * -   a
-         * -  /·\
-         * - b - c
-         * @param a 点 A。
-         * @param b 点 B。
-         * @param c 点 C。
-         * @param out 法线结果。
-         */
-        Triangle.getNormal = function (a, b, c, out) {
-            out.subtract(c, a);
-            out.cross(egret3d.helpVector3A.subtract(b, a));
-            var squaredLength = out.squaredLength;
-            if (squaredLength > 0.0) {
-                return out.multiplyScalar(1.0 / Math.sqrt(squaredLength));
-            }
-            return out.set(0.0, 0.0, 1.0);
+        Vector4.prototype.serialize = function () {
+            return [this.x, this.y, this.z, this.w];
         };
-        Triangle.prototype.serialize = function () {
-            return [
-                this.a.x, this.a.y, this.a.z,
-                this.b.x, this.b.y, this.b.z,
-                this.c.x, this.c.y, this.c.z,
-            ];
+        Vector4.prototype.deserialize = function (value) {
+            return this.fromArray(value);
         };
-        Triangle.prototype.deserialize = function (element) {
-            return this.fromArray(element);
+        Vector4.prototype.copy = function (value) {
+            return this.set(value.x, value.y, value.z, value.w);
         };
-        Triangle.prototype.copy = function (value) {
-            return this.set(value.a, value.b, value.c);
+        Vector4.prototype.clone = function () {
+            return Vector4.create(this.x, this.y, this.z, this.w);
         };
-        Triangle.prototype.clone = function () {
-            return Triangle.create(this.a, this.b, this.c);
-        };
-        Triangle.prototype.set = function (a, b, c) {
-            if (a === void 0) { a = egret3d.Vector3.ZERO; }
-            if (b === void 0) { b = egret3d.Vector3.ZERO; }
-            if (c === void 0) { c = egret3d.Vector3.ZERO; }
-            this.a.copy(a);
-            this.b.copy(b);
-            this.c.copy(c);
+        Vector4.prototype.set = function (x, y, z, w) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
             return this;
         };
-        Triangle.prototype.fromArray = function (array, offsetA, offsetB, offsetC) {
-            if (offsetA === undefined) {
-                offsetA = 0;
-            }
-            this.a.fromArray(array, offsetA);
-            this.b.fromArray(array, offsetB !== undefined ? offsetB : offsetA + 3);
-            this.c.fromArray(array, offsetC !== undefined ? offsetC : offsetA + 6);
+        Vector4.prototype.clear = function () {
+            this.x = 0.0;
+            this.y = 0.0;
+            this.z = 0.0;
+            this.w = 1.0;
+            return this;
+        };
+        Vector4.prototype.fromArray = function (value, offset) {
+            if (offset === void 0) { offset = 0; }
+            this.x = value[offset];
+            this.y = value[offset + 1];
+            this.z = value[offset + 2];
+            this.w = value[offset + 3];
+            return this;
         };
         /**
-         * 获取该三角形的中心点。
-         * @param out 输出。
+         * 判断该向量是否和一个向量相等。
+         * @param value 一个向量。
+         * @param threshold 阈值。
          */
-        Triangle.prototype.getCenter = function (out) {
-            if (!out) {
-                out = egret3d.Vector3.create();
+        Vector4.prototype.equal = function (value, threshold) {
+            if (threshold === void 0) { threshold = 0.000001; }
+            if (Math.abs(this.x - value.x) <= threshold &&
+                Math.abs(this.y - value.y) <= threshold &&
+                Math.abs(this.z - value.z) <= threshold &&
+                Math.abs(this.w - value.w) <= threshold) {
+                return true;
             }
-            return out.add(this.a, this.b).add(this.c).multiplyScalar(1.0 / 3.0);
+            return false;
         };
-        /**
-         * 获取该三角形的法线。
-         * @param out 输出。
-         */
-        Triangle.prototype.getNormal = function (out) {
-            if (!out) {
-                out = egret3d.Vector3.create();
+        Vector4.prototype.normalize = function (input) {
+            if (!input) {
+                input = this;
             }
-            return Triangle.getNormal(this.a, this.b, this.c, out);
-        };
-        /**
-         *
-         * @param u
-         * @param v
-         * @param out
-         */
-        Triangle.prototype.getPointAt = function (u, v, out) {
-            if (!out) {
-                out = egret3d.Vector3.create();
-            }
-            out.x = egret3d.math.lerp(this.a.x, this.c.x, u) + egret3d.math.lerp(0.0, this.b.x - this.a.x, v);
-            out.y = egret3d.math.lerp(this.a.y, this.b.y, v) + egret3d.math.lerp(0.0, this.c.y - this.a.y, u);
-            out.z = egret3d.math.lerp(this.a.z, this.c.z, u) + egret3d.math.lerp(0.0, this.b.z - this.a.z, v);
-            return out;
-        };
-        /**
-         * 获取一个点到该三角形的最近点。
-         * @param point 一个点。
-         * @param out 最近点。
-         */
-        Triangle.prototype.getClosestPointToPoint = function (point, out) {
-            if (!out) {
-                out = egret3d.Vector3.create();
-            }
-            var vab = egret3d.helpVector3A;
-            var vac = egret3d.helpVector3B;
-            var vbc = egret3d.helpVector3C;
-            var vap = egret3d.helpVector3D;
-            var vbp = egret3d.helpVector3E;
-            var vcp = egret3d.helpVector3F;
-            var a = this.a, b = this.b, c = this.c;
-            var v, w;
-            // algorithm thanks to Real-Time Collision Detection by Christer Ericson,
-            // published by Morgan Kaufmann Publishers, (c) 2005 Elsevier Inc.,
-            // under the accompanying license; see chapter 5.1.5 for detailed explanation.
-            // basically, we're distinguishing which of the voronoi regions of the triangle
-            // the point lies in with the minimum amount of redundant computation.
-            vab.subtract(b, a);
-            vac.subtract(c, a);
-            vap.subtract(point, a);
-            var d1 = vab.dot(vap);
-            var d2 = vac.dot(vap);
-            if (d1 <= 0 && d2 <= 0) {
-                // vertex region of A; barycentric coords (1, 0, 0)
-                return out.copy(a);
-            }
-            vbp.subtract(point, b);
-            var d3 = vab.dot(vbp);
-            var d4 = vac.dot(vbp);
-            if (d3 >= 0 && d4 <= d3) {
-                // vertex region of B; barycentric coords (0, 1, 0)
-                return out.copy(b);
-            }
-            var vc = d1 * d4 - d3 * d2;
-            if (vc <= 0 && d1 >= 0 && d3 <= 0) {
-                v = d1 / (d1 - d3);
-                // edge region of AB; barycentric coords (1-v, v, 0)
-                return out.multiplyScalar(v, vab).add(a);
-            }
-            vcp.subtract(point, c);
-            var d5 = vab.dot(vcp);
-            var d6 = vac.dot(vcp);
-            if (d6 >= 0 && d5 <= d6) {
-                // vertex region of C; barycentric coords (0, 0, 1)
-                return out.copy(c);
-            }
-            var vb = d5 * d2 - d1 * d6;
-            if (vb <= 0 && d2 >= 0 && d6 <= 0) {
-                w = d2 / (d2 - d6);
-                // edge region of AC; barycentric coords (1-w, 0, w)
-                return out.multiplyScalar(w, vac).add(a);
-            }
-            var va = d3 * d6 - d5 * d4;
-            if (va <= 0 && (d4 - d3) >= 0 && (d5 - d6) >= 0) {
-                vbc.subtract(c, b);
-                w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
-                // edge region of BC; barycentric coords (0, 1-w, w)
-                return out.multiplyScalar(w, vbc).add(b); // edge region of BC
-            }
-            // face region
-            var denom = 1.0 / (va + vb + vc);
-            // u = va * denom
-            v = vb * denom;
-            w = vc * denom;
-            return out.add(a, vac.multiplyScalar(w).add(vab.multiplyScalar(v)));
-        };
-        Triangle.prototype.raycast = function (ray, raycastInfo) {
-            // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
-            var edge1 = egret3d.helpVector3A;
-            var edge2 = egret3d.helpVector3B;
-            var diff = egret3d.helpVector3C;
-            var normal = egret3d.helpVector3D;
-            var rayDirection = ray.direction;
-            var rayOrigin = ray.origin;
-            var pA = this.a;
-            var pB = this.b;
-            var pC = this.c;
-            edge1.subtract(pC, pA);
-            edge2.subtract(pB, pA);
-            normal.cross(edge1, edge2);
-            // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
-            // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
-            //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
-            //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
-            //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
-            var DdN = rayDirection.dot(normal);
-            var sign = 1.0;
-            if (DdN > 0.0) {
-                if (!raycastInfo || raycastInfo.backfaceCulling)
-                    return false;
-            }
-            else if (DdN < 0.0) {
-                sign = -1.0;
-                DdN = -DdN;
+            var x = input.x, y = input.y, z = input.z, w = input.w;
+            var l = Math.sqrt(x * x + y * y + z * z + w * w);
+            if (l > 2.220446049250313e-16 /* EPSILON */) {
+                l = 1.0 / l;
+                this.x = x * l;
+                this.y = y * l;
+                this.z = z * l;
+                this.w = w * l;
             }
             else {
-                return false;
+                this.clear();
             }
-            diff.subtract(rayOrigin, pA);
-            var DdQxE2 = sign * rayDirection.dot(edge2.cross(diff, edge2));
-            // b1 < 0, no intersection
-            if (DdQxE2 < 0.0) {
-                return false;
+            return this;
+        };
+        Vector4.prototype.inverse = function (input) {
+            if (!input) {
+                input = this;
             }
-            var DdE1xQ = sign * rayDirection.dot(edge1.cross(diff));
-            // b2 < 0, no intersection
-            if (DdE1xQ < 0.0) {
-                return false;
+            this.x = input.x * -1;
+            this.y = input.y * -1;
+            this.z = input.z * -1;
+            this.w = input.w;
+            return this;
+        };
+        /**
+         * 向量与标量相乘运算。
+         * - `v.multiplyScalar(scalar)` 将该向量与标量相乘，相当于 v *= scalar。
+         * - `v.multiplyScalar(scalar, input)` 将输入向量与标量相乘的结果写入该向量，相当于 v = input * scalar。
+         * @param scalar 标量。
+         * @param input 输入向量。
+         */
+        Vector4.prototype.multiplyScalar = function (scalar, input) {
+            if (!input) {
+                input = this;
             }
-            // b1+b2 > 1, no intersection
-            if (DdQxE2 + DdE1xQ > DdN) {
-                return false;
-            }
-            // Line intersects triangle, check if ray does.
-            var QdN = -sign * diff.dot(normal);
-            // t < 0, no intersection
-            if (QdN < 0.0) {
-                return false;
-            }
-            if (raycastInfo) {
-                DdN = 1.0 / DdN;
-                raycastInfo.coord.x = DdQxE2 * DdN;
-                raycastInfo.coord.y = DdE1xQ * DdN;
-                ray.getPointAt(raycastInfo.distance = QdN * DdN, raycastInfo.position);
-                if (raycastInfo.normal) {
-                    raycastInfo.normal.copy(normal);
+            this.x = scalar * input.x;
+            this.y = scalar * input.y;
+            this.z = scalar * input.z;
+            this.w = scalar * input.w;
+            return this;
+        };
+        /**
+         * 将该向量与一个向量相点乘。
+         * - v · vector
+         * @param vector 一个向量。
+         */
+        Vector4.prototype.dot = function (vector) {
+            return this.x * vector.x + this.y * vector.y + this.z * vector.z + this.w * vector.w;
+        };
+        Vector4.prototype.lerp = function (p1, p2, p3) {
+            if (typeof p1 === "number") {
+                if (!p3) {
+                    p3 = p1;
+                    p1 = this;
+                }
+                else {
+                    var temp = p1;
+                    p1 = p2;
+                    p2 = p3;
+                    p3 = temp;
                 }
             }
-            return true;
+            else if (typeof p2 === "number") {
+                p3 = p2;
+                p2 = p1;
+                p1 = this;
+            }
+            this.x = p1.x + (p2.x - p1.x) * p3;
+            this.y = p1.y + (p2.y - p1.y) * p3;
+            this.z = p1.z + (p2.z - p1.z) * p3;
+            this.w = p1.w + (p2.w - p1.w) * p3;
+            return this;
         };
-        Object.defineProperty(Triangle.prototype, "area", {
+        /**
+         * 将该向量转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        Vector4.prototype.toArray = function (array, offset) {
+            if (offset === void 0) { offset = 0; }
+            if (!array) {
+                array = [];
+            }
+            array[0 + offset] = this.x;
+            array[1 + offset] = this.y;
+            array[2 + offset] = this.z;
+            array[3 + offset] = this.w;
+            return array;
+        };
+        Object.defineProperty(Vector4.prototype, "length", {
             /**
-             * 获取该三角形的面积。
+             * 该向量的长度。
              * - 该值是实时计算的。
              */
             get: function () {
-                egret3d.helpVector3A.subtract(this.c, this.a);
-                egret3d.helpVector3B.subtract(this.b, this.a);
-                return egret3d.helpVector3A.cross(egret3d.helpVector3B).length * 0.5;
+                return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
             },
             enumerable: true,
             configurable: true
         });
-        Triangle._instances = [];
-        return Triangle;
+        Object.defineProperty(Vector4.prototype, "squaredLength", {
+            /**
+             * 该向量的长度的平方。
+             * - 该值是实时计算的。
+             */
+            get: function () {
+                return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Vector4._instances = [];
+        return Vector4;
     }(paper.BaseRelease));
-    egret3d.Triangle = Triangle;
-    __reflect(Triangle.prototype, "egret3d.Triangle", ["paper.ICCS", "paper.ISerializable", "egret3d.IRaycast"]);
+    egret3d.Vector4 = Vector4;
+    __reflect(Vector4.prototype, "egret3d.Vector4", ["egret3d.IVector4", "egret3d.IVector3", "egret3d.IVector2", "paper.ICCS", "paper.ISerializable"]);
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -3328,97 +3345,22 @@ var egret3d;
 var paper;
 (function (paper) {
     /**
-     * 基础预制体资源。
-     * - 预制体资源和场景资源的基类。
+     * 基础单例组件。
+     * - 全部单例组件的基类。
      */
-    var BasePrefabAsset = (function (_super) {
-        __extends(BasePrefabAsset, _super);
-        function BasePrefabAsset() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._raw = null;
-            return _this;
+    var SingletonComponent = (function (_super) {
+        __extends(SingletonComponent, _super);
+        function SingletonComponent() {
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         /**
          * @internal
          */
-        BasePrefabAsset.prototype.parse = function (json) {
-            this._raw = json;
-        };
-        BasePrefabAsset.prototype.dispose = function () {
-            if (!_super.prototype.dispose.call(this)) {
-                return false;
-            }
-            this._raw = null;
-            return true;
-        };
-        BasePrefabAsset.prototype.caclByteLength = function () {
-            return 0;
-        };
-        return BasePrefabAsset;
-    }(paper.Asset));
-    paper.BasePrefabAsset = BasePrefabAsset;
-    __reflect(BasePrefabAsset.prototype, "paper.BasePrefabAsset");
-    /**
-     * 预制体资源。
-     */
-    var Prefab = (function (_super) {
-        __extends(Prefab, _super);
-        function Prefab() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        Prefab.create = function (name, xOrScene, y, z, scene) {
-            var prefab = paper.Asset.find(name);
-            if (prefab && prefab instanceof Prefab) {
-                if (xOrScene !== undefined && xOrScene !== null) {
-                    if (xOrScene instanceof paper.Scene) {
-                        var gameObject = prefab.createInstance(xOrScene);
-                        if (gameObject) {
-                            gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
-                        }
-                        return gameObject;
-                    }
-                    else {
-                        var gameObject = prefab.createInstance(scene || null);
-                        if (gameObject) {
-                            gameObject.transform.setLocalPosition(xOrScene, y, z);
-                        }
-                        return gameObject;
-                    }
-                }
-                else {
-                    var gameObject = prefab.createInstance();
-                    if (gameObject) {
-                        gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
-                    }
-                    return gameObject;
-                }
-            }
-            else {
-                console.warn("The prefab don't exists.", name);
-            }
-            return null;
-        };
-        /**
-         * @deprecated
-         */
-        Prefab.prototype.createInstance = function (scene, keepUUID) {
-            if (!this._raw) {
-                return null;
-            }
-            var isEditor = paper.Application.playerMode === 2 /* Editor */;
-            var deserializer = new paper.Deserializer();
-            var gameObject = deserializer.deserialize(this._raw, keepUUID, isEditor, scene);
-            if (gameObject && isEditor) {
-                if (!gameObject.extras.prefab) {
-                    gameObject.extras.prefab = this;
-                }
-            }
-            return gameObject;
-        };
-        return Prefab;
-    }(BasePrefabAsset));
-    paper.Prefab = Prefab;
-    __reflect(Prefab.prototype, "paper.Prefab");
+        SingletonComponent.__isSingleton = true;
+        return SingletonComponent;
+    }(paper.BaseComponent));
+    paper.SingletonComponent = SingletonComponent;
+    __reflect(SingletonComponent.prototype, "paper.SingletonComponent");
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -3720,212 +3662,290 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     *
+     * 三角形。
      */
-    var Vector4 = (function (_super) {
-        __extends(Vector4, _super);
+    var Triangle = (function (_super) {
+        __extends(Triangle, _super);
         /**
-         * 请使用 `egret3d.Vector4.create(); egret3d.Quaternion.create()` 创建实例。
-         * @see egret3d.Quaternion.create()
-         * @see egret3d.Vector4.create()
-         * @deprecated
+         * 请使用 `egret3d.Triangle.create()` 创建实例。
+         * @see egret3d.Triangle.create()
          */
-        function Vector4(x, y, z, w) {
-            if (x === void 0) { x = 0.0; }
-            if (y === void 0) { y = 0.0; }
-            if (z === void 0) { z = 0.0; }
-            if (w === void 0) { w = 1.0; }
+        function Triangle() {
             var _this = _super.call(this) || this;
-            _this.x = x;
-            _this.y = y;
-            _this.z = z;
-            _this.w = w;
+            /**
+             * 点 A。
+             */
+            _this.a = egret3d.Vector3.create();
+            /**
+             * 点 B。
+             */
+            _this.b = egret3d.Vector3.create();
+            /**
+             * 点 C。
+             */
+            _this.c = egret3d.Vector3.create();
             return _this;
         }
         /**
-         *
+         * 创建一个三角形实例。
+         * -   a
+         * -  /·\
+         * - b - c
+         * @param a 点 A。
+         * @param b 点 B。
+         * @param c 点 C。
          */
-        Vector4.create = function (x, y, z, w) {
-            if (x === void 0) { x = 0.0; }
-            if (y === void 0) { y = 0.0; }
-            if (z === void 0) { z = 0.0; }
-            if (w === void 0) { w = 1.0; }
+        Triangle.create = function (a, b, c) {
+            if (a === void 0) { a = egret3d.Vector3.ZERO; }
+            if (b === void 0) { b = egret3d.Vector3.ZERO; }
+            if (c === void 0) { c = egret3d.Vector3.ZERO; }
             if (this._instances.length > 0) {
-                var instance = this._instances.pop().set(x, y, z, w);
+                var instance = this._instances.pop().set(a, b, c);
                 instance._released = false;
                 return instance;
             }
-            return new Vector4().set(x, y, z, w);
-        };
-        Vector4.prototype.serialize = function () {
-            return [this.x, this.y, this.z, this.w];
-        };
-        Vector4.prototype.deserialize = function (value) {
-            return this.fromArray(value);
-        };
-        Vector4.prototype.copy = function (value) {
-            return this.set(value.x, value.y, value.z, value.w);
-        };
-        Vector4.prototype.clone = function () {
-            return Vector4.create(this.x, this.y, this.z, this.w);
-        };
-        Vector4.prototype.set = function (x, y, z, w) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-            this.w = w;
-            return this;
-        };
-        Vector4.prototype.clear = function () {
-            this.x = 0.0;
-            this.y = 0.0;
-            this.z = 0.0;
-            this.w = 1.0;
-            return this;
-        };
-        Vector4.prototype.fromArray = function (value, offset) {
-            if (offset === void 0) { offset = 0; }
-            this.x = value[offset];
-            this.y = value[offset + 1];
-            this.z = value[offset + 2];
-            this.w = value[offset + 3];
-            return this;
+            return new Triangle().set(a, b, c);
         };
         /**
-         * 判断该向量是否和一个向量相等。
-         * @param value 一个向量。
-         * @param threshold 阈值。
+         * 通过三个点确定一个三角形，获取该三角形的法线。
+         * -   a
+         * -  /·\
+         * - b - c
+         * @param a 点 A。
+         * @param b 点 B。
+         * @param c 点 C。
+         * @param out 法线结果。
          */
-        Vector4.prototype.equal = function (value, threshold) {
-            if (threshold === void 0) { threshold = 0.000001; }
-            if (Math.abs(this.x - value.x) <= threshold &&
-                Math.abs(this.y - value.y) <= threshold &&
-                Math.abs(this.z - value.z) <= threshold &&
-                Math.abs(this.w - value.w) <= threshold) {
-                return true;
+        Triangle.getNormal = function (a, b, c, out) {
+            out.subtract(c, a);
+            out.cross(egret3d.helpVector3A.subtract(b, a));
+            var squaredLength = out.squaredLength;
+            if (squaredLength > 0.0) {
+                return out.multiplyScalar(1.0 / Math.sqrt(squaredLength));
             }
-            return false;
+            return out.set(0.0, 0.0, 1.0);
         };
-        Vector4.prototype.normalize = function (input) {
-            if (!input) {
-                input = this;
+        Triangle.prototype.serialize = function () {
+            return [
+                this.a.x, this.a.y, this.a.z,
+                this.b.x, this.b.y, this.b.z,
+                this.c.x, this.c.y, this.c.z,
+            ];
+        };
+        Triangle.prototype.deserialize = function (element) {
+            return this.fromArray(element);
+        };
+        Triangle.prototype.copy = function (value) {
+            return this.set(value.a, value.b, value.c);
+        };
+        Triangle.prototype.clone = function () {
+            return Triangle.create(this.a, this.b, this.c);
+        };
+        Triangle.prototype.set = function (a, b, c) {
+            if (a === void 0) { a = egret3d.Vector3.ZERO; }
+            if (b === void 0) { b = egret3d.Vector3.ZERO; }
+            if (c === void 0) { c = egret3d.Vector3.ZERO; }
+            this.a.copy(a);
+            this.b.copy(b);
+            this.c.copy(c);
+            return this;
+        };
+        Triangle.prototype.fromArray = function (array, offsetA, offsetB, offsetC) {
+            if (offsetA === undefined) {
+                offsetA = 0;
             }
-            var x = input.x, y = input.y, z = input.z, w = input.w;
-            var l = Math.sqrt(x * x + y * y + z * z + w * w);
-            if (l > 2.220446049250313e-16 /* EPSILON */) {
-                l = 1.0 / l;
-                this.x = x * l;
-                this.y = y * l;
-                this.z = z * l;
-                this.w = w * l;
+            this.a.fromArray(array, offsetA);
+            this.b.fromArray(array, offsetB !== undefined ? offsetB : offsetA + 3);
+            this.c.fromArray(array, offsetC !== undefined ? offsetC : offsetA + 6);
+        };
+        /**
+         * 获取该三角形的中心点。
+         * @param out 输出。
+         */
+        Triangle.prototype.getCenter = function (out) {
+            if (!out) {
+                out = egret3d.Vector3.create();
+            }
+            return out.add(this.a, this.b).add(this.c).multiplyScalar(1.0 / 3.0);
+        };
+        /**
+         * 获取该三角形的法线。
+         * @param out 输出。
+         */
+        Triangle.prototype.getNormal = function (out) {
+            if (!out) {
+                out = egret3d.Vector3.create();
+            }
+            return Triangle.getNormal(this.a, this.b, this.c, out);
+        };
+        /**
+         *
+         * @param u
+         * @param v
+         * @param out
+         */
+        Triangle.prototype.getPointAt = function (u, v, out) {
+            if (!out) {
+                out = egret3d.Vector3.create();
+            }
+            out.x = egret3d.math.lerp(this.a.x, this.c.x, u) + egret3d.math.lerp(0.0, this.b.x - this.a.x, v);
+            out.y = egret3d.math.lerp(this.a.y, this.b.y, v) + egret3d.math.lerp(0.0, this.c.y - this.a.y, u);
+            out.z = egret3d.math.lerp(this.a.z, this.c.z, u) + egret3d.math.lerp(0.0, this.b.z - this.a.z, v);
+            return out;
+        };
+        /**
+         * 获取一个点到该三角形的最近点。
+         * @param point 一个点。
+         * @param out 最近点。
+         */
+        Triangle.prototype.getClosestPointToPoint = function (point, out) {
+            if (!out) {
+                out = egret3d.Vector3.create();
+            }
+            var vab = egret3d.helpVector3A;
+            var vac = egret3d.helpVector3B;
+            var vbc = egret3d.helpVector3C;
+            var vap = egret3d.helpVector3D;
+            var vbp = egret3d.helpVector3E;
+            var vcp = egret3d.helpVector3F;
+            var a = this.a, b = this.b, c = this.c;
+            var v, w;
+            // algorithm thanks to Real-Time Collision Detection by Christer Ericson,
+            // published by Morgan Kaufmann Publishers, (c) 2005 Elsevier Inc.,
+            // under the accompanying license; see chapter 5.1.5 for detailed explanation.
+            // basically, we're distinguishing which of the voronoi regions of the triangle
+            // the point lies in with the minimum amount of redundant computation.
+            vab.subtract(b, a);
+            vac.subtract(c, a);
+            vap.subtract(point, a);
+            var d1 = vab.dot(vap);
+            var d2 = vac.dot(vap);
+            if (d1 <= 0 && d2 <= 0) {
+                // vertex region of A; barycentric coords (1, 0, 0)
+                return out.copy(a);
+            }
+            vbp.subtract(point, b);
+            var d3 = vab.dot(vbp);
+            var d4 = vac.dot(vbp);
+            if (d3 >= 0 && d4 <= d3) {
+                // vertex region of B; barycentric coords (0, 1, 0)
+                return out.copy(b);
+            }
+            var vc = d1 * d4 - d3 * d2;
+            if (vc <= 0 && d1 >= 0 && d3 <= 0) {
+                v = d1 / (d1 - d3);
+                // edge region of AB; barycentric coords (1-v, v, 0)
+                return out.multiplyScalar(v, vab).add(a);
+            }
+            vcp.subtract(point, c);
+            var d5 = vab.dot(vcp);
+            var d6 = vac.dot(vcp);
+            if (d6 >= 0 && d5 <= d6) {
+                // vertex region of C; barycentric coords (0, 0, 1)
+                return out.copy(c);
+            }
+            var vb = d5 * d2 - d1 * d6;
+            if (vb <= 0 && d2 >= 0 && d6 <= 0) {
+                w = d2 / (d2 - d6);
+                // edge region of AC; barycentric coords (1-w, 0, w)
+                return out.multiplyScalar(w, vac).add(a);
+            }
+            var va = d3 * d6 - d5 * d4;
+            if (va <= 0 && (d4 - d3) >= 0 && (d5 - d6) >= 0) {
+                vbc.subtract(c, b);
+                w = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+                // edge region of BC; barycentric coords (0, 1-w, w)
+                return out.multiplyScalar(w, vbc).add(b); // edge region of BC
+            }
+            // face region
+            var denom = 1.0 / (va + vb + vc);
+            // u = va * denom
+            v = vb * denom;
+            w = vc * denom;
+            return out.add(a, vac.multiplyScalar(w).add(vab.multiplyScalar(v)));
+        };
+        Triangle.prototype.raycast = function (ray, raycastInfo) {
+            // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
+            var edge1 = egret3d.helpVector3A;
+            var edge2 = egret3d.helpVector3B;
+            var diff = egret3d.helpVector3C;
+            var normal = egret3d.helpVector3D;
+            var rayDirection = ray.direction;
+            var rayOrigin = ray.origin;
+            var pA = this.a;
+            var pB = this.b;
+            var pC = this.c;
+            edge1.subtract(pC, pA);
+            edge2.subtract(pB, pA);
+            normal.cross(edge1, edge2);
+            // Solve Q + t*D = b1*E1 + b2*E2 (Q = kDiff, D = ray direction,
+            // E1 = kEdge1, E2 = kEdge2, N = Cross(E1,E2)) by
+            //   |Dot(D,N)|*b1 = sign(Dot(D,N))*Dot(D,Cross(Q,E2))
+            //   |Dot(D,N)|*b2 = sign(Dot(D,N))*Dot(D,Cross(E1,Q))
+            //   |Dot(D,N)|*t = -sign(Dot(D,N))*Dot(Q,N)
+            var DdN = rayDirection.dot(normal);
+            var sign = 1.0;
+            if (DdN > 0.0) {
+                if (!raycastInfo || raycastInfo.backfaceCulling)
+                    return false;
+            }
+            else if (DdN < 0.0) {
+                sign = -1.0;
+                DdN = -DdN;
             }
             else {
-                this.clear();
+                return false;
             }
-            return this;
-        };
-        Vector4.prototype.inverse = function (input) {
-            if (!input) {
-                input = this;
+            diff.subtract(rayOrigin, pA);
+            var DdQxE2 = sign * rayDirection.dot(edge2.cross(diff, edge2));
+            // b1 < 0, no intersection
+            if (DdQxE2 < 0.0) {
+                return false;
             }
-            this.x = input.x * -1;
-            this.y = input.y * -1;
-            this.z = input.z * -1;
-            this.w = input.w;
-            return this;
-        };
-        /**
-         * 向量与标量相乘运算。
-         * - `v.multiplyScalar(scalar)` 将该向量与标量相乘，相当于 v *= scalar。
-         * - `v.multiplyScalar(scalar, input)` 将输入向量与标量相乘的结果写入该向量，相当于 v = input * scalar。
-         * @param scalar 标量。
-         * @param input 输入向量。
-         */
-        Vector4.prototype.multiplyScalar = function (scalar, input) {
-            if (!input) {
-                input = this;
+            var DdE1xQ = sign * rayDirection.dot(edge1.cross(diff));
+            // b2 < 0, no intersection
+            if (DdE1xQ < 0.0) {
+                return false;
             }
-            this.x = scalar * input.x;
-            this.y = scalar * input.y;
-            this.z = scalar * input.z;
-            this.w = scalar * input.w;
-            return this;
-        };
-        /**
-         * 将该向量与一个向量相点乘。
-         * - v · vector
-         * @param vector 一个向量。
-         */
-        Vector4.prototype.dot = function (vector) {
-            return this.x * vector.x + this.y * vector.y + this.z * vector.z + this.w * vector.w;
-        };
-        Vector4.prototype.lerp = function (p1, p2, p3) {
-            if (typeof p1 === "number") {
-                if (!p3) {
-                    p3 = p1;
-                    p1 = this;
-                }
-                else {
-                    var temp = p1;
-                    p1 = p2;
-                    p2 = p3;
-                    p3 = temp;
+            // b1+b2 > 1, no intersection
+            if (DdQxE2 + DdE1xQ > DdN) {
+                return false;
+            }
+            // Line intersects triangle, check if ray does.
+            var QdN = -sign * diff.dot(normal);
+            // t < 0, no intersection
+            if (QdN < 0.0) {
+                return false;
+            }
+            if (raycastInfo) {
+                DdN = 1.0 / DdN;
+                raycastInfo.coord.x = DdQxE2 * DdN;
+                raycastInfo.coord.y = DdE1xQ * DdN;
+                ray.getPointAt(raycastInfo.distance = QdN * DdN, raycastInfo.position);
+                if (raycastInfo.normal) {
+                    raycastInfo.normal.copy(normal);
                 }
             }
-            else if (typeof p2 === "number") {
-                p3 = p2;
-                p2 = p1;
-                p1 = this;
-            }
-            this.x = p1.x + (p2.x - p1.x) * p3;
-            this.y = p1.y + (p2.y - p1.y) * p3;
-            this.z = p1.z + (p2.z - p1.z) * p3;
-            this.w = p1.w + (p2.w - p1.w) * p3;
-            return this;
+            return true;
         };
-        /**
-         * 将该向量转换为数组。
-         * @param array 数组。
-         * @param offset 数组偏移。
-         */
-        Vector4.prototype.toArray = function (array, offset) {
-            if (offset === void 0) { offset = 0; }
-            if (!array) {
-                array = [];
-            }
-            array[0 + offset] = this.x;
-            array[1 + offset] = this.y;
-            array[2 + offset] = this.z;
-            array[3 + offset] = this.w;
-            return array;
-        };
-        Object.defineProperty(Vector4.prototype, "length", {
+        Object.defineProperty(Triangle.prototype, "area", {
             /**
-             * 该向量的长度。
+             * 获取该三角形的面积。
              * - 该值是实时计算的。
              */
             get: function () {
-                return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+                egret3d.helpVector3A.subtract(this.c, this.a);
+                egret3d.helpVector3B.subtract(this.b, this.a);
+                return egret3d.helpVector3A.cross(egret3d.helpVector3B).length * 0.5;
             },
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Vector4.prototype, "squaredLength", {
-            /**
-             * 该向量的长度的平方。
-             * - 该值是实时计算的。
-             */
-            get: function () {
-                return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Vector4._instances = [];
-        return Vector4;
+        Triangle._instances = [];
+        return Triangle;
     }(paper.BaseRelease));
-    egret3d.Vector4 = Vector4;
-    __reflect(Vector4.prototype, "egret3d.Vector4", ["egret3d.IVector4", "egret3d.IVector3", "egret3d.IVector2", "paper.ICCS", "paper.ISerializable"]);
+    egret3d.Triangle = Triangle;
+    __reflect(Triangle.prototype, "egret3d.Triangle", ["paper.ICCS", "paper.ISerializable", "egret3d.IRaycast"]);
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -4338,222 +4358,6 @@ var gltf;
         FrontFace[FrontFace["CCW"] = 2305] = "CCW";
     })(FrontFace = gltf.FrontFace || (gltf.FrontFace = {}));
 })(gltf || (gltf = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     *
-     */
-    var math;
-    (function (math) {
-        /**
-         *
-         */
-        function euclideanModulo(n, m) {
-            return ((n % m) + m) % m;
-        }
-        math.euclideanModulo = euclideanModulo;
-        /**
-         *
-         */
-        function clamp(v, min, max) {
-            if (min === void 0) { min = 0.0; }
-            if (max === void 0) { max = 1.0; }
-            if (v < min) {
-                return min;
-            }
-            else if (v > max) {
-                return max;
-            }
-            else {
-                return v;
-            }
-        }
-        math.clamp = clamp;
-        /**
-         *
-         */
-        function lerp(from, to, t) {
-            return from + (to - from) * t;
-        }
-        math.lerp = lerp;
-        function frustumIntersectsSphere(frustum, sphere) {
-            var planes = frustum.planes;
-            var center = sphere.center;
-            var negRadius = -sphere.radius;
-            for (var _i = 0, planes_1 = planes; _i < planes_1.length; _i++) {
-                var plane = planes_1[_i];
-                var distance = plane.getDistance(center);
-                if (distance < negRadius) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        math.frustumIntersectsSphere = frustumIntersectsSphere;
-    })(math = egret3d.math || (egret3d.math = {}));
-    /**
-     * 内联的数字常数枚举。
-     */
-    var Const;
-    (function (Const) {
-        /**
-         * 弧度制到角度制相乘的系数。
-         */
-        Const[Const["RAD_DEG"] = 57.29577951308232] = "RAD_DEG";
-        /**
-         * 角度制到弧度制相乘的系数。
-         */
-        Const[Const["DEG_RAD"] = 0.017453292519943295] = "DEG_RAD";
-        /**
-         * 大于零的最小正值。
-         * - https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
-         */
-        Const[Const["EPSILON"] = 2.220446049250313e-16] = "EPSILON";
-    })(Const = egret3d.Const || (egret3d.Const = {}));
-    function sign(value) {
-        if (value === 0 || value !== value) {
-            return value;
-        }
-        return value > 0 ? 1 : -1;
-    }
-    egret3d.sign = sign;
-    // export function triangleIntersectsPlane() {
-    // }
-    function satForAxes(axes) {
-        var v0 = egret3d.helpVector3A;
-        var v1 = egret3d.helpVector3B;
-        var v2 = egret3d.helpVector3C;
-        var extents = egret3d.helpVector3H;
-        var testAxis = egret3d.helpVector3A;
-        for (var i = 0, l = axes.length - 3; i <= l; i += 3) {
-            testAxis.fromArray(axes, i);
-            // project the aabb onto the seperating axis
-            var r = extents.x * Math.abs(testAxis.x) + extents.y * Math.abs(testAxis.y) + extents.z * Math.abs(testAxis.z);
-            // project all 3 vertices of the triangle onto the seperating axis
-            var p0 = v0.dot(testAxis);
-            var p1 = v1.dot(testAxis);
-            var p2 = v2.dot(testAxis);
-            // actual test, basically see if either of the most extreme of the triangle points intersects r
-            if (Math.max(-Math.max(p0, p1, p2), Math.min(p0, p1, p2)) > r) {
-                // points of the projected triangle are outside the projected half-length of the aabb
-                // the axis is seperating and we can exit
-                return false;
-            }
-        }
-        return true;
-    }
-    function triangleIntersectsAABB(triangle, aabb) {
-        if (aabb.isEmpty) {
-            return false;
-        }
-        var v0 = egret3d.helpVector3A;
-        var v1 = egret3d.helpVector3B;
-        var v2 = egret3d.helpVector3C;
-        // triangle edge vectors
-        var f0 = egret3d.helpVector3D;
-        var f1 = egret3d.helpVector3E;
-        var f2 = egret3d.helpVector3F;
-        var center = egret3d.helpVector3G;
-        var extents = egret3d.helpVector3H;
-        // compute box center and extents
-        extents.subtract(aabb.maximum, aabb.center);
-        // translate triangle to aabb origin
-        v0.subtract(triangle.a, center);
-        v1.subtract(triangle.b, center);
-        v2.subtract(triangle.c, center);
-        // compute edge vectors for triangle
-        f0.subtract(v1, v0);
-        f1.subtract(v2, v1);
-        f2.subtract(v0, v2);
-        // test against axes that are given by cross product combinations of the edges of the triangle and the edges of the aabb
-        // make an axis testing of each of the 3 sides of the aabb against each of the 3 sides of the triangle = 9 axis of separation
-        // axis_ij = u_i x f_j (u0, u1, u2 = face normals of aabb = x,y,z axes vectors since aabb is axis aligned)
-        var axes = [
-            0, -f0.z, f0.y, 0, -f1.z, f1.y, 0, -f2.z, f2.y,
-            f0.z, 0, -f0.x, f1.z, 0, -f1.x, f2.z, 0, -f2.x,
-            -f0.y, f0.x, 0, -f1.y, f1.x, 0, -f2.y, f2.x, 0
-        ];
-        if (!satForAxes(axes)) {
-            return false;
-        }
-        // test 3 face normals from the aabb
-        axes = [1, 0, 0, 0, 1, 0, 0, 0, 1];
-        if (!satForAxes(axes)) {
-            return false;
-        }
-        // finally testing the face normal of the triangle
-        // use already existing triangle edge vectors here
-        egret3d.helpVector3A.cross(f0, f1);
-        axes = [egret3d.helpVector3A.x, egret3d.helpVector3A.y, egret3d.helpVector3A.z];
-        return satForAxes(axes);
-    }
-    egret3d.triangleIntersectsAABB = triangleIntersectsAABB;
-    function planeIntersectsAABB(plane, aabb) {
-        // We compute the minimum and maximum dot product values. If those values
-        // are on the same side (back or front) of the plane, then there is no intersection.
-        var vMin;
-        var vMax;
-        var min = aabb.minimum;
-        var max = aabb.maximum;
-        if (plane.normal.x > 0.0) {
-            vMin = plane.normal.x * min.x;
-            vMax = plane.normal.x * max.x;
-        }
-        else {
-            vMin = plane.normal.x * max.x;
-            vMax = plane.normal.x * min.x;
-        }
-        if (plane.normal.y > 0.0) {
-            vMin += plane.normal.y * min.y;
-            vMax += plane.normal.y * max.y;
-        }
-        else {
-            vMin += plane.normal.y * max.y;
-            vMax += plane.normal.y * min.y;
-        }
-        if (plane.normal.z > 0.0) {
-            vMin += plane.normal.z * min.z;
-            vMax += plane.normal.z * max.z;
-        }
-        else {
-            vMin += plane.normal.z * max.z;
-            vMax += plane.normal.z * min.z;
-        }
-        return vMin <= plane.constant && vMax >= plane.constant;
-    }
-    egret3d.planeIntersectsAABB = planeIntersectsAABB;
-    function planeIntersectsSphere(plane, sphere) {
-        return Math.abs(plane.getDistance(sphere.center)) <= sphere.radius;
-    }
-    egret3d.planeIntersectsSphere = planeIntersectsSphere;
-    function aabbIntersectsSphere(aabb, sphere) {
-        // Find the point on the AABB closest to the sphere center.
-        egret3d.helpVector3A.copy(sphere.center).clamp(aabb.minimum, aabb.maximum);
-        // If that point is inside the sphere, the AABB and sphere intersect.
-        return egret3d.helpVector3A.getSquaredDistance(sphere.center) <= (sphere.radius * sphere.radius);
-    }
-    egret3d.aabbIntersectsSphere = aabbIntersectsSphere;
-    function aabbIntersectsAABB(valueA, valueB) {
-        var minA = valueA.minimum;
-        var maxA = valueA.maximum;
-        var minB = valueB.minimum;
-        var maxB = valueB.maximum;
-        // using 6 splitting planes to rule out intersections.
-        return maxA.x < minB.x || minA.x > maxB.x ||
-            maxA.y < minB.y || minA.y > maxB.y ||
-            maxA.z < minB.z || minA.z > maxB.z ? false : true;
-    }
-    egret3d.aabbIntersectsAABB = aabbIntersectsAABB;
-    function sphereIntersectsSphere(valueA, valueB) {
-        var radiusSum = valueA.radius + valueB.radius;
-        return valueA.center.getSquaredDistance(valueB.center) <= (radiusSum * radiusSum);
-    }
-    egret3d.sphereIntersectsSphere = sphereIntersectsSphere;
-    function isPowerOfTwo(value) {
-        return (value & (value - 1)) === 0 && value !== 0;
-    }
-    egret3d.isPowerOfTwo = isPowerOfTwo;
-})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     /**
@@ -5246,26 +5050,6 @@ var egret3d;
     __reflect(Quaternion.prototype, "egret3d.Quaternion");
     var _helpMatrix = egret3d.Matrix4.create();
 })(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
-    /**
-     * 基础单例组件。
-     * - 全部单例组件的基类。
-     */
-    var SingletonComponent = (function (_super) {
-        __extends(SingletonComponent, _super);
-        function SingletonComponent() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        /**
-         * @internal
-         */
-        SingletonComponent.__isSingleton = true;
-        return SingletonComponent;
-    }(paper.BaseComponent));
-    paper.SingletonComponent = SingletonComponent;
-    __reflect(SingletonComponent.prototype, "paper.SingletonComponent");
-})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -6057,227 +5841,6 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 灯光组件。
-     */
-    var BaseLight = (function (_super) {
-        __extends(BaseLight, _super);
-        function BaseLight() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * TODO
-             */
-            _this.cullingMask = 4294967295 /* Everything */;
-            /**
-             * 该灯光的强度。
-             */
-            _this.intensity = 1.0;
-            /**
-             * 该灯光的颜色。
-             */
-            _this.color = egret3d.Color.create(1.0, 1.0, 1.0, 1.0);
-            /**
-             * 该灯光是否投射阴影。
-             */
-            _this.castShadows = false;
-            /**
-             *
-             */
-            _this.shadow = egret3d.LightShadow.create();
-            return _this;
-            // protected _updateShadowMatrix(camera: Camera) {
-            //     // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
-            //     const matrix = this.shadowMatrix;
-            //     matrix.set(
-            //         0.5, 0.0, 0.0, 0.5,
-            //         0.0, 0.5, 0.0, 0.5,
-            //         0.0, 0.0, 0.5, 0.5,
-            //         0.0, 0.0, 0.0, 1.0
-            //     );
-            //     const context = camera.context;
-            //     context.updateCameraTransform(camera, this.gameObject.transform.localToWorldMatrix);
-            //     context.updateLightDepth(this);
-            //     helpMatrixA.fromProjection(
-            //         camera.fov, this.shadowCameraNear, this.shadowCameraFar,
-            //         this.shadowSize, camera.opvalue,
-            //         camera.aspect, stage.matchFactor
-            //     );
-            //     matrix.multiply(helpMatrixA).multiply(this.gameObject.transform.worldToLocalMatrix);
-            // }
-            // public updateShadow(camera: Camera) {
-            // }
-            // /**
-            //  * @internal
-            //  */
-            // public updateFace(camera: Camera, faceIndex: number) {
-            // }
-        }
-        __decorate([
-            paper.serializedField
-        ], BaseLight.prototype, "cullingMask", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
-        ], BaseLight.prototype, "intensity", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property("COLOR" /* COLOR */)
-        ], BaseLight.prototype, "color", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property("CHECKBOX" /* CHECKBOX */)
-        ], BaseLight.prototype, "castShadows", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property("NESTED" /* NESTED */)
-        ], BaseLight.prototype, "shadow", void 0);
-        return BaseLight;
-    }(paper.BaseComponent));
-    egret3d.BaseLight = BaseLight;
-    __reflect(BaseLight.prototype, "egret3d.BaseLight");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * 网格渲染组件。
-     * - 用于渲染网格筛选组件提供的网格资源。
-     */
-    var MeshRenderer = (function (_super) {
-        __extends(MeshRenderer, _super);
-        function MeshRenderer() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._lightmapIndex = -1;
-            /**
-             * 如果该属性合并到 UV2 中，会破坏网格共享，共享的网格无法拥有不同的 lightmap UV。
-             */
-            _this._lightmapScaleOffset = egret3d.Vector4.create();
-            return _this;
-        }
-        MeshRenderer.prototype.recalculateLocalBox = function () {
-            this._localBoundingBox.clear();
-            var filter = this.gameObject.getComponent(egret3d.MeshFilter);
-            if (filter && filter.mesh) {
-                var vertices = filter.mesh.getVertices();
-                var position = egret3d.helpVector3A;
-                for (var i = 0, l = vertices.length; i < l; i += 3) {
-                    position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
-                    this._localBoundingBox.add(position);
-                }
-            }
-        };
-        /**
-         * 实时获取网格资源的指定三角形顶点位置。
-         * - 采用 CPU 蒙皮。
-         */
-        MeshRenderer.prototype.getTriangle = function (triangleIndex, triangle) {
-            if (!triangle) {
-                triangle = egret3d.Triangle.create();
-            }
-            var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
-            if (!meshFilter) {
-                return triangle;
-            }
-            var mesh = meshFilter.mesh;
-            if (!mesh) {
-                return triangle;
-            }
-            var localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
-            var indices = mesh.getIndices();
-            var vertices = mesh.getVertices();
-            for (var i = 0; i < 3; ++i) {
-                var index = indices ? indices[triangleIndex * 3 + i] : triangleIndex * 9 + i;
-                var vertexIndex = index * 3;
-                switch (i) {
-                    case 0:
-                        triangle.a.fromArray(vertices, vertexIndex);
-                        triangle.a.applyMatrix(localToWorldMatrix);
-                        break;
-                    case 1:
-                        triangle.b.fromArray(vertices, vertexIndex);
-                        triangle.b.applyMatrix(localToWorldMatrix);
-                        break;
-                    case 2:
-                        triangle.c.fromArray(vertices, vertexIndex);
-                        triangle.c.applyMatrix(localToWorldMatrix);
-                        break;
-                }
-            }
-            return triangle;
-        };
-        MeshRenderer.prototype.raycast = function (p1, p2, p3) {
-            var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
-            if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh) {
-                return false;
-            }
-            var raycastMesh = false;
-            var raycastInfo = undefined;
-            var transform = this.gameObject.transform;
-            var worldToLocalMatrix = transform.worldToLocalMatrix;
-            var localRay = egret3d.helpRay.applyMatrix(worldToLocalMatrix, p1);
-            var localBoundingBox = this.localBoundingBox;
-            if (p2) {
-                if (p2 === true) {
-                    raycastMesh = true;
-                }
-                else {
-                    raycastMesh = p3 || false;
-                    raycastInfo = p2;
-                }
-            }
-            if (raycastMesh ? localBoundingBox.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo) : localBoundingBox.raycast(localRay, raycastInfo)) {
-                if (raycastInfo) {
-                    var localToWorldMatrix = transform.localToWorldMatrix;
-                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
-                    raycastInfo.transform = transform;
-                    var normal = raycastInfo.normal;
-                    if (normal) {
-                        // normal.applyDirection(localToWorldMatrix);
-                        normal.applyMatrix3(egret3d.helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
-                    }
-                }
-                return true;
-            }
-            return false;
-        };
-        Object.defineProperty(MeshRenderer.prototype, "lightmapIndex", {
-            /**
-             * 该组件的光照图索引。
-             */
-            get: function () {
-                return this._lightmapIndex;
-            },
-            set: function (value) {
-                if (value === this._lightmapIndex) {
-                    return;
-                }
-                this._lightmapIndex = value;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(MeshRenderer.prototype, "lightmapScaleOffset", {
-            get: function () {
-                return this._lightmapScaleOffset;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        __decorate([
-            paper.serializedField
-        ], MeshRenderer.prototype, "_lightmapIndex", void 0);
-        __decorate([
-            paper.serializedField
-        ], MeshRenderer.prototype, "_lightmapScaleOffset", void 0);
-        __decorate([
-            paper.editor.property("INT" /* INT */, { minimum: -1 })
-        ], MeshRenderer.prototype, "lightmapIndex", null);
-        return MeshRenderer;
-    }(paper.BaseRenderer));
-    egret3d.MeshRenderer = MeshRenderer;
-    __reflect(MeshRenderer.prototype, "egret3d.MeshRenderer");
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
      * 3×3 矩阵。
      */
     var Matrix3 = (function (_super) {
@@ -6512,6 +6075,476 @@ var egret3d;
      * @deprecated
      */
     egret3d.helpMatrix3A = Matrix3.create();
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * 灯光组件。
+     */
+    var BaseLight = (function (_super) {
+        __extends(BaseLight, _super);
+        function BaseLight() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            /**
+             * TODO
+             */
+            _this.cullingMask = 4294967295 /* Everything */;
+            /**
+             * 该灯光的强度。
+             */
+            _this.intensity = 1.0;
+            /**
+             * 该灯光的颜色。
+             */
+            _this.color = egret3d.Color.create(1.0, 1.0, 1.0, 1.0);
+            /**
+             * 该灯光是否投射阴影。
+             */
+            _this.castShadows = false;
+            /**
+             *
+             */
+            _this.shadow = egret3d.LightShadow.create();
+            return _this;
+            // protected _updateShadowMatrix(camera: Camera) {
+            //     // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
+            //     const matrix = this.shadowMatrix;
+            //     matrix.set(
+            //         0.5, 0.0, 0.0, 0.5,
+            //         0.0, 0.5, 0.0, 0.5,
+            //         0.0, 0.0, 0.5, 0.5,
+            //         0.0, 0.0, 0.0, 1.0
+            //     );
+            //     const context = camera.context;
+            //     context.updateCameraTransform(camera, this.gameObject.transform.localToWorldMatrix);
+            //     context.updateLightDepth(this);
+            //     helpMatrixA.fromProjection(
+            //         camera.fov, this.shadowCameraNear, this.shadowCameraFar,
+            //         this.shadowSize, camera.opvalue,
+            //         camera.aspect, stage.matchFactor
+            //     );
+            //     matrix.multiply(helpMatrixA).multiply(this.gameObject.transform.worldToLocalMatrix);
+            // }
+            // public updateShadow(camera: Camera) {
+            // }
+            // /**
+            //  * @internal
+            //  */
+            // public updateFace(camera: Camera, faceIndex: number) {
+            // }
+        }
+        __decorate([
+            paper.serializedField
+        ], BaseLight.prototype, "cullingMask", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+        ], BaseLight.prototype, "intensity", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property("COLOR" /* COLOR */)
+        ], BaseLight.prototype, "color", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
+        ], BaseLight.prototype, "castShadows", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property("NESTED" /* NESTED */)
+        ], BaseLight.prototype, "shadow", void 0);
+        return BaseLight;
+    }(paper.BaseComponent));
+    egret3d.BaseLight = BaseLight;
+    __reflect(BaseLight.prototype, "egret3d.BaseLight");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     *
+     */
+    var RenderState = (function (_super) {
+        __extends(RenderState, _super);
+        function RenderState() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.clearColor = egret3d.Color.create();
+            _this.viewPort = egret3d.Rectangle.create();
+            _this.renderTarget = null;
+            _this.render = null;
+            _this.draw = null;
+            return _this;
+        }
+        RenderState.prototype.initialize = function (renderSystem) {
+            _super.prototype.initialize.call(this);
+            if (renderSystem) {
+                this.render = renderSystem.render.bind(renderSystem);
+                this.draw = renderSystem.draw.bind(renderSystem);
+            }
+        };
+        RenderState.prototype.updateViewport = function (viewport, target) { };
+        RenderState.prototype.clearBuffer = function (bufferBit, clearColor) { };
+        RenderState.prototype.copyFramebufferToTexture = function (screenPostion, target, level) {
+            if (level === void 0) { level = 0; }
+        };
+        return RenderState;
+    }(paper.SingletonComponent));
+    egret3d.RenderState = RenderState;
+    __reflect(RenderState.prototype, "egret3d.RenderState");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * 网格渲染组件。
+     * - 用于渲染网格筛选组件提供的网格资源。
+     */
+    var MeshRenderer = (function (_super) {
+        __extends(MeshRenderer, _super);
+        function MeshRenderer() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._lightmapIndex = -1;
+            /**
+             * 如果该属性合并到 UV2 中，会破坏网格共享，共享的网格无法拥有不同的 lightmap UV。
+             */
+            _this._lightmapScaleOffset = egret3d.Vector4.create();
+            return _this;
+        }
+        MeshRenderer.prototype.recalculateLocalBox = function () {
+            this._localBoundingBox.clear();
+            var filter = this.gameObject.getComponent(egret3d.MeshFilter);
+            if (filter && filter.mesh) {
+                var vertices = filter.mesh.getVertices();
+                var position = egret3d.helpVector3A;
+                for (var i = 0, l = vertices.length; i < l; i += 3) {
+                    position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
+                    this._localBoundingBox.add(position);
+                }
+            }
+        };
+        /**
+         * 实时获取网格资源的指定三角形顶点位置。
+         * - 采用 CPU 蒙皮。
+         */
+        MeshRenderer.prototype.getTriangle = function (triangleIndex, triangle) {
+            if (!triangle) {
+                triangle = egret3d.Triangle.create();
+            }
+            var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
+            if (!meshFilter) {
+                return triangle;
+            }
+            var mesh = meshFilter.mesh;
+            if (!mesh) {
+                return triangle;
+            }
+            var localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
+            var indices = mesh.getIndices();
+            var vertices = mesh.getVertices();
+            for (var i = 0; i < 3; ++i) {
+                var index = indices ? indices[triangleIndex * 3 + i] : triangleIndex * 9 + i;
+                var vertexIndex = index * 3;
+                switch (i) {
+                    case 0:
+                        triangle.a.fromArray(vertices, vertexIndex);
+                        triangle.a.applyMatrix(localToWorldMatrix);
+                        break;
+                    case 1:
+                        triangle.b.fromArray(vertices, vertexIndex);
+                        triangle.b.applyMatrix(localToWorldMatrix);
+                        break;
+                    case 2:
+                        triangle.c.fromArray(vertices, vertexIndex);
+                        triangle.c.applyMatrix(localToWorldMatrix);
+                        break;
+                }
+            }
+            return triangle;
+        };
+        MeshRenderer.prototype.raycast = function (p1, p2, p3) {
+            var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
+            if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh) {
+                return false;
+            }
+            var raycastMesh = false;
+            var raycastInfo = undefined;
+            var transform = this.gameObject.transform;
+            var worldToLocalMatrix = transform.worldToLocalMatrix;
+            var localRay = egret3d.helpRay.applyMatrix(worldToLocalMatrix, p1);
+            var localBoundingBox = this.localBoundingBox;
+            if (p2) {
+                if (p2 === true) {
+                    raycastMesh = true;
+                }
+                else {
+                    raycastMesh = p3 || false;
+                    raycastInfo = p2;
+                }
+            }
+            if (raycastMesh ? localBoundingBox.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo) : localBoundingBox.raycast(localRay, raycastInfo)) {
+                if (raycastInfo) {
+                    var localToWorldMatrix = transform.localToWorldMatrix;
+                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
+                    raycastInfo.transform = transform;
+                    var normal = raycastInfo.normal;
+                    if (normal) {
+                        // normal.applyDirection(localToWorldMatrix);
+                        normal.applyMatrix3(egret3d.helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
+                    }
+                }
+                return true;
+            }
+            return false;
+        };
+        Object.defineProperty(MeshRenderer.prototype, "lightmapIndex", {
+            /**
+             * 该组件的光照图索引。
+             */
+            get: function () {
+                return this._lightmapIndex;
+            },
+            set: function (value) {
+                if (value === this._lightmapIndex) {
+                    return;
+                }
+                this._lightmapIndex = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(MeshRenderer.prototype, "lightmapScaleOffset", {
+            get: function () {
+                return this._lightmapScaleOffset;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        __decorate([
+            paper.serializedField
+        ], MeshRenderer.prototype, "_lightmapIndex", void 0);
+        __decorate([
+            paper.serializedField
+        ], MeshRenderer.prototype, "_lightmapScaleOffset", void 0);
+        __decorate([
+            paper.editor.property("INT" /* INT */, { minimum: -1 })
+        ], MeshRenderer.prototype, "lightmapIndex", null);
+        return MeshRenderer;
+    }(paper.BaseRenderer));
+    egret3d.MeshRenderer = MeshRenderer;
+    __reflect(MeshRenderer.prototype, "egret3d.MeshRenderer");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     *
+     */
+    var math;
+    (function (math) {
+        /**
+         *
+         */
+        function euclideanModulo(n, m) {
+            return ((n % m) + m) % m;
+        }
+        math.euclideanModulo = euclideanModulo;
+        /**
+         *
+         */
+        function clamp(v, min, max) {
+            if (min === void 0) { min = 0.0; }
+            if (max === void 0) { max = 1.0; }
+            if (v < min) {
+                return min;
+            }
+            else if (v > max) {
+                return max;
+            }
+            else {
+                return v;
+            }
+        }
+        math.clamp = clamp;
+        /**
+         *
+         */
+        function lerp(from, to, t) {
+            return from + (to - from) * t;
+        }
+        math.lerp = lerp;
+        function frustumIntersectsSphere(frustum, sphere) {
+            var planes = frustum.planes;
+            var center = sphere.center;
+            var negRadius = -sphere.radius;
+            for (var _i = 0, planes_1 = planes; _i < planes_1.length; _i++) {
+                var plane = planes_1[_i];
+                var distance = plane.getDistance(center);
+                if (distance < negRadius) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        math.frustumIntersectsSphere = frustumIntersectsSphere;
+    })(math = egret3d.math || (egret3d.math = {}));
+    /**
+     * 内联的数字常数枚举。
+     */
+    var Const;
+    (function (Const) {
+        /**
+         * 弧度制到角度制相乘的系数。
+         */
+        Const[Const["RAD_DEG"] = 57.29577951308232] = "RAD_DEG";
+        /**
+         * 角度制到弧度制相乘的系数。
+         */
+        Const[Const["DEG_RAD"] = 0.017453292519943295] = "DEG_RAD";
+        /**
+         * 大于零的最小正值。
+         * - https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
+         */
+        Const[Const["EPSILON"] = 2.220446049250313e-16] = "EPSILON";
+    })(Const = egret3d.Const || (egret3d.Const = {}));
+    function sign(value) {
+        if (value === 0 || value !== value) {
+            return value;
+        }
+        return value > 0 ? 1 : -1;
+    }
+    egret3d.sign = sign;
+    // export function triangleIntersectsPlane() {
+    // }
+    function satForAxes(axes) {
+        var v0 = egret3d.helpVector3A;
+        var v1 = egret3d.helpVector3B;
+        var v2 = egret3d.helpVector3C;
+        var extents = egret3d.helpVector3H;
+        var testAxis = egret3d.helpVector3A;
+        for (var i = 0, l = axes.length - 3; i <= l; i += 3) {
+            testAxis.fromArray(axes, i);
+            // project the aabb onto the seperating axis
+            var r = extents.x * Math.abs(testAxis.x) + extents.y * Math.abs(testAxis.y) + extents.z * Math.abs(testAxis.z);
+            // project all 3 vertices of the triangle onto the seperating axis
+            var p0 = v0.dot(testAxis);
+            var p1 = v1.dot(testAxis);
+            var p2 = v2.dot(testAxis);
+            // actual test, basically see if either of the most extreme of the triangle points intersects r
+            if (Math.max(-Math.max(p0, p1, p2), Math.min(p0, p1, p2)) > r) {
+                // points of the projected triangle are outside the projected half-length of the aabb
+                // the axis is seperating and we can exit
+                return false;
+            }
+        }
+        return true;
+    }
+    function triangleIntersectsAABB(triangle, aabb) {
+        if (aabb.isEmpty) {
+            return false;
+        }
+        var v0 = egret3d.helpVector3A;
+        var v1 = egret3d.helpVector3B;
+        var v2 = egret3d.helpVector3C;
+        // triangle edge vectors
+        var f0 = egret3d.helpVector3D;
+        var f1 = egret3d.helpVector3E;
+        var f2 = egret3d.helpVector3F;
+        var center = egret3d.helpVector3G;
+        var extents = egret3d.helpVector3H;
+        // compute box center and extents
+        extents.subtract(aabb.maximum, aabb.center);
+        // translate triangle to aabb origin
+        v0.subtract(triangle.a, center);
+        v1.subtract(triangle.b, center);
+        v2.subtract(triangle.c, center);
+        // compute edge vectors for triangle
+        f0.subtract(v1, v0);
+        f1.subtract(v2, v1);
+        f2.subtract(v0, v2);
+        // test against axes that are given by cross product combinations of the edges of the triangle and the edges of the aabb
+        // make an axis testing of each of the 3 sides of the aabb against each of the 3 sides of the triangle = 9 axis of separation
+        // axis_ij = u_i x f_j (u0, u1, u2 = face normals of aabb = x,y,z axes vectors since aabb is axis aligned)
+        var axes = [
+            0, -f0.z, f0.y, 0, -f1.z, f1.y, 0, -f2.z, f2.y,
+            f0.z, 0, -f0.x, f1.z, 0, -f1.x, f2.z, 0, -f2.x,
+            -f0.y, f0.x, 0, -f1.y, f1.x, 0, -f2.y, f2.x, 0
+        ];
+        if (!satForAxes(axes)) {
+            return false;
+        }
+        // test 3 face normals from the aabb
+        axes = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+        if (!satForAxes(axes)) {
+            return false;
+        }
+        // finally testing the face normal of the triangle
+        // use already existing triangle edge vectors here
+        egret3d.helpVector3A.cross(f0, f1);
+        axes = [egret3d.helpVector3A.x, egret3d.helpVector3A.y, egret3d.helpVector3A.z];
+        return satForAxes(axes);
+    }
+    egret3d.triangleIntersectsAABB = triangleIntersectsAABB;
+    function planeIntersectsAABB(plane, aabb) {
+        // We compute the minimum and maximum dot product values. If those values
+        // are on the same side (back or front) of the plane, then there is no intersection.
+        var vMin;
+        var vMax;
+        var min = aabb.minimum;
+        var max = aabb.maximum;
+        if (plane.normal.x > 0.0) {
+            vMin = plane.normal.x * min.x;
+            vMax = plane.normal.x * max.x;
+        }
+        else {
+            vMin = plane.normal.x * max.x;
+            vMax = plane.normal.x * min.x;
+        }
+        if (plane.normal.y > 0.0) {
+            vMin += plane.normal.y * min.y;
+            vMax += plane.normal.y * max.y;
+        }
+        else {
+            vMin += plane.normal.y * max.y;
+            vMax += plane.normal.y * min.y;
+        }
+        if (plane.normal.z > 0.0) {
+            vMin += plane.normal.z * min.z;
+            vMax += plane.normal.z * max.z;
+        }
+        else {
+            vMin += plane.normal.z * max.z;
+            vMax += plane.normal.z * min.z;
+        }
+        return vMin <= plane.constant && vMax >= plane.constant;
+    }
+    egret3d.planeIntersectsAABB = planeIntersectsAABB;
+    function planeIntersectsSphere(plane, sphere) {
+        return Math.abs(plane.getDistance(sphere.center)) <= sphere.radius;
+    }
+    egret3d.planeIntersectsSphere = planeIntersectsSphere;
+    function aabbIntersectsSphere(aabb, sphere) {
+        // Find the point on the AABB closest to the sphere center.
+        egret3d.helpVector3A.copy(sphere.center).clamp(aabb.minimum, aabb.maximum);
+        // If that point is inside the sphere, the AABB and sphere intersect.
+        return egret3d.helpVector3A.getSquaredDistance(sphere.center) <= (sphere.radius * sphere.radius);
+    }
+    egret3d.aabbIntersectsSphere = aabbIntersectsSphere;
+    function aabbIntersectsAABB(valueA, valueB) {
+        var minA = valueA.minimum;
+        var maxA = valueA.maximum;
+        var minB = valueB.minimum;
+        var maxB = valueB.maximum;
+        // using 6 splitting planes to rule out intersections.
+        return maxA.x < minB.x || minA.x > maxB.x ||
+            maxA.y < minB.y || minA.y > maxB.y ||
+            maxA.z < minB.z || minA.z > maxB.z ? false : true;
+    }
+    egret3d.aabbIntersectsAABB = aabbIntersectsAABB;
+    function sphereIntersectsSphere(valueA, valueB) {
+        var radiusSum = valueA.radius + valueB.radius;
+        return valueA.center.getSquaredDistance(valueB.center) <= (radiusSum * radiusSum);
+    }
+    egret3d.sphereIntersectsSphere = sphereIntersectsSphere;
+    function isPowerOfTwo(value) {
+        return (value & (value - 1)) === 0 && value !== 0;
+    }
+    egret3d.isPowerOfTwo = isPowerOfTwo;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -7053,82 +7086,6 @@ var egret3d;
     }(egret3d.GLTFAsset));
     egret3d.Mesh = Mesh;
     __reflect(Mesh.prototype, "egret3d.Mesh", ["egret3d.IRaycast"]);
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     *
-     * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
-     */
-    var Curve3 = (function () {
-        /**
-         * @internal
-         */
-        function Curve3(beizerPoints, bezierPointNum) {
-            this.beizerPoints = beizerPoints;
-            this.bezierPointNum = bezierPointNum;
-        }
-        /**
-         * 线性贝塞尔曲线
-         */
-        Curve3.createLinearBezier = function (start, end, indices) {
-            indices = indices > 2 ? indices : 3;
-            var bez = new Array();
-            var equation = function (t, va10, va11) {
-                var res = (1.0 - t) * va10 + t * va11;
-                return res;
-            };
-            bez.push(start);
-            for (var i = 1; i <= indices; i++) {
-                bez.push(new egret3d.Vector3(equation(i / indices, start.x, end.x), equation(i / indices, start.y, start.y), equation(i / indices, start.z, start.z)));
-            }
-            return new Curve3(bez, indices);
-        };
-        /**
-         * 二次方贝塞尔曲线路径
-         * @param v0 起始点
-         * @param v1 选中的节点
-         * @param v2 结尾点
-         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
-         * @returns 贝塞尔曲线对象
-         */
-        Curve3.createQuadraticBezier = function (v0, v1, v2, bezierPointNum) {
-            bezierPointNum = bezierPointNum > 2 ? bezierPointNum : 3;
-            var beizerPoint = new Array();
-            var equation = function (t, val0, val1, val2) {
-                var res = (1.0 - t) * (1.0 - t) * val0 + 2.0 * t * (1.0 - t) * val1 + t * t * val2;
-                return res;
-            };
-            for (var i = 1; i <= bezierPointNum; i++) {
-                beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z)));
-            }
-            return new Curve3(beizerPoint, bezierPointNum);
-        };
-        /**
-         * 三次方贝塞尔曲线路径
-         * @param v0 起始点
-         * @param v1 第一个插值点
-         * @param v2 第二个插值点
-         * @param v3 终点
-         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
-         * @returns 贝塞尔曲线对象
-         */
-        Curve3.createCubicBezier = function (v0, v1, v2, v3, bezierPointNum) {
-            bezierPointNum = bezierPointNum > 3 ? bezierPointNum : 4;
-            var beizerPoint = new Array();
-            var equation = function (t, val0, val1, val2, val3) {
-                var res = (1.0 - t) * (1.0 - t) * (1.0 - t) * val0 + 3.0 * t * (1.0 - t) * (1.0 - t) * val1 + 3.0 * t * t * (1.0 - t) * val2 + t * t * t * val3;
-                return res;
-            };
-            for (var i = 1; i <= bezierPointNum; i++) {
-                beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x, v3.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y, v3.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z, v3.z)));
-            }
-            return new Curve3(beizerPoint, bezierPointNum);
-        };
-        return Curve3;
-    }());
-    egret3d.Curve3 = Curve3;
-    __reflect(Curve3.prototype, "egret3d.Curve3");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -12225,6 +12182,54 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
+     * 球体碰撞组件。
+     */
+    var SphereCollider = (function (_super) {
+        __extends(SphereCollider, _super);
+        function SphereCollider() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.colliderType = egret3d.ColliderType.Sphere;
+            /**
+             * 描述该组件的球体。
+             */
+            _this.sphere = egret3d.Sphere.create(egret3d.Vector3.ZERO, 0.5);
+            return _this;
+        }
+        SphereCollider.prototype.raycast = function (ray, raycastInfo) {
+            var transform = this.gameObject.transform;
+            var worldToLocalMatrix = transform.worldToLocalMatrix;
+            var localRay = egret3d.helpRay.applyMatrix(transform.worldToLocalMatrix, ray);
+            if (this.sphere.raycast(localRay, raycastInfo)) {
+                if (raycastInfo) {
+                    var localToWorldMatrix = transform.localToWorldMatrix;
+                    raycastInfo.distance = ray.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
+                    raycastInfo.transform = transform;
+                    raycastInfo.collider = this;
+                    var normal = raycastInfo.normal;
+                    if (normal) {
+                        // normal.applyDirection(localToWorldMatrix);
+                        normal.applyMatrix3(egret3d.helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
+                    }
+                }
+                return true;
+            }
+            return false;
+        };
+        __decorate([
+            paper.serializedField,
+            paper.editor.property("NESTED" /* NESTED */)
+        ], SphereCollider.prototype, "sphere", void 0);
+        SphereCollider = __decorate([
+            paper.allowMultiple
+        ], SphereCollider);
+        return SphereCollider;
+    }(paper.BaseComponent));
+    egret3d.SphereCollider = SphereCollider;
+    __reflect(SphereCollider.prototype, "egret3d.SphereCollider", ["egret3d.ISphereCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
      * 几何球体。
      */
     var Sphere = (function (_super) {
@@ -12382,163 +12387,6 @@ var egret3d;
     }(paper.BaseRelease));
     egret3d.Sphere = Sphere;
     __reflect(Sphere.prototype, "egret3d.Sphere", ["paper.ICCS", "paper.ISerializable", "egret3d.IRaycast"]);
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * 圆柱（锥）碰撞组件。
-     * - 与 Y 轴对齐。
-     */
-    var CylinderCollider = (function (_super) {
-        __extends(CylinderCollider, _super);
-        function CylinderCollider() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.colliderType = egret3d.ColliderType.Cylinder;
-            /**
-             * 该圆柱（锥）的顶部半径。
-             */
-            _this.topRadius = 0.5;
-            /**
-             * 该圆柱（锥）的底部半径。
-             */
-            _this.bottomRadius = 0.5;
-            /**
-             * 该圆柱（锥）的高度。
-             */
-            _this.height = 1.0;
-            /**
-             * 该圆柱（锥）的中心点。
-             */
-            _this.center = egret3d.Vector3.create();
-            return _this;
-        }
-        CylinderCollider.prototype.raycast = function (ray, raycastInfo) {
-            var transform = this.gameObject.transform;
-            var worldToLocalMatrix = transform.worldToLocalMatrix;
-            var localRay = egret3d.helpRay.applyMatrix(worldToLocalMatrix, ray);
-            localRay.origin.subtract(this.center);
-            var end = egret3d.Vector3.create().multiplyScalar(999999.0, localRay.direction).add(localRay.origin).release();
-            // Oimo CylinderGeometr, ConeGeometry. TODO
-            var p1x = localRay.origin.x;
-            var p1y = localRay.origin.y;
-            var p1z = localRay.origin.z;
-            var p2x = end.x;
-            var p2y = end.y;
-            var p2z = end.z;
-            var height = this.height;
-            var halfHeight = height * 0.5;
-            var radius = this.bottomRadius;
-            // const dRadius = this.bottomRadius - this.topRadius;
-            // const ddd = Math.sqrt(dRadius * dRadius + height * height);
-            // const sinTheta = dRadius / ddd;
-            // const cosTheta = height / ddd;
-            var dx = p2x - p1x;
-            var dy = p2y - p1y;
-            var dz = p2z - p1z;
-            // Y
-            var tminy = 0.0;
-            var tmaxy = 1.0;
-            if (dy > 2.220446049250313e-16 /* EPSILON */ && dy < 2.220446049250313e-16 /* EPSILON */) {
-                if (p1y <= -halfHeight || p1y >= halfHeight) {
-                    return false;
-                }
-            }
-            else {
-                var invDy = 1.0 / dy;
-                var t1 = (-halfHeight - p1y) * invDy;
-                var t2 = (halfHeight - p1y) * invDy;
-                if (t1 > t2) {
-                    var tmp = t1;
-                    t1 = t2;
-                    t2 = tmp;
-                }
-                if (t1 > 0.0)
-                    tminy = t1;
-                if (t2 < 1.0)
-                    tmaxy = t2;
-            }
-            if (tminy >= 1.0 || tmaxy <= 0.0)
-                return false;
-            // XZ
-            var tminxz = 0.0;
-            var tmaxxz = 1.0;
-            var a = dx * dx + dz * dz;
-            var b = p1x * dx + p1z * dz;
-            var c = (p1x * p1x + p1z * p1z) - radius * radius;
-            var d = b * b - a * c;
-            if (d < 0.0)
-                return false;
-            if (a > 0.0) {
-                var sqrtD = Math.sqrt(d);
-                tminxz = (-b - sqrtD) / a;
-                tmaxxz = (-b + sqrtD) / a;
-                if (tminxz >= 1.0 || tmaxxz <= 0.0)
-                    return false;
-            }
-            else {
-                if (c >= 0.0)
-                    return false;
-                tminxz = 0.0;
-                tmaxxz = 1.0;
-            }
-            var min;
-            if (tmaxxz <= tminy || tmaxy <= tminxz)
-                return false;
-            if (tminxz < tminy) {
-                min = tminy;
-                if (min === 0.0)
-                    return false; // the ray starts from inside
-                if (raycastInfo && raycastInfo.normal) {
-                    raycastInfo.normal.set(0.0, dy > 0.0 ? -1.0 : 1.0, 0.0);
-                }
-            }
-            else {
-                min = tminxz;
-                if (min === 0.0)
-                    return false; // the ray starts from inside
-                if (raycastInfo && raycastInfo.normal) {
-                    raycastInfo.normal.set(p1x + dx * min, 0.0, p1z + dz * min).normalize();
-                }
-            }
-            if (raycastInfo) {
-                var localToWorldMatrix = transform.localToWorldMatrix;
-                raycastInfo.distance = ray.origin.getDistance(raycastInfo.position
-                    .set(p1x + min * dx, p1y + min * dy, p1z + min * dz)
-                    .add(this.center)
-                    .applyMatrix(localToWorldMatrix));
-                raycastInfo.transform = transform;
-                raycastInfo.collider = this;
-                var normal = raycastInfo.normal;
-                if (normal) {
-                    // normal.applyDirection(localToWorldMatrix);
-                    normal.applyMatrix3(egret3d.helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
-                }
-            }
-            return true;
-        };
-        __decorate([
-            paper.serializedField,
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
-        ], CylinderCollider.prototype, "topRadius", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
-        ], CylinderCollider.prototype, "bottomRadius", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
-        ], CylinderCollider.prototype, "height", void 0);
-        __decorate([
-            paper.serializedField,
-            paper.editor.property("VECTOR3" /* VECTOR3 */)
-        ], CylinderCollider.prototype, "center", void 0);
-        CylinderCollider = __decorate([
-            paper.allowMultiple
-        ], CylinderCollider);
-        return CylinderCollider;
-    }(paper.BaseComponent));
-    egret3d.CylinderCollider = CylinderCollider;
-    __reflect(CylinderCollider.prototype, "egret3d.CylinderCollider", ["egret3d.IRaycast"]);
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -13832,7 +13680,7 @@ var egret3d;
             }
             var postProcessingCamera = this._postProcessingCamera;
             var postProcessDrawCall = this._postProcessDrawCall;
-            var renderState = paper.GameObject.globalGameObject.getComponent(egret3d.WebGLRenderState);
+            var renderState = paper.GameObject.globalGameObject.getComponent(egret3d.RenderState);
             postProcessDrawCall.material = material;
             renderState.updateViewport(postProcessingCamera.viewport, dest);
             renderState.clearBuffer(256 /* Depth */ | 16384 /* Color */, egret3d.Color.WHITE);
@@ -14756,61 +14604,6 @@ var egret3d;
     }());
     egret3d.Fog = Fog;
     __reflect(Fog.prototype, "egret3d.Fog", ["paper.ISerializable"]);
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * 网格筛选组件。
-     * - 为网格渲染组件提供网格资源。
-     */
-    var MeshFilter = (function (_super) {
-        __extends(MeshFilter, _super);
-        function MeshFilter() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._mesh = null;
-            return _this;
-        }
-        MeshFilter.prototype.uninitialize = function () {
-            _super.prototype.uninitialize.call(this);
-            if (this._mesh) {
-                // this._mesh.dispose(); //TODO shaderdMesh暂时没法dispose
-            }
-            this._mesh = null;
-        };
-        Object.defineProperty(MeshFilter.prototype, "mesh", {
-            /**
-             * 该组件的网格资源。
-             */
-            get: function () {
-                return this._mesh;
-            },
-            set: function (value) {
-                if (this._mesh === value) {
-                    return;
-                }
-                if (this._mesh) {
-                    // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
-                }
-                this._mesh = value;
-                MeshFilter.onMeshChanged.dispatch(this);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * 当网格筛选组件的网格资源改变时派发事件。
-         */
-        MeshFilter.onMeshChanged = new signals.Signal();
-        __decorate([
-            paper.serializedField
-        ], MeshFilter.prototype, "_mesh", void 0);
-        __decorate([
-            paper.editor.property("MESH" /* MESH */)
-        ], MeshFilter.prototype, "mesh", null);
-        return MeshFilter;
-    }(paper.BaseComponent));
-    egret3d.MeshFilter = MeshFilter;
-    __reflect(MeshFilter.prototype, "egret3d.MeshFilter");
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
@@ -15745,6 +15538,151 @@ var paper;
 var egret3d;
 (function (egret3d) {
     /**
+     * 网格筛选组件。
+     * - 为网格渲染组件提供网格资源。
+     */
+    var MeshFilter = (function (_super) {
+        __extends(MeshFilter, _super);
+        function MeshFilter() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._mesh = null;
+            return _this;
+        }
+        MeshFilter.prototype.uninitialize = function () {
+            _super.prototype.uninitialize.call(this);
+            if (this._mesh) {
+                // this._mesh.dispose(); //TODO shaderdMesh暂时没法dispose
+            }
+            this._mesh = null;
+        };
+        Object.defineProperty(MeshFilter.prototype, "mesh", {
+            /**
+             * 该组件的网格资源。
+             */
+            get: function () {
+                return this._mesh;
+            },
+            set: function (value) {
+                if (this._mesh === value) {
+                    return;
+                }
+                if (this._mesh) {
+                    // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
+                }
+                this._mesh = value;
+                MeshFilter.onMeshChanged.dispatch(this);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * 当网格筛选组件的网格资源改变时派发事件。
+         */
+        MeshFilter.onMeshChanged = new signals.Signal();
+        __decorate([
+            paper.serializedField
+        ], MeshFilter.prototype, "_mesh", void 0);
+        __decorate([
+            paper.editor.property("MESH" /* MESH */)
+        ], MeshFilter.prototype, "mesh", null);
+        return MeshFilter;
+    }(paper.BaseComponent));
+    egret3d.MeshFilter = MeshFilter;
+    __reflect(MeshFilter.prototype, "egret3d.MeshFilter");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     *
+     */
+    var Spherical = (function (_super) {
+        __extends(Spherical, _super);
+        /**
+         * 请使用 `egret3d.Spherical.create()` 创建实例。
+         * @see egret3d.Spherical.create()
+         */
+        function Spherical() {
+            var _this = _super.call(this) || this;
+            /**
+             *
+             */
+            _this.radius = 1.0;
+            /**
+             *
+             */
+            _this.phi = 0.0;
+            /**
+             *
+             */
+            _this.theta = 0.0;
+            return _this;
+        }
+        /**
+         *
+         */
+        Spherical.create = function (radius, phi, theta) {
+            if (radius === void 0) { radius = 1.0; }
+            if (phi === void 0) { phi = 0.0; }
+            if (theta === void 0) { theta = 0.0; }
+            if (this._instances.length > 0) {
+                var instance = this._instances.pop().set(radius, phi, theta);
+                instance._released = false;
+                return instance;
+            }
+            return new Spherical().set(radius, phi, theta);
+        };
+        Spherical.prototype.serialize = function () {
+            return [this.radius, this.phi, this.theta];
+        };
+        Spherical.prototype.deserialize = function (value) {
+            this.radius = value[0];
+            this.phi = value[1];
+            this.theta = value[2];
+            return this;
+        };
+        Spherical.prototype.clone = function () {
+            return Spherical.create(this.radius, this.phi, this.theta);
+        };
+        Spherical.prototype.copy = function (value) {
+            return this.set(value.radius, value.phi, value.theta);
+        };
+        Spherical.prototype.set = function (radius, phi, theta) {
+            this.radius = radius;
+            this.phi = phi;
+            this.theta = theta;
+            return this;
+        };
+        Spherical.prototype.fromCartesianCoords = function (p1, p2, p3) {
+            if (p1.hasOwnProperty("x")) {
+                p3 = p1.z;
+                p2 = p1.y;
+                p1 = p1.x;
+            }
+            this.radius = Math.sqrt(p1 * p1 + p2 * p2 + p3 * p3);
+            if (this.radius === 0.0) {
+                this.theta = 0.0;
+                this.phi = 0.0;
+            }
+            else {
+                this.theta = Math.atan2(p1, p3); // TODO
+                this.phi = Math.acos(egret3d.math.clamp(p2 / this.radius, -1.0, 1.0));
+            }
+            return this;
+        };
+        Spherical.prototype.makeSafe = function () {
+            var EPS = 0.000001;
+            this.phi = Math.max(EPS, Math.min(Math.PI - EPS, this.phi));
+            return this;
+        };
+        Spherical._instances = [];
+        return Spherical;
+    }(paper.BaseRelease));
+    egret3d.Spherical = Spherical;
+    __reflect(Spherical.prototype, "egret3d.Spherical", ["paper.ICCS", "paper.ISerializable"]);
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
      * 网格渲染组件系统。
      * - 为网格渲染组件生成绘制信息。
      */
@@ -16242,7 +16180,7 @@ var egret3d;
             this.root = new egret.DisplayObjectContainer();
             this.stage.addChild(this.root);
             if (!this._renderer) {
-                this._renderer = egret.web.Renderer.getInstance(egret3d.WebGLCapabilities.webgl);
+                this._renderer = egret.web.Renderer.getInstance(egret3d.Egret2DRendererSystem.webgl);
             }
             var stage = this.stage;
             var displayList = new egret.sys.DisplayList(stage);
@@ -16251,7 +16189,7 @@ var egret3d;
             // TODO
             var webInput = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem).webInput;
             if (webInput) {
-                egret.web.$cacheTextAdapter(webInput, stage, egret3d.WebGLCapabilities.canvas.parentNode, egret3d.WebGLCapabilities.canvas);
+                egret.web.$cacheTextAdapter(webInput, stage, egret3d.Egret2DRendererSystem.canvas.parentNode, egret3d.Egret2DRendererSystem.canvas);
             }
         };
         Egret2DRenderer.prototype.uninitialize = function () {
@@ -16404,9 +16342,15 @@ var egret3d;
             }
         };
         Egret2DRendererSystem.prototype.onAwake = function (config) {
+            Egret2DRendererSystem.canvas = config.canvas;
+            Egret2DRendererSystem.webgl = config.webgl;
+            var webgl = Egret2DRendererSystem.webgl;
+            if (!webgl) {
+                return;
+            }
             var webInput = this.webInput;
             if (webInput) {
-                var canvas = config.canvas;
+                var canvas = Egret2DRendererSystem.canvas;
                 webInput._initStageDelegateDiv(canvas.parentNode, canvas);
                 webInput.$updateSize();
             }
@@ -16416,6 +16360,12 @@ var egret3d;
             egret3d.inputCollecter.onPointerCancel.add(this._onTouchEnd, this);
             egret3d.inputCollecter.onPointerUp.add(this._onTouchEnd, this);
             egret3d.inputCollecter.onPointerMove.add(this._onTouchMove, this);
+        };
+        Egret2DRendererSystem.prototype.onDisable = function () {
+            egret3d.inputCollecter.onPointerDown.remove(this._onTouchStart, this);
+            egret3d.inputCollecter.onPointerCancel.remove(this._onTouchEnd, this);
+            egret3d.inputCollecter.onPointerUp.remove(this._onTouchEnd, this);
+            egret3d.inputCollecter.onPointerMove.remove(this._onTouchMove, this);
         };
         Egret2DRendererSystem.prototype.onAddGameObject = function (gameObject) {
             this._sortedDirty = true;
@@ -16434,12 +16384,14 @@ var egret3d;
                 gameObject.renderer.update(deltaTime, w, h);
             }
         };
-        Egret2DRendererSystem.prototype.onDisable = function () {
-            egret3d.inputCollecter.onPointerDown.remove(this._onTouchStart, this);
-            egret3d.inputCollecter.onPointerCancel.remove(this._onTouchEnd, this);
-            egret3d.inputCollecter.onPointerUp.remove(this._onTouchEnd, this);
-            egret3d.inputCollecter.onPointerMove.remove(this._onTouchMove, this);
-        };
+        /**
+         * @deprecated
+         */
+        Egret2DRendererSystem.canvas = null;
+        /**
+         * @deprecated
+         */
+        Egret2DRendererSystem.webgl = null;
         return Egret2DRendererSystem;
     }(paper.BaseSystem));
     egret3d.Egret2DRendererSystem = Egret2DRendererSystem;
@@ -21821,92 +21773,109 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     *
+     * @deprecated
      */
-    var Spherical = (function (_super) {
-        __extends(Spherical, _super);
+    egret3d.RAD_DEG = 57.29577951308232 /* RAD_DEG */;
+    /**
+     * @deprecated
+     */
+    egret3d.DEG_RAD = 0.017453292519943295 /* DEG_RAD */;
+    /**
+     * @deprecated
+     */
+    egret3d.EPSILON = 2.220446049250313e-16 /* EPSILON */;
+    /**
+     * @deprecated
+     */
+    egret3d.floatClamp = egret3d.math.clamp;
+    /**
+     * @deprecated
+     */
+    egret3d.numberLerp = egret3d.math.lerp;
+    /**
+     * @deprecated
+     */
+    egret3d.AABB = egret3d.Box;
+    /**
+     * @deprecated
+     */
+    egret3d.Matrix = egret3d.Matrix4;
+    /**
+     * @deprecated
+     */
+    egret3d.Prefab = paper.Prefab;
+    /**
+     * @deprecated
+     */
+    egret3d.RawScene = paper.RawScene;
+    /**
+     * @deprecated
+     */
+    egret3d.InputManager = {
         /**
-         * 请使用 `egret3d.Spherical.create()` 创建实例。
-         * @see egret3d.Spherical.create()
+         * @deprecated
+         * @see egret3d.inputCollecter
          */
-        function Spherical() {
-            var _this = _super.call(this) || this;
+        mouse: {
             /**
-             *
+             * @deprecated
+             * @see egret3d.inputCollecter.defaultPointer.isHold()
              */
-            _this.radius = 1.0;
+            isPressed: function (button) {
+                var buttons = [1 /* LeftMouse */, 4 /* MiddleMouse */, 2 /* RightMouse */];
+                return egret3d.inputCollecter.defaultPointer.isHold(buttons[button]);
+            },
             /**
-             *
+             * @deprecated
+             * @see egret3d.inputCollecter.defaultPointer.isDown()
              */
-            _this.phi = 0.0;
+            wasPressed: function (button) {
+                var buttons = [1 /* LeftMouse */, 4 /* MiddleMouse */, 2 /* RightMouse */];
+                return egret3d.inputCollecter.defaultPointer.isDown(buttons[button]);
+            },
             /**
-             *
+             * @deprecated
+             * @see egret3d.inputCollecter.defaultPointer.isUp()
              */
-            _this.theta = 0.0;
-            return _this;
-        }
+            wasReleased: function (button) {
+                var buttons = [1 /* LeftMouse */, 4 /* MiddleMouse */, 2 /* RightMouse */];
+                return egret3d.inputCollecter.defaultPointer.isUp(buttons[button]);
+            },
+        },
         /**
-         *
+         * @deprecated
+         * @see egret3d.inputCollecter
          */
-        Spherical.create = function (radius, phi, theta) {
-            if (radius === void 0) { radius = 1.0; }
-            if (phi === void 0) { phi = 0.0; }
-            if (theta === void 0) { theta = 0.0; }
-            if (this._instances.length > 0) {
-                var instance = this._instances.pop().set(radius, phi, theta);
-                instance._released = false;
-                return instance;
-            }
-            return new Spherical().set(radius, phi, theta);
-        };
-        Spherical.prototype.serialize = function () {
-            return [this.radius, this.phi, this.theta];
-        };
-        Spherical.prototype.deserialize = function (value) {
-            this.radius = value[0];
-            this.phi = value[1];
-            this.theta = value[2];
-            return this;
-        };
-        Spherical.prototype.clone = function () {
-            return Spherical.create(this.radius, this.phi, this.theta);
-        };
-        Spherical.prototype.copy = function (value) {
-            return this.set(value.radius, value.phi, value.theta);
-        };
-        Spherical.prototype.set = function (radius, phi, theta) {
-            this.radius = radius;
-            this.phi = phi;
-            this.theta = theta;
-            return this;
-        };
-        Spherical.prototype.fromCartesianCoords = function (p1, p2, p3) {
-            if (p1.hasOwnProperty("x")) {
-                p3 = p1.z;
-                p2 = p1.y;
-                p1 = p1.x;
-            }
-            this.radius = Math.sqrt(p1 * p1 + p2 * p2 + p3 * p3);
-            if (this.radius === 0.0) {
-                this.theta = 0.0;
-                this.phi = 0.0;
-            }
-            else {
-                this.theta = Math.atan2(p1, p3); // TODO
-                this.phi = Math.acos(egret3d.math.clamp(p2 / this.radius, -1.0, 1.0));
-            }
-            return this;
-        };
-        Spherical.prototype.makeSafe = function () {
-            var EPS = 0.000001;
-            this.phi = Math.max(EPS, Math.min(Math.PI - EPS, this.phi));
-            return this;
-        };
-        Spherical._instances = [];
-        return Spherical;
-    }(paper.BaseRelease));
-    egret3d.Spherical = Spherical;
-    __reflect(Spherical.prototype, "egret3d.Spherical", ["paper.ICCS", "paper.ISerializable"]);
+        touch: {
+            /**
+             * @deprecated
+             * @see egret3d.inputCollecter.defaultPointer
+             */
+            getTouch: function (button) {
+                return egret3d.inputCollecter.getHoldPointers()[button];
+            },
+        },
+        /**
+         * @deprecated
+         * @see egret3d.inputCollecter
+         */
+        keyboard: {
+            /**
+             * @deprecated
+             * @see egret3d.inputCollecter.getKey()
+             */
+            isPressed: function (key) {
+                return egret3d.inputCollecter.getKey(key).isHold();
+            },
+            /**
+             * @deprecated
+             * @see egret3d.inputCollecter.getKey()
+             */
+            wasPressed: function (key) {
+                return egret3d.inputCollecter.getKey(key).isUp();
+            },
+        },
+    };
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -22731,113 +22700,6 @@ var egret3d;
     egret3d.Material = Material;
     __reflect(Material.prototype, "egret3d.Material");
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * @deprecated
-     */
-    egret3d.RAD_DEG = 57.29577951308232 /* RAD_DEG */;
-    /**
-     * @deprecated
-     */
-    egret3d.DEG_RAD = 0.017453292519943295 /* DEG_RAD */;
-    /**
-     * @deprecated
-     */
-    egret3d.EPSILON = 2.220446049250313e-16 /* EPSILON */;
-    /**
-     * @deprecated
-     */
-    egret3d.floatClamp = egret3d.math.clamp;
-    /**
-     * @deprecated
-     */
-    egret3d.numberLerp = egret3d.math.lerp;
-    /**
-     * @deprecated
-     */
-    egret3d.AABB = egret3d.Box;
-    /**
-     * @deprecated
-     */
-    egret3d.Matrix = egret3d.Matrix4;
-    /**
-     * @deprecated
-     */
-    egret3d.Prefab = paper.Prefab;
-    /**
-     * @deprecated
-     */
-    egret3d.RawScene = paper.RawScene;
-    /**
-     * @deprecated
-     */
-    egret3d.InputManager = {
-        /**
-         * @deprecated
-         * @see egret3d.inputCollecter
-         */
-        mouse: {
-            /**
-             * @deprecated
-             * @see egret3d.inputCollecter.defaultPointer.isHold()
-             */
-            isPressed: function (button) {
-                var buttons = [1 /* LeftMouse */, 4 /* MiddleMouse */, 2 /* RightMouse */];
-                return egret3d.inputCollecter.defaultPointer.isHold(buttons[button]);
-            },
-            /**
-             * @deprecated
-             * @see egret3d.inputCollecter.defaultPointer.isDown()
-             */
-            wasPressed: function (button) {
-                var buttons = [1 /* LeftMouse */, 4 /* MiddleMouse */, 2 /* RightMouse */];
-                return egret3d.inputCollecter.defaultPointer.isDown(buttons[button]);
-            },
-            /**
-             * @deprecated
-             * @see egret3d.inputCollecter.defaultPointer.isUp()
-             */
-            wasReleased: function (button) {
-                var buttons = [1 /* LeftMouse */, 4 /* MiddleMouse */, 2 /* RightMouse */];
-                return egret3d.inputCollecter.defaultPointer.isUp(buttons[button]);
-            },
-        },
-        /**
-         * @deprecated
-         * @see egret3d.inputCollecter
-         */
-        touch: {
-            /**
-             * @deprecated
-             * @see egret3d.inputCollecter.defaultPointer
-             */
-            getTouch: function (button) {
-                return egret3d.inputCollecter.getHoldPointers()[button];
-            },
-        },
-        /**
-         * @deprecated
-         * @see egret3d.inputCollecter
-         */
-        keyboard: {
-            /**
-             * @deprecated
-             * @see egret3d.inputCollecter.getKey()
-             */
-            isPressed: function (key) {
-                return egret3d.inputCollecter.getKey(key).isHold();
-            },
-            /**
-             * @deprecated
-             * @see egret3d.inputCollecter.getKey()
-             */
-            wasPressed: function (key) {
-                return egret3d.inputCollecter.getKey(key).isUp();
-            },
-        },
-    };
-})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     /**
@@ -22992,6 +22854,82 @@ var paper;
      */
     paper.Application = ECS.getInstance();
 })(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     *
+     * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
+     */
+    var Curve3 = (function () {
+        /**
+         * @internal
+         */
+        function Curve3(beizerPoints, bezierPointNum) {
+            this.beizerPoints = beizerPoints;
+            this.bezierPointNum = bezierPointNum;
+        }
+        /**
+         * 线性贝塞尔曲线
+         */
+        Curve3.createLinearBezier = function (start, end, indices) {
+            indices = indices > 2 ? indices : 3;
+            var bez = new Array();
+            var equation = function (t, va10, va11) {
+                var res = (1.0 - t) * va10 + t * va11;
+                return res;
+            };
+            bez.push(start);
+            for (var i = 1; i <= indices; i++) {
+                bez.push(new egret3d.Vector3(equation(i / indices, start.x, end.x), equation(i / indices, start.y, start.y), equation(i / indices, start.z, start.z)));
+            }
+            return new Curve3(bez, indices);
+        };
+        /**
+         * 二次方贝塞尔曲线路径
+         * @param v0 起始点
+         * @param v1 选中的节点
+         * @param v2 结尾点
+         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
+         * @returns 贝塞尔曲线对象
+         */
+        Curve3.createQuadraticBezier = function (v0, v1, v2, bezierPointNum) {
+            bezierPointNum = bezierPointNum > 2 ? bezierPointNum : 3;
+            var beizerPoint = new Array();
+            var equation = function (t, val0, val1, val2) {
+                var res = (1.0 - t) * (1.0 - t) * val0 + 2.0 * t * (1.0 - t) * val1 + t * t * val2;
+                return res;
+            };
+            for (var i = 1; i <= bezierPointNum; i++) {
+                beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z)));
+            }
+            return new Curve3(beizerPoint, bezierPointNum);
+        };
+        /**
+         * 三次方贝塞尔曲线路径
+         * @param v0 起始点
+         * @param v1 第一个插值点
+         * @param v2 第二个插值点
+         * @param v3 终点
+         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
+         * @returns 贝塞尔曲线对象
+         */
+        Curve3.createCubicBezier = function (v0, v1, v2, v3, bezierPointNum) {
+            bezierPointNum = bezierPointNum > 3 ? bezierPointNum : 4;
+            var beizerPoint = new Array();
+            var equation = function (t, val0, val1, val2, val3) {
+                var res = (1.0 - t) * (1.0 - t) * (1.0 - t) * val0 + 3.0 * t * (1.0 - t) * (1.0 - t) * val1 + 3.0 * t * t * (1.0 - t) * val2 + t * t * t * val3;
+                return res;
+            };
+            for (var i = 1; i <= bezierPointNum; i++) {
+                beizerPoint.push(new egret3d.Vector3(equation(i / bezierPointNum, v0.x, v1.x, v2.x, v3.x), equation(i / bezierPointNum, v0.y, v1.y, v2.y, v3.y), equation(i / bezierPointNum, v0.z, v1.z, v2.z, v3.z)));
+            }
+            return new Curve3(beizerPoint, bezierPointNum);
+        };
+        return Curve3;
+    }());
+    egret3d.Curve3 = Curve3;
+    __reflect(Curve3.prototype, "egret3d.Curve3");
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -24641,554 +24579,558 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    var _pattern = /#include +<([\w\d.]+)>/g;
-    var _browserPrefixes = [
-        "",
-        "MOZ_",
-        "OP_",
-        "WEBKIT_",
-    ];
-    function _getExtension(gl, name) {
-        for (var _i = 0, _browserPrefixes_1 = _browserPrefixes; _i < _browserPrefixes_1.length; _i++) {
-            var prefixedName = _browserPrefixes_1[_i];
-            var extension = gl.getExtension(prefixedName + name);
-            if (extension) {
-                return extension;
+    var web;
+    (function (web) {
+        var _browserPrefixes = [
+            "",
+            "MOZ_",
+            "OP_",
+            "WEBKIT_",
+        ];
+        function _getExtension(gl, name) {
+            for (var _i = 0, _browserPrefixes_1 = _browserPrefixes; _i < _browserPrefixes_1.length; _i++) {
+                var prefixedName = _browserPrefixes_1[_i];
+                var extension = gl.getExtension(prefixedName + name);
+                if (extension) {
+                    return extension;
+                }
             }
-        }
-        return null;
-    }
-    function _getMaxShaderPrecision(gl, precision) {
-        if (precision === void 0) { precision = "highp"; }
-        if (precision === "highp") {
-            if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).precision > 0 &&
-                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT).precision > 0) {
-                return "highp";
-            }
-            precision = "mediump";
-        }
-        if (precision === "mediump") {
-            if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT).precision > 0 &&
-                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT).precision > 0) {
-                return "mediump";
-            }
-        }
-        return "lowp";
-    }
-    function _getToneMappingFunction(toneMapping) {
-        var toneMappingName;
-        switch (toneMapping) {
-            case ToneMapping.LinearToneMapping:
-                toneMappingName = 'Linear';
-                break;
-            case ToneMapping.ReinhardToneMapping:
-                toneMappingName = 'Reinhard';
-                break;
-            case ToneMapping.Uncharted2ToneMapping:
-                toneMappingName = 'Uncharted2';
-                break;
-            case ToneMapping.CineonToneMapping:
-                toneMappingName = 'OptimizedCineon';
-                break;
-            default:
-                throw new Error('unsupported toneMapping: ' + toneMapping);
-        }
-        return 'vec3 toneMapping( vec3 color ) { return ' + toneMappingName + 'ToneMapping( color ); }';
-    }
-    function _getCommonExtensions(capabilities) {
-        var extensions = "";
-        if (capabilities.oes_standard_derivatives) {
-            extensions += "#extension GL_OES_standard_derivatives : enable \n";
-        }
-        return extensions;
-    }
-    function _getCommonDefines(capabilities) {
-        var defines = "";
-        defines += "precision " + capabilities.maxPrecision + " float; \n";
-        defines += "precision " + capabilities.maxPrecision + " int; \n";
-        return defines;
-    }
-    function _replace(_match, include) {
-        if (!(include in egret3d.ShaderChunk)) {
-            throw new Error("Can not resolve #include <" + include + ">");
-        }
-        return _parseIncludes(egret3d.ShaderChunk[include]);
-    }
-    function _filterEmptyLine(string) {
-        return string !== '';
-    }
-    function _parseIncludes(string) {
-        return string.replace(_pattern, _replace);
-    }
-    function _unrollLoops(string) {
-        var pattern = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
-        function replace(match, start, end, snippet) {
-            var unroll = '';
-            for (var i = parseInt(start); i < parseInt(end); i++) {
-                unroll += snippet.replace(/\[ i \]/g, '[ ' + i + ' ]');
-            }
-            return unroll;
-        }
-        return string.replace(pattern, replace);
-    }
-    function _prefixVertex(customDefines) {
-        var prefixContext = [
-            WebGLCapabilities.commonDefines,
-            customDefines,
-            egret3d.ShaderChunk.common_vert_def,
-            '\n'
-        ].filter(_filterEmptyLine).join('\n');
-        return prefixContext;
-    }
-    function _prefixFragment(customDefines) {
-        var prefixContext = [
-            WebGLCapabilities.commonExtensions,
-            WebGLCapabilities.commonDefines,
-            customDefines,
-            egret3d.ShaderChunk.common_frag_def,
-            WebGLCapabilities.toneMapping === ToneMapping.None ? '' : '#define TONE_MAPPING',
-            WebGLCapabilities.toneMapping === ToneMapping.None ? '' : egret3d.ShaderChunk.tonemapping_pars_fragment,
-            WebGLCapabilities.toneMapping === ToneMapping.None ? '' : _getToneMappingFunction(WebGLCapabilities.toneMapping),
-            '\n'
-        ].filter(_filterEmptyLine).join('\n');
-        return prefixContext;
-    }
-    function _getWebGLShader(type, webgl, gltfShader, defines) {
-        var shader = webgl.createShader(type);
-        var shaderContent = _parseIncludes(gltfShader.uri);
-        shaderContent = _unrollLoops(shaderContent);
-        webgl.shaderSource(shader, defines + shaderContent);
-        webgl.compileShader(shader);
-        var parameter = webgl.getShaderParameter(shader, webgl.COMPILE_STATUS);
-        if (!parameter) {
-            console.error("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?");
-            // if (confirm("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
-            //     alert(gltfShader.uri);
-            // }
-            webgl.deleteShader(shader);
             return null;
         }
-        return shader;
-    }
-    function _extractAttributes(webgl, program, technique) {
-        var webglProgram = program.program;
-        var attributes = program.attributes;
-        var totalAttributes = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_ATTRIBUTES);
-        for (var i = 0; i < totalAttributes; i++) {
-            var attribData = webgl.getActiveAttrib(webglProgram, i);
-            var location_1 = webgl.getAttribLocation(webglProgram, attribData.name);
-            var semantic = "";
-            if (!technique.attributes[attribData.name]) {
-                semantic = egret3d.globalAttributeSemantic[attribData.name];
-                if (!semantic) {
-                    console.error("未知Uniform定义：" + attribData.name);
+        function _getMaxShaderPrecision(gl, precision) {
+            if (precision === void 0) { precision = "highp"; }
+            if (precision === "highp") {
+                if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).precision > 0 &&
+                    gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT).precision > 0) {
+                    return "highp";
+                }
+                precision = "mediump";
+            }
+            if (precision === "mediump") {
+                if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT).precision > 0 &&
+                    gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT).precision > 0) {
+                    return "mediump";
                 }
             }
-            else {
-                semantic = technique.attributes[attribData.name].semantic;
-            }
-            attributes.push({ name: attribData.name, type: attribData.type, size: attribData.size, location: location_1, semantic: semantic });
+            return "lowp";
         }
-    }
-    function _extractUniforms(webgl, program, technique) {
-        var webglProgram = program.program;
-        var contextUniforms = program.contextUniforms;
-        var uniforms = program.uniforms;
-        var totalUniforms = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_UNIFORMS);
-        for (var i = 0; i < totalUniforms; i++) {
-            var uniformData = webgl.getActiveUniform(webglProgram, i);
-            var location_2 = webgl.getUniformLocation(webglProgram, uniformData.name);
-            var techniqueUniform = technique.uniforms[uniformData.name];
-            var semantic = "";
-            if (!techniqueUniform) {
-                semantic = egret3d.globalUniformSemantic[uniformData.name];
-                if (!semantic) {
-                    //不在自定义中，也不在全局Uniform中
-                    console.error("未知Uniform定义：" + uniformData.name);
-                }
+        function _getCommonExtensions(capabilities) {
+            var extensions = "";
+            if (capabilities.oes_standard_derivatives) {
+                extensions += "#extension GL_OES_standard_derivatives : enable \n";
             }
-            else {
-                semantic = techniqueUniform.semantic;
-            }
-            if (semantic) {
-                contextUniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, semantic: semantic, location: location_2 });
-            }
-            else {
-                uniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, location: location_2 });
-            }
+            return extensions;
         }
-    }
-    function _extractTextureUnits(program) {
-        var activeUniforms = program.contextUniforms.concat(program.uniforms);
-        var samplerArrayKeys = [];
-        var samplerKeys = [];
-        //排序
-        for (var _i = 0, activeUniforms_1 = activeUniforms; _i < activeUniforms_1.length; _i++) {
-            var uniform = activeUniforms_1[_i];
-            var key = uniform.name;
-            if (uniform.type === 35678 /* SAMPLER_2D */ || uniform.type === 35680 /* SAMPLER_CUBE */) {
-                if (key.indexOf("[") > -1) {
-                    samplerArrayKeys.push(key);
-                }
-                else {
-                    samplerKeys.push(key);
-                }
-            }
+        function _getCommonDefines(capabilities) {
+            var defines = "";
+            defines += "precision " + capabilities.maxPrecision + " float; \n";
+            defines += "precision " + capabilities.maxPrecision + " int; \n";
+            return defines;
         }
-        var textureUint = 0;
-        var allKeys = samplerKeys.concat(samplerArrayKeys);
-        for (var _a = 0, activeUniforms_2 = activeUniforms; _a < activeUniforms_2.length; _a++) {
-            var uniform = activeUniforms_2[_a];
-            if (allKeys.indexOf(uniform.name) < 0) {
-                continue;
-            }
-            if (!uniform.textureUnits) {
-                uniform.textureUnits = [];
-            }
-            uniform.textureUnits.length = uniform.size;
-            for (var i = 0; i < uniform.size; i++) {
-                uniform.textureUnits[i] = textureUint++;
-            }
-        }
-    }
-    var ToneMapping;
-    (function (ToneMapping) {
-        ToneMapping[ToneMapping["None"] = 0] = "None";
-        ToneMapping[ToneMapping["LinearToneMapping"] = 1] = "LinearToneMapping";
-        ToneMapping[ToneMapping["ReinhardToneMapping"] = 2] = "ReinhardToneMapping";
-        ToneMapping[ToneMapping["Uncharted2ToneMapping"] = 3] = "Uncharted2ToneMapping";
-        ToneMapping[ToneMapping["CineonToneMapping"] = 4] = "CineonToneMapping";
-    })(ToneMapping = egret3d.ToneMapping || (egret3d.ToneMapping = {}));
-    /**
-     * 内置提供的全局Attribute
-     * @internal
-     */
-    egret3d.globalAttributeSemantic = {
-        "corner": "_CORNER" /* _CORNER */,
-        "position": "POSITION" /* POSITION */,
-        "normal": "NORMAL" /* NORMAL */,
-        "uv": "TEXCOORD_0" /* TEXCOORD_0 */,
-        "uv2": "TEXCOORD_1" /* TEXCOORD_1 */,
-        "color": "COLOR_0" /* COLOR_0 */,
-        // "morphTarget0": gltf.AttributeSemanticType.MORPHTARGET_0,
-        // "morphTarget1": gltf.AttributeSemanticType.MORPHTARGET_1,
-        // "morphTarget2": gltf.AttributeSemanticType.MORPHTARGET_2,
-        // "morphTarget3": gltf.AttributeSemanticType.MORPHTARGET_3,
-        // "morphTarget4": gltf.AttributeSemanticType.MORPHTARGET_4,
-        // "morphTarget5": gltf.AttributeSemanticType.MORPHTARGET_5,
-        // "morphTarget6": gltf.AttributeSemanticType.MORPHTARGET_6,
-        // "morphTarget7": gltf.AttributeSemanticType.MORPHTARGET_7,
-        // "morphNormal0": gltf.AttributeSemanticType.MORPHNORMAL_0,
-        // "morphNormal1": gltf.AttributeSemanticType.MORPHNORMAL_1,
-        // "morphNormal2": gltf.AttributeSemanticType.MORPHNORMAL_2,
-        // "morphNormal3": gltf.AttributeSemanticType.MORPHNORMAL_3,
-        "skinIndex": "JOINTS_0" /* JOINTS_0 */,
-        "skinWeight": "WEIGHTS_0" /* WEIGHTS_0 */,
-        "startPosition": "_START_POSITION" /* _START_POSITION */,
-        "startVelocity": "_START_VELOCITY" /* _START_VELOCITY */,
-        "startColor": "_START_COLOR" /* _START_COLOR */,
-        "startSize": "_START_SIZE" /* _START_SIZE */,
-        "startRotation": "_START_ROTATION" /* _START_ROTATION */,
-        "time": "_TIME" /* _TIME */,
-        "random0": "_RANDOM0" /* _RANDOM0 */,
-        "random1": "_RANDOM1" /* _RANDOM1 */,
-        "startWorldPosition": "_WORLD_POSITION" /* _WORLD_POSITION */,
-        "startWorldRotation": "_WORLD_ROTATION" /* _WORLD_ROTATION */,
-        "lineDistance": "_INSTANCE_DISTANCE" /* _INSTANCE_DISTANCE */,
-        "instanceStart": "_INSTANCE_START" /* _INSTANCE_START */,
-        "instanceEnd": "_INSTANCE_END" /* _INSTANCE_END */,
-        "instanceColorStart": "_INSTANCE_COLOR_START" /* _INSTANCE_COLOR_START */,
-        "instanceColorEnd": "_INSTANCE_COLOR_END" /* _INSTANCE_COLOR_END */,
-        "instanceDistanceStart": "_INSTANCE_DISTANCE_START" /* _INSTANCE_DISTANCE_START */,
-        "instanceDistanceEnd": "_INSTANCE_DISTANCE_END" /* _INSTANCE_DISTANCE_END */,
-    };
-    /**
-     * 内置提供的全局Uniform
-     * @internal
-     */
-    egret3d.globalUniformSemantic = {
-        "modelMatrix": "MODEL" /* MODEL */,
-        "modelViewMatrix": "MODELVIEW" /* MODELVIEW */,
-        "projectionMatrix": "PROJECTION" /* PROJECTION */,
-        "viewMatrix": "VIEW" /* VIEW */,
-        "normalMatrix": "MODELVIEWINVERSE" /* MODELVIEWINVERSE */,
-        "modelViewProjectionMatrix": "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */,
-        "viewProjectionMatrix": "_VIEWPROJECTION" /* _VIEWPROJECTION */,
-        "cameraPosition": "_CAMERA_POS" /* _CAMERA_POS */,
-        "cameraForward": "_CAMERA_FORWARD" /* _CAMERA_FORWARD */,
-        "cameraUp": "_CAMERA_UP" /* _CAMERA_UP */,
-        "ambientLightColor": "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */,
-        "directionalLights[0]": "_DIRECTLIGHTS" /* _DIRECTLIGHTS */,
-        "pointLights[0]": "_POINTLIGHTS" /* _POINTLIGHTS */,
-        "spotLights[0]": "_SPOTLIGHTS" /* _SPOTLIGHTS */,
-        "boneMatrices[0]": "JOINTMATRIX" /* JOINTMATRIX */,
-        "directionalShadowMatrix[0]": "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */,
-        "spotShadowMatrix[0]": "_SPOTSHADOWMAT" /* _SPOTSHADOWMAT */,
-        "pointShadowMatrix[0]": "_POINTSHADOWMAT" /* _POINTSHADOWMAT */,
-        "directionalShadowMap[0]": "_DIRECTIONSHADOWMAP" /* _DIRECTIONSHADOWMAP */,
-        "spotShadowMap[0]": "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */,
-        "pointShadowMap[0]": "_POINTSHADOWMAP" /* _POINTSHADOWMAP */,
-        "lightMap": "_LIGHTMAPTEX" /* _LIGHTMAPTEX */,
-        "lightMapIntensity": "_LIGHTMAPINTENSITY" /* _LIGHTMAPINTENSITY */,
-        "lightMapScaleOffset": "_LIGHTMAP_SCALE_OFFSET" /* _LIGHTMAP_SCALE_OFFSET */,
-        "referencePosition": "_REFERENCEPOSITION" /* _REFERENCEPOSITION */,
-        "nearDistance": "_NEARDICTANCE" /* _NEARDICTANCE */,
-        "farDistance": "_FARDISTANCE" /* _FARDISTANCE */,
-        "fogColor": "_FOG_COLOR" /* _FOG_COLOR */,
-        "fogDensity": "_FOG_DENSITY" /* _FOG_DENSITY */,
-        "fogNear": "_FOG_NEAR" /* _FOG_NEAR */,
-        "fogFar": "_FOG_FAR" /* _FOG_FAR */,
-        "toneMappingExposure": "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */,
-        "toneMappingWhitePoint": "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */,
-    };
-    /**
-     * @private
-     */
-    var WebGLCapabilities = (function (_super) {
-        __extends(WebGLCapabilities, _super);
-        function WebGLCapabilities() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.precision = "highp";
-            return _this;
-        }
-        WebGLCapabilities.prototype.initialize = function (config) {
-            _super.prototype.initialize.call(this);
-            WebGLCapabilities.canvas = config.canvas;
-            WebGLCapabilities.webgl = config.webgl;
-            var webgl = WebGLCapabilities.webgl;
-            if (!webgl) {
-                return;
-            }
-            this.version = parseFloat(/^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION))[1]);
-            this.maxPrecision = _getMaxShaderPrecision(webgl, this.precision);
-            this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
-            this.maxVertexTextures = webgl.getParameter(webgl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
-            this.maxTextureSize = webgl.getParameter(webgl.MAX_TEXTURE_SIZE);
-            this.maxCubemapSize = webgl.getParameter(webgl.MAX_CUBE_MAP_TEXTURE_SIZE);
-            this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
-            this.floatTextures = !!_getExtension(webgl, "OES_texture_float");
-            this.anisotropyExt = _getExtension(webgl, "EXT_texture_filter_anisotropic");
-            this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
-            this.maxAnisotropy = (this.anisotropyExt !== null) ? webgl.getParameter(this.anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
-            // use dfdx and dfdy must enable OES_standard_derivatives
-            this.oes_standard_derivatives = !!_getExtension(webgl, "OES_standard_derivatives");
-            //TODO
-            WebGLCapabilities.commonExtensions = _getCommonExtensions(this);
-            WebGLCapabilities.commonDefines = _getCommonDefines(this);
-            egret3d.SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
-            console.info("WebGL version:", this.version);
-            console.info("Maximum shader precision:", this.maxPrecision);
-            console.info("Maximum texture count:", this.maxTextures);
-            console.info("Maximum vertex texture count:", this.maxVertexTextures);
-            console.info("Maximum texture size:", this.maxTextureSize);
-            console.info("Maximum cube map texture size:", this.maxCubemapSize);
-            console.info("Maximum vertex uniform vectors:", this.maxVertexUniformVectors);
-            console.info("Maximum GPU skinned bone count:", egret3d.SkinnedMeshRendererSystem.maxBoneCount);
+        /**
+         *
+         */
+        var ToneMapping;
+        (function (ToneMapping) {
+            ToneMapping[ToneMapping["None"] = 0] = "None";
+            ToneMapping[ToneMapping["LinearToneMapping"] = 1] = "LinearToneMapping";
+            ToneMapping[ToneMapping["ReinhardToneMapping"] = 2] = "ReinhardToneMapping";
+            ToneMapping[ToneMapping["Uncharted2ToneMapping"] = 3] = "Uncharted2ToneMapping";
+            ToneMapping[ToneMapping["CineonToneMapping"] = 4] = "CineonToneMapping";
+        })(ToneMapping = web.ToneMapping || (web.ToneMapping = {}));
+        /**
+         * 内置提供的全局Attribute
+         * @internal
+         */
+        web.globalAttributeSemantic = {
+            "corner": "_CORNER" /* _CORNER */,
+            "position": "POSITION" /* POSITION */,
+            "normal": "NORMAL" /* NORMAL */,
+            "uv": "TEXCOORD_0" /* TEXCOORD_0 */,
+            "uv2": "TEXCOORD_1" /* TEXCOORD_1 */,
+            "color": "COLOR_0" /* COLOR_0 */,
+            // "morphTarget0": gltf.AttributeSemanticType.MORPHTARGET_0,
+            // "morphTarget1": gltf.AttributeSemanticType.MORPHTARGET_1,
+            // "morphTarget2": gltf.AttributeSemanticType.MORPHTARGET_2,
+            // "morphTarget3": gltf.AttributeSemanticType.MORPHTARGET_3,
+            // "morphTarget4": gltf.AttributeSemanticType.MORPHTARGET_4,
+            // "morphTarget5": gltf.AttributeSemanticType.MORPHTARGET_5,
+            // "morphTarget6": gltf.AttributeSemanticType.MORPHTARGET_6,
+            // "morphTarget7": gltf.AttributeSemanticType.MORPHTARGET_7,
+            // "morphNormal0": gltf.AttributeSemanticType.MORPHNORMAL_0,
+            // "morphNormal1": gltf.AttributeSemanticType.MORPHNORMAL_1,
+            // "morphNormal2": gltf.AttributeSemanticType.MORPHNORMAL_2,
+            // "morphNormal3": gltf.AttributeSemanticType.MORPHNORMAL_3,
+            "skinIndex": "JOINTS_0" /* JOINTS_0 */,
+            "skinWeight": "WEIGHTS_0" /* WEIGHTS_0 */,
+            "startPosition": "_START_POSITION" /* _START_POSITION */,
+            "startVelocity": "_START_VELOCITY" /* _START_VELOCITY */,
+            "startColor": "_START_COLOR" /* _START_COLOR */,
+            "startSize": "_START_SIZE" /* _START_SIZE */,
+            "startRotation": "_START_ROTATION" /* _START_ROTATION */,
+            "time": "_TIME" /* _TIME */,
+            "random0": "_RANDOM0" /* _RANDOM0 */,
+            "random1": "_RANDOM1" /* _RANDOM1 */,
+            "startWorldPosition": "_WORLD_POSITION" /* _WORLD_POSITION */,
+            "startWorldRotation": "_WORLD_ROTATION" /* _WORLD_ROTATION */,
+            "lineDistance": "_INSTANCE_DISTANCE" /* _INSTANCE_DISTANCE */,
+            "instanceStart": "_INSTANCE_START" /* _INSTANCE_START */,
+            "instanceEnd": "_INSTANCE_END" /* _INSTANCE_END */,
+            "instanceColorStart": "_INSTANCE_COLOR_START" /* _INSTANCE_COLOR_START */,
+            "instanceColorEnd": "_INSTANCE_COLOR_END" /* _INSTANCE_COLOR_END */,
+            "instanceDistanceStart": "_INSTANCE_DISTANCE_START" /* _INSTANCE_DISTANCE_START */,
+            "instanceDistanceEnd": "_INSTANCE_DISTANCE_END" /* _INSTANCE_DISTANCE_END */,
         };
         /**
-         * @deprecated
+         * 内置提供的全局Uniform
+         * @internal
          */
-        WebGLCapabilities.canvas = null;
+        web.globalUniformSemantic = {
+            "modelMatrix": "MODEL" /* MODEL */,
+            "modelViewMatrix": "MODELVIEW" /* MODELVIEW */,
+            "projectionMatrix": "PROJECTION" /* PROJECTION */,
+            "viewMatrix": "VIEW" /* VIEW */,
+            "normalMatrix": "MODELVIEWINVERSE" /* MODELVIEWINVERSE */,
+            "modelViewProjectionMatrix": "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */,
+            "viewProjectionMatrix": "_VIEWPROJECTION" /* _VIEWPROJECTION */,
+            "cameraPosition": "_CAMERA_POS" /* _CAMERA_POS */,
+            "cameraForward": "_CAMERA_FORWARD" /* _CAMERA_FORWARD */,
+            "cameraUp": "_CAMERA_UP" /* _CAMERA_UP */,
+            "ambientLightColor": "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */,
+            "directionalLights[0]": "_DIRECTLIGHTS" /* _DIRECTLIGHTS */,
+            "pointLights[0]": "_POINTLIGHTS" /* _POINTLIGHTS */,
+            "spotLights[0]": "_SPOTLIGHTS" /* _SPOTLIGHTS */,
+            "boneMatrices[0]": "JOINTMATRIX" /* JOINTMATRIX */,
+            "directionalShadowMatrix[0]": "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */,
+            "spotShadowMatrix[0]": "_SPOTSHADOWMAT" /* _SPOTSHADOWMAT */,
+            "pointShadowMatrix[0]": "_POINTSHADOWMAT" /* _POINTSHADOWMAT */,
+            "directionalShadowMap[0]": "_DIRECTIONSHADOWMAP" /* _DIRECTIONSHADOWMAP */,
+            "spotShadowMap[0]": "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */,
+            "pointShadowMap[0]": "_POINTSHADOWMAP" /* _POINTSHADOWMAP */,
+            "lightMap": "_LIGHTMAPTEX" /* _LIGHTMAPTEX */,
+            "lightMapIntensity": "_LIGHTMAPINTENSITY" /* _LIGHTMAPINTENSITY */,
+            "lightMapScaleOffset": "_LIGHTMAP_SCALE_OFFSET" /* _LIGHTMAP_SCALE_OFFSET */,
+            "referencePosition": "_REFERENCEPOSITION" /* _REFERENCEPOSITION */,
+            "nearDistance": "_NEARDICTANCE" /* _NEARDICTANCE */,
+            "farDistance": "_FARDISTANCE" /* _FARDISTANCE */,
+            "fogColor": "_FOG_COLOR" /* _FOG_COLOR */,
+            "fogDensity": "_FOG_DENSITY" /* _FOG_DENSITY */,
+            "fogNear": "_FOG_NEAR" /* _FOG_NEAR */,
+            "fogFar": "_FOG_FAR" /* _FOG_FAR */,
+            "toneMappingExposure": "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */,
+            "toneMappingWhitePoint": "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */,
+        };
         /**
-         * @deprecated
+         * @internal
          */
-        WebGLCapabilities.webgl = null;
-        WebGLCapabilities.commonExtensions = "";
-        WebGLCapabilities.commonDefines = "";
-        //全局设置
-        WebGLCapabilities.toneMapping = ToneMapping.None;
-        WebGLCapabilities.toneMappingExposure = 1.0;
-        WebGLCapabilities.toneMappingWhitePoint = 1.0;
-        return WebGLCapabilities;
-    }(paper.SingletonComponent));
-    egret3d.WebGLCapabilities = WebGLCapabilities;
-    __reflect(WebGLCapabilities.prototype, "egret3d.WebGLCapabilities");
-    /**
-     * @private
-     */
-    var WebGLRenderState = (function (_super) {
-        __extends(WebGLRenderState, _super);
-        function WebGLRenderState() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.clearColor = egret3d.Color.create();
-            _this.viewPort = egret3d.Rectangle.create();
-            _this.renderTarget = null;
-            _this.render = null;
-            _this.draw = null;
-            _this._stateEnables = [3042 /* BLEND */, 2884 /* CULL_FACE */, 2929 /* DEPTH_TEST */]; // TODO
-            _this._programs = {};
-            _this._vsShaders = {};
-            _this._fsShaders = {};
-            _this._cacheStateEnable = {};
-            _this._cacheProgram = null;
-            _this._cacheState = null;
-            return _this;
-        }
-        WebGLRenderState.prototype._getWebGLProgram = function (vs, fs, customDefines) {
-            var webgl = WebGLCapabilities.webgl;
-            var program = webgl.createProgram();
-            var key = vs.name + customDefines;
-            var vertexShader = this._vsShaders[key];
-            if (!vertexShader) {
-                var prefixVertex = _prefixVertex(customDefines);
-                vertexShader = _getWebGLShader(webgl.VERTEX_SHADER, webgl, vs, prefixVertex);
-                this._vsShaders[key] = vertexShader;
+        var WebGLCapabilities = (function (_super) {
+            __extends(WebGLCapabilities, _super);
+            function WebGLCapabilities() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.precision = "highp";
+                return _this;
             }
-            key = fs.name + customDefines;
-            var fragmentShader = this._fsShaders[key];
-            if (!fragmentShader) {
-                var prefixFragment = _prefixFragment(customDefines);
-                fragmentShader = _getWebGLShader(webgl.FRAGMENT_SHADER, webgl, fs, prefixFragment);
-                this._fsShaders[key] = fragmentShader;
-            }
-            webgl.attachShader(program, vertexShader);
-            webgl.attachShader(program, fragmentShader);
-            webgl.linkProgram(program);
-            var parameter = webgl.getProgramParameter(program, webgl.LINK_STATUS);
-            if (!parameter) {
-                console.error("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
-                // alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
-                webgl.deleteProgram(program);
-                return null;
-            }
-            return program;
-        };
-        WebGLRenderState.prototype.initialize = function (renderSystem) {
-            _super.prototype.initialize.call(this);
-            if (renderSystem) {
-                this.render = renderSystem.render.bind(renderSystem);
-                this.draw = renderSystem.draw.bind(renderSystem);
-            }
-        };
-        WebGLRenderState.prototype.updateViewport = function (viewport, target) {
-            var webgl = WebGLCapabilities.webgl;
-            var w;
-            var h;
-            this.viewPort.copy(viewport);
-            this.renderTarget = target;
-            if (target) {
-                w = target.width;
-                h = target.height;
-                target.use();
-            }
-            else {
-                var stageViewport = egret3d.stage.viewport;
-                w = stageViewport.w;
-                h = stageViewport.h;
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-            }
-            webgl.viewport(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h);
-            webgl.depthRange(0.0, 1.0); // TODO
-        };
-        WebGLRenderState.prototype.updateState = function (state) {
-            if (this._cacheState === state) {
-                return;
-            }
-            this._cacheState = state;
-            var webgl = WebGLCapabilities.webgl;
-            var stateEnables = this._stateEnables;
-            var cacheStateEnable = this._cacheStateEnable;
-            for (var _i = 0, stateEnables_1 = stateEnables; _i < stateEnables_1.length; _i++) {
-                var e = stateEnables_1[_i];
-                var b = state ? state.enable && state.enable.indexOf(e) >= 0 : false;
-                if (cacheStateEnable[e] !== b) {
-                    cacheStateEnable[e] = b;
-                    b ? webgl.enable(e) : webgl.disable(e);
+            WebGLCapabilities.prototype.initialize = function (config) {
+                _super.prototype.initialize.call(this);
+                WebGLCapabilities.canvas = config.canvas;
+                WebGLCapabilities.webgl = config.webgl;
+                var webgl = WebGLCapabilities.webgl;
+                if (!webgl) {
+                    return;
                 }
-            }
-            // Functions.
-            if (state) {
-                var functions = state.functions;
-                if (functions) {
-                    for (var fun in functions) {
-                        webgl[fun].apply(webgl, functions[fun]);
-                    }
-                }
-            }
-        };
-        WebGLRenderState.prototype.clearState = function () {
-            for (var key in this._cacheStateEnable) {
-                delete this._cacheStateEnable[key];
-            }
-            this._cacheProgram = null;
-            this._cacheState = null;
-        };
-        WebGLRenderState.prototype.useProgram = function (program) {
-            if (this._cacheProgram !== program) {
-                this._cacheProgram = program;
-                WebGLCapabilities.webgl.useProgram(program.program);
-                return true;
-            }
-            return false;
-        };
-        WebGLRenderState.prototype.getProgram = function (material, technique, defines) {
-            var shader = material._shader;
-            var extensions = shader.config.extensions.KHR_techniques_webgl;
-            var vertexShader = extensions.shaders[0];
-            var fragShader = extensions.shaders[1];
-            var name = vertexShader.name + "_" + fragShader.name + "_" + defines; //TODO材质标脏可以优化
-            var webgl = WebGLCapabilities.webgl;
-            var program = this._programs[name];
-            if (!program) {
-                var webglProgram = this._getWebGLProgram(vertexShader, fragShader, defines);
-                if (webglProgram) {
-                    program = new egret3d.WebGLProgramBinder(webglProgram);
-                    this._programs[name] = program;
-                    _extractAttributes(webgl, program, technique);
-                    _extractUniforms(webgl, program, technique);
-                    _extractTextureUnits(program);
-                }
-            }
-            if (technique.program !== program.id) {
-                technique.program = program.id;
-            }
-            return program;
-        };
-        WebGLRenderState.prototype.clearBuffer = function (bufferBit, clearColor) {
-            var webgl = WebGLCapabilities.webgl;
-            if (bufferBit & 256 /* Depth */) {
-                webgl.depthMask(true);
-                webgl.clearDepth(1.0);
-            }
-            if (bufferBit & 1024 /* Stencil */) {
-                webgl.clearStencil(1.0);
-            }
-            if ((bufferBit & 16384 /* Color */) !== 0 && clearColor) {
-                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-            }
-            webgl.clear(bufferBit);
-        };
-        WebGLRenderState.prototype.copyFramebufferToTexture = function (screenPostion, target, level) {
-            if (level === void 0) { level = 0; }
-            var webgl = WebGLCapabilities.webgl;
-            webgl.activeTexture(webgl.TEXTURE0);
-            webgl.bindTexture(webgl.TEXTURE_2D, target.texture);
-            webgl.copyTexImage2D(webgl.TEXTURE_2D, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0); //TODO
-        };
-        return WebGLRenderState;
-    }(paper.SingletonComponent));
-    egret3d.WebGLRenderState = WebGLRenderState;
-    __reflect(WebGLRenderState.prototype, "egret3d.WebGLRenderState");
+                this.version = parseFloat(/^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION))[1]);
+                this.maxPrecision = _getMaxShaderPrecision(webgl, this.precision);
+                this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
+                this.maxVertexTextures = webgl.getParameter(webgl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+                this.maxTextureSize = webgl.getParameter(webgl.MAX_TEXTURE_SIZE);
+                this.maxCubemapSize = webgl.getParameter(webgl.MAX_CUBE_MAP_TEXTURE_SIZE);
+                this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
+                this.floatTextures = !!_getExtension(webgl, "OES_texture_float");
+                this.anisotropyExt = _getExtension(webgl, "EXT_texture_filter_anisotropic");
+                this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
+                this.maxAnisotropy = (this.anisotropyExt !== null) ? webgl.getParameter(this.anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
+                // use dfdx and dfdy must enable OES_standard_derivatives
+                this.oes_standard_derivatives = !!_getExtension(webgl, "OES_standard_derivatives");
+                //TODO
+                WebGLCapabilities.commonExtensions = _getCommonExtensions(this);
+                WebGLCapabilities.commonDefines = _getCommonDefines(this);
+                egret3d.SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
+                console.info("WebGL version:", this.version);
+                console.info("Maximum shader precision:", this.maxPrecision);
+                console.info("Maximum texture count:", this.maxTextures);
+                console.info("Maximum vertex texture count:", this.maxVertexTextures);
+                console.info("Maximum texture size:", this.maxTextureSize);
+                console.info("Maximum cube map texture size:", this.maxCubemapSize);
+                console.info("Maximum vertex uniform vectors:", this.maxVertexUniformVectors);
+                console.info("Maximum GPU skinned bone count:", egret3d.SkinnedMeshRendererSystem.maxBoneCount);
+            };
+            /**
+             * @deprecated
+             */
+            WebGLCapabilities.canvas = null;
+            /**
+             * @deprecated
+             */
+            WebGLCapabilities.webgl = null;
+            WebGLCapabilities.commonExtensions = "";
+            WebGLCapabilities.commonDefines = "";
+            WebGLCapabilities.toneMapping = ToneMapping.None;
+            WebGLCapabilities.toneMappingExposure = 1.0;
+            WebGLCapabilities.toneMappingWhitePoint = 1.0;
+            return WebGLCapabilities;
+        }(paper.SingletonComponent));
+        web.WebGLCapabilities = WebGLCapabilities;
+        __reflect(WebGLCapabilities.prototype, "egret3d.web.WebGLCapabilities");
+    })(web = egret3d.web || (egret3d.web = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    // 运行时 draw call 排序优化使用。
-    var _hashCode = 0;
-    /**
-     * @private
-     */
-    var WebGLProgramBinder = (function () {
-        function WebGLProgramBinder(webglProgram) {
-            this.id = _hashCode++;
-            this.attributes = [];
-            this.contextUniforms = [];
-            this.uniforms = [];
-            this.program = webglProgram;
+    var web;
+    (function (web) {
+        var _pattern = /#include +<([\w\d.]+)>/g;
+        function _replace(_match, include) {
+            if (!(include in egret3d.ShaderChunk)) {
+                throw new Error("Can not resolve #include <" + include + ">");
+            }
+            return _parseIncludes(egret3d.ShaderChunk[include]);
         }
-        return WebGLProgramBinder;
-    }());
-    egret3d.WebGLProgramBinder = WebGLProgramBinder;
-    __reflect(WebGLProgramBinder.prototype, "egret3d.WebGLProgramBinder");
+        function _filterEmptyLine(string) {
+            return string !== '';
+        }
+        function _parseIncludes(string) {
+            return string.replace(_pattern, _replace);
+        }
+        function _unrollLoops(string) {
+            var pattern = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
+            function replace(match, start, end, snippet) {
+                var unroll = '';
+                for (var i = parseInt(start); i < parseInt(end); i++) {
+                    unroll += snippet.replace(/\[ i \]/g, '[ ' + i + ' ]');
+                }
+                return unroll;
+            }
+            return string.replace(pattern, replace);
+        }
+        function _prefixVertex(customDefines) {
+            var prefixContext = [
+                web.WebGLCapabilities.commonDefines,
+                customDefines,
+                egret3d.ShaderChunk.common_vert_def,
+                '\n'
+            ].filter(_filterEmptyLine).join('\n');
+            return prefixContext;
+        }
+        function _prefixFragment(customDefines) {
+            var prefixContext = [
+                web.WebGLCapabilities.commonExtensions,
+                web.WebGLCapabilities.commonDefines,
+                customDefines,
+                egret3d.ShaderChunk.common_frag_def,
+                web.WebGLCapabilities.toneMapping === web.ToneMapping.None ? '' : '#define TONE_MAPPING',
+                web.WebGLCapabilities.toneMapping === web.ToneMapping.None ? '' : egret3d.ShaderChunk.tonemapping_pars_fragment,
+                web.WebGLCapabilities.toneMapping === web.ToneMapping.None ? '' : _getToneMappingFunction(web.WebGLCapabilities.toneMapping),
+                '\n'
+            ].filter(_filterEmptyLine).join('\n');
+            return prefixContext;
+        }
+        function _getToneMappingFunction(toneMapping) {
+            var toneMappingName;
+            switch (toneMapping) {
+                case web.ToneMapping.LinearToneMapping:
+                    toneMappingName = 'Linear';
+                    break;
+                case web.ToneMapping.ReinhardToneMapping:
+                    toneMappingName = 'Reinhard';
+                    break;
+                case web.ToneMapping.Uncharted2ToneMapping:
+                    toneMappingName = 'Uncharted2';
+                    break;
+                case web.ToneMapping.CineonToneMapping:
+                    toneMappingName = 'OptimizedCineon';
+                    break;
+                default:
+                    throw new Error('unsupported toneMapping: ' + toneMapping);
+            }
+            return 'vec3 toneMapping( vec3 color ) { return ' + toneMappingName + 'ToneMapping( color ); }';
+        }
+        function _getWebGLShader(type, webgl, gltfShader, defines) {
+            var shader = webgl.createShader(type);
+            var shaderContent = _parseIncludes(gltfShader.uri);
+            shaderContent = _unrollLoops(shaderContent);
+            webgl.shaderSource(shader, defines + shaderContent);
+            webgl.compileShader(shader);
+            var parameter = webgl.getShaderParameter(shader, webgl.COMPILE_STATUS);
+            if (!parameter) {
+                console.error("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?");
+                // if (confirm("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
+                //     alert(gltfShader.uri);
+                // }
+                webgl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+        function _extractAttributes(webgl, program, technique) {
+            var webglProgram = program.program;
+            var attributes = program.attributes;
+            var totalAttributes = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_ATTRIBUTES);
+            for (var i = 0; i < totalAttributes; i++) {
+                var attribData = webgl.getActiveAttrib(webglProgram, i);
+                var location_1 = webgl.getAttribLocation(webglProgram, attribData.name);
+                var semantic = "";
+                if (!technique.attributes[attribData.name]) {
+                    semantic = web.globalAttributeSemantic[attribData.name];
+                    if (!semantic) {
+                        console.error("未知Uniform定义：" + attribData.name);
+                    }
+                }
+                else {
+                    semantic = technique.attributes[attribData.name].semantic;
+                }
+                attributes.push({ name: attribData.name, type: attribData.type, size: attribData.size, location: location_1, semantic: semantic });
+            }
+        }
+        function _extractUniforms(webgl, program, technique) {
+            var webglProgram = program.program;
+            var contextUniforms = program.contextUniforms;
+            var uniforms = program.uniforms;
+            var totalUniforms = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_UNIFORMS);
+            for (var i = 0; i < totalUniforms; i++) {
+                var uniformData = webgl.getActiveUniform(webglProgram, i);
+                var location_2 = webgl.getUniformLocation(webglProgram, uniformData.name);
+                var techniqueUniform = technique.uniforms[uniformData.name];
+                var semantic = "";
+                if (!techniqueUniform) {
+                    semantic = web.globalUniformSemantic[uniformData.name];
+                    if (!semantic) {
+                        //不在自定义中，也不在全局Uniform中
+                        console.error("未知Uniform定义：" + uniformData.name);
+                    }
+                }
+                else {
+                    semantic = techniqueUniform.semantic;
+                }
+                if (semantic) {
+                    contextUniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, semantic: semantic, location: location_2 });
+                }
+                else {
+                    uniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, location: location_2 });
+                }
+            }
+        }
+        function _extractTextureUnits(program) {
+            var activeUniforms = program.contextUniforms.concat(program.uniforms);
+            var samplerArrayKeys = [];
+            var samplerKeys = [];
+            //排序
+            for (var _i = 0, activeUniforms_1 = activeUniforms; _i < activeUniforms_1.length; _i++) {
+                var uniform = activeUniforms_1[_i];
+                var key = uniform.name;
+                if (uniform.type === 35678 /* SAMPLER_2D */ || uniform.type === 35680 /* SAMPLER_CUBE */) {
+                    if (key.indexOf("[") > -1) {
+                        samplerArrayKeys.push(key);
+                    }
+                    else {
+                        samplerKeys.push(key);
+                    }
+                }
+            }
+            var textureUint = 0;
+            var allKeys = samplerKeys.concat(samplerArrayKeys);
+            for (var _a = 0, activeUniforms_2 = activeUniforms; _a < activeUniforms_2.length; _a++) {
+                var uniform = activeUniforms_2[_a];
+                if (allKeys.indexOf(uniform.name) < 0) {
+                    continue;
+                }
+                if (!uniform.textureUnits) {
+                    uniform.textureUnits = [];
+                }
+                uniform.textureUnits.length = uniform.size;
+                for (var i = 0; i < uniform.size; i++) {
+                    uniform.textureUnits[i] = textureUint++;
+                }
+            }
+        }
+        /**
+         * @internal
+         */
+        var WebGLRenderState = (function (_super) {
+            __extends(WebGLRenderState, _super);
+            function WebGLRenderState() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._stateEnables = [3042 /* BLEND */, 2884 /* CULL_FACE */, 2929 /* DEPTH_TEST */]; // TODO
+                _this._programs = {};
+                _this._vsShaders = {};
+                _this._fsShaders = {};
+                _this._cacheStateEnable = {};
+                _this._cacheProgram = null;
+                _this._cacheState = null;
+                return _this;
+            }
+            WebGLRenderState.prototype._getWebGLProgram = function (vs, fs, customDefines) {
+                var webgl = web.WebGLCapabilities.webgl;
+                var program = webgl.createProgram();
+                var key = vs.name + customDefines;
+                var vertexShader = this._vsShaders[key];
+                if (!vertexShader) {
+                    var prefixVertex = _prefixVertex(customDefines);
+                    vertexShader = _getWebGLShader(webgl.VERTEX_SHADER, webgl, vs, prefixVertex);
+                    this._vsShaders[key] = vertexShader;
+                }
+                key = fs.name + customDefines;
+                var fragmentShader = this._fsShaders[key];
+                if (!fragmentShader) {
+                    var prefixFragment = _prefixFragment(customDefines);
+                    fragmentShader = _getWebGLShader(webgl.FRAGMENT_SHADER, webgl, fs, prefixFragment);
+                    this._fsShaders[key] = fragmentShader;
+                }
+                webgl.attachShader(program, vertexShader);
+                webgl.attachShader(program, fragmentShader);
+                webgl.linkProgram(program);
+                var parameter = webgl.getProgramParameter(program, webgl.LINK_STATUS);
+                if (!parameter) {
+                    console.error("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
+                    // alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
+                    webgl.deleteProgram(program);
+                    return null;
+                }
+                return program;
+            };
+            WebGLRenderState.prototype.updateViewport = function (viewport, target) {
+                var webgl = web.WebGLCapabilities.webgl;
+                var w;
+                var h;
+                this.viewPort.copy(viewport);
+                this.renderTarget = target;
+                if (target) {
+                    w = target.width;
+                    h = target.height;
+                    target.use();
+                }
+                else {
+                    var stageViewport = egret3d.stage.viewport;
+                    w = stageViewport.w;
+                    h = stageViewport.h;
+                    webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+                }
+                webgl.viewport(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h);
+                webgl.depthRange(0.0, 1.0); // TODO
+            };
+            WebGLRenderState.prototype.clearBuffer = function (bufferBit, clearColor) {
+                var webgl = web.WebGLCapabilities.webgl;
+                if (bufferBit & 256 /* Depth */) {
+                    webgl.depthMask(true);
+                    webgl.clearDepth(1.0);
+                }
+                if (bufferBit & 1024 /* Stencil */) {
+                    webgl.clearStencil(1.0);
+                }
+                if ((bufferBit & 16384 /* Color */) !== 0 && clearColor) {
+                    webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                }
+                webgl.clear(bufferBit);
+            };
+            WebGLRenderState.prototype.copyFramebufferToTexture = function (screenPostion, target, level) {
+                if (level === void 0) { level = 0; }
+                var webgl = web.WebGLCapabilities.webgl;
+                webgl.activeTexture(webgl.TEXTURE0);
+                webgl.bindTexture(webgl.TEXTURE_2D, target.texture);
+                webgl.copyTexImage2D(webgl.TEXTURE_2D, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0); //TODO
+            };
+            WebGLRenderState.prototype.updateState = function (state) {
+                if (this._cacheState === state) {
+                    return;
+                }
+                this._cacheState = state;
+                var webgl = web.WebGLCapabilities.webgl;
+                var stateEnables = this._stateEnables;
+                var cacheStateEnable = this._cacheStateEnable;
+                for (var _i = 0, stateEnables_1 = stateEnables; _i < stateEnables_1.length; _i++) {
+                    var e = stateEnables_1[_i];
+                    var b = state ? state.enable && state.enable.indexOf(e) >= 0 : false;
+                    if (cacheStateEnable[e] !== b) {
+                        cacheStateEnable[e] = b;
+                        b ? webgl.enable(e) : webgl.disable(e);
+                    }
+                }
+                // Functions.
+                if (state) {
+                    var functions = state.functions;
+                    if (functions) {
+                        for (var fun in functions) {
+                            webgl[fun].apply(webgl, functions[fun]);
+                        }
+                    }
+                }
+            };
+            WebGLRenderState.prototype.clearState = function () {
+                for (var key in this._cacheStateEnable) {
+                    delete this._cacheStateEnable[key];
+                }
+                this._cacheProgram = null;
+                this._cacheState = null;
+            };
+            WebGLRenderState.prototype.useProgram = function (program) {
+                if (this._cacheProgram !== program) {
+                    this._cacheProgram = program;
+                    web.WebGLCapabilities.webgl.useProgram(program.program);
+                    return true;
+                }
+                return false;
+            };
+            WebGLRenderState.prototype.getProgram = function (material, technique, defines) {
+                var shader = material._shader;
+                var extensions = shader.config.extensions.KHR_techniques_webgl;
+                var vertexShader = extensions.shaders[0];
+                var fragShader = extensions.shaders[1];
+                var name = vertexShader.name + "_" + fragShader.name + "_" + defines; //TODO材质标脏可以优化
+                var webgl = web.WebGLCapabilities.webgl;
+                var program = this._programs[name];
+                if (!program) {
+                    var webglProgram = this._getWebGLProgram(vertexShader, fragShader, defines);
+                    if (webglProgram) {
+                        program = new web.WebGLProgramBinder(webglProgram);
+                        this._programs[name] = program;
+                        _extractAttributes(webgl, program, technique);
+                        _extractUniforms(webgl, program, technique);
+                        _extractTextureUnits(program);
+                    }
+                }
+                if (technique.program !== program.id) {
+                    technique.program = program.id;
+                }
+                return program;
+            };
+            return WebGLRenderState;
+        }(egret3d.RenderState));
+        web.WebGLRenderState = WebGLRenderState;
+        __reflect(WebGLRenderState.prototype, "egret3d.web.WebGLRenderState");
+        // Retarget.
+        egret3d.RenderState = WebGLRenderState;
+    })(web = egret3d.web || (egret3d.web = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var web;
+    (function (web) {
+        // 运行时 draw call 排序优化使用。
+        var _hashCode = 0;
+        /**
+         * @internal
+         */
+        var WebGLProgramBinder = (function () {
+            function WebGLProgramBinder(webglProgram) {
+                this.id = _hashCode++;
+                this.attributes = [];
+                this.contextUniforms = [];
+                this.uniforms = [];
+                this.program = webglProgram;
+            }
+            return WebGLProgramBinder;
+        }());
+        web.WebGLProgramBinder = WebGLProgramBinder;
+        __reflect(WebGLProgramBinder.prototype, "egret3d.web.WebGLProgramBinder");
+    })(web = egret3d.web || (egret3d.web = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -25205,7 +25147,7 @@ var egret3d;
             _this.height = height;
             _this.format = format;
             _this.mipmap = mipmap;
-            var webgl = egret3d.WebGLCapabilities.webgl;
+            var webgl = egret3d.web.WebGLCapabilities.webgl;
             if (webgl) {
                 _this.texture = webgl.createTexture();
             }
@@ -25262,7 +25204,7 @@ var egret3d;
             if (mirroredU === void 0) { mirroredU = false; }
             if (mirroredV === void 0) { mirroredV = false; }
             this.mipmap = mipmap;
-            var webgl = egret3d.WebGLCapabilities.webgl;
+            var webgl = egret3d.web.WebGLCapabilities.webgl;
             if (!webgl) {
                 return;
             }
@@ -25333,7 +25275,7 @@ var egret3d;
                 return false;
             }
             if (this.texture !== null) {
-                egret3d.WebGLCapabilities.webgl.deleteTexture(this.texture);
+                egret3d.web.WebGLCapabilities.webgl.deleteTexture(this.texture);
             }
             return true;
         };
@@ -25367,7 +25309,7 @@ var egret3d;
             this.height = height;
             var readData = new Uint8Array(this.width * this.height * 4);
             readData[0] = 2;
-            var webgl = egret3d.WebGLCapabilities.webgl;
+            var webgl = egret3d.web.WebGLCapabilities.webgl;
             if (webgl) {
                 var fbo = webgl.createFramebuffer();
                 var fbold = webgl.getParameter(webgl.FRAMEBUFFER_BINDING);
@@ -25511,7 +25453,7 @@ var egret3d;
             var height = this.height;
             var depth = this._depth;
             var stencil = this._stencil;
-            var webgl = egret3d.WebGLCapabilities.webgl;
+            var webgl = egret3d.web.WebGLCapabilities.webgl;
             this._fbo = webgl.createFramebuffer();
             this._fbo["width"] = width;
             this._fbo["height"] = height;
@@ -25547,7 +25489,7 @@ var egret3d;
             if (!_super.prototype.dispose.call(this)) {
                 return false;
             }
-            var webgl = egret3d.WebGLCapabilities.webgl;
+            var webgl = egret3d.web.WebGLCapabilities.webgl;
             if (this._renderbuffer) {
                 webgl.deleteRenderbuffer(this._renderbuffer);
             }
@@ -25576,7 +25518,7 @@ var egret3d;
         }
         GlRenderTarget.prototype.createTexture = function () {
             _super.prototype.createTexture.call(this);
-            var webgl = egret3d.WebGLCapabilities.webgl;
+            var webgl = egret3d.web.WebGLCapabilities.webgl;
             this.texture = webgl.createTexture();
             webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, 0);
@@ -25611,12 +25553,12 @@ var egret3d;
             webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, this.texture, 0);
         };
         GlRenderTarget.prototype.use = function () {
-            var webgl = egret3d.WebGLCapabilities.webgl;
+            var webgl = egret3d.web.WebGLCapabilities.webgl;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, this._fbo);
         };
         GlRenderTarget.prototype.generateMipmap = function () {
             if (this._mipmap) {
-                var webgl = egret3d.WebGLCapabilities.webgl;
+                var webgl = egret3d.web.WebGLCapabilities.webgl;
                 webgl.bindTexture(webgl.TEXTURE_2D, this.texture);
                 webgl.generateMipmap(webgl.TEXTURE_2D);
                 webgl.bindTexture(webgl.TEXTURE_2D, null);
@@ -25651,159 +25593,162 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    /**
-     * @internal
-     */
-    var WebGLMesh = (function (_super) {
-        __extends(WebGLMesh, _super);
-        function WebGLMesh() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.ibos = [];
-            _this.vbo = null;
-            return _this;
-        }
-        WebGLMesh.prototype.dispose = function () {
-            if (!_super.prototype.dispose.call(this)) {
-                return false;
+    var web;
+    (function (web) {
+        /**
+         * @internal
+         */
+        var WebGLMesh = (function (_super) {
+            __extends(WebGLMesh, _super);
+            function WebGLMesh() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.ibos = [];
+                _this.vbo = null;
+                return _this;
             }
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            if (webgl) {
-                for (var _i = 0, _a = this.ibos; _i < _a.length; _i++) {
-                    var ibo = _a[_i];
-                    webgl.deleteBuffer(ibo);
+            WebGLMesh.prototype.dispose = function () {
+                if (!_super.prototype.dispose.call(this)) {
+                    return false;
                 }
-                if (this.vbo) {
-                    webgl.deleteBuffer(this.vbo);
+                var webgl = web.WebGLCapabilities.webgl;
+                if (webgl) {
+                    for (var _i = 0, _a = this.ibos; _i < _a.length; _i++) {
+                        var ibo = _a[_i];
+                        webgl.deleteBuffer(ibo);
+                    }
+                    if (this.vbo) {
+                        webgl.deleteBuffer(this.vbo);
+                    }
                 }
-            }
-            this.ibos.length = 0;
-            this.vbo = null;
-            return true;
-        };
-        WebGLMesh.prototype.createBuffer = function () {
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            if (this.vbo || !webgl) {
-                return;
-            }
-            var vertexBufferViewAccessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION || 0);
-            var vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), 5126 /* Float */);
-            var vbo = webgl.createBuffer();
-            if (vbo) {
-                this.vbo = vbo;
-                var attributeNames = [];
-                for (var k in this._glTFMesh.primitives[0].attributes) {
-                    attributeNames.push(k);
+                this.ibos.length = 0;
+                this.vbo = null;
+                return true;
+            };
+            WebGLMesh.prototype.createBuffer = function () {
+                var webgl = web.WebGLCapabilities.webgl;
+                if (this.vbo || !webgl) {
+                    return;
                 }
-                var subMeshIndex = 0;
-                for (var _i = 0, _a = this._glTFMesh.primitives; _i < _a.length; _i++) {
-                    var primitive = _a[_i];
-                    if (primitive.indices !== undefined) {
-                        if (this.ibos.length === subMeshIndex) {
-                            var ibo = webgl.createBuffer();
-                            if (ibo) {
-                                this.ibos.push(ibo);
-                                webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
-                                webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this.getBufferLength(this.getAccessor(primitive.indices)), this.drawMode);
-                                this.uploadSubIndexBuffer(subMeshIndex);
+                var vertexBufferViewAccessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION || 0);
+                var vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), 5126 /* Float */);
+                var vbo = webgl.createBuffer();
+                if (vbo) {
+                    this.vbo = vbo;
+                    var attributeNames = [];
+                    for (var k in this._glTFMesh.primitives[0].attributes) {
+                        attributeNames.push(k);
+                    }
+                    var subMeshIndex = 0;
+                    for (var _i = 0, _a = this._glTFMesh.primitives; _i < _a.length; _i++) {
+                        var primitive = _a[_i];
+                        if (primitive.indices !== undefined) {
+                            if (this.ibos.length === subMeshIndex) {
+                                var ibo = webgl.createBuffer();
+                                if (ibo) {
+                                    this.ibos.push(ibo);
+                                    webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
+                                    webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this.getBufferLength(this.getAccessor(primitive.indices)), this.drawMode);
+                                    this.uploadSubIndexBuffer(subMeshIndex);
+                                }
+                                else {
+                                    console.error("Create webgl element buffer error.");
+                                }
                             }
                             else {
-                                console.error("Create webgl element buffer error.");
+                                console.error("Error arguments.");
                             }
                         }
-                        else {
+                        else if (this.ibos.length > 0) {
                             console.error("Error arguments.");
                         }
+                        subMeshIndex++;
                     }
-                    else if (this.ibos.length > 0) {
-                        console.error("Error arguments.");
-                    }
-                    subMeshIndex++;
+                    webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
+                    webgl.bufferData(webgl.ARRAY_BUFFER, vertexBuffer.byteLength, this.drawMode);
+                    this.uploadVertexBuffer(attributeNames);
                 }
+                else {
+                    console.error("Create webgl buffer error.");
+                }
+            };
+            WebGLMesh.prototype.uploadVertexBuffer = function (uploadAttributes, offset, count) {
+                if (uploadAttributes === void 0) { uploadAttributes = null; }
+                if (offset === void 0) { offset = 0; }
+                if (count === void 0) { count = 0; }
+                var webgl = web.WebGLCapabilities.webgl;
+                if (!this.vbo || !webgl) {
+                    return;
+                }
+                var attributes = this._glTFMesh.primitives[0].attributes;
                 webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
-                webgl.bufferData(webgl.ARRAY_BUFFER, vertexBuffer.byteLength, this.drawMode);
-                this.uploadVertexBuffer(attributeNames);
-            }
-            else {
-                console.error("Create webgl buffer error.");
-            }
-        };
-        WebGLMesh.prototype.uploadVertexBuffer = function (uploadAttributes, offset, count) {
-            if (uploadAttributes === void 0) { uploadAttributes = null; }
-            if (offset === void 0) { offset = 0; }
-            if (count === void 0) { count = 0; }
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            if (!this.vbo || !webgl) {
-                return;
-            }
-            var attributes = this._glTFMesh.primitives[0].attributes;
-            webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
-            if (!uploadAttributes) {
-                uploadAttributes = [];
-                for (var attributeName in this._glTFMesh.primitives[0].attributes) {
-                    uploadAttributes.push(attributeName);
+                if (!uploadAttributes) {
+                    uploadAttributes = [];
+                    for (var attributeName in this._glTFMesh.primitives[0].attributes) {
+                        uploadAttributes.push(attributeName);
+                    }
                 }
-            }
-            if (Array.isArray(uploadAttributes)) {
-                for (var _i = 0, uploadAttributes_1 = uploadAttributes; _i < uploadAttributes_1.length; _i++) {
-                    var attributeName = uploadAttributes_1[_i];
-                    var accessorIndex = attributes[attributeName];
+                if (Array.isArray(uploadAttributes)) {
+                    for (var _i = 0, uploadAttributes_1 = uploadAttributes; _i < uploadAttributes_1.length; _i++) {
+                        var attributeName = uploadAttributes_1[_i];
+                        var accessorIndex = attributes[attributeName];
+                        if (accessorIndex !== undefined) {
+                            var accessor = this.getAccessor(accessorIndex);
+                            var bufferOffset = this.getBufferOffset(accessor);
+                            var subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
+                            if (offset > 0) {
+                                var accessorTypeCount = this.getAccessorTypeCount(accessor.type);
+                                bufferOffset += offset * accessorTypeCount * this.getComponentTypeCount(accessor.componentType);
+                            }
+                            webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, subVertexBuffer);
+                        }
+                        else {
+                            console.warn("Error arguments.");
+                        }
+                    }
+                }
+                else {
+                    var accessorIndex = attributes[uploadAttributes];
                     if (accessorIndex !== undefined) {
                         var accessor = this.getAccessor(accessorIndex);
                         var bufferOffset = this.getBufferOffset(accessor);
-                        var subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
-                        if (offset > 0) {
-                            var accessorTypeCount = this.getAccessorTypeCount(accessor.type);
-                            bufferOffset += offset * accessorTypeCount * this.getComponentTypeCount(accessor.componentType);
-                        }
+                        var subVertexBuffer = this.createTypeArrayFromAccessor(accessor);
                         webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, subVertexBuffer);
                     }
                     else {
                         console.warn("Error arguments.");
                     }
                 }
-            }
-            else {
-                var accessorIndex = attributes[uploadAttributes];
-                if (accessorIndex !== undefined) {
-                    var accessor = this.getAccessor(accessorIndex);
-                    var bufferOffset = this.getBufferOffset(accessor);
-                    var subVertexBuffer = this.createTypeArrayFromAccessor(accessor);
-                    webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, subVertexBuffer);
+            };
+            WebGLMesh.prototype.uploadSubIndexBuffer = function (subMeshIndex) {
+                if (subMeshIndex === void 0) { subMeshIndex = 0; }
+                var webgl = web.WebGLCapabilities.webgl;
+                if (!this.vbo || !webgl) {
+                    return;
+                }
+                if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
+                    var primitive = this._glTFMesh.primitives[subMeshIndex];
+                    if (primitive.indices !== undefined) {
+                        var accessor = this.getAccessor(primitive.indices);
+                        var subIndexBuffer = this.createTypeArrayFromAccessor(accessor);
+                        var ibo = this.ibos[subMeshIndex];
+                        webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
+                        webgl.bufferSubData(webgl.ELEMENT_ARRAY_BUFFER, 0, subIndexBuffer);
+                    }
+                    else {
+                        console.warn("Error arguments.");
+                    }
                 }
                 else {
                     console.warn("Error arguments.");
                 }
-            }
-        };
-        WebGLMesh.prototype.uploadSubIndexBuffer = function (subMeshIndex) {
-            if (subMeshIndex === void 0) { subMeshIndex = 0; }
-            var webgl = egret3d.WebGLCapabilities.webgl;
-            if (!this.vbo || !webgl) {
-                return;
-            }
-            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh.primitives.length) {
-                var primitive = this._glTFMesh.primitives[subMeshIndex];
-                if (primitive.indices !== undefined) {
-                    var accessor = this.getAccessor(primitive.indices);
-                    var subIndexBuffer = this.createTypeArrayFromAccessor(accessor);
-                    var ibo = this.ibos[subMeshIndex];
-                    webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
-                    webgl.bufferSubData(webgl.ELEMENT_ARRAY_BUFFER, 0, subIndexBuffer);
-                }
-                else {
-                    console.warn("Error arguments.");
-                }
-            }
-            else {
-                console.warn("Error arguments.");
-            }
-        };
-        return WebGLMesh;
-    }(egret3d.Mesh));
-    egret3d.WebGLMesh = WebGLMesh;
-    __reflect(WebGLMesh.prototype, "egret3d.WebGLMesh");
-    // Retarget.
-    egret3d.Mesh = WebGLMesh;
+            };
+            return WebGLMesh;
+        }(egret3d.Mesh));
+        web.WebGLMesh = WebGLMesh;
+        __reflect(WebGLMesh.prototype, "egret3d.web.WebGLMesh");
+        // Retarget.
+        egret3d.Mesh = WebGLMesh;
+    })(web = egret3d.web || (egret3d.web = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -25861,7 +25806,7 @@ var egret3d;
                     size: { w: config.contentWidth, h: config.contentHeight },
                     screenSize: { w: screenWidth, h: screenHeight },
                 });
-                globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities, false, config); // TODO 下放到渲染系统初始化，但贴图对 webgl 有依赖。
+                globalGameObject.getOrAddComponent(web.WebGLCapabilities, false, config); // TODO 下放到渲染系统初始化，但贴图对 webgl 有依赖。
                 globalGameObject.getOrAddComponent(egret3d.DefaultMeshes);
                 globalGameObject.getOrAddComponent(egret3d.DefaultShaders);
                 globalGameObject.getOrAddComponent(egret3d.DefaultTextures);
@@ -25916,7 +25861,7 @@ var egret3d;
                 ];
                 _this._egret2DOrderCount = 0;
                 _this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
-                _this._renderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.WebGLRenderState, false, _this); // Set interface.
+                _this._renderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.RenderState, false, _this); // Set interface.
                 _this._lightCamera = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.Camera);
                 //
                 _this._cacheMaterialVerision = -1;
@@ -25930,13 +25875,13 @@ var egret3d;
             // const camera = this._lightCamera;
             // const renderState = this._renderState;
             // const isPointLight = light.constructor === PointLight;
-            // const shadowMaterial = isPointLight ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
+            // const shadowMaterial = isPointLight ? DefaultMaterials.SHADOW_DISTANCE : DefaultMaterials.SHADOW_DEPTH;
             // const drawCalls = this._drawCallCollecter;
             // const shadowCalls = drawCalls.shadowCalls;
             // const webgl = WebGLCapabilities.webgl!;
             // light.updateShadow(camera);
             // light.renderTarget.use();
-            // renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, egret3d.Color.WHITE);
+            // renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, Color.WHITE);
             // for (let i = 0, l = isPointLight ? 6 : 1; i < l; ++i) {
             //     const context = camera.context;
             //     if (isPointLight) {
@@ -26003,7 +25948,7 @@ var egret3d;
                 var material = drawMaterial || drawCall.material;
                 var shaderContextDefine = context.updateDrawCall(drawCall);
                 //
-                var webgl = egret3d.WebGLCapabilities.webgl;
+                var webgl = web.WebGLCapabilities.webgl;
                 var technique = material._glTFTechnique;
                 var techniqueState = technique.states || null;
                 var renderState = this._renderState;
@@ -26047,7 +25992,7 @@ var egret3d;
                 }
             };
             WebGLRenderSystem.prototype._updateGlobalUniforms = function (program, context) {
-                var webgl = egret3d.WebGLCapabilities.webgl;
+                var webgl = web.WebGLCapabilities.webgl;
                 var glUniforms = program.contextUniforms;
                 // TODO
                 var camera = context.camera;
@@ -26197,10 +26142,10 @@ var egret3d;
                             webgl.uniform1f(location_3, context.fogFar);
                             break;
                         case "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */:
-                            webgl.uniform1f(location_3, egret3d.WebGLCapabilities.toneMappingExposure);
+                            webgl.uniform1f(location_3, web.WebGLCapabilities.toneMappingExposure);
                             break;
                         case "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */:
-                            webgl.uniform1f(location_3, egret3d.WebGLCapabilities.toneMappingWhitePoint);
+                            webgl.uniform1f(location_3, web.WebGLCapabilities.toneMappingWhitePoint);
                             break;
                         default:
                             console.warn("不识别的Uniform语义:" + semantic);
@@ -26215,7 +26160,7 @@ var egret3d;
                 }
                 this._cacheMaterial = material;
                 this._cacheMaterialVerision = material._version;
-                var webgl = egret3d.WebGLCapabilities.webgl;
+                var webgl = web.WebGLCapabilities.webgl;
                 var unifroms = technique.uniforms;
                 var glUniforms = program.uniforms;
                 for (var _i = 0, glUniforms_2 = glUniforms; _i < glUniforms_2.length; _i++) {
@@ -26298,7 +26243,7 @@ var egret3d;
                 }
                 this._cacheSubMeshIndex = subMeshIndex;
                 this._cacheMesh = mesh;
-                var webgl = egret3d.WebGLCapabilities.webgl;
+                var webgl = web.WebGLCapabilities.webgl;
                 var primitive = mesh.glTFMesh.primitives[subMeshIndex];
                 // vbo.
                 var webglAttributes = program.attributes;
@@ -26369,7 +26314,7 @@ var egret3d;
                 egret3d.Camera.current = null;
             };
             WebGLRenderSystem.prototype.onUpdate = function () {
-                if (!egret3d.WebGLCapabilities.webgl) {
+                if (!web.WebGLCapabilities.webgl) {
                     return;
                 }
                 var isPlayerMode = paper.Application.playerMode === 0 /* Player */;
@@ -27093,48 +27038,157 @@ window.egret3d = egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 球体碰撞组件。
+     * 圆柱（锥）碰撞组件。
+     * - 与 Y 轴对齐。
      */
-    var SphereCollider = (function (_super) {
-        __extends(SphereCollider, _super);
-        function SphereCollider() {
+    var CylinderCollider = (function (_super) {
+        __extends(CylinderCollider, _super);
+        function CylinderCollider() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.colliderType = egret3d.ColliderType.Sphere;
+            _this.colliderType = egret3d.ColliderType.Cylinder;
             /**
-             * 描述该组件的球体。
+             * 该圆柱（锥）的顶部半径。
              */
-            _this.sphere = egret3d.Sphere.create(egret3d.Vector3.ZERO, 0.5);
+            _this.topRadius = 0.5;
+            /**
+             * 该圆柱（锥）的底部半径。
+             */
+            _this.bottomRadius = 0.5;
+            /**
+             * 该圆柱（锥）的高度。
+             */
+            _this.height = 1.0;
+            /**
+             * 该圆柱（锥）的中心点。
+             */
+            _this.center = egret3d.Vector3.create();
             return _this;
         }
-        SphereCollider.prototype.raycast = function (ray, raycastInfo) {
+        CylinderCollider.prototype.raycast = function (ray, raycastInfo) {
             var transform = this.gameObject.transform;
             var worldToLocalMatrix = transform.worldToLocalMatrix;
-            var localRay = egret3d.helpRay.applyMatrix(transform.worldToLocalMatrix, ray);
-            if (this.sphere.raycast(localRay, raycastInfo)) {
-                if (raycastInfo) {
-                    var localToWorldMatrix = transform.localToWorldMatrix;
-                    raycastInfo.distance = ray.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
-                    raycastInfo.transform = transform;
-                    raycastInfo.collider = this;
-                    var normal = raycastInfo.normal;
-                    if (normal) {
-                        // normal.applyDirection(localToWorldMatrix);
-                        normal.applyMatrix3(egret3d.helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
-                    }
+            var localRay = egret3d.helpRay.applyMatrix(worldToLocalMatrix, ray);
+            localRay.origin.subtract(this.center);
+            var end = egret3d.Vector3.create().multiplyScalar(999999.0, localRay.direction).add(localRay.origin).release();
+            // Oimo CylinderGeometr, ConeGeometry. TODO
+            var p1x = localRay.origin.x;
+            var p1y = localRay.origin.y;
+            var p1z = localRay.origin.z;
+            var p2x = end.x;
+            var p2y = end.y;
+            var p2z = end.z;
+            var height = this.height;
+            var halfHeight = height * 0.5;
+            var radius = this.bottomRadius;
+            // const dRadius = this.bottomRadius - this.topRadius;
+            // const ddd = Math.sqrt(dRadius * dRadius + height * height);
+            // const sinTheta = dRadius / ddd;
+            // const cosTheta = height / ddd;
+            var dx = p2x - p1x;
+            var dy = p2y - p1y;
+            var dz = p2z - p1z;
+            // Y
+            var tminy = 0.0;
+            var tmaxy = 1.0;
+            if (dy > 2.220446049250313e-16 /* EPSILON */ && dy < 2.220446049250313e-16 /* EPSILON */) {
+                if (p1y <= -halfHeight || p1y >= halfHeight) {
+                    return false;
                 }
-                return true;
             }
-            return false;
+            else {
+                var invDy = 1.0 / dy;
+                var t1 = (-halfHeight - p1y) * invDy;
+                var t2 = (halfHeight - p1y) * invDy;
+                if (t1 > t2) {
+                    var tmp = t1;
+                    t1 = t2;
+                    t2 = tmp;
+                }
+                if (t1 > 0.0)
+                    tminy = t1;
+                if (t2 < 1.0)
+                    tmaxy = t2;
+            }
+            if (tminy >= 1.0 || tmaxy <= 0.0)
+                return false;
+            // XZ
+            var tminxz = 0.0;
+            var tmaxxz = 1.0;
+            var a = dx * dx + dz * dz;
+            var b = p1x * dx + p1z * dz;
+            var c = (p1x * p1x + p1z * p1z) - radius * radius;
+            var d = b * b - a * c;
+            if (d < 0.0)
+                return false;
+            if (a > 0.0) {
+                var sqrtD = Math.sqrt(d);
+                tminxz = (-b - sqrtD) / a;
+                tmaxxz = (-b + sqrtD) / a;
+                if (tminxz >= 1.0 || tmaxxz <= 0.0)
+                    return false;
+            }
+            else {
+                if (c >= 0.0)
+                    return false;
+                tminxz = 0.0;
+                tmaxxz = 1.0;
+            }
+            var min;
+            if (tmaxxz <= tminy || tmaxy <= tminxz)
+                return false;
+            if (tminxz < tminy) {
+                min = tminy;
+                if (min === 0.0)
+                    return false; // the ray starts from inside
+                if (raycastInfo && raycastInfo.normal) {
+                    raycastInfo.normal.set(0.0, dy > 0.0 ? -1.0 : 1.0, 0.0);
+                }
+            }
+            else {
+                min = tminxz;
+                if (min === 0.0)
+                    return false; // the ray starts from inside
+                if (raycastInfo && raycastInfo.normal) {
+                    raycastInfo.normal.set(p1x + dx * min, 0.0, p1z + dz * min).normalize();
+                }
+            }
+            if (raycastInfo) {
+                var localToWorldMatrix = transform.localToWorldMatrix;
+                raycastInfo.distance = ray.origin.getDistance(raycastInfo.position
+                    .set(p1x + min * dx, p1y + min * dy, p1z + min * dz)
+                    .add(this.center)
+                    .applyMatrix(localToWorldMatrix));
+                raycastInfo.transform = transform;
+                raycastInfo.collider = this;
+                var normal = raycastInfo.normal;
+                if (normal) {
+                    // normal.applyDirection(localToWorldMatrix);
+                    normal.applyMatrix3(egret3d.helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
+                }
+            }
+            return true;
         };
         __decorate([
             paper.serializedField,
-            paper.editor.property("NESTED" /* NESTED */)
-        ], SphereCollider.prototype, "sphere", void 0);
-        SphereCollider = __decorate([
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+        ], CylinderCollider.prototype, "topRadius", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+        ], CylinderCollider.prototype, "bottomRadius", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+        ], CylinderCollider.prototype, "height", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property("VECTOR3" /* VECTOR3 */)
+        ], CylinderCollider.prototype, "center", void 0);
+        CylinderCollider = __decorate([
             paper.allowMultiple
-        ], SphereCollider);
-        return SphereCollider;
+        ], CylinderCollider);
+        return CylinderCollider;
     }(paper.BaseComponent));
-    egret3d.SphereCollider = SphereCollider;
-    __reflect(SphereCollider.prototype, "egret3d.SphereCollider", ["egret3d.ISphereCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
+    egret3d.CylinderCollider = CylinderCollider;
+    __reflect(CylinderCollider.prototype, "egret3d.CylinderCollider", ["egret3d.IRaycast"]);
 })(egret3d || (egret3d = {}));

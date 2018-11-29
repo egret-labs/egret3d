@@ -3,6 +3,15 @@ namespace egret3d {
      * Egret 传统 2D 渲染系统。
      */
     export class Egret2DRendererSystem extends paper.BaseSystem {
+        /**
+         * @deprecated
+         */
+        public static canvas: HTMLCanvasElement | null = null;
+        /**
+         * @deprecated
+         */
+        public static webgl: WebGLRenderingContext | null = null;
+
         protected readonly _interests = [
             { componentClass: Egret2DRenderer }
         ];
@@ -71,10 +80,17 @@ namespace egret3d {
         }
 
         public onAwake(config: RunEgretOptions) {
+            Egret2DRendererSystem.canvas = config.canvas!;
+            Egret2DRendererSystem.webgl = config.webgl!;
+            const webgl = Egret2DRendererSystem.webgl;
+            if (!webgl) {
+                return;
+            }
+
             const webInput = this.webInput;
 
             if (webInput) {
-                const canvas = config.canvas!;
+                const canvas = Egret2DRendererSystem.canvas!;
                 webInput._initStageDelegateDiv(canvas.parentNode as HTMLDivElement, canvas);
                 webInput.$updateSize();
             }
@@ -85,6 +101,13 @@ namespace egret3d {
             inputCollecter.onPointerCancel.add(this._onTouchEnd, this);
             inputCollecter.onPointerUp.add(this._onTouchEnd, this);
             inputCollecter.onPointerMove.add(this._onTouchMove, this);
+        }
+
+        public onDisable() {
+            inputCollecter.onPointerDown.remove(this._onTouchStart, this);
+            inputCollecter.onPointerCancel.remove(this._onTouchEnd, this);
+            inputCollecter.onPointerUp.remove(this._onTouchEnd, this);
+            inputCollecter.onPointerMove.remove(this._onTouchMove, this);
         }
 
         public onAddGameObject(gameObject: paper.GameObject) {
@@ -104,13 +127,6 @@ namespace egret3d {
             for (const gameObject of this._groups[0].gameObjects) {
                 (gameObject.renderer as Egret2DRenderer).update(deltaTime, w, h);
             }
-        }
-
-        public onDisable() {
-            inputCollecter.onPointerDown.remove(this._onTouchStart, this);
-            inputCollecter.onPointerCancel.remove(this._onTouchEnd, this);
-            inputCollecter.onPointerUp.remove(this._onTouchEnd, this);
-            inputCollecter.onPointerMove.remove(this._onTouchMove, this);
         }
     }
 }
