@@ -57,9 +57,8 @@ namespace egret3d {
         extensions: {
             paper: {
                 frameRate: number;
-                frameCount: number;
-                events: GLTFAnimationFrameEvent[];
                 clips: GLTFAnimationClip[];
+                events?: GLTFAnimationFrameEvent[];
             };
         };
     }
@@ -82,6 +81,10 @@ namespace egret3d {
          * 事件名称。
          */
         name: string;
+        /**
+         * 
+         */
+        position: number;
         /**
          * 事件 int 变量。
          */

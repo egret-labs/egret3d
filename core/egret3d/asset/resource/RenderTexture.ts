@@ -1,4 +1,7 @@
 namespace egret3d {
+    /**
+     * 
+     */
     export abstract class BaseRenderTexture extends egret3d.BaseTexture {
         protected _mipmap: boolean = false;
         protected constructor(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource | null,
@@ -24,7 +27,9 @@ namespace egret3d {
         public activateRenderTexture(index?: number): void { }
         public generateMipmap(): boolean { return false; }
     }
-
+    /**
+     * 
+     */
     export class RenderTexture extends egret3d.BaseRenderTexture {
         public static create(name: string, width: number, height: number, depth: boolean = false, stencil: boolean = false, mipmap: boolean = false, linear: boolean = false): RenderTexture {
             let magFilter = gltf.TextureFilter.LINEAR;

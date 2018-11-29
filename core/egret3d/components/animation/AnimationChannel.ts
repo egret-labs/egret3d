@@ -29,8 +29,6 @@ namespace egret3d {
         public updateTarget: ((animationlayer: AnimationLayer, animationState: AnimationState) => void) | null;
         public binder: AnimationBinder | null;
 
-        public frameIndex?: uint;
-
         private constructor() {
             super();
         }
@@ -39,22 +37,6 @@ namespace egret3d {
             this.isEnd = false;
             this.updateTarget = null;
             this.binder = null;
-
-            this.frameIndex = undefined;
-        }
-
-        private _crossFrameEvent(frameIndex: uint, events: GLTFAnimationFrameEvent[], animationState: AnimationState) {
-            const components = this.components as Animation;
-            const outputBuffer = this.outputBuffer;
-            const eventIndices = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]);
-
-            if (eventIndices >= 0) {
-                components.gameObject.sendMessage(
-                    "onAnimationEvent",
-                    AnimationEvent.create(AnimationEventType.KeyFrame, animationState, events[eventIndices]),
-                    false
-                );
-            }
         }
 
         public onUpdateTranslation(animationlayer: AnimationLayer, animationState: AnimationState) {
@@ -342,50 +324,6 @@ namespace egret3d {
                 else {
                     (components as Transform).gameObject.activeSelf = activeSelf;
                 }
-            }
-        }
-
-        public onUpdateFrameEvent(animationlayer: AnimationLayer, animationState: AnimationState) {
-            const events = animationState.animation.extensions.paper.events;
-            if (!events) {
-                return;
-            }
-
-            const currentTime = animationState._currentTime;
-            const frameIndex = this.getFrameIndex(currentTime);
-
-            if (this.frameIndex !== frameIndex) {
-                const inputBuffer = this.inputBuffer;
-
-                const frameCount = this.inputBuffer.length;
-                const begin = animationState.animationClip.position;
-                const end = begin + animationState.animationClip.duration;
-                let crossedFrameIndex = this.frameIndex !== undefined ? this.frameIndex : 0;
-
-                // TODO isReverse
-
-                while (crossedFrameIndex >= 0) {
-                    if (crossedFrameIndex < frameCount - 1) {
-                        crossedFrameIndex++;
-                    }
-                    else {
-                        crossedFrameIndex = 0;
-                    }
-
-                    const framePosition = inputBuffer[crossedFrameIndex];
-
-                    if (begin <= framePosition && framePosition <= end) { // Support interval play.
-                        this._crossFrameEvent(crossedFrameIndex, events, animationState);
-                    }
-
-                    // TODO Add loop complete event before first frame.
-
-                    if (crossedFrameIndex === frameIndex) {
-                        break;
-                    }
-                }
-
-                this.frameIndex = frameIndex;
             }
         }
 

@@ -114,7 +114,7 @@ namespace egret3d.web {
         "instanceColorEnd": gltf.AttributeSemanticType._INSTANCE_COLOR_END,
         "instanceDistanceStart": gltf.AttributeSemanticType._INSTANCE_DISTANCE_START,
         "instanceDistanceEnd": gltf.AttributeSemanticType._INSTANCE_DISTANCE_END,
-    }
+    };
 
     /**
      * 内置提供的全局Uniform
@@ -158,7 +158,7 @@ namespace egret3d.web {
 
         "toneMappingExposure": gltf.UniformSemanticType._TONE_MAPPING_EXPOSURE,
         "toneMappingWhitePoint": gltf.UniformSemanticType._TONE_MAPPING_WHITE_POINT,
-    }
+    };
     /**
      * TODO 与 WebGLRenderState 合并。
      * @internal

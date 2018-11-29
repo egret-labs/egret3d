@@ -76,6 +76,7 @@ namespace egret3d {
 
         private _updateAnimationState(animationFadeState: AnimationFadeState, animationState: AnimationState, deltaTime: number, forceUpdate: boolean) {
             const animation = this._animation!;
+            const gameObject = animation.gameObject;
             const animationLayer = this._animationLayer!;
             // const animationNode = animationState.animationNode;
 
@@ -98,6 +99,7 @@ namespace egret3d {
             const playTimes = animationState.playTimes;
             const duration = animationState.animationClip.duration;
             const totalTime = playTimes * duration;
+            let currentTime = 0.0;
 
             if (playTimes > 0 && (animationState._time >= totalTime || animationState._time <= -totalTime)) {
                 if (animationState._playState <= 0 && animationState._playheadEnabled) {
@@ -108,10 +110,10 @@ namespace egret3d {
 
                 if (animationState._time >= totalTime) {
                     // currentTime = duration + Const.EPSILON; // Precision problem.
-                    animationState._currentTime = duration; // TODO CHECK.
+                    currentTime = duration; // TODO CHECK.
                 }
                 else {
-                    animationState._currentTime = 0.0;
+                    currentTime = 0.0;
                 }
             }
             else {
@@ -122,15 +124,16 @@ namespace egret3d {
                 if (animationState._time < 0.0) {
                     animationState._time = -animationState._time;
                     animationState.currentPlayTimes = (animationState._time / duration) >> 0;
-                    animationState._currentTime = duration - (animationState._time % duration);
+                    currentTime = duration - (animationState._time % duration);
                 }
                 else {
                     animationState.currentPlayTimes = (animationState._time / duration) >> 0;
-                    animationState._currentTime = animationState._time % duration;
+                    currentTime = animationState._time % duration;
                 }
             }
 
-            animationState._currentTime += animationState.animationClip.position;
+            currentTime += animationState.animationClip.position;
+            animationState._currentTime = currentTime;
 
             if (forceUpdate || weight !== 0.0) {
                 for (const channel of animationState.channels) {
@@ -145,15 +148,28 @@ namespace egret3d {
                     }
                 }
             }
+            //
+            const frameEvents = animationState.animation.extensions.paper.events;
+            if (deltaTime !== 0.0 && frameEvents) {
+                for (const event of frameEvents) {
+                    if (prevTime <= event.position && event.position < currentTime) {
+                        gameObject.sendMessage(
+                            "onAnimationEvent",
+                            AnimationEvent.create(AnimationEventType.KeyFrame, animationState, event),
+                            false
+                        );
+                    }
+                }
+            }
 
             // this._events; // TODO buffer event.
 
             if (prevPlayState === -1 && animationState._playState !== -1) {
-                animation.gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.Start, animationState), false);
+                gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.Start, animationState), false);
             }
 
             if (animationState.currentPlayTimes !== prevPlayTimes) {
-                animation.gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.LoopComplete, animationState), false);
+                gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.LoopComplete, animationState), false);
 
                 if (animationState._playState === 1) {
                     const clipNames = animationLayer._clipNames;
@@ -161,7 +177,7 @@ namespace egret3d {
                         animation.play(clipNames.shift()!);
                     }
                     else {
-                        animation.gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.Complete, animationState), false);
+                        gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.Complete, animationState), false);
                     }
                 }
             }

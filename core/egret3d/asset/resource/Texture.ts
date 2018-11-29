@@ -1,6 +1,7 @@
 namespace egret3d {
     /**
-     * 纹理资源。
+     * 基础纹理资源。
+     * - 纹理资源的基类。
      */
     export abstract class BaseTexture extends GLTFAsset {
         protected _gltfTexture: GLTFTexture | null = null;
@@ -86,7 +87,9 @@ namespace egret3d {
             return this._gltfTexture!;
         }
     }
-
+    /**
+     * 纹理资源。
+     */
     export class Texture extends BaseTexture {
         public static create(name: string, source: GLTF, width?: number, height?: number): Texture;
         public static create(name: string, source: ArrayBufferView | gltf.ImageSource, width: number, height: number, format?: gltf.TextureFormat): Texture;
