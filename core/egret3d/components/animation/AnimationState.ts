@@ -173,7 +173,7 @@ namespace egret3d {
             this._playheadEnabled = true;
             this._playState = -1;
             this._time = 0.0;
-            this._currentTime = 0.0;
+            this._currentTime = -1.0;
             this._globalWeight = 0.0;
         }
         /**
@@ -187,95 +187,90 @@ namespace egret3d {
             this.animationClip = animationClip;
             this.animationNode = animationNode;
 
-            if (!this.animation.channels) {
-                return;
-            }
+            if (this.animation.channels) {
+                const rootGameObject = animation.gameObject;
+                const children = rootGameObject.transform.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
+                children["__root__"] = rootGameObject.transform; // 
 
-            const rootGameObject = animation.gameObject;
-            const children = rootGameObject.transform.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
-            children["__root__"] = rootGameObject.transform; // 
+                for (const glTFChannel of this.animation.channels) {
+                    const nodeIndex = glTFChannel.target.node;
+                    const pathName = glTFChannel.target.path;
 
-            for (const glTFChannel of this.animation.channels) {
-                const nodeIndex = glTFChannel.target.node;
-                const pathName = glTFChannel.target.path;
+                    if (nodeIndex === undefined) {
+                        // const channel = AnimationChannel.create();
+                        // channel.components = animation;
+                        // this.channels.push(channel);
 
-                if (nodeIndex === undefined) {
-                    const channel = AnimationChannel.create();
-                    channel.components = animation;
-
-                    switch (pathName) {
-                        case "frameEvent":
-                            channel.updateTarget = channel.onUpdateTranslation;
-                            break;
-
-                        default:
-                            console.warn("Unknown animation channel.", pathName);
-                            break;
+                        switch (pathName) {
+                            default:
+                                console.warn("Unknown animation channel.", pathName);
+                                break;
+                        }
                     }
-                }
-                else {
-                    const nodeName = this.animationAsset.getNode(nodeIndex).name!;
-                    if (!(nodeName in children)) {
-                        continue;
-                    }
+                    else {
+                        const nodeName = this.animationAsset.getNode(nodeIndex).name!;
+                        if (!(nodeName in children)) {
+                            continue;
+                        }
 
-                    const channel = AnimationChannel.create();
-                    const transforms = children[nodeName];
-                    const binder = animation._getBinder(nodeName, pathName);
+                        const channel = AnimationChannel.create();
+                        const transforms = children[nodeName];
+                        const binder = animation._getBinder(nodeName, pathName);
 
-                    channel.glTFChannel = glTFChannel;
-                    channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
-                    channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input));
-                    channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output));
-                    channel.binder = binder;
-                    channel.components = transforms; // TODO 更多组件
-                    this.channels.push(channel);
+                        channel.glTFChannel = glTFChannel;
+                        channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
+                        channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input));
+                        channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output));
+                        channel.binder = binder;
+                        channel.components = transforms; // TODO 更多组件
+                        this.channels.push(channel);
 
-                    switch (pathName) {
-                        case "translation":
-                            channel.updateTarget = channel.onUpdateTranslation;
-                            if (!binder.bindPose) {
-                                binder.bindPose = Vector3.create().copy((transforms as Transform).localPosition);
-                            }
-                            break;
+                        switch (pathName) {
+                            case "translation":
+                                channel.updateTarget = channel.onUpdateTranslation;
+                                if (!binder.bindPose) {
+                                    binder.bindPose = Vector3.create().copy((transforms as Transform).localPosition);
+                                }
+                                break;
 
-                        case "rotation":
-                            channel.updateTarget = channel.onUpdateRotation;
-                            if (!binder.bindPose) {
-                                binder.bindPose = Quaternion.create().copy((transforms as Transform).localRotation);
-                            }
-                            break;
+                            case "rotation":
+                                channel.updateTarget = channel.onUpdateRotation;
+                                if (!binder.bindPose) {
+                                    binder.bindPose = Quaternion.create().copy((transforms as Transform).localRotation);
+                                }
+                                break;
 
-                        case "scale":
-                            channel.updateTarget = channel.onUpdateScale;
-                            if (!binder.bindPose) {
-                                binder.bindPose = Vector3.create().copy((transforms as Transform).localScale);
-                            }
-                            break;
+                            case "scale":
+                                channel.updateTarget = channel.onUpdateScale;
+                                if (!binder.bindPose) {
+                                    binder.bindPose = Vector3.create().copy((transforms as Transform).localScale);
+                                }
+                                break;
 
-                        case "weights":
-                            // TODO
-                            break;
+                            case "weights":
+                                // TODO
+                                break;
 
-                        case "custom":
-                            switch (channel.glTFChannel.extensions!.paper.type) {
-                                case "paper.GameObject":
-                                    switch (channel.glTFChannel.extensions!.paper.property) {
-                                        case "activeSelf":
-                                            channel.updateTarget = channel.onUpdateActive;
-                                            break;
-                                    }
-                                    break;
+                            case "custom":
+                                switch (channel.glTFChannel.extensions!.paper.type) {
+                                    case "paper.GameObject":
+                                        switch (channel.glTFChannel.extensions!.paper.property) {
+                                            case "activeSelf":
+                                                channel.updateTarget = channel.onUpdateActive;
+                                                break;
+                                        }
+                                        break;
 
-                                default:
-                                    console.warn("Unknown animation channel.", channel.glTFChannel.extensions!.paper.type);
-                                    break;
-                            }
-                            break;
+                                    default:
+                                        console.warn("Unknown animation channel.", channel.glTFChannel.extensions!.paper.type);
+                                        break;
+                                }
+                                break;
 
-                        default:
-                            console.warn("Unknown animation channel.", pathName);
-                            break;
+                            default:
+                                console.warn("Unknown animation channel.", pathName);
+                                break;
+                        }
                     }
                 }
             }

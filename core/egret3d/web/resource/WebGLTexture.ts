@@ -1,6 +1,12 @@
+/**
+ * @internal
+ */
 type GlobalWeblGLTexture = WebGLTexture;
-namespace egret3d.web {
 
+namespace egret3d.web {
+    /**
+     * @internal
+     */
     export interface IWebGLTexture {
         webglTexture: GlobalWeblGLTexture | null;
     }
