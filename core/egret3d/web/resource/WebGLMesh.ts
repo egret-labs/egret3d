@@ -11,8 +11,9 @@ namespace egret3d.web {
                 return false;
             }
 
-            const webgl = WebGLCapabilities.webgl;
-            if (webgl) {
+            if (this.vbo) {
+                const webgl = WebGLCapabilities.webgl!;
+
                 for (const ibo of this.ibos) {
                     webgl.deleteBuffer(ibo);
                 }
@@ -29,13 +30,9 @@ namespace egret3d.web {
         }
 
         public createBuffer() {
-            const webgl = WebGLCapabilities.webgl;
-            if (this.vbo || !webgl) {
-                return;
-            }
-
             const vertexBufferViewAccessor = this.getAccessor(this._glTFMesh!.primitives[0].attributes.POSITION || 0);
             const vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float);
+            const webgl = WebGLCapabilities.webgl!;
             const vbo = webgl.createBuffer();
 
             if (vbo) {
@@ -82,12 +79,12 @@ namespace egret3d.web {
         }
 
         public uploadVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]) | null = null, offset: number = 0, count: number = 0) {
-            const webgl = WebGLCapabilities.webgl;
-            if (!this.vbo || !webgl) {
+            if (!this.vbo) {
                 return;
             }
 
             const { attributes } = this._glTFMesh!.primitives[0];
+            const webgl = WebGLCapabilities.webgl!;
             webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
 
             if (!uploadAttributes) {
@@ -130,8 +127,7 @@ namespace egret3d.web {
         }
 
         public uploadSubIndexBuffer(subMeshIndex: number = 0) {
-            const webgl = WebGLCapabilities.webgl;
-            if (!this.vbo || !webgl) {
+            if (!this.vbo) {
                 return;
             }
 
@@ -142,6 +138,7 @@ namespace egret3d.web {
                     const accessor = this.getAccessor(primitive.indices);
                     const subIndexBuffer = this.createTypeArrayFromAccessor(accessor);
                     const ibo = this.ibos[subMeshIndex];
+                    const webgl = WebGLCapabilities.webgl!;
                     webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
                     webgl.bufferSubData(webgl.ELEMENT_ARRAY_BUFFER, 0, subIndexBuffer);
                 }

@@ -15,7 +15,7 @@ namespace egret3d {
     export class AnimationEvent extends paper.BaseRelease<AnimationEvent> {
         private static _instances = [] as AnimationEvent[];
 
-        public static create(type: AnimationEventType, animationState: AnimationState, keyFrameEvent: GLTFKeyFrameEvent | null = null) {
+        public static create(type: AnimationEventType, animationState: AnimationState, keyFrameEvent: GLTFAnimationFrameEvent | null = null) {
             let instance: AnimationEvent | null = null;
             if (this._instances.length > 0) {
                 instance = this._instances.pop()!;
@@ -27,14 +27,14 @@ namespace egret3d {
 
             instance.type = type;
             instance.animationState = animationState;
-            instance.keyFrameEvent = keyFrameEvent;
+            instance.frameEvent = keyFrameEvent;
 
             return instance;
         }
 
         public type: AnimationEventType = AnimationEventType.Start;
         public animationState: AnimationState = null!;
-        public keyFrameEvent: GLTFKeyFrameEvent | null = null;
+        public frameEvent: GLTFAnimationFrameEvent | null = null;
 
         private constructor() {
             super();

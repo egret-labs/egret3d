@@ -17,7 +17,7 @@ namespace egret3d.web {
         return null;
     }
 
-    function _getMaxShaderPrecision(gl: WebGLRenderingContext, precision: string = "highp") {
+    function _getMaxShaderPrecision(gl: WebGLRenderingContext, precision: "lowp" | "mediump" | "highp") {
         if (precision === "highp") {
             if (
                 gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT)!.precision > 0 &&
@@ -160,6 +160,7 @@ namespace egret3d.web {
         "toneMappingWhitePoint": gltf.UniformSemanticType._TONE_MAPPING_WHITE_POINT,
     }
     /**
+     * TODO 与 WebGLRenderState 合并。
      * @internal
      */
     export class WebGLCapabilities extends paper.SingletonComponent {
@@ -179,8 +180,6 @@ namespace egret3d.web {
         public static toneMappingWhitePoint: number = 1.0;
 
         public version: number;
-
-        public precision: string = "highp";
 
         public maxPrecision: string;
 
@@ -222,7 +221,7 @@ namespace egret3d.web {
 
             this.version = parseFloat(/^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION))![1]);
 
-            this.maxPrecision = _getMaxShaderPrecision(webgl, this.precision);
+            this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
 
             this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
 

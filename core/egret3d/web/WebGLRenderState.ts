@@ -363,7 +363,6 @@ namespace egret3d.web {
             return program;
         }
     }
-
     // Retarget.
     egret3d.RenderState = WebGLRenderState;
 }

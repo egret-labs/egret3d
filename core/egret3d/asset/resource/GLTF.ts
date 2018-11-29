@@ -49,20 +49,44 @@ namespace egret3d {
     export interface GLTFAnimation extends gltf.Animation {
         extensions: {
             paper: {
-                /**
-                 * 动画帧率。
-                 */
                 frameRate: number;
-                /**
-                 * 动画帧数。
-                 */
                 frameCount: number;
-                /**
-                 * 动画剪辑列表。
-                 */
+                events: GLTFAnimationFrameEvent[];
                 clips: GLTFAnimationClip[];
             };
         };
+    }
+    /**
+     * 
+     */
+    export interface GLTFAnimationChannel extends gltf.AnimationChannel {
+        extensions?: {
+            paper: {
+                type: string,
+                property: string,
+            }
+        };
+    }
+    /**
+     * 
+     */
+    export interface GLTFAnimationFrameEvent {
+        /**
+         * 事件名称。
+         */
+        name: string;
+        /**
+         * 事件 int 变量。
+         */
+        intVariable?: int;
+        /**
+         * 事件 float 变量。
+         */
+        floatVariable?: number;
+        /**
+         * 事件 string 变量。
+         */
+        stringVariable?: string;
     }
     /**
      * 
@@ -84,50 +108,6 @@ namespace egret3d {
          * 持续时间。（以秒为单位）
          */
         duration: number;
-        // /**
-        //  * 遮罩名称列表。
-        //  */
-        // mask: number[];
-        // /**
-        //  * 事件列表。
-        //  */
-        // events: GLTFFrameEvent[];
-    }
-    /**
-     * 
-     */
-    export interface GLTFAnimationChannel extends gltf.AnimationChannel {
-        extensions?: {
-            paper: {
-                type: string,
-                property: string,
-            }
-        };
-    }
-    /**
-     * 
-     */
-    export interface GLTFKeyFrameEvent {
-        /**
-         * 事件名称。
-         */
-        name: string;
-        /**
-         * 事件位置。（%）
-         */
-        position: number;
-        /**
-         * 事件 int 变量。
-         */
-        intVariable?: number;
-        /**
-         * 事件 float 变量。
-         */
-        floatVariable?: number;
-        /**
-         * 事件 string 变量。
-         */
-        stringVariable?: string;
     }
     /**
      * glTF 资源。
