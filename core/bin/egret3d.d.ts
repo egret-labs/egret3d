@@ -1335,6 +1335,7 @@ declare namespace egret3d {
         extensions: {
             KHR_techniques_webgl?: gltf.KhrTechniqueWebglGlTfExtension;
             paper?: {
+                masks?: SkinMask[];
                 animationControllers?: {
                     parameters: AnimationParameter[];
                     layers: AnimationLayer[];
@@ -1345,111 +1346,9 @@ declare namespace egret3d {
         extensionsRequired: string[];
     }
     /**
-     *
-     */
-    interface GLTFTexture extends gltf.Texture {
-        extensions: {
-            paper?: {
-                mipmap?: boolean;
-                flipY?: 0 | 1;
-                premultiplyAlpha?: 0 | 1;
-                format?: gltf.TextureFormat;
-                width?: number;
-                height?: number;
-                anisotropy?: number;
-                type?: gltf.TextureDataType;
-                unpackAlignment?: gltf.TextureAlignment;
-                depthBuffer?: boolean;
-                stencilBuffer?: boolean;
-            };
-        };
-    }
-    /**
-     *
-     */
-    interface GLTFMaterial extends gltf.Material {
-        extensions: {
-            KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
-            paper: {
-                renderQueue: uint;
-                defines?: string[];
-                states?: gltf.States;
-            };
-        };
-    }
-    /**
-     *
-     */
-    interface GLTFAnimation extends gltf.Animation {
-        extensions: {
-            paper: {
-                frameRate: number;
-                clips: GLTFAnimationClip[];
-                events?: GLTFAnimationFrameEvent[];
-            };
-        };
-    }
-    /**
-     *
-     */
-    interface GLTFAnimationChannel extends gltf.AnimationChannel {
-        extensions?: {
-            paper: {
-                type: string;
-                property: string;
-            };
-        };
-    }
-    /**
-     *
-     */
-    interface GLTFAnimationFrameEvent {
-        /**
-         * 事件名称。
-         */
-        name: string;
-        /**
-         *
-         */
-        position: number;
-        /**
-         * 事件 int 变量。
-         */
-        intVariable?: int;
-        /**
-         * 事件 float 变量。
-         */
-        floatVariable?: number;
-        /**
-         * 事件 string 变量。
-         */
-        stringVariable?: string;
-    }
-    /**
-     *
-     */
-    interface GLTFAnimationClip {
-        /**
-         * 动画剪辑名称。
-         */
-        name: string;
-        /**
-         * 播放次数。
-         */
-        playTimes?: uint;
-        /**
-         * 开始时间。（以秒为单位）
-         */
-        position: number;
-        /**
-         * 持续时间。（以秒为单位）
-         */
-        duration: number;
-    }
-    /**
      * glTF 资源。
      */
-    class GLTFAsset extends paper.Asset {
+    abstract class GLTFAsset extends paper.Asset {
         protected static _createConfig(): GLTF;
         /**
          * 从二进制数据中解析。
@@ -1518,11 +1417,11 @@ declare namespace egret3d {
         /**
          * 通过 Accessor 索引，获取指定 Accessor。
          */
-        getAccessor(index: gltf.GLTFIndex): gltf.Accessor;
+        getAccessor(index: gltf.Index): gltf.Accessor;
         /**
          * 获取节点。
          */
-        getNode(index: gltf.GLTFIndex): gltf.Node;
+        getNode(index: gltf.Index): gltf.Node;
     }
 }
 declare namespace gltf {
@@ -1594,7 +1493,7 @@ declare namespace gltf {
     /**
      * glTF index.
      */
-    type GLTFIndex = uint;
+    type Index = uint;
     /**
      * BufferView target.
      */
@@ -1824,7 +1723,7 @@ declare namespace gltf {
         /**
          * The index of the bufferView with sparse indices. Referenced bufferView can't have ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target.
          */
-        bufferView: GLTFIndex;
+        bufferView: Index;
         /**
          * The offset relative to the start of the bufferView in bytes. Must be aligned.
          */
@@ -1843,7 +1742,7 @@ declare namespace gltf {
         /**
          * The index of the bufferView with sparse values. Referenced bufferView can't have ARRAY_BUFFER or ELEMENT_ARRAY_BUFFER target.
          */
-        bufferView: GLTFIndex;
+        bufferView: Index;
         /**
          * The offset relative to the start of the bufferView in bytes. Must be aligned.
          */
@@ -1877,7 +1776,7 @@ declare namespace gltf {
         /**
          * The index of the bufferView.
          */
-        bufferView?: GLTFIndex;
+        bufferView?: Index;
         /**
          * The offset relative to the start of the bufferView in bytes.
          */
@@ -1921,7 +1820,7 @@ declare namespace gltf {
         /**
          * The index of the node to target.
          */
-        node?: GLTFIndex;
+        node?: Index;
         /**
          * The name of the node's TRS property to modify, or the "weights" of the Morph Targets it instantiates. For the "translation" property, the values that are provided by the sampler are the translation along the x, y, and z axes. For the "rotation" property, the values are a quaternion in the order (x, y, z, w), where w is the scalar. For the "scale" property, the values are the scaling factors along the x, y, and z axes.
          */
@@ -1936,7 +1835,7 @@ declare namespace gltf {
         /**
          * The index of a sampler in this animation used to compute the value for the target.
          */
-        sampler: GLTFIndex;
+        sampler: Index;
         /**
          * The index of the node and TRS property to target.
          */
@@ -1951,7 +1850,7 @@ declare namespace gltf {
         /**
          * The index of an accessor containing keyframe input values, e.g., time.
          */
-        input: GLTFIndex;
+        input: Index;
         /**
          * Interpolation algorithm.
          */
@@ -1959,7 +1858,7 @@ declare namespace gltf {
         /**
          * The index of an accessor, containing keyframe output values.
          */
-        output: GLTFIndex;
+        output: Index;
         extensions?: any;
         extras?: any;
     }
@@ -2025,7 +1924,7 @@ declare namespace gltf {
         /**
          * The index of the buffer.
          */
-        buffer: GLTFIndex;
+        buffer: Index;
         /**
          * The offset into the buffer in bytes.
          */
@@ -2127,7 +2026,7 @@ declare namespace gltf {
         /**
          * The index of the bufferView that contains the image. Use this instead of the image's uri property.
          */
-        bufferView?: GLTFIndex;
+        bufferView?: Index;
         name?: string;
         extensions?: any;
         extras?: any;
@@ -2139,7 +2038,7 @@ declare namespace gltf {
         /**
          * The index of the texture.
          */
-        index: GLTFIndex;
+        index: Index;
         /**
          * The set index of texture's TEXCOORD attribute used for texture coordinate mapping.
          */
@@ -2242,25 +2141,25 @@ declare namespace gltf {
          * A dictionary object, where each key corresponds to mesh attribute semantic and each value is the index of the accessor containing attribute's data.
          */
         attributes: {
-            POSITION?: GLTFIndex;
-            NORMAL?: GLTFIndex;
-            TANGENT?: GLTFIndex;
-            TEXCOORD_0?: GLTFIndex;
-            TEXCOORD_1?: GLTFIndex;
-            COLOR_0?: GLTFIndex;
-            COLOR_1?: GLTFIndex;
-            JOINTS_0?: GLTFIndex;
-            WEIGHTS_0?: GLTFIndex;
-            [k: string]: GLTFIndex | undefined;
+            POSITION?: Index;
+            NORMAL?: Index;
+            TANGENT?: Index;
+            TEXCOORD_0?: Index;
+            TEXCOORD_1?: Index;
+            COLOR_0?: Index;
+            COLOR_1?: Index;
+            JOINTS_0?: Index;
+            WEIGHTS_0?: Index;
+            [k: string]: Index | undefined;
         };
         /**
          * The index of the accessor that contains the indices.
          */
-        indices?: GLTFIndex;
+        indices?: Index;
         /**
          * The index of the material to apply to this primitive when rendering.
          */
-        material?: GLTFIndex;
+        material?: Index;
         /**
          * The type of primitives to render.
          */
@@ -2269,7 +2168,7 @@ declare namespace gltf {
          * An array of Morph Targets, each  Morph Target is a dictionary mapping attributes (only `POSITION`, `NORMAL`, and `TANGENT` supported) to their deviations in the Morph Target.
          */
         targets?: {
-            [k: string]: GLTFIndex;
+            [k: string]: Index;
         }[];
         extensions?: any;
         extras?: any;
@@ -2297,15 +2196,15 @@ declare namespace gltf {
         /**
          * The index of the camera referenced by this node.
          */
-        camera?: GLTFIndex;
+        camera?: Index;
         /**
          * The indices of this node's children.
          */
-        children?: GLTFIndex[];
+        children?: Index[];
         /**
          * The index of the skin referenced by this node.
          */
-        skin?: GLTFIndex;
+        skin?: Index;
         /**
          * A floating-point 4x4 transformation matrix stored in column-major order.
          */
@@ -2313,7 +2212,7 @@ declare namespace gltf {
         /**
          * The index of the mesh in this node.
          */
-        mesh?: GLTFIndex;
+        mesh?: Index;
         /**
          * The node's unit quaternion rotation in the order (x, y, z, w), where w is the scalar.
          */
@@ -2365,7 +2264,7 @@ declare namespace gltf {
         /**
          * The indices of each root node.
          */
-        nodes?: GLTFIndex[];
+        nodes?: Index[];
         name?: string;
         extensions?: any;
         extras?: any;
@@ -2377,15 +2276,15 @@ declare namespace gltf {
         /**
          * The index of the accessor containing the floating-point 4x4 inverse-bind matrices.  The default is that each matrix is a 4x4 identity matrix, which implies that inverse-bind matrices were pre-applied.
          */
-        inverseBindMatrices?: GLTFIndex;
+        inverseBindMatrices?: Index;
         /**
          * The index of the node used as a skeleton root. When undefined, joints transforms resolve to scene root.
          */
-        skeleton?: GLTFIndex;
+        skeleton?: Index;
         /**
          * Indices of skeleton nodes, used as joints in this skin.
          */
-        joints: GLTFIndex[];
+        joints: Index[];
         name?: string;
         extensions?: any;
         extras?: any;
@@ -2397,11 +2296,11 @@ declare namespace gltf {
         /**
          * The index of the sampler used by this texture. When undefined, a sampler with repeat wrapping and auto filtering should be used.
          */
-        sampler?: GLTFIndex;
+        sampler?: Index;
         /**
          * The index of the image used by this texture.
          */
-        source?: GLTFIndex;
+        source?: Index;
         name?: string;
         extensions?: any;
         extras?: any;
@@ -2465,7 +2364,7 @@ declare namespace gltf {
         /**
          * The index of the default scene.
          */
-        scene?: GLTFIndex;
+        scene?: Index;
         /**
          * An array of scenes.
          */
@@ -2496,7 +2395,7 @@ declare namespace gltf {
         /**
          * The index of the bufferView that contains the GLSL shader source. Use this instead of the shader's uri property.
          */
-        bufferView?: GLTFIndex;
+        bufferView?: Index;
         name: any;
         extensions?: any;
         extras?: any;
@@ -2525,7 +2424,7 @@ declare namespace gltf {
         /**
          * The index of the node whose transform is used as the uniform's value.
          */
-        node?: GLTFIndex;
+        node?: Index;
         /**
          * The uniform type.
          */
@@ -2550,7 +2449,7 @@ declare namespace gltf {
         /**
          * The index of the program.
          */
-        program?: GLTFIndex;
+        program?: Index;
         /**
          * A dictionary object of `Attribute` objects.
          */
@@ -2582,11 +2481,11 @@ declare namespace gltf {
         /**
          * The index of the fragment shader.
          */
-        fragmentShader: GLTFIndex;
+        fragmentShader: Index;
         /**
          * The index of the vertex shader.
          */
-        vertexShader: GLTFIndex;
+        vertexShader: Index;
         /**
          * The names of required WebGL 1.0 extensions.
          */
@@ -3171,6 +3070,26 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+    /**
+     *
+     */
+    interface GLTFTexture extends gltf.Texture {
+        extensions: {
+            paper?: {
+                mipmap?: boolean;
+                flipY?: 0 | 1;
+                premultiplyAlpha?: 0 | 1;
+                format?: gltf.TextureFormat;
+                width?: number;
+                height?: number;
+                anisotropy?: number;
+                type?: gltf.TextureDataType;
+                unpackAlignment?: gltf.TextureAlignment;
+                depthBuffer?: boolean;
+                stencilBuffer?: boolean;
+            };
+        };
+    }
     /**
      * 基础纹理资源。
      * - 纹理资源的基类。
@@ -4144,6 +4063,25 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+    /**
+     *
+     */
+    interface GLTFSkin extends gltf.Skin {
+        extensions: {
+            paper: {
+                retargeting?: {
+                    [key: string]: uint;
+                };
+            };
+        };
+    }
+    /**
+     *
+     */
+    interface SkinMask {
+        retargeting: string[];
+        joints?: gltf.Index[];
+    }
     /**
      * 网格资源。
      */
@@ -8284,6 +8222,19 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
+     *
+     */
+    interface GLTFMaterial extends gltf.Material {
+        extensions: {
+            KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
+            paper: {
+                renderQueue: uint;
+                defines?: string[];
+                states?: gltf.States;
+            };
+        };
+    }
+    /**
      * 材质资源。
      */
     class Material extends GLTFAsset {
@@ -8621,6 +8572,75 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
+     *
+     */
+    interface GLTFAnimation extends gltf.Animation {
+        extensions: {
+            paper: {
+                frameRate: number;
+                clips: GLTFAnimationClip[];
+                events?: GLTFAnimationFrameEvent[];
+            };
+        };
+    }
+    /**
+     *
+     */
+    interface GLTFAnimationChannel extends gltf.AnimationChannel {
+        extensions?: {
+            paper: {
+                type: string;
+                property: string;
+            };
+        };
+    }
+    /**
+     *
+     */
+    interface GLTFAnimationFrameEvent {
+        /**
+         * 事件名称。
+         */
+        name: string;
+        /**
+         *
+         */
+        position: number;
+        /**
+         * 事件 int 变量。
+         */
+        intVariable?: int;
+        /**
+         * 事件 float 变量。
+         */
+        floatVariable?: number;
+        /**
+         * 事件 string 变量。
+         */
+        stringVariable?: string;
+    }
+    /**
+     *
+     */
+    interface GLTFAnimationClip {
+        /**
+         * 动画剪辑名称。
+         */
+        name: string;
+        /**
+         * 播放次数。
+         */
+        playTimes?: uint;
+        /**
+         * 开始时间。（以秒为单位）
+         */
+        position: number;
+        /**
+         * 持续时间。（以秒为单位）
+         */
+        duration: number;
+    }
+    /**
      * 动画资源。
      */
     class AnimationAsset extends GLTFAsset {
@@ -8697,6 +8717,7 @@ declare namespace egret3d {
      */
     class AnimationController extends GLTFAsset {
         static create(): AnimationController;
+        private constructor();
         createLayer(name: string): AnimationLayer;
         createAnimationTree(machineOrTreen: StateMachine | AnimationTree, name: string): AnimationTree;
         createAnimationNode(machineOrTreen: StateMachine | AnimationTree, asset: string, clip: string): AnimationNode;
@@ -10221,7 +10242,7 @@ declare namespace egret3d.utils {
 }
 declare namespace egret3d.web {
 }
-declare namespace egret3d.web {
+declare namespace egret3d {
     /**
      *
      */

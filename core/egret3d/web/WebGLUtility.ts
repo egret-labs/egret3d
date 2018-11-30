@@ -15,7 +15,7 @@ namespace egret3d.web {
         }
 
         public static setTexturexParameters(isPowerOfTwo: boolean, sampler: gltf.Sampler) {
-            const webgl = web.WebGLCapabilities.webgl!;
+            const webgl = WebGLCapabilities.webgl!;
             const magFilter = sampler.magFilter!;
             const minFilter = sampler.minFilter!;
             const wrapS = sampler.wrapS!;

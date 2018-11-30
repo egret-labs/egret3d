@@ -19,7 +19,7 @@ namespace egret3d.web {
             if (!this._image || !this._image.uri) {
                 return;
             }
-            const webgl = web.WebGLCapabilities.webgl!;
+            const webgl = WebGLCapabilities.webgl!;
             if (!this.webglTexture) {
                 this.webglTexture = webgl.createTexture();
             }
@@ -244,7 +244,7 @@ namespace egret3d.web {
             const readData = new Uint8Array(this.width * this.height * 4);
             readData[0] = 2;
 
-            const webgl = web.WebGLCapabilities.webgl;
+            const webgl = WebGLCapabilities.webgl;
             if (webgl) {
                 const fbo = webgl.createFramebuffer();
                 const fbold = webgl.getParameter(webgl.FRAMEBUFFER_BINDING);

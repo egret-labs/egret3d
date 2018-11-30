@@ -16137,7 +16137,7 @@ var egret3d;
             this.root = new egret.DisplayObjectContainer();
             this.stage.addChild(this.root);
             if (!this._renderer) {
-                this._renderer = egret.web.Renderer.getInstance(egret3d.Egret2DRendererSystem.webgl);
+                this._renderer = egret.web.Renderer.getInstance(egret3d.WebGLCapabilities.webgl || egret3d.Egret2DRendererSystem.webgl);
             }
             var stage = this.stage;
             var displayList = new egret.sys.DisplayList(stage);
@@ -23276,10 +23276,10 @@ var egret3d;
     var AnimationController = (function (_super) {
         __extends(AnimationController, _super);
         function AnimationController() {
-            return _super !== null && _super.apply(this, arguments) || this;
+            return _super.call(this) || this;
         }
         AnimationController.create = function () {
-            var controller = new AnimationController();
+            var asset = new AnimationController();
             var config = this._createConfig();
             config.extensions = {
                 paper: {
@@ -23289,8 +23289,8 @@ var egret3d;
                         }]
                 },
             };
-            controller.config = config;
-            return controller;
+            asset.config = config;
+            return asset;
         };
         AnimationController.prototype.createLayer = function (name) {
             var layers = this.layers;
@@ -24884,7 +24884,7 @@ var egret3d;
                 return 9729 /* LINEAR */;
             };
             WebGLUtility.setTexturexParameters = function (isPowerOfTwo, sampler) {
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 var magFilter = sampler.magFilter;
                 var minFilter = sampler.minFilter;
                 var wrapS = sampler.wrapS;
@@ -24917,207 +24917,204 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    var web;
-    (function (web) {
-        var _browserPrefixes = [
-            "",
-            "MOZ_",
-            "OP_",
-            "WEBKIT_",
-        ];
-        function _getExtension(gl, name) {
-            for (var _i = 0, _browserPrefixes_1 = _browserPrefixes; _i < _browserPrefixes_1.length; _i++) {
-                var prefixedName = _browserPrefixes_1[_i];
-                var extension = gl.getExtension(prefixedName + name);
-                if (extension) {
-                    return extension;
-                }
+    var _browserPrefixes = [
+        "",
+        "MOZ_",
+        "OP_",
+        "WEBKIT_",
+    ];
+    function _getExtension(gl, name) {
+        for (var _i = 0, _browserPrefixes_1 = _browserPrefixes; _i < _browserPrefixes_1.length; _i++) {
+            var prefixedName = _browserPrefixes_1[_i];
+            var extension = gl.getExtension(prefixedName + name);
+            if (extension) {
+                return extension;
             }
-            return null;
         }
-        function _getMaxShaderPrecision(gl, precision) {
-            if (precision === "highp") {
-                if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).precision > 0 &&
-                    gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT).precision > 0) {
-                    return "highp";
-                }
-                precision = "mediump";
+        return null;
+    }
+    function _getMaxShaderPrecision(gl, precision) {
+        if (precision === "highp") {
+            if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT).precision > 0 &&
+                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT).precision > 0) {
+                return "highp";
             }
-            if (precision === "mediump") {
-                if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT).precision > 0 &&
-                    gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT).precision > 0) {
-                    return "mediump";
-                }
+            precision = "mediump";
+        }
+        if (precision === "mediump") {
+            if (gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT).precision > 0 &&
+                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT).precision > 0) {
+                return "mediump";
             }
-            return "lowp";
         }
-        function _getCommonExtensions(capabilities) {
-            var extensions = "";
-            if (capabilities.oes_standard_derivatives) {
-                extensions += "#extension GL_OES_standard_derivatives : enable \n";
+        return "lowp";
+    }
+    function _getCommonExtensions(capabilities) {
+        var extensions = "";
+        if (capabilities.oes_standard_derivatives) {
+            extensions += "#extension GL_OES_standard_derivatives : enable \n";
+        }
+        return extensions;
+    }
+    function _getCommonDefines(capabilities) {
+        var defines = "";
+        defines += "precision " + capabilities.maxPrecision + " float; \n";
+        defines += "precision " + capabilities.maxPrecision + " int; \n";
+        return defines;
+    }
+    /**
+     *
+     */
+    var ToneMapping;
+    (function (ToneMapping) {
+        ToneMapping[ToneMapping["None"] = 0] = "None";
+        ToneMapping[ToneMapping["LinearToneMapping"] = 1] = "LinearToneMapping";
+        ToneMapping[ToneMapping["ReinhardToneMapping"] = 2] = "ReinhardToneMapping";
+        ToneMapping[ToneMapping["Uncharted2ToneMapping"] = 3] = "Uncharted2ToneMapping";
+        ToneMapping[ToneMapping["CineonToneMapping"] = 4] = "CineonToneMapping";
+    })(ToneMapping = egret3d.ToneMapping || (egret3d.ToneMapping = {}));
+    /**
+     * 内置提供的全局Attribute
+     * @internal
+     */
+    egret3d.globalAttributeSemantic = {
+        "corner": "_CORNER" /* _CORNER */,
+        "position": "POSITION" /* POSITION */,
+        "normal": "NORMAL" /* NORMAL */,
+        "uv": "TEXCOORD_0" /* TEXCOORD_0 */,
+        "uv2": "TEXCOORD_1" /* TEXCOORD_1 */,
+        "color": "COLOR_0" /* COLOR_0 */,
+        // "morphTarget0": gltf.AttributeSemanticType.MORPHTARGET_0,
+        // "morphTarget1": gltf.AttributeSemanticType.MORPHTARGET_1,
+        // "morphTarget2": gltf.AttributeSemanticType.MORPHTARGET_2,
+        // "morphTarget3": gltf.AttributeSemanticType.MORPHTARGET_3,
+        // "morphTarget4": gltf.AttributeSemanticType.MORPHTARGET_4,
+        // "morphTarget5": gltf.AttributeSemanticType.MORPHTARGET_5,
+        // "morphTarget6": gltf.AttributeSemanticType.MORPHTARGET_6,
+        // "morphTarget7": gltf.AttributeSemanticType.MORPHTARGET_7,
+        // "morphNormal0": gltf.AttributeSemanticType.MORPHNORMAL_0,
+        // "morphNormal1": gltf.AttributeSemanticType.MORPHNORMAL_1,
+        // "morphNormal2": gltf.AttributeSemanticType.MORPHNORMAL_2,
+        // "morphNormal3": gltf.AttributeSemanticType.MORPHNORMAL_3,
+        "skinIndex": "JOINTS_0" /* JOINTS_0 */,
+        "skinWeight": "WEIGHTS_0" /* WEIGHTS_0 */,
+        "startPosition": "_START_POSITION" /* _START_POSITION */,
+        "startVelocity": "_START_VELOCITY" /* _START_VELOCITY */,
+        "startColor": "_START_COLOR" /* _START_COLOR */,
+        "startSize": "_START_SIZE" /* _START_SIZE */,
+        "startRotation": "_START_ROTATION" /* _START_ROTATION */,
+        "time": "_TIME" /* _TIME */,
+        "random0": "_RANDOM0" /* _RANDOM0 */,
+        "random1": "_RANDOM1" /* _RANDOM1 */,
+        "startWorldPosition": "_WORLD_POSITION" /* _WORLD_POSITION */,
+        "startWorldRotation": "_WORLD_ROTATION" /* _WORLD_ROTATION */,
+        "lineDistance": "_INSTANCE_DISTANCE" /* _INSTANCE_DISTANCE */,
+        "instanceStart": "_INSTANCE_START" /* _INSTANCE_START */,
+        "instanceEnd": "_INSTANCE_END" /* _INSTANCE_END */,
+        "instanceColorStart": "_INSTANCE_COLOR_START" /* _INSTANCE_COLOR_START */,
+        "instanceColorEnd": "_INSTANCE_COLOR_END" /* _INSTANCE_COLOR_END */,
+        "instanceDistanceStart": "_INSTANCE_DISTANCE_START" /* _INSTANCE_DISTANCE_START */,
+        "instanceDistanceEnd": "_INSTANCE_DISTANCE_END" /* _INSTANCE_DISTANCE_END */,
+    };
+    /**
+     * 内置提供的全局Uniform
+     * @internal
+     */
+    egret3d.globalUniformSemantic = {
+        "modelMatrix": "MODEL" /* MODEL */,
+        "modelViewMatrix": "MODELVIEW" /* MODELVIEW */,
+        "projectionMatrix": "PROJECTION" /* PROJECTION */,
+        "viewMatrix": "VIEW" /* VIEW */,
+        "normalMatrix": "MODELVIEWINVERSE" /* MODELVIEWINVERSE */,
+        "modelViewProjectionMatrix": "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */,
+        "viewProjectionMatrix": "_VIEWPROJECTION" /* _VIEWPROJECTION */,
+        "cameraPosition": "_CAMERA_POS" /* _CAMERA_POS */,
+        "cameraForward": "_CAMERA_FORWARD" /* _CAMERA_FORWARD */,
+        "cameraUp": "_CAMERA_UP" /* _CAMERA_UP */,
+        "ambientLightColor": "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */,
+        "directionalLights[0]": "_DIRECTLIGHTS" /* _DIRECTLIGHTS */,
+        "pointLights[0]": "_POINTLIGHTS" /* _POINTLIGHTS */,
+        "spotLights[0]": "_SPOTLIGHTS" /* _SPOTLIGHTS */,
+        "boneMatrices[0]": "JOINTMATRIX" /* JOINTMATRIX */,
+        "directionalShadowMatrix[0]": "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */,
+        "spotShadowMatrix[0]": "_SPOTSHADOWMAT" /* _SPOTSHADOWMAT */,
+        "pointShadowMatrix[0]": "_POINTSHADOWMAT" /* _POINTSHADOWMAT */,
+        "directionalShadowMap[0]": "_DIRECTIONSHADOWMAP" /* _DIRECTIONSHADOWMAP */,
+        "spotShadowMap[0]": "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */,
+        "pointShadowMap[0]": "_POINTSHADOWMAP" /* _POINTSHADOWMAP */,
+        "lightMap": "_LIGHTMAPTEX" /* _LIGHTMAPTEX */,
+        "lightMapIntensity": "_LIGHTMAPINTENSITY" /* _LIGHTMAPINTENSITY */,
+        "lightMapScaleOffset": "_LIGHTMAP_SCALE_OFFSET" /* _LIGHTMAP_SCALE_OFFSET */,
+        "referencePosition": "_REFERENCEPOSITION" /* _REFERENCEPOSITION */,
+        "nearDistance": "_NEARDICTANCE" /* _NEARDICTANCE */,
+        "farDistance": "_FARDISTANCE" /* _FARDISTANCE */,
+        "fogColor": "_FOG_COLOR" /* _FOG_COLOR */,
+        "fogDensity": "_FOG_DENSITY" /* _FOG_DENSITY */,
+        "fogNear": "_FOG_NEAR" /* _FOG_NEAR */,
+        "fogFar": "_FOG_FAR" /* _FOG_FAR */,
+        "toneMappingExposure": "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */,
+        "toneMappingWhitePoint": "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */,
+    };
+    /**
+     * TODO 与 WebGLRenderState 合并。
+     * @internal
+     */
+    var WebGLCapabilities = (function (_super) {
+        __extends(WebGLCapabilities, _super);
+        function WebGLCapabilities() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        WebGLCapabilities.prototype.initialize = function (config) {
+            _super.prototype.initialize.call(this);
+            WebGLCapabilities.canvas = config.canvas;
+            WebGLCapabilities.webgl = config.webgl;
+            var webgl = WebGLCapabilities.webgl;
+            if (!webgl) {
+                return;
             }
-            return extensions;
-        }
-        function _getCommonDefines(capabilities) {
-            var defines = "";
-            defines += "precision " + capabilities.maxPrecision + " float; \n";
-            defines += "precision " + capabilities.maxPrecision + " int; \n";
-            return defines;
-        }
-        /**
-         *
-         */
-        var ToneMapping;
-        (function (ToneMapping) {
-            ToneMapping[ToneMapping["None"] = 0] = "None";
-            ToneMapping[ToneMapping["LinearToneMapping"] = 1] = "LinearToneMapping";
-            ToneMapping[ToneMapping["ReinhardToneMapping"] = 2] = "ReinhardToneMapping";
-            ToneMapping[ToneMapping["Uncharted2ToneMapping"] = 3] = "Uncharted2ToneMapping";
-            ToneMapping[ToneMapping["CineonToneMapping"] = 4] = "CineonToneMapping";
-        })(ToneMapping = web.ToneMapping || (web.ToneMapping = {}));
-        /**
-         * 内置提供的全局Attribute
-         * @internal
-         */
-        web.globalAttributeSemantic = {
-            "corner": "_CORNER" /* _CORNER */,
-            "position": "POSITION" /* POSITION */,
-            "normal": "NORMAL" /* NORMAL */,
-            "uv": "TEXCOORD_0" /* TEXCOORD_0 */,
-            "uv2": "TEXCOORD_1" /* TEXCOORD_1 */,
-            "color": "COLOR_0" /* COLOR_0 */,
-            // "morphTarget0": gltf.AttributeSemanticType.MORPHTARGET_0,
-            // "morphTarget1": gltf.AttributeSemanticType.MORPHTARGET_1,
-            // "morphTarget2": gltf.AttributeSemanticType.MORPHTARGET_2,
-            // "morphTarget3": gltf.AttributeSemanticType.MORPHTARGET_3,
-            // "morphTarget4": gltf.AttributeSemanticType.MORPHTARGET_4,
-            // "morphTarget5": gltf.AttributeSemanticType.MORPHTARGET_5,
-            // "morphTarget6": gltf.AttributeSemanticType.MORPHTARGET_6,
-            // "morphTarget7": gltf.AttributeSemanticType.MORPHTARGET_7,
-            // "morphNormal0": gltf.AttributeSemanticType.MORPHNORMAL_0,
-            // "morphNormal1": gltf.AttributeSemanticType.MORPHNORMAL_1,
-            // "morphNormal2": gltf.AttributeSemanticType.MORPHNORMAL_2,
-            // "morphNormal3": gltf.AttributeSemanticType.MORPHNORMAL_3,
-            "skinIndex": "JOINTS_0" /* JOINTS_0 */,
-            "skinWeight": "WEIGHTS_0" /* WEIGHTS_0 */,
-            "startPosition": "_START_POSITION" /* _START_POSITION */,
-            "startVelocity": "_START_VELOCITY" /* _START_VELOCITY */,
-            "startColor": "_START_COLOR" /* _START_COLOR */,
-            "startSize": "_START_SIZE" /* _START_SIZE */,
-            "startRotation": "_START_ROTATION" /* _START_ROTATION */,
-            "time": "_TIME" /* _TIME */,
-            "random0": "_RANDOM0" /* _RANDOM0 */,
-            "random1": "_RANDOM1" /* _RANDOM1 */,
-            "startWorldPosition": "_WORLD_POSITION" /* _WORLD_POSITION */,
-            "startWorldRotation": "_WORLD_ROTATION" /* _WORLD_ROTATION */,
-            "lineDistance": "_INSTANCE_DISTANCE" /* _INSTANCE_DISTANCE */,
-            "instanceStart": "_INSTANCE_START" /* _INSTANCE_START */,
-            "instanceEnd": "_INSTANCE_END" /* _INSTANCE_END */,
-            "instanceColorStart": "_INSTANCE_COLOR_START" /* _INSTANCE_COLOR_START */,
-            "instanceColorEnd": "_INSTANCE_COLOR_END" /* _INSTANCE_COLOR_END */,
-            "instanceDistanceStart": "_INSTANCE_DISTANCE_START" /* _INSTANCE_DISTANCE_START */,
-            "instanceDistanceEnd": "_INSTANCE_DISTANCE_END" /* _INSTANCE_DISTANCE_END */,
+            this.version = parseFloat(/^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION))[1]);
+            this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
+            this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
+            this.maxVertexTextures = webgl.getParameter(webgl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+            this.maxTextureSize = webgl.getParameter(webgl.MAX_TEXTURE_SIZE);
+            this.maxCubemapSize = webgl.getParameter(webgl.MAX_CUBE_MAP_TEXTURE_SIZE);
+            this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
+            this.floatTextures = !!_getExtension(webgl, "OES_texture_float");
+            this.anisotropyExt = _getExtension(webgl, "EXT_texture_filter_anisotropic");
+            this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
+            this.maxAnisotropy = (this.anisotropyExt !== null) ? webgl.getParameter(this.anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
+            // use dfdx and dfdy must enable OES_standard_derivatives
+            this.oes_standard_derivatives = !!_getExtension(webgl, "OES_standard_derivatives");
+            //TODO
+            WebGLCapabilities.commonExtensions = _getCommonExtensions(this);
+            WebGLCapabilities.commonDefines = _getCommonDefines(this);
+            egret3d.SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
+            console.info("WebGL version:", this.version);
+            console.info("Maximum shader precision:", this.maxPrecision);
+            console.info("Maximum texture count:", this.maxTextures);
+            console.info("Maximum vertex texture count:", this.maxVertexTextures);
+            console.info("Maximum texture size:", this.maxTextureSize);
+            console.info("Maximum cube map texture size:", this.maxCubemapSize);
+            console.info("Maximum vertex uniform vectors:", this.maxVertexUniformVectors);
+            console.info("Maximum GPU skinned bone count:", egret3d.SkinnedMeshRendererSystem.maxBoneCount);
         };
         /**
-         * 内置提供的全局Uniform
-         * @internal
+         * @deprecated
          */
-        web.globalUniformSemantic = {
-            "modelMatrix": "MODEL" /* MODEL */,
-            "modelViewMatrix": "MODELVIEW" /* MODELVIEW */,
-            "projectionMatrix": "PROJECTION" /* PROJECTION */,
-            "viewMatrix": "VIEW" /* VIEW */,
-            "normalMatrix": "MODELVIEWINVERSE" /* MODELVIEWINVERSE */,
-            "modelViewProjectionMatrix": "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */,
-            "viewProjectionMatrix": "_VIEWPROJECTION" /* _VIEWPROJECTION */,
-            "cameraPosition": "_CAMERA_POS" /* _CAMERA_POS */,
-            "cameraForward": "_CAMERA_FORWARD" /* _CAMERA_FORWARD */,
-            "cameraUp": "_CAMERA_UP" /* _CAMERA_UP */,
-            "ambientLightColor": "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */,
-            "directionalLights[0]": "_DIRECTLIGHTS" /* _DIRECTLIGHTS */,
-            "pointLights[0]": "_POINTLIGHTS" /* _POINTLIGHTS */,
-            "spotLights[0]": "_SPOTLIGHTS" /* _SPOTLIGHTS */,
-            "boneMatrices[0]": "JOINTMATRIX" /* JOINTMATRIX */,
-            "directionalShadowMatrix[0]": "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */,
-            "spotShadowMatrix[0]": "_SPOTSHADOWMAT" /* _SPOTSHADOWMAT */,
-            "pointShadowMatrix[0]": "_POINTSHADOWMAT" /* _POINTSHADOWMAT */,
-            "directionalShadowMap[0]": "_DIRECTIONSHADOWMAP" /* _DIRECTIONSHADOWMAP */,
-            "spotShadowMap[0]": "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */,
-            "pointShadowMap[0]": "_POINTSHADOWMAP" /* _POINTSHADOWMAP */,
-            "lightMap": "_LIGHTMAPTEX" /* _LIGHTMAPTEX */,
-            "lightMapIntensity": "_LIGHTMAPINTENSITY" /* _LIGHTMAPINTENSITY */,
-            "lightMapScaleOffset": "_LIGHTMAP_SCALE_OFFSET" /* _LIGHTMAP_SCALE_OFFSET */,
-            "referencePosition": "_REFERENCEPOSITION" /* _REFERENCEPOSITION */,
-            "nearDistance": "_NEARDICTANCE" /* _NEARDICTANCE */,
-            "farDistance": "_FARDISTANCE" /* _FARDISTANCE */,
-            "fogColor": "_FOG_COLOR" /* _FOG_COLOR */,
-            "fogDensity": "_FOG_DENSITY" /* _FOG_DENSITY */,
-            "fogNear": "_FOG_NEAR" /* _FOG_NEAR */,
-            "fogFar": "_FOG_FAR" /* _FOG_FAR */,
-            "toneMappingExposure": "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */,
-            "toneMappingWhitePoint": "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */,
-        };
+        WebGLCapabilities.canvas = null;
         /**
-         * TODO 与 WebGLRenderState 合并。
-         * @internal
+         * @deprecated
          */
-        var WebGLCapabilities = (function (_super) {
-            __extends(WebGLCapabilities, _super);
-            function WebGLCapabilities() {
-                return _super !== null && _super.apply(this, arguments) || this;
-            }
-            WebGLCapabilities.prototype.initialize = function (config) {
-                _super.prototype.initialize.call(this);
-                WebGLCapabilities.canvas = config.canvas;
-                WebGLCapabilities.webgl = config.webgl;
-                var webgl = WebGLCapabilities.webgl;
-                if (!webgl) {
-                    return;
-                }
-                this.version = parseFloat(/^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION))[1]);
-                this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
-                this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
-                this.maxVertexTextures = webgl.getParameter(webgl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
-                this.maxTextureSize = webgl.getParameter(webgl.MAX_TEXTURE_SIZE);
-                this.maxCubemapSize = webgl.getParameter(webgl.MAX_CUBE_MAP_TEXTURE_SIZE);
-                this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
-                this.floatTextures = !!_getExtension(webgl, "OES_texture_float");
-                this.anisotropyExt = _getExtension(webgl, "EXT_texture_filter_anisotropic");
-                this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
-                this.maxAnisotropy = (this.anisotropyExt !== null) ? webgl.getParameter(this.anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
-                // use dfdx and dfdy must enable OES_standard_derivatives
-                this.oes_standard_derivatives = !!_getExtension(webgl, "OES_standard_derivatives");
-                //TODO
-                WebGLCapabilities.commonExtensions = _getCommonExtensions(this);
-                WebGLCapabilities.commonDefines = _getCommonDefines(this);
-                egret3d.SkinnedMeshRendererSystem.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4);
-                console.info("WebGL version:", this.version);
-                console.info("Maximum shader precision:", this.maxPrecision);
-                console.info("Maximum texture count:", this.maxTextures);
-                console.info("Maximum vertex texture count:", this.maxVertexTextures);
-                console.info("Maximum texture size:", this.maxTextureSize);
-                console.info("Maximum cube map texture size:", this.maxCubemapSize);
-                console.info("Maximum vertex uniform vectors:", this.maxVertexUniformVectors);
-                console.info("Maximum GPU skinned bone count:", egret3d.SkinnedMeshRendererSystem.maxBoneCount);
-            };
-            /**
-             * @deprecated
-             */
-            WebGLCapabilities.canvas = null;
-            /**
-             * @deprecated
-             */
-            WebGLCapabilities.webgl = null;
-            WebGLCapabilities.commonExtensions = "";
-            WebGLCapabilities.commonDefines = "";
-            WebGLCapabilities.toneMapping = ToneMapping.None;
-            WebGLCapabilities.toneMappingExposure = 1.0;
-            WebGLCapabilities.toneMappingWhitePoint = 1.0;
-            return WebGLCapabilities;
-        }(paper.SingletonComponent));
-        web.WebGLCapabilities = WebGLCapabilities;
-        __reflect(WebGLCapabilities.prototype, "egret3d.web.WebGLCapabilities");
-    })(web = egret3d.web || (egret3d.web = {}));
+        WebGLCapabilities.webgl = null;
+        WebGLCapabilities.commonExtensions = "";
+        WebGLCapabilities.commonDefines = "";
+        WebGLCapabilities.toneMapping = ToneMapping.None;
+        WebGLCapabilities.toneMappingExposure = 1.0;
+        WebGLCapabilities.toneMappingWhitePoint = 1.0;
+        return WebGLCapabilities;
+    }(paper.SingletonComponent));
+    egret3d.WebGLCapabilities = WebGLCapabilities;
+    __reflect(WebGLCapabilities.prototype, "egret3d.WebGLCapabilities");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -25149,7 +25146,7 @@ var egret3d;
         }
         function _prefixVertex(customDefines) {
             var prefixContext = [
-                web.WebGLCapabilities.commonDefines,
+                egret3d.WebGLCapabilities.commonDefines,
                 customDefines,
                 egret3d.ShaderChunk.common_vert_def,
                 '\n'
@@ -25158,13 +25155,13 @@ var egret3d;
         }
         function _prefixFragment(customDefines) {
             var prefixContext = [
-                web.WebGLCapabilities.commonExtensions,
-                web.WebGLCapabilities.commonDefines,
+                egret3d.WebGLCapabilities.commonExtensions,
+                egret3d.WebGLCapabilities.commonDefines,
                 customDefines,
                 egret3d.ShaderChunk.common_frag_def,
-                web.WebGLCapabilities.toneMapping === web.ToneMapping.None ? '' : '#define TONE_MAPPING',
-                web.WebGLCapabilities.toneMapping === web.ToneMapping.None ? '' : egret3d.ShaderChunk.tonemapping_pars_fragment,
-                web.WebGLCapabilities.toneMapping === web.ToneMapping.None ? '' : _getToneMappingFunction(web.WebGLCapabilities.toneMapping),
+                egret3d.WebGLCapabilities.toneMapping === egret3d.ToneMapping.None ? '' : '#define TONE_MAPPING',
+                egret3d.WebGLCapabilities.toneMapping === egret3d.ToneMapping.None ? '' : egret3d.ShaderChunk.tonemapping_pars_fragment,
+                egret3d.WebGLCapabilities.toneMapping === egret3d.ToneMapping.None ? '' : _getToneMappingFunction(egret3d.WebGLCapabilities.toneMapping),
                 '\n'
             ].filter(_filterEmptyLine).join('\n');
             return prefixContext;
@@ -25172,16 +25169,16 @@ var egret3d;
         function _getToneMappingFunction(toneMapping) {
             var toneMappingName;
             switch (toneMapping) {
-                case web.ToneMapping.LinearToneMapping:
+                case egret3d.ToneMapping.LinearToneMapping:
                     toneMappingName = 'Linear';
                     break;
-                case web.ToneMapping.ReinhardToneMapping:
+                case egret3d.ToneMapping.ReinhardToneMapping:
                     toneMappingName = 'Reinhard';
                     break;
-                case web.ToneMapping.Uncharted2ToneMapping:
+                case egret3d.ToneMapping.Uncharted2ToneMapping:
                     toneMappingName = 'Uncharted2';
                     break;
-                case web.ToneMapping.CineonToneMapping:
+                case egret3d.ToneMapping.CineonToneMapping:
                     toneMappingName = 'OptimizedCineon';
                     break;
                 default:
@@ -25215,7 +25212,7 @@ var egret3d;
                 var location_1 = webgl.getAttribLocation(webglProgram, attribData.name);
                 var semantic = "";
                 if (!technique.attributes[attribData.name]) {
-                    semantic = web.globalAttributeSemantic[attribData.name];
+                    semantic = egret3d.globalAttributeSemantic[attribData.name];
                     if (!semantic) {
                         console.error("未知Uniform定义：" + attribData.name);
                     }
@@ -25237,7 +25234,7 @@ var egret3d;
                 var techniqueUniform = technique.uniforms[uniformData.name];
                 var semantic = "";
                 if (!techniqueUniform) {
-                    semantic = web.globalUniformSemantic[uniformData.name];
+                    semantic = egret3d.globalUniformSemantic[uniformData.name];
                     if (!semantic) {
                         //不在自定义中，也不在全局Uniform中
                         console.error("未知Uniform定义：" + uniformData.name);
@@ -25304,7 +25301,7 @@ var egret3d;
                 return _this;
             }
             WebGLRenderState.prototype._getWebGLProgram = function (vs, fs, customDefines) {
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 var program = webgl.createProgram();
                 var key = vs.name + customDefines;
                 var vertexShader = this._vsShaders[key];
@@ -25333,7 +25330,7 @@ var egret3d;
                 return program;
             };
             WebGLRenderState.prototype.updateViewport = function (viewport, target) {
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 var w;
                 var h;
                 this.viewPort.copy(viewport);
@@ -25354,7 +25351,7 @@ var egret3d;
                 webgl.depthRange(0.0, 1.0); // TODO
             };
             WebGLRenderState.prototype.clearBuffer = function (bufferBit, clearColor) {
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 if (bufferBit & 256 /* Depth */) {
                     webgl.depthMask(true);
                     webgl.clearDepth(1.0);
@@ -25369,7 +25366,7 @@ var egret3d;
             };
             WebGLRenderState.prototype.copyFramebufferToTexture = function (screenPostion, target, level) {
                 if (level === void 0) { level = 0; }
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 if (target._dirty) {
                     target.setupTexture(0);
                 }
@@ -25384,7 +25381,7 @@ var egret3d;
                     return;
                 }
                 this._cacheState = state;
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 var stateEnables = this._stateEnables;
                 var cacheStateEnable = this._cacheStateEnable;
                 for (var _i = 0, stateEnables_1 = stateEnables; _i < stateEnables_1.length; _i++) {
@@ -25415,7 +25412,7 @@ var egret3d;
             WebGLRenderState.prototype.useProgram = function (program) {
                 if (this._cacheProgram !== program) {
                     this._cacheProgram = program;
-                    web.WebGLCapabilities.webgl.useProgram(program.program);
+                    egret3d.WebGLCapabilities.webgl.useProgram(program.program);
                     return true;
                 }
                 return false;
@@ -25426,7 +25423,7 @@ var egret3d;
                 var vertexShader = extensions.shaders[0];
                 var fragShader = extensions.shaders[1];
                 var name = vertexShader.name + "_" + fragShader.name + "_" + defines; //TODO材质标脏可以优化
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 var program = this._programs[name];
                 if (!program) {
                     var webglProgram = this._getWebGLProgram(vertexShader, fragShader, defines);
@@ -25492,7 +25489,7 @@ var egret3d;
                 if (!this._image || !this._image.uri) {
                     return;
                 }
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 if (!this.webglTexture) {
                     this.webglTexture = webgl.createTexture();
                 }
@@ -25682,7 +25679,7 @@ var egret3d;
                 this.height = height;
                 var readData = new Uint8Array(this.width * this.height * 4);
                 readData[0] = 2;
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 if (webgl) {
                     var fbo = webgl.createFramebuffer();
                     var fbold = webgl.getParameter(webgl.FRAMEBUFFER_BINDING);
@@ -25820,14 +25817,14 @@ var egret3d;
                 return _this;
             }
             WebGLRenderTexture.prototype._setupFrameBufferTexture = function (frameBuffer, texture, textureTarget, type, width, height, format, attachment) {
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 webgl.texImage2D(textureTarget, 0, format, width, height, 0, format, type, null);
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
                 webgl.framebufferTexture2D(webgl.FRAMEBUFFER, attachment, textureTarget, texture, 0);
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
             };
             WebGLRenderTexture.prototype._setupRenderBufferStorage = function (frameBuffer, renderBuffer, depthBuffer, stencilBuffer, width, height) {
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
                 //
                 webgl.bindRenderbuffer(webgl.RENDERBUFFER, renderBuffer);
@@ -25847,7 +25844,7 @@ var egret3d;
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
             };
             WebGLRenderTexture.prototype._setupDepthRenderbuffer = function (frameBuffer, renderBuffer, depthBuffer, stencilBuffer, width, height) {
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
                 this._setupRenderBufferStorage(frameBuffer, renderBuffer, depthBuffer, stencilBuffer, width, height);
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
@@ -25861,7 +25858,7 @@ var egret3d;
                 var depth = paperExtension.depthBuffer;
                 var stencil = paperExtension.stencilBuffer;
                 //
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 if (!this.frameBuffer) {
                     this.frameBuffer = webgl.createFramebuffer();
                 }
@@ -25890,12 +25887,12 @@ var egret3d;
                     this._setupRenderTexture();
                     this._dirty = false;
                 }
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.frameBuffer);
             };
             WebGLRenderTexture.prototype.generateMipmap = function () {
                 if (this._mipmap) {
-                    var webgl = web.WebGLCapabilities.webgl;
+                    var webgl = egret3d.WebGLCapabilities.webgl;
                     webgl.bindTexture(webgl.TEXTURE_2D, this.webglTexture);
                     webgl.generateMipmap(webgl.TEXTURE_2D);
                     webgl.bindTexture(webgl.TEXTURE_2D, null);
@@ -25907,7 +25904,7 @@ var egret3d;
                 if (!_super.prototype.dispose.call(this)) {
                     return false;
                 }
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 if (!this.webglTexture) {
                     webgl.deleteBuffer(this.webglTexture);
                 }
@@ -26103,7 +26100,7 @@ var egret3d;
                     return false;
                 }
                 if (this.vbo) {
-                    var webgl = web.WebGLCapabilities.webgl;
+                    var webgl = egret3d.WebGLCapabilities.webgl;
                     for (var _i = 0, _a = this.ibos; _i < _a.length; _i++) {
                         var ibo = _a[_i];
                         ibo && webgl.deleteBuffer(ibo);
@@ -26117,7 +26114,7 @@ var egret3d;
             WebGLMesh.prototype.createBuffer = function () {
                 var vertexBufferViewAccessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION || 0);
                 var vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), 5126 /* Float */);
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 var vbo = webgl.createBuffer();
                 if (vbo) {
                     this.vbo = vbo;
@@ -26159,7 +26156,7 @@ var egret3d;
                     return;
                 }
                 var attributes = this._glTFMesh.primitives[0].attributes;
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
                 if (!uploadAttributes) {
                     uploadAttributes = [];
@@ -26210,7 +26207,7 @@ var egret3d;
                         var accessor = this.getAccessor(primitive.indices);
                         var subIndexBuffer = this.createTypeArrayFromAccessor(accessor);
                         var ibo = this.ibos[subMeshIndex];
-                        var webgl = web.WebGLCapabilities.webgl;
+                        var webgl = egret3d.WebGLCapabilities.webgl;
                         webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
                         webgl.bufferSubData(webgl.ELEMENT_ARRAY_BUFFER, 0, subIndexBuffer);
                     }
@@ -26286,7 +26283,7 @@ var egret3d;
                     size: { w: config.contentWidth, h: config.contentHeight },
                     screenSize: { w: screenWidth, h: screenHeight },
                 });
-                globalGameObject.getOrAddComponent(web.WebGLCapabilities, false, config); // TODO 下放到渲染系统初始化，但贴图对 webgl 有依赖。
+                globalGameObject.getOrAddComponent(egret3d.WebGLCapabilities, false, config); // TODO 下放到渲染系统初始化，但贴图对 webgl 有依赖。
                 globalGameObject.getOrAddComponent(egret3d.DefaultMeshes);
                 globalGameObject.getOrAddComponent(egret3d.DefaultShaders);
                 globalGameObject.getOrAddComponent(egret3d.DefaultTextures);
@@ -26400,7 +26397,7 @@ var egret3d;
                     }
                 }
                 // Render 2D.
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1); //TODO 解决字体模糊
                 for (var _b = 0, _c = this._groups[1].gameObjects; _b < _c.length; _b++) {
                     var gameObject = _c[_b];
@@ -26431,7 +26428,7 @@ var egret3d;
                 var material = drawMaterial || drawCall.material;
                 var shaderContextDefine = context.updateDrawCall(drawCall);
                 //
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 var technique = material._glTFTechnique;
                 var techniqueState = technique.states || null;
                 var renderState = this._renderState;
@@ -26475,7 +26472,7 @@ var egret3d;
                 }
             };
             WebGLRenderSystem.prototype._updateGlobalUniforms = function (program, context) {
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 var glUniforms = program.contextUniforms;
                 // TODO
                 var camera = context.camera;
@@ -26652,10 +26649,10 @@ var egret3d;
                             webgl.uniform1f(location_3, context.fogFar);
                             break;
                         case "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */:
-                            webgl.uniform1f(location_3, web.WebGLCapabilities.toneMappingExposure);
+                            webgl.uniform1f(location_3, egret3d.WebGLCapabilities.toneMappingExposure);
                             break;
                         case "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */:
-                            webgl.uniform1f(location_3, web.WebGLCapabilities.toneMappingWhitePoint);
+                            webgl.uniform1f(location_3, egret3d.WebGLCapabilities.toneMappingWhitePoint);
                             break;
                         default:
                             console.warn("不识别的Uniform语义:" + semantic);
@@ -26670,7 +26667,7 @@ var egret3d;
                 }
                 this._cacheMaterial = material;
                 this._cacheMaterialVerision = material._version;
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 var unifroms = technique.uniforms;
                 var glUniforms = program.uniforms;
                 for (var _i = 0, glUniforms_2 = glUniforms; _i < glUniforms_2.length; _i++) {
@@ -26759,7 +26756,7 @@ var egret3d;
                 }
                 this._cacheSubMeshIndex = subMeshIndex;
                 this._cacheMesh = mesh;
-                var webgl = web.WebGLCapabilities.webgl;
+                var webgl = egret3d.WebGLCapabilities.webgl;
                 var primitive = mesh.glTFMesh.primitives[subMeshIndex];
                 // vbo.
                 var webglAttributes = program.attributes;
@@ -26831,7 +26828,7 @@ var egret3d;
                 egret3d.Camera.current = null;
             };
             WebGLRenderSystem.prototype.onUpdate = function () {
-                if (!web.WebGLCapabilities.webgl) {
+                if (!egret3d.WebGLCapabilities.webgl) {
                     return;
                 }
                 var isPlayerMode = paper.Application.playerMode === 0 /* Player */;

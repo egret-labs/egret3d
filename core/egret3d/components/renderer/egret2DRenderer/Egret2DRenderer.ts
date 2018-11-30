@@ -39,7 +39,7 @@ namespace egret3d {
             this.stage.addChild(this.root);
 
             if (!this._renderer) {
-                this._renderer = egret.web.Renderer.getInstance(Egret2DRendererSystem.webgl!);
+                this._renderer = egret.web.Renderer.getInstance(egret3d.WebGLCapabilities.webgl! ||  Egret2DRendererSystem.webgl!);
             }
 
             let stage = this.stage;
