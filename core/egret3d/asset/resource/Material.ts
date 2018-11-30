@@ -260,7 +260,7 @@ namespace egret3d {
         }
 
         setBoolean(id: string, value: boolean) {
-            let uniform = this._glTFTechnique.uniforms[id];
+            const uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value !== value) {
                     uniform.value = value;
@@ -275,7 +275,7 @@ namespace egret3d {
         }
 
         setInt(id: string, value: int) {
-            let uniform = this._glTFTechnique.uniforms[id];
+            const uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value !== value) {
                     uniform.value = value;
@@ -290,7 +290,7 @@ namespace egret3d {
         }
 
         setIntv(id: string, value: Float32Array | ReadonlyArray<int>) {
-            let uniform = this._glTFTechnique.uniforms[id];
+            const uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -303,7 +303,7 @@ namespace egret3d {
         }
 
         setFloat(id: string, value: number) {
-            let uniform = this._glTFTechnique.uniforms[id];
+            const uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value !== value) {
                     uniform.value = value;
@@ -318,7 +318,7 @@ namespace egret3d {
         }
 
         setFloatv(id: string, value: Float32Array | ReadonlyArray<number>) {
-            let uniform = this._glTFTechnique.uniforms[id];
+            const uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -331,7 +331,7 @@ namespace egret3d {
         }
 
         setVector2(id: string, value: Readonly<IVector2>) {
-            let uniform = this._glTFTechnique.uniforms[id];
+            const uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value[0] !== value.x || uniform.value[1] !== value.y) {
                     uniform.value[0] = value.x;
@@ -347,7 +347,7 @@ namespace egret3d {
         }
 
         setVector2v(id: string, value: Float32Array | ReadonlyArray<number>) {
-            let uniform = this._glTFTechnique.uniforms[id];
+            const uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -360,7 +360,7 @@ namespace egret3d {
         }
 
         setVector3(id: string, value: Readonly<IVector3>) {
-            let uniform = this._glTFTechnique.uniforms[id];
+            const uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value[0] !== value.x || uniform.value[1] !== value.y || uniform.value[2] !== value.z) {
                     uniform.value[0] = value.x;
@@ -377,7 +377,7 @@ namespace egret3d {
         }
 
         setVector3v(id: string, value: Float32Array | ReadonlyArray<number>) {
-            let uniform = this._glTFTechnique.uniforms[id];
+            const uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -390,7 +390,7 @@ namespace egret3d {
         }
 
         setVector4(id: string, value: Readonly<IVector4>) {
-            let uniform = this._glTFTechnique.uniforms[id];
+            const uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 if (uniform.value[0] !== value.x || uniform.value[1] !== value.y || uniform.value[2] !== value.z || uniform.value[3] !== value.w) {
                     uniform.value[0] = value.x;
@@ -408,7 +408,7 @@ namespace egret3d {
         }
 
         setVector4v(id: string, value: Float32Array | ReadonlyArray<number>) {
-            let uniform = this._glTFTechnique.uniforms[id];
+            const uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -421,7 +421,7 @@ namespace egret3d {
         }
 
         setMatrix(id: string, value: Readonly<Matrix4>) {
-            let uniform = this._glTFTechnique.uniforms[id];
+            const uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value.rawData;
                 this._version++;
@@ -434,7 +434,7 @@ namespace egret3d {
         }
 
         setMatrixv(id: string, value: Float32Array | ReadonlyArray<number>) {
-            let uniform = this._glTFTechnique.uniforms[id];
+            const uniform = this._glTFTechnique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;

@@ -22,14 +22,12 @@ namespace egret3d {
         ) {
             super(name);
 
-            if (ArrayBuffer.isView(source)) {
-                this.config = GLTFAsset.createTextureConfig(); // TODO
-            }
-            else if (source && source.hasOwnProperty("version")) {
+            if (source && source.hasOwnProperty("version")) {
                 this.config = source as GLTF;
             }
             else {
-                this.config = GLTFAsset.createTextureConfig(); // TODO                
+                // ArrayBufferView || null
+                this.config = GLTFAsset.createTextureConfig(); // TODO  
             }
 
             this._gltfTexture = this.config.textures![0] as GLTFTexture;
@@ -92,7 +90,7 @@ namespace egret3d {
      */
     export class Texture extends BaseTexture {
         public static create(name: string, source: GLTF, width?: number, height?: number): Texture;
-        public static create(name: string, source: ArrayBufferView | gltf.ImageSource, width: number, height: number, format?: gltf.TextureFormat): Texture;
+        public static create(name: string, source: ArrayBufferView | gltf.ImageSource | null, width: number, height: number, format?: gltf.TextureFormat): Texture;
         public static create(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource, width: number, height: number,
             format?: gltf.TextureFormat, mipmap?: boolean,
             wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap,
@@ -114,7 +112,7 @@ namespace egret3d {
                 flipY, premultiplyAlpha, unpackAlignment,
                 type, anisotropy);
         }
-        public static createByImage(name: string, image: gltf.ImageSource, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean): Texture {
+        public static createByImage(name: string, image: gltf.ImageSource | egret.BitmapData, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean, premultiply?: boolean): Texture {
             let magFilter = gltf.TextureFilter.LINEAR;
             let minFilter = gltf.TextureFilter.LINEAR;
             const wrapS = repeat ? gltf.TextureWrap.REPEAT : gltf.TextureWrap.CLAMP_TO_EDGE;
@@ -127,29 +125,16 @@ namespace egret3d {
                 magFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
                 minFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
             }
-            const texture = egret3d.Texture.create(name, image, image.width, image.height,
-                format, mipmap, wrapS, wrapT, magFilter, minFilter);
+            const texture = egret3d.Texture.create(name, image instanceof egret.BitmapData ? image.source : image,
+                image.width, image.height,
+                format, mipmap,
+                wrapS, wrapT,
+                magFilter, minFilter,
+                false, premultiply);
 
             return texture;
         }
-        public static createByBitmapData(name: string, bitmapData: egret.BitmapData, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean): Texture {
-            let magFilter = gltf.TextureFilter.LINEAR;
-            let minFilter = gltf.TextureFilter.LINEAR;
-            const wrapS = repeat ? gltf.TextureWrap.REPEAT : gltf.TextureWrap.CLAMP_TO_EDGE;
-            const wrapT = repeat ? gltf.TextureWrap.REPEAT : gltf.TextureWrap.CLAMP_TO_EDGE;
-            if (mipmap) {
-                magFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
-                minFilter = linear ? gltf.TextureFilter.LINEAR_MIPMAP_LINEAR : gltf.TextureFilter.NEAREST_MIPMAP_NEAREST;
-            }
-            else {
-                magFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
-                minFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
-            }
-            const texture = egret3d.Texture.create(name, bitmapData.source, bitmapData.source.width, bitmapData.source.height,
-                format, mipmap, wrapS, wrapT, magFilter, minFilter);
 
-            return texture;
-        }
         public static createColorTexture(name: string, r: number, g: number, b: number): Texture {
             const mipmap = true;
             const width = 1;
