@@ -31,7 +31,7 @@ namespace examples {
                 rendererRaycast.target = gameObject;
 
                 //
-                rendererRaycast.target.addComponent(SkinnedMeshTriangleFollower).rendererRaycaster = rendererRaycast;
+                rendererRaycast.target.addComponent(MeshTriangleFollower).rendererRaycaster = rendererRaycast;
             }
 
             {
@@ -62,7 +62,7 @@ namespace examples {
                 rendererRaycast.target = gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.gameObject;
 
                 //
-                rendererRaycast.target.addComponent(SkinnedMeshTriangleFollower).rendererRaycaster = rendererRaycast;
+                rendererRaycast.target.addComponent(MeshTriangleFollower).rendererRaycaster = rendererRaycast;
             }
 
             {
@@ -103,7 +103,7 @@ namespace examples {
         }
     }
 
-    class SkinnedMeshTriangleFollower extends paper.Behaviour {
+    class MeshTriangleFollower extends paper.Behaviour {
         public rendererRaycaster: behaviors.RendererRaycast | null = null;
 
         private readonly _normal: paper.GameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "SkinnedMeshTriangleFollower");

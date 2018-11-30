@@ -14,6 +14,23 @@ namespace egret3d {
         gltf.MeshAttributeType.TEXCOORD_0,
     ];
     /**
+     * 
+     */
+    export interface GLTFSkin extends gltf.Skin {
+        extensions: {
+            paper: {
+                retargeting?: { [key: string]: uint };
+            }
+        };
+    }
+    /**
+     * 
+     */
+    export interface SkinMask {
+        retargeting: string[];
+        joints?: gltf.Index[];
+    }
+    /**
      * 网格资源。
      */
     export class Mesh extends GLTFAsset implements egret3d.IRaycast {

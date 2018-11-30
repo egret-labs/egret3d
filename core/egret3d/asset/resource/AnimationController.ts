@@ -68,7 +68,7 @@ namespace egret3d {
      */
     export class AnimationController extends GLTFAsset {
         public static create(): AnimationController {
-            const controller = new AnimationController();
+            const asset = new AnimationController();
             const config = this._createConfig();
             config.extensions = {
                 paper: {
@@ -79,9 +79,13 @@ namespace egret3d {
                 },
             };
 
-            controller.config = config;
+            asset.config = config;
 
-            return controller;
+            return asset;
+        }
+
+        private constructor() {
+            super(); // TODO GLTFAsset protected
         }
 
         public createLayer(name: string): AnimationLayer {

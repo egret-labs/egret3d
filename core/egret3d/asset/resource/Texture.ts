@@ -1,5 +1,26 @@
 namespace egret3d {
     /**
+     * 
+     */
+    export interface GLTFTexture extends gltf.Texture {
+        extensions: {
+            paper?: {
+                mipmap?: boolean;
+                flipY?: 0 | 1;
+                premultiplyAlpha?: 0 | 1;
+                format?: gltf.TextureFormat;
+                width?: number;
+                height?: number;
+                anisotropy?: number;
+                type?: gltf.TextureDataType;
+                unpackAlignment?: gltf.TextureAlignment;
+                //
+                depthBuffer?: boolean;
+                stencilBuffer?: boolean;
+            }
+        };
+    }
+    /**
      * 基础纹理资源。
      * - 纹理资源的基类。
      */

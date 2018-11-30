@@ -1,5 +1,74 @@
 namespace egret3d {
     /**
+     * 
+     */
+    export interface GLTFAnimation extends gltf.Animation {
+        extensions: {
+            paper: {
+                frameRate: number;
+                clips: GLTFAnimationClip[];
+                events?: GLTFAnimationFrameEvent[];
+            };
+        };
+    }
+    /**
+     * 
+     */
+    export interface GLTFAnimationChannel extends gltf.AnimationChannel {
+        extensions?: {
+            paper: {
+                type: string,
+                property: string,
+            }
+        };
+    }
+    /**
+     * 
+     */
+    export interface GLTFAnimationFrameEvent {
+        /**
+         * 事件名称。
+         */
+        name: string;
+        /**
+         * 
+         */
+        position: number;
+        /**
+         * 事件 int 变量。
+         */
+        intVariable?: int;
+        /**
+         * 事件 float 变量。
+         */
+        floatVariable?: number;
+        /**
+         * 事件 string 变量。
+         */
+        stringVariable?: string;
+    }
+    /**
+     * 
+     */
+    export interface GLTFAnimationClip {
+        /**
+         * 动画剪辑名称。
+         */
+        name: string;
+        /**
+         * 播放次数。
+         */
+        playTimes?: uint;
+        /**
+         * 开始时间。（以秒为单位）
+         */
+        position: number;
+        /**
+         * 持续时间。（以秒为单位）
+         */
+        duration: number;
+    }
+    /**
      * 动画资源。
      */
     export class AnimationAsset extends GLTFAsset {

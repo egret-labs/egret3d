@@ -2,6 +2,19 @@ namespace egret3d {
     //TODO 运行时DrawCall排序优化使用
     let _hashCode: uint = 0;
     /**
+     * 
+     */
+    export interface GLTFMaterial extends gltf.Material {
+        extensions: {
+            KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
+            paper: {
+                renderQueue: uint;
+                defines?: string[];
+                states?: gltf.States;
+            }
+        };
+    }
+    /**
      * 材质资源。
      */
     export class Material extends GLTFAsset {
