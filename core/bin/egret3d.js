@@ -17768,7 +17768,7 @@ var egret3d;
                     target.multiply(helpQuaternionA.lerp(egret3d.Quaternion.IDENTITY, helpQuaternionA, weight));
                 }
                 else {
-                    if (_helpQuaternionA.set(x, y, z, w).dot(target) < 0.0) {
+                    if (helpQuaternionA.set(x, y, z, w).dot(target) < 0.0) {
                         weight = -weight;
                     }
                     target.x += x * weight;
@@ -17811,6 +17811,7 @@ var egret3d;
                     target.z += bindPose.z * weight_2;
                     target.w += bindPose.w * weight_2;
                 }
+                target.normalize();
                 if (isArray) {
                     for (var _i = 0, _a = components; _i < _a.length; _i++) {
                         var component = _a[_i];

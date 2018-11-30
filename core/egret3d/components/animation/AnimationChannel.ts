@@ -169,7 +169,7 @@ namespace egret3d {
                     target.multiply(helpQuaternionA.lerp(Quaternion.IDENTITY, helpQuaternionA, weight));
                 }
                 else {
-                    if (_helpQuaternionA.set(x, y, z, w).dot(target) < 0.0) {
+                    if (helpQuaternionA.set(x, y, z, w).dot(target) < 0.0) {
                         weight = -weight;
                     }
 
@@ -215,6 +215,8 @@ namespace egret3d {
                     target.z += bindPose.z * weight;
                     target.w += bindPose.w * weight;
                 }
+
+                target.normalize();
 
                 if (isArray) {
                     for (const component of components as Transform[]) {

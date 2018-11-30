@@ -4238,8 +4238,6 @@ var paper;
                     tempVector.release();
                     rotationAxis.release();
                     tempQuaternion.release();
-                    // TODO
-                    selectedGameObject.transform.localEulerAngles;
                 }
                 else if (this._mode === this.scale) {
                     if (hoveredName.indexOf("XYZ") >= 0) {
@@ -5320,6 +5318,10 @@ var paper;
                         for (var k in inspectorFolders) {
                             inspectorFolders[k].updateDisplay();
                         }
+                    }
+                    if (this._modelComponent.selectedGameObject) {
+                        // TODO
+                        this._modelComponent.selectedGameObject.transform.localEulerAngles;
                     }
                 }
             };

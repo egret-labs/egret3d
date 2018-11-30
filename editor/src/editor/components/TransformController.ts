@@ -287,9 +287,6 @@ namespace paper.editor {
                 tempVector.release();
                 rotationAxis.release();
                 tempQuaternion.release();
-
-                // TODO
-                selectedGameObject.transform.localEulerAngles;
             }
             else if (this._mode === this.scale) {
 

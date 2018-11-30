@@ -659,6 +659,11 @@ namespace paper.editor {
                         inspectorFolders[k].updateDisplay();
                     }
                 }
+
+                if (this._modelComponent.selectedGameObject) {
+                    // TODO
+                    this._modelComponent.selectedGameObject.transform.localEulerAngles;
+                }
             }
         }
     }
