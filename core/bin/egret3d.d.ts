@@ -3191,10 +3191,9 @@ declare namespace egret3d {
      */
     class Texture extends BaseTexture {
         static create(name: string, source: GLTF, width?: number, height?: number): Texture;
-        static create(name: string, source: ArrayBufferView | gltf.ImageSource, width: number, height: number, format?: gltf.TextureFormat): Texture;
+        static create(name: string, source: ArrayBufferView | gltf.ImageSource | null, width: number, height: number, format?: gltf.TextureFormat): Texture;
         static create(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource, width: number, height: number, format?: gltf.TextureFormat, mipmap?: boolean, wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap, magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter, flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment, type?: gltf.TextureDataType, anisotropy?: number): Texture;
-        static createByImage(name: string, image: gltf.ImageSource, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean): Texture;
-        static createByBitmapData(name: string, bitmapData: egret.BitmapData, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean): Texture;
+        static createByImage(name: string, image: gltf.ImageSource | egret.BitmapData, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean, premultiply?: boolean): Texture;
         static createColorTexture(name: string, r: number, g: number, b: number): Texture;
         static createGridTexture(name: string): Texture;
     }
