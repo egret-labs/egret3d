@@ -5731,10 +5731,10 @@ var paper;
         var Helper = (function () {
             function Helper() {
             }
-            Helper.raycastAll = function (targets, mousePositionX, mousePositionY) {
+            Helper.raycastAll = function (targets, mousePositionX, mousePositionY, backfaceCulling) {
                 var camera = egret3d.Camera.editor;
                 var ray = camera.createRayByScreen(mousePositionX, mousePositionY).release();
-                var raycastInfos = egret3d.raycastAll(ray, targets, 0.0, 4294967295 /* Everything */, true);
+                var raycastInfos = egret3d.raycastAll(ray, targets, 0.0, 4294967295 /* Everything */, true, backfaceCulling);
                 return raycastInfos;
             };
             Helper.raycast = function (raycastAble, mousePositionX, mousePositionY) {
@@ -8725,7 +8725,7 @@ var paper;
                                     transformController_1.hovered = null;
                                 }
                                 else {
-                                    var raycastInfos = editor.Helper.raycastAll(transformController_1.mode.transform.children, defaultPointer.position.x, defaultPointer.position.y);
+                                    var raycastInfos = editor.Helper.raycastAll(transformController_1.mode.transform.children, defaultPointer.position.x, defaultPointer.position.y, true);
                                     if (raycastInfos.length > 0) {
                                         transformController_1.hovered = raycastInfos[0].transform.gameObject;
                                     }
@@ -8738,7 +8738,7 @@ var paper;
                                 transformController_1.hovered = null;
                             }
                             if (!transformController_1 || !transformController_1.isActiveAndEnabled || !transformController_1.hovered) {
-                                var raycastInfos = editor.Helper.raycastAll(paper.Scene.activeScene.getRootGameObjects(), defaultPointer.position.x, defaultPointer.position.y);
+                                var raycastInfos = editor.Helper.raycastAll(paper.Scene.activeScene.getRootGameObjects(), defaultPointer.position.x, defaultPointer.position.y, false);
                                 if (raycastInfos.length > 0) {
                                     this._modelComponent.hover(raycastInfos[0].transform.gameObject);
                                 }

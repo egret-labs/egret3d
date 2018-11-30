@@ -7203,7 +7203,11 @@ declare namespace egret3d {
         /**
          *
          */
-        stop(): void;
+        stop(animationName?: string | null, layerIndex?: uint): void;
+        /**
+         *
+         */
+        getState(animationName: string, layerIndex?: uint): AnimationState | null;
         /**
          *
          */
@@ -10350,5 +10354,5 @@ declare namespace egret3d {
      * @param cullingMask 只对特定层的实体检测。
      * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      */
-    function raycastAll(ray: Readonly<Ray>, gameObjectsOrComponents: ReadonlyArray<paper.GameObject | paper.BaseComponent>, maxDistance?: number, cullingMask?: paper.Layer, raycastMesh?: boolean): RaycastInfo[];
+    function raycastAll(ray: Readonly<Ray>, gameObjectsOrComponents: ReadonlyArray<paper.GameObject | paper.BaseComponent>, maxDistance?: number, cullingMask?: paper.Layer, raycastMesh?: boolean, backfaceCulling?: boolean): RaycastInfo[];
 }

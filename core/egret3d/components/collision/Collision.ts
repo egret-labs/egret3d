@@ -28,7 +28,7 @@ namespace egret3d {
 
     function _raycastAll(
         ray: Readonly<Ray>, gameObject: Readonly<paper.GameObject>,
-        maxDistance: number = 0.0, cullingMask: paper.Layer = paper.Layer.Everything, raycastMesh: boolean = false,
+        maxDistance: number, cullingMask: paper.Layer, raycastMesh: boolean, backfaceCulling: boolean,
         raycastInfos: RaycastInfo[]
     ) {
         if (
@@ -72,7 +72,7 @@ namespace egret3d {
 
         if (!raycastInfo.transform) {
             for (const child of gameObject.transform.children) {
-                _raycastAll(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+                _raycastAll(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, backfaceCulling, raycastInfos);
             }
         }
 
@@ -185,7 +185,7 @@ namespace egret3d {
      */
     export function raycastAll(
         ray: Readonly<Ray>, gameObjectsOrComponents: ReadonlyArray<paper.GameObject | paper.BaseComponent>,
-        maxDistance: number = 0.0, cullingMask: paper.Layer = paper.Layer.Everything, raycastMesh: boolean = false
+        maxDistance: number = 0.0, cullingMask: paper.Layer = paper.Layer.Everything, raycastMesh: boolean = false, backfaceCulling: boolean = true
     ) {
         const raycastInfos = [] as RaycastInfo[];
 
@@ -193,7 +193,7 @@ namespace egret3d {
             _raycastAll(
                 ray,
                 gameObjectOrComponent.constructor === paper.GameObject ? gameObjectOrComponent as paper.GameObject : (gameObjectOrComponent as paper.BaseComponent).gameObject,
-                maxDistance, cullingMask, raycastMesh, raycastInfos
+                maxDistance, cullingMask, raycastMesh, backfaceCulling, raycastInfos
             );
         }
 

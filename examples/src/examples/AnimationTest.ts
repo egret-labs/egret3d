@@ -14,16 +14,9 @@ namespace examples {
             animation.play("run01");
 
             //
-            gameObject.addComponent(behaviors.AnimationPlayer);
-            gameObject.addComponent(AnimationEventListener);
+            gameObject.addComponent(behaviors.AnimationHelper);
             //
             egret3d.Camera.main.gameObject.addComponent(behaviors.RotateComponent);
-        }
-    }
-
-    class AnimationEventListener extends paper.Behaviour {
-        public onAnimationEvent(animationEvent: egret3d.AnimationEvent) {
-            console.log(animationEvent.type, animationEvent.animationState.animationClip.name);
         }
     }
 }

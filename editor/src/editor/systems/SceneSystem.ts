@@ -326,7 +326,7 @@ namespace paper.editor {
                                 transformController.hovered = null;
                             }
                             else {
-                                const raycastInfos = Helper.raycastAll(transformController.mode.transform.children, defaultPointer.position.x, defaultPointer.position.y);
+                                const raycastInfos = Helper.raycastAll(transformController.mode.transform.children, defaultPointer.position.x, defaultPointer.position.y, true);
                                 if (raycastInfos.length > 0) {
                                     transformController.hovered = raycastInfos[0].transform!.gameObject;
                                 }
@@ -340,7 +340,7 @@ namespace paper.editor {
                         }
 
                         if (!transformController || !transformController.isActiveAndEnabled || !transformController.hovered) {
-                            const raycastInfos = Helper.raycastAll(Scene.activeScene.getRootGameObjects(), defaultPointer.position.x, defaultPointer.position.y);
+                            const raycastInfos = Helper.raycastAll(Scene.activeScene.getRootGameObjects(), defaultPointer.position.x, defaultPointer.position.y, false);
                             if (raycastInfos.length > 0) {
                                 this._modelComponent.hover(raycastInfos[0].transform!.gameObject);
                             }

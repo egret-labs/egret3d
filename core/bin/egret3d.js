@@ -17081,14 +17081,8 @@ var egret3d;
             for (var _i = 0, _a = this._animations; _i < _a.length; _i++) {
                 var eachAnimationAsset = _a[_i];
                 animationAsset = eachAnimationAsset;
-                if (animationClipName) {
-                    animationClip = eachAnimationAsset.getAnimationClip(animationClipName);
-                    if (animationClip !== null) {
-                        break;
-                    }
-                }
-                else {
-                    animationClip = eachAnimationAsset.getAnimationClip("");
+                animationClip = eachAnimationAsset.getAnimationClip(animationClipName);
+                if (animationClip !== null) {
                     break;
                 }
             }
@@ -17165,23 +17159,75 @@ var egret3d;
             else if (!animationClipNameOrNames) {
                 animationClipNameOrNames = "";
             }
-            return this.fadeIn(animationClipNameOrNames, 0.0, playTimes);
+            if (animationClipNameOrNames) {
+                this.fadeIn(animationClipNameOrNames, 0.0, playTimes);
+            }
+            else {
+                var lastAnimationState = this.lastAnimationState;
+                if (lastAnimationState) {
+                    if (!lastAnimationState.isPlaying && !lastAnimationState.isCompleted) {
+                        lastAnimationState.play();
+                    }
+                    else {
+                        this.fadeIn(lastAnimationState.animationClip.name, 0.0, playTimes);
+                    }
+                }
+                else {
+                    var animations = this._animations;
+                    if (animations.length > 0) {
+                        animationClipNameOrNames = animations[0].config.animations[0].extensions.paper.clips[0].name;
+                        this.fadeIn(animationClipNameOrNames, 0.0, playTimes);
+                    }
+                }
+            }
+            return this.lastAnimationState;
         };
         /**
          *
          */
-        Animation.prototype.stop = function () {
-            var fadeStatess = this._fadeStates;
-            for (var _i = 0, fadeStatess_2 = fadeStatess; _i < fadeStatess_2.length; _i++) {
-                var fadeStates = fadeStatess_2[_i];
-                for (var _a = 0, fadeStates_2 = fadeStates; _a < fadeStates_2.length; _a++) {
-                    var fadeState = fadeStates_2[_a];
-                    for (var _b = 0, _c = fadeState.states; _b < _c.length; _b++) {
-                        var animationState = _c[_b];
-                        animationState.stop();
+        Animation.prototype.stop = function (animationName, layerIndex) {
+            if (animationName === void 0) { animationName = null; }
+            if (layerIndex === void 0) { layerIndex = 0; }
+            if (animationName) {
+                var animationState = this.getState(animationName, layerIndex);
+                if (animationState) {
+                    animationState.stop();
+                }
+            }
+            else {
+                var fadeStatess = this._fadeStates;
+                for (var _i = 0, fadeStatess_2 = fadeStatess; _i < fadeStatess_2.length; _i++) {
+                    var fadeStates = fadeStatess_2[_i];
+                    for (var _a = 0, fadeStates_2 = fadeStates; _a < fadeStates_2.length; _a++) {
+                        var fadeState = fadeStates_2[_a];
+                        for (var _b = 0, _c = fadeState.states; _b < _c.length; _b++) {
+                            var animationState = _c[_b];
+                            animationState.stop();
+                        }
                     }
                 }
             }
+        };
+        /**
+         *
+         */
+        Animation.prototype.getState = function (animationName, layerIndex) {
+            if (layerIndex === void 0) { layerIndex = 0; }
+            var fadeStatess = this._fadeStates;
+            if (fadeStatess.length > layerIndex) {
+                var fadeStates = fadeStatess[layerIndex];
+                var i = fadeStates.length;
+                while (i--) {
+                    var fadeState = fadeStates[i];
+                    for (var _i = 0, _a = fadeState.states; _i < _a.length; _i++) {
+                        var animationState = _a[_i];
+                        if (animationState.animationClip.name === animationName) {
+                            return animationState;
+                        }
+                    }
+                }
+            }
+            return null;
         };
         Object.defineProperty(Animation.prototype, "lastAnimationnName", {
             /**
@@ -17231,7 +17277,11 @@ var egret3d;
                     var fadeStatess = this._fadeStates;
                     if (fadeStatess.length > layerIndex) {
                         var fadeStates = fadeStatess[layerIndex];
-                        return fadeStates.length > 0 ? fadeStates[fadeStates.length - 1].states[0] : null;
+                        if (fadeStates.length === 0) {
+                            return null;
+                        }
+                        var animationStates = fadeStates[fadeStates.length - 1].states;
+                        return animationStates[animationStates.length - 1];
                     }
                 }
                 return null;
@@ -27523,10 +27573,7 @@ var egret3d;
         }
         return false;
     }
-    function _raycastAll(ray, gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos) {
-        if (maxDistance === void 0) { maxDistance = 0.0; }
-        if (cullingMask === void 0) { cullingMask = 4294967295 /* Everything */; }
-        if (raycastMesh === void 0) { raycastMesh = false; }
+    function _raycastAll(ray, gameObject, maxDistance, cullingMask, raycastMesh, backfaceCulling, raycastInfos) {
         if ((gameObject.hideFlags === 3 /* HideAndDontSave */ && gameObject.tag === "EditorOnly" /* EditorOnly */ &&
             (!gameObject.transform.parent || gameObject.transform.parent.gameObject.activeInHierarchy)) ? gameObject.activeSelf : !gameObject.activeInHierarchy) {
             return false;
@@ -27559,7 +27606,7 @@ var egret3d;
         if (!raycastInfo.transform) {
             for (var _i = 0, _a = gameObject.transform.children; _i < _a.length; _i++) {
                 var child = _a[_i];
-                _raycastAll(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+                _raycastAll(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, backfaceCulling, raycastInfos);
             }
         }
         return true;
@@ -27656,14 +27703,15 @@ var egret3d;
      * @param cullingMask 只对特定层的实体检测。
      * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      */
-    function raycastAll(ray, gameObjectsOrComponents, maxDistance, cullingMask, raycastMesh) {
+    function raycastAll(ray, gameObjectsOrComponents, maxDistance, cullingMask, raycastMesh, backfaceCulling) {
         if (maxDistance === void 0) { maxDistance = 0.0; }
         if (cullingMask === void 0) { cullingMask = 4294967295 /* Everything */; }
         if (raycastMesh === void 0) { raycastMesh = false; }
+        if (backfaceCulling === void 0) { backfaceCulling = true; }
         var raycastInfos = [];
         for (var _i = 0, gameObjectsOrComponents_1 = gameObjectsOrComponents; _i < gameObjectsOrComponents_1.length; _i++) {
             var gameObjectOrComponent = gameObjectsOrComponents_1[_i];
-            _raycastAll(ray, gameObjectOrComponent.constructor === paper.GameObject ? gameObjectOrComponent : gameObjectOrComponent.gameObject, maxDistance, cullingMask, raycastMesh, raycastInfos);
+            _raycastAll(ray, gameObjectOrComponent.constructor === paper.GameObject ? gameObjectOrComponent : gameObjectOrComponent.gameObject, maxDistance, cullingMask, raycastMesh, backfaceCulling, raycastInfos);
         }
         raycastInfos.sort(_sortRaycastInfo);
         return raycastInfos;
