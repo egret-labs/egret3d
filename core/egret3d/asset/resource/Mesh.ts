@@ -16,19 +16,86 @@ namespace egret3d {
     /**
      * 
      */
-    export interface GLTFSkin extends gltf.Skin {
-        extensions: {
-            paper: {
-                retargeting?: { [key: string]: uint };
-            }
-        };
+    export const enum HumanoidMask {
+        Head,
+        Body,
+        LeftArm,
+        RightArm,
+        LeftHand,
+        RightHand,
+        LeftLeg,
+        RightLeg,
+        LeftHandIK,
+        RightHandIK,
+        LeftFootIK,
+        RightFootIK,
     }
     /**
      * 
      */
-    export interface SkinMask {
-        retargeting: string[];
-        joints?: gltf.Index[];
+    export const enum HumanoidJoint {
+        Heck = "H_Neck",
+        Head = "H_Head",
+        LeftEye = "H_LeftEye",
+        RightEye = "H_RightEye",
+        Jaw = "H_Jaw",
+
+        Hips = "B_Hips",
+        Spine = "B_Spine",
+        Chest = "B_Chest",
+        UpperChest = "B_UpperChest",
+
+        LeftShoulder = "LA_Shoulder",
+        LeftUpperArm = "LA_UpperArm",
+        LeftLowerArm = "LA_LowerArm",
+        LeftHand = "LA_Hand",
+
+        RightShoulder = "RA_Shoulder",
+        RightUpperArm = "RA_UpperArm",
+        RightLowerArm = "RA_LowerArm",
+        RightHand = "RA_Hand",
+
+        LeftUpperLeg = "LL_UpperLeg",
+        LeftLowerLeg = "LL_LowerLeg",
+        LeftFoot = "LL_Foot",
+        LeftToes = "LL_Toes",
+
+        RightUpperLeg = "RL_UpperLeg",
+        RightLowerLeg = "RL_LowerLeg",
+        RightFoot = "RL_Foot",
+        RightToes = "RL_Toes",
+
+        LeftThumbProximal = "LH_ThumbProximal",
+        LeftThumbIntermediate = "LH_ThumbIntermediate",
+        LeftThumbDistal = "LH_ThumbDistal",
+        LeftIndexProximal = "LH_IndexProximal",
+        LeftIndexIntermediate = "LH_IndexIntermediate",
+        LeftIndexDistal = "LH_IndexDistal",
+        LeftMiddleProximal = "LH_MiddleProximal",
+        LeftMiddleIntermediate = "LH_MiddleIntermediate",
+        LeftMiddleDistal = "LH_MiddleDistal",
+        LeftRingProximal = "LH_RingProximal",
+        LeftRingIntermediate = "LH_RingIntermediate",
+        LeftRingDistal = "LH_RingDistal",
+        LeftLittleProximal = "LH_LittleProximal",
+        LeftLittleIntermediate = "LH_LittleIntermediate",
+        LeftLittleDistal = "LH_LittleDistal",
+
+        RightThumbProximal = "RH_ThumbProximal",
+        RightThumbIntermediate = "RH_ThumbIntermediate",
+        RightThumbDistal = "RH_ThumbDistal",
+        RightIndexProximal = "RH_IndexProximal",
+        RightIndexIntermediate = "RH_IndexIntermediate",
+        RightIndexDistal = "RH_IndexDistal",
+        RightMiddleProximal = "RH_MiddleProximal",
+        RightMiddleIntermediate = "RH_MiddleIntermediate",
+        RightMiddleDistal = "RH_MiddleDistal",
+        RightRingProximal = "RH_RingProximal",
+        RightRingIntermediate = "RH_RingIntermediate",
+        RightRingDistal = "RH_RingDistal",
+        RightLittleProximal = "RH_LittleProximal",
+        RightLittleIntermediate = "RH_LittleIntermediate",
+        RightLittleDistal = "RH_LittleDistal",
     }
     /**
      * 网格资源。

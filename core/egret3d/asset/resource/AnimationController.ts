@@ -2,70 +2,6 @@ namespace egret3d {
     /**
      * @private
      */
-    export interface StateMachineNode {
-        _parent?: StateMachineNode;
-    }
-    /**
-     * @private
-     */
-    export interface StateMachine extends StateMachineNode {
-        name: string;
-        nodes: StateMachineNode[];
-    }
-    /**
-     * @private
-     */
-    export const enum AnimationBlendType {
-        E1D = 0,
-    }
-    /**
-     * @private
-     */
-    export interface AnimationParameter {
-        type: int;
-        value: boolean | int | number;
-    }
-    /**
-     * @private
-     */
-    export interface AnimationLayer {
-        additive: boolean;
-        weight: number;
-        name: string;
-        source: string | null;
-        machine: StateMachine;
-        /**
-         * @private
-         */
-        _clipNames?: string[];
-    }
-    /**
-     * @private
-     */
-    export interface AnimationBaseNode extends StateMachineNode {
-        timeScale: number;
-        positionX?: number;
-        positionY?: number;
-    }
-    /**
-     * @private
-     */
-    export interface AnimationTree extends AnimationBaseNode {
-        blendType: AnimationBlendType;
-        name: string;
-        parameters: string[];
-        nodes: AnimationBaseNode[];
-    }
-    /**
-     * @private
-     */
-    export interface AnimationNode extends AnimationBaseNode {
-        asset: string;
-        clip: string;
-    }
-    /**
-     * @private
-     */
     export class AnimationController extends GLTFAsset {
         public static create(): AnimationController {
             const asset = new AnimationController();
@@ -73,8 +9,8 @@ namespace egret3d {
             config.extensions = {
                 paper: {
                     animationControllers: [{
-                        parameters: [],
-                        layers: []
+                        layers: [],
+                        parameters: []
                     }]
                 },
             };
