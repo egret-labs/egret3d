@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 
+     * @private
      */
     export interface GLTFTexture extends gltf.Texture {
         extensions: {
