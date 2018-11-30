@@ -86,14 +86,8 @@ namespace egret3d {
 
             for (const eachAnimationAsset of this._animations) {
                 animationAsset = eachAnimationAsset;
-                if (animationClipName) {
-                    animationClip = eachAnimationAsset.getAnimationClip(animationClipName);
-                    if (animationClip !== null) {
-                        break;
-                    }
-                }
-                else {
-                    animationClip = eachAnimationAsset.getAnimationClip("");
+                animationClip = eachAnimationAsset.getAnimationClip(animationClipName);
+                if (animationClip !== null) {
                     break;
                 }
             }
@@ -174,20 +168,71 @@ namespace egret3d {
                 animationClipNameOrNames = "";
             }
 
-            return this.fadeIn(animationClipNameOrNames, 0.0, playTimes);
+            if (animationClipNameOrNames) {
+                this.fadeIn(animationClipNameOrNames, 0.0, playTimes);
+            }
+            else {
+                const lastAnimationState = this.lastAnimationState;
+
+                if (lastAnimationState) {
+                    if (!lastAnimationState.isPlaying && !lastAnimationState.isCompleted) {
+                        lastAnimationState.play();
+                    }
+                    else {
+                        this.fadeIn(lastAnimationState.animationClip.name, 0.0, playTimes);
+                    }
+                }
+                else {
+                    const animations = this._animations;
+                    if (animations.length > 0) {
+                        animationClipNameOrNames = (animations[0].config.animations![0] as GLTFAnimation).extensions.paper.clips[0].name;
+                        this.fadeIn(animationClipNameOrNames as string, 0.0, playTimes);
+                    }
+                }
+            }
+
+            return this.lastAnimationState;
         }
         /**
          * 
          */
-        public stop(): void {
-            const fadeStatess = this._fadeStates;
-            for (const fadeStates of fadeStatess) {
-                for (const fadeState of fadeStates) {
-                    for (const animationState of fadeState.states) {
-                        animationState.stop();
+        public stop(animationName: string | null = null, layerIndex: uint = 0): void {
+            if (animationName) {
+                const animationState = this.getState(animationName, layerIndex);
+                if (animationState) {
+                    animationState.stop();
+                }
+            }
+            else {
+                const fadeStatess = this._fadeStates;
+                for (const fadeStates of fadeStatess) {
+                    for (const fadeState of fadeStates) {
+                        for (const animationState of fadeState.states) {
+                            animationState.stop();
+                        }
                     }
                 }
             }
+        }
+        /**
+         * 
+         */
+        public getState(animationName: string, layerIndex: uint = 0): AnimationState | null {
+            const fadeStatess = this._fadeStates;
+            if (fadeStatess.length > layerIndex) {
+                const fadeStates = fadeStatess[layerIndex];
+                let i = fadeStates.length;
+                while (i--) {
+                    const fadeState = fadeStates[i];
+                    for (const animationState of fadeState.states) {
+                        if (animationState.animationClip.name === animationName) {
+                            return animationState;
+                        }
+                    }
+                }
+            }
+
+            return null;
         }
         /**
          * 
@@ -210,7 +255,7 @@ namespace egret3d {
         /**
          * 
          */
-        public get animationController() {
+        public get animationController(): AnimationController | null {
             return this._animationController;
         }
         /**
@@ -224,7 +269,13 @@ namespace egret3d {
                 const fadeStatess = this._fadeStates;
                 if (fadeStatess.length > layerIndex) {
                     const fadeStates = fadeStatess[layerIndex];
-                    return fadeStates.length > 0 ? fadeStates[fadeStates.length - 1].states[0] : null;
+                    if (fadeStates.length === 0) {
+                        return null;
+                    }
+
+                    const animationStates = fadeStates[fadeStates.length - 1].states;
+
+                    return animationStates[animationStates.length - 1];
                 }
             }
 
