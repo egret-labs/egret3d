@@ -736,11 +736,11 @@ namespace paper {
          * @param parameter 
          */
         public sendMessageUpwards<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
-            this.sendMessage(methodName, parameter, requireReceiver);
+            this.sendMessage(methodName as any, parameter, requireReceiver);
             //
             const parent = this.transform.parent;
             if (parent && parent.gameObject.activeInHierarchy) {
-                parent.gameObject.sendMessage(methodName, parameter, requireReceiver);
+                parent.gameObject.sendMessage(methodName as any, parameter, requireReceiver);
             }
         }
 
@@ -750,11 +750,11 @@ namespace paper {
          * @param parameter 
          */
         public broadcastMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
-            this.sendMessage(methodName, parameter, requireReceiver);
+            this.sendMessage(methodName as any, parameter, requireReceiver);
 
             for (const child of this.transform.children) {
                 if (child.gameObject.activeInHierarchy) {
-                    child.gameObject.broadcastMessage(methodName, parameter, requireReceiver);
+                    child.gameObject.broadcastMessage(methodName as any, parameter, requireReceiver);
                 }
             }
         }
