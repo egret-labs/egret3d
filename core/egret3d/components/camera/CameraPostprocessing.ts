@@ -1,11 +1,5 @@
 namespace egret3d {
     /**
-     * TODO 平台无关。
-     */
-    export interface ICameraPostProcessing {
-        render(camera: Camera): void;
-    }
-    /**
      * @beta 这是一个试验性质的 API，有可能会被删除或修改。
      */
     export abstract class CameraPostprocessing extends paper.BaseComponent {

@@ -98,10 +98,10 @@
         "egret3d/components/collision/CylinderCollider.ts",
         "egret3d/components/collision/Collision.ts",
 
-        "egret3d/components/camera/CameraSystem.ts",
         "egret3d/components/camera/Camera.ts",
         "egret3d/components/camera/CameraPostprocessing.ts",
         "egret3d/components/camera/CameraRenderContext.ts",
+        "egret3d/components/camera/CameraAndLightSystem.ts",
 
         "egret3d/components/light/Shadow.ts",
         "egret3d/components/light/BaseLight.ts",

@@ -26,9 +26,6 @@ namespace egret3d {
           */
         public _version: uint = 0;
         private _cacheDefines: string = "";
-        /**
-          * @internal
-          */
         private readonly _defines: Array<string> = [];
         private readonly _textures: BaseTexture[] = []; // TODO
         /**

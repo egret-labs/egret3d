@@ -12,8 +12,10 @@ namespace egret3d {
          * 当舞台尺寸改变时派发事件。
          */
         public readonly onResize: signals.Signal = new signals.Signal();
-
-        public scaler: number = 1.0;
+        /**
+         * 
+         */
+        public readonly scaler: number = 1.0;
 
         private _rotated: boolean = false;
         private _matchFactor: number = 1.0;
@@ -37,7 +39,7 @@ namespace egret3d {
 
                 const scalerW = size.w / screenW;
                 const scalerH = size.h / screenH;
-                this.scaler = math.lerp(scalerW, scalerH, this._matchFactor);
+                (this.scaler as number) = math.lerp(scalerW, scalerH, this._matchFactor);
 
                 viewport.w = Math.ceil(screenW * this.scaler);
                 viewport.h = Math.ceil(screenH * this.scaler);
@@ -45,7 +47,7 @@ namespace egret3d {
             else {
                 const scalerW = Math.min(size.w, screenSize.w) / screenSize.w;
                 const scalerH = size.h / screenSize.h;
-                this.scaler = math.lerp(scalerW, scalerH, this._matchFactor);
+                (this.scaler as number) = math.lerp(scalerW, scalerH, this._matchFactor);
 
                 this._rotated = false;
                 viewport.w = Math.ceil(screenSize.w * this.scaler);
@@ -58,7 +60,7 @@ namespace egret3d {
         public initialize(config: { size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
             super.initialize();
 
-            stage = this;
+            (stage as Stage) = this;
             this._size.w = config.size.w || 1.0;
             this._size.h = config.size.h || 1.0;
             this._screenSize.w = config.screenSize.w || 1.0;
@@ -86,9 +88,9 @@ namespace egret3d {
         }
         /**
          * 舞台到屏幕坐标的转换。
+            // TODO
          */
         public stageToScreen(value: Readonly<Vector3>, out: Vector3) {
-            // TODO
             return this;
         }
         /**
@@ -159,5 +161,5 @@ namespace egret3d {
     /**
      * 全局舞台信息组件实例。
      */
-    export let stage: Stage = null!;
+    export const stage: Stage = null!;
 }

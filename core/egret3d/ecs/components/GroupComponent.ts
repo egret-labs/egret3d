@@ -3,9 +3,8 @@ namespace paper {
      * @internal
      */
     export class GroupComponent extends paper.BaseComponent {
-        public componentIndex: number = -1;
-        public componentClass: IComponentClass<BaseComponent> = null as any;
-
+        public componentIndex: int = -1;
+        public componentClass: IComponentClass<BaseComponent> = null!;
         public readonly components: BaseComponent[] = [];
 
         public addComponent(component: BaseComponent) {

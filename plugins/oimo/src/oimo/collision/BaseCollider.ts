@@ -18,7 +18,7 @@ namespace egret3d.oimo {
          */
         @paper.serializedField
         protected readonly _values: Float32Array = new Float32Array([
-            paper.CullingMask.Everything, paper.CullingMask.Everything, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
+            paper.Layer.Everything, paper.Layer.Everything, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
         ]);
         protected _oimoShape: OIMO.Shape = null as any;
 

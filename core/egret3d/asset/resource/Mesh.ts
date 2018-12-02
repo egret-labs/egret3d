@@ -339,6 +339,7 @@ namespace egret3d {
                                 );
 
                                 if (raycastInfo) {
+                                    helpRaycastInfo.backfaceCulling = raycastInfo.backfaceCulling;
                                     if (
                                         helpTriangleA.raycast(ray, helpRaycastInfo) &&
                                         (!hit || raycastInfo.distance > helpRaycastInfo.distance)
@@ -367,6 +368,7 @@ namespace egret3d {
                                 helpTriangleA.fromArray(castVertices, i);
 
                                 if (raycastInfo) {
+                                    helpRaycastInfo.backfaceCulling = raycastInfo.backfaceCulling;
                                     if (helpTriangleA.raycast(ray, helpRaycastInfo)) {
                                         if (!hit || raycastInfo.distance > helpRaycastInfo.distance) {
                                             raycastInfo.subMeshIndex = subMeshIndex;

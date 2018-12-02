@@ -12,7 +12,7 @@ namespace paper {
                 return this.missingObject.class;
             }
 
-            return '';
+            return "";
         }
         /**
          * 已丢失或不支持的组件数据。

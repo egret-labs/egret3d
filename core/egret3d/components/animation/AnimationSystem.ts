@@ -3,7 +3,7 @@ namespace egret3d {
      * 动画系统。
      */
     export class AnimationSystem extends paper.BaseSystem {
-        protected readonly _interests = [
+        public readonly interests = [
             { componentClass: Animation }
         ];
 
@@ -261,7 +261,7 @@ namespace egret3d {
         }
 
         public onUpdate(deltaTime: number) {
-            for (const gameObject of this._groups[0].gameObjects) {
+            for (const gameObject of this.groups[0].gameObjects) {
                 const animation = this._animation = gameObject.getComponent(Animation)!;
                 const animationController = animation.animationController!;
                 if (!animationController) {

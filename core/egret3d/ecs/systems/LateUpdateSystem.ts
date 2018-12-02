@@ -3,14 +3,14 @@ namespace paper {
      * Late 更新系统。
      */
     export class LateUpdateSystem extends BaseSystem {
-        protected readonly _interests = [
+        public readonly interests = [
             { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
         ];
         private readonly _laterCalls: (() => void)[] = [];
 
         public onUpdate(deltaTime: number) {
             // Update behaviours.
-            const components = this._groups[0].components as ReadonlyArray<Behaviour | null>;
+            const components = this.groups[0].components as ReadonlyArray<Behaviour | null>;
 
             if (Application.playerMode === PlayerMode.Editor) {
                 for (const component of components) {
@@ -29,12 +29,13 @@ namespace paper {
             //
             egret.ticker.update(); // TODO 帧频
             //
-            if (this._laterCalls.length > 0) {
-                for (const callback of this._laterCalls) {
+            const laterCalls = this._laterCalls;
+            if (laterCalls.length > 0) {
+                for (const callback of laterCalls) {
                     callback();
                 }
 
-                this._laterCalls.length = 0;
+                laterCalls.length = 0;
             }
         }
         /**

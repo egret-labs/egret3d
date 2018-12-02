@@ -8,7 +8,7 @@ namespace egret3d {
          */
         public static maxBoneCount: number = 36;
 
-        protected readonly _interests = [
+        public readonly interests = [
             {
                 componentClass: SkinnedMeshRenderer,
                 listeners: [
@@ -32,7 +32,7 @@ namespace egret3d {
         private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
 
         private _updateDrawCalls(gameObject: paper.GameObject) {
-            if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
+            if (!this.enabled || !this.groups[0].hasGameObject(gameObject)) {
                 return;
             }
 
@@ -60,7 +60,7 @@ namespace egret3d {
         }
 
         public onEnable() {
-            for (const gameObject of this._groups[0].gameObjects) {
+            for (const gameObject of this.groups[0].gameObjects) {
                 this._updateDrawCalls(gameObject);
             }
         }
@@ -79,13 +79,13 @@ namespace egret3d {
         }
 
         public onUpdate() {
-            for (const gameObject of this._groups[0].gameObjects) {
+            for (const gameObject of this.groups[0].gameObjects) {
                 (gameObject.renderer as SkinnedMeshRenderer)._update();
             }
         }
 
         public onDisable() {
-            for (const gameObject of this._groups[0].gameObjects) {
+            for (const gameObject of this.groups[0].gameObjects) {
                 this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
             }
         }

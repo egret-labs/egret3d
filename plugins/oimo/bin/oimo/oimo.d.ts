@@ -7606,7 +7606,7 @@ declare namespace egret3d.oimo {
     /**
      *
      */
-    class CylinderCollider extends BaseCollider {
+    class ConeCollider extends BaseCollider {
         readonly colliderType: ColliderType;
         private _radius;
         private _height;
@@ -7619,6 +7619,19 @@ declare namespace egret3d.oimo {
          *
          */
         height: number;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     *
+     */
+    class RayTester extends paper.Behaviour {
+        distance: number;
+        collisionMask: paper.Layer;
+        private _hitted;
+        private _mesh;
+        onStart(): void;
+        onUpdate(): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -7658,7 +7671,47 @@ declare namespace egret3d.oimo {
     /**
      *
      */
-    class ConeCollider extends BaseCollider {
+    class PhysicsSystem extends paper.BaseSystem {
+        private static _instance;
+        /**
+         *
+         */
+        static getInstance(): PhysicsSystem;
+        readonly interests: ({
+            componentClass: typeof Rigidbody;
+        } | {
+            componentClass: (typeof BoxCollider | typeof SphereCollider)[];
+            type: paper.InterestType;
+        } | {
+            componentClass: (typeof SphericalJoint | typeof HingeJoint | typeof ConeTwistJoint)[];
+            type: paper.InterestType;
+        })[][];
+        private readonly _gravity;
+        private readonly _rayCastClosest;
+        private readonly _contactCallback;
+        private readonly _contactColliders;
+        private _oimoWorld;
+        raycast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        onAwake(): void;
+        onAddGameObject(gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
+        onAddComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup): void;
+        onRemoveComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup): void;
+        onRemoveGameObject(gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
+        onUpdate(): void;
+        onDestroy(): void;
+        /**
+         *
+         */
+        gravity: Readonly<IVector3>;
+        readonly oimoWorld: OIMO.World;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     *
+     */
+    class CylinderCollider extends BaseCollider {
         readonly colliderType: ColliderType;
         private _radius;
         private _height;
@@ -7671,19 +7724,6 @@ declare namespace egret3d.oimo {
          *
          */
         height: number;
-    }
-}
-declare namespace egret3d.oimo {
-    /**
-     *
-     */
-    class RayTester extends paper.Behaviour {
-        distance: number;
-        collisionMask: paper.CullingMask;
-        private _hitted;
-        private _mesh;
-        onStart(): void;
-        onUpdate(): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -7818,44 +7858,21 @@ declare namespace egret3d.oimo {
         axis: Readonly<IVector3>;
     }
 }
-declare namespace egret3d.oimo {
+declare namespace paper {
     /**
-     *
+     * 默认标识和自定义标识。
      */
-    class PhysicsSystem extends paper.BaseSystem {
-        private static _instance;
-        /**
-         *
-         */
-        static getInstance(): PhysicsSystem;
-        protected readonly _interests: ({
-            componentClass: typeof Rigidbody;
-        } | {
-            componentClass: (typeof BoxCollider | typeof SphereCollider)[];
-            type: paper.InterestType;
-        } | {
-            componentClass: (typeof ConeTwistJoint | typeof HingeJoint | typeof SphericalJoint)[];
-            type: paper.InterestType;
-        })[][];
-        private readonly _gravity;
-        private readonly _rayCastClosest;
-        private readonly _contactCallback;
-        private readonly _contactColliders;
-        private _oimoWorld;
-        raycast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        onAwake(): void;
-        onAddGameObject(gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
-        onAddComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup): void;
-        onRemoveComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup): void;
-        onRemoveGameObject(gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
-        onUpdate(): void;
-        onDestroy(): void;
-        /**
-         *
-         */
-        gravity: Readonly<IVector3>;
-        readonly oimoWorld: OIMO.World;
+    const enum DefaultTags {
+    }
+    /**
+     * 内置层级和自定义层级。
+     */
+    const enum Layer {
+    }
+    /**
+     * 渲染排序。
+     */
+    const enum RenderQueue {
     }
 }
 declare namespace egret3d.oimo {

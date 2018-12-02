@@ -4,7 +4,7 @@ namespace egret3d {
      * - 为网格渲染组件生成绘制信息。
      */
     export class MeshRendererSystem extends paper.BaseSystem {
-        protected readonly _interests = [
+        public readonly interests = [
             {
                 componentClass: MeshFilter,
                 listeners: [{
@@ -31,7 +31,7 @@ namespace egret3d {
         private _updateDrawCalls(gameObject: paper.GameObject, pass?: boolean) {
             if (
                 !pass &&
-                (!this._enabled || !this._groups[0].hasGameObject(gameObject))
+                (!this.enabled || !this.groups[0].hasGameObject(gameObject))
             ) {
                 return;
             }
@@ -61,7 +61,7 @@ namespace egret3d {
         }
 
         public onEnable() {
-            for (const gameObject of this._groups[0].gameObjects) {
+            for (const gameObject of this.groups[0].gameObjects) {
                 this._updateDrawCalls(gameObject, true);
             }
         }
@@ -75,7 +75,7 @@ namespace egret3d {
         }
 
         public onDisable() {
-            for (const gameObject of this._groups[0].gameObjects) {
+            for (const gameObject of this.groups[0].gameObjects) {
                 this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
             }
         }

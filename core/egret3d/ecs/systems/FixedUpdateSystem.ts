@@ -4,24 +4,25 @@ namespace paper {
      * TODO
      */
     export class FixedUpdateSystem extends BaseSystem {
-        protected readonly _interests = [
+        public readonly interests = [
             { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
         ];
 
         public onUpdate() {
+            const clock = this.clock;
             let currentTimes = 0;
-            let fixedTime = this._clock.fixedTime;
-            const totalTimes = Math.min(Math.floor(fixedTime / this._clock.fixedDeltaTime), this._clock.maxFixedSubSteps);
-            const components = this._groups[0].components as ReadonlyArray<paper.Behaviour>;
+            let fixedTime = clock.fixedTime;
+            const totalTimes = Math.min(Math.floor(fixedTime / clock.fixedDeltaTime), clock.maxFixedSubSteps);
+            const components = this.groups[0].components as ReadonlyArray<paper.Behaviour>;
 
-            while (fixedTime >= this._clock.fixedDeltaTime && currentTimes++ < this._clock.maxFixedSubSteps) {
+            while (fixedTime >= clock.fixedDeltaTime && currentTimes++ < clock.maxFixedSubSteps) {
                 for (const component of components) {
                     if (component) {
                         component.onFixedUpdate && component.onFixedUpdate(currentTimes, totalTimes);
                     }
                 }
 
-                fixedTime -= this._clock.fixedDeltaTime;
+                fixedTime -= clock.fixedDeltaTime;
             }
         }
     }

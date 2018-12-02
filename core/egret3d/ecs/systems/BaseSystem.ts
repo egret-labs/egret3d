@@ -14,39 +14,37 @@ namespace paper {
             return new systemClass(order);
         }
         /**
+         * 该系统是否被激活。
+         */
+        public enabled: boolean = true;
+        /**
          * 该系统的执行顺序。
          */
         public readonly order: SystemOrder = -1;
         /**
          * 该系统在调试模式时每帧消耗的时间，仅用于性能统计。（以毫秒为单位）
          */
-        public deltaTime: uint = 0;
-        /**
-         * @private
-         */
-        public _started: boolean = true;
-        private _locked: boolean = false;
-        /**
-         * 该系统是否被激活。
-         */
-        protected _enabled: boolean = true;
-
-        private _startTime: uint = 0;
-        /**
-         * 
-         */
-        protected readonly _interests: ReadonlyArray<InterestConfig | ReadonlyArray<InterestConfig>> = [];
-        /**
-         * 
-         */
-        protected readonly _groups: GameObjectGroup[] = [];
+        public readonly deltaTime: uint = 0;
         /**
          * 全局时钟信息组件实例。
          */
-        protected readonly _clock: Clock = GameObject.globalGameObject.getOrAddComponent(Clock);
+        public readonly clock: Clock = GameObject.globalGameObject.getOrAddComponent(Clock);
+        /**
+         * 
+         */
+        public readonly interests: ReadonlyArray<InterestConfig | ReadonlyArray<InterestConfig>> = [];
+        /**
+         * 该系统关心的实体组。
+         */
+        public readonly groups: ReadonlyArray<GameObjectGroup> = [];
+        /**
+         * @private
+         */
+        public _started: boolean = false;
+        private _enabled: boolean = false;
         /**
          * 禁止实例化系统。
-         * @private
+         * @protected
          */
         public constructor(order: SystemOrder = -1) {
             if (!_createEnabled) {
@@ -61,15 +59,18 @@ namespace paper {
          * @private
          */
         public initialize(config?: any) {
-            if (this._interests.length > 0) {
+            (this.interests as any) = this.interests || (this as any)["_interests"]; // TODO
+            if (this.interests.length > 0) {
                 let interests: ReadonlyArray<ReadonlyArray<InterestConfig>>;
 
-                if (Array.isArray(this._interests[0])) {
-                    interests = this._interests as ReadonlyArray<ReadonlyArray<InterestConfig>>;
+                if (Array.isArray(this.interests[0])) {
+                    interests = this.interests as ReadonlyArray<ReadonlyArray<InterestConfig>>;
                 }
                 else {
-                    interests = [this._interests as ReadonlyArray<InterestConfig>];
+                    interests = [this.interests as ReadonlyArray<InterestConfig>];
                 }
+
+                const groups = this.groups as GameObjectGroup[];
 
                 for (const interest of interests) {
                     for (const config of interest) {
@@ -80,12 +81,11 @@ namespace paper {
                         }
                     }
 
-                    this._groups.push(GameObjectGroup.create(interest));
+                    groups.push(GameObjectGroup.create(interest));
                 }
             }
 
             this.onAwake && this.onAwake(config);
-            this.onEnable && this.onEnable();
         }
         /**
          * 系统内部卸载。
@@ -94,14 +94,14 @@ namespace paper {
         public uninitialize() {
             this.onDestroy && this.onDestroy();
 
-            if (this._interests.length > 0) {
+            if (this.interests.length > 0) {
                 let interests: ReadonlyArray<ReadonlyArray<InterestConfig>>;
 
-                if (Array.isArray(this._interests[0])) {
-                    interests = this._interests as ReadonlyArray<ReadonlyArray<InterestConfig>>;
+                if (Array.isArray(this.interests[0])) {
+                    interests = this.interests as ReadonlyArray<ReadonlyArray<InterestConfig>>;
                 }
                 else {
-                    interests = [this._interests as ReadonlyArray<InterestConfig>];
+                    interests = [this.interests as ReadonlyArray<InterestConfig>];
                 }
 
                 for (const interest of interests) {
@@ -120,41 +120,60 @@ namespace paper {
          * @private
          */
         public update() {
-            if (!this._enabled || !this._started) {
-                return;
-            }
+            const enabled = this.enabled;
 
-            if (DEBUG) {
-                this._startTime = this._clock.now;
-                this.deltaTime = 0;
-            }
-
-            this._locked = true;
-
-            for (const group of this._groups) {
-                if (this.onAddGameObject) {
-                    for (const gameObject of group._addedGameObjects) {
-                        if (gameObject) {
-                            this.onAddGameObject(gameObject, group);
-                        }
-                    }
-                }
-
-                if (this.onAddComponent) {
-                    for (const component of group._addedComponents) {
-                        if (component) {
-                            this.onAddComponent(component, group);
-                        }
+            if (this._enabled !== enabled) {
+                if (enabled) {
+                    this.onEnable && this.onEnable();
+                    if (DEBUG) {
+                        console.info(egret.getQualifiedClassName(this), "enabled.");
                     }
                 }
             }
 
-            this.onUpdate && this.onUpdate(this._clock.deltaTime);
+            if (enabled && this._started) {
+                let startTime = 0;
+                const clock = this.clock;
 
-            this._locked = false;
+                if (DEBUG) {
+                    (this.deltaTime as uint) = 0;
+                    startTime = clock.now;
+                }
 
-            if (DEBUG) {
-                this.deltaTime += this._clock.now - this._startTime;
+                for (const group of this.groups) {
+                    if (this.onAddGameObject) {
+                        for (const gameObject of group._addedGameObjects) {
+                            if (gameObject) {
+                                this.onAddGameObject(gameObject, group);
+                            }
+                        }
+                    }
+
+                    if (this.onAddComponent) {
+                        for (const component of group._addedComponents) {
+                            if (component) {
+                                this.onAddComponent(component, group);
+                            }
+                        }
+                    }
+                }
+
+                this.onUpdate && this.onUpdate(clock.deltaTime);
+
+                if (DEBUG) {
+                    (this.deltaTime as uint) += clock.now - startTime;
+                }
+            }
+
+            if (this._enabled !== enabled) {
+                this._enabled = enabled;
+
+                if (!enabled) {
+                    this.onDisable && this.onDisable();
+                    if (DEBUG) {
+                        console.info(egret.getQualifiedClassName(this), "disabled.");
+                    }
+                }
             }
         }
         /**
@@ -162,20 +181,19 @@ namespace paper {
          * @private
          */
         public lateUpdate() {
-            if (!this._enabled || !this._started) {
-                return;
-            }
+            if (this.enabled && this._started) {
+                let startTime = 0;
+                const clock = this.clock;
 
-            if (DEBUG) {
-                this._startTime = this._clock.now;
-            }
+                if (DEBUG) {
+                    startTime = clock.now;
+                }
 
-            this._locked = true;
-            this.onLateUpdate && this.onLateUpdate(this._clock.deltaTime);
-            this._locked = false;
+                this.onLateUpdate && this.onLateUpdate(clock.deltaTime);
 
-            if (DEBUG) {
-                this.deltaTime += this._clock.now - this._startTime;
+                if (DEBUG) {
+                    (this.deltaTime as uint) += clock.now - startTime;
+                }
             }
         }
         /**
@@ -243,36 +261,5 @@ namespace paper {
          * @see paper.Application#systemManager
          */
         public onDestroy?(): void;
-        /**
-         * 该系统是否被激活。
-         */
-        public get enabled() {
-            return this._enabled;
-        }
-        public set enabled(value: boolean) {
-            if (this._locked) {
-                console.warn("Cannot change the enabled value when the system is updating.", egret.getQualifiedClassName(this));
-                return;
-            }
-
-            if (this._enabled === value) {
-                return;
-            }
-
-            this._enabled = value;
-
-            if (this._enabled) {
-                this.onEnable && this.onEnable();
-            }
-            else {
-                this.onDisable && this.onDisable();
-            }
-        }
-        /**
-         * 该系统关心的实体组。
-         */
-        public get groups(): ReadonlyArray<GameObjectGroup> {
-            return this._groups;
-        }
     }
 }

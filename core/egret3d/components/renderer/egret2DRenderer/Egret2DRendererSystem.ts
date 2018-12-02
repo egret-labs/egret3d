@@ -12,7 +12,7 @@ namespace egret3d {
          */
         public static webgl: WebGLRenderingContext | null = null;
 
-        protected readonly _interests = [
+        public readonly interests = [
             { componentClass: Egret2DRenderer }
         ];
         /**
@@ -124,7 +124,7 @@ namespace egret3d {
 
         public onUpdate(deltaTime: number) {
             const { w, h } = stage.viewport;
-            for (const gameObject of this._groups[0].gameObjects) {
+            for (const gameObject of this.groups[0].gameObjects) {
                 (gameObject.renderer as Egret2DRenderer).update(deltaTime, w, h);
             }
         }

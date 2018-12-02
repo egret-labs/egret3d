@@ -58,11 +58,6 @@ namespace paper {
             this.systemManager.update();
         }
 
-        private _updatePlayerMode() {
-            // if (this._playerMode !== PlayerMode.Player) { TODO
-            //     egret3d.Camera.editor; // Active editor camera.
-            // }
-        }
         /**
          * @internal
          */
@@ -72,10 +67,8 @@ namespace paper {
             this.systemManager.register(StartSystem, SystemOrder.Start);
             this.systemManager.register(FixedUpdateSystem, SystemOrder.FixedUpdate);
             this.systemManager.register(UpdateSystem, SystemOrder.Update);
-            this.systemManager.register(LateUpdateSystem, SystemOrder.LaterUpdate);
+            this.systemManager.register(LateUpdateSystem, SystemOrder.LateUpdate);
             this.systemManager.register(DisableSystem, SystemOrder.Disable);
-            this._updatePlayerMode();
-            this.resume();
         }
         /**
          * TODO

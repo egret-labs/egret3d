@@ -242,21 +242,24 @@ namespace egret3d {
             }
         }
 
-        protected _onParentChange(newParent: Transform | null, oldParent: Transform | null) {
+        private _addToCollecter() {
+            const parentChangedGameObjects = paper._parentChangedGameObjects;
+            if (parentChangedGameObjects.indexOf(this.gameObject) < 0) {
+                parentChangedGameObjects.push(this.gameObject);
+            }
+        }
+
+        private _onParentChange(newParent: Transform | null, oldParent: Transform | null) {
             const prevActive = oldParent ? oldParent.gameObject.activeInHierarchy : this.gameObject.activeSelf;
             if ((newParent ? newParent.gameObject.activeInHierarchy : this.gameObject.activeSelf) !== prevActive) {
                 this.gameObject._activeInHierarchyDirty(prevActive);
             }
 
             this._dirtify(false, TransformDirty.PRS);
-
-            const parentChangedGameObjects = paper.disposeCollecter.parentChangedGameObjects;
-            if (parentChangedGameObjects.indexOf(this.gameObject) < 0) {
-                paper.disposeCollecter.parentChangedGameObjects.push(this.gameObject);
-            }
+            this._addToCollecter();
         }
 
-        protected _onPositionUpdate(position: Readonly<Vector3>): void {
+        private _onPositionUpdate(position: Readonly<Vector3>): void {
             if (position === this._localPosition) {
                 this._dirtify(true, TransformDirty.Position);
             }
@@ -265,7 +268,7 @@ namespace egret3d {
             }
         }
 
-        protected _onRotationUpdate(rotation: Readonly<Quaternion>): void {
+        private _onRotationUpdate(rotation: Readonly<Quaternion>): void {
             if (rotation === this._localRotation) {
                 this._dirtify(true, TransformDirty.Rotation);
             }
@@ -274,7 +277,7 @@ namespace egret3d {
             }
         }
 
-        protected _onEulerUpdate(euler: Readonly<Vector3>): void {
+        private _onEulerUpdate(euler: Readonly<Vector3>): void {
             if (euler === this._localEuler) {
                 this.localEuler = euler;
             }
@@ -283,7 +286,7 @@ namespace egret3d {
             }
         }
 
-        protected _onEulerAnglesUpdate(euler: Readonly<Vector3>): void {
+        private _onEulerAnglesUpdate(euler: Readonly<Vector3>): void {
             if (euler === this._localEulerAngles) {
                 this.localEulerAngles = euler;
             }
@@ -292,7 +295,7 @@ namespace egret3d {
             }
         }
 
-        protected _onScaleUpdate(scale: Readonly<Vector3>): void {
+        private _onScaleUpdate(scale: Readonly<Vector3>): void {
             if (scale === this._localScale) {
                 this._dirtify(true, TransformDirty.Scale);
             }
@@ -314,6 +317,7 @@ namespace egret3d {
             this._localEulerAngles.onUpdate = this._eulerAngles.onUpdate = this._onEulerAnglesUpdate;
             this._localScale.onUpdateTarget = this._scale.onUpdateTarget = this;
             this._localScale.onUpdate = this._scale.onUpdate = this._onScaleUpdate;
+            this._addToCollecter();
         }
 
         public uninitialize() {

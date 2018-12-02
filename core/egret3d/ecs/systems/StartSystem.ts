@@ -3,7 +3,7 @@ namespace paper {
      * @internal
      */
     export class StartSystem extends BaseSystem {
-        protected readonly _interests = [
+        public readonly interests = [
             { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
         ];
 

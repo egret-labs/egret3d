@@ -168,30 +168,33 @@ namespace egret3d {
                 animationClipNameOrNames = "";
             }
 
+            let animationState: AnimationState | null = null;
+
             if (animationClipNameOrNames) {
-                this.fadeIn(animationClipNameOrNames, 0.0, playTimes);
+                animationState = this.fadeIn(animationClipNameOrNames, 0.0, playTimes);
             }
             else {
                 const lastAnimationState = this.lastAnimationState;
 
                 if (lastAnimationState) {
                     if (!lastAnimationState.isPlaying && !lastAnimationState.isCompleted) {
+                        animationState = lastAnimationState;
                         lastAnimationState.play();
                     }
                     else {
-                        this.fadeIn(lastAnimationState.animationClip.name, 0.0, playTimes);
+                        animationState = this.fadeIn(lastAnimationState.animationClip.name, 0.0, playTimes);
                     }
                 }
                 else {
                     const animations = this._animations;
                     if (animations.length > 0) {
                         animationClipNameOrNames = (animations[0].config.animations![0] as GLTFAnimation).extensions.paper.clips[0].name;
-                        this.fadeIn(animationClipNameOrNames as string, 0.0, playTimes);
+                        animationState = this.fadeIn(animationClipNameOrNames as string, 0.0, playTimes);
                     }
                 }
             }
 
-            return this.lastAnimationState;
+            return animationState;
         }
         /**
          * 

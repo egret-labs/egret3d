@@ -41886,7 +41886,7 @@ var egret3d;
                  * [Type, Mass, LinearDamping, AngularDamping];
                  */
                 _this._values = new Float32Array([
-                    16777215 /* Everything */, 16777215 /* Everything */, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
+                    4294967295 /* Everything */, 4294967295 /* Everything */, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
                 ]);
                 _this._oimoShape = null;
                 return _this;
@@ -42199,23 +42199,23 @@ var egret3d;
         /**
          *
          */
-        var CylinderCollider = (function (_super) {
-            __extends(CylinderCollider, _super);
-            function CylinderCollider() {
+        var ConeCollider = (function (_super) {
+            __extends(ConeCollider, _super);
+            function ConeCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.colliderType = egret3d.ColliderType.Cylinder;
+                _this.colliderType = egret3d.ColliderType.Cone;
                 _this._radius = 1.0;
                 _this._height = 1.0;
                 return _this;
             }
-            CylinderCollider.prototype._createShape = function () {
+            ConeCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
-                config.geometry = new OIMO.CylinderGeometry(this._radius, this._height * 0.5);
+                config.geometry = new OIMO.ConeGeometry(this._radius, this._height * 0.5);
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
             };
-            Object.defineProperty(CylinderCollider.prototype, "radius", {
+            Object.defineProperty(ConeCollider.prototype, "radius", {
                 /**
                  *
                  */
@@ -42236,7 +42236,7 @@ var egret3d;
                 enumerable: true,
                 configurable: true
             });
-            Object.defineProperty(CylinderCollider.prototype, "height", {
+            Object.defineProperty(ConeCollider.prototype, "height", {
                 /**
                  *
                  */
@@ -42259,17 +42259,135 @@ var egret3d;
             });
             __decorate([
                 paper.serializedField
-            ], CylinderCollider.prototype, "_radius", void 0);
+            ], ConeCollider.prototype, "_radius", void 0);
             __decorate([
                 paper.serializedField
-            ], CylinderCollider.prototype, "_height", void 0);
-            CylinderCollider = __decorate([
+            ], ConeCollider.prototype, "_height", void 0);
+            ConeCollider = __decorate([
                 paper.requireComponent(oimo.Rigidbody)
-            ], CylinderCollider);
-            return CylinderCollider;
+            ], ConeCollider);
+            return ConeCollider;
         }(oimo.BaseCollider));
-        oimo.CylinderCollider = CylinderCollider;
-        __reflect(CylinderCollider.prototype, "egret3d.oimo.CylinderCollider");
+        oimo.ConeCollider = ConeCollider;
+        __reflect(ConeCollider.prototype, "egret3d.oimo.ConeCollider");
+    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var oimo;
+    (function (oimo) {
+        var _attributes = [
+            "POSITION" /* POSITION */,
+            "COLOR_0" /* COLOR_0 */,
+        ];
+        var _material = null;
+        /**
+         *
+         */
+        var RayTester = (function (_super) {
+            __extends(RayTester, _super);
+            function RayTester() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.distance = 10.0;
+                _this.collisionMask = 4294967295 /* Everything */;
+                _this._hitted = false;
+                _this._mesh = null;
+                return _this;
+            }
+            RayTester.prototype.onStart = function () {
+                var meshFilter = this.gameObject.getOrAddComponent(egret3d.MeshFilter);
+                var meshRender = this.gameObject.getOrAddComponent(egret3d.MeshRenderer);
+                this._mesh = egret3d.Mesh.create(4, 0, _attributes);
+                var vertices = this._mesh.getVertices();
+                var colors = this._mesh.getColors();
+                vertices[0] = 0.0;
+                vertices[1] = 0.0;
+                vertices[2] = 0.0;
+                vertices[3] = 0.0;
+                vertices[4] = 0.0;
+                vertices[5] = this.distance;
+                vertices[6] = 0.0;
+                vertices[7] = 0.0;
+                vertices[8] = this.distance;
+                vertices[9] = 0.0;
+                vertices[10] = 0.0;
+                vertices[11] = this.distance;
+                for (var i = 0, l = colors.length; i < l; i += 4) {
+                    colors[i + 0] = 0.0;
+                    colors[i + 1] = 1.0;
+                    colors[i + 2] = 0.0;
+                    colors[i + 3] = 0.7;
+                }
+                this._mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
+                if (!_material) {
+                    _material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
+                }
+                meshRender.materials = [_material];
+                meshFilter.mesh = this._mesh;
+            };
+            RayTester.prototype.onUpdate = function () {
+                var transform = this.gameObject.transform;
+                var matrix = transform.getWorldMatrix();
+                var from = transform.getPosition();
+                var to = matrix.transformVector3(egret3d.Vector3.create(this.distance, 0.0, 0.0).release());
+                var raycastInfo = oimo.PhysicsSystem.getInstance().raycast(from, to, this.collisionMask);
+                if (raycastInfo) {
+                    this._hitted = true;
+                    var inverseMatrix = matrix.clone().inverse();
+                    var v = raycastInfo.normal.applyMatrix(inverseMatrix).multiplyScalar(1.0);
+                    var vertices = this._mesh.getVertices();
+                    var colors = this._mesh.getColors();
+                    inverseMatrix.release();
+                    vertices[3] = raycastInfo.distance;
+                    vertices[4] = 0.0;
+                    vertices[5] = 0.0;
+                    vertices[6] = raycastInfo.distance;
+                    vertices[7] = 0.0;
+                    vertices[8] = 0.0;
+                    vertices[9] = v.x + raycastInfo.distance;
+                    vertices[10] = v.y;
+                    vertices[11] = v.z;
+                    for (var i = 2 * 4, l = colors.length; i < l; i += 4) {
+                        colors[i + 0] = 1.0;
+                        colors[i + 1] = 0.0;
+                        colors[i + 2] = 0.0;
+                        colors[i + 3] = 0.7;
+                    }
+                    this._mesh.uploadVertexBuffer();
+                    raycastInfo.release();
+                }
+                else if (this._hitted) {
+                    this._hitted = false;
+                    var vertices = this._mesh.getVertices();
+                    var colors = this._mesh.getColors();
+                    vertices[3] = 0.0;
+                    vertices[4] = 0.0;
+                    vertices[5] = this.distance;
+                    vertices[6] = 0.0;
+                    vertices[7] = 0.0;
+                    vertices[8] = this.distance;
+                    vertices[9] = 0.0;
+                    vertices[10] = 0.0;
+                    vertices[11] = this.distance;
+                    for (var i = 2 * 4, l = colors.length; i < l; i += 4) {
+                        colors[i + 0] = 0.0;
+                        colors[i + 1] = 1.0;
+                        colors[i + 2] = 0.0;
+                        colors[i + 3] = 0.7;
+                    }
+                    this._mesh.uploadVertexBuffer();
+                }
+            };
+            __decorate([
+                paper.serializedField
+            ], RayTester.prototype, "distance", void 0);
+            __decorate([
+                paper.serializedField
+            ], RayTester.prototype, "collisionMask", void 0);
+            return RayTester;
+        }(paper.Behaviour));
+        oimo.RayTester = RayTester;
+        __reflect(RayTester.prototype, "egret3d.oimo.RayTester");
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -42408,26 +42526,294 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
+        var _helpVector3 = egret3d.Vector3.create();
+        var _helpVector4 = egret3d.Vector4.create();
         /**
          *
          */
-        var ConeCollider = (function (_super) {
-            __extends(ConeCollider, _super);
-            function ConeCollider() {
+        var PhysicsSystem = (function (_super) {
+            __extends(PhysicsSystem, _super);
+            function PhysicsSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.colliderType = egret3d.ColliderType.Cone;
+                _this.interests = [
+                    [
+                        { componentClass: oimo.Rigidbody },
+                        {
+                            componentClass: [oimo.BoxCollider, oimo.SphereCollider],
+                            type: 4 /* Unessential */
+                        },
+                        {
+                            componentClass: [oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint],
+                            type: 4 /* Unessential */
+                        }
+                    ]
+                ];
+                _this._gravity = egret3d.Vector3.create(0.0, -9.80665, 0.0);
+                _this._rayCastClosest = new OIMO.RayCastClosest();
+                _this._contactCallback = new OIMO.ContactCallback();
+                _this._contactColliders = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.ContactCollecter);
+                _this._oimoWorld = null;
+                return _this;
+            }
+            /**
+             *
+             */
+            PhysicsSystem.getInstance = function () {
+                return this._instance;
+            };
+            PhysicsSystem.prototype.raycast = function (rayOrFrom, distanceOrTo, mask, raycastInfo) {
+                var rayCastClosest = this._rayCastClosest;
+                rayCastClosest.clear(); // TODO mask.
+                if (rayOrFrom instanceof egret3d.Ray) {
+                    distanceOrTo = _helpVector3.multiplyScalar(distanceOrTo || 100.0, rayOrFrom.direction).add(rayOrFrom.origin);
+                    rayOrFrom = rayOrFrom.origin;
+                }
+                this._oimoWorld.rayCast(rayOrFrom, distanceOrTo, rayCastClosest);
+                if (rayCastClosest.hit) {
+                    raycastInfo = raycastInfo || egret3d.RaycastInfo.create();
+                    raycastInfo.distance = egret3d.Vector3.getDistance(rayOrFrom, distanceOrTo) * rayCastClosest.fraction;
+                    raycastInfo.position.copy(rayCastClosest.position);
+                    if (raycastInfo.normal) {
+                        raycastInfo.normal.copy(rayCastClosest.normal);
+                    }
+                    raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData;
+                    raycastInfo.collider = rayCastClosest.shape.userData;
+                    return raycastInfo;
+                }
+                return null;
+            };
+            PhysicsSystem.prototype.onAwake = function () {
+                var _this = this;
+                PhysicsSystem._instance = this;
+                this._oimoWorld = new OIMO.World();
+                this._oimoWorld.setGravity(this._gravity);
+                this._contactCallback.beginContact = function (contact) {
+                    // do {
+                    // }
+                    // while (contact.getNext());
+                    //TODO
+                    _this._contactColliders.begin.push(contact);
+                    _this._contactColliders.stay.push(contact);
+                    var colliderA = contact.getShape1().userData;
+                    var colliderB = contact.getShape2().userData;
+                    for (var _i = 0, _a = colliderA.gameObject.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
+                        var behaviour = _a[_i];
+                        behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderB);
+                    }
+                    for (var _b = 0, _c = colliderB.gameObject.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
+                        var behaviour = _c[_b];
+                        behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderA);
+                    }
+                };
+                this._contactCallback.preSolve = function (contact) {
+                };
+                this._contactCallback.postSolve = function (contact) {
+                };
+                this._contactCallback.endContact = function (contact) {
+                    //TODO
+                    _this._contactColliders.end.push(contact);
+                    var stay = _this._contactColliders.stay;
+                    var index = stay.indexOf(contact);
+                    if (index >= 0) {
+                        stay.splice(index, 1);
+                    }
+                    var colliderA = contact.getShape1().userData;
+                    var colliderB = contact.getShape2().userData;
+                    for (var _i = 0, _a = colliderA.gameObject.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
+                        var behaviour = _a[_i];
+                        behaviour.onCollisionExit && behaviour.onCollisionExit(colliderB);
+                    }
+                    for (var _b = 0, _c = colliderB.gameObject.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
+                        var behaviour = _c[_b];
+                        behaviour.onCollisionExit && behaviour.onCollisionExit(colliderA);
+                    }
+                };
+            };
+            PhysicsSystem.prototype.onAddGameObject = function (gameObject, group) {
+                var rigidbody = gameObject.getComponent(oimo.Rigidbody);
+                for (var _i = 0, _a = gameObject.getComponents(oimo.BaseCollider, true); _i < _a.length; _i++) {
+                    var shape = _a[_i];
+                    if (!shape.oimoShape._rigidBody) {
+                        rigidbody.oimoRigidbody.addShape(shape.oimoShape);
+                        // rigidbody._updateMass(rigidbody.oimoRigidbody);
+                    }
+                }
+                for (var _b = 0, _c = gameObject.getComponents(oimo.Joint, true); _b < _c.length; _b++) {
+                    var joint = _c[_b];
+                    if (!joint.oimoJoint._world) {
+                        this._oimoWorld.addJoint(joint.oimoJoint);
+                    }
+                }
+                this._oimoWorld.addRigidBody(rigidbody.oimoRigidbody);
+            };
+            PhysicsSystem.prototype.onAddComponent = function (component, group) {
+                if (group !== this.groups[0]) {
+                    return;
+                }
+                if (component instanceof oimo.BaseCollider) {
+                    if (!component.oimoShape._rigidBody) {
+                        var rigidbody = component.gameObject.getComponent(oimo.Rigidbody);
+                        rigidbody.oimoRigidbody.addShape(component.oimoShape);
+                        // rigidbody._updateMass(rigidbody.oimoRigidbody);
+                    }
+                    if (!component.oimoShape.getContactCallback()) {
+                        component.oimoShape.setContactCallback(this._contactCallback);
+                    }
+                }
+                else if (component instanceof oimo.Joint && !component.oimoJoint._world) {
+                    this._oimoWorld.addJoint(component.oimoJoint);
+                }
+            };
+            PhysicsSystem.prototype.onRemoveComponent = function (component, group) {
+                if (group !== this.groups[0]) {
+                    return;
+                }
+                if (component instanceof oimo.BaseCollider) {
+                    var rigidbody = component.gameObject.getComponent(oimo.Rigidbody);
+                    if (component.oimoShape._rigidBody) {
+                        rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                    }
+                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
+                }
+                else if (component instanceof oimo.Joint) {
+                    this._oimoWorld.removeJoint(component.oimoJoint);
+                }
+            };
+            PhysicsSystem.prototype.onRemoveGameObject = function (gameObject, group) {
+                var rigidbody = gameObject.getComponent(oimo.Rigidbody);
+                for (var _i = 0, _a = gameObject.getComponents(oimo.Joint, true); _i < _a.length; _i++) {
+                    var joint = _a[_i];
+                    this._oimoWorld.removeJoint(joint.oimoJoint);
+                }
+                this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
+            };
+            PhysicsSystem.prototype.onUpdate = function () {
+                var currentTimes = 0;
+                var fixedTime = this.clock.fixedTime;
+                var gameObjects = this.groups[0].gameObjects;
+                var oimoTransform = PhysicsSystem._helpTransform;
+                while (fixedTime >= this.clock.fixedDeltaTime && currentTimes++ < this.clock.maxFixedSubSteps) {
+                    for (var _i = 0, gameObjects_1 = gameObjects; _i < gameObjects_1.length; _i++) {
+                        var gameObject = gameObjects_1[_i];
+                        var transform = gameObject.transform;
+                        var rigidbody = gameObject.getComponent(oimo.Rigidbody);
+                        var oimoRigidbody = rigidbody.oimoRigidbody;
+                        switch (rigidbody.type) {
+                            case 2 /* KINEMATIC */:
+                            case 1 /* STATIC */:
+                                if (oimoRigidbody.isSleeping()) {
+                                }
+                                else {
+                                    var position = transform.getPosition();
+                                    var quaternion = transform.getRotation();
+                                    oimoTransform.setPosition(position);
+                                    oimoTransform.setOrientation(quaternion);
+                                    oimoRigidbody.setTransform(oimoTransform);
+                                }
+                                break;
+                        }
+                    }
+                    this._oimoWorld.step(this.clock.fixedDeltaTime);
+                    for (var _a = 0, gameObjects_2 = gameObjects; _a < gameObjects_2.length; _a++) {
+                        var gameObject = gameObjects_2[_a];
+                        var transform = gameObject.transform;
+                        var rigidbody = gameObject.getComponent(oimo.Rigidbody);
+                        var oimoRigidbody = rigidbody.oimoRigidbody;
+                        switch (rigidbody.type) {
+                            case 0 /* DYNAMIC */:
+                                if (oimoRigidbody.isSleeping()) {
+                                }
+                                else {
+                                    oimoRigidbody.getTransformTo(oimoTransform);
+                                    oimoTransform.getPositionTo(_helpVector3);
+                                    oimoTransform.getOrientationTo(_helpVector4);
+                                    transform.setPosition(_helpVector3);
+                                    transform.setRotation(_helpVector4);
+                                }
+                                break;
+                        }
+                    }
+                    //
+                    var stay = this._contactColliders.stay;
+                    if (stay.length > 0) {
+                        for (var _b = 0, stay_1 = stay; _b < stay_1.length; _b++) {
+                            var contact = stay_1[_b];
+                            var colliderA = contact.getShape1().userData;
+                            var colliderB = contact.getShape2().userData;
+                            for (var _c = 0, _d = colliderA.gameObject.getComponents(paper.Behaviour, true); _c < _d.length; _c++) {
+                                var behaviour = _d[_c];
+                                behaviour.onCollisionStay && behaviour.onCollisionStay(colliderB);
+                            }
+                            for (var _e = 0, _f = colliderB.gameObject.getComponents(paper.Behaviour, true); _e < _f.length; _e++) {
+                                var behaviour = _f[_e];
+                                behaviour.onCollisionStay && behaviour.onCollisionStay(colliderA);
+                            }
+                        }
+                    }
+                    fixedTime -= this.clock.fixedDeltaTime;
+                }
+            };
+            PhysicsSystem.prototype.onDestroy = function () {
+                // TODO
+            };
+            Object.defineProperty(PhysicsSystem.prototype, "gravity", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._gravity;
+                },
+                set: function (value) {
+                    this._gravity.copy(value);
+                    this._oimoWorld.setGravity(this._gravity);
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(PhysicsSystem.prototype, "oimoWorld", {
+                get: function () {
+                    return this._oimoWorld;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            PhysicsSystem._instance = null;
+            /**
+             * @internal
+             */
+            PhysicsSystem._helpTransform = new OIMO.Transform();
+            return PhysicsSystem;
+        }(paper.BaseSystem));
+        oimo.PhysicsSystem = PhysicsSystem;
+        __reflect(PhysicsSystem.prototype, "egret3d.oimo.PhysicsSystem");
+        //
+        paper.Application.systemManager.preRegister(PhysicsSystem, 3000 /* FixedUpdate */);
+    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var oimo;
+    (function (oimo) {
+        /**
+         *
+         */
+        var CylinderCollider = (function (_super) {
+            __extends(CylinderCollider, _super);
+            function CylinderCollider() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.colliderType = egret3d.ColliderType.Cylinder;
                 _this._radius = 1.0;
                 _this._height = 1.0;
                 return _this;
             }
-            ConeCollider.prototype._createShape = function () {
+            CylinderCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
-                config.geometry = new OIMO.ConeGeometry(this._radius, this._height * 0.5);
+                config.geometry = new OIMO.CylinderGeometry(this._radius, this._height * 0.5);
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
             };
-            Object.defineProperty(ConeCollider.prototype, "radius", {
+            Object.defineProperty(CylinderCollider.prototype, "radius", {
                 /**
                  *
                  */
@@ -42448,7 +42834,7 @@ var egret3d;
                 enumerable: true,
                 configurable: true
             });
-            Object.defineProperty(ConeCollider.prototype, "height", {
+            Object.defineProperty(CylinderCollider.prototype, "height", {
                 /**
                  *
                  */
@@ -42471,135 +42857,17 @@ var egret3d;
             });
             __decorate([
                 paper.serializedField
-            ], ConeCollider.prototype, "_radius", void 0);
+            ], CylinderCollider.prototype, "_radius", void 0);
             __decorate([
                 paper.serializedField
-            ], ConeCollider.prototype, "_height", void 0);
-            ConeCollider = __decorate([
+            ], CylinderCollider.prototype, "_height", void 0);
+            CylinderCollider = __decorate([
                 paper.requireComponent(oimo.Rigidbody)
-            ], ConeCollider);
-            return ConeCollider;
+            ], CylinderCollider);
+            return CylinderCollider;
         }(oimo.BaseCollider));
-        oimo.ConeCollider = ConeCollider;
-        __reflect(ConeCollider.prototype, "egret3d.oimo.ConeCollider");
-    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var oimo;
-    (function (oimo) {
-        var _attributes = [
-            "POSITION" /* POSITION */,
-            "COLOR_0" /* COLOR_0 */,
-        ];
-        var _material = null;
-        /**
-         *
-         */
-        var RayTester = (function (_super) {
-            __extends(RayTester, _super);
-            function RayTester() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.distance = 10.0;
-                _this.collisionMask = 16777215 /* Everything */;
-                _this._hitted = false;
-                _this._mesh = null;
-                return _this;
-            }
-            RayTester.prototype.onStart = function () {
-                var meshFilter = this.gameObject.getOrAddComponent(egret3d.MeshFilter);
-                var meshRender = this.gameObject.getOrAddComponent(egret3d.MeshRenderer);
-                this._mesh = new egret3d.Mesh(4, 0, _attributes);
-                var vertices = this._mesh.getVertices();
-                var colors = this._mesh.getColors();
-                vertices[0] = 0.0;
-                vertices[1] = 0.0;
-                vertices[2] = 0.0;
-                vertices[3] = 0.0;
-                vertices[4] = 0.0;
-                vertices[5] = this.distance;
-                vertices[6] = 0.0;
-                vertices[7] = 0.0;
-                vertices[8] = this.distance;
-                vertices[9] = 0.0;
-                vertices[10] = 0.0;
-                vertices[11] = this.distance;
-                for (var i = 0, l = colors.length; i < l; i += 4) {
-                    colors[i + 0] = 0.0;
-                    colors[i + 1] = 1.0;
-                    colors[i + 2] = 0.0;
-                    colors[i + 3] = 0.7;
-                }
-                this._mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
-                if (!_material) {
-                    _material = new egret3d.Material(egret3d.DefaultShaders.LINEDASHED);
-                }
-                meshRender.materials = [_material];
-                meshFilter.mesh = this._mesh;
-            };
-            RayTester.prototype.onUpdate = function () {
-                var transform = this.gameObject.transform;
-                var matrix = transform.getWorldMatrix();
-                var from = transform.getPosition();
-                var to = matrix.transformVector3(egret3d.Vector3.create(this.distance, 0.0, 0.0).release());
-                var raycastInfo = oimo.PhysicsSystem.getInstance().raycast(from, to, this.collisionMask);
-                if (raycastInfo) {
-                    this._hitted = true;
-                    var inverseMatrix = matrix.clone().inverse();
-                    var v = raycastInfo.normal.applyMatrix(inverseMatrix).multiplyScalar(1.0);
-                    var vertices = this._mesh.getVertices();
-                    var colors = this._mesh.getColors();
-                    inverseMatrix.release();
-                    vertices[3] = raycastInfo.distance;
-                    vertices[4] = 0.0;
-                    vertices[5] = 0.0;
-                    vertices[6] = raycastInfo.distance;
-                    vertices[7] = 0.0;
-                    vertices[8] = 0.0;
-                    vertices[9] = v.x + raycastInfo.distance;
-                    vertices[10] = v.y;
-                    vertices[11] = v.z;
-                    for (var i = 2 * 4, l = colors.length; i < l; i += 4) {
-                        colors[i + 0] = 1.0;
-                        colors[i + 1] = 0.0;
-                        colors[i + 2] = 0.0;
-                        colors[i + 3] = 0.7;
-                    }
-                    this._mesh.uploadVertexBuffer();
-                    raycastInfo.release();
-                }
-                else if (this._hitted) {
-                    this._hitted = false;
-                    var vertices = this._mesh.getVertices();
-                    var colors = this._mesh.getColors();
-                    vertices[3] = 0.0;
-                    vertices[4] = 0.0;
-                    vertices[5] = this.distance;
-                    vertices[6] = 0.0;
-                    vertices[7] = 0.0;
-                    vertices[8] = this.distance;
-                    vertices[9] = 0.0;
-                    vertices[10] = 0.0;
-                    vertices[11] = this.distance;
-                    for (var i = 2 * 4, l = colors.length; i < l; i += 4) {
-                        colors[i + 0] = 0.0;
-                        colors[i + 1] = 1.0;
-                        colors[i + 2] = 0.0;
-                        colors[i + 3] = 0.7;
-                    }
-                    this._mesh.uploadVertexBuffer();
-                }
-            };
-            __decorate([
-                paper.serializedField
-            ], RayTester.prototype, "distance", void 0);
-            __decorate([
-                paper.serializedField
-            ], RayTester.prototype, "collisionMask", void 0);
-            return RayTester;
-        }(paper.Behaviour));
-        oimo.RayTester = RayTester;
-        __reflect(RayTester.prototype, "egret3d.oimo.RayTester");
+        oimo.CylinderCollider = CylinderCollider;
+        __reflect(CylinderCollider.prototype, "egret3d.oimo.CylinderCollider");
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -43230,274 +43498,6 @@ var egret3d;
         }(oimo.Joint));
         oimo.HingeJoint = HingeJoint;
         __reflect(HingeJoint.prototype, "egret3d.oimo.HingeJoint");
-    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var oimo;
-    (function (oimo) {
-        var _helpVector3 = egret3d.Vector3.create();
-        var _helpVector4 = egret3d.Vector4.create();
-        /**
-         *
-         */
-        var PhysicsSystem = (function (_super) {
-            __extends(PhysicsSystem, _super);
-            function PhysicsSystem() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._interests = [
-                    [
-                        { componentClass: oimo.Rigidbody },
-                        {
-                            componentClass: [oimo.BoxCollider, oimo.SphereCollider],
-                            type: 4 /* Unessential */
-                        },
-                        {
-                            componentClass: [oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint],
-                            type: 4 /* Unessential */
-                        }
-                    ]
-                ];
-                _this._gravity = egret3d.Vector3.create(0.0, -9.80665, 0.0);
-                _this._rayCastClosest = new OIMO.RayCastClosest();
-                _this._contactCallback = new OIMO.ContactCallback();
-                _this._contactColliders = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.ContactCollecter);
-                _this._oimoWorld = null;
-                return _this;
-            }
-            /**
-             *
-             */
-            PhysicsSystem.getInstance = function () {
-                return this._instance;
-            };
-            PhysicsSystem.prototype.raycast = function (rayOrFrom, distanceOrTo, mask, raycastInfo) {
-                var rayCastClosest = this._rayCastClosest;
-                rayCastClosest.clear(); // TODO mask.
-                if (rayOrFrom instanceof egret3d.Ray) {
-                    distanceOrTo = _helpVector3.multiplyScalar(distanceOrTo || 100.0, rayOrFrom.direction).add(rayOrFrom.origin);
-                    rayOrFrom = rayOrFrom.origin;
-                }
-                this._oimoWorld.rayCast(rayOrFrom, distanceOrTo, rayCastClosest);
-                if (rayCastClosest.hit) {
-                    raycastInfo = raycastInfo || egret3d.RaycastInfo.create();
-                    raycastInfo.distance = egret3d.Vector3.getDistance(rayOrFrom, distanceOrTo) * rayCastClosest.fraction;
-                    raycastInfo.position.copy(rayCastClosest.position);
-                    if (raycastInfo.normal) {
-                        raycastInfo.normal.copy(rayCastClosest.normal);
-                    }
-                    raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData;
-                    raycastInfo.collider = rayCastClosest.shape.userData;
-                    return raycastInfo;
-                }
-                return null;
-            };
-            PhysicsSystem.prototype.onAwake = function () {
-                var _this = this;
-                PhysicsSystem._instance = this;
-                this._oimoWorld = new OIMO.World();
-                this._oimoWorld.setGravity(this._gravity);
-                this._contactCallback.beginContact = function (contact) {
-                    // do {
-                    // }
-                    // while (contact.getNext());
-                    //TODO
-                    _this._contactColliders.begin.push(contact);
-                    _this._contactColliders.stay.push(contact);
-                    var colliderA = contact.getShape1().userData;
-                    var colliderB = contact.getShape2().userData;
-                    for (var _i = 0, _a = colliderA.gameObject.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
-                        var behaviour = _a[_i];
-                        behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderB);
-                    }
-                    for (var _b = 0, _c = colliderB.gameObject.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
-                        var behaviour = _c[_b];
-                        behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderA);
-                    }
-                };
-                this._contactCallback.preSolve = function (contact) {
-                };
-                this._contactCallback.postSolve = function (contact) {
-                };
-                this._contactCallback.endContact = function (contact) {
-                    //TODO
-                    _this._contactColliders.end.push(contact);
-                    var stay = _this._contactColliders.stay;
-                    var index = stay.indexOf(contact);
-                    if (index >= 0) {
-                        stay.splice(index, 1);
-                    }
-                    var colliderA = contact.getShape1().userData;
-                    var colliderB = contact.getShape2().userData;
-                    for (var _i = 0, _a = colliderA.gameObject.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
-                        var behaviour = _a[_i];
-                        behaviour.onCollisionExit && behaviour.onCollisionExit(colliderB);
-                    }
-                    for (var _b = 0, _c = colliderB.gameObject.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
-                        var behaviour = _c[_b];
-                        behaviour.onCollisionExit && behaviour.onCollisionExit(colliderA);
-                    }
-                };
-            };
-            PhysicsSystem.prototype.onAddGameObject = function (gameObject, group) {
-                var rigidbody = gameObject.getComponent(oimo.Rigidbody);
-                for (var _i = 0, _a = gameObject.getComponents(oimo.BaseCollider, true); _i < _a.length; _i++) {
-                    var shape = _a[_i];
-                    if (!shape.oimoShape._rigidBody) {
-                        rigidbody.oimoRigidbody.addShape(shape.oimoShape);
-                        // rigidbody._updateMass(rigidbody.oimoRigidbody);
-                    }
-                }
-                for (var _b = 0, _c = gameObject.getComponents(oimo.Joint, true); _b < _c.length; _b++) {
-                    var joint = _c[_b];
-                    if (!joint.oimoJoint._world) {
-                        this._oimoWorld.addJoint(joint.oimoJoint);
-                    }
-                }
-                this._oimoWorld.addRigidBody(rigidbody.oimoRigidbody);
-            };
-            PhysicsSystem.prototype.onAddComponent = function (component, group) {
-                if (group !== this._groups[0]) {
-                    return;
-                }
-                if (component instanceof oimo.BaseCollider) {
-                    if (!component.oimoShape._rigidBody) {
-                        var rigidbody = component.gameObject.getComponent(oimo.Rigidbody);
-                        rigidbody.oimoRigidbody.addShape(component.oimoShape);
-                        // rigidbody._updateMass(rigidbody.oimoRigidbody);
-                    }
-                    if (!component.oimoShape.getContactCallback()) {
-                        component.oimoShape.setContactCallback(this._contactCallback);
-                    }
-                }
-                else if (component instanceof oimo.Joint && !component.oimoJoint._world) {
-                    this._oimoWorld.addJoint(component.oimoJoint);
-                }
-            };
-            PhysicsSystem.prototype.onRemoveComponent = function (component, group) {
-                if (group !== this._groups[0]) {
-                    return;
-                }
-                if (component instanceof oimo.BaseCollider) {
-                    var rigidbody = component.gameObject.getComponent(oimo.Rigidbody);
-                    if (component.oimoShape._rigidBody) {
-                        rigidbody.oimoRigidbody.removeShape(component.oimoShape);
-                    }
-                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
-                }
-                else if (component instanceof oimo.Joint) {
-                    this._oimoWorld.removeJoint(component.oimoJoint);
-                }
-            };
-            PhysicsSystem.prototype.onRemoveGameObject = function (gameObject, group) {
-                var rigidbody = gameObject.getComponent(oimo.Rigidbody);
-                for (var _i = 0, _a = gameObject.getComponents(oimo.Joint, true); _i < _a.length; _i++) {
-                    var joint = _a[_i];
-                    this._oimoWorld.removeJoint(joint.oimoJoint);
-                }
-                this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
-            };
-            PhysicsSystem.prototype.onUpdate = function () {
-                var currentTimes = 0;
-                var fixedTime = this._clock.fixedTime;
-                var gameObjects = this._groups[0].gameObjects;
-                var oimoTransform = PhysicsSystem._helpTransform;
-                while (fixedTime >= this._clock.fixedDeltaTime && currentTimes++ < this._clock.maxFixedSubSteps) {
-                    for (var _i = 0, gameObjects_1 = gameObjects; _i < gameObjects_1.length; _i++) {
-                        var gameObject = gameObjects_1[_i];
-                        var transform = gameObject.transform;
-                        var rigidbody = gameObject.getComponent(oimo.Rigidbody);
-                        var oimoRigidbody = rigidbody.oimoRigidbody;
-                        switch (rigidbody.type) {
-                            case 2 /* KINEMATIC */:
-                            case 1 /* STATIC */:
-                                if (oimoRigidbody.isSleeping()) {
-                                }
-                                else {
-                                    var position = transform.getPosition();
-                                    var quaternion = transform.getRotation();
-                                    oimoTransform.setPosition(position);
-                                    oimoTransform.setOrientation(quaternion);
-                                    oimoRigidbody.setTransform(oimoTransform);
-                                }
-                                break;
-                        }
-                    }
-                    this._oimoWorld.step(this._clock.fixedDeltaTime);
-                    for (var _a = 0, gameObjects_2 = gameObjects; _a < gameObjects_2.length; _a++) {
-                        var gameObject = gameObjects_2[_a];
-                        var transform = gameObject.transform;
-                        var rigidbody = gameObject.getComponent(oimo.Rigidbody);
-                        var oimoRigidbody = rigidbody.oimoRigidbody;
-                        switch (rigidbody.type) {
-                            case 0 /* DYNAMIC */:
-                                if (oimoRigidbody.isSleeping()) {
-                                }
-                                else {
-                                    oimoRigidbody.getTransformTo(oimoTransform);
-                                    oimoTransform.getPositionTo(_helpVector3);
-                                    oimoTransform.getOrientationTo(_helpVector4);
-                                    transform.setPosition(_helpVector3);
-                                    transform.setRotation(_helpVector4);
-                                }
-                                break;
-                        }
-                    }
-                    //
-                    var stay = this._contactColliders.stay;
-                    if (stay.length > 0) {
-                        for (var _b = 0, stay_1 = stay; _b < stay_1.length; _b++) {
-                            var contact = stay_1[_b];
-                            var colliderA = contact.getShape1().userData;
-                            var colliderB = contact.getShape2().userData;
-                            for (var _c = 0, _d = colliderA.gameObject.getComponents(paper.Behaviour, true); _c < _d.length; _c++) {
-                                var behaviour = _d[_c];
-                                behaviour.onCollisionStay && behaviour.onCollisionStay(colliderB);
-                            }
-                            for (var _e = 0, _f = colliderB.gameObject.getComponents(paper.Behaviour, true); _e < _f.length; _e++) {
-                                var behaviour = _f[_e];
-                                behaviour.onCollisionStay && behaviour.onCollisionStay(colliderA);
-                            }
-                        }
-                    }
-                    fixedTime -= this._clock.fixedDeltaTime;
-                }
-            };
-            PhysicsSystem.prototype.onDestroy = function () {
-                // TODO
-            };
-            Object.defineProperty(PhysicsSystem.prototype, "gravity", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._gravity;
-                },
-                set: function (value) {
-                    this._gravity.copy(value);
-                    this._oimoWorld.setGravity(this._gravity);
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(PhysicsSystem.prototype, "oimoWorld", {
-                get: function () {
-                    return this._oimoWorld;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            PhysicsSystem._instance = null;
-            /**
-             * @internal
-             */
-            PhysicsSystem._helpTransform = new OIMO.Transform();
-            return PhysicsSystem;
-        }(paper.BaseSystem));
-        oimo.PhysicsSystem = PhysicsSystem;
-        __reflect(PhysicsSystem.prototype, "egret3d.oimo.PhysicsSystem");
-        //
-        paper.Application.systemManager.preRegister(PhysicsSystem, 3000 /* FixedUpdate */);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;

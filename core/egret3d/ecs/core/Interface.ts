@@ -106,9 +106,9 @@ namespace paper {
         FixedUpdate = 3000,
         Update = 4000,
         Animation = 5000,
-        LaterUpdate = 6000,
-        Renderer = 7000,
-        Draw = 8000,
+        LateUpdate = 6000,
+        BeforeRenderer = 7000,
+        Renderer = 8000,
         Disable = 9000,
         End = 10000,
     }

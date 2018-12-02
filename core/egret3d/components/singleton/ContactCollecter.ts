@@ -18,7 +18,7 @@ namespace egret3d {
         /**
          * @internal
          */
-        public update(deltaTime: number) {
+        public _update() {
             if (this.begin.length > 0) {
                 this.begin.length = 0;
             }

@@ -147,20 +147,20 @@ namespace paper {
          * - 重写此方法时，必须调用 `super.initialize()`。
          * @param config 实体添加该组件时可以传递的初始化数据。
          */
-        public initialize(config?: any) {
+        public initialize(config?: any): void {
         }
 
         /**
          * 移除组件后，组件内部卸载时执行。
          * - 重写此方法时，必须调用 `super.uninitialize()`。
          */
-        public uninitialize() {
+        public uninitialize(): void {
         }
 
         /**
          * 该组件是否已被销毁。
          */
-        public get isDestroyed() {
+        public get isDestroyed(): boolean {
             return !this.gameObject;
         }
 
@@ -168,7 +168,7 @@ namespace paper {
          * 该组件自身的激活状态。
          */
         @editor.property(editor.EditType.CHECKBOX)
-        public get enabled() {
+        public get enabled(): boolean {
             return this._enabled;
         }
         public set enabled(value: boolean) {
@@ -193,7 +193,7 @@ namespace paper {
         /**
          * 该组件在场景的激活状态。
          */
-        public get isActiveAndEnabled() {
+        public get isActiveAndEnabled(): boolean {
             // return this._enabled && this.gameObject.activeInHierarchy;
             return this._enabled && (this.gameObject._activeDirty ? this.gameObject.activeInHierarchy : this.gameObject._activeInHierarchy);
         }
@@ -201,7 +201,7 @@ namespace paper {
         /**
          * 该组件所属实体的变换组件。
          */
-        public get transform() {
+        public get transform(): egret3d.Transform {
             return this.gameObject.transform;
         }
     }

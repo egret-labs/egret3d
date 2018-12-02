@@ -3,7 +3,7 @@ namespace paper.editor {
      * TODO
      */
     export class SceneSystem extends BaseSystem {
-        protected readonly _interests = [
+        public readonly interests = [
             [
                 { componentClass: egret3d.Transform }
             ]
@@ -165,7 +165,10 @@ namespace paper.editor {
             ModelComponent.onGameObjectSelected.add(this._onGameObjectSelected, this);
             ModelComponent.onGameObjectUnselected.add(this._onGameObjectUnselected, this);
 
-            this._orbitControls = egret3d.Camera.editor.gameObject.addComponent(OrbitControls);
+            const editorCamera = egret3d.Camera.editor;
+            editorCamera.enabled = true;
+
+            this._orbitControls = editorCamera.gameObject.addComponent(OrbitControls);
             this._transformController = EditorMeshHelper.createGameObject("TransformController").addComponent(TransformController);
             this._transformController.gameObject.activeSelf = false;
             this._boxesDrawer = EditorMeshHelper.createGameObject("BoxesDrawer").addComponent(BoxesDrawer);
@@ -179,7 +182,6 @@ namespace paper.editor {
             this._gridDrawer = EditorMeshHelper.createGameObject("GridDrawer").addComponent(GridDrawer);
 
             // TODO
-            // const editorCamera = egret3d.Camera.editor;
             // const mainCamera = egret3d.Camera.main;
             // editorCamera.transform.position = mainCamera.transform.position;
             // editorCamera.transform.rotation = mainCamera.transform.rotation;
@@ -190,6 +192,8 @@ namespace paper.editor {
             ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectChanged, this);
             ModelComponent.onGameObjectSelected.remove(this._onGameObjectSelected, this);
             ModelComponent.onGameObjectUnselected.remove(this._onGameObjectUnselected, this);
+
+            const editorCamera = egret3d.Camera.editor;
 
             //
             for (const camera of this._cameraAndLightCollecter.cameras) {
@@ -214,7 +218,8 @@ namespace paper.editor {
                 }
             }
 
-            egret3d.Camera.editor.gameObject.removeComponent(OrbitControls);
+            editorCamera.gameObject.removeComponent(OrbitControls);
+            editorCamera.enabled = false;
             this._orbitControls = null;
 
             this._transformController!.gameObject.destroy();
@@ -326,7 +331,7 @@ namespace paper.editor {
                                 transformController.hovered = null;
                             }
                             else {
-                                const raycastInfos = Helper.raycastAll(transformController.mode.transform.children, defaultPointer.position.x, defaultPointer.position.y, true);
+                                const raycastInfos = Helper.raycastAll(transformController.mode.transform.children, defaultPointer.position.x, defaultPointer.position.y, false);
                                 if (raycastInfos.length > 0) {
                                     transformController.hovered = raycastInfos[0].transform!.gameObject;
                                 }
@@ -340,7 +345,7 @@ namespace paper.editor {
                         }
 
                         if (!transformController || !transformController.isActiveAndEnabled || !transformController.hovered) {
-                            const raycastInfos = Helper.raycastAll(Scene.activeScene.getRootGameObjects(), defaultPointer.position.x, defaultPointer.position.y, false);
+                            const raycastInfos = Helper.raycastAll(Scene.activeScene.getRootGameObjects(), defaultPointer.position.x, defaultPointer.position.y, true);
                             if (raycastInfos.length > 0) {
                                 this._modelComponent.hover(raycastInfos[0].transform!.gameObject);
                             }

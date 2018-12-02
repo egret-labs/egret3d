@@ -59,6 +59,10 @@ namespace egret3d {
      */
     export type RawScene = paper.RawScene;
     /**
+     * @internal
+     */
+    export const WebGLCapabilities = web.WebGLCapabilities;
+    /**
      * @deprecated
      */
     export const InputManager = {

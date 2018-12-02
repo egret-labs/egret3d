@@ -18,7 +18,7 @@ namespace egret3d.oimo {
          */
         public static readonly _helpTransform: OIMO.Transform = new OIMO.Transform();
 
-        protected readonly _interests = [
+        public readonly interests = [
             [
                 { componentClass: Rigidbody },
                 {
@@ -144,7 +144,7 @@ namespace egret3d.oimo {
         }
 
         public onAddComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup) {
-            if (group !== this._groups[0]) {
+            if (group !== this.groups[0]) {
                 return;
             }
 
@@ -165,7 +165,7 @@ namespace egret3d.oimo {
         }
 
         public onRemoveComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup) {
-            if (group !== this._groups[0]) {
+            if (group !== this.groups[0]) {
                 return;
             }
 
@@ -193,11 +193,11 @@ namespace egret3d.oimo {
 
         public onUpdate() {
             let currentTimes = 0;
-            let fixedTime = this._clock.fixedTime;
-            const gameObjects = this._groups[0].gameObjects;
+            let fixedTime = this.clock.fixedTime;
+            const gameObjects = this.groups[0].gameObjects;
             const oimoTransform = PhysicsSystem._helpTransform;
 
-            while (fixedTime >= this._clock.fixedDeltaTime && currentTimes++ < this._clock.maxFixedSubSteps) {
+            while (fixedTime >= this.clock.fixedDeltaTime && currentTimes++ < this.clock.maxFixedSubSteps) {
                 for (const gameObject of gameObjects) {
                     const transform = gameObject.transform;
                     const rigidbody = gameObject.getComponent(Rigidbody)!;
@@ -219,7 +219,7 @@ namespace egret3d.oimo {
                     }
                 }
 
-                this._oimoWorld.step(this._clock.fixedDeltaTime);
+                this._oimoWorld.step(this.clock.fixedDeltaTime);
 
                 for (const gameObject of gameObjects) {
                     const transform = gameObject.transform;
@@ -258,7 +258,7 @@ namespace egret3d.oimo {
                     }
                 }
 
-                fixedTime -= this._clock.fixedDeltaTime;
+                fixedTime -= this.clock.fixedDeltaTime;
             }
         }
 

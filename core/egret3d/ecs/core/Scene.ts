@@ -123,6 +123,7 @@ namespace paper {
         public addGameObject(gameObject: GameObject) {
             if (this._gameObjects.indexOf(gameObject) >= 0) {
                 console.warn("Add game object error.", gameObject.path);
+                return;
             }
 
             this._gameObjects.push(gameObject);
@@ -135,6 +136,7 @@ namespace paper {
 
             if (index < 0) {
                 console.warn("Remove game object error.", gameObject.path);
+                return;
             }
 
             this._gameObjects.splice(index, 1);

@@ -30,7 +30,7 @@ namespace paper.editor {
             GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
             //
             if (Application.playerMode === PlayerMode.Editor) {
-                Application.systemManager.register(SceneSystem, SystemOrder.LaterUpdate);
+                Application.systemManager.register(SceneSystem, SystemOrder.LateUpdate);
             }
             else {
                 const guiComponent = this._guiComponent!;
@@ -106,10 +106,12 @@ namespace paper.editor {
                     inspector[0].appendChild(guiComponent.inspector.domElement);
                 }
 
-                Application.systemManager.register(GUISystem, SystemOrder.LaterUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
-
-                console.info(`小提示：通过 H 键切换 Inspector 的显示与隐藏。`);
+                Application.systemManager.register(GUISystem, SystemOrder.LateUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
             }
+        }
+
+        public onStart() {
+            console.info(`小提示：通过 H 键切换 Inspector 的显示与隐藏。`);
         }
 
         public onUpdate() {

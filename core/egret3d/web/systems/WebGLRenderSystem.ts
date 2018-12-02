@@ -3,7 +3,7 @@ namespace egret3d.web {
      * @internal
      */
     export class WebGLRenderSystem extends paper.BaseSystem implements IRenderSystem {
-        protected readonly _interests = [
+        public readonly interests = [
             [
                 { componentClass: Camera }
             ],
@@ -15,6 +15,7 @@ namespace egret3d.web {
             ]
         ];
         private _egret2DOrderCount: number = 0;
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
         private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(RenderState, false, this) as WebGLRenderState; // Set interface.
         private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
@@ -75,11 +76,11 @@ namespace egret3d.web {
                     renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
                 }
             }
-            
+
             // Render 2D.
             const webgl = WebGLCapabilities.webgl!;
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);//TODO 解决字体模糊
-            for (const gameObject of this._groups[1].gameObjects) {
+            for (const gameObject of this.groups[1].gameObjects) {
                 const egret2DRenderer = gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer;
                 if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
                     if (egret2DRenderer._order < 0) {
@@ -502,10 +503,10 @@ namespace egret3d.web {
                 }
                 //
                 let isAnyActivated = false;
-                const postProcessings = camera.gameObject.getComponents(CameraPostprocessing as any, true) as CameraPostprocessing[];
+                const postprocessings = camera.gameObject.getComponents(CameraPostprocessing as any, true) as CameraPostprocessing[];
 
-                if (postProcessings.length > 0) {
-                    for (const postprocessing of postProcessings) {
+                if (postprocessings.length > 0) {
+                    for (const postprocessing of postprocessings) {
                         if (postprocessing.isActiveAndEnabled) {
                             isAnyActivated = true;
                             break;
@@ -518,7 +519,7 @@ namespace egret3d.web {
                 }
                 else {
                     this._render(camera, camera._readRenderTarget, material);
-                    for (const postprocessing of postProcessings) {
+                    for (const postprocessing of postprocessings) {
                         if (postprocessing.isActiveAndEnabled) {
                             postprocessing.render(camera);
                         }
@@ -547,6 +548,8 @@ namespace egret3d.web {
             const editorScene = paper.Application.sceneManager.editorScene;
             const cameras = cameraAndLightCollecter.cameras;
             const lights = cameraAndLightCollecter.lights;
+
+            this._drawCallCollecter._update();
 
             // Render lights.
             if (lights.length > 0) {

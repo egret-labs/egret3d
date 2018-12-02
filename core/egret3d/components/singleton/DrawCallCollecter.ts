@@ -5,6 +5,7 @@ namespace egret3d {
     export class DrawCallCollecter extends paper.SingletonComponent {
         /**
          * 此帧可能参与渲染的渲染组件列表。
+         * - 未进行视锥剔除的。
          */
         public readonly renderers: (paper.BaseRenderer | null)[] = [];
         /**
@@ -21,10 +22,7 @@ namespace egret3d {
             if (this._drawCallsDirty) {
                 let index = 0;
                 let removeCount = 0;
-                const renderers = this.renderers;
-                const drawCalls = this.drawCalls;
-
-                this._drawCallsDirty = false;
+                const { renderers, drawCalls } = this;
 
                 for (const renderer of renderers) {
                     if (renderer) {
@@ -66,33 +64,36 @@ namespace egret3d {
                 if (removeCount > 0) {
                     drawCalls.length -= removeCount;
                 }
+
+                this._drawCallsDirty = false;
             }
         }
         /**
          * 移除指定渲染组件的绘制信息列表。
          */
-        public removeDrawCalls(renderer: paper.BaseRenderer) {
-            const index = this.renderers.indexOf(renderer);
+        public removeDrawCalls(renderer: paper.BaseRenderer): void {
+            const { renderers, drawCalls } = this;
+            const index = renderers.indexOf(renderer);
             if (index < 0) {
                 return;
             }
 
-            let i = this.drawCalls.length;
+            let i = drawCalls.length;
             while (i--) {
-                const drawCall = this.drawCalls[i];
+                const drawCall = drawCalls[i];
                 if (drawCall && drawCall.renderer === renderer) {
-                    this.drawCalls[i] = null;
+                    drawCalls[i] = null;
                     drawCall.release();
                 }
             }
 
-            this.renderers[index] = null;
+            renderers[index] = null;
             this._drawCallsDirty = true;
         }
         /**
          * 是否包含指定渲染组件的绘制信息列表。
          */
-        public hasDrawCalls(renderer: paper.BaseRenderer) {
+        public hasDrawCalls(renderer: paper.BaseRenderer): boolean {
             return this.renderers.indexOf(renderer) >= 0;
         }
     }

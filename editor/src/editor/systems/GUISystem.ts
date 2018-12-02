@@ -1,8 +1,3 @@
-/**
- * @internal
- */
-declare var VConsole: any;
-
 namespace paper.editor {
     type ResData = { name: string, type: string, url: string, root: string };
     /**
@@ -10,10 +5,6 @@ namespace paper.editor {
      * @internal
      */
     export class GUISystem extends BaseSystem {
-        protected readonly _interests = [
-            [{ componentClass: egret3d.Transform }]
-        ];
-
         private readonly _disposeCollecter: DisposeCollecter = GameObject.globalGameObject.getOrAddComponent(DisposeCollecter);
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
         private readonly _guiComponent: GUIComponent = GameObject.globalGameObject.getOrAddComponent(GUIComponent);
@@ -85,11 +76,14 @@ namespace paper.editor {
             const result = [{ label: "None", value: null }] as { label: string, value: ResData | null }[];
 
             if (RES.host.resourceConfig.config) {
-                const resFSDatas = (RES.host.resourceConfig.config.fileSystem as any).fsData as { [key: string]: ResData };
-                for (const k in resFSDatas) {
-                    const data = resFSDatas[k];
-                    if (data.type === type) {
-                        result.push({ label: k, value: data });
+                const fileSystem = RES.host.resourceConfig.config.fileSystem as any;
+                if (fileSystem) {
+                    const resFSDatas = fileSystem.fsData as { [key: string]: ResData };
+                    for (const k in resFSDatas) {
+                        const data = resFSDatas[k];
+                        if (data.type === type) {
+                            result.push({ label: k, value: data });
+                        }
                     }
                 }
             }
@@ -498,7 +492,7 @@ namespace paper.editor {
             };
 
             this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
-                const sceneSystem = Application.systemManager.getOrRegisterSystem(editor.SceneSystem, SystemOrder.LaterUpdate);
+                const sceneSystem = Application.systemManager.getOrRegisterSystem(editor.SceneSystem, SystemOrder.LateUpdate);
 
                 if (v) {
                     Application.playerMode = PlayerMode.DebugPlayer;
@@ -516,13 +510,8 @@ namespace paper.editor {
             ModelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
             ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectedChange, this);
 
-            this._bufferedGameObjects.push(GameObject.globalGameObject);
-
-            for (const gameObject of this._groups[0].gameObjects) {
-                this._bufferedGameObjects.push(gameObject);
-            }
-
             this._modelComponent.select(Scene.activeScene);
+            this._bufferedGameObjects.push(paper.GameObject.globalGameObject);
         }
 
         public onDisable() {
@@ -549,17 +538,6 @@ namespace paper.editor {
 
             this._bufferedGameObjects.length = 0;
             this._selectFolder = null;
-        }
-
-        public onAddGameObject(gameObject: GameObject, _group: GameObjectGroup) {
-            this._bufferedGameObjects.push(gameObject);
-        }
-
-        public onRemoveGameObject(gameObject: GameObject, _group: GameObjectGroup) {
-            const index = this._bufferedGameObjects.indexOf(gameObject);
-            if (index >= 0) {
-                this._bufferedGameObjects[index] = null;
-            }
         }
 
         public onUpdate() {
@@ -619,17 +597,15 @@ namespace paper.editor {
                             catch (e) {
                             }
                         }
-
-                        this._bufferedGameObjects.push(gameObject);
                     }
-                    else if (this._bufferedGameObjects.indexOf(gameObject) < 0) {
+                    
+                    if (this._bufferedGameObjects.indexOf(gameObject) < 0) {
                         this._bufferedGameObjects.push(gameObject);
                     }
                 }
             }
 
-            if (isHierarchyShowed) {
-                // Add folder.
+            if (isHierarchyShowed) { // Add folder.
                 let i = 0;
                 while (this._bufferedGameObjects.length > 0 && i++ < 5) {
                     const gameObject = this._bufferedGameObjects.shift();
@@ -661,8 +637,7 @@ namespace paper.editor {
                 }
 
                 if (this._modelComponent.selectedGameObject) {
-                    // TODO
-                    this._modelComponent.selectedGameObject.transform.localEulerAngles;
+                    this._modelComponent.selectedGameObject.transform.localEulerAngles; // TODO
                 }
             }
         }

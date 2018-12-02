@@ -5,6 +5,7 @@ namespace egret3d {
     function _raycastCollider(ray: Readonly<Ray>, collider: BoxCollider | SphereCollider | CylinderCollider, raycastInfo: RaycastInfo, hit: boolean) {
         const helpRaycastInfo = _helpRaycastInfo;
         const normal = raycastInfo.normal;
+        helpRaycastInfo.backfaceCulling = raycastInfo.backfaceCulling;
         helpRaycastInfo.normal = normal ? _helpVector3 : null;
 
         if (collider.raycast(ray, helpRaycastInfo) &&
@@ -41,6 +42,7 @@ namespace egret3d {
         }
 
         const raycastInfo = RaycastInfo.create();
+        raycastInfo.backfaceCulling = backfaceCulling;
 
         if (gameObject.layer & cullingMask) {
             if (raycastMesh) {

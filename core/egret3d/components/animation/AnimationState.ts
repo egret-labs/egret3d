@@ -280,12 +280,16 @@ namespace egret3d {
          */
         public play() {
             this._playheadEnabled = true;
+
+            return this;
         }
         /**
          * 停止该动画状态的播放。
          */
         public stop() {
             this._playheadEnabled = false;
+
+            return this;
         }
         /**
          * 该动画状态是否正在播放。

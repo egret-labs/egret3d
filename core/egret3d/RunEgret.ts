@@ -36,8 +36,7 @@ namespace egret3d {
             options = {};
         }
 
-        console.info("Egret version:", paper.Application.version);
-        console.info("Egret start.");
+        console.info("Egret", paper.Application.version, "start.");
 
         // TODO
         egret.Sound = egret.web ? egret.web.HtmlSound : (egret as any)['wxgame']['HtmlSound']; //TODO:Sound
@@ -87,17 +86,18 @@ namespace egret3d {
         systemManager.register(web.BeginSystem, paper.SystemOrder.Begin, options);
 
         systemManager.register(AnimationSystem, paper.SystemOrder.Animation);
-        systemManager.register(MeshRendererSystem, paper.SystemOrder.Renderer);
-        systemManager.register(SkinnedMeshRendererSystem, paper.SystemOrder.Renderer);
-        systemManager.register(particle.ParticleSystem, paper.SystemOrder.Renderer);
-        systemManager.register(Egret2DRendererSystem, paper.SystemOrder.Renderer, options);
-        systemManager.register(CameraAndLightSystem, paper.SystemOrder.Draw);
+        systemManager.register(MeshRendererSystem, paper.SystemOrder.BeforeRenderer);
+        systemManager.register(SkinnedMeshRendererSystem, paper.SystemOrder.BeforeRenderer);
+        systemManager.register(particle.ParticleSystem, paper.SystemOrder.BeforeRenderer);
+        systemManager.register(Egret2DRendererSystem, paper.SystemOrder.BeforeRenderer, options);
+        systemManager.register(CameraAndLightSystem, paper.SystemOrder.BeforeRenderer);
 
-        systemManager.register(web.WebGLRenderSystem, paper.SystemOrder.Draw, options);
+        systemManager.register(web.WebGLRenderSystem, paper.SystemOrder.Renderer, options);
         systemManager.register(web.InputSystem, paper.SystemOrder.End, options);
         systemManager.register(web.EndSystem, paper.SystemOrder.End, options);
         // TODO
         systemManager._preRegisterSystems();
+        paper.Application.resume();
 
         console.info("Egret start complete.");
     }

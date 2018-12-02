@@ -7,8 +7,13 @@ namespace egret3d {
          * 
          */
         public lightDirty: boolean = false;
-
+        /**
+         * 
+         */
         public readonly cameras: Camera[] = [];
+        /**
+         * 
+         */
         public readonly lights: BaseLight[] = [];
 
         private _sortCameras(a: Camera, b: Camera) {
@@ -43,15 +48,15 @@ namespace egret3d {
         /**
          * 摄像机计数
          */
-        @paper.editor.property(paper.editor.EditType.UINT)
-        public get cameraCount() {
+        @paper.editor.property(paper.editor.EditType.UINT, { readonly: true })
+        public get cameraCount(): uint {
             return this.cameras.length;
         }
         /**
          * 灯光计数。
          */
-        @paper.editor.property(paper.editor.EditType.UINT)
-        public get lightCount() {
+        @paper.editor.property(paper.editor.EditType.UINT, { readonly: true })
+        public get lightCount(): uint {
             return this.lights.length;
         }
     }

@@ -3,7 +3,7 @@ namespace egret3d.particle {
      * 
      */
     export class ParticleSystem extends paper.BaseSystem {
-        protected readonly _interests = [
+        public readonly interests = [
             {
                 componentClass: ParticleComponent,
                 listeners: [
@@ -55,7 +55,7 @@ namespace egret3d.particle {
         }
 
         private _onRenderUpdate(render: ParticleRenderer, type: signals.Signal) {
-            if (!this._enabled || !this._groups[0].hasGameObject(render.gameObject)) {
+            if (!this.enabled || !this.groups[0].hasGameObject(render.gameObject)) {
                 return;
             }
 
@@ -116,7 +116,7 @@ namespace egret3d.particle {
             }
         }
         private _onMainUpdate(component: ParticleComponent, type: signals.Signal) {
-            if (!this._enabled || !this._groups[0].hasGameObject(component.gameObject)) {
+            if (!this.enabled || !this.groups[0].hasGameObject(component.gameObject)) {
                 return;
             }
 
@@ -147,7 +147,7 @@ namespace egret3d.particle {
          * @param component 
          */
         private _onShapeChanged(comp: ParticleComponent) {
-            if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+            if (!this.enabled || !this.groups[0].hasGameObject(comp.gameObject)) {
                 return;
             }
 
@@ -163,7 +163,7 @@ namespace egret3d.particle {
          * @param component 
          */
         private _onVelocityOverLifetime(comp: ParticleComponent) {
-            if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+            if (!this.enabled || !this.groups[0].hasGameObject(comp.gameObject)) {
                 return;
             }
 
@@ -221,7 +221,7 @@ namespace egret3d.particle {
          * @param component 
          */
         private _onColorOverLifetime(comp: ParticleComponent) {
-            if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+            if (!this.enabled || !this.groups[0].hasGameObject(comp.gameObject)) {
                 return;
             }
 
@@ -259,7 +259,7 @@ namespace egret3d.particle {
          * @param component
          */
         private _onSizeOverLifetime(comp: ParticleComponent) {
-            if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+            if (!this.enabled || !this.groups[0].hasGameObject(comp.gameObject)) {
                 return;
             }
 
@@ -317,7 +317,7 @@ namespace egret3d.particle {
          * @param comp
          */
         private _onRotationOverLifetime(comp: ParticleComponent) {
-            if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+            if (!this.enabled || !this.groups[0].hasGameObject(comp.gameObject)) {
                 return;
             }
 
@@ -396,7 +396,7 @@ namespace egret3d.particle {
         }
 
         private _onTextureSheetAnimation(comp: ParticleComponent) {
-            if (!this._enabled || !this._groups[0].hasGameObject(comp.gameObject)) {
+            if (!this.enabled || !this.groups[0].hasGameObject(comp.gameObject)) {
                 return;
             }
 
@@ -432,7 +432,7 @@ namespace egret3d.particle {
         }
 
         private _updateDrawCalls(gameObject: paper.GameObject, cleanPlayState: boolean = true) {
-            if (!this._enabled || !this._groups[0].hasGameObject(gameObject)) {
+            if (!this.enabled || !this.groups[0].hasGameObject(gameObject)) {
                 return;
             }
 
@@ -465,7 +465,7 @@ namespace egret3d.particle {
         }
 
         public onEnable() {
-            for (const gameObject of this._groups[0].gameObjects) {
+            for (const gameObject of this.groups[0].gameObjects) {
                 this._updateDrawCalls(gameObject);
             }
         }
@@ -488,13 +488,13 @@ namespace egret3d.particle {
             if (deltaTime > 0.3) {
                 deltaTime = 0.3;//防止dt过大，引起周期错乱
             }
-            for (const gameObject of this._groups[0].gameObjects) {
+            for (const gameObject of this.groups[0].gameObjects) {
                 (gameObject.getComponent(ParticleComponent) as ParticleComponent).update(deltaTime);
             }
         }
 
         public onDisable() {
-            for (const gameObject of this._groups[0].gameObjects) {
+            for (const gameObject of this.groups[0].gameObjects) {
                 this._drawCallCollecter.removeDrawCalls(gameObject.renderer as ParticleRenderer);
             }
         }
