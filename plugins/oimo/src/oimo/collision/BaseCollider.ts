@@ -14,13 +14,13 @@ namespace egret3d.oimo {
 
         public readonly colliderType: egret3d.ColliderType = -1;
         /**
-         * [Type, Mass, LinearDamping, AngularDamping];
+         * [CollisionGroup, CollisionMask, Friction, Restitution, Density];
          */
         @paper.serializedField
         protected readonly _values: Float32Array = new Float32Array([
-            paper.Layer.Everything, paper.Layer.Everything, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
+            paper.Layer.Default, paper.Layer.Default, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
         ]);
-        protected _oimoShape: OIMO.Shape = null as any;
+        protected _oimoShape: OIMO.Shape = null!;
 
         protected abstract _createShape(): OIMO.Shape;
 
@@ -40,7 +40,7 @@ namespace egret3d.oimo {
         public get collisionGroup() {
             return this._values[ValueType.CollisionGroup];
         }
-        public set collisionGroup(value: paper.CullingMask) {
+        public set collisionGroup(value: paper.Layer) {
             if (this._values[ValueType.CollisionGroup] === value) {
                 return;
             }
@@ -57,7 +57,7 @@ namespace egret3d.oimo {
         public get collisionMask() {
             return this._values[ValueType.CollisionMask];
         }
-        public set collisionMask(value: paper.CullingMask) {
+        public set collisionMask(value: paper.Layer) {
             if (this._values[ValueType.CollisionMask] === value) {
                 return;
             }

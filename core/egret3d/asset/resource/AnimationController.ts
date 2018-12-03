@@ -30,7 +30,6 @@ namespace egret3d {
                 additive: false,
                 weight: 1.0,
                 name: name,
-                source: null,
                 machine: {
                     name: paper.DefaultNames.Default,
                     nodes: [],
@@ -75,7 +74,7 @@ namespace egret3d {
             return animationNode;
         }
 
-        public getLayer(index: uint): AnimationLayer {
+        public getOrCreateLayer(index: uint): AnimationLayer {
             const layers = this.layers;
             if (index >= layers.length) {
                 index = layers.length;

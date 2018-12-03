@@ -7507,7 +7507,7 @@ declare namespace egret3d.oimo {
         protected static readonly _config: OIMO.ShapeConfig;
         readonly colliderType: egret3d.ColliderType;
         /**
-         * [Type, Mass, LinearDamping, AngularDamping];
+         * [CollisionGroup, CollisionMask, Friction, Restitution, Density];
          */
         protected readonly _values: Float32Array;
         protected _oimoShape: OIMO.Shape;
@@ -7516,11 +7516,11 @@ declare namespace egret3d.oimo {
         /**
          *
          */
-        collisionGroup: paper.CullingMask;
+        collisionGroup: paper.Layer;
         /**
          *
          */
-        collisionMask: paper.CullingMask;
+        collisionMask: paper.Layer;
         /**
          *
          */

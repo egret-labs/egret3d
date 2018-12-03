@@ -41883,10 +41883,10 @@ var egret3d;
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = -1;
                 /**
-                 * [Type, Mass, LinearDamping, AngularDamping];
+                 * [CollisionGroup, CollisionMask, Friction, Restitution, Density];
                  */
                 _this._values = new Float32Array([
-                    4294967295 /* Everything */, 4294967295 /* Everything */, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
+                    1 /* Default */, 1 /* Default */, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
                 ]);
                 _this._oimoShape = null;
                 return _this;

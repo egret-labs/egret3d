@@ -21,20 +21,28 @@ namespace egret3d {
             return asset;
         }
 
+        private _dirty: boolean = false;
+        private readonly _jointNames: string[] = [];
+
         private constructor() {
             super(); // TODO GLTFAsset protected
         }
 
-        private _addJointChildren(nodes: gltf.Node[], joints: uint[], node: gltf.Node) {
-            const children = node.children;
-            if (!children) {
-                return;
+        private _addJoint(nodes: gltf.Node[], joints: uint[], jointIndex: uint, recursive: boolean) {
+            if (joints.indexOf(jointIndex) < 0) {
+                joints.push(jointIndex);
+                this._dirty = true;
             }
 
-            for (const index of children) {
-                if (joints.indexOf(index) < 0) {
-                    joints.push(index);
-                    this._addJointChildren(nodes, joints, nodes[index]);
+            if (recursive) {
+                const node = nodes[jointIndex];
+                const children = node.children;
+                if (!children) {
+                    return;
+                }
+
+                for (const index of children) {
+                    this._addJoint(nodes, joints, index, recursive);
                 }
             }
         }
@@ -57,24 +65,14 @@ namespace egret3d {
             return this;
         }
 
-        public addJointMask(name: string, recursive: boolean = true): this {
+        public addJoint(name: string, recursive: boolean = true): this {
             let index = 0;
             const nodes = this.config.nodes!;
             const joints = this.config.extensions!.paper!.animationMasks![0].joints;
 
             for (const node of nodes) {
                 if (node.name === name) {
-                    if (joints.indexOf(index) < 0) {
-                        joints.push(index); // Success.
-
-                        if (recursive) { // add children.
-                            this._addJointChildren(nodes, joints, node);
-                        }
-                    }
-                    else {
-                        console.warn("The joint have been added.", name);
-                    }
-
+                    this._addJoint(nodes, joints, index, recursive);
                     return this;
                 }
 
@@ -86,9 +84,40 @@ namespace egret3d {
             return this;
         }
 
-        public removeJointMask(name: string, recursive: boolean = true): this { 
-            
+        public removeJoint(name: string, recursive: boolean = true): this {
+            let index = 0;
+            const nodes = this.config.nodes!;
+            const joints = this.config.extensions!.paper!.animationMasks![0].joints;
+
+            for (const node of nodes) {
+                if (node.name === name) {
+                    if (joints.indexOf(index) >= 0) {
+                        joints.splice(index, 1);
+                    }
+                    break;
+                }
+
+                index++;
+            }
+
+            // recursive // TODO
+
             return this;
+        }
+
+        public get jointNames(): ReadonlyArray<string> {
+            const jointNames = this._jointNames;
+            if (this._dirty) {
+                const nodes = this.config.nodes!;
+                const joints = this.config.extensions!.paper!.animationMasks![0].joints;
+                for (const index of joints) {
+                    const node = nodes[index];
+                    jointNames.push(node.name!);
+                }
+
+                this._dirty = false;
+            }
+            return jointNames;
         }
     }
 }

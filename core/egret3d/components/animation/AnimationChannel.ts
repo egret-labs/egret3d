@@ -20,6 +20,7 @@ namespace egret3d {
             return instance;
         }
 
+        public enabled: boolean;
         public isEnd: boolean;
         public glTFChannel: GLTFAnimationChannel;
         public glTFSampler: gltf.AnimationSampler;
@@ -34,6 +35,7 @@ namespace egret3d {
         }
 
         public onClear() {
+            this.enabled = true;
             this.isEnd = false;
             this.updateTarget = null;
             this.binder = null;

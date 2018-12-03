@@ -2094,7 +2094,8 @@ declare namespace egret3d {
         additive: boolean;
         weight: number;
         name: string;
-        source: string | null;
+        source?: string | null;
+        mask?: string | AnimationMask | null;
         machine: StateMachine;
         /**
          * @private
@@ -7162,6 +7163,10 @@ declare namespace egret3d {
         private _lastAnimationLayer;
         uninitialize(): void;
         /**
+         * @private
+         */
+        setLayerMask(layerIndex: uint, animationMask: AnimationMask | null): void;
+        /**
          * 融合播放一个指定的动画。
          * @param animationClipName 动画剪辑的名称。
          * @param fadeTime 融合的时间。
@@ -7322,6 +7327,7 @@ declare namespace egret3d {
     class AnimationChannel extends paper.BaseRelease<AnimationChannel> {
         private static _instances;
         static create(): AnimationChannel;
+        enabled: boolean;
         isEnd: boolean;
         glTFChannel: GLTFAnimationChannel;
         glTFSampler: gltf.AnimationSampler;
@@ -8615,7 +8621,7 @@ declare namespace egret3d {
         createLayer(name: string): AnimationLayer;
         createAnimationTree(machineOrTreen: StateMachine | AnimationTree, name: string): AnimationTree;
         createAnimationNode(machineOrTreen: StateMachine | AnimationTree, asset: string, clip: string): AnimationNode;
-        getLayer(index: uint): AnimationLayer;
+        getOrCreateLayer(index: uint): AnimationLayer;
         readonly layers: AnimationLayer[];
     }
 }
@@ -8625,11 +8631,14 @@ declare namespace egret3d {
      */
     class AnimationMask extends GLTFAsset {
         static create(): AnimationMask;
+        private _dirty;
+        private readonly _jointNames;
         private constructor();
-        private _addJointChildren(nodes, joints, node);
+        private _addJoint(nodes, joints, jointIndex, recursive);
         createJoints(mesh: Mesh): this;
         addJointMask(name: string, recursive?: boolean): this;
         removeJointMask(name: string, recursive?: boolean): this;
+        readonly jointNames: ReadonlyArray<string>;
     }
 }
 declare namespace egret3d {

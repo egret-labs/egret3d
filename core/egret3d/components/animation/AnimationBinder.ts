@@ -46,8 +46,8 @@ namespace egret3d {
             if (this.dirty > 0) {
                 if (this.totalWeight < 1.0 - Const.EPSILON) {
                     this.dirty++;
-                    this.totalWeight += globalWeight;
-                    this.weight = globalWeight; // TODO
+                    this.weight = globalWeight * (1.0 - this.totalWeight);
+                    this.totalWeight += this.weight;
 
                     return true;
                 }

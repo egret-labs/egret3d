@@ -67,6 +67,39 @@ namespace egret3d {
             this._lastAnimationLayer = null;
         }
         /**
+         * @private
+         */
+        public setLayerMask(layerIndex: uint, animationMask: AnimationMask | null) {
+            const animationController = this._animationController;
+            if (animationController) {
+                const layers = animationController.layers;
+                const layer = animationController.getOrCreateLayer(layerIndex);
+                layerIndex = layers.indexOf(layer);
+                layer.mask = animationMask;
+
+                const jointNames = animationMask ? animationMask.jointNames : null;
+                const fadeStatess = this._fadeStates;
+                if (layerIndex < fadeStatess.length) {
+                    const fadeStates = fadeStatess[layerIndex];
+
+                    for (const fadeState of fadeStates) {
+                        for (const animationState of fadeState.states) {
+                            const nodes = animationState.animationAsset.config.nodes!;
+                            for (const channel of animationState.channels) {
+                                if (jointNames && jointNames.length > 0) {
+                                    const jointIndex = channel.glTFChannel.target.node;
+                                    channel.enabled = jointIndex === undefined || jointNames.indexOf(nodes[jointIndex].name!) >= 0;
+                                }
+                                else {
+                                    channel.enabled = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        /**
          * 融合播放一个指定的动画。
          * @param animationClipName 动画剪辑的名称。
          * @param fadeTime 融合的时间。
@@ -74,7 +107,6 @@ namespace egret3d {
          * @param layerIndex 动画层索引。
          * @param layerAdditive 动画层混合方式是否为叠加。
          */
-
         public fadeIn(
             animationClipName: string,
             fadeTime: number, playTimes: int = -1,
@@ -102,7 +134,7 @@ namespace egret3d {
             }
 
             const animationController = this._animationController;
-            const animationLayer = animationController.getLayer(layerIndex);
+            const animationLayer = animationController.getOrCreateLayer(layerIndex);
             animationLayer.additive = layerAdditive;
             layerIndex = animationController.layers.indexOf(animationLayer);
             const animationNode: AnimationNode = {
@@ -145,7 +177,7 @@ namespace egret3d {
             }
 
             const animationController = this._animationController;
-            const animationLayer = animationController.getLayer(0);
+            const animationLayer = animationController.getOrCreateLayer(0);
             //
             if (!animationLayer._clipNames) {
                 animationLayer._clipNames = [];

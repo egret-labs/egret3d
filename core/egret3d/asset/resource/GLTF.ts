@@ -168,7 +168,8 @@ namespace egret3d {
         additive: boolean;
         weight: number;
         name: string;
-        source: string | null;
+        source?: string | null;
+        mask?: string | AnimationMask | null;
         machine: StateMachine;
         /**
          * @private
