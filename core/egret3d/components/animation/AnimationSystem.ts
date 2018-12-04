@@ -11,37 +11,6 @@ namespace egret3d {
         private _animation: Animation | null = null;
         private _animationLayer: AnimationLayer | null = null;
 
-        private _updateChannelEnd(animation: Animation) {
-            const animationFadeStates = animation._fadeStates;
-            const blendLayers: AnimationBinder[] = [];
-            const channelss: AnimationChannel[][] = [];
-
-            for (let i = animationFadeStates.length - 1; i >= 0; i--) {
-                for (const fadeState of animationFadeStates[i]) {
-                    for (const animationState of fadeState.states) {
-                        for (const channel of animationState.channels) {
-                            const blendLayer = channel.binder;
-                            channel.isEnd = false;
-
-                            if (blendLayer) {
-                                let index = blendLayers.indexOf(blendLayer);
-                                if (index < 0) {
-                                    index = blendLayers.length;
-                                    blendLayers.push(blendLayer);
-                                }
-
-                                (channelss[index] = channelss[index] || []).push(channel);
-                            }
-                        }
-                    }
-                }
-            }
-
-            for (const channels of channelss) {
-                channels[channels.length - 1].isEnd = true;
-            }
-        }
-
         private _updateAnimationFadeState(animationFadeState: AnimationFadeState, deltaTime: number) {
             if (deltaTime < 0.0) {
                 deltaTime = -deltaTime;
@@ -136,13 +105,17 @@ namespace egret3d {
 
             if (forceUpdate || weight !== 0.0) {
                 for (const channel of animationState.channels) {
-                    if (!channel.updateTarget) {
+                    if (!channel.updateTarget || !channel.enabled) {
                         continue;
                     }
 
                     const binder = channel.binder;
-
-                    if (!binder || binder.updateBlend(animationLayer, animationState)) {
+                    if (binder.constructor === AnimationBinder) {
+                        if ((binder as AnimationBinder).updateBlend(animationLayer, animationState)) {
+                            channel.updateTarget(animationLayer, animationState);
+                        }
+                    }
+                    else {
                         channel.updateTarget(animationLayer, animationState);
                     }
                 }
@@ -278,7 +251,6 @@ namespace egret3d {
                 }
 
                 if (animation._statesDirty) {
-                    this._updateChannelEnd(animation);
                     animation._statesDirty = false;
                 }
 
@@ -316,6 +288,11 @@ namespace egret3d {
                             animation._statesDirty = true;
                         }
                     }
+                }
+
+                for (const k in blendlayers) { // Update blendLayers.
+                    const blendLayer = blendlayers[k];
+                    blendLayer.updateTarget!();
                 }
             }
         }

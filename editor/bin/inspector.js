@@ -3529,24 +3529,6 @@ var paper;
             };
             ModelComponent.prototype._onChangeEditType = function (type) {
             };
-            ModelComponent.prototype.initialize = function () {
-                var _this = this;
-                if (paper.Application.playerMode === 2 /* Editor */) {
-                    editor.Editor.addEventListener(editor.EditorEvent.CHANGE_SCENE, function () {
-                        if (_this._editorModel) {
-                            _this._editorModel.removeEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, _this._onEditorSelectGameObjects, _this);
-                            _this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_PROPERTY, _this._onChangeProperty, _this);
-                            _this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_EDIT_MODE, _this._onChangeEditMode, _this);
-                            _this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, _this._onChangeEditType, _this);
-                        }
-                        _this._editorModel = editor.Editor.activeEditorModel;
-                        _this._editorModel.addEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, _this._onEditorSelectGameObjects, _this);
-                        _this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_PROPERTY, _this._onChangeProperty, _this);
-                        _this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_MODE, _this._onChangeEditMode, _this);
-                        _this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, _this._onChangeEditType, _this);
-                    }, this);
-                }
-            };
             ModelComponent.prototype._select = function (value, isReplace) {
                 if (value) {
                     if (value instanceof paper.Scene) {
@@ -3611,6 +3593,24 @@ var paper;
                 this.selectedGameObjects.splice(index, 1);
                 ModelComponent.onGameObjectUnselected.dispatch(this, value);
             };
+            ModelComponent.prototype.initialize = function () {
+                var _this = this;
+                if (paper.Application.playerMode === 2 /* Editor */) {
+                    editor.Editor.addEventListener(editor.EditorEvent.CHANGE_SCENE, function () {
+                        if (_this._editorModel) {
+                            _this._editorModel.removeEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, _this._onEditorSelectGameObjects, _this);
+                            _this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_PROPERTY, _this._onChangeProperty, _this);
+                            _this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_EDIT_MODE, _this._onChangeEditMode, _this);
+                            _this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, _this._onChangeEditType, _this);
+                        }
+                        _this._editorModel = editor.Editor.activeEditorModel;
+                        _this._editorModel.addEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, _this._onEditorSelectGameObjects, _this);
+                        _this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_PROPERTY, _this._onChangeProperty, _this);
+                        _this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_MODE, _this._onChangeEditMode, _this);
+                        _this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, _this._onChangeEditType, _this);
+                    }, this);
+                }
+            };
             ModelComponent.prototype.hover = function (value) {
                 if (this.hoveredGameObject === value) {
                     return;
@@ -3633,6 +3633,18 @@ var paper;
                 this._unselect(value);
                 if (this._editorModel !== null) {
                     this._editorModel.selectGameObject(this.selectedGameObjects);
+                }
+            };
+            ModelComponent.prototype.update = function () {
+                if (this.hoveredGameObject && this.hoveredGameObject.isDestroyed) {
+                    this.hover(null);
+                }
+                var i = this.selectedGameObjects.length;
+                while (i--) {
+                    var gameObject = this.selectedGameObjects[0];
+                    if (gameObject.isDestroyed) {
+                        this.unselect(gameObject);
+                    }
                 }
             };
             ModelComponent.prototype.changeProperty = function (propName, propOldValue, propNewValue, target) {
@@ -5279,6 +5291,7 @@ var paper;
                         }
                     }
                 }
+                this._modelComponent.update();
                 if (isHierarchyShowed) {
                     var i = 0;
                     while (this._bufferedGameObjects.length > 0 && i++ < 5) {
@@ -8769,19 +8782,7 @@ var paper;
                 if (this._keyF.isUp(false) && !this._keyF.event.altKey && !this._keyF.event.ctrlKey && !this._keyF.event.shiftKey) {
                     this.lookAtSelected();
                 }
-                // Update model gameObjects.
-                if (this._modelComponent.hoveredGameObject && this._modelComponent.hoveredGameObject.isDestroyed) {
-                    this._modelComponent.hover(null);
-                }
-                {
-                    var i = this._modelComponent.selectedGameObjects.length;
-                    while (i--) {
-                        var gameObject = this._modelComponent.selectedGameObjects[0];
-                        if (gameObject.isDestroyed) {
-                            this._modelComponent.unselect(gameObject);
-                        }
-                    }
-                }
+                this._modelComponent.update();
                 if (transformController.isActiveAndEnabled) {
                     transformController.update(defaultPointer.position);
                 }

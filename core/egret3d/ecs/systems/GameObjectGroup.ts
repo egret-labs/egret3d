@@ -364,7 +364,7 @@ namespace paper {
 
                     this._addedComponents.push(component);
 
-                    if (component instanceof Behaviour) {
+                    if ((component.constructor as IComponentClass<BaseComponent>).__isBehaviour) {
                         if (component.gameObject.getComponent(egret3d.Camera)) { // TODO Camera component update first.
                             this._behaviourComponents.unshift(component);
                         }

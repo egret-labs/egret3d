@@ -15,7 +15,7 @@ namespace paper.editor {
         /**
          * 属性配置。
          */
-        public option: PropertyOption | undefined;
+        public option?: PropertyOption;
 
         constructor(name: string, editType: EditType, option?: PropertyOption) {
             this.name = name;
@@ -47,6 +47,10 @@ namespace paper.editor {
          * UINT, INT, FLOAT 类型的步进值。
          */
         step?: number;
+        /**
+         * UINT, INT, FLOAT 类型的数值精度。 TODO
+         */
+        precision?: number;
         /**
          * 赋值函数
          */

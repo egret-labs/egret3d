@@ -598,12 +598,14 @@ namespace paper.editor {
                             }
                         }
                     }
-                    
+
                     if (this._bufferedGameObjects.indexOf(gameObject) < 0) {
                         this._bufferedGameObjects.push(gameObject);
                     }
                 }
             }
+
+            this._modelComponent.update();
 
             if (isHierarchyShowed) { // Add folder.
                 let i = 0;

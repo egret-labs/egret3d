@@ -266,13 +266,14 @@ declare namespace paper.editor {
         private _onChangeProperty(data);
         private _onChangeEditMode(mode);
         private _onChangeEditType(type);
-        initialize(): void;
         private _select(value, isReplace?);
         private _unselect(value);
+        initialize(): void;
         hover(value: GameObject | null): void;
         select(value: Scene | GameObject | null, isReplace?: boolean): void;
         remove(value: GameObject): void;
         unselect(value: GameObject): void;
+        update(): void;
         changeProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void;
     }
 }

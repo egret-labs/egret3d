@@ -22,7 +22,9 @@ namespace egret3d {
         public dirty: uint;
         public totalWeight: number;
         public weight: number;
+        public components: paper.BaseComponent | ReadonlyArray<paper.BaseComponent>;
         public bindPose: any;
+        public updateTarget: (() => void);
 
         private constructor() {
             super();
@@ -31,7 +33,13 @@ namespace egret3d {
         public onClear() {
             this.clear();
 
+            if (this.bindPose) {
+                this.bindPose.release(); // TODO
+            }
+
             this.bindPose = null!;
+            this.components = null!;
+            this.updateTarget = null!;
         }
 
         public clear() {
@@ -60,6 +68,78 @@ namespace egret3d {
             this.weight = globalWeight;
 
             return true;
+        }
+
+        public onUpdateTranslation() {
+            const components = this.components;
+            const isArray = Array.isArray(components);
+            const target = (isArray ? (components as Transform[])[0].localPosition : (components as Transform).localPosition) as Vector3;
+
+            if (this.totalWeight < 1.0 - Const.EPSILON) {
+                const weight = 1.0 - this.totalWeight;
+                const bindPose = this.bindPose as Vector3;
+                target.x += bindPose.x * weight;
+                target.y += bindPose.y * weight;
+                target.z += bindPose.z * weight;
+            }
+
+            if (isArray) {
+                for (const component of components as Transform[]) {
+                    component.localPosition = target;
+                }
+            }
+            else {
+                target.update();
+            }
+        }
+
+        public onUpdateRotation() {
+            const components = this.components;
+            const isArray = Array.isArray(components);
+            const target = (isArray ? (components as Transform[])[0].localRotation : (components as Transform).localRotation) as Quaternion;
+
+            if (this.totalWeight < 1.0 - Const.EPSILON) {
+                const weight = 1.0 - this.totalWeight;
+                const bindPose = this.bindPose as Quaternion;
+                target.x += bindPose.x * weight;
+                target.y += bindPose.y * weight;
+                target.z += bindPose.z * weight;
+                target.w += bindPose.w * weight;
+            }
+
+            target.normalize();
+
+            if (isArray) {
+                for (const component of components as Transform[]) {
+                    component.localRotation = target;
+                }
+            }
+            else {
+                target.update();
+            }
+        }
+
+        public onUpdateScale() {
+            const components = this.components;
+            const isArray = Array.isArray(components);
+            const target = (isArray ? (components as Transform[])[0].localScale : (components as Transform).localScale) as Vector3;
+
+            if (this.totalWeight < 1.0 - Const.EPSILON) {
+                const weight = 1.0 - this.totalWeight;
+                const bindPose = this.bindPose as Vector3;
+                target.x += bindPose.x * weight;
+                target.y += bindPose.y * weight;
+                target.z += bindPose.z * weight;
+            }
+
+            if (isArray) {
+                for (const component of components as Transform[]) {
+                    component.localScale = target;
+                }
+            }
+            else {
+                target.update();
+            }
         }
     }
 }

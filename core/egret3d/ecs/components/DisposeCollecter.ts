@@ -32,7 +32,7 @@ namespace paper {
         public initialize() {
             super.initialize();
 
-            disposeCollecter = this;
+            (disposeCollecter as DisposeCollecter) = this;
         }
         /**
          * @internal
@@ -48,5 +48,5 @@ namespace paper {
     /**
      * @internal
      */
-    export let disposeCollecter: DisposeCollecter = null!;
+    export const disposeCollecter: DisposeCollecter = null!;
 }

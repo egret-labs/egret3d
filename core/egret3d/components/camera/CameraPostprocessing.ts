@@ -28,7 +28,7 @@ namespace egret3d {
         }
 
         public uninitialize() {
-            super.initialize();
+            super.uninitialize();
 
             if (this._material) {
                 this._material.dispose();

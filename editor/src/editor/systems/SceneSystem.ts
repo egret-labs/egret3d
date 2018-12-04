@@ -392,20 +392,7 @@ namespace paper.editor {
                 this.lookAtSelected();
             }
 
-            // Update model gameObjects.
-            if (this._modelComponent.hoveredGameObject && this._modelComponent.hoveredGameObject.isDestroyed) {
-                this._modelComponent.hover(null);
-            }
-
-            {
-                let i = this._modelComponent.selectedGameObjects.length;
-                while (i--) {
-                    const gameObject = this._modelComponent.selectedGameObjects[0];
-                    if (gameObject.isDestroyed) {
-                        this._modelComponent.unselect(gameObject);
-                    }
-                }
-            }
+            this._modelComponent.update();
 
             if (transformController.isActiveAndEnabled) {
                 transformController.update(defaultPointer.position);

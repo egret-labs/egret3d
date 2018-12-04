@@ -458,7 +458,7 @@ declare namespace paper.editor {
         /**
          * 属性配置。
          */
-        option: PropertyOption | undefined;
+        option?: PropertyOption;
         constructor(name: string, editType: EditType, option?: PropertyOption);
     }
     /**
@@ -485,6 +485,10 @@ declare namespace paper.editor {
          * UINT, INT, FLOAT 类型的步进值。
          */
         step?: number;
+        /**
+         * UINT, INT, FLOAT 类型的数值精度。 TODO
+         */
+        precision?: number;
         /**
          * 赋值函数
          */
@@ -1298,9 +1302,13 @@ declare namespace paper {
          */
         constructor();
         /**
+         * @private
+         */
+        _dispatchEnabledEvent(value: boolean): void;
+        /**
          * 添加组件后，组件内部初始化时执行。
          * - 重写此方法时，必须调用 `super.initialize()`。
-         * @param config 实体添加该组件时可以传递的初始化数据。
+         * @param config 实体添加该组件时可以传递的初始化数据。（注意：如果添加该组件时，实体未处于激活状态，则该属性无效）
          */
         initialize(config?: any): void;
         /**
@@ -4506,12 +4514,28 @@ declare namespace paper {
      */
     abstract class Behaviour extends BaseComponent {
         /**
+         * @private
+         */
+        _isReseted: boolean;
+        /**
+         * @private
+         */
+        _isAwaked: boolean;
+        /**
+         * @private
+         */
+        _isStarted: boolean;
+        /**
+         * @private
+         */
+        _dispatchEnabledEvent(value: boolean): void;
+        /**
          * 该组件被初始化时执行。
          * - 在该组件的整个生命周期中只执行一次。
          * @param config 该组件被添加时可以传递的初始化数据。
          * @see paper.GameObject#addComponent()
          */
-        onAwake?(config: any): void;
+        onAwake?(config?: any): void;
         /**
          * TODO
          */
@@ -7313,11 +7337,16 @@ declare namespace egret3d {
         dirty: uint;
         totalWeight: number;
         weight: number;
+        components: paper.BaseComponent | ReadonlyArray<paper.BaseComponent>;
         bindPose: any;
+        updateTarget: (() => void);
         private constructor();
         onClear(): void;
         clear(): void;
         updateBlend(animationLayer: AnimationLayer, animationState: AnimationState): boolean;
+        onUpdateTranslation(): void;
+        onUpdateRotation(): void;
+        onUpdateScale(): void;
     }
 }
 declare namespace egret3d {
@@ -7328,14 +7357,12 @@ declare namespace egret3d {
         private static _instances;
         static create(): AnimationChannel;
         enabled: boolean;
-        isEnd: boolean;
         glTFChannel: GLTFAnimationChannel;
         glTFSampler: gltf.AnimationSampler;
         inputBuffer: Float32Array;
         outputBuffer: ArrayBufferView & ArrayLike<number>;
-        components: paper.BaseComponent | paper.BaseComponent[];
+        binder: paper.BaseComponent | paper.BaseComponent[] | AnimationBinder;
         updateTarget: ((animationlayer: AnimationLayer, animationState: AnimationState) => void) | null;
-        binder: AnimationBinder | null;
         private constructor();
         onClear(): void;
         onUpdateTranslation(animationlayer: AnimationLayer, animationState: AnimationState): void;
@@ -7379,7 +7406,6 @@ declare namespace egret3d {
         private readonly _events;
         private _animation;
         private _animationLayer;
-        private _updateChannelEnd(animation);
         private _updateAnimationFadeState(animationFadeState, deltaTime);
         private _updateAnimationState(animationFadeState, animationState, deltaTime, forceUpdate);
         onAddComponent(component: Animation): void;
@@ -8636,8 +8662,8 @@ declare namespace egret3d {
         private constructor();
         private _addJoint(nodes, joints, jointIndex, recursive);
         createJoints(mesh: Mesh): this;
-        addJointMask(name: string, recursive?: boolean): this;
-        removeJointMask(name: string, recursive?: boolean): this;
+        addJoint(name: string, recursive?: boolean): this;
+        removeJoint(name: string, recursive?: boolean): this;
         readonly jointNames: ReadonlyArray<string>;
     }
 }

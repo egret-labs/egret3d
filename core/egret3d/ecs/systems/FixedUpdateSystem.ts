@@ -17,7 +17,7 @@ namespace paper {
 
             while (fixedTime >= clock.fixedDeltaTime && currentTimes++ < clock.maxFixedSubSteps) {
                 for (const component of components) {
-                    if (component) {
+                    if (component && component._isStarted) {
                         component.onFixedUpdate && component.onFixedUpdate(currentTimes, totalTimes);
                     }
                 }

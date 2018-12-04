@@ -9,19 +9,9 @@ namespace paper {
 
         public onUpdate(deltaTime: number) {
             const components = this.groups[0].components as ReadonlyArray<Behaviour | null>;
-
-            if (Application.playerMode === PlayerMode.Editor) {
-                for (const component of components) {
-                    if (component && (component.constructor as IComponentClass<Behaviour>).executeInEditMode) {
-                        component.onUpdate && component.onUpdate(deltaTime);
-                    }
-                }
-            }
-            else {
-                for (const component of components) {
-                    if (component) {
-                        component.onUpdate && component.onUpdate(deltaTime);
-                    }
+            for (const component of components) {
+                if (component && component._isStarted) {
+                    component.onUpdate && component.onUpdate(deltaTime);
                 }
             }
         }

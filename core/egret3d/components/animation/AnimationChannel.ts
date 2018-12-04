@@ -15,20 +15,19 @@ namespace egret3d {
             }
             else {
                 instance = new AnimationChannel();
+                instance.onClear();
             }
 
             return instance;
         }
 
         public enabled: boolean;
-        public isEnd: boolean;
         public glTFChannel: GLTFAnimationChannel;
         public glTFSampler: gltf.AnimationSampler;
         public inputBuffer: Float32Array;
         public outputBuffer: ArrayBufferView & ArrayLike<number>;
-        public components: paper.BaseComponent | paper.BaseComponent[];
+        public binder: paper.BaseComponent | paper.BaseComponent[] | AnimationBinder;
         public updateTarget: ((animationlayer: AnimationLayer, animationState: AnimationState) => void) | null;
-        public binder: AnimationBinder | null;
 
         private constructor() {
             super();
@@ -36,9 +35,8 @@ namespace egret3d {
 
         public onClear() {
             this.enabled = true;
-            this.isEnd = false;
+            this.binder = null!;
             this.updateTarget = null;
-            this.binder = null;
         }
 
         public onUpdateTranslation(animationlayer: AnimationLayer, animationState: AnimationState) {
@@ -46,8 +44,8 @@ namespace egret3d {
             const currentTime = animationState._currentTime;
             const interpolation = this.glTFSampler.interpolation;
             const outputBuffer = this.outputBuffer;
-            const components = this.components;
-            const binder = this.binder!;
+            const binder = this.binder as AnimationBinder;
+            const components = binder.components;
             const frameIndex = this.getFrameIndex(currentTime);
 
             let x: number, y: number, z: number;
@@ -100,25 +98,6 @@ namespace egret3d {
                     target.z = z;
                 }
             }
-
-            if (this.isEnd) {
-                if (binder.totalWeight < 1.0 - Const.EPSILON) {
-                    const weight = 1.0 - binder.totalWeight;
-                    const bindPose = binder.bindPose as Vector3;
-                    target.x += bindPose.x * weight;
-                    target.y += bindPose.y * weight;
-                    target.z += bindPose.z * weight;
-                }
-
-                if (isArray) {
-                    for (const component of components as Transform[]) {
-                        component.localPosition = target;
-                    }
-                }
-                else {
-                    target.update();
-                }
-            }
         }
 
         public onUpdateRotation(animationlayer: AnimationLayer, animationState: AnimationState) {
@@ -128,8 +107,8 @@ namespace egret3d {
             const currentTime = animationState._currentTime;
             const interpolation = this.glTFSampler.interpolation;
             const outputBuffer = this.outputBuffer;
-            const components = this.components;
-            const binder = this.binder!;
+            const binder = this.binder as AnimationBinder;
+            const components = binder.components;
             const frameIndex = this.getFrameIndex(currentTime);
 
             let x: number, y: number, z: number, w: number;
@@ -207,28 +186,6 @@ namespace egret3d {
                 target.z = z;
                 target.w = w;
             }
-
-            if (this.isEnd) {
-                if (binder.totalWeight < 1.0 - Const.EPSILON) {
-                    const weight = 1.0 - binder.totalWeight;
-                    const bindPose = binder.bindPose as Quaternion;
-                    target.x += bindPose.x * weight;
-                    target.y += bindPose.y * weight;
-                    target.z += bindPose.z * weight;
-                    target.w += bindPose.w * weight;
-                }
-
-                target.normalize();
-
-                if (isArray) {
-                    for (const component of components as Transform[]) {
-                        component.localRotation = target;
-                    }
-                }
-                else {
-                    target.update();
-                }
-            }
         }
 
         public onUpdateScale(animationlayer: AnimationLayer, animationState: AnimationState) {
@@ -236,8 +193,8 @@ namespace egret3d {
             const currentTime = animationState._currentTime;
             const interpolation = this.glTFSampler.interpolation;
             const outputBuffer = this.outputBuffer;
-            const components = this.components;
-            const binder = this.binder!;
+            const binder = this.binder as AnimationBinder;
+            const components = binder.components;
             const frameIndex = this.getFrameIndex(currentTime);
 
             let x: number, y: number, z: number;
@@ -290,44 +247,23 @@ namespace egret3d {
                     target.z = z;
                 }
             }
-
-            if (this.isEnd) {
-                if (binder.totalWeight < 1.0 - Const.EPSILON) {
-                    const weight = 1.0 - binder.totalWeight;
-                    const bindPose = binder.bindPose as Vector3;
-                    target.x += bindPose.x * weight;
-                    target.y += bindPose.y * weight;
-                    target.z += bindPose.z * weight;
-                }
-
-                if (isArray) {
-                    for (const component of components as Transform[]) {
-                        component.localScale = target;
-                    }
-                }
-                else {
-                    target.update();
-                }
-            }
         }
 
         public onUpdateActive(animationlayer: AnimationLayer, animationState: AnimationState) {
             const currentTime = animationState._currentTime;
             const outputBuffer = this.outputBuffer;
-            const components = this.components;
+            const components = this.binder as paper.BaseComponent | ReadonlyArray<paper.BaseComponent>;
             const frameIndex = this.getFrameIndex(currentTime);
             //
             const activeSelf = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]) !== 0;
 
-            if (this.isEnd) {
-                if (Array.isArray(components)) {
-                    for (const component of components as Transform[]) {
-                        component.gameObject.activeSelf = activeSelf;
-                    }
+            if (Array.isArray(components)) {
+                for (const component of components as Transform[]) {
+                    component.gameObject.activeSelf = activeSelf;
                 }
-                else {
-                    (components as Transform).gameObject.activeSelf = activeSelf;
-                }
+            }
+            else {
+                (components as Transform).gameObject.activeSelf = activeSelf;
             }
         }
 

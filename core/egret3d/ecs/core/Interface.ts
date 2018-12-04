@@ -291,6 +291,11 @@ namespace paper {
          */
         readonly __isSingleton: boolean;
         /**
+         * 该组件实例是否为单例组件。
+         * @internal
+         */
+        readonly __isBehaviour: boolean;
+        /**
          * 该组件实例索引。
          * @internal
          */

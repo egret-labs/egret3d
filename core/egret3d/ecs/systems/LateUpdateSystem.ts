@@ -11,21 +11,12 @@ namespace paper {
         public onUpdate(deltaTime: number) {
             // Update behaviours.
             const components = this.groups[0].components as ReadonlyArray<Behaviour | null>;
+            for (const component of components) {
+                if (component && component._isStarted) {
+                    component.onLateUpdate && component.onLateUpdate(deltaTime);
+                }
+            }
 
-            if (Application.playerMode === PlayerMode.Editor) {
-                for (const component of components) {
-                    if (component && (component.constructor as IComponentClass<Behaviour>).executeInEditMode) {
-                        component.onLateUpdate && component.onLateUpdate(deltaTime);
-                    }
-                }
-            }
-            else {
-                for (const component of components) {
-                    if (component) {
-                        component.onLateUpdate && component.onLateUpdate(deltaTime);
-                    }
-                }
-            }
             //
             egret.ticker.update(); // TODO 帧频
             //

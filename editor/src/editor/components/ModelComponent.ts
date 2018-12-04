@@ -82,27 +82,6 @@ namespace paper.editor {
 
         }
 
-        public initialize() {
-            if (Application.playerMode === PlayerMode.Editor) {
-                editor.Editor.addEventListener(editor.EditorEvent.CHANGE_SCENE, () => {
-                    if (this._editorModel) {
-                        this._editorModel.removeEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, this._onEditorSelectGameObjects, this);
-                        this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_PROPERTY, this._onChangeProperty, this);
-
-                        this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_EDIT_MODE, this._onChangeEditMode, this);
-                        this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, this._onChangeEditType, this);
-                    }
-
-                    this._editorModel = editor.Editor.activeEditorModel;
-                    this._editorModel.addEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, this._onEditorSelectGameObjects, this);
-                    this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_PROPERTY, this._onChangeProperty, this);
-
-                    this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_MODE, this._onChangeEditMode, this);
-                    this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, this._onChangeEditType, this);
-                }, this);
-            }
-        }
-
         private _select(value: Scene | GameObject | null, isReplace?: boolean) {
             if (value) {
                 if (value instanceof Scene) {
@@ -177,6 +156,27 @@ namespace paper.editor {
             ModelComponent.onGameObjectUnselected.dispatch(this, value);
         }
 
+        public initialize() {
+            if (Application.playerMode === PlayerMode.Editor) {
+                editor.Editor.addEventListener(editor.EditorEvent.CHANGE_SCENE, () => {
+                    if (this._editorModel) {
+                        this._editorModel.removeEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, this._onEditorSelectGameObjects, this);
+                        this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_PROPERTY, this._onChangeProperty, this);
+
+                        this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_EDIT_MODE, this._onChangeEditMode, this);
+                        this._editorModel.removeEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, this._onChangeEditType, this);
+                    }
+
+                    this._editorModel = editor.Editor.activeEditorModel;
+                    this._editorModel.addEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, this._onEditorSelectGameObjects, this);
+                    this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_PROPERTY, this._onChangeProperty, this);
+
+                    this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_MODE, this._onChangeEditMode, this);
+                    this._editorModel.addEventListener(editor.EditorModelEvent.CHANGE_EDIT_TYPE, this._onChangeEditType, this);
+                }, this);
+            }
+        }
+
         public hover(value: GameObject | null) {
             if (this.hoveredGameObject === value) {
                 return;
@@ -204,6 +204,20 @@ namespace paper.editor {
 
             if (this._editorModel !== null) {
                 this._editorModel.selectGameObject(this.selectedGameObjects);
+            }
+        }
+
+        public update() {
+            if (this.hoveredGameObject && this.hoveredGameObject.isDestroyed) {
+                this.hover(null);
+            }
+
+            let i = this.selectedGameObjects.length;
+            while (i--) {
+                const gameObject = this.selectedGameObjects[0];
+                if (gameObject.isDestroyed) {
+                    this.unselect(gameObject);
+                }
             }
         }
 

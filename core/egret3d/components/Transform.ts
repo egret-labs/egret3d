@@ -412,6 +412,10 @@ namespace egret3d {
                 return this;
             }
 
+            if (this.gameObject === paper.GameObject.globalGameObject) {
+                return this;
+            }
+
             if (
                 parent &&
                 this.gameObject.scene !== parent.gameObject.scene

@@ -196,6 +196,17 @@ namespace paper {
             disposeCollecter.components.push(value);
 
             value.enabled = false;
+
+            if ((value.constructor as IComponentClass<BaseComponent>).__isBehaviour) {
+                if ((value as Behaviour)._isAwaked) {
+                    (value as Behaviour).onDestroy && (value as Behaviour).onDestroy!();
+                }
+
+                if ((value as Behaviour).onBeforeRender) {
+                    this._beforeRenderBehaviors.splice(this._beforeRenderBehaviors.indexOf(value as Behaviour), 1);
+                }
+            }
+
             (value as any).gameObject = null;
 
             if (value === this.renderer) {
@@ -224,12 +235,6 @@ namespace paper {
             if (this.transform && value.hasOwnProperty("onTransformChange")) { // TODO 字符串依赖。
                 this.transform.unregisterObserver(value as any);
             }
-
-            if (value instanceof Behaviour) {
-                if (value.onBeforeRender) {
-                    this._beforeRenderBehaviors.splice(this._beforeRenderBehaviors.indexOf(value), 1);
-                }
-            }
         }
 
         private _getComponent(componentClass: IComponentClass<BaseComponent>) {
@@ -249,15 +254,34 @@ namespace paper {
                         continue;
                     }
 
-                    if (component.enabled) {
-                        component._dispatchEnabledEvent(currentActive);
-                    }
-
                     if (component.constructor === GroupComponent) {
                         for (const componentInGroup of (component as GroupComponent).components) {
+                            if (
+                                (componentInGroup.constructor as IComponentClass<BaseComponent>).__isBehaviour &&
+                                !(<any>componentInGroup as Behaviour)._isAwaked &&
+                                (Application.playerMode !== PlayerMode.Editor || (componentInGroup.constructor as IComponentClass<Behaviour>).executeInEditMode)
+                            ) {
+                                (<any>componentInGroup as Behaviour).onAwake && (<any>componentInGroup as Behaviour).onAwake!();
+                                (<any>componentInGroup as Behaviour)._isAwaked = true;
+                            }
+
                             if (componentInGroup.enabled) {
                                 componentInGroup._dispatchEnabledEvent(currentActive);
                             }
+                        }
+                    }
+                    else {
+                        if (
+                            (component.constructor as IComponentClass<BaseComponent>).__isBehaviour &&
+                            !(<any>component as Behaviour)._isAwaked &&
+                            (Application.playerMode !== PlayerMode.Editor || (component.constructor as IComponentClass<Behaviour>).executeInEditMode)
+                        ) {
+                            (<any>component as Behaviour).onAwake && (<any>component as Behaviour).onAwake!();
+                            (<any>component as Behaviour)._isAwaked = true;
+                        }
+
+                        if (component.enabled) {
+                            component._dispatchEnabledEvent(currentActive);
                         }
                     }
                 }
@@ -352,9 +376,9 @@ namespace paper {
             else if (component instanceof BaseRenderer) {
                 this.renderer = component;
             }
-            else if (component instanceof Behaviour) {
-                if (component.onBeforeRender) {
-                    this._beforeRenderBehaviors.push(component);
+            else if ((component.constructor as IComponentClass<T>).__isBehaviour) {
+                if ((<any>component as Behaviour).onBeforeRender) {
+                    this._beforeRenderBehaviors.push(<any>component as Behaviour);
                 }
             }
             // Add component.
@@ -377,6 +401,7 @@ namespace paper {
                 this._components[componentIndex] = component;
             }
 
+            // Component initialize.
             if (config) {
                 component.initialize(config);
             }
@@ -384,8 +409,18 @@ namespace paper {
                 component.initialize();
             }
 
-            if (component.isActiveAndEnabled) {
-                component._dispatchEnabledEvent(true);
+            if (this.activeInHierarchy) {
+                if (
+                    (component.constructor as IComponentClass<BaseComponent>).__isBehaviour &&
+                    (Application.playerMode !== PlayerMode.Editor || (component.constructor as IComponentClass<Behaviour>).executeInEditMode)
+                ) {
+                    (<any>component as Behaviour).onAwake && (<any>component as Behaviour).onAwake!(config);
+                    (<any>component as Behaviour)._isAwaked = true;
+                }
+
+                if (component.enabled) {
+                    component._dispatchEnabledEvent(true);
+                }
             }
 
             return component;
@@ -402,8 +437,7 @@ namespace paper {
 
             if (componentInstanceOrClass instanceof BaseComponent) {
                 const componentClass = componentInstanceOrClass.constructor as IComponentClass<T>;
-                // SingletonComponent.
-                if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
+                if (componentClass.__isSingleton && this !== GameObject._globalGameObject) { // SingletonComponent.
                     GameObject.globalGameObject.removeComponent(componentInstanceOrClass, isExtends);
                     return;
                 }
@@ -415,8 +449,7 @@ namespace paper {
                 this._removeComponent(componentInstanceOrClass, null);
             }
             else {
-                // SingletonComponent.
-                if (componentInstanceOrClass.__isSingleton && this !== GameObject._globalGameObject) {
+                if (componentInstanceOrClass.__isSingleton && this !== GameObject._globalGameObject) { // SingletonComponent.
                     return GameObject.globalGameObject.removeComponent(componentInstanceOrClass, isExtends);
                 }
 
@@ -483,8 +516,7 @@ namespace paper {
          */
         public removeAllComponents<T extends BaseComponent>(componentClass?: IComponentClass<T>, isExtends: boolean = false) {
             if (componentClass) {
-                // SingletonComponent.
-                if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
+                if (componentClass.__isSingleton && this !== GameObject._globalGameObject) { // SingletonComponent.
                     GameObject.globalGameObject.removeAllComponents(componentClass, isExtends);
                     return;
                 }
@@ -546,8 +578,7 @@ namespace paper {
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         public getComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
-            // SingletonComponent.
-            if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
+            if (componentClass.__isSingleton && this !== GameObject._globalGameObject) { // SingletonComponent.
                 return GameObject.globalGameObject.getComponent(componentClass, isExtends);
             }
 
@@ -593,8 +624,7 @@ namespace paper {
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         public getComponents<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T[] {
-            // SingletonComponent.
-            if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
+            if (componentClass.__isSingleton && this !== GameObject._globalGameObject) { // SingletonComponent.
                 return GameObject.globalGameObject.getComponents(componentClass, isExtends);
             }
 
@@ -719,7 +749,7 @@ namespace paper {
          */
         public sendMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
             for (const component of this._components) {
-                if (component && component.isActiveAndEnabled && component instanceof Behaviour) {
+                if (component && (component.constructor as IComponentClass<T>).__isBehaviour && component.isActiveAndEnabled) {
                     if (methodName in component) {
                         (component as any)[methodName](parameter);
                     }
@@ -808,7 +838,7 @@ namespace paper {
             return this._activeSelf;
         }
         public set activeSelf(value: boolean) {
-            if (this._activeSelf === value) {
+            if (this._activeSelf === value || this === GameObject._globalGameObject) {
                 return;
             }
 

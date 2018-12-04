@@ -221,15 +221,24 @@ namespace egret3d {
                         channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
                         channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input));
                         channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output));
-                        channel.binder = binder;
-                        channel.components = transforms; // TODO 更多组件
                         this.channels.push(channel);
+
+                        if (binder) {
+                            channel.binder = binder;
+                            binder.components = transforms; // TODO 更多组件
+                        }
+                        else {
+                            channel.binder = transforms;
+                        }
 
                         switch (pathName) {
                             case "translation":
                                 channel.updateTarget = channel.onUpdateTranslation;
                                 if (!binder.bindPose) {
                                     binder.bindPose = Vector3.create().copy((transforms as Transform).localPosition);
+                                }
+                                if (!binder.updateTarget) {
+                                    binder.updateTarget = binder.onUpdateTranslation;
                                 }
                                 break;
 
@@ -238,12 +247,18 @@ namespace egret3d {
                                 if (!binder.bindPose) {
                                     binder.bindPose = Quaternion.create().copy((transforms as Transform).localRotation);
                                 }
+                                if (!binder.updateTarget) {
+                                    binder.updateTarget = binder.onUpdateRotation;
+                                }
                                 break;
 
                             case "scale":
                                 channel.updateTarget = channel.onUpdateScale;
                                 if (!binder.bindPose) {
                                     binder.bindPose = Vector3.create().copy((transforms as Transform).localScale);
+                                }
+                                if (!binder.updateTarget) {
+                                    binder.updateTarget = binder.onUpdateScale;
                                 }
                                 break;
 

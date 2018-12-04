@@ -18,13 +18,21 @@ namespace paper {
         /**
          * @internal
          */
+        public static readonly __isBehaviour: boolean = true;
+        /**
+         * @private
+         */
         public _isReseted: boolean = false;
         /**
-         * @internal
+         * @private
+         */
+        public _isAwaked: boolean = false;
+        /**
+         * @private
          */
         public _isStarted: boolean = false;
         /**
-         * @internal
+         * @private
          */
         public _dispatchEnabledEvent(value: boolean) {
             super._dispatchEnabledEvent(value);
@@ -37,22 +45,12 @@ namespace paper {
             }
         }
         /**
-         * @internal
-         */
-        public initialize(config?: any) {
-            super.initialize(config);
-
-            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
-                this.onAwake && this.onAwake(config);
-            }
-        }
-        /**
          * 该组件被初始化时执行。
          * - 在该组件的整个生命周期中只执行一次。
          * @param config 该组件被添加时可以传递的初始化数据。
          * @see paper.GameObject#addComponent()
          */
-        public onAwake?(config: any): void;
+        public onAwake?(config?: any): void;
         /**
          * TODO
          */

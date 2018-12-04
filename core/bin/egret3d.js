@@ -1976,7 +1976,7 @@ var paper;
             return new componentClass();
         };
         /**
-         * @internal
+         * @private
          */
         BaseComponent.prototype._dispatchEnabledEvent = function (value) {
             var componentClass = this.constructor;
@@ -1990,7 +1990,7 @@ var paper;
         /**
          * 添加组件后，组件内部初始化时执行。
          * - 重写此方法时，必须调用 `super.initialize()`。
-         * @param config 实体添加该组件时可以传递的初始化数据。
+         * @param config 实体添加该组件时可以传递的初始化数据。（注意：如果添加该组件时，实体未处于激活状态，则该属性无效）
          */
         BaseComponent.prototype.initialize = function (config) {
         };
@@ -2087,6 +2087,10 @@ var paper;
          * @internal
          */
         BaseComponent.__isSingleton = false;
+        /**
+         * @internal
+         */
+        BaseComponent.__isBehaviour = false;
         /**
          * 该组件实例索引。
          * @internal
@@ -7621,17 +7625,21 @@ var paper;
         function Behaviour() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
-             * @internal
+             * @private
              */
             _this._isReseted = false;
             /**
-             * @internal
+             * @private
+             */
+            _this._isAwaked = false;
+            /**
+             * @private
              */
             _this._isStarted = false;
             return _this;
         }
         /**
-         * @internal
+         * @private
          */
         Behaviour.prototype._dispatchEnabledEvent = function (value) {
             _super.prototype._dispatchEnabledEvent.call(this, value);
@@ -7645,12 +7653,7 @@ var paper;
         /**
          * @internal
          */
-        Behaviour.prototype.initialize = function (config) {
-            _super.prototype.initialize.call(this, config);
-            if (paper.Application.playerMode !== 2 /* Editor */ || this.constructor.executeInEditMode) {
-                this.onAwake && this.onAwake(config);
-            }
-        };
+        Behaviour.__isBehaviour = true;
         return Behaviour;
     }(paper.BaseComponent));
     paper.Behaviour = Behaviour;
@@ -8422,7 +8425,7 @@ var paper;
             while (fixedTime >= clock.fixedDeltaTime && currentTimes++ < clock.maxFixedSubSteps) {
                 for (var _i = 0, components_1 = components; _i < components_1.length; _i++) {
                     var component = components_1[_i];
-                    if (component) {
+                    if (component && component._isStarted) {
                         component.onFixedUpdate && component.onFixedUpdate(currentTimes, totalTimes);
                     }
                 }
@@ -8450,20 +8453,10 @@ var paper;
         }
         UpdateSystem.prototype.onUpdate = function (deltaTime) {
             var components = this.groups[0].components;
-            if (paper.Application.playerMode === 2 /* Editor */) {
-                for (var _i = 0, components_2 = components; _i < components_2.length; _i++) {
-                    var component = components_2[_i];
-                    if (component && component.constructor.executeInEditMode) {
-                        component.onUpdate && component.onUpdate(deltaTime);
-                    }
-                }
-            }
-            else {
-                for (var _a = 0, components_3 = components; _a < components_3.length; _a++) {
-                    var component = components_3[_a];
-                    if (component) {
-                        component.onUpdate && component.onUpdate(deltaTime);
-                    }
+            for (var _i = 0, components_2 = components; _i < components_2.length; _i++) {
+                var component = components_2[_i];
+                if (component && component._isStarted) {
+                    component.onUpdate && component.onUpdate(deltaTime);
                 }
             }
         };
@@ -8490,20 +8483,10 @@ var paper;
         LateUpdateSystem.prototype.onUpdate = function (deltaTime) {
             // Update behaviours.
             var components = this.groups[0].components;
-            if (paper.Application.playerMode === 2 /* Editor */) {
-                for (var _i = 0, components_4 = components; _i < components_4.length; _i++) {
-                    var component = components_4[_i];
-                    if (component && component.constructor.executeInEditMode) {
-                        component.onLateUpdate && component.onLateUpdate(deltaTime);
-                    }
-                }
-            }
-            else {
-                for (var _a = 0, components_5 = components; _a < components_5.length; _a++) {
-                    var component = components_5[_a];
-                    if (component) {
-                        component.onLateUpdate && component.onLateUpdate(deltaTime);
-                    }
+            for (var _i = 0, components_3 = components; _i < components_3.length; _i++) {
+                var component = components_3[_i];
+                if (component && component._isStarted) {
+                    component.onLateUpdate && component.onLateUpdate(deltaTime);
                 }
             }
             //
@@ -8511,8 +8494,8 @@ var paper;
             //
             var laterCalls = this._laterCalls;
             if (laterCalls.length > 0) {
-                for (var _b = 0, laterCalls_1 = laterCalls; _b < laterCalls_1.length; _b++) {
-                    var callback = laterCalls_1[_b];
+                for (var _a = 0, laterCalls_1 = laterCalls; _a < laterCalls_1.length; _a++) {
+                    var callback = laterCalls_1[_a];
                     callback();
                 }
                 laterCalls.length = 0;
@@ -8554,9 +8537,6 @@ var paper;
                 return;
             }
             component.onDisable && component.onDisable();
-            if (paper.disposeCollecter.components.indexOf(component) >= 0) {
-                component.onDestroy && component.onDestroy();
-            }
         };
         DisableSystem.prototype.onUpdate = function () {
             var disposeCollecter = this._disposeCollecter;
@@ -9739,6 +9719,9 @@ var egret3d;
             if (worldTransformStays === void 0) { worldTransformStays = false; }
             var prevParent = this._parent;
             if (prevParent === parent) {
+                return this;
+            }
+            if (this.gameObject === paper.GameObject.globalGameObject) {
                 return this;
             }
             if (parent &&
@@ -12870,7 +12853,7 @@ var egret3d;
             this._material.setFloat("velocityFactor", this._velocityFactor);
         };
         MotionBlurEffect.prototype.uninitialize = function () {
-            _super.prototype.initialize.call(this);
+            _super.prototype.uninitialize.call(this);
             if (this._material) {
                 this._material.dispose();
             }
@@ -14300,6 +14283,14 @@ var paper;
         GameObject.prototype._removeComponent = function (value, groupComponent) {
             paper.disposeCollecter.components.push(value);
             value.enabled = false;
+            if (value.constructor.__isBehaviour) {
+                if (value._isAwaked) {
+                    value.onDestroy && value.onDestroy();
+                }
+                if (value.onBeforeRender) {
+                    this._beforeRenderBehaviors.splice(this._beforeRenderBehaviors.indexOf(value), 1);
+                }
+            }
             value.gameObject = null;
             if (value === this.renderer) {
                 this.renderer = null;
@@ -14324,11 +14315,6 @@ var paper;
             if (this.transform && value.hasOwnProperty("onTransformChange")) {
                 this.transform.unregisterObserver(value);
             }
-            if (value instanceof paper.Behaviour) {
-                if (value.onBeforeRender) {
-                    this._beforeRenderBehaviors.splice(this._beforeRenderBehaviors.indexOf(value), 1);
-                }
-            }
         };
         GameObject.prototype._getComponent = function (componentClass) {
             var componentIndex = componentClass.__index;
@@ -14346,15 +14332,29 @@ var paper;
                     if (!component) {
                         continue;
                     }
-                    if (component.enabled) {
-                        component._dispatchEnabledEvent(currentActive);
-                    }
                     if (component.constructor === paper.GroupComponent) {
                         for (var _b = 0, _c = component.components; _b < _c.length; _b++) {
                             var componentInGroup = _c[_b];
+                            if (componentInGroup.constructor.__isBehaviour &&
+                                !componentInGroup._isAwaked &&
+                                (paper.Application.playerMode !== 2 /* Editor */ || componentInGroup.constructor.executeInEditMode)) {
+                                componentInGroup.onAwake && componentInGroup.onAwake();
+                                componentInGroup._isAwaked = true;
+                            }
                             if (componentInGroup.enabled) {
                                 componentInGroup._dispatchEnabledEvent(currentActive);
                             }
+                        }
+                    }
+                    else {
+                        if (component.constructor.__isBehaviour &&
+                            !component._isAwaked &&
+                            (paper.Application.playerMode !== 2 /* Editor */ || component.constructor.executeInEditMode)) {
+                            component.onAwake && component.onAwake();
+                            component._isAwaked = true;
+                        }
+                        if (component.enabled) {
+                            component._dispatchEnabledEvent(currentActive);
                         }
                     }
                 }
@@ -14440,7 +14440,7 @@ var paper;
             else if (component instanceof paper.BaseRenderer) {
                 this.renderer = component;
             }
-            else if (component instanceof paper.Behaviour) {
+            else if (component.constructor.__isBehaviour) {
                 if (component.onBeforeRender) {
                     this._beforeRenderBehaviors.push(component);
                 }
@@ -14464,14 +14464,22 @@ var paper;
             else {
                 this._components[componentIndex] = component;
             }
+            // Component initialize.
             if (config) {
                 component.initialize(config);
             }
             else {
                 component.initialize();
             }
-            if (component.isActiveAndEnabled) {
-                component._dispatchEnabledEvent(true);
+            if (this.activeInHierarchy) {
+                if (component.constructor.__isBehaviour &&
+                    (paper.Application.playerMode !== 2 /* Editor */ || component.constructor.executeInEditMode)) {
+                    component.onAwake && component.onAwake(config);
+                    component._isAwaked = true;
+                }
+                if (component.enabled) {
+                    component._dispatchEnabledEvent(true);
+                }
             }
             return component;
         };
@@ -14487,7 +14495,6 @@ var paper;
             }
             if (componentInstanceOrClass instanceof paper.BaseComponent) {
                 var componentClass = componentInstanceOrClass.constructor;
-                // SingletonComponent.
                 if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
                     GameObject.globalGameObject.removeComponent(componentInstanceOrClass, isExtends);
                     return;
@@ -14498,7 +14505,6 @@ var paper;
                 this._removeComponent(componentInstanceOrClass, null);
             }
             else {
-                // SingletonComponent.
                 if (componentInstanceOrClass.__isSingleton && this !== GameObject._globalGameObject) {
                     return GameObject.globalGameObject.removeComponent(componentInstanceOrClass, isExtends);
                 }
@@ -14557,7 +14563,6 @@ var paper;
         GameObject.prototype.removeAllComponents = function (componentClass, isExtends) {
             if (isExtends === void 0) { isExtends = false; }
             if (componentClass) {
-                // SingletonComponent.
                 if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
                     GameObject.globalGameObject.removeAllComponents(componentClass, isExtends);
                     return;
@@ -14615,7 +14620,6 @@ var paper;
          */
         GameObject.prototype.getComponent = function (componentClass, isExtends) {
             if (isExtends === void 0) { isExtends = false; }
-            // SingletonComponent.
             if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
                 return GameObject.globalGameObject.getComponent(componentClass, isExtends);
             }
@@ -14657,7 +14661,6 @@ var paper;
          */
         GameObject.prototype.getComponents = function (componentClass, isExtends) {
             if (isExtends === void 0) { isExtends = false; }
-            // SingletonComponent.
             if (componentClass.__isSingleton && this !== GameObject._globalGameObject) {
                 return GameObject.globalGameObject.getComponents(componentClass, isExtends);
             }
@@ -14781,7 +14784,7 @@ var paper;
             if (requireReceiver === void 0) { requireReceiver = true; }
             for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
                 var component = _a[_i];
-                if (component && component.isActiveAndEnabled && component instanceof paper.Behaviour) {
+                if (component && component.constructor.__isBehaviour && component.isActiveAndEnabled) {
                     if (methodName in component) {
                         component[methodName](parameter);
                     }
@@ -14872,7 +14875,7 @@ var paper;
                 return this._activeSelf;
             },
             set: function (value) {
-                if (this._activeSelf === value) {
+                if (this._activeSelf === value || this === GameObject._globalGameObject) {
                     return;
                 }
                 var parent = this.transform.parent;
@@ -16655,7 +16658,7 @@ var egret3d;
                             var nodes = animationState.animationAsset.config.nodes;
                             for (var _c = 0, _d = animationState.channels; _c < _d.length; _c++) {
                                 var channel = _d[_c];
-                                if (jointNames) {
+                                if (jointNames && jointNames.length > 0) {
                                     var jointIndex = channel.glTFChannel.target.node;
                                     channel.enabled = jointIndex === undefined || jointNames.indexOf(nodes[jointIndex].name) >= 0;
                                 }
@@ -17057,14 +17060,22 @@ var egret3d;
                         channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
                         channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input));
                         channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output));
-                        channel.binder = binder;
-                        channel.components = transforms; // TODO 更多组件
                         this.channels.push(channel);
+                        if (binder) {
+                            channel.binder = binder;
+                            binder.components = transforms; // TODO 更多组件
+                        }
+                        else {
+                            channel.binder = transforms;
+                        }
                         switch (pathName) {
                             case "translation":
                                 channel.updateTarget = channel.onUpdateTranslation;
                                 if (!binder.bindPose) {
                                     binder.bindPose = egret3d.Vector3.create().copy(transforms.localPosition);
+                                }
+                                if (!binder.updateTarget) {
+                                    binder.updateTarget = binder.onUpdateTranslation;
                                 }
                                 break;
                             case "rotation":
@@ -17072,11 +17083,17 @@ var egret3d;
                                 if (!binder.bindPose) {
                                     binder.bindPose = egret3d.Quaternion.create().copy(transforms.localRotation);
                                 }
+                                if (!binder.updateTarget) {
+                                    binder.updateTarget = binder.onUpdateRotation;
+                                }
                                 break;
                             case "scale":
                                 channel.updateTarget = channel.onUpdateScale;
                                 if (!binder.bindPose) {
                                     binder.bindPose = egret3d.Vector3.create().copy(transforms.localScale);
+                                }
+                                if (!binder.updateTarget) {
+                                    binder.updateTarget = binder.onUpdateScale;
                                 }
                                 break;
                             case "weights":
@@ -17204,7 +17221,12 @@ var egret3d;
         };
         AnimationBinder.prototype.onClear = function () {
             this.clear();
+            if (this.bindPose) {
+                this.bindPose.release(); // TODO
+            }
             this.bindPose = null;
+            this.components = null;
+            this.updateTarget = null;
         };
         AnimationBinder.prototype.clear = function () {
             this.dirty = 0;
@@ -17226,6 +17248,71 @@ var egret3d;
             this.totalWeight += globalWeight;
             this.weight = globalWeight;
             return true;
+        };
+        AnimationBinder.prototype.onUpdateTranslation = function () {
+            var components = this.components;
+            var isArray = Array.isArray(components);
+            var target = (isArray ? components[0].localPosition : components.localPosition);
+            if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
+                var weight = 1.0 - this.totalWeight;
+                var bindPose = this.bindPose;
+                target.x += bindPose.x * weight;
+                target.y += bindPose.y * weight;
+                target.z += bindPose.z * weight;
+            }
+            if (isArray) {
+                for (var _i = 0, _a = components; _i < _a.length; _i++) {
+                    var component = _a[_i];
+                    component.localPosition = target;
+                }
+            }
+            else {
+                target.update();
+            }
+        };
+        AnimationBinder.prototype.onUpdateRotation = function () {
+            var components = this.components;
+            var isArray = Array.isArray(components);
+            var target = (isArray ? components[0].localRotation : components.localRotation);
+            if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
+                var weight = 1.0 - this.totalWeight;
+                var bindPose = this.bindPose;
+                target.x += bindPose.x * weight;
+                target.y += bindPose.y * weight;
+                target.z += bindPose.z * weight;
+                target.w += bindPose.w * weight;
+            }
+            target.normalize();
+            if (isArray) {
+                for (var _i = 0, _a = components; _i < _a.length; _i++) {
+                    var component = _a[_i];
+                    component.localRotation = target;
+                }
+            }
+            else {
+                target.update();
+            }
+        };
+        AnimationBinder.prototype.onUpdateScale = function () {
+            var components = this.components;
+            var isArray = Array.isArray(components);
+            var target = (isArray ? components[0].localScale : components.localScale);
+            if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
+                var weight = 1.0 - this.totalWeight;
+                var bindPose = this.bindPose;
+                target.x += bindPose.x * weight;
+                target.y += bindPose.y * weight;
+                target.z += bindPose.z * weight;
+            }
+            if (isArray) {
+                for (var _i = 0, _a = components; _i < _a.length; _i++) {
+                    var component = _a[_i];
+                    component.localScale = target;
+                }
+            }
+            else {
+                target.update();
+            }
         };
         AnimationBinder._instances = [];
         return AnimationBinder;
@@ -17253,22 +17340,22 @@ var egret3d;
             }
             else {
                 instance = new AnimationChannel();
+                instance.onClear();
             }
             return instance;
         };
         AnimationChannel.prototype.onClear = function () {
             this.enabled = true;
-            this.isEnd = false;
-            this.updateTarget = null;
             this.binder = null;
+            this.updateTarget = null;
         };
         AnimationChannel.prototype.onUpdateTranslation = function (animationlayer, animationState) {
             var additive = animationlayer.additive;
             var currentTime = animationState._currentTime;
             var interpolation = this.glTFSampler.interpolation;
             var outputBuffer = this.outputBuffer;
-            var components = this.components;
             var binder = this.binder;
+            var components = binder.components;
             var frameIndex = this.getFrameIndex(currentTime);
             var x, y, z;
             if (frameIndex >= 0) {
@@ -17315,24 +17402,6 @@ var egret3d;
                     target.z = z;
                 }
             }
-            if (this.isEnd) {
-                if (binder.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
-                    var weight_1 = 1.0 - binder.totalWeight;
-                    var bindPose = binder.bindPose;
-                    target.x += bindPose.x * weight_1;
-                    target.y += bindPose.y * weight_1;
-                    target.z += bindPose.z * weight_1;
-                }
-                if (isArray) {
-                    for (var _i = 0, _a = components; _i < _a.length; _i++) {
-                        var component = _a[_i];
-                        component.localPosition = target;
-                    }
-                }
-                else {
-                    target.update();
-                }
-            }
         };
         AnimationChannel.prototype.onUpdateRotation = function (animationlayer, animationState) {
             var helpQuaternionA = _helpQuaternionA;
@@ -17341,8 +17410,8 @@ var egret3d;
             var currentTime = animationState._currentTime;
             var interpolation = this.glTFSampler.interpolation;
             var outputBuffer = this.outputBuffer;
-            var components = this.components;
             var binder = this.binder;
+            var components = binder.components;
             var frameIndex = this.getFrameIndex(currentTime);
             var x, y, z, w;
             if (frameIndex >= 0) {
@@ -17412,34 +17481,14 @@ var egret3d;
                 target.z = z;
                 target.w = w;
             }
-            if (this.isEnd) {
-                if (binder.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
-                    var weight_2 = 1.0 - binder.totalWeight;
-                    var bindPose = binder.bindPose;
-                    target.x += bindPose.x * weight_2;
-                    target.y += bindPose.y * weight_2;
-                    target.z += bindPose.z * weight_2;
-                    target.w += bindPose.w * weight_2;
-                }
-                target.normalize();
-                if (isArray) {
-                    for (var _i = 0, _a = components; _i < _a.length; _i++) {
-                        var component = _a[_i];
-                        component.localRotation = target;
-                    }
-                }
-                else {
-                    target.update();
-                }
-            }
         };
         AnimationChannel.prototype.onUpdateScale = function (animationlayer, animationState) {
             var additive = animationlayer.additive;
             var currentTime = animationState._currentTime;
             var interpolation = this.glTFSampler.interpolation;
             var outputBuffer = this.outputBuffer;
-            var components = this.components;
             var binder = this.binder;
+            var components = binder.components;
             var frameIndex = this.getFrameIndex(currentTime);
             var x, y, z;
             if (frameIndex >= 0) {
@@ -17486,42 +17535,22 @@ var egret3d;
                     target.z = z;
                 }
             }
-            if (this.isEnd) {
-                if (binder.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
-                    var weight_3 = 1.0 - binder.totalWeight;
-                    var bindPose = binder.bindPose;
-                    target.x += bindPose.x * weight_3;
-                    target.y += bindPose.y * weight_3;
-                    target.z += bindPose.z * weight_3;
-                }
-                if (isArray) {
-                    for (var _i = 0, _a = components; _i < _a.length; _i++) {
-                        var component = _a[_i];
-                        component.localScale = target;
-                    }
-                }
-                else {
-                    target.update();
-                }
-            }
         };
         AnimationChannel.prototype.onUpdateActive = function (animationlayer, animationState) {
             var currentTime = animationState._currentTime;
             var outputBuffer = this.outputBuffer;
-            var components = this.components;
+            var components = this.binder;
             var frameIndex = this.getFrameIndex(currentTime);
             //
             var activeSelf = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]) !== 0;
-            if (this.isEnd) {
-                if (Array.isArray(components)) {
-                    for (var _i = 0, _a = components; _i < _a.length; _i++) {
-                        var component = _a[_i];
-                        component.gameObject.activeSelf = activeSelf;
-                    }
+            if (Array.isArray(components)) {
+                for (var _i = 0, _a = components; _i < _a.length; _i++) {
+                    var component = _a[_i];
+                    component.gameObject.activeSelf = activeSelf;
                 }
-                else {
-                    components.gameObject.activeSelf = activeSelf;
-                }
+            }
+            else {
+                components.gameObject.activeSelf = activeSelf;
             }
         };
         AnimationChannel.prototype.getFrameIndex = function (currentTime) {
@@ -17621,36 +17650,6 @@ var egret3d;
             _this._animationLayer = null;
             return _this;
         }
-        AnimationSystem.prototype._updateChannelEnd = function (animation) {
-            var animationFadeStates = animation._fadeStates;
-            var blendLayers = [];
-            var channelss = [];
-            for (var i = animationFadeStates.length - 1; i >= 0; i--) {
-                for (var _i = 0, _a = animationFadeStates[i]; _i < _a.length; _i++) {
-                    var fadeState = _a[_i];
-                    for (var _b = 0, _c = fadeState.states; _b < _c.length; _b++) {
-                        var animationState = _c[_b];
-                        for (var _d = 0, _e = animationState.channels; _d < _e.length; _d++) {
-                            var channel = _e[_d];
-                            var blendLayer = channel.binder;
-                            channel.isEnd = false;
-                            if (blendLayer) {
-                                var index = blendLayers.indexOf(blendLayer);
-                                if (index < 0) {
-                                    index = blendLayers.length;
-                                    blendLayers.push(blendLayer);
-                                }
-                                (channelss[index] = channelss[index] || []).push(channel);
-                            }
-                        }
-                    }
-                }
-            }
-            for (var _f = 0, channelss_1 = channelss; _f < channelss_1.length; _f++) {
-                var channels = channelss_1[_f];
-                channels[channels.length - 1].isEnd = true;
-            }
-        };
         AnimationSystem.prototype._updateAnimationFadeState = function (animationFadeState, deltaTime) {
             if (deltaTime < 0.0) {
                 deltaTime = -deltaTime;
@@ -17732,11 +17731,16 @@ var egret3d;
             if (forceUpdate || weight !== 0.0) {
                 for (var _i = 0, _a = animationState.channels; _i < _a.length; _i++) {
                     var channel = _a[_i];
-                    if (!channel.updateTarget) {
+                    if (!channel.updateTarget || !channel.enabled) {
                         continue;
                     }
                     var binder = channel.binder;
-                    if (!binder || binder.updateBlend(animationLayer, animationState)) {
+                    if (binder.constructor === egret3d.AnimationBinder) {
+                        if (binder.updateBlend(animationLayer, animationState)) {
+                            channel.updateTarget(animationLayer, animationState);
+                        }
+                    }
+                    else {
                         channel.updateTarget(animationLayer, animationState);
                     }
                 }
@@ -17838,7 +17842,6 @@ var egret3d;
                     blendLayer.clear();
                 }
                 if (animation._statesDirty) {
-                    this._updateChannelEnd(animation);
                     animation._statesDirty = false;
                 }
                 for (var i = animationFadeStates.length - 1; i >= 0; i--) {
@@ -17871,6 +17874,10 @@ var egret3d;
                             animation._statesDirty = true;
                         }
                     }
+                }
+                for (var k in blendlayers) {
+                    var blendLayer = blendlayers[k];
+                    blendLayer.updateTarget();
                 }
             }
         };
@@ -23037,7 +23044,7 @@ var egret3d;
             }
             return this;
         };
-        AnimationMask.prototype.addJointMask = function (name, recursive) {
+        AnimationMask.prototype.addJoint = function (name, recursive) {
             if (recursive === void 0) { recursive = true; }
             var index = 0;
             var nodes = this.config.nodes;
@@ -23053,7 +23060,7 @@ var egret3d;
             console.warn("Invalid joint mask name.", name);
             return this;
         };
-        AnimationMask.prototype.removeJointMask = function (name, recursive) {
+        AnimationMask.prototype.removeJoint = function (name, recursive) {
             if (recursive === void 0) { recursive = true; }
             var index = 0;
             var nodes = this.config.nodes;

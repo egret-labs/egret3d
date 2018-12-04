@@ -1,6 +1,5 @@
 namespace paper {
     let _createEnabled: GameObject | null = null;
-
     /**
      * 基础组件。
      * - 所有组件的基类。
@@ -38,6 +37,10 @@ namespace paper {
          * @internal
          */
         public static readonly __isSingleton: boolean = false;
+        /**
+         * @internal
+         */
+        public static readonly __isBehaviour: boolean = false;
         /**
          * 该组件实例索引。
          * @internal
@@ -93,18 +96,15 @@ namespace paper {
 
             return new componentClass();
         }
-
         /**
          * 
          */
         @serializedField
         public hideFlags: HideFlags = HideFlags.None;
-
         /**
          * 该组件的实体。
          */
         public readonly gameObject: GameObject = null!;
-
         /**
          * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
          */
@@ -113,7 +113,6 @@ namespace paper {
 
         @serializedField
         protected _enabled: boolean = true;
-
         /**
          * 禁止实例化组件。
          * @protected
@@ -128,9 +127,8 @@ namespace paper {
             this.gameObject = _createEnabled;
             _createEnabled = null;
         }
-
         /**
-         * @internal
+         * @private
          */
         public _dispatchEnabledEvent(value: boolean) {
             const componentClass = this.constructor as IComponentClass<this>;
@@ -141,29 +139,25 @@ namespace paper {
                 componentClass.onComponentDisabled.dispatch(this);
             }
         }
-
         /**
          * 添加组件后，组件内部初始化时执行。
          * - 重写此方法时，必须调用 `super.initialize()`。
-         * @param config 实体添加该组件时可以传递的初始化数据。
+         * @param config 实体添加该组件时可以传递的初始化数据。（注意：如果添加该组件时，实体未处于激活状态，则该属性无效）
          */
         public initialize(config?: any): void {
         }
-
         /**
          * 移除组件后，组件内部卸载时执行。
          * - 重写此方法时，必须调用 `super.uninitialize()`。
          */
         public uninitialize(): void {
         }
-
         /**
          * 该组件是否已被销毁。
          */
         public get isDestroyed(): boolean {
             return !this.gameObject;
         }
-
         /**
          * 该组件自身的激活状态。
          */
@@ -189,7 +183,6 @@ namespace paper {
                 this._dispatchEnabledEvent(currentEnabled);
             }
         }
-
         /**
          * 该组件在场景的激活状态。
          */
@@ -197,7 +190,6 @@ namespace paper {
             // return this._enabled && this.gameObject.activeInHierarchy;
             return this._enabled && (this.gameObject._activeDirty ? this.gameObject.activeInHierarchy : this.gameObject._activeInHierarchy);
         }
-
         /**
          * 该组件所属实体的变换组件。
          */

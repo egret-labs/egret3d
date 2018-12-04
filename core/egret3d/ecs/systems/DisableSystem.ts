@@ -21,10 +21,6 @@ namespace paper {
             }
 
             component.onDisable && component.onDisable();
-
-            if (disposeCollecter.components.indexOf(component) >= 0) { // TODO onDestroy 如果不是 enabled 就不派发
-                component.onDestroy && component.onDestroy();
-            }
         }
 
         public onUpdate() {
