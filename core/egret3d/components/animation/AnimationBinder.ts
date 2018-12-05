@@ -48,7 +48,7 @@ namespace egret3d {
             this.weight = 1.0;
         }
 
-        public updateBlend(animationLayer: AnimationLayer, animationState: AnimationState) {
+        public updateBlend(animationState: AnimationState) {
             const globalWeight = animationState._globalWeight;
 
             if (this.dirty > 0) {

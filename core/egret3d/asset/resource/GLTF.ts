@@ -172,7 +172,7 @@ namespace egret3d {
         mask?: string | AnimationMask | null;
         machine: StateMachine;
         /**
-         * @private
+         * @internal
          */
         _clipNames?: string[];
     }

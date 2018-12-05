@@ -20,8 +20,11 @@ namespace egret3d {
 
             return asset;
         }
-
-        private _dirty: boolean = false;
+        /**
+         * @internal
+         */
+        public _dirty: boolean = false;
+        private _jointNamesDirty: boolean = false;
         private readonly _jointNames: string[] = [];
 
         private constructor() {
@@ -32,6 +35,7 @@ namespace egret3d {
             if (joints.indexOf(jointIndex) < 0) {
                 joints.push(jointIndex);
                 this._dirty = true;
+                this._jointNamesDirty = true;
             }
 
             if (recursive) {
@@ -105,18 +109,30 @@ namespace egret3d {
             return this;
         }
 
+        public removeJoints(): this {
+            const joints = this.config.extensions!.paper!.animationMasks![0].joints;
+            joints.length = 0;
+            this._dirty = true;
+            this._jointNamesDirty = true;
+
+            return this;
+        }
+
         public get jointNames(): ReadonlyArray<string> {
             const jointNames = this._jointNames;
-            if (this._dirty) {
+            if (this._jointNamesDirty) {
                 const nodes = this.config.nodes!;
                 const joints = this.config.extensions!.paper!.animationMasks![0].joints;
+                jointNames.length = 0;
+
                 for (const index of joints) {
                     const node = nodes[index];
                     jointNames.push(node.name!);
                 }
 
-                this._dirty = false;
+                this._jointNamesDirty = false;
             }
+
             return jointNames;
         }
     }

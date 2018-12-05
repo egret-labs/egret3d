@@ -2105,10 +2105,6 @@ declare namespace egret3d {
         source?: string | null;
         mask?: string | AnimationMask | null;
         machine: StateMachine;
-        /**
-         * @private
-         */
-        _clipNames?: string[];
     }
     /**
      * @private
@@ -7187,10 +7183,6 @@ declare namespace egret3d {
         private _lastAnimationLayer;
         uninitialize(): void;
         /**
-         * @private
-         */
-        setLayerMask(layerIndex: uint, animationMask: AnimationMask | null): void;
-        /**
          * 融合播放一个指定的动画。
          * @param animationClipName 动画剪辑的名称。
          * @param fadeTime 融合的时间。
@@ -7343,7 +7335,7 @@ declare namespace egret3d {
         private constructor();
         onClear(): void;
         clear(): void;
-        updateBlend(animationLayer: AnimationLayer, animationState: AnimationState): boolean;
+        updateBlend(animationState: AnimationState): boolean;
         onUpdateTranslation(): void;
         onUpdateRotation(): void;
         onUpdateScale(): void;
@@ -7405,7 +7397,6 @@ declare namespace egret3d {
         }[];
         private readonly _events;
         private _animation;
-        private _animationLayer;
         private _updateAnimationFadeState(animationFadeState, deltaTime);
         private _updateAnimationState(animationFadeState, animationState, deltaTime, forceUpdate);
         onAddComponent(component: Animation): void;
@@ -8644,10 +8635,17 @@ declare namespace egret3d {
     class AnimationController extends GLTFAsset {
         static create(): AnimationController;
         private constructor();
-        createLayer(name: string): AnimationLayer;
+        /**
+         * 添加一个新的动画层。
+         */
+        addLayer(name: string): AnimationLayer;
         createAnimationTree(machineOrTreen: StateMachine | AnimationTree, name: string): AnimationTree;
         createAnimationNode(machineOrTreen: StateMachine | AnimationTree, asset: string, clip: string): AnimationNode;
-        getOrCreateLayer(index: uint): AnimationLayer;
+        /**
+         * 获取或添加一个动画层。
+         * - 层索引强制连续。
+         */
+        getOrAddLayer(layerIndex: uint): AnimationLayer;
         readonly layers: AnimationLayer[];
     }
 }
@@ -8657,13 +8655,14 @@ declare namespace egret3d {
      */
     class AnimationMask extends GLTFAsset {
         static create(): AnimationMask;
-        private _dirty;
+        private _jointNamesDirty;
         private readonly _jointNames;
         private constructor();
         private _addJoint(nodes, joints, jointIndex, recursive);
         createJoints(mesh: Mesh): this;
         addJoint(name: string, recursive?: boolean): this;
         removeJoint(name: string, recursive?: boolean): this;
+        removeJoints(): this;
         readonly jointNames: ReadonlyArray<string>;
     }
 }

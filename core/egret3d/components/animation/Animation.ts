@@ -67,39 +67,6 @@ namespace egret3d {
             this._lastAnimationLayer = null;
         }
         /**
-         * @private
-         */
-        public setLayerMask(layerIndex: uint, animationMask: AnimationMask | null) {
-            const animationController = this._animationController;
-            if (animationController) {
-                const layers = animationController.layers;
-                const layer = animationController.getOrCreateLayer(layerIndex);
-                layerIndex = layers.indexOf(layer);
-                layer.mask = animationMask;
-
-                const jointNames = animationMask ? animationMask.jointNames : null;
-                const fadeStatess = this._fadeStates;
-                if (layerIndex < fadeStatess.length) {
-                    const fadeStates = fadeStatess[layerIndex];
-
-                    for (const fadeState of fadeStates) {
-                        for (const animationState of fadeState.states) {
-                            const nodes = animationState.animationAsset.config.nodes!;
-                            for (const channel of animationState.channels) {
-                                if (jointNames && jointNames.length > 0) {
-                                    const jointIndex = channel.glTFChannel.target.node;
-                                    channel.enabled = jointIndex === undefined || jointNames.indexOf(nodes[jointIndex].name!) >= 0;
-                                }
-                                else {
-                                    channel.enabled = true;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        /**
          * 融合播放一个指定的动画。
          * @param animationClipName 动画剪辑的名称。
          * @param fadeTime 融合的时间。
@@ -134,9 +101,15 @@ namespace egret3d {
             }
 
             const animationController = this._animationController;
-            const animationLayer = animationController.getOrCreateLayer(layerIndex);
+            const animationLayers = animationController.layers;
+
+            if (layerIndex > animationLayers.length) {
+                console.warn(`The animation layers must be continuous.`);
+                return null;
+            }
+
+            const animationLayer = animationController.getOrAddLayer(layerIndex);
             animationLayer.additive = layerAdditive;
-            layerIndex = animationController.layers.indexOf(animationLayer);
             const animationNode: AnimationNode = {
                 asset: "",
                 clip: "",
@@ -177,7 +150,7 @@ namespace egret3d {
             }
 
             const animationController = this._animationController;
-            const animationLayer = animationController.getOrCreateLayer(0);
+            const animationLayer = animationController.getOrAddLayer(0);
             //
             if (!animationLayer._clipNames) {
                 animationLayer._clipNames = [];
@@ -203,7 +176,7 @@ namespace egret3d {
             let animationState: AnimationState | null = null;
 
             if (animationClipNameOrNames) {
-                animationState = this.fadeIn(animationClipNameOrNames, 0.0, playTimes);
+                animationState = this.fadeIn(animationClipNameOrNames as string, 0.0, playTimes);
             }
             else {
                 const lastAnimationState = this.lastAnimationState;

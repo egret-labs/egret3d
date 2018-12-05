@@ -131,7 +131,7 @@ namespace egret3d {
 
                 const imgResource = (RES.host.resourceConfig as any)["getResource"](name);
                 if (imgResource) {
-                    return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {                    
+                    return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
                         const texture = egret3d.Texture.createByImage(resource.name, bitmapData, textureFormat, mipmap, linear, repeat, premultiply);
                         paper.Asset.register(texture);
                         return texture;
@@ -262,8 +262,8 @@ namespace egret3d {
     export const PrefabProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
             return host.load(resource, "json").then((data: paper.ISerializedData) => {
-                const prefab = new paper.Prefab(resource.name);
                 return loadSubAssets(data, resource).then(() => {
+                    const prefab = new paper.Prefab(resource.name);
                     prefab.parse(data);
                     paper.Asset.register(prefab);
                     return prefab;
@@ -280,8 +280,8 @@ namespace egret3d {
     export const SceneProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
             return host.load(resource, "json").then((data: paper.ISerializedData) => {
-                const rawScene = new paper.RawScene(resource.name);
                 return loadSubAssets(data, resource).then(() => {
+                    const rawScene = new paper.RawScene(resource.name);
                     rawScene.parse(data);
                     paper.Asset.register(rawScene);
                     return rawScene;

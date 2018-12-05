@@ -9,7 +9,6 @@ namespace egret3d {
 
         private readonly _events: any[] = [];
         private _animation: Animation | null = null;
-        private _animationLayer: AnimationLayer | null = null;
 
         private _updateAnimationFadeState(animationFadeState: AnimationFadeState, deltaTime: number) {
             if (deltaTime < 0.0) {
@@ -46,7 +45,7 @@ namespace egret3d {
         private _updateAnimationState(animationFadeState: AnimationFadeState, animationState: AnimationState, deltaTime: number, forceUpdate: boolean) {
             const animation = this._animation!;
             const gameObject = animation.gameObject;
-            const animationLayer = this._animationLayer!;
+            const animationLayer = animationState.animationLayer;
             // const animationNode = animationState.animationNode;
 
             let weight = animationLayer.weight * animationFadeState.progress * animationState.weight;
@@ -104,6 +103,22 @@ namespace egret3d {
             animationState._currentTime = currentTime;
 
             if (forceUpdate || weight !== 0.0) {
+                const mask = animationLayer.mask as AnimationMask | null;
+                if (mask && mask._dirty) {
+                    const jointNames = mask.jointNames;
+                    const nodes = animationState.animationAsset.config.nodes!;
+
+                    for (const channel of animationState.channels) {
+                        if (jointNames && jointNames.length > 0) {
+                            const jointIndex = channel.glTFChannel.target.node;
+                            channel.enabled = jointIndex === undefined || jointNames.indexOf(nodes[jointIndex].name!) >= 0;
+                        }
+                        else {
+                            channel.enabled = true;
+                        }
+                    }
+                }
+
                 for (const channel of animationState.channels) {
                     if (!channel.updateTarget || !channel.enabled) {
                         continue;
@@ -111,7 +126,7 @@ namespace egret3d {
 
                     const binder = channel.binder;
                     if (binder.constructor === AnimationBinder) {
-                        if ((binder as AnimationBinder).updateBlend(animationLayer, animationState)) {
+                        if ((binder as AnimationBinder).updateBlend(animationState)) {
                             channel.updateTarget(animationLayer, animationState);
                         }
                     }
@@ -256,11 +271,10 @@ namespace egret3d {
 
                 for (let i = animationFadeStates.length - 1; i >= 0; i--) {
                     const fadeStates = animationFadeStates[i];
-                    this._animationLayer = animationLayers[i];
 
-                    for (let i = 0, r = 0, l = fadeStates.length; i < l; ++i) {
+                    for (let j = 0, r = 0, lJ = fadeStates.length; j < lJ; ++j) {
                         let forceUpdate = false;
-                        const fadeState = fadeStates[i];
+                        const fadeState = fadeStates[j];
                         const sFadeState = fadeState.fadeState;
                         const sSubFadeState = fadeState.subFadeState;
 
@@ -270,7 +284,7 @@ namespace egret3d {
                         }
                         else {
                             if (r > 0) {
-                                fadeStates[i - r] = fadeState;
+                                fadeStates[j - r] = fadeState;
                             }
 
                             if (sFadeState !== 0 || sSubFadeState !== 0) {
@@ -283,10 +297,17 @@ namespace egret3d {
                             }
                         }
 
-                        if (i === l - 1 && r > 0) {
+                        if (j === lJ - 1 && r > 0) {
                             fadeStates.length -= r;
                             animation._statesDirty = true;
                         }
+                    }
+                }
+
+                for (const layer of animationLayers) {
+                    const mask = layer.mask as AnimationMask | null;
+                    if (mask && mask._dirty) {
+                        mask._dirty = false;
                     }
                 }
 

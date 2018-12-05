@@ -185,9 +185,12 @@ namespace egret3d {
             this.animationAsset = animationAsset;
             this.animation = (assetConfig.animations as GLTFAnimation[])[0]; // TODO 动画数据暂不合并。
             this.animationClip = animationClip;
+            this.animationLayer = animationLayer;
             this.animationNode = animationNode;
 
             if (this.animation.channels) {
+                const animationMask = animationLayer.mask as AnimationMask | null;
+                const jointNames = animationMask ? animationMask.jointNames : null;
                 const rootGameObject = animation.gameObject;
                 const children = rootGameObject.transform.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
                 children["__root__"] = rootGameObject.transform; // 
@@ -209,7 +212,7 @@ namespace egret3d {
                     }
                     else {
                         const nodeName = this.animationAsset.getNode(nodeIndex).name!;
-                        if (!(nodeName in children)) {
+                        if (!(nodeName in children) || (jointNames && jointNames.indexOf(nodeName) < 0)) {
                             continue;
                         }
 

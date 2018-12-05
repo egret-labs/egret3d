@@ -2,8 +2,8 @@ namespace behaviors {
     /**
      * 
      */
+    @paper.allowMultiple
     export class AnimationHelper extends paper.Behaviour {
-
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: "_animations" })
         public get animation(): string {
             return this._animation;
@@ -41,12 +41,12 @@ namespace behaviors {
             if (animation) {
                 animation.fadeIn(this.animation, this.fadeTime, -1, this.layerIndex);
 
+                const animationController = animation.animationController!;
+                const layer = animationController.getOrAddLayer(this.layerIndex);
+                let mask = layer.mask as egret3d.AnimationMask | null;
+
                 if (this._maskJointNames) {
                     const masks = this._maskJointNames.split(",");
-
-                    const animationController = animation.animationController!;
-                    const layer = animationController.getOrCreateLayer(this.layerIndex);
-                    let mask = layer.mask as egret3d.AnimationMask | null;
 
                     if (!mask) {
                         layer.mask = mask = egret3d.AnimationMask.create();
@@ -56,8 +56,9 @@ namespace behaviors {
                     for (const joint of masks) {
                         mask.addJoint(joint);
                     }
-
-                    animation.setLayerMask(this.layerIndex, mask);
+                }
+                else if (mask) {
+                    mask.removeJoints();
                 }
             }
         }

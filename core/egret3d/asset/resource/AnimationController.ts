@@ -23,8 +23,10 @@ namespace egret3d {
         private constructor() {
             super(); // TODO GLTFAsset protected
         }
-
-        public createLayer(name: string): AnimationLayer {
+        /**
+         * 添加一个新的动画层。
+         */
+        public addLayer(name: string): AnimationLayer {
             const layers = this.layers;
             const layer: AnimationLayer = {
                 additive: false,
@@ -73,15 +75,18 @@ namespace egret3d {
 
             return animationNode;
         }
-
-        public getOrCreateLayer(index: uint): AnimationLayer {
+        /**
+         * 获取或添加一个动画层。
+         * - 层索引强制连续。
+         */
+        public getOrAddLayer(layerIndex: uint): AnimationLayer {
             const layers = this.layers;
-            if (index >= layers.length) {
-                index = layers.length;
-                this.createLayer(paper.DefaultNames.NoName);
+            if (layerIndex >= layers.length) {
+                layerIndex = layers.length;
+                this.addLayer(paper.DefaultNames.NoName);
             }
 
-            return layers[index];
+            return layers[layerIndex];
         }
 
         public get layers(): AnimationLayer[] {
