@@ -126,7 +126,7 @@ namespace paper {
                 if (enabled) {
                     this.onEnable && this.onEnable();
                     if (DEBUG) {
-                        console.info(egret.getQualifiedClassName(this), "enabled.");
+                        console.debug(egret.getQualifiedClassName(this), "enabled.");
                     }
                 }
             }
@@ -171,7 +171,7 @@ namespace paper {
                 if (!enabled) {
                     this.onDisable && this.onDisable();
                     if (DEBUG) {
-                        console.info(egret.getQualifiedClassName(this), "disabled.");
+                        console.debug(egret.getQualifiedClassName(this), "disabled.");
                     }
                 }
             }

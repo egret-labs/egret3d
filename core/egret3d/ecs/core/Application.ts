@@ -11,7 +11,6 @@ namespace paper {
      * 应用程序。
      */
     export class ECS {
-
         private static _instance: ECS | null = null;
         /**
          * 应用程序单例。
@@ -33,7 +32,7 @@ namespace paper {
         /**
          * 引擎版本。
          */
-        public readonly version: string = "1.3.0.001";
+        public readonly version: string = "1.4.0.001";
         /**
          * 系统管理器。
          */
@@ -57,7 +56,6 @@ namespace paper {
             GameObjectGroup.update();
             this.systemManager.update();
         }
-
         /**
          * @internal
          */
@@ -115,7 +113,6 @@ namespace paper {
         public get isRunning() {
             return this._isRunning;
         }
-
         /**
          * 运行模式。
          */
@@ -132,7 +129,6 @@ namespace paper {
             this.onPlayerModeChange.dispatch(this.playerMode);
         }
     }
-
     /**
      * 应用程序单例。
      */

@@ -9,7 +9,7 @@ namespace egret3d {
                 componentClass: MeshFilter,
                 listeners: [{
                     type: MeshFilter.onMeshChanged, listener: (component: paper.BaseComponent) => {
-                        this._updateDrawCalls(component.gameObject);
+                        this._updateDrawCalls(component.gameObject, true);
 
                         if (component.gameObject.renderer) {
                             component.gameObject.renderer._localBoundingBoxDirty = true;
@@ -21,63 +21,105 @@ namespace egret3d {
                 componentClass: MeshRenderer,
                 listeners: [{
                     type: MeshRenderer.onMaterialsChanged, listener: (component: paper.BaseComponent) => {
-                        this._updateDrawCalls(component.gameObject);
+                        this._updateDrawCalls(component.gameObject, true);
                     }
                 }]
             },
         ];
         private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
+        private readonly _materialFilter: boolean[] = [];
 
-        private _updateDrawCalls(gameObject: paper.GameObject, pass?: boolean) {
-            if (
-                !pass &&
-                (!this.enabled || !this.groups[0].hasGameObject(gameObject))
-            ) {
+        private _updateDrawCalls(gameObject: paper.GameObject, checkState: boolean) {
+            if (checkState && (!this.enabled || !this.groups[0].hasGameObject(gameObject))) {
                 return;
             }
 
             const drawCallCollecter = this._drawCallCollecter;
             const filter = gameObject.getComponent(MeshFilter)!;
             const renderer = gameObject.renderer!;
+            const mesh = filter.mesh;
             const materials = renderer.materials;
+            const materialCount = materials.length;
+            drawCallCollecter.removeDrawCalls(renderer); // Clear drawCalls.
 
-            drawCallCollecter.removeDrawCalls(renderer);
-            if (!filter.mesh || materials.length === 0) {
+            if (!mesh || materialCount === 0) {
                 return;
             }
 
+            const primitives = mesh.glTFMesh.primitives;
+            const subMeshCount = primitives.length;
+
+            if (DEBUG && subMeshCount === 0) {
+                throw new Error();
+            }
+
+            const materialFilter = this._materialFilter;
+            const matrix = gameObject.transform.localToWorldMatrix;
+            materialFilter.length = materialCount;
             drawCallCollecter.renderers.push(renderer);
 
-            let subMeshIndex = 0;
-            for (const primitive of filter.mesh.glTFMesh.primitives) {
-                const drawCall = DrawCall.create();
-                drawCall.renderer = renderer;
-                drawCall.matrix = gameObject.transform.localToWorldMatrix;
-                drawCall.subMeshIndex = subMeshIndex++;
-                drawCall.mesh = filter.mesh;
-                drawCall.material = materials[primitive.material!] || DefaultMaterials.MISSING;
-                drawCallCollecter.drawCalls.push(drawCall);
+            for (let i = 0; i < subMeshCount; ++i) { // Specified materials.
+                const materialIndex = primitives[i].material;
+                let material: Material | null = null;
+
+                if (materialIndex === undefined) {
+                    material = DefaultMaterials.MESH_BASIC;
+                }
+                else if (materialIndex < materialCount) {
+                    material = materials[materialIndex];
+                    materialFilter[materialIndex] = true;
+                }
+
+                if (material) {
+                    const drawCall = DrawCall.create();
+                    drawCall.renderer = renderer;
+                    drawCall.matrix = matrix;
+                    drawCall.subMeshIndex = i;
+                    drawCall.mesh = mesh;
+                    drawCall.material = material;
+                    drawCallCollecter.drawCalls.push(drawCall);
+                }
             }
+
+            for (let i = 0; i < materialCount; ++i) { // No specified materials.
+                if (materialFilter[i]) {
+                    continue;
+                }
+
+                const material = materials[i]!;
+
+                for (let j = 0; j < subMeshCount; ++j) {
+                    const drawCall = DrawCall.create();
+                    drawCall.renderer = renderer;
+                    drawCall.matrix = matrix;
+                    drawCall.subMeshIndex = j;
+                    drawCall.mesh = mesh;
+                    drawCall.material = material;
+                    drawCallCollecter.drawCalls.push(drawCall);
+                }
+            }
+
+            materialFilter.length = 0;
         }
 
         public onEnable() {
             for (const gameObject of this.groups[0].gameObjects) {
-                this._updateDrawCalls(gameObject, true);
+                this._updateDrawCalls(gameObject, false);
             }
-        }
-
-        public onAddGameObject(gameObject: paper.GameObject) {
-            this._updateDrawCalls(gameObject, true);
-        }
-
-        public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
         }
 
         public onDisable() {
             for (const gameObject of this.groups[0].gameObjects) {
                 this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
             }
+        }
+
+        public onAddGameObject(gameObject: paper.GameObject) {
+            this._updateDrawCalls(gameObject, false);
+        }
+
+        public onRemoveGameObject(gameObject: paper.GameObject) {
+            this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
         }
     }
 }

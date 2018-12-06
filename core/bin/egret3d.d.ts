@@ -1791,7 +1791,7 @@ declare namespace paper {
         protected _castShadows: boolean;
         protected readonly _boundingSphere: egret3d.Sphere;
         protected readonly _localBoundingBox: egret3d.Box;
-        protected readonly _materials: egret3d.Material[];
+        protected readonly _materials: (egret3d.Material | null)[];
         protected _recalculateSphere(): void;
         initialize(): void;
         uninitialize(): void;
@@ -1821,7 +1821,7 @@ declare namespace paper {
         /**
          * 该组件的材质列表。
          */
-        materials: ReadonlyArray<egret3d.Material>;
+        materials: ReadonlyArray<egret3d.Material | null>;
         /**
          * 该组件材质列表中的第一个材质。
          */
@@ -4032,7 +4032,7 @@ declare namespace egret3d {
          * 实时获取网格资源的指定三角形顶点位置。
          * - 采用 CPU 蒙皮。
          */
-        getTriangle(triangleIndex: uint, triangle?: Triangle): Triangle;
+        getTriangle(triangleIndex: uint, out?: Triangle): Triangle;
         raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
         /**
          * 该组件的光照图索引。
@@ -6840,11 +6840,12 @@ declare namespace egret3d {
             }[];
         })[];
         private readonly _drawCallCollecter;
-        private _updateDrawCalls(gameObject, pass?);
+        private readonly _materialFilter;
+        private _updateDrawCalls(gameObject, checkState);
         onEnable(): void;
+        onDisable(): void;
         onAddGameObject(gameObject: paper.GameObject): void;
         onRemoveGameObject(gameObject: paper.GameObject): void;
-        onDisable(): void;
     }
 }
 declare namespace egret3d {
@@ -6876,7 +6877,7 @@ declare namespace egret3d {
          * 实时获取网格资源的指定三角形顶点位置。
          * - 采用 CPU 蒙皮指定顶点。
          */
-        getTriangle(triangleIndex: uint, triangle?: Triangle): Triangle;
+        getTriangle(triangleIndex: uint, out?: Triangle): Triangle;
         raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
         /**
          * 该渲染组件的骨骼列表。
@@ -6894,7 +6895,9 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 蒙皮网格渲染器。
+     * 蒙皮网格渲染组件系统。
+     * - 为蒙皮网格渲染组件生成绘制信息。
+     * - 更新蒙皮网格的骨骼矩阵信息。
      */
     class SkinnedMeshRendererSystem extends paper.BaseSystem {
         readonly interests: {
@@ -6905,12 +6908,13 @@ declare namespace egret3d {
             }[];
         }[];
         private readonly _drawCallCollecter;
-        private _updateDrawCalls(gameObject);
+        private readonly _materialFilter;
+        private _updateDrawCalls(gameObject, checkState);
         onEnable(): void;
+        onDisable(): void;
         onAddGameObject(gameObject: paper.GameObject): void;
         onRemoveGameObject(gameObject: paper.GameObject): void;
         onUpdate(): void;
-        onDisable(): void;
     }
 }
 declare namespace egret3d {

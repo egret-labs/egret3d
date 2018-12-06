@@ -3898,17 +3898,14 @@ var paper;
                 return this._materials;
             },
             set: function (value) {
-                if (value === this._materials) {
-                    return;
-                }
                 // TODO 共享材质的接口。
-                this._materials.length = 0;
-                for (var _i = 0, value_1 = value; _i < value_1.length; _i++) {
-                    var material = value_1[_i];
-                    if (!material) {
-                        console.warn("Invalid material.");
+                var materials = this._materials;
+                if (value !== materials) {
+                    materials.length = 0;
+                    for (var _i = 0, value_1 = value; _i < value_1.length; _i++) {
+                        var material = value_1[_i];
+                        materials.push(material);
                     }
-                    this._materials.push(material || egret3d.DefaultMaterials.MISSING);
                 }
                 BaseRenderer.onMaterialsChanged.dispatch(this);
             },
@@ -3924,20 +3921,14 @@ var paper;
             },
             set: function (value) {
                 var dirty = false;
-                if (value) {
-                    if (this._materials.length > 0) {
-                        if (this._materials[0] !== value) {
-                            this._materials[0] = value;
-                            dirty = true;
-                        }
-                    }
-                    else {
-                        this._materials.push(value);
+                if (this._materials.length > 0) {
+                    if (this._materials[0] !== value) {
+                        this._materials[0] = value;
                         dirty = true;
                     }
                 }
-                else if (this._materials.length > 0) {
-                    this._materials.splice(0, 1);
+                else if (value) {
+                    this._materials.push(value);
                     dirty = true;
                 }
                 if (dirty) {
@@ -5371,7 +5362,7 @@ var paper;
                 if (enabled) {
                     this.onEnable && this.onEnable();
                     if (true) {
-                        console.info(egret.getQualifiedClassName(this), "enabled.");
+                        console.debug(egret.getQualifiedClassName(this), "enabled.");
                     }
                 }
             }
@@ -5411,7 +5402,7 @@ var paper;
                 if (!enabled) {
                     this.onDisable && this.onDisable();
                     if (true) {
-                        console.info(egret.getQualifiedClassName(this), "disabled.");
+                        console.debug(egret.getQualifiedClassName(this), "disabled.");
                     }
                 }
             }
@@ -6039,17 +6030,17 @@ var egret3d;
          * 实时获取网格资源的指定三角形顶点位置。
          * - 采用 CPU 蒙皮。
          */
-        MeshRenderer.prototype.getTriangle = function (triangleIndex, triangle) {
-            if (!triangle) {
-                triangle = egret3d.Triangle.create();
+        MeshRenderer.prototype.getTriangle = function (triangleIndex, out) {
+            if (!out) {
+                out = egret3d.Triangle.create();
             }
             var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
             if (!meshFilter) {
-                return triangle;
+                return out;
             }
             var mesh = meshFilter.mesh;
             if (!mesh) {
-                return triangle;
+                return out;
             }
             var localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
             var indices = mesh.getIndices();
@@ -6059,20 +6050,20 @@ var egret3d;
                 var vertexIndex = index * 3;
                 switch (i) {
                     case 0:
-                        triangle.a.fromArray(vertices, vertexIndex);
-                        triangle.a.applyMatrix(localToWorldMatrix);
+                        out.a.fromArray(vertices, vertexIndex);
+                        out.a.applyMatrix(localToWorldMatrix);
                         break;
                     case 1:
-                        triangle.b.fromArray(vertices, vertexIndex);
-                        triangle.b.applyMatrix(localToWorldMatrix);
+                        out.b.fromArray(vertices, vertexIndex);
+                        out.b.applyMatrix(localToWorldMatrix);
                         break;
                     case 2:
-                        triangle.c.fromArray(vertices, vertexIndex);
-                        triangle.c.applyMatrix(localToWorldMatrix);
+                        out.c.fromArray(vertices, vertexIndex);
+                        out.c.applyMatrix(localToWorldMatrix);
                         break;
                 }
             }
-            return triangle;
+            return out;
         };
         MeshRenderer.prototype.raycast = function (p1, p2, p3) {
             var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
@@ -15226,7 +15217,7 @@ var egret3d;
                     componentClass: egret3d.MeshFilter,
                     listeners: [{
                             type: egret3d.MeshFilter.onMeshChanged, listener: function (component) {
-                                _this._updateDrawCalls(component.gameObject);
+                                _this._updateDrawCalls(component.gameObject, true);
                                 if (component.gameObject.renderer) {
                                     component.gameObject.renderer._localBoundingBoxDirty = true;
                                 }
@@ -15237,57 +15228,92 @@ var egret3d;
                     componentClass: egret3d.MeshRenderer,
                     listeners: [{
                             type: egret3d.MeshRenderer.onMaterialsChanged, listener: function (component) {
-                                _this._updateDrawCalls(component.gameObject);
+                                _this._updateDrawCalls(component.gameObject, true);
                             }
                         }]
                 },
             ];
             _this._drawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.DrawCallCollecter);
+            _this._materialFilter = [];
             return _this;
         }
-        MeshRendererSystem.prototype._updateDrawCalls = function (gameObject, pass) {
-            if (!pass &&
-                (!this.enabled || !this.groups[0].hasGameObject(gameObject))) {
+        MeshRendererSystem.prototype._updateDrawCalls = function (gameObject, checkState) {
+            if (checkState && (!this.enabled || !this.groups[0].hasGameObject(gameObject))) {
                 return;
             }
             var drawCallCollecter = this._drawCallCollecter;
             var filter = gameObject.getComponent(egret3d.MeshFilter);
             var renderer = gameObject.renderer;
+            var mesh = filter.mesh;
             var materials = renderer.materials;
-            drawCallCollecter.removeDrawCalls(renderer);
-            if (!filter.mesh || materials.length === 0) {
+            var materialCount = materials.length;
+            drawCallCollecter.removeDrawCalls(renderer); // Clear drawCalls.
+            if (!mesh || materialCount === 0) {
                 return;
             }
-            drawCallCollecter.renderers.push(renderer);
-            var subMeshIndex = 0;
-            for (var _i = 0, _a = filter.mesh.glTFMesh.primitives; _i < _a.length; _i++) {
-                var primitive = _a[_i];
-                var drawCall = egret3d.DrawCall.create();
-                drawCall.renderer = renderer;
-                drawCall.matrix = gameObject.transform.localToWorldMatrix;
-                drawCall.subMeshIndex = subMeshIndex++;
-                drawCall.mesh = filter.mesh;
-                drawCall.material = materials[primitive.material] || egret3d.DefaultMaterials.MISSING;
-                drawCallCollecter.drawCalls.push(drawCall);
+            var primitives = mesh.glTFMesh.primitives;
+            var subMeshCount = primitives.length;
+            if (true && subMeshCount === 0) {
+                throw new Error();
             }
+            var materialFilter = this._materialFilter;
+            var matrix = gameObject.transform.localToWorldMatrix;
+            materialFilter.length = materialCount;
+            drawCallCollecter.renderers.push(renderer);
+            for (var i = 0; i < subMeshCount; ++i) {
+                var materialIndex = primitives[i].material;
+                var material = null;
+                if (materialIndex === undefined) {
+                    material = egret3d.DefaultMaterials.MESH_BASIC;
+                }
+                else if (materialIndex < materialCount) {
+                    material = materials[materialIndex];
+                    materialFilter[materialIndex] = true;
+                }
+                if (material) {
+                    var drawCall = egret3d.DrawCall.create();
+                    drawCall.renderer = renderer;
+                    drawCall.matrix = matrix;
+                    drawCall.subMeshIndex = i;
+                    drawCall.mesh = mesh;
+                    drawCall.material = material;
+                    drawCallCollecter.drawCalls.push(drawCall);
+                }
+            }
+            for (var i = 0; i < materialCount; ++i) {
+                if (materialFilter[i]) {
+                    continue;
+                }
+                var material = materials[i];
+                for (var j = 0; j < subMeshCount; ++j) {
+                    var drawCall = egret3d.DrawCall.create();
+                    drawCall.renderer = renderer;
+                    drawCall.matrix = matrix;
+                    drawCall.subMeshIndex = j;
+                    drawCall.mesh = mesh;
+                    drawCall.material = material;
+                    drawCallCollecter.drawCalls.push(drawCall);
+                }
+            }
+            materialFilter.length = 0;
         };
         MeshRendererSystem.prototype.onEnable = function () {
             for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
                 var gameObject = _a[_i];
-                this._updateDrawCalls(gameObject, true);
+                this._updateDrawCalls(gameObject, false);
             }
-        };
-        MeshRendererSystem.prototype.onAddGameObject = function (gameObject) {
-            this._updateDrawCalls(gameObject, true);
-        };
-        MeshRendererSystem.prototype.onRemoveGameObject = function (gameObject) {
-            this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
         };
         MeshRendererSystem.prototype.onDisable = function () {
             for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
                 var gameObject = _a[_i];
                 this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
             }
+        };
+        MeshRendererSystem.prototype.onAddGameObject = function (gameObject) {
+            this._updateDrawCalls(gameObject, false);
+        };
+        MeshRendererSystem.prototype.onRemoveGameObject = function (gameObject) {
+            this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
         };
         return MeshRendererSystem;
     }(paper.BaseSystem));
@@ -15439,13 +15465,13 @@ var egret3d;
          * 实时获取网格资源的指定三角形顶点位置。
          * - 采用 CPU 蒙皮指定顶点。
          */
-        SkinnedMeshRenderer.prototype.getTriangle = function (triangleIndex, triangle) {
-            if (!triangle) {
-                triangle = egret3d.Triangle.create();
+        SkinnedMeshRenderer.prototype.getTriangle = function (triangleIndex, out) {
+            if (!out) {
+                out = egret3d.Triangle.create();
             }
             var mesh = this._mesh;
             if (!mesh) {
-                return triangle;
+                return out;
             }
             var boneMatrices = this.boneMatrices;
             var indices = mesh.getIndices();
@@ -15470,17 +15496,17 @@ var egret3d;
                 }
                 switch (i) {
                     case 0:
-                        triangle.a.copy(vB);
+                        out.a.copy(vB);
                         break;
                     case 1:
-                        triangle.b.copy(vB);
+                        out.b.copy(vB);
                         break;
                     case 2:
-                        triangle.c.copy(vB);
+                        out.c.copy(vB);
                         break;
                 }
             }
-            return triangle;
+            return out;
         };
         SkinnedMeshRenderer.prototype.raycast = function (p1, p2, p3) {
             if (!this._mesh) {
@@ -15576,7 +15602,9 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 蒙皮网格渲染器。
+     * 蒙皮网格渲染组件系统。
+     * - 为蒙皮网格渲染组件生成绘制信息。
+     * - 更新蒙皮网格的骨骼矩阵信息。
      */
     var SkinnedMeshRendererSystem = (function (_super) {
         __extends(SkinnedMeshRendererSystem, _super);
@@ -15588,7 +15616,7 @@ var egret3d;
                     listeners: [
                         {
                             type: egret3d.SkinnedMeshRenderer.onMeshChanged, listener: function (component) {
-                                _this._updateDrawCalls(component.gameObject);
+                                _this._updateDrawCalls(component.gameObject, true);
                                 if (component.gameObject.renderer) {
                                     component.gameObject.renderer._localBoundingBoxDirty = true;
                                 }
@@ -15596,44 +15624,85 @@ var egret3d;
                         },
                         {
                             type: egret3d.SkinnedMeshRenderer.onMaterialsChanged, listener: function (component) {
-                                _this._updateDrawCalls(component.gameObject);
+                                _this._updateDrawCalls(component.gameObject, true);
                             }
                         },
                     ]
                 }
             ];
             _this._drawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.DrawCallCollecter);
+            _this._materialFilter = [];
             return _this;
         }
-        SkinnedMeshRendererSystem.prototype._updateDrawCalls = function (gameObject) {
-            if (!this.enabled || !this.groups[0].hasGameObject(gameObject)) {
+        SkinnedMeshRendererSystem.prototype._updateDrawCalls = function (gameObject, checkState) {
+            if (checkState && !this.enabled || !this.groups[0].hasGameObject(gameObject)) {
                 return;
             }
             var drawCallCollecter = this._drawCallCollecter;
             var renderer = gameObject.renderer;
-            drawCallCollecter.removeDrawCalls(renderer);
-            if (!renderer.mesh || renderer.materials.length === 0) {
+            var mesh = renderer.mesh;
+            var materials = renderer.materials;
+            var materialCount = materials.length;
+            drawCallCollecter.removeDrawCalls(renderer); // Clear drawCalls.
+            if (!mesh || materialCount === 0) {
                 return;
             }
-            this._drawCallCollecter.renderers.push(renderer);
-            //
-            var subMeshIndex = 0;
-            for (var _i = 0, _a = renderer.mesh.glTFMesh.primitives; _i < _a.length; _i++) {
-                var primitive = _a[_i];
-                var material = renderer.materials[primitive.material]; // TODO miss material
-                var drawCall = egret3d.DrawCall.create();
-                drawCall.renderer = renderer;
-                drawCall.matrix = egret3d.Matrix4.IDENTITY;
-                drawCall.subMeshIndex = subMeshIndex++;
-                drawCall.mesh = renderer.mesh;
-                drawCall.material = material || egret3d.DefaultMaterials.MISSING;
-                drawCallCollecter.drawCalls.push(drawCall);
+            var primitives = mesh.glTFMesh.primitives;
+            var subMeshCount = primitives.length;
+            if (true && subMeshCount === 0) {
+                throw new Error();
             }
+            var materialFilter = this._materialFilter;
+            var matrix = egret3d.Matrix4.IDENTITY;
+            materialFilter.length = materialCount;
+            drawCallCollecter.renderers.push(renderer);
+            for (var i = 0; i < subMeshCount; ++i) {
+                var materialIndex = primitives[i].material;
+                var material = null;
+                if (materialIndex === undefined) {
+                    material = egret3d.DefaultMaterials.MESH_BASIC;
+                }
+                else if (materialIndex < materialCount) {
+                    material = materials[materialIndex];
+                    materialFilter[materialIndex] = true;
+                }
+                if (material) {
+                    var drawCall = egret3d.DrawCall.create();
+                    drawCall.renderer = renderer;
+                    drawCall.matrix = matrix;
+                    drawCall.subMeshIndex = i;
+                    drawCall.mesh = mesh;
+                    drawCall.material = material;
+                    drawCallCollecter.drawCalls.push(drawCall);
+                }
+            }
+            for (var i = 0; i < materialCount; ++i) {
+                if (materialFilter[i]) {
+                    continue;
+                }
+                var material = materials[i];
+                for (var j = 0; j < subMeshCount; ++j) {
+                    var drawCall = egret3d.DrawCall.create();
+                    drawCall.renderer = renderer;
+                    drawCall.matrix = matrix;
+                    drawCall.subMeshIndex = j;
+                    drawCall.mesh = mesh;
+                    drawCall.material = material;
+                    drawCallCollecter.drawCalls.push(drawCall);
+                }
+            }
+            materialFilter.length = 0;
         };
         SkinnedMeshRendererSystem.prototype.onEnable = function () {
             for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
                 var gameObject = _a[_i];
-                this._updateDrawCalls(gameObject);
+                this._updateDrawCalls(gameObject, false);
+            }
+        };
+        SkinnedMeshRendererSystem.prototype.onDisable = function () {
+            for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
+                var gameObject = _a[_i];
+                this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
             }
         };
         SkinnedMeshRendererSystem.prototype.onAddGameObject = function (gameObject) {
@@ -15641,7 +15710,7 @@ var egret3d;
             if (renderer.mesh && !renderer.boneMatrices) {
                 renderer.initialize(true);
             }
-            this._updateDrawCalls(gameObject);
+            this._updateDrawCalls(gameObject, false);
         };
         SkinnedMeshRendererSystem.prototype.onRemoveGameObject = function (gameObject) {
             this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
@@ -15650,12 +15719,6 @@ var egret3d;
             for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
                 var gameObject = _a[_i];
                 gameObject.renderer._update();
-            }
-        };
-        SkinnedMeshRendererSystem.prototype.onDisable = function () {
-            for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
             }
         };
         /**
@@ -21648,7 +21711,7 @@ var paper;
             /**
              * 引擎版本。
              */
-            this.version = "1.3.0.001";
+            this.version = "1.4.0.001";
             /**
              * 系统管理器。
              */
@@ -24053,8 +24116,8 @@ var egret3d;
     egret3d.PrefabProcessor = {
         onLoadStart: function (host, resource) {
             return host.load(resource, "json").then(function (data) {
-                var prefab = new paper.Prefab(resource.name);
                 return loadSubAssets(data, resource).then(function () {
+                    var prefab = new paper.Prefab(resource.name);
                     prefab.parse(data);
                     paper.Asset.register(prefab);
                     return prefab;
@@ -24070,8 +24133,8 @@ var egret3d;
     egret3d.SceneProcessor = {
         onLoadStart: function (host, resource) {
             return host.load(resource, "json").then(function (data) {
-                var rawScene = new paper.RawScene(resource.name);
                 return loadSubAssets(data, resource).then(function () {
+                    var rawScene = new paper.RawScene(resource.name);
                     rawScene.parse(data);
                     paper.Asset.register(rawScene);
                     return rawScene;

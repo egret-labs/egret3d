@@ -114,42 +114,20 @@ namespace examples {
                 return;
             }
 
-            // const triangleIndex = this.rendererRaycaster.raycastInfo.triangleIndex;
-            // if (triangleIndex < 0) {
-            //     this._normal.activeSelf = false;
-            //     return;
-            // }
+            const triangleIndex = this.rendererRaycaster.raycastInfo.triangleIndex;
+            if (triangleIndex < 0) {
+                this._normal.activeSelf = false;
+                return;
+            }
 
             const raycastInfo = this.rendererRaycaster.raycastInfo;
             const meshRender = this.rendererRaycaster.target!.renderer! as (egret3d.MeshRenderer | egret3d.SkinnedMeshRenderer);
-
-
             const coord = raycastInfo.coord;
-            const triangleIndex = raycastInfo.triangleIndex;
-
-
-
-            
             const triangle = meshRender.getTriangle(triangleIndex).release();
-            triangle.getPointAt(coord.x, coord.y).release();
-
-
 
             this._normal.transform.position = triangle.getPointAt(coord.x, coord.y).release();
             this._normal.transform.lookRotation(triangle.getNormal().release());
             this._normal.activeSelf = true;
         }
-
-        // public getPointAt(triangle: egret3d.Triangle, u: number, v: number, out?: egret3d.Vector3): egret3d.Vector3 {
-        //     if (!out) {
-        //         out = egret3d.Vector3.create();
-        //     }
-
-        //     out.x = egret3d.math.lerp(triangle.a.x, triangle.c.x, u) + egret3d.math.lerp(0.0, triangle.b.x - triangle.a.x, v);
-        //     out.y = egret3d.math.lerp(triangle.a.y, triangle.b.y, v) + egret3d.math.lerp(0.0, triangle.c.y - triangle.a.y, u);
-        //     out.z = egret3d.math.lerp(triangle.a.z, triangle.c.z, u) + egret3d.math.lerp(0.0, triangle.b.z - triangle.a.z, v);
-
-        //     return out;
-        // }
     }
 }

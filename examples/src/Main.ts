@@ -5,9 +5,8 @@ declare namespace examples {
 }
 
 async function main() {
-    // exampleStart();
+    exampleStart();
     // new examples.SceneTest().start();
-    new examples.ResourceTest().start();
 }
 
 function exampleStart() {
@@ -88,46 +87,3 @@ function exampleStart() {
         return appFile;
     }
 }
-
-
-// if (RELEASE) {
-    // RES.processor.map("json", new JSONProcessor());
-// }
-
-// class JSONProcessor implements RES.processor.Processor {
-//     private _mergedCache?: { [index: string]: any };
-
-//     async onLoadStart(host: RES.ProcessHost, resource: RES.ResourceInfo): Promise<any> {
-//         const { type } = resource;
-//         if (type === 'legacyResourceConfig') {
-//             const data = host.load(resource, RES.processor.JsonProcessor);
-//             return data;
-//         }
-//         else {
-//             if (!this._mergedCache) {
-//                 const r = (host as any).resourceConfig['getResource']("1.jsonbin");
-//                 const data = await host.load(r, "bin");
-
-//                 if (!this._mergedCache) {
-//                     const uint8 = new Uint8Array(data);
-//                     const result = pako.inflate(uint8, { to: 'string' });
-//                     this._mergedCache = JSON.parse(result);
-//                 }
-//             }
-
-//             const result = this._mergedCache![resource.name];
-//             if (!result) {
-//                 throw `missing resource ${resource.name}`;
-//             }
-
-//             return result;
-//         }
-//     }
-
-//     onRemoveStart(host: RES.ProcessHost, resource: RES.ResourceInfo): void {
-//     }
-
-//     getData?(host: RES.ProcessHost, resource: RES.ResourceInfo, key: string, subkey: string) {
-//         throw new Error("Method not implemented.");
-//     }
-// }

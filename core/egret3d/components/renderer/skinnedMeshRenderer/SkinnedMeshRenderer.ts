@@ -167,14 +167,14 @@ namespace egret3d {
          * 实时获取网格资源的指定三角形顶点位置。
          * - 采用 CPU 蒙皮指定顶点。
          */
-        public getTriangle(triangleIndex: uint, triangle?: Triangle): Triangle {
-            if (!triangle) {
-                triangle = Triangle.create();
+        public getTriangle(triangleIndex: uint, out?: Triangle): Triangle {
+            if (!out) {
+                out = Triangle.create();
             }
 
             const mesh = this._mesh;
             if (!mesh) {
-                return triangle;
+                return out;
             }
 
             const boneMatrices = this.boneMatrices!;
@@ -206,20 +206,20 @@ namespace egret3d {
 
                 switch (i) {
                     case 0:
-                        triangle.a.copy(vB);
+                        out.a.copy(vB);
                         break;
 
                     case 1:
-                        triangle.b.copy(vB);
+                        out.b.copy(vB);
                         break;
 
                     case 2:
-                        triangle.c.copy(vB);
+                        out.c.copy(vB);
                         break;
                 }
             }
 
-            return triangle;
+            return out;
         }
 
         public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {

@@ -31,19 +31,19 @@ namespace egret3d {
          * 实时获取网格资源的指定三角形顶点位置。
          * - 采用 CPU 蒙皮。
          */
-        public getTriangle(triangleIndex: uint, triangle?: Triangle): Triangle {
-            if (!triangle) {
-                triangle = Triangle.create();
+        public getTriangle(triangleIndex: uint, out?: Triangle): Triangle {
+            if (!out) {
+                out = Triangle.create();
             }
 
             const meshFilter = this.gameObject.getComponent(MeshFilter);
             if (!meshFilter) {
-                return triangle;
+                return out;
             }
 
             const mesh = meshFilter.mesh;
             if (!mesh) {
-                return triangle;
+                return out;
             }
 
             const localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
@@ -56,23 +56,23 @@ namespace egret3d {
 
                 switch (i) {
                     case 0:
-                        triangle.a.fromArray(vertices, vertexIndex);
-                        triangle.a.applyMatrix(localToWorldMatrix);
+                        out.a.fromArray(vertices, vertexIndex);
+                        out.a.applyMatrix(localToWorldMatrix);
                         break;
 
                     case 1:
-                        triangle.b.fromArray(vertices, vertexIndex);
-                        triangle.b.applyMatrix(localToWorldMatrix);
+                        out.b.fromArray(vertices, vertexIndex);
+                        out.b.applyMatrix(localToWorldMatrix);
                         break;
 
                     case 2:
-                        triangle.c.fromArray(vertices, vertexIndex);
-                        triangle.c.applyMatrix(localToWorldMatrix);
+                        out.c.fromArray(vertices, vertexIndex);
+                        out.c.applyMatrix(localToWorldMatrix);
                         break;
                 }
             }
 
-            return triangle;
+            return out;
         }
 
         public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {

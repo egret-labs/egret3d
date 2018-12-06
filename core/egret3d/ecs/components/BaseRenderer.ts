@@ -25,7 +25,7 @@ namespace paper {
         protected readonly _boundingSphere: egret3d.Sphere = egret3d.Sphere.create();
         protected readonly _localBoundingBox: egret3d.Box = egret3d.Box.create();
         @paper.serializedField
-        protected readonly _materials: egret3d.Material[] = [egret3d.DefaultMaterials.MESH_BASIC];
+        protected readonly _materials: (egret3d.Material | null)[] = [egret3d.DefaultMaterials.MESH_BASIC];
 
         protected _recalculateSphere() {
             const localBoundingBox = this.localBoundingBox; // Update localBoundingBox.
@@ -113,22 +113,17 @@ namespace paper {
          * 该组件的材质列表。
          */
         @editor.property(editor.EditType.MATERIAL_ARRAY)
-        public get materials(): ReadonlyArray<egret3d.Material> {
+        public get materials(): ReadonlyArray<egret3d.Material | null> {
             return this._materials;
         }
-        public set materials(value: ReadonlyArray<egret3d.Material>) {
-            if (value === this._materials) {
-                return;
-            }
+        public set materials(value: ReadonlyArray<egret3d.Material | null>) {
             // TODO 共享材质的接口。
-
-            this._materials.length = 0;
-            for (const material of value) {
-                if (!material) {
-                    console.warn("Invalid material.");
+            const materials = this._materials;
+            if (value !== materials) {
+                materials.length = 0;
+                for (const material of value) {
+                    materials.push(material);
                 }
-
-                this._materials.push(material || egret3d.DefaultMaterials.MISSING);
             }
 
             BaseRenderer.onMaterialsChanged.dispatch(this);
@@ -141,20 +136,14 @@ namespace paper {
         }
         public set material(value: egret3d.Material | null) {
             let dirty = false;
-            if (value) {
-                if (this._materials.length > 0) {
-                    if (this._materials[0] !== value) {
-                        this._materials[0] = value;
-                        dirty = true;
-                    }
-                }
-                else {
-                    this._materials.push(value);
+            if (this._materials.length > 0) {
+                if (this._materials[0] !== value) {
+                    this._materials[0] = value;
                     dirty = true;
                 }
             }
-            else if (this._materials.length > 0) {
-                this._materials.splice(0, 1);
+            else if (value) {
+                this._materials.push(value);
                 dirty = true;
             }
 
