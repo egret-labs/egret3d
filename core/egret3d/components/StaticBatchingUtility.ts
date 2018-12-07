@@ -79,7 +79,7 @@ namespace egret3d {
 
         //合并筛选的条件:光照贴图_材质0_材质1... ：0_234_532...
         let key: string = meshRenderer.lightmapIndex + "_";
-        materials.forEach(element => { key = key + "_" + element.uuid; });
+        materials.forEach(element => { key = key + "_" + element!.uuid; });
 
         if (!out[key]) {
             out[key] = [];
