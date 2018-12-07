@@ -88,6 +88,9 @@ namespace egret3d {
             this._dirty = true;
         }
 
+        /**
+         * @internal
+         */
         public setupTexture(index?: number): void { }
 
         public get width(): number {

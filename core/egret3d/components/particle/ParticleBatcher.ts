@@ -240,7 +240,7 @@ namespace egret3d.particle {
             }
             //
             const maxParticles = this._comp.main.maxParticles;
-            var nextCursor = this._firstAliveCursor + 1 >= maxParticles ? 0 : this._firstAliveCursor + 1;
+            const nextCursor = this._firstAliveCursor + 1 >= maxParticles ? 0 : this._firstAliveCursor + 1;
             //
             if (nextCursor === this._lastAliveCursor) {
                 this._forceUpdate = true;
@@ -311,7 +311,7 @@ namespace egret3d.particle {
             }
 
             renderer.batchMesh = mesh;
-            renderer.batchMaterial = renderer.materials[0].clone();
+            renderer.batchMaterial = renderer.materials[0]!.clone();
             mesh.uploadSubIndexBuffer();
         }
 
