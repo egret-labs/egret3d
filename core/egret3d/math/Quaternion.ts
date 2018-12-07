@@ -359,8 +359,8 @@ namespace egret3d {
 
             const sinHalfTheta = Math.sqrt(sqrSinHalfTheta);
             const halfTheta = Math.atan2(sinHalfTheta, cosHalfTheta);
-            const ratioA = Math.sin((1.0 - <number>p1) * halfTheta) / sinHalfTheta,
-                ratioB = Math.sin(<number>p1 * halfTheta) / sinHalfTheta;
+            const ratioA = Math.sin((1.0 - <number>p3) * halfTheta) / sinHalfTheta,
+                ratioB = Math.sin(<number>p3 * halfTheta) / sinHalfTheta;
 
             this.w = fW * ratioA + this.w * ratioB;
             this.x = fX * ratioA + this.x * ratioB;
