@@ -17,7 +17,7 @@ namespace egret3d {
             return config;
         }
         /**
-         * 从二进制数据中解析。
+         * @private
          */
         public static parseFromBinary(array: Uint32Array) {
             let index = 0;
@@ -66,7 +66,7 @@ namespace egret3d {
             return result;
         }
         /**
-         * 
+         * @private
          */
         public static createMeshConfig() {
             const config = this._createConfig();
@@ -80,6 +80,9 @@ namespace egret3d {
 
             return config;
         }
+        /**
+         * @private
+         */
         public static createTextureConfig() {
             const config = this._createConfig();
             config.images = [{}];
@@ -89,7 +92,7 @@ namespace egret3d {
             return config;
         }
         /**
-         * 
+         * @private
          */
         public static createGLTFExtensionsConfig() {
             const config = this._createConfig();
@@ -105,7 +108,9 @@ namespace egret3d {
 
             return config;
         }
-
+        /**
+         * @private
+         */
         public static createTechnique(source: gltf.Technique) {
             const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {} }; // , states: { enable: [], functions: {} }
             for (const key in source.attributes) {
@@ -143,7 +148,9 @@ namespace egret3d {
 
             return target;
         }
-
+        /**
+         * @private
+         */
         public static copyTechniqueStates(source: gltf.States, target?: gltf.States) {
             if (source.enable && source.enable.length > 0) {
                 if (!target) {

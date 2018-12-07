@@ -230,7 +230,6 @@ namespace egret3d {
 
             const postProcessingCamera = this._postProcessingCamera;
             const postProcessDrawCall = this._postProcessDrawCall;
-            const renderState = paper.GameObject.globalGameObject.getComponent(RenderState)!;
             postProcessDrawCall.material = material;
 
             renderState.updateViewport(postProcessingCamera.viewport, dest);
@@ -518,7 +517,7 @@ namespace egret3d {
             }
 
             if (renderer && renderer.constructor === SkinnedMeshRenderer && !(renderer as SkinnedMeshRenderer).forceCPUSkin) {
-                shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(SkinnedMeshRendererSystem.maxBoneCount, (renderer as SkinnedMeshRenderer).bones.length)} \n`;
+                shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(renderState.maxBoneCount, (renderer as SkinnedMeshRenderer).bones.length)} \n`;
             }
 
             return shaderContextDefine;

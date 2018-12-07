@@ -126,7 +126,7 @@ namespace egret3d {
 
                 this.boneMatrices = new Float32Array(this._bones.length * 16);
 
-                if (this._bones.length > SkinnedMeshRendererSystem.maxBoneCount) {
+                if (this._bones.length > renderState.maxBoneCount) {
                     this.forceCPUSkin = true;
                     console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", this._mesh.name);
                 }

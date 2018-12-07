@@ -66,7 +66,7 @@ namespace paper.editor {
         }
 
         public onEnable() {
-            const canvas = (egret3d as any).web.WebGLCapabilities.canvas;//TODO
+            const canvas = (egret3d as any).WebGLCapabilities.canvas;//TODO
             if (canvas) {
                 canvas!.addEventListener("mousedown", this._mouseDownHandler);
                 canvas!.addEventListener("mouseup", this._mouseUpHandler);
@@ -78,7 +78,7 @@ namespace paper.editor {
         }
 
         public onDisable() {
-            const canvas = (egret3d as any).web.WebGLCapabilities.canvas;//TODO
+            const canvas = (egret3d as any).WebGLCapabilities.canvas;//TODO
             if (canvas) {
                 canvas!.removeEventListener("mousedown", this._mouseDownHandler);
                 canvas!.removeEventListener("mouseup", this._mouseUpHandler);

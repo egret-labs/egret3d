@@ -51,14 +51,12 @@ namespace egret3d.web {
                 screenSize: { w: screenWidth, h: screenHeight },
             });
 
-            globalGameObject.getOrAddComponent(WebGLCapabilities, false, config); // TODO 下放到渲染系统初始化，但贴图对 webgl 有依赖。
-
-            globalGameObject.getOrAddComponent(DefaultMeshes);
-            globalGameObject.getOrAddComponent(DefaultShaders);
-            globalGameObject.getOrAddComponent(DefaultTextures);
-            globalGameObject.getOrAddComponent(DefaultMaterials);
-
-            globalGameObject.getOrAddComponent(InputCollecter);
+            globalGameObject.addComponent(DefaultMeshes);
+            globalGameObject.addComponent(DefaultShaders);
+            globalGameObject.addComponent(DefaultTextures);
+            globalGameObject.addComponent(DefaultMaterials);
+            globalGameObject.addComponent(InputCollecter);
+            globalGameObject.addComponent(RenderState, config);
 
             // Update canvas when screen resized.
             this._updateCanvas(stage); // First update.
@@ -72,12 +70,14 @@ namespace egret3d.web {
 
         public onUpdate() {
             // TODO 查询是否有性能问题。
-            const isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || this._canvas.parentElement === undefined;
-            const screenWidth = isWX ? window.innerWidth : this._canvas.parentElement!.clientWidth;
-            const screenHeight = isWX ? window.innerHeight : this._canvas.parentElement!.clientHeight;
             const screenSize = stage.screenSize;
+            // 
+            const parentElement = this._canvas.parentElement;
+            const isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || parentElement === undefined;
+            const screenWidth = isWX ? window.innerWidth : parentElement!.clientWidth;
+            const screenHeight = isWX ? window.innerHeight : parentElement!.clientHeight;
 
-            if (screenWidth !== screenSize.w || screenHeight !== screenSize.h) {
+            if (screenSize.w !== screenWidth || screenSize.h !== screenHeight) {
                 stage.screenSize = { w: screenWidth, h: screenHeight };
             }
         }

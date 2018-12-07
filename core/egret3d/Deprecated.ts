@@ -59,9 +59,10 @@ namespace egret3d {
      */
     export type RawScene = paper.RawScene;
     /**
+     * @deprecated
      * @internal
      */
-    export const WebGLCapabilities = web.WebGLCapabilities;
+    export const WebGLCapabilities = web.WebGLRenderState;
     /**
      * @deprecated
      */

@@ -14,7 +14,7 @@ namespace egret3d.web {
         public frameBuffer: WebGLFramebuffer | null = null;
         public renderBuffer: WebGLRenderbuffer | null = null;
         private _setupFrameBufferTexture(frameBuffer: WebGLFramebuffer, texture: GlobalWeblGLTexture, textureTarget: number, type: gltf.TextureDataType, width: number, height: number, format: gltf.TextureFormat, attachment: number): void {
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
 
             webgl.texImage2D(textureTarget, 0, format, width, height, 0, format, type, null);
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
@@ -22,7 +22,7 @@ namespace egret3d.web {
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
         private _setupRenderBufferStorage(frameBuffer: WebGLFramebuffer, renderBuffer: WebGLRenderbuffer, depthBuffer: boolean, stencilBuffer: boolean, width: number, height: number): void {
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
             //
             webgl.bindRenderbuffer(webgl.RENDERBUFFER, renderBuffer);
@@ -43,7 +43,7 @@ namespace egret3d.web {
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
         private _setupDepthRenderbuffer(frameBuffer: WebGLFramebuffer, renderBuffer: WebGLRenderbuffer, depthBuffer: boolean, stencilBuffer: boolean, width: number, height: number) {
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
             this._setupRenderBufferStorage(frameBuffer, renderBuffer, depthBuffer, stencilBuffer, width, height);
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
@@ -57,7 +57,7 @@ namespace egret3d.web {
             const depth = paperExtension.depthBuffer!;
             const stencil = paperExtension.stencilBuffer!;
             //
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             if (!this.frameBuffer) {
                 this.frameBuffer = webgl.createFramebuffer()!;
             }
@@ -90,13 +90,13 @@ namespace egret3d.web {
                 this._setupRenderTexture();
                 this._dirty = false;
             }
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.frameBuffer);
         }
 
         public generateMipmap(): boolean {
             if (this._mipmap) {
-                const webgl = WebGLCapabilities.webgl!;
+                const webgl = WebGLRenderState.webgl!;
                 webgl.bindTexture(webgl.TEXTURE_2D, this.webglTexture);
                 webgl.generateMipmap(webgl.TEXTURE_2D);
                 webgl.bindTexture(webgl.TEXTURE_2D, null);
@@ -109,7 +109,7 @@ namespace egret3d.web {
             if (!super.dispose()) {
                 return false;
             }
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             if (!this.webglTexture) {
                 webgl.deleteBuffer(this.webglTexture);
             }

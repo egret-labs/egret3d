@@ -8,8 +8,11 @@
 #include <skinning_pars_vertex>
 #include <logdepthbuf_pars_vertex>
 #include <clipping_planes_pars_vertex>
+#include <custom_vertex> // modified by egret
 
 void main() {
+ 	// modified by egret
+	#include <custom_begin_vertex>
 
 	#include <uv_vertex>
 	#include <uv2_vertex>
@@ -35,5 +38,8 @@ void main() {
 	#include <clipping_planes_vertex>
 	#include <envmap_vertex>
 	#include <fog_vertex>
+
+ 	// modified by egret
+	#include <custom_end_vertex>
 
 }

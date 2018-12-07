@@ -245,6 +245,19 @@ namespace egret3d {
         /**
          * 
          */
+        public hasAnimation(animationClipName: string): boolean {
+            for (const animationAsset of this._animations) {
+                const animationClip = animationAsset.getAnimationClip(animationClipName);
+                if (animationClip) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        /**
+         * 
+         */
         public get lastAnimationnName(): string {
             const lastAnimationState = this.lastAnimationState;
             return lastAnimationState ? lastAnimationState.animationClip.name : "";

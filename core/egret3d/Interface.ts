@@ -16,12 +16,12 @@ namespace egret3d {
          * 渲染相机。
          * @param camera 
          */
-        render(camera: Camera): void;
+        render(camera: Camera, material: Material | null): void;
         /**
          * 绘制一个绘制信息。
          * @param camera 
          * @param drawCall 
          */
-        draw(drawCall: DrawCall): void;
+        draw(drawCall: DrawCall, material: Material | null): void;
     }
 }

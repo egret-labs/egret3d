@@ -20,8 +20,12 @@ varying vec3 vViewPosition;
 #include <shadowmap_pars_vertex>
 #include <logdepthbuf_pars_vertex>
 #include <clipping_planes_pars_vertex>
+#include <custom_vertex> // modified by egret
 
 void main() {
+
+ 	// modified by egret
+	#include <custom_begin_vertex>
 
 	#include <uv_vertex>
 	#include <uv2_vertex>
@@ -53,5 +57,8 @@ void main() {
 	#include <envmap_vertex>
 	#include <shadowmap_vertex>
 	#include <fog_vertex>
+
+ 	// modified by egret
+	#include <custom_end_vertex>
 
 }

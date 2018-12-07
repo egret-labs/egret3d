@@ -25,6 +25,9 @@
                         "textureMatrix": {
                             "type": 35676
                         },
+                        "intensity": {
+                            "type": 5124
+                        },
                         "color": {
                             "type": 35665
                         },

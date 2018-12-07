@@ -45,7 +45,7 @@ namespace egret3d {
         public static COPY: Shader;
 
         private _createShader(name: string, config: GLTF, renderQueue?: number, states?: gltf.States, defines?: string[]) {
-            const shader = new Shader(config, name);
+            const shader = Shader.create(config, name);
             shader._isBuiltin = true;
 
             if (renderQueue) {
@@ -70,8 +70,12 @@ namespace egret3d {
 
         public initialize() {
             super.initialize();
+            // TODO
+            (ShaderChunk as any)[ShaderDefine.CUSTOM_VERTEX] = "";
+            (ShaderChunk as any)[ShaderDefine.CUSTOM_BEGIN_VERTEX] = "";
+            (ShaderChunk as any)[ShaderDefine.CUSTOM_END_VERTEX] = "";
             //
-            const helpMaterial = Material.create(new Shader(egret3d.ShaderLib.meshbasic as any, ""));
+            const helpMaterial = Material.create(Shader.create(egret3d.ShaderLib.meshbasic as any, ""));
             //
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
             DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", egret3d.ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpMaterial.glTFTechnique.states, [ShaderDefine.USE_MAP]);

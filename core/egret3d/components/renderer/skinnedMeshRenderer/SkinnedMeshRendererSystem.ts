@@ -5,11 +5,6 @@ namespace egret3d {
      * - 更新蒙皮网格的骨骼矩阵信息。
      */
     export class SkinnedMeshRendererSystem extends paper.BaseSystem {
-        /**
-         * @internal
-         */
-        public static maxBoneCount: number = 36;
-
         public readonly interests = [
             {
                 componentClass: SkinnedMeshRenderer,

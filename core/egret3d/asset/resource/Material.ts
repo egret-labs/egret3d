@@ -229,9 +229,10 @@ namespace egret3d {
                 defineString += " " + value;
             }
 
-            if (this._defines.indexOf(defineString) < 0) {
-                this._defines.push(defineString);
-                this._defines.sort();
+            const defines = this._defines;
+            if (defines.indexOf(defineString) < 0) {
+                defines.push(defineString);
+                defines.sort();
                 this._version++;
             }
 

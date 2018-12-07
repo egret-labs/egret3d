@@ -22,17 +22,21 @@
                     "name": "xray",
                     "attributes": {},
                     "uniforms": {
-                        "viewVector": {
-                            "type": 35665
-                        },
                         "c": {
-                            "type": 5126
+                            "type": 5126,
+                            "value": 1
                         },
                         "p": {
-                            "type": 5126
+                            "type": 5126,
+                            "value": 3
                         },
                         "glowColor": {
-                            "type": 35665
+                            "type": 35665,
+                            "value": [
+                                1,
+                                1,
+                                1
+                            ]
                         }
                     },
                     "states": {

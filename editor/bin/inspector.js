@@ -3810,7 +3810,7 @@ var paper;
             OrbitControls.prototype.onStart = function () {
             };
             OrbitControls.prototype.onEnable = function () {
-                var canvas = egret3d.web.WebGLCapabilities.canvas; //TODO
+                var canvas = egret3d.WebGLCapabilities.canvas; //TODO
                 if (canvas) {
                     canvas.addEventListener("mousedown", this._mouseDownHandler);
                     canvas.addEventListener("mouseup", this._mouseUpHandler);
@@ -3821,7 +3821,7 @@ var paper;
                 }
             };
             OrbitControls.prototype.onDisable = function () {
-                var canvas = egret3d.web.WebGLCapabilities.canvas; //TODO
+                var canvas = egret3d.WebGLCapabilities.canvas; //TODO
                 if (canvas) {
                     canvas.removeEventListener("mousedown", this._mouseDownHandler);
                     canvas.removeEventListener("mouseup", this._mouseUpHandler);

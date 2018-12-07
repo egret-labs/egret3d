@@ -17,7 +17,7 @@ namespace egret3d.web {
         private _egret2DOrderCount: number = 0;
         private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
-        private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(RenderState, false, this) as WebGLRenderState; // Set interface.
+        private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(RenderState) as WebGLRenderState;
         private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
         //
         private _cacheMaterialVerision: number = -1;
@@ -33,7 +33,7 @@ namespace egret3d.web {
         // const shadowMaterial = isPointLight ? DefaultMaterials.SHADOW_DISTANCE : DefaultMaterials.SHADOW_DEPTH;
         // const drawCalls = this._drawCallCollecter;
         // const shadowCalls = drawCalls.shadowCalls;
-        // const webgl = WebGLCapabilities.webgl!;
+        // const webgl = WebGLRenderState.webgl!;
 
         // light.updateShadow(camera);
         // light.renderTarget.use();
@@ -78,7 +78,7 @@ namespace egret3d.web {
             }
 
             // Render 2D.
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1);//TODO 解决字体模糊
             for (const gameObject of this.groups[1].gameObjects) {
                 const egret2DRenderer = gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer;
@@ -93,72 +93,8 @@ namespace egret3d.web {
             }
         }
 
-        public draw(drawCall: DrawCall, drawMaterial: Material | null = null): void {
-            if (drawCall.renderer && drawCall.renderer.gameObject._beforeRenderBehaviors.length > 0) {
-                let flag = false;
-
-                for (const behaviour of drawCall.renderer.gameObject._beforeRenderBehaviors) {
-                    flag = !behaviour.onBeforeRender!() || flag;
-                }
-
-                if (flag) {
-                    return;
-                }
-            }
-
-            const camera = Camera.current!;
-            const context = camera.context;
-            const material = drawMaterial || drawCall.material;
-            const shaderContextDefine = context.updateDrawCall(drawCall);
-            //
-            const webgl = WebGLCapabilities.webgl!;
-            const technique = material._glTFTechnique;
-            const techniqueState = technique.states || null;
-            const renderState = this._renderState;
-            // Get program.
-            const program = renderState.getProgram(material, technique, shaderContextDefine + material.shaderDefine);
-            // Use program.
-            const force = renderState.useProgram(program);
-            // Update states.
-            renderState.updateState(techniqueState);
-            //  TODO
-            // if (techniqueState && context.drawCall.renderer.transform._worldMatrixDeterminant < 0) {
-            //     if (techniqueState.functions!.frontFace[0] === CCW) {
-            //         webgl.frontFace(CW);
-            //     }
-            //     else {
-            //         webgl.frontFace(CCW);
-            //     }
-            // }
-            // Update static uniforms.
-            this._updateGlobalUniforms(program, context);
-            // Update uniforms.
-            this._updateUniforms(program, material, technique, force);
-            // Update attributes.
-            this._updateAttributes(program, drawCall.mesh, drawCall.subMeshIndex, technique, force);
-            // Draw.
-            const mesh = drawCall.mesh;
-            const glTFMesh = mesh.glTFMesh;
-            const primitive = glTFMesh.primitives[drawCall.subMeshIndex];
-            const vertexAccessor = mesh.getAccessor(glTFMesh.primitives[0].attributes.POSITION || 0);
-            const bufferOffset = mesh.getBufferOffset(vertexAccessor);
-            const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;
-
-            if (primitive.indices !== undefined) {
-                const indexAccessor = mesh.getAccessor(primitive.indices);
-                webgl.drawElements(drawMode, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
-            }
-            else {
-                webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
-            }
-
-            if (DEBUG && drawCall.drawCount >= 0) {
-                drawCall.drawCount++;
-            }
-        }
-
         private _updateGlobalUniforms(program: WebGLProgramBinder, context: CameraRenderContext) {
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             const glUniforms = program.contextUniforms;
             // TODO
             const camera = context.camera;
@@ -346,10 +282,10 @@ namespace egret3d.web {
                         webgl.uniform1f(location, context.fogFar);
                         break;
                     case gltf.UniformSemanticType._TONE_MAPPING_EXPOSURE:
-                        webgl.uniform1f(location, WebGLCapabilities.toneMappingExposure);
+                        webgl.uniform1f(location, this._renderState.toneMappingExposure);
                         break;
                     case gltf.UniformSemanticType._TONE_MAPPING_WHITE_POINT:
-                        webgl.uniform1f(location, WebGLCapabilities.toneMappingWhitePoint);
+                        webgl.uniform1f(location, this._renderState.toneMappingWhitePoint);
                         break;
 
                     default:
@@ -368,7 +304,7 @@ namespace egret3d.web {
             this._cacheMaterial = material;
             this._cacheMaterialVerision = material._version;
 
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             const unifroms = technique.uniforms;
             const glUniforms = program.uniforms;
 
@@ -462,7 +398,7 @@ namespace egret3d.web {
             this._cacheSubMeshIndex = subMeshIndex;
             this._cacheMesh = mesh;
 
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             const primitive = mesh.glTFMesh.primitives[subMeshIndex];
             // vbo.
             const webglAttributes = program.attributes;
@@ -537,8 +473,78 @@ namespace egret3d.web {
             Camera.current = null;
         }
 
+        public draw(drawCall: DrawCall, material: Material | null = null) {
+            if (drawCall.renderer && drawCall.renderer.gameObject._beforeRenderBehaviors.length > 0) {
+                let flag = false;
+
+                for (const behaviour of drawCall.renderer.gameObject._beforeRenderBehaviors) {
+                    flag = !behaviour.onBeforeRender!() || flag;
+                }
+
+                if (flag) {
+                    return;
+                }
+            }
+
+            const camera = Camera.current!;
+            const context = camera.context;
+            material = material || drawCall.material;
+            const shaderContextDefine = context.updateDrawCall(drawCall);
+            //
+            const webgl = WebGLRenderState.webgl!;
+            const technique = material._glTFTechnique;
+            const techniqueState = technique.states || null;
+            const renderState = this._renderState;
+            // Get program.
+            const program = renderState.getProgram(material, technique, shaderContextDefine + material.shaderDefine);
+            // Use program.
+            const force = renderState.useProgram(program);
+            // Update states.
+            renderState.updateState(techniqueState);
+            //  TODO
+            // if (techniqueState && context.drawCall.renderer.transform._worldMatrixDeterminant < 0) {
+            //     if (techniqueState.functions!.frontFace[0] === CCW) {
+            //         webgl.frontFace(CW);
+            //     }
+            //     else {
+            //         webgl.frontFace(CCW);
+            //     }
+            // }
+            // Update static uniforms.
+            this._updateGlobalUniforms(program, context);
+            // Update uniforms.
+            this._updateUniforms(program, material, technique, force);
+            // Update attributes.
+            this._updateAttributes(program, drawCall.mesh, drawCall.subMeshIndex, technique, force);
+            // Draw.
+            const mesh = drawCall.mesh;
+            const glTFMesh = mesh.glTFMesh;
+            const primitive = glTFMesh.primitives[drawCall.subMeshIndex];
+            const vertexAccessor = mesh.getAccessor(glTFMesh.primitives[0].attributes.POSITION || 0);
+            const bufferOffset = mesh.getBufferOffset(vertexAccessor);
+            const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;
+
+            if (primitive.indices !== undefined) {
+                const indexAccessor = mesh.getAccessor(primitive.indices);
+                webgl.drawElements(drawMode, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
+            }
+            else {
+                webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
+            }
+
+            if (DEBUG && drawCall.drawCount >= 0) {
+                drawCall.drawCount++;
+            }
+        }
+
+        public onAwake() {
+            const renderState = this._renderState;
+            renderState.render = this.render.bind(this);
+            renderState.draw = this.draw.bind(this);
+        }
+
         public onUpdate() {
-            if (!WebGLCapabilities.webgl) {
+            if (!WebGLRenderState.webgl) {
                 return;
             }
 

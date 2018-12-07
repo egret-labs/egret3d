@@ -1,106 +1,4 @@
 namespace egret3d.web {
-    const _pattern = /#include +<([\w\d.]+)>/g;
-
-    function _replace(_match: string, include: string) {
-        if (!(include in ShaderChunk)) {
-            throw new Error(`Can not resolve #include <${include}>`);
-        }
-
-        return _parseIncludes((ShaderChunk as any)[include]);
-    }
-
-    function _filterEmptyLine(string: string) {
-        return string !== '';
-    }
-
-    function _parseIncludes(string: string): string {
-        return string.replace(_pattern, _replace);
-    }
-
-    function _unrollLoops(string: string) {
-        const pattern = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
-        function replace(match: string, start: string, end: string, snippet: string) {
-            var unroll = '';
-            for (var i = parseInt(start); i < parseInt(end); i++) {
-                unroll += snippet.replace(/\[ i \]/g, '[ ' + i + ' ]');
-            }
-            return unroll;
-        }
-
-        return string.replace(pattern, replace);
-    }
-
-    function _prefixVertex(customDefines: string) {
-        const prefixContext = [
-            WebGLCapabilities.commonDefines,
-            customDefines,
-            ShaderChunk.common_vert_def,
-            '\n'
-        ].filter(_filterEmptyLine).join('\n');
-
-        return prefixContext;
-    }
-
-    function _prefixFragment(customDefines: string) {
-        const prefixContext = [
-            WebGLCapabilities.commonExtensions,
-            WebGLCapabilities.commonDefines,
-            customDefines,
-            ShaderChunk.common_frag_def,
-            WebGLCapabilities.toneMapping === ToneMapping.None ? '' : '#define TONE_MAPPING',
-            WebGLCapabilities.toneMapping === ToneMapping.None ? '' : ShaderChunk.tonemapping_pars_fragment,
-            WebGLCapabilities.toneMapping === ToneMapping.None ? '' : _getToneMappingFunction(WebGLCapabilities.toneMapping),
-            '\n'
-        ].filter(_filterEmptyLine).join('\n');
-
-        return prefixContext;
-
-    }
-
-    function _getToneMappingFunction(toneMapping: ToneMapping) {
-        var toneMappingName;
-        switch (toneMapping) {
-            case ToneMapping.LinearToneMapping:
-                toneMappingName = 'Linear';
-                break;
-            case ToneMapping.ReinhardToneMapping:
-                toneMappingName = 'Reinhard';
-                break;
-            case ToneMapping.Uncharted2ToneMapping:
-                toneMappingName = 'Uncharted2';
-                break;
-            case ToneMapping.CineonToneMapping:
-                toneMappingName = 'OptimizedCineon';
-                break;
-            default:
-                throw new Error('unsupported toneMapping: ' + toneMapping);
-        }
-
-        return 'vec3 toneMapping( vec3 color ) { return ' + toneMappingName + 'ToneMapping( color ); }';
-    }
-
-    function _getWebGLShader(type: number, webgl: WebGLRenderingContext, gltfShader: gltf.Shader, defines: string) {
-        const shader = webgl.createShader(type)!;
-        let shaderContent = _parseIncludes(gltfShader.uri!);
-        shaderContent = _unrollLoops(shaderContent);
-        webgl.shaderSource(shader, defines + shaderContent);
-        webgl.compileShader(shader);
-
-        const parameter = webgl.getShaderParameter(shader, webgl.COMPILE_STATUS);
-        if (!parameter) {
-            console.error("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?");
-            // if (confirm("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
-            //     alert(gltfShader.uri);
-            // }
-
-            webgl.deleteShader(shader);
-
-            return null;
-        }
-
-        return shader;
-    }
-
     function _extractAttributes(webgl: WebGLRenderingContext, program: WebGLProgramBinder, technique: gltf.Technique) {
         const webglProgram = program.program;
         const attributes = program.attributes;
@@ -191,10 +89,80 @@ namespace egret3d.web {
             }
         }
     }
+
+    const _browserPrefixes = [
+        "",
+        "MOZ_",
+        "OP_",
+        "WEBKIT_",
+    ];
+
+    function _getExtension(gl: WebGLRenderingContext, name: string) {
+        for (const prefixedName of _browserPrefixes) {
+            const extension = gl.getExtension(prefixedName + name);
+            if (extension) {
+                return extension;
+            }
+        }
+
+        return null;
+    }
+
+    function _getMaxShaderPrecision(gl: WebGLRenderingContext, precision: "lowp" | "mediump" | "highp") {
+        if (precision === "highp") {
+            if (
+                gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT)!.precision > 0 &&
+                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT)!.precision > 0
+            ) {
+                return "highp";
+            }
+
+            precision = "mediump";
+        }
+
+        if (precision === "mediump") {
+            if (
+                gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT)!.precision > 0 &&
+                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT)!.precision > 0
+            ) {
+                return "mediump";
+            }
+        }
+
+        return "lowp";
+    }
     /**
      * @internal
      */
     export class WebGLRenderState extends RenderState {
+        /**
+         * @deprecated
+         */
+        public static canvas: HTMLCanvasElement | null = null;
+        /**
+         * @deprecated
+         */
+        public static webgl: WebGLRenderingContext | null = null;
+
+        public version: number;
+
+        public maxPrecision: string;
+        public maxTextures: uint;
+        public maxVertexTextures: uint;
+        public maxTextureSize: uint;
+        public maxCubemapSize: uint;
+        public maxRenderBufferize: uint;
+        public maxVertexUniformVectors: uint;
+        public maxAnisotropy: uint;
+
+        public standardDerivatives: boolean;
+        public textureFloat: boolean;
+        public anisotropyExt: EXT_texture_filter_anisotropic;
+        public s3tc: WEBGL_compressed_texture_s3tc;
+        public textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
+        public shaderTextureLOD: any;
+        public oes_standard_derivatives: boolean;
+
         private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST]; // TODO
         private readonly _programs: { [key: string]: WebGLProgramBinder } = {};
         private readonly _vsShaders: { [key: string]: WebGLShader } = {};
@@ -203,23 +171,45 @@ namespace egret3d.web {
         private _cacheProgram: WebGLProgramBinder | null = null;
         private _cacheState: gltf.States | null = null;
 
+        private _getWebGLShader(type: number, webgl: WebGLRenderingContext, gltfShader: gltf.Shader, defines: string) {
+            const shader = webgl.createShader(type)!;
+            let shaderContent = this._parseIncludes(gltfShader.uri!);
+            shaderContent = this._unrollLoops(shaderContent);
+            webgl.shaderSource(shader, defines + shaderContent);
+            webgl.compileShader(shader);
+
+            const parameter = webgl.getShaderParameter(shader, webgl.COMPILE_STATUS);
+            if (!parameter) {
+                console.error("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?");
+                // if (confirm("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
+                //     alert(gltfShader.uri);
+                // }
+
+                webgl.deleteShader(shader);
+
+                return null;
+            }
+
+            return shader;
+        }
+
         private _getWebGLProgram(vs: gltf.Shader, fs: gltf.Shader, customDefines: string) {
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             const program = webgl.createProgram()!;
 
             let key = vs.name + customDefines;
             let vertexShader = this._vsShaders[key];
             if (!vertexShader) {
-                const prefixVertex = _prefixVertex(customDefines);
-                vertexShader = _getWebGLShader(webgl.VERTEX_SHADER, webgl, vs, prefixVertex)!;
+                const prefixVertex = this._prefixVertex(customDefines);
+                vertexShader = this._getWebGLShader(webgl.VERTEX_SHADER, webgl, vs, prefixVertex)!;
                 this._vsShaders[key] = vertexShader;
             }
 
             key = fs.name + customDefines;
             let fragmentShader = this._fsShaders[key];
             if (!fragmentShader) {
-                const prefixFragment = _prefixFragment(customDefines);
-                fragmentShader = _getWebGLShader(webgl.FRAGMENT_SHADER, webgl, fs, prefixFragment)!;
+                const prefixFragment = this._prefixFragment(customDefines);
+                fragmentShader = this._getWebGLShader(webgl.FRAGMENT_SHADER, webgl, fs, prefixFragment)!;
                 this._fsShaders[key] = fragmentShader;
             }
 
@@ -238,9 +228,68 @@ namespace egret3d.web {
 
             return program;
         }
+        protected _getCommonExtensions() {
+            let extensions = "";
+            if (this.oes_standard_derivatives) {
+                extensions += "#extension GL_OES_standard_derivatives : enable \n";
+            }
+
+            return extensions;
+        }
+
+        protected _getCommonDefines() {
+            let defines = "";
+            defines += "precision " + this.maxPrecision + " float; \n";
+            defines += "precision " + this.maxPrecision + " int; \n";
+
+            return defines;
+        }
+
+        public initialize(config: { canvas: HTMLCanvasElement, webgl: WebGLRenderingContext }) {
+            super.initialize();
+
+            WebGLRenderState.canvas = config.canvas;
+            WebGLRenderState.webgl = config.webgl;
+
+            const webgl = WebGLRenderState.webgl;
+            if (!webgl) {
+                return;
+            }
+
+            this.version = parseFloat(/^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION))![1]);
+            //
+            this.textureFloat = !!_getExtension(webgl, "OES_texture_float");
+            this.anisotropyExt = _getExtension(webgl, "EXT_texture_filter_anisotropic");
+            this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
+            // use dfdx and dfdy must enable OES_standard_derivatives
+            this.oes_standard_derivatives = !!_getExtension(webgl, "OES_standard_derivatives");
+            //
+            this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
+            this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
+            this.maxVertexTextures = webgl.getParameter(webgl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+            this.maxTextureSize = webgl.getParameter(webgl.MAX_TEXTURE_SIZE);
+            this.maxCubemapSize = webgl.getParameter(webgl.MAX_CUBE_MAP_TEXTURE_SIZE);
+            this.maxRenderBufferize = webgl.getParameter(webgl.MAX_RENDERBUFFER_SIZE);
+            this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
+            this.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4); // TODO
+            this.maxAnisotropy = (this.anisotropyExt !== null) ? webgl.getParameter(this.anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
+
+            this.commonExtensions = this._getCommonExtensions();
+            this.commonDefines = this._getCommonDefines();
+
+            console.info("WebGL version:", this.version);
+            console.info("Maximum shader precision:", this.maxPrecision);
+            console.info("Maximum texture count:", this.maxTextures);
+            console.info("Maximum vertex texture count:", this.maxVertexTextures);
+            console.info("Maximum texture size:", this.maxTextureSize);
+            console.info("Maximum cube map texture size:", this.maxCubemapSize);
+            console.info("Maximum render buffer size:", this.maxRenderBufferize);
+            console.info("Maximum vertex uniform vectors:", this.maxVertexUniformVectors);
+            console.info("Maximum GPU skinned bone count:", this.maxBoneCount);
+        }
 
         public updateViewport(viewport: Readonly<Rectangle>, target: BaseRenderTexture | null) { // TODO
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             let w: number;
             let h: number;
 
@@ -265,7 +314,7 @@ namespace egret3d.web {
         }
 
         public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>) {
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
 
             if (bufferBit & gltf.BufferMask.Depth) {
                 webgl.depthMask(true);
@@ -284,7 +333,7 @@ namespace egret3d.web {
         }
 
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: number = 0) {
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             if (target._dirty) {
                 target.setupTexture(0);
             }
@@ -302,7 +351,7 @@ namespace egret3d.web {
             }
             this._cacheState = state;
 
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             const stateEnables = this._stateEnables;
             const cacheStateEnable = this._cacheStateEnable;
             for (const e of stateEnables) {
@@ -335,7 +384,7 @@ namespace egret3d.web {
         public useProgram(program: WebGLProgramBinder) {
             if (this._cacheProgram !== program) {
                 this._cacheProgram = program;
-                WebGLCapabilities.webgl!.useProgram(program.program);
+                WebGLRenderState.webgl!.useProgram(program.program);
 
                 return true;
             }
@@ -346,21 +395,31 @@ namespace egret3d.web {
         public getProgram(material: Material, technique: gltf.Technique, defines: string) {
             const shader = material._shader;
             const extensions = shader.config.extensions!.KHR_techniques_webgl;
-            const vertexShader = extensions!.shaders[0];
-            const fragShader = extensions!.shaders[1];
-            const name = vertexShader.name + "_" + fragShader.name + "_" + defines;//TODO材质标脏可以优化
-            const webgl = WebGLCapabilities.webgl!;
+            const vertexShader = extensions!.shaders[0]; // TODO 顺序依赖
+            const fragmentShader = extensions!.shaders[1]; // TODO 顺序依赖
+            // TODO 
+            const shaderCustom = shader.customs;
+            if (shaderCustom) {
+                for (const k in shaderCustom) {
+                    (ShaderChunk as any)[k] = shaderCustom[k];
+                }
+            }
+            else {
+                (ShaderChunk as any)[ShaderDefine.CUSTOM_VERTEX] = "";
+                (ShaderChunk as any)[ShaderDefine.CUSTOM_BEGIN_VERTEX] = "";
+                (ShaderChunk as any)[ShaderDefine.CUSTOM_END_VERTEX] = "";
+            }
+            //
+            const name = vertexShader.name + "_" + fragmentShader.name + "_" + defines; // TODO材质标脏可以优化
+            const webgl = WebGLRenderState.webgl!;
             let program = this._programs[name];
 
             if (!program) {
-                const webglProgram = this._getWebGLProgram(vertexShader, fragShader, defines);
-                if (webglProgram) {
-                    program = new WebGLProgramBinder(webglProgram);
-                    this._programs[name] = program;
-                    _extractAttributes(webgl, program, technique);
-                    _extractUniforms(webgl, program, technique);
-                    _extractTextureUnits(program);
-                }
+                const webglProgram = this._getWebGLProgram(vertexShader, fragmentShader, defines)!; // 
+                this._programs[name] = program = new WebGLProgramBinder(webglProgram);
+                _extractAttributes(webgl, program, technique);
+                _extractUniforms(webgl, program, technique);
+                _extractTextureUnits(program);
             }
 
             if (technique.program !== program.id) {

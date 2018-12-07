@@ -19,7 +19,7 @@ namespace egret3d.web {
             if (!this._image || !this._image.uri) {
                 return;
             }
-            const webgl = WebGLCapabilities.webgl!;
+            const webgl = WebGLRenderState.webgl!;
             if (!this.webglTexture) {
                 this.webglTexture = webgl.createTexture();
             }
@@ -230,59 +230,59 @@ namespace egret3d.web {
     //     }
     // }
 
-    export class TextureReader {
-        public readonly gray: boolean;
-        public readonly width: number;
-        public readonly height: number;
-        public readonly data: Uint8Array;
+    // export class TextureReader {
+    //     public readonly gray: boolean;
+    //     public readonly width: number;
+    //     public readonly height: number;
+    //     public readonly data: Uint8Array;
 
-        constructor(texRGBA: WebGLTexture, width: number, height: number, gray: boolean = true) {
-            this.gray = gray;
-            this.width = width;
-            this.height = height;
+    //     constructor(texRGBA: WebGLTexture, width: number, height: number, gray: boolean = true) {
+    //         this.gray = gray;
+    //         this.width = width;
+    //         this.height = height;
 
-            const readData = new Uint8Array(this.width * this.height * 4);
-            readData[0] = 2;
+    //         const readData = new Uint8Array(this.width * this.height * 4);
+    //         readData[0] = 2;
 
-            const webgl = WebGLCapabilities.webgl;
-            if (webgl) {
-                const fbo = webgl.createFramebuffer();
-                const fbold = webgl.getParameter(webgl.FRAMEBUFFER_BINDING);
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, fbo);
-                webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, texRGBA, 0);
+    //         const webgl = WebGLRenderState.webgl;
+    //         if (webgl) {
+    //             const fbo = webgl.createFramebuffer();
+    //             const fbold = webgl.getParameter(webgl.FRAMEBUFFER_BINDING);
+    //             webgl.bindFramebuffer(webgl.FRAMEBUFFER, fbo);
+    //             webgl.framebufferTexture2D(webgl.FRAMEBUFFER, webgl.COLOR_ATTACHMENT0, webgl.TEXTURE_2D, texRGBA, 0);
 
-                webgl.readPixels(0, 0, this.width, this.height, webgl.RGBA, webgl.UNSIGNED_BYTE, readData);
-                webgl.deleteFramebuffer(fbo);
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, fbold);
-            }
+    //             webgl.readPixels(0, 0, this.width, this.height, webgl.RGBA, webgl.UNSIGNED_BYTE, readData);
+    //             webgl.deleteFramebuffer(fbo);
+    //             webgl.bindFramebuffer(webgl.FRAMEBUFFER, fbold);
+    //         }
 
-            if (gray) {
-                this.data = new Uint8Array(this.width * this.height);
-                for (let i = 0; i < width * height; i++) {
-                    this.data[i] = readData[i * 4];
-                }
-            }
-            else {
-                this.data = readData;
-            }
-        }
+    //         if (gray) {
+    //             this.data = new Uint8Array(this.width * this.height);
+    //             for (let i = 0; i < width * height; i++) {
+    //                 this.data[i] = readData[i * 4];
+    //             }
+    //         }
+    //         else {
+    //             this.data = readData;
+    //         }
+    //     }
 
-        getPixel(u: number, v: number): any {
-            const x = (u * this.width) | 0;
-            const y = (v * this.height) | 0;
-            if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
-                return 0;
-            }
+    //     getPixel(u: number, v: number): any {
+    //         const x = (u * this.width) | 0;
+    //         const y = (v * this.height) | 0;
+    //         if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+    //             return 0;
+    //         }
 
-            if (this.gray) {
-                return this.data[y * this.width + x];
-            }
-            else {
-                const i = (y * this.width + x) * 4;
-                return Color.create(this.data[i], this.data[i + 1], this.data[i + 2], this.data[i + 3]);
-            }
-        }
-    }
+    //         if (this.gray) {
+    //             return this.data[y * this.width + x];
+    //         }
+    //         else {
+    //             const i = (y * this.width + x) * 4;
+    //             return Color.create(this.data[i], this.data[i + 1], this.data[i + 2], this.data[i + 3]);
+    //         }
+    //     }
+    // }
 
     /**
     * @deprecated

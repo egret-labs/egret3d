@@ -55,7 +55,7 @@ namespace egret3d {
 
     export const ShaderProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
-            const result = await host.load(resource, 'json') as egret3d.GLTF;
+            const result = await host.load(resource, 'json') as GLTF;
 
             const shaders = result.extensions.KHR_techniques_webgl!.shaders;
             if (shaders && shaders.length === 2) {
@@ -76,7 +76,7 @@ namespace egret3d {
                 console.error("错误的Shader格式数据");
             }
 
-            const glTF = new egret3d.Shader(result, resource.name);
+            const glTF = Shader.create(result, resource.name);
             paper.Asset.register(glTF);
 
             return glTF;
@@ -132,7 +132,7 @@ namespace egret3d {
                 const imgResource = (RES.host.resourceConfig as any)["getResource"](name);
                 if (imgResource) {
                     return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
-                        const texture = egret3d.Texture.createByImage(resource.name, bitmapData, textureFormat, mipmap, linear, repeat, premultiply);
+                        const texture = Texture.createByImage(resource.name, bitmapData, textureFormat, mipmap, linear, repeat, premultiply);
                         paper.Asset.register(texture);
                         return texture;
 
@@ -141,7 +141,7 @@ namespace egret3d {
 
                 if (resRoot) {
                     return getResByURL(name, resRoot).then((bitmapData: any) => {
-                        const texture = egret3d.Texture.createByImage(resource.name, bitmapData, textureFormat, mipmap, linear, repeat, premultiply);
+                        const texture = Texture.createByImage(resource.name, bitmapData, textureFormat, mipmap, linear, repeat, premultiply);
                         paper.Asset.register(texture);
                         return texture;
                     });
@@ -159,13 +159,13 @@ namespace egret3d {
         onLoadStart(host, resource) {
 
             return host.load(resource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
-                const texture = egret3d.Texture.createByImage(resource.name, bitmapData, gltf.TextureFormat.RGBA, true, true, true);
+                const texture = Texture.createByImage(resource.name, bitmapData, gltf.TextureFormat.RGBA, true, true, true);
                 paper.Asset.register(texture);
                 return texture;
             })
         },
         onRemoveStart(host, resource) {
-            const data: egret3d.Texture = host.get(resource);
+            const data: Texture = host.get(resource);
             data.dispose();
             return Promise.resolve();
         }
@@ -173,10 +173,10 @@ namespace egret3d {
 
     export const MaterialProcessor: RES.processor.Processor = {
         async onLoadStart(host, resource) {
-            const result = await host.load(resource, 'json') as egret3d.GLTF;
+            const result = await host.load(resource, 'json') as GLTF;
 
             if (result.materials && result.materials.length > 0) {
-                for (const mat of result.materials as egret3d.GLTFMaterial[]) {
+                for (const mat of result.materials as GLTFMaterial[]) {
                     //load shader
                     const technique = mat.extensions.KHR_techniques_webgl.technique;
                     const techniqueRes = (RES.host.resourceConfig as any)["getResource"](technique);
@@ -198,14 +198,14 @@ namespace egret3d {
                             }
                             else {
                                 console.log("Load image error.", value);
-                                values[key] = egret3d.DefaultTextures.MISSING;
+                                values[key] = DefaultTextures.MISSING;
                             }
                         }
                     }
                 }
             }
 
-            const material = egret3d.Material.create(result, resource.name);
+            const material = Material.create(result, resource.name);
             paper.Asset.register(material);
 
             return material;
@@ -220,7 +220,7 @@ namespace egret3d {
     export const MeshProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
             return host.load(resource, "bin").then((result) => {
-                const parseResult = egret3d.GLTFAsset.parseFromBinary(result instanceof ArrayBuffer ? new Uint32Array(result) : result)!;
+                const parseResult = GLTFAsset.parseFromBinary(result instanceof ArrayBuffer ? new Uint32Array(result) : result)!;
                 const glb = Mesh.create(parseResult.config, parseResult.buffers, resource.name);
                 glb.initialize();
 
@@ -238,8 +238,8 @@ namespace egret3d {
     export const AnimationProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
             return host.load(resource, "bin").then((result) => {
-                const parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result))!;
-                const animation = new egret3d.AnimationAsset();
+                const parseResult = GLTFAsset.parseFromBinary(new Uint32Array(result))!;
+                const animation = new AnimationAsset();
                 animation.name = resource.name;
                 animation.config = parseResult.config;
 
