@@ -13,12 +13,22 @@ namespace egret3d {
          * - 未进行视锥剔除的。
          */
         public readonly drawCalls: (DrawCall | null)[] = [];
+        /**
+         * 此帧新添加的绘制信息列表。
+         * - 渲染前清除。
+         */
+        public readonly addDrawCalls: (DrawCall | null)[] = [];
 
         private _drawCallsDirty: boolean = false;
         /**
          * @internal
          */
         public _update() {
+            const addDrawCalls = this.addDrawCalls;
+            if (addDrawCalls.length > 0) {
+                addDrawCalls.length = 0;
+            }
+
             if (this._drawCallsDirty) {
                 let index = 0;
                 let removeCount = 0;
@@ -69,10 +79,18 @@ namespace egret3d {
             }
         }
         /**
+         * 
+         * @param drawCall 
+         */
+        public addDrawCall(drawCall: DrawCall): void {
+            this.drawCalls.push(drawCall);
+            this.addDrawCalls.push(drawCall);
+        }
+        /**
          * 移除指定渲染组件的绘制信息列表。
          */
         public removeDrawCalls(renderer: paper.BaseRenderer): void {
-            const { renderers, drawCalls } = this;
+            const { renderers, drawCalls, addDrawCalls } = this;
             const index = renderers.indexOf(renderer);
             if (index < 0) {
                 return;
@@ -84,6 +102,14 @@ namespace egret3d {
                 if (drawCall && drawCall.renderer === renderer) {
                     drawCalls[i] = null;
                     drawCall.release();
+                }
+            }
+
+            i = addDrawCalls.length;
+            while (i--) {
+                const drawCall = addDrawCalls[i];
+                if (drawCall && drawCall.renderer === renderer) {
+                    addDrawCalls[i] = null;
                 }
             }
 

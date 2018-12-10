@@ -5628,7 +5628,17 @@ declare namespace egret3d {
          * - 未进行视锥剔除的。
          */
         readonly drawCalls: (DrawCall | null)[];
+        /**
+         * 此帧新添加的绘制信息列表。
+         * - 渲染前清除。
+         */
+        readonly addDrawCalls: (DrawCall | null)[];
         private _drawCallsDirty;
+        /**
+         *
+         * @param drawCall
+         */
+        addDrawCall(drawCall: DrawCall): void;
         /**
          * 移除指定渲染组件的绘制信息列表。
          */
@@ -8532,6 +8542,7 @@ declare namespace egret3d {
         USE_COLOR = "USE_COLOR",
         USE_MAP = "USE_MAP",
         USE_SKINNING = "USE_SKINNING",
+        USE_NORMALMAP = "USE_NORMALMAP",
         USE_LIGHTMAP = "USE_LIGHTMAP",
         USE_SHADOWMAP = "USE_SHADOWMAP",
         USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
@@ -8741,6 +8752,10 @@ declare namespace egret3d {
          * 该材质的 shader。
          */
         shader: Shader;
+        /**
+         *
+         */
+        readonly defines: ReadonlyArray<string>;
         /**
          * 该材质的 glTF 渲染技术。
          */

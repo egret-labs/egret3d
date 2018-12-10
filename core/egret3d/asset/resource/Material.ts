@@ -836,7 +836,7 @@ namespace egret3d {
         /**
          * 该材质的透明度。
          */
-        public get opacity() {
+        public get opacity(): number {
             const uniform = this._glTFTechnique.uniforms[ShaderUniformName.Opacity];
             if (uniform) {
                 return (uniform.value !== uniform.value) ? 1.0 : uniform.value;
@@ -871,6 +871,13 @@ namespace egret3d {
             }
 
             this._reset(value);
+        }
+
+        /**
+         * 
+         */
+        public get defines(): ReadonlyArray<string> {
+            return this._defines;
         }
 
         /**
