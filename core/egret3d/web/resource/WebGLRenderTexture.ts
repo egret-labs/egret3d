@@ -65,12 +65,12 @@ namespace egret3d.web {
                 this.webglTexture = webgl.createTexture()!;
             }
             webgl.bindTexture(webgl.TEXTURE_2D, this.webglTexture);
-            const isPowerOfTwo = WebGLUtility.isPowerOfTwo(width, height);
-            WebGLUtility.setTexturexParameters(isPowerOfTwo, sampler);
+            const isPowerTwo = isPowerOfTwo(width, height);
+            setTexturexParameters(isPowerTwo, sampler);
             this._setupFrameBufferTexture(this.frameBuffer, this.webglTexture, webgl.TEXTURE_2D, gltf.TextureDataType.UNSIGNED_BYTE, width, height, format, webgl.COLOR_ATTACHMENT0);
 
             const minFilter = sampler.minFilter!;
-            const canGenerateMipmap = isPowerOfTwo && minFilter !== gltf.TextureFilter.NEAREST && minFilter !== gltf.TextureFilter.LINEAR;
+            const canGenerateMipmap = isPowerTwo && minFilter !== gltf.TextureFilter.NEAREST && minFilter !== gltf.TextureFilter.LINEAR;
             if (canGenerateMipmap) {
                 webgl.generateMipmap(webgl.TEXTURE_2D);
             }

@@ -22173,7 +22173,7 @@ var egret3d;
                 }
                 for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
                     var gameObject = _a[_i];
-                    gameObject.getComponent(particle.ParticleComponent).update(0.016);
+                    gameObject.getComponent(particle.ParticleComponent).update(deltaTime);
                 }
             };
             ParticleSystem.prototype.onDisable = function () {
@@ -22829,15 +22829,17 @@ var egret3d;
     (function (ShaderDefine) {
         ShaderDefine["USE_COLOR"] = "USE_COLOR";
         ShaderDefine["USE_MAP"] = "USE_MAP";
-        ShaderDefine["USE_SKINNING"] = "USE_SKINNING";
         ShaderDefine["USE_NORMALMAP"] = "USE_NORMALMAP";
+        ShaderDefine["USE_BUMPMAP"] = "USE_BUMPMAP";
         ShaderDefine["USE_LIGHTMAP"] = "USE_LIGHTMAP";
         ShaderDefine["USE_SHADOWMAP"] = "USE_SHADOWMAP";
+        ShaderDefine["USE_SKINNING"] = "USE_SKINNING";
         ShaderDefine["USE_SIZEATTENUATION"] = "USE_SIZEATTENUATION";
         //
-        ShaderDefine["MAX_BONES"] = "MAX_BONES";
+        ShaderDefine["FLAT_SHADED"] = "FLAT_SHADED";
+        ShaderDefine["ENVMAP_TYPE_CUBE_UV"] = "ENVMAP_TYPE_CUBE_UV";
         //
-        ShaderDefine["FLIP_V"] = "FLIP_V";
+        ShaderDefine["MAX_BONES"] = "MAX_BONES";
         //
         ShaderDefine["NUM_POINT_LIGHTS"] = "NUM_POINT_LIGHTS";
         ShaderDefine["NUM_SPOT_LIGHTS"] = "NUM_SPOT_LIGHTS";
@@ -22848,6 +22850,8 @@ var egret3d;
         //
         ShaderDefine["USE_FOG"] = "USE_FOG";
         ShaderDefine["FOG_EXP2"] = "FOG_EXP2";
+        //
+        ShaderDefine["FLIP_V"] = "FLIP_V";
         //
         ShaderDefine["CUSTOM_VERTEX"] = "custom_vertex";
         ShaderDefine["CUSTOM_BEGIN_VERTEX"] = "custom_begin_vertex";
@@ -25761,48 +25765,50 @@ var egret3d;
         /**
          * @internal
          */
-        var WebGLUtility = (function () {
-            function WebGLUtility() {
+        function isPowerOfTwo(width, height) {
+            return egret3d.math.isPowerOfTwo(width) && egret3d.math.isPowerOfTwo(height);
+        }
+        web.isPowerOfTwo = isPowerOfTwo;
+        /**
+         * @internal
+         */
+        function filterFallback(f) {
+            if (f === 9728 /* NEAREST */ || f === 9984 /* NEAREST_MIPMAP_NEAREST */ || f === 9986 /* NEAREST_MIPMAP_LINEAR */) {
+                return 9728 /* NEAREST */;
             }
-            WebGLUtility.isPowerOfTwo = function (width, height) {
-                return egret3d.math.isPowerOfTwo(width) && egret3d.math.isPowerOfTwo(height);
-            };
-            WebGLUtility.filterFallback = function (f) {
-                if (f === 9728 /* NEAREST */ || f === 9984 /* NEAREST_MIPMAP_NEAREST */ || f === 9986 /* NEAREST_MIPMAP_LINEAR */) {
-                    return 9728 /* NEAREST */;
+            return 9729 /* LINEAR */;
+        }
+        web.filterFallback = filterFallback;
+        /**
+         * @internal
+         */
+        function setTexturexParameters(isPowerOfTwo, sampler) {
+            var webgl = web.WebGLRenderState.webgl;
+            var magFilter = sampler.magFilter;
+            var minFilter = sampler.minFilter;
+            var wrapS = sampler.wrapS;
+            var wrapT = sampler.wrapT;
+            if (isPowerOfTwo) {
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, magFilter);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, minFilter);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, wrapS);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, wrapT);
+            }
+            else {
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
+                if (wrapS !== 33071 /* CLAMP_TO_EDGE */ || wrapT !== 33071 /* CLAMP_TO_EDGE */) {
+                    console.warn('Texture is not power of two. Texture.wrapS and Texture.wrapT should be set to gltf.TextureWrap.CLAMP_TO_EDGE.');
                 }
-                return 9729 /* LINEAR */;
-            };
-            WebGLUtility.setTexturexParameters = function (isPowerOfTwo, sampler) {
-                var webgl = web.WebGLRenderState.webgl;
-                var magFilter = sampler.magFilter;
-                var minFilter = sampler.minFilter;
-                var wrapS = sampler.wrapS;
-                var wrapT = sampler.wrapT;
-                if (isPowerOfTwo) {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, magFilter);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, minFilter);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, wrapS);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, wrapT);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, filterFallback(magFilter));
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, filterFallback(minFilter));
+                if (minFilter !== 9728 /* NEAREST */ && minFilter !== 9729 /* LINEAR */) {
+                    console.warn('Texture is not power of two. Texture.minFilter should be set to gltf.TextureFilter.NEAREST or gltf.TextureFilter.LINEAR.');
                 }
-                else {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
-                    if (wrapS !== 33071 /* CLAMP_TO_EDGE */ || wrapT !== 33071 /* CLAMP_TO_EDGE */) {
-                        console.warn('Texture is not power of two. Texture.wrapS and Texture.wrapT should be set to gltf.TextureWrap.CLAMP_TO_EDGE.');
-                    }
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, WebGLUtility.filterFallback(magFilter));
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, WebGLUtility.filterFallback(minFilter));
-                    if (minFilter !== 9728 /* NEAREST */ && minFilter !== 9729 /* LINEAR */) {
-                        console.warn('Texture is not power of two. Texture.minFilter should be set to gltf.TextureFilter.NEAREST or gltf.TextureFilter.LINEAR.');
-                    }
-                }
-                //TODO EXT_texture_filter_anisotropic
-            };
-            return WebGLUtility;
-        }());
-        web.WebGLUtility = WebGLUtility;
-        __reflect(WebGLUtility.prototype, "egret3d.web.WebGLUtility");
+            }
+            //TODO EXT_texture_filter_anisotropic
+        }
+        web.setTexturexParameters = setTexturexParameters;
     })(web = egret3d.web || (egret3d.web = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -25962,8 +25968,8 @@ var egret3d;
                 webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, paperExtension.premultiplyAlpha);
                 webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, paperExtension.flipY);
                 webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, paperExtension.unpackAlignment);
-                var isPowerOfTwo = web.WebGLUtility.isPowerOfTwo(paperExtension.width, paperExtension.height);
-                web.WebGLUtility.setTexturexParameters(isPowerOfTwo, sampler);
+                var isPowerTwo = web.isPowerOfTwo(paperExtension.width, paperExtension.height);
+                web.setTexturexParameters(isPowerTwo, sampler);
                 if (ArrayBuffer.isView(image.uri)) {
                     webgl.texImage2D(webgl.TEXTURE_2D, 0, paperExtension.format, paperExtension.width, paperExtension.height, 0, paperExtension.format, paperExtension.type, image.uri);
                 }
@@ -25971,7 +25977,7 @@ var egret3d;
                     webgl.texImage2D(webgl.TEXTURE_2D, 0, paperExtension.format, paperExtension.format, webgl.UNSIGNED_BYTE, image.uri);
                 }
                 var minFilter = sampler.minFilter;
-                var canGenerateMipmap = isPowerOfTwo && minFilter !== 9728 /* NEAREST */ && minFilter !== 9729 /* LINEAR */;
+                var canGenerateMipmap = isPowerTwo && minFilter !== 9728 /* NEAREST */ && minFilter !== 9729 /* LINEAR */;
                 if (canGenerateMipmap) {
                     webgl.generateMipmap(webgl.TEXTURE_2D);
                 }
@@ -26327,11 +26333,11 @@ var egret3d;
                     this.webglTexture = webgl.createTexture();
                 }
                 webgl.bindTexture(webgl.TEXTURE_2D, this.webglTexture);
-                var isPowerOfTwo = web.WebGLUtility.isPowerOfTwo(width, height);
-                web.WebGLUtility.setTexturexParameters(isPowerOfTwo, sampler);
+                var isPowerTwo = web.isPowerOfTwo(width, height);
+                web.setTexturexParameters(isPowerTwo, sampler);
                 this._setupFrameBufferTexture(this.frameBuffer, this.webglTexture, webgl.TEXTURE_2D, 5121 /* UNSIGNED_BYTE */, width, height, format, webgl.COLOR_ATTACHMENT0);
                 var minFilter = sampler.minFilter;
-                var canGenerateMipmap = isPowerOfTwo && minFilter !== 9728 /* NEAREST */ && minFilter !== 9729 /* LINEAR */;
+                var canGenerateMipmap = isPowerTwo && minFilter !== 9728 /* NEAREST */ && minFilter !== 9729 /* LINEAR */;
                 if (canGenerateMipmap) {
                     webgl.generateMipmap(webgl.TEXTURE_2D);
                 }
@@ -27158,8 +27164,13 @@ var egret3d;
                 if (!renderState.oesStandardDerivatives) {
                     for (var _i = 0, _a = drawCallCollecter.addDrawCalls; _i < _a.length; _i++) {
                         var drawCall = _a[_i];
-                        if (drawCall && drawCall.material.defines.indexOf("USE_NORMALMAP" /* USE_NORMALMAP */) >= 0) {
-                            drawCall.material.removeDefine("USE_NORMALMAP" /* USE_NORMALMAP */);
+                        if (drawCall) {
+                            var material = drawCall.material;
+                            material
+                                .removeDefine("USE_NORMALMAP" /* USE_NORMALMAP */)
+                                .removeDefine("USE_BUMPMAP" /* USE_BUMPMAP */)
+                                .removeDefine("FLAT_SHADED" /* FLAT_SHADED */)
+                                .removeDefine("ENVMAP_TYPE_CUBE_UV" /* ENVMAP_TYPE_CUBE_UV */);
                         }
                     }
                 }

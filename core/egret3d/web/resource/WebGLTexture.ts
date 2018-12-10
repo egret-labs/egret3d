@@ -33,8 +33,8 @@ namespace egret3d.web {
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, paperExtension.flipY!);
             webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, paperExtension.unpackAlignment!);
 
-            const isPowerOfTwo = WebGLUtility.isPowerOfTwo(paperExtension.width!, paperExtension.height!);
-            WebGLUtility.setTexturexParameters(isPowerOfTwo, sampler);
+            const isPowerTwo = isPowerOfTwo(paperExtension.width!, paperExtension.height!);
+            setTexturexParameters(isPowerTwo, sampler);
 
             if (ArrayBuffer.isView(image.uri)) {
                 webgl.texImage2D(webgl.TEXTURE_2D, 0, paperExtension.format!, paperExtension.width!, paperExtension.height!, 0, paperExtension.format!, paperExtension.type!, image.uri);
@@ -44,7 +44,7 @@ namespace egret3d.web {
             }
 
             const minFilter = sampler.minFilter!;
-            const canGenerateMipmap = isPowerOfTwo && minFilter !== gltf.TextureFilter.NEAREST && minFilter !== gltf.TextureFilter.LINEAR;
+            const canGenerateMipmap = isPowerTwo && minFilter !== gltf.TextureFilter.NEAREST && minFilter !== gltf.TextureFilter.LINEAR;
             if (canGenerateMipmap) {
                 webgl.generateMipmap(webgl.TEXTURE_2D);
             }
