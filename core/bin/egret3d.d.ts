@@ -1695,7 +1695,7 @@ declare namespace gltf {
     const enum TextureWrap {
         CLAMP_TO_EDGE = 33071,
         MIRRORED_REPEAT = 33648,
-        REPEAT = 33071,
+        REPEAT = 10497,
     }
     const enum TextureAlignment {
         One = 1,
@@ -3253,7 +3253,6 @@ declare namespace egret3d {
         protected _image: gltf.Image;
         protected _sampler: gltf.Sampler;
         protected constructor(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource | null, width: number, height: number, format?: gltf.TextureFormat, mipmap?: boolean, wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap, magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter, flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment, type?: gltf.TextureDataType, anisotropy?: number);
-        setupTexture(index?: number): void;
         readonly width: number;
         readonly height: number;
         readonly format: number;
@@ -8035,6 +8034,7 @@ declare namespace egret3d.particle {
          *
          */
         arcMode: ShapeMultiModeValue;
+        arc: number;
         /**
          *
          */

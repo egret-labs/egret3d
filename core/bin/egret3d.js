@@ -2315,7 +2315,7 @@ var egret3d;
         GLTFAsset.createTextureConfig = function () {
             var config = this._createConfig();
             config.images = [{}];
-            config.samplers = [{ magFilter: 9728 /* NEAREST */, minFilter: 9728 /* NEAREST */, wrapS: 33071 /* REPEAT */, wrapT: 33071 /* REPEAT */ }];
+            config.samplers = [{ magFilter: 9728 /* NEAREST */, minFilter: 9728 /* NEAREST */, wrapS: 10497 /* REPEAT */, wrapT: 10497 /* REPEAT */ }];
             config.textures = [{ sampler: 0, source: 0, extensions: { paper: {} } }];
             return config;
         };
@@ -4099,8 +4099,8 @@ var egret3d;
             // Sampler
             {
                 _this._sampler = _this.config.samplers[_this._gltfTexture.sampler];
-                _this._sampler.wrapS = wrapS || 33071 /* REPEAT */;
-                _this._sampler.wrapT = wrapT || 33071 /* REPEAT */;
+                _this._sampler.wrapS = wrapS || 10497 /* REPEAT */;
+                _this._sampler.wrapT = wrapT || 10497 /* REPEAT */;
                 _this._sampler.magFilter = magFilter || 9728 /* NEAREST */;
                 _this._sampler.minFilter = minFilter || 9728 /* NEAREST */;
             }
@@ -4129,6 +4129,9 @@ var egret3d;
             _this._dirty = true;
             return _this;
         }
+        /**
+         * @internal
+         */
         BaseTexture.prototype.setupTexture = function (index) { };
         Object.defineProperty(BaseTexture.prototype, "width", {
             get: function () {
@@ -4176,8 +4179,8 @@ var egret3d;
         Texture.createByImage = function (name, image, format, mipmap, linear, repeat, premultiply) {
             var magFilter = 9729 /* LINEAR */;
             var minFilter = 9729 /* LINEAR */;
-            var wrapS = repeat ? 33071 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
-            var wrapT = repeat ? 33071 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
+            var wrapS = repeat ? 10497 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
+            var wrapT = repeat ? 10497 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
             if (mipmap) {
                 magFilter = linear ? 9729 /* LINEAR */ : 9728 /* NEAREST */;
                 minFilter = linear ? 9987 /* LINEAR_MIPMAP_LINEAR */ : 9984 /* NEAREST_MIPMAP_NEAREST */;
@@ -4210,7 +4213,7 @@ var egret3d;
                     data[seek + 3] = 255;
                 }
             }
-            var texture = Texture.create(name, data, width, height, 6408 /* RGBA */, mipmap, 33071 /* REPEAT */, 33071 /* REPEAT */, 9729 /* LINEAR */, 9987 /* LINEAR_MIPMAP_LINEAR */);
+            var texture = Texture.create(name, data, width, height, 6408 /* RGBA */, mipmap, 10497 /* REPEAT */, 10497 /* REPEAT */, 9729 /* LINEAR */, 9987 /* LINEAR_MIPMAP_LINEAR */);
             return texture;
         };
         return Texture;
@@ -19057,12 +19060,9 @@ var egret3d;
          * @internal
          */
         function generatePositionAndDirection(position, direction, shape) {
-            if (!shape.enable) {
-                position.x = position.y = position.z = 0;
-                direction.x = direction.y = 0;
-                direction.z = 1.0;
-                return;
-            }
+            position.x = position.y = position.z = 0;
+            direction.x = direction.y = 0;
+            direction.z = 1.0;
             //
             switch (shape.shapeType) {
                 case 4 /* Cone */:
@@ -19093,13 +19093,8 @@ var egret3d;
                         _generateCircleParticlePosition(shape, position, direction);
                     }
                     break;
-                default:
-                    {
-                        position.x = position.y = position.z = 0;
-                        direction.x = direction.y = 0;
-                        direction.z = 1;
-                    }
             }
+            direction.normalize();
         }
         particle.generatePositionAndDirection = generatePositionAndDirection;
         function _randomPostionCircle(out) {
@@ -19114,6 +19109,7 @@ var egret3d;
             out.y = out.y * range;
         }
         function _randomPositionArcCircle(arc, out) {
+            arc *= Math.PI / 180.0;
             var angle = Math.random() * arc;
             out.x = Math.cos(angle);
             out.y = Math.sin(angle);
@@ -19140,7 +19136,7 @@ var egret3d;
             out.z = out.z * range;
         }
         function _generateConeParticlePosition(shape, position, direction) {
-            var temp = new egret3d.Vector3();
+            var temp = egret3d.Vector3.create().release();
             if (shape.shapeType === 4 /* Cone */) {
                 _randomPositionInsideCircle(temp);
             }
@@ -19166,7 +19162,7 @@ var egret3d;
             }
         }
         function _generateConeVolumeParticlePosition(shape, position, direction) {
-            var temp = new egret3d.Vector3();
+            var temp = egret3d.Vector3.create().release();
             if (shape.shapeType === 8 /* ConeVolume */) {
                 _randomPositionInsideCircle(temp);
             }
@@ -19210,7 +19206,7 @@ var egret3d;
             }
         }
         function _generateSphereParticlePosition(shape, position, direction) {
-            var temp = new egret3d.Vector3();
+            var temp = egret3d.Vector3.create().release();
             if (!shape.spherizeDirection) {
                 if (shape.shapeType === 0 /* Sphere */) {
                     _randomPositionInsideSphere(position);
@@ -19232,13 +19228,8 @@ var egret3d;
             }
         }
         function _generateCircleParticlePosition(shape, position, direction) {
-            var temp = new egret3d.Vector3();
-            if (shape.shapeType === 10 /* Circle */) {
-                _randomPositionInsideArcCircle(shape.radiusSpread, temp);
-            }
-            else {
-                _randomPositionArcCircle(shape.radiusSpread, temp);
-            }
+            var temp = egret3d.Vector3.create().release();
+            _randomPositionArcCircle(shape.arc, temp);
             position.x = -temp.x * shape.radius;
             position.y = temp.y * shape.radius;
             position.z = 0;
@@ -20096,6 +20087,7 @@ var egret3d;
                  *
                  */
                 _this.arcMode = 0 /* Random */;
+                _this.arc = 0.0;
                 /**
                  *
                  */
@@ -20124,6 +20116,7 @@ var egret3d;
                 this.radius = element.radius;
                 this.angle = element.angle;
                 this.length = element.length;
+                this.arc = element.arc || 0.0;
                 this.arcSpeed.deserialize(element.arcSpeed);
                 this.arcMode = element.arcMode;
                 this.radiusSpread = element.radiusSpread;
@@ -20163,6 +20156,9 @@ var egret3d;
             __decorate([
                 paper.serializedField
             ], ShapeModule.prototype, "arcMode", void 0);
+            __decorate([
+                paper.serializedField
+            ], ShapeModule.prototype, "arc", void 0);
             __decorate([
                 paper.serializedField
             ], ShapeModule.prototype, "radiusSpread", void 0);
@@ -21069,8 +21065,8 @@ var egret3d;
                     }
                 }
                 var transform = comp.gameObject.transform;
-                this._worldPostionCache = transform.position;
-                this._worldRotationCache = transform.rotation;
+                this._worldPostionCache = transform.position.clone();
+                this._worldRotationCache = transform.rotation.clone();
                 if (comp._isPlaying && this._time >= mainModule.startDelay.constant && comp.emission.enable) {
                     this._updateEmission(elapsedTime);
                 }
@@ -22138,7 +22134,7 @@ var egret3d;
                 }
                 for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
                     var gameObject = _a[_i];
-                    gameObject.getComponent(particle.ParticleComponent).update(deltaTime);
+                    gameObject.getComponent(particle.ParticleComponent).update(0.016);
                 }
             };
             ParticleSystem.prototype.onDisable = function () {

@@ -57,7 +57,7 @@ namespace egret3d.particle {
         private _getBurstCount(startTime: number, endTime: number): number {
             let totalEmitCount: number = 0;
             const bursts = this._comp.emission.bursts;
-            for (let l = bursts.length; this._burstIndex < l; this._burstIndex++) {
+            for (const l = bursts.length; this._burstIndex < l; this._burstIndex++) {
                 const burst: Burst = bursts[this._burstIndex];
                 if (burst.time >= startTime && burst.time < endTime) {
                     // totalEmitCount += numberLerp(burst.minCount, burst.maxCount, Math.random());
@@ -337,8 +337,8 @@ namespace egret3d.particle {
             }
 
             const transform = comp.gameObject.transform;
-            this._worldPostionCache = transform.position;
-            this._worldRotationCache = transform.rotation;
+            this._worldPostionCache = transform.position.clone();
+            this._worldRotationCache = transform.rotation.clone();
             if (comp._isPlaying && this._time >= mainModule.startDelay.constant && comp.emission.enable) {
                 this._updateEmission(elapsedTime);
             }
