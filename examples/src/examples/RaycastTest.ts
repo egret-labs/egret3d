@@ -108,7 +108,7 @@ namespace examples {
 
         private readonly _normal: paper.GameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "SkinnedMeshTriangleFollower");
 
-        public onUpdate() {
+        public onLateUpdate() {
             if (!this.rendererRaycaster) {
                 this._normal.activeSelf = false;
                 return;

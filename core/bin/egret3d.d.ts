@@ -1695,7 +1695,7 @@ declare namespace gltf {
     const enum TextureWrap {
         CLAMP_TO_EDGE = 33071,
         MIRRORED_REPEAT = 33648,
-        REPEAT = 33071,
+        REPEAT = 10497,
     }
     const enum TextureAlignment {
         One = 1,
@@ -3253,7 +3253,6 @@ declare namespace egret3d {
         protected _image: gltf.Image;
         protected _sampler: gltf.Sampler;
         protected constructor(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource | null, width: number, height: number, format?: gltf.TextureFormat, mipmap?: boolean, wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap, magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter, flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment, type?: gltf.TextureDataType, anisotropy?: number);
-        setupTexture(index?: number): void;
         readonly width: number;
         readonly height: number;
         readonly format: number;
@@ -5629,7 +5628,17 @@ declare namespace egret3d {
          * - 未进行视锥剔除的。
          */
         readonly drawCalls: (DrawCall | null)[];
+        /**
+         * 此帧新添加的绘制信息列表。
+         * - 渲染前清除。
+         */
+        readonly addDrawCalls: (DrawCall | null)[];
         private _drawCallsDirty;
+        /**
+         *
+         * @param drawCall
+         */
+        addDrawCall(drawCall: DrawCall): void;
         /**
          * 移除指定渲染组件的绘制信息列表。
          */
@@ -8532,6 +8541,7 @@ declare namespace egret3d {
         USE_COLOR = "USE_COLOR",
         USE_MAP = "USE_MAP",
         USE_SKINNING = "USE_SKINNING",
+        USE_NORMALMAP = "USE_NORMALMAP",
         USE_LIGHTMAP = "USE_LIGHTMAP",
         USE_SHADOWMAP = "USE_SHADOWMAP",
         USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
@@ -8741,6 +8751,10 @@ declare namespace egret3d {
          * 该材质的 shader。
          */
         shader: Shader;
+        /**
+         *
+         */
+        readonly defines: ReadonlyArray<string>;
         /**
          * 该材质的 glTF 渲染技术。
          */

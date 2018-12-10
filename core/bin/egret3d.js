@@ -2315,7 +2315,7 @@ var egret3d;
         GLTFAsset.createTextureConfig = function () {
             var config = this._createConfig();
             config.images = [{}];
-            config.samplers = [{ magFilter: 9728 /* NEAREST */, minFilter: 9728 /* NEAREST */, wrapS: 33071 /* REPEAT */, wrapT: 33071 /* REPEAT */ }];
+            config.samplers = [{ magFilter: 9728 /* NEAREST */, minFilter: 9728 /* NEAREST */, wrapS: 10497 /* REPEAT */, wrapT: 10497 /* REPEAT */ }];
             config.textures = [{ sampler: 0, source: 0, extensions: { paper: {} } }];
             return config;
         };
@@ -4099,8 +4099,8 @@ var egret3d;
             // Sampler
             {
                 _this._sampler = _this.config.samplers[_this._gltfTexture.sampler];
-                _this._sampler.wrapS = wrapS || 33071 /* REPEAT */;
-                _this._sampler.wrapT = wrapT || 33071 /* REPEAT */;
+                _this._sampler.wrapS = wrapS || 10497 /* REPEAT */;
+                _this._sampler.wrapT = wrapT || 10497 /* REPEAT */;
                 _this._sampler.magFilter = magFilter || 9728 /* NEAREST */;
                 _this._sampler.minFilter = minFilter || 9728 /* NEAREST */;
             }
@@ -4129,6 +4129,9 @@ var egret3d;
             _this._dirty = true;
             return _this;
         }
+        /**
+         * @internal
+         */
         BaseTexture.prototype.setupTexture = function (index) { };
         Object.defineProperty(BaseTexture.prototype, "width", {
             get: function () {
@@ -4176,8 +4179,8 @@ var egret3d;
         Texture.createByImage = function (name, image, format, mipmap, linear, repeat, premultiply) {
             var magFilter = 9729 /* LINEAR */;
             var minFilter = 9729 /* LINEAR */;
-            var wrapS = repeat ? 33071 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
-            var wrapT = repeat ? 33071 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
+            var wrapS = repeat ? 10497 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
+            var wrapT = repeat ? 10497 /* REPEAT */ : 33071 /* CLAMP_TO_EDGE */;
             if (mipmap) {
                 magFilter = linear ? 9729 /* LINEAR */ : 9728 /* NEAREST */;
                 minFilter = linear ? 9987 /* LINEAR_MIPMAP_LINEAR */ : 9984 /* NEAREST_MIPMAP_NEAREST */;
@@ -4210,7 +4213,7 @@ var egret3d;
                     data[seek + 3] = 255;
                 }
             }
-            var texture = Texture.create(name, data, width, height, 6408 /* RGBA */, mipmap, 33071 /* REPEAT */, 33071 /* REPEAT */, 9729 /* LINEAR */, 9987 /* LINEAR_MIPMAP_LINEAR */);
+            var texture = Texture.create(name, data, width, height, 6408 /* RGBA */, mipmap, 10497 /* REPEAT */, 10497 /* REPEAT */, 9729 /* LINEAR */, 9987 /* LINEAR_MIPMAP_LINEAR */);
             return texture;
         };
         return Texture;
@@ -7682,35 +7685,45 @@ var egret3d;
             WebGLRenderState.prototype._getWebGLProgram = function (vs, fs, customDefines) {
                 var webgl = WebGLRenderState.webgl;
                 var program = webgl.createProgram();
-                var key = vs.name + customDefines;
-                var vertexShader = this._vsShaders[key];
-                if (!vertexShader) {
-                    var prefixVertex = this._prefixVertex(customDefines);
-                    vertexShader = this._getWebGLShader(webgl.VERTEX_SHADER, webgl, vs, prefixVertex);
-                    this._vsShaders[key] = vertexShader;
+                if (program) {
+                    var key = vs.name + customDefines;
+                    var vertexShader = this._vsShaders[key];
+                    if (!vertexShader) {
+                        var prefixVertex = this._prefixVertex(customDefines);
+                        vertexShader = this._getWebGLShader(webgl.VERTEX_SHADER, webgl, vs, prefixVertex);
+                        if (vertexShader) {
+                            this._vsShaders[key] = vertexShader;
+                        }
+                    }
+                    key = fs.name + customDefines;
+                    var fragmentShader = this._fsShaders[key];
+                    if (!fragmentShader) {
+                        var prefixFragment = this._prefixFragment(customDefines);
+                        fragmentShader = this._getWebGLShader(webgl.FRAGMENT_SHADER, webgl, fs, prefixFragment);
+                        if (fragmentShader) {
+                            this._fsShaders[key] = fragmentShader;
+                        }
+                    }
+                    if (vertexShader && fragmentShader) {
+                        webgl.attachShader(program, vertexShader);
+                        webgl.attachShader(program, fragmentShader);
+                        webgl.linkProgram(program);
+                        var parameter = webgl.getProgramParameter(program, webgl.LINK_STATUS);
+                        if (parameter) {
+                            return program;
+                        }
+                        else {
+                            console.error("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
+                            // alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
+                            webgl.deleteProgram(program);
+                        }
+                    }
                 }
-                key = fs.name + customDefines;
-                var fragmentShader = this._fsShaders[key];
-                if (!fragmentShader) {
-                    var prefixFragment = this._prefixFragment(customDefines);
-                    fragmentShader = this._getWebGLShader(webgl.FRAGMENT_SHADER, webgl, fs, prefixFragment);
-                    this._fsShaders[key] = fragmentShader;
-                }
-                webgl.attachShader(program, vertexShader);
-                webgl.attachShader(program, fragmentShader);
-                webgl.linkProgram(program);
-                var parameter = webgl.getProgramParameter(program, webgl.LINK_STATUS);
-                if (!parameter) {
-                    console.error("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
-                    // alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
-                    webgl.deleteProgram(program);
-                    return null;
-                }
-                return program;
+                return null;
             };
             WebGLRenderState.prototype._getCommonExtensions = function () {
                 var extensions = "";
-                if (this.oes_standard_derivatives) {
+                if (this.oesStandardDerivatives) {
                     extensions += "#extension GL_OES_standard_derivatives : enable \n";
                 }
                 return extensions;
@@ -7735,7 +7748,7 @@ var egret3d;
                 this.anisotropyExt = _getExtension(webgl, "EXT_texture_filter_anisotropic");
                 this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
                 // use dfdx and dfdy must enable OES_standard_derivatives
-                this.oes_standard_derivatives = !!_getExtension(webgl, "OES_standard_derivatives");
+                this.oesStandardDerivatives = !!_getExtension(webgl, "OES_standard_derivatives");
                 //
                 this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
                 this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
@@ -7846,7 +7859,7 @@ var egret3d;
                 }
                 return false;
             };
-            WebGLRenderState.prototype.getProgram = function (material, technique, defines) {
+            WebGLRenderState.prototype.getProgram = function (material, technique, contextDefine) {
                 var shader = material._shader;
                 var extensions = shader.config.extensions.KHR_techniques_webgl;
                 var vertexShader = extensions.shaders[0]; // TODO 顺序依赖
@@ -7863,21 +7876,26 @@ var egret3d;
                     egret3d.ShaderChunk["custom_begin_vertex" /* CUSTOM_BEGIN_VERTEX */] = "";
                     egret3d.ShaderChunk["custom_end_vertex" /* CUSTOM_END_VERTEX */] = "";
                 }
-                //
+                var defines = contextDefine + material.shaderDefine;
                 var name = vertexShader.name + "_" + fragmentShader.name + "_" + defines; // TODO材质标脏可以优化
                 var webgl = WebGLRenderState.webgl;
-                var program = this._programs[name];
-                if (!program) {
-                    var webglProgram = this._getWebGLProgram(vertexShader, fragmentShader, defines); // 
-                    this._programs[name] = program = new web.WebGLProgramBinder(webglProgram);
-                    _extractAttributes(webgl, program, technique);
-                    _extractUniforms(webgl, program, technique);
-                    _extractTextureUnits(program);
+                var programBinder = null;
+                if (name in this._programs) {
+                    programBinder = this._programs[name];
                 }
-                if (technique.program !== program.id) {
-                    technique.program = program.id;
+                else {
+                    var program = this._getWebGLProgram(vertexShader, fragmentShader, defines);
+                    if (program) {
+                        this._programs[name] = programBinder = new web.WebGLProgramBinder(program);
+                        _extractAttributes(webgl, programBinder, technique);
+                        _extractUniforms(webgl, programBinder, technique);
+                        _extractTextureUnits(programBinder);
+                    }
                 }
-                return program;
+                if (programBinder && technique.program !== programBinder.id) {
+                    technique.program = programBinder.id;
+                }
+                return programBinder;
             };
             /**
              * @deprecated
@@ -11600,6 +11618,11 @@ var egret3d;
              * - 未进行视锥剔除的。
              */
             _this.drawCalls = [];
+            /**
+             * 此帧新添加的绘制信息列表。
+             * - 渲染前清除。
+             */
+            _this.addDrawCalls = [];
             _this._drawCallsDirty = false;
             return _this;
         }
@@ -11607,6 +11630,10 @@ var egret3d;
          * @internal
          */
         DrawCallCollecter.prototype._update = function () {
+            var addDrawCalls = this.addDrawCalls;
+            if (addDrawCalls.length > 0) {
+                addDrawCalls.length = 0;
+            }
             if (this._drawCallsDirty) {
                 var index = 0;
                 var removeCount = 0;
@@ -11650,10 +11677,18 @@ var egret3d;
             }
         };
         /**
+         *
+         * @param drawCall
+         */
+        DrawCallCollecter.prototype.addDrawCall = function (drawCall) {
+            this.drawCalls.push(drawCall);
+            this.addDrawCalls.push(drawCall);
+        };
+        /**
          * 移除指定渲染组件的绘制信息列表。
          */
         DrawCallCollecter.prototype.removeDrawCalls = function (renderer) {
-            var _a = this, renderers = _a.renderers, drawCalls = _a.drawCalls;
+            var _a = this, renderers = _a.renderers, drawCalls = _a.drawCalls, addDrawCalls = _a.addDrawCalls;
             var index = renderers.indexOf(renderer);
             if (index < 0) {
                 return;
@@ -11664,6 +11699,13 @@ var egret3d;
                 if (drawCall && drawCall.renderer === renderer) {
                     drawCalls[i] = null;
                     drawCall.release();
+                }
+            }
+            i = addDrawCalls.length;
+            while (i--) {
+                var drawCall = addDrawCalls[i];
+                if (drawCall && drawCall.renderer === renderer) {
+                    addDrawCalls[i] = null;
                 }
             }
             renderers[index] = null;
@@ -16217,7 +16259,7 @@ var egret3d;
                     drawCall.subMeshIndex = i;
                     drawCall.mesh = mesh;
                     drawCall.material = material;
-                    drawCallCollecter.drawCalls.push(drawCall);
+                    drawCallCollecter.addDrawCall(drawCall);
                 }
             }
             for (var i = 0; i < materialCount; ++i) {
@@ -16232,7 +16274,7 @@ var egret3d;
                     drawCall.subMeshIndex = j;
                     drawCall.mesh = mesh;
                     drawCall.material = material;
-                    drawCallCollecter.drawCalls.push(drawCall);
+                    drawCallCollecter.addDrawCall(drawCall);
                 }
             }
             materialFilter.length = 0;
@@ -16613,7 +16655,7 @@ var egret3d;
                     drawCall.subMeshIndex = i;
                     drawCall.mesh = mesh;
                     drawCall.material = material;
-                    drawCallCollecter.drawCalls.push(drawCall);
+                    drawCallCollecter.addDrawCall(drawCall);
                 }
             }
             for (var i = 0; i < materialCount; ++i) {
@@ -16628,7 +16670,7 @@ var egret3d;
                     drawCall.subMeshIndex = j;
                     drawCall.mesh = mesh;
                     drawCall.material = material;
-                    drawCallCollecter.drawCalls.push(drawCall);
+                    drawCallCollecter.addDrawCall(drawCall);
                 }
             }
             materialFilter.length = 0;
@@ -22112,7 +22154,7 @@ var egret3d;
                     drawCall.subMeshIndex = subMeshIndex++;
                     drawCall.mesh = renderer.batchMesh;
                     drawCall.material = renderer.batchMaterial || egret3d.DefaultMaterials.MISSING;
-                    drawCallCollecter.drawCalls.push(drawCall);
+                    drawCallCollecter.addDrawCall(drawCall);
                 }
             };
             ParticleSystem.prototype.onEnable = function () {
@@ -22795,6 +22837,7 @@ var egret3d;
         ShaderDefine["USE_COLOR"] = "USE_COLOR";
         ShaderDefine["USE_MAP"] = "USE_MAP";
         ShaderDefine["USE_SKINNING"] = "USE_SKINNING";
+        ShaderDefine["USE_NORMALMAP"] = "USE_NORMALMAP";
         ShaderDefine["USE_LIGHTMAP"] = "USE_LIGHTMAP";
         ShaderDefine["USE_SHADOWMAP"] = "USE_SHADOWMAP";
         ShaderDefine["USE_SIZEATTENUATION"] = "USE_SIZEATTENUATION";
@@ -23627,6 +23670,16 @@ var egret3d;
                     return;
                 }
                 this._reset(value);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Material.prototype, "defines", {
+            /**
+             *
+             */
+            get: function () {
+                return this._defines;
             },
             enumerable: true,
             configurable: true
@@ -27054,43 +27107,42 @@ var egret3d;
                 var technique = material._glTFTechnique;
                 var techniqueState = technique.states || null;
                 var renderState = this._renderState;
-                // Get program.
-                var program = renderState.getProgram(material, technique, shaderContextDefine + material.shaderDefine);
-                // Use program.
-                var force = renderState.useProgram(program);
-                // Update states.
-                renderState.updateState(techniqueState);
-                //  TODO
-                // if (techniqueState && context.drawCall.renderer.transform._worldMatrixDeterminant < 0) {
-                //     if (techniqueState.functions!.frontFace[0] === CCW) {
-                //         webgl.frontFace(CW);
-                //     }
-                //     else {
-                //         webgl.frontFace(CCW);
-                //     }
-                // }
-                // Update static uniforms.
-                this._updateGlobalUniforms(program, context);
-                // Update uniforms.
-                this._updateUniforms(program, material, technique, force);
-                // Update attributes.
-                this._updateAttributes(program, drawCall.mesh, drawCall.subMeshIndex, technique, force);
-                // Draw.
-                var mesh = drawCall.mesh;
-                var glTFMesh = mesh.glTFMesh;
-                var primitive = glTFMesh.primitives[drawCall.subMeshIndex];
-                var vertexAccessor = mesh.getAccessor(glTFMesh.primitives[0].attributes.POSITION || 0);
-                var bufferOffset = mesh.getBufferOffset(vertexAccessor);
-                var drawMode = primitive.mode === undefined ? 4 /* Triangles */ : primitive.mode;
-                if (primitive.indices !== undefined) {
-                    var indexAccessor = mesh.getAccessor(primitive.indices);
-                    webgl.drawElements(drawMode, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
-                }
-                else {
-                    webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
-                }
-                if (true && drawCall.drawCount >= 0) {
-                    drawCall.drawCount++;
+                var program = renderState.getProgram(material, technique, shaderContextDefine); // Get program.
+                if (program) {
+                    var force = renderState.useProgram(program); // Use program.
+                    renderState.updateState(techniqueState); // Update states.
+                    //  TODO
+                    // if (techniqueState && context.drawCall.renderer.transform._worldMatrixDeterminant < 0) {
+                    //     if (techniqueState.functions!.frontFace[0] === CCW) {
+                    //         webgl.frontFace(CW);
+                    //     }
+                    //     else {
+                    //         webgl.frontFace(CCW);
+                    //     }
+                    // }
+                    // Update static uniforms.
+                    this._updateGlobalUniforms(program, context);
+                    // Update uniforms.
+                    this._updateUniforms(program, material, technique, force);
+                    // Update attributes.
+                    this._updateAttributes(program, drawCall.mesh, drawCall.subMeshIndex, technique, force);
+                    // Draw.
+                    var mesh = drawCall.mesh;
+                    var glTFMesh = mesh.glTFMesh;
+                    var primitive = glTFMesh.primitives[drawCall.subMeshIndex];
+                    var vertexAccessor = mesh.getAccessor(glTFMesh.primitives[0].attributes.POSITION || 0);
+                    var bufferOffset = mesh.getBufferOffset(vertexAccessor);
+                    var drawMode = primitive.mode === undefined ? 4 /* Triangles */ : primitive.mode;
+                    if (primitive.indices !== undefined) {
+                        var indexAccessor = mesh.getAccessor(primitive.indices);
+                        webgl.drawElements(drawMode, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
+                    }
+                    else {
+                        webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
+                    }
+                    if (true && drawCall.drawCount >= 0) {
+                        drawCall.drawCount++;
+                    }
                 }
             };
             WebGLRenderSystem.prototype.onAwake = function () {
@@ -27103,16 +27155,27 @@ var egret3d;
                     return;
                 }
                 var isPlayerMode = paper.Application.playerMode === 0 /* Player */;
+                var drawCallCollecter = this._drawCallCollecter;
                 var cameraAndLightCollecter = this._cameraAndLightCollecter;
                 var renderState = this._renderState;
                 var editorScene = paper.Application.sceneManager.editorScene;
                 var cameras = cameraAndLightCollecter.cameras;
                 var lights = cameraAndLightCollecter.lights;
+                //
+                if (!renderState.oesStandardDerivatives) {
+                    for (var _i = 0, _a = drawCallCollecter.addDrawCalls; _i < _a.length; _i++) {
+                        var drawCall = _a[_i];
+                        if (drawCall && drawCall.material.defines.indexOf("USE_NORMALMAP" /* USE_NORMALMAP */) >= 0) {
+                            drawCall.material.removeDefine("USE_NORMALMAP" /* USE_NORMALMAP */);
+                        }
+                    }
+                }
+                //
                 this._drawCallCollecter._update();
                 // Render lights.
                 if (lights.length > 0) {
-                    for (var _i = 0, lights_3 = lights; _i < lights_3.length; _i++) {
-                        var light = lights_3[_i];
+                    for (var _b = 0, lights_3 = lights; _b < lights_3.length; _b++) {
+                        var light = lights_3[_b];
                         if (!light.castShadows) {
                             continue;
                         }
@@ -27122,8 +27185,8 @@ var egret3d;
                 // Render cameras.
                 if (cameras.length > 0) {
                     this._egret2DOrderCount = 0;
-                    for (var _a = 0, cameras_1 = cameras; _a < cameras_1.length; _a++) {
-                        var camera = cameras_1[_a];
+                    for (var _c = 0, cameras_1 = cameras; _c < cameras_1.length; _c++) {
+                        var camera = cameras_1[_c];
                         var scene = camera.gameObject.scene;
                         if (isPlayerMode ? scene !== editorScene : scene === editorScene) {
                             this.render(camera);

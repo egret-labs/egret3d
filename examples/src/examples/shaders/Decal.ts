@@ -19,10 +19,22 @@ namespace examples.shaders {
                         `,
                         custom_begin_vertex: ``,
                         custom_end_vertex: `
-                            vec3 uVector = vec3(1.0, 0.0, 0.0) / (2.0 * radius);
-                            vec3 vVector = vec3(0.0, 0.0, 1.0) / (-2.0 * radius);
-                            vUv.x = dot(position - center, uVector) + 0.5; 
-                            vUv.y = dot(position - center, vVector) + 0.5; 
+                            vec3 up = vec3(1.0, 0.0, 0.0);
+                            vec3 forward = vec3(0.0, 0.0, 1.0);
+                            vec4 plane = vec4(0.0, 0.0, 1.0, 0.0);
+                            vec4 mViewPosition = - ( modelViewMatrix * vec4( position, 1.0 ));
+
+                            if (dot( mViewPosition.xyz, plane.xyz ) < plane.w) {
+                                float k = 2.0 * radius;
+                                vec3 uVector = up / k;
+                                vec3 vVector = forward / -k;
+                                vUv.x = dot(position - center, uVector) + 0.5; 
+                                vUv.y = dot(position - center, vVector) + 0.5; 
+                            }
+                            else {
+                                vUv.x = 0.0;
+                                vUv.y = 0.0;
+                            }
                         `,
                     }
                 )
@@ -46,7 +58,7 @@ namespace examples.shaders {
                 gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
                 //
                 const animation = gameObject.getComponentInChildren(egret3d.Animation)!;
-                animation.play("run");
+                animation.play("idle");
                 //
                 const renderer = gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!;
                 const materials = renderer.materials as egret3d.Material[];

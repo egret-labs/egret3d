@@ -161,7 +161,7 @@ namespace egret3d.web {
         public s3tc: WEBGL_compressed_texture_s3tc;
         public textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
         public shaderTextureLOD: any;
-        public oes_standard_derivatives: boolean;
+        public oesStandardDerivatives: boolean;
 
         private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST]; // TODO
         private readonly _programs: { [key: string]: WebGLProgramBinder } = {};
@@ -197,40 +197,49 @@ namespace egret3d.web {
             const webgl = WebGLRenderState.webgl!;
             const program = webgl.createProgram()!;
 
-            let key = vs.name + customDefines;
-            let vertexShader = this._vsShaders[key];
-            if (!vertexShader) {
-                const prefixVertex = this._prefixVertex(customDefines);
-                vertexShader = this._getWebGLShader(webgl.VERTEX_SHADER, webgl, vs, prefixVertex)!;
-                this._vsShaders[key] = vertexShader;
+            if (program) {
+                let key = vs.name + customDefines;
+                let vertexShader = this._vsShaders[key];
+                if (!vertexShader) {
+                    const prefixVertex = this._prefixVertex(customDefines);
+                    vertexShader = this._getWebGLShader(webgl.VERTEX_SHADER, webgl, vs, prefixVertex)!;
+                    if (vertexShader) {
+                        this._vsShaders[key] = vertexShader;
+                    }
+                }
+
+                key = fs.name + customDefines;
+                let fragmentShader = this._fsShaders[key];
+                if (!fragmentShader) {
+                    const prefixFragment = this._prefixFragment(customDefines);
+                    fragmentShader = this._getWebGLShader(webgl.FRAGMENT_SHADER, webgl, fs, prefixFragment)!;
+                    if (fragmentShader) {
+                        this._fsShaders[key] = fragmentShader;
+                    }
+                }
+
+                if (vertexShader && fragmentShader) {
+                    webgl.attachShader(program, vertexShader);
+                    webgl.attachShader(program, fragmentShader);
+                    webgl.linkProgram(program);
+
+                    const parameter = webgl.getProgramParameter(program, webgl.LINK_STATUS);
+                    if (parameter) {
+                        return program;
+                    }
+                    else {
+                        console.error("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
+                        // alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
+                        webgl.deleteProgram(program);
+                    }
+                }
             }
 
-            key = fs.name + customDefines;
-            let fragmentShader = this._fsShaders[key];
-            if (!fragmentShader) {
-                const prefixFragment = this._prefixFragment(customDefines);
-                fragmentShader = this._getWebGLShader(webgl.FRAGMENT_SHADER, webgl, fs, prefixFragment)!;
-                this._fsShaders[key] = fragmentShader;
-            }
-
-            webgl.attachShader(program, vertexShader);
-            webgl.attachShader(program, fragmentShader);
-            webgl.linkProgram(program);
-
-            const parameter = webgl.getProgramParameter(program, webgl.LINK_STATUS);
-            if (!parameter) {
-                console.error("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
-                // alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
-                webgl.deleteProgram(program);
-
-                return null;
-            }
-
-            return program;
+            return null;
         }
         protected _getCommonExtensions() {
             let extensions = "";
-            if (this.oes_standard_derivatives) {
+            if (this.oesStandardDerivatives) {
                 extensions += "#extension GL_OES_standard_derivatives : enable \n";
             }
 
@@ -262,7 +271,7 @@ namespace egret3d.web {
             this.anisotropyExt = _getExtension(webgl, "EXT_texture_filter_anisotropic");
             this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
             // use dfdx and dfdy must enable OES_standard_derivatives
-            this.oes_standard_derivatives = !!_getExtension(webgl, "OES_standard_derivatives");
+            this.oesStandardDerivatives = !!_getExtension(webgl, "OES_standard_derivatives");
             //
             this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
             this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
@@ -392,7 +401,7 @@ namespace egret3d.web {
             return false;
         }
 
-        public getProgram(material: Material, technique: gltf.Technique, defines: string) {
+        public getProgram(material: Material, technique: gltf.Technique, contextDefine: string) {
             const shader = material._shader;
             const extensions = shader.config.extensions!.KHR_techniques_webgl;
             const vertexShader = extensions!.shaders[0]; // TODO 顺序依赖
@@ -409,24 +418,30 @@ namespace egret3d.web {
                 (ShaderChunk as any)[ShaderDefine.CUSTOM_BEGIN_VERTEX] = "";
                 (ShaderChunk as any)[ShaderDefine.CUSTOM_END_VERTEX] = "";
             }
-            //
+
+            const defines = contextDefine + material.shaderDefine;
             const name = vertexShader.name + "_" + fragmentShader.name + "_" + defines; // TODO材质标脏可以优化
             const webgl = WebGLRenderState.webgl!;
-            let program = this._programs[name];
+            let programBinder: WebGLProgramBinder | null = null;
 
-            if (!program) {
-                const webglProgram = this._getWebGLProgram(vertexShader, fragmentShader, defines)!; // 
-                this._programs[name] = program = new WebGLProgramBinder(webglProgram);
-                _extractAttributes(webgl, program, technique);
-                _extractUniforms(webgl, program, technique);
-                _extractTextureUnits(program);
+            if (name in this._programs) {
+                programBinder = this._programs[name]
+            }
+            else {
+                const program = this._getWebGLProgram(vertexShader, fragmentShader, defines);
+                if (program) {
+                    this._programs[name] = programBinder = new WebGLProgramBinder(program);
+                    _extractAttributes(webgl, programBinder, technique);
+                    _extractUniforms(webgl, programBinder, technique);
+                    _extractTextureUnits(programBinder);
+                }
             }
 
-            if (technique.program !== program.id) {
-                technique.program = program.id;
+            if (programBinder && technique.program !== programBinder.id) {
+                technique.program = programBinder.id;
             }
 
-            return program;
+            return programBinder;
         }
     }
     // Retarget.

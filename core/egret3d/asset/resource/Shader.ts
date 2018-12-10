@@ -5,14 +5,17 @@ namespace egret3d {
     export const enum ShaderDefine {
         USE_COLOR = "USE_COLOR",
         USE_MAP = "USE_MAP",
-        USE_SKINNING = "USE_SKINNING",
+        USE_NORMALMAP = "USE_NORMALMAP",
+        USE_BUMPMAP = "USE_BUMPMAP",
         USE_LIGHTMAP = "USE_LIGHTMAP",
         USE_SHADOWMAP = "USE_SHADOWMAP",
+        USE_SKINNING = "USE_SKINNING",
         USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
         //
-        MAX_BONES = "MAX_BONES",
+        FLAT_SHADED = "FLAT_SHADED",
+        ENVMAP_TYPE_CUBE_UV = "ENVMAP_TYPE_CUBE_UV",
         //
-        FLIP_V = "FLIP_V",
+        MAX_BONES = "MAX_BONES",
         //
         NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
         NUM_SPOT_LIGHTS = "NUM_SPOT_LIGHTS",
@@ -23,6 +26,8 @@ namespace egret3d {
         //
         USE_FOG = "USE_FOG",
         FOG_EXP2 = "FOG_EXP2",
+        //
+        FLIP_V = "FLIP_V",
         //
         CUSTOM_VERTEX = "custom_vertex",
         CUSTOM_BEGIN_VERTEX = "custom_begin_vertex",

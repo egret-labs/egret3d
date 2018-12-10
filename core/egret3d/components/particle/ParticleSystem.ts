@@ -460,7 +460,7 @@ namespace egret3d.particle {
                 drawCall.subMeshIndex = subMeshIndex++;
                 drawCall.mesh = renderer.batchMesh;
                 drawCall.material = renderer.batchMaterial || DefaultMaterials.MISSING;
-                drawCallCollecter.drawCalls.push(drawCall);
+                drawCallCollecter.addDrawCall(drawCall);
             }
         }
 

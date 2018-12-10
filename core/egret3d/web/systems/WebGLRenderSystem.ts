@@ -495,45 +495,44 @@ namespace egret3d.web {
             const technique = material._glTFTechnique;
             const techniqueState = technique.states || null;
             const renderState = this._renderState;
-            // Get program.
-            const program = renderState.getProgram(material, technique, shaderContextDefine + material.shaderDefine);
-            // Use program.
-            const force = renderState.useProgram(program);
-            // Update states.
-            renderState.updateState(techniqueState);
-            //  TODO
-            // if (techniqueState && context.drawCall.renderer.transform._worldMatrixDeterminant < 0) {
-            //     if (techniqueState.functions!.frontFace[0] === CCW) {
-            //         webgl.frontFace(CW);
-            //     }
-            //     else {
-            //         webgl.frontFace(CCW);
-            //     }
-            // }
-            // Update static uniforms.
-            this._updateGlobalUniforms(program, context);
-            // Update uniforms.
-            this._updateUniforms(program, material, technique, force);
-            // Update attributes.
-            this._updateAttributes(program, drawCall.mesh, drawCall.subMeshIndex, technique, force);
-            // Draw.
-            const mesh = drawCall.mesh;
-            const glTFMesh = mesh.glTFMesh;
-            const primitive = glTFMesh.primitives[drawCall.subMeshIndex];
-            const vertexAccessor = mesh.getAccessor(glTFMesh.primitives[0].attributes.POSITION || 0);
-            const bufferOffset = mesh.getBufferOffset(vertexAccessor);
-            const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;
+            const program = renderState.getProgram(material, technique, shaderContextDefine); // Get program.
+            if (program) {
+                const force = renderState.useProgram(program); // Use program.
+                renderState.updateState(techniqueState);  // Update states.
+                //  TODO
+                // if (techniqueState && context.drawCall.renderer.transform._worldMatrixDeterminant < 0) {
+                //     if (techniqueState.functions!.frontFace[0] === CCW) {
+                //         webgl.frontFace(CW);
+                //     }
+                //     else {
+                //         webgl.frontFace(CCW);
+                //     }
+                // }
+                // Update static uniforms.
+                this._updateGlobalUniforms(program, context);
+                // Update uniforms.
+                this._updateUniforms(program, material, technique, force);
+                // Update attributes.
+                this._updateAttributes(program, drawCall.mesh, drawCall.subMeshIndex, technique, force);
+                // Draw.
+                const mesh = drawCall.mesh;
+                const glTFMesh = mesh.glTFMesh;
+                const primitive = glTFMesh.primitives[drawCall.subMeshIndex];
+                const vertexAccessor = mesh.getAccessor(glTFMesh.primitives[0].attributes.POSITION || 0);
+                const bufferOffset = mesh.getBufferOffset(vertexAccessor);
+                const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;
 
-            if (primitive.indices !== undefined) {
-                const indexAccessor = mesh.getAccessor(primitive.indices);
-                webgl.drawElements(drawMode, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
-            }
-            else {
-                webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
-            }
+                if (primitive.indices !== undefined) {
+                    const indexAccessor = mesh.getAccessor(primitive.indices);
+                    webgl.drawElements(drawMode, indexAccessor.count, webgl.UNSIGNED_SHORT, bufferOffset);
+                }
+                else {
+                    webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
+                }
 
-            if (DEBUG && drawCall.drawCount >= 0) {
-                drawCall.drawCount++;
+                if (DEBUG && drawCall.drawCount >= 0) {
+                    drawCall.drawCount++;
+                }
             }
         }
 
@@ -549,14 +548,27 @@ namespace egret3d.web {
             }
 
             const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
+            const drawCallCollecter = this._drawCallCollecter;
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
             const renderState = this._renderState;
             const editorScene = paper.Application.sceneManager.editorScene;
             const cameras = cameraAndLightCollecter.cameras;
             const lights = cameraAndLightCollecter.lights;
-
+            //
+            if (!renderState.oesStandardDerivatives) {
+                for (const drawCall of drawCallCollecter.addDrawCalls) {
+                    if (drawCall) {
+                        const material = drawCall.material;
+                        material
+                            .removeDefine(ShaderDefine.USE_NORMALMAP)
+                            .removeDefine(ShaderDefine.USE_BUMPMAP)
+                            .removeDefine(ShaderDefine.FLAT_SHADED)
+                            .removeDefine(ShaderDefine.ENVMAP_TYPE_CUBE_UV);
+                    }
+                }
+            }
+            //
             this._drawCallCollecter._update();
-
             // Render lights.
             if (lights.length > 0) {
                 for (const light of lights) {
@@ -567,7 +579,6 @@ namespace egret3d.web {
                     // this._renderLightShadow(light);
                 }
             }
-
             // Render cameras.
             if (cameras.length > 0) {
                 this._egret2DOrderCount = 0;

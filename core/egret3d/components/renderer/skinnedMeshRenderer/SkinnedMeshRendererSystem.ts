@@ -76,7 +76,7 @@ namespace egret3d {
                     drawCall.subMeshIndex = i;
                     drawCall.mesh = mesh;
                     drawCall.material = material;
-                    drawCallCollecter.drawCalls.push(drawCall);
+                    drawCallCollecter.addDrawCall(drawCall);
                 }
             }
 
@@ -94,7 +94,7 @@ namespace egret3d {
                     drawCall.subMeshIndex = j;
                     drawCall.mesh = mesh;
                     drawCall.material = material;
-                    drawCallCollecter.drawCalls.push(drawCall);
+                    drawCallCollecter.addDrawCall(drawCall);
                 }
             }
 
