@@ -21134,6 +21134,7 @@ var egret3d;
                     }
                     else {
                         comp.stop(false);
+                        isOver = true;
                     }
                 }
                 //
@@ -21156,7 +21157,7 @@ var egret3d;
                     }
                 }
                 totalEmitCount = Math.min(mainModule.maxParticles - aliveParticleCount, totalEmitCount);
-                if (totalEmitCount > 0) {
+                if (totalEmitCount > 0 && !isOver) {
                     this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount, lastEmittsionTime);
                     this._dirty = true;
                 }
