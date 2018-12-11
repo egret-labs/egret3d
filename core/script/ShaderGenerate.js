@@ -108,7 +108,7 @@ var ParseShaderCommand = /** @class */ (function () {
             var file = _c[_b];
             var fileName = path.basename(file);
             var dirName = path.dirname(file);
-            var shaderName = fileName.substring(0, fileName.indexOf("_"));
+            var shaderName = fileName.substring(0, fileName.lastIndexOf("_"));
             var type = fileName.indexOf("frag") >= 0 ? 35632 /* FRAGMENT_SHADER */ : 35633 /* VERTEX_SHADER */;
             var context = fs.readFileSync(file, "utf-8");
             shaderContext.shaderLibs[fileName] = { fileName: fileName, context: context, type: type };
@@ -200,9 +200,9 @@ var GenerateChunksCommand = /** @class */ (function () {
             var all = "namespace " + this._spaceName + "." + this._outputName + " {\n";
             for (var _i = 0, _a = shaderContext.chunkFiles; _i < _a.length; _i++) {
                 var file = _a[_i];
-                var name = path.basename(file).replace(/\.glsl$/, "");
-                console.log("处理:" + name);
-                all += "export const " + name + " = " + JSON.stringify(ShaderUtils.parseShader(file)) + ";\n";
+                var name_2 = path.basename(file).replace(/\.glsl$/, "");
+                console.log("处理:" + name_2);
+                all += "export const " + name_2 + " = " + JSON.stringify(ShaderUtils.parseShader(file)) + ";\n";
             }
             all += "}\n";
             fs.writeFileSync(this._outputPath + this._outputName + ".ts", all);
@@ -224,15 +224,15 @@ var GenerateLibsCommand = /** @class */ (function () {
             fs.mkdirSync(path.dirname(this._outputPath));
         }
         var all = "namespace " + this._spaceName + "." + this._outputName + " {\n";
-        for (var name_2 in shaderContext.shaderAssets) {
-            var asset = shaderContext.shaderAssets[name_2];
+        for (var name_3 in shaderContext.shaderAssets) {
+            var asset = shaderContext.shaderAssets[name_3];
             var shaders = asset.extensions.KHR_techniques_webgl.shaders;
             //直接拿context填充
             var tempUri0 = shaders[0].uri;
             var tempUri1 = shaders[1].uri;
             shaders[0].uri = shaderContext.shaderLibs[tempUri0].context;
             shaders[1].uri = shaderContext.shaderLibs[tempUri1].context;
-            all += "    export const " + name_2 + " = " + JSON.stringify(asset) + ";\n";
+            all += "    export const " + name_3 + " = " + JSON.stringify(asset) + ";\n";
             //还原
             shaders[0].uri = tempUri0;
             shaders[1].uri = tempUri1;
@@ -251,10 +251,10 @@ var GenerateGLTFCommand = /** @class */ (function () {
     }
     GenerateGLTFCommand.prototype.execute = function (shaderContext) {
         console.log("-----------------generateGLTF------------------");
-        for (var name_3 in shaderContext.shaderAssets) {
-            var asset = shaderContext.shaderAssets[name_3];
-            var dir = this._outputPath !== "" ? this._outputPath : shaderContext.shaders[name_3].dir + "\\";
-            var outPath = dir + name_3 + ".shader.json";
+        for (var name_4 in shaderContext.shaderAssets) {
+            var asset = shaderContext.shaderAssets[name_4];
+            var dir = this._outputPath !== "" ? this._outputPath : shaderContext.shaders[name_4].dir + "\\";
+            var outPath = dir + name_4 + ".shader.json";
             if (!fs.existsSync(path.dirname(outPath))) {
                 fs.mkdirSync(path.dirname(outPath));
             }

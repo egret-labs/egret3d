@@ -750,6 +750,8 @@ namespace egret3d.particle {
          */
         @paper.serializedField
         public arcMode: ShapeMultiModeValue = ShapeMultiModeValue.Random;
+        @paper.serializedField
+        public arc: number = 0.0;
         /**
          * 
          */
@@ -782,6 +784,7 @@ namespace egret3d.particle {
             this.radius = element.radius;
             this.angle = element.angle;
             this.length = element.length;
+            this.arc = element.arc || 0.0;
             this.arcSpeed.deserialize(element.arcSpeed);
             this.arcMode = element.arcMode;
             this.radiusSpread = element.radiusSpread;

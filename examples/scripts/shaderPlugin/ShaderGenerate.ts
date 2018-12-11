@@ -23,7 +23,7 @@ export class ColletCustomShaderCommand implements IShaderCommand {
         const tempMap: { [key: string]: { vert: string, frag: string } } = {};
         //Find Shaders
         for (const file of allShaders) {
-            let fileName = path.basename(file);
+            const fileName = path.basename(file);
             const shaderName = fileName.substring(0, fileName.lastIndexOf("_"));
             if (!tempMap[shaderName]) {
                 tempMap[shaderName] = { vert: "", frag: "" };
@@ -48,7 +48,7 @@ export class ColletCustomShaderCommand implements IShaderCommand {
         for (const file of allShaders) {
             if (libFiles.indexOf(file) < 0 && chunkFiles.indexOf(file) < 0) {
                 chunkFiles.push(file);
-                let fileName = path.basename(file);
+                const fileName = path.basename(file);
                 const shaderName = fileName.substring(0, fileName.lastIndexOf("_"));
                 console.log("确认为Shader Chunks:" + shaderName);
             }
@@ -113,7 +113,7 @@ export class ParseShaderCommand implements IShaderCommand {
         for (const file of shaderContext.libFiles) {
             const fileName = path.basename(file);
             const dirName = path.dirname(file);
-            const shaderName = fileName.substring(0, fileName.indexOf("_"));
+            const shaderName = fileName.substring(0, fileName.lastIndexOf("_"));
             const type = fileName.indexOf("frag") >= 0 ? gltf.ShaderStage.FRAGMENT_SHADER : gltf.ShaderStage.VERTEX_SHADER;
             const context = fs.readFileSync(file, "utf-8");
 
@@ -129,8 +129,8 @@ export class ParseShaderCommand implements IShaderCommand {
                 shaderContext.shaders[shaderName].frag = fileName;
             }
         }
-        let attrReg = new RegExp("attribute ([\\w])+ ([\\w])+;", "g");
-        let uniformReg = new RegExp("uniform ([\\w])+ ([\\w\\[\\]\\* ])+;", "g");
+        const attrReg = new RegExp("attribute ([\\w])+ ([\\w])+;", "g");
+        const uniformReg = new RegExp("uniform ([\\w])+ ([\\w\\[\\]\\* ])+;", "g");
 
         for (const name in shaderContext.shaders) {
             console.log("处理:" + name);
@@ -162,7 +162,7 @@ export class ParseShaderCommand implements IShaderCommand {
             //
             const technique: gltf.Technique = { name: name, attributes: {}, uniforms: {}, states: { enable: [], functions: {} } } as any;
             //寻找所有attribute
-            let attrMatchResult = all.match(attrReg);
+            const attrMatchResult = all.match(attrReg);
             if (attrMatchResult) {
                 for (const attrStr of attrMatchResult) {
                     const attName = ShaderUtils.parseAttributeName(attrStr);
@@ -177,7 +177,7 @@ export class ParseShaderCommand implements IShaderCommand {
                 }
             }
             //寻找所有unifrom
-            let uniformMatchResult = all.match(uniformReg);
+            const uniformMatchResult = all.match(uniformReg);
             if (uniformMatchResult) {
                 for (const uniformStr of uniformMatchResult) {
                     const uniformName = ShaderUtils.parseUniformName(uniformStr);
@@ -209,10 +209,10 @@ export class GenerateChunksCommand implements IShaderCommand {
     public execute(shaderContext: ShaderGenerateContext) {
         console.log("-----------------generateChunks------------------");
         if (shaderContext.chunkFiles) {
-            var all = "namespace " + this._spaceName + "." + this._outputName + " {\n";
+            let all = "namespace " + this._spaceName + "." + this._outputName + " {\n";
 
             for (const file of shaderContext.chunkFiles) {
-                var name = path.basename(file).replace(/\.glsl$/, "");
+                const name = path.basename(file).replace(/\.glsl$/, "");
                 console.log("处理:" + name);
 
                 all += "export const " + name + " = " + JSON.stringify(ShaderUtils.parseShader(file)) + ";\n";
@@ -292,7 +292,7 @@ export class GenerateGLTFCommand implements IShaderCommand {
                     const newTechnique = asset.extensions.KHR_techniques_webgl!.techniques[i];
 
                     //Uniform Value和State覆盖
-                    for(let uniformName in oldTechnique.uniforms){
+                    for(const uniformName in oldTechnique.uniforms){
                         if(newTechnique.uniforms[uniformName]){
                             newTechnique.uniforms[uniformName].value = oldTechnique.uniforms[uniformName].value;
                         }
@@ -331,7 +331,7 @@ export class ShaderGenerateContext {
         this.shaders = {};
         this.shaderAssets = {};
 
-        let comanders: IShaderCommand[] = [];
+        const comanders: IShaderCommand[] = [];
         if (isEngine) {
             comanders.push(new ColletEngineShaderCommand(root + "chunks/", root + "shaders/"));
             comanders.push(new ParseShaderCommand());

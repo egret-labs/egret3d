@@ -19099,12 +19099,9 @@ var egret3d;
          * @internal
          */
         function generatePositionAndDirection(position, direction, shape) {
-            if (!shape.enable) {
-                position.x = position.y = position.z = 0;
-                direction.x = direction.y = 0;
-                direction.z = 1.0;
-                return;
-            }
+            position.x = position.y = position.z = 0;
+            direction.x = direction.y = 0;
+            direction.z = 1.0;
             //
             switch (shape.shapeType) {
                 case 4 /* Cone */:
@@ -19135,13 +19132,8 @@ var egret3d;
                         _generateCircleParticlePosition(shape, position, direction);
                     }
                     break;
-                default:
-                    {
-                        position.x = position.y = position.z = 0;
-                        direction.x = direction.y = 0;
-                        direction.z = 1;
-                    }
             }
+            direction.normalize();
         }
         particle.generatePositionAndDirection = generatePositionAndDirection;
         function _randomPostionCircle(out) {
@@ -19156,6 +19148,7 @@ var egret3d;
             out.y = out.y * range;
         }
         function _randomPositionArcCircle(arc, out) {
+            arc *= Math.PI / 180.0;
             var angle = Math.random() * arc;
             out.x = Math.cos(angle);
             out.y = Math.sin(angle);
@@ -19182,7 +19175,7 @@ var egret3d;
             out.z = out.z * range;
         }
         function _generateConeParticlePosition(shape, position, direction) {
-            var temp = new egret3d.Vector3();
+            var temp = egret3d.Vector3.create().release();
             if (shape.shapeType === 4 /* Cone */) {
                 _randomPositionInsideCircle(temp);
             }
@@ -19208,7 +19201,7 @@ var egret3d;
             }
         }
         function _generateConeVolumeParticlePosition(shape, position, direction) {
-            var temp = new egret3d.Vector3();
+            var temp = egret3d.Vector3.create().release();
             if (shape.shapeType === 8 /* ConeVolume */) {
                 _randomPositionInsideCircle(temp);
             }
@@ -19252,7 +19245,7 @@ var egret3d;
             }
         }
         function _generateSphereParticlePosition(shape, position, direction) {
-            var temp = new egret3d.Vector3();
+            var temp = egret3d.Vector3.create().release();
             if (!shape.spherizeDirection) {
                 if (shape.shapeType === 0 /* Sphere */) {
                     _randomPositionInsideSphere(position);
@@ -19274,13 +19267,8 @@ var egret3d;
             }
         }
         function _generateCircleParticlePosition(shape, position, direction) {
-            var temp = new egret3d.Vector3();
-            if (shape.shapeType === 10 /* Circle */) {
-                _randomPositionInsideArcCircle(shape.radiusSpread, temp);
-            }
-            else {
-                _randomPositionArcCircle(shape.radiusSpread, temp);
-            }
+            var temp = egret3d.Vector3.create().release();
+            _randomPositionArcCircle(shape.arc, temp);
             position.x = -temp.x * shape.radius;
             position.y = temp.y * shape.radius;
             position.z = 0;
@@ -20138,6 +20126,7 @@ var egret3d;
                  *
                  */
                 _this.arcMode = 0 /* Random */;
+                _this.arc = 0.0;
                 /**
                  *
                  */
@@ -20166,6 +20155,7 @@ var egret3d;
                 this.radius = element.radius;
                 this.angle = element.angle;
                 this.length = element.length;
+                this.arc = element.arc || 0.0;
                 this.arcSpeed.deserialize(element.arcSpeed);
                 this.arcMode = element.arcMode;
                 this.radiusSpread = element.radiusSpread;
@@ -20205,6 +20195,9 @@ var egret3d;
             __decorate([
                 paper.serializedField
             ], ShapeModule.prototype, "arcMode", void 0);
+            __decorate([
+                paper.serializedField
+            ], ShapeModule.prototype, "arc", void 0);
             __decorate([
                 paper.serializedField
             ], ShapeModule.prototype, "radiusSpread", void 0);
@@ -21111,8 +21104,8 @@ var egret3d;
                     }
                 }
                 var transform = comp.gameObject.transform;
-                this._worldPostionCache = transform.position;
-                this._worldRotationCache = transform.rotation;
+                this._worldPostionCache = transform.position.clone();
+                this._worldRotationCache = transform.rotation.clone();
                 if (comp._isPlaying && this._time >= mainModule.startDelay.constant && comp.emission.enable) {
                     this._updateEmission(elapsedTime);
                 }
@@ -21141,6 +21134,7 @@ var egret3d;
                     }
                     else {
                         comp.stop(false);
+                        isOver = true;
                     }
                 }
                 //
@@ -21163,7 +21157,7 @@ var egret3d;
                     }
                 }
                 totalEmitCount = Math.min(mainModule.maxParticles - aliveParticleCount, totalEmitCount);
-                if (totalEmitCount > 0) {
+                if (totalEmitCount > 0 && !isOver) {
                     this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount, lastEmittsionTime);
                     this._dirty = true;
                 }
@@ -22836,15 +22830,17 @@ var egret3d;
     (function (ShaderDefine) {
         ShaderDefine["USE_COLOR"] = "USE_COLOR";
         ShaderDefine["USE_MAP"] = "USE_MAP";
-        ShaderDefine["USE_SKINNING"] = "USE_SKINNING";
         ShaderDefine["USE_NORMALMAP"] = "USE_NORMALMAP";
+        ShaderDefine["USE_BUMPMAP"] = "USE_BUMPMAP";
         ShaderDefine["USE_LIGHTMAP"] = "USE_LIGHTMAP";
         ShaderDefine["USE_SHADOWMAP"] = "USE_SHADOWMAP";
+        ShaderDefine["USE_SKINNING"] = "USE_SKINNING";
         ShaderDefine["USE_SIZEATTENUATION"] = "USE_SIZEATTENUATION";
         //
-        ShaderDefine["MAX_BONES"] = "MAX_BONES";
+        ShaderDefine["FLAT_SHADED"] = "FLAT_SHADED";
+        ShaderDefine["ENVMAP_TYPE_CUBE_UV"] = "ENVMAP_TYPE_CUBE_UV";
         //
-        ShaderDefine["FLIP_V"] = "FLIP_V";
+        ShaderDefine["MAX_BONES"] = "MAX_BONES";
         //
         ShaderDefine["NUM_POINT_LIGHTS"] = "NUM_POINT_LIGHTS";
         ShaderDefine["NUM_SPOT_LIGHTS"] = "NUM_SPOT_LIGHTS";
@@ -22855,6 +22851,8 @@ var egret3d;
         //
         ShaderDefine["USE_FOG"] = "USE_FOG";
         ShaderDefine["FOG_EXP2"] = "FOG_EXP2";
+        //
+        ShaderDefine["FLIP_V"] = "FLIP_V";
         //
         ShaderDefine["CUSTOM_VERTEX"] = "custom_vertex";
         ShaderDefine["CUSTOM_BEGIN_VERTEX"] = "custom_begin_vertex";
@@ -25768,48 +25766,50 @@ var egret3d;
         /**
          * @internal
          */
-        var WebGLUtility = (function () {
-            function WebGLUtility() {
+        function isPowerOfTwo(width, height) {
+            return egret3d.math.isPowerOfTwo(width) && egret3d.math.isPowerOfTwo(height);
+        }
+        web.isPowerOfTwo = isPowerOfTwo;
+        /**
+         * @internal
+         */
+        function filterFallback(f) {
+            if (f === 9728 /* NEAREST */ || f === 9984 /* NEAREST_MIPMAP_NEAREST */ || f === 9986 /* NEAREST_MIPMAP_LINEAR */) {
+                return 9728 /* NEAREST */;
             }
-            WebGLUtility.isPowerOfTwo = function (width, height) {
-                return egret3d.math.isPowerOfTwo(width) && egret3d.math.isPowerOfTwo(height);
-            };
-            WebGLUtility.filterFallback = function (f) {
-                if (f === 9728 /* NEAREST */ || f === 9984 /* NEAREST_MIPMAP_NEAREST */ || f === 9986 /* NEAREST_MIPMAP_LINEAR */) {
-                    return 9728 /* NEAREST */;
+            return 9729 /* LINEAR */;
+        }
+        web.filterFallback = filterFallback;
+        /**
+         * @internal
+         */
+        function setTexturexParameters(isPowerOfTwo, sampler) {
+            var webgl = web.WebGLRenderState.webgl;
+            var magFilter = sampler.magFilter;
+            var minFilter = sampler.minFilter;
+            var wrapS = sampler.wrapS;
+            var wrapT = sampler.wrapT;
+            if (isPowerOfTwo) {
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, magFilter);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, minFilter);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, wrapS);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, wrapT);
+            }
+            else {
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
+                if (wrapS !== 33071 /* CLAMP_TO_EDGE */ || wrapT !== 33071 /* CLAMP_TO_EDGE */) {
+                    console.warn('Texture is not power of two. Texture.wrapS and Texture.wrapT should be set to gltf.TextureWrap.CLAMP_TO_EDGE.');
                 }
-                return 9729 /* LINEAR */;
-            };
-            WebGLUtility.setTexturexParameters = function (isPowerOfTwo, sampler) {
-                var webgl = web.WebGLRenderState.webgl;
-                var magFilter = sampler.magFilter;
-                var minFilter = sampler.minFilter;
-                var wrapS = sampler.wrapS;
-                var wrapT = sampler.wrapT;
-                if (isPowerOfTwo) {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, magFilter);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, minFilter);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, wrapS);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, wrapT);
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, filterFallback(magFilter));
+                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, filterFallback(minFilter));
+                if (minFilter !== 9728 /* NEAREST */ && minFilter !== 9729 /* LINEAR */) {
+                    console.warn('Texture is not power of two. Texture.minFilter should be set to gltf.TextureFilter.NEAREST or gltf.TextureFilter.LINEAR.');
                 }
-                else {
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
-                    if (wrapS !== 33071 /* CLAMP_TO_EDGE */ || wrapT !== 33071 /* CLAMP_TO_EDGE */) {
-                        console.warn('Texture is not power of two. Texture.wrapS and Texture.wrapT should be set to gltf.TextureWrap.CLAMP_TO_EDGE.');
-                    }
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, WebGLUtility.filterFallback(magFilter));
-                    webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, WebGLUtility.filterFallback(minFilter));
-                    if (minFilter !== 9728 /* NEAREST */ && minFilter !== 9729 /* LINEAR */) {
-                        console.warn('Texture is not power of two. Texture.minFilter should be set to gltf.TextureFilter.NEAREST or gltf.TextureFilter.LINEAR.');
-                    }
-                }
-                //TODO EXT_texture_filter_anisotropic
-            };
-            return WebGLUtility;
-        }());
-        web.WebGLUtility = WebGLUtility;
-        __reflect(WebGLUtility.prototype, "egret3d.web.WebGLUtility");
+            }
+            //TODO EXT_texture_filter_anisotropic
+        }
+        web.setTexturexParameters = setTexturexParameters;
     })(web = egret3d.web || (egret3d.web = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -25969,8 +25969,8 @@ var egret3d;
                 webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, paperExtension.premultiplyAlpha);
                 webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, paperExtension.flipY);
                 webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, paperExtension.unpackAlignment);
-                var isPowerOfTwo = web.WebGLUtility.isPowerOfTwo(paperExtension.width, paperExtension.height);
-                web.WebGLUtility.setTexturexParameters(isPowerOfTwo, sampler);
+                var isPowerTwo = web.isPowerOfTwo(paperExtension.width, paperExtension.height);
+                web.setTexturexParameters(isPowerTwo, sampler);
                 if (ArrayBuffer.isView(image.uri)) {
                     webgl.texImage2D(webgl.TEXTURE_2D, 0, paperExtension.format, paperExtension.width, paperExtension.height, 0, paperExtension.format, paperExtension.type, image.uri);
                 }
@@ -25978,7 +25978,7 @@ var egret3d;
                     webgl.texImage2D(webgl.TEXTURE_2D, 0, paperExtension.format, paperExtension.format, webgl.UNSIGNED_BYTE, image.uri);
                 }
                 var minFilter = sampler.minFilter;
-                var canGenerateMipmap = isPowerOfTwo && minFilter !== 9728 /* NEAREST */ && minFilter !== 9729 /* LINEAR */;
+                var canGenerateMipmap = isPowerTwo && minFilter !== 9728 /* NEAREST */ && minFilter !== 9729 /* LINEAR */;
                 if (canGenerateMipmap) {
                     webgl.generateMipmap(webgl.TEXTURE_2D);
                 }
@@ -26334,11 +26334,11 @@ var egret3d;
                     this.webglTexture = webgl.createTexture();
                 }
                 webgl.bindTexture(webgl.TEXTURE_2D, this.webglTexture);
-                var isPowerOfTwo = web.WebGLUtility.isPowerOfTwo(width, height);
-                web.WebGLUtility.setTexturexParameters(isPowerOfTwo, sampler);
+                var isPowerTwo = web.isPowerOfTwo(width, height);
+                web.setTexturexParameters(isPowerTwo, sampler);
                 this._setupFrameBufferTexture(this.frameBuffer, this.webglTexture, webgl.TEXTURE_2D, 5121 /* UNSIGNED_BYTE */, width, height, format, webgl.COLOR_ATTACHMENT0);
                 var minFilter = sampler.minFilter;
-                var canGenerateMipmap = isPowerOfTwo && minFilter !== 9728 /* NEAREST */ && minFilter !== 9729 /* LINEAR */;
+                var canGenerateMipmap = isPowerTwo && minFilter !== 9728 /* NEAREST */ && minFilter !== 9729 /* LINEAR */;
                 if (canGenerateMipmap) {
                     webgl.generateMipmap(webgl.TEXTURE_2D);
                 }
@@ -27165,8 +27165,13 @@ var egret3d;
                 if (!renderState.oesStandardDerivatives) {
                     for (var _i = 0, _a = drawCallCollecter.addDrawCalls; _i < _a.length; _i++) {
                         var drawCall = _a[_i];
-                        if (drawCall && drawCall.material.defines.indexOf("USE_NORMALMAP" /* USE_NORMALMAP */) >= 0) {
-                            drawCall.material.removeDefine("USE_NORMALMAP" /* USE_NORMALMAP */);
+                        if (drawCall) {
+                            var material = drawCall.material;
+                            material
+                                .removeDefine("USE_NORMALMAP" /* USE_NORMALMAP */)
+                                .removeDefine("USE_BUMPMAP" /* USE_BUMPMAP */)
+                                .removeDefine("FLAT_SHADED" /* FLAT_SHADED */)
+                                .removeDefine("ENVMAP_TYPE_CUBE_UV" /* ENVMAP_TYPE_CUBE_UV */);
                         }
                     }
                 }

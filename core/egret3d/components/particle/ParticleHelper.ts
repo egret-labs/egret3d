@@ -163,12 +163,9 @@ namespace egret3d.particle {
      * @internal
      */
     export function generatePositionAndDirection(position: Vector3, direction: Vector3, shape: ShapeModule) {
-        if (!shape.enable) {
-            position.x = position.y = position.z = 0;
-            direction.x = direction.y = 0;
-            direction.z = 1.0;
-            return;
-        }
+        position.x = position.y = position.z = 0;
+        direction.x = direction.y = 0;
+        direction.z = 1.0;
         //
         switch (shape.shapeType) {
             case ShapeType.Cone:
@@ -199,13 +196,9 @@ namespace egret3d.particle {
                     _generateCircleParticlePosition(shape, position, direction);
                 }
                 break;
-            default:
-                {
-                    position.x = position.y = position.z = 0;
-                    direction.x = direction.y = 0;
-                    direction.z = 1;
-                }
         }
+
+        direction.normalize();
     }
 
     function _randomPostionCircle(out: Vector3) {
@@ -223,6 +216,7 @@ namespace egret3d.particle {
     }
 
     function _randomPositionArcCircle(arc: number, out: Vector3) {
+        arc *= Math.PI / 180.0;
         const angle = Math.random() * arc;
         out.x = Math.cos(angle);
         out.y = Math.sin(angle);
@@ -255,7 +249,7 @@ namespace egret3d.particle {
     }
 
     function _generateConeParticlePosition(shape: ShapeModule, position: Vector3, direction: Vector3) {
-        const temp = new Vector3();
+        const temp = Vector3.create().release();
         if (shape.shapeType === ShapeType.Cone) {
             _randomPositionInsideCircle(temp);
         } else {
@@ -282,7 +276,7 @@ namespace egret3d.particle {
     }
 
     function _generateConeVolumeParticlePosition(shape: ShapeModule, position: Vector3, direction: Vector3) {
-        const temp = new Vector3();
+        const temp = Vector3.create().release();
         if (shape.shapeType === ShapeType.ConeVolume) {
             _randomPositionInsideCircle(temp);
         } else {
@@ -333,7 +327,7 @@ namespace egret3d.particle {
     }
 
     function _generateSphereParticlePosition(shape: ShapeModule, position: Vector3, direction: Vector3) {
-        const temp = new Vector3();
+        const temp = Vector3.create().release();
         if (!shape.spherizeDirection) {
             if (shape.shapeType === ShapeType.Sphere) {
                 _randomPositionInsideSphere(position);
@@ -356,12 +350,8 @@ namespace egret3d.particle {
     }
 
     function _generateCircleParticlePosition(shape: ShapeModule, position: Vector3, direction: Vector3) {
-        const temp = new Vector3();
-        if (shape.shapeType === ShapeType.Circle) {
-            _randomPositionInsideArcCircle(shape.radiusSpread, temp);
-        } else {
-            _randomPositionArcCircle(shape.radiusSpread, temp);
-        }
+        const temp = Vector3.create().release();
+        _randomPositionArcCircle(shape.arc, temp);        
 
         position.x = -temp.x * shape.radius;
         position.y = temp.y * shape.radius;
