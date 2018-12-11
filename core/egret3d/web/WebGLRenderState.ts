@@ -265,7 +265,8 @@ namespace egret3d.web {
                 return;
             }
 
-            this.version = parseFloat(/^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION))![1]);
+            const webglVersions = /^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION));
+            this.version = webglVersions ? parseFloat(webglVersions[1]) : 1.0;
             //
             this.textureFloat = !!_getExtension(webgl, "OES_texture_float");
             this.anisotropyExt = _getExtension(webgl, "EXT_texture_filter_anisotropic");

@@ -1,6 +1,7 @@
 namespace paper {
     /**
-     * 资源基类。
+     * 基础资源。
+     * - 全部资源的基类。
      */
     export abstract class Asset extends BaseObject {
         /**
@@ -12,37 +13,53 @@ namespace paper {
          */
         public static readonly _assets: { [key: string]: Asset } = {};
         /**
-         * @private
+         * 将一个资源注册为全局可访问资源。
+         * - 引用计数加 1 。
          */
-        public static register(asset: Asset) {
-            if (!this._assets[asset.name]) {
-                this._assets[asset.name] = asset;
-            }
-            else if (this._assets[asset.name] !== asset) {
-                console.warn("Replace existing asset.", asset.name);
-                this._assets[asset.name] = asset;
-            }
-        }
-        /**
-         * 查找已加载的指定资源。
-         */
-        public static find<T extends Asset>(name: string) {
-            const result = this._assets[name];
-            if (!result) {
-                return RES.getRes(name) as T;
+        public static register(asset: Asset): boolean {
+            const assetName = asset.name;
+
+            if (!assetName) {
+                console.warn("Unable to register an unnamed asset.");
+                return false;
             }
 
-            return result as T;
+            const assets = this._assets;
+
+            if (assetName in assets) {
+                const existingAsset = assets[assetName];
+                if (existingAsset === asset) {
+                    return false;
+                }
+
+                console.warn("Replaces an existing asset.", assetName);
+                existingAsset.release();
+            }
+
+            assets[assetName] = asset;
+            asset.retain();
+
+            return true;
+        }
+        /**
+         * 通过资源名获取一个已注册的指定资源。
+         */
+        public static find<T extends Asset>(name: string): T | null {
+            const assets = this._assets;
+
+            if (name in assets) {
+                return assets[name] as T;
+            }
+
+            return RES.getRes(name);
         }
         /**
          * 资源名称。
          * @readonly
          */
         public name: string = "";
-        /**
-         * @internal
-         */
-        public _isBuiltin: boolean = false;
+
+        private _referenceCount: int = -1;
         /**
          * TODO
          * remove
@@ -54,27 +71,72 @@ namespace paper {
             this.name = name;
         }
         /**
-         * @internal
-         */
-        public abstract caclByteLength(): number;
-        /**
          * 该资源内部初始化。
+         * - 重写此方法时，必须调用 `super.initialize();`。
          */
         public initialize(): void {
+            this._referenceCount = 0;
         }
         /**
-         * 释放资源。
+         * 该资源的引用计数加一。
          */
-        public dispose(disposeChildren?: boolean): boolean {
-            if (this._isBuiltin) {
-                console.warn("Cannot dispose builtin asset.", this.name);
-                return false;
+        public retain(): this {
+            if (this._referenceCount === 0) {
+
             }
 
-            delete Asset._assets[this.name];
-            this.name = "";
+            this._referenceCount++;
+
+            return this;
+        }
+        /**
+         * 该资源的引用计数减一。
+         */
+        public release(): this {
+            if (this._referenceCount > 0) {
+                this._referenceCount--;
+
+                if (this._referenceCount === 0) {
+
+                }
+            }
+
+            return this;
+        }
+        /**
+         * 释放该资源。
+         * - 重写此方法时，必须调用 `super.dispose();`。
+         * @returns 释放是否成功。（已经释放过的资源，无法再次释放）
+         */
+        public dispose(): boolean {
+            if (this._referenceCount < 0) {
+                return false;
+            }
+            //
+            const assets = Asset._assets;
+            if (this.name in assets) {
+                delete assets[this.name];
+            }
+            //
+            this._referenceCount = -1;
 
             return true;
         }
+        /**
+         * 
+         */
+        public get isDisposed(): boolean {
+            return this._referenceCount === -1;
+        }
+        /**
+         * 获取该资源占用的内存字节长度。
+         * TODO
+         */
+        public abstract get memoryByteLength(): uint;
+        /**
+         * 获取该资源占用的显存字节长度。
+         * TODO
+         */
+        public abstract get videoMemoryByteLength(): uint;
     }
 }

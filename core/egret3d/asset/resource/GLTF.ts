@@ -45,9 +45,9 @@ namespace egret3d {
                 flipY?: 0 | 1;
                 premultiplyAlpha?: 0 | 1;
                 format?: gltf.TextureFormat;
-                width?: number;
-                height?: number;
-                anisotropy?: number;
+                width?: uint;
+                height?: uint;
+                anisotropy?: uint;
                 type?: gltf.TextureDataType;
                 unpackAlignment?: gltf.TextureAlignment;
                 //
