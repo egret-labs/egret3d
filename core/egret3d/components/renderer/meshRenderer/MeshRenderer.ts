@@ -29,7 +29,6 @@ namespace egret3d {
 
         /**
          * 实时获取网格资源的指定三角形顶点位置。
-         * - 采用 CPU 蒙皮。
          */
         public getTriangle(triangleIndex: uint, out?: Triangle): Triangle {
             if (!out) {
@@ -47,30 +46,10 @@ namespace egret3d {
             }
 
             const localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
-            const indices = mesh.getIndices();
-            const vertices = mesh.getVertices()!;
-
-            for (let i = 0; i < 3; ++i) {
-                const index = indices ? indices[triangleIndex * 3 + i] : triangleIndex * 9 + i;
-                const vertexIndex = index * 3;
-
-                switch (i) {
-                    case 0:
-                        out.a.fromArray(vertices, vertexIndex);
-                        out.a.applyMatrix(localToWorldMatrix);
-                        break;
-
-                    case 1:
-                        out.b.fromArray(vertices, vertexIndex);
-                        out.b.applyMatrix(localToWorldMatrix);
-                        break;
-
-                    case 2:
-                        out.c.fromArray(vertices, vertexIndex);
-                        out.c.applyMatrix(localToWorldMatrix);
-                        break;
-                }
-            }
+            mesh.getTriangle(triangleIndex, out);
+            out.a.applyMatrix(localToWorldMatrix);
+            out.b.applyMatrix(localToWorldMatrix);
+            out.c.applyMatrix(localToWorldMatrix);
 
             return out;
         }

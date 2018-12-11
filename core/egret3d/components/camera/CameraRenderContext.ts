@@ -516,8 +516,11 @@ namespace egret3d {
                 }
             }
 
-            if (renderer && renderer.constructor === SkinnedMeshRenderer && !(renderer as SkinnedMeshRenderer).forceCPUSkin) {
-                shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(renderState.maxBoneCount, (renderer as SkinnedMeshRenderer).bones.length)} \n`;
+            if (renderer && renderer.constructor === SkinnedMeshRenderer) {
+                const skinnedMeshRenderer = (renderer as SkinnedMeshRenderer).source || renderer as SkinnedMeshRenderer;
+                if (!skinnedMeshRenderer.forceCPUSkin) {
+                    shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(renderState.maxBoneCount, skinnedMeshRenderer.bones.length)} \n`;
+                }
             }
 
             return shaderContextDefine;

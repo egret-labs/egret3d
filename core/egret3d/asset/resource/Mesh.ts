@@ -1,9 +1,4 @@
 namespace egret3d {
-    const _helpVector3A = Vector3.create();
-    const _helpVector3B = Vector3.create();
-    const _helpVector3C = Vector3.create();
-    // const _helpQuaternion = Quaternion.create();
-    const _helpMatrix = Matrix4.create();
     const _helpTriangleA = Triangle.create();
     const _helpTriangleB = Triangle.create();
     const _helpRaycastInfo = RaycastInfo.create();
@@ -130,16 +125,6 @@ namespace egret3d {
         protected readonly _customAttributeTypes: { [key: string]: gltf.AccessorType } = {};
         protected _glTFMesh: gltf.Mesh | null = null;
         protected _inverseBindMatrices: Float32Array | null = null;
-        /**
-         * Backuped raw vertices when CPU skinned.
-         * @internal
-         */
-        public _rawVertices: Float32Array | null = null;
-        /**
-         * CPU skinned vertices.
-         * @internal
-         */
-        public _skinnedVertices: Float32Array | null = null;
         protected _boneIndices: { [key: string]: uint } | null = null;
         /**
          * 请使用 `egret3d.Mesh.create()` 创建实例。
@@ -223,11 +208,9 @@ namespace egret3d {
 
             this._drawMode = gltf.DrawMode.Static;
             this._attributeNames.length = 0;
-            // this._customAttributeTypes
+            // this._customAttributeTypes TODO
             this._glTFMesh = null;
             this._inverseBindMatrices = null;
-            this._rawVertices = null;
-            this._skinnedVertices = null;
             this._boneIndices = null;
 
             return true;
@@ -265,50 +248,37 @@ namespace egret3d {
         /**
          * 
          */
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo, boneMatrices?: Float32Array | null) {
+        public getTriangle(triangleIndex: uint, out?: Triangle, vertices?: Float32Array | null): Triangle {
+            if (!out) {
+                out = Triangle.create();
+            }
+
+            const indices = this.getIndices();
+            vertices = vertices || this.getVertices()!;
+
+            if (indices) {
+                const vertexOffset = triangleIndex * 3;
+                out.fromArray(vertices, indices[vertexOffset + 0] * 3, indices[vertexOffset + 1] * 3, indices[vertexOffset + 2] * 3);
+            }
+            else {
+                out.fromArray(vertices, triangleIndex * 9);
+            }
+
+            return out;
+        }
+        /**
+         * 
+         */
+        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo, vertices?: Float32Array | null) {
             let subMeshIndex = 0;
-            const p0 = _helpVector3A;
-            const p1 = _helpVector3B;
-            const p2 = _helpVector3C;
             const helpTriangleA = _helpTriangleA;
             const helpTriangleB = _helpTriangleB;
             const helpRaycastInfo = _helpRaycastInfo;
-            const vertices = this.getVertices()!;
-            const joints = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.JOINTS_0) as Float32Array : null;
-            const weights = boneMatrices ? this.getAttributes(gltf.MeshAttributeType.WEIGHTS_0) as Float32Array : null;
+            vertices = vertices || this.getVertices()!;
             let hit = false;
 
             for (const primitive of this._glTFMesh!.primitives) {
                 const indices = primitive.indices !== undefined ? this.getIndices(subMeshIndex)! : null;
-                let castVertices = vertices;
-
-                if (boneMatrices) { // Skinned mesh.
-                    if (!this._rawVertices) {
-                        if (!this._skinnedVertices) {
-                            this._skinnedVertices = new Float32Array(vertices.length);
-                        }
-
-                        castVertices = this._skinnedVertices;
-
-                        for (const index of <any>indices! as uint[]) {
-                            const vertexIndex = index * 3;
-                            const jointIndex = index * 4;
-                            p0.fromArray(vertices, vertexIndex);
-                            p1.clear();
-
-                            for (let i = 0; i < 4; ++i) {
-                                const weight = weights![jointIndex + i];
-                                if (weight <= 0.1) {
-                                    continue;
-                                }
-
-                                p1.add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + i] * 16), p0).multiplyScalar(weight));
-                            }
-
-                            p1.toArray(castVertices, vertexIndex);
-                        }
-                    }
-                }
 
                 switch (primitive.mode) { // TODO
                     case gltf.MeshPrimitiveMode.Points:
@@ -334,7 +304,7 @@ namespace egret3d {
                         if (indices) {
                             for (let i = 0, l = indices.length; i < l; i += 3) { //
                                 helpTriangleA.fromArray(
-                                    castVertices,
+                                    vertices,
                                     indices[i] * 3, indices[i + 1] * 3, indices[i + 2] * 3
                                 );
 
@@ -364,8 +334,8 @@ namespace egret3d {
                             }
                         }
                         else {
-                            for (let i = 0, l = castVertices.length; i < l; i += 9) { //
-                                helpTriangleA.fromArray(castVertices, i);
+                            for (let i = 0, l = vertices.length; i < l; i += 9) { //
+                                helpTriangleA.fromArray(vertices, i);
 
                                 if (raycastInfo) {
                                     helpRaycastInfo.backfaceCulling = raycastInfo.backfaceCulling;

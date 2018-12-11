@@ -70,10 +70,6 @@ namespace egret3d {
 
         public initialize() {
             super.initialize();
-            // TODO
-            (ShaderChunk as any)[ShaderDefine.CUSTOM_VERTEX] = "";
-            (ShaderChunk as any)[ShaderDefine.CUSTOM_BEGIN_VERTEX] = "";
-            (ShaderChunk as any)[ShaderDefine.CUSTOM_END_VERTEX] = "";
             //
             const helpMaterial = Material.create(Shader.create(egret3d.ShaderLib.meshbasic as any, ""));
             //

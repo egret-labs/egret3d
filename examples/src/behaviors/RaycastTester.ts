@@ -1,9 +1,8 @@
 namespace behaviors {
     export abstract class BaseRaycast extends paper.Behaviour {
-        protected static readonly _ray: egret3d.Ray = egret3d.Ray.create();
-
-        public readonly raycastInfo: egret3d.RaycastInfo = egret3d.RaycastInfo.create();
+        public readonly ray: egret3d.Ray = egret3d.Ray.create();
         public readonly normal: egret3d.Vector3 = egret3d.Vector3.create();
+        public readonly raycastInfo: egret3d.RaycastInfo = egret3d.RaycastInfo.create();
 
         protected _lineMesh: egret3d.Mesh | null = null;
         protected _normalMesh: egret3d.Mesh | null = null;
@@ -34,13 +33,11 @@ namespace behaviors {
             this._normal.activeSelf = false;
         }
 
-        protected _updateAngGetRay() {
+        protected _updateRay() {
             const transform = this.gameObject.transform;
-            const ray = BaseRaycast._ray;
+            const ray = this.ray;
             ray.origin.copy(transform.position);
             transform.getForward(ray.direction);
-
-            return ray;
         }
     }
 
@@ -57,9 +54,9 @@ namespace behaviors {
             raycastInfo.normal = this.normal;
 
             if (this.target && this.target.renderer) {
-                const ray = this._updateAngGetRay();
+                this._updateRay();
 
-                if (this.target.renderer.raycast(ray, raycastInfo, this.raycastMesh)) {
+                if (this.target.renderer.raycast(this.ray, raycastInfo, this.raycastMesh)) {
 
                     lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
                     this._normal.activeSelf = true;
@@ -86,9 +83,9 @@ namespace behaviors {
             raycastInfo.normal = this.normal;
 
             if (this.target) {
-                const ray = this._updateAngGetRay();
+                this._updateRay();
 
-                if (egret3d.raycast(ray, this.target, false, raycastInfo)) {
+                if (egret3d.raycast(this.ray, this.target, false, raycastInfo)) {
                     lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
                     this._normal.activeSelf = true;
                     this._normal.transform

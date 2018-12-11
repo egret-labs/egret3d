@@ -44,8 +44,12 @@ varying vec3 vViewPosition;
 #include <metalnessmap_pars_fragment>
 #include <logdepthbuf_pars_fragment>
 #include <clipping_planes_pars_fragment>
+#include <custom_fragment> // modified by egret
 
 void main() {
+
+ 	// modified by egret
+	#include <custom_begin_fragment>
 
 	#include <clipping_planes_fragment>
 
@@ -82,5 +86,8 @@ void main() {
 	#include <fog_fragment>
 	#include <premultiplied_alpha_fragment>
 	#include <dithering_fragment>
+
+ 	// modified by egret
+	#include <custom_end_fragment>
 
 }

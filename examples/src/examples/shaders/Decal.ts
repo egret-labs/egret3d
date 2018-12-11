@@ -16,67 +16,64 @@ namespace examples.shaders {
                         custom_vertex: `
                             uniform float radius;
                             uniform vec3 center;
+                            uniform vec3 up;
+                            uniform vec3 forward;
                         `,
-                        custom_begin_vertex: ``,
                         custom_end_vertex: `
-                            vec3 up = vec3(1.0, 0.0, 0.0);
-                            vec3 forward = vec3(0.0, 0.0, 1.0);
-                            vec4 plane = vec4(0.0, 0.0, 1.0, 0.0);
-                            vec4 mViewPosition = - ( modelViewMatrix * vec4( position, 1.0 ));
-
-                            if (dot( mViewPosition.xyz, plane.xyz ) < plane.w) {
-                                float k = 2.0 * radius;
-                                vec3 uVector = up / k;
-                                vec3 vVector = forward / -k;
-                                vUv.x = dot(position - center, uVector) + 0.5; 
-                                vUv.y = dot(position - center, vVector) + 0.5; 
-                            }
-                            else {
-                                vUv.x = 0.0;
-                                vUv.y = 0.0;
-                            }
+                            float k = 2.0 * radius;
+                            vec3 right = cross(up, forward);
+                            vec3 uVector = right / k;
+                            vec3 vVector = cross(forward, right) / -k;
+                            vUv.x = dot(position - center, uVector) + 0.5; 
+                            vUv.y = dot(position - center, vVector) + 0.5;
                         `,
                     }
                 )
                 .addUniform("radius", gltf.UniformType.FLOAT, 0.5)
-                .addUniform("center", gltf.UniformType.FLOAT_VEC3, [0.0, 0.0, 1.0]);
-
-            // { // MeshRenderer.
-            //     const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
-            //     gameObject.transform.setLocalPosition(2.0, 0.0, 0.0);
-            //     // 
-            //     const renderer = gameObject.renderer!;
-            //     const materials = renderer.materials as egret3d.Material[];
-            //     materials[0] = egret3d.Material.create().setTexture(await RES.getResAsync("logo.png"));
-            //     materials[1] = egret3d.Material.create().setTexture(await RES.getResAsync("textures/sprite0.png")).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.5);
-            //     renderer.materials = materials;
-            // }
+                .addUniform("center", gltf.UniformType.FLOAT_VEC3, [0.0, 0.0, 0.0])
+                .addUniform("up", gltf.UniformType.FLOAT_VEC3, [0.0, 1.0, 0.0])
+                .addUniform("forward", gltf.UniformType.FLOAT_VEC3, [0.0, 0.0, 1.0]);
 
             { // SkinnedMeshRenderer.
                 await RES.getResAsync("Assets/Prefab/Actor/female1.prefab.json");
+                const texture = await RES.getResAsync("textures/sprite0.png") as egret3d.Texture;
+                texture.gltfSampler.wrapS = gltf.TextureWrap.CLAMP_TO_EDGE;
+                texture.gltfSampler.wrapT = gltf.TextureWrap.CLAMP_TO_EDGE;
+
                 const gameObject = paper.Prefab.create("Assets/Prefab/Actor/female1.prefab.json")!;
                 gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
                 //
                 const animation = gameObject.getComponentInChildren(egret3d.Animation)!;
                 animation.play("idle");
+
                 //
                 const renderer = gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!;
+
+                //
+                const line = paper.GameObject.create("SkinnedMeshRendererRaycast");
+                line.transform.setLocalPosition(0.0, 0.0, -2.0);
+                const rendererRaycast = line.addComponent(behaviors.RendererRaycast);
+                rendererRaycast.raycastMesh = true;
+                rendererRaycast.target = renderer.gameObject;
+
+                //
                 const materials = renderer.materials as egret3d.Material[];
                 // materials[0] = egret3d.Material.create().setTexture(await RES.getResAsync("logo.png"));
-                materials[1] = egret3d.Material.create(shader).setTexture(await RES.getResAsync("textures/sprite0.png")).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.5);
+                materials[1] = egret3d.Material.create(shader).setTexture(texture).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.5);
                 renderer.materials = materials;
 
-
-                gameObject.addComponent(TestDecal, materials[1]);
+                gameObject.addComponent(TestDecal, materials[1]).rendererRaycast = rendererRaycast;
             }
         }
     }
 
     class TestDecal extends paper.Behaviour {
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 20.0 })
-        public readonly radius: number = 1.0;
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 2.0, step: 0.01 })
+        public readonly radius: number = 0.1;
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public readonly center: egret3d.Vector3 = egret3d.Vector3.create();
+
+        public rendererRaycast: behaviors.RendererRaycast | null = null;
 
         private _material: egret3d.Material | null = null;
         public onAwake(config: egret3d.Material) {
@@ -84,13 +81,32 @@ namespace examples.shaders {
         }
 
         public onUpdate() {
-            if (!this._material) {
+            const material = this._material;
+            const rendererRaycast = this.rendererRaycast;
+
+            if (!material || !rendererRaycast) {
                 return;
             }
 
-            this._material.setFloat("radius", this.radius);
-            this._material.setVector3("center", this.center);
+            const raycastInfo = rendererRaycast.raycastInfo;
+            if (raycastInfo.transform) {
+                //
+                const skinnedMeshRenderer = rendererRaycast.target!.renderer as egret3d.SkinnedMeshRenderer;
+                const mesh = skinnedMeshRenderer.mesh!;
+                const triangle = mesh.getTriangle(raycastInfo.triangleIndex).release();
+                const center = triangle.getPointAt(raycastInfo.coord.x, raycastInfo.coord.y).release();
+                //
+                const forwardNormal = triangle.getNormal().negate().release();
+                //
+                const toMatrix = skinnedMeshRenderer.gameObject.transform.worldToLocalMatrix;
+                const up = egret3d.Vector3.UP.clone().applyDirection(toMatrix).release();
+                const forwardRay = rendererRaycast.ray.direction.clone().applyDirection(toMatrix).release();
+                //
+                material.setFloat("radius", this.radius);
+                material.setVector3("center", center);
+                material.setVector3("up", up);
+                material.setVector3("forward", forwardNormal.lerp(forwardRay, 0.5));
+            }
         }
     }
-
 }

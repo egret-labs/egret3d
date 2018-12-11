@@ -53,14 +53,15 @@ namespace egret3d {
 
             this._gltfTexture = this.config.textures![0] as GLTFTexture;
             const paperExtension = this._gltfTexture.extensions.paper!;
-            // Sampler
-            {
+
+            { // Sampler
                 this._sampler = this.config.samplers![this._gltfTexture.sampler as number];
                 this._sampler.wrapS = wrapS || gltf.TextureWrap.REPEAT;
                 this._sampler.wrapT = wrapT || gltf.TextureWrap.REPEAT;
                 this._sampler.magFilter = magFilter || gltf.TextureFilter.NEAREST;
                 this._sampler.minFilter = minFilter || gltf.TextureFilter.NEAREST;
             }
+            //
             let w = width;
             let h = height;
             {
@@ -92,19 +93,33 @@ namespace egret3d {
          * @internal
          */
         public setupTexture(index?: number): void { }
-
-        public get width(): number {
+        /**
+         * 
+         */
+        public get width(): uint {
             return this._gltfTexture!.extensions.paper!.width!;
         }
-
-        public get height(): number {
+        /**
+         * 
+         */
+        public get height(): uint {
             return this._gltfTexture!.extensions.paper!.height!;
         }
-
-        public get format(): number {
+        /**
+         * 
+         */
+        public get format(): gltf.TextureFormat {
             return this._gltfTexture!.extensions.paper!.format!;
         }
-
+        /**
+         * 
+         */
+        public get gltfSampler(): gltf.Sampler {
+            return this._sampler;
+        }
+        /**
+         * 
+         */
         public get gltfTexture(): GLTFTexture {
             return this._gltfTexture!;
         }
