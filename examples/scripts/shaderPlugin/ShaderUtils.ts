@@ -128,7 +128,7 @@ export function parseUniform(string: string, name: string): gltf.Uniform | null 
         //     uniform.value = [];
         // }
         if (shaderConfig.UNIFORM_TEMPLATE[name].value) {
-            uniform.value = shaderConfig.UNIFORM_TEMPLATE[name].value;
+            uniform.value = shaderConfig.UNIFORM_TEMPLATE[name].value as any;
         }
     }
     //用户自定义的
@@ -140,7 +140,7 @@ export function parseUniform(string: string, name: string): gltf.Uniform | null 
             uniform.value = [];
         }
         if (shaderConfig.CUSTOM_UNIFORM_TEMPLATE[name].value) {
-            uniform.value = shaderConfig.CUSTOM_UNIFORM_TEMPLATE[name].value;
+            uniform.value = shaderConfig.CUSTOM_UNIFORM_TEMPLATE[name].value as any;
         }
     }
     else {
@@ -183,12 +183,12 @@ export function checkValid(asset: gltf.GLTFEgret) {
 }
 
 export function parseShader(file: string) {
-    var buffer = fs.readFileSync(file);
-    var string = buffer.toString()
+    const buffer = fs.readFileSync(file);
+    const result = buffer.toString()
         .replace(/\r\n/g, '\n') // for windows
         .replace(/\n/g, '\n') // for windows
         .replace(/\r/g, '\n') // for windows
-        .replace(/\t/g, ' ') // for windows;
+        .replace(/\t/g, ' '); // for windows;
 
-    return string;
+    return result;
 }

@@ -351,7 +351,7 @@ namespace egret3d.particle {
             const mainModule = comp.main;
             const lastEmittsionTime = this._emittsionTime;
             this._emittsionTime += elapsedTime;
-            let isOver = this._emittsionTime > mainModule.duration;
+            const isOver = this._emittsionTime > mainModule.duration;
             const aliveParticleCount = this.aliveParticleCount;
             let totalEmitCount = 0;
             if (!isOver) {
@@ -369,7 +369,6 @@ namespace egret3d.particle {
                 }
                 else {
                     comp.stop(false);
-                    isOver = true;
                 }
             }
             //
