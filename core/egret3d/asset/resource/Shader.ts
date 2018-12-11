@@ -28,10 +28,6 @@ namespace egret3d {
         FOG_EXP2 = "FOG_EXP2",
         //
         FLIP_V = "FLIP_V",
-        //
-        CUSTOM_VERTEX = "custom_vertex",
-        CUSTOM_BEGIN_VERTEX = "custom_begin_vertex",
-        CUSTOM_END_VERTEX = "custom_end_vertex",
     }
     /**
      * Shader 通用 Uniform 名称。

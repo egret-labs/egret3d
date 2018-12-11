@@ -143,7 +143,8 @@ namespace egret3d.web {
                         break;
 
                     case gltf.UniformSemanticType.JOINTMATRIX:
-                        webgl.uniformMatrix4fv(location, false, (drawCall.renderer as SkinnedMeshRenderer).boneMatrices!);
+                        const skinnedMeshRenderer = (drawCall.renderer as SkinnedMeshRenderer).source || (drawCall.renderer as SkinnedMeshRenderer);
+                        webgl.uniformMatrix4fv(location, false, skinnedMeshRenderer.boneMatrices!);
                         break;
 
                     case gltf.UniformSemanticType._DIRECTLIGHTS:

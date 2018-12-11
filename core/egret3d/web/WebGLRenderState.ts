@@ -406,18 +406,8 @@ namespace egret3d.web {
             const extensions = shader.config.extensions!.KHR_techniques_webgl;
             const vertexShader = extensions!.shaders[0]; // TODO 顺序依赖
             const fragmentShader = extensions!.shaders[1]; // TODO 顺序依赖
-            // TODO 
-            const shaderCustom = shader.customs;
-            if (shaderCustom) {
-                for (const k in shaderCustom) {
-                    (ShaderChunk as any)[k] = shaderCustom[k];
-                }
-            }
-            else {
-                (ShaderChunk as any)[ShaderDefine.CUSTOM_VERTEX] = "";
-                (ShaderChunk as any)[ShaderDefine.CUSTOM_BEGIN_VERTEX] = "";
-                (ShaderChunk as any)[ShaderDefine.CUSTOM_END_VERTEX] = "";
-            }
+
+            this.customShaderChunks = shader.customs; //
 
             const defines = contextDefine + material.shaderDefine;
             const name = vertexShader.name + "_" + fragmentShader.name + "_" + defines; // TODO材质标脏可以优化

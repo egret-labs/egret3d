@@ -112,14 +112,27 @@ namespace egret3d {
         return unroll;
     }
 
-    function _replace(match: string, include: string) {
-        if (!(include in ShaderChunk)) {
-            console.error(`Can not resolve #include <${include}>`);
-            
-            return "";
+    function _replace(match: string, include: string): string {
+        let flag = true;
+        let chunk = "";
+
+        if (include in ShaderChunk) {
+            chunk = (ShaderChunk as any)[include];
+        }
+        else if (include in renderState.defaultCustomShaderChunks) {
+            flag = false;
+            chunk = (renderState.customShaderChunks && include in renderState.customShaderChunks) ? renderState.customShaderChunks[include] : "";
         }
 
-        return (ShaderChunk as any)[include].replace(_patternA, _replace);
+        if (chunk) {
+            return chunk.replace(_patternA, _replace);
+        }
+
+        if (flag) {
+            console.error(`Can not resolve #include <${include}>`);
+        }
+
+        return "";
     }
 
     function _filterEmptyLine(string: string) {
@@ -140,6 +153,15 @@ namespace egret3d {
 
         public readonly clearColor: Color = Color.create();
         public readonly viewPort: Rectangle = Rectangle.create();
+        public readonly defaultCustomShaderChunks: Readonly<{ [key: string]: string }> = {
+            custom_vertex: "",
+            custom_begin_vertex: "",
+            custom_end_vertex: "",
+            custom_fragment: "",
+            custom_begin_fragment: "",
+            custom_end_fragment: "",
+        };
+        public customShaderChunks: { [key: string]: string } | null = null;
         public renderTarget: RenderTexture | null = null;
 
         public render: (camera: Camera, material?: Material) => void = null!;

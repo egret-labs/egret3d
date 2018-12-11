@@ -20,8 +20,12 @@ uniform float opacity;
 #include <specularmap_pars_fragment>
 #include <logdepthbuf_pars_fragment>
 #include <clipping_planes_pars_fragment>
+#include <custom_fragment> // modified by egret
 
 void main() {
+
+ 	// modified by egret
+	#include <custom_begin_fragment>
 
 	#include <clipping_planes_fragment>
 
@@ -68,5 +72,8 @@ void main() {
 	#include <tonemapping_fragment>
 	// #include <encodings_fragment> // modified by egret. TODO
 	#include <fog_fragment>
+
+ 	// modified by egret
+	#include <custom_end_fragment>
 
 }
