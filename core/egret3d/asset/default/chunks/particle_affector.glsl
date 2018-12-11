@@ -5,13 +5,16 @@ if(u_simulationSpace==1)
 else
 	worldRotation=u_worldRotation;
 vec3 gravity=u_gravity*age;
-
 vec3 center=computePosition(startVelocity, lifeVelocity, age, t,gravity,worldRotation); 
 #ifdef SPHERHBILLBOARD
-			vec2 corner=corner.xy;
+		  vec3 cameraForwardVector = cameraForward;
+		  if(u_startRotation3D){
+			  cameraForwardVector = vec3(0.0,0.0,1.0);//TODO
+		  }
+		  vec2 corner=corner.xy;
 	     vec3 cameraUpVector =normalize(cameraUp);
-	     vec3 sideVector = normalize(cross(cameraForward,cameraUpVector));
-	     vec3 upVector = normalize(cross(sideVector,cameraForward));
+	     vec3 sideVector = normalize(cross(cameraForwardVector,cameraUpVector));
+	     vec3 upVector = normalize(cross(sideVector,cameraForwardVector));
 	   	corner*=computeBillbardSize(startSize.xy,t);
 		#if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)
 			if(u_startRotation3D){
@@ -52,7 +55,7 @@ vec3 center=computePosition(startVelocity, lifeVelocity, age, t,gravity,worldRot
 	 	#endif	
 		vec3 cameraUpVector = normalize(velocity);
 		vec3 direction = normalize(center-cameraPosition);
-	   vec3 sideVector = normalize(cross(direction,normalize(velocity)));
+	   vec3 sideVector = normalize(cross(direction,cameraUpVector));
 		sideVector=u_sizeScale.xzy*sideVector;
 		cameraUpVector=length(vec3(u_sizeScale.x,0.0,0.0))*cameraUpVector;
 	   vec2 size=computeBillbardSize(startSize.xy,t);
