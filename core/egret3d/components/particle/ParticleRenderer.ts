@@ -123,14 +123,13 @@ namespace egret3d.particle {
          */
         public frustumCulled: boolean = false;
         @paper.serializedField
-        public velocityScale: number;
+        public velocityScale: number = 1.0;
         @paper.serializedField
-        public lengthScale: number;
+        public lengthScale: number = 1.0;
 
         @paper.serializedField
         private _renderMode: ParticleRenderMode = ParticleRenderMode.Billboard;
-        @paper.serializedField
-        private _mesh: egret3d.Mesh | null;
+        private _mesh: egret3d.Mesh | null = null;
         /**
          * @internal
          */
@@ -143,10 +142,14 @@ namespace egret3d.particle {
         public uninitialize() {
             super.uninitialize();
 
-            this._mesh = null;
+            if (this._mesh) {
+                this._mesh.release();
+            }
+
             this._renderMode = ParticleRenderMode.Billboard;
             this.velocityScale = 1.0;
             this.lengthScale = 1.0;
+            this._mesh = null;
         }
 
         public recalculateLocalBox() {
@@ -199,15 +202,25 @@ namespace egret3d.particle {
          * 
          */
         @paper.editor.property(paper.editor.EditType.MESH)
-        public get mesh() {
+        @paper.serializedField("_mesh")
+        public get mesh(): Mesh | null {
             return this._mesh;
         }
-        public set mesh(mesh: Mesh | null) {
-            if (this._mesh === mesh) {
+        public set mesh(value: Mesh | null) {
+            if (this._mesh === value) {
                 return;
             }
 
-            this._mesh = mesh;
+            if (this._mesh) {
+                this._mesh.release();
+            }
+
+            this._mesh = value;
+
+            if (this._mesh) {
+                this._mesh.retain();
+            }
+
             ParticleRenderer.onMeshChanged.dispatch(this);
         }
     }

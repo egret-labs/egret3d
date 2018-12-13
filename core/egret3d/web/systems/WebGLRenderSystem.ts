@@ -55,7 +55,7 @@ namespace egret3d.web {
 
         // webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         // }
-        private _render(camera: Camera, renderTarget: BaseRenderTexture | null, material: Material | null) {
+        private _render(camera: Camera, renderTarget: RenderTexture | null, material: Material | null) {
             const renderState = this._renderState;
             renderState.updateViewport(camera.viewport, renderTarget);
             renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
@@ -186,7 +186,7 @@ namespace egret3d.web {
                                 if (context.directShadowMaps[i]) {
                                     const unit = units[i];
                                     const texture = context.directShadowMaps[i] as WebGLTexture;
-                                    if (texture._dirty) {
+                                    if (texture.dirty) {
                                         texture.setupTexture(unit);
                                     }
                                     else {
@@ -207,7 +207,7 @@ namespace egret3d.web {
                                 if (context.pointShadowMaps[i]) {
                                     const unit = units[i];
                                     const texture = context.pointShadowMaps[i] as WebGLTexture;
-                                    if (texture._dirty) {
+                                    if (texture.dirty) {
                                         texture.setupTexture(unit);
                                     }
                                     else {
@@ -228,7 +228,7 @@ namespace egret3d.web {
                                 if (context.spotShadowMaps[i]) {
                                     const unit = units[i];
                                     const texture = context.spotShadowMaps[i] as WebGLTexture;
-                                    if (texture._dirty) {
+                                    if (texture.dirty) {
                                         texture.setupTexture(unit);
                                     }
                                     else {
@@ -245,7 +245,7 @@ namespace egret3d.web {
                             const texture = context.lightmap as WebGLTexture;
                             const unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location, unit);
-                            if (texture._dirty) {
+                            if (texture.dirty) {
                                 texture.setupTexture(unit);
                             }
                             else {
@@ -370,7 +370,7 @@ namespace egret3d.web {
                             const texture = value as WebGLTexture;
                             const unit = glUniform.textureUnits[0];
                             webgl.uniform1i(location, unit);
-                            if (texture._dirty) {
+                            if (texture.dirty) {
                                 texture.setupTexture(unit);
                             }
                             else {
@@ -392,7 +392,7 @@ namespace egret3d.web {
                 return;
             }
 
-            if (!(mesh as WebGLMesh).vbo) {
+            if (!(mesh as WebGLMesh).vbo && !mesh.isDisposed) {
                 (mesh as WebGLMesh).createBuffer();
             }
 
@@ -493,7 +493,7 @@ namespace egret3d.web {
             const shaderContextDefine = context.updateDrawCall(drawCall);
             //
             const webgl = WebGLRenderState.webgl!;
-            const technique = material._glTFTechnique;
+            const technique = material._technique;
             const techniqueState = technique.states || null;
             const renderState = this._renderState;
             const program = renderState.getProgram(material, technique, shaderContextDefine); // Get program.

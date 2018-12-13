@@ -141,8 +141,8 @@ namespace egret3d {
             if (materialA.renderQueue !== materialB.renderQueue) {
                 return materialA.renderQueue - materialB.renderQueue;
             }
-            else if (materialA._glTFTechnique.program !== materialB._glTFTechnique.program) {
-                return materialA._glTFTechnique.program! - materialB._glTFTechnique.program!;
+            else if (materialA._technique.program !== materialB._technique.program) {
+                return materialA._technique.program! - materialB._technique.program!;
             }
             else if (materialA._id !== materialB._id) {
                 return materialA._id - materialB._id;
@@ -222,7 +222,7 @@ namespace egret3d {
             transparentCalls.sort(this._sortFromFarToNear);
         }
 
-        public blit(src: BaseTexture, material: Material | null = null, dest: BaseRenderTexture | null = null) {
+        public blit(src: BaseTexture, material: Material | null = null, dest: RenderTexture | null = null) {
             if (!material) {
                 material = DefaultMaterials.COPY;
                 material.setTexture(src);

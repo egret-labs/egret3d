@@ -3,8 +3,11 @@ namespace egret3d {
      * glTF 资源。
      */
     export abstract class GLTFAsset extends paper.Asset {
-        protected static _createConfig() {
-            const config = {
+        /**
+         * @private
+         */
+        public static createConfig(): GLTF {
+            const config: GLTF = {
                 version: "4",
                 asset: {
                     version: "2.0"
@@ -12,7 +15,7 @@ namespace egret3d {
                 extensions: {},
                 extensionsRequired: ["paper"],
                 extensionsUsed: ["paper"],
-            } as GLTF;
+            };
 
             return config;
         }
@@ -66,143 +69,31 @@ namespace egret3d {
             return result;
         }
         /**
-         * @private
-         */
-        public static createMeshConfig() {
-            const config = this._createConfig();
-            config.buffers = [{ byteLength: 0 }];
-            config.bufferViews = [{ buffer: 0, byteOffset: 0, byteLength: 0, target: gltf.BufferViewTarget.ArrayBuffer }]; // VBO
-            config.accessors = [];
-            config.meshes = [{
-                primitives: [{ attributes: {} }],
-                extensions: { paper: {} },
-            }];
-
-            return config;
-        }
-        /**
-         * @private
-         */
-        public static createTextureConfig() {
-            const config = this._createConfig();
-            config.images = [{}];
-            config.samplers = [{ magFilter: gltf.TextureFilter.NEAREST, minFilter: gltf.TextureFilter.NEAREST, wrapS: gltf.TextureWrap.REPEAT, wrapT: gltf.TextureWrap.REPEAT }];
-            config.textures = [{ sampler: 0, source: 0, extensions: { paper: {} } }];
-
-            return config;
-        }
-        /**
-         * @private
-         */
-        public static createGLTFExtensionsConfig() {
-            const config = this._createConfig();
-            config.materials = [];
-            config.extensions = {
-                KHR_techniques_webgl: {
-                    shaders: [],
-                    techniques: [],
-                    programs: [],
-                },
-                paper: {},
-            };
-
-            return config;
-        }
-        /**
-         * @private
-         */
-        public static createTechnique(source: gltf.Technique) {
-            const target: gltf.Technique = { name: source.name, attributes: {}, uniforms: {} }; // , states: { enable: [], functions: {} }
-            for (const key in source.attributes) {
-                const attribute = source.attributes[key];
-                target.attributes[key] = { semantic: attribute.semantic };
-            }
-
-            for (const key in source.uniforms) {
-                const uniform = source.uniforms[key];
-                let value: any;
-
-                if (uniform.type === gltf.UniformType.SAMPLER_2D && !uniform.value) {
-                    value = egret3d.DefaultTextures.WHITE; // Default texture.
-                }
-                else if (Array.isArray(uniform.value)) {
-                    value = uniform.value ? uniform.value.concat() : [];
-                }
-                else {
-                    value = uniform.value ? uniform.value : [];
-                }
-
-                const targetUniform = target.uniforms[key] = { type: uniform.type, value } as gltf.Uniform;
-
-                if (uniform.semantic) {
-                    targetUniform.semantic = uniform.semantic;
-                }
-            }
-
-            // if (source.states) {
-            //     const states = GLTFAsset.copyTechniqueStates(source.states);
-            //     if (states) {
-            //         target.states = states;
-            //     }
-            // }
-
-            return target;
-        }
-        /**
-         * @private
-         */
-        public static copyTechniqueStates(source: gltf.States, target?: gltf.States) {
-            if (source.enable && source.enable.length > 0) {
-                if (!target) {
-                    target = {};
-                }
-
-                target.enable = source.enable.concat();
-            }
-
-            if (source.functions) {
-                for (const k in source.functions) {
-                    if (!target) {
-                        target = {};
-                    }
-
-                    if (!target.functions) {
-                        target.functions = {};
-                    }
-
-                    if (Array.isArray(source.functions[k])) { // TODO
-                        target.functions[k] = source.functions[k].concat();
-                    }
-                    else {
-                        target.functions[k] = source.functions[k];
-                    }
-                }
-            }
-
-            return target;
-        }
-        /**
          * Buffer 列表。
          */
         public readonly buffers: (Float32Array | Uint32Array | Uint16Array)[] = [];
         /**
          * 配置。
          */
-        public config: GLTF = null!;
+        public readonly config: GLTF = null!;
+        /**
+         * 请使用 `T.create()` 创建实例。
+         */
+        protected constructor(config: GLTF, name: string) {
+            super(name);
+
+            this.config = config;
+        }
 
         public dispose() {
             if (!super.dispose()) {
                 return false;
             }
 
-            this.buffers.length = 0; // TODO clear buffer.
-            this.config = null!;
+            this.buffers.length = 0;
+            (this.config as GLTF) = null!;
 
             return true;
-        }
-
-        public caclByteLength() {
-            return 0;
         }
         /**
          * 根据指定 BufferView 创建二进制数组。
@@ -336,19 +227,19 @@ namespace egret3d {
          */
         public getMeshAttributeType(type: gltf.MeshAttribute): gltf.AccessorType {
             switch (type) {
-                case gltf.MeshAttributeType.POSITION:
-                case gltf.MeshAttributeType.NORMAL:
+                case gltf.AttributeSemanticType.POSITION:
+                case gltf.AttributeSemanticType.NORMAL:
                     return gltf.AccessorType.VEC3;
 
-                case gltf.MeshAttributeType.TEXCOORD_0:
-                case gltf.MeshAttributeType.TEXCOORD_1:
+                case gltf.AttributeSemanticType.TEXCOORD_0:
+                case gltf.AttributeSemanticType.TEXCOORD_1:
                     return gltf.AccessorType.VEC2;
 
-                case gltf.MeshAttributeType.TANGENT:
-                case gltf.MeshAttributeType.COLOR_0:
-                case gltf.MeshAttributeType.COLOR_1:
-                case gltf.MeshAttributeType.JOINTS_0:
-                case gltf.MeshAttributeType.WEIGHTS_0:
+                case gltf.AttributeSemanticType.TANGENT:
+                case gltf.AttributeSemanticType.COLOR_0:
+                case gltf.AttributeSemanticType.COLOR_1:
+                case gltf.AttributeSemanticType.JOINTS_0:
+                case gltf.AttributeSemanticType.WEIGHTS_0:
                     return gltf.AccessorType.VEC4;
 
                 default:

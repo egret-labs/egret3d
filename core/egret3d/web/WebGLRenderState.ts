@@ -163,10 +163,10 @@ namespace egret3d.web {
         public shaderTextureLOD: any;
         public oesStandardDerivatives: boolean;
 
-        private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST]; // TODO
+        private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.Blend, gltf.EnableState.CullFace, gltf.EnableState.DepthTest]; // TODO
         private readonly _programs: { [key: string]: WebGLProgramBinder } = {};
-        private readonly _vsShaders: { [key: string]: WebGLShader } = {};
-        private readonly _fsShaders: { [key: string]: WebGLShader } = {};
+        private readonly _vsShaders: { [key: string]: WebGLShader | boolean } = {};
+        private readonly _fsShaders: { [key: string]: WebGLShader | boolean } = {};
         private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
         private _cacheProgram: WebGLProgramBinder | null = null;
         private _cacheState: gltf.States | null = null;
@@ -206,6 +206,9 @@ namespace egret3d.web {
                     if (vertexShader) {
                         this._vsShaders[key] = vertexShader;
                     }
+                    else {
+                        this._vsShaders[key] = true;
+                    }
                 }
 
                 key = fs.name + customDefines;
@@ -216,9 +219,15 @@ namespace egret3d.web {
                     if (fragmentShader) {
                         this._fsShaders[key] = fragmentShader;
                     }
+                    else {
+                        this._vsShaders[key] = true;
+                    }
                 }
 
-                if (vertexShader && fragmentShader) {
+                if (
+                    vertexShader && fragmentShader &&
+                    vertexShader !== true && fragmentShader !== true
+                ) {
                     webgl.attachShader(program, vertexShader);
                     webgl.attachShader(program, fragmentShader);
                     webgl.linkProgram(program);
@@ -237,6 +246,7 @@ namespace egret3d.web {
 
             return null;
         }
+
         protected _getCommonExtensions() {
             let extensions = "";
             if (this.oesStandardDerivatives) {
@@ -298,7 +308,7 @@ namespace egret3d.web {
             console.info("Maximum GPU skinned bone count:", this.maxBoneCount);
         }
 
-        public updateViewport(viewport: Readonly<Rectangle>, target: BaseRenderTexture | null) { // TODO
+        public updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null) { // TODO
             const webgl = WebGLRenderState.webgl!;
             let w: number;
             let h: number;
@@ -344,12 +354,12 @@ namespace egret3d.web {
 
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: number = 0) {
             const webgl = WebGLRenderState.webgl!;
-            if (target._dirty) {
+            if ((target as WebGLTexture | WebGLRenderTexture).dirty) {
                 target.setupTexture(0);
             }
             else {
                 webgl.activeTexture(webgl.TEXTURE0);
-                webgl.bindTexture(webgl.TEXTURE_2D, (target as WebGLTexture).webglTexture);
+                webgl.bindTexture(webgl.TEXTURE_2D, (target as WebGLTexture | WebGLRenderTexture).webglTexture);
             }
 
             webgl.copyTexImage2D(webgl.TEXTURE_2D, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0);//TODO

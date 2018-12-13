@@ -13,6 +13,8 @@ namespace egret3d.web {
         public webglTexture: GlobalWeblGLTexture | null = null;
         public frameBuffer: WebGLFramebuffer | null = null;
         public renderBuffer: WebGLRenderbuffer | null = null;
+        public dirty: boolean = true;
+
         private _setupFrameBufferTexture(frameBuffer: WebGLFramebuffer, texture: GlobalWeblGLTexture, textureTarget: number, type: gltf.TextureDataType, width: number, height: number, format: gltf.TextureFormat, attachment: number): void {
             const webgl = WebGLRenderState.webgl!;
 
@@ -70,7 +72,7 @@ namespace egret3d.web {
             this._setupFrameBufferTexture(this.frameBuffer, this.webglTexture, webgl.TEXTURE_2D, gltf.TextureDataType.UNSIGNED_BYTE, width, height, format, webgl.COLOR_ATTACHMENT0);
 
             const minFilter = sampler.minFilter!;
-            const canGenerateMipmap = isPowerTwo && minFilter !== gltf.TextureFilter.NEAREST && minFilter !== gltf.TextureFilter.LINEAR;
+            const canGenerateMipmap = isPowerTwo && minFilter !== gltf.TextureFilter.Nearest && minFilter !== gltf.TextureFilter.Linear;
             if (canGenerateMipmap) {
                 webgl.generateMipmap(webgl.TEXTURE_2D);
             }
@@ -86,9 +88,9 @@ namespace egret3d.web {
         }
 
         public activateRenderTexture() {
-            if (this._dirty) {
+            if (this.dirty) {
                 this._setupRenderTexture();
-                this._dirty = false;
+                this.dirty = false;
             }
             const webgl = WebGLRenderState.webgl!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.frameBuffer);

@@ -17,7 +17,6 @@ namespace egret3d {
          * @internal
          */
         public _statesDirty: boolean = false;
-        @paper.serializedField
         private readonly _animations: AnimationAsset[] = [];
         /**
          * @internal
@@ -60,6 +59,14 @@ namespace egret3d {
                 delete binders[k];
             }
 
+            for (const animation of this._animations) {
+                animation.release();
+            }
+
+            if (this._animationController) {
+                this._animationController.release();
+            }
+
             this._animations.length = 0;
             this._fadeStates.length = 0;
             // this._binders;
@@ -97,7 +104,7 @@ namespace egret3d {
             }
             //
             if (!this._animationController) {
-                this._animationController = AnimationController.create();
+                this._animationController = AnimationController.create("").retain();
             }
 
             const animationController = this._animationController;
@@ -146,7 +153,7 @@ namespace egret3d {
          */
         public play(animationClipNameOrNames: string | (string[]) | null = null, playTimes: int = -1): AnimationState | null {
             if (!this._animationController) {
-                this._animationController = AnimationController.create();
+                this._animationController = AnimationController.create("").retain();
             }
 
             const animationController = this._animationController;
@@ -265,12 +272,27 @@ namespace egret3d {
         /**
          * 动画数据列表。
          */
+        @paper.serializedField("_animations")
         public get animations(): ReadonlyArray<AnimationAsset> {
             return this._animations;
         }
-        public set animations(animations: ReadonlyArray<AnimationAsset>) {
-            for (let i = 0, l = animations.length; i < l; i++) {
-                this._animations[i] = animations[i];
+        public set animations(value: ReadonlyArray<AnimationAsset>) {
+            const animations = this._animations;
+
+            for (const animation of animations) {
+                animation.release();
+            }
+
+            if (value !== animations) {
+                animations.length = 0;
+
+                for (const animation of value) {
+                    animations.push(animation);
+                }
+            }
+
+            for (const animation of animations) {
+                animation.retain();
             }
         }
         /**

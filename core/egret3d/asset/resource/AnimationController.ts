@@ -3,25 +3,35 @@ namespace egret3d {
      * @private
      */
     export class AnimationController extends GLTFAsset {
-        public static create(): AnimationController {
-            const asset = new AnimationController();
-            const config = this._createConfig();
-            config.extensions = {
-                paper: {
-                    animationControllers: [{
-                        layers: [],
-                        parameters: []
-                    }]
-                },
-            };
+        /**
+         * 
+         */
+        public static create(name: string): AnimationController;
+        /**
+         * 
+         */
+        public static create(config: GLTF, name: string): AnimationController;
+        public static create(configOrName: GLTF | string, name?: string) {
+            let animationController: AnimationController;
 
-            asset.config = config;
+            if (typeof configOrName === "string") {
+                const config = this.createConfig();
+                config.extensions = {
+                    paper: {
+                        animationControllers: [{
+                            layers: [],
+                            parameters: []
+                        }]
+                    },
+                };
 
-            return asset;
-        }
+                animationController = new AnimationController(config, configOrName);
+            }
+            else {
+                animationController = new AnimationController(configOrName, name!);
+            }
 
-        private constructor() {
-            super(); // TODO GLTFAsset protected
+            return animationController;
         }
         /**
          * 添加一个新的动画层。

@@ -1,24 +1,40 @@
 namespace egret3d {
     /**
-     * 动画资源。
+     * @private
      */
     export class AnimationMask extends GLTFAsset {
-        public static create(): AnimationMask {
-            const asset = new AnimationMask();
-            const config = this._createConfig();
-            config.nodes = [];
-            config.extensions = {
-                paper: {
-                    animationMasks: [{
-                        retargeting: [],
-                        joints: []
-                    }]
-                },
-            };
+        /**
+         * 
+         */
+        public static create(name: string): AnimationMask;
+        /**
+         * 
+         */
+        public static create(config: GLTF, name: string): AnimationMask;
+        public static create(configOrName: GLTF | string, name?: string) {
+            let animationMask: AnimationMask;
 
-            asset.config = config;
+            if (typeof configOrName === "string") {
+                const config = this.createConfig();
+                config.nodes = [];
+                config.extensions = {
+                    paper: {
+                        animationMasks: [{
+                            retargeting: [],
+                            joints: []
+                        }]
+                    },
+                };
 
-            return asset;
+                animationMask = new AnimationMask(config, configOrName);
+                animationMask.initialize();
+            }
+            else {
+                animationMask = new AnimationMask(configOrName, name!);
+                animationMask.initialize();
+            }
+
+            return animationMask;
         }
         /**
          * @internal
@@ -26,10 +42,6 @@ namespace egret3d {
         public _dirty: boolean = false;
         private _jointNamesDirty: boolean = false;
         private readonly _jointNames: string[] = [];
-
-        private constructor() {
-            super(); // TODO GLTFAsset protected
-        }
 
         private _addJoint(nodes: gltf.Node[], joints: uint[], jointIndex: uint, recursive: boolean) {
             if (joints.indexOf(jointIndex) < 0) {

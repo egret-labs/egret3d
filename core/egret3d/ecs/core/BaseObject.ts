@@ -25,7 +25,7 @@ namespace paper {
          */
         public update() {
             if (this.onUpdate) {
-                this.onUpdate.call(this.onUpdateTarget || this, this);
+                this.onUpdate.call(this.onUpdateTarget || this, this as any);
             }
 
             return this;

@@ -45,7 +45,7 @@ namespace egret3d {
         /**
          * @private
          */
-        public renderTarget: BaseRenderTexture = null!;
+        public renderTarget: RenderTexture = null!;
         /**
          * 
          */

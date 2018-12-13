@@ -148,7 +148,7 @@ var ParseShaderCommand = /** @class */ (function () {
             assetShaders.push({ name: fragName.substr(0, fragName.indexOf(".")), type: orginFrag.type, uri: orginFrag.fileName });
             asset.extensions.KHR_techniques_webgl.shaders = assetShaders;
             //
-            var technique = { name: name_1, attributes: {}, uniforms: {}, states: { enable: [], functions: {} } };
+            var technique = { name: name_1, attributes: {}, uniforms: {} };
             //寻找所有attribute
             var attrMatchResult = all.match(attrReg);
             if (attrMatchResult) {
@@ -281,7 +281,10 @@ var GenerateGLTFCommand = /** @class */ (function () {
                             newTechnique.uniforms[uniformName].value = oldTechnique.uniforms[uniformName].value;
                         }
                     }
-                    newTechnique.states = oldTechnique.states;
+                    
+                    if (oldTechnique.states){
+                        newTechnique.states = oldTechnique.states;
+                    }
                 }
             }
             ShaderUtils.checkValid(asset);

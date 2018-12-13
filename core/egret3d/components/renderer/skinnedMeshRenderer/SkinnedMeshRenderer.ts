@@ -34,7 +34,6 @@ namespace egret3d {
          * @internal
          */
         public _retargetBoneNames: string[] | null = null;
-        @paper.serializedField
         private _mesh: Mesh | null = null;
         private _skinnedVertices: Float32Array | null = null;
 
@@ -48,8 +47,8 @@ namespace egret3d {
                 const p2 = _helpVector3C;
                 const vertices = mesh.getVertices()!;
                 const indices = mesh.getIndices()!;
-                const joints = mesh.getAttributes(gltf.MeshAttributeType.JOINTS_0) as Float32Array;
-                const weights = mesh.getAttributes(gltf.MeshAttributeType.WEIGHTS_0) as Float32Array;
+                const joints = mesh.getAttributes(gltf.AttributeSemanticType.JOINTS_0) as Float32Array;
+                const weights = mesh.getAttributes(gltf.AttributeSemanticType.WEIGHTS_0) as Float32Array;
 
                 if (!this._skinnedVertices) {
                     this._skinnedVertices = new Float32Array(vertices.length);
@@ -163,14 +162,14 @@ namespace egret3d {
         public uninitialize() {
             super.uninitialize();
 
-            // TODO
             if (this._mesh) {
-                // this._mesh.dispose();
+                this._mesh.release();
             }
+
+            this.boneMatrices = null;
 
             this._bones.length = 0;
             this._rootBone = null;
-            this.boneMatrices = null;
             this._retargetBoneNames = null;
             this._mesh = null;
             this._skinnedVertices = null;
@@ -178,10 +177,11 @@ namespace egret3d {
 
         public recalculateLocalBox() {
             // TODO 蒙皮网格的 aabb 需要能自定义，或者强制更新。
-            if (this._mesh) {
+            const mesh = this._mesh;
+            if (mesh) {
                 this._localBoundingBox.clear();
 
-                const vertices = this._mesh.getVertices()!; // T pose mesh aabb.
+                const vertices = mesh.getVertices()!; // T pose mesh aabb.
                 const position = helpVector3A;
 
                 for (let i = 0, l = vertices.length; i < l; i += 3) {
@@ -267,24 +267,31 @@ namespace egret3d {
         /**
          * 该渲染组件的网格资源。
          */
-        public get mesh() {
+        @paper.editor.property(paper.editor.EditType.MESH)
+        @paper.serializedField("_mesh")
+        public get mesh(): Mesh | null {
             return this._mesh;
         }
-        public set mesh(mesh: Mesh | null) {
-            if (mesh && !mesh.config.scenes && !mesh.config.nodes && !mesh.config.skins) {
-                console.warn("Invalid skinned mesh.", mesh.name);
+        public set mesh(value: Mesh | null) {
+            if (value && !value.config.scenes && !value.config.nodes && !value.config.skins) {
+                console.warn("Invalid skinned mesh.", value.name);
                 return;
             }
 
-            if (this._mesh === mesh) {
+            if (this._mesh === value) {
                 return;
             }
 
             if (this._mesh) {
-                // this._mesh.dispose(); TODO
+                this._mesh.release();
             }
 
-            this._mesh = mesh;
+            this._mesh = value;
+
+            if (this._mesh) {
+                this._mesh.retain();
+            }
+
             SkinnedMeshRenderer.onMeshChanged.dispatch(this);
         }
     }

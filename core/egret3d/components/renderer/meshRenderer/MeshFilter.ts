@@ -9,14 +9,13 @@ namespace egret3d {
          */
         public static readonly onMeshChanged: signals.Signal = new signals.Signal();
 
-        @paper.serializedField
         private _mesh: Mesh | null = null;
 
         public uninitialize() {
             super.uninitialize();
 
             if (this._mesh) {
-                // this._mesh.dispose(); //TODO shaderdMesh暂时没法dispose
+                this._mesh.release();
             }
 
             this._mesh = null;
@@ -25,7 +24,8 @@ namespace egret3d {
          * 该组件的网格资源。
          */
         @paper.editor.property(paper.editor.EditType.MESH)
-        public get mesh() {
+        @paper.serializedField("_mesh")
+        public get mesh(): Mesh | null {
             return this._mesh;
         }
         public set mesh(value: Mesh | null) {
@@ -34,10 +34,15 @@ namespace egret3d {
             }
 
             if (this._mesh) {
-                // this._mesh.dispose();//TODO shaderdMesh暂时没法dispose
+                this._mesh.release();
             }
 
             this._mesh = value;
+
+            if (this._mesh) {
+                this._mesh.retain();
+            }
+
             MeshFilter.onMeshChanged.dispatch(this);
         }
     }

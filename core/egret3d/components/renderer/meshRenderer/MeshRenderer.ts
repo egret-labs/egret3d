@@ -10,7 +10,7 @@ namespace egret3d {
          * 如果该属性合并到 UV2 中，会破坏网格共享，共享的网格无法拥有不同的 lightmap UV。
          */
         @paper.serializedField
-        protected readonly _lightmapScaleOffset: egret3d.Vector4 = egret3d.Vector4.create();
+        protected readonly _lightmapScaleOffset: Vector4 = Vector4.create();
 
         public recalculateLocalBox() {
             this._localBoundingBox.clear();
@@ -54,14 +54,14 @@ namespace egret3d {
             return out;
         }
 
-        public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
+        public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
             const meshFilter = this.gameObject.getComponent(MeshFilter);
             if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh) {
                 return false;
             }
 
             let raycastMesh = false;
-            let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
+            let raycastInfo: RaycastInfo | undefined = undefined;
             const transform = this.gameObject.transform;
             const worldToLocalMatrix = transform.worldToLocalMatrix;
             const localRay = helpRay.applyMatrix(worldToLocalMatrix, p1);

@@ -623,22 +623,25 @@ declare namespace paper.editor {
 }
 declare namespace paper {
     /**
-     * 资源基类。
+     * 基础资源。
+     * - 全部资源的基类。
      */
     abstract class Asset extends BaseObject {
         /**
-         * @private
+         * 将一个资源注册为全局可访问资源。
+         * - 引用计数加 1 。
          */
-        static register(asset: Asset): void;
+        static register(asset: Asset): boolean;
         /**
-         * 查找已加载的指定资源。
+         * 通过资源名获取一个已注册的指定资源。
          */
-        static find<T extends Asset>(name: string): T;
+        static find<T extends Asset>(name: string): T | null;
         /**
          * 资源名称。
          * @readonly
          */
         name: string;
+        private _referenceCount;
         /**
          * TODO
          * remove
@@ -647,12 +650,27 @@ declare namespace paper {
         constructor(name?: string);
         /**
          * 该资源内部初始化。
+         * - 重写此方法时，必须调用 `super.initialize();`。
          */
         initialize(): void;
         /**
-         * 释放资源。
+         * 该资源的引用计数加一。
          */
-        dispose(disposeChildren?: boolean): boolean;
+        retain(): this;
+        /**
+         * 该资源的引用计数减一。
+         */
+        release(): this;
+        /**
+         * 释放该资源。
+         * - 重写此方法时，必须调用 `super.dispose();`。
+         * @returns 释放是否成功。（已经释放过的资源，无法再次释放）
+         */
+        dispose(): boolean;
+        /**
+         *
+         */
+        readonly isDisposed: boolean;
     }
 }
 declare namespace paper {
@@ -1344,7 +1362,7 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     *
+     * 扩展 glTF。
      */
     interface GLTF extends gltf.GLTF {
         version: string;
@@ -1367,36 +1385,83 @@ declare namespace egret3d {
         extensionsRequired: string[];
     }
     /**
-     *
+     * 扩展 glTF 材质。
+     * - 仅用于存储材质初始值。
      */
     interface GLTFMaterial extends gltf.Material {
         extensions: {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
             paper: {
                 renderQueue: uint;
-                defines?: string[];
+                /**
+                 * 该值如果定义，则覆盖着色器中的值。
+                 */
                 states?: gltf.States;
+                /**
+                 * 该值如果定义，则覆盖着色器中的值。
+                 */
+                defines?: string[];
             };
         };
     }
     /**
-     * @private
+     *
+     */
+    interface GLTFEgretTextureExtension {
+        /**
+         * @defaults false
+         */
+        mipmap?: boolean;
+        /**
+         * @defaults false
+         */
+        depthBuffer?: boolean;
+        /**
+         * @defaults false
+         */
+        stencilBuffer?: boolean;
+        /**
+         * @defaults 0
+         */
+        flipY?: 0 | 1;
+        /**
+         * @defaults 0
+         */
+        premultiplyAlpha?: 0 | 1;
+        /**
+         * 纹理宽。
+         */
+        width?: uint;
+        /**
+         * 纹理高。
+         */
+        height?: uint;
+        /**
+         * @defaults 1
+         */
+        anisotropy?: uint;
+        /**
+         * 纹理数据格式。
+         * @defaults gltf.TextureFormat.RGBA
+         */
+        format?: gltf.TextureFormat;
+        /**
+         * 纹理数据类型。
+         * @defaults gltf.TextureDataType.UNSIGNED_BYTE
+         */
+        type?: gltf.TextureDataType;
+        /**
+         * 纹理对齐方式。
+         * @defaults gltf.TextureAlignment.Four
+         */
+        unpackAlignment?: gltf.TextureAlignment;
+    }
+    /**
+     *
      */
     interface GLTFTexture extends gltf.Texture {
         extensions: {
-            paper?: {
-                mipmap?: boolean;
-                flipY?: 0 | 1;
-                premultiplyAlpha?: 0 | 1;
-                format?: gltf.TextureFormat;
-                width?: number;
-                height?: number;
-                anisotropy?: number;
-                type?: gltf.TextureDataType;
-                unpackAlignment?: gltf.TextureAlignment;
-                depthBuffer?: boolean;
-                stencilBuffer?: boolean;
-            };
+            paper: GLTFEgretTextureExtension;
         };
     }
     /**
@@ -1678,25 +1743,37 @@ declare namespace gltf {
         RGBA = 6408,
         Luminance = 6409,
     }
+    /**
+     *
+     */
     const enum TextureDataType {
         UNSIGNED_BYTE = 5121,
         UNSIGNED_SHORT_5_6_5 = 33635,
         UNSIGNED_SHORT_4_4_4_4 = 32819,
         UNSIGNED_SHORT_5_5_5_1 = 32820,
     }
+    /**
+     *
+     */
     const enum TextureFilter {
-        NEAREST = 9728,
-        LINEAR = 9729,
-        NEAREST_MIPMAP_NEAREST = 9984,
-        LINEAR_MIPMAP_NEAREST = 9985,
-        NEAREST_MIPMAP_LINEAR = 9986,
-        LINEAR_MIPMAP_LINEAR = 9987,
+        Nearest = 9728,
+        Linear = 9729,
+        MearestMipmapNearest = 9984,
+        LinearMipmapNearest = 9985,
+        NearestMipMapLinear = 9986,
+        LinearMipMapLinear = 9987,
     }
-    const enum TextureWrap {
-        CLAMP_TO_EDGE = 33071,
-        MIRRORED_REPEAT = 33648,
-        REPEAT = 10497,
+    /**
+     *
+     */
+    const enum TextureWrappingMode {
+        Repeat = 10497,
+        ClampToEdge = 33071,
+        MirroredRepeat = 33648,
     }
+    /**
+     *
+     */
     const enum TextureAlignment {
         One = 1,
         Two = 2,
@@ -1710,27 +1787,37 @@ declare namespace gltf {
         Fragment = 35632,
         Vertex = 35633,
     }
+    /**
+     *
+     */
     const enum EnableState {
-        BLEND = 3042,
-        CULL_FACE = 2884,
-        DEPTH_TEST = 2929,
-        STENCIL_TEST = 2960,
-        POLYGON_OFFSET_FILL = 32823,
-        SAMPLE_ALPHA_TO_COVERAGE = 32926,
+        Blend = 3042,
+        CullFace = 2884,
+        DepthTest = 2929,
+        StencilTest = 2960,
+        PolygonOffsetFill = 32823,
+        SampleAlphaToCoverage = 32926,
     }
+    /**
+     *
+     */
     const enum DepthFunc {
-        NEVER = 512,
-        LESS = 513,
-        LEQUAL = 515,
-        EQUAL = 514,
-        GREATER = 516,
-        NOTEQUAL = 517,
-        GEQUAL = 518,
-        ALWAYS = 519,
+        Never = 512,
+        Less = 513,
+        Lequal = 515,
+        Equal = 514,
+        Greater = 516,
+        NotEqual = 517,
+        GEqual = 518,
+        Always = 519,
     }
+    /**
+     *
+     */
     const enum AttributeSemanticType {
         POSITION = "POSITION",
         NORMAL = "NORMAL",
+        TANGENT = "TANGENT",
         TEXCOORD_0 = "TEXCOORD_0",
         TEXCOORD_1 = "TEXCOORD_1",
         COLOR_0 = "COLOR_0",
@@ -1820,17 +1907,6 @@ declare namespace gltf {
         MAT2 = "MAT2",
         MAT3 = "MAT3",
         MAT4 = "MAT4",
-    }
-    const enum MeshAttributeType {
-        POSITION = "POSITION",
-        NORMAL = "NORMAL",
-        TANGENT = "TANGENT",
-        TEXCOORD_0 = "TEXCOORD_0",
-        TEXCOORD_1 = "TEXCOORD_1",
-        COLOR_0 = "COLOR_0",
-        COLOR_1 = "COLOR_1",
-        JOINTS_0 = "JOINTS_0",
-        WEIGHTS_0 = "WEIGHTS_0",
     }
     type ImageSource = ImageBitmap | ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement;
     type MeshAttribute = AttributeSemanticType | string;
@@ -2357,20 +2433,24 @@ declare namespace gltf {
     interface Sampler {
         /**
          * Magnification filter.
+         * @defaults gltf.TextureFilter.Nearest
          */
-        magFilter?: 9728 | 9729 | number;
+        magFilter?: gltf.TextureFilter;
         /**
          * Minification filter.
+         * @defaults gltf.TextureFilter.Nearest
          */
-        minFilter?: 9728 | 9729 | 9984 | 9985 | 9986 | 9987 | number;
+        minFilter?: gltf.TextureFilter;
         /**
          * s wrapping mode.
+         * @defaults gltf.TextureWrap.Repeat
          */
-        wrapS?: 33071 | 33648 | 10497 | number;
+        wrapS?: TextureWrappingMode;
         /**
          * t wrapping mode.
+         * @defaults gltf.TextureWrap.Repeat
          */
-        wrapT?: 33071 | 33648 | 10497 | number;
+        wrapT?: TextureWrappingMode;
         name?: string;
         extensions?: any;
         extras?: any;
@@ -2514,7 +2594,7 @@ declare namespace gltf {
          * The index of the bufferView that contains the GLSL shader source. Use this instead of the shader's uri property.
          */
         bufferView?: Index;
-        name: any;
+        name?: string;
         extensions?: any;
         extras?: any;
     }
@@ -2556,7 +2636,7 @@ declare namespace gltf {
          * TODO 默认值
          */
         value: UniformValue;
-        name?: any;
+        name?: string;
         extensions?: any;
         extras?: any;
     }
@@ -2586,7 +2666,7 @@ declare namespace gltf {
              */
             [k: string]: gltf.Uniform;
         };
-        name: any;
+        name?: string;
         states?: States;
         extensions?: any;
         extras?: any;
@@ -2608,7 +2688,7 @@ declare namespace gltf {
          * The names of required WebGL 1.0 extensions.
          */
         glExtensions?: string[];
-        name?: any;
+        name?: string;
         extensions?: any;
         extras?: any;
         [k: string]: any;
@@ -2723,7 +2803,10 @@ declare namespace egret3d {
      * glTF 资源。
      */
     abstract class GLTFAsset extends paper.Asset {
-        protected static _createConfig(): GLTF;
+        /**
+         * @private
+         */
+        static createConfig(): GLTF;
         /**
          * @private
          */
@@ -2732,35 +2815,18 @@ declare namespace egret3d {
             buffers: (Float32Array | Uint32Array | Uint16Array)[];
         } | undefined;
         /**
-         * @private
-         */
-        static createMeshConfig(): GLTF;
-        /**
-         * @private
-         */
-        static createTextureConfig(): GLTF;
-        /**
-         * @private
-         */
-        static createGLTFExtensionsConfig(): GLTF;
-        /**
-         * @private
-         */
-        static createTechnique(source: gltf.Technique): gltf.Technique;
-        /**
-         * @private
-         */
-        static copyTechniqueStates(source: gltf.States, target?: gltf.States): gltf.States | undefined;
-        /**
          * Buffer 列表。
          */
         readonly buffers: (Float32Array | Uint32Array | Uint16Array)[];
         /**
          * 配置。
          */
-        config: GLTF;
+        readonly config: GLTF;
+        /**
+         * 请使用 `T.create()` 创建实例。
+         */
+        protected constructor(config: GLTF, name: string);
         dispose(): boolean;
-        caclByteLength(): number;
         /**
          * 根据指定 BufferView 创建二进制数组。
          */
@@ -3225,49 +3291,63 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * @private
+     *
      */
-    interface GLTFTexture extends gltf.Texture {
-        extensions: {
-            paper?: {
-                mipmap?: boolean;
-                flipY?: 0 | 1;
-                premultiplyAlpha?: 0 | 1;
-                format?: gltf.TextureFormat;
-                width?: number;
-                height?: number;
-                anisotropy?: number;
-                type?: gltf.TextureDataType;
-                unpackAlignment?: gltf.TextureAlignment;
-                depthBuffer?: boolean;
-                stencilBuffer?: boolean;
-            };
-        };
+    interface CreateTextureParameters extends gltf.Sampler, GLTFEgretTextureExtension {
+        /**
+         * 纹理数据源。
+         */
+        source?: ArrayBufferView | gltf.ImageSource | null;
     }
     /**
      * 基础纹理资源。
      * - 纹理资源的基类。
      */
     abstract class BaseTexture extends GLTFAsset {
-        protected _gltfTexture: GLTFTexture | null;
+        protected static _createConfig(createTextureParameters: CreateTextureParameters): GLTF;
+        protected _gltfTexture: GLTFTexture;
         protected _image: gltf.Image;
         protected _sampler: gltf.Sampler;
-        protected constructor(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource | null, width: number, height: number, format?: gltf.TextureFormat, mipmap?: boolean, wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap, magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter, flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment, type?: gltf.TextureDataType, anisotropy?: number);
-        readonly width: number;
-        readonly height: number;
-        readonly format: number;
+        initialize(): void;
+        /**
+         *
+         */
+        setLiner(linear: boolean): this;
+        /**
+         *
+         */
+        setRepeat(repeat: boolean): this;
+        /**
+         *
+         */
+        readonly width: uint;
+        /**
+         *
+         */
+        readonly height: uint;
+        /**
+         *
+         */
+        readonly format: gltf.TextureFormat;
+        /**
+         *
+         */
+        readonly sampler: gltf.Sampler;
+        /**
+         *
+         */
         readonly gltfTexture: GLTFTexture;
     }
     /**
      * 纹理资源。
      */
     class Texture extends BaseTexture {
-        static create(name: string, source: GLTF, width?: number, height?: number): Texture;
-        static create(name: string, source: ArrayBufferView | gltf.ImageSource | null, width: number, height: number, format?: gltf.TextureFormat): Texture;
-        static create(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource, width: number, height: number, format?: gltf.TextureFormat, mipmap?: boolean, wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap, magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter, flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment, type?: gltf.TextureDataType, anisotropy?: number): Texture;
-        static createByImage(name: string, image: gltf.ImageSource | egret.BitmapData, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean, premultiply?: boolean): Texture;
+        static create(parameters: CreateTextureParameters): Texture;
+        static create(source: GLTF, name: string): Texture;
+        /**
+         *
+         */
         static createColorTexture(name: string, r: number, g: number, b: number): Texture;
-        static createGridTexture(name: string): Texture;
     }
 }
 declare namespace egret3d {
@@ -3307,6 +3387,12 @@ declare namespace egret3d {
         commonDefines: string;
         readonly clearColor: Color;
         readonly viewPort: Rectangle;
+        readonly defaultCustomShaderChunks: Readonly<{
+            [key: string]: string;
+        }>;
+        customShaderChunks: {
+            [key: string]: string;
+        } | null;
         renderTarget: RenderTexture | null;
         render: (camera: Camera, material?: Material) => void;
         draw: (drawCall: DrawCall) => void;
@@ -3318,7 +3404,7 @@ declare namespace egret3d {
         initialize(config?: any): void;
         updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null): void;
         clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void;
-        copyFramebufferToTexture(screenPostion: Vector2, target: Texture, level?: number): void;
+        copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level?: uint): void;
     }
     /**
      *
@@ -3331,9 +3417,12 @@ declare namespace paper {
      * - 预制体资源和场景资源的基类。
      */
     abstract class BasePrefabAsset extends Asset {
-        protected _raw: ISerializedData;
+        /**
+         *
+         */
+        readonly config: ISerializedData;
+        constructor(config: ISerializedData, name: string);
         dispose(): boolean;
-        caclByteLength(): number;
     }
     /**
      * 预制体资源。
@@ -3963,7 +4052,7 @@ declare namespace paper {
      */
     class RawScene extends BasePrefabAsset {
         /**
-         * @private
+         * @deprecated
          */
         createInstance(keepUUID?: boolean): Scene | null;
         readonly name: string;
@@ -3979,14 +4068,13 @@ declare namespace egret3d {
         /**
          * 如果该属性合并到 UV2 中，会破坏网格共享，共享的网格无法拥有不同的 lightmap UV。
          */
-        protected readonly _lightmapScaleOffset: egret3d.Vector4;
+        protected readonly _lightmapScaleOffset: Vector4;
         recalculateLocalBox(): void;
         /**
          * 实时获取网格资源的指定三角形顶点位置。
-         * - 采用 CPU 蒙皮。
          */
         getTriangle(triangleIndex: uint, out?: Triangle): Triangle;
-        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
+        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
         /**
          * 该组件的光照图索引。
          */
@@ -4275,99 +4363,18 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     *
+     * 渲染贴图。
      */
-    abstract class BaseRenderTexture extends egret3d.BaseTexture {
+    class RenderTexture extends BaseTexture {
+        static create(parameters: CreateTextureParameters): RenderTexture;
+        static create(source: GLTF, name: string): RenderTexture;
         protected _mipmap: boolean;
-        protected constructor(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource | null, width: number, height: number, format?: gltf.TextureFormat, mipmap?: boolean, wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap, magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter, flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment, type?: gltf.TextureDataType, anisotropy?: number, depth?: boolean, stencil?: boolean);
-        activateRenderTexture(index?: number): void;
+        initialize(): void;
+        activateRenderTexture(index?: uint): void;
         generateMipmap(): boolean;
-    }
-    /**
-     *
-     */
-    class RenderTexture extends egret3d.BaseRenderTexture {
-        static create(name: string, width: number, height: number, depth?: boolean, stencil?: boolean, mipmap?: boolean, linear?: boolean): RenderTexture;
     }
 }
 declare namespace egret3d {
-    /**
-     *
-     */
-    const enum HumanoidMask {
-        Head = 0,
-        Body = 1,
-        LeftArm = 2,
-        RightArm = 3,
-        LeftHand = 4,
-        RightHand = 5,
-        LeftLeg = 6,
-        RightLeg = 7,
-        LeftHandIK = 8,
-        RightHandIK = 9,
-        LeftFootIK = 10,
-        RightFootIK = 11,
-    }
-    /**
-     *
-     */
-    const enum HumanoidJoint {
-        Heck = "H_Neck",
-        Head = "H_Head",
-        LeftEye = "H_LeftEye",
-        RightEye = "H_RightEye",
-        Jaw = "H_Jaw",
-        Hips = "B_Hips",
-        Spine = "B_Spine",
-        Chest = "B_Chest",
-        UpperChest = "B_UpperChest",
-        LeftShoulder = "LA_Shoulder",
-        LeftUpperArm = "LA_UpperArm",
-        LeftLowerArm = "LA_LowerArm",
-        LeftHand = "LA_Hand",
-        RightShoulder = "RA_Shoulder",
-        RightUpperArm = "RA_UpperArm",
-        RightLowerArm = "RA_LowerArm",
-        RightHand = "RA_Hand",
-        LeftUpperLeg = "LL_UpperLeg",
-        LeftLowerLeg = "LL_LowerLeg",
-        LeftFoot = "LL_Foot",
-        LeftToes = "LL_Toes",
-        RightUpperLeg = "RL_UpperLeg",
-        RightLowerLeg = "RL_LowerLeg",
-        RightFoot = "RL_Foot",
-        RightToes = "RL_Toes",
-        LeftThumbProximal = "LH_ThumbProximal",
-        LeftThumbIntermediate = "LH_ThumbIntermediate",
-        LeftThumbDistal = "LH_ThumbDistal",
-        LeftIndexProximal = "LH_IndexProximal",
-        LeftIndexIntermediate = "LH_IndexIntermediate",
-        LeftIndexDistal = "LH_IndexDistal",
-        LeftMiddleProximal = "LH_MiddleProximal",
-        LeftMiddleIntermediate = "LH_MiddleIntermediate",
-        LeftMiddleDistal = "LH_MiddleDistal",
-        LeftRingProximal = "LH_RingProximal",
-        LeftRingIntermediate = "LH_RingIntermediate",
-        LeftRingDistal = "LH_RingDistal",
-        LeftLittleProximal = "LH_LittleProximal",
-        LeftLittleIntermediate = "LH_LittleIntermediate",
-        LeftLittleDistal = "LH_LittleDistal",
-        RightThumbProximal = "RH_ThumbProximal",
-        RightThumbIntermediate = "RH_ThumbIntermediate",
-        RightThumbDistal = "RH_ThumbDistal",
-        RightIndexProximal = "RH_IndexProximal",
-        RightIndexIntermediate = "RH_IndexIntermediate",
-        RightIndexDistal = "RH_IndexDistal",
-        RightMiddleProximal = "RH_MiddleProximal",
-        RightMiddleIntermediate = "RH_MiddleIntermediate",
-        RightMiddleDistal = "RH_MiddleDistal",
-        RightRingProximal = "RH_RingProximal",
-        RightRingIntermediate = "RH_RingIntermediate",
-        RightRingDistal = "RH_RingDistal",
-        RightLittleProximal = "RH_LittleProximal",
-        RightLittleIntermediate = "RH_LittleIntermediate",
-        RightLittleDistal = "RH_LittleDistal",
-    }
     /**
      * 网格资源。
      */
@@ -4380,28 +4387,22 @@ declare namespace egret3d {
          * @param attributeTypes
          * @param drawMode
          */
-        static create(vertexCount: number, indexCount: number, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
+        static create(vertexCount: uint, indexCount: uint, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
             [key: string]: gltf.AccessorType;
         } | null, drawMode?: gltf.DrawMode): Mesh;
         static create(config: GLTF, buffers: Uint32Array[], name: string): Mesh;
+        private static _createConfig();
         protected _drawMode: gltf.DrawMode;
         protected _vertexCount: uint;
         protected readonly _attributeNames: string[];
         protected readonly _customAttributeTypes: {
             [key: string]: gltf.AccessorType;
         };
-        protected _glTFMesh: gltf.Mesh | null;
+        protected _glTFMesh: gltf.Mesh;
         protected _inverseBindMatrices: Float32Array | null;
         protected _boneIndices: {
             [key: string]: uint;
         } | null;
-        /**
-         * 请使用 `egret3d.Mesh.create()` 创建实例。
-         * @see egret3d.Mesh.create()
-         */
-        protected constructor(vertexCountOrConfig: uint | GLTF, indexCountOrBuffers?: uint | Uint32Array[], attributeNamesOrName?: gltf.MeshAttribute[] | null | string, attributeTypes?: {
-            [key: string]: gltf.AccessorType;
-        } | null, drawMode?: gltf.DrawMode);
         dispose(): boolean;
         /**
          * 克隆该网格。
@@ -4413,7 +4414,11 @@ declare namespace egret3d {
         /**
          *
          */
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo, boneMatrices?: Float32Array | null): boolean;
+        getTriangle(triangleIndex: uint, out?: Triangle, vertices?: Float32Array | null): Triangle;
+        /**
+         *
+         */
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo, vertices?: Float32Array | null): boolean;
         /**
          *
          */
@@ -4975,6 +4980,120 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
+     * Shader 通用宏定义。
+     */
+    const enum ShaderDefine {
+        USE_COLOR = "USE_COLOR",
+        USE_MAP = "USE_MAP",
+        USE_NORMALMAP = "USE_NORMALMAP",
+        USE_BUMPMAP = "USE_BUMPMAP",
+        USE_LIGHTMAP = "USE_LIGHTMAP",
+        USE_SHADOWMAP = "USE_SHADOWMAP",
+        USE_SKINNING = "USE_SKINNING",
+        USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
+        FLAT_SHADED = "FLAT_SHADED",
+        ENVMAP_TYPE_CUBE_UV = "ENVMAP_TYPE_CUBE_UV",
+        MAX_BONES = "MAX_BONES",
+        NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
+        NUM_SPOT_LIGHTS = "NUM_SPOT_LIGHTS",
+        SHADOWMAP_TYPE_PCF = "SHADOWMAP_TYPE_PCF",
+        SHADOWMAP_TYPE_PCF_SOFT = "SHADOWMAP_TYPE_PCF_SOFT",
+        DEPTH_PACKING_3200 = "DEPTH_PACKING 3200",
+        DEPTH_PACKING_3201 = "DEPTH_PACKING 3201",
+        USE_FOG = "USE_FOG",
+        FOG_EXP2 = "FOG_EXP2",
+        FLIP_V = "FLIP_V",
+    }
+    /**
+     * Shader 通用 Uniform 名称。
+     */
+    const enum ShaderUniformName {
+        Diffuse = "diffuse",
+        Opacity = "opacity",
+        Size = "size",
+        Map = "map",
+        Specular = "specular",
+        Shininess = "shininess",
+        UVTransform = "uvTransform",
+    }
+    /**
+     *
+     */
+    const enum HumanoidMask {
+        Head = 0,
+        Body = 1,
+        LeftArm = 2,
+        RightArm = 3,
+        LeftHand = 4,
+        RightHand = 5,
+        LeftLeg = 6,
+        RightLeg = 7,
+        LeftHandIK = 8,
+        RightHandIK = 9,
+        LeftFootIK = 10,
+        RightFootIK = 11,
+    }
+    /**
+     *
+     */
+    const enum HumanoidJoint {
+        Heck = "H_Neck",
+        Head = "H_Head",
+        LeftEye = "H_LeftEye",
+        RightEye = "H_RightEye",
+        Jaw = "H_Jaw",
+        Hips = "B_Hips",
+        Spine = "B_Spine",
+        Chest = "B_Chest",
+        UpperChest = "B_UpperChest",
+        LeftShoulder = "LA_Shoulder",
+        LeftUpperArm = "LA_UpperArm",
+        LeftLowerArm = "LA_LowerArm",
+        LeftHand = "LA_Hand",
+        RightShoulder = "RA_Shoulder",
+        RightUpperArm = "RA_UpperArm",
+        RightLowerArm = "RA_LowerArm",
+        RightHand = "RA_Hand",
+        LeftUpperLeg = "LL_UpperLeg",
+        LeftLowerLeg = "LL_LowerLeg",
+        LeftFoot = "LL_Foot",
+        LeftToes = "LL_Toes",
+        RightUpperLeg = "RL_UpperLeg",
+        RightLowerLeg = "RL_LowerLeg",
+        RightFoot = "RL_Foot",
+        RightToes = "RL_Toes",
+        LeftThumbProximal = "LH_ThumbProximal",
+        LeftThumbIntermediate = "LH_ThumbIntermediate",
+        LeftThumbDistal = "LH_ThumbDistal",
+        LeftIndexProximal = "LH_IndexProximal",
+        LeftIndexIntermediate = "LH_IndexIntermediate",
+        LeftIndexDistal = "LH_IndexDistal",
+        LeftMiddleProximal = "LH_MiddleProximal",
+        LeftMiddleIntermediate = "LH_MiddleIntermediate",
+        LeftMiddleDistal = "LH_MiddleDistal",
+        LeftRingProximal = "LH_RingProximal",
+        LeftRingIntermediate = "LH_RingIntermediate",
+        LeftRingDistal = "LH_RingDistal",
+        LeftLittleProximal = "LH_LittleProximal",
+        LeftLittleIntermediate = "LH_LittleIntermediate",
+        LeftLittleDistal = "LH_LittleDistal",
+        RightThumbProximal = "RH_ThumbProximal",
+        RightThumbIntermediate = "RH_ThumbIntermediate",
+        RightThumbDistal = "RH_ThumbDistal",
+        RightIndexProximal = "RH_IndexProximal",
+        RightIndexIntermediate = "RH_IndexIntermediate",
+        RightIndexDistal = "RH_IndexDistal",
+        RightMiddleProximal = "RH_MiddleProximal",
+        RightMiddleIntermediate = "RH_MiddleIntermediate",
+        RightMiddleDistal = "RH_MiddleDistal",
+        RightRingProximal = "RH_RingProximal",
+        RightRingIntermediate = "RH_RingIntermediate",
+        RightRingDistal = "RH_RingDistal",
+        RightLittleProximal = "RH_LittleProximal",
+        RightLittleIntermediate = "RH_LittleIntermediate",
+        RightLittleDistal = "RH_LittleDistal",
+    }
+    /**
      *
      */
     interface ITransformObserver {
@@ -5476,25 +5595,25 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 默认的贴图。
+     * 默认的纹理。
      */
     class DefaultTextures extends paper.SingletonComponent {
         /**
-         * 纯白色纹理
+         * 纯白色纹理。
          */
-        static WHITE: Texture;
+        static WHITE: BaseTexture;
         /**
-         * 纯灰色纹理
+         * 纯灰色纹理。
          */
-        static GRAY: Texture;
+        static GRAY: BaseTexture;
         /**
-         * 黑白网格纹理
+         * 黑白网格纹理。
          */
-        static GRID: Texture;
+        static GRID: BaseTexture;
         /**
-         * 用于表示纹理丢失的紫色纹理
+         * 用于表示纹理丢失的紫色纹理。
          */
-        static MISSING: Texture;
+        static MISSING: BaseTexture;
         initialize(): void;
     }
 }
@@ -5538,7 +5657,7 @@ declare namespace egret3d {
         static SHADOW: Shader;
         static SPRITE: Shader;
         static COPY: Shader;
-        private _createShader(name, config, renderQueue?, states?, defines?);
+        private _createShader(name, config, renderQueue, tStates, defines?);
         initialize(): void;
     }
 }
@@ -5575,7 +5694,7 @@ declare namespace egret3d {
          *
          */
         static MISSING: Material;
-        private _createMaterial(name, shader, renderQueue?);
+        private _createMaterial(shader, name);
         initialize(): void;
     }
 }
@@ -6385,11 +6504,11 @@ declare namespace egret3d {
          * 该相机的渲染目标。
          * - 未设置该值则直接绘制到舞台。
          */
-        renderTarget: BaseRenderTexture | null;
+        renderTarget: RenderTexture | null;
         /**
          *
          */
-        readonly postprocessingRenderTarget: BaseRenderTexture;
+        readonly postprocessingRenderTarget: RenderTexture;
         /**
          * @deprecated
          */
@@ -6422,18 +6541,6 @@ declare namespace egret3d {
      */
     abstract class CameraPostprocessing extends paper.BaseComponent {
         render(camera: Camera): void;
-    }
-    class MotionBlurEffect extends CameraPostprocessing {
-        private _material;
-        private _velocityFactor;
-        private _samples;
-        private _worldToClipMatrix;
-        private readonly _resolution;
-        initialize(): void;
-        uninitialize(): void;
-        render(camera: Camera): void;
-        velocityFactor: number;
-        samples: number;
     }
 }
 declare namespace egret3d {
@@ -6497,7 +6604,7 @@ declare namespace egret3d {
          * 所有透明的，按照从远到近排序
          */
         private _sortFromFarToNear(a, b);
-        blit(src: BaseTexture, material?: Material | null, dest?: BaseRenderTexture | null): void;
+        blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null): void;
         updateCameraTransform(): void;
         updateLights(lights: ReadonlyArray<BaseLight>): void;
         updateDrawCall(drawCall: DrawCall): string;
@@ -6541,7 +6648,7 @@ declare namespace egret3d {
         /**
          * @private
          */
-        renderTarget: BaseRenderTexture;
+        renderTarget: RenderTexture;
         /**
          *
          */
@@ -6602,20 +6709,9 @@ declare namespace paper {
          * 该场景的雾。
          */
         readonly fog: egret3d.Fog;
-        /**
-         * 该场景的光照贴图列表。
-         */
-        readonly lightmaps: egret3d.BaseTexture[];
         private readonly _gameObjects;
-        /**
-         * 禁止实例化。
-         */
+        private readonly _lightmaps;
         private constructor();
-        /**
-         * 场景被销毁后，内部卸载。
-         * @protected
-         */
-        uninitialize(): void;
         /**
          * 销毁该场景和场景中的全部实体。
          */
@@ -6645,11 +6741,15 @@ declare namespace paper {
         /**
          * 该场景的实体总数。
          */
-        readonly gameObjectCount: number;
+        readonly gameObjectCount: uint;
         /**
          * 该场景的全部实体。
          */
         readonly gameObjects: ReadonlyArray<GameObject>;
+        /**
+         * 该场景的光照贴图列表。
+         */
+        lightmaps: ReadonlyArray<egret3d.BaseTexture | null>;
     }
 }
 declare namespace egret3d {
@@ -6674,7 +6774,7 @@ declare namespace egret3d {
          *
          */
         distance: number;
-        renderTarget: BaseRenderTexture;
+        renderTarget: RenderTexture;
         updateShadow(camera: Camera): void;
         updateFace(camera: Camera, faceIndex: number): void;
     }
@@ -7097,9 +7197,16 @@ declare namespace egret3d {
          *
          */
         boneMatrices: Float32Array | null;
+        /**
+         *
+         */
+        source: SkinnedMeshRenderer | null;
+        private _skinnedDirty;
         private readonly _bones;
         private _rootBone;
         private _mesh;
+        private _skinnedVertices;
+        private _skinning(vertexOffset, vertexCount);
         initialize(reset?: boolean): void;
         uninitialize(): void;
         recalculateLocalBox(): void;
@@ -8536,46 +8643,6 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     * Shader 通用宏定义。
-     */
-    const enum ShaderDefine {
-        USE_COLOR = "USE_COLOR",
-        USE_MAP = "USE_MAP",
-        USE_NORMALMAP = "USE_NORMALMAP",
-        USE_BUMPMAP = "USE_BUMPMAP",
-        USE_LIGHTMAP = "USE_LIGHTMAP",
-        USE_SHADOWMAP = "USE_SHADOWMAP",
-        USE_SKINNING = "USE_SKINNING",
-        USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
-        FLAT_SHADED = "FLAT_SHADED",
-        ENVMAP_TYPE_CUBE_UV = "ENVMAP_TYPE_CUBE_UV",
-        MAX_BONES = "MAX_BONES",
-        NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
-        NUM_SPOT_LIGHTS = "NUM_SPOT_LIGHTS",
-        SHADOWMAP_TYPE_PCF = "SHADOWMAP_TYPE_PCF",
-        SHADOWMAP_TYPE_PCF_SOFT = "SHADOWMAP_TYPE_PCF_SOFT",
-        DEPTH_PACKING_3200 = "DEPTH_PACKING 3200",
-        DEPTH_PACKING_3201 = "DEPTH_PACKING 3201",
-        USE_FOG = "USE_FOG",
-        FOG_EXP2 = "FOG_EXP2",
-        FLIP_V = "FLIP_V",
-        CUSTOM_VERTEX = "custom_vertex",
-        CUSTOM_BEGIN_VERTEX = "custom_begin_vertex",
-        CUSTOM_END_VERTEX = "custom_end_vertex",
-    }
-    /**
-     * Shader 通用 Uniform 名称。
-     */
-    const enum ShaderUniformName {
-        Diffuse = "diffuse",
-        Opacity = "opacity",
-        Size = "size",
-        Map = "map",
-        Specular = "specular",
-        Shininess = "shininess",
-        UVTransform = "uvTransform",
-    }
-    /**
      * Shader 资源。
      */
     class Shader extends GLTFAsset {
@@ -8594,10 +8661,17 @@ declare namespace egret3d {
         /**
          * @private
          */
+        static createDefaultStates(): gltf.States;
+        /**
+         * @private
+         */
+        static copyStates(source: gltf.States, target: gltf.States): void;
+        /**
+         * @private
+         */
         customs: {
             [key: string]: string;
         } | null;
-        private constructor();
         /**
          * @private
          */
@@ -8618,32 +8692,26 @@ declare namespace egret3d {
         /**
          * 创建一个材质。
          */
-        static create(shader?: Shader | string): Material;
-        static create(config: GLTF, name: string): Material;
+        static create(shader?: Shader, name?: string): Material;
+        static create(config: GLTF, name?: string): Material;
         /**
-         *
+         * 该材质的渲染排序。
          */
         renderQueue: paper.RenderQueue | uint;
         private _cacheDefines;
         private readonly _defines;
-        private readonly _textures;
-        /**
-         * 请使用 `Material.create()` 创建实例。
-         * @see Material.create()
-         * @deprecated
-         */
-        constructor(shader?: Shader | string);
-        constructor(config: GLTF, name: string);
+        private _createTechnique(shader, glTFMaterial);
         private _reset(shaderOrConfig);
-        dispose(disposeChildren?: boolean): boolean;
+        private _retainOrReleaseTextures(isRatain);
+        dispose(): boolean;
         /**
          * 拷贝。
          */
         copy(value: Material): this;
         /**
-         * 克隆。
+         * 克隆该材质。
          */
-        clone(): Material;
+        clone(): this;
         /**
          * 为该材质添加指定的 define。
          * @param defineString define 字符串。
@@ -8738,15 +8806,15 @@ declare namespace egret3d {
         getTexture(uniformName: string): BaseTexture | null;
         /**
          * 设置该材质的主贴图。
-         * @param value 贴图。
+         * @param texture 贴图。
          */
-        setTexture(value: BaseTexture | null): this;
+        setTexture(texture: BaseTexture | null): this;
         /**
          * 设置该材质的指定贴图。
          * @param uniformName uniform 名称。
-         * @param value 贴图。
+         * @param texture 贴图。
          */
-        setTexture(uniformName: string, value: BaseTexture | null): this;
+        setTexture(uniformName: string, texture: BaseTexture | null): this;
         /**
          * 该材质的透明度。
          */
@@ -8760,9 +8828,9 @@ declare namespace egret3d {
          */
         readonly defines: ReadonlyArray<string>;
         /**
-         * 该材质的 glTF 渲染技术。
+         * 该材质的渲染技术。
          */
-        readonly glTFTechnique: gltf.Technique;
+        readonly technique: gltf.Technique;
         /**
          * @deprecated
          */
@@ -8904,6 +8972,10 @@ declare namespace egret3d {
      * 动画资源。
      */
     class AnimationAsset extends GLTFAsset {
+        /**
+         * @private
+         */
+        static create(config: GLTF, buffers: Uint32Array[], name: string): AnimationAsset;
         getAnimationClip(name: string): GLTFAnimationClip | null;
     }
 }
@@ -8912,8 +8984,14 @@ declare namespace egret3d {
      * @private
      */
     class AnimationController extends GLTFAsset {
-        static create(): AnimationController;
-        private constructor();
+        /**
+         *
+         */
+        static create(name: string): AnimationController;
+        /**
+         *
+         */
+        static create(config: GLTF, name: string): AnimationController;
         /**
          * 添加一个新的动画层。
          */
@@ -8930,13 +9008,19 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 动画资源。
+     * @private
      */
     class AnimationMask extends GLTFAsset {
-        static create(): AnimationMask;
+        /**
+         *
+         */
+        static create(name: string): AnimationMask;
+        /**
+         *
+         */
+        static create(config: GLTF, name: string): AnimationMask;
         private _jointNamesDirty;
         private readonly _jointNames;
-        private constructor();
         private _addJoint(nodes, joints, jointIndex, recursive);
         createJoints(mesh: Mesh): this;
         addJoint(name: string, recursive?: boolean): this;
@@ -9811,46 +9895,6 @@ declare namespace egret3d.ShaderLib {
         "extensionsRequired": string[];
         "extensionsUsed": string[];
     };
-    const motionBlur: {
-        "version": string;
-        "asset": {
-            "version": string;
-        };
-        "extensions": {
-            "KHR_techniques_webgl": {
-                "shaders": {
-                    "name": string;
-                    "type": number;
-                    "uri": string;
-                }[];
-                "techniques": {
-                    "name": string;
-                    "attributes": {};
-                    "uniforms": {
-                        "tColor": {
-                            "type": number;
-                        };
-                        "viewProjectionInverseMatrix": {
-                            "type": number;
-                        };
-                        "previousViewProjectionMatrix": {
-                            "type": number;
-                        };
-                        "velocityFactor": {
-                            "type": number;
-                        };
-                    };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
-                    };
-                }[];
-            };
-            "paper": {};
-        };
-        "extensionsRequired": string[];
-        "extensionsUsed": string[];
-    };
     const normal: {
         "version": string;
         "asset": {
@@ -10494,21 +10538,6 @@ declare namespace egret3d {
 declare namespace egret3d.web {
 }
 declare namespace egret3d.web {
-    /**
-     *
-     */
-    /**
-    * @deprecated
-    */
-    const enum TextureFormatEnum {
-        RGBA = 1,
-        RGB = 2,
-        Gray = 3,
-        PVRTC4_RGB = 4,
-        PVRTC4_RGBA = 4,
-        PVRTC2_RGB = 4,
-        PVRTC2_RGBA = 4,
-    }
 }
 declare namespace egret3d.web {
 }

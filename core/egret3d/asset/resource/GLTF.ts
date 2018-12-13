@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 
+     * 扩展 glTF。
      */
     export interface GLTF extends gltf.GLTF {
         version: string;
@@ -23,37 +23,83 @@ namespace egret3d {
         extensionsRequired: string[];
     }
     /**
-     * 
+     * 扩展 glTF 材质。
+     * - 仅用于存储材质初始值。
      */
     export interface GLTFMaterial extends gltf.Material {
         extensions: {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
             paper: {
                 renderQueue: uint;
-                defines?: string[];
+                /**
+                 * 该值如果定义，则覆盖着色器中的值。
+                 */
                 states?: gltf.States;
+                /**
+                 * 该值如果定义，则覆盖着色器中的值。
+                 */
+                defines?: string[];
             }
         };
     }
     /**
-     * @private
+     * 
+     */
+    export interface GLTFEgretTextureExtension {
+        /**
+         * @defaults false
+         */
+        mipmap?: boolean;
+        /**
+         * @defaults false
+         */
+        depthBuffer?: boolean;
+        /**
+         * @defaults false
+         */
+        stencilBuffer?: boolean;
+        /**
+         * @defaults 0
+         */
+        flipY?: 0 | 1;
+        /**
+         * @defaults 0
+         */
+        premultiplyAlpha?: 0 | 1;
+        /**
+         * 纹理宽。
+         */
+        width?: uint;
+        /**
+         * 纹理高。
+         */
+        height?: uint;
+        /**
+         * @defaults 1
+         */
+        anisotropy?: uint;
+        /**
+         * 纹理数据格式。
+         * @defaults gltf.TextureFormat.RGBA
+         */
+        format?: gltf.TextureFormat;
+        /**
+         * 纹理数据类型。
+         * @defaults gltf.TextureDataType.UNSIGNED_BYTE
+         */
+        type?: gltf.TextureDataType;
+        /**
+         * 纹理对齐方式。
+         * @defaults gltf.TextureAlignment.Four
+         */
+        unpackAlignment?: gltf.TextureAlignment;
+    }
+    /**
+     * 
      */
     export interface GLTFTexture extends gltf.Texture {
         extensions: {
-            paper?: {
-                mipmap?: boolean;
-                flipY?: 0 | 1;
-                premultiplyAlpha?: 0 | 1;
-                format?: gltf.TextureFormat;
-                width?: uint;
-                height?: uint;
-                anisotropy?: uint;
-                type?: gltf.TextureDataType;
-                unpackAlignment?: gltf.TextureAlignment;
-                //
-                depthBuffer?: boolean;
-                stencilBuffer?: boolean;
-            }
+            paper: GLTFEgretTextureExtension,
         };
     }
     /**
@@ -347,29 +393,38 @@ declare namespace gltf {
         RGBA = 6408,
         Luminance = 6409,
     }
-
+    /**
+     * 
+     */
     export const enum TextureDataType {
         UNSIGNED_BYTE = 5121,
         UNSIGNED_SHORT_5_6_5 = 33635,
         UNSIGNED_SHORT_4_4_4_4 = 32819,
         UNSIGNED_SHORT_5_5_5_1 = 32820,
     }
-
+    /**
+     * 
+     */
     export const enum TextureFilter {
-        NEAREST = 9728,
-        LINEAR = 9729,
-        NEAREST_MIPMAP_NEAREST = 9984,
-        LINEAR_MIPMAP_NEAREST = 9985,
-        NEAREST_MIPMAP_LINEAR = 9986,
-        LINEAR_MIPMAP_LINEAR = 9987,
-    }
+        Nearest = 9728,
+        Linear = 9729,
 
-    export const enum TextureWrap {
-        CLAMP_TO_EDGE = 33071,
-        MIRRORED_REPEAT = 33648,
-        REPEAT = 10497,
+        MearestMipmapNearest = 9984,
+        LinearMipmapNearest = 9985,
+        NearestMipMapLinear = 9986,
+        LinearMipMapLinear = 9987,
     }
-
+    /**
+     * 
+     */
+    export const enum TextureWrappingMode {
+        Repeat = 10497,
+        ClampToEdge = 33071,
+        MirroredRepeat = 33648,
+    }
+    /**
+     * 
+     */
     export const enum TextureAlignment {
         One = 1,
         Two = 2,
@@ -383,30 +438,37 @@ declare namespace gltf {
         Fragment = 35632,
         Vertex = 35633,
     }
-
+    /**
+     * 
+     */
     export const enum EnableState {
-        BLEND = 3042,
-        CULL_FACE = 2884,
-        DEPTH_TEST = 2929,
-        STENCIL_TEST = 2960,
-        POLYGON_OFFSET_FILL = 32823,
-        SAMPLE_ALPHA_TO_COVERAGE = 32926,
+        Blend = 3042,
+        CullFace = 2884,
+        DepthTest = 2929,
+        StencilTest = 2960,
+        PolygonOffsetFill = 32823,
+        SampleAlphaToCoverage = 32926,
     }
-
+    /**
+     * 
+     */
     export const enum DepthFunc {
-        NEVER = 512,
-        LESS = 513,
-        LEQUAL = 515,
-        EQUAL = 514,
-        GREATER = 516,
-        NOTEQUAL = 517,
-        GEQUAL = 518,
-        ALWAYS = 519,
+        Never = 512,
+        Less = 513,
+        Lequal = 515,
+        Equal = 514,
+        Greater = 516,
+        NotEqual = 517,
+        GEqual = 518,
+        Always = 519,
     }
-
+    /**
+     * 
+     */
     export const enum AttributeSemanticType {
         POSITION = "POSITION",
         NORMAL = "NORMAL",
+        TANGENT = "TANGENT",
         TEXCOORD_0 = "TEXCOORD_0",
         TEXCOORD_1 = "TEXCOORD_1",
         COLOR_0 = "COLOR_0",
@@ -512,18 +574,6 @@ declare namespace gltf {
         MAT2 = "MAT2",
         MAT3 = "MAT3",
         MAT4 = "MAT4",
-    }
-
-    export const enum MeshAttributeType {
-        POSITION = "POSITION",
-        NORMAL = "NORMAL",
-        TANGENT = "TANGENT",
-        TEXCOORD_0 = "TEXCOORD_0",
-        TEXCOORD_1 = "TEXCOORD_1",
-        COLOR_0 = "COLOR_0",
-        COLOR_1 = "COLOR_1",
-        JOINTS_0 = "JOINTS_0",
-        WEIGHTS_0 = "WEIGHTS_0",
     }
 
     export type ImageSource = ImageBitmap | ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement;
@@ -1076,20 +1126,24 @@ declare namespace gltf {
     export interface Sampler {
         /**
          * Magnification filter.
+         * @defaults gltf.TextureFilter.Nearest
          */
-        magFilter?: 9728 | 9729 | number;
+        magFilter?: gltf.TextureFilter;
         /**
          * Minification filter.
+         * @defaults gltf.TextureFilter.Nearest
          */
-        minFilter?: 9728 | 9729 | 9984 | 9985 | 9986 | 9987 | number;
+        minFilter?: gltf.TextureFilter;
         /**
          * s wrapping mode.
+         * @defaults gltf.TextureWrap.Repeat
          */
-        wrapS?: 33071 | 33648 | 10497 | number;
+        wrapS?: TextureWrappingMode;
         /**
          * t wrapping mode.
+         * @defaults gltf.TextureWrap.Repeat
          */
-        wrapT?: 33071 | 33648 | 10497 | number;
+        wrapT?: TextureWrappingMode;
         name?: string;
         extensions?: any;
         extras?: any;
@@ -1238,7 +1292,7 @@ declare namespace gltf {
          * The index of the bufferView that contains the GLSL shader source. Use this instead of the shader's uri property.
          */
         bufferView?: Index;
-        name: any;
+        name?: string;
         extensions?: any;
         extras?: any;
         // [k: string]: any;
@@ -1281,7 +1335,7 @@ declare namespace gltf {
          * TODO 默认值
          */
         value: UniformValue;
-        name?: any;
+        name?: string;
         extensions?: any;
         extras?: any;
         // [k: string]: any;
@@ -1312,7 +1366,7 @@ declare namespace gltf {
              */
             [k: string]: gltf.Uniform;
         };
-        name: any;
+        name?: string;
         states?: States;
         extensions?: any;
         extras?: any;
@@ -1334,7 +1388,7 @@ declare namespace gltf {
          * The names of required WebGL 1.0 extensions.
          */
         glExtensions?: string[];
-        name?: any;
+        name?: string;
         extensions?: any;
         extras?: any;
         [k: string]: any;
@@ -1361,6 +1415,7 @@ declare namespace gltf {
         /**
          * The index of the technique.
          */
+        // technique: Index; Modified by egret.
         technique: string;
         /**
          * Dictionary object of uniform values.

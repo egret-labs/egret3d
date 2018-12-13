@@ -58,9 +58,9 @@ namespace egret3d.particle {
             //
             let index = 0;
             //提前填充
-            const orginPostionBuffer = mesh.getAttributes(gltf.MeshAttributeType.POSITION)!;
-            const orginUVBuffer = mesh.getAttributes(gltf.MeshAttributeType.TEXCOORD_0);
-            const orginColorBuffer = mesh.getAttributes(gltf.MeshAttributeType.COLOR_0);
+            const orginPostionBuffer = mesh.getAttributes(gltf.AttributeSemanticType.POSITION)!;
+            const orginUVBuffer = mesh.getAttributes(gltf.AttributeSemanticType.TEXCOORD_0);
+            const orginColorBuffer = mesh.getAttributes(gltf.AttributeSemanticType.COLOR_0);
             const positionBuffer = batchMesh.getAttributes(gltf.AttributeSemanticType.POSITION)!;
             const colorBuffer = batchMesh.getAttributes(gltf.AttributeSemanticType.COLOR_0)!;
             const uvBuffer = batchMesh.getAttributes(gltf.AttributeSemanticType.TEXCOORD_0)!;

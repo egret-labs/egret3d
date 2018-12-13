@@ -10,17 +10,14 @@ namespace egret3d.web {
             if (!super.dispose()) {
                 return false;
             }
+            //
+            const webgl = WebGLRenderState.webgl!;
+            this.vbo && webgl.deleteBuffer(this.vbo);
 
-            if (this.vbo) {
-                const webgl = WebGLRenderState.webgl!;
-
-                for (const ibo of this.ibos) {
-                    ibo && webgl.deleteBuffer(ibo);
-                }
-
-                webgl.deleteBuffer(this.vbo);
+            for (const ibo of this.ibos) {
+                ibo && webgl.deleteBuffer(ibo);
             }
-
+            //
             this.ibos.length = 0;
             this.vbo = null;
 
@@ -56,7 +53,7 @@ namespace egret3d.web {
                             console.error("Create webgl element buffer error.");
                         }
                     }
-                    
+
                     subMeshIndex++;
                 }
 
@@ -142,6 +139,6 @@ namespace egret3d.web {
             }
         }
     }
-    // Retarget.
+    // Retargeting.
     egret3d.Mesh = WebGLMesh;
 }

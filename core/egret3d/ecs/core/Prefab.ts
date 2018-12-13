@@ -4,12 +4,15 @@ namespace paper {
      * - 预制体资源和场景资源的基类。
      */
     export abstract class BasePrefabAsset extends Asset {
-        protected _raw: ISerializedData = null as any;
         /**
-         * @internal
+         * 
          */
-        public parse(json: ISerializedData) {
-            this._raw = json;
+        public readonly config: ISerializedData = null!;
+
+        public constructor(config: ISerializedData, name: string) {
+            super(name);
+
+            this.config = config;
         }
 
         public dispose() {
@@ -17,13 +20,9 @@ namespace paper {
                 return false;
             }
 
-            this._raw = null!;
+            (this.config as any) = null;
 
             return true;
-        }
-
-        public caclByteLength() {
-            return 0;
         }
     }
     /**
@@ -91,17 +90,18 @@ namespace paper {
 
             return null;
         }
+
         /**
          * @deprecated
          */
         public createInstance(scene?: Scene | null, keepUUID?: boolean) {
-            if (!this._raw) {
+            if (!this.config) {
                 return null;
             }
 
             const isEditor = Application.playerMode === PlayerMode.Editor;
             const deserializer = new Deserializer();
-            const gameObject = deserializer.deserialize(this._raw, keepUUID, isEditor, scene) as GameObject | null;
+            const gameObject = deserializer.deserialize(this.config, keepUUID, isEditor, scene) as GameObject | null;
 
             if (gameObject && isEditor) {
                 if (!gameObject.extras!.prefab) {

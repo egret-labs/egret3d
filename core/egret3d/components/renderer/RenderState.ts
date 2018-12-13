@@ -232,7 +232,7 @@ namespace egret3d {
 
         public updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null): void { }
         public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void { }
-        public copyFramebufferToTexture(screenPostion: Vector2, target: Texture, level: number = 0): void { }
+        public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: uint = 0): void { }
     }
     /**
      * 

@@ -3,6 +3,17 @@ namespace egret3d {
      * 动画资源。
      */
     export class AnimationAsset extends GLTFAsset {
+        /**
+         * @private
+         */
+        public static create(config: GLTF, buffers: Uint32Array[], name: string): AnimationAsset {
+            const animationAsset = new AnimationAsset(config, name);
+            for (const b of buffers) {
+                animationAsset.buffers.push(b);
+            }
+
+            return animationAsset;
+        }
         /*
          * 获取动画剪辑。
          */
@@ -10,7 +21,6 @@ namespace egret3d {
             if (
                 !this.config.animations ||
                 this.config.animations.length === 0
-
             ) { // TODO 动画数据暂不合并。
                 return null;
             }

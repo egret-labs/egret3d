@@ -102,16 +102,10 @@ namespace paper {
         @serializedField
         @editor.property(editor.EditType.NESTED)
         public readonly fog: egret3d.Fog = egret3d.Fog.create();
-        /**
-         * 该场景的光照贴图列表。
-         */
-        @serializedField
-        public readonly lightmaps: egret3d.BaseTexture[] = [];
 
         private readonly _gameObjects: GameObject[] = [];
-        /**
-         * 禁止实例化。
-         */
+        private readonly _lightmaps: (egret3d.BaseTexture | null)[] = [];
+
         private constructor(name: string) {
             super();
 
@@ -143,9 +137,15 @@ namespace paper {
         }
         /**
          * 场景被销毁后，内部卸载。
-         * @protected
+         * @internal
          */
         public uninitialize() {
+            for (const lightmap of this._lightmaps) {
+                if (lightmap) {
+                    lightmap.release();
+                }
+            }
+
             // TODO
             // this.name = "";
             // this.extras
@@ -153,12 +153,12 @@ namespace paper {
             this.lightmapIntensity = 1.0;
             this.ambientColor.set(0.20, 0.20, 0.25, 1.0);
             // this.fog.clear();
-            this.lightmaps.length = 0;
+            this._lightmaps.length = 0;
         }
         /**
          * 销毁该场景和场景中的全部实体。
          */
-        public destroy() {
+        public destroy(): boolean {
             if (!Application.sceneManager.removeScene(this)) {
                 return false;
             }
@@ -183,7 +183,7 @@ namespace paper {
          * - 仅返回第一个符合条件的实体。
          * @param nameOrPath 名称或路径。
          */
-        public find(nameOrPath: string) {
+        public find(nameOrPath: string): GameObject | null {
             const index = nameOrPath.indexOf("/");
             if (index > 0) {
                 const firstName = nameOrPath.slice(0, index);
@@ -209,7 +209,7 @@ namespace paper {
          * - 仅返回第一个符合条件的实体。
          * @param tag 标识。
          */
-        public findWithTag(tag: string) {
+        public findWithTag(tag: string): GameObject | null {
             for (const gameObject of this._gameObjects) {
                 if (gameObject.tag === tag) {
                     return gameObject;
@@ -223,7 +223,7 @@ namespace paper {
          * - 返回符合条件的全部实体。
          * @param tag 标识。
          */
-        public findGameObjectsWithTag(tag: string) {
+        public findGameObjectsWithTag(tag: string): GameObject[] {
             const gameObjects: GameObject[] = [];
             for (const gameObject of this._gameObjects) {
                 if (gameObject.tag === tag) {
@@ -236,7 +236,7 @@ namespace paper {
         /**
          * 该场景的全部根实体。
          */
-        public getRootGameObjects() {
+        public getRootGameObjects(): GameObject[] {
             const gameObjects: GameObject[] = [];
             for (const gameObject of this._gameObjects) {
                 if (!gameObject.transform.parent) {
@@ -249,7 +249,7 @@ namespace paper {
         /**
          * 该场景的实体总数。
          */
-        public get gameObjectCount() {
+        public get gameObjectCount(): uint {
             return this._gameObjects.length;
         }
         /**
@@ -259,6 +259,36 @@ namespace paper {
         @deserializedIgnore
         public get gameObjects(): ReadonlyArray<GameObject> {
             return this._gameObjects;
+        }
+        /**
+         * 该场景的光照贴图列表。
+         */
+        @serializedField
+        public get lightmaps(): ReadonlyArray<egret3d.BaseTexture | null> {
+            return this._lightmaps;
+        }
+        public set lightmaps(value: ReadonlyArray<egret3d.BaseTexture | null>) {
+            const lightmaps = this._lightmaps;
+
+            for (const lightmap of lightmaps) {
+                if (lightmap) {
+                    lightmap.release();
+                }
+            }
+
+            if (value !== lightmaps) {
+                lightmaps.length = 0;
+
+                for (const lightmap of value) {
+                    lightmaps.push(lightmap);
+                }
+            }
+
+            for (const lightmap of lightmaps) {
+                if (lightmap) {
+                    lightmap.retain();
+                }
+            }
         }
     }
 }

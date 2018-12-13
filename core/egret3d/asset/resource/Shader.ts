@@ -1,47 +1,5 @@
 namespace egret3d {
     /**
-     * Shader 通用宏定义。
-     */
-    export const enum ShaderDefine {
-        USE_COLOR = "USE_COLOR",
-        USE_MAP = "USE_MAP",
-        USE_NORMALMAP = "USE_NORMALMAP",
-        USE_BUMPMAP = "USE_BUMPMAP",
-        USE_LIGHTMAP = "USE_LIGHTMAP",
-        USE_SHADOWMAP = "USE_SHADOWMAP",
-        USE_SKINNING = "USE_SKINNING",
-        USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
-        //
-        FLAT_SHADED = "FLAT_SHADED",
-        ENVMAP_TYPE_CUBE_UV = "ENVMAP_TYPE_CUBE_UV",
-        //
-        MAX_BONES = "MAX_BONES",
-        //
-        NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
-        NUM_SPOT_LIGHTS = "NUM_SPOT_LIGHTS",
-        SHADOWMAP_TYPE_PCF = "SHADOWMAP_TYPE_PCF",
-        SHADOWMAP_TYPE_PCF_SOFT = "SHADOWMAP_TYPE_PCF_SOFT",
-        DEPTH_PACKING_3200 = "DEPTH_PACKING 3200",
-        DEPTH_PACKING_3201 = "DEPTH_PACKING 3201",
-        //
-        USE_FOG = "USE_FOG",
-        FOG_EXP2 = "FOG_EXP2",
-        //
-        FLIP_V = "FLIP_V",
-    }
-    /**
-     * Shader 通用 Uniform 名称。
-     */
-    export const enum ShaderUniformName {
-        Diffuse = "diffuse",
-        Opacity = "opacity",
-        Size = "size",
-        Map = "map",
-        Specular = "specular",
-        Shininess = "shininess",
-        UVTransform = "uvTransform",
-    }
-    /**
      * Shader 资源。
      */
     export class Shader extends GLTFAsset {
@@ -58,38 +16,97 @@ namespace egret3d {
          */
         public static create(glTF: GLTF, name: string): Shader;
         public static create(shaderOrGLTF: Shader | GLTF, name: string): Shader {
-            const shader = new Shader(name);
+            let shader: Shader;
+
             if (shaderOrGLTF instanceof Shader) {
                 const KHR_techniques_webgl = shaderOrGLTF.config.extensions.KHR_techniques_webgl!;
                 const technique = KHR_techniques_webgl.techniques[0];
                 const uniforms = {} as any;
+
                 for (const k in technique.uniforms) {
                     uniforms[k] = technique.uniforms[k];
                 }
 
-                shader.config = {
+                const config = {
                     extensions: {
                         KHR_techniques_webgl: {
                             shaders: KHR_techniques_webgl.shaders,
                             techniques: [{
                                 attributes: technique.attributes,
                                 uniforms: uniforms,
-                                states: technique.states,
+                                // states: technique.states,
                             }]
                         }
                     }
-                } as any; // TODO
-                shaderOrGLTF.config;
+                } as GLTF; // TODO
+
+                shader = new Shader(config, name);
+                shader.initialize();
                 // shader.customs = shaderOrGLTF.customs; TODO
                 shader._renderQueue = shaderOrGLTF._renderQueue;
                 shader._defines = shaderOrGLTF._defines ? shaderOrGLTF._defines.concat() : undefined;
                 shader._states = shaderOrGLTF._states; // TODO
             }
             else {
-                shader.config = shaderOrGLTF;
+                shader = new Shader(shaderOrGLTF, name);
+                shader.initialize();
             }
 
             return shader;
+        }
+        /**
+         * @private
+         */
+        public static createDefaultStates(): gltf.States {
+            const states: gltf.States = {
+                enable: [gltf.EnableState.DepthTest, gltf.EnableState.CullFace],
+                functions: {
+                    depthFunc: [gltf.DepthFunc.Lequal],
+                    depthMask: [true],
+                    frontFace: [gltf.FrontFace.CCW],
+                    cullFace: [gltf.CullFace.Back],
+                },
+            };
+
+            return states;
+        }
+        /**
+         * @private
+         */
+        public static copyStates(source: gltf.States, target: gltf.States) {
+            const { enable: sourceEnable, functions: sourceFunctions } = source;
+            let { enable, functions } = target;
+
+            if (enable) {
+                enable.length = 0;
+            }
+
+            if (functions) {
+                for (const k in functions) {
+                    delete functions[k];
+                }
+            }
+
+            if (sourceEnable) {
+                if (!enable) {
+                    enable = target.enable = [];
+                }
+
+                for (const value of sourceEnable) {
+                    enable.push(value);
+                }
+            }
+
+            if (sourceFunctions) {
+                if (!functions) {
+                    functions = target.functions = {};
+                }
+
+                for (const k in sourceFunctions) {
+                    const sourceFunction = sourceFunctions[k];
+                    functions[k] = Array.isArray(sourceFunction) ? sourceFunction.concat() : sourceFunction;
+                }
+            }
         }
         /**
          * @private
@@ -107,10 +124,6 @@ namespace egret3d {
          * @internal
          */
         public _states?: gltf.States;
-
-        private constructor(name: string) {
-            super(name);
-        }
         /**
          * @private
          */
