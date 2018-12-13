@@ -1,0 +1,76 @@
+{
+    "version": "3",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {
+        "KHR_techniques_webgl": {
+            "shaders": [
+                {
+                    "name": "water_vert",
+                    "type": 35633,
+                    "uri": "shaders/water/water_vert.glsl"
+                },
+                {
+                    "name": "water_frag",
+                    "type": 35632,
+                    "uri": "shaders/water/water_frag.glsl"
+                }
+            ],
+            "techniques": [
+                {
+                    "name": "water",
+                    "attributes": {},
+                    "uniforms": {
+                        "lightDir": {
+                            "type": 35665
+                        },
+                        "_Color": {
+                            "type": 35666
+                        },
+                        "_MainTex": {
+                            "type": 35678
+                        },
+                        "_NormalTex1": {
+                            "type": 35678
+                        },
+                        "_NormalTex1_ST": {
+                            "type": 35666
+                        },
+                        "_NormalTex2": {
+                            "type": 35678
+                        },
+                        "_NormalTex2_ST": {
+                            "type": 35666
+                        },
+                        "_Shininess": {
+                            "type": 5126
+                        },
+                        "_time": {
+                            "type": 5126
+                        },
+                        "lightPosition": {
+                            "type": 35665
+                        },
+                        "lightColor": {
+                            "type": 35665
+                        }
+                    },
+                    "states": {
+                        "enable": [],
+                        "functions": {}
+                    }
+                }
+            ]
+        },
+        "paper": {}
+    },
+    "extensionsRequired": [
+        "paper",
+        "KHR_techniques_webgl"
+    ],
+    "extensionsUsed": [
+        "paper",
+        "KHR_techniques_webgl"
+    ]
+}
