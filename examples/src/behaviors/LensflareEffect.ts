@@ -23,8 +23,19 @@ namespace behaviors {
         @paper.editor.property(paper.editor.EditType.COLOR)
         public color: egret3d.Color = egret3d.Color.create(0.55, 0.9, 1.0, 1.0);
         public onAwake() {
-            this._tempMap = egret3d.Texture.create("tempMap", new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), LensflareEffect.TEXTURE_SIZE.x, LensflareEffect.TEXTURE_SIZE.y, gltf.TextureFormat.RGB, false, gltf.TextureWrap.CLAMP_TO_EDGE, gltf.TextureWrap.CLAMP_TO_EDGE);
-            this._occlusionMap = egret3d.Texture.create("occlusionMap", new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), LensflareEffect.TEXTURE_SIZE.x, LensflareEffect.TEXTURE_SIZE.y, gltf.TextureFormat.RGB, false, gltf.TextureWrap.CLAMP_TO_EDGE, gltf.TextureWrap.CLAMP_TO_EDGE);
+            this._tempMap = egret3d.Texture.create({
+                source: new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3),
+                width: LensflareEffect.TEXTURE_SIZE.x, height: LensflareEffect.TEXTURE_SIZE.y,
+                format: gltf.TextureFormat.RGB, mipmap: false,
+                wrapS: gltf.TextureWrappingMode.ClampToEdge, wrapT: gltf.TextureWrappingMode.ClampToEdge
+            });
+
+            this._occlusionMap = egret3d.Texture.create({
+                source: new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3),
+                width: LensflareEffect.TEXTURE_SIZE.x, height: LensflareEffect.TEXTURE_SIZE.y,
+                format: gltf.TextureFormat.RGB, mipmap: false,
+                wrapS: gltf.TextureWrappingMode.ClampToEdge, wrapT: gltf.TextureWrappingMode.ClampToEdge
+            });
             // this._tempMap.uploadImage(new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), false, false, false);
             // this._occlusionMap.uploadImage(new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), false, false, false);
 

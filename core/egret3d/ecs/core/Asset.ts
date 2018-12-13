@@ -74,7 +74,7 @@ namespace paper {
          * 该资源内部初始化。
          * - 重写此方法时，必须调用 `super.initialize();`。
          */
-        public initialize(): void {
+        public initialize(...args: any[]): void {
             this._referenceCount = 0;
         }
         /**

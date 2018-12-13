@@ -3316,21 +3316,19 @@ var paper;
             EditorDefaultTexture.prototype.initialize = function () {
                 {
                     var image = new Image();
-                    image.setAttribute('src', icons["camera"]);
-                    // image.onload = function () { texture.uploadImage(image, false, true, true, false); };
-                    // const texture = new egret3d.GLTexture2D("builtin/camera_icon.image.json");
-                    var texture = egret3d.Texture.createByImage("builtin/camera_icon.image.json", image, 6408 /* RGBA */, false, true, false);
+                    image.src = icons["camera"];
+                    var texture = egret3d.Texture.create({
+                        source: image, format: 6408 /* RGBA */, mipmap: false,
+                    }).setLiner(true).setRepeat(false).retain();
                     EditorDefaultTexture.CAMERA_ICON = texture;
-                    paper.Asset.register(texture);
                 }
                 {
                     var image = new Image();
-                    image.setAttribute('src', icons["light"]);
-                    // const texture = new egret3d.GLTexture2D("builtin/light_icon.image.json");
-                    // image.onload = function () { texture.uploadImage(image, false, true, true, false); };
-                    var texture = egret3d.Texture.createByImage("builtin/light_icon.image.json", image, 6408 /* RGBA */, false, true, false);
+                    image.src = icons["light"];
+                    var texture = egret3d.Texture.create({
+                        source: image, format: 6408 /* RGBA */, mipmap: false,
+                    }).setLiner(true).setRepeat(false).retain();
                     EditorDefaultTexture.LIGHT_ICON = texture;
-                    paper.Asset.register(texture);
                 }
             };
             return EditorDefaultTexture;
@@ -3868,7 +3866,7 @@ var paper;
             __extends(SkeletonDrawer, _super);
             function SkeletonDrawer() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._skeletonMesh = egret3d.Mesh.create(128, 0, ["POSITION" /* POSITION */], null, 35048 /* Dynamic */);
+                _this._skeletonMesh = egret3d.Mesh.create(128, 0, ["POSITION" /* POSITION */]);
                 return _this;
             }
             SkeletonDrawer.prototype.initialize = function () {
@@ -3876,6 +3874,7 @@ var paper;
                 var mesh = this._skeletonMesh;
                 var material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
+                mesh.drawMode = 35048 /* Dynamic */;
                 material
                     .setColor(egret3d.Color.YELLOW)
                     .setDepth(false, false)
@@ -6539,7 +6538,7 @@ var paper;
                         }
                         _glTFMaterial = target.config.materials[0];
                         gltfUnifromMap = _glTFMaterial.extensions.KHR_techniques_webgl.values;
-                        uniformMap = target.glTFTechnique.uniforms;
+                        uniformMap = target.technique.uniforms;
                         for (key in uniformMap) {
                             if (uniformMap[key].semantic === undefined) {
                                 value = uniformMap[key].value;
@@ -6597,12 +6596,12 @@ var paper;
             };
             EditorModel.prototype.modifyMaterialGltfStates = function (target, propName, copyValue) {
                 if (propName === "enable") {
-                    target.glTFTechnique.states.enable = copyValue;
+                    target.technique.states.enable = copyValue;
                 }
                 else {
-                    target.glTFTechnique.states.functions[propName] = copyValue;
+                    target.technique.states.functions[propName] = copyValue;
                 }
-                target.config.materials[0].extensions.paper.states = target.glTFTechnique.states;
+                target.config.materials[0].extensions.paper.states = target.technique.states;
             };
             return EditorModel;
         }(editor.EventDispatcher));

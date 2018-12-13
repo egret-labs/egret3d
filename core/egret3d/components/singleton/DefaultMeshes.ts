@@ -31,17 +31,17 @@ namespace egret3d {
             // TODO 颜色，更多类型。
 
             { // TRIANGLE.
-                const mesh = Mesh.create(3, 0, [gltf.AttributeSemanticType.POSITION, gltf.AttributeSemanticType.COLOR_0]);
+                const mesh = Mesh.create(3, 0, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
                 mesh.name = "builtin/triangle.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.TRIANGLE = mesh;
 
-                mesh.setAttributes(gltf.AttributeSemanticType.POSITION, [
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, [
                     0.0, 0.5, 0.0,
                     -0.5, -0.5, 0.0,
                     0.5, -0.5, 0.0,
                 ]);
-                mesh.setAttributes(gltf.AttributeSemanticType.COLOR_0, [
+                mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, [
                     1.0, 1.0, 1.0, 1.0,
                     1.0, 1.0, 1.0, 1.0,
                     1.0, 1.0, 1.0, 1.0,
@@ -125,19 +125,19 @@ namespace egret3d {
             }
 
             { // LINE_X.
-                const mesh = Mesh.create(4, 2, [gltf.AttributeSemanticType.POSITION, gltf.AttributeSemanticType.COLOR_0]);
+                const mesh = Mesh.create(4, 2, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
                 mesh.name = "builtin/line_x.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.LINE_X = mesh;
-                mesh.setAttributes(gltf.AttributeSemanticType.POSITION, [
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, [
                     0.0, 0.0, 0.0, // Line start.
                     1.0, 0.0, 0.0, // Line end.
 
                     0.0, 0.0, 0.0, // Point start.
                     1.0, 0.0, 0.0, // Point end.
                 ]);
-                mesh.setAttributes(gltf.AttributeSemanticType.COLOR_0, [
+                mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, [
                     1.0, 1.0, 1.0, 1.0,
                     1.0, 1.0, 1.0, 1.0,
 
@@ -148,19 +148,19 @@ namespace egret3d {
             }
 
             { // LINE_Y.
-                const mesh = Mesh.create(4, 2, [gltf.AttributeSemanticType.POSITION, gltf.AttributeSemanticType.COLOR_0]);
+                const mesh = Mesh.create(4, 2, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
                 mesh.name = "builtin/line_y.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.LINE_Y = mesh;
-                mesh.setAttributes(gltf.AttributeSemanticType.POSITION, [
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, [
                     0.0, 0.0, 0.0, // Line start.
                     0.0, 1.0, 0.0, // Line end.
 
                     0.0, 0.0, 0.0, // Point start.
                     0.0, 1.0, 0.0, // Point end.
                 ]);
-                mesh.setAttributes(gltf.AttributeSemanticType.COLOR_0, [
+                mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, [
                     1.0, 1.0, 1.0, 1.0,
                     1.0, 1.0, 1.0, 1.0,
 
@@ -171,19 +171,19 @@ namespace egret3d {
             }
 
             { // LINE_Z.
-                const mesh = Mesh.create(4, 2, [gltf.AttributeSemanticType.POSITION, gltf.AttributeSemanticType.COLOR_0]);
+                const mesh = Mesh.create(4, 2, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
                 mesh.name = "builtin/line_z.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.LINE_Z = mesh;
-                mesh.setAttributes(gltf.AttributeSemanticType.POSITION, [
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, [
                     0.0, 0.0, 0.0, // Line start.
                     0.0, 0.0, 1.0, // Line end.
 
                     0.0, 0.0, 0.0, // Point start.
                     0.0, 0.0, 1.0, // Point end.
                 ]);
-                mesh.setAttributes(gltf.AttributeSemanticType.COLOR_0, [
+                mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, [
                     1.0, 1.0, 1.0, 1.0,
                     1.0, 1.0, 1.0, 1.0,
 
@@ -201,13 +201,13 @@ namespace egret3d {
             }
 
             { // CUBE_LINE
-                const mesh = Mesh.create(8, 24, [gltf.AttributeSemanticType.POSITION, gltf.AttributeSemanticType.COLOR_0]);
+                const mesh = Mesh.create(8, 24, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
                 mesh.name = "builtin/cube_line.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.CUBE_LINE = mesh;
                 //
-                mesh.setAttributes(gltf.AttributeSemanticType.POSITION, [
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, [
                     // Z-
                     -0.5, 0.5, -0.5,
                     0.5, 0.5, -0.5,
@@ -220,7 +220,7 @@ namespace egret3d {
                     -0.5, -0.5, 0.5,
                     -0.5, 0.5, 0.5,
                 ]);
-                mesh.setAttributes(gltf.AttributeSemanticType.COLOR_0, [
+                mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, [
                     1, 1, 1, 1,
                     1, 1, 1, 1,
                     1, 1, 1, 1,

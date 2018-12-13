@@ -7,29 +7,28 @@ namespace paper.editor {
      * @internal
      */
     export class EditorDefaultTexture extends SingletonComponent {
-
         public static CAMERA_ICON: egret3d.Texture;
         public static LIGHT_ICON: egret3d.Texture;
 
         public initialize() {
             {//TODO
                 const image = new Image();
-                image.setAttribute('src', icons["camera"]);
-                // image.onload = function () { texture.uploadImage(image, false, true, true, false); };
-                // const texture = new egret3d.GLTexture2D("builtin/camera_icon.image.json");
-                const texture = egret3d.Texture.createByImage("builtin/camera_icon.image.json", image, gltf.TextureFormat.RGBA,false, true, false);
+                image.src = icons["camera"];
+
+                const texture = egret3d.Texture.create({
+                    source: image, format: gltf.TextureFormat.RGBA, mipmap: false,
+                }).setLiner(true).setRepeat(false).retain();
                 EditorDefaultTexture.CAMERA_ICON = texture;
-                Asset.register(texture);
             }
 
             {//TODO
                 const image = new Image();
-                image.setAttribute('src', icons["light"]);
-                // const texture = new egret3d.GLTexture2D("builtin/light_icon.image.json");
-                // image.onload = function () { texture.uploadImage(image, false, true, true, false); };
-                const texture = egret3d.Texture.createByImage("builtin/light_icon.image.json", image, gltf.TextureFormat.RGBA, false, true, false);
+                image.src = icons["light"];
+
+                const texture = egret3d.Texture.create({
+                    source: image, format: gltf.TextureFormat.RGBA, mipmap: false,
+                }).setLiner(true).setRepeat(false).retain();
                 EditorDefaultTexture.LIGHT_ICON = texture;
-                Asset.register(texture);
             }
         }
     }

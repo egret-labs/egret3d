@@ -222,8 +222,8 @@ namespace egret3d {
 
                         channel.glTFChannel = glTFChannel;
                         channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
-                        channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input));
-                        channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output));
+                        channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input)) as Float32Array;
+                        channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output)) as Float32Array;
                         this.channels.push(channel);
 
                         if (binder) {

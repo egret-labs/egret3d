@@ -109,74 +109,74 @@ namespace egret3d.web {
 
                 const location = glUniform.location;
                 switch (semantic) {
-                    case gltf.UniformSemanticType.MODEL:
+                    case gltf.UniformSemantics.MODEL:
                         webgl.uniformMatrix4fv(location, false, matrix.rawData);
                         break;
-                    case gltf.UniformSemanticType.MODELVIEW:
+                    case gltf.UniformSemantics.MODELVIEW:
                         webgl.uniformMatrix4fv(location, false, context.matrix_mv.rawData);
                         break;
-                    case gltf.UniformSemanticType.MODELVIEWPROJECTION:
+                    case gltf.UniformSemantics.MODELVIEWPROJECTION:
                         webgl.uniformMatrix4fv(location, false, context.matrix_mvp.rawData);
                         break;
-                    case gltf.UniformSemanticType.MODELVIEWINVERSE:
+                    case gltf.UniformSemantics.MODELVIEWINVERSE:
                         webgl.uniformMatrix3fv(location, false, context.matrix_mv_inverse.rawData);
                         break;
 
-                    case gltf.UniformSemanticType.VIEW:
+                    case gltf.UniformSemantics.VIEW:
                         webgl.uniformMatrix4fv(location, false, camera.worldToCameraMatrix.rawData);
                         break;
-                    case gltf.UniformSemanticType.PROJECTION:
+                    case gltf.UniformSemantics.PROJECTION:
                         webgl.uniformMatrix4fv(location, false, camera.projectionMatrix.rawData);
                         break;
-                    case gltf.UniformSemanticType._VIEWPROJECTION:
+                    case gltf.UniformSemantics._VIEWPROJECTION:
                         webgl.uniformMatrix4fv(location, false, camera.worldToClipMatrix.rawData);
                         break;
 
-                    case gltf.UniformSemanticType._CAMERA_POS:
+                    case gltf.UniformSemantics._CAMERA_POS:
                         webgl.uniform3fv(location, context.cameraPosition);
                         break;
-                    case gltf.UniformSemanticType._CAMERA_FORWARD:
+                    case gltf.UniformSemantics._CAMERA_FORWARD:
                         webgl.uniform3fv(location, context.cameraForward);
                         break;
-                    case gltf.UniformSemanticType._CAMERA_UP:
+                    case gltf.UniformSemantics._CAMERA_UP:
                         webgl.uniform3fv(location, context.cameraUp);
                         break;
 
-                    case gltf.UniformSemanticType.JOINTMATRIX:
+                    case gltf.UniformSemantics.JOINTMATRIX:
                         const skinnedMeshRenderer = (drawCall.renderer as SkinnedMeshRenderer).source || (drawCall.renderer as SkinnedMeshRenderer);
                         webgl.uniformMatrix4fv(location, false, skinnedMeshRenderer.boneMatrices!);
                         break;
 
-                    case gltf.UniformSemanticType._DIRECTLIGHTS:
+                    case gltf.UniformSemantics._DIRECTLIGHTS:
                         if (context.directLightCount > 0) {
                             webgl.uniform1fv(location, context.directLightArray);
                         }
                         break;
-                    case gltf.UniformSemanticType._POINTLIGHTS:
+                    case gltf.UniformSemantics._POINTLIGHTS:
                         if (context.pointLightCount > 0) {
                             webgl.uniform1fv(location, context.pointLightArray);
                         }
                         break;
-                    case gltf.UniformSemanticType._SPOTLIGHTS:
+                    case gltf.UniformSemantics._SPOTLIGHTS:
                         if (context.spotLightCount > 0) {
                             webgl.uniform1fv(location, context.spotLightArray);
                         }
                         break;
-                    case gltf.UniformSemanticType._AMBIENTLIGHTCOLOR:
+                    case gltf.UniformSemantics._AMBIENTLIGHTCOLOR:
                         const currenAmbientColor = drawCall.renderer ? drawCall.renderer!.gameObject.scene.ambientColor : paper.Scene.activeScene.ambientColor;
                         webgl.uniform3f(location, currenAmbientColor.r, currenAmbientColor.g, currenAmbientColor.b);
                         break;
 
-                    case gltf.UniformSemanticType._DIRECTIONSHADOWMAT:
+                    case gltf.UniformSemantics._DIRECTIONSHADOWMAT:
                         webgl.uniformMatrix4fv(location, false, context.directShadowMatrix);
                         break;
-                    case gltf.UniformSemanticType._SPOTSHADOWMAT:
+                    case gltf.UniformSemantics._SPOTSHADOWMAT:
                         webgl.uniformMatrix4fv(location, false, context.spotShadowMatrix);
                         break;
-                    case gltf.UniformSemanticType._POINTSHADOWMAT:
+                    case gltf.UniformSemantics._POINTSHADOWMAT:
                         webgl.uniformMatrix4fv(location, false, context.pointShadowMatrix);
                         break;
-                    case gltf.UniformSemanticType._DIRECTIONSHADOWMAP:
+                    case gltf.UniformSemantics._DIRECTIONSHADOWMAP:
                         const directShadowLen = context.directShadowMaps.length;
                         if (directShadowLen > 0 && glUniform.textureUnits) {
                             const units = glUniform.textureUnits;
@@ -197,7 +197,7 @@ namespace egret3d.web {
                             }
                         }
                         break;
-                    case gltf.UniformSemanticType._POINTSHADOWMAP:
+                    case gltf.UniformSemantics._POINTSHADOWMAP:
                         const pointShadowLen = context.pointShadowMaps.length;
                         if (pointShadowLen > 0 && glUniform.textureUnits) {
                             const units = glUniform.textureUnits;
@@ -218,7 +218,7 @@ namespace egret3d.web {
                             }
                         }
                         break;
-                    case gltf.UniformSemanticType._SPOTSHADOWMAP:
+                    case gltf.UniformSemantics._SPOTSHADOWMAP:
                         const spotShadowLen = context.spotShadowMaps.length;
                         if (spotShadowLen > 0 && glUniform.textureUnits) {
                             const units = glUniform.textureUnits;
@@ -240,7 +240,7 @@ namespace egret3d.web {
                         }
                         break;
 
-                    case gltf.UniformSemanticType._LIGHTMAPTEX:
+                    case gltf.UniformSemantics._LIGHTMAPTEX:
                         if (glUniform.textureUnits && glUniform.textureUnits.length === 1 && context.lightmap) {
                             const texture = context.lightmap as WebGLTexture;
                             const unit = glUniform.textureUnits[0];
@@ -257,35 +257,35 @@ namespace egret3d.web {
                             console.error("Error texture unit.");
                         }
                         break;
-                    case gltf.UniformSemanticType._LIGHTMAPINTENSITY:
+                    case gltf.UniformSemantics._LIGHTMAPINTENSITY:
                         webgl.uniform1f(location, context.lightmapIntensity);
                         break;
 
-                    case gltf.UniformSemanticType._LIGHTMAP_SCALE_OFFSET:
+                    case gltf.UniformSemantics._LIGHTMAP_SCALE_OFFSET:
                         webgl.uniform4fv(location, context.lightmapScaleOffset);
                         break;
-                    case gltf.UniformSemanticType._NEARDICTANCE:
+                    case gltf.UniformSemantics._NEARDICTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraNear);
                         break;
-                    case gltf.UniformSemanticType._FARDISTANCE:
+                    case gltf.UniformSemantics._FARDISTANCE:
                         webgl.uniform1f(location, context.lightShadowCameraFar);
                         break;
-                    case gltf.UniformSemanticType._FOG_COLOR:
+                    case gltf.UniformSemantics._FOG_COLOR:
                         webgl.uniform3fv(location, context.fogColor);
                         break;
-                    case gltf.UniformSemanticType._FOG_DENSITY:
+                    case gltf.UniformSemantics._FOG_DENSITY:
                         webgl.uniform1f(location, context.fogDensity);
                         break;
-                    case gltf.UniformSemanticType._FOG_NEAR:
+                    case gltf.UniformSemantics._FOG_NEAR:
                         webgl.uniform1f(location, context.fogNear);
                         break;
-                    case gltf.UniformSemanticType._FOG_FAR:
+                    case gltf.UniformSemantics._FOG_FAR:
                         webgl.uniform1f(location, context.fogFar);
                         break;
-                    case gltf.UniformSemanticType._TONE_MAPPING_EXPOSURE:
+                    case gltf.UniformSemantics._TONE_MAPPING_EXPOSURE:
                         webgl.uniform1f(location, this._renderState.toneMappingExposure);
                         break;
-                    case gltf.UniformSemanticType._TONE_MAPPING_WHITE_POINT:
+                    case gltf.UniformSemantics._TONE_MAPPING_WHITE_POINT:
                         webgl.uniform1f(location, this._renderState.toneMappingWhitePoint);
                         break;
 
@@ -413,8 +413,7 @@ namespace egret3d.web {
                 if (accessorIndex !== undefined) {
                     const accessor = mesh.getAccessor(accessorIndex);
                     const bufferOffset = mesh.getBufferOffset(accessor);
-                    const typeCount = mesh.getAccessorTypeCount(accessor.type);
-                    webgl.vertexAttribPointer(location, typeCount, accessor.componentType, accessor.normalized !== undefined ? accessor.normalized : false, 0, bufferOffset);//TODO normalized应该来源于mesh，应该还没有
+                    webgl.vertexAttribPointer(location, accessor.typeCount!, accessor.componentType, accessor.normalized !== undefined ? accessor.normalized : false, 0, bufferOffset);//TODO normalized应该来源于mesh，应该还没有
                     webgl.enableVertexAttribArray(location);
                 }
                 else {

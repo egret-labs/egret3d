@@ -1,9 +1,21 @@
-{    "asset":{        "version":2    },    "materials":[
-        {            "extensions":{                "KHR_techniques_webgl":{                    "technique":"builtin/meshbasic.shader.json",                    "values":{                        "diffuse":[
+{
+    "asset": {
+        "version": 2
+    },
+    "materials": [
+        {
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "technique": "builtin/meshbasic.shader.json",
+                    "values": {
+                        "diffuse": [
                             1,
                             1,
                             1
-                        ],                        "opacity":1,                        "map":"Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01.image.json",                        "uvTransform":[
+                        ],
+                        "opacity": 1,
+                        "map": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01.image.json",
+                        "uvTransform": [
                             1,
                             0,
                             0,
@@ -13,12 +25,23 @@
                             0,
                             0,
                             1
-                        ]                    }                },                "paper":{                    "renderQueue":2000,                    "defines":[
-                    ]                }            }        }
-    ],    "extensionsRequired":[
+                        ]
+                    }
+                },
+                "paper": {
+                    "renderQueue": 2000,
+                    "defines": ["USE_MAP"]
+                }
+            }
+        }
+    ],
+    "extensionsRequired": [
         "KHR_techniques_webgl",
         "paper"
-    ],    "extensionsUsed":[
+    ],
+    "extensionsUsed": [
         "KHR_techniques_webgl",
         "paper"
-    ],    "version":4}
+    ],
+    "version": 4
+}

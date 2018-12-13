@@ -5,6 +5,13 @@ namespace paper {
     export type CullingMask = Layer;
 }
 
+namespace gltf {
+    /**
+     * @deprecated
+     */
+    export type MeshAttributeType = AttributeSemantics;
+}
+
 namespace egret3d {
     /**
      * @deprecated

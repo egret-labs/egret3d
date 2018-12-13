@@ -20,10 +20,9 @@ namespace egret3d {
     export const BitmapDataProcessor: RES.processor.Processor = {
 
         onLoadStart(host, resource) {
-
             const loader = new egret.ImageLoader();
-
             loader.load(resource.root + resource.url);
+            
             return new Promise((resolve, reject) => {
                 const onSuccess = () => {
                     const bitmapData = loader.data;
@@ -71,7 +70,7 @@ namespace egret3d {
                 console.error("错误的Shader格式数据");
             }
 
-            const glTF = Shader.create(result, resource.name);
+            const glTF = Shader.create(resource.name, result);
             paper.Asset.register(glTF);
 
             return glTF;
@@ -79,23 +78,42 @@ namespace egret3d {
         onRemoveStart(host, resource) {
             const data = host.get(resource);
             data.dispose();
+            // data.release();
+
             return Promise.resolve();
         }
     };
 
-    // TODO
-    type ImgDescConfig = {
-        name: string;
-        filterMode: string;
-        format: string;
-        mipmap: boolean;
-        wrap: string;
-        premultiply: any;
-    }
-
-    export const TextureDescProcessor: RES.processor.Processor = {
+    export const ImageProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
-            return host.load(resource, "json").then((data: ImgDescConfig): any => {
+            return host.load(resource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
+                const texture = Texture
+                    .create({ name: resource.name, source: bitmapData.source, format: gltf.TextureFormat.RGBA, mipmap: true })
+                    .setLiner(true)
+                    .setRepeat(true);
+                paper.Asset.register(texture);
+                return texture;
+            })
+        },
+        onRemoveStart(host, resource) {
+            const data = host.get(resource) as Texture;
+            data.dispose();
+            // data.release();
+
+            return Promise.resolve();
+        }
+    };
+
+    export const TextureProcessor: RES.processor.Processor = {
+        onLoadStart(host, resource) {
+            return host.load(resource, "json").then((data: {
+                name: string;
+                filterMode: string;
+                format: string;
+                mipmap: boolean;
+                wrap: string;
+                premultiply: any;
+            }): any => {
                 const name = data.name;
                 const filterMode = data.filterMode;
                 const format = data.format;
@@ -141,25 +159,7 @@ namespace egret3d {
         onRemoveStart(host, resource) {
             const data = host.get(resource) as Texture;
             data.dispose();
-
-            return Promise.resolve();
-        }
-    };
-
-    export const TextureProcessor: RES.processor.Processor = {
-        onLoadStart(host, resource) {
-            return host.load(resource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
-                const texture = Texture
-                    .create({ name: resource.name, source: bitmapData.source, format: gltf.TextureFormat.RGBA, mipmap: true })
-                    .setLiner(true)
-                    .setRepeat(true);
-                paper.Asset.register(texture);
-                return texture;
-            })
-        },
-        onRemoveStart(host, resource) {
-            const data = host.get(resource) as Texture;
-            data.dispose();
+            // data.release();
 
             return Promise.resolve();
         }
@@ -169,33 +169,33 @@ namespace egret3d {
         async onLoadStart(host, resource) {
             const result = await host.load(resource, 'json') as GLTF;
 
-            if (result.materials && result.materials.length > 0) {
-                for (const mat of result.materials as GLTFMaterial[]) {
-                    //load shader
-                    const technique = mat.extensions.KHR_techniques_webgl.technique;
-                    const techniqueRes = (RES.host.resourceConfig as any)["getResource"](technique);
-                    if (techniqueRes) {
-                        const shader = await host.load(techniqueRes, "Shader");
+            if (result.materials) {
+                for (const material of result.materials as GLTFMaterial[]) {
+                    const techniqueRes = (RES.host.resourceConfig as any)["getResource"](material.extensions.KHR_techniques_webgl.technique);
+                    if (techniqueRes && techniqueRes.indexOf("builtin/") < 0) {
+                        await host.load(techniqueRes, "Shader"); // TODO
                     }
-                    const values = mat.extensions.KHR_techniques_webgl.values!;
-                    for (const key in values) {
-                        const value = values[key];
-                        if (value && typeof value === "string") { // A string value must be texture uri.
-                            const r = (RES.host.resourceConfig as any)["getResource"](value);
-                            if (r) {
-                                const texture = await host.load(r, "TextureDesc");
-                                values[key] = texture;
-                            }
-                            else {
-                                console.log("Load image error.", value);
-                                values[key] = DefaultTextures.MISSING;
+
+                    const values = material.extensions.KHR_techniques_webgl.values;
+                    if (values) {
+                        for (const k in values) {
+                            const value = values[k];
+                            if (value && typeof value === "string") { // A string value must be texture uri.
+                                const r = (RES.host.resourceConfig as any)["getResource"](value);
+
+                                if (r) {
+                                    await host.load(r, "TextureDesc"); // TODO
+                                }
+                                else {
+                                    console.log("Load image error.", value);
+                                }
                             }
                         }
                     }
                 }
             }
 
-            const material = Material.create(result, resource.name);
+            const material = Material.create(resource.name, result);
             paper.Asset.register(material);
 
             return material;
@@ -203,6 +203,7 @@ namespace egret3d {
         onRemoveStart(host, resource) {
             const data = host.get(resource) as Material;
             data.dispose();
+            // data.release();
 
             return Promise.resolve();
         }
@@ -212,8 +213,8 @@ namespace egret3d {
         onLoadStart(host, resource) {
             return host.load(resource, "bin").then((result) => {
                 const parseResult = GLTFAsset.parseFromBinary(result instanceof ArrayBuffer ? new Uint32Array(result) : result)!;
-                const mesh = Mesh.create(parseResult.config, parseResult.buffers, resource.name);
-
+                const mesh = Mesh.create(parseResult.config, parseResult.buffers);
+                mesh.name = resource.name; // TODO
                 paper.Asset.register(mesh);
                 return mesh;
             });
@@ -221,6 +222,7 @@ namespace egret3d {
         onRemoveStart(host, resource) {
             const data = host.get(resource) as Material;
             data.dispose();
+            // data.release();
 
             return Promise.resolve();
         }
@@ -230,7 +232,7 @@ namespace egret3d {
         onLoadStart(host, resource) {
             return host.load(resource, "bin").then((result) => {
                 const parseResult = GLTFAsset.parseFromBinary(new Uint32Array(result))!;
-                const animation = AnimationAsset.create(parseResult.config, parseResult.buffers, resource.name);
+                const animation = AnimationAsset.create(resource.name, parseResult.config, parseResult.buffers);
                 paper.Asset.register(animation);
 
                 return animation;
@@ -239,6 +241,8 @@ namespace egret3d {
         onRemoveStart(host, resource) {
             const data = host.get(resource) as AnimationAsset;
             data.dispose();
+            // data.release();
+
             return Promise.resolve();
         }
     };
@@ -257,6 +261,7 @@ namespace egret3d {
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Prefab;
             data.dispose();
+            // data.release();
 
             return Promise.resolve();
         }
@@ -276,6 +281,7 @@ namespace egret3d {
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.RawScene;
             data.dispose();
+            // data.release();
 
             return Promise.resolve();
         }
@@ -363,8 +369,8 @@ namespace egret3d {
     }
 
     RES.processor.map("Shader", ShaderProcessor);
-    RES.processor.map("Texture", TextureProcessor);
-    RES.processor.map("TextureDesc", TextureDescProcessor);
+    RES.processor.map("Texture", ImageProcessor);
+    RES.processor.map("TextureDesc", TextureProcessor);
     RES.processor.map("Material", MaterialProcessor);
     RES.processor.map("Mesh", MeshProcessor);
     RES.processor.map("Animation", AnimationProcessor);

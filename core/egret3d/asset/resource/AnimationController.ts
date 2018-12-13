@@ -8,14 +8,14 @@ namespace egret3d {
          */
         public static create(name: string): AnimationController;
         /**
-         * 
+         * @private
          */
-        public static create(config: GLTF, name: string): AnimationController;
-        public static create(configOrName: GLTF | string, name?: string) {
+        public static create(name: string, config: GLTF): AnimationController;
+        public static create(name: string, config?: GLTF) {
             let animationController: AnimationController;
 
-            if (typeof configOrName === "string") {
-                const config = this.createConfig();
+            if (!config) {
+                config = this.createConfig();
                 config.extensions = {
                     paper: {
                         animationControllers: [{
@@ -24,12 +24,10 @@ namespace egret3d {
                         }]
                     },
                 };
+            }
 
-                animationController = new AnimationController(config, configOrName);
-            }
-            else {
-                animationController = new AnimationController(configOrName, name!);
-            }
+            animationController = new AnimationController(name, config);
+            animationController.initialize();
 
             return animationController;
         }

@@ -465,7 +465,7 @@ declare namespace gltf {
     /**
      * 
      */
-    export const enum AttributeSemanticType {
+    export const enum AttributeSemantics {
         POSITION = "POSITION",
         NORMAL = "NORMAL",
         TANGENT = "TANGENT",
@@ -512,7 +512,7 @@ declare namespace gltf {
         _WORLD_ROTATION = "_WORLD_ROTATION",
     }
 
-    export const enum UniformSemanticType {
+    export const enum UniformSemantics {
         LOCAL = "LOCAL",
         MODEL = "MODEL",
         VIEW = "VIEW",
@@ -575,9 +575,10 @@ declare namespace gltf {
         MAT3 = "MAT3",
         MAT4 = "MAT4",
     }
-
+    /**
+     * 
+     */
     export type ImageSource = ImageBitmap | ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement;
-    export type MeshAttribute = AttributeSemanticType | string;
     /**
      * Indices of those attributes that deviate from their initialization value.
      */
@@ -662,6 +663,10 @@ declare namespace gltf {
          * Specifies if the attribute is a scalar, vector, or matrix.
          */
         type: AccessorType;
+        /**
+         * Specifies if the attribute is a scalar, vector, or matrix.
+         */
+        typeCount?: number; // Modified by egret.
         /**
          * Maximum value of each component in this attribute.
          */

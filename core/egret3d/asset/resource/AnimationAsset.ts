@@ -6,13 +6,21 @@ namespace egret3d {
         /**
          * @private
          */
-        public static create(config: GLTF, buffers: Uint32Array[], name: string): AnimationAsset {
-            const animationAsset = new AnimationAsset(config, name);
+        public static create(name: string, config: GLTF, buffers: ArrayBufferView[]): AnimationAsset {
+            const animationAsset = new AnimationAsset(name, config);
+            animationAsset.initialize();
+
             for (const b of buffers) {
                 animationAsset.buffers.push(b);
             }
 
             return animationAsset;
+        }
+
+        public initialize() {
+            super.initialize();
+
+            this.updateAccessorTypeCount();
         }
         /*
          * 获取动画剪辑。

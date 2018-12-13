@@ -7,13 +7,34 @@ namespace egret3d {
     export class Material extends GLTFAsset {
         /**
          * 创建一个材质。
+         * @param shader 指定一个着色器。（默认：DefaultShaders.MESH_BASIC）
          */
-        public static create(shader?: Shader, name?: string): Material;
-        public static create(config: GLTF, name?: string): Material;
-        public static create(shaderOrConfig?: Shader | GLTF, name?: string) {
-            const material = new Material(null!, name || "");
+        public static create(shader?: Shader): Material;
+        /**
+         * 创建一个材质。
+         * @param name 资源名称。
+         * @param shader 指定一个着色器。
+         */
+        public static create(name: string, shader?: Shader): Material;
+        /**
+         * 加载一个材质。
+         * @private
+         */
+        public static create(name: string, config: GLTF): Material;
+        public static create(shaderOrName?: Shader | string, shaderOrConfig?: Shader | GLTF) {
+            const hasName = typeof shaderOrName === "string";
+            const name = (shaderOrName && hasName) ? shaderOrName as string : "";
+            //
+            if (shaderOrName === undefined) {
+                shaderOrConfig = shaderOrConfig || DefaultShaders.MESH_BASIC;
+            }
+            else if (!hasName) {
+                shaderOrConfig = shaderOrName as Shader || shaderOrConfig || DefaultShaders.MESH_BASIC;
+            }
+            //
+            const material = new Material(name, null!);
             material.initialize();
-            material._reset(shaderOrConfig || DefaultShaders.MESH_BASIC);
+            material._reset(shaderOrConfig!);
 
             return material;
         }
@@ -73,7 +94,7 @@ namespace egret3d {
 
                 if (type === gltf.UniformType.SAMPLER_2D || type === gltf.UniformType.SAMPLER_CUBE) {
                     if (sourceValue) {
-                        value = paper.Asset.find<BaseTexture>(sourceValue);
+                        value = paper.Asset.find<BaseTexture>(sourceValue) || DefaultTextures.MISSING; // Missing texture.
                     }
 
                     if (!value) {
@@ -162,6 +183,7 @@ namespace egret3d {
             //
             this.renderQueue = glTFMaterial.extensions.paper.renderQueue;
             this._technique = this._createTechnique(shader, glTFMaterial);
+            this._shader = shader;
             this._retainOrReleaseTextures(true);
         }
 

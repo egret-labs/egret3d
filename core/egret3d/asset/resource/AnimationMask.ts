@@ -8,14 +8,14 @@ namespace egret3d {
          */
         public static create(name: string): AnimationMask;
         /**
-         * 
+         * @private
          */
-        public static create(config: GLTF, name: string): AnimationMask;
-        public static create(configOrName: GLTF | string, name?: string) {
+        public static create(name: string, config: GLTF): AnimationMask;
+        public static create(name: string, config?: GLTF) {
             let animationMask: AnimationMask;
 
-            if (typeof configOrName === "string") {
-                const config = this.createConfig();
+            if (!config) {
+                config = this.createConfig();
                 config.nodes = [];
                 config.extensions = {
                     paper: {
@@ -25,14 +25,10 @@ namespace egret3d {
                         }]
                     },
                 };
+            }
 
-                animationMask = new AnimationMask(config, configOrName);
-                animationMask.initialize();
-            }
-            else {
-                animationMask = new AnimationMask(configOrName, name!);
-                animationMask.initialize();
-            }
+            animationMask = new AnimationMask(name, config);
+            animationMask.initialize();
 
             return animationMask;
         }

@@ -8,26 +8,28 @@ namespace egret3d {
          * @param shader 
          * @param name 
          */
-        public static create(shader: Shader, name: string): Shader;
+        public static create(name: string, shader: Shader): Shader;
         /**
-         * 
-         * @param glTF
-         * @param name 
+         * @private
          */
-        public static create(glTF: GLTF, name: string): Shader;
-        public static create(shaderOrGLTF: Shader | GLTF, name: string): Shader {
+        public static create(name: string, config: GLTF): Shader;
+        public static create(name: string, shaderOrConfig: Shader | GLTF): Shader {
+            let config: GLTF;
             let shader: Shader;
+            let parent: Shader | null = null;
 
-            if (shaderOrGLTF instanceof Shader) {
-                const KHR_techniques_webgl = shaderOrGLTF.config.extensions.KHR_techniques_webgl!;
+            if (shaderOrConfig instanceof Shader) {
+                // TODO
+                const KHR_techniques_webgl = shaderOrConfig.config.extensions.KHR_techniques_webgl!;
                 const technique = KHR_techniques_webgl.techniques[0];
                 const uniforms = {} as any;
+                parent = shaderOrConfig;
 
                 for (const k in technique.uniforms) {
                     uniforms[k] = technique.uniforms[k];
                 }
 
-                const config = {
+                config = {
                     extensions: {
                         KHR_techniques_webgl: {
                             shaders: KHR_techniques_webgl.shaders,
@@ -38,19 +40,14 @@ namespace egret3d {
                             }]
                         }
                     }
-                } as GLTF; // TODO
-
-                shader = new Shader(config, name);
-                shader.initialize();
-                // shader.customs = shaderOrGLTF.customs; TODO
-                shader._renderQueue = shaderOrGLTF._renderQueue;
-                shader._defines = shaderOrGLTF._defines ? shaderOrGLTF._defines.concat() : undefined;
-                shader._states = shaderOrGLTF._states; // TODO
+                } as GLTF;
             }
             else {
-                shader = new Shader(shaderOrGLTF, name);
-                shader.initialize();
+                config = shaderOrConfig;
             }
+            //
+            shader = new Shader(name, config);
+            shader.initialize(parent);
 
             return shader;
         }
@@ -124,6 +121,17 @@ namespace egret3d {
          * @internal
          */
         public _states?: gltf.States;
+
+        public initialize(parent: Shader | null) {
+            super.initialize();
+
+            if (parent) {
+                // this.customs = parent.customs; TODO
+                this._renderQueue = parent._renderQueue;
+                this._defines = parent._defines ? parent._defines.concat() : undefined;
+                this._states = parent._states; // TODO
+            }
+        }
         /**
          * @private
          */

@@ -47,8 +47,8 @@ namespace egret3d {
                 const p2 = _helpVector3C;
                 const vertices = mesh.getVertices()!;
                 const indices = mesh.getIndices()!;
-                const joints = mesh.getAttributes(gltf.AttributeSemanticType.JOINTS_0) as Float32Array;
-                const weights = mesh.getAttributes(gltf.AttributeSemanticType.WEIGHTS_0) as Float32Array;
+                const joints = mesh.getAttributes(gltf.AttributeSemantics.JOINTS_0) as Float32Array;
+                const weights = mesh.getAttributes(gltf.AttributeSemantics.WEIGHTS_0) as Float32Array;
 
                 if (!this._skinnedVertices) {
                     this._skinnedVertices = new Float32Array(vertices.length);
@@ -101,7 +101,7 @@ namespace egret3d {
                     const offset = i * 16;
                     const bone = bones[i];
                     const matrix = bone ? bone.localToWorldMatrix : Matrix4.IDENTITY;
-                    _helpMatrix.fromArray(inverseBindMatrices, offset).premultiply(matrix).toArray(boneMatrices, offset);
+                    _helpMatrix.fromArray(inverseBindMatrices as any, offset).premultiply(matrix).toArray(boneMatrices, offset);
                 }
 
                 if (this.forceCPUSkin) {

@@ -147,22 +147,29 @@ namespace egret3d {
      * 纹理资源。
      */
     export class Texture extends BaseTexture {
+        /**
+         * 
+         * @param parameters 
+         */
         public static create(parameters: CreateTextureParameters): Texture;
-        public static create(source: GLTF, name: string): Texture;
-        public static create(parametersOrSource: CreateTextureParameters | GLTF, name?: string) {
-            let config: GLTF;
+        /**
+         * @private
+         */
+        public static create(name: string, config: GLTF): Texture;
+        public static create(parametersOrName: CreateTextureParameters | string, config?: GLTF) {
+            let name: string;
             let texture: Texture;
 
-            if (parametersOrSource.hasOwnProperty("asset")) {
-                config = parametersOrSource as GLTF;
+            if (typeof parametersOrName === "string") {
+                name = parametersOrName;
             }
             else {
-                config = this._createConfig(parametersOrSource as CreateTextureParameters);
-                name = (parametersOrSource as CreateTextureParameters).name || "";
+                config = this._createConfig(parametersOrName as CreateTextureParameters);
+                name = (parametersOrName as CreateTextureParameters).name || "";
             }
 
             // Retargeting.
-            texture = new egret3d.Texture(config, name!);
+            texture = new egret3d.Texture(name, config!);
             texture.initialize();
 
             return texture;

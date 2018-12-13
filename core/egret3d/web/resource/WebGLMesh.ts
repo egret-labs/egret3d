@@ -33,9 +33,9 @@ namespace egret3d.web {
             if (vbo) {
                 this.vbo = vbo;
 
-                const attributeNames: gltf.MeshAttribute[] = [];
+                const attributeNames: gltf.AttributeSemantics[] = [];
                 for (const k in this._glTFMesh!.primitives[0].attributes) {
-                    attributeNames.push(k);
+                    attributeNames.push(k as gltf.AttributeSemantics);
                 }
 
                 let subMeshIndex = 0;
@@ -45,7 +45,7 @@ namespace egret3d.web {
                         if (ibo) {
                             this.ibos[subMeshIndex] = ibo;
                             webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
-                            webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this.getBufferLength(this.getAccessor(primitive.indices)), this.drawMode);
+                            webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this.getBufferLength(this.getAccessor(primitive.indices)), this._drawMode);
                             this.uploadSubIndexBuffer(subMeshIndex);
                         }
                         else {
@@ -58,15 +58,20 @@ namespace egret3d.web {
                 }
 
                 webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
-                webgl.bufferData(webgl.ARRAY_BUFFER, vertexBuffer.byteLength, this.drawMode);
+                webgl.bufferData(webgl.ARRAY_BUFFER, vertexBuffer.byteLength, this._drawMode);
                 this.uploadVertexBuffer(attributeNames);
             }
             else {
                 console.error("Create webgl buffer error.");
             }
         }
-
-        public uploadVertexBuffer(uploadAttributes: gltf.MeshAttribute | (gltf.MeshAttribute[]) | null = null, offset: number = 0, count: number = 0) {
+        /**
+         * 更新该网格的顶点缓存。
+         * @param uploadAttributes 要更新的顶点属性名，可以为一个属性，或属性列表，或 `null` （更新所有属性）。
+         * @param offset 更新顶点的偏移。 [0: 不偏移，N: 从 N + 1 个顶点开始] （默认：0）
+         * @param count 更新顶点的总数。 [0: 所有顶点，N: N 个顶点] （默认：0）
+         */
+        public uploadVertexBuffer(uploadAttributes: gltf.AttributeSemantics | (gltf.AttributeSemantics[]) | null = null, offset: uint = 0, count: uint = 0) {
             if (!this.vbo) {
                 return;
             }
@@ -77,8 +82,8 @@ namespace egret3d.web {
 
             if (!uploadAttributes) {
                 uploadAttributes = [];
-                for (const attributeName in this._glTFMesh!.primitives[0].attributes) {
-                    uploadAttributes.push(attributeName);
+                for (const k in this._glTFMesh!.primitives[0].attributes) {
+                    uploadAttributes.push(k as gltf.AttributeSemantics);
                 }
             }
 
@@ -90,8 +95,7 @@ namespace egret3d.web {
                         let bufferOffset = this.getBufferOffset(accessor);
                         const subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
                         if (offset > 0) {
-                            const accessorTypeCount = this.getAccessorTypeCount(accessor.type);
-                            bufferOffset += offset * accessorTypeCount * this.getComponentTypeCount(accessor.componentType);
+                            bufferOffset += offset * accessor.typeCount! * GLTFAsset.getComponentTypeCount(accessor.componentType);
                         }
                         webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, subVertexBuffer);
                     }
@@ -113,7 +117,10 @@ namespace egret3d.web {
                 }
             }
         }
-
+        /**
+         * 更新该网格的索引缓存。
+         * @param subMeshIndex 
+         */
         public uploadSubIndexBuffer(subMeshIndex: number = 0) {
             if (!this.vbo) {
                 return;

@@ -3,25 +3,32 @@ namespace egret3d {
      * 渲染贴图。
      */
     export class RenderTexture extends BaseTexture {
+        /**
+         * 
+         * @param parameters 
+         */
         public static create(parameters: CreateTextureParameters): RenderTexture;
-        public static create(source: GLTF, name: string): RenderTexture;
-        public static create(parametersOrSource: CreateTextureParameters | GLTF, name?: string) {
-            let config: GLTF;
-            let texture: RenderTexture;
+        /**
+         * @private
+         */
+        public static create(name: string, config: GLTF): RenderTexture;
+        public static create(parametersOrName: CreateTextureParameters | string, config?: GLTF) {
+            let name: string;
+            let renderTexture: RenderTexture;
 
-            if (parametersOrSource.hasOwnProperty("asset")) {
-                config = parametersOrSource as GLTF;
+            if (typeof parametersOrName === "string") {
+                name = parametersOrName;
             }
             else {
-                config = this._createConfig(parametersOrSource as CreateTextureParameters);
-                name = (parametersOrSource as CreateTextureParameters).name || "";
+                config = this._createConfig(parametersOrName as CreateTextureParameters);
+                name = (parametersOrName as CreateTextureParameters).name || "";
             }
 
             // Retargeting.
-            texture = new egret3d.RenderTexture(config, name!);
-            texture.initialize();
+            renderTexture = new egret3d.RenderTexture(name, config!);
+            renderTexture.initialize();
 
-            return texture;
+            return renderTexture;
         }
 
         protected _mipmap: boolean = false;

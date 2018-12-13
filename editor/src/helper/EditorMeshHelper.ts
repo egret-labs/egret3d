@@ -77,9 +77,9 @@ namespace paper.editor {
                 }
             }
 
-            const mesh = egret3d.Mesh.create(verticeCount, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-            mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, colors);
+            const mesh = egret3d.Mesh.create(verticeCount, 0, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
+            mesh.setAttributes(gltf.AttributeSemantics.POSITION, vertices);
+            mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, colors);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
 
             const material = egret3d.DefaultMaterials.LINEDASHED_COLOR.clone();

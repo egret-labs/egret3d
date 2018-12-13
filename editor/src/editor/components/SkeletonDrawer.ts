@@ -3,7 +3,7 @@ namespace paper.editor {
      * @internal
      */
     export class SkeletonDrawer extends BaseSelectedGOComponent {
-        private readonly _skeletonMesh: egret3d.Mesh = egret3d.Mesh.create(128, 0, [gltf.MeshAttributeType.POSITION], null, gltf.DrawMode.Dynamic);
+        private readonly _skeletonMesh: egret3d.Mesh = egret3d.Mesh.create(128, 0, [gltf.AttributeSemantics.POSITION]);
 
         public initialize() {
             super.initialize();
@@ -11,6 +11,7 @@ namespace paper.editor {
             const mesh = this._skeletonMesh;
             const material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+            mesh.drawMode = gltf.DrawMode.Dynamic;
             material
                 .setColor(egret3d.Color.YELLOW)
                 .setDepth(false, false)

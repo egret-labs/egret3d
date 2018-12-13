@@ -3,45 +3,45 @@ namespace egret3d.particle {
      * @private
      * 渲染类型为Mesh的属性格式
      */
-    const MeshShaderAttributeFormat: { key: string, type: gltf.AccessorType }[] = [
-        { key: gltf.AttributeSemanticType.POSITION, type: gltf.AccessorType.VEC3 },
-        { key: gltf.AttributeSemanticType.COLOR_0, type: gltf.AccessorType.VEC4 },
-        { key: gltf.AttributeSemanticType.TEXCOORD_0, type: gltf.AccessorType.VEC2 },
-        { key: gltf.AttributeSemanticType._START_POSITION, type: gltf.AccessorType.VEC3 },
-        { key: gltf.AttributeSemanticType._START_VELOCITY, type: gltf.AccessorType.VEC3 },
-        { key: gltf.AttributeSemanticType._START_COLOR, type: gltf.AccessorType.VEC4 },
-        { key: gltf.AttributeSemanticType._START_SIZE, type: gltf.AccessorType.VEC3 },
-        { key: gltf.AttributeSemanticType._START_ROTATION, type: gltf.AccessorType.VEC3 },
-        { key: gltf.AttributeSemanticType._TIME, type: gltf.AccessorType.VEC2 },
-        { key: gltf.AttributeSemanticType._RANDOM0, type: gltf.AccessorType.VEC4 },
-        { key: gltf.AttributeSemanticType._RANDOM1, type: gltf.AccessorType.VEC4 },
-        { key: gltf.AttributeSemanticType._WORLD_POSITION, type: gltf.AccessorType.VEC3 },
-        { key: gltf.AttributeSemanticType._WORLD_ROTATION, type: gltf.AccessorType.VEC4 },
+    const MeshShaderAttributeFormat: { key: gltf.AttributeSemantics, type: gltf.AccessorType }[] = [
+        { key: gltf.AttributeSemantics.POSITION, type: gltf.AccessorType.VEC3 },
+        { key: gltf.AttributeSemantics.COLOR_0, type: gltf.AccessorType.VEC4 },
+        { key: gltf.AttributeSemantics.TEXCOORD_0, type: gltf.AccessorType.VEC2 },
+        { key: gltf.AttributeSemantics._START_POSITION, type: gltf.AccessorType.VEC3 },
+        { key: gltf.AttributeSemantics._START_VELOCITY, type: gltf.AccessorType.VEC3 },
+        { key: gltf.AttributeSemantics._START_COLOR, type: gltf.AccessorType.VEC4 },
+        { key: gltf.AttributeSemantics._START_SIZE, type: gltf.AccessorType.VEC3 },
+        { key: gltf.AttributeSemantics._START_ROTATION, type: gltf.AccessorType.VEC3 },
+        { key: gltf.AttributeSemantics._TIME, type: gltf.AccessorType.VEC2 },
+        { key: gltf.AttributeSemantics._RANDOM0, type: gltf.AccessorType.VEC4 },
+        { key: gltf.AttributeSemantics._RANDOM1, type: gltf.AccessorType.VEC4 },
+        { key: gltf.AttributeSemantics._WORLD_POSITION, type: gltf.AccessorType.VEC3 },
+        { key: gltf.AttributeSemantics._WORLD_ROTATION, type: gltf.AccessorType.VEC4 },
     ];
     /**
      * @private
      * 渲染类型为Billboard的属性格式
      */
-    const BillboardShaderAttributeFormat: { key: string, type: gltf.AccessorType }[] = [
-        { key: gltf.AttributeSemanticType._CORNER, type: gltf.AccessorType.VEC2 },
-        { key: gltf.AttributeSemanticType.TEXCOORD_0, type: gltf.AccessorType.VEC2 },
-        { key: gltf.AttributeSemanticType._START_POSITION, type: gltf.AccessorType.VEC3 },
-        { key: gltf.AttributeSemanticType._START_VELOCITY, type: gltf.AccessorType.VEC3 },
-        { key: gltf.AttributeSemanticType._START_COLOR, type: gltf.AccessorType.VEC4 },
-        { key: gltf.AttributeSemanticType._START_SIZE, type: gltf.AccessorType.VEC3 },
-        { key: gltf.AttributeSemanticType._START_ROTATION, type: gltf.AccessorType.VEC3 },
-        { key: gltf.AttributeSemanticType._TIME, type: gltf.AccessorType.VEC2 },
-        { key: gltf.AttributeSemanticType._RANDOM0, type: gltf.AccessorType.VEC4 },
-        { key: gltf.AttributeSemanticType._RANDOM1, type: gltf.AccessorType.VEC4 },
-        { key: gltf.AttributeSemanticType._WORLD_POSITION, type: gltf.AccessorType.VEC3 },
-        { key: gltf.AttributeSemanticType._WORLD_ROTATION, type: gltf.AccessorType.VEC4 },
+    const BillboardShaderAttributeFormat: { key: gltf.AttributeSemantics, type: gltf.AccessorType }[] = [
+        { key: gltf.AttributeSemantics._CORNER, type: gltf.AccessorType.VEC2 },
+        { key: gltf.AttributeSemantics.TEXCOORD_0, type: gltf.AccessorType.VEC2 },
+        { key: gltf.AttributeSemantics._START_POSITION, type: gltf.AccessorType.VEC3 },
+        { key: gltf.AttributeSemantics._START_VELOCITY, type: gltf.AccessorType.VEC3 },
+        { key: gltf.AttributeSemantics._START_COLOR, type: gltf.AccessorType.VEC4 },
+        { key: gltf.AttributeSemantics._START_SIZE, type: gltf.AccessorType.VEC3 },
+        { key: gltf.AttributeSemantics._START_ROTATION, type: gltf.AccessorType.VEC3 },
+        { key: gltf.AttributeSemantics._TIME, type: gltf.AccessorType.VEC2 },
+        { key: gltf.AttributeSemantics._RANDOM0, type: gltf.AccessorType.VEC4 },
+        { key: gltf.AttributeSemantics._RANDOM1, type: gltf.AccessorType.VEC4 },
+        { key: gltf.AttributeSemantics._WORLD_POSITION, type: gltf.AccessorType.VEC3 },
+        { key: gltf.AttributeSemantics._WORLD_ROTATION, type: gltf.AccessorType.VEC4 },
     ];
 
     /**
     * @internal
     */
     export function createBatchMesh(renderer: ParticleRenderer, maxParticleCount: number) {
-        const meshAttributes: string[] = [];
+        const meshAttributes: gltf.AttributeSemantics[] = [];
         const meshAttributesType: { [key: string]: gltf.AccessorType } = {};
         if (renderer.renderMode === ParticleRenderMode.Mesh) {
             const mesh = renderer.mesh!;
@@ -54,16 +54,17 @@ namespace egret3d.particle {
 
             const totalVertexCount = mesh.vertexCount * maxParticleCount;
             const totalIndexCount = orginIndexBufferCount * maxParticleCount;
-            const batchMesh = Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType, gltf.DrawMode.Dynamic);
+            const batchMesh = Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType);
+            batchMesh.drawMode = gltf.DrawMode.Dynamic;
             //
             let index = 0;
             //提前填充
-            const orginPostionBuffer = mesh.getAttributes(gltf.AttributeSemanticType.POSITION)!;
-            const orginUVBuffer = mesh.getAttributes(gltf.AttributeSemanticType.TEXCOORD_0);
-            const orginColorBuffer = mesh.getAttributes(gltf.AttributeSemanticType.COLOR_0);
-            const positionBuffer = batchMesh.getAttributes(gltf.AttributeSemanticType.POSITION)!;
-            const colorBuffer = batchMesh.getAttributes(gltf.AttributeSemanticType.COLOR_0)!;
-            const uvBuffer = batchMesh.getAttributes(gltf.AttributeSemanticType.TEXCOORD_0)!;
+            const orginPostionBuffer = mesh.getAttributes(gltf.AttributeSemantics.POSITION)!;
+            const orginUVBuffer = mesh.getAttributes(gltf.AttributeSemantics.TEXCOORD_0);
+            const orginColorBuffer = mesh.getAttributes(gltf.AttributeSemantics.COLOR_0);
+            const positionBuffer = batchMesh.getAttributes(gltf.AttributeSemantics.POSITION)!;
+            const colorBuffer = batchMesh.getAttributes(gltf.AttributeSemantics.COLOR_0)!;
+            const uvBuffer = batchMesh.getAttributes(gltf.AttributeSemantics.TEXCOORD_0)!;
             for (let i = 0; i < totalVertexCount; i++) {
                 const vector2Offset = i * 2;
                 const vector3Offset = i * 3;
@@ -110,10 +111,11 @@ namespace egret3d.particle {
             const vertexStride = 4;
             const totalVertexCount = vertexStride * maxParticleCount;
             const totalIndexCount = orginIndexBufferCount * maxParticleCount;
-            const batchMesh = Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType, gltf.DrawMode.Dynamic);
+            const batchMesh = Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType);
+            batchMesh.drawMode = gltf.DrawMode.Dynamic;
 
-            const cornerBuffer = batchMesh.getAttributes(gltf.AttributeSemanticType._CORNER)!;
-            const uvBuffer = batchMesh.getAttributes(gltf.AttributeSemanticType.TEXCOORD_0)!;
+            const cornerBuffer = batchMesh.getAttributes(gltf.AttributeSemantics._CORNER)!;
+            const uvBuffer = batchMesh.getAttributes(gltf.AttributeSemantics.TEXCOORD_0)!;
             for (let i = 0; i < totalVertexCount; i++) {
                 const orginVertexIndex = i % vertexStride;
                 const vector2Offset = i * 2;
@@ -351,7 +353,7 @@ namespace egret3d.particle {
 
     function _generateCircleParticlePosition(shape: ShapeModule, position: Vector3, direction: Vector3) {
         const temp = Vector3.create().release();
-        _randomPositionArcCircle(shape.arc, temp);        
+        _randomPositionArcCircle(shape.arc, temp);
 
         position.x = -temp.x * shape.radius;
         position.y = temp.y * shape.radius;

@@ -45,7 +45,7 @@ namespace egret3d {
         public static COPY: Shader;
 
         private _createShader(name: string, config: GLTF, renderQueue: number, tStates: gltf.States, defines?: string[]) {
-            const shader = Shader.create(config, name);
+            const shader = Shader.create(name, config);
 
             if (renderQueue) {
                 shader._renderQueue = renderQueue;
@@ -69,7 +69,7 @@ namespace egret3d {
         public initialize() {
             super.initialize();
             //
-            const helpMaterial = Material.create(Shader.create(egret3d.ShaderLib.meshbasic as any, ""));
+            const helpMaterial = Material.create(Shader.create("", egret3d.ShaderLib.meshbasic as any));
             const helpStates = helpMaterial.technique.states!;
             //
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);

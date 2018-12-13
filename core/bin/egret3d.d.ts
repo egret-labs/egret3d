@@ -652,7 +652,7 @@ declare namespace paper {
          * 该资源内部初始化。
          * - 重写此方法时，必须调用 `super.initialize();`。
          */
-        initialize(): void;
+        initialize(...args: any[]): void;
         /**
          * 该资源的引用计数加一。
          */
@@ -1814,7 +1814,7 @@ declare namespace gltf {
     /**
      *
      */
-    const enum AttributeSemanticType {
+    const enum AttributeSemantics {
         POSITION = "POSITION",
         NORMAL = "NORMAL",
         TANGENT = "TANGENT",
@@ -1855,7 +1855,7 @@ declare namespace gltf {
         _WORLD_POSITION = "_WORLD_POSITION",
         _WORLD_ROTATION = "_WORLD_ROTATION",
     }
-    const enum UniformSemanticType {
+    const enum UniformSemantics {
         LOCAL = "LOCAL",
         MODEL = "MODEL",
         VIEW = "VIEW",
@@ -1908,8 +1908,10 @@ declare namespace gltf {
         MAT3 = "MAT3",
         MAT4 = "MAT4",
     }
+    /**
+     *
+     */
     type ImageSource = ImageBitmap | ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement;
-    type MeshAttribute = AttributeSemanticType | string;
     /**
      * Indices of those attributes that deviate from their initialization value.
      */
@@ -1991,6 +1993,10 @@ declare namespace gltf {
          * Specifies if the attribute is a scalar, vector, or matrix.
          */
         type: AccessorType;
+        /**
+         * Specifies if the attribute is a scalar, vector, or matrix.
+         */
+        typeCount?: number;
         /**
          * Maximum value of each component in this attribute.
          */
@@ -2804,6 +2810,14 @@ declare namespace egret3d {
      */
     abstract class GLTFAsset extends paper.Asset {
         /**
+         *
+         */
+        static getComponentTypeCount(type: gltf.ComponentType): uint;
+        /**
+         *
+         */
+        static getAccessorTypeCount(type: gltf.AccessorType): uint;
+        /**
          * @private
          */
         static createConfig(): GLTF;
@@ -2812,12 +2826,12 @@ declare namespace egret3d {
          */
         static parseFromBinary(array: Uint32Array): {
             config: GLTF;
-            buffers: (Float32Array | Uint32Array | Uint16Array)[];
+            buffers: ArrayBufferView[];
         } | undefined;
         /**
          * Buffer 列表。
          */
-        readonly buffers: (Float32Array | Uint32Array | Uint16Array)[];
+        readonly buffers: ArrayBufferView[];
         /**
          * 配置。
          */
@@ -2825,28 +2839,20 @@ declare namespace egret3d {
         /**
          * 请使用 `T.create()` 创建实例。
          */
-        protected constructor(config: GLTF, name: string);
+        protected constructor(name: string, config: GLTF);
         dispose(): boolean;
+        /**
+         *
+         */
+        updateAccessorTypeCount(): this;
         /**
          * 根据指定 BufferView 创建二进制数组。
          */
-        createTypeArrayFromBufferView(bufferView: gltf.BufferView, componentType: gltf.ComponentType): Float32Array;
+        createTypeArrayFromBufferView(bufferView: gltf.BufferView, componentType: gltf.ComponentType): ArrayBufferView;
         /**
          * 根据指定 Accessor 创建二进制数组。
          */
-        createTypeArrayFromAccessor(accessor: gltf.Accessor, offset?: uint, count?: uint): Float32Array;
-        /**
-         *
-         */
-        getComponentTypeCount(type: gltf.ComponentType): uint;
-        /**
-         *
-         */
-        getAccessorTypeCount(type: gltf.AccessorType): uint;
-        /**
-         * 自定义 Mesh 的属性枚举。
-         */
-        getMeshAttributeType(type: gltf.MeshAttribute): gltf.AccessorType;
+        createTypeArrayFromAccessor(accessor: gltf.Accessor, offset?: uint, count?: uint): ArrayBufferView;
         /**
          * 通过 Accessor 获取指定 BufferLength。
          */
@@ -2858,7 +2864,7 @@ declare namespace egret3d {
         /**
          * 通过 Accessor 获取指定 Buffer。
          */
-        getBuffer(accessor: gltf.Accessor): Uint32Array;
+        getBuffer(accessor: gltf.Accessor): ArrayBufferView;
         /**
          * 通过 Accessor 获取指定 BufferView。
          */
@@ -3342,8 +3348,15 @@ declare namespace egret3d {
      * 纹理资源。
      */
     class Texture extends BaseTexture {
+        /**
+         *
+         * @param parameters
+         */
         static create(parameters: CreateTextureParameters): Texture;
-        static create(source: GLTF, name: string): Texture;
+        /**
+         * @private
+         */
+        static create(name: string, config: GLTF): Texture;
         /**
          *
          */
@@ -3366,14 +3379,14 @@ declare namespace egret3d {
      * @private
      */
     const globalAttributeSemantic: {
-        [key: string]: gltf.AttributeSemanticType;
+        [key: string]: gltf.AttributeSemantics;
     };
     /**
      * 内置提供的全局Uniform
      * @private
      */
     const globalUniformSemantic: {
-        [key: string]: gltf.UniformSemanticType;
+        [key: string]: gltf.UniformSemantics;
     };
     /**
      *
@@ -3639,6 +3652,16 @@ declare namespace paper {
      * 渲染排序。
      */
     const enum RenderQueue {
+    }
+    /**
+     *
+     */
+    const enum AttributeSemantics {
+    }
+    /**
+     *
+     */
+    const enum UniformSemantics {
     }
 }
 declare namespace egret3d {
@@ -4366,8 +4389,15 @@ declare namespace egret3d {
      * 渲染贴图。
      */
     class RenderTexture extends BaseTexture {
+        /**
+         *
+         * @param parameters
+         */
         static create(parameters: CreateTextureParameters): RenderTexture;
-        static create(source: GLTF, name: string): RenderTexture;
+        /**
+         * @private
+         */
+        static create(name: string, config: GLTF): RenderTexture;
         protected _mipmap: boolean;
         initialize(): void;
         activateRenderTexture(index?: uint): void;
@@ -4385,24 +4415,27 @@ declare namespace egret3d {
          * @param indexCount
          * @param attributeNames
          * @param attributeTypes
-         * @param drawMode
          */
-        static create(vertexCount: uint, indexCount: uint, attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: {
+        static create(vertexCount: uint, indexCount: uint, attributeNames?: gltf.AttributeSemantics[] | null, attributeTypes?: {
             [key: string]: gltf.AccessorType;
-        } | null, drawMode?: gltf.DrawMode): Mesh;
-        static create(config: GLTF, buffers: Uint32Array[], name: string): Mesh;
-        private static _createConfig();
+        } | null): Mesh;
+        static create(config: GLTF, buffers: ReadonlyArray<ArrayBufferView>): Mesh;
+        private static _createConfig(vertexCount, indexCount, attributeNames, attributeTypes);
+        private static _getMeshAttributeType(attributeName, customAttributeTypes);
         protected _drawMode: gltf.DrawMode;
         protected _vertexCount: uint;
-        protected readonly _attributeNames: string[];
-        protected readonly _customAttributeTypes: {
+        protected readonly _attributeNames: gltf.AttributeSemantics[];
+        protected readonly _attributeTypes: {
             [key: string]: gltf.AccessorType;
         };
         protected _glTFMesh: gltf.Mesh;
-        protected _inverseBindMatrices: Float32Array | null;
+        protected _inverseBindMatrices: ArrayBufferView | null;
         protected _boneIndices: {
             [key: string]: uint;
         } | null;
+        initialize(buffers: ReadonlyArray<ArrayBufferView>, attributeTypes: {
+            [key: string]: gltf.AccessorType;
+        } | null): void;
         dispose(): boolean;
         /**
          * 克隆该网格。
@@ -4464,14 +4497,14 @@ declare namespace egret3d {
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点总数。（默认全部顶点）
          */
-        getAttributes(attributeType: gltf.MeshAttribute, offset?: uint, count?: uint): Float32Array | Uint16Array | null;
+        getAttributes(attributeType: gltf.AttributeSemantics, offset?: uint, count?: uint): Float32Array | Uint16Array | null;
         /**
          * 设置该网格指定的顶点属性数据。
          * @param attributeType 属性名。
          * @param value 属性数据。
          * @param offset 顶点偏移。（默认从第一个点开始）
          */
-        setAttributes(attributeType: gltf.MeshAttribute, value: ReadonlyArray<number>, offset?: uint): Float32Array | Uint16Array | null;
+        setAttributes(attributeType: gltf.AttributeSemantics, value: ReadonlyArray<number>, offset?: uint): Float32Array | Uint16Array | null;
         /**
          * 获取该网格的顶点索引数据。
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
@@ -4490,7 +4523,7 @@ declare namespace egret3d {
          * @param offset 顶点偏移。（默认不偏移）
          * @param count 顶点总数。（默认全部顶点）
          */
-        uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: uint, count?: uint): void;
+        uploadVertexBuffer(uploadAttributes?: gltf.AttributeSemantics | (gltf.AttributeSemantics[]), offset?: uint, count?: uint): void;
         /**
          * 当修改该网格的顶点索引后，调用此方法来更新顶点索引的缓冲区。
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
@@ -5694,7 +5727,7 @@ declare namespace egret3d {
          *
          */
         static MISSING: Material;
-        private _createMaterial(shader, name);
+        private _createMaterial(name, shader);
         initialize(): void;
     }
 }
@@ -8516,6 +8549,12 @@ declare namespace paper {
      */
     type CullingMask = Layer;
 }
+declare namespace gltf {
+    /**
+     * @deprecated
+     */
+    type MeshAttributeType = AttributeSemantics;
+}
 declare namespace egret3d {
     /**
      * @deprecated
@@ -8651,13 +8690,11 @@ declare namespace egret3d {
          * @param shader
          * @param name
          */
-        static create(shader: Shader, name: string): Shader;
+        static create(name: string, shader: Shader): Shader;
         /**
-         *
-         * @param glTF
-         * @param name
+         * @private
          */
-        static create(glTF: GLTF, name: string): Shader;
+        static create(name: string, config: GLTF): Shader;
         /**
          * @private
          */
@@ -8672,6 +8709,7 @@ declare namespace egret3d {
         customs: {
             [key: string]: string;
         } | null;
+        initialize(parent: Shader | null): void;
         /**
          * @private
          */
@@ -8691,9 +8729,20 @@ declare namespace egret3d {
     class Material extends GLTFAsset {
         /**
          * 创建一个材质。
+         * @param shader 指定一个着色器。（默认：DefaultShaders.MESH_BASIC）
          */
-        static create(shader?: Shader, name?: string): Material;
-        static create(config: GLTF, name?: string): Material;
+        static create(shader?: Shader): Material;
+        /**
+         * 创建一个材质。
+         * @param name 资源名称。
+         * @param shader 指定一个着色器。
+         */
+        static create(name: string, shader?: Shader): Material;
+        /**
+         * 加载一个材质。
+         * @private
+         */
+        static create(name: string, config: GLTF): Material;
         /**
          * 该材质的渲染排序。
          */
@@ -8975,7 +9024,8 @@ declare namespace egret3d {
         /**
          * @private
          */
-        static create(config: GLTF, buffers: Uint32Array[], name: string): AnimationAsset;
+        static create(name: string, config: GLTF, buffers: ArrayBufferView[]): AnimationAsset;
+        initialize(): void;
         getAnimationClip(name: string): GLTFAnimationClip | null;
     }
 }
@@ -8989,9 +9039,9 @@ declare namespace egret3d {
          */
         static create(name: string): AnimationController;
         /**
-         *
+         * @private
          */
-        static create(config: GLTF, name: string): AnimationController;
+        static create(name: string, config: GLTF): AnimationController;
         /**
          * 添加一个新的动画层。
          */
@@ -9016,9 +9066,9 @@ declare namespace egret3d {
          */
         static create(name: string): AnimationMask;
         /**
-         *
+         * @private
          */
-        static create(config: GLTF, name: string): AnimationMask;
+        static create(name: string, config: GLTF): AnimationMask;
         private _jointNamesDirty;
         private readonly _jointNames;
         private _addJoint(nodes, joints, jointIndex, recursive);
@@ -10406,7 +10456,7 @@ declare namespace egret3d.ShaderChunk {
 declare namespace egret3d {
     const BitmapDataProcessor: RES.processor.Processor;
     const ShaderProcessor: RES.processor.Processor;
-    const TextureDescProcessor: RES.processor.Processor;
+    const ImageProcessor: RES.processor.Processor;
     const TextureProcessor: RES.processor.Processor;
     const MaterialProcessor: RES.processor.Processor;
     const MeshProcessor: RES.processor.Processor;

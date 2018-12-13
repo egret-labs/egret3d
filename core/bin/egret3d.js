@@ -1013,6 +1013,10 @@ var paper;
          * - 重写此方法时，必须调用 `super.initialize();`。
          */
         Asset.prototype.initialize = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
             this._referenceCount = 0;
         };
         /**
@@ -2281,7 +2285,7 @@ var egret3d;
         /**
          * 请使用 `T.create()` 创建实例。
          */
-        function GLTFAsset(config, name) {
+        function GLTFAsset(name, config) {
             var _this = _super.call(this, name) || this;
             /**
              * Buffer 列表。
@@ -2294,6 +2298,48 @@ var egret3d;
             _this.config = config;
             return _this;
         }
+        /**
+         *
+         */
+        GLTFAsset.getComponentTypeCount = function (type) {
+            switch (type) {
+                case 5120 /* Byte */:
+                case 5121 /* UnsignedByte */:
+                    return 1;
+                case 5122 /* Short */:
+                case 5123 /* UnsignedShort */:
+                    return 2;
+                case 5124 /* Int */:
+                case 5125 /* UnsignedInt */:
+                    return 4;
+                case 5126 /* Float */:
+                    return 4;
+                default:
+                    throw new Error();
+            }
+        };
+        /**
+         *
+         */
+        GLTFAsset.getAccessorTypeCount = function (type) {
+            switch (type) {
+                case "SCALAR" /* SCALAR */:
+                    return 1;
+                case "VEC2" /* VEC2 */:
+                    return 2;
+                case "VEC3" /* VEC3 */:
+                    return 3;
+                case "VEC4" /* VEC4 */:
+                case "MAT2" /* MAT2 */:
+                    return 4;
+                case "MAT3" /* MAT3 */:
+                    return 9;
+                case "MAT4" /* MAT4 */:
+                    return 16;
+                default:
+                    throw new Error();
+            }
+        };
         /**
          * @private
          */
@@ -2314,7 +2360,7 @@ var egret3d;
          */
         GLTFAsset.parseFromBinary = function (array) {
             var index = 0;
-            var result = { config: {}, buffers: [] };
+            var result = { buffers: [] };
             if (array[index++] !== 0x46546C67 ||
                 array[index++] !== 2) {
                 console.assert(false, "Nonsupport glTF data.");
@@ -2358,6 +2404,19 @@ var egret3d;
             return true;
         };
         /**
+         *
+         */
+        GLTFAsset.prototype.updateAccessorTypeCount = function () {
+            var accessors = this.config.accessors;
+            if (accessors) {
+                for (var _i = 0, accessors_1 = accessors; _i < accessors_1.length; _i++) {
+                    var accessor = accessors_1[_i];
+                    accessor.typeCount = GLTFAsset.getAccessorTypeCount(accessor.type);
+                }
+            }
+            return this;
+        };
+        /**
          * 根据指定 BufferView 创建二进制数组。
          */
         GLTFAsset.prototype.createTypeArrayFromBufferView = function (bufferView, componentType) {
@@ -2389,14 +2448,14 @@ var egret3d;
         GLTFAsset.prototype.createTypeArrayFromAccessor = function (accessor, offset, count) {
             if (offset === void 0) { offset = 0; }
             if (count === void 0) { count = 0; }
-            var accessorTypeCount = this.getAccessorTypeCount(accessor.type);
-            var bufferCount = accessorTypeCount * Math.min(accessor.count - offset, count || accessor.count);
+            var typeCount = accessor.typeCount;
+            var bufferCount = typeCount * Math.min(accessor.count - offset, count || accessor.count);
             var bufferView = this.getBufferView(accessor);
             var buffer = this.buffers[bufferView.buffer];
             // assert.config.buffers[bufferView.buffer];
             var bufferOffset = buffer.byteOffset + (bufferView.byteOffset || 0) + (accessor.byteOffset || 0);
             if (offset > 0) {
-                bufferOffset += offset * accessorTypeCount * this.getComponentTypeCount(accessor.componentType);
+                bufferOffset += offset * typeCount * GLTFAsset.getComponentTypeCount(accessor.componentType);
             }
             switch (accessor.componentType) {
                 case 5120 /* Byte */:
@@ -2418,73 +2477,10 @@ var egret3d;
             }
         };
         /**
-         *
-         */
-        GLTFAsset.prototype.getComponentTypeCount = function (type) {
-            switch (type) {
-                case 5120 /* Byte */:
-                case 5121 /* UnsignedByte */:
-                    return 1;
-                case 5122 /* Short */:
-                case 5123 /* UnsignedShort */:
-                    return 2;
-                case 5124 /* Int */:
-                case 5125 /* UnsignedInt */:
-                    return 4;
-                case 5126 /* Float */:
-                    return 4;
-                default:
-                    throw new Error();
-            }
-        };
-        /**
-         *
-         */
-        GLTFAsset.prototype.getAccessorTypeCount = function (type) {
-            switch (type) {
-                case "SCALAR" /* SCALAR */:
-                    return 1;
-                case "VEC2" /* VEC2 */:
-                    return 2;
-                case "VEC3" /* VEC3 */:
-                    return 3;
-                case "VEC4" /* VEC4 */:
-                case "MAT2" /* MAT2 */:
-                    return 4;
-                case "MAT3" /* MAT3 */:
-                    return 9;
-                case "MAT4" /* MAT4 */:
-                    return 16;
-                default:
-                    throw new Error();
-            }
-        };
-        /**
-         * 自定义 Mesh 的属性枚举。
-         */
-        GLTFAsset.prototype.getMeshAttributeType = function (type) {
-            switch (type) {
-                case "POSITION" /* POSITION */:
-                case "NORMAL" /* NORMAL */:
-                    return "VEC3" /* VEC3 */;
-                case "TEXCOORD_0" /* TEXCOORD_0 */:
-                case "TEXCOORD_1" /* TEXCOORD_1 */:
-                    return "VEC2" /* VEC2 */;
-                case "TANGENT" /* TANGENT */:
-                case "COLOR_0" /* COLOR_0 */:
-                case "COLOR_1" /* COLOR_1 */:
-                case "JOINTS_0" /* JOINTS_0 */:
-                case "WEIGHTS_0" /* WEIGHTS_0 */:
-                    return "VEC4" /* VEC4 */;
-                default:
-                    throw new Error();
-            }
-        };
-        /**
          * 通过 Accessor 获取指定 BufferLength。
          */
         GLTFAsset.prototype.getBufferLength = function (accessor) {
-            return this.getAccessorTypeCount(accessor.type) * this.getComponentTypeCount(accessor.componentType) * accessor.count;
+            return accessor.typeCount * GLTFAsset.getComponentTypeCount(accessor.componentType) * accessor.count;
         };
         /**
          * 通过 Accessor 获取指定 BufferOffset。
@@ -4201,18 +4197,18 @@ var egret3d;
         function Texture() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        Texture.create = function (parametersOrSource, name) {
-            var config;
+        Texture.create = function (parametersOrName, config) {
+            var name;
             var texture;
-            if (parametersOrSource.hasOwnProperty("asset")) {
-                config = parametersOrSource;
+            if (typeof parametersOrName === "string") {
+                name = parametersOrName;
             }
             else {
-                config = this._createConfig(parametersOrSource);
-                name = parametersOrSource.name || "";
+                config = this._createConfig(parametersOrName);
+                name = parametersOrName.name || "";
             }
             // Retargeting.
-            texture = new egret3d.Texture(config, name);
+            texture = new egret3d.Texture(name, config);
             texture.initialize();
             return texture;
         };
@@ -6914,20 +6910,20 @@ var egret3d;
             _this._mipmap = false;
             return _this;
         }
-        RenderTexture.create = function (parametersOrSource, name) {
-            var config;
-            var texture;
-            if (parametersOrSource.hasOwnProperty("asset")) {
-                config = parametersOrSource;
+        RenderTexture.create = function (parametersOrName, config) {
+            var name;
+            var renderTexture;
+            if (typeof parametersOrName === "string") {
+                name = parametersOrName;
             }
             else {
-                config = this._createConfig(parametersOrSource);
-                name = parametersOrSource.name || "";
+                config = this._createConfig(parametersOrName);
+                name = parametersOrName.name || "";
             }
             // Retargeting.
-            texture = new egret3d.RenderTexture(config, name);
-            texture.initialize();
-            return texture;
+            renderTexture = new egret3d.RenderTexture(name, config);
+            renderTexture.initialize();
+            return renderTexture;
         };
         RenderTexture.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
@@ -6961,77 +6957,37 @@ var egret3d;
             _this._drawMode = 35044 /* Static */;
             _this._vertexCount = 0;
             _this._attributeNames = [];
-            _this._customAttributeTypes = {};
+            _this._attributeTypes = {};
             _this._glTFMesh = null;
             _this._inverseBindMatrices = null;
             _this._boneIndices = null;
             return _this;
         }
-        Mesh.create = function (vertexCountOrConfig, indexCountOrBuffers, attributeNamesOrName, attributeTypes, drawMode) {
-            var name = typeof attributeNamesOrName === "string" ? attributeNamesOrName : "";
+        Mesh.create = function (vertexCountOrConfig, indexCountOrBuffers, attributeNames, attributeTypes) {
+            var config;
+            var buffers;
             var mesh;
+            var indexCount = 0;
+            //
             if (typeof vertexCountOrConfig === "number") {
-                // Retargeting.
-                mesh = new egret3d.Mesh(this._createConfig(), name);
-                mesh.initialize();
-                vertexCountOrConfig = vertexCountOrConfig || 3;
-                indexCountOrBuffers = indexCountOrBuffers || 0;
-                //
-                var config = mesh.config;
-                var buffer = config.buffers[0];
-                var vertexBufferView = config.bufferViews[0];
-                var accessors = config.accessors;
-                var attributes = config.meshes[0].primitives[0].attributes;
-                //
-                var hasCustomAttributeType = false;
-                if (attributeTypes) {
-                    for (var k in attributeTypes) {
-                        hasCustomAttributeType = true;
-                        mesh._customAttributeTypes[k] = attributeTypes[k];
-                    }
-                }
-                for (var _i = 0, _a = (attributeNamesOrName || _attributeNames); _i < _a.length; _i++) {
-                    var attributeName = _a[_i];
-                    var attributeType = hasCustomAttributeType ? mesh._customAttributeTypes[attributeName] || mesh.getMeshAttributeType(attributeName) : mesh.getMeshAttributeType(attributeName);
-                    var byteOffset = vertexBufferView.byteLength;
-                    vertexBufferView.byteLength += vertexCountOrConfig * mesh.getAccessorTypeCount(attributeType) * Float32Array.BYTES_PER_ELEMENT;
-                    attributes[attributeName] = accessors.length;
-                    accessors.push({
-                        bufferView: 0,
-                        byteOffset: byteOffset,
-                        count: vertexCountOrConfig,
-                        normalized: attributeName === "NORMAL" /* NORMAL */,
-                        componentType: 5126 /* Float */,
-                        type: attributeType,
-                    });
-                }
-                buffer.byteLength = vertexBufferView.byteLength;
-                mesh.buffers[0] = new Float32Array(vertexBufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
-                mesh._drawMode = drawMode || 35044 /* Static */;
-                if (indexCountOrBuffers > 0) {
-                    mesh.addSubMesh(indexCountOrBuffers, 0);
-                }
-                else {
-                    config.meshes[0].primitives[0].material = 0;
-                }
+                indexCount = indexCountOrBuffers;
+                config = this._createConfig(vertexCountOrConfig, indexCount, attributeNames || _attributeNames, attributeTypes || null);
+                buffers = [new Uint32Array(config.bufferViews[0].byteLength / Uint32Array.BYTES_PER_ELEMENT)];
             }
             else {
-                // Retargeting.
-                mesh = new egret3d.Mesh(vertexCountOrConfig, name);
-                mesh.initialize();
-                for (var _b = 0, _c = indexCountOrBuffers; _b < _c.length; _b++) {
-                    var buffer = _c[_b];
-                    mesh.buffers.push(buffer);
-                }
+                config = vertexCountOrConfig;
+                buffers = indexCountOrBuffers;
             }
-            mesh._glTFMesh = mesh.config.meshes[0];
-            mesh._vertexCount = mesh.getAccessor(mesh._glTFMesh.primitives[0].attributes.POSITION || 0).count;
-            for (var k in mesh._glTFMesh.primitives[0].attributes) {
-                mesh._attributeNames.push(k);
+            // Retargeting.
+            mesh = new egret3d.Mesh("", config);
+            mesh.initialize(buffers, attributeTypes || null);
+            //
+            if (indexCount > 0) {
+                mesh.addSubMesh(indexCountOrBuffers, 0);
             }
             return mesh;
         };
-        Mesh._createConfig = function () {
+        Mesh._createConfig = function (vertexCount, indexCount, attributeNames, attributeTypes) {
             var config = this.createConfig();
             config.buffers = [{ byteLength: 0 }];
             config.bufferViews = [{ buffer: 0, byteOffset: 0, byteLength: 0, target: 34962 /* ArrayBuffer */ }]; // VBO
@@ -7040,15 +6996,82 @@ var egret3d;
                     primitives: [{ attributes: {} }],
                     extensions: { paper: {} },
                 }];
+            //
+            var buffer = config.buffers[0];
+            var vertexBufferView = config.bufferViews[0];
+            var accessors = config.accessors;
+            var attributes = config.meshes[0].primitives[0].attributes;
+            //
+            for (var _i = 0, attributeNames_1 = attributeNames; _i < attributeNames_1.length; _i++) {
+                var attributeName = attributeNames_1[_i];
+                var attributeType = this._getMeshAttributeType(attributeName, attributeTypes);
+                var byteOffset = vertexBufferView.byteLength;
+                vertexBufferView.byteLength += vertexCount * egret3d.GLTFAsset.getAccessorTypeCount(attributeType) * Float32Array.BYTES_PER_ELEMENT;
+                attributes[attributeName] = accessors.length;
+                accessors.push({
+                    bufferView: 0,
+                    byteOffset: byteOffset,
+                    count: vertexCount,
+                    normalized: attributeName === "NORMAL" /* NORMAL */ || attributeName === "TANGENT" /* TANGENT */,
+                    componentType: 5126 /* Float */,
+                    type: attributeType,
+                });
+            }
+            buffer.byteLength = vertexBufferView.byteLength;
+            if (indexCount === 0) {
+                config.meshes[0].primitives[0].material = 0;
+            }
             return config;
+        };
+        Mesh._getMeshAttributeType = function (attributeName, customAttributeTypes) {
+            if (customAttributeTypes && attributeName in customAttributeTypes) {
+                return customAttributeTypes[attributeName];
+            }
+            switch (attributeName) {
+                case "POSITION" /* POSITION */:
+                case "NORMAL" /* NORMAL */:
+                    return "VEC3" /* VEC3 */;
+                case "TEXCOORD_0" /* TEXCOORD_0 */:
+                case "TEXCOORD_1" /* TEXCOORD_1 */:
+                    return "VEC2" /* VEC2 */;
+                case "TANGENT" /* TANGENT */:
+                case "COLOR_0" /* COLOR_0 */:
+                case "COLOR_1" /* COLOR_1 */:
+                case "JOINTS_0" /* JOINTS_0 */:
+                case "WEIGHTS_0" /* WEIGHTS_0 */:
+                    return "VEC4" /* VEC4 */;
+                default:
+                    throw new Error();
+            }
+        };
+        Mesh.prototype.initialize = function (buffers, attributeTypes) {
+            _super.prototype.initialize.call(this);
+            var glTFMesh = this._glTFMesh = this.config.meshes[0];
+            this._vertexCount = this.getAccessor(glTFMesh.primitives[0].attributes.POSITION || 0).count;
+            for (var k in glTFMesh.primitives[0].attributes) {
+                this._attributeNames.push(k);
+            }
+            if (attributeTypes) {
+                for (var k in attributeTypes) {
+                    this._attributeTypes[k] = attributeTypes[k];
+                }
+            }
+            for (var _i = 0, buffers_1 = buffers; _i < buffers_1.length; _i++) {
+                var buffer = buffers_1[_i];
+                this.buffers.push(buffer);
+            }
+            this.updateAccessorTypeCount();
         };
         Mesh.prototype.dispose = function () {
             if (!_super.prototype.dispose.call(this)) {
                 return false;
             }
+            for (var k in this._attributeTypes) {
+                delete this._attributeTypes[k];
+            }
             this._drawMode = 35044 /* Static */;
             this._attributeNames.length = 0;
-            // this._customAttributeTypes TODO
+            // this._customAttributeTypes;
             this._glTFMesh = null;
             this._inverseBindMatrices = null;
             this._boneIndices = null;
@@ -7059,7 +7082,8 @@ var egret3d;
          */
         Mesh.prototype.clone = function () {
             // TODO
-            var value = Mesh.create(this.vertexCount, 0, this._attributeNames, this._customAttributeTypes, this.drawMode);
+            var value = Mesh.create(this.vertexCount, 0, this._attributeNames, this._attributeTypes);
+            value._drawMode = this._drawMode;
             for (var _i = 0, _a = this._glTFMesh.primitives; _i < _a.length; _i++) {
                 var primitive = _a[_i];
                 if (primitive.indices !== undefined) {
@@ -7211,7 +7235,7 @@ var egret3d;
             var indexBufferView = this.config.bufferViews[subMeshIndex + 1] = {
                 buffer: subMeshIndex + 1,
                 byteOffset: 0,
-                byteLength: indexCount * this.getAccessorTypeCount("SCALAR" /* SCALAR */) * Uint16Array.BYTES_PER_ELEMENT,
+                byteLength: indexCount * Uint16Array.BYTES_PER_ELEMENT,
                 target: 34963 /* ElementArrayBuffer */,
             };
             var primitive = primitives[subMeshIndex] = primitives[subMeshIndex] || {
@@ -7223,6 +7247,7 @@ var egret3d;
             accessors.push({
                 bufferView: subMeshIndex + 1, byteOffset: 0,
                 count: indexCount,
+                typeCount: 1,
                 componentType: 5123 /* UnsignedShort */, type: "SCALAR" /* SCALAR */,
             });
             this.buffers[subMeshIndex + 1] = new Uint16Array(indexBufferView.byteLength / Uint16Array.BYTES_PER_ELEMENT);
@@ -11383,7 +11408,7 @@ var egret3d;
             return _super !== null && _super.apply(this, arguments) || this;
         }
         DefaultShaders.prototype._createShader = function (name, config, renderQueue, tStates, defines) {
-            var shader = egret3d.Shader.create(config, name);
+            var shader = egret3d.Shader.create(name, config);
             if (renderQueue) {
                 shader._renderQueue = renderQueue;
             }
@@ -11401,7 +11426,7 @@ var egret3d;
         DefaultShaders.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             //
-            var helpMaterial = egret3d.Material.create(egret3d.Shader.create(egret3d.ShaderLib.meshbasic, ""));
+            var helpMaterial = egret3d.Material.create(egret3d.Shader.create("", egret3d.ShaderLib.meshbasic));
             var helpStates = helpMaterial.technique.states;
             //
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* Back */);
@@ -11491,32 +11516,32 @@ var egret3d;
         function DefaultMaterials() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        DefaultMaterials.prototype._createMaterial = function (shader, name) {
-            var material = egret3d.Material.create(shader, name);
+        DefaultMaterials.prototype._createMaterial = function (name, shader) {
+            var material = egret3d.Material.create(name, shader);
             paper.Asset.register(material);
             return material;
         };
         DefaultMaterials.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
-            DefaultMaterials.MESH_BASIC = this._createMaterial(egret3d.DefaultShaders.MESH_BASIC, "builtin/meshbasic.mat.json")
+            DefaultMaterials.MESH_BASIC = this._createMaterial("builtin/meshbasic.mat.json", egret3d.DefaultShaders.MESH_BASIC)
                 .setTexture(egret3d.DefaultTextures.WHITE);
-            DefaultMaterials.MESH_BASIC_DOUBLESIDE = this._createMaterial(egret3d.DefaultShaders.MESH_BASIC, "builtin/meshbasic_doubleside.mat.json")
+            DefaultMaterials.MESH_BASIC_DOUBLESIDE = this._createMaterial("builtin/meshbasic_doubleside.mat.json", egret3d.DefaultShaders.MESH_BASIC)
                 .setTexture(egret3d.DefaultTextures.WHITE)
                 .setCullFace(false);
-            DefaultMaterials.MESH_LAMBERT = this._createMaterial(egret3d.DefaultShaders.MESH_LAMBERT, "builtin/meshlambert.mat.json")
+            DefaultMaterials.MESH_LAMBERT = this._createMaterial("builtin/meshlambert.mat.json", egret3d.DefaultShaders.MESH_LAMBERT)
                 .setTexture(egret3d.DefaultTextures.WHITE);
-            DefaultMaterials.MESH_LAMBERT_DOUBLESIDE = this._createMaterial(egret3d.DefaultShaders.MESH_LAMBERT, "builtin/meshlambert_doubleside.mat.json")
+            DefaultMaterials.MESH_LAMBERT_DOUBLESIDE = this._createMaterial("builtin/meshlambert_doubleside.mat.json", egret3d.DefaultShaders.MESH_LAMBERT)
                 .setTexture(egret3d.DefaultTextures.WHITE)
                 .setCullFace(false);
-            DefaultMaterials.LINEDASHED = this._createMaterial(egret3d.DefaultShaders.LINEDASHED, "builtin/linedashed.mat.json");
-            DefaultMaterials.LINEDASHED_COLOR = this._createMaterial(egret3d.DefaultShaders.LINEDASHED, "builtin/linedashed_color.mat.json")
+            DefaultMaterials.LINEDASHED = this._createMaterial("builtin/linedashed.mat.json", egret3d.DefaultShaders.LINEDASHED);
+            DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", egret3d.DefaultShaders.LINEDASHED)
                 .addDefine("USE_COLOR" /* USE_COLOR */);
-            DefaultMaterials.MISSING = this._createMaterial(egret3d.DefaultShaders.MESH_BASIC, "builtin/missing.mat.json")
+            DefaultMaterials.MISSING = this._createMaterial("builtin/missing.mat.json", egret3d.DefaultShaders.MESH_BASIC)
                 .setColor(egret3d.Color.PURPLE);
-            DefaultMaterials.SHADOW_DEPTH = this._createMaterial(egret3d.DefaultShaders.DEPTH, "builtin/shadow_depth.mat.json")
+            DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/shadow_depth.mat.json", egret3d.DefaultShaders.DEPTH)
                 .addDefine("DEPTH_PACKING 3201" /* DEPTH_PACKING_3201 */);
-            DefaultMaterials.SHADOW_DISTANCE = this._createMaterial(egret3d.DefaultShaders.DISTANCE_RGBA, "builtin/shadow_distance.mat.json");
-            DefaultMaterials.COPY = this._createMaterial(egret3d.DefaultShaders.COPY, "builtin/copy.mat.json");
+            DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", egret3d.DefaultShaders.DISTANCE_RGBA);
+            DefaultMaterials.COPY = this._createMaterial("builtin/copy.mat.json", egret3d.DefaultShaders.COPY);
         };
         return DefaultMaterials;
     }(paper.SingletonComponent));
@@ -18973,7 +18998,8 @@ var egret3d;
                 }
                 var totalVertexCount = mesh.vertexCount * maxParticleCount;
                 var totalIndexCount = orginIndexBufferCount * maxParticleCount;
-                var batchMesh = egret3d.Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType, 35048 /* Dynamic */);
+                var batchMesh = egret3d.Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType);
+                batchMesh.drawMode = 35048 /* Dynamic */;
                 //
                 var index = 0;
                 //提前填充
@@ -19028,7 +19054,8 @@ var egret3d;
                 var vertexStride = 4;
                 var totalVertexCount = vertexStride * maxParticleCount;
                 var totalIndexCount = orginIndexBufferCount * maxParticleCount;
-                var batchMesh = egret3d.Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType, 35048 /* Dynamic */);
+                var batchMesh = egret3d.Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType);
+                batchMesh.drawMode = 35048 /* Dynamic */;
                 var cornerBuffer = batchMesh.getAttributes("_CORNER" /* _CORNER */);
                 var uvBuffer = batchMesh.getAttributes("TEXCOORD_0" /* TEXCOORD_0 */);
                 for (var i = 0; i < totalVertexCount; i++) {
@@ -22288,7 +22315,7 @@ var egret3d;
             for (var attStr in primitives[i].attributes) {
                 var attrType = attStr;
                 if (!combine.meshAttribute[attrType]) {
-                    combine.vertexBufferSize += meshData.getAccessorTypeCount(meshData.getAccessor(primitive.attributes[attStr]).type);
+                    combine.vertexBufferSize += meshData.getAccessor(primitive.attributes[attStr]).typeCount;
                 }
                 combine.meshAttribute[attrType] = attrType;
             }
@@ -22491,7 +22518,8 @@ var egret3d;
             startIndex = endIndex + 1;
             meshFilter.mesh = null;
         }
-        var combineMesh = egret3d.Mesh.create(combineInstance.vertexCount, combineInstance.indexBufferTotalSize, newAttribute, undefined, 35048 /* Dynamic */);
+        var combineMesh = egret3d.Mesh.create(combineInstance.vertexCount, combineInstance.indexBufferTotalSize, newAttribute);
+        combineMesh.drawMode = 35048 /* Dynamic */;
         var newVertexBuffers = combineMesh.buffers[0];
         var newIndexBuffers = combineMesh.buffers[1];
         var iv = 0;
@@ -22519,8 +22547,8 @@ var egret3d;
         }
         return combineMesh;
     }
-    function _copyAccessorBufferArray(gltf, accessor, target) {
-        var buffer = gltf.createTypeArrayFromAccessor(gltf.getAccessor(accessor));
+    function _copyAccessorBufferArray(mesh, accessor, target) {
+        var buffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(accessor));
         var count = buffer.length;
         var startIndex = target.length;
         target.length += count;
@@ -22826,16 +22854,20 @@ var egret3d;
             _this.customs = null;
             return _this;
         }
-        Shader.create = function (shaderOrGLTF, name) {
+        Shader.create = function (name, shaderOrConfig) {
+            var config;
             var shader;
-            if (shaderOrGLTF instanceof Shader) {
-                var KHR_techniques_webgl = shaderOrGLTF.config.extensions.KHR_techniques_webgl;
+            var parent = null;
+            if (shaderOrConfig instanceof Shader) {
+                // TODO
+                var KHR_techniques_webgl = shaderOrConfig.config.extensions.KHR_techniques_webgl;
                 var technique = KHR_techniques_webgl.techniques[0];
                 var uniforms = {};
+                parent = shaderOrConfig;
                 for (var k in technique.uniforms) {
                     uniforms[k] = technique.uniforms[k];
                 }
-                var config = {
+                config = {
                     extensions: {
                         KHR_techniques_webgl: {
                             shaders: KHR_techniques_webgl.shaders,
@@ -22845,18 +22877,14 @@ var egret3d;
                                 }]
                         }
                     }
-                }; // TODO
-                shader = new Shader(config, name);
-                shader.initialize();
-                // shader.customs = shaderOrGLTF.customs; TODO
-                shader._renderQueue = shaderOrGLTF._renderQueue;
-                shader._defines = shaderOrGLTF._defines ? shaderOrGLTF._defines.concat() : undefined;
-                shader._states = shaderOrGLTF._states; // TODO
+                };
             }
             else {
-                shader = new Shader(shaderOrGLTF, name);
-                shader.initialize();
+                config = shaderOrConfig;
             }
+            //
+            shader = new Shader(name, config);
+            shader.initialize(parent);
             return shader;
         };
         /**
@@ -22905,6 +22933,15 @@ var egret3d;
                     var sourceFunction = sourceFunctions[k];
                     functions[k] = Array.isArray(sourceFunction) ? sourceFunction.concat() : sourceFunction;
                 }
+            }
+        };
+        Shader.prototype.initialize = function (parent) {
+            _super.prototype.initialize.call(this);
+            if (parent) {
+                // this.customs = parent.customs; TODO
+                this._renderQueue = parent._renderQueue;
+                this._defines = parent._defines ? parent._defines.concat() : undefined;
+                this._states = parent._states; // TODO
             }
         };
         /**
@@ -22980,10 +23017,20 @@ var egret3d;
             _this._shader = null;
             return _this;
         }
-        Material.create = function (shaderOrConfig, name) {
-            var material = new Material(null, name || "");
+        Material.create = function (shaderOrName, shaderOrConfig) {
+            var hasName = typeof shaderOrName === "string";
+            var name = (shaderOrName && hasName) ? shaderOrName : "";
+            //
+            if (shaderOrName === undefined) {
+                shaderOrConfig = shaderOrConfig || egret3d.DefaultShaders.MESH_BASIC;
+            }
+            else if (!hasName) {
+                shaderOrConfig = shaderOrName || shaderOrConfig || egret3d.DefaultShaders.MESH_BASIC;
+            }
+            //
+            var material = new Material(name, null);
             material.initialize();
-            material._reset(shaderOrConfig || egret3d.DefaultShaders.MESH_BASIC);
+            material._reset(shaderOrConfig);
             return material;
         };
         Material.prototype._createTechnique = function (shader, glTFMaterial) {
@@ -23018,7 +23065,7 @@ var egret3d;
                 var value = void 0;
                 if (type === 35678 /* SAMPLER_2D */ || type === 35680 /* SAMPLER_CUBE */) {
                     if (sourceValue) {
-                        value = paper.Asset.find(sourceValue);
+                        value = paper.Asset.find(sourceValue) || egret3d.DefaultTextures.MISSING; // Missing texture.
                     }
                     if (!value) {
                         value = egret3d.DefaultTextures.WHITE; // Default texture.
@@ -23103,6 +23150,7 @@ var egret3d;
             //
             this.renderQueue = glTFMaterial.extensions.paper.renderQueue;
             this._technique = this._createTechnique(shader, glTFMaterial);
+            this._shader = shader;
             this._retainOrReleaseTextures(true);
         };
         Material.prototype._retainOrReleaseTextures = function (isRatain) {
@@ -24002,13 +24050,18 @@ var egret3d;
         /**
          * @private
          */
-        AnimationAsset.create = function (config, buffers, name) {
-            var animationAsset = new AnimationAsset(config, name);
-            for (var _i = 0, buffers_1 = buffers; _i < buffers_1.length; _i++) {
-                var b = buffers_1[_i];
+        AnimationAsset.create = function (name, config, buffers) {
+            var animationAsset = new AnimationAsset(name, config);
+            animationAsset.initialize();
+            for (var _i = 0, buffers_2 = buffers; _i < buffers_2.length; _i++) {
+                var b = buffers_2[_i];
                 animationAsset.buffers.push(b);
             }
             return animationAsset;
+        };
+        AnimationAsset.prototype.initialize = function () {
+            _super.prototype.initialize.call(this);
+            this.updateAccessorTypeCount();
         };
         /*
          * 获取动画剪辑。
@@ -24051,10 +24104,10 @@ var egret3d;
         function AnimationController() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        AnimationController.create = function (configOrName, name) {
+        AnimationController.create = function (name, config) {
             var animationController;
-            if (typeof configOrName === "string") {
-                var config = this.createConfig();
+            if (!config) {
+                config = this.createConfig();
                 config.extensions = {
                     paper: {
                         animationControllers: [{
@@ -24063,11 +24116,9 @@ var egret3d;
                             }]
                     },
                 };
-                animationController = new AnimationController(config, configOrName);
             }
-            else {
-                animationController = new AnimationController(configOrName, name);
-            }
+            animationController = new AnimationController(name, config);
+            animationController.initialize();
             return animationController;
         };
         /**
@@ -24154,10 +24205,10 @@ var egret3d;
             _this._jointNames = [];
             return _this;
         }
-        AnimationMask.create = function (configOrName, name) {
+        AnimationMask.create = function (name, config) {
             var animationMask;
-            if (typeof configOrName === "string") {
-                var config = this.createConfig();
+            if (!config) {
+                config = this.createConfig();
                 config.nodes = [];
                 config.extensions = {
                     paper: {
@@ -24167,13 +24218,9 @@ var egret3d;
                             }]
                     },
                 };
-                animationMask = new AnimationMask(config, configOrName);
-                animationMask.initialize();
             }
-            else {
-                animationMask = new AnimationMask(configOrName, name);
-                animationMask.initialize();
-            }
+            animationMask = new AnimationMask(name, config);
+            animationMask.initialize();
             return animationMask;
         };
         AnimationMask.prototype._addJoint = function (nodes, joints, jointIndex, recursive) {
@@ -25018,7 +25065,7 @@ var egret3d;
                             console.error("错误的Shader格式数据");
                             _a.label = 7;
                         case 7:
-                            glTF = egret3d.Shader.create(result, resource.name);
+                            glTF = egret3d.Shader.create(resource.name, result);
                             paper.Asset.register(glTF);
                             return [2 /*return*/, glTF];
                     }
@@ -25028,10 +25075,29 @@ var egret3d;
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
             data.dispose();
+            // data.release();
             return Promise.resolve();
         }
     };
-    egret3d.TextureDescProcessor = {
+    egret3d.ImageProcessor = {
+        onLoadStart: function (host, resource) {
+            return host.load(resource, "bitmapdata").then(function (bitmapData) {
+                var texture = egret3d.Texture
+                    .create({ name: resource.name, source: bitmapData.source, format: 6408 /* RGBA */, mipmap: true })
+                    .setLiner(true)
+                    .setRepeat(true);
+                paper.Asset.register(texture);
+                return texture;
+            });
+        },
+        onRemoveStart: function (host, resource) {
+            var data = host.get(resource);
+            data.dispose();
+            // data.release();
+            return Promise.resolve();
+        }
+    };
+    egret3d.TextureProcessor = {
         onLoadStart: function (host, resource) {
             return host.load(resource, "json").then(function (data) {
                 var name = data.name;
@@ -25074,50 +25140,34 @@ var egret3d;
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
             data.dispose();
-            return Promise.resolve();
-        }
-    };
-    egret3d.TextureProcessor = {
-        onLoadStart: function (host, resource) {
-            return host.load(resource, "bitmapdata").then(function (bitmapData) {
-                var texture = egret3d.Texture
-                    .create({ name: resource.name, source: bitmapData.source, format: 6408 /* RGBA */, mipmap: true })
-                    .setLiner(true)
-                    .setRepeat(true);
-                paper.Asset.register(texture);
-                return texture;
-            });
-        },
-        onRemoveStart: function (host, resource) {
-            var data = host.get(resource);
-            data.dispose();
+            // data.release();
             return Promise.resolve();
         }
     };
     egret3d.MaterialProcessor = {
         onLoadStart: function (host, resource) {
             return __awaiter(this, void 0, void 0, function () {
-                var result, _i, _a, mat, technique, techniqueRes, shader, values, _b, _c, _d, key, value, r, texture, material;
+                var result, _i, _a, material_1, techniqueRes, values, _b, _c, _d, k, value, r, material;
                 return __generator(this, function (_e) {
                     switch (_e.label) {
                         case 0: return [4 /*yield*/, host.load(resource, 'json')];
                         case 1:
                             result = _e.sent();
-                            if (!(result.materials && result.materials.length > 0)) return [3 /*break*/, 10];
+                            if (!result.materials) return [3 /*break*/, 10];
                             _i = 0, _a = result.materials;
                             _e.label = 2;
                         case 2:
                             if (!(_i < _a.length)) return [3 /*break*/, 10];
-                            mat = _a[_i];
-                            technique = mat.extensions.KHR_techniques_webgl.technique;
-                            techniqueRes = RES.host.resourceConfig["getResource"](technique);
-                            if (!techniqueRes) return [3 /*break*/, 4];
+                            material_1 = _a[_i];
+                            techniqueRes = RES.host.resourceConfig["getResource"](material_1.extensions.KHR_techniques_webgl.technique);
+                            if (!(techniqueRes && techniqueRes.indexOf("builtin/") < 0)) return [3 /*break*/, 4];
                             return [4 /*yield*/, host.load(techniqueRes, "Shader")];
                         case 3:
-                            shader = _e.sent();
+                            _e.sent(); // TODO
                             _e.label = 4;
                         case 4:
-                            values = mat.extensions.KHR_techniques_webgl.values;
+                            values = material_1.extensions.KHR_techniques_webgl.values;
+                            if (!values) return [3 /*break*/, 9];
                             _b = [];
                             for (_c in values)
                                 _b.push(_c);
@@ -25125,19 +25175,17 @@ var egret3d;
                             _e.label = 5;
                         case 5:
                             if (!(_d < _b.length)) return [3 /*break*/, 9];
-                            key = _b[_d];
-                            value = values[key];
+                            k = _b[_d];
+                            value = values[k];
                             if (!(value && typeof value === "string")) return [3 /*break*/, 8];
                             r = RES.host.resourceConfig["getResource"](value);
                             if (!r) return [3 /*break*/, 7];
                             return [4 /*yield*/, host.load(r, "TextureDesc")];
                         case 6:
-                            texture = _e.sent();
-                            values[key] = texture;
+                            _e.sent(); // TODO
                             return [3 /*break*/, 8];
                         case 7:
                             console.log("Load image error.", value);
-                            values[key] = egret3d.DefaultTextures.MISSING;
                             _e.label = 8;
                         case 8:
                             _d++;
@@ -25146,7 +25194,7 @@ var egret3d;
                             _i++;
                             return [3 /*break*/, 2];
                         case 10:
-                            material = egret3d.Material.create(result, resource.name);
+                            material = egret3d.Material.create(resource.name, result);
                             paper.Asset.register(material);
                             return [2 /*return*/, material];
                     }
@@ -25156,6 +25204,7 @@ var egret3d;
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
             data.dispose();
+            // data.release();
             return Promise.resolve();
         }
     };
@@ -25163,7 +25212,8 @@ var egret3d;
         onLoadStart: function (host, resource) {
             return host.load(resource, "bin").then(function (result) {
                 var parseResult = egret3d.GLTFAsset.parseFromBinary(result instanceof ArrayBuffer ? new Uint32Array(result) : result);
-                var mesh = egret3d.Mesh.create(parseResult.config, parseResult.buffers, resource.name);
+                var mesh = egret3d.Mesh.create(parseResult.config, parseResult.buffers);
+                mesh.name = resource.name; // TODO
                 paper.Asset.register(mesh);
                 return mesh;
             });
@@ -25171,6 +25221,7 @@ var egret3d;
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
             data.dispose();
+            // data.release();
             return Promise.resolve();
         }
     };
@@ -25178,7 +25229,7 @@ var egret3d;
         onLoadStart: function (host, resource) {
             return host.load(resource, "bin").then(function (result) {
                 var parseResult = egret3d.GLTFAsset.parseFromBinary(new Uint32Array(result));
-                var animation = egret3d.AnimationAsset.create(parseResult.config, parseResult.buffers, resource.name);
+                var animation = egret3d.AnimationAsset.create(resource.name, parseResult.config, parseResult.buffers);
                 paper.Asset.register(animation);
                 return animation;
             });
@@ -25186,6 +25237,7 @@ var egret3d;
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
             data.dispose();
+            // data.release();
             return Promise.resolve();
         }
     };
@@ -25202,6 +25254,7 @@ var egret3d;
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
             data.dispose();
+            // data.release();
             return Promise.resolve();
         }
     };
@@ -25218,6 +25271,7 @@ var egret3d;
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
             data.dispose();
+            // data.release();
             return Promise.resolve();
         }
     };
@@ -25319,8 +25373,8 @@ var egret3d;
         });
     }
     RES.processor.map("Shader", egret3d.ShaderProcessor);
-    RES.processor.map("Texture", egret3d.TextureProcessor);
-    RES.processor.map("TextureDesc", egret3d.TextureDescProcessor);
+    RES.processor.map("Texture", egret3d.ImageProcessor);
+    RES.processor.map("TextureDesc", egret3d.TextureProcessor);
     RES.processor.map("Material", egret3d.MaterialProcessor);
     RES.processor.map("Mesh", egret3d.MeshProcessor);
     RES.processor.map("Animation", egret3d.AnimationProcessor);
@@ -26172,7 +26226,7 @@ var egret3d;
                             if (ibo) {
                                 this.ibos[subMeshIndex] = ibo;
                                 webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
-                                webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this.getBufferLength(this.getAccessor(primitive.indices)), this.drawMode);
+                                webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this.getBufferLength(this.getAccessor(primitive.indices)), this._drawMode);
                                 this.uploadSubIndexBuffer(subMeshIndex);
                             }
                             else {
@@ -26183,13 +26237,19 @@ var egret3d;
                         subMeshIndex++;
                     }
                     webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
-                    webgl.bufferData(webgl.ARRAY_BUFFER, vertexBuffer.byteLength, this.drawMode);
+                    webgl.bufferData(webgl.ARRAY_BUFFER, vertexBuffer.byteLength, this._drawMode);
                     this.uploadVertexBuffer(attributeNames);
                 }
                 else {
                     console.error("Create webgl buffer error.");
                 }
             };
+            /**
+             * 更新该网格的顶点缓存。
+             * @param uploadAttributes 要更新的顶点属性名，可以为一个属性，或属性列表，或 `null` （更新所有属性）。
+             * @param offset 更新顶点的偏移。 [0: 不偏移，N: 从 N + 1 个顶点开始] （默认：0）
+             * @param count 更新顶点的总数。 [0: 所有顶点，N: N 个顶点] （默认：0）
+             */
             WebGLMesh.prototype.uploadVertexBuffer = function (uploadAttributes, offset, count) {
                 if (uploadAttributes === void 0) { uploadAttributes = null; }
                 if (offset === void 0) { offset = 0; }
@@ -26202,8 +26262,8 @@ var egret3d;
                 webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
                 if (!uploadAttributes) {
                     uploadAttributes = [];
-                    for (var attributeName in this._glTFMesh.primitives[0].attributes) {
-                        uploadAttributes.push(attributeName);
+                    for (var k in this._glTFMesh.primitives[0].attributes) {
+                        uploadAttributes.push(k);
                     }
                 }
                 if (Array.isArray(uploadAttributes)) {
@@ -26215,8 +26275,7 @@ var egret3d;
                             var bufferOffset = this.getBufferOffset(accessor);
                             var subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
                             if (offset > 0) {
-                                var accessorTypeCount = this.getAccessorTypeCount(accessor.type);
-                                bufferOffset += offset * accessorTypeCount * this.getComponentTypeCount(accessor.componentType);
+                                bufferOffset += offset * accessor.typeCount * egret3d.GLTFAsset.getComponentTypeCount(accessor.componentType);
                             }
                             webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, subVertexBuffer);
                         }
@@ -26238,6 +26297,10 @@ var egret3d;
                     }
                 }
             };
+            /**
+             * 更新该网格的索引缓存。
+             * @param subMeshIndex
+             */
             WebGLMesh.prototype.uploadSubIndexBuffer = function (subMeshIndex) {
                 if (subMeshIndex === void 0) { subMeshIndex = 0; }
                 if (!this.vbo) {
@@ -26756,8 +26819,7 @@ var egret3d;
                     if (accessorIndex !== undefined) {
                         var accessor = mesh.getAccessor(accessorIndex);
                         var bufferOffset = mesh.getBufferOffset(accessor);
-                        var typeCount = mesh.getAccessorTypeCount(accessor.type);
-                        webgl.vertexAttribPointer(location_5, typeCount, accessor.componentType, accessor.normalized !== undefined ? accessor.normalized : false, 0, bufferOffset); //TODO normalized应该来源于mesh，应该还没有
+                        webgl.vertexAttribPointer(location_5, accessor.typeCount, accessor.componentType, accessor.normalized !== undefined ? accessor.normalized : false, 0, bufferOffset); //TODO normalized应该来源于mesh，应该还没有
                         webgl.enableVertexAttribArray(location_5);
                     }
                     else {
