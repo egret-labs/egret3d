@@ -23,32 +23,42 @@ namespace egret3d {
             vertexCount: uint, indexCount: uint,
             attributeNames?: gltf.AttributeSemantics[] | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null
         ): Mesh;
-        public static create(config: GLTF, buffers: ReadonlyArray<ArrayBufferView>): Mesh;
+        /**
+         * 加载一个网格。
+         * @private 
+         */
+        public static create(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView>): Mesh;
         public static create(
-            vertexCountOrConfig: uint | GLTF, indexCountOrBuffers?: uint | ReadonlyArray<ArrayBufferView>,
-            attributeNames?: gltf.AttributeSemantics[] | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null
+            vertexCountOrName: uint | string, indexCountOrConfig?: uint | GLTF,
+            attributeNamesOrBuffers?: gltf.AttributeSemantics[] | null | ReadonlyArray<ArrayBufferView>, attributeTypes?: { [key: string]: gltf.AccessorType } | null
         ) {
+            let name: string;
             let config: GLTF;
             let buffers: ArrayBufferView[];
             let mesh: Mesh;
             let indexCount = 0;
             //
-            if (typeof vertexCountOrConfig === "number") {
-                indexCount = indexCountOrBuffers as uint;
-                config = this._createConfig(vertexCountOrConfig as uint, indexCount, attributeNames as any || _attributeNames, attributeTypes || null);
+            if (typeof vertexCountOrName === "number") {
+                indexCount = indexCountOrConfig as uint;
+                //
+                name = "";
+                config = this._createConfig(
+                    vertexCountOrName as uint, indexCount,
+                    attributeNamesOrBuffers as any || _attributeNames, attributeTypes || null
+                );
                 buffers = [new Uint32Array(config.bufferViews![0].byteLength / Uint32Array.BYTES_PER_ELEMENT)];
-
             }
             else {
-                config = vertexCountOrConfig as GLTF;
-                buffers = indexCountOrBuffers as ArrayBufferView[];
+                name = vertexCountOrName;
+                config = indexCountOrConfig as GLTF;
+                buffers = attributeNamesOrBuffers as ArrayBufferView[];
             }
             // Retargeting.
-            mesh = new egret3d.Mesh("", config);
+            mesh = new egret3d.Mesh(name, config);
             mesh.initialize(buffers, attributeTypes || null);
             //
             if (indexCount > 0) {
-                mesh.addSubMesh(indexCountOrBuffers as uint, 0);
+                mesh.addSubMesh(indexCount, 0);
             }
 
             return mesh;
@@ -83,9 +93,9 @@ namespace egret3d {
                     type: attributeType,
                 });
             }
-            
-            buffer.byteLength = vertexBufferView.byteLength;
 
+            buffer.byteLength = vertexBufferView.byteLength;
+            //
             if (indexCount === 0) {
                 config.meshes![0].primitives[0].material = 0;
             }

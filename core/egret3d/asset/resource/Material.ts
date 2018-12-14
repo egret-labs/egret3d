@@ -43,18 +43,20 @@ namespace egret3d {
          */
         public renderQueue: paper.RenderQueue | uint = paper.RenderQueue.Geometry;
         /**
-          * @internal
-          */
+         * 
+         */
+        public readonly defines: Defines = new Defines();
+        /**
+         * @internal
+         */
         public readonly _id: uint = _hashCode++;
         /**
-          * @internal
-          */
+         * @internal
+         */
         public _version: uint = 0;
-        private _cacheDefines: string = "";
-        private readonly _defines: Array<string> = [];
         /**
-        * @internal
-        */
+         * @internal
+         */
         public _technique: gltf.Technique = null!;
         /**
          * @internal
@@ -210,8 +212,7 @@ namespace egret3d {
             this._retainOrReleaseTextures(false);
             //
             this._version++;
-            this._cacheDefines = "";
-            this._defines.length = 0;
+            this.defines.clear();
             this._technique = null!;
             this._shader = null!;
 
@@ -224,8 +225,8 @@ namespace egret3d {
             this._retainOrReleaseTextures(false);
             //
             this.renderQueue = value.renderQueue;
-            this._defines.length = 0;
             this._shader = value._shader;
+            this.defines.copy(value.defines);
             // Copy uniforms.
             const sourceUniforms = value._technique.uniforms;
             const targetUniforms = this._technique.uniforms = {} as { [k: string]: gltf.Uniform };
@@ -249,10 +250,6 @@ namespace egret3d {
                 const stateFunction = sourceStates.functions![k];
                 targetStates.functions![k] = Array.isArray(stateFunction) ? stateFunction.concat() : stateFunction;
             }
-            // Copy define.
-            for (const define of value._defines) {
-                this.addDefine(define);
-            }
             //
             this._retainOrReleaseTextures(true);
 
@@ -263,41 +260,6 @@ namespace egret3d {
          */
         public clone(): this {
             return Material.create(this._shader).copy(this) as this;
-        }
-        /**
-         * 为该材质添加指定的 define。
-         * @param defineString define 字符串。
-         */
-        public addDefine(defineString: string, value?: number): this {
-            if (value !== undefined) {
-                defineString += " " + value;
-            }
-
-            const defines = this._defines;
-            if (defines.indexOf(defineString) < 0) {
-                defines.push(defineString);
-                defines.sort();
-                this._version++;
-            }
-
-            return this;
-        }
-        /**
-         * 从该材质移除指定的 define。
-         * @param defineString define 字符串。
-         */
-        public removeDefine(defineString: string, value?: number): this {
-            if (value !== undefined) {
-                defineString += " " + value;
-            }
-
-            const index = this._defines.indexOf(defineString);
-            if (index >= 0) {
-                this._defines.splice(index, 1);
-                this._version++;
-            }
-
-            return this;
         }
 
         setBoolean(id: string, value: boolean) {
@@ -483,6 +445,24 @@ namespace egret3d {
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
             }
+
+            return this;
+        }
+        /**
+         * 为该材质添加指定的 define。
+         * @param defineString define 字符串。
+         */
+        public addDefine(defineString: string, value?: number): this {
+            this.defines.addDefine(defineString, value);
+            
+            return this;
+        }
+        /**
+         * 从该材质移除指定的 define。
+         * @param defineString define 字符串。
+         */
+        public removeDefine(defineString: string, value?: number): this {
+            this.defines.removeDefine(defineString, value);
 
             return this;
         }
@@ -817,18 +797,6 @@ namespace egret3d {
             return this;
         }
         /**
-         * TODO
-         * @internal
-         */
-        public get shaderDefine(): string {
-            this._cacheDefines = "";
-            for (const key of this._defines) {
-                this._cacheDefines += "#define " + key + " \n";
-            }
-
-            return this._cacheDefines;
-        }
-        /**
          * 该材质的透明度。
          */
         public get opacity(): number {
@@ -864,12 +832,6 @@ namespace egret3d {
             }
 
             this._reset(value);
-        }
-        /**
-         * 
-         */
-        public get defines(): ReadonlyArray<string> {
-            return this._defines;
         }
         /**
          * 该材质的渲染技术。

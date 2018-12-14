@@ -4,7 +4,6 @@ namespace egret3d {
      * - 用于渲染网格筛选组件提供的网格资源。
      */
     export class MeshRenderer extends paper.BaseRenderer {
-        @paper.serializedField
         protected _lightmapIndex: number = -1;
         /**
          * 如果该属性合并到 UV2 中，会破坏网格共享，共享的网格无法拥有不同的 lightmap UV。
@@ -99,17 +98,27 @@ namespace egret3d {
          * 该组件的光照图索引。
          */
         @paper.editor.property(paper.editor.EditType.INT, { minimum: -1 })
-        public get lightmapIndex() {
+        @paper.serializedField("_lightmapIndex")
+        public get lightmapIndex(): int {
             return this._lightmapIndex;
         }
-        public set lightmapIndex(value: number) {
+        public set lightmapIndex(value: int) {
             if (value === this._lightmapIndex) {
                 return;
             }
 
             this._lightmapIndex = value;
-        }
 
+            if (value >= 0) {
+                this.defines.addDefine("USE_LIGHTMAP");
+            }
+            else {
+                this.defines.removeDefine("USE_LIGHTMAP");
+            }
+        }
+        /**
+         * TODO
+         */
         public get lightmapScaleOffset() {
             return this._lightmapScaleOffset;
         }

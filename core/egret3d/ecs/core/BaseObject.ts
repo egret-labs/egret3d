@@ -21,7 +21,7 @@ namespace paper {
          */
         protected _released?: boolean;
         /**
-         * 更新该对象，使得该对象的 `onUpdate` 被执行。
+         * 更新该对象，使得该对象的 `onUpdate()` 被执行。
          */
         public update() {
             if (this.onUpdate) {

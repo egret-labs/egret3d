@@ -25,27 +25,27 @@ namespace egret3d.web {
         }
 
         public createBuffer() {
-            const vertexBufferViewAccessor = this.getAccessor(this._glTFMesh!.primitives[0].attributes.POSITION || 0);
-            const vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float);
             const webgl = WebGLRenderState.webgl!;
             const vbo = webgl.createBuffer();
+            const primitives = this._glTFMesh.primitives;
 
             if (vbo) {
                 this.vbo = vbo;
 
                 const attributeNames: gltf.AttributeSemantics[] = [];
-                for (const k in this._glTFMesh!.primitives[0].attributes) {
+                for (const k in primitives[0].attributes) {
                     attributeNames.push(k as gltf.AttributeSemantics);
                 }
 
                 let subMeshIndex = 0;
-                for (const primitive of this._glTFMesh!.primitives) {
+                for (const primitive of primitives) {
                     if (primitive.indices !== undefined) {
                         const ibo = webgl.createBuffer();
                         if (ibo) {
                             this.ibos[subMeshIndex] = ibo;
-                            webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
-                            webgl.bufferData(webgl.ELEMENT_ARRAY_BUFFER, this.getBufferLength(this.getAccessor(primitive.indices)), this._drawMode);
+
+                            webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
+                            webgl.bufferData(gltf.BufferViewTarget.ElementArrayBuffer, this.getBufferLength(this.getAccessor(primitive.indices)), this._drawMode);
                             this.uploadSubIndexBuffer(subMeshIndex);
                         }
                         else {
@@ -56,9 +56,10 @@ namespace egret3d.web {
 
                     subMeshIndex++;
                 }
-
-                webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
-                webgl.bufferData(webgl.ARRAY_BUFFER, vertexBuffer.byteLength, this._drawMode);
+                
+                const bufferLength = this.getBufferLength(this.getAccessor(primitives[0].attributes.POSITION || 0));
+                webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
+                webgl.bufferData(gltf.BufferViewTarget.ArrayBuffer, bufferLength, this._drawMode);
                 this.uploadVertexBuffer(attributeNames);
             }
             else {
@@ -78,7 +79,7 @@ namespace egret3d.web {
 
             const { attributes } = this._glTFMesh!.primitives[0];
             const webgl = WebGLRenderState.webgl!;
-            webgl.bindBuffer(webgl.ARRAY_BUFFER, this.vbo);
+            webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, this.vbo);
 
             if (!uploadAttributes) {
                 uploadAttributes = [];
@@ -94,10 +95,12 @@ namespace egret3d.web {
                         const accessor = this.getAccessor(accessorIndex);
                         let bufferOffset = this.getBufferOffset(accessor);
                         const subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
+
                         if (offset > 0) {
                             bufferOffset += offset * accessor.typeCount! * GLTFAsset.getComponentTypeCount(accessor.componentType);
                         }
-                        webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, subVertexBuffer);
+
+                        webgl.bufferSubData(gltf.BufferViewTarget.ArrayBuffer, bufferOffset, subVertexBuffer);
                     }
                     else {
                         console.warn("Error arguments.");
@@ -108,9 +111,14 @@ namespace egret3d.web {
                 const accessorIndex = attributes[uploadAttributes];
                 if (accessorIndex !== undefined) {
                     const accessor = this.getAccessor(accessorIndex);
-                    const bufferOffset = this.getBufferOffset(accessor);
+                    let bufferOffset = this.getBufferOffset(accessor);
+
+                    if (offset > 0) {
+                        bufferOffset += offset * accessor.typeCount! * GLTFAsset.getComponentTypeCount(accessor.componentType);
+                    }
+
                     const subVertexBuffer = this.createTypeArrayFromAccessor(accessor);
-                    webgl.bufferSubData(webgl.ARRAY_BUFFER, bufferOffset, subVertexBuffer);
+                    webgl.bufferSubData(gltf.BufferViewTarget.ArrayBuffer, bufferOffset, subVertexBuffer);
                 }
                 else {
                     console.warn("Error arguments.");
@@ -134,8 +142,8 @@ namespace egret3d.web {
                     const subIndexBuffer = this.createTypeArrayFromAccessor(accessor);
                     const ibo = this.ibos[subMeshIndex];
                     const webgl = WebGLRenderState.webgl!;
-                    webgl.bindBuffer(webgl.ELEMENT_ARRAY_BUFFER, ibo);
-                    webgl.bufferSubData(webgl.ELEMENT_ARRAY_BUFFER, 0, subIndexBuffer);
+                    webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
+                    webgl.bufferSubData(gltf.BufferViewTarget.ElementArrayBuffer, 0, subIndexBuffer);
                 }
                 else {
                     console.warn("Error arguments.");

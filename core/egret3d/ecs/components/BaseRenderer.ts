@@ -14,6 +14,10 @@ namespace paper {
         @editor.property(editor.EditType.CHECKBOX)
         public frustumCulled: boolean = true;
         /**
+         * 
+         */
+        public readonly defines: egret3d.Defines = new egret3d.Defines();
+        /**
          * @internal
          */
         public _localBoundingBoxDirty: boolean = true;
@@ -49,6 +53,8 @@ namespace paper {
                     material.release();
                 }
             }
+
+            this.defines.clear();
 
             this._materials.length = 0;
         }

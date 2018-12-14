@@ -136,8 +136,6 @@ namespace egret3d {
          */
         public _update() {
             this.context._frustumCulling();
-
-            this.context.updateCameraTransform(); // TODO
         }
 
         private _onStageResize(): void {

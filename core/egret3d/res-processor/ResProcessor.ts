@@ -22,7 +22,7 @@ namespace egret3d {
         onLoadStart(host, resource) {
             const loader = new egret.ImageLoader();
             loader.load(resource.root + resource.url);
-            
+
             return new Promise((resolve, reject) => {
                 const onSuccess = () => {
                     const bitmapData = loader.data;
@@ -213,9 +213,9 @@ namespace egret3d {
         onLoadStart(host, resource) {
             return host.load(resource, "bin").then((result) => {
                 const parseResult = GLTFAsset.parseFromBinary(result instanceof ArrayBuffer ? new Uint32Array(result) : result)!;
-                const mesh = Mesh.create(parseResult.config, parseResult.buffers);
-                mesh.name = resource.name; // TODO
+                const mesh = Mesh.create(resource.name, parseResult.config, parseResult.buffers);
                 paper.Asset.register(mesh);
+                
                 return mesh;
             });
         },

@@ -325,7 +325,14 @@ declare namespace gltf {
     /**
      * glTF index.
      */
-    export type Index = uint;
+    export type Index = uint;//35713
+    /**
+     * 
+     */
+    export const enum Status {
+        CompileStatus = 35713,
+        LinkStatus = 35714,
+    }
     /**
      * BufferView target.
      */

@@ -24,15 +24,16 @@ namespace egret3d {
          * @internal
          */
         public _update() {
-            const addDrawCalls = this.addDrawCalls;
+            const { renderers, drawCalls, addDrawCalls } = this;
+
             if (addDrawCalls.length > 0) {
                 addDrawCalls.length = 0;
             }
 
             if (this._drawCallsDirty) {
+                // Clear renderers.
                 let index = 0;
                 let removeCount = 0;
-                const { renderers, drawCalls } = this;
 
                 for (const renderer of renderers) {
                     if (renderer) {
@@ -51,7 +52,7 @@ namespace egret3d {
                 if (removeCount > 0) {
                     renderers.length -= removeCount;
                 }
-
+                // Clear drawCalls.
                 index = 0;
                 removeCount = 0;
 
@@ -77,6 +78,14 @@ namespace egret3d {
 
                 this._drawCallsDirty = false;
             }
+
+            if (DEBUG) { // Clear drawCall count.
+                for (const drawCall of drawCalls) {
+                    if (drawCall) {
+                        drawCall.drawCount = 0;
+                    }
+                }
+            }
         }
         /**
          * 
@@ -92,6 +101,7 @@ namespace egret3d {
         public removeDrawCalls(renderer: paper.BaseRenderer): void {
             const { renderers, drawCalls, addDrawCalls } = this;
             const index = renderers.indexOf(renderer);
+
             if (index < 0) {
                 return;
             }
@@ -104,7 +114,7 @@ namespace egret3d {
                     drawCall.release();
                 }
             }
-
+            
             i = addDrawCalls.length;
             while (i--) {
                 const drawCall = addDrawCalls[i];

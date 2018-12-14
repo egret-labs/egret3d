@@ -6,9 +6,9 @@ namespace egret3d.web {
      */
     export interface WebGLActiveAttribute {
         name: string;
-        size: number;
-        type: number;
-        location: number;
+        size: uint;
+        type: uint;
+        location: uint;
         semantic: string;
     }
     /**
@@ -16,11 +16,11 @@ namespace egret3d.web {
      */
     export interface WebGLActiveUniform {
         name: string;
-        size: number;
-        type: number;
+        size: uint;
+        type: uint;
         location: WebGLUniformLocation;
         semantic?: string;
-        textureUnits?: number[];
+        textureUnits?: uint[];
     }
     /**
      * @internal
@@ -32,8 +32,104 @@ namespace egret3d.web {
         public readonly uniforms: WebGLActiveUniform[] = [];
         public readonly program: WebGLProgram;
 
-        public constructor(webglProgram: WebGLProgram) {
-            this.program = webglProgram;
+        public constructor(program: WebGLProgram) {
+            this.program = program;
+        }
+
+        public extract(technique: gltf.Technique): this {
+            const webgl = WebGLRenderState.webgl!;
+            const webglProgram = this.program;
+            //
+            const attributes = this.attributes;
+            const totalAttributes = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_ATTRIBUTES);
+
+            for (let i = 0; i < totalAttributes; i++) {
+                const webglActiveInfo = webgl.getActiveAttrib(webglProgram, i)!;
+                const name = webglActiveInfo.name;
+                const location = webgl.getAttribLocation(webglProgram, name);
+                let semantic = "";
+
+                if (!technique.attributes[name]) {
+                    semantic = globalAttributeSemantic[name];
+                    if (!semantic) {
+                        console.error("未知Uniform定义：" + name);
+                    }
+                }
+                else {
+                    semantic = technique.attributes[name].semantic;
+                }
+
+                attributes.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, location, semantic });
+            }
+            //
+            const contextUniforms = this.contextUniforms;
+            const uniforms = this.uniforms;
+            const totalUniforms = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_UNIFORMS);
+
+            for (let i = 0; i < totalUniforms; i++) {
+                const webglActiveInfo = webgl.getActiveUniform(webglProgram, i)!;
+                const name = webglActiveInfo.name;
+                const location = webgl.getUniformLocation(webglProgram, name)!;
+                const techniqueUniform = technique.uniforms[name];
+
+                let semantic: string | undefined = undefined;
+                if (!techniqueUniform) {
+                    semantic = globalUniformSemantic[name];
+                    if (!semantic) {
+                        //不在自定义中，也不在全局Uniform中
+                        console.error("未知Uniform定义：" + name);
+                    }
+                }
+                else {
+                    semantic = techniqueUniform.semantic;
+                }
+
+                if (semantic) {
+                    contextUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic, location });
+                }
+                else {
+                    uniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, location });
+                }
+            }
+            //
+            const activeUniforms = contextUniforms.concat(uniforms);
+            const samplerArrayNames: string[] = [];
+            const samplerNames: string[] = [];
+            // Shot.
+            for (const uniform of activeUniforms) {
+                const name = uniform.name;
+                if (uniform.type === gltf.UniformType.SAMPLER_2D || uniform.type === gltf.UniformType.SAMPLER_CUBE) {
+                    if (name.indexOf("[") > -1) {
+                        samplerArrayNames.push(name);
+                    }
+                    else {
+                        samplerNames.push(name);
+                    }
+                }
+            }
+            //
+            let textureUint = 0;
+            const allNames = samplerNames.concat(samplerArrayNames);
+
+            for (const uniform of activeUniforms) {
+                if (allNames.indexOf(uniform.name) < 0) {
+                    continue;
+                }
+
+                let textureUnits = uniform.textureUnits;
+
+                if (!textureUnits) {
+                    textureUnits = uniform.textureUnits = [];
+                }
+
+                textureUnits.length = uniform.size;
+
+                for (let i = 0; i < uniform.size; i++) {
+                    textureUnits[i] = textureUint++;
+                }
+            }
+
+            return this;
         }
     }
 }

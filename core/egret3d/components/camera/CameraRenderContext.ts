@@ -12,18 +12,15 @@ namespace egret3d {
         /**
          * 
          */
+        public readonly defines: Defines = new Defines();
+        /**
+         * 
+         */
         public readonly camera: Camera = null!;
         /**
          * 
          */
         public drawCall: DrawCall = null!;
-        /**
-         * 
-         */
-        public lightmapUV: uint = 1;
-        public lightmapIntensity: number = 1.0;
-        public readonly lightmapScaleOffset: Float32Array = new Float32Array(4);
-        public lightmap: BaseTexture | null = null;
         /**
          * 
          */
@@ -56,27 +53,10 @@ namespace egret3d {
         public readonly matrix_mvp: Matrix4 = Matrix4.create();
         public readonly matrix_mv_inverse: Matrix3 = Matrix3.create();
 
-        public fogDensity: number = 0.0;
-        public fogNear: number = 0.0;
-        public fogFar: number = 0.0;
-        public readonly fogColor: Float32Array = new Float32Array(3);
-
         private readonly _postProcessingCamera: Camera = null!;
         private readonly _postProcessDrawCall: DrawCall = DrawCall.create();
 
         private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
-        /**
-         * @internal
-         */
-        public readonly cameraPosition: Float32Array = new Float32Array(3);
-        /**
-         * @internal
-         */
-        public readonly cameraForward: Float32Array = new Float32Array(3);
-        /**
-         * @internal
-         */
-        public readonly cameraUp: Float32Array = new Float32Array(3);
         /**
          * 此帧的非透明绘制信息列表。
          * - 已进行视锥剔除的。
@@ -108,14 +88,14 @@ namespace egret3d {
 
                 if (transform) {
                     gameObject = transform.gameObject;
-                    this._postProcessingCamera = gameObject.getComponent(egret3d.Camera)!;
+                    this._postProcessingCamera = gameObject.getComponent(Camera)!;
                 }
                 else {
                     gameObject = paper.GameObject.create(gameObjectName, paper.DefaultTags.Untagged, paper.Scene.globalScene);
                     // gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
                     gameObject.parent = paper.GameObject.globalGameObject; // TODO remove
 
-                    const postProcessingCamera = gameObject.addComponent(egret3d.Camera);
+                    const postProcessingCamera = gameObject.addComponent(Camera);
                     postProcessingCamera.enabled = false;
                     postProcessingCamera.opvalue = 0.0;
                     postProcessingCamera.size = 1.0;
@@ -233,28 +213,12 @@ namespace egret3d {
             postProcessDrawCall.material = material;
 
             renderState.updateViewport(postProcessingCamera.viewport, dest);
-            renderState.clearBuffer(gltf.BufferMask.Depth | gltf.BufferMask.Color, egret3d.Color.WHITE);
+            renderState.clearBuffer(gltf.BufferMask.Depth | gltf.BufferMask.Color, Color.WHITE);
             postProcessingCamera.projectionMatrix.identity(); // TODO
             const saveCamera = Camera.current;
             Camera.current = postProcessingCamera;
             renderState.draw(postProcessDrawCall);
             Camera.current = saveCamera;
-        }
-
-        public updateCameraTransform() {
-            const rawData = this.camera.cameraToWorldMatrix.rawData;
-
-            this.cameraPosition[0] = rawData[12];
-            this.cameraPosition[1] = rawData[13];
-            this.cameraPosition[2] = rawData[14];
-
-            this.cameraUp[0] = rawData[4];
-            this.cameraUp[1] = rawData[5];
-            this.cameraUp[2] = rawData[6];
-
-            this.cameraForward[0] = -rawData[8];
-            this.cameraForward[1] = -rawData[9];
-            this.cameraForward[2] = -rawData[10];
         }
 
         public updateLights(lights: ReadonlyArray<BaseLight>) {
@@ -454,8 +418,7 @@ namespace egret3d {
 
         public updateDrawCall(drawCall: DrawCall) {
             const renderer = drawCall.renderer;
-            const scene = renderer ? renderer.gameObject.scene : this.camera.gameObject.scene;//后期渲染renderer为空，取camera的场景
-            // const scene = paper.Scene.activeScene;
+            const scene = renderer ? renderer.gameObject.scene : this.camera.gameObject.scene; // 后期渲染 renderer 为空，取 camera 的场景
             const worldToCameraMatrix = this.camera.worldToCameraMatrix;
             const worldToClipMatrix = this.camera.worldToClipMatrix;
             const matrix = drawCall.matrix;
@@ -467,16 +430,23 @@ namespace egret3d {
             //
             let shaderContextDefine = "";
 
-            if (
-                renderer && renderer.constructor === MeshRenderer &&
-                (renderer as MeshRenderer).lightmapIndex >= 0 &&
-                scene.lightmaps.length > (renderer as MeshRenderer).lightmapIndex
-            ) {
-                this.lightmapUV = drawCall.mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes.TEXCOORD_1 ? 1 : 0;
-                this.lightmapIntensity = scene.lightmapIntensity;
-                (renderer as MeshRenderer).lightmapScaleOffset.toArray(this.lightmapScaleOffset);
-                this.lightmap = scene.lightmaps[(renderer as MeshRenderer).lightmapIndex];
-                shaderContextDefine += "#define USE_LIGHTMAP \n";
+            if (renderer) {
+                if (
+                    renderer.constructor === MeshRenderer &&
+                    (renderer as MeshRenderer).lightmapIndex >= 0 &&
+                    scene.lightmaps.length > (renderer as MeshRenderer).lightmapIndex
+                ) {
+                    this.lightmapIntensity = scene.lightmapIntensity;
+                    (renderer as MeshRenderer).lightmapScaleOffset.toArray(this.lightmapScaleOffset);
+                    this.lightmap = scene.lightmaps[(renderer as MeshRenderer).lightmapIndex];
+                }
+
+                if (renderer.constructor === SkinnedMeshRenderer) {
+                    const skinnedMeshRenderer = (renderer as SkinnedMeshRenderer).source || renderer as SkinnedMeshRenderer;
+                    if (!skinnedMeshRenderer.forceCPUSkin) {
+                        shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(renderState.maxBoneCount, skinnedMeshRenderer.bones.length)} \n`;
+                    }
+                }
             }
 
             if (this.lightCount > 0) {
@@ -513,13 +483,6 @@ namespace egret3d {
                 else {
                     this.fogNear = fog.near;
                     this.fogFar = fog.far;
-                }
-            }
-
-            if (renderer && renderer.constructor === SkinnedMeshRenderer) {
-                const skinnedMeshRenderer = (renderer as SkinnedMeshRenderer).source || renderer as SkinnedMeshRenderer;
-                if (!skinnedMeshRenderer.forceCPUSkin) {
-                    shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(renderState.maxBoneCount, skinnedMeshRenderer.bones.length)} \n`;
                 }
             }
 

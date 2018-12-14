@@ -32,14 +32,14 @@ namespace examples.materials {
                 animation.play("run01");
                 //
                 const renderer = gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!;
-                // const materials = renderer.materials.concat();
-                // materials.push(
-                //     egret3d.Material
-                //         .create()
-                //         .setTexture(await RES.getResAsync("textures/UV_Grid_Sm.jpg"))
-                //         .setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.5)
-                // );
-                // renderer.materials = materials;
+                const materials = renderer.materials.concat();
+                materials.push(
+                    egret3d.Material
+                        .create()
+                        .setTexture(await RES.getResAsync("textures/UV_Grid_Sm.jpg"))
+                        .setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.5)
+                );
+                renderer.materials = materials;
             }
         }
     }

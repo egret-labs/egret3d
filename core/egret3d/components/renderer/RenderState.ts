@@ -2,6 +2,40 @@ namespace egret3d {
     /**
      * @private
      */
+    export enum UniformDirty {
+        None = 0x00000000,
+        All = 0xFFFFFFFF,
+        // Global.
+        DirectLights = 0x0000001,
+        PointLights = 0x0000002,
+        SpotLights = 0x0000004,
+        // Scene.
+        LightmapIntensity = 0x0000008,
+        AmbientLightColor = 0x0000010,
+        Fog = 0x0000020,
+        // Camera.
+        View = 0x0000040,
+        Projection = 0x0000080,
+        viewProjection = 0x00000100,
+        CameraPosition = 0x00000200,
+        CameraForward = 0x00000400,
+        CameraUp = 0x00000800,
+        // Shadow.
+        ShadowNear = 0x00001000,
+        ShadowFar = 0x00002000,
+        DirectionShadowMatrix = 0x00004000,
+        PointShadowMatrix = 0x00008000,
+        SpotShadowMatrix = 0x00010000,
+        DirectionShadowMap = 0x00020000,
+        PointMatrixMap = 0x00040000,
+        SpotMatrixMap = 0x00080000,
+        // Renderer.
+        Lightmap = 0x00100000,
+        // Material.
+    }
+    /**
+     * @private
+     */
     export enum ToneMapping {
         None = 0,
         LinearToneMapping = 1,
@@ -121,7 +155,7 @@ namespace egret3d {
         }
         else if (include in renderState.defaultCustomShaderChunks) {
             flag = false;
-            chunk = (renderState.customShaderChunks && include in renderState.customShaderChunks) ? renderState.customShaderChunks[include] : "";
+            chunk = renderState.customShaderChunks ? renderState.customShaderChunks[include] || "" : "";
         }
 
         if (chunk) {
@@ -142,17 +176,28 @@ namespace egret3d {
      * 
      */
     export class RenderState extends paper.SingletonComponent {
+        /**
+         * @private
+         */
+        public uniformDirty: UniformDirty = UniformDirty.None;
+
         public maxBoneCount: uint = 24;
 
         public toneMapping: ToneMapping = ToneMapping.None;
         public toneMappingExposure: number = 1.0;
         public toneMappingWhitePoint: number = 1.0;
 
+        public maxPrecision: string = "";
         public commonExtensions: string = "";
+        public vertexExtensions: string = "";
+        public fragmentExtensions: string = "";
         public commonDefines: string = "";
+        public vertexDefines: string = "";
+        public fragmentDefines: string = "";
 
         public readonly clearColor: Color = Color.create();
         public readonly viewPort: Rectangle = Rectangle.create();
+        public readonly defines: Defines = new Defines();
         public readonly defaultCustomShaderChunks: Readonly<{ [key: string]: string }> = {
             custom_vertex: "",
             custom_begin_vertex: "",
@@ -161,8 +206,19 @@ namespace egret3d {
             custom_begin_fragment: "",
             custom_end_fragment: "",
         };
-        public customShaderChunks: { [key: string]: string } | null = null;
         public renderTarget: RenderTexture | null = null;
+        public customShaderChunks: { [key: string]: string } | null = null;
+        //
+        // public sceneDefines: Defines | null = null;
+        // public cameraDefines: Defines | null = null;
+        // public rendererDefines: Defines | null = null;
+        // public materialDefines: Defines | null = null;
+        //
+        public cacheScene: paper.Scene | null = null;
+        public cacheCamera: Camera | null = null;
+        public cacheRenderer: paper.BaseRenderer | null = null;
+        public cacheMaterial: Material | null = null;
+        public cacheMaterialVersion: uint = 0; // 其实没什么用。
 
         public render: (camera: Camera, material?: Material) => void = null!;
         public draw: (drawCall: DrawCall) => void = null!;
@@ -177,7 +233,10 @@ namespace egret3d {
 
         protected _prefixVertex(customDefines: string) {
             const prefixContext = [
+                this.commonExtensions,
+                this.vertexExtensions,
                 this.commonDefines,
+                this.vertexDefines,
                 customDefines,
                 ShaderChunk.common_vert_def,
                 '\n'
@@ -187,15 +246,13 @@ namespace egret3d {
         }
 
         protected _prefixFragment(customDefines: string) {
-            const toneMappingNone = this.toneMapping === ToneMapping.None;
             const prefixContext = [
                 this.commonExtensions,
+                this.fragmentExtensions,
                 this.commonDefines,
+                this.fragmentDefines,
                 customDefines,
                 ShaderChunk.common_frag_def,
-                toneMappingNone ? '' : '#define TONE_MAPPING',
-                toneMappingNone ? '' : ShaderChunk.tonemapping_pars_fragment,
-                toneMappingNone ? '' : this._getToneMappingFunction(this.toneMapping),
                 '\n'
             ].filter(_filterEmptyLine).join('\n');
 
@@ -204,24 +261,29 @@ namespace egret3d {
 
         protected _getToneMappingFunction(toneMapping: ToneMapping) {
             let toneMappingName = "";
+
             switch (toneMapping) {
                 case ToneMapping.LinearToneMapping:
                     toneMappingName = 'Linear';
                     break;
+
                 case ToneMapping.ReinhardToneMapping:
                     toneMappingName = 'Reinhard';
                     break;
+
                 case ToneMapping.Uncharted2ToneMapping:
                     toneMappingName = 'Uncharted2';
                     break;
+
                 case ToneMapping.CineonToneMapping:
                     toneMappingName = 'OptimizedCineon';
                     break;
+
                 default:
                     throw new Error('unsupported toneMapping: ' + toneMapping);
             }
 
-            return 'vec3 toneMapping( vec3 color ) { return ' + toneMappingName + 'ToneMapping( color ); }';
+            return `vec3 toneMapping( vec3 color ) { return ${toneMappingName}ToneMapping( color ); } \n`;
         }
 
         public initialize(config?: any) {
@@ -233,6 +295,45 @@ namespace egret3d {
         public updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null): void { }
         public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void { }
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: uint = 0): void { }
+
+        public updateCamera(camera: Camera) {
+            const { cacheCamera } = this;
+            if (camera !== cacheCamera) {
+
+                this.cacheCamera = camera;
+            }
+        }
+
+        public updateRenderer(renderer: paper.BaseRenderer) {
+            const { cacheScene, cacheRenderer } = this;
+            const scene = renderer.gameObject.scene;
+
+            if (scene !== cacheScene) {
+                this.uniformDirty |= UniformDirty.LightmapIntensity | UniformDirty.AmbientLightColor | UniformDirty.Fog;
+                this.cacheScene = scene;
+            }
+
+            if (renderer !== cacheRenderer) {
+                if (cacheRenderer) {
+                    const rendererConstructor = renderer.constructor;
+                    if (
+                        rendererConstructor === MeshRenderer &&
+                        rendererConstructor === cacheRenderer.constructor &&
+                        (scene !== cacheScene || (renderer as MeshRenderer).lightmapIndex !== (cacheRenderer as MeshRenderer).lightmapIndex)
+                    ) {
+                        this.uniformDirty |= UniformDirty.Lightmap;
+                    }
+                    // (renderer as MeshRenderer).lightmapIndex >= 0 &&
+                    //     scene.lightmaps.length > (renderer as MeshRenderer).lightmapIndex
+                    // this.lightmap = scene.lightmaps[(renderer as MeshRenderer).lightmapIndex];
+                }
+                else if ((renderer as MeshRenderer).lightmapIndex >= 0) {
+                    this.uniformDirty |= UniformDirty.Lightmap;
+                }
+
+                this.cacheRenderer = renderer;
+            }
+        }
     }
     /**
      * 
