@@ -9,8 +9,6 @@ uniform float _Shininess;
 uniform float _time;
 uniform vec3 lightColor;
 
-uniform mat3 normalMatrix;
-
 varying vec2 vUv;
 varying vec3 vNormal;
 varying vec3 vViewDir;
