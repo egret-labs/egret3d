@@ -208,12 +208,6 @@ namespace egret3d {
         };
         public renderTarget: RenderTexture | null = null;
         public customShaderChunks: { [key: string]: string } | null = null;
-        //
-        // public sceneDefines: Defines | null = null;
-        // public cameraDefines: Defines | null = null;
-        // public rendererDefines: Defines | null = null;
-        // public materialDefines: Defines | null = null;
-        //
 
         public render: (camera: Camera, material?: Material) => void = null!;
         public draw: (drawCall: DrawCall) => void = null!;

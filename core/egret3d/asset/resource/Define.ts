@@ -46,6 +46,7 @@ namespace egret3d {
      * @private
      */
     export class Defines {
+        public drity: boolean = false;
         // mask, string, array,
         private _definesDirty: uint = 0b000;
         private _definesMask: string = "";
@@ -64,6 +65,8 @@ namespace egret3d {
          * 
          */
         public clear(): void {
+            this.drity = false;
+
             this._definesDirty = 0b000;
             this._definesMask = "";
             this._definesString = "";
@@ -73,6 +76,8 @@ namespace egret3d {
          * 
          */
         public copy(value: this): void {
+            this.drity = value.drity;
+
             this._definesDirty = value._definesDirty;
             this._definesMask = value._definesMask;
             this._definesString = value._definesString;
@@ -95,6 +100,7 @@ namespace egret3d {
 
             if (defines.indexOf(define) < 0) {
                 defines.push(define);
+                this.drity = true;
                 this._definesDirty = 0b111;
 
                 return true;
@@ -116,6 +122,7 @@ namespace egret3d {
 
             if (index >= 0) {
                 defines.splice(index, 1);
+                this.drity = true;
                 this._definesDirty = 0b111;
 
                 return true;

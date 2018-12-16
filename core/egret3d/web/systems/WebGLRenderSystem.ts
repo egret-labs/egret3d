@@ -19,7 +19,6 @@ namespace egret3d.web {
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
         private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(RenderState) as WebGLRenderState;
         private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
-        private readonly _helpVector3Buffer: Float32Array = new Float32Array(3);
         private readonly _helpGlobalUniforms: (WebGLActiveUniform | null)[] = [];
 
         //
@@ -27,9 +26,11 @@ namespace egret3d.web {
         public readonly _matrix_mvp: Matrix4 = Matrix4.create();
         public readonly _matrix_mv_inverse: Matrix3 = Matrix3.create();
         //
+        private _cacheShader: Shader | null = null;
         private _cacheProgram: WebGLProgramBinder | null = null;
         private _cacheScene: paper.Scene | null = null;
         private _cacheCamera: Camera | null = null;
+        private _cacheRenderer: paper.BaseRenderer | null = null;
         //
         private _cacheMesh: Mesh | null = null;
         private _cacheSubMeshIndex: int = -1;
@@ -106,9 +107,9 @@ namespace egret3d.web {
         private _updateGlobalUniforms(program: WebGLProgramBinder, context: CameraRenderContext, forceUpdate: boolean) {
             const webgl = WebGLRenderState.webgl!;
             const renderState = this._renderState;
+            const camera = context.camera;
             const drawCall = context.drawCall;
             const renderer = drawCall.renderer;
-            const camera = context.camera;
             const scene = renderer ? renderer.gameObject.scene : camera.gameObject.scene; // 后期渲染renderer为空，取camera的场景
             const matrix = drawCall.matrix;
             const globalUniforms = this._helpGlobalUniforms;
@@ -117,10 +118,6 @@ namespace egret3d.web {
             globalUniforms.length = 0;
 
             for (const uniform of program.globalUniforms) {
-                if (!uniform.semantic) {
-                    continue;
-                }
-
                 globalUniforms.push(uniform);
             }
 
@@ -627,13 +624,63 @@ namespace egret3d.web {
             //
             const webgl = WebGLRenderState.webgl!;
             const renderState = this._renderState;
-            const program = renderState.getProgram(material); // Get program.
+            const camera = Camera.current!;
+            const context = camera.context;
+
+            const renderer = drawCall.renderer;
+            const scene = renderer ? renderer.gameObject.scene : camera.gameObject.scene; // 后期渲染renderer为空，取camera的场景
+            const shader = material._shader;
+
+            let forceUpdate = false;
+            let program: WebGLProgramBinder | null = null;
+
+            if (shader === this._cacheShader) {
+                if (material.defines.drity) {
+                    material.defines.drity = false;
+                    forceUpdate = true;
+                }
+
+                if (scene !== this._cacheScene) {
+                    forceUpdate = true;
+                }
+                else if (scene.defines.drity) {
+                    scene.defines.drity = false;
+                    forceUpdate = true;
+                }
+
+                if (renderer !== this._cacheRenderer) {
+                    forceUpdate = true;
+                }
+                else if (renderer && renderer.defines.drity) {
+                    renderer.defines.drity = false;
+                    forceUpdate = true;
+                }
+
+                if (forceUpdate) {
+                    program = renderState.getProgram(material); // Get program.
+                }
+                else {
+                    program = this._cacheProgram;
+                }
+            }
+            else {
+                program = renderState.getProgram(material); // Get program.
+                this._cacheShader = shader;
+                forceUpdate = true;
+            }
 
             if (program) {
-                const camera = Camera.current!;
-                const context = camera.context;
+                if (forceUpdate) {
+                    webgl.useProgram(program.program);
+                    this._cacheProgram = program;
+                    this._cacheScene = null;
+                    this._cacheCamera = null;
+                    this._cacheMesh = null;
+                    this._cacheMaterial = null;
+                    this._cacheMatrix = null;
+                    this._cacheLightmapIndex = -1;
+                }
 
-                let forceUpdate = false;
                 const mesh = drawCall.mesh;
                 const subMeshIndex = drawCall.subMeshIndex;
                 const primitive = mesh.glTFMesh.primitives[subMeshIndex];
@@ -643,17 +690,6 @@ namespace egret3d.web {
                 const technique = material._technique;
                 const techniqueState = technique.states || null;
 
-                if (this._cacheProgram !== program) {
-                    webgl.useProgram(program.program);
-                    this._cacheProgram = program;
-                    this._cacheScene = null;
-                    this._cacheCamera = null;
-                    this._cacheMesh = null;
-                    this._cacheMaterial = null;
-                    this._cacheMatrix = null;
-                    this._cacheLightmapIndex = -1;
-                    forceUpdate = true;
-                }
                 // Update global uniforms.
                 this._updateGlobalUniforms(program, context, forceUpdate);
                 // Update attributes.

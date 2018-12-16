@@ -72,10 +72,11 @@ namespace egret3d.web {
         public shaderTextureLOD: any;
         public oesStandardDerivatives: boolean;
 
-        private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.Blend, gltf.EnableState.CullFace, gltf.EnableState.DepthTest]; // TODO
         private readonly _programs: { [key: string]: WebGLProgramBinder } = {};
         private readonly _vsShaders: { [key: string]: WebGLShader | boolean } = {};
         private readonly _fsShaders: { [key: string]: WebGLShader | boolean } = {};
+        
+        private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.Blend, gltf.EnableState.CullFace, gltf.EnableState.DepthTest]; // TODO
         private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
 
         protected _getCommonExtensions() {
