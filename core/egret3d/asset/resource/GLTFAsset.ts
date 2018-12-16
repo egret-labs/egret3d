@@ -123,18 +123,26 @@ namespace egret3d {
         /**
          * Buffer 列表。
          */
-        public readonly buffers: ArrayBufferView[] = [];
+        public readonly buffers: Array<ArrayBufferView> = [];
         /**
          * 配置。
          */
         public readonly config: GLTF = null!;
-        /**
-         * 请使用 `T.create()` 创建实例。
-         */
-        protected constructor(name: string, config: GLTF) {
-            super(name);
 
-            this.config = config;
+        public initialize(
+            name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null,
+            ...args: Array<any>
+        ) {
+            super.initialize();
+
+            this.name = name;
+            (this.config as GLTF) = config;
+
+            if (buffers) {
+                for (const buffer of buffers) {
+                    this.buffers.push(buffer);
+                }
+            }
         }
 
         public dispose() {

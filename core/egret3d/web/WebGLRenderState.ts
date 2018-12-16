@@ -77,8 +77,6 @@ namespace egret3d.web {
         private readonly _vsShaders: { [key: string]: WebGLShader | boolean } = {};
         private readonly _fsShaders: { [key: string]: WebGLShader | boolean } = {};
         private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
-        private _cacheProgram: WebGLProgramBinder | null = null;
-        private _cacheState: gltf.States | null = null;
 
         protected _getCommonExtensions() {
             //
@@ -285,11 +283,6 @@ namespace egret3d.web {
         }
 
         public updateState(state: gltf.States | null) {
-            if (this._cacheState === state) {
-                return;
-            }
-            this._cacheState = state;
-
             const webgl = WebGLRenderState.webgl!;
             const stateEnables = this._stateEnables;
             const cacheStateEnable = this._cacheStateEnable;
@@ -316,20 +309,6 @@ namespace egret3d.web {
             for (const key in this._cacheStateEnable) {
                 delete this._cacheStateEnable[key];
             }
-
-            this._cacheProgram = null;
-            this._cacheState = null;
-        }
-
-        public useProgram(program: WebGLProgramBinder) {
-            if (this._cacheProgram !== program) {
-                this._cacheProgram = program;
-                WebGLRenderState.webgl!.useProgram(program.program);
-
-                return true;
-            }
-
-            return false;
         }
 
         public getProgram(material: Material, technique: gltf.Technique, contextDefine: string) {

@@ -25,16 +25,16 @@ namespace egret3d {
             }
 
             // Retargeting.
-            renderTexture = new egret3d.RenderTexture(name, config!);
-            renderTexture.initialize();
+            renderTexture = new egret3d.RenderTexture();
+            renderTexture.initialize(name, config!);
 
             return renderTexture;
         }
 
         protected _mipmap: boolean = false;
 
-        public initialize() {
-            super.initialize();
+        public initialize(name: string, config: GLTF) {
+            super.initialize(name, config);
 
             const extension = this._gltfTexture!.extensions.paper!;
             this._mipmap = extension.mipmap!;

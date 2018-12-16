@@ -28,7 +28,7 @@ namespace egret3d.web {
     export class WebGLProgramBinder {
         public readonly id: uint = _hashCode++;
         public readonly attributes: WebGLActiveAttribute[] = [];
-        public readonly contextUniforms: WebGLActiveUniform[] = [];
+        public readonly globalUniforms: WebGLActiveUniform[] = [];
         public readonly uniforms: WebGLActiveUniform[] = [];
         public readonly program: WebGLProgram;
 
@@ -50,7 +50,7 @@ namespace egret3d.web {
                 let semantic = "";
 
                 if (!technique.attributes[name]) {
-                    semantic = globalAttributeSemantic[name];
+                    semantic = globalAttributeSemantics[name];
                     if (!semantic) {
                         console.error("未知Uniform定义：" + name);
                     }
@@ -62,7 +62,7 @@ namespace egret3d.web {
                 attributes.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, location, semantic });
             }
             //
-            const contextUniforms = this.contextUniforms;
+            const globalUniforms = this.globalUniforms;
             const uniforms = this.uniforms;
             const totalUniforms = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_UNIFORMS);
 
@@ -70,32 +70,33 @@ namespace egret3d.web {
                 const webglActiveInfo = webgl.getActiveUniform(webglProgram, i)!;
                 const name = webglActiveInfo.name;
                 const location = webgl.getUniformLocation(webglProgram, name)!;
-                const techniqueUniform = technique.uniforms[name];
-
+                const gltfUniform = technique.uniforms[name];
                 let semantic: string | undefined = undefined;
-                if (!techniqueUniform) {
-                    semantic = globalUniformSemantic[name];
+
+                if (!gltfUniform) {
+                    semantic = globalUniformSemantics[name];
+
                     if (!semantic) {
                         //不在自定义中，也不在全局Uniform中
                         console.error("未知Uniform定义：" + name);
                     }
                 }
                 else {
-                    semantic = techniqueUniform.semantic;
+                    semantic = gltfUniform.semantic;
                 }
 
                 if (semantic) {
-                    contextUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic, location });
+                    globalUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic, location });
                 }
                 else {
                     uniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, location });
                 }
             }
             //
-            const activeUniforms = contextUniforms.concat(uniforms);
+            const activeUniforms = globalUniforms.concat(uniforms);
             const samplerArrayNames: string[] = [];
             const samplerNames: string[] = [];
-            // Shot.
+            // Sort.
             for (const uniform of activeUniforms) {
                 const name = uniform.name;
                 if (uniform.type === gltf.UniformType.SAMPLER_2D || uniform.type === gltf.UniformType.SAMPLER_CUBE) {

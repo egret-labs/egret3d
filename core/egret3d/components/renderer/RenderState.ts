@@ -44,11 +44,10 @@ namespace egret3d {
         CineonToneMapping = 4,
     }
     /**
-     * 内置提供的全局Attribute
+     * 内置提供的全局 Attribute。
      * @private
      */
-    export const globalAttributeSemantic: { [key: string]: gltf.AttributeSemantics } = {
-        "corner": gltf.AttributeSemantics._CORNER,
+    export const globalAttributeSemantics: { [key: string]: gltf.AttributeSemantics } = {
         "position": gltf.AttributeSemantics.POSITION,
         "normal": gltf.AttributeSemantics.NORMAL,
         "uv": gltf.AttributeSemantics.TEXCOORD_0,
@@ -71,6 +70,7 @@ namespace egret3d {
         "skinIndex": gltf.AttributeSemantics.JOINTS_0,
         "skinWeight": gltf.AttributeSemantics.WEIGHTS_0,
 
+        "corner": gltf.AttributeSemantics._CORNER,
         "startPosition": gltf.AttributeSemantics._START_POSITION,
         "startVelocity": gltf.AttributeSemantics._START_VELOCITY,
         "startColor": gltf.AttributeSemantics._START_COLOR,
@@ -91,10 +91,10 @@ namespace egret3d {
         "instanceDistanceEnd": gltf.AttributeSemantics._INSTANCE_DISTANCE_END,
     };
     /**
-     * 内置提供的全局Uniform
+     * 内置提供的全局 Uniform。
      * @private
      */
-    export const globalUniformSemantic: { [key: string]: gltf.UniformSemantics } = {
+    export const globalUniformSemantics: { [key: string]: gltf.UniformSemantics } = {
         "modelMatrix": gltf.UniformSemantics.MODEL,
         "modelViewMatrix": gltf.UniformSemantics.MODELVIEW,
         "projectionMatrix": gltf.UniformSemantics.PROJECTION,
@@ -214,11 +214,6 @@ namespace egret3d {
         // public rendererDefines: Defines | null = null;
         // public materialDefines: Defines | null = null;
         //
-        public cacheScene: paper.Scene | null = null;
-        public cacheCamera: Camera | null = null;
-        public cacheRenderer: paper.BaseRenderer | null = null;
-        public cacheMaterial: Material | null = null;
-        public cacheMaterialVersion: uint = 0; // 其实没什么用。
 
         public render: (camera: Camera, material?: Material) => void = null!;
         public draw: (drawCall: DrawCall) => void = null!;
@@ -295,45 +290,6 @@ namespace egret3d {
         public updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null): void { }
         public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void { }
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: uint = 0): void { }
-
-        public updateCamera(camera: Camera) {
-            const { cacheCamera } = this;
-            if (camera !== cacheCamera) {
-
-                this.cacheCamera = camera;
-            }
-        }
-
-        public updateRenderer(renderer: paper.BaseRenderer) {
-            const { cacheScene, cacheRenderer } = this;
-            const scene = renderer.gameObject.scene;
-
-            if (scene !== cacheScene) {
-                this.uniformDirty |= UniformDirty.LightmapIntensity | UniformDirty.AmbientLightColor | UniformDirty.Fog;
-                this.cacheScene = scene;
-            }
-
-            if (renderer !== cacheRenderer) {
-                if (cacheRenderer) {
-                    const rendererConstructor = renderer.constructor;
-                    if (
-                        rendererConstructor === MeshRenderer &&
-                        rendererConstructor === cacheRenderer.constructor &&
-                        (scene !== cacheScene || (renderer as MeshRenderer).lightmapIndex !== (cacheRenderer as MeshRenderer).lightmapIndex)
-                    ) {
-                        this.uniformDirty |= UniformDirty.Lightmap;
-                    }
-                    // (renderer as MeshRenderer).lightmapIndex >= 0 &&
-                    //     scene.lightmaps.length > (renderer as MeshRenderer).lightmapIndex
-                    // this.lightmap = scene.lightmaps[(renderer as MeshRenderer).lightmapIndex];
-                }
-                else if ((renderer as MeshRenderer).lightmapIndex >= 0) {
-                    this.uniformDirty |= UniformDirty.Lightmap;
-                }
-
-                this.cacheRenderer = renderer;
-            }
-        }
     }
     /**
      * 

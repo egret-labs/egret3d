@@ -49,10 +49,6 @@ namespace egret3d {
         public spotShadowMatrix: Float32Array = new Float32Array(0);
         public pointShadowMatrix: Float32Array = new Float32Array(0);
 
-        public readonly matrix_mv: Matrix4 = Matrix4.create();
-        public readonly matrix_mvp: Matrix4 = Matrix4.create();
-        public readonly matrix_mv_inverse: Matrix3 = Matrix3.create();
-
         private readonly _postProcessingCamera: Camera = null!;
         private readonly _postProcessDrawCall: DrawCall = DrawCall.create();
 
@@ -415,78 +411,5 @@ namespace egret3d {
         //     this.lightShadowCameraNear = light.shadowCameraNear;
         //     this.lightShadowCameraFar = light.shadowCameraFar;
         // }
-
-        public updateDrawCall(drawCall: DrawCall) {
-            const renderer = drawCall.renderer;
-            const scene = renderer ? renderer.gameObject.scene : this.camera.gameObject.scene; // 后期渲染 renderer 为空，取 camera 的场景
-            const worldToCameraMatrix = this.camera.worldToCameraMatrix;
-            const worldToClipMatrix = this.camera.worldToClipMatrix;
-            const matrix = drawCall.matrix;
-
-            this.drawCall = drawCall;
-            this.matrix_mv.multiply(worldToCameraMatrix, matrix);
-            this.matrix_mvp.multiply(worldToClipMatrix, matrix);
-            this.matrix_mv_inverse.getNormalMatrix(this.matrix_mv);
-            //
-            let shaderContextDefine = "";
-
-            if (renderer) {
-                if (
-                    renderer.constructor === MeshRenderer &&
-                    (renderer as MeshRenderer).lightmapIndex >= 0 &&
-                    scene.lightmaps.length > (renderer as MeshRenderer).lightmapIndex
-                ) {
-                    this.lightmapIntensity = scene.lightmapIntensity;
-                    (renderer as MeshRenderer).lightmapScaleOffset.toArray(this.lightmapScaleOffset);
-                    this.lightmap = scene.lightmaps[(renderer as MeshRenderer).lightmapIndex];
-                }
-
-                if (renderer.constructor === SkinnedMeshRenderer) {
-                    const skinnedMeshRenderer = (renderer as SkinnedMeshRenderer).source || renderer as SkinnedMeshRenderer;
-                    if (!skinnedMeshRenderer.forceCPUSkin) {
-                        shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(renderState.maxBoneCount, skinnedMeshRenderer.bones.length)} \n`;
-                    }
-                }
-            }
-
-            if (this.lightCount > 0) {
-                if (this.directLightCount > 0) {
-                    shaderContextDefine += "#define NUM_DIR_LIGHTS " + this.directLightCount + "\n";
-                }
-
-                if (this.pointLightCount > 0) {
-                    shaderContextDefine += "#define NUM_POINT_LIGHTS " + this.pointLightCount + "\n";
-                }
-
-                if (this.spotLightCount > 0) {
-                    shaderContextDefine += "#define NUM_SPOT_LIGHTS " + this.spotLightCount + "\n";
-                }
-
-                if (renderer && renderer.receiveShadows && this.lightCastShadows) {
-                    shaderContextDefine += "#define USE_SHADOWMAP \n";
-                    shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
-                }
-            }
-
-            const fog = scene.fog;
-
-            if (fog.mode !== FogMode.None) {
-                this.fogColor[0] = fog.color.r;
-                this.fogColor[1] = fog.color.g;
-                this.fogColor[2] = fog.color.b;
-                shaderContextDefine += "#define USE_FOG \n";//TODO 根据参数生成define
-
-                if (fog.mode === FogMode.FogEXP2) {
-                    this.fogDensity = fog.density;
-                    shaderContextDefine += "#define FOG_EXP2 \n";//TODO 根据参数生成define
-                }
-                else {
-                    this.fogNear = fog.near;
-                    this.fogFar = fog.far;
-                }
-            }
-
-            return shaderContextDefine;
-        }
     }
 }

@@ -54,8 +54,8 @@ namespace egret3d {
                 buffers = attributeNamesOrBuffers as ArrayBufferView[];
             }
             // Retargeting.
-            mesh = new egret3d.Mesh(name, config);
-            mesh.initialize(buffers, attributeTypes || null);
+            mesh = new egret3d.Mesh();
+            mesh.initialize(name, config, buffers, attributeTypes || null);
             //
             if (indexCount > 0) {
                 mesh.addSubMesh(indexCount, 0);
@@ -137,8 +137,11 @@ namespace egret3d {
         protected _inverseBindMatrices: ArrayBufferView | null = null;
         protected _boneIndices: { [key: string]: uint } | null = null;
 
-        public initialize(buffers: ReadonlyArray<ArrayBufferView>, attributeTypes: { [key: string]: gltf.AccessorType } | null) {
-            super.initialize();
+        public initialize(
+            name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null,
+            attributeTypes: { [key: string]: gltf.AccessorType } | null
+        ) {
+            super.initialize(name, config, buffers);
 
             const glTFMesh = this._glTFMesh = this.config.meshes![0];
             this._vertexCount = this.getAccessor(glTFMesh.primitives[0].attributes.POSITION || 0).count;
@@ -151,10 +154,6 @@ namespace egret3d {
                 for (const k in attributeTypes) {
                     this._attributeTypes[k] = attributeTypes[k];
                 }
-            }
-
-            for (const buffer of buffers) {
-                this.buffers.push(buffer);
             }
 
             this.updateAccessorTypeCount();

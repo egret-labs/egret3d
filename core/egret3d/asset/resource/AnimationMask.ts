@@ -27,8 +27,8 @@ namespace egret3d {
                 };
             }
 
-            animationMask = new AnimationMask(name, config);
-            animationMask.initialize();
+            animationMask = new AnimationMask();
+            animationMask.initialize(name, config, null);
 
             return animationMask;
         }

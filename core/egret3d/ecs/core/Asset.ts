@@ -61,14 +61,10 @@ namespace paper {
 
         private _referenceCount: int = -1;
         /**
-         * TODO
-         * remove
-         * @param name 
+         * 请使用 `T.create()` 创建实例。
          */
-        public constructor(name: string = "") {
+        protected constructor() {
             super();
-
-            this.name = name;
         }
         /**
          * 该资源内部初始化。

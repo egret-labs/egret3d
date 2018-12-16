@@ -26,8 +26,8 @@ namespace egret3d {
                 };
             }
 
-            animationController = new AnimationController(name, config);
-            animationController.initialize();
+            animationController = new AnimationController();
+            animationController.initialize(name, config, null);
 
             return animationController;
         }

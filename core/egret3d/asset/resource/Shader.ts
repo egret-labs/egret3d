@@ -46,8 +46,8 @@ namespace egret3d {
                 config = shaderOrConfig;
             }
             //
-            shader = new Shader(name, config);
-            shader.initialize(parent);
+            shader = new Shader();
+            shader.initialize(name, config, null, parent);
 
             return shader;
         }
@@ -108,6 +108,10 @@ namespace egret3d {
         /**
          * @private
          */
+        public readonly programs: { [key: string]: any } = {};
+        /**
+         * @private
+         */
         public customs: { [key: string]: string } | null = null;
         /**
          * @internal
@@ -122,8 +126,11 @@ namespace egret3d {
          */
         public _states?: gltf.States;
 
-        public initialize(parent: Shader | null) {
-            super.initialize();
+        public initialize(
+            name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null,
+            parent: Shader | null
+        ) {
+            super.initialize(name, config, null);
 
             if (parent) {
                 // this.customs = parent.customs; TODO

@@ -72,6 +72,19 @@ namespace egret3d {
         /**
          * 
          */
+        public copy(value: this): void {
+            this._definesDirty = value._definesDirty;
+            this._definesMask = value._definesMask;
+            this._definesString = value._definesString;
+            this._defines.length = 0;
+
+            for (const define of value._defines) {
+                this._defines.push(define);
+            }
+        }
+        /**
+         * 
+         */
         public addDefine(defineString: string, value?: number): boolean {
             if (value !== undefined) {
                 defineString += " " + value;

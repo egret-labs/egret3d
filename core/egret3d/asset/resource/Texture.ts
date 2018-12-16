@@ -79,8 +79,8 @@ namespace egret3d {
          */
         public setupTexture(index: uint): void { }
 
-        public initialize() {
-            super.initialize();
+        public initialize(name: string, config: GLTF) {
+            super.initialize(name, config, null);
 
             const gltfTexture = this._gltfTexture = this.config.textures![0] as GLTFTexture;
             this._image = this.config.images![gltfTexture.source!];
@@ -169,8 +169,8 @@ namespace egret3d {
             }
 
             // Retargeting.
-            texture = new egret3d.Texture(name, config!);
-            texture.initialize();
+            texture = new egret3d.Texture();
+            texture.initialize(name, config!);
 
             return texture;
         }

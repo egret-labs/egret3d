@@ -32,8 +32,8 @@ namespace egret3d {
                 shaderOrConfig = shaderOrName as Shader || shaderOrConfig || DefaultShaders.MESH_BASIC;
             }
             //
-            const material = new Material(name, null!);
-            material.initialize();
+            const material = new Material();
+            material.initialize(name, null!, null);
             material._reset(shaderOrConfig!);
 
             return material;
@@ -454,7 +454,7 @@ namespace egret3d {
          */
         public addDefine(defineString: string, value?: number): this {
             this.defines.addDefine(defineString, value);
-            
+
             return this;
         }
         /**

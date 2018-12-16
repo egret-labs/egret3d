@@ -7,8 +7,8 @@ namespace egret3d {
          * @private
          */
         public static create(name: string, config: GLTF, buffers: ArrayBufferView[]): AnimationAsset {
-            const animationAsset = new AnimationAsset(name, config);
-            animationAsset.initialize();
+            const animationAsset = new AnimationAsset();
+            animationAsset.initialize(name, config);
 
             for (const b of buffers) {
                 animationAsset.buffers.push(b);
@@ -17,8 +17,8 @@ namespace egret3d {
             return animationAsset;
         }
 
-        public initialize() {
-            super.initialize();
+        public initialize(name: string, config: GLTF) {
+            super.initialize(name, config, null);
 
             this.updateAccessorTypeCount();
         }
