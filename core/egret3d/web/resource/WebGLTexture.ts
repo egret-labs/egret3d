@@ -34,7 +34,7 @@ namespace egret3d.web {
             webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, paperExtension.unpackAlignment!);
 
             const isPowerTwo = isPowerOfTwo(paperExtension.width!, paperExtension.height!);
-            setTexturexParameters(isPowerTwo, sampler);
+            setTexturexParameters(isPowerTwo, sampler, paperExtension.anisotropy || 1);
 
             if (ArrayBuffer.isView(image.uri)) {
                 webgl.texImage2D(webgl.TEXTURE_2D, 0, paperExtension.format!, paperExtension.width!, paperExtension.height!, 0, paperExtension.format!, paperExtension.type!, image.uri);

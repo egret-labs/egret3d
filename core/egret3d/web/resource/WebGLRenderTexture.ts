@@ -66,7 +66,7 @@ namespace egret3d.web {
             }
             webgl.bindTexture(webgl.TEXTURE_2D, this.webglTexture);
             const isPowerTwo = isPowerOfTwo(width, height);
-            setTexturexParameters(isPowerTwo, sampler);
+            setTexturexParameters(isPowerTwo, sampler, paperExtension.anisotropy || 1);
             this._setupFrameBufferTexture(this.frameBuffer, this.webglTexture, webgl.TEXTURE_2D, gltf.TextureDataType.UNSIGNED_BYTE, width, height, format, webgl.COLOR_ATTACHMENT0);
 
             const minFilter = sampler.minFilter!;

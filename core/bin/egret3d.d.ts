@@ -623,22 +623,25 @@ declare namespace paper.editor {
 }
 declare namespace paper {
     /**
-     * 资源基类。
+     * 基础资源。
+     * - 全部资源的基类。
      */
     abstract class Asset extends BaseObject {
         /**
-         * @private
+         * 将一个资源注册为全局可访问资源。
+         * - 引用计数加 1 。
          */
-        static register(asset: Asset): void;
+        static register(asset: Asset): boolean;
         /**
-         * 查找已加载的指定资源。
+         * 通过资源名获取一个已注册的指定资源。
          */
-        static find<T extends Asset>(name: string): T;
+        static find<T extends Asset>(name: string): T | null;
         /**
          * 资源名称。
          * @readonly
          */
         name: string;
+        private _referenceCount;
         /**
          * TODO
          * remove
@@ -647,12 +650,37 @@ declare namespace paper {
         constructor(name?: string);
         /**
          * 该资源内部初始化。
+         * - 重写此方法时，必须调用 `super.initialize();`。
          */
         initialize(): void;
         /**
-         * 释放资源。
+         * 该资源的引用计数加一。
          */
-        dispose(disposeChildren?: boolean): boolean;
+        retain(): this;
+        /**
+         * 该资源的引用计数减一。
+         */
+        release(): this;
+        /**
+         * 释放该资源。
+         * - 重写此方法时，必须调用 `super.dispose();`。
+         * @returns 释放是否成功。（已经释放过的资源，无法再次释放）
+         */
+        dispose(): boolean;
+        /**
+         *
+         */
+        readonly isDisposed: boolean;
+        /**
+         * 获取该资源占用的内存字节长度。
+         * TODO
+         */
+        readonly abstract memoryByteLength: uint;
+        /**
+         * 获取该资源占用的显存字节长度。
+         * TODO
+         */
+        readonly abstract videoMemoryByteLength: uint;
     }
 }
 declare namespace paper {
@@ -1389,9 +1417,9 @@ declare namespace egret3d {
                 flipY?: 0 | 1;
                 premultiplyAlpha?: 0 | 1;
                 format?: gltf.TextureFormat;
-                width?: number;
-                height?: number;
-                anisotropy?: number;
+                width?: uint;
+                height?: uint;
+                anisotropy?: uint;
                 type?: gltf.TextureDataType;
                 unpackAlignment?: gltf.TextureAlignment;
                 depthBuffer?: boolean;
@@ -3253,9 +3281,25 @@ declare namespace egret3d {
         protected _image: gltf.Image;
         protected _sampler: gltf.Sampler;
         protected constructor(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource | null, width: number, height: number, format?: gltf.TextureFormat, mipmap?: boolean, wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap, magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter, flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment, type?: gltf.TextureDataType, anisotropy?: number);
-        readonly width: number;
-        readonly height: number;
-        readonly format: number;
+        /**
+         *
+         */
+        readonly width: uint;
+        /**
+         *
+         */
+        readonly height: uint;
+        /**
+         *
+         */
+        readonly format: gltf.TextureFormat;
+        /**
+         *
+         */
+        readonly gltfSampler: gltf.Sampler;
+        /**
+         *
+         */
         readonly gltfTexture: GLTFTexture;
     }
     /**
@@ -3307,6 +3351,12 @@ declare namespace egret3d {
         commonDefines: string;
         readonly clearColor: Color;
         readonly viewPort: Rectangle;
+        readonly defaultCustomShaderChunks: Readonly<{
+            [key: string]: string;
+        }>;
+        customShaderChunks: {
+            [key: string]: string;
+        } | null;
         renderTarget: RenderTexture | null;
         render: (camera: Camera, material?: Material) => void;
         draw: (drawCall: DrawCall) => void;
@@ -3983,7 +4033,6 @@ declare namespace egret3d {
         recalculateLocalBox(): void;
         /**
          * 实时获取网格资源的指定三角形顶点位置。
-         * - 采用 CPU 蒙皮。
          */
         getTriangle(triangleIndex: uint, out?: Triangle): Triangle;
         raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
@@ -4413,7 +4462,11 @@ declare namespace egret3d {
         /**
          *
          */
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo, boneMatrices?: Float32Array | null): boolean;
+        getTriangle(triangleIndex: uint, out?: Triangle, vertices?: Float32Array | null): Triangle;
+        /**
+         *
+         */
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo, vertices?: Float32Array | null): boolean;
         /**
          *
          */
@@ -7097,9 +7150,16 @@ declare namespace egret3d {
          *
          */
         boneMatrices: Float32Array | null;
+        /**
+         *
+         */
+        source: SkinnedMeshRenderer | null;
+        private _skinnedDirty;
         private readonly _bones;
         private _rootBone;
         private _mesh;
+        private _skinnedVertices;
+        private _skinning(vertexOffset, vertexCount);
         initialize(reset?: boolean): void;
         uninitialize(): void;
         recalculateLocalBox(): void;
@@ -8559,9 +8619,6 @@ declare namespace egret3d {
         USE_FOG = "USE_FOG",
         FOG_EXP2 = "FOG_EXP2",
         FLIP_V = "FLIP_V",
-        CUSTOM_VERTEX = "custom_vertex",
-        CUSTOM_BEGIN_VERTEX = "custom_begin_vertex",
-        CUSTOM_END_VERTEX = "custom_end_vertex",
     }
     /**
      * Shader 通用 Uniform 名称。

@@ -392,7 +392,7 @@ namespace egret3d.particle {
             }
 
             totalEmitCount = Math.min(mainModule.maxParticles - aliveParticleCount, totalEmitCount);
-            if (totalEmitCount > 0 && !isOver) {
+            if (totalEmitCount > 0 && comp._isPlaying) {
                 this._addParticles(this._time, this._lastFrameFirstCursor, totalEmitCount, lastEmittsionTime);
                 this._dirty = true;
             }
