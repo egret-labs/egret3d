@@ -8388,7 +8388,7 @@ declare namespace egret3d.particle {
             componentClass: typeof ParticleComponent;
             listeners: {
                 type: signals.Signal<any>;
-                listener: any;
+                listener: (comp: paper.BaseComponent) => void;
             }[];
         } | {
             componentClass: typeof ParticleRenderer;

@@ -19079,7 +19079,7 @@ var egret3d;
                 return batchMesh;
             }
             else {
-                var orginIndexBuffer = [0, 2, 1, 0, 3, 2];
+                var orginIndexBuffer = [0, 2, 1, 1, 2, 3];
                 var orginIndexBufferCount = orginIndexBuffer.length;
                 for (var _a = 0, BillboardShaderAttributeFormat_1 = BillboardShaderAttributeFormat; _a < BillboardShaderAttributeFormat_1.length; _a++) {
                     var attribute = BillboardShaderAttributeFormat_1[_a];
@@ -19098,27 +19098,27 @@ var egret3d;
                     switch (orginVertexIndex) {
                         case 0:
                             cornerBuffer[vector2Offset] = -0.5;
-                            cornerBuffer[vector2Offset + 1] = -0.5;
+                            cornerBuffer[vector2Offset + 1] = 0.5;
                             uvBuffer[vector2Offset] = 0.0;
-                            uvBuffer[vector2Offset + 1] = 1.0;
+                            uvBuffer[vector2Offset + 1] = 0.0;
                             break;
                         case 1:
                             cornerBuffer[vector2Offset] = 0.5;
+                            cornerBuffer[vector2Offset + 1] = 0.5;
+                            uvBuffer[vector2Offset] = 1.0;
+                            uvBuffer[vector2Offset + 1] = 0.0;
+                            break;
+                        case 2:
+                            cornerBuffer[vector2Offset] = -0.5;
+                            cornerBuffer[vector2Offset + 1] = -0.5;
+                            uvBuffer[vector2Offset] = 0.0;
+                            uvBuffer[vector2Offset + 1] = 1.0;
+                            break;
+                        case 3:
+                            cornerBuffer[vector2Offset] = 0.5;
                             cornerBuffer[vector2Offset + 1] = -0.5;
                             uvBuffer[vector2Offset] = 1.0;
                             uvBuffer[vector2Offset + 1] = 1.0;
-                            break;
-                        case 2:
-                            cornerBuffer[vector2Offset] = 0.5;
-                            cornerBuffer[vector2Offset + 1] = 0.5;
-                            uvBuffer[vector2Offset] = 1.0;
-                            uvBuffer[vector2Offset + 1] = 0.0;
-                            break;
-                        case 3:
-                            cornerBuffer[vector2Offset] = -0.5;
-                            cornerBuffer[vector2Offset + 1] = 0.5;
-                            uvBuffer[vector2Offset] = 0.0;
-                            uvBuffer[vector2Offset + 1] = 0.0;
                             break;
                     }
                 }
@@ -19130,9 +19130,9 @@ var egret3d;
                     indexBuffer[indexOffset + 0] = firstVertex;
                     indexBuffer[indexOffset + 1] = secondVertex;
                     indexBuffer[indexOffset + 2] = firstVertex + 1;
-                    indexBuffer[indexOffset + 3] = firstVertex;
-                    indexBuffer[indexOffset + 4] = firstVertex + 3;
-                    indexBuffer[indexOffset + 5] = secondVertex;
+                    indexBuffer[indexOffset + 3] = firstVertex + 1;
+                    indexBuffer[indexOffset + 4] = secondVertex;
+                    indexBuffer[indexOffset + 5] = firstVertex + 3;
                 }
                 return batchMesh;
             }
@@ -21755,11 +21755,11 @@ var egret3d;
                             { type: particle.onStartRotation3DChanged, listener: function (comp) { _this._onMainUpdate(comp, particle.onStartRotation3DChanged); } },
                             { type: particle.onSimulationSpaceChanged, listener: function (comp) { _this._onMainUpdate(comp, particle.onSimulationSpaceChanged); } },
                             { type: particle.onScaleModeChanged, listener: function (comp) { _this._onMainUpdate(comp, particle.onScaleModeChanged); } },
-                            { type: particle.onVelocityChanged, listener: _this._onVelocityOverLifetime.bind(_this) },
-                            { type: particle.onColorChanged, listener: _this._onColorOverLifetime.bind(_this) },
-                            { type: particle.onSizeChanged, listener: _this._onSizeOverLifetime.bind(_this) },
-                            { type: particle.onRotationChanged, listener: _this._onRotationOverLifetime.bind(_this) },
-                            { type: particle.onTextureSheetChanged, listener: _this._onTextureSheetAnimation.bind(_this) },
+                            { type: particle.onVelocityChanged, listener: function (comp) { _this._onVelocityOverLifetime(comp); } },
+                            { type: particle.onColorChanged, listener: function (comp) { _this._onColorOverLifetime(comp); } },
+                            { type: particle.onSizeChanged, listener: function (comp) { _this._onSizeOverLifetime(comp); } },
+                            { type: particle.onRotationChanged, listener: function (comp) { _this._onRotationOverLifetime(comp); } },
+                            { type: particle.onTextureSheetChanged, listener: function (comp) { _this._onTextureSheetAnimation(comp); } },
                         ]
                     },
                     {
