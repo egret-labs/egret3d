@@ -971,6 +971,10 @@ var paper;
              * @readonly
              */
             _this.name = "";
+            /**
+             * @internal
+             */
+            _this._isBuiltin = false;
             _this._referenceCount = -1;
             _this.name = name;
             return _this;

@@ -58,6 +58,10 @@ namespace paper {
          * @readonly
          */
         public name: string = "";
+        /**
+         * @internal
+         */
+        public _isBuiltin: boolean = false;
 
         private _referenceCount: int = -1;
         /**
@@ -128,15 +132,5 @@ namespace paper {
         public get isDisposed(): boolean {
             return this._referenceCount === -1;
         }
-        /**
-         * 获取该资源占用的内存字节长度。
-         * TODO
-         */
-        public abstract get memoryByteLength(): uint;
-        /**
-         * 获取该资源占用的显存字节长度。
-         * TODO
-         */
-        public abstract get videoMemoryByteLength(): uint;
     }
 }

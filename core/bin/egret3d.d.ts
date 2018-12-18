@@ -671,16 +671,6 @@ declare namespace paper {
          *
          */
         readonly isDisposed: boolean;
-        /**
-         * 获取该资源占用的内存字节长度。
-         * TODO
-         */
-        readonly abstract memoryByteLength: uint;
-        /**
-         * 获取该资源占用的显存字节长度。
-         * TODO
-         */
-        readonly abstract videoMemoryByteLength: uint;
     }
 }
 declare namespace paper {
