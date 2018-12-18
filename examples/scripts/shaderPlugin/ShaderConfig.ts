@@ -113,6 +113,8 @@ UNIFORM_TEMPLATE["fogFar"] = { semantic: gltf.UniformSemanticType._FOG_FAR };
 UNIFORM_TEMPLATE["toneMappingExposure"] = { semantic: gltf.UniformSemanticType._TONE_MAPPING_EXPOSURE };
 UNIFORM_TEMPLATE["toneMappingWhitePoint"] = { semantic: gltf.UniformSemanticType._TONE_MAPPING_WHITE_POINT };
 //
+UNIFORM_TEMPLATE["logDepthBufFC"] = { semantic: gltf.UniformSemanticType._LOG_DEPTH_BUFFC };
+//
 UNIFORM_TEMPLATE["specular"] = { value: [1.0, 1.0, 1.0] };
 UNIFORM_TEMPLATE["shininess"] = { value: 30.0 };
 UNIFORM_TEMPLATE["opacity"] = { value: 1.0 };

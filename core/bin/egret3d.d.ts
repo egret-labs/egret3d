@@ -9176,9 +9176,6 @@ declare namespace egret3d.ShaderLib {
                         "boneTextureSize": {
                             "type": number;
                         };
-                        "logDepthBufFC": {
-                            "type": number;
-                        };
                         "opacity": {
                             "type": number;
                             "value": number;
@@ -9310,9 +9307,6 @@ declare namespace egret3d.ShaderLib {
                     "name": string;
                     "attributes": {};
                     "uniforms": {
-                        "logDepthBufFC": {
-                            "type": number;
-                        };
                         "linewidth": {
                             "type": number;
                             "value": number;
@@ -9371,9 +9365,6 @@ declare namespace egret3d.ShaderLib {
                         "scale": {
                             "type": number;
                             "value": number;
-                        };
-                        "logDepthBufFC": {
-                            "type": number;
                         };
                         "diffuse": {
                             "type": number;
@@ -9436,9 +9427,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                         "boneTextureSize": {
-                            "type": number;
-                        };
-                        "logDepthBufFC": {
                             "type": number;
                         };
                         "diffuse": {
@@ -9527,9 +9515,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                         "boneTextureSize": {
-                            "type": number;
-                        };
-                        "logDepthBufFC": {
                             "type": number;
                         };
                         "diffuse": {
@@ -9634,9 +9619,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                         "boneTextureSize": {
-                            "type": number;
-                        };
-                        "logDepthBufFC": {
                             "type": number;
                         };
                         "diffuse": {
@@ -9762,9 +9744,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                         "boneTextureSize": {
-                            "type": number;
-                        };
-                        "logDepthBufFC": {
                             "type": number;
                         };
                         "diffuse": {
@@ -9937,9 +9916,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                         "boneTextureSize": {
-                            "type": number;
-                        };
-                        "logDepthBufFC": {
                             "type": number;
                         };
                         "opacity": {
@@ -10188,9 +10164,6 @@ declare namespace egret3d.ShaderLib {
                         "morphTargetInfluences[0]": {
                             "type": number;
                         };
-                        "logDepthBufFC": {
-                            "type": number;
-                        };
                         "diffuse": {
                             "type": number;
                             "value": number[];
@@ -10281,9 +10254,6 @@ declare namespace egret3d.ShaderLib {
                         "uvTransform": {
                             "type": number;
                             "value": number[];
-                        };
-                        "logDepthBufFC": {
-                            "type": number;
                         };
                         "diffuse": {
                             "type": number;
