@@ -288,6 +288,9 @@ namespace egret3d.web {
                     case gltf.UniformSemanticType._TONE_MAPPING_WHITE_POINT:
                         webgl.uniform1f(location, this._renderState.toneMappingWhitePoint);
                         break;
+                    case gltf.UniformSemanticType._LOG_DEPTH_BUFFC:
+                        webgl.uniform1f(location, context.logDepthBufFC);
+                        break;
 
                     default:
                         console.warn("不识别的Uniform语义:" + semantic);

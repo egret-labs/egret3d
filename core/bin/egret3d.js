@@ -4388,6 +4388,7 @@ var egret3d;
         "fogFar": "_FOG_FAR" /* _FOG_FAR */,
         "toneMappingExposure": "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */,
         "toneMappingWhitePoint": "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */,
+        "logDepthBufFC": "_LOG_DEPTH_BUFFC" /* _LOG_DEPTH_BUFFC */,
     };
     var _patternA = /#include +<([\w\d.]+)>/g;
     var _patternB = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
@@ -4430,6 +4431,7 @@ var egret3d;
             _this.toneMapping = ToneMapping.None;
             _this.toneMappingExposure = 1.0;
             _this.toneMappingWhitePoint = 1.0;
+            _this.logarithmicDepthBuffer = false;
             _this.commonExtensions = "";
             _this.commonDefines = "";
             _this.clearColor = egret3d.Color.create();
@@ -4506,6 +4508,9 @@ var egret3d;
         RenderState.prototype.copyFramebufferToTexture = function (screenPostion, target, level) {
             if (level === void 0) { level = 0; }
         };
+        __decorate([
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
+        ], RenderState.prototype, "logarithmicDepthBuffer", void 0);
         return RenderState;
     }(paper.SingletonComponent));
     egret3d.RenderState = RenderState;
@@ -7613,16 +7618,15 @@ var egret3d;
                 var uniformData = webgl.getActiveUniform(webglProgram, i);
                 var location_2 = webgl.getUniformLocation(webglProgram, uniformData.name);
                 var techniqueUniform = technique.uniforms[uniformData.name];
-                var semantic = "";
-                if (!techniqueUniform) {
-                    semantic = egret3d.globalUniformSemantic[uniformData.name];
-                    if (!semantic) {
+                var semantic = egret3d.globalUniformSemantic[uniformData.name];
+                if (!semantic) {
+                    if (techniqueUniform) {
+                        semantic = techniqueUniform.semantic;
+                    }
+                    else {
                         //不在自定义中，也不在全局Uniform中
                         console.error("未知Uniform定义：" + uniformData.name);
                     }
-                }
-                else {
-                    semantic = techniqueUniform.semantic;
                 }
                 if (semantic) {
                     contextUniforms.push({ name: uniformData.name, type: uniformData.type, size: uniformData.size, semantic: semantic, location: location_2 });
@@ -7774,6 +7778,9 @@ var egret3d;
                 if (this.oesStandardDerivatives) {
                     extensions += "#extension GL_OES_standard_derivatives : enable \n";
                 }
+                if (this.fragDepthExt) {
+                    extensions += "#extension GL_EXT_frag_depth : enable \n";
+                }
                 return extensions;
             };
             WebGLRenderState.prototype._getCommonDefines = function () {
@@ -7798,6 +7805,7 @@ var egret3d;
                 this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
                 // use dfdx and dfdy must enable OES_standard_derivatives
                 this.oesStandardDerivatives = !!_getExtension(webgl, "OES_standard_derivatives");
+                this.fragDepthExt = !!_getExtension(webgl, "EXT_frag_depth");
                 //
                 this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
                 this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
@@ -13979,6 +13987,7 @@ var egret3d;
             this.fogNear = 0.0;
             this.fogFar = 0.0;
             this.fogColor = new Float32Array(3);
+            this.logDepthBufFC = 0.0;
             this._postProcessingCamera = null;
             this._postProcessDrawCall = egret3d.DrawCall.create();
             this._drawCallCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.DrawCallCollecter);
@@ -14149,6 +14158,7 @@ var egret3d;
             this.cameraForward[0] = -rawData[8];
             this.cameraForward[1] = -rawData[9];
             this.cameraForward[2] = -rawData[10];
+            this.logDepthBufFC = 2.0 / (Math.log(this.camera.far + 1.0) / Math.LN2);
         };
         CameraRenderContext.prototype.updateLights = function (lights) {
             var allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
@@ -14368,6 +14378,12 @@ var egret3d;
                 var skinnedMeshRenderer = renderer.source || renderer;
                 if (!skinnedMeshRenderer.forceCPUSkin) {
                     shaderContextDefine += "#define USE_SKINNING \n" + ("#define MAX_BONES " + Math.min(egret3d.renderState.maxBoneCount, skinnedMeshRenderer.bones.length) + " \n");
+                }
+            }
+            if (egret3d.renderState.logarithmicDepthBuffer) {
+                shaderContextDefine += "#define USE_LOGDEPTHBUF \n";
+                if (egret3d.renderState.fragDepthExt) {
+                    shaderContextDefine += "#define USE_LOGDEPTHBUF_EXT \n";
                 }
             }
             return shaderContextDefine;
@@ -26942,6 +26958,9 @@ var egret3d;
                             break;
                         case "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */:
                             webgl.uniform1f(location_3, this._renderState.toneMappingWhitePoint);
+                            break;
+                        case "_LOG_DEPTH_BUFFC" /* _LOG_DEPTH_BUFFC */:
+                            webgl.uniform1f(location_3, context.logDepthBufFC);
                             break;
                         default:
                             console.warn("不识别的Uniform语义:" + semantic);

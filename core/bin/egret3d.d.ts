@@ -1825,6 +1825,7 @@ declare namespace gltf {
         _FARDISTANCE = "_FARDISTANCE",
         _TONE_MAPPING_EXPOSURE = "_TONE_MAPPING_EXPOSURE",
         _TONE_MAPPING_WHITE_POINT = "_TONE_MAPPING_WHITE_POINT",
+        _LOG_DEPTH_BUFFC = "_LOG_DEPTH_BUFFC",
         _FOG_COLOR = "_FOG_COLOR",
         _FOG_DENSITY = "_FOG_DENSITY",
         _FOG_NEAR = "_FOG_NEAR",
@@ -3337,6 +3338,7 @@ declare namespace egret3d {
         toneMapping: ToneMapping;
         toneMappingExposure: number;
         toneMappingWhitePoint: number;
+        logarithmicDepthBuffer: boolean;
         commonExtensions: string;
         commonDefines: string;
         readonly clearColor: Color;
@@ -6525,6 +6527,7 @@ declare namespace egret3d {
         fogNear: number;
         fogFar: number;
         readonly fogColor: Float32Array;
+        logDepthBufFC: number;
         private readonly _postProcessingCamera;
         private readonly _postProcessDrawCall;
         private readonly _drawCallCollecter;

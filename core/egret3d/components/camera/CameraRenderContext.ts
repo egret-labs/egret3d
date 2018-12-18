@@ -61,6 +61,8 @@ namespace egret3d {
         public fogFar: number = 0.0;
         public readonly fogColor: Float32Array = new Float32Array(3);
 
+        public logDepthBufFC: number = 0.0;
+
         private readonly _postProcessingCamera: Camera = null!;
         private readonly _postProcessDrawCall: DrawCall = DrawCall.create();
 
@@ -255,6 +257,8 @@ namespace egret3d {
             this.cameraForward[0] = -rawData[8];
             this.cameraForward[1] = -rawData[9];
             this.cameraForward[2] = -rawData[10];
+
+            this.logDepthBufFC = 2.0 / (Math.log(this.camera.far + 1.0) / Math.LN2);
         }
 
         public updateLights(lights: ReadonlyArray<BaseLight>) {
@@ -520,6 +524,13 @@ namespace egret3d {
                 const skinnedMeshRenderer = (renderer as SkinnedMeshRenderer).source || renderer as SkinnedMeshRenderer;
                 if (!skinnedMeshRenderer.forceCPUSkin) {
                     shaderContextDefine += "#define USE_SKINNING \n" + `#define MAX_BONES ${Math.min(renderState.maxBoneCount, skinnedMeshRenderer.bones.length)} \n`;
+                }
+            }
+
+            if (renderState.logarithmicDepthBuffer) {//TODO
+                shaderContextDefine += "#define USE_LOGDEPTHBUF \n";
+                if ((renderState as web.WebGLRenderState).fragDepthExt) {
+                    shaderContextDefine += "#define USE_LOGDEPTHBUF_EXT \n";
                 }
             }
 

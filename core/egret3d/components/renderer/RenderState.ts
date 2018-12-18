@@ -98,6 +98,8 @@ namespace egret3d {
 
         "toneMappingExposure": gltf.UniformSemanticType._TONE_MAPPING_EXPOSURE,
         "toneMappingWhitePoint": gltf.UniformSemanticType._TONE_MAPPING_WHITE_POINT,
+
+        "logDepthBufFC": gltf.UniformSemanticType._LOG_DEPTH_BUFFC,
     };
 
     const _patternA = /#include +<([\w\d.]+)>/g;
@@ -147,6 +149,8 @@ namespace egret3d {
         public toneMapping: ToneMapping = ToneMapping.None;
         public toneMappingExposure: number = 1.0;
         public toneMappingWhitePoint: number = 1.0;
+
+        public logarithmicDepthBuffer: boolean = false;
 
         public commonExtensions: string = "";
         public commonDefines: string = "";

@@ -32,16 +32,15 @@ namespace egret3d.web {
             const location = webgl.getUniformLocation(webglProgram, uniformData.name)!;
             const techniqueUniform = technique.uniforms[uniformData.name];
 
-            let semantic: string | undefined = "";
-            if (!techniqueUniform) {
-                semantic = globalUniformSemantic[uniformData.name];
-                if (!semantic) {
+            let semantic: string | undefined = globalUniformSemantic[uniformData.name];
+            if (!semantic) {
+                if (techniqueUniform) {
+                    semantic = techniqueUniform.semantic;
+                }
+                else {
                     //不在自定义中，也不在全局Uniform中
                     console.error("未知Uniform定义：" + uniformData.name);
                 }
-            }
-            else {
-                semantic = techniqueUniform.semantic;
             }
 
             if (semantic) {
@@ -162,6 +161,7 @@ namespace egret3d.web {
         public textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
         public shaderTextureLOD: any;
         public oesStandardDerivatives: boolean;
+        public fragDepthExt: boolean;
 
         private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.BLEND, gltf.EnableState.CULL_FACE, gltf.EnableState.DEPTH_TEST]; // TODO
         private readonly _programs: { [key: string]: WebGLProgramBinder } = {};
@@ -243,6 +243,10 @@ namespace egret3d.web {
                 extensions += "#extension GL_OES_standard_derivatives : enable \n";
             }
 
+            if (this.fragDepthExt) {
+                extensions += "#extension GL_EXT_frag_depth : enable \n";
+            }
+
             return extensions;
         }
 
@@ -273,6 +277,7 @@ namespace egret3d.web {
             this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
             // use dfdx and dfdy must enable OES_standard_derivatives
             this.oesStandardDerivatives = !!_getExtension(webgl, "OES_standard_derivatives");
+            this.fragDepthExt = !!_getExtension(webgl, "EXT_frag_depth");
             //
             this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
             this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
