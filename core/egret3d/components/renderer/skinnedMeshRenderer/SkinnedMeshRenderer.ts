@@ -155,7 +155,10 @@ namespace egret3d {
                     this.forceCPUSkin = true;
                     console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", this._mesh.name);
                 }
-                // this._update(); TODO
+                else {
+                    this.defines.addDefine(ShaderDefine.USE_SKINNING);
+                    this.defines.addDefine(ShaderDefine.MAX_BONES, Math.min(renderState.maxBoneCount, this.bones.length)); // TODO 浮点纹理。
+                }
             }
         }
 

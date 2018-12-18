@@ -12,19 +12,12 @@ namespace egret3d {
         /**
          * 
          */
-        public readonly defines: Defines = new Defines();
+        public readonly defines: egret3d.Defines = new egret3d.Defines();
         /**
          * 
          */
         public readonly camera: Camera = null!;
-        /**
-         * 
-         */
-        public drawCall: DrawCall = null!;
-        /**
-         * 
-         */
-        public lightCount: uint = 0;
+
         public directLightCount: uint = 0;
         public pointLightCount: uint = 0;
         public spotLightCount: uint = 0;
@@ -218,7 +211,7 @@ namespace egret3d {
         }
 
         public updateLights(lights: ReadonlyArray<BaseLight>) {
-            let allLightCount = 0, directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
+            let directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
             this.lightCastShadows = false;
             for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
                 if (light instanceof DirectionalLight) {
@@ -230,8 +223,6 @@ namespace egret3d {
                 else if (light instanceof SpotLight) {
                     spotLightCount++;
                 }
-
-                allLightCount++;
             }
 
             // TODO
@@ -262,11 +253,6 @@ namespace egret3d {
             this.directShadowMaps.length = directLightCount;
             this.pointShadowMaps.length = pointLightCount;
             this.spotShadowMaps.length = spotLightCount;
-
-            this.lightCount = allLightCount;
-            this.directLightCount = directLightCount;
-            this.pointLightCount = pointLightCount;
-            this.spotLightCount = spotLightCount;
 
             let directLightIndex = 0, pointLightIndex = 0, spotLightIndex = 0, index = 0;
             let lightArray = this.directLightArray;
@@ -398,6 +384,44 @@ namespace egret3d {
                             break;
                     }
                 }
+            }
+
+            const defines = this.defines;
+
+            if (directLightCount !== this.directLightCount) {
+                if (this.directLightCount > 0) {
+                    defines.removeDefine(ShaderDefine.NUM_DIR_LIGHTS, this.directLightCount);
+                }
+
+                if (directLightCount > 0) {
+                    defines.addDefine(ShaderDefine.NUM_DIR_LIGHTS, directLightCount);
+                }
+
+                this.directLightCount = directLightCount;
+            }
+
+            if (pointLightCount !== this.pointLightCount) {
+                if (this.pointLightCount > 0) {
+                    defines.removeDefine(ShaderDefine.NUM_POINT_LIGHTS, this.pointLightCount);
+                }
+
+                if (pointLightCount > 0) {
+                    defines.addDefine(ShaderDefine.NUM_POINT_LIGHTS, pointLightCount);
+                }
+
+                this.pointLightCount = pointLightCount;
+            }
+
+            if (spotLightCount !== this.spotLightCount) {
+                if (this.spotLightCount > 0) {
+                    defines.removeDefine(ShaderDefine.NUM_SPOT_LIGHTS, this.spotLightCount);
+                }
+
+                if (spotLightCount > 0) {
+                    defines.addDefine(ShaderDefine.NUM_SPOT_LIGHTS, spotLightCount);
+                }
+
+                this.spotLightCount = spotLightCount;
             }
         }
 

@@ -2,40 +2,6 @@ namespace egret3d {
     /**
      * @private
      */
-    export enum UniformDirty {
-        None = 0x00000000,
-        All = 0xFFFFFFFF,
-        // Global.
-        DirectLights = 0x0000001,
-        PointLights = 0x0000002,
-        SpotLights = 0x0000004,
-        // Scene.
-        LightmapIntensity = 0x0000008,
-        AmbientLightColor = 0x0000010,
-        Fog = 0x0000020,
-        // Camera.
-        View = 0x0000040,
-        Projection = 0x0000080,
-        viewProjection = 0x00000100,
-        CameraPosition = 0x00000200,
-        CameraForward = 0x00000400,
-        CameraUp = 0x00000800,
-        // Shadow.
-        ShadowNear = 0x00001000,
-        ShadowFar = 0x00002000,
-        DirectionShadowMatrix = 0x00004000,
-        PointShadowMatrix = 0x00008000,
-        SpotShadowMatrix = 0x00010000,
-        DirectionShadowMap = 0x00020000,
-        PointMatrixMap = 0x00040000,
-        SpotMatrixMap = 0x00080000,
-        // Renderer.
-        Lightmap = 0x00100000,
-        // Material.
-    }
-    /**
-     * @private
-     */
     export enum ToneMapping {
         None = 0,
         LinearToneMapping = 1,
@@ -134,41 +100,6 @@ namespace egret3d {
         "toneMappingWhitePoint": gltf.UniformSemantics._TONE_MAPPING_WHITE_POINT,
     };
 
-    const _patternA = /#include +<([\w\d.]+)>/g;
-    const _patternB = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
-
-    function _loopReplace(match: string, start: string, end: string, snippet: string) {
-        let unroll = "";
-        for (var i = parseInt(start); i < parseInt(end); i++) {
-            unroll += snippet.replace(/\[ i \]/g, '[ ' + i + ' ]');
-        }
-
-        return unroll;
-    }
-
-    function _replace(match: string, include: string): string {
-        let flag = true;
-        let chunk = "";
-
-        if (include in ShaderChunk) {
-            chunk = (ShaderChunk as any)[include];
-        }
-        else if (include in renderState.defaultCustomShaderChunks) {
-            flag = false;
-            chunk = renderState.customShaderChunks ? renderState.customShaderChunks[include] || "" : "";
-        }
-
-        if (chunk) {
-            return chunk.replace(_patternA, _replace);
-        }
-
-        if (flag) {
-            console.error(`Can not resolve #include <${include}>`);
-        }
-
-        return "";
-    }
-
     function _filterEmptyLine(string: string) {
         return string !== "";
     }
@@ -176,10 +107,6 @@ namespace egret3d {
      * 
      */
     export class RenderState extends paper.SingletonComponent {
-        /**
-         * @private
-         */
-        public uniformDirty: UniformDirty = UniformDirty.None;
 
         public maxBoneCount: uint = 24;
 
@@ -209,45 +136,6 @@ namespace egret3d {
         public renderTarget: RenderTexture | null = null;
         public customShaderChunks: { [key: string]: string } | null = null;
 
-        public render: (camera: Camera, material?: Material) => void = null!;
-        public draw: (drawCall: DrawCall) => void = null!;
-
-        protected _parseIncludes(string: string): string {
-            return string.replace(_patternA, _replace);
-        }
-
-        protected _unrollLoops(string: string) {
-            return string.replace(_patternB, _loopReplace);
-        }
-
-        protected _prefixVertex(customDefines: string) {
-            const prefixContext = [
-                this.commonExtensions,
-                this.vertexExtensions,
-                this.commonDefines,
-                this.vertexDefines,
-                customDefines,
-                ShaderChunk.common_vert_def,
-                '\n'
-            ].filter(_filterEmptyLine).join('\n');
-
-            return prefixContext;
-        }
-
-        protected _prefixFragment(customDefines: string) {
-            const prefixContext = [
-                this.commonExtensions,
-                this.fragmentExtensions,
-                this.commonDefines,
-                this.fragmentDefines,
-                customDefines,
-                ShaderChunk.common_frag_def,
-                '\n'
-            ].filter(_filterEmptyLine).join('\n');
-
-            return prefixContext;
-        }
-
         protected _getToneMappingFunction(toneMapping: ToneMapping) {
             let toneMappingName = "";
 
@@ -275,6 +163,9 @@ namespace egret3d {
             return `vec3 toneMapping( vec3 color ) { return ${toneMappingName}ToneMapping( color ); } \n`;
         }
 
+        public render: (camera: Camera, material?: Material) => void = null!;
+        public draw: (drawCall: DrawCall) => void = null!;
+
         public initialize(config?: any) {
             super.initialize(config);
 
@@ -284,6 +175,38 @@ namespace egret3d {
         public updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null): void { }
         public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void { }
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: uint = 0): void { }
+        /**
+         * @internal
+         */
+        public getPrefixVertex(defines: string) {
+            const prefixContext = [
+                this.commonExtensions,
+                this.vertexExtensions,
+                this.commonDefines,
+                this.vertexDefines,
+                defines,
+                ShaderChunk.common_vert_def,
+                "\n"
+            ].filter(_filterEmptyLine).join("\n");
+
+            return prefixContext;
+        }
+        /**
+         * @internal
+         */
+        public getPrefixFragment(defines: string) {
+            const prefixContext = [
+                this.commonExtensions,
+                this.fragmentExtensions,
+                this.commonDefines,
+                this.fragmentDefines,
+                defines,
+                ShaderChunk.common_frag_def,
+                "\n"
+            ].filter(_filterEmptyLine).join("\n");
+
+            return prefixContext;
+        }
     }
     /**
      * 

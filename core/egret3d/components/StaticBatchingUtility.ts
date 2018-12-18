@@ -319,7 +319,7 @@ namespace egret3d {
         const combineMesh = Mesh.create(combineInstance.vertexCount, combineInstance.indexBufferTotalSize, newAttribute);
         combineMesh.drawMode = gltf.DrawMode.Dynamic;
 
-        const newVertexBuffers = combineMesh.buffers[0] as Float32Array;
+        const newVertexBuffers = new Float32Array(combineMesh.buffers[0].buffer); // 这里依赖了 buffers 必须是两个分离的 buffer TODO
         const newIndexBuffers = combineMesh.buffers[1] as Uint16Array;
         let iv = 0;
         for (const key in tempVertexBuffers) {

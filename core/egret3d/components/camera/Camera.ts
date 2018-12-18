@@ -15,7 +15,7 @@ namespace egret3d {
         ClipMatrix = ClipToWorldMatrix | WorldToClipMatrix,
         ProjectionAndClipMatrix = ProjectionMatrix | ClipMatrix,
         Culling = CullingMatrix | CullingFrustum,
-
+        
         All = ProjectionAndClipMatrix | PixelViewport | Culling,
     }
     /**
