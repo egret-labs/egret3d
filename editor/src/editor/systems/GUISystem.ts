@@ -213,7 +213,7 @@ namespace paper.editor {
                 if (descriptror && descriptror.get && descriptror.set) {
                     return true;
                 }
-                
+
                 prototype = Object.getPrototypeOf(prototype);
             }
 
@@ -611,7 +611,7 @@ namespace paper.editor {
                 let i = 0;
                 while (this._bufferedGameObjects.length > 0 && i++ < 5) {
                     const gameObject = this._bufferedGameObjects.shift();
-                    if (gameObject) {
+                    if (gameObject && !gameObject.isDestroyed) {
                         if (!this._addToHierarchy(gameObject)) {
                             this._bufferedGameObjects.push(gameObject);
                         }

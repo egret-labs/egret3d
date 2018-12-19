@@ -3,12 +3,11 @@ namespace paper.editor {
      * @internal
      */
     export class SkeletonDrawer extends BaseSelectedGOComponent {
-        private readonly _skeletonMesh: egret3d.Mesh = egret3d.Mesh.create(128, 0, [gltf.AttributeSemantics.POSITION]);
 
         public initialize() {
             super.initialize();
 
-            const mesh = this._skeletonMesh;
+            const mesh = egret3d.Mesh.create(128, 0, [gltf.AttributeSemantics.POSITION]);
             const material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
             mesh.drawMode = gltf.DrawMode.Dynamic;
@@ -17,8 +16,8 @@ namespace paper.editor {
                 .setDepth(false, false)
                 .renderQueue = RenderQueue.Overlay;
 
-            this.gameObject.getOrAddComponent(egret3d.MeshFilter).mesh = mesh;
-            this.gameObject.getOrAddComponent(egret3d.MeshRenderer).material = material;
+            this.gameObject.addComponent(egret3d.MeshFilter).mesh = mesh;
+            this.gameObject.addComponent(egret3d.MeshRenderer).material = material;
         }
 
         public update() {
@@ -26,7 +25,7 @@ namespace paper.editor {
             const skinnedMeshRenderer = selectedGameObject ? selectedGameObject.getComponent(egret3d.SkinnedMeshRenderer) : null;
 
             if (selectedGameObject && skinnedMeshRenderer) {
-                const mesh = this._skeletonMesh;
+                const mesh = this.gameObject.getComponent(egret3d.MeshFilter)!.mesh!;
 
                 let offset = 0;
                 const helpVertex3A = egret3d.Vector3.create().release();

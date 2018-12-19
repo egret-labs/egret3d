@@ -69,7 +69,7 @@ namespace egret3d {
      * @deprecated
      * @internal
      */
-    export const WebGLCapabilities = web.WebGLRenderState;
+    export const WebGLCapabilities = webgl.WebGLRenderState;
     /**
      * @deprecated
      */

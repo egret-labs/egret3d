@@ -505,6 +505,7 @@ namespace egret3d {
             }
 
             const index = enable!.indexOf(gltf.EnableState.Blend);
+
             if (blend === gltf.BlendMode.None) {
                 if (index >= 0) {
                     enable!.splice(index, 1);
@@ -516,7 +517,7 @@ namespace egret3d {
                 }
             }
 
-            if (renderQueue) {  // 兼容
+            if (renderQueue) { // 兼容
                 this.renderQueue = renderQueue;
             }
 

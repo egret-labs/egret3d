@@ -571,7 +571,7 @@ declare namespace paper.editor {
          */
         MATERIAL_ARRAY = "MATERIAL_ARRAY",
         /**
-         * 贴图。
+         * 贴图纹理。
          */
         TEXTUREDESC = "TEXTUREDESC",
         /**
@@ -667,9 +667,14 @@ declare namespace paper {
          */
         dispose(): boolean;
         /**
-         *
+         * 该资源是否已经被释放。
          */
         readonly isDisposed: boolean;
+        /**
+         * 该资源的引用计数。
+         * - 当引用计数为 0 时，该资源将在本帧末尾被释放。
+         */
+        readonly referenceCount: uint;
     }
 }
 declare namespace paper {
@@ -4131,7 +4136,7 @@ declare namespace egret3d {
         /**
          * TODO
          */
-        readonly lightmapScaleOffset: Vector4;
+        readonly lightmapScaleOffset: Readonly<Vector4>;
     }
 }
 declare namespace egret3d {
@@ -4457,7 +4462,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 渲染贴图。
+     * 渲染纹理。
      */
     class RenderTexture extends BaseTexture {
         /**
@@ -4626,7 +4631,7 @@ declare namespace egret3d {
         readonly glTFMesh: gltf.Mesh;
     }
 }
-declare namespace egret3d.web {
+declare namespace egret3d.webgl {
 }
 declare namespace paper {
     /**
@@ -5875,13 +5880,19 @@ declare namespace egret3d {
         readonly lights: BaseLight[];
         private _sortCameras(a, b);
         /**
-         * 更新摄像机。
+         * 更新相机。
          */
         updateCameras(gameObjects: ReadonlyArray<paper.GameObject>): void;
+        /**
+         * 更新灯光。
+         */
         updateLights(gameObjects: ReadonlyArray<paper.GameObject>): void;
+        /**
+         * 排序相机。
+         */
         sortCameras(): void;
         /**
-         * 摄像机计数
+         * 相机计数。
          */
         readonly cameraCount: uint;
         /**
@@ -5912,7 +5923,7 @@ declare namespace egret3d {
         readonly addDrawCalls: (DrawCall | null)[];
         private _drawCallsDirty;
         /**
-         *
+         * 添加
          * @param drawCall
          */
         addDrawCall(drawCall: DrawCall): void;
@@ -8831,13 +8842,13 @@ declare namespace egret3d {
         getTexture(uniformName: string): BaseTexture | null;
         /**
          * 设置该材质的主贴图。
-         * @param texture 贴图。
+         * @param texture 贴图纹理。
          */
         setTexture(texture: BaseTexture | null): this;
         /**
          * 设置该材质的指定贴图。
          * @param uniformName uniform 名称。
-         * @param texture 贴图。
+         * @param texture 贴图纹理。
          */
         setTexture(uniformName: string, texture: BaseTexture | null): this;
         /**
@@ -10422,7 +10433,7 @@ declare namespace egret3d.io {
 declare namespace egret3d.utils {
     function getRelativePath(targetPath: string, sourcePath: string): string;
 }
-declare namespace egret3d.web {
+declare namespace egret3d.webgl {
 }
 declare namespace paper {
     /**
@@ -10439,23 +10450,23 @@ declare namespace paper {
         missingObject: any | null;
     }
 }
-declare namespace egret3d.web {
+declare namespace egret3d.webgl {
 }
-declare namespace egret3d.web {
+declare namespace egret3d.webgl {
 }
-declare namespace egret3d.web {
+declare namespace egret3d.webgl {
 }
-declare namespace egret3d.web {
+declare namespace egret3d.webgl {
 }
-declare namespace egret3d.web {
+declare namespace egret3d.webgl {
 }
-declare namespace egret3d.web {
+declare namespace egret3d.webgl {
 }
-declare namespace egret3d.web {
+declare namespace egret3d.webgl {
 }
-declare namespace egret3d.web {
+declare namespace egret3d.webgl {
 }
-declare namespace egret3d.web {
+declare namespace egret3d.webgl {
 }
 declare namespace egret3d {
     type ProfileItem = {

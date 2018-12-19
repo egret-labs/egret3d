@@ -26,6 +26,7 @@ namespace paper.editor {
             const iconObj = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material, parent.tag, parent.scene);
             iconObj.transform.setParent(parent.transform);
             iconObj.addComponent(GizmoPickComponent).pickTarget = parent;
+
             return iconObj;
         }
 

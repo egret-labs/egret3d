@@ -2163,7 +2163,7 @@ Common.extend(GUI.prototype,
     var init = this.__listening.length === 0;
     this.__listening.push(controller);
     if (init) {
-      updateDisplays(this.__listening);
+      updateDisplays(this, this.__listening);
     }
   },
   updateDisplay: function updateDisplay() {
@@ -2516,15 +2516,18 @@ function setPresetSelectIndex(gui) {
     }
   }
 }
-function updateDisplays(controllerArray) {
+function updateDisplays(gui, controllerArray) {
   if (controllerArray.length !== 0) {
     requestAnimationFrame$1.call(window, function () {
-      updateDisplays(controllerArray);
+      updateDisplays(gui, controllerArray);
     });
   }
-  Common.each(controllerArray, function (c) {
-    c.updateDisplay();
-  });
+  var isShowed = !gui.closed && gui.domElement.style.display !== "none";
+  if (isShowed) {
+    Common.each(controllerArray, function (c) {
+      c.updateDisplay();
+    });
+  }
 }
 
 var color = {

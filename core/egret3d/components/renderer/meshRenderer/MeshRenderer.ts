@@ -25,7 +25,6 @@ namespace egret3d {
                 }
             }
         }
-
         /**
          * 实时获取网格资源的指定三角形顶点位置。
          */
@@ -107,19 +106,19 @@ namespace egret3d {
                 return;
             }
 
-            this._lightmapIndex = value;
-
             if (value >= 0) {
-                this.defines.addDefine("USE_LIGHTMAP");
+                this.defines.addDefine(ShaderDefine.USE_LIGHTMAP);
             }
             else {
-                this.defines.removeDefine("USE_LIGHTMAP");
+                this.defines.removeDefine(ShaderDefine.USE_LIGHTMAP);
             }
+
+            this._lightmapIndex = value;
         }
         /**
          * TODO
          */
-        public get lightmapScaleOffset() {
+        public get lightmapScaleOffset(): Readonly<Vector4> {
             return this._lightmapScaleOffset;
         }
     }

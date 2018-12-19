@@ -1,4 +1,4 @@
-namespace egret3d.web {
+namespace egret3d.webgl {
     const _patternA = /#include +<([\w\d.]+)>/g;
     const _patternB = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
 

@@ -2347,7 +2347,7 @@ Common.extend(GUI.prototype,
     var init = this.__listening.length === 0;
     this.__listening.push(controller);
     if (init) {
-      updateDisplays(this.__listening);
+      updateDisplays(this, this.__listening);
     }
   },
   updateDisplay: function updateDisplay() {
@@ -2700,15 +2700,18 @@ function setPresetSelectIndex(gui) {
     }
   }
 }
-function updateDisplays(controllerArray) {
+function updateDisplays(gui, controllerArray) {
   if (controllerArray.length !== 0) {
     requestAnimationFrame$1.call(window, function () {
-      updateDisplays(controllerArray);
+      updateDisplays(gui, controllerArray);
     });
   }
-  Common.each(controllerArray, function (c) {
-    c.updateDisplay();
-  });
+  var isShowed = !gui.closed && gui.domElement.style.display !== "none";
+  if (isShowed) {
+    Common.each(controllerArray, function (c) {
+      c.updateDisplay();
+    });
+  }
 }
 
 var color = {
@@ -4690,7 +4693,7 @@ var paper;
                 }
                 var guiComponent = this._guiComponent;
                 guiComponent.stats.update();
-                guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["web"]["WebGLRenderSystem"]).deltaTime, 200);
+                guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["webgl"]["WebGLRenderSystem"]).deltaTime, 200);
                 if (egret3d.inputCollecter.getKey("KeyH" /* KeyH */).isDown(false)) {
                     this._hideFPS();
                 }
@@ -4950,9 +4953,8 @@ var paper;
             };
             GUISystem.prototype._propertyHasGetterSetter = function (target, propName) {
                 var prototype = Object.getPrototypeOf(target);
-                var descriptror;
                 while (prototype) {
-                    descriptror = Object.getOwnPropertyDescriptor(prototype, propName);
+                    var descriptror = Object.getOwnPropertyDescriptor(prototype, propName);
                     if (descriptror && descriptror.get && descriptror.set) {
                         return true;
                     }
@@ -5295,7 +5297,7 @@ var paper;
                     var i = 0;
                     while (this._bufferedGameObjects.length > 0 && i++ < 5) {
                         var gameObject = this._bufferedGameObjects.shift();
-                        if (gameObject) {
+                        if (gameObject && !gameObject.isDestroyed) {
                             if (!this._addToHierarchy(gameObject)) {
                                 this._bufferedGameObjects.push(gameObject);
                             }

@@ -7,8 +7,8 @@ namespace paper.editor {
      * @internal
      */
     export class EditorDefaultTexture extends SingletonComponent {
-        public static CAMERA_ICON: egret3d.Texture;
-        public static LIGHT_ICON: egret3d.Texture;
+        public static CAMERA_ICON: egret3d.BaseTexture;
+        public static LIGHT_ICON: egret3d.BaseTexture;
 
         public initialize() {
             {//TODO

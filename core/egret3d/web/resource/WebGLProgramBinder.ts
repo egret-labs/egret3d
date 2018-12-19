@@ -3,7 +3,7 @@
  */
 type GlobalWeblGLShader = WebGLShader;
 
-namespace egret3d.web {
+namespace egret3d.webgl {
     // 运行时 draw call 排序优化使用。
     let _hashCode: uint = 0;
     /**

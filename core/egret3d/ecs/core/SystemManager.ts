@@ -15,7 +15,7 @@ namespace paper {
             return this._instance;
         }
 
-        private constructor() { 
+        private constructor() {
         }
 
         private readonly _preSystems: { systemClass: { new(): BaseSystem }, order: number }[] = [];
@@ -23,25 +23,26 @@ namespace paper {
 
         private _getSystemInsertIndex(order: SystemOrder) {
             let index = -1;
-            const systemCount = this._systems.length;
+            const systems = this._systems;
+            const systemCount = systems.length;
 
             if (systemCount > 0) {
-                if (order < this._systems[0].order) {
+                if (order < systems[0].order) {
                     return 0;
                 }
-                else if (order >= this._systems[systemCount - 1].order) {
+                else if (order >= systems[systemCount - 1].order) {
                     return systemCount;
                 }
             }
 
             for (let i = 0; i < systemCount - 1; ++i) {
-                if (this._systems[i].order <= order && order < this._systems[i + 1].order) {
+                if (systems[i].order <= order && order < systems[i + 1].order) {
                     index = i + 1;
                     break;
                 }
             }
 
-            return index < 0 ? this._systems.length : index;
+            return index < 0 ? systems.length : index;
         }
 
         private _checkRegister<T extends BaseSystem>(systemClass: { new(): T }) {
@@ -59,32 +60,35 @@ namespace paper {
          * @internal
          */
         public _preRegisterSystems() {
-            this._preSystems.sort((a, b) => { return a.order - b.order; });
+            const preSystems = this._preSystems;
+            preSystems.sort((a, b) => { return a.order - b.order; });
 
-            for (const pair of this._preSystems) {
+            for (const pair of preSystems) {
                 this.register(pair.systemClass, pair.order);
             }
 
-            this._preSystems.length = 0;
+            preSystems.length = 0;
         }
         /**
          * @internal
          */
         public update() {
-            for (const system of this._systems) {
+            const systems = this._systems;
+
+            for (const system of systems) {
                 if (system && system.enabled && !system._started) {
                     system._started = true;
                     system.onStart && system.onStart();
                 }
             }
 
-            for (const system of this._systems) {
+            for (const system of systems) {
                 if (system) {
                     system.update();
                 }
             }
 
-            for (const system of this._systems) {
+            for (const system of systems) {
                 if (system) {
                     system.lateUpdate();
                 }
@@ -96,6 +100,7 @@ namespace paper {
         public preRegister<T extends BaseSystem>(systemClass: { new(): T }, order: SystemOrder = SystemOrder.Update) {
             if (this._systems.length > 0) {
                 this.register(systemClass, order);
+                
                 return this;
             }
 

@@ -1,4 +1,4 @@
-namespace egret3d.web {
+namespace egret3d.webgl {
     /**
      * @internal
      */
@@ -24,6 +24,7 @@ namespace egret3d.web {
         const minFilter = sampler.minFilter!;
         const wrapS = sampler.wrapS!;
         const wrapT = sampler.wrapT!;
+
         if (isPowerOfTwo) {
             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, magFilter);
             webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, minFilter);

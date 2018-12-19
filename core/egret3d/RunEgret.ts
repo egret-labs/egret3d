@@ -83,7 +83,7 @@ namespace egret3d {
 
         paper.Application.initialize(options);
         const systemManager = paper.Application.systemManager;
-        systemManager.register(web.BeginSystem, paper.SystemOrder.Begin, options);
+        systemManager.register(webgl.BeginSystem, paper.SystemOrder.Begin, options);
 
         systemManager.register(AnimationSystem, paper.SystemOrder.Animation);
         systemManager.register(MeshRendererSystem, paper.SystemOrder.BeforeRenderer);
@@ -92,9 +92,9 @@ namespace egret3d {
         systemManager.register(Egret2DRendererSystem, paper.SystemOrder.BeforeRenderer, options);
         systemManager.register(CameraAndLightSystem, paper.SystemOrder.BeforeRenderer);
 
-        systemManager.register(web.WebGLRenderSystem, paper.SystemOrder.Renderer, options);
-        systemManager.register(web.InputSystem, paper.SystemOrder.End, options);
-        systemManager.register(web.EndSystem, paper.SystemOrder.End, options);
+        systemManager.register(webgl.WebGLRenderSystem, paper.SystemOrder.Renderer, options);
+        systemManager.register(webgl.InputSystem, paper.SystemOrder.End, options);
+        systemManager.register(webgl.EndSystem, paper.SystemOrder.End, options);
         // TODO
         systemManager._preRegisterSystems();
         paper.Application.resume();
