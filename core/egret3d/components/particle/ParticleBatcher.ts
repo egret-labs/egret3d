@@ -311,7 +311,7 @@ namespace egret3d.particle {
             }
 
             renderer.batchMesh = mesh;
-            renderer.batchMaterial = renderer.materials[0]!.clone();
+            renderer.batchMaterial = renderer.materials[0]!.clone().retain();
             mesh.uploadSubIndexBuffer();
         }
 

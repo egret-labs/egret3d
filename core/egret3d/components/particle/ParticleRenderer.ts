@@ -215,11 +215,11 @@ namespace egret3d.particle {
                 this._mesh.release();
             }
 
-            this._mesh = value;
-
-            if (this._mesh) {
-                this._mesh.retain();
+            if (value) {
+                value.retain();
             }
+
+            this._mesh = value;
 
             ParticleRenderer.onMeshChanged.dispatch(this);
         }

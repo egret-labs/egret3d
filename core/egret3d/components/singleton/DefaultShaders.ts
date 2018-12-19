@@ -3,36 +3,16 @@ namespace egret3d {
      * 默认的 shader。
      */
     export class DefaultShaders extends paper.SingletonComponent {
-        public static MESH_BASIC: Shader;
-        public static MESH_BASIC_DOUBLESIDE: Shader;
-        public static MESH_LAMBERT: Shader;
-        public static MESH_LAMBERT_DOUBLESIDE: Shader;
-        public static MESH_PHONG: Shader;
-        public static MESH_PHONE_DOUBLESIDE: Shader;
-        public static MESH_PHYSICAL: Shader;
-        public static MESH_PHYSICAL_DOUBLESIDE: Shader;
-
         public static LINEDASHED: Shader;
         public static VERTEX_COLOR: Shader;
         public static MATERIAL_COLOR: Shader;
-        public static TRANSPARENT_COLOR: Shader;
-        public static TRANSPARENT_ADDITIVE_COLOR: Shader;
 
-        public static TRANSPARENT: Shader;
-        public static TRANSPARENT_DOUBLESIDE: Shader;
-        public static TRANSPARENT_ADDITIVE: Shader;
-        public static TRANSPARENT_ADDITIVE_DOUBLESIDE: Shader;
-        public static TRANSPARENT_MULTIPLY: Shader;
-        public static TRANSPARENT_MULTIPLY_DOUBLESIDE: Shader;
+        public static MESH_BASIC: Shader;
+        public static MESH_LAMBERT: Shader;
+        public static MESH_PHONG: Shader;
+        public static MESH_PHYSICAL: Shader;
 
         public static PARTICLE: Shader;
-        public static PARTICLE_BLEND: Shader;
-        public static PARTICLE_ADDITIVE: Shader;
-        public static PARTICLE_MULTIPLY: Shader;
-
-        public static PARTICLE_BLEND_PREMULTIPLY: Shader;
-        public static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
-        public static PARTICLE_MULTIPLY_PREMULTIPLY: Shader;
 
         public static CUBE: Shader;
         public static DEPTH: Shader;
@@ -43,6 +23,79 @@ namespace egret3d {
         public static SHADOW: Shader;
         public static SPRITE: Shader;
         public static COPY: Shader;
+        
+        /**
+         * @deprecated
+         */
+        public static MESH_BASIC_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        public static MESH_LAMBERT_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        public static MESH_PHONE_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        public static MESH_PHYSICAL_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        public static TRANSPARENT_COLOR: Shader;
+        /**
+         * @deprecated
+         */
+        public static TRANSPARENT_ADDITIVE_COLOR: Shader;
+        /**
+         * @deprecated
+         */
+        public static TRANSPARENT: Shader;
+        /**
+         * @deprecated
+         */
+        public static TRANSPARENT_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        public static TRANSPARENT_ADDITIVE: Shader;
+        /**
+         * @deprecated
+         */
+        public static TRANSPARENT_ADDITIVE_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        public static TRANSPARENT_MULTIPLY: Shader;
+        /**
+         * @deprecated
+         */
+        public static TRANSPARENT_MULTIPLY_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        public static PARTICLE_BLEND: Shader;
+        /**
+         * @deprecated
+         */
+        public static PARTICLE_ADDITIVE: Shader;
+        /**
+         * @deprecated
+         */
+        public static PARTICLE_MULTIPLY: Shader;
+        /**
+         * @deprecated
+         */
+        public static PARTICLE_BLEND_PREMULTIPLY: Shader;
+        /**
+         * @deprecated
+         */
+        public static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
+        /**
+         * @deprecated
+         */
+        public static PARTICLE_MULTIPLY_PREMULTIPLY: Shader;
 
         private _createShader(name: string, config: GLTF, renderQueue: number, tStates: gltf.States, defines?: string[]) {
             const shader = Shader.create(name, config);
@@ -68,51 +121,9 @@ namespace egret3d {
         public initialize() {
             super.initialize();
             //
-            const helpMaterial = Material.create(Shader.create("", ShaderLib.meshbasic as any));
+            const helpMaterial = Material.create("helpMaterial", Shader.create("helpShader", ShaderLib.meshbasic as any));
             const helpStates = helpMaterial.technique.states!;
             //
-            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
-            DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
-
-            helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_BASIC_DOUBLESIDE = this._createShader("builtin/meshbasic_doubleside.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
-
-            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
-            DefaultShaders.MESH_LAMBERT = this._createShader("builtin/meshlambert.shader.json", ShaderLib.meshlambert as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
-
-            helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_LAMBERT_DOUBLESIDE = this._createShader("builtin/meshlambert_doubleside.shader.json", ShaderLib.meshlambert as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
-
-            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
-            DefaultShaders.MESH_PHONG = this._createShader("builtin/meshphong.shader.json", ShaderLib.meshphong as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
-
-            helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_PHONE_DOUBLESIDE = this._createShader("builtin/meshphong_doubleside.shader.json", ShaderLib.meshphong as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
-
-            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
-            DefaultShaders.MESH_PHYSICAL = this._createShader("builtin/meshphysical.shader.json", ShaderLib.meshphysical as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
-
-            helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_PHYSICAL_DOUBLESIDE = this._createShader("builtin/meshphysical_doubleside.shader.json", ShaderLib.meshphysical as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
-
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent);
-            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_MAP]);
-
-            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent);
-            DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_MAP]);
-
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Add, paper.RenderQueue.Transparent);
-            DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_MAP]);
-
-            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add, paper.RenderQueue.Transparent);
-            DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_MAP]);
-
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Multiply, paper.RenderQueue.Transparent);
-            DefaultShaders.TRANSPARENT_MULTIPLY = this._createShader("builtin/transparent_multiply.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_MAP]);
-
-            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply, paper.RenderQueue.Transparent);
-            DefaultShaders.TRANSPARENT_MULTIPLY_DOUBLESIDE = this._createShader("builtin/transparent_multiply_doubleside.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_MAP]);
-
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
             DefaultShaders.LINEDASHED = this._createShader("builtin/linedashed.shader.json", ShaderLib.linedashed as any, paper.RenderQueue.Geometry, helpStates);
 
@@ -122,32 +133,20 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpStates);
 
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent);
-            DefaultShaders.TRANSPARENT_COLOR = this._createShader("builtin/transparent_color.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
+            DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
 
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Additive, paper.RenderQueue.Transparent);
-            DefaultShaders.TRANSPARENT_ADDITIVE_COLOR = this._createShader("builtin/transparent_additive_color.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
+            DefaultShaders.MESH_LAMBERT = this._createShader("builtin/meshlambert.shader.json", ShaderLib.meshlambert as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
+
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
+            DefaultShaders.MESH_PHONG = this._createShader("builtin/meshphong.shader.json", ShaderLib.meshphong as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
+
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
+            DefaultShaders.MESH_PHYSICAL = this._createShader("builtin/meshphysical.shader.json", ShaderLib.meshphysical as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", ShaderLib.particle as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_COLOR]);
-
-            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent);
-            DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", ShaderLib.particle as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_COLOR]);
-
-            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add, paper.RenderQueue.Transparent);
-            DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", ShaderLib.particle as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_COLOR]);
-
-            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply, paper.RenderQueue.Transparent);
-            DefaultShaders.PARTICLE_MULTIPLY = this._createShader("builtin/particle_multiply.shader.json", ShaderLib.particle as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_COLOR]);
-
-            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend_PreMultiply, paper.RenderQueue.Transparent);
-            DefaultShaders.PARTICLE_BLEND_PREMULTIPLY = this._createShader("builtin/particle_blend_premultiply.shader.json", ShaderLib.particle as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_COLOR]);
-
-            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add_PreMultiply, paper.RenderQueue.Transparent);
-            DefaultShaders.PARTICLE_ADDITIVE_PREMULTIPLY = this._createShader("builtin/particle_additive_premultiply.shader.json", ShaderLib.particle as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_COLOR]);
-
-            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply_PreMultiply, paper.RenderQueue.Transparent);
-            DefaultShaders.PARTICLE_MULTIPLY_PREMULTIPLY = this._createShader("builtin/particle_multiply_premultiply.shader.json", ShaderLib.particle as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_COLOR]);
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.CUBE = this._createShader("builtin/cube.shader.json", ShaderLib.cube as any, paper.RenderQueue.Geometry, helpStates);
@@ -176,7 +175,60 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(false, false);
             DefaultShaders.COPY = this._createShader("builtin/copy.shader.json", ShaderLib.copy as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
 
-            helpMaterial.dispose();
+
+            helpMaterial.clearStates().setDepth(true, true);
+            DefaultShaders.MESH_BASIC_DOUBLESIDE = this._createShader("builtin/meshbasic_doubleside.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
+            
+            helpMaterial.clearStates().setDepth(true, true);
+            DefaultShaders.MESH_LAMBERT_DOUBLESIDE = this._createShader("builtin/meshlambert_doubleside.shader.json", ShaderLib.meshlambert as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
+            
+            helpMaterial.clearStates().setDepth(true, true);
+            DefaultShaders.MESH_PHONE_DOUBLESIDE = this._createShader("builtin/meshphong_doubleside.shader.json", ShaderLib.meshphong as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
+            
+            helpMaterial.clearStates().setDepth(true, true);
+            DefaultShaders.MESH_PHYSICAL_DOUBLESIDE = this._createShader("builtin/meshphysical_doubleside.shader.json", ShaderLib.meshphysical as any, paper.RenderQueue.Geometry, helpStates, [ShaderDefine.USE_MAP]);
+            
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent);
+            DefaultShaders.TRANSPARENT_COLOR = this._createShader("builtin/transparent_color.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates);
+
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Additive, paper.RenderQueue.Transparent);
+            DefaultShaders.TRANSPARENT_ADDITIVE_COLOR = this._createShader("builtin/transparent_additive_color.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates);
+
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent);
+            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_MAP]);
+
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent);
+            DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_MAP]);
+
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Add, paper.RenderQueue.Transparent);
+            DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_MAP]);
+
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add, paper.RenderQueue.Transparent);
+            DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_MAP]);
+
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Multiply, paper.RenderQueue.Transparent);
+            DefaultShaders.TRANSPARENT_MULTIPLY = this._createShader("builtin/transparent_multiply.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_MAP]);
+
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply, paper.RenderQueue.Transparent);
+            DefaultShaders.TRANSPARENT_MULTIPLY_DOUBLESIDE = this._createShader("builtin/transparent_multiply_doubleside.shader.json", ShaderLib.meshbasic as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_MAP]);
+
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent);
+            DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", ShaderLib.particle as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_COLOR]);
+
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add, paper.RenderQueue.Transparent);
+            DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", ShaderLib.particle as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_COLOR]);
+
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply, paper.RenderQueue.Transparent);
+            DefaultShaders.PARTICLE_MULTIPLY = this._createShader("builtin/particle_multiply.shader.json", ShaderLib.particle as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_COLOR]);
+
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend_PreMultiply, paper.RenderQueue.Transparent);
+            DefaultShaders.PARTICLE_BLEND_PREMULTIPLY = this._createShader("builtin/particle_blend_premultiply.shader.json", ShaderLib.particle as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_COLOR]);
+
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add_PreMultiply, paper.RenderQueue.Transparent);
+            DefaultShaders.PARTICLE_ADDITIVE_PREMULTIPLY = this._createShader("builtin/particle_additive_premultiply.shader.json", ShaderLib.particle as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_COLOR]);
+
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply_PreMultiply, paper.RenderQueue.Transparent);
+            DefaultShaders.PARTICLE_MULTIPLY_PREMULTIPLY = this._createShader("builtin/particle_multiply_premultiply.shader.json", ShaderLib.particle as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_COLOR]);
         }
     }
 }

@@ -207,13 +207,13 @@ namespace paper.editor {
 
         private _propertyHasGetterSetter(target: any, propName: string) {
             let prototype = Object.getPrototypeOf(target);
-            let descriptror;
 
             while (prototype) {
-                descriptror = Object.getOwnPropertyDescriptor(prototype, propName);
+                const descriptror = Object.getOwnPropertyDescriptor(prototype, propName);
                 if (descriptror && descriptror.get && descriptror.set) {
                     return true;
                 }
+                
                 prototype = Object.getPrototypeOf(prototype);
             }
 

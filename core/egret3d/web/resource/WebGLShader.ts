@@ -3,9 +3,6 @@ namespace egret3d.web {
      * @internal
      */
     export class WebGLShader extends Shader {
-        /**
-         * @private
-         */
         public readonly programs: { [key: string]: WebGLProgramBinder | null } = {};
 
         public dispose() {

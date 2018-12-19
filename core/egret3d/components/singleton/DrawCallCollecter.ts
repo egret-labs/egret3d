@@ -88,12 +88,19 @@ namespace egret3d {
             }
         }
         /**
-         * 
+         * 添加
          * @param drawCall 
          */
         public addDrawCall(drawCall: DrawCall): void {
-            this.drawCalls.push(drawCall);
-            this.addDrawCalls.push(drawCall);
+            const { renderers, drawCalls, addDrawCalls } = this;
+            const renderer = drawCall.renderer;
+
+            if (renderers.indexOf(renderer) < 0) {
+                renderers.push(renderer);
+            }
+
+            drawCalls.push(drawCall);
+            addDrawCalls.push(drawCall);
         }
         /**
          * 移除指定渲染组件的绘制信息列表。
@@ -114,7 +121,7 @@ namespace egret3d {
                     drawCall.release();
                 }
             }
-            
+
             i = addDrawCalls.length;
             while (i--) {
                 const drawCall = addDrawCalls[i];

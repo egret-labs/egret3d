@@ -46,6 +46,10 @@ namespace egret3d {
         public uninitialize() {
             super.uninitialize();
 
+            for (const animation of this._animations) {
+                animation.release();
+            }
+
             const fadeStatess = this._fadeStates;
             for (const fadeStates of fadeStatess) {
                 for (const fadeState of fadeStates) {
@@ -57,10 +61,6 @@ namespace egret3d {
             for (const k in binders) {
                 binders[k].release();
                 delete binders[k];
-            }
-
-            for (const animation of this._animations) {
-                animation.release();
             }
 
             if (this._animationController) {
@@ -104,7 +104,7 @@ namespace egret3d {
             }
             //
             if (!this._animationController) {
-                this._animationController = AnimationController.create("").retain();
+                this._animationController = AnimationController.create(paper.DefaultNames.Default).retain();
             }
 
             const animationController = this._animationController;
@@ -153,7 +153,7 @@ namespace egret3d {
          */
         public play(animationClipNameOrNames: string | (string[]) | null = null, playTimes: int = -1): AnimationState | null {
             if (!this._animationController) {
-                this._animationController = AnimationController.create("").retain();
+                this._animationController = AnimationController.create(paper.DefaultNames.Default).retain();
             }
 
             const animationController = this._animationController;

@@ -646,6 +646,7 @@ declare namespace paper {
          * 请使用 `T.create()` 创建实例。
          */
         protected constructor();
+        private _addToDispose();
         /**
          * 该资源内部初始化。
          * - 重写此方法时，必须调用 `super.initialize();`。
@@ -3399,6 +3400,7 @@ declare namespace egret3d {
      *
      */
     class RenderState extends paper.SingletonComponent {
+        version: number;
         standardDerivativesEnabled: boolean;
         textureFloatEnabled: boolean;
         fragDepthEnabled: boolean;
@@ -3412,11 +3414,11 @@ declare namespace egret3d {
         maxVertexUniformVectors: uint;
         maxAnisotropy: uint;
         maxBoneCount: uint;
+        maxPrecision: string;
         logarithmicDepthBuffer: boolean;
         toneMapping: ToneMapping;
         toneMappingExposure: number;
         toneMappingWhitePoint: number;
-        maxPrecision: string;
         commonExtensions: string;
         vertexExtensions: string;
         fragmentExtensions: string;
@@ -3433,6 +3435,8 @@ declare namespace egret3d {
         customShaderChunks: {
             [key: string]: string;
         } | null;
+        protected _getCommonExtensions(): void;
+        protected _getCommonDefines(): void;
         protected _getToneMappingFunction(toneMapping: ToneMapping): string;
         render: (camera: Camera, material?: Material) => void;
         draw: (drawCall: DrawCall) => void;
@@ -4820,6 +4824,10 @@ declare namespace paper {
          * 缓存此帧结束时释放的对象。
          */
         readonly releases: BaseRelease<any>[];
+        /**
+         * 缓存此帧结束时释放的资源。
+         */
+        readonly assets: Asset[];
         initialize(): void;
     }
 }
@@ -5005,6 +5013,12 @@ declare namespace paper {
      *
      */
     class Deserializer {
+        /**
+         *
+         * @param target
+         * @param propName
+         */
+        static propertyHasGetterAndSetter(target: any, propName: string): boolean;
         /**
          *
          */
@@ -5712,32 +5726,14 @@ declare namespace egret3d {
      * 默认的 shader。
      */
     class DefaultShaders extends paper.SingletonComponent {
-        static MESH_BASIC: Shader;
-        static MESH_BASIC_DOUBLESIDE: Shader;
-        static MESH_LAMBERT: Shader;
-        static MESH_LAMBERT_DOUBLESIDE: Shader;
-        static MESH_PHONG: Shader;
-        static MESH_PHONE_DOUBLESIDE: Shader;
-        static MESH_PHYSICAL: Shader;
-        static MESH_PHYSICAL_DOUBLESIDE: Shader;
         static LINEDASHED: Shader;
         static VERTEX_COLOR: Shader;
         static MATERIAL_COLOR: Shader;
-        static TRANSPARENT_COLOR: Shader;
-        static TRANSPARENT_ADDITIVE_COLOR: Shader;
-        static TRANSPARENT: Shader;
-        static TRANSPARENT_DOUBLESIDE: Shader;
-        static TRANSPARENT_ADDITIVE: Shader;
-        static TRANSPARENT_ADDITIVE_DOUBLESIDE: Shader;
-        static TRANSPARENT_MULTIPLY: Shader;
-        static TRANSPARENT_MULTIPLY_DOUBLESIDE: Shader;
+        static MESH_BASIC: Shader;
+        static MESH_LAMBERT: Shader;
+        static MESH_PHONG: Shader;
+        static MESH_PHYSICAL: Shader;
         static PARTICLE: Shader;
-        static PARTICLE_BLEND: Shader;
-        static PARTICLE_ADDITIVE: Shader;
-        static PARTICLE_MULTIPLY: Shader;
-        static PARTICLE_BLEND_PREMULTIPLY: Shader;
-        static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
-        static PARTICLE_MULTIPLY_PREMULTIPLY: Shader;
         static CUBE: Shader;
         static DEPTH: Shader;
         static DISTANCE_RGBA: Shader;
@@ -5747,6 +5743,78 @@ declare namespace egret3d {
         static SHADOW: Shader;
         static SPRITE: Shader;
         static COPY: Shader;
+        /**
+         * @deprecated
+         */
+        static MESH_BASIC_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        static MESH_LAMBERT_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        static MESH_PHONE_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        static MESH_PHYSICAL_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        static TRANSPARENT_COLOR: Shader;
+        /**
+         * @deprecated
+         */
+        static TRANSPARENT_ADDITIVE_COLOR: Shader;
+        /**
+         * @deprecated
+         */
+        static TRANSPARENT: Shader;
+        /**
+         * @deprecated
+         */
+        static TRANSPARENT_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        static TRANSPARENT_ADDITIVE: Shader;
+        /**
+         * @deprecated
+         */
+        static TRANSPARENT_ADDITIVE_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        static TRANSPARENT_MULTIPLY: Shader;
+        /**
+         * @deprecated
+         */
+        static TRANSPARENT_MULTIPLY_DOUBLESIDE: Shader;
+        /**
+         * @deprecated
+         */
+        static PARTICLE_BLEND: Shader;
+        /**
+         * @deprecated
+         */
+        static PARTICLE_ADDITIVE: Shader;
+        /**
+         * @deprecated
+         */
+        static PARTICLE_MULTIPLY: Shader;
+        /**
+         * @deprecated
+         */
+        static PARTICLE_BLEND_PREMULTIPLY: Shader;
+        /**
+         * @deprecated
+         */
+        static PARTICLE_ADDITIVE_PREMULTIPLY: Shader;
+        /**
+         * @deprecated
+         */
+        static PARTICLE_MULTIPLY_PREMULTIPLY: Shader;
         private _createShader(name, config, renderQueue, tStates, defines?);
         initialize(): void;
     }
@@ -9067,10 +9135,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                     };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
-                    };
                 }[];
             };
             "paper": {};
@@ -9104,10 +9168,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                             "value": number;
                         };
-                    };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
                     };
                 }[];
             };
@@ -9168,10 +9228,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                     };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
-                    };
                 }[];
             };
             "paper": {};
@@ -9227,10 +9283,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                     };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
-                    };
                 }[];
             };
             "paper": {};
@@ -9257,10 +9309,6 @@ declare namespace egret3d.ShaderLib {
                         "tEquirect": {
                             "type": number;
                         };
-                    };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
                     };
                 }[];
             };
@@ -9313,10 +9361,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                     };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
-                    };
                 }[];
             };
             "paper": {};
@@ -9363,10 +9407,6 @@ declare namespace egret3d.ShaderLib {
                         "clippingPlanes[0]": {
                             "type": number;
                         };
-                    };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
                     };
                 }[];
             };
@@ -9451,10 +9491,6 @@ declare namespace egret3d.ShaderLib {
                         "clippingPlanes[0]": {
                             "type": number;
                         };
-                    };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
                     };
                 }[];
             };
@@ -9546,10 +9582,6 @@ declare namespace egret3d.ShaderLib {
                         "clippingPlanes[0]": {
                             "type": number;
                         };
-                    };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
                     };
                 }[];
             };
@@ -9674,10 +9706,6 @@ declare namespace egret3d.ShaderLib {
                         "clippingPlanes[0]": {
                             "type": number;
                         };
-                    };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
                     };
                 }[];
             };
@@ -9807,10 +9835,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                     };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
-                    };
                 }[];
             };
             "paper": {};
@@ -9873,10 +9897,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                             "value": number[];
                         };
-                    };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
                     };
                 }[];
             };
@@ -10065,10 +10085,6 @@ declare namespace egret3d.ShaderLib {
                             "value": number;
                         };
                     };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
-                    };
                 }[];
             };
             "paper": {};
@@ -10121,10 +10137,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                     };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
-                    };
                 }[];
             };
             "paper": {};
@@ -10155,10 +10167,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                             "value": number;
                         };
-                    };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
                     };
                 }[];
             };
@@ -10207,10 +10215,6 @@ declare namespace egret3d.ShaderLib {
                         "clippingPlanes[0]": {
                             "type": number;
                         };
-                    };
-                    "states": {
-                        "enable": never[];
-                        "functions": {};
                     };
                 }[];
             };

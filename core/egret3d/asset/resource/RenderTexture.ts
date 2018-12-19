@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 渲染贴图。
+     * 渲染纹理。
      */
     export class RenderTexture extends BaseTexture {
         /**

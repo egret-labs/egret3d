@@ -734,13 +734,13 @@ namespace egret3d {
         }
         /**
          * 设置该材质的主贴图。
-         * @param texture 贴图。 
+         * @param texture 贴图纹理。 
          */
         public setTexture(texture: BaseTexture | null): this;
         /**
          * 设置该材质的指定贴图。
          * @param uniformName uniform 名称。
-         * @param texture 贴图。
+         * @param texture 贴图纹理。
          */
         public setTexture(uniformName: string, texture: BaseTexture | null): this;
         public setTexture(p1: BaseTexture | null | string, p2?: BaseTexture | null) {
@@ -763,6 +763,7 @@ namespace egret3d {
 
                     if (p2) {
                         p2.retain();
+
                         if (p2 instanceof RenderTexture) {
                             this.addDefine(ShaderDefine.FLIP_V);
                         }

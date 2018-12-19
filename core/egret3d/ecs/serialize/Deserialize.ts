@@ -53,6 +53,26 @@ namespace paper {
         public static _lastDeserializer: Deserializer;
         /**
          * 
+         * @param target 
+         * @param propName 
+         */
+        public static propertyHasGetterAndSetter(target: any, propName: string): boolean {
+            let prototype = Object.getPrototypeOf(target);
+
+            while (prototype) {
+                const descriptror = Object.getOwnPropertyDescriptor(prototype, propName);
+                if (descriptror && descriptror.get && descriptror.set) {
+                    return true;
+                }
+
+                prototype = Object.getPrototypeOf(prototype);
+            }
+
+            return false;
+        }
+
+        /**
+         * 
          */
         public readonly assets: string[] = [];
         /**
@@ -100,9 +120,10 @@ namespace paper {
                     continue;
                 }
 
-                const retarget = this._deserializeChild(source[k], (target as any)[retargetKey]);
+                const hasGetterAndSetter = Deserializer.propertyHasGetterAndSetter(target, retargetKey);
+                const retarget = this._deserializeChild(source[k], !hasGetterAndSetter ? (target as any)[retargetKey] : null);
 
-                if (retarget === undefined) { // 忽略 undefined。
+                if (retarget === undefined) { // 忽略反序列化后为 undefined 的属性值。
                     continue;
                 }
 
@@ -169,7 +190,7 @@ namespace paper {
             return componentTarget;
         }
 
-        private _deserializeChild(source: any, target?: any) {
+        private _deserializeChild(source: any, target: any = null) {
             if (source === null || source === undefined) {
                 return source;
             }

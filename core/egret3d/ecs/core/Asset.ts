@@ -58,10 +58,6 @@ namespace paper {
          * @readonly
          */
         public name: string = "";
-        /**
-         * @internal
-         */
-        public _isBuiltin: boolean = false;
 
         private _referenceCount: int = -1;
         /**
@@ -70,19 +66,32 @@ namespace paper {
         protected constructor() {
             super();
         }
+
+        private _addToDispose() {
+            const assets = disposeCollecter.assets;
+            if (assets.indexOf(this) < 0) {
+                assets.push(this);
+            }
+        }
         /**
          * 该资源内部初始化。
          * - 重写此方法时，必须调用 `super.initialize();`。
          */
         public initialize(...args: any[]): void {
             this._referenceCount = 0;
+            this._addToDispose();
         }
         /**
          * 该资源的引用计数加一。
          */
         public retain(): this {
             if (this._referenceCount === 0) {
+                const assets = disposeCollecter.assets;
+                const index = assets.indexOf(this);
 
+                if (index >= 0) {
+                    assets.splice(index, 1);
+                }
             }
 
             this._referenceCount++;
@@ -97,7 +106,7 @@ namespace paper {
                 this._referenceCount--;
 
                 if (this._referenceCount === 0) {
-
+                    this._addToDispose();
                 }
             }
 
@@ -109,7 +118,7 @@ namespace paper {
          * @returns 释放是否成功。（已经释放过的资源，无法再次释放）
          */
         public dispose(): boolean {
-            if (this._referenceCount < 0) {
+            if (this._referenceCount === -1) {
                 return false;
             }
             //
@@ -123,10 +132,17 @@ namespace paper {
             return true;
         }
         /**
-         * 
+         * 该资源是否已经被释放。
          */
         public get isDisposed(): boolean {
             return this._referenceCount === -1;
+        }
+        /**
+         * 该资源的引用计数。
+         * - 当引用计数为 0 时，该资源将在本帧末尾被释放。
+         */
+        public get referenceCount(): uint {
+            return this._referenceCount >= 0 ? this._referenceCount : 0;
         }
     }
 }

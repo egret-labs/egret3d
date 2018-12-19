@@ -44,6 +44,10 @@ namespace paper {
                 instances.push(instance);
             }
 
+            for (const asset of disposeCollecter.assets) {
+                asset.dispose();
+            }
+
             disposeCollecter.clear();
         }
     }

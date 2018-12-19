@@ -122,15 +122,15 @@ namespace egret3d {
         private readonly _worldToCameraMatrix: Matrix4 = Matrix4.create();
         private readonly _worldToClipMatrix: Matrix4 = Matrix4.create();
         private readonly _clipToWorldMatrix: Matrix4 = Matrix4.create();
+        /**
+         * @internal
+         */
+        public _readRenderTarget: RenderTexture = null!;
+        /**
+         * @internal
+         */
+        public _writeRenderTarget: RenderTexture = null!;
         private _renderTarget: RenderTexture | null = null;
-        /**
-         * @internal
-         */
-        public _readRenderTarget: RenderTexture | null = null;
-        /**
-         * @internal
-         */
-        public _writeRenderTarget: RenderTexture | null = null;
         /**
          * 该相机渲染前更新。
          * @internal
@@ -154,8 +154,8 @@ namespace egret3d {
         public initialize() {
             super.initialize();
             //TODO
-            this._readRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true });
-            this._writeRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true });
+            this._readRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true }).retain();
+            this._writeRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true }).retain();
 
             this.transform.registerObserver(this);
             stage.onScreenResize.add(this._onStageResize, this);
@@ -166,14 +166,20 @@ namespace egret3d {
             super.uninitialize();
 
             if (this._readRenderTarget) {
-                this._readRenderTarget.dispose();
-            }
-            if (this._writeRenderTarget) {
-                this._writeRenderTarget.dispose();
+                this._readRenderTarget.release();
             }
 
-            this._readRenderTarget = null;
-            this._writeRenderTarget = null;
+            if (this._writeRenderTarget) {
+                this._writeRenderTarget.release();
+            }
+
+            if (this._renderTarget) {
+                this._renderTarget.release();
+            }
+
+            this._readRenderTarget = null!;
+            this._writeRenderTarget = null!;
+            this._renderTarget = null;
 
             stage.onScreenResize.remove(this._onStageResize, this);
             stage.onResize.remove(this._onStageResize, this);
@@ -662,6 +668,14 @@ namespace egret3d {
                 return;
             }
 
+            if (this._renderTarget) {
+                this._renderTarget.release();
+            }
+
+            if (value) {
+                value.retain();
+            }
+
             this._renderTarget = value;
 
             if (!this._nativeProjection) {
@@ -676,7 +690,7 @@ namespace egret3d {
          * 
          */
         public get postprocessingRenderTarget(): RenderTexture {
-            return this._readRenderTarget!;
+            return this._readRenderTarget;
         }
 
         /**

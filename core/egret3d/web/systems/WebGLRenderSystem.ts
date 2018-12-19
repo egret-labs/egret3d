@@ -469,7 +469,7 @@ namespace egret3d.web {
 
                     case gltf.UniformType.SAMPLER_2D:
                         if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
-                            const texture = value as WebGLTexture;
+                            const texture = value as (WebGLTexture | WebGLRenderTexture);
                             const unit = globalUniform.textureUnits[0];
                             webgl.uniform1i(location, unit);
 

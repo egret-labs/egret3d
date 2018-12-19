@@ -450,7 +450,6 @@ namespace egret3d.particle {
                 console.error("ParticleSystem : error renderMode");
             }
 
-            this._drawCallCollecter.renderers.push(renderer);
             //
             let subMeshIndex = 0;
             for (const _primitive of renderer.batchMesh.glTFMesh.primitives) {
@@ -459,7 +458,7 @@ namespace egret3d.particle {
                 drawCall.matrix = gameObject.transform.localToWorldMatrix;
                 drawCall.subMeshIndex = subMeshIndex++;
                 drawCall.mesh = renderer.batchMesh;
-                drawCall.material = renderer.batchMaterial || DefaultMaterials.MISSING;
+                drawCall.material = renderer.batchMaterial;
                 drawCallCollecter.addDrawCall(drawCall);
             }
         }

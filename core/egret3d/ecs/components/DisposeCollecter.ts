@@ -28,6 +28,10 @@ namespace paper {
          * 缓存此帧结束时释放的对象。
          */
         public readonly releases: BaseRelease<any>[] = [];
+        /**
+         * 缓存此帧结束时释放的资源。
+         */
+        public readonly assets: Asset[] = [];
 
         public initialize() {
             super.initialize();
@@ -43,6 +47,7 @@ namespace paper {
             this.parentChangedGameObjects.length = 0;
             this.components.length = 0;
             this.releases.length = 0;
+            this.assets.length = 0;
         }
     }
     /**
