@@ -112,6 +112,7 @@
         "egret3d/components/renderer/DrawCall.ts",
         "egret3d/components/renderer/Fog.ts",
         "egret3d/components/renderer/RenderState.ts",
+        "egret3d/components/renderer/BeforeRenderSystem.ts",
         "egret3d/components/renderer/meshRenderer/MeshFilter.ts",
         "egret3d/components/renderer/meshRenderer/MeshRenderer.ts",
         "egret3d/components/renderer/meshRenderer/MeshRendererSystem.ts",

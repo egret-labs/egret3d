@@ -6,6 +6,7 @@ namespace paper {
         public readonly interests = [
             { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
         ];
+
         private readonly _disposeCollecter: DisposeCollecter = GameObject.globalGameObject.getOrAddComponent(DisposeCollecter);
 
         public onRemoveComponent(component: Behaviour) {
@@ -45,6 +46,7 @@ namespace paper {
             }
 
             for (const asset of disposeCollecter.assets) {
+                console.info("Dispose asset.", asset.name);
                 asset.dispose();
             }
 

@@ -89,11 +89,12 @@ namespace egret3d {
          * @internal
          */
         public _update() {
+            const mesh = this._mesh;
             const boneMatrices = this.boneMatrices;
-            if (boneMatrices) {
+
+            if (mesh && !mesh.isDisposed && boneMatrices) {
                 // TODO cache 剔除，脏标记。
                 // TODO bind to GPU
-                const mesh = this._mesh!;
                 const bones = this._bones;
                 const inverseBindMatrices = mesh.inverseBindMatrices!;
 
@@ -109,6 +110,8 @@ namespace egret3d {
                 }
 
                 this._skinnedDirty = true;
+
+                return true;
             }
         }
 
@@ -124,8 +127,10 @@ namespace egret3d {
             this._rootBone = null;
             this.boneMatrices = null;
 
-            if (this._mesh) {
-                const config = this._mesh.config;
+            const mesh = this._mesh;
+
+            if (mesh) {
+                const config = mesh.config;
                 const skin = config.skins![0];
                 const children = this.gameObject.transform.parent!.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
 
@@ -153,7 +158,7 @@ namespace egret3d {
 
                 if (this._bones.length > renderState.maxBoneCount) {
                     this.forceCPUSkin = true;
-                    console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", this._mesh.name);
+                    console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", mesh.name);
                 }
                 else {
                     this.defines.addDefine(ShaderDefine.USE_SKINNING);
@@ -181,7 +186,7 @@ namespace egret3d {
         public recalculateLocalBox() {
             // TODO 蒙皮网格的 aabb 需要能自定义，或者强制更新。
             const mesh = this._mesh;
-            if (mesh) {
+            if (mesh && !mesh.isDisposed) {
                 this._localBoundingBox.clear();
 
                 const vertices = mesh.getVertices()!; // T pose mesh aabb.
@@ -205,7 +210,7 @@ namespace egret3d {
             const mesh = this._mesh;
             const boneMatrices = this.boneMatrices;
 
-            if (mesh && boneMatrices) {
+            if (mesh && !mesh.isDisposed && boneMatrices) {
                 mesh.getTriangle(triangleIndex, out, this._skinning(triangleIndex * 3, 3));
             }
 

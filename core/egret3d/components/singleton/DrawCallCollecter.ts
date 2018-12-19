@@ -15,7 +15,7 @@ namespace egret3d {
         public readonly drawCalls: (DrawCall | null)[] = [];
         /**
          * 此帧新添加的绘制信息列表。
-         * - 渲染前清除。
+         * - 渲染后清除。
          */
         public readonly addDrawCalls: (DrawCall | null)[] = [];
 
@@ -24,11 +24,7 @@ namespace egret3d {
          * @internal
          */
         public _update() {
-            const { renderers, drawCalls, addDrawCalls } = this;
-
-            if (addDrawCalls.length > 0) {
-                addDrawCalls.length = 0;
-            }
+            const { renderers, drawCalls } = this;
 
             if (this._drawCallsDirty) {
                 // Clear renderers.
@@ -58,8 +54,6 @@ namespace egret3d {
 
                 for (const drawCall of drawCalls) {
                     if (drawCall) {
-                        drawCall.drawCount = 0;
-
                         if (removeCount > 0) {
                             drawCalls[index - removeCount] = drawCall;
                             drawCalls[index] = null;
@@ -78,17 +72,9 @@ namespace egret3d {
 
                 this._drawCallsDirty = false;
             }
-
-            if (DEBUG) { // Clear drawCall count.
-                for (const drawCall of drawCalls) {
-                    if (drawCall) {
-                        drawCall.drawCount = 0;
-                    }
-                }
-            }
         }
         /**
-         * 添加
+         * 添加绘制信息。
          * @param drawCall 
          */
         public addDrawCall(drawCall: DrawCall): void {

@@ -493,7 +493,7 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             const attributes = mesh.glTFMesh.primitives[subMeshIndex].attributes;
             //
-            if (!(mesh as WebGLMesh).vbo && !mesh.isDisposed) {
+            if (!(mesh as WebGLMesh).vbo) {
                 (mesh as WebGLMesh).createBuffer();
             }
             // vbo.
@@ -608,6 +608,11 @@ namespace egret3d.webgl {
         public draw(drawCall: DrawCall, material: Material | null = null) {
             const renderer = drawCall.renderer;
             material = material || drawCall.material;
+
+            if (material.isDisposed) {
+                console.warn("Material has been disposed.");
+                return;
+            }
 
             if (renderer && renderer.gameObject._beforeRenderBehaviors.length > 0) {
                 let flag = false;
@@ -725,7 +730,7 @@ namespace egret3d.webgl {
                     webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
                 }
 
-                if (DEBUG && drawCall.drawCount >= 0) {
+                if (drawCall.drawCount >= 0) {
                     drawCall.drawCount++;
                 }
             }
@@ -743,24 +748,9 @@ namespace egret3d.webgl {
             }
 
             const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
-            const drawCallCollecter = this._drawCallCollecter;
             const { cameras, lights } = this._cameraAndLightCollecter;
             const renderState = this._renderState;
             const editorScene = paper.Application.sceneManager.editorScene;
-            //
-            if (!renderState.standardDerivativesEnabled) {
-                for (const drawCall of drawCallCollecter.addDrawCalls) {
-                    if (drawCall) {
-                        drawCall.material
-                            .removeDefine(ShaderDefine.USE_NORMALMAP)
-                            .removeDefine(ShaderDefine.USE_BUMPMAP)
-                            .removeDefine(ShaderDefine.FLAT_SHADED)
-                            .removeDefine(ShaderDefine.ENVMAP_TYPE_CUBE_UV);
-                    }
-                }
-            }
-            //
-            drawCallCollecter._update();
             // Render lights shadow.
             if (lights.length > 0) {
                 for (const light of lights) {

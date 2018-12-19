@@ -4845,22 +4845,23 @@ var paper;
         };
         SystemManager.prototype._getSystemInsertIndex = function (order) {
             var index = -1;
-            var systemCount = this._systems.length;
+            var systems = this._systems;
+            var systemCount = systems.length;
             if (systemCount > 0) {
-                if (order < this._systems[0].order) {
+                if (order < systems[0].order) {
                     return 0;
                 }
-                else if (order >= this._systems[systemCount - 1].order) {
+                else if (order >= systems[systemCount - 1].order) {
                     return systemCount;
                 }
             }
             for (var i = 0; i < systemCount - 1; ++i) {
-                if (this._systems[i].order <= order && order < this._systems[i + 1].order) {
+                if (systems[i].order <= order && order < systems[i + 1].order) {
                     index = i + 1;
                     break;
                 }
             }
-            return index < 0 ? this._systems.length : index;
+            return index < 0 ? systems.length : index;
         };
         SystemManager.prototype._checkRegister = function (systemClass) {
             var system = this.getSystem(systemClass);
@@ -4875,32 +4876,34 @@ var paper;
          * @internal
          */
         SystemManager.prototype._preRegisterSystems = function () {
-            this._preSystems.sort(function (a, b) { return a.order - b.order; });
-            for (var _i = 0, _a = this._preSystems; _i < _a.length; _i++) {
-                var pair = _a[_i];
+            var preSystems = this._preSystems;
+            preSystems.sort(function (a, b) { return a.order - b.order; });
+            for (var _i = 0, preSystems_1 = preSystems; _i < preSystems_1.length; _i++) {
+                var pair = preSystems_1[_i];
                 this.register(pair.systemClass, pair.order);
             }
-            this._preSystems.length = 0;
+            preSystems.length = 0;
         };
         /**
          * @internal
          */
         SystemManager.prototype.update = function () {
-            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                var system = _a[_i];
+            var systems = this._systems;
+            for (var _i = 0, systems_1 = systems; _i < systems_1.length; _i++) {
+                var system = systems_1[_i];
                 if (system && system.enabled && !system._started) {
                     system._started = true;
                     system.onStart && system.onStart();
                 }
             }
-            for (var _b = 0, _c = this._systems; _b < _c.length; _b++) {
-                var system = _c[_b];
+            for (var _a = 0, systems_2 = systems; _a < systems_2.length; _a++) {
+                var system = systems_2[_a];
                 if (system) {
                     system.update();
                 }
             }
-            for (var _d = 0, _e = this._systems; _d < _e.length; _d++) {
-                var system = _e[_d];
+            for (var _b = 0, systems_3 = systems; _b < systems_3.length; _b++) {
+                var system = systems_3[_b];
                 if (system) {
                     system.lateUpdate();
                 }
@@ -8815,6 +8818,7 @@ var paper;
             }
             for (var _h = 0, _j = disposeCollecter.assets; _h < _j.length; _h++) {
                 var asset = _j[_h];
+                console.info("Dispose asset.", asset.name);
                 asset.dispose();
             }
             disposeCollecter.clear();
@@ -11698,16 +11702,23 @@ var egret3d;
                 this._drawCallsDirty = false;
             }
             if (true) {
-                for (var _c = 0, drawCalls_2 = drawCalls; _c < drawCalls_2.length; _c++) {
-                    var drawCall = drawCalls_2[_c];
-                    if (drawCall) {
+                var i = drawCalls.length;
+                while (i--) {
+                    var drawCall = drawCalls[i];
+                    if (drawCall.mesh.isDisposed ||
+                        drawCall.material.isDisposed ||
+                        drawCall.material.shader.isDisposed) {
+                        console.warn("Mesh or Material has been disposed.");
+                        this.removeDrawCalls(drawCall.renderer);
+                    }
+                    else {
                         drawCall.drawCount = 0;
                     }
                 }
             }
         };
         /**
-         * 添加
+         * 添加绘制信息。
          * @param drawCall
          */
         DrawCallCollecter.prototype.addDrawCall = function (drawCall) {
@@ -15741,11 +15752,11 @@ var egret3d;
          * @internal
          */
         SkinnedMeshRenderer.prototype._update = function () {
+            var mesh = this._mesh;
             var boneMatrices = this.boneMatrices;
-            if (boneMatrices) {
+            if (mesh && !mesh.isDisposed && boneMatrices) {
                 // TODO cache 剔除，脏标记。
                 // TODO bind to GPU
-                var mesh = this._mesh;
                 var bones = this._bones;
                 var inverseBindMatrices = mesh.inverseBindMatrices;
                 for (var i = 0, l = bones.length; i < l; ++i) {
@@ -15758,6 +15769,7 @@ var egret3d;
                     // this._skinning(0, 0); TODO
                 }
                 this._skinnedDirty = true;
+                return true;
             }
         };
         SkinnedMeshRenderer.prototype.initialize = function (reset) {
@@ -15769,8 +15781,9 @@ var egret3d;
             this._bones.length = 0;
             this._rootBone = null;
             this.boneMatrices = null;
-            if (this._mesh) {
-                var config = this._mesh.config;
+            var mesh = this._mesh;
+            if (mesh) {
+                var config = mesh.config;
                 var skin = config.skins[0];
                 var children = this.gameObject.transform.parent.getAllChildren({});
                 if (skin.skeleton !== undefined) {
@@ -15794,7 +15807,7 @@ var egret3d;
                 this.boneMatrices = new Float32Array(this._bones.length * 16);
                 if (this._bones.length > egret3d.renderState.maxBoneCount) {
                     this.forceCPUSkin = true;
-                    console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", this._mesh.name);
+                    console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", mesh.name);
                 }
                 else {
                     this.defines.addDefine("USE_SKINNING" /* USE_SKINNING */);
@@ -15817,7 +15830,7 @@ var egret3d;
         SkinnedMeshRenderer.prototype.recalculateLocalBox = function () {
             // TODO 蒙皮网格的 aabb 需要能自定义，或者强制更新。
             var mesh = this._mesh;
-            if (mesh) {
+            if (mesh && !mesh.isDisposed) {
                 this._localBoundingBox.clear();
                 var vertices = mesh.getVertices(); // T pose mesh aabb.
                 var position = egret3d.helpVector3A;
@@ -15837,7 +15850,7 @@ var egret3d;
             }
             var mesh = this._mesh;
             var boneMatrices = this.boneMatrices;
-            if (mesh && boneMatrices) {
+            if (mesh && !mesh.isDisposed && boneMatrices) {
                 mesh.getTriangle(triangleIndex, out, this._skinning(triangleIndex * 3, 3));
             }
             return out;
@@ -26172,7 +26185,7 @@ var egret3d;
                 var webgl = webgl_9.WebGLRenderState.webgl;
                 var attributes = mesh.glTFMesh.primitives[subMeshIndex].attributes;
                 //
-                if (!mesh.vbo && !mesh.isDisposed) {
+                if (!mesh.vbo) {
                     mesh.createBuffer();
                 }
                 // vbo.
@@ -26278,6 +26291,10 @@ var egret3d;
                 if (material === void 0) { material = null; }
                 var renderer = drawCall.renderer;
                 material = material || drawCall.material;
+                if (material.isDisposed) {
+                    console.warn("Material has been disposed.");
+                    return;
+                }
                 if (renderer && renderer.gameObject._beforeRenderBehaviors.length > 0) {
                     var flag = false;
                     for (var _i = 0, _a = renderer.gameObject._beforeRenderBehaviors; _i < _a.length; _i++) {
@@ -26350,7 +26367,7 @@ var egret3d;
                     // Update global uniforms.
                     this._updateGlobalUniforms(program, context, drawCall, renderer, scene, forceUpdate);
                     // Update attributes.
-                    if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
+                    if ((this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex)) {
                         this._updateAttributes(program, mesh, subMeshIndex);
                         this._cacheSubMeshIndex = subMeshIndex;
                         this._cacheMesh = mesh;

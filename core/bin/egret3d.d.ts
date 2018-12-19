@@ -5923,7 +5923,7 @@ declare namespace egret3d {
         readonly addDrawCalls: (DrawCall | null)[];
         private _drawCallsDirty;
         /**
-         * 添加
+         * 添加绘制信息。
          * @param drawCall
          */
         addDrawCall(drawCall: DrawCall): void;
