@@ -1,5 +1,4 @@
 namespace egret3d.web {
-
     const _browserPrefixes = [
         "",
         "MOZ_",
@@ -7,9 +6,9 @@ namespace egret3d.web {
         "WEBKIT_",
     ];
 
-    function _getExtension(gl: WebGLRenderingContext, name: string) {
+    function _getExtension(webgl: WebGLRenderingContext, name: string) {
         for (const prefixedName of _browserPrefixes) {
-            const extension = gl.getExtension(prefixedName + name);
+            const extension = webgl.getExtension(prefixedName + name);
             if (extension) {
                 return extension;
             }
@@ -18,11 +17,11 @@ namespace egret3d.web {
         return null;
     }
 
-    function _getMaxShaderPrecision(gl: WebGLRenderingContext, precision: "lowp" | "mediump" | "highp") {
+    function _getMaxShaderPrecision(webgl: WebGLRenderingContext, precision: "lowp" | "mediump" | "highp") {
         if (precision === "highp") {
             if (
-                gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.HIGH_FLOAT)!.precision > 0 &&
-                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT)!.precision > 0
+                webgl.getShaderPrecisionFormat(webgl.VERTEX_SHADER, webgl.HIGH_FLOAT)!.precision > 0 &&
+                webgl.getShaderPrecisionFormat(webgl.FRAGMENT_SHADER, webgl.HIGH_FLOAT)!.precision > 0
             ) {
                 return "highp";
             }
@@ -32,8 +31,8 @@ namespace egret3d.web {
 
         if (precision === "mediump") {
             if (
-                gl.getShaderPrecisionFormat(gl.VERTEX_SHADER, gl.MEDIUM_FLOAT)!.precision > 0 &&
-                gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.MEDIUM_FLOAT)!.precision > 0
+                webgl.getShaderPrecisionFormat(webgl.VERTEX_SHADER, webgl.MEDIUM_FLOAT)!.precision > 0 &&
+                webgl.getShaderPrecisionFormat(webgl.FRAGMENT_SHADER, webgl.MEDIUM_FLOAT)!.precision > 0
             ) {
                 return "mediump";
             }
@@ -72,10 +71,6 @@ namespace egret3d.web {
         public shaderTextureLOD: any;
         public oesStandardDerivatives: boolean;
 
-        private readonly _programs: { [key: string]: WebGLProgramBinder } = {};
-        private readonly _vsShaders: { [key: string]: WebGLShader | boolean } = {};
-        private readonly _fsShaders: { [key: string]: WebGLShader | boolean } = {};
-        
         private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.Blend, gltf.EnableState.CullFace, gltf.EnableState.DepthTest]; // TODO
         private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
 
@@ -107,80 +102,6 @@ namespace egret3d.web {
                 defines += this._getToneMappingFunction(this.toneMapping);
             }
             this.fragmentDefines = defines;
-        }
-
-        private _getWebGLShader(webgl: WebGLRenderingContext, gltfShader: gltf.Shader, defines: string) {
-            const shader = webgl.createShader(gltfShader.type)!;
-            let shaderContent = this._parseIncludes(gltfShader.uri!);
-            shaderContent = this._unrollLoops(shaderContent);
-            webgl.shaderSource(shader, defines + shaderContent);
-            webgl.compileShader(shader);
-
-            const parameter = webgl.getShaderParameter(shader, gltf.Status.CompileStatus);
-            if (!parameter) {
-                console.error("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?");
-                // if (confirm("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
-                //     alert(gltfShader.uri);
-                // }
-
-                webgl.deleteShader(shader);
-
-                return null;
-            }
-
-            return shader;
-        }
-
-        private _getWebGLProgram(vs: gltf.Shader, fs: gltf.Shader, customDefines: string) {
-            const webgl = WebGLRenderState.webgl!;
-
-            let key = vs.name + customDefines;
-            let vertexShader = this._vsShaders[key];
-            if (!vertexShader) {
-                const prefixVertex = this._prefixVertex(customDefines);
-                vertexShader = this._getWebGLShader(webgl, vs, prefixVertex)!;
-                if (vertexShader) {
-                    this._vsShaders[key] = vertexShader;
-                }
-                else {
-                    this._vsShaders[key] = true;
-                }
-            }
-
-            key = fs.name + customDefines;
-            let fragmentShader = this._fsShaders[key];
-            if (!fragmentShader) {
-                const prefixFragment = this._prefixFragment(customDefines);
-                fragmentShader = this._getWebGLShader(webgl, fs, prefixFragment)!;
-                if (fragmentShader) {
-                    this._fsShaders[key] = fragmentShader;
-                }
-                else {
-                    this._vsShaders[key] = true;
-                }
-            }
-
-            if (
-                vertexShader && fragmentShader &&
-                vertexShader !== true && fragmentShader !== true
-            ) {
-                const program = webgl.createProgram()!;
-                webgl.attachShader(program, vertexShader);
-                webgl.attachShader(program, fragmentShader);
-                webgl.linkProgram(program);
-
-                const parameter = webgl.getProgramParameter(program, gltf.Status.LinkStatus);
-                if (parameter) {
-                    return program;
-                }
-                else {
-                    console.error("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
-                    // alert("program compile: " + vs.name + "_" + fs.name + " error! ->" + webgl.getProgramInfoLog(program));
-                    webgl.deleteProgram(program);
-                }
-            }
-
-            return null;
         }
 
         public initialize(config: { canvas: HTMLCanvasElement, webgl: WebGLRenderingContext }) {
@@ -310,36 +231,6 @@ namespace egret3d.web {
             for (const key in this._cacheStateEnable) {
                 delete this._cacheStateEnable[key];
             }
-        }
-
-        public getProgram(material: Material, technique: gltf.Technique, contextDefine: string) {
-            const shader = material._shader;
-            const extensions = shader.config.extensions!.KHR_techniques_webgl;
-            const vertexShader = extensions!.shaders[0]; // TODO 顺序依赖
-            const fragmentShader = extensions!.shaders[1]; // TODO 顺序依赖
-
-            this.customShaderChunks = shader.customs; //
-
-            const defines = contextDefine + material.shaderDefine;
-            const name = vertexShader.name + "_" + fragmentShader.name + "_" + defines;
-            const webgl = WebGLRenderState.webgl!;
-            let programBinder: WebGLProgramBinder | null = null;
-
-            if (name in this._programs) {
-                programBinder = this._programs[name]
-            }
-            else {
-                const program = this._getWebGLProgram(vertexShader, fragmentShader, defines);
-                if (program) {
-                    programBinder = this._programs[name] = new WebGLProgramBinder(program).extract(technique);
-                }
-            }
-
-            if (programBinder && technique.program !== programBinder.id) {
-                technique.program = programBinder.id;
-            }
-
-            return programBinder;
         }
     }
     // Retargeting.

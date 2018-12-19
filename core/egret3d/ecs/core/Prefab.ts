@@ -10,8 +10,9 @@ namespace paper {
         public readonly config: ISerializedData = null!;
 
         public constructor(config: ISerializedData, name: string) {
-            super(name);
-
+            super();
+            
+            this.name = name;
             this.config = config;
         }
 

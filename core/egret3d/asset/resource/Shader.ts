@@ -45,8 +45,9 @@ namespace egret3d {
             else {
                 config = shaderOrConfig;
             }
-            //
-            shader = new Shader();
+
+            // Retargeting.
+            shader = new egret3d.Shader();
             shader.initialize(name, config, null, parent);
 
             return shader;
@@ -105,10 +106,6 @@ namespace egret3d {
                 }
             }
         }
-        /**
-         * @private
-         */
-        public readonly programs: { [key: string]: any } = {};
         /**
          * @private
          */

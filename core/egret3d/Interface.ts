@@ -17,6 +17,7 @@ namespace egret3d {
         //
         MAX_BONES = "MAX_BONES",
         //
+        NUM_DIR_LIGHTS = "NUM_DIR_LIGHTS",
         NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
         NUM_SPOT_LIGHTS = "NUM_SPOT_LIGHTS",
         SHADOWMAP_TYPE_PCF = "SHADOWMAP_TYPE_PCF",

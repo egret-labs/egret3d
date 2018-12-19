@@ -101,7 +101,7 @@ namespace paper {
          */
         @serializedField
         @editor.property(editor.EditType.NESTED)
-        public readonly fog: egret3d.Fog = egret3d.Fog.create();
+        public readonly fog: egret3d.Fog = egret3d.Fog.create(this);
         /**
          * 
          */

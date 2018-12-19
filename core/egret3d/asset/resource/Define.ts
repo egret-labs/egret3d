@@ -46,11 +46,9 @@ namespace egret3d {
      * @private
      */
     export class Defines {
-        public drity: boolean = false;
+        public definesMask: string = "";
+
         // mask, string, array,
-        private _definesDirty: uint = 0b000;
-        private _definesMask: string = "";
-        private _definesString: string = "";
         private readonly _defines: Array<Define> = [];
 
         private _sortDefine(a: Define, b: Define) {
@@ -61,26 +59,48 @@ namespace egret3d {
 
             return d;
         }
+
+        private _update() {
+            let index = 0;
+            let mask = 0;
+            let definesMask = "";
+            const defines = this._defines;
+            defines.sort(this._sortDefine);
+
+            for (const define of defines) {
+                if (define.index !== index) {
+                    definesMask += "0x" + mask.toString(16);
+                    index = define.index;
+                    mask = 0;
+                }
+
+                mask |= define.mask;
+
+                if (mask < 0) {
+                    mask = -mask;
+                }
+            }
+
+            if (index === 0) {
+                definesMask += "0x" + mask.toString(16);
+            }
+
+            this.definesMask = definesMask;
+        }
         /**
          * 
          */
         public clear(): void {
-            this.drity = false;
+            this.definesMask = "";
 
-            this._definesDirty = 0b000;
-            this._definesMask = "";
-            this._definesString = "";
             this._defines.length = 0;
         }
         /**
          * 
          */
         public copy(value: this): void {
-            this.drity = value.drity;
-
-            this._definesDirty = value._definesDirty;
-            this._definesMask = value._definesMask;
-            this._definesString = value._definesString;
+            this.definesMask = value.definesMask;
+            
             this._defines.length = 0;
 
             for (const define of value._defines) {
@@ -100,8 +120,7 @@ namespace egret3d {
 
             if (defines.indexOf(define) < 0) {
                 defines.push(define);
-                this.drity = true;
-                this._definesDirty = 0b111;
+                this._update();
 
                 return true;
             }
@@ -122,8 +141,7 @@ namespace egret3d {
 
             if (index >= 0) {
                 defines.splice(index, 1);
-                this.drity = true;
-                this._definesDirty = 0b111;
+                this._update();
 
                 return true;
             }
@@ -133,61 +151,14 @@ namespace egret3d {
         /**
          * 
          */
-        public get definesMask(): string {
-            if (this._definesDirty & 0b100) {
-                const defines = this._defines;
-                //
-                if (this._definesDirty & 0b001) {
-                    defines.sort(this._sortDefine);
-                    this._definesDirty &= ~0b001;
-                }
-                //
-                let index = 0;
-                let mask = 0;
-                let definesMask = "";
-
-                for (const define of defines) {
-                    if (define.index !== index) {
-                        index = define.index;
-                        mask = 0;
-                        definesMask += "0x" + mask.toString(16);
-                    }
-
-                    mask |= define.mask;
-                }
-
-                if (index === 0) {
-                    definesMask += "0x" + mask.toString(16);
-                }
-
-                this._definesMask = definesMask;
-                this._definesDirty &= ~0b100;
-            }
-
-            return this._definesMask;
-        }
-        /**
-         * 
-         */
         public get definesString(): string {
-            if (this._definesDirty & 0b010) {
-                let definesString = "";
-                const defines = this._defines;
+            let definesString = "";
 
-                if (this._definesDirty & 0b001) {
-                    defines.sort(this._sortDefine);
-                    this._definesDirty &= ~0b001;
-                }
-
-                for (const define of this._defines) {
-                    definesString += "#define " + define.context + " \n";
-                }
-
-                this._definesString = definesString;
-                this._definesDirty &= ~0b010;
+            for (const define of this._defines) {
+                definesString += "#define " + define.context + " \n";
             }
 
-            return this._definesString;
+            return definesString;
         }
     }
 }

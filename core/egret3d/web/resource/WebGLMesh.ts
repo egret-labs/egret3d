@@ -57,9 +57,10 @@ namespace egret3d.web {
                     subMeshIndex++;
                 }
                 
-                const bufferLength = this.getBufferLength(this.getAccessor(primitives[0].attributes.POSITION || 0));
+                const vertexBufferViewAccessor = this.getAccessor(this._glTFMesh!.primitives[0].attributes.POSITION || 0);
+                const vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float);
                 webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
-                webgl.bufferData(gltf.BufferViewTarget.ArrayBuffer, bufferLength, this._drawMode);
+                webgl.bufferData(gltf.BufferViewTarget.ArrayBuffer, vertexBuffer.byteLength, this._drawMode);
                 this.uploadVertexBuffer(attributeNames);
             }
             else {

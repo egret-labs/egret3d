@@ -643,11 +643,9 @@ declare namespace paper {
         name: string;
         private _referenceCount;
         /**
-         * TODO
-         * remove
-         * @param name
+         * 请使用 `T.create()` 创建实例。
          */
-        constructor(name?: string);
+        protected constructor();
         /**
          * 该资源内部初始化。
          * - 重写此方法时，必须调用 `super.initialize();`。
@@ -1677,6 +1675,13 @@ declare namespace gltf {
      * glTF index.
      */
     type Index = uint;
+    /**
+     *
+     */
+    const enum Status {
+        CompileStatus = 35713,
+        LinkStatus = 35714,
+    }
     /**
      * BufferView target.
      */
@@ -2831,15 +2836,12 @@ declare namespace egret3d {
         /**
          * Buffer 列表。
          */
-        readonly buffers: ArrayBufferView[];
+        readonly buffers: Array<ArrayBufferView>;
         /**
          * 配置。
          */
         readonly config: GLTF;
-        /**
-         * 请使用 `T.create()` 创建实例。
-         */
-        protected constructor(name: string, config: GLTF);
+        initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null, ...args: Array<any>): void;
         dispose(): boolean;
         /**
          *
@@ -3198,6 +3200,10 @@ declare namespace paper {
          * 该组件是否开启视锥剔除。
          */
         frustumCulled: boolean;
+        /**
+         *
+         */
+        readonly defines: egret3d.Defines;
         private _boundingSphereDirty;
         protected _receiveShadows: boolean;
         protected _castShadows: boolean;
@@ -3314,7 +3320,7 @@ declare namespace egret3d {
         protected _gltfTexture: GLTFTexture;
         protected _image: gltf.Image;
         protected _sampler: gltf.Sampler;
-        initialize(): void;
+        initialize(name: string, config: GLTF): void;
         /**
          *
          */
@@ -3375,17 +3381,17 @@ declare namespace egret3d {
         CineonToneMapping = 4,
     }
     /**
-     * 内置提供的全局Attribute
+     * 内置提供的全局 Attribute。
      * @private
      */
-    const globalAttributeSemantic: {
+    const globalAttributeSemantics: {
         [key: string]: gltf.AttributeSemantics;
     };
     /**
-     * 内置提供的全局Uniform
+     * 内置提供的全局 Uniform。
      * @private
      */
-    const globalUniformSemantic: {
+    const globalUniformSemantics: {
         [key: string]: gltf.UniformSemantics;
     };
     /**
@@ -3396,24 +3402,26 @@ declare namespace egret3d {
         toneMapping: ToneMapping;
         toneMappingExposure: number;
         toneMappingWhitePoint: number;
+        maxPrecision: string;
         commonExtensions: string;
+        vertexExtensions: string;
+        fragmentExtensions: string;
         commonDefines: string;
+        vertexDefines: string;
+        fragmentDefines: string;
         readonly clearColor: Color;
         readonly viewPort: Rectangle;
+        readonly defines: Defines;
         readonly defaultCustomShaderChunks: Readonly<{
             [key: string]: string;
         }>;
+        renderTarget: RenderTexture | null;
         customShaderChunks: {
             [key: string]: string;
         } | null;
-        renderTarget: RenderTexture | null;
+        protected _getToneMappingFunction(toneMapping: ToneMapping): string;
         render: (camera: Camera, material?: Material) => void;
         draw: (drawCall: DrawCall) => void;
-        protected _parseIncludes(string: string): string;
-        protected _unrollLoops(string: string): string;
-        protected _prefixVertex(customDefines: string): string;
-        protected _prefixFragment(customDefines: string): string;
-        protected _getToneMappingFunction(toneMapping: ToneMapping): string;
         initialize(config?: any): void;
         updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null): void;
         clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void;
@@ -4101,7 +4109,10 @@ declare namespace egret3d {
         /**
          * 该组件的光照图索引。
          */
-        lightmapIndex: number;
+        lightmapIndex: int;
+        /**
+         * TODO
+         */
         readonly lightmapScaleOffset: Vector4;
     }
 }
@@ -4280,6 +4291,48 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
+     * Shader 资源。
+     */
+    class Shader extends GLTFAsset {
+        /**
+         *
+         * @param shader
+         * @param name
+         */
+        static create(name: string, shader: Shader): Shader;
+        /**
+         * @private
+         */
+        static create(name: string, config: GLTF): Shader;
+        /**
+         * @private
+         */
+        static createDefaultStates(): gltf.States;
+        /**
+         * @private
+         */
+        static copyStates(source: gltf.States, target: gltf.States): void;
+        /**
+         * @private
+         */
+        customs: {
+            [key: string]: string;
+        } | null;
+        initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null, parent: Shader | null): void;
+        /**
+         * @private
+         */
+        addDefine(defineString: string, value?: number | {
+            [key: string]: string;
+        }): this;
+        /**
+         * @private
+         */
+        addUniform(name: string, type: gltf.UniformType, value: any): this;
+    }
+}
+declare namespace egret3d {
+    /**
      * 颜色接口。
      */
     interface IColor {
@@ -4399,7 +4452,7 @@ declare namespace egret3d {
          */
         static create(name: string, config: GLTF): RenderTexture;
         protected _mipmap: boolean;
-        initialize(): void;
+        initialize(name: string, config: GLTF): void;
         activateRenderTexture(index?: uint): void;
         generateMipmap(): boolean;
     }
@@ -4437,7 +4490,7 @@ declare namespace egret3d {
         protected _boneIndices: {
             [key: string]: uint;
         } | null;
-        initialize(buffers: ReadonlyArray<ArrayBufferView>, attributeTypes: {
+        initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null, attributeTypes: {
             [key: string]: gltf.AccessorType;
         } | null): void;
         dispose(): boolean;
@@ -4556,21 +4609,6 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d.web {
-}
-declare namespace paper {
-    /**
-     * 已丢失或不支持的组件数据备份。
-     */
-    class MissingComponent extends BaseComponent {
-        /**
-         * 丢失的组件类名
-         */
-        readonly missingClass: string;
-        /**
-         * 已丢失或不支持的组件数据。
-         */
-        missingObject: any | null;
-    }
 }
 declare namespace paper {
     /**
@@ -5031,6 +5069,7 @@ declare namespace egret3d {
         FLAT_SHADED = "FLAT_SHADED",
         ENVMAP_TYPE_CUBE_UV = "ENVMAP_TYPE_CUBE_UV",
         MAX_BONES = "MAX_BONES",
+        NUM_DIR_LIGHTS = "NUM_DIR_LIGHTS",
         NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
         NUM_SPOT_LIGHTS = "NUM_SPOT_LIGHTS",
         SHADOWMAP_TYPE_PCF = "SHADOWMAP_TYPE_PCF",
@@ -6405,22 +6444,11 @@ declare namespace egret3d {
         /**
          *
          */
+        readonly defines: egret3d.Defines;
+        /**
+         *
+         */
         readonly camera: Camera;
-        /**
-         *
-         */
-        drawCall: DrawCall;
-        /**
-         *
-         */
-        lightmapUV: uint;
-        lightmapIntensity: number;
-        readonly lightmapScaleOffset: Float32Array;
-        lightmap: BaseTexture | null;
-        /**
-         *
-         */
-        lightCount: uint;
         directLightCount: uint;
         pointLightCount: uint;
         spotLightCount: uint;
@@ -6436,13 +6464,6 @@ declare namespace egret3d {
         directShadowMatrix: Float32Array;
         spotShadowMatrix: Float32Array;
         pointShadowMatrix: Float32Array;
-        readonly matrix_mv: Matrix4;
-        readonly matrix_mvp: Matrix4;
-        readonly matrix_mv_inverse: Matrix3;
-        fogDensity: number;
-        fogNear: number;
-        fogFar: number;
-        readonly fogColor: Float32Array;
         private readonly _postProcessingCamera;
         private readonly _postProcessDrawCall;
         private readonly _drawCallCollecter;
@@ -6459,9 +6480,7 @@ declare namespace egret3d {
          */
         private _sortFromFarToNear(a, b);
         blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null): void;
-        updateCameraTransform(): void;
         updateLights(lights: ReadonlyArray<BaseLight>): void;
-        updateDrawCall(drawCall: DrawCall): string;
     }
 }
 declare namespace egret3d {
@@ -6563,6 +6582,10 @@ declare namespace paper {
          * 该场景的雾。
          */
         readonly fog: egret3d.Fog;
+        /**
+         *
+         */
+        readonly defines: egret3d.Defines;
         private readonly _gameObjects;
         private readonly _lightmaps;
         private constructor();
@@ -6715,10 +6738,6 @@ declare namespace egret3d {
      */
     class Fog implements paper.ISerializable {
         /**
-         * 雾的模式。
-         */
-        mode: FogMode;
-        /**
          * 雾的强度。
          */
         density: number;
@@ -6736,12 +6755,15 @@ declare namespace egret3d {
          * 雾的颜色。
          */
         readonly color: Color;
-        /**
-         * 禁止实例化。
-         */
+        private _mode;
+        private readonly _scene;
         private constructor();
         serialize(): number[];
         deserialize(data: Readonly<[number, number, number, number, number, number, number, number]>): this;
+        /**
+         * 雾的模式。
+         */
+        mode: FogMode;
     }
 }
 declare namespace paper {
@@ -8503,44 +8525,41 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     * Shader 资源。
+     *
+     * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
      */
-    class Shader extends GLTFAsset {
+    class Curve3 {
         /**
-         *
-         * @param shader
-         * @param name
-         */
-        static create(name: string, shader: Shader): Shader;
+        * 贝塞尔曲线上的点，不包含第一个点
+        */
+        beizerPoints: egret3d.Vector3[];
         /**
-         * @private
-         */
-        static create(name: string, config: GLTF): Shader;
+        * 贝塞尔曲线上所有的个数
+        */
+        bezierPointNum: number;
         /**
-         * @private
+         * 线性贝塞尔曲线
          */
-        static createDefaultStates(): gltf.States;
+        static createLinearBezier(start: egret3d.Vector3, end: egret3d.Vector3, indices: number): Curve3;
         /**
-         * @private
+         * 二次方贝塞尔曲线路径
+         * @param v0 起始点
+         * @param v1 选中的节点
+         * @param v2 结尾点
+         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
+         * @returns 贝塞尔曲线对象
          */
-        static copyStates(source: gltf.States, target: gltf.States): void;
+        static createQuadraticBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, bezierPointNum: number): Curve3;
         /**
-         * @private
+         * 三次方贝塞尔曲线路径
+         * @param v0 起始点
+         * @param v1 第一个插值点
+         * @param v2 第二个插值点
+         * @param v3 终点
+         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
+         * @returns 贝塞尔曲线对象
          */
-        customs: {
-            [key: string]: string;
-        } | null;
-        initialize(parent: Shader | null): void;
-        /**
-         * @private
-         */
-        addDefine(defineString: string, value?: number | {
-            [key: string]: string;
-        }): this;
-        /**
-         * @private
-         */
-        addUniform(name: string, type: gltf.UniformType, value: any): this;
+        static createCubicBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, v3: egret3d.Vector3, bezierPointNum: number): Curve3;
     }
 }
 declare namespace egret3d {
@@ -8548,10 +8567,6 @@ declare namespace egret3d {
      * @private
      */
     class Define {
-        private static _index;
-        private static _mask;
-        private static readonly _defines;
-        static getDefine(defineString: string): Define;
         /**
          * 掩码索引。
          */
@@ -8561,10 +8576,39 @@ declare namespace egret3d {
          */
         readonly mask: uint;
         /**
-         *
+         * 内容。
          */
         readonly context: string;
-        private constructor();
+        constructor(index: uint, mask: uint, context: string);
+    }
+    /**
+     * @private
+     */
+    class Defines {
+        definesMask: string;
+        private readonly _defines;
+        private _sortDefine(a, b);
+        private _update();
+        /**
+         *
+         */
+        clear(): void;
+        /**
+         *
+         */
+        copy(value: this): void;
+        /**
+         *
+         */
+        addDefine(defineString: string, value?: number): boolean;
+        /**
+         *
+         */
+        removeDefine(defineString: string, value?: number): boolean;
+        /**
+         *
+         */
+        readonly definesString: string;
     }
 }
 declare namespace egret3d {
@@ -8592,8 +8636,10 @@ declare namespace egret3d {
          * 该材质的渲染排序。
          */
         renderQueue: paper.RenderQueue | uint;
-        private _cacheDefines;
-        private readonly _defines;
+        /**
+         *
+         */
+        readonly defines: Defines;
         private _createTechnique(shader, glTFMaterial);
         private _reset(shaderOrConfig);
         private _retainOrReleaseTextures(isRatain);
@@ -8606,16 +8652,6 @@ declare namespace egret3d {
          * 克隆该材质。
          */
         clone(): this;
-        /**
-         * 为该材质添加指定的 define。
-         * @param defineString define 字符串。
-         */
-        addDefine(defineString: string, value?: number): this;
-        /**
-         * 从该材质移除指定的 define。
-         * @param defineString define 字符串。
-         */
-        removeDefine(defineString: string, value?: number): this;
         setBoolean(id: string, value: boolean): this;
         setInt(id: string, value: int): this;
         setIntv(id: string, value: Float32Array | ReadonlyArray<int>): this;
@@ -8629,6 +8665,16 @@ declare namespace egret3d {
         setVector4v(id: string, value: Float32Array | ReadonlyArray<number>): this;
         setMatrix(id: string, value: Readonly<Matrix4>): this;
         setMatrixv(id: string, value: Float32Array | ReadonlyArray<number>): this;
+        /**
+         * 为该材质添加指定的 define。
+         * @param defineString define 字符串。
+         */
+        addDefine(defineString: string, value?: number): this;
+        /**
+         * 从该材质移除指定的 define。
+         * @param defineString define 字符串。
+         */
+        removeDefine(defineString: string, value?: number): this;
         /**
          * 设置该材质的混合模式。
          * @param blend 混合模式。
@@ -8718,10 +8764,6 @@ declare namespace egret3d {
          */
         shader: Shader;
         /**
-         *
-         */
-        readonly defines: ReadonlyArray<string>;
-        /**
          * 该材质的渲染技术。
          */
         readonly technique: gltf.Technique;
@@ -8737,45 +8779,6 @@ declare namespace egret3d {
          * @deprecated
          */
         setShader(value: Shader): this | undefined;
-    }
-}
-declare namespace egret3d {
-    /**
-     *
-     * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
-     */
-    class Curve3 {
-        /**
-        * 贝塞尔曲线上的点，不包含第一个点
-        */
-        beizerPoints: egret3d.Vector3[];
-        /**
-        * 贝塞尔曲线上所有的个数
-        */
-        bezierPointNum: number;
-        /**
-         * 线性贝塞尔曲线
-         */
-        static createLinearBezier(start: egret3d.Vector3, end: egret3d.Vector3, indices: number): Curve3;
-        /**
-         * 二次方贝塞尔曲线路径
-         * @param v0 起始点
-         * @param v1 选中的节点
-         * @param v2 结尾点
-         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
-         * @returns 贝塞尔曲线对象
-         */
-        static createQuadraticBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, bezierPointNum: number): Curve3;
-        /**
-         * 三次方贝塞尔曲线路径
-         * @param v0 起始点
-         * @param v1 第一个插值点
-         * @param v2 第二个插值点
-         * @param v3 终点
-         * @param bezierPointNum 将贝塞尔曲线拆分bezierPointNum段，一共有bezierPointNum + 1个点
-         * @returns 贝塞尔曲线对象
-         */
-        static createCubicBezier(v0: egret3d.Vector3, v1: egret3d.Vector3, v2: egret3d.Vector3, v3: egret3d.Vector3, bezierPointNum: number): Curve3;
     }
 }
 declare namespace egret3d {
@@ -8863,6 +8866,35 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
+     *
+     */
+    class Frustum extends paper.BaseRelease<Frustum> implements paper.ICCS<Frustum>, paper.ISerializable {
+        private static readonly _instances;
+        /**
+         *
+         */
+        static create(): Frustum;
+        /**
+         *
+         */
+        readonly planes: [Plane, Plane, Plane, Plane, Plane, Plane];
+        /**
+         * 请使用 `egret3d.Frustum.create()` 创建实例。
+         * @see egret3d.Frustum.create()
+         */
+        private constructor();
+        serialize(): number[];
+        deserialize(value: ReadonlyArray<number>): this;
+        clone(): Frustum;
+        copy(value: Readonly<Frustum>): this;
+        set(planes: [Plane, Plane, Plane, Plane, Plane, Plane]): this;
+        fromArray(array: ReadonlyArray<number>, offset?: number): this;
+        fromMatrix(matrix: Readonly<Matrix4>): this;
+        containsPoint(point: Readonly<IVector3>): boolean;
+    }
+}
+declare namespace egret3d {
+    /**
      * 动画资源。
      */
     class AnimationAsset extends GLTFAsset {
@@ -8870,7 +8902,7 @@ declare namespace egret3d {
          * @private
          */
         static create(name: string, config: GLTF, buffers: ArrayBufferView[]): AnimationAsset;
-        initialize(): void;
+        initialize(name: string, config: GLTF): void;
         getAnimationClip(name: string): GLTFAnimationClip | null;
     }
 }
@@ -10401,34 +10433,22 @@ declare namespace egret3d.utils {
 }
 declare namespace egret3d.web {
 }
-declare namespace egret3d {
+declare namespace paper {
     /**
-     *
+     * 已丢失或不支持的组件数据备份。
      */
-    class Frustum extends paper.BaseRelease<Frustum> implements paper.ICCS<Frustum>, paper.ISerializable {
-        private static readonly _instances;
+    class MissingComponent extends BaseComponent {
         /**
-         *
+         * 丢失的组件类名
          */
-        static create(): Frustum;
+        readonly missingClass: string;
         /**
-         *
+         * 已丢失或不支持的组件数据。
          */
-        readonly planes: [Plane, Plane, Plane, Plane, Plane, Plane];
-        /**
-         * 请使用 `egret3d.Frustum.create()` 创建实例。
-         * @see egret3d.Frustum.create()
-         */
-        private constructor();
-        serialize(): number[];
-        deserialize(value: ReadonlyArray<number>): this;
-        clone(): Frustum;
-        copy(value: Readonly<Frustum>): this;
-        set(planes: [Plane, Plane, Plane, Plane, Plane, Plane]): this;
-        fromArray(array: ReadonlyArray<number>, offset?: number): this;
-        fromMatrix(matrix: Readonly<Matrix4>): this;
-        containsPoint(point: Readonly<IVector3>): boolean;
+        missingObject: any | null;
     }
+}
+declare namespace egret3d.web {
 }
 declare namespace egret3d.web {
 }
