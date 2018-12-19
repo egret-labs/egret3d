@@ -106,6 +106,8 @@ exports.UNIFORM_TEMPLATE["fogFar"] = { semantic: "_FOG_FAR" /* _FOG_FAR */ };
 exports.UNIFORM_TEMPLATE["toneMappingExposure"] = { semantic: "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */ };
 exports.UNIFORM_TEMPLATE["toneMappingWhitePoint"] = { semantic: "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */ };
 //
+exports.UNIFORM_TEMPLATE["logDepthBufFC"] = { semantic: "_LOG_DEPTH_BUFFC" /* _LOG_DEPTH_BUFFC */ };
+//
 exports.UNIFORM_TEMPLATE["specular"] = { value: [1.0, 1.0, 1.0] };
 exports.UNIFORM_TEMPLATE["shininess"] = { value: 30.0 };
 exports.UNIFORM_TEMPLATE["opacity"] = { value: 1.0 };

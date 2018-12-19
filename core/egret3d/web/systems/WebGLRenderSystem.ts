@@ -140,10 +140,10 @@ namespace egret3d.web {
             const camera = context.camera;
             const matrix = drawCall.matrix;
             const globalUniforms = program.globalUniforms;
-            let i = 0;
+            let i = 0, l = globalUniforms.length;
 
             if (forceUpdate) {
-                i = globalUniforms.length;
+                i = l;
 
                 while (i--) {
                     const { semantic, location } = globalUniforms[i];
@@ -162,7 +162,7 @@ namespace egret3d.web {
 
             if (scene !== this._cacheScene) {
                 const fog = scene.fog;
-                i = globalUniforms.length;
+                i = l;
 
                 while (i--) {
                     const { semantic, location } = globalUniforms[i];
@@ -201,7 +201,7 @@ namespace egret3d.web {
 
             if (camera !== this._cacheCamera) {
                 const rawData = camera.cameraToWorldMatrix.rawData;
-                i = globalUniforms.length;
+                i = l;
 
                 while (i--) {
                     const { semantic, location } = globalUniforms[i];
@@ -248,6 +248,10 @@ namespace egret3d.web {
                                 webgl.uniform1fv(location, context.spotLightArray);
                             }
                             break;
+
+                        case gltf.UniformSemantics._LOG_DEPTH_BUFFC:
+                            webgl.uniform1f(location, context.logDepthBufFC);
+                            break;
                     }
                 }
 
@@ -258,7 +262,7 @@ namespace egret3d.web {
             this._matrix_mvp.multiply(camera.worldToClipMatrix, matrix);
             this._matrix_mv_inverse.getNormalMatrix(this._matrix_mv);
 
-            i = globalUniforms.length;
+            i = l;
 
             while (i--) {
                 const uniform = globalUniforms[i];
@@ -397,10 +401,6 @@ namespace egret3d.web {
                     //             }
                     //         }
                     //     }
-                    //     break;
-
-                    // default: TODO
-                    //     console.warn("不识别的Uniform语义:" + semantic);
                     //     break;
                 }
             }
@@ -657,9 +657,9 @@ namespace egret3d.web {
                     }
                     else {
                         console.error("program compile: " + shader.name + " error! ->" + webgl.getProgramInfoLog(webGLProgram));
+                        webgl.deleteProgram(webGLProgram);
                         webgl.deleteShader(vertexWebGLShader);
                         webgl.deleteShader(fragmentWebGLShader);
-                        webgl.deleteProgram(webGLProgram);
                     }
                 }
 
@@ -748,7 +748,7 @@ namespace egret3d.web {
             const renderState = this._renderState;
             const editorScene = paper.Application.sceneManager.editorScene;
             //
-            if (!renderState.oesStandardDerivatives) {
+            if (!renderState.standardDerivativesEnabled) {
                 for (const drawCall of drawCallCollecter.addDrawCalls) {
                     if (drawCall) {
                         drawCall.material

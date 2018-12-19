@@ -101,7 +101,7 @@ namespace egret3d.particle {
             }
             return batchMesh;
         } else {
-            const orginIndexBuffer = [0, 2, 1, 0, 3, 2];
+            const orginIndexBuffer = [0, 2, 1, 1, 2, 3];
             const orginIndexBufferCount = orginIndexBuffer.length;
             for (const attribute of BillboardShaderAttributeFormat) {
                 meshAttributes.push(attribute.key);
@@ -122,27 +122,27 @@ namespace egret3d.particle {
                 switch (orginVertexIndex) {
                     case 0:
                         cornerBuffer[vector2Offset] = -0.5;
-                        cornerBuffer[vector2Offset + 1] = -0.5;
+                        cornerBuffer[vector2Offset + 1] = 0.5;
                         uvBuffer[vector2Offset] = 0.0;
-                        uvBuffer[vector2Offset + 1] = 1.0;
+                        uvBuffer[vector2Offset + 1] = 0.0;
                         break;
                     case 1:
                         cornerBuffer[vector2Offset] = 0.5;
+                        cornerBuffer[vector2Offset + 1] = 0.5;
+                        uvBuffer[vector2Offset] = 1.0;
+                        uvBuffer[vector2Offset + 1] = 0.0;
+                        break;
+                    case 2:
+                        cornerBuffer[vector2Offset] = -0.5;
+                        cornerBuffer[vector2Offset + 1] = -0.5;
+                        uvBuffer[vector2Offset] = 0.0;
+                        uvBuffer[vector2Offset + 1] = 1.0;
+                        break;
+                    case 3:
+                        cornerBuffer[vector2Offset] = 0.5;
                         cornerBuffer[vector2Offset + 1] = -0.5;
                         uvBuffer[vector2Offset] = 1.0;
                         uvBuffer[vector2Offset + 1] = 1.0;
-                        break;
-                    case 2:
-                        cornerBuffer[vector2Offset] = 0.5;
-                        cornerBuffer[vector2Offset + 1] = 0.5;
-                        uvBuffer[vector2Offset] = 1.0;
-                        uvBuffer[vector2Offset + 1] = 0.0;
-                        break;
-                    case 3:
-                        cornerBuffer[vector2Offset] = -0.5;
-                        cornerBuffer[vector2Offset + 1] = 0.5;
-                        uvBuffer[vector2Offset] = 0.0;
-                        uvBuffer[vector2Offset + 1] = 0.0;
                         break;
                 }
             }
@@ -154,9 +154,9 @@ namespace egret3d.particle {
                 indexBuffer[indexOffset + 0] = firstVertex;
                 indexBuffer[indexOffset + 1] = secondVertex;
                 indexBuffer[indexOffset + 2] = firstVertex + 1;
-                indexBuffer[indexOffset + 3] = firstVertex;
-                indexBuffer[indexOffset + 4] = firstVertex + 3;
-                indexBuffer[indexOffset + 5] = secondVertex;
+                indexBuffer[indexOffset + 3] = firstVertex + 1;
+                indexBuffer[indexOffset + 4] = secondVertex;
+                indexBuffer[indexOffset + 5] = firstVertex + 3;
             }
             return batchMesh;
         }

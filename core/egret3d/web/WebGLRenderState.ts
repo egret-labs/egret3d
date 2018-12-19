@@ -53,56 +53,8 @@ namespace egret3d.web {
          */
         public static webgl: WebGLRenderingContext | null = null;
 
-        public version: number;
-
-        public maxTextures: uint;
-        public maxVertexTextures: uint;
-        public maxTextureSize: uint;
-        public maxCubemapSize: uint;
-        public maxRenderBufferize: uint;
-        public maxVertexUniformVectors: uint;
-        public maxAnisotropy: uint;
-
-        public standardDerivatives: boolean;
-        public textureFloat: boolean;
-        public anisotropyExt: EXT_texture_filter_anisotropic;
-        public s3tc: WEBGL_compressed_texture_s3tc;
-        public textureAnisotropicFilterExtension: EXT_texture_filter_anisotropic;
-        public shaderTextureLOD: any;
-        public oesStandardDerivatives: boolean;
-
         private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.Blend, gltf.EnableState.CullFace, gltf.EnableState.DepthTest]; // TODO
         private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
-
-        protected _getCommonExtensions() {
-            //
-            let extensions = "";
-
-            if (this.oesStandardDerivatives) {
-                extensions += "#extension GL_OES_standard_derivatives : enable \n";
-            }
-
-            this.fragmentExtensions = extensions;
-            //
-        }
-
-        protected _getCommonDefines() {
-            //
-            let defines = "";
-            defines += "precision " + this.maxPrecision + " float; \n";
-            defines += "precision " + this.maxPrecision + " int; \n";
-            this.commonDefines = defines;
-            //
-
-            //
-            defines = "";
-            if (this.toneMapping !== ToneMapping.None) {
-                defines += "#define TONE_MAPPING \n";
-                defines += ShaderChunk.tonemapping_pars_fragment + " \n";
-                defines += this._getToneMappingFunction(this.toneMapping);
-            }
-            this.fragmentDefines = defines;
-        }
 
         public initialize(config: { canvas: HTMLCanvasElement, webgl: WebGLRenderingContext }) {
             super.initialize();
@@ -117,12 +69,12 @@ namespace egret3d.web {
 
             const webglVersions = /^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION));
             this.version = webglVersions ? parseFloat(webglVersions[1]) : 1.0;
-            //
-            this.textureFloat = !!_getExtension(webgl, "OES_texture_float");
-            this.anisotropyExt = _getExtension(webgl, "EXT_texture_filter_anisotropic");
-            this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
             // use dfdx and dfdy must enable OES_standard_derivatives
-            this.oesStandardDerivatives = !!_getExtension(webgl, "OES_standard_derivatives");
+            this.standardDerivativesEnabled = !!_getExtension(webgl, "OES_standard_derivatives");
+            this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");
+            this.fragDepthEnabled = !!_getExtension(webgl, "EXT_frag_depth");
+            this.textureFilterAnisotropicEnabled = _getExtension(webgl, "EXT_texture_filter_anisotropic");
+            this.shaderTextureLODEnabled = _getExtension(webgl, "EXT_shader_texture_lod");
             //
             this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
             this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
@@ -132,7 +84,7 @@ namespace egret3d.web {
             this.maxRenderBufferize = webgl.getParameter(webgl.MAX_RENDERBUFFER_SIZE);
             this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
             this.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4); // TODO
-            this.maxAnisotropy = (this.anisotropyExt !== null) ? webgl.getParameter(this.anisotropyExt.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
+            this.maxAnisotropy = (this.textureFilterAnisotropicEnabled !== null) ? webgl.getParameter(this.textureFilterAnisotropicEnabled.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
 
             this._getCommonExtensions();
             this._getCommonDefines();

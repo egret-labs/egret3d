@@ -98,6 +98,8 @@ namespace egret3d {
 
         "toneMappingExposure": gltf.UniformSemantics._TONE_MAPPING_EXPOSURE,
         "toneMappingWhitePoint": gltf.UniformSemantics._TONE_MAPPING_WHITE_POINT,
+
+        "logDepthBufFC": gltf.UniformSemantics._LOG_DEPTH_BUFFC,
     };
 
     function _filterEmptyLine(string: string) {
@@ -107,14 +109,28 @@ namespace egret3d {
      * 
      */
     export class RenderState extends paper.SingletonComponent {
+        public version: number;
+        public standardDerivativesEnabled: boolean;
+        public textureFloatEnabled: boolean;
+        public fragDepthEnabled: boolean;
+        public textureFilterAnisotropicEnabled: EXT_texture_filter_anisotropic | null;
+        public shaderTextureLODEnabled: any;
 
+        public maxTextures: uint;
+        public maxVertexTextures: uint;
+        public maxTextureSize: uint;
+        public maxCubemapSize: uint;
+        public maxRenderBufferize: uint;
+        public maxVertexUniformVectors: uint;
+        public maxAnisotropy: uint;
         public maxBoneCount: uint = 24;
+        public maxPrecision: string = "";
 
+        public logarithmicDepthBuffer: boolean = false;
         public toneMapping: ToneMapping = ToneMapping.None;
         public toneMappingExposure: number = 1.0;
         public toneMappingWhitePoint: number = 1.0;
 
-        public maxPrecision: string = "";
         public commonExtensions: string = "";
         public vertexExtensions: string = "";
         public fragmentExtensions: string = "";
@@ -135,6 +151,46 @@ namespace egret3d {
         };
         public renderTarget: RenderTexture | null = null;
         public customShaderChunks: { [key: string]: string } | null = null;
+
+        protected _getCommonExtensions() {
+            // fragmentExtensions.
+            let extensions = "";
+
+            if (this.standardDerivativesEnabled) {
+                extensions += "#extension GL_OES_standard_derivatives : enable \n";
+            }
+
+            if (this.fragDepthEnabled) {
+                extensions += "#extension GL_EXT_frag_depth : enable \n";
+            }
+
+            this.fragmentExtensions = extensions;
+        }
+
+        protected _getCommonDefines() {
+            // commonDefines.
+            let defines = "";
+            defines += "precision " + this.maxPrecision + " float; \n";
+            defines += "precision " + this.maxPrecision + " int; \n";
+            this.commonDefines = defines;
+            // fragmentDefines.
+            defines = "";
+
+            if (this.toneMapping !== ToneMapping.None) {
+                defines += "#define TONE_MAPPING \n";
+                defines += ShaderChunk.tonemapping_pars_fragment + " \n";
+                defines += this._getToneMappingFunction(this.toneMapping);
+            }
+
+            if (this.logarithmicDepthBuffer) {
+                defines += "#define USE_LOGDEPTHBUF \n";
+                if (this.fragDepthEnabled) {
+                    defines += "#define USE_LOGDEPTHBUF_EXT \n";
+                }
+            }
+
+            this.fragmentDefines = defines;
+        }
 
         protected _getToneMappingFunction(toneMapping: ToneMapping) {
             let toneMappingName = "";

@@ -341,6 +341,8 @@ export const enum UniformSemanticType {
     _TONE_MAPPING_EXPOSURE = "_TONE_MAPPING_EXPOSURE",
     _TONE_MAPPING_WHITE_POINT = "_TONE_MAPPING_WHITE_POINT",
     //
+    _LOG_DEPTH_BUFFC = "_LOG_DEPTH_BUFFC",
+    //
     _FOG_COLOR = "_FOG_COLOR",
     _FOG_DENSITY = "_FOG_DENSITY",
     _FOG_NEAR = "_FOG_NEAR",

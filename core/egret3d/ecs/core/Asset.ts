@@ -58,6 +58,10 @@ namespace paper {
          * @readonly
          */
         public name: string = "";
+        /**
+         * @internal
+         */
+        public _isBuiltin: boolean = false;
 
         private _referenceCount: int = -1;
         /**

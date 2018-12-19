@@ -18,7 +18,7 @@ namespace egret3d.web {
     /**
      * @internal
      */
-    export function setTexturexParameters(isPowerOfTwo: boolean, sampler: gltf.Sampler) {
+    export function setTexturexParameters(isPowerOfTwo: boolean, sampler: gltf.Sampler, anisotropy: number) {
         const webgl = WebGLRenderState.webgl!;
         const magFilter = sampler.magFilter!;
         const minFilter = sampler.minFilter!;
@@ -47,6 +47,8 @@ namespace egret3d.web {
             }
         }
 
-        //TODO EXT_texture_filter_anisotropic
+        if (renderState.textureFilterAnisotropicEnabled && anisotropy > 1) {
+            webgl.texParameterf(webgl.TEXTURE_2D, renderState.textureFilterAnisotropicEnabled.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(anisotropy, renderState.maxAnisotropy));
+        }
     }
 }

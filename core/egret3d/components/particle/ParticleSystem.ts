@@ -11,11 +11,11 @@ namespace egret3d.particle {
                     { type: onStartRotation3DChanged, listener: (comp: paper.BaseComponent) => { this._onMainUpdate(comp as ParticleComponent, onStartRotation3DChanged); } },
                     { type: onSimulationSpaceChanged, listener: (comp: paper.BaseComponent) => { this._onMainUpdate(comp as ParticleComponent, onSimulationSpaceChanged); } },
                     { type: onScaleModeChanged, listener: (comp: paper.BaseComponent) => { this._onMainUpdate(comp as ParticleComponent, onScaleModeChanged); } },
-                    { type: onVelocityChanged, listener: this._onVelocityOverLifetime.bind(this) },
-                    { type: onColorChanged, listener: this._onColorOverLifetime.bind(this) },
-                    { type: onSizeChanged, listener: this._onSizeOverLifetime.bind(this) },
-                    { type: onRotationChanged, listener: this._onRotationOverLifetime.bind(this) },
-                    { type: onTextureSheetChanged, listener: this._onTextureSheetAnimation.bind(this) },
+                    { type: onVelocityChanged, listener: (comp: paper.BaseComponent) => { this._onVelocityOverLifetime(comp as ParticleComponent); } },
+                    { type: onColorChanged, listener: (comp: paper.BaseComponent) => { this._onColorOverLifetime(comp as ParticleComponent); } },
+                    { type: onSizeChanged, listener: (comp: paper.BaseComponent) => { this._onSizeOverLifetime(comp as ParticleComponent); } },
+                    { type: onRotationChanged, listener: (comp: paper.BaseComponent) => { this._onRotationOverLifetime(comp as ParticleComponent); } },
+                    { type: onTextureSheetChanged, listener: (comp: paper.BaseComponent) => { this._onTextureSheetAnimation(comp as ParticleComponent); } },
                 ]
             },
             {

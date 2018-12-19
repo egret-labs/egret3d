@@ -15,7 +15,7 @@ namespace egret3d {
         ClipMatrix = ClipToWorldMatrix | WorldToClipMatrix,
         ProjectionAndClipMatrix = ProjectionMatrix | ClipMatrix,
         Culling = CullingMatrix | CullingFrustum,
-        
+
         All = ProjectionAndClipMatrix | PixelViewport | Culling,
     }
     /**
@@ -132,10 +132,11 @@ namespace egret3d {
          */
         public _writeRenderTarget: RenderTexture | null = null;
         /**
+         * 该相机渲染前更新。
          * @internal
          */
         public _update() {
-            this.context._frustumCulling();
+            this.context._update();
         }
 
         private _onStageResize(): void {

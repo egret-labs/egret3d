@@ -12,6 +12,10 @@ namespace egret3d {
         /**
          * 
          */
+        public logDepthBufFC: number = 0.0;
+        /**
+         * 
+         */
         public readonly defines: egret3d.Defines = new egret3d.Defines();
         /**
          * 
@@ -190,26 +194,17 @@ namespace egret3d {
             opaqueCalls.sort(this._sortOpaque);
             transparentCalls.sort(this._sortFromFarToNear);
         }
+        /**
+         * @internal
+         */
+        public _update() {
+            this._frustumCulling();
 
-        public blit(src: BaseTexture, material: Material | null = null, dest: RenderTexture | null = null) {
-            if (!material) {
-                material = DefaultMaterials.COPY;
-                material.setTexture(src);
-            }
-
-            const postProcessingCamera = this._postProcessingCamera;
-            const postProcessDrawCall = this._postProcessDrawCall;
-            postProcessDrawCall.material = material;
-
-            renderState.updateViewport(postProcessingCamera.viewport, dest);
-            renderState.clearBuffer(gltf.BufferMask.Depth | gltf.BufferMask.Color, Color.WHITE);
-            postProcessingCamera.projectionMatrix.identity(); // TODO
-            const saveCamera = Camera.current;
-            Camera.current = postProcessingCamera;
-            renderState.draw(postProcessDrawCall);
-            Camera.current = saveCamera;
+            this.logDepthBufFC = 2.0 / (Math.log(this.camera.far + 1.0) / Math.LN2);
         }
-
+        /**
+         * @internal
+         */
         public updateLights(lights: ReadonlyArray<BaseLight>) {
             let directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
             this.lightCastShadows = false;
@@ -435,5 +430,24 @@ namespace egret3d {
         //     this.lightShadowCameraNear = light.shadowCameraNear;
         //     this.lightShadowCameraFar = light.shadowCameraFar;
         // }
+
+        public blit(src: BaseTexture, material: Material | null = null, dest: RenderTexture | null = null) {
+            if (!material) {
+                material = DefaultMaterials.COPY;
+                material.setTexture(src);
+            }
+
+            const postProcessingCamera = this._postProcessingCamera;
+            const postProcessDrawCall = this._postProcessDrawCall;
+            postProcessDrawCall.material = material;
+
+            renderState.updateViewport(postProcessingCamera.viewport, dest);
+            renderState.clearBuffer(gltf.BufferMask.Depth | gltf.BufferMask.Color, Color.WHITE);
+            postProcessingCamera.projectionMatrix.identity(); // TODO
+            const saveCamera = Camera.current;
+            Camera.current = postProcessingCamera;
+            renderState.draw(postProcessDrawCall);
+            Camera.current = saveCamera;
+        }
     }
 }
