@@ -238,6 +238,12 @@ namespace paper {
                     if (KEY_ASSET in source) { // Asset.
                         const assetIndex = (source as IAssetReference).asset;
                         if (assetIndex >= 0) {
+                            // TODO 资源获取不到时，对应返回的资源方案
+                            // 材质应返回 MISSING
+                            // 纹理应返回 MISSING
+                            // Shader 
+                            // Mesh
+                            // ...
                             return Asset.find(this.assets[assetIndex]);
                         }
 

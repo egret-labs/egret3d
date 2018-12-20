@@ -13,7 +13,6 @@ namespace egret3d.webgl {
         public webglTexture: GlobalWeblGLTexture | null = null;
         public frameBuffer: WebGLFramebuffer | null = null;
         public renderBuffer: WebGLRenderbuffer | null = null;
-        public dirty: boolean = true;
 
         private _setupFrameBufferTexture(frameBuffer: WebGLFramebuffer, texture: GlobalWeblGLTexture, textureTarget: number, type: gltf.TextureDataType, width: number, height: number, format: gltf.TextureFormat, attachment: number): void {
             const webgl = WebGLRenderState.webgl!;
@@ -68,7 +67,7 @@ namespace egret3d.webgl {
                 this.frameBuffer = webgl.createFramebuffer()!;
             }
 
-            if (!this.webglTexture) {
+            if (!this.webglTexture) { // TODO 创建与 buffer 分离。
                 this.webglTexture = webgl.createTexture()!;
             }
 
@@ -94,12 +93,33 @@ namespace egret3d.webgl {
             }
         }
 
-        public activateRenderTexture() {
-            if (this.dirty) {
-                this._setupRenderTexture();
-                this.dirty = false;
+        public onReferenceCountChange(isZero: boolean) {
+            if (isZero) {
+                const webgl = WebGLRenderState.webgl!;
+
+                if (this.webglTexture) {
+                    webgl.deleteTexture(this.webglTexture);
+                }
+
+                if (this.frameBuffer) {
+                    webgl.deleteFramebuffer(this.frameBuffer);
+                }
+
+                if (this.renderBuffer) {
+                    webgl.deleteRenderbuffer(this.renderBuffer);
+                }
+                //
+                this.webglTexture = null;
+                this.frameBuffer = null;
+                this.renderBuffer = null;
             }
-            
+        }
+        
+        public activateRenderTexture() {
+            if (!this.webglTexture) { // TODO 引用计数的问题
+                this._setupRenderTexture();
+            }
+
             const webgl = WebGLRenderState.webgl!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.frameBuffer);
         }
@@ -115,32 +135,6 @@ namespace egret3d.webgl {
             }
 
             return false;
-        }
-
-        public dispose() {
-            if (!super.dispose()) {
-                return false;
-            }
-
-            const webgl = WebGLRenderState.webgl!;
-
-            if (this.webglTexture) {
-                webgl.deleteBuffer(this.webglTexture);
-            }
-
-            if (this.frameBuffer) {
-                webgl.deleteFramebuffer(this.frameBuffer);
-            }
-
-            if (this.renderBuffer) {
-                webgl.deleteRenderbuffer(this.renderBuffer);
-            }
-            //
-            this.webglTexture = null;
-            this.frameBuffer = null;
-            this.renderBuffer = null;
-
-            return true;
         }
     }
     // Retargetting.

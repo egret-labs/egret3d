@@ -145,7 +145,7 @@ namespace egret3d.webgl {
 
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: number = 0) {
             const webgl = WebGLRenderState.webgl!;
-            if ((target as WebGLTexture | WebGLRenderTexture).dirty) {
+            if (!(target as WebGLTexture | WebGLRenderTexture).webglTexture) {
                 target.setupTexture(0);
             }
             else {

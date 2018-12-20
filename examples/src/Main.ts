@@ -5,8 +5,8 @@ declare namespace examples {
 }
 
 async function main() {
-    exampleStart();
-    // new examples.SceneTest().start();
+    // exampleStart();
+    new examples.SceneTest().start();
 }
 
 function exampleStart() {

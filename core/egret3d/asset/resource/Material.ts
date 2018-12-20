@@ -92,7 +92,7 @@ namespace egret3d {
 
                 if (type === gltf.UniformType.SAMPLER_2D || type === gltf.UniformType.SAMPLER_CUBE) {
                     if (sourceValue) {
-                        value = paper.Asset.find<BaseTexture>(sourceValue) || DefaultTextures.MISSING; // Missing texture.
+                        value = paper.Asset.find<BaseTexture>(sourceValue) || DefaultTextures.WHITE; // Missing texture.
                     }
 
                     if (!value) {

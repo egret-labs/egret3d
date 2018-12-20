@@ -91,7 +91,6 @@ namespace egret3d {
         systemManager.register(particle.ParticleSystem, paper.SystemOrder.BeforeRenderer);
         systemManager.register(Egret2DRendererSystem, paper.SystemOrder.BeforeRenderer, options);
         systemManager.register(CameraAndLightSystem, paper.SystemOrder.BeforeRenderer);
-        systemManager.register(BeforeRenderSystem, paper.SystemOrder.BeforeRenderer);
 
         systemManager.register(webgl.WebGLRenderSystem, paper.SystemOrder.Renderer, options);
         systemManager.register(webgl.InputSystem, paper.SystemOrder.End, options);
@@ -114,6 +113,7 @@ namespace egret3d {
             const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
             const canvas = document.createElement("canvas");
             div.appendChild(canvas);
+
             return canvas;
         }
     }

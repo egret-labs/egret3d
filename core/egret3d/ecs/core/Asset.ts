@@ -68,9 +68,11 @@ namespace paper {
         }
 
         private _addToDispose() {
-            const assets = disposeCollecter.assets;
-            if (assets.indexOf(this) < 0) {
-                assets.push(this);
+            if (this.onReferenceCountChange) {
+                const assets = disposeCollecter.assets;
+                if (assets.indexOf(this) < 0) {
+                    assets.push(this);
+                }
             }
         }
         /**
@@ -86,11 +88,15 @@ namespace paper {
          */
         public retain(): this {
             if (this._referenceCount === 0) {
-                const assets = disposeCollecter.assets;
-                const index = assets.indexOf(this);
+                if (this.onReferenceCountChange) {
+                    const assets = disposeCollecter.assets;
+                    const index = assets.indexOf(this);
 
-                if (index >= 0) {
-                    assets.splice(index, 1);
+                    if (index >= 0) {
+                        assets.splice(index, 1);
+                    }
+
+                    this.onReferenceCountChange(false);
                 }
             }
 
@@ -129,8 +135,15 @@ namespace paper {
             //
             this._referenceCount = -1;
 
+            this.onReferenceCountChange && this.onReferenceCountChange(true);
+
             return true;
         }
+        /**
+         * 
+         * @param isZero 
+         */
+        public onReferenceCountChange?(isZero: boolean): void;
         /**
          * 该资源是否已经被释放。
          */

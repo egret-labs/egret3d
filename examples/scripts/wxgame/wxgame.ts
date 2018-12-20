@@ -42,12 +42,12 @@ export class WxgamePlugin implements plugins.Command {
 
                 if (filename.indexOf('egret3d.js') >= 0) {
                     content = " var RES = window.RES;" + content;
-                    content = content.replace(new RegExp('egret.web', 'g'), "egret.wxgame");
+                    content = content.replace(/\begret\b.\bweb\b/g, "egret.wxgame");
                 }
                 else if (filename.indexOf("egret3d.min.js") >= 0) {
                     content = " var RES = window.RES;" + content;
-                    content = content.replace(new RegExp('egret.web', 'g'), "egret.wxgame");
-                    content = content.replace(new RegExp('e.web', 'g'), "e.wxgame");
+                    content = content.replace(/\begret\b.\bweb\b/g, "egret.wxgame");
+                    content = content.replace(/\be\b.\bweb\b/g, "e.wxgame");
                 }
 
                 if (filename === 'main.js') {
@@ -84,7 +84,7 @@ export class WxgamePlugin implements plugins.Command {
 
         //修改横竖屏
         let orientation;
-        if (projectConfig.orientation === '"landscape"') {
+        if (Number(projectConfig.contentWidth) > Number(projectConfig.contentHeight)) {
             orientation = "landscape";
         }
         else {

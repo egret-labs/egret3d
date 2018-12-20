@@ -3,15 +3,15 @@
 import * as path from "path";
 import { CleanPlugin, CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, ManifestPlugin, UglifyPlugin } from 'built-in';
 import * as defaultConfig from './config';
-import { bakeInfo, nameSelector, mergeJSONSelector, MergeJSONPlugin, MergeBinaryPlugin, ModifyDefaultResJSONPlugin, InspectorFilterPlugin } from "./myplugin";
+import { bakeInfo, nameSelector, InspectorFilterPlugin } from "./myplugin";
 import { WxgamePlugin } from './wxgame/wxgame';
 
 const config: ResourceManagerConfig = {
 
     buildConfig: (params) => {
-
         const { target, command, projectName, version } = params;
         const outputDir = `../${projectName}_wxgame`;
+
         if (command === 'build') {
             return {
                 outputDir,
@@ -30,7 +30,6 @@ const config: ResourceManagerConfig = {
             return {
                 outputDir,
                 commands: [
-                    // new MergeJSONPlugin({ nameSelector, mergeJSONSelector }),
                     new EmitResConfigFilePlugin({
                         output: bakeInfo.root + "default.res.json",
                         typeSelector: config.typeSelector,

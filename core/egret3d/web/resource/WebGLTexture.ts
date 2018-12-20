@@ -15,7 +15,17 @@ namespace egret3d.webgl {
      */
     export class WebGLTexture extends egret3d.Texture implements IWebGLTexture {
         public webglTexture: GlobalWeblGLTexture | null = null;
-        public dirty: boolean = true;
+
+        public onReferenceCountChange(isZero: boolean) {
+            if (isZero) {
+                if (this.webglTexture) {
+                    const webgl = WebGLRenderState.webgl!;
+                    webgl.deleteTexture(this.webglTexture);
+                }
+                //
+                this.webglTexture = null;
+            }
+        }
 
         public setupTexture(index: uint) {
             if (!this._image || !this._image.uri) {
@@ -52,8 +62,6 @@ namespace egret3d.webgl {
             if (canGenerateMipmap) {
                 webgl.generateMipmap(webgl.TEXTURE_2D);
             }
-
-            this.dirty = false;
         }
     }
     // Retargeting.

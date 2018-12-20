@@ -186,9 +186,9 @@ namespace egret3d {
         public recalculateLocalBox() {
             // TODO 蒙皮网格的 aabb 需要能自定义，或者强制更新。
             const mesh = this._mesh;
-            if (mesh && !mesh.isDisposed) {
-                this._localBoundingBox.clear();
+            this._localBoundingBox.clear();
 
+            if (mesh && !mesh.isDisposed) {
                 const vertices = mesh.getVertices()!; // T pose mesh aabb.
                 const position = helpVector3A;
 
@@ -220,7 +220,7 @@ namespace egret3d {
         public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
             const mesh = this._mesh;
             const boneMatrices = this.boneMatrices;
-            if (!mesh || !boneMatrices) {
+            if (!mesh || mesh.isDisposed || !boneMatrices) {
                 return false;
             }
 

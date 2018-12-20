@@ -4,7 +4,7 @@ namespace examples {
 
         async start() {
             // Load resource config.
-            await RES.loadConfig("default.res.json", "resource/");
+            await RES.loadConfig("default.res.json", "http://10.1.2.34:8000/resource/");
             // Load scene resource.
             await RES.getResAsync("Assets/Art/changjing/Scenes/Scene_11X9.scene.json");
             // Create scene.

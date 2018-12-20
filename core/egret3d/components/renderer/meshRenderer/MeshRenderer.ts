@@ -12,11 +12,11 @@ namespace egret3d {
         protected readonly _lightmapScaleOffset: Vector4 = Vector4.create();
 
         public recalculateLocalBox() {
+            const meshFilter = this.gameObject.getComponent(MeshFilter);
             this._localBoundingBox.clear();
 
-            const filter = this.gameObject.getComponent(MeshFilter);
-            if (filter && filter.mesh) {
-                const vertices = filter.mesh.getVertices()!;
+            if (meshFilter && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
+                const vertices = meshFilter.mesh.getVertices()!;
                 const position = helpVector3A;
 
                 for (let i = 0, l = vertices.length; i < l; i += 3) {
@@ -34,27 +34,21 @@ namespace egret3d {
             }
 
             const meshFilter = this.gameObject.getComponent(MeshFilter);
-            if (!meshFilter) {
-                return out;
-            }
 
-            const mesh = meshFilter.mesh;
-            if (!mesh) {
-                return out;
+            if (meshFilter && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
+                const localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
+                meshFilter.mesh.getTriangle(triangleIndex, out);
+                out.a.applyMatrix(localToWorldMatrix);
+                out.b.applyMatrix(localToWorldMatrix);
+                out.c.applyMatrix(localToWorldMatrix);
             }
-
-            const localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
-            mesh.getTriangle(triangleIndex, out);
-            out.a.applyMatrix(localToWorldMatrix);
-            out.b.applyMatrix(localToWorldMatrix);
-            out.c.applyMatrix(localToWorldMatrix);
 
             return out;
         }
 
         public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
             const meshFilter = this.gameObject.getComponent(MeshFilter);
-            if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh) {
+            if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh || meshFilter.mesh.isDisposed) {
                 return false;
             }
 

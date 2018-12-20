@@ -72,6 +72,12 @@ namespace egret3d {
 
                 this._drawCallsDirty = false;
             }
+            
+            if (DEBUG) {
+                for (const drawCall of drawCalls) {
+                    drawCall!.drawCount = 0;
+                }
+            }
         }
         /**
          * 添加绘制信息。

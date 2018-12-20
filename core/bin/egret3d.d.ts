@@ -667,6 +667,11 @@ declare namespace paper {
          */
         dispose(): boolean;
         /**
+         *
+         * @param isZero
+         */
+        onReferenceCountChange?(isZero: boolean): void;
+        /**
          * 该资源是否已经被释放。
          */
         readonly isDisposed: boolean;
@@ -4066,10 +4071,10 @@ declare namespace egret3d {
         EPSILON = 2.220446049250313e-16,
     }
     function sign(value: number): number;
-    function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<Box>): boolean;
-    function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<Box>): boolean;
+    function triangleIntersectsAABB(triangle: Readonly<Triangle>, box: Readonly<Box>): boolean;
+    function planeIntersectsAABB(plane: Readonly<Plane>, box: Readonly<Box>): boolean;
     function planeIntersectsSphere(plane: Readonly<Plane>, sphere: Readonly<Sphere>): boolean;
-    function aabbIntersectsSphere(aabb: Readonly<Box>, sphere: Readonly<Sphere>): boolean;
+    function aabbIntersectsSphere(box: Readonly<Box>, sphere: Readonly<Sphere>): boolean;
     function aabbIntersectsAABB(valueA: Readonly<Box>, valueB: Readonly<Box>): boolean;
     function sphereIntersectsSphere(valueA: Readonly<Sphere>, valueB: Readonly<Sphere>): boolean;
 }
@@ -5918,7 +5923,7 @@ declare namespace egret3d {
         readonly drawCalls: (DrawCall | null)[];
         /**
          * 此帧新添加的绘制信息列表。
-         * - 渲染前清除。
+         * - 渲染后清除。
          */
         readonly addDrawCalls: (DrawCall | null)[];
         private _drawCallsDirty;

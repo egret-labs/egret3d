@@ -6,22 +6,18 @@ namespace egret3d.webgl {
         public readonly ibos: (WebGLBuffer | null)[] = [];
         public vbo: WebGLBuffer | null = null;
 
-        public dispose() {
-            if (!super.dispose()) {
-                return false;
-            }
-            //
-            const webgl = WebGLRenderState.webgl!;
-            this.vbo && webgl.deleteBuffer(this.vbo);
+        public onReferenceCountChange(isZero: boolean) {
+            if (isZero) {
+                const webgl = WebGLRenderState.webgl!;
+                this.vbo && webgl.deleteBuffer(this.vbo);
 
-            for (const ibo of this.ibos) {
-                ibo && webgl.deleteBuffer(ibo);
+                for (const ibo of this.ibos) {
+                    ibo && webgl.deleteBuffer(ibo);
+                }
+                //
+                this.ibos.length = 0;
+                this.vbo = null;
             }
-            //
-            this.ibos.length = 0;
-            this.vbo = null;
-
-            return true;
         }
 
         public createBuffer() {
@@ -56,7 +52,7 @@ namespace egret3d.webgl {
 
                     subMeshIndex++;
                 }
-                
+                // 先提交 ElementArrayBuffer，后提交 ArrayBuffer。
                 const vertexBufferViewAccessor = this.getAccessor(this._glTFMesh!.primitives[0].attributes.POSITION || 0);
                 const vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float);
                 webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);

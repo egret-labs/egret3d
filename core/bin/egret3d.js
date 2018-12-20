@@ -1005,9 +1005,11 @@ var paper;
             return RES.getRes(name);
         };
         Asset.prototype._addToDispose = function () {
-            var assets = paper.disposeCollecter.assets;
-            if (assets.indexOf(this) < 0) {
-                assets.push(this);
+            if (this.onReferenceCountChange) {
+                var assets = paper.disposeCollecter.assets;
+                if (assets.indexOf(this) < 0) {
+                    assets.push(this);
+                }
             }
         };
         /**
@@ -1027,10 +1029,13 @@ var paper;
          */
         Asset.prototype.retain = function () {
             if (this._referenceCount === 0) {
-                var assets = paper.disposeCollecter.assets;
-                var index = assets.indexOf(this);
-                if (index >= 0) {
-                    assets.splice(index, 1);
+                if (this.onReferenceCountChange) {
+                    var assets = paper.disposeCollecter.assets;
+                    var index = assets.indexOf(this);
+                    if (index >= 0) {
+                        assets.splice(index, 1);
+                    }
+                    this.onReferenceCountChange(false);
                 }
             }
             this._referenceCount++;
@@ -1064,6 +1069,7 @@ var paper;
             }
             //
             this._referenceCount = -1;
+            this.onReferenceCountChange && this.onReferenceCountChange(true);
             return true;
         };
         Object.defineProperty(Asset.prototype, "isDisposed", {
@@ -4476,7 +4482,7 @@ var egret3d;
             return "vec3 toneMapping( vec3 color ) { return " + toneMappingName + "ToneMapping( color ); } \n";
         };
         RenderState.prototype.initialize = function (config) {
-            _super.prototype.initialize.call(this, config);
+            _super.prototype.initialize.call(this);
             egret3d.renderState = this;
         };
         RenderState.prototype.updateViewport = function (viewport, target) { };
@@ -5122,6 +5128,9 @@ var egret3d;
             return this;
         };
         Box.prototype.expand = function (scalarOrVector, input) {
+            if (this.isEmpty) {
+                return this;
+            }
             if (!input) {
                 input = this;
             }
@@ -5141,6 +5150,9 @@ var egret3d;
             return this;
         };
         Box.prototype.translate = function (scalarOrVector, input) {
+            if (this.isEmpty) {
+                return this;
+            }
             if (!input) {
                 input = this;
             }
@@ -5168,6 +5180,9 @@ var egret3d;
             if (!out) {
                 out = egret3d.Vector3.create();
             }
+            if (this.isEmpty) {
+                return out.copy(egret3d.Vector3.ZERO);
+            }
             return out.clamp(this._minimum, this._maximum, point);
         };
         /**
@@ -5175,12 +5190,18 @@ var egret3d;
          * @param point 一个点。
          */
         Box.prototype.getDistance = function (point) {
+            if (this.isEmpty) {
+                return egret3d.helpVector3A.copy(egret3d.Vector3.ZERO).subtract(point).length;
+            }
             return egret3d.helpVector3A.clamp(this._minimum, this._maximum, point).subtract(point).length;
         };
         /**
          * 该立方体是否包含指定的点或立方体。
          */
         Box.prototype.contains = function (pointOrBox) {
+            if (this.isEmpty) {
+                return false;
+            }
             var min = this._minimum;
             var max = this._maximum;
             if (pointOrBox instanceof Box) {
@@ -5195,6 +5216,9 @@ var egret3d;
                 (pointOrBox.z > min.z) && (pointOrBox.z < max.z);
         };
         Box.prototype.raycast = function (ray, raycastInfo) {
+            if (this.isEmpty) {
+                return false;
+            }
             var tmin, tmax, tymin, tymax, tzmin, tzmax;
             var hitDirection = 0;
             var origin = ray.origin;
@@ -5283,8 +5307,13 @@ var egret3d;
              */
             get: function () {
                 if (this._dirtyRadius) {
-                    egret3d.helpVector3A.subtract(this._maximum, this._minimum).multiplyScalar(0.5);
-                    this._boundingSphereRadius = egret3d.helpVector3A.length;
+                    if (this.isEmpty) {
+                        this._boundingSphereRadius = 0.0;
+                    }
+                    else {
+                        egret3d.helpVector3A.subtract(this._maximum, this._minimum).multiplyScalar(0.5);
+                        this._boundingSphereRadius = egret3d.helpVector3A.length;
+                    }
                     this._dirtyRadius = false;
                 }
                 return this._boundingSphereRadius;
@@ -5318,14 +5347,23 @@ var egret3d;
              */
             get: function () {
                 if (this._dirtySize) {
-                    this._size.subtract(this._maximum, this._minimum);
+                    if (this.isEmpty) {
+                        this._size.copy(egret3d.Vector3.ZERO);
+                    }
+                    else {
+                        this._size.subtract(this._maximum, this._minimum);
+                    }
                     this._dirtySize = false;
                 }
                 return this._size;
             },
             set: function (value) {
+                if (this.isEmpty) {
+                    return;
+                }
                 var center = this.center;
                 var size = this._size.copy(value);
+                //
                 var halfSize = egret3d.helpVector3A.copy(size).multiplyScalar(0.5);
                 this._minimum.copy(center).subtract(halfSize);
                 this._maximum.copy(center).add(halfSize);
@@ -5340,14 +5378,23 @@ var egret3d;
              */
             get: function () {
                 if (this._dirtyCenter) {
-                    this._center.add(this._maximum, this._minimum).multiplyScalar(0.5);
+                    if (this.isEmpty) {
+                        this._center.copy(egret3d.Vector3.ZERO);
+                    }
+                    else {
+                        this._center.add(this._maximum, this._minimum).multiplyScalar(0.5);
+                    }
                     this._dirtyCenter = false;
                 }
                 return this._center;
             },
             set: function (value) {
+                if (this.isEmpty) {
+                    return;
+                }
                 var size = this.size;
                 var center = this._center.copy(value);
+                //
                 var halfSize = egret3d.helpVector3A.copy(size).multiplyScalar(0.5);
                 this._minimum.copy(center).subtract(halfSize);
                 this._maximum.copy(center).add(halfSize);
@@ -5370,7 +5417,7 @@ var egret3d;
     /**
      * @internal
      */
-    egret3d.helpAABBA = Box.create();
+    egret3d.helpBoxA = Box.create();
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
@@ -5911,8 +5958,8 @@ var egret3d;
         }
         return true;
     }
-    function triangleIntersectsAABB(triangle, aabb) {
-        if (aabb.isEmpty) {
+    function triangleIntersectsAABB(triangle, box) {
+        if (box.isEmpty) {
             return false;
         }
         var v0 = egret3d.helpVector3A;
@@ -5925,7 +5972,7 @@ var egret3d;
         var center = egret3d.helpVector3G;
         var extents = egret3d.helpVector3H;
         // compute box center and extents
-        extents.subtract(aabb.maximum, aabb.center);
+        extents.subtract(box.maximum, box.center);
         // translate triangle to aabb origin
         v0.subtract(triangle.a, center);
         v1.subtract(triangle.b, center);
@@ -5957,13 +6004,16 @@ var egret3d;
         return satForAxes(axes);
     }
     egret3d.triangleIntersectsAABB = triangleIntersectsAABB;
-    function planeIntersectsAABB(plane, aabb) {
+    function planeIntersectsAABB(plane, box) {
+        if (box.isEmpty) {
+            return false;
+        }
         // We compute the minimum and maximum dot product values. If those values
         // are on the same side (back or front) of the plane, then there is no intersection.
         var vMin;
         var vMax;
-        var min = aabb.minimum;
-        var max = aabb.maximum;
+        var min = box.minimum;
+        var max = box.maximum;
         if (plane.normal.x > 0.0) {
             vMin = plane.normal.x * min.x;
             vMax = plane.normal.x * max.x;
@@ -5995,14 +6045,20 @@ var egret3d;
         return Math.abs(plane.getDistance(sphere.center)) <= sphere.radius;
     }
     egret3d.planeIntersectsSphere = planeIntersectsSphere;
-    function aabbIntersectsSphere(aabb, sphere) {
+    function aabbIntersectsSphere(box, sphere) {
+        if (box.isEmpty) {
+            return false;
+        }
         // Find the point on the AABB closest to the sphere center.
-        egret3d.helpVector3A.copy(sphere.center).clamp(aabb.minimum, aabb.maximum);
+        egret3d.helpVector3A.copy(sphere.center).clamp(box.minimum, box.maximum);
         // If that point is inside the sphere, the AABB and sphere intersect.
         return egret3d.helpVector3A.getSquaredDistance(sphere.center) <= (sphere.radius * sphere.radius);
     }
     egret3d.aabbIntersectsSphere = aabbIntersectsSphere;
     function aabbIntersectsAABB(valueA, valueB) {
+        if (valueA.isEmpty || valueB.isEmpty) {
+            return false;
+        }
         var minA = valueA.minimum;
         var maxA = valueA.maximum;
         var minB = valueB.minimum;
@@ -6155,10 +6211,10 @@ var egret3d;
             return _this;
         }
         MeshRenderer.prototype.recalculateLocalBox = function () {
+            var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
             this._localBoundingBox.clear();
-            var filter = this.gameObject.getComponent(egret3d.MeshFilter);
-            if (filter && filter.mesh) {
-                var vertices = filter.mesh.getVertices();
+            if (meshFilter && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
+                var vertices = meshFilter.mesh.getVertices();
                 var position = egret3d.helpVector3A;
                 for (var i = 0, l = vertices.length; i < l; i += 3) {
                     position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
@@ -6174,23 +6230,18 @@ var egret3d;
                 out = egret3d.Triangle.create();
             }
             var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
-            if (!meshFilter) {
-                return out;
+            if (meshFilter && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
+                var localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
+                meshFilter.mesh.getTriangle(triangleIndex, out);
+                out.a.applyMatrix(localToWorldMatrix);
+                out.b.applyMatrix(localToWorldMatrix);
+                out.c.applyMatrix(localToWorldMatrix);
             }
-            var mesh = meshFilter.mesh;
-            if (!mesh) {
-                return out;
-            }
-            var localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
-            mesh.getTriangle(triangleIndex, out);
-            out.a.applyMatrix(localToWorldMatrix);
-            out.b.applyMatrix(localToWorldMatrix);
-            out.c.applyMatrix(localToWorldMatrix);
             return out;
         };
         MeshRenderer.prototype.raycast = function (p1, p2, p3) {
             var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
-            if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh) {
+            if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh || meshFilter.mesh.isDisposed) {
                 return false;
             }
             var raycastMesh = false;
@@ -7805,7 +7856,7 @@ var egret3d;
             WebGLRenderState.prototype.copyFramebufferToTexture = function (screenPostion, target, level) {
                 if (level === void 0) { level = 0; }
                 var webgl = WebGLRenderState.webgl;
-                if (target.dirty) {
+                if (!target.webglTexture) {
                     target.setupTexture(0);
                 }
                 else {
@@ -8818,8 +8869,7 @@ var paper;
             }
             for (var _h = 0, _j = disposeCollecter.assets; _h < _j.length; _h++) {
                 var asset = _j[_h];
-                console.info("Dispose asset.", asset.name);
-                asset.dispose();
+                asset.onReferenceCountChange(true);
             }
             disposeCollecter.clear();
         };
@@ -9096,6 +9146,12 @@ var paper;
                     if (KEY_ASSET in source) {
                         var assetIndex = source.asset;
                         if (assetIndex >= 0) {
+                            // TODO 资源获取不到时，对应返回的资源方案
+                            // 材质应返回 MISSING
+                            // 纹理应返回 MISSING
+                            // Shader 
+                            // Mesh
+                            // ...
                             return paper.Asset.find(this.assets[assetIndex]);
                         }
                         return null;
@@ -11645,7 +11701,7 @@ var egret3d;
             _this.drawCalls = [];
             /**
              * 此帧新添加的绘制信息列表。
-             * - 渲染前清除。
+             * - 渲染后清除。
              */
             _this.addDrawCalls = [];
             _this._drawCallsDirty = false;
@@ -11655,10 +11711,7 @@ var egret3d;
          * @internal
          */
         DrawCallCollecter.prototype._update = function () {
-            var _a = this, renderers = _a.renderers, drawCalls = _a.drawCalls, addDrawCalls = _a.addDrawCalls;
-            if (addDrawCalls.length > 0) {
-                addDrawCalls.length = 0;
-            }
+            var _a = this, renderers = _a.renderers, drawCalls = _a.drawCalls;
             if (this._drawCallsDirty) {
                 // Clear renderers.
                 var index = 0;
@@ -11685,7 +11738,6 @@ var egret3d;
                 for (var _b = 0, drawCalls_1 = drawCalls; _b < drawCalls_1.length; _b++) {
                     var drawCall = drawCalls_1[_b];
                     if (drawCall) {
-                        drawCall.drawCount = 0;
                         if (removeCount > 0) {
                             drawCalls[index - removeCount] = drawCall;
                             drawCalls[index] = null;
@@ -11702,18 +11754,9 @@ var egret3d;
                 this._drawCallsDirty = false;
             }
             if (true) {
-                var i = drawCalls.length;
-                while (i--) {
-                    var drawCall = drawCalls[i];
-                    if (drawCall.mesh.isDisposed ||
-                        drawCall.material.isDisposed ||
-                        drawCall.material.shader.isDisposed) {
-                        console.warn("Mesh or Material has been disposed.");
-                        this.removeDrawCalls(drawCall.renderer);
-                    }
-                    else {
-                        drawCall.drawCount = 0;
-                    }
+                for (var _c = 0, drawCalls_2 = drawCalls; _c < drawCalls_2.length; _c++) {
+                    var drawCall = drawCalls_2[_c];
+                    drawCall.drawCount = 0;
                 }
             }
         };
@@ -13149,7 +13192,7 @@ var egret3d;
                 this.center.copy(center);
             }
             else {
-                this.center.copy(egret3d.helpAABBA.fromPoints(points).center);
+                this.center.copy(egret3d.helpBoxA.fromPoints(points).center);
             }
             var maxRadiusSqrt = 0.0;
             for (var i = 0, l = points.length; i < l; i++) {
@@ -13667,6 +13710,7 @@ var egret3d;
                     { componentClass: [egret3d.DirectionalLight, egret3d.PointLight, egret3d.SpotLight] }
                 ]
             ];
+            _this._drawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.DrawCallCollecter);
             _this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
             _this._lightCamera = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.Camera);
             return _this;
@@ -13699,6 +13743,7 @@ var egret3d;
         CameraAndLightSystem.prototype.onUpdate = function () {
             var cameraAndLightCollecter = this._cameraAndLightCollecter;
             var cameras = cameraAndLightCollecter.cameras, lights = cameraAndLightCollecter.lights;
+            this._drawCallCollecter._update();
             if (cameras.length > 0) {
                 cameraAndLightCollecter.sortCameras();
             }
@@ -15830,8 +15875,8 @@ var egret3d;
         SkinnedMeshRenderer.prototype.recalculateLocalBox = function () {
             // TODO 蒙皮网格的 aabb 需要能自定义，或者强制更新。
             var mesh = this._mesh;
+            this._localBoundingBox.clear();
             if (mesh && !mesh.isDisposed) {
-                this._localBoundingBox.clear();
                 var vertices = mesh.getVertices(); // T pose mesh aabb.
                 var position = egret3d.helpVector3A;
                 for (var i = 0, l = vertices.length; i < l; i += 3) {
@@ -15858,7 +15903,7 @@ var egret3d;
         SkinnedMeshRenderer.prototype.raycast = function (p1, p2, p3) {
             var mesh = this._mesh;
             var boneMatrices = this.boneMatrices;
-            if (!mesh || !boneMatrices) {
+            if (!mesh || mesh.isDisposed || !boneMatrices) {
                 return false;
             }
             var raycastMesh = false;
@@ -22521,7 +22566,7 @@ var egret3d;
                 var value = void 0;
                 if (type === 35678 /* SAMPLER_2D */ || type === 35680 /* SAMPLER_CUBE */) {
                     if (sourceValue) {
-                        value = paper.Asset.find(sourceValue) || egret3d.DefaultTextures.MISSING; // Missing texture.
+                        value = paper.Asset.find(sourceValue) || egret3d.DefaultTextures.WHITE; // Missing texture.
                     }
                     if (!value) {
                         value = egret3d.DefaultTextures.WHITE; // Default texture.
@@ -24495,8 +24540,8 @@ var egret3d;
         },
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
             return Promise.resolve();
         }
     };
@@ -24513,8 +24558,8 @@ var egret3d;
         },
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
             return Promise.resolve();
         }
     };
@@ -24560,8 +24605,8 @@ var egret3d;
         },
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
             return Promise.resolve();
         }
     };
@@ -24624,8 +24669,8 @@ var egret3d;
         },
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
             return Promise.resolve();
         }
     };
@@ -24640,8 +24685,8 @@ var egret3d;
         },
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
             return Promise.resolve();
         }
     };
@@ -24656,8 +24701,8 @@ var egret3d;
         },
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
             return Promise.resolve();
         }
     };
@@ -24673,8 +24718,8 @@ var egret3d;
         },
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
             return Promise.resolve();
         }
     };
@@ -24690,8 +24735,8 @@ var egret3d;
         },
         onRemoveStart: function (host, resource) {
             var data = host.get(resource);
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
             return Promise.resolve();
         }
     };
@@ -25375,19 +25420,17 @@ var egret3d;
                 _this.programs = {};
                 return _this;
             }
-            WebGLShader.prototype.dispose = function () {
-                if (!_super.prototype.dispose.call(this)) {
-                    return false;
-                }
-                for (var k in this.programs) {
-                    var program = this.programs[k];
-                    if (program) {
-                        program.dispose();
+            WebGLShader.prototype.onReferenceCountChange = function (isZero) {
+                if (isZero) {
+                    for (var k in this.programs) {
+                        var program = this.programs[k];
+                        if (program) {
+                            program.dispose();
+                        }
+                        delete this.programs[k];
                     }
-                    delete this.programs[k];
+                    // this.programs.
                 }
-                // this.programs.
-                return true;
             };
             return WebGLShader;
         }(egret3d.Shader));
@@ -25409,9 +25452,18 @@ var egret3d;
             function WebGLTexture() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.webglTexture = null;
-                _this.dirty = true;
                 return _this;
             }
+            WebGLTexture.prototype.onReferenceCountChange = function (isZero) {
+                if (isZero) {
+                    if (this.webglTexture) {
+                        var webgl_5 = webgl_4.WebGLRenderState.webgl;
+                        webgl_5.deleteTexture(this.webglTexture);
+                    }
+                    //
+                    this.webglTexture = null;
+                }
+            };
             WebGLTexture.prototype.setupTexture = function (index) {
                 if (!this._image || !this._image.uri) {
                     return;
@@ -25441,7 +25493,6 @@ var egret3d;
                 if (canGenerateMipmap) {
                     webgl.generateMipmap(webgl.TEXTURE_2D);
                 }
-                this.dirty = false;
             };
             return WebGLTexture;
         }(egret3d.Texture));
@@ -25454,7 +25505,7 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     var webgl;
-    (function (webgl_5) {
+    (function (webgl_6) {
         /**
          * @internal
          */
@@ -25465,18 +25516,17 @@ var egret3d;
                 _this.webglTexture = null;
                 _this.frameBuffer = null;
                 _this.renderBuffer = null;
-                _this.dirty = true;
                 return _this;
             }
             WebGLRenderTexture.prototype._setupFrameBufferTexture = function (frameBuffer, texture, textureTarget, type, width, height, format, attachment) {
-                var webgl = webgl_5.WebGLRenderState.webgl;
+                var webgl = webgl_6.WebGLRenderState.webgl;
                 webgl.texImage2D(textureTarget, 0, format, width, height, 0, format, type, null);
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
                 webgl.framebufferTexture2D(webgl.FRAMEBUFFER, attachment, textureTarget, texture, 0);
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
             };
             WebGLRenderTexture.prototype._setupRenderBufferStorage = function (frameBuffer, renderBuffer, depthBuffer, stencilBuffer, width, height) {
-                var webgl = webgl_5.WebGLRenderState.webgl;
+                var webgl = webgl_6.WebGLRenderState.webgl;
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
                 //
                 webgl.bindRenderbuffer(webgl.RENDERBUFFER, renderBuffer);
@@ -25496,7 +25546,7 @@ var egret3d;
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
             };
             WebGLRenderTexture.prototype._setupDepthRenderbuffer = function (frameBuffer, renderBuffer, depthBuffer, stencilBuffer, width, height) {
-                var webgl = webgl_5.WebGLRenderState.webgl;
+                var webgl = webgl_6.WebGLRenderState.webgl;
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
                 this._setupRenderBufferStorage(frameBuffer, renderBuffer, depthBuffer, stencilBuffer, width, height);
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
@@ -25510,7 +25560,7 @@ var egret3d;
                 var depth = paperExtension.depthBuffer;
                 var stencil = paperExtension.stencilBuffer;
                 //
-                var webgl = webgl_5.WebGLRenderState.webgl;
+                var webgl = webgl_6.WebGLRenderState.webgl;
                 if (!this.frameBuffer) {
                     this.frameBuffer = webgl.createFramebuffer();
                 }
@@ -25518,8 +25568,8 @@ var egret3d;
                     this.webglTexture = webgl.createTexture();
                 }
                 webgl.bindTexture(webgl.TEXTURE_2D, this.webglTexture);
-                var isPowerTwo = webgl_5.isPowerOfTwo(width, height);
-                webgl_5.setTexturexParameters(isPowerTwo, sampler, paperExtension.anisotropy || 1);
+                var isPowerTwo = webgl_6.isPowerOfTwo(width, height);
+                webgl_6.setTexturexParameters(isPowerTwo, sampler, paperExtension.anisotropy || 1);
                 this._setupFrameBufferTexture(this.frameBuffer, this.webglTexture, webgl.TEXTURE_2D, 5121 /* UNSIGNED_BYTE */, width, height, format, webgl.COLOR_ATTACHMENT0);
                 var minFilter = sampler.minFilter;
                 var canGenerateMipmap = isPowerTwo && minFilter !== 9728 /* Nearest */ && minFilter !== 9729 /* Linear */;
@@ -25534,47 +25584,44 @@ var egret3d;
                     this._setupDepthRenderbuffer(this.frameBuffer, this.renderBuffer, depth, stencil, width, height);
                 }
             };
-            WebGLRenderTexture.prototype.activateRenderTexture = function () {
-                if (this.dirty) {
-                    this._setupRenderTexture();
-                    this.dirty = false;
+            WebGLRenderTexture.prototype.onReferenceCountChange = function (isZero) {
+                if (isZero) {
+                    var webgl_7 = webgl_6.WebGLRenderState.webgl;
+                    if (this.webglTexture) {
+                        webgl_7.deleteTexture(this.webglTexture);
+                    }
+                    if (this.frameBuffer) {
+                        webgl_7.deleteFramebuffer(this.frameBuffer);
+                    }
+                    if (this.renderBuffer) {
+                        webgl_7.deleteRenderbuffer(this.renderBuffer);
+                    }
+                    //
+                    this.webglTexture = null;
+                    this.frameBuffer = null;
+                    this.renderBuffer = null;
                 }
-                var webgl = webgl_5.WebGLRenderState.webgl;
+            };
+            WebGLRenderTexture.prototype.activateRenderTexture = function () {
+                if (!this.webglTexture) {
+                    this._setupRenderTexture();
+                }
+                var webgl = webgl_6.WebGLRenderState.webgl;
                 webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.frameBuffer);
             };
             WebGLRenderTexture.prototype.generateMipmap = function () {
                 if (this._mipmap) {
-                    var webgl_6 = webgl_5.WebGLRenderState.webgl;
-                    webgl_6.bindTexture(webgl_6.TEXTURE_2D, this.webglTexture);
-                    webgl_6.generateMipmap(webgl_6.TEXTURE_2D);
-                    webgl_6.bindTexture(webgl_6.TEXTURE_2D, null);
+                    var webgl_8 = webgl_6.WebGLRenderState.webgl;
+                    webgl_8.bindTexture(webgl_8.TEXTURE_2D, this.webglTexture);
+                    webgl_8.generateMipmap(webgl_8.TEXTURE_2D);
+                    webgl_8.bindTexture(webgl_8.TEXTURE_2D, null);
                     return true;
                 }
                 return false;
             };
-            WebGLRenderTexture.prototype.dispose = function () {
-                if (!_super.prototype.dispose.call(this)) {
-                    return false;
-                }
-                var webgl = webgl_5.WebGLRenderState.webgl;
-                if (this.webglTexture) {
-                    webgl.deleteBuffer(this.webglTexture);
-                }
-                if (this.frameBuffer) {
-                    webgl.deleteFramebuffer(this.frameBuffer);
-                }
-                if (this.renderBuffer) {
-                    webgl.deleteRenderbuffer(this.renderBuffer);
-                }
-                //
-                this.webglTexture = null;
-                this.frameBuffer = null;
-                this.renderBuffer = null;
-                return true;
-            };
             return WebGLRenderTexture;
         }(egret3d.RenderTexture));
-        webgl_5.WebGLRenderTexture = WebGLRenderTexture;
+        webgl_6.WebGLRenderTexture = WebGLRenderTexture;
         __reflect(WebGLRenderTexture.prototype, "egret3d.webgl.WebGLRenderTexture", ["egret3d.webgl.IWebGLTexture", "egret3d.webgl.IWebGLRenderTexture"]);
         // Retargetting.
         egret3d.RenderTexture = WebGLRenderTexture;
@@ -25583,7 +25630,7 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     var webgl;
-    (function (webgl_7) {
+    (function (webgl_9) {
         /**
          * @internal
          */
@@ -25595,24 +25642,21 @@ var egret3d;
                 _this.vbo = null;
                 return _this;
             }
-            WebGLMesh.prototype.dispose = function () {
-                if (!_super.prototype.dispose.call(this)) {
-                    return false;
+            WebGLMesh.prototype.onReferenceCountChange = function (isZero) {
+                if (isZero) {
+                    var webgl_10 = webgl_9.WebGLRenderState.webgl;
+                    this.vbo && webgl_10.deleteBuffer(this.vbo);
+                    for (var _i = 0, _a = this.ibos; _i < _a.length; _i++) {
+                        var ibo = _a[_i];
+                        ibo && webgl_10.deleteBuffer(ibo);
+                    }
+                    //
+                    this.ibos.length = 0;
+                    this.vbo = null;
                 }
-                //
-                var webgl = webgl_7.WebGLRenderState.webgl;
-                this.vbo && webgl.deleteBuffer(this.vbo);
-                for (var _i = 0, _a = this.ibos; _i < _a.length; _i++) {
-                    var ibo = _a[_i];
-                    ibo && webgl.deleteBuffer(ibo);
-                }
-                //
-                this.ibos.length = 0;
-                this.vbo = null;
-                return true;
             };
             WebGLMesh.prototype.createBuffer = function () {
-                var webgl = webgl_7.WebGLRenderState.webgl;
+                var webgl = webgl_9.WebGLRenderState.webgl;
                 var vbo = webgl.createBuffer();
                 var primitives = this._glTFMesh.primitives;
                 if (vbo) {
@@ -25639,6 +25683,7 @@ var egret3d;
                         }
                         subMeshIndex++;
                     }
+                    // 先提交 ElementArrayBuffer，后提交 ArrayBuffer。
                     var vertexBufferViewAccessor = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION || 0);
                     var vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), 5126 /* Float */);
                     webgl.bindBuffer(34962 /* ArrayBuffer */, vbo);
@@ -25663,7 +25708,7 @@ var egret3d;
                     return;
                 }
                 var attributes = this._glTFMesh.primitives[0].attributes;
-                var webgl = webgl_7.WebGLRenderState.webgl;
+                var webgl = webgl_9.WebGLRenderState.webgl;
                 webgl.bindBuffer(34962 /* ArrayBuffer */, this.vbo);
                 if (!uploadAttributes) {
                     uploadAttributes = [];
@@ -25720,9 +25765,9 @@ var egret3d;
                         var accessor = this.getAccessor(primitive.indices);
                         var subIndexBuffer = this.createTypeArrayFromAccessor(accessor);
                         var ibo = this.ibos[subMeshIndex];
-                        var webgl_8 = webgl_7.WebGLRenderState.webgl;
-                        webgl_8.bindBuffer(34963 /* ElementArrayBuffer */, ibo);
-                        webgl_8.bufferSubData(34963 /* ElementArrayBuffer */, 0, subIndexBuffer);
+                        var webgl_11 = webgl_9.WebGLRenderState.webgl;
+                        webgl_11.bindBuffer(34963 /* ElementArrayBuffer */, ibo);
+                        webgl_11.bufferSubData(34963 /* ElementArrayBuffer */, 0, subIndexBuffer);
                     }
                     else {
                         console.warn("Error arguments.");
@@ -25734,7 +25779,7 @@ var egret3d;
             };
             return WebGLMesh;
         }(egret3d.Mesh));
-        webgl_7.WebGLMesh = WebGLMesh;
+        webgl_9.WebGLMesh = WebGLMesh;
         __reflect(WebGLMesh.prototype, "egret3d.webgl.WebGLMesh");
         // Retargeting.
         egret3d.Mesh = WebGLMesh;
@@ -25832,7 +25877,7 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     var webgl;
-    (function (webgl_9) {
+    (function (webgl_12) {
         var _patternA = /#include +<([\w\d.]+)>/g;
         var _patternB = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
         function _loopReplace(match, start, end, snippet) {
@@ -25932,7 +25977,7 @@ var egret3d;
             // webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
             // }
             WebGLRenderSystem.prototype._getWebGLShader = function (gltfShader, defines) {
-                var webgl = webgl_9.WebGLRenderState.webgl;
+                var webgl = webgl_12.WebGLRenderState.webgl;
                 var shader = webgl.createShader(gltfShader.type);
                 var shaderContent = _parseIncludes(gltfShader.uri);
                 shaderContent = _unrollLoops(shaderContent);
@@ -25954,7 +25999,7 @@ var egret3d;
                 //     shaderContextDefine += "#define USE_SHADOWMAP \n";
                 //     shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
                 // }
-                var webgl = webgl_9.WebGLRenderState.webgl;
+                var webgl = webgl_12.WebGLRenderState.webgl;
                 var renderState = this._renderState;
                 var camera = context.camera;
                 var matrix = drawCall.matrix;
@@ -26081,12 +26126,12 @@ var egret3d;
                                     var texture = scene.lightmaps[lightmapIndex];
                                     var unit = uniform.textureUnits[0];
                                     webgl.uniform1i(location_6, unit);
-                                    if (texture.dirty) {
-                                        texture.setupTexture(unit);
-                                    }
-                                    else {
+                                    if (texture.webglTexture) {
                                         webgl.activeTexture(webgl.TEXTURE0 + unit);
                                         webgl.bindTexture(webgl.TEXTURE_2D, texture.webglTexture);
+                                    }
+                                    else {
+                                        texture.setupTexture(unit);
                                     }
                                 }
                                 else {
@@ -26103,7 +26148,7 @@ var egret3d;
                 }
             };
             WebGLRenderSystem.prototype._updateUniforms = function (program, technique) {
-                var webgl = webgl_9.WebGLRenderState.webgl;
+                var webgl = webgl_12.WebGLRenderState.webgl;
                 var unifroms = technique.uniforms;
                 for (var _i = 0, _a = program.uniforms; _i < _a.length; _i++) {
                     var globalUniform = _a[_i];
@@ -26163,15 +26208,18 @@ var egret3d;
                             break;
                         case 35678 /* SAMPLER_2D */:
                             if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
-                                var texture = value;
                                 var unit = globalUniform.textureUnits[0];
-                                webgl.uniform1i(location_7, unit);
-                                if (texture.dirty) {
-                                    texture.setupTexture(unit);
+                                var texture = value;
+                                if (texture.isDisposed) {
+                                    texture = egret3d.DefaultTextures.WHITE; // TODO
                                 }
-                                else {
+                                webgl.uniform1i(location_7, unit);
+                                if (texture.webglTexture) {
                                     webgl.activeTexture(webgl.TEXTURE0 + unit);
                                     webgl.bindTexture(webgl.TEXTURE_2D, texture.webglTexture);
+                                }
+                                else {
+                                    texture.setupTexture(unit);
                                 }
                             }
                             else {
@@ -26182,14 +26230,16 @@ var egret3d;
                 }
             };
             WebGLRenderSystem.prototype._updateAttributes = function (program, mesh, subMeshIndex) {
-                var webgl = webgl_9.WebGLRenderState.webgl;
+                var webgl = webgl_12.WebGLRenderState.webgl;
                 var attributes = mesh.glTFMesh.primitives[subMeshIndex].attributes;
                 //
-                if (!mesh.vbo) {
+                if (mesh.vbo) {
+                    webgl.bindBuffer(34962 /* ArrayBuffer */, mesh.vbo);
+                }
+                else {
                     mesh.createBuffer();
                 }
                 // vbo.
-                webgl.bindBuffer(34962 /* ArrayBuffer */, mesh.vbo);
                 for (var _i = 0, _a = program.attributes; _i < _a.length; _i++) {
                     var attribute = _a[_i];
                     var location_8 = attribute.location;
@@ -26228,7 +26278,7 @@ var egret3d;
                     renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
                 }
                 // Render 2D.
-                var webgl = webgl_9.WebGLRenderState.webgl;
+                var webgl = webgl_12.WebGLRenderState.webgl;
                 webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1); // TODO 解决字体模糊。
                 for (var _d = 0, _e = this.groups[1].gameObjects; _d < _e.length; _d++) {
                     var gameObject = _e[_d];
@@ -26305,21 +26355,40 @@ var egret3d;
                         return;
                     }
                 }
-                var webgl = webgl_9.WebGLRenderState.webgl;
+                var webgl = webgl_12.WebGLRenderState.webgl;
                 var renderState = this._renderState;
                 var camera = egret3d.Camera.current;
                 var context = camera.context;
                 var scene = renderer ? renderer.gameObject.scene : camera.gameObject.scene; // 后期渲染renderer为空，取camera的场景
                 //
-                var shader = material._shader;
+                var mesh = drawCall.mesh;
+                var shader = material.shader;
                 var programs = shader.programs;
                 var programKey = context.defines.definesMask + material.defines.definesMask + (renderer ? renderer.defines.definesMask : "") + scene.defines.definesMask;
                 var program = null;
+                if (true) {
+                    var flag = false;
+                    if (mesh.isDisposed) {
+                        console.error("The mesh has been disposed.", renderer ? renderer.gameObject.path : mesh.name);
+                        flag = true;
+                    }
+                    if (shader.isDisposed) {
+                        console.error("The shader has been disposed.", renderer ? renderer.gameObject.path : shader.name);
+                        flag = true;
+                    }
+                    if (material.isDisposed) {
+                        console.error("The material has been disposed.", renderer ? renderer.gameObject.path : material.name);
+                        flag = true;
+                    }
+                    if (flag) {
+                        return;
+                    }
+                }
                 if (programKey in programs) {
                     program = programs[programKey];
                 }
                 else {
-                    var webgl_10 = webgl_9.WebGLRenderState.webgl;
+                    var webgl_13 = webgl_12.WebGLRenderState.webgl;
                     var renderState_1 = this._renderState;
                     renderState_1.customShaderChunks = shader.customs;
                     var defines = context.defines.definesString + material.defines.definesString + (renderer ? renderer.defines.definesString : "") + scene.defines.definesString;
@@ -26327,19 +26396,19 @@ var egret3d;
                     var vertexWebGLShader = this._getWebGLShader(extensions.shaders[0], renderState_1.getPrefixVertex(defines)); // TODO 顺序依赖
                     var fragmentWebGLShader = this._getWebGLShader(extensions.shaders[1], renderState_1.getPrefixFragment(defines)); // TODO 顺序依赖
                     if (vertexWebGLShader && fragmentWebGLShader) {
-                        var webGLProgram = webgl_10.createProgram();
-                        webgl_10.attachShader(webGLProgram, vertexWebGLShader);
-                        webgl_10.attachShader(webGLProgram, fragmentWebGLShader);
-                        webgl_10.linkProgram(webGLProgram);
-                        var parameter = webgl_10.getProgramParameter(webGLProgram, 35714 /* LinkStatus */);
+                        var webGLProgram = webgl_13.createProgram();
+                        webgl_13.attachShader(webGLProgram, vertexWebGLShader);
+                        webgl_13.attachShader(webGLProgram, fragmentWebGLShader);
+                        webgl_13.linkProgram(webGLProgram);
+                        var parameter = webgl_13.getProgramParameter(webGLProgram, 35714 /* LinkStatus */);
                         if (parameter) {
-                            program = new webgl_9.WebGLProgramBinder(webGLProgram, vertexWebGLShader, fragmentWebGLShader).extract(material.technique);
+                            program = new webgl_12.WebGLProgramBinder(webGLProgram, vertexWebGLShader, fragmentWebGLShader).extract(material.technique);
                         }
                         else {
-                            console.error("program compile: " + shader.name + " error! ->" + webgl_10.getProgramInfoLog(webGLProgram));
-                            webgl_10.deleteProgram(webGLProgram);
-                            webgl_10.deleteShader(vertexWebGLShader);
-                            webgl_10.deleteShader(fragmentWebGLShader);
+                            console.error("program compile: " + shader.name + " error! ->" + webgl_13.getProgramInfoLog(webGLProgram));
+                            webgl_13.deleteProgram(webGLProgram);
+                            webgl_13.deleteShader(vertexWebGLShader);
+                            webgl_13.deleteShader(fragmentWebGLShader);
                         }
                     }
                     programs[programKey] = program;
@@ -26358,7 +26427,6 @@ var egret3d;
                         forceUpdate = true;
                     }
                     //
-                    var mesh = drawCall.mesh;
                     var subMeshIndex = drawCall.subMeshIndex;
                     var primitive = mesh.glTFMesh.primitives[subMeshIndex];
                     var drawMode = primitive.mode === undefined ? 4 /* Triangles */ : primitive.mode;
@@ -26367,7 +26435,7 @@ var egret3d;
                     // Update global uniforms.
                     this._updateGlobalUniforms(program, context, drawCall, renderer, scene, forceUpdate);
                     // Update attributes.
-                    if ((this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex)) {
+                    if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
                         this._updateAttributes(program, mesh, subMeshIndex);
                         this._cacheSubMeshIndex = subMeshIndex;
                         this._cacheMesh = mesh;
@@ -26402,7 +26470,7 @@ var egret3d;
                     else {
                         webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
                     }
-                    if (true && drawCall.drawCount >= 0) {
+                    if (drawCall.drawCount >= 0) {
                         drawCall.drawCount++;
                     }
                 }
@@ -26413,33 +26481,17 @@ var egret3d;
                 renderState.draw = this.draw.bind(this);
             };
             WebGLRenderSystem.prototype.onUpdate = function () {
-                if (!webgl_9.WebGLRenderState.webgl) {
+                if (!webgl_12.WebGLRenderState.webgl) {
                     return;
                 }
                 var isPlayerMode = paper.Application.playerMode === 0 /* Player */;
-                var drawCallCollecter = this._drawCallCollecter;
                 var _a = this._cameraAndLightCollecter, cameras = _a.cameras, lights = _a.lights;
                 var renderState = this._renderState;
                 var editorScene = paper.Application.sceneManager.editorScene;
-                //
-                if (!renderState.standardDerivativesEnabled) {
-                    for (var _i = 0, _b = drawCallCollecter.addDrawCalls; _i < _b.length; _i++) {
-                        var drawCall = _b[_i];
-                        if (drawCall) {
-                            drawCall.material
-                                .removeDefine("USE_NORMALMAP" /* USE_NORMALMAP */)
-                                .removeDefine("USE_BUMPMAP" /* USE_BUMPMAP */)
-                                .removeDefine("FLAT_SHADED" /* FLAT_SHADED */)
-                                .removeDefine("ENVMAP_TYPE_CUBE_UV" /* ENVMAP_TYPE_CUBE_UV */);
-                        }
-                    }
-                }
-                //
-                drawCallCollecter._update();
                 // Render lights shadow.
                 if (lights.length > 0) {
-                    for (var _c = 0, lights_3 = lights; _c < lights_3.length; _c++) {
-                        var light = lights_3[_c];
+                    for (var _i = 0, lights_3 = lights; _i < lights_3.length; _i++) {
+                        var light = lights_3[_i];
                         if (!light.castShadows) {
                             continue;
                         }
@@ -26449,8 +26501,8 @@ var egret3d;
                 // Render cameras.
                 if (cameras.length > 0) {
                     this._egret2DOrderCount = 0;
-                    for (var _d = 0, cameras_1 = cameras; _d < cameras_1.length; _d++) {
-                        var camera = cameras_1[_d];
+                    for (var _b = 0, cameras_1 = cameras; _b < cameras_1.length; _b++) {
+                        var camera = cameras_1[_b];
                         var scene = camera.gameObject.scene;
                         if (isPlayerMode ? scene !== editorScene : scene === editorScene) {
                             this.render(camera);
@@ -26463,7 +26515,7 @@ var egret3d;
             };
             return WebGLRenderSystem;
         }(paper.BaseSystem));
-        webgl_9.WebGLRenderSystem = WebGLRenderSystem;
+        webgl_12.WebGLRenderSystem = WebGLRenderSystem;
         __reflect(WebGLRenderSystem.prototype, "egret3d.webgl.WebGLRenderSystem", ["egret3d.IRenderSystem"]);
     })(webgl = egret3d.webgl || (egret3d.webgl = {}));
 })(egret3d || (egret3d = {}));
@@ -26935,10 +26987,17 @@ var egret3d;
             function EndSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this._contactCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.ContactCollecter);
+                _this._drawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.DrawCallCollecter);
                 return _this;
             }
             EndSystem.prototype.onUpdate = function () {
+                //
                 this._contactCollecter._update();
+                //
+                var addDrawCalls = this._drawCallCollecter.addDrawCalls;
+                if (addDrawCalls.length > 0) {
+                    addDrawCalls.length = 0;
+                }
             };
             return EndSystem;
         }(paper.BaseSystem));

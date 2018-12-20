@@ -223,7 +223,7 @@ namespace egret3d {
         public draw: (drawCall: DrawCall) => void = null!;
 
         public initialize(config?: any) {
-            super.initialize(config);
+            super.initialize();
 
             (renderState as RenderState) = this;
         }

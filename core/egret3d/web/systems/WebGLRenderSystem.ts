@@ -298,12 +298,12 @@ namespace egret3d.webgl {
                                 const unit = uniform.textureUnits[0];
                                 webgl.uniform1i(location, unit);
 
-                                if ((texture as WebGLTexture).dirty) {
-                                    texture.setupTexture(unit);
-                                }
-                                else {
+                                if ((texture as WebGLTexture).webglTexture) {
                                     webgl.activeTexture(webgl.TEXTURE0 + unit);
                                     webgl.bindTexture(webgl.TEXTURE_2D, (texture as WebGLTexture).webglTexture);
+                                }
+                                else {
+                                    texture.setupTexture(unit);
                                 }
                             }
                             else {
@@ -469,16 +469,21 @@ namespace egret3d.webgl {
 
                     case gltf.UniformType.SAMPLER_2D:
                         if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
-                            const texture = value as (WebGLTexture | WebGLRenderTexture);
                             const unit = globalUniform.textureUnits[0];
+                            let texture = value as (WebGLTexture | WebGLRenderTexture);
+
+                            if (texture.isDisposed) {
+                                texture = DefaultTextures.WHITE as WebGLTexture; // TODO
+                            }
+
                             webgl.uniform1i(location, unit);
 
-                            if (texture.dirty) {
-                                texture.setupTexture(unit);
-                            }
-                            else {
+                            if (texture.webglTexture) {
                                 webgl.activeTexture(webgl.TEXTURE0 + unit);
                                 webgl.bindTexture(webgl.TEXTURE_2D, texture.webglTexture);
+                            }
+                            else {
+                                texture.setupTexture(unit);
                             }
                         }
                         else {
@@ -493,12 +498,13 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             const attributes = mesh.glTFMesh.primitives[subMeshIndex].attributes;
             //
-            if (!(mesh as WebGLMesh).vbo) {
+            if ((mesh as WebGLMesh).vbo) {
+                webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, (mesh as WebGLMesh).vbo);
+            }
+            else {
                 (mesh as WebGLMesh).createBuffer();
             }
             // vbo.
-            webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, (mesh as WebGLMesh).vbo);
-
             for (const attribute of program.attributes) {
                 const location = attribute.location;
                 const accessorIndex = attributes[attribute.semantic];
@@ -632,10 +638,34 @@ namespace egret3d.webgl {
             const context = camera.context;
             const scene = renderer ? renderer.gameObject.scene : camera.gameObject.scene; // 后期渲染renderer为空，取camera的场景
             //
-            const shader = material._shader as WebGLShader;
+            const mesh = drawCall.mesh;
+            const shader = material.shader as WebGLShader;
             const programs = shader.programs;
             const programKey = context.defines.definesMask + material.defines.definesMask + (renderer ? renderer.defines.definesMask : "") + scene.defines.definesMask;
             let program: WebGLProgramBinder | null = null;
+
+            if (DEBUG) {
+                let flag = false;
+
+                if (mesh.isDisposed) {
+                    console.error("The mesh has been disposed.", renderer ? renderer.gameObject.path : mesh.name);
+                    flag = true;
+                }
+
+                if (shader.isDisposed) {
+                    console.error("The shader has been disposed.", renderer ? renderer.gameObject.path : shader.name);
+                    flag = true;
+                }
+
+                if (material.isDisposed) {
+                    console.error("The material has been disposed.", renderer ? renderer.gameObject.path : material.name);
+                    flag = true;
+                }
+
+                if (flag) {
+                    return;
+                }
+            }
 
             if (programKey in programs) {
                 program = programs[programKey];
@@ -684,7 +714,6 @@ namespace egret3d.webgl {
                     forceUpdate = true;
                 }
                 //
-                const mesh = drawCall.mesh;
                 const subMeshIndex = drawCall.subMeshIndex;
                 const primitive = mesh.glTFMesh.primitives[subMeshIndex];
                 const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;

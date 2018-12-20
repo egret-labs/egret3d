@@ -77,8 +77,8 @@ namespace egret3d {
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
 
             return Promise.resolve();
         }
@@ -97,8 +97,8 @@ namespace egret3d {
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
 
             return Promise.resolve();
         }
@@ -158,8 +158,8 @@ namespace egret3d {
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
 
             return Promise.resolve();
         }
@@ -202,8 +202,8 @@ namespace egret3d {
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
 
             return Promise.resolve();
         }
@@ -221,8 +221,8 @@ namespace egret3d {
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
 
             return Promise.resolve();
         }
@@ -240,8 +240,8 @@ namespace egret3d {
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
 
             return Promise.resolve();
         }
@@ -260,8 +260,8 @@ namespace egret3d {
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
 
             return Promise.resolve();
         }
@@ -280,8 +280,8 @@ namespace egret3d {
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            data.dispose();
-            // data.release();
+            // data.dispose();
+            data.release();
 
             return Promise.resolve();
         }

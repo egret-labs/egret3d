@@ -46,8 +46,7 @@ namespace paper {
             }
 
             for (const asset of disposeCollecter.assets) {
-                console.info("Dispose asset.", asset.name);
-                asset.dispose();
+                asset.onReferenceCountChange!(true);
             }
 
             disposeCollecter.clear();
