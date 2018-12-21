@@ -91,13 +91,13 @@ namespace egret3d {
         private _dirtify(isLocalDirty: ConstrainBoolean, dirty: TransformDirty) {
             if (isLocalDirty) {
                 this._localDirty |= dirty | TransformDirty.MIM;
+
                 if (dirty & TransformDirty.Rotation) {
                     this._localDirty |= TransformDirty.Scale | TransformDirty.Euler;
                 }
                 else if (dirty & TransformDirty.Scale) {
                     this._localDirty |= TransformDirty.Rotation;
                 }
-
 
                 if (DEBUG) {
                     if (dirty & TransformDirty.Position) {
@@ -179,6 +179,10 @@ namespace egret3d {
                 }
             }
 
+            for (const child of this._children) {
+                child._dirtify(false, dirty);
+            }
+
             if (!(this._worldDirty & dirty) || !(this._worldDirty & TransformDirty.Matrix)) {
                 if (dirty & TransformDirty.Position) {
                     this._worldDirty |= dirty | TransformDirty.MIM;
@@ -186,14 +190,9 @@ namespace egret3d {
                 else {
                     this._worldDirty = TransformDirty.All;
                 }
-
-                for (const child of this._children) {
-                    child._dirtify(false, dirty);
-                }
             }
 
             const observers = this._observers;
-
             if (observers.length > 0) {
                 for (const observer of this._observers) {
                     observer.onTransformChange();

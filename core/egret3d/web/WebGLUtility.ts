@@ -48,8 +48,8 @@ namespace egret3d.webgl {
             }
         }
 
-        if (renderState.textureFilterAnisotropicEnabled && anisotropy > 1) {
-            webgl.texParameterf(webgl.TEXTURE_2D, renderState.textureFilterAnisotropicEnabled.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(anisotropy, renderState.maxAnisotropy));
+        if (renderState.textureFilterAnisotropic && anisotropy > 1) {
+            webgl.texParameterf(webgl.TEXTURE_2D, renderState.textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(anisotropy, renderState.maxAnisotropy));
         }
     }
 }

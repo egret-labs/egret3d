@@ -17,14 +17,16 @@ namespace egret3d.webgl {
         public webglTexture: GlobalWeblGLTexture | null = null;
 
         public onReferenceCountChange(isZero: boolean) {
-            if (isZero) {
-                if (this.webglTexture) {
-                    const webgl = WebGLRenderState.webgl!;
-                    webgl.deleteTexture(this.webglTexture);
-                }
+            if (isZero && this.webglTexture) {
+                const webgl = WebGLRenderState.webgl!;
+                webgl.deleteTexture(this.webglTexture);
                 //
                 this.webglTexture = null;
+
+                return true;
             }
+
+            return false;
         }
 
         public setupTexture(index: uint) {

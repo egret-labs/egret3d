@@ -33,11 +33,9 @@ namespace paper {
                 }
 
                 console.warn("Replaces an existing asset.", assetName);
-                existingAsset.release();
             }
 
             assets[assetName] = asset;
-            asset.retain();
 
             return true;
         }
@@ -59,21 +57,12 @@ namespace paper {
          */
         public name: string = "";
 
-        private _referenceCount: int = -1;
+        protected _referenceCount: int = -1;
         /**
          * 请使用 `T.create()` 创建实例。
          */
         protected constructor() {
             super();
-        }
-
-        private _addToDispose() {
-            if (this.onReferenceCountChange) {
-                const assets = disposeCollecter.assets;
-                if (assets.indexOf(this) < 0) {
-                    assets.push(this);
-                }
-            }
         }
         /**
          * 该资源内部初始化。
@@ -81,7 +70,6 @@ namespace paper {
          */
         public initialize(...args: any[]): void {
             this._referenceCount = 0;
-            this._addToDispose();
         }
         /**
          * 该资源的引用计数加一。
@@ -112,7 +100,13 @@ namespace paper {
                 this._referenceCount--;
 
                 if (this._referenceCount === 0) {
-                    this._addToDispose();
+                    if (this.onReferenceCountChange) {
+                        const assets = disposeCollecter.assets;
+
+                        if (assets.indexOf(this) < 0) {
+                            assets.push(this);
+                        }
+                    }
                 }
             }
 
@@ -143,7 +137,7 @@ namespace paper {
          * 
          * @param isZero 
          */
-        public onReferenceCountChange?(isZero: boolean): void;
+        public onReferenceCountChange?(isZero: boolean): boolean;
         /**
          * 该资源是否已经被释放。
          */

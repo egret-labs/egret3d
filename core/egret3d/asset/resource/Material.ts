@@ -157,7 +157,7 @@ namespace egret3d {
             //
             if (shaderOrConfig instanceof Shader) {
                 if (this.config) { // Change shader.
-                    this._retainOrReleaseTextures(false);
+                    this._retainOrReleaseTextures(false, false);
                     glTFMaterial = this.config.materials![0] as GLTFMaterial;
                 }
                 else { // Create.
@@ -182,10 +182,10 @@ namespace egret3d {
             this.renderQueue = glTFMaterial.extensions.paper.renderQueue;
             this._technique = this._createTechnique(shader, glTFMaterial);
             this._shader = shader;
-            this._retainOrReleaseTextures(true);
+            this._retainOrReleaseTextures(true, false);
         }
 
-        private _retainOrReleaseTextures(isRatain: boolean) {
+        private _retainOrReleaseTextures(isRatain: boolean, isOnce: boolean) {
             const uniforms = this._technique.uniforms;
             for (const k in uniforms) {
                 const uniform = uniforms[k];
@@ -193,20 +193,46 @@ namespace egret3d {
                     uniform.value &&
                     (uniform.type === gltf.UniformType.SAMPLER_2D || uniform.type === gltf.UniformType.SAMPLER_CUBE)
                 ) {
-                    isRatain ? (uniform.value as BaseTexture).retain() : (uniform.value as BaseTexture).release();
+                    if (isOnce) {
+                        isRatain ? (uniform.value as BaseTexture).retain() : (uniform.value as BaseTexture).release();
+                    }
+                    else {
+                        let i = this.referenceCount;
+                        while (i--) {
+                            isRatain ? (uniform.value as BaseTexture).retain() : (uniform.value as BaseTexture).release();
+                        }
+                    }
                 }
             }
 
-            isRatain ? this._shader.retain() : this._shader.release();
+            // isRatain ? this._shader.retain() : this._shader.release();
+        }
+
+        public retain(): this {
+            super.retain();
+
+            this._retainOrReleaseTextures(true, true);
+
+            return this;
+        }
+
+        public release(): this {
+            super.release();
+
+            if (this._referenceCount >= 0) {
+                this._retainOrReleaseTextures(false, true);
+            }
+
+            return this;
         }
 
         public dispose() {
             if (!super.dispose()) {
                 return false;
             }
-            //
-            this._retainOrReleaseTextures(false);
 
+            this._retainOrReleaseTextures(false, false);
+            //
             this.defines.clear();
             this._technique = null!;
             this._shader = null!;
@@ -217,7 +243,7 @@ namespace egret3d {
          * 拷贝。
          */
         public copy(value: Material): this {
-            this._retainOrReleaseTextures(false);
+            this._retainOrReleaseTextures(false, false);
             //
             this.renderQueue = value.renderQueue;
             this._shader = value._shader;
@@ -246,7 +272,7 @@ namespace egret3d {
                 targetStates.functions![k] = Array.isArray(stateFunction) ? stateFunction.concat() : stateFunction;
             }
             //
-            this._retainOrReleaseTextures(true);
+            this._retainOrReleaseTextures(true, false);
 
             return this;
         }
@@ -757,13 +783,20 @@ namespace egret3d {
             const uniform = this._technique.uniforms[p1];
             if (uniform) {
                 if (uniform.value !== p2) {
+
                     const existingTexture = uniform.value as BaseTexture | null;
                     if (existingTexture) {
-                        existingTexture.release();
+                        let i = this.referenceCount;
+                        while (i--) {
+                            existingTexture.release();
+                        }
                     }
 
                     if (p2) {
-                        p2.retain();
+                        let i = this.referenceCount;
+                        while (i--) {
+                            p2.retain();
+                        }
 
                         if (p2 instanceof RenderTexture) {
                             this.addDefine(ShaderDefine.FLIP_V);

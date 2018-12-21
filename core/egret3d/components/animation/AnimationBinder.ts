@@ -78,9 +78,17 @@ namespace egret3d {
             if (this.totalWeight < 1.0 - Const.EPSILON) {
                 const weight = 1.0 - this.totalWeight;
                 const bindPose = this.bindPose as Vector3;
-                target.x += bindPose.x * weight;
-                target.y += bindPose.y * weight;
-                target.z += bindPose.z * weight;
+
+                if (this.dirty > 0) {
+                    target.x += bindPose.x * weight;
+                    target.y += bindPose.y * weight;
+                    target.z += bindPose.z * weight;
+                }
+                else {
+                    target.x = bindPose.x * weight;
+                    target.y = bindPose.y * weight;
+                    target.z = bindPose.z * weight;
+                }
             }
 
             if (isArray) {
@@ -101,10 +109,19 @@ namespace egret3d {
             if (this.totalWeight < 1.0 - Const.EPSILON) {
                 const weight = 1.0 - this.totalWeight;
                 const bindPose = this.bindPose as Quaternion;
-                target.x += bindPose.x * weight;
-                target.y += bindPose.y * weight;
-                target.z += bindPose.z * weight;
-                target.w += bindPose.w * weight;
+
+                if (this.dirty > 0) {
+                    target.x += bindPose.x * weight;
+                    target.y += bindPose.y * weight;
+                    target.z += bindPose.z * weight;
+                    target.w += bindPose.w * weight;
+                }
+                else {
+                    target.x = bindPose.x * weight;
+                    target.y = bindPose.y * weight;
+                    target.z = bindPose.z * weight;
+                    target.w = bindPose.w * weight;
+                }
             }
 
             target.normalize();
@@ -127,9 +144,17 @@ namespace egret3d {
             if (this.totalWeight < 1.0 - Const.EPSILON) {
                 const weight = 1.0 - this.totalWeight;
                 const bindPose = this.bindPose as Vector3;
-                target.x += bindPose.x * weight;
-                target.y += bindPose.y * weight;
-                target.z += bindPose.z * weight;
+
+                if (this.dirty > 0) {
+                    target.x += bindPose.x * weight;
+                    target.y += bindPose.y * weight;
+                    target.z += bindPose.z * weight;
+                }
+                else {
+                    target.x = bindPose.x * weight;
+                    target.y = bindPose.y * weight;
+                    target.z = bindPose.z * weight;
+                }
             }
 
             if (isArray) {

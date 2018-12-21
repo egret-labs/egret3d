@@ -1,3 +1,4 @@
+// "use strict"; TODO
 /*jslint onevar:true, undef:true, newcap:true, regexp:true, bitwise:true, maxerr:50, indent:4, white:false, nomen:false, plusplus:false */
 /*global define:false, require:false, exports:false, module:false, signals:false */
 
@@ -988,10 +989,8 @@ var paper;
                     return false;
                 }
                 console.warn("Replaces an existing asset.", assetName);
-                existingAsset.release();
             }
             assets[assetName] = asset;
-            asset.retain();
             return true;
         };
         /**
@@ -1004,14 +1003,6 @@ var paper;
             }
             return RES.getRes(name);
         };
-        Asset.prototype._addToDispose = function () {
-            if (this.onReferenceCountChange) {
-                var assets = paper.disposeCollecter.assets;
-                if (assets.indexOf(this) < 0) {
-                    assets.push(this);
-                }
-            }
-        };
         /**
          * 该资源内部初始化。
          * - 重写此方法时，必须调用 `super.initialize();`。
@@ -1022,7 +1013,6 @@ var paper;
                 args[_i] = arguments[_i];
             }
             this._referenceCount = 0;
-            this._addToDispose();
         };
         /**
          * 该资源的引用计数加一。
@@ -1048,7 +1038,12 @@ var paper;
             if (this._referenceCount > 0) {
                 this._referenceCount--;
                 if (this._referenceCount === 0) {
-                    this._addToDispose();
+                    if (this.onReferenceCountChange) {
+                        var assets = paper.disposeCollecter.assets;
+                        if (assets.indexOf(this) < 0) {
+                            assets.push(this);
+                        }
+                    }
                 }
             }
             return this;
@@ -6181,13 +6176,6 @@ var paper;
             }
             return scene;
         };
-        Object.defineProperty(RawScene.prototype, "name", {
-            get: function () {
-                return this.config.objects[0].name;
-            },
-            enumerable: true,
-            configurable: true
-        });
         return RawScene;
     }(paper.BasePrefabAsset));
     paper.RawScene = RawScene;
@@ -7795,8 +7783,8 @@ var egret3d;
                 this.standardDerivativesEnabled = !!_getExtension(webgl, "OES_standard_derivatives");
                 this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");
                 this.fragDepthEnabled = !!_getExtension(webgl, "EXT_frag_depth");
-                this.textureFilterAnisotropicEnabled = _getExtension(webgl, "EXT_texture_filter_anisotropic");
-                this.shaderTextureLODEnabled = _getExtension(webgl, "EXT_shader_texture_lod");
+                this.textureFilterAnisotropic = _getExtension(webgl, "EXT_texture_filter_anisotropic");
+                this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
                 //
                 this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
                 this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
@@ -7806,10 +7794,15 @@ var egret3d;
                 this.maxRenderBufferize = webgl.getParameter(webgl.MAX_RENDERBUFFER_SIZE);
                 this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
                 this.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4); // TODO
-                this.maxAnisotropy = (this.textureFilterAnisotropicEnabled !== null) ? webgl.getParameter(this.textureFilterAnisotropicEnabled.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
+                this.maxAnisotropy = (this.textureFilterAnisotropic !== null) ? webgl.getParameter(this.textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
                 this._getCommonExtensions();
                 this._getCommonDefines();
                 console.info("WebGL version:", this.version);
+                console.info("Standard derivatives enabled:", this.standardDerivativesEnabled);
+                console.info("Texture float enabled:", this.textureFloatEnabled);
+                console.info("Frag depth enabled:", this.fragDepthEnabled);
+                console.info("Texture filter anisotropic:", this.textureFilterAnisotropic);
+                console.info("Shader texture LOD:", this.shaderTextureLOD);
                 console.info("Maximum shader precision:", this.maxPrecision);
                 console.info("Maximum texture count:", this.maxTextures);
                 console.info("Maximum vertex texture count:", this.maxVertexTextures);
@@ -7818,6 +7811,7 @@ var egret3d;
                 console.info("Maximum render buffer size:", this.maxRenderBufferize);
                 console.info("Maximum vertex uniform vectors:", this.maxVertexUniformVectors);
                 console.info("Maximum GPU skinned bone count:", this.maxBoneCount);
+                console.info("Maximum anisotropy:", this.maxAnisotropy);
             };
             WebGLRenderState.prototype.updateViewport = function (viewport, target) {
                 var webgl = WebGLRenderState.webgl;
@@ -8869,7 +8863,9 @@ var paper;
             }
             for (var _h = 0, _j = disposeCollecter.assets; _h < _j.length; _h++) {
                 var asset = _j[_h];
-                asset.onReferenceCountChange(true);
+                if (asset.onReferenceCountChange(true)) {
+                    console.debug("Auto dispose GPU memory.", asset.name);
+                }
             }
             disposeCollecter.clear();
         };
@@ -9973,6 +9969,10 @@ var egret3d;
                     }
                 }
             }
+            for (var _i = 0, _a = this._children; _i < _a.length; _i++) {
+                var child = _a[_i];
+                child._dirtify(false, dirty);
+            }
             if (!(this._worldDirty & dirty) || !(this._worldDirty & 16 /* Matrix */)) {
                 if (dirty & 1 /* Position */) {
                     this._worldDirty |= dirty | 48 /* MIM */;
@@ -9980,16 +9980,12 @@ var egret3d;
                 else {
                     this._worldDirty = 63 /* All */;
                 }
-                for (var _i = 0, _a = this._children; _i < _a.length; _i++) {
-                    var child = _a[_i];
-                    child._dirtify(false, dirty);
-                }
-            }
-            var observers = this._observers;
-            if (observers.length > 0) {
-                for (var _b = 0, _c = this._observers; _b < _c.length; _b++) {
-                    var observer = _c[_b];
-                    observer.onTransformChange();
+                var observers = this._observers;
+                if (observers.length > 0) {
+                    for (var _b = 0, _c = this._observers; _b < _c.length; _b++) {
+                        var observer = _c[_b];
+                        observer.onTransformChange();
+                    }
                 }
             }
         };
@@ -17718,9 +17714,16 @@ var egret3d;
             if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
                 var weight = 1.0 - this.totalWeight;
                 var bindPose = this.bindPose;
-                target.x += bindPose.x * weight;
-                target.y += bindPose.y * weight;
-                target.z += bindPose.z * weight;
+                if (this.dirty > 0) {
+                    target.x += bindPose.x * weight;
+                    target.y += bindPose.y * weight;
+                    target.z += bindPose.z * weight;
+                }
+                else {
+                    target.x = bindPose.x * weight;
+                    target.y = bindPose.y * weight;
+                    target.z = bindPose.z * weight;
+                }
             }
             if (isArray) {
                 for (var _i = 0, _a = components; _i < _a.length; _i++) {
@@ -17739,10 +17742,18 @@ var egret3d;
             if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
                 var weight = 1.0 - this.totalWeight;
                 var bindPose = this.bindPose;
-                target.x += bindPose.x * weight;
-                target.y += bindPose.y * weight;
-                target.z += bindPose.z * weight;
-                target.w += bindPose.w * weight;
+                if (this.dirty > 0) {
+                    target.x += bindPose.x * weight;
+                    target.y += bindPose.y * weight;
+                    target.z += bindPose.z * weight;
+                    target.w += bindPose.w * weight;
+                }
+                else {
+                    target.x = bindPose.x * weight;
+                    target.y = bindPose.y * weight;
+                    target.z = bindPose.z * weight;
+                    target.w = bindPose.w * weight;
+                }
             }
             target.normalize();
             if (isArray) {
@@ -17762,9 +17773,16 @@ var egret3d;
             if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
                 var weight = 1.0 - this.totalWeight;
                 var bindPose = this.bindPose;
-                target.x += bindPose.x * weight;
-                target.y += bindPose.y * weight;
-                target.z += bindPose.z * weight;
+                if (this.dirty > 0) {
+                    target.x += bindPose.x * weight;
+                    target.y += bindPose.y * weight;
+                    target.z += bindPose.z * weight;
+                }
+                else {
+                    target.x = bindPose.x * weight;
+                    target.y = bindPose.y * weight;
+                    target.z = bindPose.z * weight;
+                }
             }
             if (isArray) {
                 for (var _i = 0, _a = components; _i < _a.length; _i++) {
@@ -22407,9 +22425,7 @@ var egret3d;
                     mask = -mask;
                 }
             }
-            if (index === 0) {
-                definesMask += "0x" + mask.toString(16);
-            }
+            definesMask += "0x" + mask.toString(16);
             this.definesMask = definesMask;
         };
         /**
@@ -22628,7 +22644,7 @@ var egret3d;
             //
             if (shaderOrConfig instanceof egret3d.Shader) {
                 if (this.config) {
-                    this._retainOrReleaseTextures(false);
+                    this._retainOrReleaseTextures(false, false);
                     glTFMaterial = this.config.materials[0];
                 }
                 else {
@@ -22652,25 +22668,45 @@ var egret3d;
             this.renderQueue = glTFMaterial.extensions.paper.renderQueue;
             this._technique = this._createTechnique(shader, glTFMaterial);
             this._shader = shader;
-            this._retainOrReleaseTextures(true);
+            this._retainOrReleaseTextures(true, false);
         };
-        Material.prototype._retainOrReleaseTextures = function (isRatain) {
+        Material.prototype._retainOrReleaseTextures = function (isRatain, isOnce) {
             var uniforms = this._technique.uniforms;
             for (var k in uniforms) {
                 var uniform = uniforms[k];
                 if (uniform.value &&
                     (uniform.type === 35678 /* SAMPLER_2D */ || uniform.type === 35680 /* SAMPLER_CUBE */)) {
-                    isRatain ? uniform.value.retain() : uniform.value.release();
+                    if (isOnce) {
+                        isRatain ? uniform.value.retain() : uniform.value.release();
+                    }
+                    else {
+                        var i = this.referenceCount;
+                        while (i--) {
+                            isRatain ? uniform.value.retain() : uniform.value.release();
+                        }
+                    }
                 }
             }
-            isRatain ? this._shader.retain() : this._shader.release();
+            // isRatain ? this._shader.retain() : this._shader.release();
+        };
+        Material.prototype.retain = function () {
+            _super.prototype.retain.call(this);
+            this._retainOrReleaseTextures(true, true);
+            return this;
+        };
+        Material.prototype.release = function () {
+            _super.prototype.release.call(this);
+            if (this._referenceCount >= 0) {
+                this._retainOrReleaseTextures(false, true);
+            }
+            return this;
         };
         Material.prototype.dispose = function () {
             if (!_super.prototype.dispose.call(this)) {
                 return false;
             }
+            this._retainOrReleaseTextures(false, false);
             //
-            this._retainOrReleaseTextures(false);
             this.defines.clear();
             this._technique = null;
             this._shader = null;
@@ -22680,7 +22716,7 @@ var egret3d;
          * 拷贝。
          */
         Material.prototype.copy = function (value) {
-            this._retainOrReleaseTextures(false);
+            this._retainOrReleaseTextures(false, false);
             //
             this.renderQueue = value.renderQueue;
             this._shader = value._shader;
@@ -22706,7 +22742,7 @@ var egret3d;
                 targetStates.functions[k] = Array.isArray(stateFunction) ? stateFunction.concat() : stateFunction;
             }
             //
-            this._retainOrReleaseTextures(true);
+            this._retainOrReleaseTextures(true, false);
             return this;
         };
         /**
@@ -23113,10 +23149,16 @@ var egret3d;
                 if (uniform.value !== p2) {
                     var existingTexture = uniform.value;
                     if (existingTexture) {
-                        existingTexture.release();
+                        var i = this.referenceCount;
+                        while (i--) {
+                            existingTexture.release();
+                        }
                     }
                     if (p2) {
-                        p2.retain();
+                        var i = this.referenceCount;
+                        while (i--) {
+                            p2.retain();
+                        }
                         if (p2 instanceof egret3d.RenderTexture) {
                             this.addDefine("FLIP_V" /* FLIP_V */);
                         }
@@ -25244,8 +25286,8 @@ var egret3d;
                     console.warn('Texture is not power of two. Texture.minFilter should be set to gltf.TextureFilter.NEAREST or gltf.TextureFilter.LINEAR.');
                 }
             }
-            if (egret3d.renderState.textureFilterAnisotropicEnabled && anisotropy > 1) {
-                webgl.texParameterf(webgl.TEXTURE_2D, egret3d.renderState.textureFilterAnisotropicEnabled.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(anisotropy, egret3d.renderState.maxAnisotropy));
+            if (egret3d.renderState.textureFilterAnisotropic && anisotropy > 1) {
+                webgl.texParameterf(webgl.TEXTURE_2D, egret3d.renderState.textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(anisotropy, egret3d.renderState.maxAnisotropy));
             }
         }
         webgl_2.setTexturexParameters = setTexturexParameters;
@@ -25419,19 +25461,21 @@ var egret3d;
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.programs = {};
                 return _this;
+                // public onReferenceCountChange(isZero: boolean) { // TODO
+                //     if (isZero) {
+                //         for (const k in this.programs) {
+                //             const program = this.programs[k];
+                //             if (program) {
+                //                 program.dispose();
+                //             }
+                //             delete this.programs[k];
+                //         }
+                //         // this.programs;
+                //         return true;
+                //     }
+                //     return false;
+                // }
             }
-            WebGLShader.prototype.onReferenceCountChange = function (isZero) {
-                if (isZero) {
-                    for (var k in this.programs) {
-                        var program = this.programs[k];
-                        if (program) {
-                            program.dispose();
-                        }
-                        delete this.programs[k];
-                    }
-                    // this.programs.
-                }
-            };
             return WebGLShader;
         }(egret3d.Shader));
         webgl.WebGLShader = WebGLShader;
@@ -25455,14 +25499,14 @@ var egret3d;
                 return _this;
             }
             WebGLTexture.prototype.onReferenceCountChange = function (isZero) {
-                if (isZero) {
-                    if (this.webglTexture) {
-                        var webgl_5 = webgl_4.WebGLRenderState.webgl;
-                        webgl_5.deleteTexture(this.webglTexture);
-                    }
+                if (isZero && this.webglTexture) {
+                    var webgl_5 = webgl_4.WebGLRenderState.webgl;
+                    webgl_5.deleteTexture(this.webglTexture);
                     //
                     this.webglTexture = null;
+                    return true;
                 }
+                return false;
             };
             WebGLTexture.prototype.setupTexture = function (index) {
                 if (!this._image || !this._image.uri) {
@@ -25585,7 +25629,7 @@ var egret3d;
                 }
             };
             WebGLRenderTexture.prototype.onReferenceCountChange = function (isZero) {
-                if (isZero) {
+                if (isZero && this.webglTexture) {
                     var webgl_7 = webgl_6.WebGLRenderState.webgl;
                     if (this.webglTexture) {
                         webgl_7.deleteTexture(this.webglTexture);
@@ -25600,7 +25644,9 @@ var egret3d;
                     this.webglTexture = null;
                     this.frameBuffer = null;
                     this.renderBuffer = null;
+                    return true;
                 }
+                return false;
             };
             WebGLRenderTexture.prototype.activateRenderTexture = function () {
                 if (!this.webglTexture) {
@@ -25643,9 +25689,12 @@ var egret3d;
                 return _this;
             }
             WebGLMesh.prototype.onReferenceCountChange = function (isZero) {
-                if (isZero) {
+                if (isZero && this.vbo) {
+                    if (this.config && this.config.skins) {
+                        return false;
+                    }
                     var webgl_10 = webgl_9.WebGLRenderState.webgl;
-                    this.vbo && webgl_10.deleteBuffer(this.vbo);
+                    webgl_10.deleteBuffer(this.vbo);
                     for (var _i = 0, _a = this.ibos; _i < _a.length; _i++) {
                         var ibo = _a[_i];
                         ibo && webgl_10.deleteBuffer(ibo);
@@ -25653,7 +25702,9 @@ var egret3d;
                     //
                     this.ibos.length = 0;
                     this.vbo = null;
+                    return true;
                 }
+                return false;
             };
             WebGLMesh.prototype.createBuffer = function () {
                 var webgl = webgl_9.WebGLRenderState.webgl;

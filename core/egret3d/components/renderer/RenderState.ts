@@ -113,8 +113,8 @@ namespace egret3d {
         public standardDerivativesEnabled: boolean;
         public textureFloatEnabled: boolean;
         public fragDepthEnabled: boolean;
-        public textureFilterAnisotropicEnabled: EXT_texture_filter_anisotropic | null;
-        public shaderTextureLODEnabled: any;
+        public textureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
+        public shaderTextureLOD: any;
 
         public maxTextures: uint;
         public maxVertexTextures: uint;

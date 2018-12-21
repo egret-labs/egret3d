@@ -7,9 +7,13 @@ namespace egret3d.webgl {
         public vbo: WebGLBuffer | null = null;
 
         public onReferenceCountChange(isZero: boolean) {
-            if (isZero) {
+            if (isZero && this.vbo) {
+                if (this.config && this.config.skins) { // TODO
+                    return false;
+                }
+
                 const webgl = WebGLRenderState.webgl!;
-                this.vbo && webgl.deleteBuffer(this.vbo);
+                webgl.deleteBuffer(this.vbo);
 
                 for (const ibo of this.ibos) {
                     ibo && webgl.deleteBuffer(ibo);
@@ -17,7 +21,11 @@ namespace egret3d.webgl {
                 //
                 this.ibos.length = 0;
                 this.vbo = null;
+
+                return true;
             }
+
+            return false;
         }
 
         public createBuffer() {

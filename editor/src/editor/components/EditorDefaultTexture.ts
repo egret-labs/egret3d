@@ -17,7 +17,7 @@ namespace paper.editor {
 
                 const texture = egret3d.Texture.create({
                     source: image, format: gltf.TextureFormat.RGBA, mipmap: false,
-                }).setLiner(true).setRepeat(false).retain();
+                }).setLiner(true).setRepeat(false);
                 EditorDefaultTexture.CAMERA_ICON = texture;
             }
 
@@ -27,7 +27,7 @@ namespace paper.editor {
 
                 const texture = egret3d.Texture.create({
                     source: image, format: gltf.TextureFormat.RGBA, mipmap: false,
-                }).setLiner(true).setRepeat(false).retain();
+                }).setLiner(true).setRepeat(false);
                 EditorDefaultTexture.LIGHT_ICON = texture;
             }
         }

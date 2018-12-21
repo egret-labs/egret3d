@@ -94,7 +94,7 @@ namespace egret3d.webgl {
         }
 
         public onReferenceCountChange(isZero: boolean) {
-            if (isZero) {
+            if (isZero && this.webglTexture) {
                 const webgl = WebGLRenderState.webgl!;
 
                 if (this.webglTexture) {
@@ -112,9 +112,13 @@ namespace egret3d.webgl {
                 this.webglTexture = null;
                 this.frameBuffer = null;
                 this.renderBuffer = null;
+
+                return true;
             }
+
+            return false;
         }
-        
+
         public activateRenderTexture() {
             if (!this.webglTexture) { // TODO 引用计数的问题
                 this._setupRenderTexture();

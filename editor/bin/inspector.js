@@ -3190,7 +3190,7 @@ var paper;
             __extends(BoxesDrawer, _super);
             function BoxesDrawer() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._hoverBox = editor.EditorMeshHelper.createBox("HoverAABB", egret3d.Color.WHITE, 0.6, paper.Scene.editorScene);
+                _this._hoverBox = editor.EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, paper.Scene.editorScene);
                 _this._drawer = [];
                 return _this;
             }
@@ -3213,7 +3213,7 @@ var paper;
                 }
                 for (var i = 0, l = Math.max(this._drawer.length, selectedGameObjects ? selectedGameObjects.length : 0); i < l; ++i) {
                     if (i + 1 > this._drawer.length) {
-                        var gameObject = editor.EditorMeshHelper.createBox("AABB_" + i, egret3d.Color.INDIGO, 0.8, paper.Scene.editorScene);
+                        var gameObject = editor.EditorMeshHelper.createBox("Box_" + i, egret3d.Color.INDIGO, 0.8, paper.Scene.editorScene);
                         gameObject.parent = this.gameObject;
                         this._drawer.push(gameObject);
                     }
@@ -3322,7 +3322,7 @@ var paper;
                     image.src = icons["camera"];
                     var texture = egret3d.Texture.create({
                         source: image, format: 6408 /* RGBA */, mipmap: false,
-                    }).setLiner(true).setRepeat(false).retain();
+                    }).setLiner(true).setRepeat(false);
                     EditorDefaultTexture.CAMERA_ICON = texture;
                 }
                 {
@@ -3330,7 +3330,7 @@ var paper;
                     image.src = icons["light"];
                     var texture = egret3d.Texture.create({
                         source: image, format: 6408 /* RGBA */, mipmap: false,
-                    }).setLiner(true).setRepeat(false).retain();
+                    }).setLiner(true).setRepeat(false);
                     EditorDefaultTexture.LIGHT_ICON = texture;
                 }
             };
@@ -3392,6 +3392,7 @@ var paper;
                     vertices.push(k, 0, halfSize);
                 }
                 var mesh = egret3d.Mesh.create(vertices.length, 0, ["POSITION" /* POSITION */]);
+                mesh.name = "editor/grid.mesh.bin";
                 mesh.setAttributes("POSITION" /* POSITION */, vertices);
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
                 var gameObject = editor.EditorMeshHelper.createGameObject(name, mesh, egret3d.DefaultMaterials.MESH_BASIC.clone());
@@ -3868,13 +3869,11 @@ var paper;
         var SkeletonDrawer = (function (_super) {
             __extends(SkeletonDrawer, _super);
             function SkeletonDrawer() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._skeletonMesh = egret3d.Mesh.create(128, 0, ["POSITION" /* POSITION */]);
-                return _this;
+                return _super !== null && _super.apply(this, arguments) || this;
             }
             SkeletonDrawer.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
-                var mesh = this._skeletonMesh;
+                var mesh = egret3d.Mesh.create(128, 0, ["POSITION" /* POSITION */]);
                 var material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
                 mesh.drawMode = 35048 /* Dynamic */;
@@ -3882,14 +3881,14 @@ var paper;
                     .setColor(egret3d.Color.YELLOW)
                     .setDepth(false, false)
                     .renderQueue = 4000 /* Overlay */;
-                this.gameObject.getOrAddComponent(egret3d.MeshFilter).mesh = mesh;
-                this.gameObject.getOrAddComponent(egret3d.MeshRenderer).material = material;
+                this.gameObject.addComponent(egret3d.MeshFilter).mesh = mesh;
+                this.gameObject.addComponent(egret3d.MeshRenderer).material = material;
             };
             SkeletonDrawer.prototype.update = function () {
                 var selectedGameObject = _super.prototype.update.call(this);
                 var skinnedMeshRenderer = selectedGameObject ? selectedGameObject.getComponent(egret3d.SkinnedMeshRenderer) : null;
                 if (selectedGameObject && skinnedMeshRenderer) {
-                    var mesh = this._skeletonMesh;
+                    var mesh = this.gameObject.getComponent(egret3d.MeshFilter).mesh;
                     var offset = 0;
                     var helpVertex3A = egret3d.Vector3.create().release();
                     var helpVertex3B = egret3d.Vector3.create().release();

@@ -81,9 +81,7 @@ namespace egret3d {
                 }
             }
 
-            if (index === 0) {
-                definesMask += "0x" + mask.toString(16);
-            }
+            definesMask += "0x" + mask.toString(16);
 
             this.definesMask = definesMask;
         }
@@ -100,7 +98,7 @@ namespace egret3d {
          */
         public copy(value: this): void {
             this.definesMask = value.definesMask;
-            
+
             this._defines.length = 0;
 
             for (const define of value._defines) {

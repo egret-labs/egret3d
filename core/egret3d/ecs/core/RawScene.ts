@@ -21,9 +21,5 @@ namespace paper {
 
             return scene;
         }
-
-        public get name(): string {
-            return this.config.objects![0].name;
-        }
     }
 }

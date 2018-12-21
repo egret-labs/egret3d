@@ -641,12 +641,11 @@ declare namespace paper {
          * @readonly
          */
         name: string;
-        private _referenceCount;
+        protected _referenceCount: int;
         /**
          * 请使用 `T.create()` 创建实例。
          */
         protected constructor();
-        private _addToDispose();
         /**
          * 该资源内部初始化。
          * - 重写此方法时，必须调用 `super.initialize();`。
@@ -670,7 +669,7 @@ declare namespace paper {
          *
          * @param isZero
          */
-        onReferenceCountChange?(isZero: boolean): void;
+        onReferenceCountChange?(isZero: boolean): boolean;
         /**
          * 该资源是否已经被释放。
          */
@@ -3414,8 +3413,8 @@ declare namespace egret3d {
         standardDerivativesEnabled: boolean;
         textureFloatEnabled: boolean;
         fragDepthEnabled: boolean;
-        textureFilterAnisotropicEnabled: EXT_texture_filter_anisotropic | null;
-        shaderTextureLODEnabled: any;
+        textureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
+        shaderTextureLOD: any;
         maxTextures: uint;
         maxVertexTextures: uint;
         maxTextureSize: uint;
@@ -4114,7 +4113,6 @@ declare namespace paper {
          * @deprecated
          */
         createInstance(keepUUID?: boolean): Scene | null;
-        readonly name: string;
     }
 }
 declare namespace egret3d {
@@ -8743,7 +8741,9 @@ declare namespace egret3d {
         readonly defines: Defines;
         private _createTechnique(shader, glTFMaterial);
         private _reset(shaderOrConfig);
-        private _retainOrReleaseTextures(isRatain);
+        private _retainOrReleaseTextures(isRatain, isOnce);
+        retain(): this;
+        release(): this;
         dispose(): boolean;
         /**
          * 拷贝。
