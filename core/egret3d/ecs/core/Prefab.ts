@@ -11,7 +11,7 @@ namespace paper {
 
         public constructor(config: ISerializedData, name: string) {
             super();
-            
+
             this.name = name;
             this.config = config;
         }
@@ -24,6 +24,23 @@ namespace paper {
             (this.config as any) = null;
 
             return true;
+        }
+
+        public disposeAssets() {
+            if (!this.config) {
+                return;
+            }
+
+            for (const assetName of this.config.assets!) {
+                if (assetName.indexOf("builtin/") >= 0) {
+                    continue;
+                }
+
+                const asset = Asset.find(assetName);
+                if (asset) {
+
+                }
+            }
         }
     }
     /**

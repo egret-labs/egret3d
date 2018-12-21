@@ -6176,6 +6176,13 @@ var paper;
             }
             return scene;
         };
+        Object.defineProperty(RawScene.prototype, "sceneName", {
+            get: function () {
+                return this.config.objects[0].name;
+            },
+            enumerable: true,
+            configurable: true
+        });
         return RawScene;
     }(paper.BasePrefabAsset));
     paper.RawScene = RawScene;
@@ -9980,12 +9987,12 @@ var egret3d;
                 else {
                     this._worldDirty = 63 /* All */;
                 }
-                var observers = this._observers;
-                if (observers.length > 0) {
-                    for (var _b = 0, _c = this._observers; _b < _c.length; _b++) {
-                        var observer = _c[_b];
-                        observer.onTransformChange();
-                    }
+            }
+            var observers = this._observers;
+            if (observers.length > 0) {
+                for (var _b = 0, _c = this._observers; _b < _c.length; _b++) {
+                    var observer = _c[_b];
+                    observer.onTransformChange();
                 }
             }
         };
@@ -13902,7 +13909,7 @@ var paper;
             var rawScene = paper.Asset.find(name);
             if (rawScene && rawScene instanceof paper.RawScene) {
                 if (rawScene) {
-                    var existedScene = paper.Application.sceneManager.getScene(rawScene.name);
+                    var existedScene = paper.Application.sceneManager.getScene(rawScene.sceneName);
                     if (existedScene) {
                         console.warn("The scene with the same name already exists.");
                         return existedScene;

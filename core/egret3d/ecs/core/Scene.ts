@@ -28,7 +28,7 @@ namespace paper {
 
             if (rawScene && rawScene instanceof RawScene) {
                 if (rawScene) {
-                    const existedScene = Application.sceneManager.getScene(rawScene.name);
+                    const existedScene = Application.sceneManager.getScene(rawScene.sceneName);
                     if (existedScene) {
                         console.warn("The scene with the same name already exists.");
                         return existedScene;

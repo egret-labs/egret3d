@@ -4113,6 +4113,7 @@ declare namespace paper {
          * @deprecated
          */
         createInstance(keepUUID?: boolean): Scene | null;
+        readonly sceneName: string;
     }
 }
 declare namespace egret3d {
