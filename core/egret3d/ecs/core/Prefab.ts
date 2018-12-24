@@ -38,7 +38,7 @@ namespace paper {
 
                 const asset = Asset.find(assetName);
                 if (asset) {
-
+                    asset.dispose();
                 }
             }
         }

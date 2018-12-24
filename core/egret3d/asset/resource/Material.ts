@@ -205,7 +205,7 @@ namespace egret3d {
                 }
             }
 
-            // isRatain ? this._shader.retain() : this._shader.release();
+            // isRatain ? this._shader.retain() : this._shader.release(); TODO
         }
 
         public retain(): this {

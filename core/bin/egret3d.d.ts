@@ -3471,6 +3471,7 @@ declare namespace paper {
         readonly config: ISerializedData;
         constructor(config: ISerializedData, name: string);
         dispose(): boolean;
+        disposeAssets(): void;
     }
     /**
      * 预制体资源。

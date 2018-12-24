@@ -48,37 +48,31 @@ namespace egret3d {
     }
 
     export const ShaderProcessor: RES.processor.Processor = {
-        async onLoadStart(host, resource) {
-            const result = await host.load(resource, 'json') as GLTF;
+        onLoadStart(host, resource) {
+            return host.load(resource, 'json').then((result: GLTF) => {
+                const subAssets: paper.ISerializedData = { assets: [] };
+                const shaders = result.extensions.KHR_techniques_webgl!.shaders;
 
-            const shaders = result.extensions.KHR_techniques_webgl!.shaders;
-            if (shaders && shaders.length === 2) {
                 for (const shader of shaders) {
-                    const source = (RES.host.resourceConfig as any)["getResource"](shader.uri);
-                    if (source) {
-                        const shaderSource = await host.load(source, "text");
-                        if (shaderSource) {
-                            shader.uri = shaderSource;
-                        }
-                        else {
-                            console.error("Load shader error.", shader.uri);
-                        }
-                    }
+                    subAssets.assets!.push(shader.uri!);
                 }
-            }
-            else {
-                console.error("错误的Shader格式数据");
-            }
 
-            const glTF = Shader.create(resource.name, result);
-            paper.Asset.register(glTF);
+                return loadSubAssets(subAssets, resource).then((texts: string[]) => {
+                    for (let i = 0, l = texts.length; i < l; ++i) {
+                        shaders[i].uri = texts[i];
+                    }
 
-            return glTF;
+                    const shader = Shader.create(resource.name, result);
+                    paper.Asset.register(shader);
+                    return shader;
+                });
+            });
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            // data.dispose();
-            data.release();
+            if (data) {
+                data.dispose();
+            }
 
             return Promise.resolve();
         }
@@ -93,12 +87,13 @@ namespace egret3d {
                     .setRepeat(true);
                 paper.Asset.register(texture);
                 return texture;
-            })
+            });
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            // data.dispose();
-            data.release();
+            if (data) {
+                data.dispose();
+            }
 
             return Promise.resolve();
         }
@@ -158,52 +153,46 @@ namespace egret3d {
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            // data.dispose();
-            data.release();
+            if (data) {
+                data.dispose();
+            }
 
             return Promise.resolve();
         }
     };
 
     export const MaterialProcessor: RES.processor.Processor = {
-        async onLoadStart(host, resource) {
-            const result = await host.load(resource, 'json') as GLTF;
+        onLoadStart(host, resource) {
+            return host.load(resource, "json").then((result: GLTF): any => {
+                const subAssets: paper.ISerializedData = { assets: [] };
 
-            if (result.materials) {
-                for (const material of result.materials as GLTFMaterial[]) {
-                    const techniqueRes = (RES.host.resourceConfig as any)["getResource"](material.extensions.KHR_techniques_webgl.technique);
-                    if (techniqueRes && techniqueRes.indexOf("builtin/") < 0) {
-                        await host.load(techniqueRes, "Shader"); // TODO
-                    }
+                for (const materialConfig of result.materials as GLTFMaterial[]) {
+                    subAssets.assets!.push(materialConfig.extensions.KHR_techniques_webgl.technique);
 
-                    const values = material.extensions.KHR_techniques_webgl.values;
+                    const values = materialConfig.extensions.KHR_techniques_webgl.values;
                     if (values) {
                         for (const k in values) {
                             const value = values[k];
                             if (value && typeof value === "string") { // A string value must be texture uri.
-                                const r = (RES.host.resourceConfig as any)["getResource"](value);
-
-                                if (r) {
-                                    await host.load(r, "TextureDesc"); // TODO
-                                }
-                                else {
-                                    console.log("Load image error.", value);
-                                }
+                                subAssets.assets!.push(value);
                             }
                         }
                     }
                 }
-            }
 
-            const material = Material.create(resource.name, result);
-            paper.Asset.register(material);
-
-            return material;
+                return loadSubAssets(subAssets, resource).then(() => {
+                    const material = Material.create(resource.name, result);
+                    paper.Asset.register(material);
+                    
+                    return material;
+                });
+            });
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            // data.dispose();
-            data.release();
+            if (data) {
+                data.dispose();
+            }
 
             return Promise.resolve();
         }
@@ -221,8 +210,9 @@ namespace egret3d {
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            // data.dispose();
-            data.release();
+            if (data && data.dispose) { // TODO???
+                data.dispose();
+            }
 
             return Promise.resolve();
         }
@@ -240,8 +230,9 @@ namespace egret3d {
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            // data.dispose();
-            data.release();
+            if (data) {
+                data.dispose();
+            }
 
             return Promise.resolve();
         }
@@ -252,6 +243,7 @@ namespace egret3d {
             return host.load(resource, "json").then((data: paper.ISerializedData) => {
                 return loadSubAssets(data, resource).then(() => {
                     const prefab = new paper.Prefab(data, resource.name); // TODO
+                    prefab.initialize();
                     paper.Asset.register(prefab);
 
                     return prefab;
@@ -260,8 +252,9 @@ namespace egret3d {
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            // data.dispose();
-            data.release();
+            if (data) {
+                data.dispose();
+            }
 
             return Promise.resolve();
         }
@@ -272,6 +265,7 @@ namespace egret3d {
             return host.load(resource, "json").then((data: paper.ISerializedData) => {
                 return loadSubAssets(data, resource).then(() => {
                     const rawScene = new paper.RawScene(data, resource.name); // TODO
+                    rawScene.initialize();
                     paper.Asset.register(rawScene);
 
                     return rawScene;
@@ -280,8 +274,9 @@ namespace egret3d {
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
-            // data.dispose();
-            data.release();
+            if (data) {
+                data.dispose();
+            }
 
             return Promise.resolve();
         }

@@ -11,6 +11,7 @@ namespace egret3d {
             define = defines[defineString] = new Define(_index, _mask, defineString);
 
             _mask >>>= 1;
+
             if (_mask === 0) {
                 _index++;
                 _mask = 0x80000000;
