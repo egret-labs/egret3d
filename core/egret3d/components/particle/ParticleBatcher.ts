@@ -376,7 +376,7 @@ namespace egret3d.particle {
                 }
             }
             //
-            for (let i = 0; i < this._readEmitCount; i++) {
+            for (let i = 0, l = this._readEmitCount; i < l; i++) {
                 if (this._tryEmit()) {
                     totalEmitCount++;
                     this._readEmitCount--;
