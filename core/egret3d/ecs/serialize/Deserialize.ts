@@ -121,7 +121,8 @@ namespace paper {
                 }
 
                 const hasGetterAndSetter = Deserializer.propertyHasGetterAndSetter(target, retargetKey);
-                const retarget = this._deserializeChild(source[k], !hasGetterAndSetter ? (target as any)[retargetKey] : null);
+                const rawRetarget = (target as any)[retargetKey];
+                const retarget = this._deserializeChild(source[k], (hasGetterAndSetter && rawRetarget && (rawRetarget.constructor === Array || rawRetarget.constructor === Object)) ? null : rawRetarget);
 
                 if (retarget === undefined) { // 忽略反序列化后为 undefined 的属性值。
                     continue;
