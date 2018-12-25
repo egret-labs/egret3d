@@ -24611,8 +24611,12 @@ var egret3d;
                             .setRepeat(repeat);
                         paper.Asset.register(texture);
                         host.save(imgResource, bitmapData);
+                        texture._bitmapData = bitmapData;
                         return texture;
                     });
+                }
+                else {
+                    throw new Error(); // TODO
                 }
             });
         },
@@ -24735,7 +24739,9 @@ var egret3d;
             var r = host.resourceConfig["getResource"](item);
             if (r) {
                 return host.load(r).then(function (data) {
-                    host.save(r, data);
+                    if (data instanceof paper.Asset) {
+                        host.save(r, data);
+                    }
                     return data;
                 });
             }
