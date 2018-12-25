@@ -145,15 +145,22 @@ namespace egret3d {
                             .setLiner(linear)
                             .setRepeat(repeat);
                         paper.Asset.register(texture);
+                        host.save(imgResource, bitmapData);
+                        (texture as any)._bitmapData = bitmapData;
+
                         return texture;
 
                     });
+                }
+                else {
+                    throw new Error(); // TODO
                 }
             });
         },
         onRemoveStart(host, resource) {
             const data = host.get(resource) as paper.Asset;
             if (data) {
+                // host.save(imgResource, bitmapData);
                 data.dispose();
             }
 
@@ -183,7 +190,7 @@ namespace egret3d {
                 return loadSubAssets(subAssets, resource).then(() => {
                     const material = Material.create(resource.name, result);
                     paper.Asset.register(material);
-                    
+
                     return material;
                 });
             });
@@ -287,7 +294,13 @@ namespace egret3d {
             const host = RES.host;
             const r = (host.resourceConfig as any)["getResource"](item);
             if (r) {
-                return host.load(r);
+                return host.load(r).then((data) => {
+                    if (data instanceof paper.Asset) { //!??!?!?
+                        host.save(r, data);
+                    }
+
+                    return data;
+                });
             }
             else {
                 if (item.indexOf("builtin/") !== 0) {
