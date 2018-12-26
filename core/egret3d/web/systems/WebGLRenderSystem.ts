@@ -220,11 +220,11 @@ namespace egret3d.webgl {
                             break;
 
                         case gltf.UniformSemantics._CAMERA_FORWARD:
-                            webgl.uniform3f(location, rawData[4], rawData[5], rawData[6]);
+                            webgl.uniform3f(location, -rawData[8], -rawData[9], -rawData[10]);
                             break;
 
                         case gltf.UniformSemantics._CAMERA_UP:
-                            webgl.uniform3f(location, -rawData[8], -rawData[9], -rawData[10]);
+                            webgl.uniform3f(location, rawData[4], rawData[5], rawData[6]);
                             break;
 
                         case gltf.UniformSemantics._CAMERA_POS:
