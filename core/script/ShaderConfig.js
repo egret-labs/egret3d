@@ -112,13 +112,23 @@ exports.UNIFORM_TEMPLATE["specular"] = { value: [1.0, 1.0, 1.0] };
 exports.UNIFORM_TEMPLATE["shininess"] = { value: 30.0 };
 exports.UNIFORM_TEMPLATE["opacity"] = { value: 1.0 };
 exports.UNIFORM_TEMPLATE["normalScale"] = { value: [1.0, 1.0] };
+//
+exports.UNIFORM_TEMPLATE["roughness"] = { value: 0.5 };
+exports.UNIFORM_TEMPLATE["metalness"] = { value: 0.5 };
+exports.UNIFORM_TEMPLATE["bumpScale"] = { value: 1.0 };
+exports.UNIFORM_TEMPLATE["displacementScale"] = { value: 1.0 };
+exports.UNIFORM_TEMPLATE["displacementBias"] = { value: 0.0 };
+//
+exports.UNIFORM_TEMPLATE["clearCoat"] = { value: 0.0 };
+exports.UNIFORM_TEMPLATE["clearCoatRoughness"] = { value: 0.0 };
 exports.UNIFORM_TEMPLATE["uvTransform"] = { value: [1, 0, 0, 0, 1, 0, 0, 0, 1] };
-exports.UNIFORM_TEMPLATE["refractionRatio"] = { value: 0 };
 exports.UNIFORM_TEMPLATE["diffuse"] = { value: [1, 1, 1] };
 exports.UNIFORM_TEMPLATE["emissive"] = { value: [0, 0, 0] };
+exports.UNIFORM_TEMPLATE["emissiveIntensity"] = { value: 1 };
 exports.UNIFORM_TEMPLATE["opacity"] = { value: 1 };
 exports.UNIFORM_TEMPLATE["aoMapIntensity"] = { value: 1 };
-exports.UNIFORM_TEMPLATE["reflectivity"] = { value: 0 };
+exports.UNIFORM_TEMPLATE["reflectivity"] = { value: 1 };
+exports.UNIFORM_TEMPLATE["refractionRatio"] = { value: 0.98 };
 exports.UNIFORM_TEMPLATE["envMapIntensity"] = { value: 1 };
 exports.UNIFORM_TEMPLATE["flipEnvMap"] = { value: 1 };
 exports.UNIFORM_TEMPLATE["maxMipLevel"] = { value: 0 };
