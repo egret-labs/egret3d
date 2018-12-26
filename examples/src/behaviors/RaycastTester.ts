@@ -16,7 +16,7 @@ namespace behaviors {
 
             this._lineMesh = meshFilter.mesh!;
             this._lineMesh.setIndices([2, 3], this._lineMesh.addSubMesh(2, 1, gltf.MeshPrimitiveMode.Points));
-            this._lineMesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+            this._lineMesh.setAttributes(gltf.AttributeSemantics.COLOR_0, [
                 0.0, 0.0, 0.0, 0.0,
                 0.0, 0.0, 0.0, 0.0,
             ], 2);

@@ -1,6 +1,5 @@
 namespace paper {
-    Layer.Default;
-
+    Layer.Default; // egret build bug.
     /**
      * 实体。
      */
@@ -10,7 +9,6 @@ namespace paper {
          */
         public static readonly _instances: GameObject[] = [];
         private static _globalGameObject: GameObject | null = null;
-
         /**
          * 创建 GameObject，并添加到当前场景中。
          */
@@ -36,7 +34,6 @@ namespace paper {
 
             return gameObect;
         }
-
         /**
          * 全局实体。
          * - 全局实体不可被销毁。
@@ -50,20 +47,17 @@ namespace paper {
 
             return this._globalGameObject;
         }
-
         /**
          * 是否是静态模式。
          */
         @serializedField
         @editor.property(editor.EditType.CHECKBOX)
         public isStatic: boolean = false;
-
         /**
          * 
          */
         @serializedField
         public hideFlags: HideFlags = HideFlags.None;
-
         /**
          * 层级。
          * - 用于各种层遮罩。
@@ -71,40 +65,35 @@ namespace paper {
         @serializedField
         @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).Layer) }) // TODO
         public layer: Layer = Layer.Default;
-
         /**
          * 名称。
          */
         @serializedField
         @editor.property(editor.EditType.TEXT)
         public name: string = "";
-
         /**
          * 标签。
          */
         @serializedField
         @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).DefaultTags) }) // TODO
         public tag: string = "";
-
         /**
          * 变换组件。
          * @readonly
          */
         public transform: egret3d.Transform = null!;
-
         /**
          * 渲染组件。
          * @readonly
          */
         public renderer: BaseRenderer | null = null;
-
         /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
         @serializedField
         public extras?: GameObjectExtras = Application.playerMode === PlayerMode.Editor ? {} : undefined;
 
-        @serializedField
+        @serializedField // TODO 反序列化 bug
         private _activeSelf: boolean = true;
         /**
          * @internal
@@ -291,7 +280,6 @@ namespace paper {
                 child.gameObject._activeInHierarchyDirty(prevActive);
             }
         }
-
         /**
          * 实体被销毁后，内部卸载。
          * @internal
@@ -662,7 +650,6 @@ namespace paper {
 
             return components;
         }
-
         /**
          * 获取一个自己或父级中指定的组件实例。
          * @param componentClass 组件类。
@@ -679,7 +666,6 @@ namespace paper {
 
             return result;
         }
-
         /**
          * 获取一个自己或子（孙）级中指定的组件实例。
          * @param componentClass 组件类。
@@ -698,7 +684,6 @@ namespace paper {
 
             return component;
         }
-
         /**
          * 获取全部自己和子（孙）级中指定的组件实例。
          * @param componentClass 组件类。
@@ -731,7 +716,6 @@ namespace paper {
 
             return components;
         }
-
         /**
          * 从该实体已注册的全部组件中获取一个指定组件实例，如果未添加该组件，则添加该组件。
          * @param componentClass 组件类。
@@ -741,7 +725,6 @@ namespace paper {
         public getOrAddComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false, config?: any) {
             return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, config);
         }
-
         /**
          * 向该实体已激活的全部 Behaviour 组件发送消息。
          * @param methodName 
@@ -759,7 +742,6 @@ namespace paper {
                 }
             }
         }
-
         /**
          * 向该实体和其父级的 Behaviour 组件发送消息。
          * @param methodName 
@@ -773,7 +755,6 @@ namespace paper {
                 parent.gameObject.sendMessage(methodName as any, parameter, requireReceiver);
             }
         }
-
         /**
          * 向该实体和的其子（孙）级的 Behaviour 组件发送消息。
          * @param methodName 
@@ -788,14 +769,12 @@ namespace paper {
                 }
             }
         }
-
         /**
          * 该实体是否已经被销毁。
          */
         public get isDestroyed() {
             return !this._scene;
         }
-
         /**
          * 该实体是否可以被销毁。
          * - 当此值为 `true` 时，将会被添加到全局场景，反之将被添加到激活场景。
@@ -829,7 +808,6 @@ namespace paper {
                 child.gameObject.dontDestroy = value;
             }
         }
-
         /**
          * 该实体自身的激活状态。
          */
@@ -852,7 +830,6 @@ namespace paper {
                 this._activeSelf = value;//TODO
             }
         }
-
         /**
          * 该实体在场景中的激活状态。
          */
@@ -872,7 +849,6 @@ namespace paper {
 
             return this._activeInHierarchy;
         }
-
         /**
          * 该实体的路径。
          */
@@ -891,7 +867,6 @@ namespace paper {
 
             return path;
         }
-
         /**
          * 该实体已添加的全部组件。
          */
@@ -917,7 +892,6 @@ namespace paper {
 
             return this._cachedComponents;
         }
-
         /**
          * 该实体的父级实体。
          */
@@ -927,14 +901,12 @@ namespace paper {
         public set parent(gameObject: GameObject | null) {
             this.transform.parent = gameObject ? gameObject.transform : null;
         }
-
         /**
          * 该实体所属的场景。
          */
         public get scene() {
             return this._scene!;
         }
-
         /**
          * 全局实体。
          * - 全局实体不可被销毁。

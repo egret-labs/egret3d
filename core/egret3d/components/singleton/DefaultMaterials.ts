@@ -44,11 +44,8 @@ namespace egret3d {
          */
         public static COPY: Material;
 
-        private _createMaterial(name: string, shader: Shader, renderQueue: paper.RenderQueue = paper.RenderQueue.Geometry) {
-            const material = Material.create(shader);
-            material.name = name;
-            material.renderQueue = renderQueue;
-            material._isBuiltin = true;
+        private _createMaterial(name: string, shader: Shader) {
+            const material = Material.create(name, shader);
             paper.Asset.register(material);
 
             return material;

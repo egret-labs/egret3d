@@ -19,8 +19,10 @@ namespace paper.editor {
                 vertices.push(k, 0, halfSize);
             }
 
-            const mesh = egret3d.Mesh.create(vertices.length, 0, [gltf.MeshAttributeType.POSITION]);
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+            const mesh = egret3d.Mesh.create(vertices.length, 0, [gltf.AttributeSemantics.POSITION]);
+            mesh.name = "editor/grid.mesh.bin";
+
+            mesh.setAttributes(gltf.AttributeSemantics.POSITION, vertices);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
             const gameObject = EditorMeshHelper.createGameObject(name, mesh, egret3d.DefaultMaterials.MESH_BASIC.clone());
 

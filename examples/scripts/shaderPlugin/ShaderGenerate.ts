@@ -160,7 +160,7 @@ export class ParseShaderCommand implements IShaderCommand {
             asset.extensions.KHR_techniques_webgl!.shaders = assetShaders;
 
             //
-            const technique: gltf.Technique = { name: name, attributes: {}, uniforms: {}, states: { enable: [], functions: {} } } as any;
+            const technique: gltf.Technique = { name: name, attributes: {}, uniforms: {} } as any;
             //寻找所有attribute
             const attrMatchResult = all.match(attrReg);
             if (attrMatchResult) {
@@ -280,25 +280,27 @@ export class GenerateGLTFCommand implements IShaderCommand {
             dir = path.relative(shaderContext.root, dir).split('\\').join("/") + "/";
             shaders[0].uri = dir + shaders[0].name + ".glsl";
             shaders[1].uri = dir + shaders[1].name + ".glsl";
-            if(fs.existsSync(outPath)){
+            if (fs.existsSync(outPath)) {
                 //如果存在的话
                 const oldFile = fs.readFileSync(outPath, "utf-8");
                 const oldAsset = JSON.parse(oldFile) as gltf.GLTFEgret;
-                for(let i = 0, l = oldAsset.extensions.KHR_techniques_webgl!.techniques.length; i < l; i++){
-                    if(i >= asset.extensions!.KHR_techniques_webgl!.techniques.length){
+                for (let i = 0, l = oldAsset.extensions.KHR_techniques_webgl!.techniques.length; i < l; i++) {
+                    if (i >= asset.extensions!.KHR_techniques_webgl!.techniques.length) {
                         continue;
                     }
                     const oldTechnique = oldAsset.extensions.KHR_techniques_webgl!.techniques[i];
                     const newTechnique = asset.extensions.KHR_techniques_webgl!.techniques[i];
 
                     //Uniform Value和State覆盖
-                    for(const uniformName in oldTechnique.uniforms){
-                        if(newTechnique.uniforms[uniformName]){
+                    for (const uniformName in oldTechnique.uniforms) {
+                        if (newTechnique.uniforms[uniformName]) {
                             newTechnique.uniforms[uniformName].value = oldTechnique.uniforms[uniformName].value;
                         }
                     }
 
-                    newTechnique.states = oldTechnique.states;
+                    if (oldTechnique.states) {
+                        newTechnique.states = oldTechnique.states;
+                    }
                 }
             }
             ShaderUtils.checkValid(asset);

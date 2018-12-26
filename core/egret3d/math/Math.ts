@@ -110,8 +110,8 @@ namespace egret3d {
         return true;
     }
 
-    export function triangleIntersectsAABB(triangle: Readonly<Triangle>, aabb: Readonly<Box>) {
-        if (aabb.isEmpty) {
+    export function triangleIntersectsAABB(triangle: Readonly<Triangle>, box: Readonly<Box>) {
+        if (box.isEmpty) {
             return false;
         }
 
@@ -126,7 +126,7 @@ namespace egret3d {
         const extents = helpVector3H;
 
         // compute box center and extents
-        extents.subtract(aabb.maximum, aabb.center);
+        extents.subtract(box.maximum, box.center);
         // translate triangle to aabb origin
         v0.subtract(triangle.a, center);
         v1.subtract(triangle.b, center);
@@ -158,13 +158,16 @@ namespace egret3d {
         return satForAxes(axes);
     }
 
-    export function planeIntersectsAABB(plane: Readonly<Plane>, aabb: Readonly<Box>) {
+    export function planeIntersectsAABB(plane: Readonly<Plane>, box: Readonly<Box>) {
+        if (box.isEmpty) {
+            return false;
+        }
         // We compute the minimum and maximum dot product values. If those values
         // are on the same side (back or front) of the plane, then there is no intersection.
         let vMin: number;
         let vMax: number;
-        const min = aabb.minimum;
-        const max = aabb.maximum;
+        const min = box.minimum;
+        const max = box.maximum;
 
         if (plane.normal.x > 0.0) {
             vMin = plane.normal.x * min.x;
@@ -200,14 +203,22 @@ namespace egret3d {
         return Math.abs(plane.getDistance(sphere.center)) <= sphere.radius;
     }
 
-    export function aabbIntersectsSphere(aabb: Readonly<Box>, sphere: Readonly<Sphere>) {
+    export function aabbIntersectsSphere(box: Readonly<Box>, sphere: Readonly<Sphere>) {
+        if (box.isEmpty) {
+            return false;
+        }
+
         // Find the point on the AABB closest to the sphere center.
-        helpVector3A.copy(sphere.center).clamp(aabb.minimum, aabb.maximum);
+        helpVector3A.copy(sphere.center).clamp(box.minimum, box.maximum);
         // If that point is inside the sphere, the AABB and sphere intersect.
         return helpVector3A.getSquaredDistance(sphere.center) <= (sphere.radius * sphere.radius);
     }
 
     export function aabbIntersectsAABB(valueA: Readonly<Box>, valueB: Readonly<Box>) {
+        if (valueA.isEmpty || valueB.isEmpty) {
+            return false;
+        }
+
         const minA = valueA.minimum;
         const maxA = valueA.maximum;
         const minB = valueB.minimum;

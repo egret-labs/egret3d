@@ -5,6 +5,13 @@ namespace paper {
     export type CullingMask = Layer;
 }
 
+namespace gltf {
+    /**
+     * @deprecated
+     */
+    export type MeshAttributeType = AttributeSemantics;
+}
+
 namespace egret3d {
     /**
      * @deprecated
@@ -62,7 +69,7 @@ namespace egret3d {
      * @deprecated
      * @internal
      */
-    export const WebGLCapabilities = web.WebGLRenderState;
+    export const WebGLCapabilities = webgl.WebGLRenderState;
     /**
      * @deprecated
      */

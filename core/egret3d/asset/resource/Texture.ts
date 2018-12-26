@@ -1,98 +1,117 @@
 namespace egret3d {
     /**
-     * @private
+     * 
      */
-    export interface GLTFTexture extends gltf.Texture {
-        extensions: {
-            paper?: {
-                mipmap?: boolean;
-                flipY?: 0 | 1;
-                premultiplyAlpha?: 0 | 1;
-                format?: gltf.TextureFormat;
-                width?: number;
-                height?: number;
-                anisotropy?: number;
-                type?: gltf.TextureDataType;
-                unpackAlignment?: gltf.TextureAlignment;
-                //
-                depthBuffer?: boolean;
-                stencilBuffer?: boolean;
-            }
-        };
+    export interface CreateTextureParameters extends gltf.Sampler, GLTFEgretTextureExtension {
+        /**
+         * 纹理数据源。
+         */
+        source?: ArrayBufferView | gltf.ImageSource | null;
     }
     /**
      * 基础纹理资源。
      * - 纹理资源的基类。
      */
     export abstract class BaseTexture extends GLTFAsset {
-        protected _gltfTexture: GLTFTexture | null = null;
-        protected _image: gltf.Image;
-        protected _sampler: gltf.Sampler;
-        /**
-         * @internal
-         */
-        public _dirty: boolean = false;
-
-        protected constructor(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource | null,
-            width: number, height: number,
-            format?: gltf.TextureFormat, mipmap?: boolean,
-            wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap,
-            magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter,
-            flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment,
-            type?: gltf.TextureDataType, anisotropy?: number,
-        ) {
-            super(name);
-
-            if (source && source.hasOwnProperty("version")) {
-                this.config = source as GLTF;
-            }
-            else {
-                // ArrayBufferView || null
-                this.config = GLTFAsset.createTextureConfig(); // TODO  
-            }
-
-            this._gltfTexture = this.config.textures![0] as GLTFTexture;
-            const paperExtension = this._gltfTexture.extensions.paper!;
-
-            { // Sampler
-                this._sampler = this.config.samplers![this._gltfTexture.sampler as number];
-                this._sampler.wrapS = wrapS || gltf.TextureWrap.REPEAT;
-                this._sampler.wrapT = wrapT || gltf.TextureWrap.REPEAT;
-                this._sampler.magFilter = magFilter || gltf.TextureFilter.NEAREST;
-                this._sampler.minFilter = minFilter || gltf.TextureFilter.NEAREST;
-            }
+        protected static _createConfig(createTextureParameters: CreateTextureParameters) {
+            const config = this.createConfig();
+            config.images = [{}];
+            config.samplers = [{
+                magFilter: gltf.TextureFilter.Nearest, minFilter: gltf.TextureFilter.Nearest,
+                wrapS: gltf.TextureWrappingMode.Repeat, wrapT: gltf.TextureWrappingMode.Repeat,
+            }];
+            config.textures = [{ sampler: 0, source: 0, extensions: { paper: {} } }];
             //
-            let w = width;
-            let h = height;
-            {
-                this._image = this.config.images![this._gltfTexture.source as number];
-                if (ArrayBuffer.isView(source)) {
-                    this._image.uri = source;
-                }
-                else if (source) {
-                    const img = this._image.uri = source as gltf.ImageSource;
-                    w = img.width;
-                    h = img.height;
-                }
+            const gltfTexture = config.textures![0] as GLTFTexture;
+            const image = config.images![gltfTexture.source!];
+            const sampler = config.samplers![gltfTexture.sampler!];
+            const extension = gltfTexture.extensions.paper;
+            //
+            const {
+                source, width = 0, height = 0,
+                mipmap = false, premultiplyAlpha = 0, flipY = 0,
+                anisotropy = 1,
+                format = gltf.TextureFormat.RGBA, type = gltf.TextureDataType.UNSIGNED_BYTE,
+                wrapS = gltf.TextureWrappingMode.Repeat, wrapT = gltf.TextureWrappingMode.Repeat,
+                magFilter = gltf.TextureFilter.Nearest, minFilter = gltf.TextureFilter.Nearest,
+                unpackAlignment = gltf.TextureAlignment.Four,
+                //
+                depthBuffer = false, stencilBuffer = false,
+            } = createTextureParameters as CreateTextureParameters;
+            //
+            sampler.wrapS = wrapS;
+            sampler.wrapT = wrapT;
+            sampler.magFilter = magFilter;
+            sampler.minFilter = minFilter;
+
+            extension.width = width;
+            extension.height = height;
+            extension.anisotropy = anisotropy;
+
+            extension.mipmap = mipmap;
+            extension.premultiplyAlpha = premultiplyAlpha;
+            extension.flipY = flipY;
+
+            extension.depthBuffer = depthBuffer;
+            extension.stencilBuffer = stencilBuffer;
+
+            extension.format = format;
+            extension.type = type;
+            extension.unpackAlignment = unpackAlignment;
+            //
+            if (ArrayBuffer.isView(source)) {
+                image.uri = source;
             }
-            paperExtension.width = w;
-            paperExtension.height = h;
+            else if (source) {
+                image.uri = source;
+                extension.width = source.width;
+                extension.height = source.height;
+            }
 
-            paperExtension.format = format || gltf.TextureFormat.RGBA;
-            paperExtension.premultiplyAlpha = premultiplyAlpha ? 1 : 0;
-            paperExtension.unpackAlignment = unpackAlignment || gltf.TextureAlignment.Four;
-            paperExtension.mipmap = mipmap || false;
-            paperExtension.flipY = flipY ? 1 : 0;
-            paperExtension.type = type || gltf.TextureDataType.UNSIGNED_BYTE;
-            paperExtension.anisotropy = anisotropy || 1;
-
-            this._dirty = true;
+            return config;
         }
 
+        protected _gltfTexture: GLTFTexture = null!;
+        protected _image: gltf.Image = null!;
+        protected _sampler: gltf.Sampler = null!;
         /**
          * @internal
          */
-        public setupTexture(index?: number): void { }
+        public setupTexture(index: uint): void { }
+
+        public initialize(name: string, config: GLTF) {
+            super.initialize(name, config, null);
+
+            const gltfTexture = this._gltfTexture = this.config.textures![0] as GLTFTexture;
+            this._image = this.config.images![gltfTexture.source!];
+            this._sampler = this.config.samplers![gltfTexture.sampler!];
+        }
+        /**
+         * 
+         */
+        public setLiner(linear: boolean): this {
+            const sampler = this._sampler;
+
+            if (this._gltfTexture.extensions.paper.mipmap) {
+                sampler.magFilter = linear ? gltf.TextureFilter.Linear : gltf.TextureFilter.Nearest;
+                sampler.minFilter = linear ? gltf.TextureFilter.LinearMipMapLinear : gltf.TextureFilter.MearestMipmapNearest;
+            }
+            else {
+                sampler.magFilter = linear ? gltf.TextureFilter.Linear : gltf.TextureFilter.Nearest;
+                sampler.minFilter = linear ? gltf.TextureFilter.Linear : gltf.TextureFilter.Nearest;
+            }
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public setRepeat(repeat: boolean): this {
+            const sampler = this._sampler;
+            sampler.wrapS = sampler.wrapT = repeat ? gltf.TextureWrappingMode.Repeat : gltf.TextureWrappingMode.ClampToEdge;
+
+            return this;
+        }
         /**
          * 
          */
@@ -114,97 +133,83 @@ namespace egret3d {
         /**
          * 
          */
-        public get gltfSampler(): gltf.Sampler {
+        public get sampler(): gltf.Sampler {
             return this._sampler;
         }
         /**
          * 
          */
         public get gltfTexture(): GLTFTexture {
-            return this._gltfTexture!;
+            return this._gltfTexture;
         }
     }
     /**
      * 纹理资源。
      */
     export class Texture extends BaseTexture {
-        public static create(name: string, source: GLTF, width?: number, height?: number): Texture;
-        public static create(name: string, source: ArrayBufferView | gltf.ImageSource | null, width: number, height: number, format?: gltf.TextureFormat): Texture;
-        public static create(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource, width: number, height: number,
-            format?: gltf.TextureFormat, mipmap?: boolean,
-            wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap,
-            magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter,
-            flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment,
-            type?: gltf.TextureDataType, anisotropy?: number,
-        ): Texture;
-        public static create(name: string, source: GLTF | ArrayBufferView | gltf.ImageSource | null, width: number, height: number,
-            format?: gltf.TextureFormat, mipmap?: boolean,
-            wrapS?: gltf.TextureWrap, wrapT?: gltf.TextureWrap,
-            magFilter?: gltf.TextureFilter, minFilter?: gltf.TextureFilter,
-            flipY?: boolean, premultiplyAlpha?: boolean, unpackAlignment?: gltf.TextureAlignment,
-            type?: gltf.TextureDataType, anisotropy?: number): Texture {
+        /**
+         * 
+         * @param parameters 
+         */
+        public static create(parameters: CreateTextureParameters): Texture;
+        /**
+         * @private
+         */
+        public static create(name: string, config: GLTF): Texture;
+        public static create(parametersOrName: CreateTextureParameters | string, config?: GLTF) {
+            let name: string;
+            let texture: Texture;
 
-            return new egret3d.Texture(name, source, width, height,
-                format, mipmap,
-                wrapS, wrapT,
-                magFilter, minFilter,
-                flipY, premultiplyAlpha, unpackAlignment,
-                type, anisotropy);
-        }
-        public static createByImage(name: string, image: gltf.ImageSource | egret.BitmapData, format: gltf.TextureFormat, mipmap: boolean, linear: boolean, repeat: boolean, premultiply?: boolean): Texture {
-            let magFilter = gltf.TextureFilter.LINEAR;
-            let minFilter = gltf.TextureFilter.LINEAR;
-            const wrapS = repeat ? gltf.TextureWrap.REPEAT : gltf.TextureWrap.CLAMP_TO_EDGE;
-            const wrapT = repeat ? gltf.TextureWrap.REPEAT : gltf.TextureWrap.CLAMP_TO_EDGE;
-            if (mipmap) {
-                magFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
-                minFilter = linear ? gltf.TextureFilter.LINEAR_MIPMAP_LINEAR : gltf.TextureFilter.NEAREST_MIPMAP_NEAREST;
+            if (typeof parametersOrName === "string") {
+                name = parametersOrName;
             }
             else {
-                magFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
-                minFilter = linear ? gltf.TextureFilter.LINEAR : gltf.TextureFilter.NEAREST;
+                config = this._createConfig(parametersOrName as CreateTextureParameters);
+                name = (parametersOrName as CreateTextureParameters).name || "";
             }
-            const texture = egret3d.Texture.create(name, image instanceof egret.BitmapData ? image.source : image,
-                image.width, image.height,
-                format, mipmap,
-                wrapS, wrapT,
-                magFilter, minFilter,
-                false, premultiply);
+
+            // Retargeting.
+            texture = new egret3d.Texture();
+            texture.initialize(name, config!);
 
             return texture;
         }
-
+        /**
+         * 
+         */
         public static createColorTexture(name: string, r: number, g: number, b: number): Texture {
-            const mipmap = true;
-            const width = 1;
-            const height = 1;
-            const data = new Uint8Array([r, g, b, 255]);
-            const texture = Texture.create(name, data, width, height,
-                gltf.TextureFormat.RGBA, mipmap,
-                gltf.TextureWrap.CLAMP_TO_EDGE, gltf.TextureWrap.CLAMP_TO_EDGE,
-                gltf.TextureFilter.LINEAR, gltf.TextureFilter.LINEAR_MIPMAP_LINEAR);
+            const texture = Texture.create({
+                name, source: new Uint8Array([r, g, b, 255]), width: 1, height: 1,
+                // mipmap: true,
+                wrapS: gltf.TextureWrappingMode.ClampToEdge, wrapT: gltf.TextureWrappingMode.ClampToEdge,
+                magFilter: gltf.TextureFilter.Linear, minFilter: gltf.TextureFilter.LinearMipMapLinear
+            });
 
             return texture;
         }
-
+        /**
+         * @internal
+         */
         public static createGridTexture(name: string): Texture {
-            const mipmap = true;
             const width = 128;
             const height = 128;
-            const data = new Uint8Array(width * height * 4);
+            const source = new Uint8Array(width * height * 4);
 
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
                     const seek = (y * width + x) * 4;
                     const bool = ((x - width * 0.5) * (y - height * 0.5)) > 0;
-                    data[seek] = data[seek + 1] = data[seek + 2] = bool ? 0 : 255;
-                    data[seek + 3] = 255;
+                    source[seek] = source[seek + 1] = source[seek + 2] = bool ? 0 : 255;
+                    source[seek + 3] = 255;
                 }
             }
-            const texture = Texture.create(name, data, width, height,
-                gltf.TextureFormat.RGBA, mipmap,
-                gltf.TextureWrap.REPEAT, gltf.TextureWrap.REPEAT,
-                gltf.TextureFilter.LINEAR, gltf.TextureFilter.LINEAR_MIPMAP_LINEAR);
+
+            const texture = Texture.create({
+                name, source, width, height,
+                mipmap: true,
+                wrapS: gltf.TextureWrappingMode.Repeat, wrapT: gltf.TextureWrappingMode.Repeat,
+                magFilter: gltf.TextureFilter.Linear, minFilter: gltf.TextureFilter.LinearMipMapLinear
+            });
 
             return texture;
         }

@@ -67,9 +67,9 @@ namespace egret3d {
             }
 
             const mesh = Mesh.create(vertices.length / 3, indices.length);
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+            mesh.setAttributes(gltf.AttributeSemantics.POSITION, vertices);
+            mesh.setAttributes(gltf.AttributeSemantics.NORMAL, normals);
+            mesh.setAttributes(gltf.AttributeSemantics.TEXCOORD_0, uvs);
             mesh.setIndices(indices);
 
             return mesh;
@@ -113,9 +113,9 @@ namespace egret3d {
             if (differentFace) {
                 const faceIndexCount = indices.length / 6;
                 const mesh = Mesh.create(vertices.length / 3, 0);
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, vertices);
+                mesh.setAttributes(gltf.AttributeSemantics.NORMAL, normals);
+                mesh.setAttributes(gltf.AttributeSemantics.TEXCOORD_0, uvs);
 
                 for (let i = 0; i < 6; ++i) {
                     mesh.addSubMesh(faceIndexCount, i);
@@ -126,9 +126,9 @@ namespace egret3d {
             }
             else {
                 const mesh = Mesh.create(vertices.length / 3, indices.length);
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, vertices);
+                mesh.setAttributes(gltf.AttributeSemantics.NORMAL, normals);
+                mesh.setAttributes(gltf.AttributeSemantics.TEXCOORD_0, uvs);
                 mesh.setIndices(indices);
 
                 return mesh;
@@ -253,9 +253,9 @@ namespace egret3d {
             // build geometry
             if (differentFace) {
                 const mesh = Mesh.create(vertices.length / 3, 0);
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, vertices);
+                mesh.setAttributes(gltf.AttributeSemantics.NORMAL, normals);
+                mesh.setAttributes(gltf.AttributeSemantics.TEXCOORD_0, uvs);
 
                 for (let i = 0; i < subIndices.length; i += 3) {
                     mesh.addSubMesh(subIndices[1], subIndices[2]);
@@ -266,9 +266,9 @@ namespace egret3d {
             }
             else {
                 const mesh = Mesh.create(vertices.length / 3, indices.length);
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-                mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-                mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, vertices);
+                mesh.setAttributes(gltf.AttributeSemantics.NORMAL, normals);
+                mesh.setAttributes(gltf.AttributeSemantics.TEXCOORD_0, uvs);
                 mesh.setIndices(indices);
 
                 return mesh;
@@ -443,8 +443,8 @@ namespace egret3d {
 
             }
 
-            const mesh = egret3d.Mesh.create(vertices.length / 3, 0, [gltf.MeshAttributeType.POSITION]);
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
+            const mesh = Mesh.create(vertices.length / 3, 0, [gltf.AttributeSemantics.POSITION]);
+            mesh.setAttributes(gltf.AttributeSemantics.POSITION, vertices);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.LineStrip;
 
             return mesh;
@@ -535,10 +535,10 @@ namespace egret3d {
             normal.release();
 
             // build geometry
-            const mesh = Mesh.create(vertices.length / 3, indices.length, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.NORMAL, gltf.MeshAttributeType.TEXCOORD_0]);
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+            const mesh = Mesh.create(vertices.length / 3, indices.length, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.NORMAL, gltf.AttributeSemantics.TEXCOORD_0]);
+            mesh.setAttributes(gltf.AttributeSemantics.POSITION, vertices);
+            mesh.setAttributes(gltf.AttributeSemantics.NORMAL, normals);
+            mesh.setAttributes(gltf.AttributeSemantics.TEXCOORD_0, uvs);
             mesh.setIndices(indices);
 
             return mesh;
@@ -632,10 +632,10 @@ namespace egret3d {
             }
 
             // build geometry
-            const mesh = Mesh.create(vertices.length / 3, indices.length, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.NORMAL, gltf.MeshAttributeType.TEXCOORD_0]);
-            mesh.setAttributes(gltf.MeshAttributeType.POSITION, vertices);
-            mesh.setAttributes(gltf.MeshAttributeType.NORMAL, normals);
-            mesh.setAttributes(gltf.MeshAttributeType.TEXCOORD_0, uvs);
+            const mesh = Mesh.create(vertices.length / 3, indices.length, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.NORMAL, gltf.AttributeSemantics.TEXCOORD_0]);
+            mesh.setAttributes(gltf.AttributeSemantics.POSITION, vertices);
+            mesh.setAttributes(gltf.AttributeSemantics.NORMAL, normals);
+            mesh.setAttributes(gltf.AttributeSemantics.TEXCOORD_0, uvs);
             mesh.setIndices(indices);
 
             return mesh;

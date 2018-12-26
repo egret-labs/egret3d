@@ -6,6 +6,7 @@ namespace paper {
         public readonly interests = [
             { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
         ];
+
         private readonly _disposeCollecter: DisposeCollecter = GameObject.globalGameObject.getOrAddComponent(DisposeCollecter);
 
         public onRemoveComponent(component: Behaviour) {
@@ -42,6 +43,12 @@ namespace paper {
                 const instances = (instance.constructor as any)._instances as BaseRelease<any>[]; // TODO
                 instance.onClear && instance.onClear();
                 instances.push(instance);
+            }
+
+            for (const asset of disposeCollecter.assets) {
+                if (asset.onReferenceCountChange!(true)) {
+                    console.debug("Auto dispose GPU memory.", asset.name);
+                }
             }
 
             disposeCollecter.clear();

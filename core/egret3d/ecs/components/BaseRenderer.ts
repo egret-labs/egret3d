@@ -14,6 +14,10 @@ namespace paper {
         @editor.property(editor.EditType.CHECKBOX)
         public frustumCulled: boolean = true;
         /**
+         * 
+         */
+        public readonly defines: egret3d.Defines = new egret3d.Defines();
+        /**
          * @internal
          */
         public _localBoundingBoxDirty: boolean = true;
@@ -24,26 +28,33 @@ namespace paper {
         protected _castShadows: boolean = false;
         protected readonly _boundingSphere: egret3d.Sphere = egret3d.Sphere.create();
         protected readonly _localBoundingBox: egret3d.Box = egret3d.Box.create();
-        @paper.serializedField
-        protected readonly _materials: (egret3d.Material | null)[] = [egret3d.DefaultMaterials.MESH_BASIC];
+        protected readonly _materials: (egret3d.Material | null)[] = [egret3d.DefaultMaterials.MESH_BASIC.retain()];
 
         protected _recalculateSphere() {
             const localBoundingBox = this.localBoundingBox; // Update localBoundingBox.
 
-            const worldMatrix = this.gameObject.transform.localToWorldMatrix;
+            const localToWorldMatrix = this.getBoundingTransform().localToWorldMatrix;
             this._boundingSphere.set(localBoundingBox.center, localBoundingBox.boundingSphereRadius);
-            this._boundingSphere.center.applyMatrix(worldMatrix);
-            this._boundingSphere.radius *= worldMatrix.maxScaleOnAxis;
+            this._boundingSphere.center.applyMatrix(localToWorldMatrix);
+            this._boundingSphere.radius *= localToWorldMatrix.maxScaleOnAxis;
         }
 
         public initialize() {
             super.initialize();
 
-            this.gameObject.transform.registerObserver(this);
+            this.getBoundingTransform().registerObserver(this);
         }
 
         public uninitialize() {
             super.uninitialize();
+
+            for (const material of this._materials) {
+                if (material) {
+                    material.release();
+                }
+            }
+
+            this.defines.clear();
 
             this._materials.length = 0;
         }
@@ -51,7 +62,6 @@ namespace paper {
         public onTransformChange() {
             this._boundingSphereDirty = true;
         }
-
         /**
          * 重新计算 AABB。
          */
@@ -59,6 +69,12 @@ namespace paper {
 
         public abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
         public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
+        /**
+         * 
+         */
+        public getBoundingTransform(): egret3d.Transform {
+            return this.gameObject.transform;
+        }
         /**
          * 该组件是否接收投影。
          */
@@ -113,16 +129,30 @@ namespace paper {
          * 该组件的材质列表。
          */
         @editor.property(editor.EditType.MATERIAL_ARRAY)
+        @paper.serializedField("_materials")
         public get materials(): ReadonlyArray<egret3d.Material | null> {
             return this._materials;
         }
         public set materials(value: ReadonlyArray<egret3d.Material | null>) {
-            // TODO 共享材质的接口。
             const materials = this._materials;
+
+            for (const material of materials) {
+                if (material) {
+                    material.release();
+                }
+            }
+
             if (value !== materials) {
                 materials.length = 0;
+
                 for (const material of value) {
                     materials.push(material);
+                }
+            }
+
+            for (const material of materials) {
+                if (material) {
+                    material.retain();
                 }
             }
 
@@ -132,22 +162,35 @@ namespace paper {
          * 该组件材质列表中的第一个材质。
          */
         public get material(): egret3d.Material | null {
-            return this._materials.length > 0 ? this._materials[0] : null;
+            const materials = this._materials;
+
+            return materials.length > 0 ? materials[0] : null;
         }
         public set material(value: egret3d.Material | null) {
             let dirty = false;
-            if (this._materials.length > 0) {
-                if (this._materials[0] !== value) {
-                    this._materials[0] = value;
+            const materials = this._materials;
+            let existingMaterial: egret3d.Material | null = null;
+
+            if (materials.length > 0) {
+                existingMaterial = materials[0];
+                if (existingMaterial !== value) {
                     dirty = true;
                 }
             }
             else if (value) {
-                this._materials.push(value);
                 dirty = true;
             }
 
             if (dirty) {
+                if (existingMaterial) {
+                    existingMaterial.release();
+                }
+
+                if (value) {
+                    value.retain();
+                }
+
+                materials[0] = value;
                 BaseRenderer.onMaterialsChanged.dispatch(this);
             }
         }

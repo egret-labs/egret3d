@@ -209,6 +209,16 @@ declare namespace paper {
      */
     const enum RenderQueue {
     }
+    /**
+     *
+     */
+    const enum AttributeSemantics {
+    }
+    /**
+     *
+     */
+    const enum UniformSemantics {
+    }
 }
 declare namespace paper.editor {
 }

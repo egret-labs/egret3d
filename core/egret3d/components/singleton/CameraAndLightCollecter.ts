@@ -22,7 +22,7 @@ namespace egret3d {
             return aOrder - bOrder;
         }
         /**
-         * 更新摄像机。
+         * 更新相机。
          */
         public updateCameras(gameObjects: ReadonlyArray<paper.GameObject>) {
             this.cameras.length = 0;
@@ -31,7 +31,9 @@ namespace egret3d {
                 this.cameras.push(gameObject.getComponent(Camera)!);
             }
         }
-
+        /**
+         * 更新灯光。
+         */
         public updateLights(gameObjects: ReadonlyArray<paper.GameObject>) {
             this.lightDirty = true;
             this.lights.length = 0;
@@ -40,13 +42,14 @@ namespace egret3d {
                 this.lights.push(gameObject.getComponent(BaseLight as any, true) as BaseLight);
             }
         }
-
+        /**
+         * 排序相机。
+         */
         public sortCameras() {
-            // TODO camera order event.
             this.cameras.sort(this._sortCameras);
         }
         /**
-         * 摄像机计数
+         * 相机计数。
          */
         @paper.editor.property(paper.editor.EditType.UINT, { readonly: true })
         public get cameraCount(): uint {

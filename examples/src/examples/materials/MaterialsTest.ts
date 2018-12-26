@@ -11,9 +11,15 @@ namespace examples.materials {
                 gameObject.transform.setLocalPosition(2.0, 0.0, 0.0);
                 // 
                 const renderer = gameObject.renderer!;
-                const materials = renderer.materials as egret3d.Material[];
-                materials[0] = egret3d.Material.create().setTexture(await RES.getResAsync("logo.png"));
-                materials[1] = egret3d.Material.create().setTexture(await RES.getResAsync("textures/UV_Grid_Sm.jpg")).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.5);
+                const materials = [
+                    egret3d.Material
+                        .create()
+                        .setTexture(await RES.getResAsync("logo.png")),
+                    egret3d.Material
+                        .create()
+                        .setTexture(await RES.getResAsync("textures/UV_Grid_Sm.jpg"))
+                        .setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.5),
+                ]
                 renderer.materials = materials;
             }
 
@@ -26,9 +32,13 @@ namespace examples.materials {
                 animation.play("run01");
                 //
                 const renderer = gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!;
-                const materials = renderer.materials as egret3d.Material[];
-                // materials[0] = egret3d.Material.create().setTexture(await RES.getResAsync("logo.png"));
-                materials[1] = egret3d.Material.create().setTexture(await RES.getResAsync("textures/UV_Grid_Sm.jpg")).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.5);
+                const materials = renderer.materials.concat();
+                materials.push(
+                    egret3d.Material
+                        .create()
+                        .setTexture(await RES.getResAsync("textures/UV_Grid_Sm.jpg"))
+                        .setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.5)
+                );
                 renderer.materials = materials;
             }
         }

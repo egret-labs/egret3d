@@ -14,14 +14,9 @@ namespace egret3d {
         /**
          * @internal
          */
-        public static create() {
-            return new Fog();
+        public static create(scene: paper.Scene) {
+            return new Fog(scene);
         }
-        /**
-         * 雾的模式。
-         */
-        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((egret3d as any).FogMode) }) // TODO
-        public mode: FogMode = FogMode.None;
         /**
          * 雾的强度。
          */
@@ -44,10 +39,12 @@ namespace egret3d {
          */
         @paper.editor.property(paper.editor.EditType.COLOR)
         public readonly color: Color = Color.create(0.5, 0.5, 0.5, 1);
-        /**
-         * 禁止实例化。
-         */
-        private constructor() {
+
+        private _mode: FogMode = FogMode.None;
+        private readonly _scene: paper.Scene;
+
+        private constructor(scene: paper.Scene) {
+            this._scene = scene;
         }
 
         public serialize() {
@@ -63,6 +60,34 @@ namespace egret3d {
             this.color.fromArray(data, 4);
 
             return this;
+        }
+        /**
+         * 雾的模式。
+         */
+        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((egret3d as any).FogMode) }) // TODO
+        public get mode(): FogMode {
+            return this._mode;
+        }
+        public set mode(value: FogMode) {
+            if (this._mode === value) {
+                return;
+            }
+            
+            const scene = this._scene;
+            this._mode = value;
+
+            switch (value) {
+                case FogMode.Fog:
+                    scene.defines.addDefine(ShaderDefine.USE_FOG);
+                case FogMode.FogEXP2:
+                    scene.defines.addDefine(ShaderDefine.FOG_EXP2);
+                    break;
+
+                case FogMode.None:
+                    scene.defines.removeDefine(ShaderDefine.USE_FOG);
+                    scene.defines.removeDefine(ShaderDefine.FOG_EXP2);
+                    break;
+            }
         }
     }
 }

@@ -125,7 +125,7 @@ namespace paper.editor {
                 setPoint(cameraProject, positions, 0, -1, -1, [48]);
                 setPoint(cameraProject, positions, 0, 1, -1, [49]);
 
-                mesh.uploadVertexBuffer(gltf.MeshAttributeType.POSITION);
+                mesh.uploadVertexBuffer(gltf.AttributeSemantics.POSITION);
             }
         }
 

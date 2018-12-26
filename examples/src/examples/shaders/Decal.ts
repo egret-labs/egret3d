@@ -8,7 +8,7 @@ namespace examples.shaders {
             // Create camera.
             egret3d.Camera.main;
 
-            const shader = egret3d.Shader.create(egret3d.DefaultShaders.MESH_BASIC, "custom/decal.shader.json");
+            const shader = egret3d.Shader.create("custom/decal.shader.json", egret3d.DefaultShaders.MESH_BASIC);
             shader
                 .addDefine(
                     "CUSTOM_DECAL",
@@ -37,8 +37,8 @@ namespace examples.shaders {
             { // SkinnedMeshRenderer.
                 await RES.getResAsync("Assets/Prefab/Actor/female1.prefab.json");
                 const texture = await RES.getResAsync("textures/sprite0.png") as egret3d.Texture;
-                texture.gltfSampler.wrapS = gltf.TextureWrap.CLAMP_TO_EDGE;
-                texture.gltfSampler.wrapT = gltf.TextureWrap.CLAMP_TO_EDGE;
+                texture.sampler.wrapS = gltf.TextureWrappingMode.ClampToEdge;
+                texture.sampler.wrapT = gltf.TextureWrappingMode.ClampToEdge;
 
                 const gameObject = paper.Prefab.create("Assets/Prefab/Actor/female1.prefab.json")!;
                 gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);

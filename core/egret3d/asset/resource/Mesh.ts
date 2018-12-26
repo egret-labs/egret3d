@@ -3,95 +3,11 @@ namespace egret3d {
     const _helpTriangleB = Triangle.create();
     const _helpRaycastInfo = RaycastInfo.create();
 
-    const _attributeNames: gltf.MeshAttributeType[] = [
-        gltf.MeshAttributeType.POSITION,
-        gltf.MeshAttributeType.NORMAL,
-        gltf.MeshAttributeType.TEXCOORD_0,
+    const _attributeNames: gltf.AttributeSemantics[] = [
+        gltf.AttributeSemantics.POSITION,
+        gltf.AttributeSemantics.NORMAL,
+        gltf.AttributeSemantics.TEXCOORD_0,
     ];
-    /**
-     * 
-     */
-    export const enum HumanoidMask {
-        Head,
-        Body,
-        LeftArm,
-        RightArm,
-        LeftHand,
-        RightHand,
-        LeftLeg,
-        RightLeg,
-        LeftHandIK,
-        RightHandIK,
-        LeftFootIK,
-        RightFootIK,
-    }
-    /**
-     * 
-     */
-    export const enum HumanoidJoint {
-        Heck = "H_Neck",
-        Head = "H_Head",
-        LeftEye = "H_LeftEye",
-        RightEye = "H_RightEye",
-        Jaw = "H_Jaw",
-
-        Hips = "B_Hips",
-        Spine = "B_Spine",
-        Chest = "B_Chest",
-        UpperChest = "B_UpperChest",
-
-        LeftShoulder = "LA_Shoulder",
-        LeftUpperArm = "LA_UpperArm",
-        LeftLowerArm = "LA_LowerArm",
-        LeftHand = "LA_Hand",
-
-        RightShoulder = "RA_Shoulder",
-        RightUpperArm = "RA_UpperArm",
-        RightLowerArm = "RA_LowerArm",
-        RightHand = "RA_Hand",
-
-        LeftUpperLeg = "LL_UpperLeg",
-        LeftLowerLeg = "LL_LowerLeg",
-        LeftFoot = "LL_Foot",
-        LeftToes = "LL_Toes",
-
-        RightUpperLeg = "RL_UpperLeg",
-        RightLowerLeg = "RL_LowerLeg",
-        RightFoot = "RL_Foot",
-        RightToes = "RL_Toes",
-
-        LeftThumbProximal = "LH_ThumbProximal",
-        LeftThumbIntermediate = "LH_ThumbIntermediate",
-        LeftThumbDistal = "LH_ThumbDistal",
-        LeftIndexProximal = "LH_IndexProximal",
-        LeftIndexIntermediate = "LH_IndexIntermediate",
-        LeftIndexDistal = "LH_IndexDistal",
-        LeftMiddleProximal = "LH_MiddleProximal",
-        LeftMiddleIntermediate = "LH_MiddleIntermediate",
-        LeftMiddleDistal = "LH_MiddleDistal",
-        LeftRingProximal = "LH_RingProximal",
-        LeftRingIntermediate = "LH_RingIntermediate",
-        LeftRingDistal = "LH_RingDistal",
-        LeftLittleProximal = "LH_LittleProximal",
-        LeftLittleIntermediate = "LH_LittleIntermediate",
-        LeftLittleDistal = "LH_LittleDistal",
-
-        RightThumbProximal = "RH_ThumbProximal",
-        RightThumbIntermediate = "RH_ThumbIntermediate",
-        RightThumbDistal = "RH_ThumbDistal",
-        RightIndexProximal = "RH_IndexProximal",
-        RightIndexIntermediate = "RH_IndexIntermediate",
-        RightIndexDistal = "RH_IndexDistal",
-        RightMiddleProximal = "RH_MiddleProximal",
-        RightMiddleIntermediate = "RH_MiddleIntermediate",
-        RightMiddleDistal = "RH_MiddleDistal",
-        RightRingProximal = "RH_RingProximal",
-        RightRingIntermediate = "RH_RingIntermediate",
-        RightRingDistal = "RH_RingDistal",
-        RightLittleProximal = "RH_LittleProximal",
-        RightLittleIntermediate = "RH_LittleIntermediate",
-        RightLittleDistal = "RH_LittleDistal",
-    }
     /**
      * 网格资源。
      */
@@ -102,103 +18,145 @@ namespace egret3d {
          * @param indexCount 
          * @param attributeNames 
          * @param attributeTypes 
-         * @param drawMode 
          */
         public static create(
-            vertexCount: number, indexCount: number,
-            attributeNames?: gltf.MeshAttribute[] | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
-            drawMode?: gltf.DrawMode
+            vertexCount: uint, indexCount: uint,
+            attributeNames?: gltf.AttributeSemantics[] | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null
         ): Mesh;
-        public static create(config: GLTF, buffers: Uint32Array[], name: string): Mesh;
+        /**
+         * 加载一个网格。
+         * @private 
+         */
+        public static create(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView>): Mesh;
         public static create(
-            vertexCountOrConfig: number | GLTF, indexCountOrBuffers?: number | Uint32Array[],
-            attributeNamesOrName?: gltf.MeshAttribute[] | null | string, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
-            drawMode?: gltf.DrawMode
+            vertexCountOrName: uint | string, indexCountOrConfig?: uint | GLTF,
+            attributeNamesOrBuffers?: gltf.AttributeSemantics[] | null | ReadonlyArray<ArrayBufferView>, attributeTypes?: { [key: string]: gltf.AccessorType } | null
         ) {
-            // Retarget.
-            return new egret3d.Mesh(vertexCountOrConfig as any, indexCountOrBuffers as any, attributeNamesOrName as any, attributeTypes, drawMode);
+            let name: string;
+            let config: GLTF;
+            let buffers: ArrayBufferView[];
+            let mesh: Mesh;
+            let indexCount = 0;
+            //
+            if (typeof vertexCountOrName === "number") {
+                indexCount = indexCountOrConfig as uint;
+                //
+                name = "";
+                config = this._createConfig(
+                    vertexCountOrName as uint, indexCount,
+                    attributeNamesOrBuffers as any || _attributeNames, attributeTypes || null
+                );
+                buffers = [new Uint32Array(config.bufferViews![0].byteLength / Uint32Array.BYTES_PER_ELEMENT)];
+            }
+            else {
+                name = vertexCountOrName;
+                config = indexCountOrConfig as GLTF;
+                buffers = attributeNamesOrBuffers as ArrayBufferView[];
+            }
+            // Retargeting.
+            mesh = new egret3d.Mesh();
+            mesh.initialize(name, config, buffers, attributeTypes || null);
+            //
+            if (indexCount > 0) {
+                mesh.addSubMesh(indexCount, 0);
+            }
+
+            return mesh;
+        }
+
+        private static _createConfig(vertexCount: uint, indexCount: uint, attributeNames: gltf.AttributeSemantics[], attributeTypes: { [key: string]: gltf.AccessorType } | null) {
+            const config = this.createConfig();
+            config.buffers = [{ byteLength: 0 }];
+            config.bufferViews = [{ buffer: 0, byteOffset: 0, byteLength: 0, target: gltf.BufferViewTarget.ArrayBuffer }]; // VBO
+            config.accessors = [];
+            config.meshes = [{
+                primitives: [{ attributes: {} }],
+                extensions: { paper: {} },
+            }];
+            //
+            const buffer = config.buffers![0];
+            const vertexBufferView = config.bufferViews![0];
+            const { accessors } = config;
+            const { attributes } = config.meshes![0].primitives[0];
+            //
+            for (const attributeName of attributeNames) {
+                const attributeType = this._getMeshAttributeType(attributeName, attributeTypes);
+                const byteOffset = vertexBufferView.byteLength;
+                vertexBufferView.byteLength += vertexCount * GLTFAsset.getAccessorTypeCount(attributeType) * Float32Array.BYTES_PER_ELEMENT;
+                attributes[attributeName] = accessors!.length;
+                accessors!.push({
+                    bufferView: 0,
+                    byteOffset: byteOffset,
+                    count: vertexCount,
+                    normalized: attributeName === gltf.AttributeSemantics.NORMAL || attributeName === gltf.AttributeSemantics.TANGENT,
+                    componentType: gltf.ComponentType.Float,
+                    type: attributeType,
+                });
+            }
+
+            buffer.byteLength = vertexBufferView.byteLength;
+            //
+            if (indexCount === 0) {
+                config.meshes![0].primitives[0].material = 0;
+            }
+
+            return config;
+        }
+
+        private static _getMeshAttributeType(attributeName: gltf.AttributeSemantics, customAttributeTypes: { [key: string]: gltf.AccessorType } | null): gltf.AccessorType {
+            if (customAttributeTypes && attributeName in customAttributeTypes) {
+                return customAttributeTypes[attributeName];
+            }
+
+            switch (attributeName) {
+                case gltf.AttributeSemantics.POSITION:
+                case gltf.AttributeSemantics.NORMAL:
+                    return gltf.AccessorType.VEC3;
+
+                case gltf.AttributeSemantics.TEXCOORD_0:
+                case gltf.AttributeSemantics.TEXCOORD_1:
+                    return gltf.AccessorType.VEC2;
+
+                case gltf.AttributeSemantics.TANGENT:
+                case gltf.AttributeSemantics.COLOR_0:
+                case gltf.AttributeSemantics.COLOR_1:
+                case gltf.AttributeSemantics.JOINTS_0:
+                case gltf.AttributeSemantics.WEIGHTS_0:
+                    return gltf.AccessorType.VEC4;
+
+                default:
+                    throw new Error();
+            }
         }
 
         protected _drawMode: gltf.DrawMode = gltf.DrawMode.Static;
         protected _vertexCount: uint = 0;
-        protected readonly _attributeNames: string[] = [];
-        protected readonly _customAttributeTypes: { [key: string]: gltf.AccessorType } = {};
-        protected _glTFMesh: gltf.Mesh | null = null;
-        protected _inverseBindMatrices: Float32Array | null = null;
+        protected readonly _attributeNames: gltf.AttributeSemantics[] = [];
+        protected readonly _attributeTypes: { [key: string]: gltf.AccessorType } = {};
+        protected _glTFMesh: gltf.Mesh = null!;
+        protected _inverseBindMatrices: ArrayBufferView | null = null;
         protected _boneIndices: { [key: string]: uint } | null = null;
-        /**
-         * 请使用 `egret3d.Mesh.create()` 创建实例。
-         * @see egret3d.Mesh.create()
-         */
-        protected constructor(
-            vertexCountOrConfig: uint | GLTF, indexCountOrBuffers?: uint | Uint32Array[],
-            attributeNamesOrName?: gltf.MeshAttribute[] | null | string, attributeTypes?: { [key: string]: gltf.AccessorType } | null,
-            drawMode?: gltf.DrawMode
+
+        public initialize(
+            name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null,
+            attributeTypes: { [key: string]: gltf.AccessorType } | null
         ) {
-            super(typeof attributeNamesOrName === "string" ? attributeNamesOrName : "");
+            super.initialize(name, config, buffers);
 
-            if (typeof vertexCountOrConfig === "number") {
-                vertexCountOrConfig = vertexCountOrConfig || 3;
-                indexCountOrBuffers = indexCountOrBuffers || 0;
+            const glTFMesh = this._glTFMesh = this.config.meshes![0];
+            this._vertexCount = this.getAccessor(glTFMesh.primitives[0].attributes.POSITION || 0).count;
 
-                this.config = GLTFAsset.createMeshConfig();
-                //
-                const buffer = this.config.buffers![0];
-                const vertexBufferView = this.config.bufferViews![0];
-                const { accessors } = this.config;
-                const { attributes } = this.config.meshes![0].primitives[0];
-                //
-                let hasCustomAttributeType = false;
-
-                if (attributeTypes) {
-                    for (const k in attributeTypes) {
-                        hasCustomAttributeType = true;
-                        this._customAttributeTypes[k] = attributeTypes[k];
-                    }
-                }
-
-                for (const attributeName of (attributeNamesOrName || _attributeNames) as string[]) { // Create
-                    const attributeType = hasCustomAttributeType ? this._customAttributeTypes[attributeName] || this.getMeshAttributeType(attributeName) : this.getMeshAttributeType(attributeName);
-                    const byteOffset = vertexBufferView.byteLength;
-                    vertexBufferView.byteLength += vertexCountOrConfig * this.getAccessorTypeCount(attributeType) * Float32Array.BYTES_PER_ELEMENT;
-                    attributes[attributeName] = accessors!.length;
-                    accessors!.push({
-                        bufferView: 0,
-                        byteOffset: byteOffset,
-                        count: vertexCountOrConfig,
-                        normalized: attributeName === gltf.MeshAttributeType.NORMAL || attributeName === gltf.MeshAttributeType.TANGENT,
-                        componentType: gltf.ComponentType.Float,
-                        type: attributeType,
-                    });
-                }
-
-                buffer.byteLength = vertexBufferView.byteLength;
-                this.buffers[0] = new Float32Array(vertexBufferView.byteLength / Float32Array.BYTES_PER_ELEMENT);
-                this._drawMode = drawMode || gltf.DrawMode.Static;
-
-                if (indexCountOrBuffers as uint > 0) { // Indices.
-                    this.addSubMesh(indexCountOrBuffers as uint, 0);
-                }
-                else {
-                    this.config.meshes![0].primitives[0].material = 0;
-                }
-            }
-            else {
-                this.config = vertexCountOrConfig as GLTF;
-
-                for (const buffer of indexCountOrBuffers as Uint32Array[]) {
-                    this.buffers.push(buffer);
-                }
-
-                this.name = attributeNamesOrName as string;
+            for (const k in glTFMesh.primitives[0].attributes) {
+                this._attributeNames.push(k as gltf.AttributeSemantics);
             }
 
-            this._glTFMesh = this.config.meshes![0];
-            this._vertexCount = this.getAccessor(this._glTFMesh.primitives[0].attributes.POSITION || 0).count;
-
-            for (const k in this._glTFMesh.primitives[0].attributes) {
-                this._attributeNames.push(k);
+            if (attributeTypes) {
+                for (const k in attributeTypes) {
+                    this._attributeTypes[k] = attributeTypes[k];
+                }
             }
+
+            this.updateAccessorTypeCount();
         }
 
         public dispose() {
@@ -206,10 +164,14 @@ namespace egret3d {
                 return false;
             }
 
+            for (const k in this._attributeTypes) {
+                delete this._attributeTypes[k];
+            }
+
             this._drawMode = gltf.DrawMode.Static;
             this._attributeNames.length = 0;
-            // this._customAttributeTypes TODO
-            this._glTFMesh = null;
+            // this._customAttributeTypes;
+            this._glTFMesh = null!;
             this._inverseBindMatrices = null;
             this._boneIndices = null;
 
@@ -218,9 +180,10 @@ namespace egret3d {
         /**
          * 克隆该网格。
          */
-        public clone() {
+        public clone(): Mesh {
             // TODO
-            const value = Mesh.create(this.vertexCount, 0, this._attributeNames, this._customAttributeTypes, this.drawMode);
+            const value = Mesh.create(this.vertexCount, 0, this._attributeNames, this._attributeTypes);
+            value._drawMode = this._drawMode;
 
             for (const primitive of this._glTFMesh!.primitives) {
                 if (primitive.indices !== undefined) {
@@ -232,8 +195,8 @@ namespace egret3d {
             let index = 0;
             for (const bufferViewA of this.config.bufferViews!) {
                 const bufferViewB = value.config.bufferViews![index++];
-                const a = this.createTypeArrayFromBufferView(bufferViewA, gltf.ComponentType.UnsignedInt);
-                const b = value.createTypeArrayFromBufferView(bufferViewB, gltf.ComponentType.UnsignedInt);
+                const a = this.createTypeArrayFromBufferView(bufferViewA, gltf.ComponentType.UnsignedInt) as Uint8Array;
+                const b = value.createTypeArrayFromBufferView(bufferViewB, gltf.ComponentType.UnsignedInt) as Uint8Array;
 
                 for (let i = 0, l = a.length; i < l; ++i) {
                     b[i] = a[i];
@@ -398,7 +361,7 @@ namespace egret3d {
             const indexBufferView = this.config.bufferViews![subMeshIndex + 1] = {
                 buffer: subMeshIndex + 1,
                 byteOffset: 0,
-                byteLength: indexCount * this.getAccessorTypeCount(gltf.AccessorType.SCALAR) * Uint16Array.BYTES_PER_ELEMENT,
+                byteLength: indexCount * Uint16Array.BYTES_PER_ELEMENT,
                 target: gltf.BufferViewTarget.ElementArrayBuffer,
             };
             const primitive = primitives[subMeshIndex] = primitives[subMeshIndex] || {
@@ -411,6 +374,7 @@ namespace egret3d {
             accessors!.push({
                 bufferView: subMeshIndex + 1, byteOffset: 0,
                 count: indexCount,
+                typeCount: 1,
                 componentType: gltf.ComponentType.UnsignedShort, type: gltf.AccessorType.SCALAR,
             });
             this.buffers[subMeshIndex + 1] = new Uint16Array(indexBufferView.byteLength / Uint16Array.BYTES_PER_ELEMENT);
@@ -425,7 +389,7 @@ namespace egret3d {
          * @param count 顶点数。（默认全部顶点）
          */
         public getVertices(offset: uint = 0, count: uint = 0): Float32Array | null {
-            return this.getAttributes(gltf.MeshAttributeType.POSITION, offset, count);
+            return this.getAttributes(gltf.AttributeSemantics.POSITION, offset, count);
         }
         /**
          * 获取该网格顶点的 UV 属性数据。
@@ -434,7 +398,7 @@ namespace egret3d {
          * @param count 顶点数。（默认全部顶点）
          */
         public getUVs(offset: uint = 0, count: uint = 0): Float32Array | null {
-            return this.getAttributes(gltf.MeshAttributeType.TEXCOORD_0, offset, count);
+            return this.getAttributes(gltf.AttributeSemantics.TEXCOORD_0, offset, count);
         }
         /**
          * 获取该网格顶点的颜色属性数据。
@@ -443,7 +407,7 @@ namespace egret3d {
          * @param count 顶点数。（默认全部顶点）
          */
         public getColors(offset: uint = 0, count: uint = 0): Float32Array | null {
-            return this.getAttributes(gltf.MeshAttributeType.COLOR_0, offset, count);
+            return this.getAttributes(gltf.AttributeSemantics.COLOR_0, offset, count);
         }
         /**
          * 获取该网格顶点的法线属性数据。
@@ -452,7 +416,7 @@ namespace egret3d {
          * @param count 顶点数。（默认全部顶点）
          */
         public getNormals(offset: uint = 0, count: uint = 0): Float32Array | null {
-            return this.getAttributes(gltf.MeshAttributeType.NORMAL, offset, count);
+            return this.getAttributes(gltf.AttributeSemantics.NORMAL, offset, count);
         }
         /**
          * 获取该网格顶点的切线属性数据。
@@ -461,7 +425,7 @@ namespace egret3d {
          * @param count 顶点数。（默认全部顶点）
          */
         public getTangents(offset: uint = 0, count: uint = 0): Float32Array | null {
-            return this.getAttributes(gltf.MeshAttributeType.TANGENT, offset, count);
+            return this.getAttributes(gltf.AttributeSemantics.TANGENT, offset, count);
         }
         /**
          * 获取该网格顶点的指定属性数据。
@@ -469,13 +433,13 @@ namespace egret3d {
          * @param offset 顶点偏移。（默认从第一个点开始）
          * @param count 顶点总数。（默认全部顶点）
          */
-        public getAttributes(attributeType: gltf.MeshAttribute, offset: uint = 0, count: uint = 0): Float32Array | Uint16Array | null {
+        public getAttributes(attributeType: gltf.AttributeSemantics, offset: uint = 0, count: uint = 0): Float32Array | Uint16Array | null {
             const accessorIndex = this._glTFMesh!.primitives[0].attributes[attributeType];
             if (accessorIndex === undefined) {
                 return null;
             }
 
-            return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex), offset, count);
+            return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex), offset, count) as any;
         }
         /**
          * 设置该网格指定的顶点属性数据。
@@ -483,7 +447,7 @@ namespace egret3d {
          * @param value 属性数据。
          * @param offset 顶点偏移。（默认从第一个点开始）
          */
-        public setAttributes(attributeType: gltf.MeshAttribute, value: ReadonlyArray<number>, offset: uint = 0): Float32Array | Uint16Array | null {
+        public setAttributes(attributeType: gltf.AttributeSemantics, value: ReadonlyArray<number>, offset: uint = 0): Float32Array | Uint16Array | null {
             const target = this.getAttributes(attributeType, offset);
             if (target) {
                 for (let i = 0, l = Math.min(value.length, target.length); i < l; i++) {
@@ -504,7 +468,7 @@ namespace egret3d {
                     return null;
                 }
 
-                return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex));
+                return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex)) as any;
             }
 
             console.warn("Error arguments.");
@@ -533,7 +497,7 @@ namespace egret3d {
          * @param offset 顶点偏移。（默认不偏移）
          * @param count 顶点总数。（默认全部顶点）
          */
-        public uploadVertexBuffer(uploadAttributes?: gltf.MeshAttribute | (gltf.MeshAttribute[]), offset?: uint, count?: uint): void { }
+        public uploadVertexBuffer(uploadAttributes?: gltf.AttributeSemantics | (gltf.AttributeSemantics[]), offset?: uint, count?: uint): void { }
         /**
          * 当修改该网格的顶点索引后，调用此方法来更新顶点索引的缓冲区。
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
@@ -584,7 +548,7 @@ namespace egret3d {
         /**
          * @internal
          */
-        public get inverseBindMatrices(): Float32Array | null {
+        public get inverseBindMatrices(): ArrayBufferView | null {
             const config = this.config;
             if (!this._inverseBindMatrices && config.skins) {
                 // Mast be skinned mesh if has skin.

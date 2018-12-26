@@ -133,7 +133,7 @@ namespace paper.editor {
          */
         MATERIAL_ARRAY = "MATERIAL_ARRAY",
         /**
-         * 贴图。
+         * 贴图纹理。
          */
         TEXTUREDESC = "TEXTUREDESC",
         /**

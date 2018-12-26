@@ -55,7 +55,6 @@ namespace egret3d {
             const materialFilter = this._materialFilter;
             const matrix = Matrix4.IDENTITY;
             materialFilter.length = materialCount;
-            drawCallCollecter.renderers.push(renderer);
 
             for (let i = 0; i < subMeshCount; ++i) { // Specified materials.
                 const materialIndex = primitives[i].material;

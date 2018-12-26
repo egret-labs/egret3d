@@ -122,7 +122,7 @@ namespace paper.editor {
             const guiComponent = this._guiComponent!;
             guiComponent.stats.update();
             guiComponent.renderPanel.update(
-                paper.Application.systemManager.getSystem((egret3d as any)["web"]["WebGLRenderSystem"])!.deltaTime,
+                paper.Application.systemManager.getSystem((egret3d as any)["webgl"]["WebGLRenderSystem"])!.deltaTime,
                 200
             );
 

@@ -1,24 +1,36 @@
 namespace egret3d {
     /**
-     * 动画资源。
+     * @private
      */
     export class AnimationMask extends GLTFAsset {
-        public static create(): AnimationMask {
-            const asset = new AnimationMask();
-            const config = this._createConfig();
-            config.nodes = [];
-            config.extensions = {
-                paper: {
-                    animationMasks: [{
-                        retargeting: [],
-                        joints: []
-                    }]
-                },
-            };
+        /**
+         * 
+         */
+        public static create(name: string): AnimationMask;
+        /**
+         * @private
+         */
+        public static create(name: string, config: GLTF): AnimationMask;
+        public static create(name: string, config?: GLTF) {
+            let animationMask: AnimationMask;
 
-            asset.config = config;
+            if (!config) {
+                config = this.createConfig();
+                config.nodes = [];
+                config.extensions = {
+                    paper: {
+                        animationMasks: [{
+                            retargeting: [],
+                            joints: []
+                        }]
+                    },
+                };
+            }
 
-            return asset;
+            animationMask = new AnimationMask();
+            animationMask.initialize(name, config, null);
+
+            return animationMask;
         }
         /**
          * @internal
@@ -26,10 +38,6 @@ namespace egret3d {
         public _dirty: boolean = false;
         private _jointNamesDirty: boolean = false;
         private readonly _jointNames: string[] = [];
-
-        private constructor() {
-            super(); // TODO GLTFAsset protected
-        }
 
         private _addJoint(nodes: gltf.Node[], joints: uint[], jointIndex: uint, recursive: boolean) {
             if (joints.indexOf(jointIndex) < 0) {

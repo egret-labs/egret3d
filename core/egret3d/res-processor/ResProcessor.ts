@@ -1,9 +1,4 @@
 namespace egret3d {
-    /**
-     * TODO
-     * @internal
-     */
-    export let resRoot: string = "";
 
     // function promisify(loader: egret.HttpRequest | egret.Sound | any, resource: RES.ResourceInfo): Promise<any> {
 
@@ -25,10 +20,9 @@ namespace egret3d {
     export const BitmapDataProcessor: RES.processor.Processor = {
 
         onLoadStart(host, resource) {
-
             const loader = new egret.ImageLoader();
-
             loader.load(resource.root + resource.url);
+
             return new Promise((resolve, reject) => {
                 const onSuccess = () => {
                     const bitmapData = loader.data;
@@ -54,53 +48,67 @@ namespace egret3d {
     }
 
     export const ShaderProcessor: RES.processor.Processor = {
-        async onLoadStart(host, resource) {
-            const result = await host.load(resource, 'json') as GLTF;
+        onLoadStart(host, resource) {
+            return host.load(resource, 'json').then((result: GLTF) => {
+                const subAssets: paper.ISerializedData = { assets: [] };
+                const shaders = result.extensions.KHR_techniques_webgl!.shaders;
 
-            const shaders = result.extensions.KHR_techniques_webgl!.shaders;
-            if (shaders && shaders.length === 2) {
                 for (const shader of shaders) {
-                    const source = (RES.host.resourceConfig as any)["getResource"](shader.uri);
-                    if (source) {
-                        const shaderSource = await host.load(source, "text");
-                        if (shaderSource) {
-                            shader.uri = shaderSource;
-                        }
-                        else {
-                            console.error("Load shader error.", shader.uri);
-                        }
-                    }
+                    subAssets.assets!.push(shader.uri!);
                 }
-            }
-            else {
-                console.error("错误的Shader格式数据");
-            }
 
-            const glTF = Shader.create(result, resource.name);
-            paper.Asset.register(glTF);
+                return loadSubAssets(subAssets, resource).then((texts: string[]) => {
+                    for (let i = 0, l = texts.length; i < l; ++i) {
+                        shaders[i].uri = texts[i];
+                    }
 
-            return glTF;
+                    const shader = Shader.create(resource.name, result);
+                    paper.Asset.register(shader);
+                    return shader;
+                });
+            });
         },
         onRemoveStart(host, resource) {
-            const data = host.get(resource);
-            data.dispose();
+            const data = host.get(resource) as paper.Asset;
+            if (data) {
+                data.dispose();
+            }
+
             return Promise.resolve();
         }
     };
 
-    // TODO
-    type ImgDescConfig = {
-        name: string;
-        filterMode: string;
-        format: string;
-        mipmap: boolean;
-        wrap: string;
-        premultiply: any;
-    }
-
-    export const TextureDescProcessor: RES.processor.Processor = {
+    export const ImageProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
-            return host.load(resource, "json").then((data: ImgDescConfig): any => {
+            return host.load(resource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
+                const texture = Texture
+                    .create({ name: resource.name, source: bitmapData.source, format: gltf.TextureFormat.RGBA, mipmap: true })
+                    .setLiner(true)
+                    .setRepeat(true);
+                paper.Asset.register(texture);
+                return texture;
+            });
+        },
+        onRemoveStart(host, resource) {
+            const data = host.get(resource) as paper.Asset;
+            if (data) {
+                data.dispose();
+            }
+
+            return Promise.resolve();
+        }
+    };
+
+    export const TextureProcessor: RES.processor.Processor = {
+        onLoadStart(host, resource) {
+            return host.load(resource, "json").then((data: {
+                name: string;
+                filterMode: string;
+                format: string;
+                mipmap: boolean;
+                wrap: string;
+                premultiply: any;
+            }): any => {
                 const name = data.name;
                 const filterMode = data.filterMode;
                 const format = data.format;
@@ -124,95 +132,75 @@ namespace egret3d {
                     repeat = true;
                 }
 
-                let premultiply: boolean = false;
+                let premultiplyAlpha: 0 | 1 = 0;
                 if (data["premultiply"] !== undefined) {
-                    premultiply = data["premultiply"] > 0;
+                    premultiplyAlpha = data["premultiply"] > 0 ? 1 : 0;
                 }
 
                 const imgResource = (RES.host.resourceConfig as any)["getResource"](name);
                 if (imgResource) {
                     return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
-                        const texture = Texture.createByImage(resource.name, bitmapData, textureFormat, mipmap, linear, repeat, premultiply);
+                        const texture = Texture
+                            .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap, premultiplyAlpha })
+                            .setLiner(linear)
+                            .setRepeat(repeat);
                         paper.Asset.register(texture);
+                        host.save(imgResource, bitmapData);
+                        (texture as any)._bitmapData = bitmapData;
+
                         return texture;
 
                     });
                 }
-
-                if (resRoot) {
-                    return getResByURL(name, resRoot).then((bitmapData: any) => {
-                        const texture = Texture.createByImage(resource.name, bitmapData, textureFormat, mipmap, linear, repeat, premultiply);
-                        paper.Asset.register(texture);
-                        return texture;
-                    });
+                else {
+                    throw new Error(); // TODO
                 }
             });
         },
         onRemoveStart(host, resource) {
-            const data = host.get(resource);
-            data.dispose();
-            return Promise.resolve();
-        }
-    };
+            const data = host.get(resource) as paper.Asset;
+            if (data) {
+                // host.save(imgResource, bitmapData);
+                data.dispose();
+            }
 
-    export const TextureProcessor: RES.processor.Processor = {
-        onLoadStart(host, resource) {
-
-            return host.load(resource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
-                const texture = Texture.createByImage(resource.name, bitmapData, gltf.TextureFormat.RGBA, true, true, true);
-                paper.Asset.register(texture);
-                return texture;
-            })
-        },
-        onRemoveStart(host, resource) {
-            const data: Texture = host.get(resource);
-            data.dispose();
             return Promise.resolve();
         }
     };
 
     export const MaterialProcessor: RES.processor.Processor = {
-        async onLoadStart(host, resource) {
-            const result = await host.load(resource, 'json') as GLTF;
+        onLoadStart(host, resource) {
+            return host.load(resource, "json").then((result: GLTF): any => {
+                const subAssets: paper.ISerializedData = { assets: [] };
 
-            if (result.materials && result.materials.length > 0) {
-                for (const mat of result.materials as GLTFMaterial[]) {
-                    //load shader
-                    const technique = mat.extensions.KHR_techniques_webgl.technique;
-                    const techniqueRes = (RES.host.resourceConfig as any)["getResource"](technique);
-                    if (techniqueRes) {
-                        const shader = await host.load(techniqueRes, "Shader");
-                    }
-                    const values = mat.extensions.KHR_techniques_webgl.values!;
-                    for (const key in values) {
-                        const value = values[key];
-                        if (value && typeof value === "string") { // A string value must be texture uri.
-                            const r = (RES.host.resourceConfig as any)["getResource"](value);
-                            if (r) {
-                                const texture = await host.load(r, "TextureDesc");
-                                values[key] = texture;
-                            }
-                            else if (resRoot) {
-                                const texture = await getResByURL(value, resRoot);
-                                values[key] = texture;
-                            }
-                            else {
-                                console.log("Load image error.", value);
-                                values[key] = DefaultTextures.MISSING;
+                for (const materialConfig of result.materials as GLTFMaterial[]) {
+                    subAssets.assets!.push(materialConfig.extensions.KHR_techniques_webgl.technique);
+
+                    const values = materialConfig.extensions.KHR_techniques_webgl.values;
+                    if (values) {
+                        for (const k in values) {
+                            const value = values[k];
+                            if (value && typeof value === "string") { // A string value must be texture uri.
+                                subAssets.assets!.push(value);
                             }
                         }
                     }
                 }
-            }
 
-            const material = Material.create(result, resource.name);
-            paper.Asset.register(material);
+                return loadSubAssets(subAssets, resource).then(() => {
+                    const material = Material.create(resource.name, result);
+                    paper.Asset.register(material);
 
-            return material;
+                    return material;
+                });
+            });
         },
         onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
+            const data = host.get(resource) as paper.Asset;
+            if (data) {
+                data.dispose();
+            }
+
             return Promise.resolve();
         }
     };
@@ -221,16 +209,18 @@ namespace egret3d {
         onLoadStart(host, resource) {
             return host.load(resource, "bin").then((result) => {
                 const parseResult = GLTFAsset.parseFromBinary(result instanceof ArrayBuffer ? new Uint32Array(result) : result)!;
-                const glb = Mesh.create(parseResult.config, parseResult.buffers, resource.name);
-                glb.initialize();
+                const mesh = Mesh.create(resource.name, parseResult.config, parseResult.buffers);
+                paper.Asset.register(mesh);
 
-                paper.Asset.register(glb);
-                return glb;
+                return mesh;
             });
         },
         onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
+            const data = host.get(resource) as paper.Asset;
+            if (data && data.dispose) { // TODO???
+                data.dispose();
+            }
+
             return Promise.resolve();
         }
     };
@@ -239,22 +229,18 @@ namespace egret3d {
         onLoadStart(host, resource) {
             return host.load(resource, "bin").then((result) => {
                 const parseResult = GLTFAsset.parseFromBinary(new Uint32Array(result))!;
-                const animation = new AnimationAsset();
-                animation.name = resource.name;
-                animation.config = parseResult.config;
-
-                for (const b of parseResult.buffers) {
-                    animation.buffers.push(b);
-                }
-
+                const animation = AnimationAsset.create(resource.name, parseResult.config, parseResult.buffers);
                 paper.Asset.register(animation);
 
                 return animation;
             });
         },
         onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
+            const data = host.get(resource) as paper.Asset;
+            if (data) {
+                data.dispose();
+            }
+
             return Promise.resolve();
         }
     };
@@ -263,16 +249,20 @@ namespace egret3d {
         onLoadStart(host, resource) {
             return host.load(resource, "json").then((data: paper.ISerializedData) => {
                 return loadSubAssets(data, resource).then(() => {
-                    const prefab = new paper.Prefab(resource.name);
-                    prefab.parse(data);
+                    const prefab = new paper.Prefab(data, resource.name); // TODO
+                    prefab.initialize();
                     paper.Asset.register(prefab);
+
                     return prefab;
                 });
             });
         },
         onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
+            const data = host.get(resource) as paper.Asset;
+            if (data) {
+                data.dispose();
+            }
+
             return Promise.resolve();
         }
     };
@@ -281,16 +271,20 @@ namespace egret3d {
         onLoadStart(host, resource) {
             return host.load(resource, "json").then((data: paper.ISerializedData) => {
                 return loadSubAssets(data, resource).then(() => {
-                    const rawScene = new paper.RawScene(resource.name);
-                    rawScene.parse(data);
+                    const rawScene = new paper.RawScene(data, resource.name); // TODO
+                    rawScene.initialize();
                     paper.Asset.register(rawScene);
+
                     return rawScene;
                 });
             });
         },
         onRemoveStart(host, resource) {
-            let data = host.get(resource);
-            data.dispose();
+            const data = host.get(resource) as paper.Asset;
+            if (data) {
+                data.dispose();
+            }
+
             return Promise.resolve();
         }
     };
@@ -300,10 +294,13 @@ namespace egret3d {
             const host = RES.host;
             const r = (host.resourceConfig as any)["getResource"](item);
             if (r) {
-                return host.load(r);
-            }
-            else if (resRoot) {
-                return getResByURL(item, resRoot);
+                return host.load(r).then((data) => {
+                    if (data instanceof paper.Asset) { //!??!?!?
+                        host.save(r, data);
+                    }
+
+                    return data;
+                });
             }
             else {
                 if (item.indexOf("builtin/") !== 0) {
@@ -315,73 +312,9 @@ namespace egret3d {
         })));
     }
 
-    function getResType(uri: string) {
-        const file = uri.substr(uri.lastIndexOf("/") + 1);
-        let i = file.indexOf(".", 0);
-        let extname = "";
-
-        while (i >= 0) {
-            extname = file.substr(i);
-            if (extname === ".assetbundle.json") {
-                return 'Bundle';
-            } else if (extname === ".png" || extname === ".jpg") {
-                return 'Texture';
-            } else if (extname === ".pvr.bin" || extname === ".pvr") {
-                return 'PVR';
-            } else if (extname === ".atlas.json") {
-                return 'Atlas';
-            } else if (extname === ".font.json") {
-                return 'Font';
-            } else if (extname === ".json" || extname === ".txt" || extname === ".effect.json") {
-                return 'TextAsset';
-            } else if (extname === ".packs.bin") {
-                return 'PackBin';
-            } else if (extname === ".packs.txt") {
-                return 'PackTxt';
-            } else if (extname === ".path.json") {
-                return 'pathAsset';
-            } else if (extname === ".mp3" || extname === ".ogg") {
-                return 'Sound';
-            } else if (extname === ".prefab.json") {
-                return 'Prefab';
-            } else if (extname === ".scene.json") {
-                return 'Scene';
-            } else if (extname === ".vs.glsl") {
-                return 'text';
-            } else if (extname === ".fs.glsl") {
-                return 'text';
-            } else if (extname === ".glsl") {
-                return 'text';
-            } else if (extname === ".shader.json") {
-                return 'Shader';
-            } else if (extname === ".image.json") {
-                return 'TextureDesc';
-            } else if (extname === ".mat.json") {
-                return 'Material';
-            } else if (extname === ".mesh.bin") {
-                return 'Mesh';
-            } else if (extname === ".ani.bin") {
-                return 'Animation';
-            }
-
-            i = file.indexOf(".", i + 1);
-        }
-
-        return "Unknown";
-    }
-
-    async function getResByURL(uri: string, root: string) {
-        return new Promise((r) => {
-            RES.getResByUrl(root + uri, (data: any) => {
-                paper.Asset.register(data);
-                r(data);
-            }, RES, getResType(uri));
-        });
-    }
-
     RES.processor.map("Shader", ShaderProcessor);
-    RES.processor.map("Texture", TextureProcessor);
-    RES.processor.map("TextureDesc", TextureDescProcessor);
+    RES.processor.map("Texture", ImageProcessor);
+    RES.processor.map("TextureDesc", TextureProcessor);
     RES.processor.map("Material", MaterialProcessor);
     RES.processor.map("Mesh", MeshProcessor);
     RES.processor.map("Animation", AnimationProcessor);

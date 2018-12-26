@@ -15,7 +15,7 @@ namespace egret3d {
         public readonly drawCalls: (DrawCall | null)[] = [];
         /**
          * 此帧新添加的绘制信息列表。
-         * - 渲染前清除。
+         * - 渲染后清除。
          */
         public readonly addDrawCalls: (DrawCall | null)[] = [];
 
@@ -24,15 +24,12 @@ namespace egret3d {
          * @internal
          */
         public _update() {
-            const addDrawCalls = this.addDrawCalls;
-            if (addDrawCalls.length > 0) {
-                addDrawCalls.length = 0;
-            }
+            const { renderers, drawCalls } = this;
 
             if (this._drawCallsDirty) {
+                // Clear renderers.
                 let index = 0;
                 let removeCount = 0;
-                const { renderers, drawCalls } = this;
 
                 for (const renderer of renderers) {
                     if (renderer) {
@@ -51,14 +48,12 @@ namespace egret3d {
                 if (removeCount > 0) {
                     renderers.length -= removeCount;
                 }
-
+                // Clear drawCalls.
                 index = 0;
                 removeCount = 0;
 
                 for (const drawCall of drawCalls) {
                     if (drawCall) {
-                        drawCall.drawCount = 0;
-
                         if (removeCount > 0) {
                             drawCalls[index - removeCount] = drawCall;
                             drawCalls[index] = null;
@@ -77,14 +72,27 @@ namespace egret3d {
 
                 this._drawCallsDirty = false;
             }
+            
+            if (DEBUG) {
+                for (const drawCall of drawCalls) {
+                    drawCall!.drawCount = 0;
+                }
+            }
         }
         /**
-         * 
+         * 添加绘制信息。
          * @param drawCall 
          */
         public addDrawCall(drawCall: DrawCall): void {
-            this.drawCalls.push(drawCall);
-            this.addDrawCalls.push(drawCall);
+            const { renderers, drawCalls, addDrawCalls } = this;
+            const renderer = drawCall.renderer;
+
+            if (renderers.indexOf(renderer) < 0) {
+                renderers.push(renderer);
+            }
+
+            drawCalls.push(drawCall);
+            addDrawCalls.push(drawCall);
         }
         /**
          * 移除指定渲染组件的绘制信息列表。
@@ -92,6 +100,7 @@ namespace egret3d {
         public removeDrawCalls(renderer: paper.BaseRenderer): void {
             const { renderers, drawCalls, addDrawCalls } = this;
             const index = renderers.indexOf(renderer);
+
             if (index < 0) {
                 return;
             }

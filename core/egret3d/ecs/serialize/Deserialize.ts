@@ -53,6 +53,26 @@ namespace paper {
         public static _lastDeserializer: Deserializer;
         /**
          * 
+         * @param target 
+         * @param propName 
+         */
+        public static propertyHasGetterAndSetter(target: any, propName: string): boolean {
+            let prototype = Object.getPrototypeOf(target);
+
+            while (prototype) {
+                const descriptror = Object.getOwnPropertyDescriptor(prototype, propName);
+                if (descriptror && descriptror.get && descriptror.set) {
+                    return true;
+                }
+
+                prototype = Object.getPrototypeOf(prototype);
+            }
+
+            return false;
+        }
+
+        /**
+         * 
          */
         public readonly assets: string[] = [];
         /**
@@ -100,9 +120,11 @@ namespace paper {
                     continue;
                 }
 
-                const retarget = this._deserializeChild(source[k], (target as any)[retargetKey]);
+                const hasGetterAndSetter = Deserializer.propertyHasGetterAndSetter(target, retargetKey);
+                const rawRetarget = (target as any)[retargetKey];
+                const retarget = this._deserializeChild(source[k], (hasGetterAndSetter && rawRetarget && (rawRetarget.constructor === Array || rawRetarget.constructor === Object)) ? null : rawRetarget);
 
-                if (retarget === undefined) { // 忽略 undefined。
+                if (retarget === undefined) { // 忽略反序列化后为 undefined 的属性值。
                     continue;
                 }
 
@@ -169,7 +191,7 @@ namespace paper {
             return componentTarget;
         }
 
-        private _deserializeChild(source: any, target?: any) {
+        private _deserializeChild(source: any, target: any = null) {
             if (source === null || source === undefined) {
                 return source;
             }
@@ -217,6 +239,12 @@ namespace paper {
                     if (KEY_ASSET in source) { // Asset.
                         const assetIndex = (source as IAssetReference).asset;
                         if (assetIndex >= 0) {
+                            // TODO 资源获取不到时，对应返回的资源方案
+                            // 材质应返回 MISSING
+                            // 纹理应返回 MISSING
+                            // Shader 
+                            // Mesh
+                            // ...
                             return Asset.find(this.assets[assetIndex]);
                         }
 

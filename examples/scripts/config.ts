@@ -2,7 +2,7 @@
 ///<reference path="declaration/api.d.ts"/>
 import * as path from "path";
 import { CompilePlugin, EmitResConfigFilePlugin, ExmlPlugin, IncrementCompilePlugin, ManifestPlugin, UglifyPlugin } from "built-in";
-import { bakeInfo, nameSelector, mergeJSONSelector, MergeJSONPlugin, MergeBinaryPlugin, ModifyDefaultResJSONPlugin, InspectorFilterPlugin } from "./myplugin";
+import { bakeInfo, nameSelector, ModifyDefaultResJSONPlugin, InspectorFilterPlugin } from "./myplugin";
 import { ShaderGenerateContext } from './shaderPlugin/ShaderGenerate';
 
 const config: ResourceManagerConfig = {
@@ -69,7 +69,6 @@ const config: ResourceManagerConfig = {
             return {
                 outputDir,
                 commands: [
-                    new MergeJSONPlugin({ nameSelector, mergeJSONSelector }),
                     new EmitResConfigFilePlugin({
                         output: bakeInfo.root + "default.res.json",
                         typeSelector: config.typeSelector,

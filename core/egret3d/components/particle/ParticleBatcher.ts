@@ -29,7 +29,7 @@ namespace egret3d.particle {
         private _readEmitCount: number = 0;
         //最终重力
         private _finalGravity = new Vector3();
-        private _vertexAttributes: gltf.MeshAttribute[];
+        private _vertexAttributes: gltf.AttributeSemantics[];
 
         //vbo缓存
         private _startPositionBuffer: Float32Array;
@@ -293,21 +293,21 @@ namespace egret3d.particle {
             const mesh = renderer.batchMesh ? renderer.batchMesh : createBatchMesh(renderer, comp.main.maxParticles);
             this._vertexStride = renderer.renderMode === ParticleRenderMode.Mesh ? renderer.mesh!.vertexCount : 4;
 
-            this._startPositionBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_POSITION)!;
-            this._startVelocityBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_VELOCITY)!;
-            this._startColorBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_COLOR)!;
-            this._startSizeBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_SIZE)!;
-            this._startRotationBuffer = mesh.getAttributes(gltf.AttributeSemanticType._START_ROTATION)!;
-            this._startTimeBuffer = mesh.getAttributes(gltf.AttributeSemanticType._TIME)!;
-            this._random0Buffer = mesh.getAttributes(gltf.AttributeSemanticType._RANDOM0)!;
-            this._random1Buffer = mesh.getAttributes(gltf.AttributeSemanticType._RANDOM1)!;
-            this._worldPostionBuffer = mesh.getAttributes(gltf.AttributeSemanticType._WORLD_POSITION)!;
-            this._worldRoationBuffer = mesh.getAttributes(gltf.AttributeSemanticType._WORLD_ROTATION)!;
+            this._startPositionBuffer = mesh.getAttributes(gltf.AttributeSemantics._START_POSITION)!;
+            this._startVelocityBuffer = mesh.getAttributes(gltf.AttributeSemantics._START_VELOCITY)!;
+            this._startColorBuffer = mesh.getAttributes(gltf.AttributeSemantics._START_COLOR)!;
+            this._startSizeBuffer = mesh.getAttributes(gltf.AttributeSemantics._START_SIZE)!;
+            this._startRotationBuffer = mesh.getAttributes(gltf.AttributeSemantics._START_ROTATION)!;
+            this._startTimeBuffer = mesh.getAttributes(gltf.AttributeSemantics._TIME)!;
+            this._random0Buffer = mesh.getAttributes(gltf.AttributeSemantics._RANDOM0)!;
+            this._random1Buffer = mesh.getAttributes(gltf.AttributeSemantics._RANDOM1)!;
+            this._worldPostionBuffer = mesh.getAttributes(gltf.AttributeSemantics._WORLD_POSITION)!;
+            this._worldRoationBuffer = mesh.getAttributes(gltf.AttributeSemantics._WORLD_ROTATION)!;
 
             const primitive = mesh.glTFMesh.primitives[0];
             this._vertexAttributes = [];
             for (const k in primitive.attributes) {
-                this._vertexAttributes.push(k as gltf.MeshAttribute);
+                this._vertexAttributes.push(k as gltf.AttributeSemantics);
             }
             //
             for (let i = 0, l = this._startTimeBuffer.length; i < l; i++) {
@@ -315,7 +315,7 @@ namespace egret3d.particle {
             }
 
             renderer.batchMesh = mesh;
-            renderer.batchMaterial = renderer.materials[0]!.clone();
+            renderer.batchMaterial = renderer.materials[0]!.clone().retain();
             mesh.uploadSubIndexBuffer();
         }
 

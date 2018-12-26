@@ -13,6 +13,7 @@ namespace egret3d {
      * 几何立方体。
      */
     export class Box extends paper.BaseRelease<Box> implements paper.ICCS<Box>, paper.ISerializable, IRaycast {
+
         public static readonly ONE: Readonly<Box> = new Box().set(
             Vector3.MINUS_ONE.clone().multiplyScalar(0.5),
             Vector3.ONE.clone().multiplyScalar(0.5)
@@ -134,7 +135,7 @@ namespace egret3d {
 
             // transform of empty box is an empty box.
             if (input.isEmpty) {
-                if (input !== this!) {
+                if (input !== this) {
                     this.copy(input);
                 }
 
@@ -204,6 +205,10 @@ namespace egret3d {
          */
         public expand(scalarOrVector: number | Readonly<IVector3>, input: Readonly<Box>): this;
         public expand(scalarOrVector: number | Readonly<IVector3>, input?: Readonly<Box>) {
+            if (this.isEmpty) {
+                return this;
+            }
+
             if (!input) {
                 input = this;
             }
@@ -238,6 +243,10 @@ namespace egret3d {
          */
         public translate(scalarOrVector: number | Readonly<IVector3>, input: Readonly<Box>): this;
         public translate(scalarOrVector: number | Readonly<IVector3>, input?: Readonly<Box>) {
+            if (this.isEmpty) {
+                return this;
+            }
+
             if (!input) {
                 input = this;
             }
@@ -270,6 +279,10 @@ namespace egret3d {
                 out = egret3d.Vector3.create();
             }
 
+            if (this.isEmpty) {
+                return out.copy(Vector3.ZERO);
+            }
+
             return out.clamp(this._minimum, this._maximum, point);
         }
         /**
@@ -277,12 +290,20 @@ namespace egret3d {
          * @param point 一个点。
          */
         public getDistance(point: Readonly<IVector3>): number {
+            if (this.isEmpty) {
+                return helpVector3A.copy(Vector3.ZERO).subtract(point).length;
+            }
+
             return helpVector3A.clamp(this._minimum, this._maximum, point).subtract(point).length;
         }
         /**
          * 该立方体是否包含指定的点或立方体。
          */
         public contains(pointOrBox: Readonly<IVector3 | Box>): boolean {
+            if (this.isEmpty) {
+                return false;
+            }
+
             const min = this._minimum;
             const max = this._maximum;
 
@@ -301,6 +322,10 @@ namespace egret3d {
         }
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+            if (this.isEmpty) {
+                return false;
+            }
+
             let tmin: number, tmax: number, tymin: number, tymax: number, tzmin: number, tzmax: number;
             let hitDirection: 0 | 1 | 2 = 0;
             const origin = ray.origin;
@@ -398,8 +423,14 @@ namespace egret3d {
          */
         public get boundingSphereRadius(): number {
             if (this._dirtyRadius) {
-                helpVector3A.subtract(this._maximum, this._minimum).multiplyScalar(0.5);
-                this._boundingSphereRadius = helpVector3A.length;
+                if (this.isEmpty) {
+                    this._boundingSphereRadius = 0.0;
+                }
+                else {
+                    helpVector3A.subtract(this._maximum, this._minimum).multiplyScalar(0.5);
+                    this._boundingSphereRadius = helpVector3A.length;
+                }
+
                 this._dirtyRadius = false;
             }
 
@@ -423,16 +454,26 @@ namespace egret3d {
         @paper.editor.property(paper.editor.EditType.VECTOR3, { minimum: 0.0 })
         public get size(): Readonly<IVector3> {
             if (this._dirtySize) {
-                this._size.subtract(this._maximum, this._minimum);
+                if (this.isEmpty) {
+                    this._size.copy(Vector3.ZERO);
+                }
+                else {
+                    this._size.subtract(this._maximum, this._minimum);
+                }
+
                 this._dirtySize = false;
             }
 
             return this._size;
         }
         public set size(value: Readonly<IVector3>) {
+            if (this.isEmpty) {
+                return;
+            }
+
             const center = this.center;
             const size = this._size.copy(value);
-
+            //
             const halfSize = helpVector3A.copy(size).multiplyScalar(0.5);
             this._minimum.copy(center).subtract(halfSize);
             this._maximum.copy(center).add(halfSize);
@@ -444,16 +485,26 @@ namespace egret3d {
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get center(): Readonly<IVector3> {
             if (this._dirtyCenter) {
-                this._center.add(this._maximum, this._minimum).multiplyScalar(0.5);
+                if (this.isEmpty) {
+                    this._center.copy(Vector3.ZERO);
+                }
+                else {
+                    this._center.add(this._maximum, this._minimum).multiplyScalar(0.5);
+                }
+
                 this._dirtyCenter = false;
             }
 
             return this._center;
         }
         public set center(value: Readonly<IVector3>) {
+            if (this.isEmpty) {
+                return;
+            }
+
             const size = this.size;
             const center = this._center.copy(value);
-
+            //
             const halfSize = helpVector3A.copy(size).multiplyScalar(0.5);
             this._minimum.copy(center).subtract(halfSize);
             this._maximum.copy(center).add(halfSize);
@@ -462,5 +513,5 @@ namespace egret3d {
     /**
      * @internal
      */
-    export const helpAABBA = Box.create();
+    export const helpBoxA = Box.create();
 }

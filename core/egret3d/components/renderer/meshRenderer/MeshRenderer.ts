@@ -4,20 +4,19 @@ namespace egret3d {
      * - 用于渲染网格筛选组件提供的网格资源。
      */
     export class MeshRenderer extends paper.BaseRenderer {
-        @paper.serializedField
         protected _lightmapIndex: number = -1;
         /**
          * 如果该属性合并到 UV2 中，会破坏网格共享，共享的网格无法拥有不同的 lightmap UV。
          */
         @paper.serializedField
-        protected readonly _lightmapScaleOffset: egret3d.Vector4 = egret3d.Vector4.create();
+        protected readonly _lightmapScaleOffset: Vector4 = Vector4.create();
 
         public recalculateLocalBox() {
+            const meshFilter = this.gameObject.getComponent(MeshFilter);
             this._localBoundingBox.clear();
 
-            const filter = this.gameObject.getComponent(MeshFilter);
-            if (filter && filter.mesh) {
-                const vertices = filter.mesh.getVertices()!;
+            if (meshFilter && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
+                const vertices = meshFilter.mesh.getVertices()!;
                 const position = helpVector3A;
 
                 for (let i = 0, l = vertices.length; i < l; i += 3) {
@@ -26,7 +25,6 @@ namespace egret3d {
                 }
             }
         }
-
         /**
          * 实时获取网格资源的指定三角形顶点位置。
          */
@@ -36,32 +34,26 @@ namespace egret3d {
             }
 
             const meshFilter = this.gameObject.getComponent(MeshFilter);
-            if (!meshFilter) {
-                return out;
-            }
 
-            const mesh = meshFilter.mesh;
-            if (!mesh) {
-                return out;
+            if (meshFilter && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
+                const localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
+                meshFilter.mesh.getTriangle(triangleIndex, out);
+                out.a.applyMatrix(localToWorldMatrix);
+                out.b.applyMatrix(localToWorldMatrix);
+                out.c.applyMatrix(localToWorldMatrix);
             }
-
-            const localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
-            mesh.getTriangle(triangleIndex, out);
-            out.a.applyMatrix(localToWorldMatrix);
-            out.b.applyMatrix(localToWorldMatrix);
-            out.c.applyMatrix(localToWorldMatrix);
 
             return out;
         }
 
-        public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
+        public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
             const meshFilter = this.gameObject.getComponent(MeshFilter);
-            if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh) {
+            if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh || meshFilter.mesh.isDisposed) {
                 return false;
             }
 
             let raycastMesh = false;
-            let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
+            let raycastInfo: RaycastInfo | undefined = undefined;
             const transform = this.gameObject.transform;
             const worldToLocalMatrix = transform.worldToLocalMatrix;
             const localRay = helpRay.applyMatrix(worldToLocalMatrix, p1);
@@ -99,18 +91,28 @@ namespace egret3d {
          * 该组件的光照图索引。
          */
         @paper.editor.property(paper.editor.EditType.INT, { minimum: -1 })
-        public get lightmapIndex() {
+        @paper.serializedField("_lightmapIndex")
+        public get lightmapIndex(): int {
             return this._lightmapIndex;
         }
-        public set lightmapIndex(value: number) {
+        public set lightmapIndex(value: int) {
             if (value === this._lightmapIndex) {
                 return;
             }
 
+            if (value >= 0) {
+                this.defines.addDefine(ShaderDefine.USE_LIGHTMAP);
+            }
+            else {
+                this.defines.removeDefine(ShaderDefine.USE_LIGHTMAP);
+            }
+
             this._lightmapIndex = value;
         }
-
-        public get lightmapScaleOffset() {
+        /**
+         * TODO
+         */
+        public get lightmapScaleOffset(): Readonly<Vector4> {
             return this._lightmapScaleOffset;
         }
     }

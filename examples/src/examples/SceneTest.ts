@@ -10,7 +10,6 @@ namespace examples {
             // Create scene.
             paper.Scene.create("Assets/Art/changjing/Scenes/Scene_11X9.scene.json");
             paper.Scene.create("Assets/Art/changjing/Scenes/Scene_11X9.scene.json");
-
             //
             egret3d.Camera.main.gameObject.addComponent(behaviors.RotateComponent);
         }

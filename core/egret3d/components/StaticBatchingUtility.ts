@@ -103,9 +103,9 @@ namespace egret3d {
         for (let i = 0; i < primitives.length; i++) {
             const primitive = primitives[i];
             for (const attStr in primitives[i].attributes) {
-                const attrType = attStr as gltf.MeshAttributeType;
+                const attrType = attStr as gltf.AttributeSemantics;
                 if (!combine.meshAttribute[attrType]) {
-                    combine.vertexBufferSize += meshData.getAccessorTypeCount(meshData.getAccessor(primitive.attributes[attStr]!).type);
+                    combine.vertexBufferSize += meshData.getAccessor(primitive.attributes[attStr]!).typeCount!;
                 }
                 combine.meshAttribute[attrType] = attrType;
             }
@@ -139,13 +139,13 @@ namespace egret3d {
 
         const meshAttribute = combineInstance.meshAttribute;
         const lightmapScaleOffset = (combineInstance.root!.renderer as MeshRenderer).lightmapScaleOffset;
-        const newAttribute: gltf.MeshAttributeType[] = [];
+        const newAttribute: gltf.AttributeSemantics[] = [];
         const tempIndexBuffers: number[][] = [];
         const tempVertexBuffers: { [key: string]: number[] } = {};
 
         for (const key in meshAttribute) {
             tempVertexBuffers[key] = [];
-            newAttribute.push(key as gltf.MeshAttributeType);
+            newAttribute.push(key as gltf.AttributeSemantics);
         }
         //
         let startIndex = 0;
@@ -176,13 +176,13 @@ namespace egret3d {
                         worldMatrix.transformVector3(helpVec3_1, helpVec3_2);
                         helpInverseMatrix.transformVector3(helpVec3_2, helpVec3_1);
                         //
-                        tempVertexBuffers[gltf.MeshAttributeType.POSITION].push(helpVec3_1.x, helpVec3_1.y, helpVec3_1.z);
+                        tempVertexBuffers[gltf.AttributeSemantics.POSITION].push(helpVec3_1.x, helpVec3_1.y, helpVec3_1.z);
                     }
                     //
-                    if (meshAttribute[gltf.MeshAttributeType.NORMAL]) {
+                    if (meshAttribute[gltf.AttributeSemantics.NORMAL]) {
                         if (orginAttributes.NORMAL) {
                             const normalBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.NORMAL)) as Float32Array;
-                            const target = tempVertexBuffers[gltf.MeshAttributeType.NORMAL];
+                            const target = tempVertexBuffers[gltf.AttributeSemantics.NORMAL];
                             const count = normalBuffer.length;
                             let startIndex = target.length;
 
@@ -199,53 +199,53 @@ namespace egret3d {
                                 target[startIndex + j + 1] = helpVec3_1.y;
                                 target[startIndex + j + 2] = helpVec3_1.z;
                             }
-                            // _copyAccessorBufferArray(glTFAsset, orginAttributes.NORMAL, tempVertexBuffers[gltf.MeshAttributeType.NORMAL]);
+                            // _copyAccessorBufferArray(glTFAsset, orginAttributes.NORMAL, tempVertexBuffers[gltf.AttributeSemanticType.NORMAL]);
                         } else {
-                            _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.NORMAL], orginVertexCount, [0, 0, 0]);
+                            _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.NORMAL], orginVertexCount, [0, 0, 0]);
                         }
                     }
-                    if (meshAttribute[gltf.MeshAttributeType.TANGENT]) {
-                        if (orginAttributes.TANGENT) {
-                            const tangentBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TANGENT)) as Float32Array;
-                            const target = tempVertexBuffers[gltf.MeshAttributeType.TANGENT];
-                            const count = tangentBuffer.length;
-                            let startIndex = target.length;
+                    // if (meshAttribute[gltf.AttributeSemanticType.TANGENT]) { TODO
+                    //     if (orginAttributes.TANGENT) {
+                    //         const tangentBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TANGENT)) as Float32Array;
+                    //         const target = tempVertexBuffers[gltf.AttributeSemanticType.TANGENT];
+                    //         const count = tangentBuffer.length;
+                    //         let startIndex = target.length;
 
-                            target.length += count;
-                            for (let j = 0; j < count; j += 4) {
-                                helpVec3_1.x = tangentBuffer[j + 0];
-                                helpVec3_1.y = tangentBuffer[j + 1];
-                                helpVec3_1.z = tangentBuffer[j + 2];
+                    //         target.length += count;
+                    //         for (let j = 0; j < count; j += 4) {
+                    //             helpVec3_1.x = tangentBuffer[j + 0];
+                    //             helpVec3_1.y = tangentBuffer[j + 1];
+                    //             helpVec3_1.z = tangentBuffer[j + 2];
 
-                                worldMatrix.transformNormal(helpVec3_1);
-                                helpInverseMatrix.transformNormal(helpVec3_1);
-                                helpVec3_1.normalize();
+                    //             worldMatrix.transformNormal(helpVec3_1);
+                    //             helpInverseMatrix.transformNormal(helpVec3_1);
+                    //             helpVec3_1.normalize();
 
-                                target[startIndex + j] = helpVec3_1.x;
-                                target[startIndex + j + 1] = helpVec3_1.y;
-                                target[startIndex + j + 2] = helpVec3_1.z;
-                                target[startIndex + j + 3] = tangentBuffer[j + 3];
-                            }
-                            // _copyAccessorBufferArray(glTFAsset, orginAttributes.TANGENT, tempVertexBuffers[gltf.MeshAttributeType.TANGENT]);
-                        } else {
-                            _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.TANGENT], orginVertexCount, [0, 0, 0, 1]);
-                        }
-                    }
-                    if (meshAttribute[gltf.MeshAttributeType.COLOR_0]) {
+                    //             target[startIndex + j] = helpVec3_1.x;
+                    //             target[startIndex + j + 1] = helpVec3_1.y;
+                    //             target[startIndex + j + 2] = helpVec3_1.z;
+                    //             target[startIndex + j + 3] = tangentBuffer[j + 3];
+                    //         }
+                    //         // _copyAccessorBufferArray(glTFAsset, orginAttributes.TANGENT, tempVertexBuffers[gltf.AttributeSemanticType.TANGENT]);
+                    //     } else {
+                    //         _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemanticType.TANGENT], orginVertexCount, [0, 0, 0, 1]);
+                    //     }
+                    // }
+                    if (meshAttribute[gltf.AttributeSemantics.COLOR_0]) {
                         if (orginAttributes.COLOR_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.COLOR_0, tempVertexBuffers[gltf.MeshAttributeType.COLOR_0]);
+                            _copyAccessorBufferArray(mesh, orginAttributes.COLOR_0, tempVertexBuffers[gltf.AttributeSemantics.COLOR_0]);
                         } else {
-                            _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.COLOR_0], orginVertexCount, [1, 1, 1, 1]);
+                            _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.COLOR_0], orginVertexCount, [1, 1, 1, 1]);
                         }
                     }
-                    if (meshAttribute[gltf.MeshAttributeType.TEXCOORD_0]) {
+                    if (meshAttribute[gltf.AttributeSemantics.TEXCOORD_0]) {
                         if (orginAttributes.TEXCOORD_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_0]);
+                            _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0, tempVertexBuffers[gltf.AttributeSemantics.TEXCOORD_0]);
                         } else {
-                            _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_0], orginVertexCount, [0, 0]);
+                            _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.TEXCOORD_0], orginVertexCount, [0, 0]);
                         }
                     }
-                    if (meshAttribute[gltf.MeshAttributeType.TEXCOORD_1]) {
+                    if (meshAttribute[gltf.AttributeSemantics.TEXCOORD_1]) {
                         if (combineInstance.lightmapIndex >= 0) {
                             //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
                             const uvBuffer = orginAttributes.TEXCOORD_1 ?
@@ -258,44 +258,44 @@ namespace egret3d {
                                 u = ((u * orginLightmapScaleOffset.x + orginLightmapScaleOffset.z) - lightmapScaleOffset.z) / lightmapScaleOffset.x;
                                 v = ((v * orginLightmapScaleOffset.y - orginLightmapScaleOffset.y - orginLightmapScaleOffset.w) + lightmapScaleOffset.w + lightmapScaleOffset.x) / lightmapScaleOffset.x;
 
-                                tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1].push(u, v);
+                                tempVertexBuffers[gltf.AttributeSemantics.TEXCOORD_1].push(u, v);
                             }
                             // if (orginAttributes.TEXCOORD_1 !== undefined) {
-                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
+                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.AttributeSemanticType.TEXCOORD_1]);
                             // }
                             // else {
-                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0!, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
+                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0!, tempVertexBuffers[gltf.AttributeSemanticType.TEXCOORD_1]);
                             // }
                         }
                         else {
                             if (orginAttributes.TEXCOORD_1 !== undefined) {
-                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1]);
+                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.AttributeSemantics.TEXCOORD_1]);
                             }
                             else {
-                                _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.TEXCOORD_1], orginVertexCount, [0, 0]);
+                                _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.TEXCOORD_1], orginVertexCount, [0, 0]);
                             }
                         }
                     }
-                    if (meshAttribute[gltf.MeshAttributeType.JOINTS_0]) {
+                    if (meshAttribute[gltf.AttributeSemantics.JOINTS_0]) {
                         if (orginAttributes.JOINTS_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.JOINTS_0, tempVertexBuffers[gltf.MeshAttributeType.JOINTS_0]);
+                            _copyAccessorBufferArray(mesh, orginAttributes.JOINTS_0, tempVertexBuffers[gltf.AttributeSemantics.JOINTS_0]);
                         }
                         else {
-                            _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.JOINTS_0], orginVertexCount, [0, 0, 0, 0]);
+                            _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.JOINTS_0], orginVertexCount, [0, 0, 0, 0]);
                         }
                     }
-                    if (meshAttribute[gltf.MeshAttributeType.WEIGHTS_0]) {
+                    if (meshAttribute[gltf.AttributeSemantics.WEIGHTS_0]) {
                         if (orginAttributes.WEIGHTS_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.WEIGHTS_0, tempVertexBuffers[gltf.MeshAttributeType.WEIGHTS_0]);
+                            _copyAccessorBufferArray(mesh, orginAttributes.WEIGHTS_0, tempVertexBuffers[gltf.AttributeSemantics.WEIGHTS_0]);
                         } else {
-                            _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.WEIGHTS_0], orginVertexCount, [1, 0, 0, 0]);
+                            _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.WEIGHTS_0], orginVertexCount, [1, 0, 0, 0]);
                         }
                     }
-                    if (meshAttribute[gltf.MeshAttributeType.COLOR_1]) {
+                    if (meshAttribute[gltf.AttributeSemantics.COLOR_1]) {
                         if (orginAttributes.COLOR_1) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.COLOR_1, tempVertexBuffers[gltf.MeshAttributeType.COLOR_1]);
+                            _copyAccessorBufferArray(mesh, orginAttributes.COLOR_1, tempVertexBuffers[gltf.AttributeSemantics.COLOR_1]);
                         } else {
-                            _fillDefaultArray(tempVertexBuffers[gltf.MeshAttributeType.COLOR_1], orginVertexCount, [1, 1, 1, 1]);
+                            _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.COLOR_1], orginVertexCount, [1, 1, 1, 1]);
                         }
                     }
                 }
@@ -316,9 +316,10 @@ namespace egret3d {
             meshFilter.mesh = null;
         }
 
-        const combineMesh = Mesh.create(combineInstance.vertexCount, combineInstance.indexBufferTotalSize, newAttribute, undefined, gltf.DrawMode.Dynamic);
+        const combineMesh = Mesh.create(combineInstance.vertexCount, combineInstance.indexBufferTotalSize, newAttribute);
+        combineMesh.drawMode = gltf.DrawMode.Dynamic;
 
-        const newVertexBuffers = combineMesh.buffers[0] as Float32Array;
+        const newVertexBuffers = new Float32Array(combineMesh.buffers[0].buffer); // 这里依赖了 buffers 必须是两个分离的 buffer TODO
         const newIndexBuffers = combineMesh.buffers[1] as Uint16Array;
         let iv = 0;
         for (const key in tempVertexBuffers) {
@@ -347,10 +348,10 @@ namespace egret3d {
         return combineMesh;
     }
 
-    function _copyAccessorBufferArray(gltf: GLTFAsset, accessor: number, target: number[]) {
-        const buffer = gltf.createTypeArrayFromAccessor(gltf.getAccessor(accessor)) as Float32Array;
+    function _copyAccessorBufferArray(mesh: Mesh, accessor: number, target: number[]) {
+        const buffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(accessor)) as Float32Array;
         const count = buffer.length;
-        let startIndex = target.length;
+        const startIndex = target.length;
 
         target.length += count;
         for (let i = 0; i < count; i++) {
@@ -375,7 +376,7 @@ namespace egret3d {
         public vertexBufferSize: number = 0;
         public indexBufferTotalSize: number = 0;
         public lightmapIndex: number = -1;
-        public meshAttribute: { [key: string]: gltf.MeshAttributeType } = {};
+        public meshAttribute: { [key: string]: gltf.AttributeSemantics } = {};
         public root: paper.GameObject | null = null;
         public readonly instances: paper.GameObject[] = [];
     }

@@ -1,47 +1,5 @@
 namespace egret3d {
     /**
-     * Shader 通用宏定义。
-     */
-    export const enum ShaderDefine {
-        USE_COLOR = "USE_COLOR",
-        USE_MAP = "USE_MAP",
-        USE_NORMALMAP = "USE_NORMALMAP",
-        USE_BUMPMAP = "USE_BUMPMAP",
-        USE_LIGHTMAP = "USE_LIGHTMAP",
-        USE_SHADOWMAP = "USE_SHADOWMAP",
-        USE_SKINNING = "USE_SKINNING",
-        USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
-        //
-        FLAT_SHADED = "FLAT_SHADED",
-        ENVMAP_TYPE_CUBE_UV = "ENVMAP_TYPE_CUBE_UV",
-        //
-        MAX_BONES = "MAX_BONES",
-        //
-        NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
-        NUM_SPOT_LIGHTS = "NUM_SPOT_LIGHTS",
-        SHADOWMAP_TYPE_PCF = "SHADOWMAP_TYPE_PCF",
-        SHADOWMAP_TYPE_PCF_SOFT = "SHADOWMAP_TYPE_PCF_SOFT",
-        DEPTH_PACKING_3200 = "DEPTH_PACKING 3200",
-        DEPTH_PACKING_3201 = "DEPTH_PACKING 3201",
-        //
-        USE_FOG = "USE_FOG",
-        FOG_EXP2 = "FOG_EXP2",
-        //
-        FLIP_V = "FLIP_V",
-    }
-    /**
-     * Shader 通用 Uniform 名称。
-     */
-    export const enum ShaderUniformName {
-        Diffuse = "diffuse",
-        Opacity = "opacity",
-        Size = "size",
-        Map = "map",
-        Specular = "specular",
-        Shininess = "shininess",
-        UVTransform = "uvTransform",
-    }
-    /**
      * Shader 资源。
      */
     export class Shader extends GLTFAsset {
@@ -50,46 +8,103 @@ namespace egret3d {
          * @param shader 
          * @param name 
          */
-        public static create(shader: Shader, name: string): Shader;
+        public static create(name: string, shader: Shader): Shader;
         /**
-         * 
-         * @param glTF
-         * @param name 
+         * @private
          */
-        public static create(glTF: GLTF, name: string): Shader;
-        public static create(shaderOrGLTF: Shader | GLTF, name: string): Shader {
-            const shader = new Shader(name);
-            if (shaderOrGLTF instanceof Shader) {
-                const KHR_techniques_webgl = shaderOrGLTF.config.extensions.KHR_techniques_webgl!;
+        public static create(name: string, config: GLTF): Shader;
+        public static create(name: string, shaderOrConfig: Shader | GLTF): Shader {
+            let config: GLTF;
+            let shader: Shader;
+            let parent: Shader | null = null;
+
+            if (shaderOrConfig instanceof Shader) {
+                // TODO
+                const KHR_techniques_webgl = shaderOrConfig.config.extensions.KHR_techniques_webgl!;
                 const technique = KHR_techniques_webgl.techniques[0];
                 const uniforms = {} as any;
+                parent = shaderOrConfig;
+
                 for (const k in technique.uniforms) {
                     uniforms[k] = technique.uniforms[k];
                 }
 
-                shader.config = {
+                config = {
                     extensions: {
                         KHR_techniques_webgl: {
                             shaders: KHR_techniques_webgl.shaders,
                             techniques: [{
                                 attributes: technique.attributes,
                                 uniforms: uniforms,
-                                states: technique.states,
+                                // states: technique.states,
                             }]
                         }
                     }
-                } as any; // TODO
-                shaderOrGLTF.config;
-                // shader.customs = shaderOrGLTF.customs; TODO
-                shader._renderQueue = shaderOrGLTF._renderQueue;
-                shader._defines = shaderOrGLTF._defines ? shaderOrGLTF._defines.concat() : undefined;
-                shader._states = shaderOrGLTF._states; // TODO
+                } as GLTF;
             }
             else {
-                shader.config = shaderOrGLTF;
+                config = shaderOrConfig;
             }
 
+            // Retargeting.
+            shader = new egret3d.Shader();
+            shader.initialize(name, config, null, parent);
+
             return shader;
+        }
+        /**
+         * @private
+         */
+        public static createDefaultStates(): gltf.States {
+            const states: gltf.States = {
+                enable: [gltf.EnableState.DepthTest, gltf.EnableState.CullFace],
+                functions: {
+                    depthFunc: [gltf.DepthFunc.Lequal],
+                    depthMask: [true],
+                    frontFace: [gltf.FrontFace.CCW],
+                    cullFace: [gltf.CullFace.Back],
+                },
+            };
+
+            return states;
+        }
+        /**
+         * @private
+         */
+        public static copyStates(source: gltf.States, target: gltf.States) {
+            const { enable: sourceEnable, functions: sourceFunctions } = source;
+            let { enable, functions } = target;
+
+            if (enable) {
+                enable.length = 0;
+            }
+
+            if (functions) {
+                for (const k in functions) {
+                    delete functions[k];
+                }
+            }
+
+            if (sourceEnable) {
+                if (!enable) {
+                    enable = target.enable = [];
+                }
+
+                for (const value of sourceEnable) {
+                    enable.push(value);
+                }
+            }
+
+            if (sourceFunctions) {
+                if (!functions) {
+                    functions = target.functions = {};
+                }
+
+                for (const k in sourceFunctions) {
+                    const sourceFunction = sourceFunctions[k];
+                    functions[k] = Array.isArray(sourceFunction) ? sourceFunction.concat() : sourceFunction;
+                }
+            }
         }
         /**
          * @private
@@ -108,8 +123,18 @@ namespace egret3d {
          */
         public _states?: gltf.States;
 
-        private constructor(name: string) {
-            super(name);
+        public initialize(
+            name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null,
+            parent: Shader | null
+        ) {
+            super.initialize(name, config, null);
+
+            if (parent) {
+                // this.customs = parent.customs; TODO
+                this._renderQueue = parent._renderQueue;
+                this._defines = parent._defines ? parent._defines.concat() : undefined;
+                this._states = parent._states; // TODO
+            }
         }
         /**
          * @private

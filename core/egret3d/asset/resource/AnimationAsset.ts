@@ -3,6 +3,25 @@ namespace egret3d {
      * 动画资源。
      */
     export class AnimationAsset extends GLTFAsset {
+        /**
+         * @private
+         */
+        public static create(name: string, config: GLTF, buffers: ArrayBufferView[]): AnimationAsset {
+            const animationAsset = new AnimationAsset();
+            animationAsset.initialize(name, config);
+
+            for (const b of buffers) {
+                animationAsset.buffers.push(b);
+            }
+
+            return animationAsset;
+        }
+
+        public initialize(name: string, config: GLTF) {
+            super.initialize(name, config, null);
+
+            this.updateAccessorTypeCount();
+        }
         /*
          * 获取动画剪辑。
          */
@@ -10,7 +29,6 @@ namespace egret3d {
             if (
                 !this.config.animations ||
                 this.config.animations.length === 0
-
             ) { // TODO 动画数据暂不合并。
                 return null;
             }

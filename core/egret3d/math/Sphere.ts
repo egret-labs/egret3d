@@ -78,7 +78,7 @@ namespace egret3d {
                 this.center.copy(center);
             }
             else {
-                this.center.copy(helpAABBA.fromPoints(points).center);
+                this.center.copy(helpBoxA.fromPoints(points).center);
             }
 
             let maxRadiusSqrt = 0.0;

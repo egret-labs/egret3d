@@ -1,59 +1,45 @@
 namespace egret3d {
-
     /**
-     * 默认的贴图。
+     * 默认的纹理。
      */
     export class DefaultTextures extends paper.SingletonComponent {
-
         /**
-         * 纯白色纹理
+         * 纯白色纹理。
          */
-        public static WHITE: Texture;
-
+        public static WHITE: BaseTexture;
         /**
-         * 纯灰色纹理
+         * 纯灰色纹理。
          */
-        public static GRAY: Texture;
-
+        public static GRAY: BaseTexture;
         /**
-         * 黑白网格纹理
+         * 黑白网格纹理。
          */
-        public static GRID: Texture;
-
+        public static GRID: BaseTexture;
         /**
-         * 用于表示纹理丢失的紫色纹理
+         * 用于表示纹理丢失的紫色纹理。
          */
-        public static MISSING: Texture;
+        public static MISSING: BaseTexture;
 
         public initialize() {
             super.initialize();
-            {
-                const texture = Texture.createColorTexture("builtin/white.image.json", 255, 255, 255);
-                texture._isBuiltin = true;
-                DefaultTextures.WHITE = texture;
-                paper.Asset.register(texture);
-            }
 
-            {
-                const texture = Texture.createColorTexture("builtin/gray.image.json", 128, 128, 128);
-                texture._isBuiltin = true;
-                DefaultTextures.GRAY = texture;
-                paper.Asset.register(texture);
-            }
+            let texture: BaseTexture;
 
-            {
-                const texture = Texture.createGridTexture("builtin/grid.image.json");
-                texture._isBuiltin = true;
-                DefaultTextures.GRID = texture;
-                paper.Asset.register(texture);
-            }
+            texture = Texture.createColorTexture("builtin/white.image.json", 255, 255, 255);
+            DefaultTextures.WHITE = texture;
+            paper.Asset.register(texture);
 
-            {
-                const texture = Texture.createColorTexture("builtin/missing.image.json", 255, 0, 255);
-                texture._isBuiltin = true;
-                DefaultTextures.MISSING = texture;
-                paper.Asset.register(texture);
-            }
+            texture = Texture.createColorTexture("builtin/gray.image.json", 128, 128, 128);
+            DefaultTextures.GRAY = texture;
+            paper.Asset.register(texture);
+
+            texture = Texture.createGridTexture("builtin/grid.image.json");
+            DefaultTextures.GRID = texture;
+            paper.Asset.register(texture);
+
+            texture = Texture.createColorTexture("builtin/missing.image.json", 255, 0, 255);
+            DefaultTextures.MISSING = texture;
+            paper.Asset.register(texture);
         }
     }
 }

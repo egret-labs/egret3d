@@ -31,18 +31,17 @@ namespace egret3d {
             // TODO 颜色，更多类型。
 
             { // TRIANGLE.
-                const mesh = Mesh.create(3, 0, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-                mesh._isBuiltin = true;
+                const mesh = Mesh.create(3, 0, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
                 mesh.name = "builtin/triangle.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.TRIANGLE = mesh;
 
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, [
                     0.0, 0.5, 0.0,
                     -0.5, -0.5, 0.0,
                     0.5, -0.5, 0.0,
                 ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, [
                     1.0, 1.0, 1.0, 1.0,
                     1.0, 1.0, 1.0, 1.0,
                     1.0, 1.0, 1.0, 1.0,
@@ -51,7 +50,6 @@ namespace egret3d {
 
             { // QUAD.
                 const mesh = MeshBuilder.createPlane();
-                mesh._isBuiltin = true;
                 mesh.name = "builtin/quad.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD = mesh;
@@ -59,7 +57,6 @@ namespace egret3d {
 
             { // QUAD_PARTICLE.
                 const mesh = MeshBuilder.createPlane(1.0, 1.0, -0.5, 0.0);
-                mesh._isBuiltin = true;
                 mesh.name = "builtin/quad_particle.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD_PARTICLE = mesh;
@@ -67,7 +64,6 @@ namespace egret3d {
 
             { // FULLSCREEN_QUAD.
                 const mesh = MeshBuilder.createPlane(2.0, 2.0);
-                mesh._isBuiltin = true;
                 mesh.name = "builtin/fullscreen_quad.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.FULLSCREEN_QUAD = mesh;
@@ -81,7 +77,6 @@ namespace egret3d {
 
             { // PLANE.
                 const mesh = MeshBuilder.createPlane(10.0, 10.0);
-                mesh._isBuiltin = true;
                 mesh.name = "builtin/plane.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PLANE = mesh;
@@ -89,7 +84,6 @@ namespace egret3d {
 
             { // CUBE.
                 const mesh = MeshBuilder.createCube();
-                mesh._isBuiltin = true;
                 mesh.name = "builtin/cube.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CUBE = mesh;
@@ -97,7 +91,6 @@ namespace egret3d {
 
             { // PYRAMID.
                 const mesh = MeshBuilder.createCylinder(0.0, Math.sqrt(0.5), 1.0, 0.0, 0.0, 0.0, 4, 1, false, Math.PI * 0.25);
-                mesh._isBuiltin = true;
                 mesh.name = "builtin/pyramid.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PYRAMID = mesh;
@@ -105,7 +98,6 @@ namespace egret3d {
 
             { // CONE.
                 const mesh = MeshBuilder.createCylinder(0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 16, 1);
-                mesh._isBuiltin = true;
                 mesh.name = "builtin/cone.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CONE = mesh;
@@ -113,7 +105,6 @@ namespace egret3d {
 
             { // CYLINDER.
                 const mesh = MeshBuilder.createCylinder();
-                mesh._isBuiltin = true;
                 mesh.name = "builtin/cylinder.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CYLINDER = mesh;
@@ -121,7 +112,6 @@ namespace egret3d {
 
             { // TORUS.
                 const mesh = MeshBuilder.createTorus();
-                mesh._isBuiltin = true;
                 mesh.name = "builtin/torus.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.TORUS = mesh;
@@ -129,27 +119,25 @@ namespace egret3d {
 
             { // SPHERE.
                 const mesh = MeshBuilder.createSphere();
-                mesh._isBuiltin = true;
                 mesh.name = "builtin/sphere.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.SPHERE = mesh;
             }
 
             { // LINE_X.
-                const mesh = Mesh.create(4, 2, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-                mesh._isBuiltin = true;
+                const mesh = Mesh.create(4, 2, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
                 mesh.name = "builtin/line_x.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.LINE_X = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, [
                     0.0, 0.0, 0.0, // Line start.
                     1.0, 0.0, 0.0, // Line end.
 
                     0.0, 0.0, 0.0, // Point start.
                     1.0, 0.0, 0.0, // Point end.
                 ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, [
                     1.0, 1.0, 1.0, 1.0,
                     1.0, 1.0, 1.0, 1.0,
 
@@ -160,20 +148,19 @@ namespace egret3d {
             }
 
             { // LINE_Y.
-                const mesh = Mesh.create(4, 2, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-                mesh._isBuiltin = true;
+                const mesh = Mesh.create(4, 2, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
                 mesh.name = "builtin/line_y.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.LINE_Y = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, [
                     0.0, 0.0, 0.0, // Line start.
                     0.0, 1.0, 0.0, // Line end.
 
                     0.0, 0.0, 0.0, // Point start.
                     0.0, 1.0, 0.0, // Point end.
                 ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, [
                     1.0, 1.0, 1.0, 1.0,
                     1.0, 1.0, 1.0, 1.0,
 
@@ -184,20 +171,19 @@ namespace egret3d {
             }
 
             { // LINE_Z.
-                const mesh = Mesh.create(4, 2, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-                mesh._isBuiltin = true;
+                const mesh = Mesh.create(4, 2, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
                 mesh.name = "builtin/line_z.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.LINE_Z = mesh;
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, [
                     0.0, 0.0, 0.0, // Line start.
                     0.0, 0.0, 1.0, // Line end.
 
                     0.0, 0.0, 0.0, // Point start.
                     0.0, 0.0, 1.0, // Point end.
                 ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, [
                     1.0, 1.0, 1.0, 1.0,
                     1.0, 1.0, 1.0, 1.0,
 
@@ -209,21 +195,19 @@ namespace egret3d {
 
             { // CIRCLE_LINE
                 const mesh = MeshBuilder.createCircle();
-                mesh._isBuiltin = true;
                 mesh.name = "builtin/circle_line.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CIRCLE_LINE = mesh;
             }
 
             { // CUBE_LINE
-                const mesh = Mesh.create(8, 24, [gltf.MeshAttributeType.POSITION, gltf.MeshAttributeType.COLOR_0]);
-                mesh._isBuiltin = true;
+                const mesh = Mesh.create(8, 24, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
                 mesh.name = "builtin/cube_line.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
                 DefaultMeshes.CUBE_LINE = mesh;
                 //
-                mesh.setAttributes(gltf.MeshAttributeType.POSITION, [
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, [
                     // Z-
                     -0.5, 0.5, -0.5,
                     0.5, 0.5, -0.5,
@@ -236,7 +220,7 @@ namespace egret3d {
                     -0.5, -0.5, 0.5,
                     -0.5, 0.5, 0.5,
                 ]);
-                mesh.setAttributes(gltf.MeshAttributeType.COLOR_0, [
+                mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, [
                     1, 1, 1, 1,
                     1, 1, 1, 1,
                     1, 1, 1, 1,

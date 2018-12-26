@@ -1,4 +1,4 @@
-namespace egret3d.web {
+namespace egret3d.webgl {
     /**
      * @internal
      */
@@ -13,6 +13,7 @@ namespace egret3d.web {
         public webglTexture: GlobalWeblGLTexture | null = null;
         public frameBuffer: WebGLFramebuffer | null = null;
         public renderBuffer: WebGLRenderbuffer | null = null;
+
         private _setupFrameBufferTexture(frameBuffer: WebGLFramebuffer, texture: GlobalWeblGLTexture, textureTarget: number, type: gltf.TextureDataType, width: number, height: number, format: gltf.TextureFormat, attachment: number): void {
             const webgl = WebGLRenderState.webgl!;
 
@@ -21,6 +22,7 @@ namespace egret3d.web {
             webgl.framebufferTexture2D(webgl.FRAMEBUFFER, attachment, textureTarget, texture, 0);
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
+
         private _setupRenderBufferStorage(frameBuffer: WebGLFramebuffer, renderBuffer: WebGLRenderbuffer, depthBuffer: boolean, stencilBuffer: boolean, width: number, height: number): void {
             const webgl = WebGLRenderState.webgl!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
@@ -42,12 +44,14 @@ namespace egret3d.web {
             //
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
+
         private _setupDepthRenderbuffer(frameBuffer: WebGLFramebuffer, renderBuffer: WebGLRenderbuffer, depthBuffer: boolean, stencilBuffer: boolean, width: number, height: number) {
             const webgl = WebGLRenderState.webgl!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
             this._setupRenderBufferStorage(frameBuffer, renderBuffer, depthBuffer, stencilBuffer, width, height);
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
         }
+
         private _setupRenderTexture(): void {
             const sampler = this._sampler;
             const paperExtension = this._gltfTexture!.extensions.paper!;
@@ -58,19 +62,23 @@ namespace egret3d.web {
             const stencil = paperExtension.stencilBuffer!;
             //
             const webgl = WebGLRenderState.webgl!;
+
             if (!this.frameBuffer) {
                 this.frameBuffer = webgl.createFramebuffer()!;
             }
-            if (!this.webglTexture) {
+
+            if (!this.webglTexture) { // TODO 创建与 buffer 分离。
                 this.webglTexture = webgl.createTexture()!;
             }
+
             webgl.bindTexture(webgl.TEXTURE_2D, this.webglTexture);
+
             const isPowerTwo = isPowerOfTwo(width, height);
             setTexturexParameters(isPowerTwo, sampler, paperExtension.anisotropy || 1);
             this._setupFrameBufferTexture(this.frameBuffer, this.webglTexture, webgl.TEXTURE_2D, gltf.TextureDataType.UNSIGNED_BYTE, width, height, format, webgl.COLOR_ATTACHMENT0);
 
             const minFilter = sampler.minFilter!;
-            const canGenerateMipmap = isPowerTwo && minFilter !== gltf.TextureFilter.NEAREST && minFilter !== gltf.TextureFilter.LINEAR;
+            const canGenerateMipmap = isPowerTwo && minFilter !== gltf.TextureFilter.Nearest && minFilter !== gltf.TextureFilter.Linear;
             if (canGenerateMipmap) {
                 webgl.generateMipmap(webgl.TEXTURE_2D);
             }
@@ -85,11 +93,37 @@ namespace egret3d.web {
             }
         }
 
-        public activateRenderTexture() {
-            if (this._dirty) {
-                this._setupRenderTexture();
-                this._dirty = false;
+        public onReferenceCountChange(isZero: boolean) {
+            if (isZero && this.webglTexture) {
+                const webgl = WebGLRenderState.webgl!;
+
+                if (this.webglTexture) {
+                    webgl.deleteTexture(this.webglTexture);
+                }
+
+                if (this.frameBuffer) {
+                    webgl.deleteFramebuffer(this.frameBuffer);
+                }
+
+                if (this.renderBuffer) {
+                    webgl.deleteRenderbuffer(this.renderBuffer);
+                }
+                //
+                this.webglTexture = null;
+                this.frameBuffer = null;
+                this.renderBuffer = null;
+
+                return true;
             }
+
+            return false;
+        }
+
+        public activateRenderTexture() {
+            if (!this.webglTexture) { // TODO 引用计数的问题
+                this._setupRenderTexture();
+            }
+
             const webgl = WebGLRenderState.webgl!;
             webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.frameBuffer);
         }
@@ -100,30 +134,11 @@ namespace egret3d.web {
                 webgl.bindTexture(webgl.TEXTURE_2D, this.webglTexture);
                 webgl.generateMipmap(webgl.TEXTURE_2D);
                 webgl.bindTexture(webgl.TEXTURE_2D, null);
+
                 return true;
             }
-            return false;
-        }
 
-        public dispose() {
-            if (!super.dispose()) {
-                return false;
-            }
-            const webgl = WebGLRenderState.webgl!;
-            if (!this.webglTexture) {
-                webgl.deleteBuffer(this.webglTexture);
-            }
-            if (!this.frameBuffer) {
-                webgl.deleteFramebuffer(this.frameBuffer);
-            }
-            if (!this.renderBuffer) {
-                webgl.deleteRenderbuffer(this.renderBuffer);
-            }
-            //
-            this.webglTexture = null;
-            this.frameBuffer = null;
-            this.renderBuffer = null;
-            return true;
+            return false;
         }
     }
     // Retargetting.

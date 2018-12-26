@@ -49,7 +49,7 @@ namespace behaviors {
                     const masks = this._maskJointNames.split(",");
 
                     if (!mask) {
-                        layer.mask = mask = egret3d.AnimationMask.create();
+                        layer.mask = mask = egret3d.AnimationMask.create("");
                         mask.createJoints(this.gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.mesh!);
                     }
 

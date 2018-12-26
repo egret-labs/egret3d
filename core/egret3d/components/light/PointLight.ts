@@ -28,7 +28,7 @@ namespace egret3d {
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public distance: number = 10.0;
 
-        public renderTarget: BaseRenderTexture;
+        public renderTarget: RenderTexture;
 
         public updateShadow(camera: Camera) {
             // if (!this.renderTarget) {

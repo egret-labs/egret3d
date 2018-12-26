@@ -20,4 +20,18 @@ declare namespace paper {
         //RenderQueue-auto-replace-start
         //RenderQueue-auto-replace-end
     }
+    /**
+     * 
+     */
+    export const enum AttributeSemantics {
+        //AttributeSemantics-auto-replace-start
+        //AttributeSemantics-auto-replace-end
+    }
+    /**
+     * 
+     */
+    export const enum UniformSemantics {
+        //UniformSemantics-auto-replace-start
+        //UniformSemantics-auto-replace-end
+    }
 }

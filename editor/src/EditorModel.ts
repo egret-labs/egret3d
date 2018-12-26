@@ -81,17 +81,17 @@ namespace paper.editor {
             }
         }
         public setTransformProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void {
-            let valueEditType: paper.editor.EditType | null = getEditType(target,propName);
+            let valueEditType: paper.editor.EditType | null = getEditType(target, propName);
 
             if (valueEditType !== null) {
                 let newPropertyData = {
-                    propName:[propName],
+                    propName: [propName],
                     copyValue: this.serializeProperty(propNewValue, valueEditType),
                     valueEditType
                 };
 
                 let prePropertyData = {
-                    propName:[propName],
+                    propName: [propName],
                     copyValue: this.serializeProperty(propOldValue, valueEditType),
                     valueEditType
                 };
@@ -483,8 +483,8 @@ namespace paper.editor {
             if (propertyChain.length == 1) {
                 return target;
             }
-            
-            let realTarget:any;
+
+            let realTarget: any;
             for (let index = 0; index < propertyChain.length; index++) {
                 if (index === propertyChain.length - 1) {
                     return realTarget;
@@ -494,16 +494,16 @@ namespace paper.editor {
             }
 
             throw new Error("can not find target");
-		}
+        }
 
         public setTargetProperty(propName: string, target: any, value: any, editType: paper.editor.EditType): void;
         public setTargetProperty(propNameOrpropertyChain: string | string[], target: any, value: any, editType: paper.editor.EditType) {
-            let propertyName:string;
+            let propertyName: string;
 
             if (Array.isArray(propNameOrpropertyChain)) {
-                target = this.getTargetByPropertyChain(propNameOrpropertyChain,target);
+                target = this.getTargetByPropertyChain(propNameOrpropertyChain, target);
                 propertyName = propNameOrpropertyChain[propNameOrpropertyChain.length - 1];
-            }else{
+            } else {
                 propertyName = propNameOrpropertyChain;
             }
 
@@ -788,9 +788,9 @@ namespace paper.editor {
                 const { propName, copyValue, extraData } = propertyValue;
 
                 if (extraData.uniformType) {
-                    this.modifyMaterialUniformProperty(target,extraData.uniformType,propName,copyValue);
-                }else if(extraData.gltfStateConfig){
-                    this.modifyMaterialGltfStates(target,propName,copyValue);
+                    this.modifyMaterialUniformProperty(target, extraData.uniformType, propName, copyValue);
+                } else if (extraData.gltfStateConfig) {
+                    this.modifyMaterialGltfStates(target, propName, copyValue);
                 }
 
                 if (propName === "renderQueue") {
@@ -803,7 +803,7 @@ namespace paper.editor {
             //modify gltf config
             const _glTFMaterial = target.config.materials![0] as egret3d.GLTFMaterial;
             const gltfUnifromMap = _glTFMaterial.extensions.KHR_techniques_webgl.values!;
-            const uniformMap = target.glTFTechnique.uniforms;
+            const uniformMap = target.technique.uniforms;
             for (const key in uniformMap) {
                 if (uniformMap[key].semantic === undefined) {
                     const value = uniformMap[key].value;
@@ -820,8 +820,7 @@ namespace paper.editor {
             }
         }
 
-        private modifyMaterialUniformProperty(target: egret3d.Material,uniformType:gltf.UniformType,propName:string,copyValue:any)
-        {
+        private modifyMaterialUniformProperty(target: egret3d.Material, uniformType: gltf.UniformType, propName: string, copyValue: any) {
             switch (uniformType) {
                 case gltf.UniformType.BOOL:
                     target.setBoolean(propName, copyValue);
@@ -859,15 +858,14 @@ namespace paper.editor {
             }
         }
 
-        private modifyMaterialGltfStates(target:egret3d.Material,propName:string,copyValue:any)
-        {
+        private modifyMaterialGltfStates(target: egret3d.Material, propName: string, copyValue: any) {
             if (propName === "enable") {
-                target.glTFTechnique.states!.enable = copyValue;
-            }else{
-                target.glTFTechnique.states!.functions![propName] = copyValue;
+                target.technique.states!.enable = copyValue;
+            } else {
+                target.technique.states!.functions![propName] = copyValue;
             }
 
-            (target.config.materials![0] as egret3d.GLTFMaterial).extensions.paper.states = target.glTFTechnique.states;
+            (target.config.materials![0] as egret3d.GLTFMaterial).extensions.paper.states = target.technique.states;
         }
     }
 }
