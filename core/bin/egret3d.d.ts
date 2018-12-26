@@ -3388,12 +3388,24 @@ declare namespace egret3d {
     /**
      * @private
      */
-    enum ToneMapping {
+    const enum ToneMapping {
         None = 0,
         LinearToneMapping = 1,
         ReinhardToneMapping = 2,
         Uncharted2ToneMapping = 3,
         CineonToneMapping = 4,
+    }
+    /**
+     * @private
+     */
+    const enum TextureEncoding {
+        Linear = 1,
+        sRGB = 2,
+        RGBE = 3,
+        RGBM7 = 4,
+        RGBM16 = 5,
+        RGBD = 6,
+        Gamma = 7,
     }
     /**
      * 内置提供的全局 Attribute。
@@ -3432,6 +3444,7 @@ declare namespace egret3d {
         toneMapping: ToneMapping;
         toneMappingExposure: number;
         toneMappingWhitePoint: number;
+        gammaFactor: number;
         commonExtensions: string;
         vertexExtensions: string;
         fragmentExtensions: string;
@@ -3450,6 +3463,9 @@ declare namespace egret3d {
         } | null;
         protected _getCommonExtensions(): void;
         protected _getCommonDefines(): void;
+        protected _getEncodingComponents(encoding: TextureEncoding): string[];
+        protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding): string;
+        protected getTexelEncodingFunction(functionName: string, encoding: TextureEncoding): string;
         protected _getToneMappingFunction(toneMapping: ToneMapping): string;
         render: (camera: Camera, material?: Material) => void;
         draw: (drawCall: DrawCall) => void;
@@ -10295,7 +10311,7 @@ declare namespace egret3d.ShaderChunk {
     const dithering_pars_fragment = "#if defined( DITHERING )\n\n // based on https://www.shadertoy.com/view/MslGR8\n vec3 dithering( vec3 color ) {\n  //Calculate grid position\n  float grid_position = rand( gl_FragCoord.xy );\n\n  //Shift the individual colors differently, thus making it even harder to see the dithering pattern\n  vec3 dither_shift_RGB = vec3( 0.25 / 255.0, -0.25 / 255.0, 0.25 / 255.0 );\n\n  //modify shift acording to grid position.\n  dither_shift_RGB = mix( 2.0 * dither_shift_RGB, -2.0 * dither_shift_RGB, grid_position );\n\n  //shift the color by dither_shift\n  return color + dither_shift_RGB;\n }\n\n#endif\n";
     const emissivemap_fragment = "#ifdef USE_EMISSIVEMAP\n\n vec4 emissiveColor = texture2D( emissiveMap, vUv );\n\n emissiveColor.rgb = emissiveMapTexelToLinear( emissiveColor ).rgb;\n\n totalEmissiveRadiance *= emissiveColor.rgb;\n\n#endif\n";
     const emissivemap_pars_fragment = "#ifdef USE_EMISSIVEMAP\n\n uniform sampler2D emissiveMap;\n\n#endif\n";
-    const encodings_fragment = "  // gl_FragColor = linearToOutputTexel( gl_FragColor );\n";
+    const encodings_fragment = "  gl_FragColor = linearToOutputTexel( gl_FragColor );\n";
     const encodings_pars_fragment = "// For a discussion of what this is, please read this: http://lousodrome.net/blog/light/2013/05/26/gamma-correct-and-hdr-rendering-in-a-32-bits-buffer/\n\nvec4 LinearToLinear( in vec4 value ) {\n return value;\n}\n\nvec4 GammaToLinear( in vec4 value, in float gammaFactor ) {\n return vec4( pow( value.xyz, vec3( gammaFactor ) ), value.w );\n}\nvec4 LinearToGamma( in vec4 value, in float gammaFactor ) {\n return vec4( pow( value.xyz, vec3( 1.0 / gammaFactor ) ), value.w );\n}\n\nvec4 sRGBToLinear( in vec4 value ) {\n return vec4( mix( pow( value.rgb * 0.9478672986 + vec3( 0.0521327014 ), vec3( 2.4 ) ), value.rgb * 0.0773993808, vec3( lessThanEqual( value.rgb, vec3( 0.04045 ) ) ) ), value.w );\n}\nvec4 LinearTosRGB( in vec4 value ) {\n return vec4( mix( pow( value.rgb, vec3( 0.41666 ) ) * 1.055 - vec3( 0.055 ), value.rgb * 12.92, vec3( lessThanEqual( value.rgb, vec3( 0.0031308 ) ) ) ), value.w );\n}\n\nvec4 RGBEToLinear( in vec4 value ) {\n return vec4( value.rgb * exp2( value.a * 255.0 - 128.0 ), 1.0 );\n}\nvec4 LinearToRGBE( in vec4 value ) {\n float maxComponent = max( max( value.r, value.g ), value.b );\n float fExp = clamp( ceil( log2( maxComponent ) ), -128.0, 127.0 );\n return vec4( value.rgb / exp2( fExp ), ( fExp + 128.0 ) / 255.0 );\n//  return vec4( value.brg, ( 3.0 + 128.0 ) / 256.0 );\n}\n\n// reference: http://iwasbeingirony.blogspot.ca/2010/06/difference-between-rgbm-and-rgbd.html\nvec4 RGBMToLinear( in vec4 value, in float maxRange ) {\n return vec4( value.xyz * value.w * maxRange, 1.0 );\n}\nvec4 LinearToRGBM( in vec4 value, in float maxRange ) {\n float maxRGB = max( value.x, max( value.g, value.b ) );\n float M      = clamp( maxRGB / maxRange, 0.0, 1.0 );\n M            = ceil( M * 255.0 ) / 255.0;\n return vec4( value.rgb / ( M * maxRange ), M );\n}\n\n// reference: http://iwasbeingirony.blogspot.ca/2010/06/difference-between-rgbm-and-rgbd.html\nvec4 RGBDToLinear( in vec4 value, in float maxRange ) {\n return vec4( value.rgb * ( ( maxRange / 255.0 ) / value.a ), 1.0 );\n}\nvec4 LinearToRGBD( in vec4 value, in float maxRange ) {\n float maxRGB = max( value.x, max( value.g, value.b ) );\n float D      = max( maxRange / maxRGB, 1.0 );\n D            = min( floor( D ) / 255.0, 1.0 );\n return vec4( value.rgb * ( D * ( 255.0 / maxRange ) ), D );\n}\n\n// LogLuv reference: http://graphicrants.blogspot.ca/2009/04/rgbm-color-encoding.html\n\n// M matrix, for encoding\nconst mat3 cLogLuvM = mat3( 0.2209, 0.3390, 0.4184, 0.1138, 0.6780, 0.7319, 0.0102, 0.1130, 0.2969 );\nvec4 LinearToLogLuv( in vec4 value )  {\n vec3 Xp_Y_XYZp = value.rgb * cLogLuvM;\n Xp_Y_XYZp = max(Xp_Y_XYZp, vec3(1e-6, 1e-6, 1e-6));\n vec4 vResult;\n vResult.xy = Xp_Y_XYZp.xy / Xp_Y_XYZp.z;\n float Le = 2.0 * log2(Xp_Y_XYZp.y) + 127.0;\n vResult.w = fract(Le);\n vResult.z = (Le - (floor(vResult.w*255.0))/255.0)/255.0;\n return vResult;\n}\n\n// Inverse M matrix, for decoding\nconst mat3 cLogLuvInverseM = mat3( 6.0014, -2.7008, -1.7996, -1.3320, 3.1029, -5.7721, 0.3008, -1.0882, 5.6268 );\nvec4 LogLuvToLinear( in vec4 value ) {\n float Le = value.z * 255.0 + value.w;\n vec3 Xp_Y_XYZp;\n Xp_Y_XYZp.y = exp2((Le - 127.0) / 2.0);\n Xp_Y_XYZp.z = Xp_Y_XYZp.y / value.y;\n Xp_Y_XYZp.x = value.x * Xp_Y_XYZp.z;\n vec3 vRGB = Xp_Y_XYZp.rgb * cLogLuvInverseM;\n return vec4( max(vRGB, 0.0), 1.0 );\n}\n";
     const envmap_fragment = "#ifdef USE_ENVMAP\n\n #if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\n  vec3 cameraToVertex = normalize( vWorldPosition - cameraPosition );\n\n  // Transforming Normal Vectors with the Inverse Transformation\n  vec3 worldNormal = inverseTransformDirection( normal, viewMatrix );\n\n  #ifdef ENVMAP_MODE_REFLECTION\n\n   vec3 reflectVec = reflect( cameraToVertex, worldNormal );\n\n  #else\n\n   vec3 reflectVec = refract( cameraToVertex, worldNormal, refractionRatio );\n\n  #endif\n\n #else\n\n  vec3 reflectVec = vReflect;\n\n #endif\n\n #ifdef ENVMAP_TYPE_CUBE\n\n  vec4 envColor = textureCube( envMap, vec3( flipEnvMap * reflectVec.x, reflectVec.yz ) );\n\n #elif defined( ENVMAP_TYPE_EQUIREC )\n\n  vec2 sampleUV;\n\n  reflectVec = normalize( reflectVec );\n\n  sampleUV.y = asin( clamp( reflectVec.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\n  sampleUV.x = atan( reflectVec.z, reflectVec.x ) * RECIPROCAL_PI2 + 0.5;\n\n  vec4 envColor = texture2D( envMap, sampleUV );\n\n #elif defined( ENVMAP_TYPE_SPHERE )\n\n  reflectVec = normalize( reflectVec );\n\n  vec3 reflectView = normalize( ( viewMatrix * vec4( reflectVec, 0.0 ) ).xyz + vec3( 0.0, 0.0, 1.0 ) );\n\n  vec4 envColor = texture2D( envMap, reflectView.xy * 0.5 + 0.5 );\n\n #else\n\n  vec4 envColor = vec4( 0.0 );\n\n #endif\n\n envColor = envMapTexelToLinear( envColor );\n\n #ifdef ENVMAP_BLENDING_MULTIPLY\n\n  outgoingLight = mix( outgoingLight, outgoingLight * envColor.xyz, specularStrength * reflectivity );\n\n #elif defined( ENVMAP_BLENDING_MIX )\n\n  outgoingLight = mix( outgoingLight, envColor.xyz, specularStrength * reflectivity );\n\n #elif defined( ENVMAP_BLENDING_ADD )\n\n  outgoingLight += envColor.xyz * specularStrength * reflectivity;\n\n #endif\n\n#endif\n";
     const envmap_pars_fragment = "#if defined( USE_ENVMAP ) || defined( PHYSICAL )\n uniform float reflectivity;\n uniform float envMapIntensity;\n#endif\n\n#ifdef USE_ENVMAP\n\n #if ! defined( PHYSICAL ) && ( defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG ) )\n  varying vec3 vWorldPosition;\n #endif\n\n #ifdef ENVMAP_TYPE_CUBE\n  uniform samplerCube envMap;\n #else\n  uniform sampler2D envMap;\n #endif\n uniform float flipEnvMap;\n uniform int maxMipLevel;\n\n #if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG ) || defined( PHYSICAL )\n  uniform float refractionRatio;\n #else\n  varying vec3 vReflect;\n #endif\n\n#endif\n";
