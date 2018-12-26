@@ -3399,13 +3399,13 @@ declare namespace egret3d {
      * @private
      */
     const enum TextureEncoding {
-        Linear = 1,
-        sRGB = 2,
-        RGBE = 3,
-        RGBM7 = 4,
-        RGBM16 = 5,
-        RGBD = 6,
-        Gamma = 7,
+        LinearEncoding = 1,
+        sRGBEncoding = 2,
+        RGBEEncoding = 3,
+        RGBM7Encoding = 4,
+        RGBM16Encoding = 5,
+        RGBDEncoding = 6,
+        GammaEncoding = 7,
     }
     /**
      * 内置提供的全局 Attribute。
@@ -3465,7 +3465,7 @@ declare namespace egret3d {
         protected _getCommonDefines(): void;
         protected _getEncodingComponents(encoding: TextureEncoding): string[];
         protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding): string;
-        protected getTexelEncodingFunction(functionName: string, encoding: TextureEncoding): string;
+        protected _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding): string;
         protected _getToneMappingFunction(toneMapping: ToneMapping): string;
         render: (camera: Camera, material?: Material) => void;
         draw: (drawCall: DrawCall) => void;
@@ -10339,7 +10339,7 @@ declare namespace egret3d.ShaderChunk {
     const logdepthbuf_pars_fragment = "#if defined( USE_LOGDEPTHBUF ) && defined( USE_LOGDEPTHBUF_EXT )\n\n uniform float logDepthBufFC;\n varying float vFragDepth;\n\n#endif\n";
     const logdepthbuf_pars_vertex = "#ifdef USE_LOGDEPTHBUF\n\n #ifdef USE_LOGDEPTHBUF_EXT\n\n  varying float vFragDepth;\n\n #else\n\n  uniform float logDepthBufFC;\n\n #endif\n\n#endif\n";
     const logdepthbuf_vertex = "#ifdef USE_LOGDEPTHBUF\n\n #ifdef USE_LOGDEPTHBUF_EXT\n\n  vFragDepth = 1.0 + gl_Position.w;\n\n #else\n\n  gl_Position.z = log2( max( EPSILON, gl_Position.w + 1.0 ) ) * logDepthBufFC - 1.0;\n\n  gl_Position.z *= gl_Position.w;\n\n #endif\n\n#endif\n";
-    const map_fragment = "#ifdef USE_MAP\n\n vec4 texelColor = texture2D( map, vUv );\n\n // texelColor = mapTexelToLinear( texelColor ); // modified by egret. TODO\n diffuseColor *= texelColor;\n\n#endif\n";
+    const map_fragment = "#ifdef USE_MAP\n\n vec4 texelColor = texture2D( map, vUv );\n\n texelColor = mapTexelToLinear( texelColor ); // modified by egret. TODO\n diffuseColor *= texelColor;\n\n#endif\n";
     const map_pars_fragment = "#ifdef USE_MAP\n\n uniform sampler2D map;\n\n#endif\n";
     const map_particle_fragment = "#ifdef USE_MAP\n\n vec2 uv = ( uvTransform * vec3( gl_PointCoord.x, 1.0 - gl_PointCoord.y, 1 ) ).xy;\n vec4 mapTexel = texture2D( map, uv );\n diffuseColor *= mapTexelToLinear( mapTexel );\n\n#endif\n";
     const map_particle_pars_fragment = "#ifdef USE_MAP\n\n uniform mat3 uvTransform;\n uniform sampler2D map;\n\n#endif\n";

@@ -192,17 +192,17 @@ namespace egret3d {
             if (this.toneMapping !== ToneMapping.None) {
                 defines += "#define TONE_MAPPING \n";
                 defines += ShaderChunk.tonemapping_pars_fragment + " \n";
-                defines += this._getToneMappingFunction(this.toneMapping);
+                defines += this._getToneMappingFunction(this.toneMapping) + " \n";
             }
 
-            // if (this.gammaFactor > 0.0) {
-            //     defines += "#define GAMMA_FACTOR " + this.gammaFactor + "\n";
-            //     defines += ShaderChunk.encodings_pars_fragment + "\n";
-            //     defines += this.getTexelEncodingFunction("mapTexelToLinear", TextureEncoding.Gamma);
-            //     // defines += this.getTexelEncodingFunction("envMapTexelToLinear", TextureEncoding.Gamma);
-            //     // defines += this.getTexelEncodingFunction("emissiveMapTexelToLinear", TextureEncoding.Gamma);
-            //     defines += this.getTexelEncodingFunction("linearToOutputTexel", TextureEncoding.Gamma);
-            // }
+            if (this.gammaFactor > 0.0) {
+                defines += "#define GAMMA_FACTOR " + this.gammaFactor + "\n";
+                defines += ShaderChunk.encodings_pars_fragment + "\n";
+                defines += this._getTexelDecodingFunction("mapTexelToLinear", TextureEncoding.GammaEncoding) + " \n";
+                // defines += this._getTexelDecodingFunction("envMapTexelToLinear", TextureEncoding.GammaEncoding);
+                // defines += this._getTexelDecodingFunction("emissiveMapTexelToLinear", TextureEncoding.GammaEncoding);
+                defines += this._getTexelEncodingFunction("linearToOutputTexel", TextureEncoding.GammaEncoding) + " \n";
+            }
 
             if (this.logarithmicDepthBuffer) {
                 defines += "#define USE_LOGDEPTHBUF \n";
@@ -215,9 +215,7 @@ namespace egret3d {
         }
 
         protected _getEncodingComponents(encoding: TextureEncoding) {
-
             switch (encoding) {
-
                 case TextureEncoding.LinearEncoding:
                     return ['Linear', '( value )'];
                 case TextureEncoding.sRGBEncoding:
@@ -236,7 +234,6 @@ namespace egret3d {
                     throw new Error('unsupported encoding: ' + encoding);
 
             }
-
         }
 
         protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding) {
@@ -244,7 +241,7 @@ namespace egret3d {
             return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
         }
 
-        protected getTexelEncodingFunction(functionName: string, encoding: TextureEncoding) {
+        protected _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding) {
             const components = this._getEncodingComponents(encoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return LinearTo' + components[0] + components[1] + '; }';
         }

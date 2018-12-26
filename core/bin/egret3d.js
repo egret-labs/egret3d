@@ -4278,13 +4278,13 @@ var egret3d;
      */
     var TextureEncoding;
     (function (TextureEncoding) {
-        TextureEncoding[TextureEncoding["Linear"] = 1] = "Linear";
-        TextureEncoding[TextureEncoding["sRGB"] = 2] = "sRGB";
-        TextureEncoding[TextureEncoding["RGBE"] = 3] = "RGBE";
-        TextureEncoding[TextureEncoding["RGBM7"] = 4] = "RGBM7";
-        TextureEncoding[TextureEncoding["RGBM16"] = 5] = "RGBM16";
-        TextureEncoding[TextureEncoding["RGBD"] = 6] = "RGBD";
-        TextureEncoding[TextureEncoding["Gamma"] = 7] = "Gamma";
+        TextureEncoding[TextureEncoding["LinearEncoding"] = 1] = "LinearEncoding";
+        TextureEncoding[TextureEncoding["sRGBEncoding"] = 2] = "sRGBEncoding";
+        TextureEncoding[TextureEncoding["RGBEEncoding"] = 3] = "RGBEEncoding";
+        TextureEncoding[TextureEncoding["RGBM7Encoding"] = 4] = "RGBM7Encoding";
+        TextureEncoding[TextureEncoding["RGBM16Encoding"] = 5] = "RGBM16Encoding";
+        TextureEncoding[TextureEncoding["RGBDEncoding"] = 6] = "RGBDEncoding";
+        TextureEncoding[TextureEncoding["GammaEncoding"] = 7] = "GammaEncoding";
     })(TextureEncoding = egret3d.TextureEncoding || (egret3d.TextureEncoding = {}));
     /**
      * 内置提供的全局 Attribute。
@@ -4431,15 +4431,15 @@ var egret3d;
             if (this.toneMapping !== 0 /* None */) {
                 defines += "#define TONE_MAPPING \n";
                 defines += egret3d.ShaderChunk.tonemapping_pars_fragment + " \n";
-                defines += this._getToneMappingFunction(this.toneMapping);
+                defines += this._getToneMappingFunction(this.toneMapping) + " \n";
             }
             if (this.gammaFactor > 0.0) {
                 defines += "#define GAMMA_FACTOR " + this.gammaFactor + "\n";
                 defines += egret3d.ShaderChunk.encodings_pars_fragment + "\n";
-                defines += this.getTexelEncodingFunction("mapTexelToLinear", 7 /* Gamma */);
-                // defines += this.getTexelEncodingFunction("envMapTexelToLinear", TextureEncoding.Gamma);
-                // defines += this.getTexelEncodingFunction("emissiveMapTexelToLinear", TextureEncoding.Gamma);
-                defines += this.getTexelEncodingFunction("linearToOutputTexel", 7 /* Gamma */);
+                defines += this._getTexelDecodingFunction("mapTexelToLinear", 7 /* GammaEncoding */) + " \n";
+                // defines += this._getTexelDecodingFunction("envMapTexelToLinear", TextureEncoding.GammaEncoding);
+                // defines += this._getTexelDecodingFunction("emissiveMapTexelToLinear", TextureEncoding.GammaEncoding);
+                defines += this._getTexelEncodingFunction("linearToOutputTexel", 7 /* GammaEncoding */) + " \n";
             }
             if (this.logarithmicDepthBuffer) {
                 defines += "#define USE_LOGDEPTHBUF \n";
@@ -4451,19 +4451,19 @@ var egret3d;
         };
         RenderState.prototype._getEncodingComponents = function (encoding) {
             switch (encoding) {
-                case 1 /* Linear */:
+                case 1 /* LinearEncoding */:
                     return ['Linear', '( value )'];
-                case 2 /* sRGB */:
+                case 2 /* sRGBEncoding */:
                     return ['sRGB', '( value )'];
-                case 3 /* RGBE */:
+                case 3 /* RGBEEncoding */:
                     return ['RGBE', '( value )'];
-                case 4 /* RGBM7 */:
+                case 4 /* RGBM7Encoding */:
                     return ['RGBM', '( value, 7.0 )'];
-                case 5 /* RGBM16 */:
+                case 5 /* RGBM16Encoding */:
                     return ['RGBM', '( value, 16.0 )'];
-                case 6 /* RGBD */:
+                case 6 /* RGBDEncoding */:
                     return ['RGBD', '( value, 256.0 )'];
-                case 7 /* Gamma */:
+                case 7 /* GammaEncoding */:
                     return ['Gamma', '( value, float( GAMMA_FACTOR ) )'];
                 default:
                     throw new Error('unsupported encoding: ' + encoding);
@@ -4473,7 +4473,7 @@ var egret3d;
             var components = this._getEncodingComponents(encoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
         };
-        RenderState.prototype.getTexelEncodingFunction = function (functionName, encoding) {
+        RenderState.prototype._getTexelEncodingFunction = function (functionName, encoding) {
             var components = this._getEncodingComponents(encoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return LinearTo' + components[0] + components[1] + '; }';
         };
@@ -24542,7 +24542,7 @@ var egret3d;
         ShaderChunk.logdepthbuf_pars_fragment = "#if defined( USE_LOGDEPTHBUF ) && defined( USE_LOGDEPTHBUF_EXT )\n\n uniform float logDepthBufFC;\n varying float vFragDepth;\n\n#endif\n";
         ShaderChunk.logdepthbuf_pars_vertex = "#ifdef USE_LOGDEPTHBUF\n\n #ifdef USE_LOGDEPTHBUF_EXT\n\n  varying float vFragDepth;\n\n #else\n\n  uniform float logDepthBufFC;\n\n #endif\n\n#endif\n";
         ShaderChunk.logdepthbuf_vertex = "#ifdef USE_LOGDEPTHBUF\n\n #ifdef USE_LOGDEPTHBUF_EXT\n\n  vFragDepth = 1.0 + gl_Position.w;\n\n #else\n\n  gl_Position.z = log2( max( EPSILON, gl_Position.w + 1.0 ) ) * logDepthBufFC - 1.0;\n\n  gl_Position.z *= gl_Position.w;\n\n #endif\n\n#endif\n";
-        ShaderChunk.map_fragment = "#ifdef USE_MAP\n\n vec4 texelColor = texture2D( map, vUv );\n\n // texelColor = mapTexelToLinear( texelColor ); // modified by egret. TODO\n diffuseColor *= texelColor;\n\n#endif\n";
+        ShaderChunk.map_fragment = "#ifdef USE_MAP\n\n vec4 texelColor = texture2D( map, vUv );\n\n texelColor = mapTexelToLinear( texelColor ); // modified by egret. TODO\n diffuseColor *= texelColor;\n\n#endif\n";
         ShaderChunk.map_pars_fragment = "#ifdef USE_MAP\n\n uniform sampler2D map;\n\n#endif\n";
         ShaderChunk.map_particle_fragment = "#ifdef USE_MAP\n\n vec2 uv = ( uvTransform * vec3( gl_PointCoord.x, 1.0 - gl_PointCoord.y, 1 ) ).xy;\n vec4 mapTexel = texture2D( map, uv );\n diffuseColor *= mapTexelToLinear( mapTexel );\n\n#endif\n";
         ShaderChunk.map_particle_pars_fragment = "#ifdef USE_MAP\n\n uniform mat3 uvTransform;\n uniform sampler2D map;\n\n#endif\n";
