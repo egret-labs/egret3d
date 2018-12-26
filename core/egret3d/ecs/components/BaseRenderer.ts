@@ -33,16 +33,16 @@ namespace paper {
         protected _recalculateSphere() {
             const localBoundingBox = this.localBoundingBox; // Update localBoundingBox.
 
-            const worldMatrix = this.gameObject.transform.localToWorldMatrix;
+            const localToWorldMatrix = this.getBoundingTransform().localToWorldMatrix;
             this._boundingSphere.set(localBoundingBox.center, localBoundingBox.boundingSphereRadius);
-            this._boundingSphere.center.applyMatrix(worldMatrix);
-            this._boundingSphere.radius *= worldMatrix.maxScaleOnAxis;
+            this._boundingSphere.center.applyMatrix(localToWorldMatrix);
+            this._boundingSphere.radius *= localToWorldMatrix.maxScaleOnAxis;
         }
 
         public initialize() {
             super.initialize();
 
-            this.gameObject.transform.registerObserver(this);
+            this.getBoundingTransform().registerObserver(this);
         }
 
         public uninitialize() {
@@ -62,7 +62,6 @@ namespace paper {
         public onTransformChange() {
             this._boundingSphereDirty = true;
         }
-
         /**
          * 重新计算 AABB。
          */
@@ -70,6 +69,12 @@ namespace paper {
 
         public abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
         public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
+        /**
+         * 
+         */
+        public getBoundingTransform(): egret3d.Transform {
+            return this.gameObject.transform;
+        }
         /**
          * 该组件是否接收投影。
          */

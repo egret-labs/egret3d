@@ -3203,10 +3203,11 @@ var paper;
                 var selectedGameObjects = modelComponent.selectedGameObjects;
                 var hoveredGameObject = modelComponent.hoveredGameObject;
                 if (hoveredGameObject && hoveredGameObject.renderer) {
+                    var boundingTransform = hoveredGameObject.renderer.getBoundingTransform();
                     this._hoverBox.activeSelf = true;
-                    this._hoverBox.transform.localPosition.applyMatrix(hoveredGameObject.transform.localToWorldMatrix, hoveredGameObject.renderer.localBoundingBox.center).update();
-                    this._hoverBox.transform.localRotation = hoveredGameObject.transform.rotation;
-                    this._hoverBox.transform.localScale.multiply(hoveredGameObject.renderer.localBoundingBox.size, hoveredGameObject.transform.scale).update();
+                    this._hoverBox.transform.localPosition.applyMatrix(boundingTransform.localToWorldMatrix, hoveredGameObject.renderer.localBoundingBox.center).update();
+                    this._hoverBox.transform.localRotation = boundingTransform.rotation;
+                    this._hoverBox.transform.localScale.multiply(hoveredGameObject.renderer.localBoundingBox.size, boundingTransform.scale).update();
                 }
                 else {
                     this._hoverBox.activeSelf = false;
@@ -3224,10 +3225,11 @@ var paper;
                     else {
                         var gameObject = selectedGameObjects[i];
                         if (gameObject.activeSelf && gameObject.renderer) {
+                            var boundingTransform = gameObject.renderer.getBoundingTransform();
                             drawer.activeSelf = true;
-                            drawer.transform.localPosition.applyMatrix(gameObject.transform.localToWorldMatrix, gameObject.renderer.localBoundingBox.center).update();
-                            drawer.transform.localRotation = gameObject.transform.rotation;
-                            drawer.transform.localScale.multiply(gameObject.renderer.localBoundingBox.size, gameObject.transform.scale).update();
+                            drawer.transform.localPosition.applyMatrix(boundingTransform.localToWorldMatrix, gameObject.renderer.localBoundingBox.center).update();
+                            drawer.transform.localRotation = boundingTransform.rotation;
+                            drawer.transform.localScale.multiply(gameObject.renderer.localBoundingBox.size, boundingTransform.scale).update();
                         }
                         else {
                             drawer.activeSelf = false;
@@ -3873,7 +3875,7 @@ var paper;
             }
             SkeletonDrawer.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
-                var mesh = egret3d.Mesh.create(128, 0, ["POSITION" /* POSITION */]);
+                var mesh = egret3d.Mesh.create(1024, 0, ["POSITION" /* POSITION */]);
                 var material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
                 mesh.drawMode = 35048 /* Dynamic */;
@@ -3896,6 +3898,9 @@ var paper;
                     var bones = skinnedMeshRenderer.bones;
                     this.gameObject.transform.position = selectedGameObject.transform.position;
                     var worldToLocalMatrix = this.gameObject.transform.worldToLocalMatrix;
+                    for (var i = 0, l = vertices.length; i < l; ++i) {
+                        vertices[i] = 0.0;
+                    }
                     for (var _i = 0, bones_1 = bones; _i < bones_1.length; _i++) {
                         var bone = bones_1[_i];
                         if (bone) {
@@ -3909,13 +3914,9 @@ var paper;
                                 helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
                             }
                         }
-                        else {
-                            egret3d.Vector3.ZERO.toArray(vertices, offset);
-                            egret3d.Vector3.ZERO.toArray(vertices, offset + 3);
-                        }
                         offset += 6;
                     }
-                    mesh.uploadVertexBuffer();
+                    mesh.uploadVertexBuffer("POSITION" /* POSITION */);
                 }
                 else {
                     this.gameObject.activeSelf = false;

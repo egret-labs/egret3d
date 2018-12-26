@@ -3232,6 +3232,10 @@ declare namespace paper {
         abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
         abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
         /**
+         *
+         */
+        getBoundingTransform(): egret3d.Transform;
+        /**
          * 该组件是否接收投影。
          */
         receiveShadows: boolean;
@@ -7184,9 +7188,6 @@ declare namespace egret3d {
         private _mesh;
         private _skinnedVertices;
         private _skinning(vertexOffset, vertexCount);
-        initialize(reset?: boolean): void;
-        uninitialize(): void;
-        recalculateLocalBox(): void;
         /**
          * 实时获取网格资源的指定三角形顶点位置。
          * - 采用 CPU 蒙皮指定顶点。
@@ -7194,13 +7195,17 @@ declare namespace egret3d {
         getTriangle(triangleIndex: uint, out?: Triangle): Triangle;
         raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
         /**
+         *
+         */
+        readonly boneCount: uint;
+        /**
          * 该渲染组件的骨骼列表。
          */
         readonly bones: ReadonlyArray<Transform | null>;
         /**
          * 该渲染组件的根骨骼。
          */
-        readonly rootBone: Transform | null;
+        rootBone: Transform | null;
         /**
          * 该渲染组件的网格资源。
          */

@@ -7,7 +7,7 @@ namespace paper.editor {
         public initialize() {
             super.initialize();
 
-            const mesh = egret3d.Mesh.create(128, 0, [gltf.AttributeSemantics.POSITION]);
+            const mesh = egret3d.Mesh.create(1024, 0, [gltf.AttributeSemantics.POSITION]);
             const material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
             mesh.drawMode = gltf.DrawMode.Dynamic;
@@ -36,6 +36,10 @@ namespace paper.editor {
                 this.gameObject.transform.position = selectedGameObject!.transform.position;
                 const worldToLocalMatrix = this.gameObject.transform.worldToLocalMatrix;
 
+                for (let i = 0, l = vertices.length; i < l; ++i) {
+                    vertices[i] = 0.0;
+                }
+
                 for (const bone of bones) {
                     if (bone) {
                         if (bone.parent && bones.indexOf(bone.parent) >= 0) {
@@ -48,15 +52,11 @@ namespace paper.editor {
                             helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
                         }
                     }
-                    else {
-                        (egret3d.Vector3.ZERO as egret3d.Vector3).toArray(vertices, offset);
-                        (egret3d.Vector3.ZERO as egret3d.Vector3).toArray(vertices, offset + 3);
-                    }
 
                     offset += 6;
                 }
 
-                mesh.uploadVertexBuffer();
+                mesh.uploadVertexBuffer(gltf.AttributeSemantics.POSITION);
             }
             else {
                 this.gameObject.activeSelf = false;

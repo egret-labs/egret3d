@@ -3757,14 +3757,14 @@ var paper;
         }
         BaseRenderer.prototype._recalculateSphere = function () {
             var localBoundingBox = this.localBoundingBox; // Update localBoundingBox.
-            var worldMatrix = this.gameObject.transform.localToWorldMatrix;
+            var localToWorldMatrix = this.getBoundingTransform().localToWorldMatrix;
             this._boundingSphere.set(localBoundingBox.center, localBoundingBox.boundingSphereRadius);
-            this._boundingSphere.center.applyMatrix(worldMatrix);
-            this._boundingSphere.radius *= worldMatrix.maxScaleOnAxis;
+            this._boundingSphere.center.applyMatrix(localToWorldMatrix);
+            this._boundingSphere.radius *= localToWorldMatrix.maxScaleOnAxis;
         };
         BaseRenderer.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
-            this.gameObject.transform.registerObserver(this);
+            this.getBoundingTransform().registerObserver(this);
         };
         BaseRenderer.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
@@ -3779,6 +3779,12 @@ var paper;
         };
         BaseRenderer.prototype.onTransformChange = function () {
             this._boundingSphereDirty = true;
+        };
+        /**
+         *
+         */
+        BaseRenderer.prototype.getBoundingTransform = function () {
+            return this.gameObject.transform;
         };
         Object.defineProperty(BaseRenderer.prototype, "receiveShadows", {
             /**
@@ -9032,7 +9038,8 @@ var paper;
                     continue;
                 }
                 var hasGetterAndSetter = Deserializer.propertyHasGetterAndSetter(target, retargetKey);
-                var retarget = this._deserializeChild(source[k], !hasGetterAndSetter ? target[retargetKey] : null);
+                var rawRetarget = target[retargetKey];
+                var retarget = this._deserializeChild(source[k], (hasGetterAndSetter && rawRetarget && (rawRetarget.constructor === Array || rawRetarget.constructor === Object)) ? null : rawRetarget);
                 if (retarget === undefined) {
                     continue;
                 }
@@ -15800,6 +15807,9 @@ var egret3d;
                 return true;
             }
         };
+        /**
+         * @internal
+         */
         SkinnedMeshRenderer.prototype.initialize = function (reset) {
             _super.prototype.initialize.call(this);
             if (!reset) {
@@ -15807,7 +15817,7 @@ var egret3d;
             }
             // TODO cache 剔除，脏标记。
             this._bones.length = 0;
-            this._rootBone = null;
+            this.rootBone = null;
             this.boneMatrices = null;
             var mesh = this._mesh;
             if (mesh) {
@@ -15818,7 +15828,7 @@ var egret3d;
                     var rootNode = config.nodes[skin.skeleton];
                     if (rootNode.name in children) {
                         var transforms = children[rootNode.name];
-                        this._rootBone = Array.isArray(transforms) ? transforms[0] : transforms;
+                        this.rootBone = Array.isArray(transforms) ? transforms[0] : transforms;
                     }
                 }
                 for (var _i = 0, _a = skin.joints; _i < _a.length; _i++) {
@@ -15843,6 +15853,9 @@ var egret3d;
                 }
             }
         };
+        /**
+         * @internal
+         */
         SkinnedMeshRenderer.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
             if (this._mesh) {
@@ -15855,18 +15868,29 @@ var egret3d;
             this._mesh = null;
             this._skinnedVertices = null;
         };
+        /**
+         * @internal
+         */
         SkinnedMeshRenderer.prototype.recalculateLocalBox = function () {
             // TODO 蒙皮网格的 aabb 需要能自定义，或者强制更新。
             var mesh = this._mesh;
             this._localBoundingBox.clear();
             if (mesh && !mesh.isDisposed) {
-                var vertices = mesh.getVertices(); // T pose mesh aabb.
+                this._skinning(0, 0);
+                var vertices = this._skinnedVertices;
                 var position = egret3d.helpVector3A;
+                var worldToLocalMatrix = this.getBoundingTransform().worldToLocalMatrix;
                 for (var i = 0, l = vertices.length; i < l; i += 3) {
-                    position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
+                    position.set(vertices[i], vertices[i + 1], vertices[i + 2]).applyMatrix(worldToLocalMatrix);
                     this._localBoundingBox.add(position);
                 }
             }
+        };
+        /**
+         * @internal
+         */
+        SkinnedMeshRenderer.prototype.getBoundingTransform = function () {
+            return this._rootBone || this.gameObject.transform;
         };
         /**
          * 实时获取网格资源的指定三角形顶点位置。
@@ -15920,6 +15944,16 @@ var egret3d;
             }
             return false;
         };
+        Object.defineProperty(SkinnedMeshRenderer.prototype, "boneCount", {
+            /**
+             *
+             */
+            get: function () {
+                return this._bones.length;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(SkinnedMeshRenderer.prototype, "bones", {
             /**
              * 该渲染组件的骨骼列表。
@@ -15936,6 +15970,14 @@ var egret3d;
              */
             get: function () {
                 return this._rootBone;
+            },
+            set: function (value) {
+                if (this._rootBone === value) {
+                    return;
+                }
+                this.getBoundingTransform().unregisterObserver(this);
+                this._rootBone = value;
+                this.getBoundingTransform().registerObserver(this);
             },
             enumerable: true,
             configurable: true
@@ -15971,6 +16013,9 @@ var egret3d;
          * 当蒙皮网格渲染组件的网格资源改变时派发事件。
          */
         SkinnedMeshRenderer.onMeshChanged = new signals.Signal();
+        __decorate([
+            paper.editor.property("UINT" /* UINT */, { readonly: true })
+        ], SkinnedMeshRenderer.prototype, "boneCount", null);
         __decorate([
             paper.editor.property("MESH" /* MESH */),
             paper.serializedField("_mesh")
@@ -26072,10 +26117,10 @@ var egret3d;
                                 webgl.uniformMatrix4fv(location_5, false, camera.worldToClipMatrix.rawData);
                                 break;
                             case "_CAMERA_FORWARD" /* _CAMERA_FORWARD */:
-                                webgl.uniform3f(location_5, rawData[4], rawData[5], rawData[6]);
+                                webgl.uniform3f(location_5, -rawData[8], -rawData[9], -rawData[10]);
                                 break;
                             case "_CAMERA_UP" /* _CAMERA_UP */:
-                                webgl.uniform3f(location_5, -rawData[8], -rawData[9], -rawData[10]);
+                                webgl.uniform3f(location_5, rawData[4], rawData[5], rawData[6]);
                                 break;
                             case "_CAMERA_POS" /* _CAMERA_POS */:
                                 webgl.uniform3f(location_5, rawData[12], rawData[13], rawData[14]);
