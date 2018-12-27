@@ -142,7 +142,11 @@ namespace egret3d {
         public toneMapping: ToneMapping = ToneMapping.None;
         public toneMappingExposure: number = 1.0;
         public toneMappingWhitePoint: number = 1.0;
+
         public gammaFactor: number = 2.0;
+        public gammaInput: boolean = false;
+        public gammaOutput: boolean = false;
+        public textureEncoding: TextureEncoding = TextureEncoding.GammaEncoding;
 
         public commonExtensions: string = "";
         public vertexExtensions: string = "";
@@ -186,7 +190,6 @@ namespace egret3d {
             defines += "precision " + this.maxPrecision + " float; \n";
             defines += "precision " + this.maxPrecision + " int; \n";
             this.commonDefines = defines;
-            // fragmentDefines.
             defines = "";
 
             if (this.toneMapping !== ToneMapping.None) {
@@ -195,14 +198,15 @@ namespace egret3d {
                 defines += this._getToneMappingFunction(this.toneMapping) + " \n";
             }
 
-            if (this.gammaFactor > 0.0) {
-                defines += "#define GAMMA_FACTOR " + this.gammaFactor + "\n";
-                defines += ShaderChunk.encodings_pars_fragment + "\n";
-                defines += this._getTexelDecodingFunction("mapTexelToLinear", TextureEncoding.GammaEncoding) + " \n";
-                // defines += this._getTexelDecodingFunction("envMapTexelToLinear", TextureEncoding.GammaEncoding);
-                // defines += this._getTexelDecodingFunction("emissiveMapTexelToLinear", TextureEncoding.GammaEncoding);
-                defines += this._getTexelEncodingFunction("linearToOutputTexel", TextureEncoding.GammaEncoding) + " \n";
-            }
+            // if (this.gammaFactor > 0.0) {
+            //     defines += "#define GAMMA_FACTOR " + this.gammaFactor + "\n";
+            // }
+
+            // defines += ShaderChunk.encodings_pars_fragment + "\n";
+            // defines += this._getTexelDecodingFunction("mapTexelToLinear", this.textureEncoding) + " \n";
+            // defines += this._getTexelDecodingFunction("envMapTexelToLinear", this.textureEncoding);
+            // defines += this._getTexelDecodingFunction("emissiveMapTexelToLinear", this.textureEncoding);
+            // defines += this._getTexelEncodingFunction("linearToOutputTexel", this.textureEncoding) + " \n";
 
             if (this.logarithmicDepthBuffer) {
                 defines += "#define USE_LOGDEPTHBUF \n";

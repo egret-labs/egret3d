@@ -103,7 +103,7 @@ namespace egret3d {
                     value = sourceValue ? sourceValue.concat() : []; // TODO
                 }
                 else {
-                    value = sourceValue ? sourceValue : []; // TODO 不应是数组。
+                    value = sourceValue ? sourceValue : (sourceValue === 0 ? 0 : []); // TODO 不应是数组。
                 }
 
                 const targetUniform = technique.uniforms[k] = { type, value } as gltf.Uniform;
