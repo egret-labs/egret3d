@@ -10,7 +10,7 @@ namespace egret3d.webgl {
      * @internal
      */
     export class WebGLRenderTexture extends RenderTexture implements IWebGLTexture, IWebGLRenderTexture {
-        public webglTexture: GlobalWeblGLTexture | null = null;
+        public webGLTexture: GlobalWeblGLTexture | null = null;
         public frameBuffer: WebGLFramebuffer | null = null;
         public renderBuffer: WebGLRenderbuffer | null = null;
 
@@ -67,15 +67,15 @@ namespace egret3d.webgl {
                 this.frameBuffer = webgl.createFramebuffer()!;
             }
 
-            if (!this.webglTexture) { // TODO 创建与 buffer 分离。
-                this.webglTexture = webgl.createTexture()!;
+            if (!this.webGLTexture) { // TODO 创建与 buffer 分离。
+                this.webGLTexture = webgl.createTexture()!;
             }
 
-            webgl.bindTexture(webgl.TEXTURE_2D, this.webglTexture);
+            webgl.bindTexture(webgl.TEXTURE_2D, this.webGLTexture);
 
             const isPowerTwo = isPowerOfTwo(width, height);
             setTexturexParameters(isPowerTwo, sampler, paperExtension.anisotropy || 1);
-            this._setupFrameBufferTexture(this.frameBuffer, this.webglTexture, webgl.TEXTURE_2D, gltf.TextureDataType.UNSIGNED_BYTE, width, height, format, webgl.COLOR_ATTACHMENT0);
+            this._setupFrameBufferTexture(this.frameBuffer, this.webGLTexture, webgl.TEXTURE_2D, gltf.TextureDataType.UNSIGNED_BYTE, width, height, format, webgl.COLOR_ATTACHMENT0);
 
             const minFilter = sampler.minFilter!;
             const canGenerateMipmap = isPowerTwo && minFilter !== gltf.TextureFilter.Nearest && minFilter !== gltf.TextureFilter.Linear;
@@ -93,34 +93,34 @@ namespace egret3d.webgl {
             }
         }
 
-        public onReferenceCountChange(isZero: boolean) {
-            if (isZero && this.webglTexture) {
-                const webgl = WebGLRenderState.webgl!;
-
-                if (this.webglTexture) {
-                    webgl.deleteTexture(this.webglTexture);
-                }
-
-                if (this.frameBuffer) {
-                    webgl.deleteFramebuffer(this.frameBuffer);
-                }
-
-                if (this.renderBuffer) {
-                    webgl.deleteRenderbuffer(this.renderBuffer);
-                }
-                //
-                this.webglTexture = null;
-                this.frameBuffer = null;
-                this.renderBuffer = null;
-
-                return true;
+        public dispose() {
+            if (!super.dispose()) {
+                return false;
             }
 
-            return false;
+            const webgl = WebGLRenderState.webgl!;
+
+            if (this.webGLTexture) {
+                webgl.deleteTexture(this.webGLTexture);
+            }
+
+            if (this.frameBuffer) {
+                webgl.deleteFramebuffer(this.frameBuffer);
+            }
+
+            if (this.renderBuffer) {
+                webgl.deleteRenderbuffer(this.renderBuffer);
+            }
+            //
+            this.webGLTexture = null;
+            this.frameBuffer = null;
+            this.renderBuffer = null;
+
+            return true;
         }
 
         public activateRenderTexture() {
-            if (!this.webglTexture) { // TODO 引用计数的问题
+            if (!this.webGLTexture) { // TODO 引用计数的问题
                 this._setupRenderTexture();
             }
 
@@ -131,7 +131,7 @@ namespace egret3d.webgl {
         public generateMipmap(): boolean {
             if (this._mipmap) {
                 const webgl = WebGLRenderState.webgl!;
-                webgl.bindTexture(webgl.TEXTURE_2D, this.webglTexture);
+                webgl.bindTexture(webgl.TEXTURE_2D, this.webGLTexture);
                 webgl.generateMipmap(webgl.TEXTURE_2D);
                 webgl.bindTexture(webgl.TEXTURE_2D, null);
 

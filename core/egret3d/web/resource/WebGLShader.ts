@@ -5,24 +5,24 @@ namespace egret3d.webgl {
     export class WebGLShader extends Shader {
         public readonly programs: { [key: string]: WebGLProgramBinder | null } = {};
 
-        // public onReferenceCountChange(isZero: boolean) { // TODO
-        //     if (isZero) {
-        //         for (const k in this.programs) {
-        //             const program = this.programs[k];
-        //             if (program) {
-        //                 program.dispose();
-        //             }
+        public dispose() {
+            if (!super.dispose()) {
+                return false;
+            }
 
-        //             delete this.programs[k];
-        //         }
+            for (const k in this.programs) {
+                const program = this.programs[k];
+                if (program) {
+                    program.dispose();
+                }
 
-        //         // this.programs;
+                delete this.programs[k];
+            }
 
-        //         return true;
-        //     }
+            // this.programs;
 
-        //     return false;
-        // }
+            return true;
+        }
     }
     // Retargeting.
     egret3d.Shader = WebGLShader;

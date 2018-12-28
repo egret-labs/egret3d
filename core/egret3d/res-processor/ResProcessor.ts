@@ -116,7 +116,7 @@ namespace egret3d {
                 const wrap = data.wrap;
 
                 let textureFormat = gltf.TextureFormat.RGBA;
-                if (format === "RGB") {
+                if (format === "RGB") {''
                     textureFormat = gltf.TextureFormat.RGB;
                 } else if (format === "Gray") {
                     textureFormat = gltf.TextureFormat.Luminance;
@@ -146,10 +146,9 @@ namespace egret3d {
                             .setRepeat(repeat);
                         paper.Asset.register(texture);
                         host.save(imgResource, bitmapData);
-                        (texture as any)._bitmapData = bitmapData;
+                        (texture as any)._bitmapData = bitmapData; // TODO
 
                         return texture;
-
                     });
                 }
                 else {

@@ -8,6 +8,7 @@ namespace paper {
      */
     export const DATA_VERSIONS = [DATA_VERSION];
 
+    const KEY_SERIALIZE: keyof ISerializable = "serialize";
     const KEY_GAMEOBJECTS: keyof Scene = "gameObjects";
     const KEY_COMPONENTS: keyof GameObject = "components";
     const KEY_EXTRAS: keyof GameObject = "extras";
@@ -136,7 +137,7 @@ namespace paper {
             return true;
         }
 
-        if (egret.is(source, "paper.ISerializable")) { // TODO 字符串依赖。
+        if (source.hasOwnProperty(KEY_SERIALIZE)) {
             return equal((source as ISerializable).serialize(), (target as ISerializable).serialize());
         }
 
@@ -332,7 +333,7 @@ namespace paper {
                     return target;
                 }
 
-                if (egret.is(source, "paper.ISerializable")) { // TODO 字符串依赖。
+                if (source.hasOwnProperty(KEY_SERIALIZE)) {
                     return (source as paper.ISerializable).serialize();
                 }
 

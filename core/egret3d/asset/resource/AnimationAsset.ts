@@ -16,7 +16,9 @@ namespace egret3d {
 
             return animationAsset;
         }
-
+        /**
+         * @internal
+         */
         public initialize(name: string, config: GLTF) {
             super.initialize(name, config, null);
 

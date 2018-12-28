@@ -8,43 +8,51 @@ namespace egret3d.webgl {
      * @internal
      */
     export interface IWebGLTexture {
-        webglTexture: GlobalWeblGLTexture | null;
+        webGLTexture: GlobalWeblGLTexture | null;
     }
     /**
      * @internal
      */
     export class WebGLTexture extends egret3d.Texture implements IWebGLTexture {
-        public webglTexture: GlobalWeblGLTexture | null = null;
+        public webGLTexture: GlobalWeblGLTexture | null = null;
 
-        public onReferenceCountChange(isZero: boolean) {
-            if (isZero && this.webglTexture) {
-                const webgl = WebGLRenderState.webgl!;
-                webgl.deleteTexture(this.webglTexture);
-                //
-                this.webglTexture = null;
-
-                return true;
+        public dispose() {
+            const image = this._image;
+            if (image && image.uri && image.uri.hasOwnProperty("src")) {
+                (image.uri as HTMLImageElement).src = ""; // wx
+                delete image.uri;
             }
 
-            return false;
+            if (!super.dispose()) {
+                return false;
+            }
+
+            if (this.webGLTexture) {
+                const webgl = WebGLRenderState.webgl!;
+                webgl.deleteTexture(this.webGLTexture);
+                //
+                this.webGLTexture = null;
+            }
+
+            return true;
         }
 
         public setupTexture(index: uint) {
-            if (!this._image || !this._image.uri) {
+            const image = this._image;
+            if (!image.uri) {
                 return;
             }
 
             const webgl = WebGLRenderState.webgl!;
-            if (!this.webglTexture) {
-                this.webglTexture = webgl.createTexture();
+            if (!this.webGLTexture) {
+                this.webGLTexture = webgl.createTexture();
             }
 
-            const image = this._image;
             const sampler = this._sampler;
             const paperExtension = this._gltfTexture!.extensions.paper!;
 
             webgl.activeTexture(webgl.TEXTURE0 + index);
-            webgl.bindTexture(webgl.TEXTURE_2D, this.webglTexture);
+            webgl.bindTexture(webgl.TEXTURE_2D, this.webGLTexture);
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, paperExtension.premultiplyAlpha!);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, paperExtension.flipY!);
             webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, paperExtension.unpackAlignment!);
@@ -63,6 +71,11 @@ namespace egret3d.webgl {
             const canGenerateMipmap = isPowerTwo && minFilter !== gltf.TextureFilter.Nearest && minFilter !== gltf.TextureFilter.Linear;
             if (canGenerateMipmap) {
                 webgl.generateMipmap(webgl.TEXTURE_2D);
+            }
+
+            if (image.uri.hasOwnProperty("src")) {
+                (image.uri as HTMLImageElement).src = ""; // wx
+                delete image.uri;
             }
         }
     }

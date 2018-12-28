@@ -35,9 +35,9 @@ namespace paper {
                 gameObject.uninitialize();
             }
 
-            for (const component of disposeCollecter.components) {
-                component.uninitialize();
-            }
+            // for (const component of disposeCollecter.components) {
+            //     component.uninitialize();
+            // }
 
             for (const instance of disposeCollecter.releases) {
                 const instances = (instance.constructor as any)._instances as BaseRelease<any>[]; // TODO

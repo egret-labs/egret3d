@@ -62,9 +62,10 @@ namespace egret3d.webgl {
         private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(RenderState) as WebGLRenderState;
         private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
         //
-        public readonly _matrix_mv: Matrix4 = Matrix4.create();
-        public readonly _matrix_mvp: Matrix4 = Matrix4.create();
-        public readonly _matrix_mv_inverse: Matrix3 = Matrix3.create();
+        private readonly _modelViewMatrix: Matrix4 = Matrix4.create();
+        private readonly _modelViewPojectionMatrix: Matrix4 = Matrix4.create();
+        private readonly _inverseModelViewMatrix: Matrix3 = Matrix3.create();
+        private readonly _clockBuffer: Float32Array = new Float32Array(4);
         //
         private _cacheProgram: WebGLProgramBinder | null = null;
         private _cacheScene: paper.Scene | null = null;
@@ -258,9 +259,9 @@ namespace egret3d.webgl {
                 this._cacheCamera = camera;
             }
 
-            this._matrix_mv.multiply(camera.worldToCameraMatrix, matrix);
-            this._matrix_mvp.multiply(camera.worldToClipMatrix, matrix);
-            this._matrix_mv_inverse.getNormalMatrix(this._matrix_mv);
+            this._modelViewMatrix.multiply(camera.worldToCameraMatrix, matrix);
+            this._modelViewPojectionMatrix.multiply(camera.worldToClipMatrix, matrix);
+            this._inverseModelViewMatrix.getNormalMatrix(this._modelViewMatrix);
 
             i = l;
 
@@ -274,20 +275,24 @@ namespace egret3d.webgl {
                         break;
 
                     case gltf.UniformSemantics.MODELVIEW:
-                        webgl.uniformMatrix4fv(location, false, this._matrix_mv.rawData);
+                        webgl.uniformMatrix4fv(location, false, this._modelViewMatrix.rawData);
                         break;
 
                     case gltf.UniformSemantics.MODELVIEWPROJECTION:
-                        webgl.uniformMatrix4fv(location, false, this._matrix_mvp.rawData);
+                        webgl.uniformMatrix4fv(location, false, this._modelViewPojectionMatrix.rawData);
                         break;
 
                     case gltf.UniformSemantics.MODELVIEWINVERSE:
-                        webgl.uniformMatrix3fv(location, false, this._matrix_mv_inverse.rawData);
+                        webgl.uniformMatrix3fv(location, false, this._inverseModelViewMatrix.rawData);
                         break;
 
                     case gltf.UniformSemantics.JOINTMATRIX:
                         const skinnedMeshRenderer = (renderer as SkinnedMeshRenderer).source || (renderer as SkinnedMeshRenderer);
                         webgl.uniformMatrix4fv(location, false, skinnedMeshRenderer.boneMatrices!);
+                        break;
+
+                    case gltf.UniformSemantics._CLOCK:
+                        webgl.uniform4fv(location, this._clockBuffer);
                         break;
 
                     case gltf.UniformSemantics._LIGHTMAPTEX:
@@ -298,9 +303,9 @@ namespace egret3d.webgl {
                                 const unit = uniform.textureUnits[0];
                                 webgl.uniform1i(location, unit);
 
-                                if ((texture as WebGLTexture).webglTexture) {
+                                if ((texture as WebGLTexture).webGLTexture) {
                                     webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                    webgl.bindTexture(webgl.TEXTURE_2D, (texture as WebGLTexture).webglTexture);
+                                    webgl.bindTexture(webgl.TEXTURE_2D, (texture as WebGLTexture).webGLTexture);
                                 }
                                 else {
                                     texture.setupTexture(unit);
@@ -478,9 +483,9 @@ namespace egret3d.webgl {
 
                             webgl.uniform1i(location, unit);
 
-                            if (texture.webglTexture) {
+                            if (texture.webGLTexture) {
                                 webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                webgl.bindTexture(webgl.TEXTURE_2D, texture.webglTexture);
+                                webgl.bindTexture(webgl.TEXTURE_2D, texture.webGLTexture);
                             }
                             else {
                                 texture.setupTexture(unit);
@@ -777,9 +782,12 @@ namespace egret3d.webgl {
             }
 
             const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
+            const clock = this.clock;
             const { cameras, lights } = this._cameraAndLightCollecter;
             const renderState = this._renderState;
             const editorScene = paper.Application.sceneManager.editorScene;
+            this._clockBuffer[0] = clock.time;
+
             // Render lights shadow.
             if (lights.length > 0) {
                 for (const light of lights) {

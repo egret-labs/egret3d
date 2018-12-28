@@ -178,6 +178,8 @@ namespace egret3d {
                 this._mesh.release();
             }
 
+            this.getBoundingTransform().unregisterObserver(this);
+
             this.boneMatrices = null;
 
             this._bones.length = 0;
@@ -241,7 +243,8 @@ namespace egret3d {
             let raycastMesh = false;
             let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
             const transform = this.gameObject.transform;
-            const localRay = helpRay.applyMatrix(transform.worldToLocalMatrix, p1);
+            const boundingTransform = this.getBoundingTransform();
+            const localRay = helpRay.applyMatrix(boundingTransform.worldToLocalMatrix, p1);
             const localBoundingBox = this.localBoundingBox;
 
             if (p2) {
@@ -265,7 +268,7 @@ namespace egret3d {
             }
             else if (localBoundingBox.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) { // Update local raycast info to world.
-                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position.applyMatrix(transform.localToWorldMatrix));
+                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position.applyMatrix(boundingTransform.localToWorldMatrix));
                     raycastInfo.transform = transform;
                 }
 

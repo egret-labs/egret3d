@@ -543,6 +543,8 @@ declare namespace gltf {
 
         _RESOLUTION = "_RESOLUTION",
 
+        _CLOCK = "_CLOCK",
+
         _VIEWPROJECTION = "_VIEWPROJECTION",
         _CAMERA_POS = "_CAMERA_POS",
         _CAMERA_UP = "_CAMERA_UP",

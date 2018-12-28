@@ -38,13 +38,17 @@ namespace paper {
             this._boundingSphere.center.applyMatrix(localToWorldMatrix);
             this._boundingSphere.radius *= localToWorldMatrix.maxScaleOnAxis;
         }
-
+        /**
+         * @internal
+         */
         public initialize() {
             super.initialize();
 
             this.getBoundingTransform().registerObserver(this);
         }
-
+        /**
+         * @internal
+         */
         public uninitialize() {
             super.uninitialize();
 
@@ -58,7 +62,9 @@ namespace paper {
 
             this._materials.length = 0;
         }
-
+        /**
+         * @internal
+         */
         public onTransformChange() {
             this._boundingSphereDirty = true;
         }

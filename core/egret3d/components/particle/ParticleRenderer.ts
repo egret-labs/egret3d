@@ -146,10 +146,21 @@ namespace egret3d.particle {
                 this._mesh.release();
             }
 
+            if (this.batchMesh) {
+                this.batchMesh.release();
+            }
+
+            if (this.batchMaterial) {
+                this.batchMaterial.release();
+            }
+
             this._renderMode = ParticleRenderMode.Billboard;
             this.velocityScale = 1.0;
             this.lengthScale = 1.0;
             this._mesh = null;
+
+            this.batchMesh = null!;
+            this.batchMaterial = null!;
         }
 
         public recalculateLocalBox() {

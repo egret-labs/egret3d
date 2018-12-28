@@ -67,6 +67,8 @@ namespace egret3d {
         "viewMatrix": gltf.UniformSemantics.VIEW,
         "normalMatrix": gltf.UniformSemantics.MODELVIEWINVERSE,
         "modelViewProjectionMatrix": gltf.UniformSemantics.MODELVIEWPROJECTION,
+
+        "clock": gltf.UniformSemantics._CLOCK,
         "viewProjectionMatrix": gltf.UniformSemantics._VIEWPROJECTION,
         "cameraPosition": gltf.UniformSemantics._CAMERA_POS,
         "cameraForward": gltf.UniformSemantics._CAMERA_FORWARD,

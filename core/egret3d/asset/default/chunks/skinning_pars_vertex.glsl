@@ -1,6 +1,6 @@
 #ifdef USE_SKINNING
 
-	// Modify egret.
+	// modified by egret.
 	// uniform_mat4 bindMatrix;
 	// uniform_mat4 bindMatrixInverse;
 

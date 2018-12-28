@@ -196,6 +196,7 @@ namespace paper {
                 }
             }
 
+            value.uninitialize(); //
             (value as any).gameObject = null;
 
             if (value === this.renderer) {

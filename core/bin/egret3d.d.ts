@@ -1887,6 +1887,7 @@ declare namespace gltf {
         VIEWPORT = "VIEWPORT",
         JOINTMATRIX = "JOINTMATRIX",
         _RESOLUTION = "_RESOLUTION",
+        _CLOCK = "_CLOCK",
         _VIEWPROJECTION = "_VIEWPROJECTION",
         _CAMERA_POS = "_CAMERA_POS",
         _CAMERA_UP = "_CAMERA_UP",
@@ -3222,9 +3223,6 @@ declare namespace paper {
         protected readonly _localBoundingBox: egret3d.Box;
         protected readonly _materials: (egret3d.Material | null)[];
         protected _recalculateSphere(): void;
-        initialize(): void;
-        uninitialize(): void;
-        onTransformChange(): void;
         /**
          * 重新计算 AABB。
          */
@@ -3335,7 +3333,6 @@ declare namespace egret3d {
         protected _gltfTexture: GLTFTexture;
         protected _image: gltf.Image;
         protected _sampler: gltf.Sampler;
-        initialize(name: string, config: GLTF): void;
         /**
          *
          */
@@ -3356,6 +3353,10 @@ declare namespace egret3d {
          *
          */
         readonly format: gltf.TextureFormat;
+        /**
+         *
+         */
+        readonly memory: uint;
         /**
          *
          */
@@ -9010,7 +9011,6 @@ declare namespace egret3d {
          * @private
          */
         static create(name: string, config: GLTF, buffers: ArrayBufferView[]): AnimationAsset;
-        initialize(name: string, config: GLTF): void;
         getAnimationClip(name: string): GLTFAnimationClip | null;
     }
 }

@@ -78,13 +78,29 @@ namespace egret3d {
          * @internal
          */
         public setupTexture(index: uint): void { }
-
+        /**
+         * @internal
+         */
         public initialize(name: string, config: GLTF) {
             super.initialize(name, config, null);
 
             const gltfTexture = this._gltfTexture = this.config.textures![0] as GLTFTexture;
             this._image = this.config.images![gltfTexture.source!];
             this._sampler = this.config.samplers![gltfTexture.sampler!];
+        }
+        /**
+         * @internal
+         */
+        public dispose() {
+            if (!super.dispose()) {
+                return false;
+            }
+
+            this._gltfTexture = null!;
+            this._image = null!;
+            this._sampler = null!;
+
+            return true;
         }
         /**
          * 
@@ -129,6 +145,29 @@ namespace egret3d {
          */
         public get format(): gltf.TextureFormat {
             return this._gltfTexture!.extensions.paper!.format!;
+        }
+        /**
+         * 
+         */
+        public get memory(): uint {
+            let k = 0;
+
+            switch (this.format) {
+                case gltf.TextureFormat.RGB:
+                case gltf.TextureFormat.Luminance:
+                    k = 3;
+                    break;
+
+                case gltf.TextureFormat.RGBA:
+                    k = 4;
+                    break;
+            }
+
+            if (this._gltfTexture.extensions.paper.mipmap) {
+                k *= 2;
+            }
+
+            return this.width * this.height * k;
         }
         /**
          * 

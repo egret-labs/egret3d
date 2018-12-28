@@ -263,6 +263,7 @@ namespace egret3d.particle {
         private readonly _colorValue: Float32Array = new Float32Array(16);
 
         public serialize() {
+            // TODO 导出数据应和 mode 有关，但编辑器需要全数据，需要区分出发布数据和编辑器全数据。
             return {
                 mode: this.mode,
                 alphaKeys: this.alphaKeys.map(v => v.serialize()),
