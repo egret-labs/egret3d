@@ -146,7 +146,6 @@ namespace egret3d {
         public gammaFactor: number = 2.0;
         public gammaInput: boolean = false;
         public gammaOutput: boolean = false;
-        public textureEncoding: TextureEncoding = TextureEncoding.GammaEncoding;
 
         public commonExtensions: string = "";
         public vertexExtensions: string = "";
@@ -198,15 +197,9 @@ namespace egret3d {
                 defines += this._getToneMappingFunction(this.toneMapping) + " \n";
             }
 
-            // if (this.gammaFactor > 0.0) {
-            //     defines += "#define GAMMA_FACTOR " + this.gammaFactor + "\n";
-            // }
-
-            // defines += ShaderChunk.encodings_pars_fragment + "\n";
-            // defines += this._getTexelDecodingFunction("mapTexelToLinear", this.textureEncoding) + " \n";
-            // defines += this._getTexelDecodingFunction("envMapTexelToLinear", this.textureEncoding);
-            // defines += this._getTexelDecodingFunction("emissiveMapTexelToLinear", this.textureEncoding);
-            // defines += this._getTexelEncodingFunction("linearToOutputTexel", this.textureEncoding) + " \n";
+            defines += "#define GAMMA_FACTOR " + (this.gammaFactor > 0.0 ? this.gammaFactor : 1.0) + "\n";
+            defines += ShaderChunk.encodings_pars_fragment;
+            defines += this.getTexelEncodingFunction("linearToOutputTexel", this.gammaOutput ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding) + " \n";
 
             if (this.logarithmicDepthBuffer) {
                 defines += "#define USE_LOGDEPTHBUF \n";
@@ -238,16 +231,6 @@ namespace egret3d {
                     throw new Error('unsupported encoding: ' + encoding);
 
             }
-        }
-
-        protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding) {
-            const components = this._getEncodingComponents(encoding);
-            return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
-        }
-
-        protected _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding) {
-            const components = this._getEncodingComponents(encoding);
-            return 'vec4 ' + functionName + '( vec4 value ) { return LinearTo' + components[0] + components[1] + '; }';
         }
 
         protected _getToneMappingFunction(toneMapping: ToneMapping) {
@@ -320,6 +303,21 @@ namespace egret3d {
             ].filter(_filterEmptyLine).join("\n");
 
             return prefixContext;
+        }
+        /**
+         * @internal
+         */
+        public getTexelDecodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+            const finialEncoding = (this.gammaInput && encoding === TextureEncoding.LinearEncoding) ? TextureEncoding.GammaEncoding : encoding;
+            const components = this._getEncodingComponents(finialEncoding);
+            return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
+        }
+        /**
+         * @internal
+         */
+        public getTexelEncodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+            const components = this._getEncodingComponents(encoding);
+            return 'vec4 ' + functionName + '( vec4 value ) { return LinearTo' + components[0] + components[1] + '; }';
         }
     }
     /**

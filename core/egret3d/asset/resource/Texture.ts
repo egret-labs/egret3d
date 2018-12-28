@@ -35,6 +35,7 @@ namespace egret3d {
                 wrapS = gltf.TextureWrappingMode.Repeat, wrapT = gltf.TextureWrappingMode.Repeat,
                 magFilter = gltf.TextureFilter.Nearest, minFilter = gltf.TextureFilter.Nearest,
                 unpackAlignment = gltf.TextureAlignment.Four,
+                encoding = TextureEncoding.LinearEncoding,
                 //
                 depthBuffer = false, stencilBuffer = false,
             } = createTextureParameters as CreateTextureParameters;
@@ -58,6 +59,7 @@ namespace egret3d {
             extension.format = format;
             extension.type = type;
             extension.unpackAlignment = unpackAlignment;
+            extension.encoding = encoding;
             //
             if (ArrayBuffer.isView(source)) {
                 image.uri = source;

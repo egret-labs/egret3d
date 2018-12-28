@@ -294,7 +294,7 @@ namespace egret3d.webgl {
                         const lightmapIndex = (renderer as MeshRenderer).lightmapIndex;
                         if (lightmapIndex >= 0 && lightmapIndex !== this._cacheLightmapIndex) {
                             if (uniform.textureUnits && uniform.textureUnits.length === 1) {
-                                const texture = scene.lightmaps[lightmapIndex]!;
+                                const texture = scene.lightmaps[lightmapIndex]!;//TODO可能有空
                                 const unit = uniform.textureUnits[0];
                                 webgl.uniform1i(location, unit);
 
@@ -470,9 +470,9 @@ namespace egret3d.webgl {
                     case gltf.UniformType.SAMPLER_2D:
                         if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
                             const unit = globalUniform.textureUnits[0];
-                            let texture = value as (WebGLTexture | WebGLRenderTexture);
+                            let texture = value as (WebGLTexture | WebGLRenderTexture | null);
 
-                            if (texture.isDisposed) {
+                            if (!texture || texture.isDisposed) {
                                 texture = DefaultTextures.WHITE as WebGLTexture; // TODO
                             }
 
@@ -675,10 +675,11 @@ namespace egret3d.webgl {
                 const renderState = this._renderState;
                 renderState.customShaderChunks = shader.customs;
 
-                const defines = context.defines.definesString + material.defines.definesString + (renderer ? renderer.defines.definesString : "") + scene.defines.definesString;
+                const vertexDefinesString = context.defines.vertexDefinesString + material.defines.vertexDefinesString + (renderer ? renderer.defines.vertexDefinesString : "") + scene.defines.vertexDefinesString;
+                const fragmentDefinesString = context.defines.fragmentDefinesString + material.defines.fragmentDefinesString + (renderer ? renderer.defines.fragmentDefinesString : "") + scene.defines.fragmentDefinesString;
                 const extensions = shader.config.extensions!.KHR_techniques_webgl;
-                const vertexWebGLShader = this._getWebGLShader(extensions!.shaders[0], renderState.getPrefixVertex(defines))!; // TODO 顺序依赖
-                const fragmentWebGLShader = this._getWebGLShader(extensions!.shaders[1], renderState.getPrefixFragment(defines))!;  // TODO 顺序依赖
+                const vertexWebGLShader = this._getWebGLShader(extensions!.shaders[0], renderState.getPrefixVertex(vertexDefinesString))!; // TODO 顺序依赖
+                const fragmentWebGLShader = this._getWebGLShader(extensions!.shaders[1], renderState.getPrefixFragment(fragmentDefinesString))!;  // TODO 顺序依赖
 
                 if (vertexWebGLShader && fragmentWebGLShader) {
                     const webGLProgram = webgl.createProgram()!;

@@ -20,6 +20,12 @@ namespace egret3d {
 
         return define;
     }
+
+    export const enum DefineLocation {
+        All,
+        Vertex,
+        Fragment
+    }
     /**
      * @private
      */
@@ -36,7 +42,12 @@ namespace egret3d {
          * 内容。
          */
         public readonly context: string;
+        /**
+         * @internal
+         */
+        public isDefine: boolean = true;
 
+        public type: DefineLocation = DefineLocation.All;
         public constructor(index: uint, mask: uint, context: string) {
             this.index = index;
             this.mask = mask;
@@ -109,7 +120,7 @@ namespace egret3d {
         /**
          * 
          */
-        public addDefine(defineString: string, value?: number): boolean {
+        public addDefine(defineString: string, value?: number): Define | null {
             if (value !== undefined) {
                 defineString += " " + value;
             }
@@ -121,15 +132,15 @@ namespace egret3d {
                 defines.push(define);
                 this._update();
 
-                return true;
+                return define;
             }
 
-            return false;
+            return null;
         }
         /**
          * 
          */
-        public removeDefine(defineString: string, value?: number): boolean {
+        public removeDefine(defineString: string, value?: number): Define | null {
             if (value !== undefined) {
                 defineString += " " + value;
             }
@@ -142,19 +153,41 @@ namespace egret3d {
                 defines.splice(index, 1);
                 this._update();
 
-                return true;
+                return define;
             }
 
-            return false;
+            return null;
         }
-        /**
-         * 
-         */
-        public get definesString(): string {
+        
+        public get vertexDefinesString(): string {
             let definesString = "";
 
             for (const define of this._defines) {
-                definesString += "#define " + define.context + " \n";
+                if (define.type === DefineLocation.All || define.type === DefineLocation.Vertex) {
+                    if (define.isDefine) {
+                        definesString += "#define " + define.context + " \n";
+                    }
+                    else {
+                        definesString += define.context + " \n";
+                    }
+                }
+            }
+
+            return definesString;
+        }
+
+        public get fragmentDefinesString(): string {
+            let definesString = "";
+
+            for (const define of this._defines) {
+                if (define.type === DefineLocation.All || define.type === DefineLocation.Fragment) {
+                    if (define.isDefine) {
+                        definesString += "#define " + define.context + " \n";
+                    }
+                    else {
+                        definesString += define.context + " \n";
+                    }
+                }
             }
 
             return definesString;

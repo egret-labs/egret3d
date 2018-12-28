@@ -93,6 +93,10 @@ namespace egret3d {
          * @defaults gltf.TextureAlignment.Four
          */
         unpackAlignment?: gltf.TextureAlignment;
+        /**
+         * 纹理编码格式
+         */
+        encoding?: TextureEncoding;
     }
     /**
      * 
