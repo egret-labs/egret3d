@@ -177,11 +177,11 @@ function checkValid(asset) {
 exports.checkValid = checkValid;
 function parseShader(file) {
     var buffer = fs.readFileSync(file);
-    var string = buffer.toString()
+    var result = buffer.toString()
         .replace(/\r\n/g, '\n') // for windows
         .replace(/\n/g, '\n') // for windows
         .replace(/\r/g, '\n') // for windows
         .replace(/\t/g, ' '); // for windows;
-    return string;
+    return result;
 }
 exports.parseShader = parseShader;

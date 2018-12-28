@@ -51,12 +51,12 @@ namespace egret3d.webgl {
                 screenSize: { w: screenWidth, h: screenHeight },
             });
 
+            globalGameObject.addComponent(RenderState, config);
             globalGameObject.addComponent(DefaultMeshes);
             globalGameObject.addComponent(DefaultShaders);
             globalGameObject.addComponent(DefaultTextures);
             globalGameObject.addComponent(DefaultMaterials);
             globalGameObject.addComponent(InputCollecter);
-            globalGameObject.addComponent(RenderState, config);
 
             // Update canvas when screen resized.
             this._updateCanvas(stage); // First update.

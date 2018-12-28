@@ -38,6 +38,8 @@ namespace egret3d {
         Opacity = "opacity",
         Size = "size",
         Map = "map",
+        EnvMap = "envMap",
+        EmissiveMap = "emissiveMap",
         Specular = "specular",
         Shininess = "shininess",
         UVTransform = "uvTransform",

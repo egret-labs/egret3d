@@ -121,7 +121,7 @@ namespace egret3d {
         public initialize() {
             super.initialize();
             //
-            const helpMaterial = Material.create("helpMaterial", Shader.create("helpShader", ShaderLib.meshbasic as any));
+            const helpMaterial = Material.create("helpMaterial", Shader.create("helpShader", ShaderLib.linedashed as any));
             const helpStates = helpMaterial.technique.states!;
             //
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
@@ -229,6 +229,8 @@ namespace egret3d {
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply_PreMultiply, paper.RenderQueue.Transparent);
             DefaultShaders.PARTICLE_MULTIPLY_PREMULTIPLY = this._createShader("builtin/particle_multiply_premultiply.shader.json", ShaderLib.particle as any, paper.RenderQueue.Transparent, helpStates, [ShaderDefine.USE_COLOR]);
+        
+            helpMaterial.dispose();
         }
     }
 }

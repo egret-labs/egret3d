@@ -94,16 +94,16 @@ namespace egret3d {
                     if (sourceValue) {
                         value = paper.Asset.find<BaseTexture>(sourceValue) || DefaultTextures.WHITE; // Missing texture.
                     }
-
-                    if (!value) {
-                        value = egret3d.DefaultTextures.WHITE; // Default texture.
-                    }
+                    //Uniform提交的时候判断
+                    // if (!value) {
+                    //     value = egret3d.DefaultTextures.WHITE; // Default texture.
+                    // }
                 }
                 else if (Array.isArray(sourceValue)) {
                     value = sourceValue ? sourceValue.concat() : []; // TODO
                 }
                 else {
-                    value = sourceValue ? sourceValue : []; // TODO 不应是数组。
+                    value = sourceValue ? sourceValue : (sourceValue === 0 ? 0 : []); // TODO 不应是数组。
                 }
 
                 const targetUniform = technique.uniforms[k] = { type, value } as gltf.Uniform;
@@ -158,6 +158,7 @@ namespace egret3d {
             if (shaderOrConfig instanceof Shader) {
                 if (this.config) { // Change shader.
                     this._retainOrReleaseTextures(false, false);
+                    this._addOrRemoveTexturesDecodingDefine(false);
                     glTFMaterial = this.config.materials![0] as GLTFMaterial;
                 }
                 else { // Create.
@@ -183,6 +184,7 @@ namespace egret3d {
             this._technique = this._createTechnique(shader, glTFMaterial);
             this._shader = shader;
             this._retainOrReleaseTextures(true, false);
+            this._addOrRemoveTexturesDecodingDefine(true);
         }
 
         private _retainOrReleaseTextures(isRatain: boolean, isOnce: boolean) {
@@ -206,6 +208,47 @@ namespace egret3d {
             }
 
             // isRatain ? this._shader.retain() : this._shader.release(); TODO
+        }
+
+        private _setTexelDecodingFunction(key: string, add: boolean, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+            let decodingFunName = "";
+            if (key === ShaderUniformName.Map) {
+                decodingFunName = "mapTexelToLinear";
+            }
+            else if (key === ShaderUniformName.EnvMap) {
+                decodingFunName = "envMapTexelToLinear";
+            }
+            else if (key === ShaderUniformName.EmissiveMap) {
+                decodingFunName = "emissiveMapTexelToLinear";
+            }
+
+            if (decodingFunName) {
+                const renderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.RenderState);
+                const decodingStr = renderState.getTexelDecodingFunction(decodingFunName, encoding);
+                if (add) {
+                    const define = this.defines.addDefine(decodingStr);
+                    if (define) {
+                        define.isDefine = false;
+                        define.type = DefineLocation.Fragment;
+                    }
+                }
+                else {
+                    this.removeDefine(decodingStr);
+                }
+            }
+        }
+
+        private _addOrRemoveTexturesDecodingDefine(add: boolean) {
+            const uniforms = this._technique.uniforms;
+            for (const k in uniforms) {
+                const uniform = uniforms[k];
+                if (
+                    (uniform.type === gltf.UniformType.SAMPLER_2D || uniform.type === gltf.UniformType.SAMPLER_CUBE)
+                ) {
+                    const texture = (uniform.value as BaseTexture) || DefaultTextures.WHITE;
+                    this._setTexelDecodingFunction(k, add, texture.gltfTexture.extensions.paper.encoding);
+                }
+            }
         }
 
         public retain(): this {
@@ -776,9 +819,9 @@ namespace egret3d {
                 p1 = ShaderUniformName.Map;
             }
 
-            if (!p2) { // null to white.
-                p2 = DefaultTextures.WHITE;
-            }
+            // if (!p2) { // null to white.
+            //     p2 = DefaultTextures.WHITE;
+            // }
 
             const uniform = this._technique.uniforms[p1];
             if (uniform) {
@@ -790,6 +833,7 @@ namespace egret3d {
                         while (i--) {
                             existingTexture.release();
                         }
+                        this._setTexelDecodingFunction(p1, false, existingTexture.gltfTexture.extensions.paper.encoding);
                     }
 
                     if (p2) {
@@ -801,6 +845,8 @@ namespace egret3d {
                         if (p2 instanceof RenderTexture) {
                             this.addDefine(ShaderDefine.FLIP_V);
                         }
+
+                        this._setTexelDecodingFunction(p1, true), p2.gltfTexture.extensions.paper.encoding;
                     }
 
                     uniform.value = p2;

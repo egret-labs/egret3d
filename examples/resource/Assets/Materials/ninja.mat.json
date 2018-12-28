@@ -1,0 +1,19 @@
+{    "asset":{        "version":2    },    "materials":[
+        {            "extensions":{                "KHR_techniques_webgl":{                    "values":{                        "diffuse":[
+                            1,
+                            1,
+                            1
+                        ],                        "opacity":1,                        "emissive":[
+                            0,
+                            0,
+                            0
+                        ],                        "roughness":0.5,                        "metalness":0                    },                    "technique":"builtin/materialcolor.shader.json"                },                "paper":{                    "renderQueue":2000,                    "defines":[
+                        "ALPHATEST 0.5"
+                    ]                }            }        }
+    ],    "extensionsRequired":[
+        "KHR_techniques_webgl",
+        "paper"
+    ],    "extensionsUsed":[
+        "KHR_techniques_webgl",
+        "paper"
+    ],    "version":4}

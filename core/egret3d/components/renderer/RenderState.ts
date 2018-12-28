@@ -2,12 +2,24 @@ namespace egret3d {
     /**
      * @private
      */
-    export enum ToneMapping {
+    export const enum ToneMapping {
         None = 0,
         LinearToneMapping = 1,
         ReinhardToneMapping = 2,
         Uncharted2ToneMapping = 3,
         CineonToneMapping = 4,
+    }
+    /**
+     * @private
+     */
+    export const enum TextureEncoding {
+        LinearEncoding = 1,
+        sRGBEncoding = 2,
+        RGBEEncoding = 3,
+        RGBM7Encoding = 4,
+        RGBM16Encoding = 5,
+        RGBDEncoding = 6,
+        GammaEncoding = 7,
     }
     /**
      * 内置提供的全局 Attribute。
@@ -133,6 +145,10 @@ namespace egret3d {
         public toneMappingExposure: number = 1.0;
         public toneMappingWhitePoint: number = 1.0;
 
+        public gammaFactor: number = 2.0;
+        public gammaInput: boolean = false;
+        public gammaOutput: boolean = false;
+
         public commonExtensions: string = "";
         public vertexExtensions: string = "";
         public fragmentExtensions: string = "";
@@ -175,14 +191,17 @@ namespace egret3d {
             defines += "precision " + this.maxPrecision + " float; \n";
             defines += "precision " + this.maxPrecision + " int; \n";
             this.commonDefines = defines;
-            // fragmentDefines.
             defines = "";
 
             if (this.toneMapping !== ToneMapping.None) {
                 defines += "#define TONE_MAPPING \n";
                 defines += ShaderChunk.tonemapping_pars_fragment + " \n";
-                defines += this._getToneMappingFunction(this.toneMapping);
+                defines += this._getToneMappingFunction(this.toneMapping) + " \n";
             }
+
+            defines += "#define GAMMA_FACTOR " + (this.gammaFactor > 0.0 ? this.gammaFactor : 1.0) + "\n";
+            defines += ShaderChunk.encodings_pars_fragment;
+            defines += this.getTexelEncodingFunction("linearToOutputTexel", this.gammaOutput ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding) + " \n";
 
             if (this.logarithmicDepthBuffer) {
                 defines += "#define USE_LOGDEPTHBUF \n";
@@ -192,6 +211,28 @@ namespace egret3d {
             }
 
             this.fragmentDefines = defines;
+        }
+
+        protected _getEncodingComponents(encoding: TextureEncoding) {
+            switch (encoding) {
+                case TextureEncoding.LinearEncoding:
+                    return ['Linear', '( value )'];
+                case TextureEncoding.sRGBEncoding:
+                    return ['sRGB', '( value )'];
+                case TextureEncoding.RGBEEncoding:
+                    return ['RGBE', '( value )'];
+                case TextureEncoding.RGBM7Encoding:
+                    return ['RGBM', '( value, 7.0 )'];
+                case TextureEncoding.RGBM16Encoding:
+                    return ['RGBM', '( value, 16.0 )'];
+                case TextureEncoding.RGBDEncoding:
+                    return ['RGBD', '( value, 256.0 )'];
+                case TextureEncoding.GammaEncoding:
+                    return ['Gamma', '( value, float( GAMMA_FACTOR ) )'];
+                default:
+                    throw new Error('unsupported encoding: ' + encoding);
+
+            }
         }
 
         protected _getToneMappingFunction(toneMapping: ToneMapping) {
@@ -264,6 +305,21 @@ namespace egret3d {
             ].filter(_filterEmptyLine).join("\n");
 
             return prefixContext;
+        }
+        /**
+         * @internal
+         */
+        public getTexelDecodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+            const finialEncoding = (this.gammaInput && encoding === TextureEncoding.LinearEncoding) ? TextureEncoding.GammaEncoding : encoding;
+            const components = this._getEncodingComponents(finialEncoding);
+            return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
+        }
+        /**
+         * @internal
+         */
+        public getTexelEncodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+            const components = this._getEncodingComponents(encoding);
+            return 'vec4 ' + functionName + '( vec4 value ) { return LinearTo' + components[0] + components[1] + '; }';
         }
     }
     /**
