@@ -4435,14 +4435,14 @@ var egret3d;
                 defines += egret3d.ShaderChunk.tonemapping_pars_fragment + " \n";
                 defines += this._getToneMappingFunction(this.toneMapping) + " \n";
             }
-            if (this.gammaFactor > 0.0) {
-                defines += "#define GAMMA_FACTOR " + this.gammaFactor + "\n";
-            }
-            defines += egret3d.ShaderChunk.encodings_pars_fragment + "\n";
-            defines += this._getTexelDecodingFunction("mapTexelToLinear", this.textureEncoding) + " \n";
-            defines += this._getTexelDecodingFunction("envMapTexelToLinear", this.textureEncoding);
-            defines += this._getTexelDecodingFunction("emissiveMapTexelToLinear", this.textureEncoding);
-            defines += this._getTexelEncodingFunction("linearToOutputTexel", this.textureEncoding) + " \n";
+            // if (this.gammaFactor > 0.0) {
+            //     defines += "#define GAMMA_FACTOR " + this.gammaFactor + "\n";
+            // }
+            // defines += ShaderChunk.encodings_pars_fragment + "\n";
+            // defines += this._getTexelDecodingFunction("mapTexelToLinear", this.textureEncoding) + " \n";
+            // defines += this._getTexelDecodingFunction("envMapTexelToLinear", this.textureEncoding);
+            // defines += this._getTexelDecodingFunction("emissiveMapTexelToLinear", this.textureEncoding);
+            // defines += this._getTexelEncodingFunction("linearToOutputTexel", this.textureEncoding) + " \n";
             if (this.logarithmicDepthBuffer) {
                 defines += "#define USE_LOGDEPTHBUF \n";
                 if (this.fragDepthEnabled) {
@@ -4538,12 +4538,6 @@ var egret3d;
             ].filter(_filterEmptyLine).join("\n");
             return prefixContext;
         };
-        __decorate([
-            paper.editor.property("FLOAT" /* FLOAT */)
-        ], RenderState.prototype, "toneMappingExposure", void 0);
-        __decorate([
-            paper.editor.property("FLOAT" /* FLOAT */)
-        ], RenderState.prototype, "toneMappingWhitePoint", void 0);
         return RenderState;
     }(paper.SingletonComponent));
     egret3d.RenderState = RenderState;
@@ -21687,14 +21681,20 @@ var egret3d;
                 var component = gameObject.getComponent(particle.ParticleComponent);
                 var renderer = gameObject.getComponent(particle.ParticleRenderer);
                 //
-                this._onUpdateBatchMesh(component, cleanPlayState);
                 drawCallCollecter.removeDrawCalls(renderer);
-                if (!renderer.batchMesh || !renderer.batchMaterial) {
+                if (!renderer.material) {
+                    console.error("ParticleSystem : material is null");
+                    return;
+                }
+                if (renderer.renderMode === 4 /* Mesh */ && !renderer.mesh) {
+                    console.error("ParticleSystem : mesh is null");
                     return;
                 }
                 if (renderer.renderMode === 5 /* None */) {
                     console.error("ParticleSystem : error renderMode");
+                    renderer.renderMode = 0 /* Billboard */;
                 }
+                this._onUpdateBatchMesh(component, cleanPlayState);
                 //
                 var subMeshIndex = 0;
                 for (var _i = 0, _a = renderer.batchMesh.glTFMesh.primitives; _i < _a.length; _i++) {

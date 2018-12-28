@@ -440,16 +440,21 @@ namespace egret3d.particle {
             const component = gameObject.getComponent(ParticleComponent) as ParticleComponent;
             const renderer = gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             //
-            this._onUpdateBatchMesh(component, cleanPlayState);
             drawCallCollecter.removeDrawCalls(renderer);
-            if (!renderer.batchMesh || !renderer.batchMaterial) {
+            if (!renderer.material) {
+                console.error("ParticleSystem : material is null");
                 return;
             }
-
+            if (renderer.renderMode === ParticleRenderMode.Mesh && !renderer.mesh) {
+                console.error("ParticleSystem : mesh is null");
+                return;
+            }
             if (renderer.renderMode === ParticleRenderMode.None) {
                 console.error("ParticleSystem : error renderMode");
+                renderer.renderMode = ParticleRenderMode.Billboard;
             }
 
+            this._onUpdateBatchMesh(component, cleanPlayState);
             //
             let subMeshIndex = 0;
             for (const _primitive of renderer.batchMesh.glTFMesh.primitives) {

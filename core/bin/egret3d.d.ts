@@ -1463,7 +1463,6 @@ declare namespace egret3d {
          * @defaults gltf.TextureAlignment.Four
          */
         unpackAlignment?: gltf.TextureAlignment;
-        encoding?: TextureEncoding;
     }
     /**
      *
