@@ -2,7 +2,7 @@ namespace behaviors {
 
     export class RotateComponent extends paper.Behaviour {
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: -10.0, maximum: 10.0 })
-        public rotateSpeed: number = 1.0;
+        public rotateSpeed: number = 0.5;
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public readonly lookAtPoint: egret3d.Vector3 = egret3d.Vector3.create();
 

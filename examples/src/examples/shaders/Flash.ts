@@ -1,26 +1,12 @@
 namespace examples.shaders {
 
-    export class Flash implements Example {
+    export class Flash extends BaseExample {
 
         async start() {
             // Load resource config.
             await RES.loadConfig("default.res.json", "resource/");
-            // Load texture.
-            const texture = await RES.getResAsync("test.png") as egret3d.Texture;
-            // Create camera.
-            egret3d.Camera.main;
-
-            { // Create light.
-                const gameObject = paper.GameObject.create("Light");
-                gameObject.transform.setLocalPosition(1.0, 10.0, -1.0);
-                gameObject.transform.lookAt(egret3d.Vector3.ZERO);
-
-                const light = gameObject.addComponent(egret3d.DirectionalLight);
-                light.intensity = 0.5;
-            }
             // Create shader.
-            const shader = egret3d.Shader.create("custom/flash.shader.json", egret3d.DefaultShaders.MESH_PHONG);
-            shader
+            const shader = egret3d.Shader.create("custom/flash.shader.json", egret3d.DefaultShaders.MESH_PHONG)
                 .addDefine(
                     "CUSTOM_FLASH",
                     {
@@ -30,20 +16,24 @@ namespace examples.shaders {
                             uniform vec2 _scale;
                         `,
                         custom_end_vertex: `
-                            vUv =  position.xy * _scale.xy + _speed.xy * clock.x; // Local space.
-                            // vUv =  transformed.xy * _scale.xy + _speed.xy * clock.x; // World space.
+                            // vUv =  position.xy * _scale.xy + _speed.xy * clock.x; // Local space.
+                            vUv =  transformed.xy * _scale.xy + _speed.xy * clock.x; // World space.
                         `,
                     }
                 )
                 .addUniform("_speed", gltf.UniformType.FLOAT_VEC2, [1.0, 0.0])
                 .addUniform("_scale", gltf.UniformType.FLOAT_VEC2, [1.0, 1.0]);
+            // Load texture.
+            const texture = await RES.getResAsync("textures/test.png") as egret3d.Texture;
+            //
+            this.addBackground();
 
             { // MeshRenderer.
                 const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
-                gameObject.transform.setLocalPosition(2.0, 0.0, 0.0);
+                gameObject.transform.setLocalPosition(2.0, 0.5, 0.0);
                 // 
                 const renderer = gameObject.renderer!;
-                const materials = [
+                renderer.materials = [
                     egret3d.Material
                         .create()
                         .setTexture(await RES.getResAsync("logo.png")),
@@ -51,8 +41,7 @@ namespace examples.shaders {
                         .setTexture(texture)
                         .setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.7)
                         .setColor(egret3d.Color.INDIGO)
-                ]
-                renderer.materials = materials;
+                ];
             }
 
             { // SkinnedMeshRenderer.

@@ -28,12 +28,16 @@ namespace egret3d {
          * TODO
          */
         ConvexHull,
+        /**
+         * TODO
+         */
+        Mesh,
     }
     /**
      * 碰撞体接口。
      * - 为多物理引擎统一接口。
      */
-    export interface ICollider {
+    export interface ICollider extends paper.BaseComponent {
         /**
          * 碰撞体类型。
          */

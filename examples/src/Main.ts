@@ -1,17 +1,59 @@
-declare namespace examples {
-    interface Example {
-        start(): Promise<void>;
-    }
-}
 
 async function main() {
     exampleStart();
     // new examples.SceneTest().start();
 }
 
+namespace examples {
+
+    export abstract class BaseExample {
+        abstract async start(): Promise<void>;
+
+        public async addBackground(): Promise<void> {
+            // Create camera.
+            egret3d.Camera.main;
+
+            { // Create light.
+                const gameObject = paper.GameObject.create("Light");
+                gameObject.transform.setLocalPosition(1.0, 20.0, -1.0);
+                gameObject.transform.lookAt(egret3d.Vector3.ZERO);
+
+                const light = gameObject.addComponent(egret3d.PointLight);
+                light.intensity = 1.0;
+            }
+
+            const textureA = await RES.getResAsync("textures/grid_a.png") as egret3d.Texture;
+            const textureB = await RES.getResAsync("textures/grid_b.png") as egret3d.Texture;
+
+            textureA.gltfTexture.extensions.paper.anisotropy = 8;
+            textureB.gltfTexture.extensions.paper.anisotropy = 8;
+
+            const mesh = egret3d.MeshBuilder.createCube(
+                40.0, 40.0, 40.0, 0.0, 20.0, 0.0, 40, 40, 40,
+                false, true
+            );
+
+            const gameObject = egret3d.DefaultMeshes.createObject(mesh, "Background");
+            gameObject.renderer!.materials = [
+                egret3d.DefaultMaterials.MESH_LAMBERT.clone()
+                    .setTexture(textureA)
+                    .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Front)
+                    .setUVTransform(egret3d.Matrix3.create().fromUVTransform(0.0, 0.0, 20, 20, 0.0, 0.0, 0.0).release())
+                ,
+                egret3d.DefaultMaterials.MESH_LAMBERT.clone()
+                    .setTexture(textureB)
+                    .setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent)
+                    .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Front)
+                ,
+            ];
+            gameObject.hideFlags = paper.HideFlags.NotTouchable;
+        }
+    }
+}
+
 function exampleStart() {
     const exampleString = getCurrentExampleString();
-    let exampleClass: { new(): examples.Example };
+    let exampleClass: { new(): examples.BaseExample };
 
     if (exampleString.indexOf(".") > 0) { // Package
         const params = exampleString.split(".");
@@ -23,7 +65,7 @@ function exampleStart() {
 
     createGUI(exampleString);
 
-    const exampleObj: examples.Example = new exampleClass();
+    const exampleObj: examples.BaseExample = new exampleClass();
     exampleObj.start();
 
     function createGUI(exampleString: string) {

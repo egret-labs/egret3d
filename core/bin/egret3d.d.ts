@@ -128,11 +128,19 @@ declare namespace paper {
         /**
          *
          */
-        Hide = 2,
+        NotTouchable = 2,
         /**
          *
          */
-        HideAndDontSave = 3,
+        Hide = 6,
+        /**
+         *
+         */
+        DontSave = 8,
+        /**
+         *
+         */
+        HideAndDontSave = 14,
     }
     /**
      *
@@ -143,7 +151,7 @@ declare namespace paper {
         Global = "Global",
         MainCamera = "Main Camera",
         EditorCamera = "Editor Camera",
-        EditorOnly = "Editor Only",
+        Editor = "Editor",
         MissingPrefab = "Missing Prefab",
     }
     /**
@@ -4153,12 +4161,10 @@ declare namespace egret3d {
          * 如果该属性合并到 UV2 中，会破坏网格共享，共享的网格无法拥有不同的 lightmap UV。
          */
         protected readonly _lightmapScaleOffset: Vector4;
-        recalculateLocalBox(): void;
         /**
          * 实时获取网格资源的指定三角形顶点位置。
          */
         getTriangle(triangleIndex: uint, out?: Triangle): Triangle;
-        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
         /**
          * 该组件的光照图索引。
          */
@@ -6341,12 +6347,16 @@ declare namespace egret3d {
          * TODO
          */
         ConvexHull = 5,
+        /**
+         * TODO
+         */
+        Mesh = 6,
     }
     /**
      * 碰撞体接口。
      * - 为多物理引擎统一接口。
      */
-    interface ICollider {
+    interface ICollider extends paper.BaseComponent {
         /**
          * 碰撞体类型。
          */
@@ -6476,6 +6486,24 @@ declare namespace egret3d {
          */
         readonly center: Vector3;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+    }
+}
+declare namespace egret3d {
+    /**
+     * 网格碰撞组件接口。
+     */
+    interface IMeshCollider extends ICollider {
+    }
+    /**
+     * 网格碰撞组件。
+     */
+    class MeshCollider extends paper.BaseComponent implements IMeshCollider, IRaycast {
+        protected readonly _localBoundingBox: egret3d.Box;
+        private _mesh;
+        /**
+         * 该组件的网格资源。
+         */
+        mesh: Mesh | null;
     }
 }
 declare namespace egret3d {
@@ -7110,7 +7138,6 @@ declare namespace egret3d {
          */
         static readonly onMeshChanged: signals.Signal;
         private _mesh;
-        uninitialize(): void;
         /**
          * 该组件的网格资源。
          */
@@ -9120,7 +9147,7 @@ declare namespace egret3d {
          * @param depthSegments 深度分段。
          * @param differentFace 是否使用不同材质。
          */
-        static createCube(width?: number, height?: number, depth?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, widthSegments?: number, heightSegments?: number, depthSegments?: number, differentFace?: boolean): Mesh;
+        static createCube(width?: number, height?: number, depth?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, widthSegments?: number, heightSegments?: number, depthSegments?: number, differentFace?: boolean, negateNormal?: boolean): Mesh;
         /**
          * 创建圆柱体网格。
          * @param radiusTop 顶部半径。

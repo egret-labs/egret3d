@@ -5,7 +5,7 @@ namespace paper.editor {
     export class EditorMeshHelper {
         public static createGameObject(name: string, mesh: egret3d.Mesh | null = null, material: egret3d.Material | null = null, tag: string = paper.DefaultTags.EditorOnly, scene: paper.Scene = paper.Scene.editorScene) {
             const gameObject = paper.GameObject.create(name, tag, scene);
-            gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
+            gameObject.tag = tag;
 
             if (mesh) {
                 gameObject.addComponent(egret3d.MeshFilter).mesh = mesh;

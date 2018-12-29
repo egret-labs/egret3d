@@ -10,7 +10,9 @@ namespace egret3d {
         public static readonly onMeshChanged: signals.Signal = new signals.Signal();
 
         private _mesh: Mesh | null = null;
-
+        /**
+         * @internal
+         */
         public uninitialize() {
             super.uninitialize();
 

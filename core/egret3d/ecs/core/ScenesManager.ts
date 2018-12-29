@@ -109,7 +109,7 @@ namespace paper {
          */
         public get editorScene() {
             if (!this._editorScene) {
-                this._editorScene = Scene.createEmpty(DefaultNames.EditorOnly, false);
+                this._editorScene = Scene.createEmpty(DefaultNames.Editor, false);
                 this._scenes.pop(); // Remove editor scene from scenes.
             }
 

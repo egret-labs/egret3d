@@ -1,15 +1,48 @@
 namespace examples.shaders {
 
-    export class XRay {
+    export class XRay extends BaseExample {
 
         async start() {
             // Load resource config.
             await RES.loadConfig("default.res.json", "resource/");
-            // Create camera.
-            egret3d.Camera.main;
+            // Create shader.
+            const shader = egret3d.Shader.create("custom/xray.shader.json", egret3d.DefaultShaders.MESH_LAMBERT)
+                .addDefine(
+                    "CUSTOM_XRAY",
+                    {
+                        custom_vertex: `
+                            uniform float _c;
+                            uniform float _p;
+                            varying float _intensity;
+                        `,
+                        custom_end_vertex: `
+                            vec3 normalA = normalize( normalMatrix * normal );
+                            vec3 normalB = normalize( normalMatrix * (cameraPosition - modelMatrix[2].xyz) );
+                            _intensity = pow( _c - dot(normalA, normalB), _p );
+                        `,
+                        custom_fragment: `
+                            varying float _intensity;
+                        `,
+                        custom_end_fragment: `
+                            gl_FragColor *= _intensity;
+                        `,
+                    }
+                )
+                .addUniform("_c", gltf.UniformType.FLOAT, 1.0)
+                .addUniform("_p", gltf.UniformType.FLOAT, 3.0);
+            //
+            this.addBackground();
 
-            // Load shader.
-            const xRay = await RES.getResAsync("shaders/xray.shader.json") as egret3d.Shader;
+
+            { // MeshRenderer.
+                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
+                gameObject.transform.setLocalPosition(2.0, 0.5, 0.0);
+                // 
+                const renderer = gameObject.renderer!;
+                renderer.material = egret3d.Material.create(shader)
+                    .setBlend(gltf.BlendMode.Add, paper.RenderQueue.Transparent)
+                    .setColor(egret3d.Color.PURPLE);
+            }
 
             {
                 // Load prefab resource.
@@ -19,10 +52,10 @@ namespace examples.shaders {
                 gameObject.getComponentInChildren(egret3d.Animation)!.play("run01");
 
                 const renderer = gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!;
-                renderer.material = egret3d.Material.create(xRay).setBlend(gltf.BlendMode.Add, paper.RenderQueue.Transparent).setDepth(true, false);
-                // gameObject.addComponent(XRayTester);
+                renderer.material = egret3d.Material.create(shader)
+                    .setBlend(gltf.BlendMode.Add, paper.RenderQueue.Transparent)
+                    .setColor(egret3d.Color.PURPLE);
             }
-
             //
             egret3d.Camera.main.gameObject.addComponent(behaviors.RotateComponent);
         }

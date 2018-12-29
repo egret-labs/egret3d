@@ -4009,7 +4009,7 @@ var paper;
                 _this._plane = egret3d.Plane.create();
                 _this._quad = editor.EditorMeshHelper.createGameObject("Plane", egret3d.DefaultMeshes.QUAD, egret3d.DefaultMaterials.MESH_BASIC_DOUBLESIDE.clone().setBlend(1 /* Blend */, 3000 /* Transparent */).setOpacity(0.5));
                 _this._highlights = {};
-                _this._highlightvalue = {};
+                _this._highlightsValue = {};
                 _this._dir = { "X": egret3d.Vector3.RIGHT, "Y": egret3d.Vector3.UP, "Z": egret3d.Vector3.FORWARD };
                 _this._mode = null;
                 _this._hovered = null;
@@ -4028,12 +4028,15 @@ var paper;
                     var pickX = editor.EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickY = editor.EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickZ = editor.EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickXY = editor.EditorMeshHelper.createGameObject("XY", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "Untagged" /* Untagged */);
-                    var pickYZ = editor.EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "Untagged" /* Untagged */);
-                    var pickZX = editor.EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "Untagged" /* Untagged */);
-                    this._highlights[pickX.uuid] = [pickX, axisX, arrowX];
-                    this._highlights[pickY.uuid] = [pickY, axisY, arrowY];
-                    this._highlights[pickZ.uuid] = [pickZ, axisZ, arrowZ];
+                    var pickXY = editor.EditorMeshHelper.createGameObject("XY", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE));
+                    var pickYZ = editor.EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE));
+                    var pickZX = editor.EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE));
+                    this._highlights[pickX.uuid] = [axisX, arrowX];
+                    this._highlights[pickY.uuid] = [axisY, arrowY];
+                    this._highlights[pickZ.uuid] = [axisZ, arrowZ];
+                    this._highlightsValue[pickX.uuid] = { high: 0.0, low: 0.0, default: 0.0 };
+                    this._highlightsValue[pickY.uuid] = { high: 0.0, low: 0.0, default: 0.0 };
+                    this._highlightsValue[pickZ.uuid] = { high: 0.0, low: 0.0, default: 0.0 };
                     translate.transform.setParent(this.gameObject.transform);
                     axisX.transform.setParent(translate.transform).setLocalPosition(0.001, 0.0, 0.0);
                     axisY.transform.setParent(translate.transform).setLocalPosition(0.0, 0.001, 0.0);
@@ -4041,9 +4044,9 @@ var paper;
                     arrowX.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.RIGHT).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalScale(0.1, 0.2, 0.1);
                     arrowY.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.UP).setLocalScale(0.1, 0.2, 0.1);
                     arrowZ.transform.setParent(translate.transform).setLocalPosition(egret3d.Vector3.FORWARD).setLocalEuler(Math.PI * 0.5, 0.0, 0.0).setLocalScale(0.1, 0.2, 0.1);
-                    pickX.transform.setParent(translate.transform).setLocalPosition(0.7, 0.0, 0.0).setLocalScale(0.9, 0.15, 0.15).gameObject.activeSelf = false;
-                    pickY.transform.setParent(translate.transform).setLocalPosition(0.0, 0.7, 0.0).setLocalScale(0.15, 0.9, 0.15).gameObject.activeSelf = false;
-                    pickZ.transform.setParent(translate.transform).setLocalPosition(0.0, 0.0, 0.7).setLocalScale(0.15, 0.15, 0.9).gameObject.activeSelf = false;
+                    pickX.transform.setParent(translate.transform).setLocalPosition(0.7, 0.0, 0.0).setLocalScale(0.9, 0.15, 0.15);
+                    pickY.transform.setParent(translate.transform).setLocalPosition(0.0, 0.7, 0.0).setLocalScale(0.15, 0.9, 0.15);
+                    pickZ.transform.setParent(translate.transform).setLocalPosition(0.0, 0.0, 0.7).setLocalScale(0.15, 0.15, 0.9);
                     pickXY.transform.setParent(translate.transform).setLocalPosition(0.15, 0.15, 0.0).setLocalScale(0.3);
                     pickYZ.transform.setParent(translate.transform).setLocalPosition(0.0, 0.15, 0.15).setLocalEuler(0.0, Math.PI * 0.5, 0.0).setLocalScale(0.3);
                     pickZX.transform.setParent(translate.transform).setLocalPosition(0.15, 0.0, 0.15).setLocalEuler(Math.PI * 0.5, 0.0, 0.0).setLocalScale(0.3);
@@ -4053,9 +4056,9 @@ var paper;
                     arrowX.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.RED);
                     arrowY.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.GREEN);
                     arrowZ.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.BLUE);
-                    pickX.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.RED);
-                    pickY.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.GREEN);
-                    pickZ.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.BLUE);
+                    pickX.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.0).setColor(egret3d.Color.RED);
+                    pickY.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.0).setColor(egret3d.Color.GREEN);
+                    pickZ.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.0).setColor(egret3d.Color.BLUE);
                     pickXY.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.YELLOW);
                     pickYZ.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.INDIGO);
                     pickZX.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.PURPLE);
@@ -4071,34 +4074,38 @@ var paper;
                     var pickY = editor.EditorMeshHelper.createGameObject("Y", egret3d.MeshBuilder.createTorus(1.0, 0.1, 4, 12, 0.5, 2), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickZ = editor.EditorMeshHelper.createGameObject("Z", egret3d.MeshBuilder.createTorus(1.0, 0.1, 4, 12, 0.5, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickE = editor.EditorMeshHelper.createGameObject("E", egret3d.MeshBuilder.createTorus(1.25, 0.1, 4, 24, 1.0, 3), egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickXYZE = editor.EditorMeshHelper.createGameObject("XYZE", egret3d.MeshBuilder.createSphere(1, 0, 0), egret3d.DefaultMaterials.MESH_BASIC.clone(), "Untagged" /* Untagged */);
+                    var pickXYZE = editor.EditorMeshHelper.createGameObject("XYZE", egret3d.MeshBuilder.createSphere(1, 0, 0), egret3d.DefaultMaterials.MESH_BASIC.clone());
                     this._highlights[pickX.uuid] = [axisX];
                     this._highlights[pickY.uuid] = [axisY];
                     this._highlights[pickZ.uuid] = [axisZ];
                     this._highlights[pickE.uuid] = [axisE];
                     this._highlights[pickXYZE.uuid] = [axisXYZE, pickXYZE];
-                    this._highlightvalue[pickXYZE.uuid] = { high: 0.2, low: 0, default: 0 };
+                    this._highlightsValue[pickX.uuid] = { high: 0.0, low: 0.0, default: 0.0 };
+                    this._highlightsValue[pickY.uuid] = { high: 0.0, low: 0.0, default: 0.0 };
+                    this._highlightsValue[pickZ.uuid] = { high: 0.0, low: 0.0, default: 0.0 };
+                    this._highlightsValue[pickE.uuid] = { high: 0.0, low: 0.0, default: 0.0 };
+                    this._highlightsValue[pickXYZE.uuid] = { high: 0.2, low: 0.0, default: 0.0 };
                     rotate.transform.setParent(this.gameObject.transform);
                     axisX.transform.setParent(rotate.transform);
                     axisY.transform.setParent(rotate.transform);
                     axisZ.transform.setParent(rotate.transform);
                     axisE.transform.setParent(rotate.transform);
                     axisXYZE.transform.setParent(rotate.transform);
-                    pickX.transform.setParent(rotate.transform).gameObject.activeSelf = false;
-                    pickY.transform.setParent(rotate.transform).gameObject.activeSelf = false;
-                    pickZ.transform.setParent(rotate.transform).gameObject.activeSelf = false;
-                    pickE.transform.setParent(rotate.transform).gameObject.activeSelf = false;
-                    pickXYZE.transform.setParent(rotate.transform).gameObject.activeSelf = true;
+                    pickX.transform.setParent(rotate.transform);
+                    pickY.transform.setParent(rotate.transform);
+                    pickZ.transform.setParent(rotate.transform);
+                    pickE.transform.setParent(rotate.transform);
+                    pickXYZE.transform.setParent(rotate.transform);
                     axisX.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.RED);
                     axisY.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.GREEN);
                     axisZ.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.BLUE);
                     axisE.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.YELLOW);
                     axisXYZE.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */ - 1, 0.8).setColor(egret3d.Color.GRAY);
-                    pickX.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.RED);
-                    pickY.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.GREEN);
-                    pickZ.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.BLUE);
-                    pickE.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.YELLOW);
-                    pickXYZE.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */ - 1, 0).setColor(egret3d.Color.BLACK);
+                    pickX.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.0).setColor(egret3d.Color.RED);
+                    pickY.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.0).setColor(egret3d.Color.GREEN);
+                    pickZ.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.0).setColor(egret3d.Color.BLUE);
+                    pickE.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.0).setColor(egret3d.Color.YELLOW);
+                    pickXYZE.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */ - 1, 0.0).setColor(egret3d.Color.BLACK);
                 }
                 {
                     var scale = this.scale;
@@ -4111,12 +4118,15 @@ var paper;
                     var pickX = editor.EditorMeshHelper.createGameObject("X", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickY = editor.EditorMeshHelper.createGameObject("Y", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
                     var pickZ = editor.EditorMeshHelper.createGameObject("Z", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                    var pickXY = editor.EditorMeshHelper.createGameObject("XY", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "Untagged" /* Untagged */);
-                    var pickYZ = editor.EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "Untagged" /* Untagged */);
-                    var pickZX = editor.EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE), "Untagged" /* Untagged */);
-                    this._highlights[pickX.uuid] = [pickX, axisX, arrowX];
-                    this._highlights[pickY.uuid] = [pickX, axisY, arrowY];
-                    this._highlights[pickZ.uuid] = [pickX, axisZ, arrowZ];
+                    var pickXY = editor.EditorMeshHelper.createGameObject("XY", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE));
+                    var pickYZ = editor.EditorMeshHelper.createGameObject("YZ", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE));
+                    var pickZX = editor.EditorMeshHelper.createGameObject("ZX", egret3d.DefaultMeshes.QUAD, egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC_DOUBLESIDE));
+                    this._highlights[pickX.uuid] = [axisX, arrowX];
+                    this._highlights[pickY.uuid] = [axisY, arrowY];
+                    this._highlights[pickZ.uuid] = [axisZ, arrowZ];
+                    this._highlightsValue[pickX.uuid] = { high: 0.0, low: 0.0, default: 0.0 };
+                    this._highlightsValue[pickY.uuid] = { high: 0.0, low: 0.0, default: 0.0 };
+                    this._highlightsValue[pickZ.uuid] = { high: 0.0, low: 0.0, default: 0.0 };
                     scale.transform.setParent(this.gameObject.transform);
                     axisX.transform.setParent(scale.transform).setLocalPosition(0.001, 0.0, 0.0);
                     axisY.transform.setParent(scale.transform).setLocalPosition(0.0, 0.001, 0.0);
@@ -4124,9 +4134,9 @@ var paper;
                     arrowX.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.RIGHT).setLocalScale(0.15, 0.15, 0.15);
                     arrowY.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.UP).setLocalScale(0.15, 0.15, 0.15);
                     arrowZ.transform.setParent(scale.transform).setLocalPosition(egret3d.Vector3.FORWARD).setLocalScale(0.15, 0.15, 0.15);
-                    pickX.transform.setParent(scale.transform).setLocalPosition(0.7, 0.0, 0.0).setLocalScale(0.9, 0.15, 0.15).gameObject.activeSelf = false;
-                    pickY.transform.setParent(scale.transform).setLocalPosition(0.0, 0.7, 0.0).setLocalScale(0.15, 0.9, 0.15).gameObject.activeSelf = false;
-                    pickZ.transform.setParent(scale.transform).setLocalPosition(0.0, 0.0, 0.7).setLocalScale(0.15, 0.15, 0.9).gameObject.activeSelf = false;
+                    pickX.transform.setParent(scale.transform).setLocalPosition(0.7, 0.0, 0.0).setLocalScale(0.9, 0.15, 0.15);
+                    pickY.transform.setParent(scale.transform).setLocalPosition(0.0, 0.7, 0.0).setLocalScale(0.15, 0.9, 0.15);
+                    pickZ.transform.setParent(scale.transform).setLocalPosition(0.0, 0.0, 0.7).setLocalScale(0.15, 0.15, 0.9);
                     pickXY.transform.setParent(scale.transform).setLocalPosition(0.15, 0.15, 0.0).setLocalScale(0.3);
                     pickYZ.transform.setParent(scale.transform).setLocalPosition(0.0, 0.15, 0.15).setLocalEuler(0.0, Math.PI * 0.5, 0.0).setLocalScale(0.3);
                     pickZX.transform.setParent(scale.transform).setLocalPosition(0.15, 0.0, 0.15).setLocalEuler(Math.PI * 0.5, 0.0, 0.0).setLocalScale(0.3);
@@ -4136,9 +4146,9 @@ var paper;
                     arrowX.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.RED);
                     arrowY.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.GREEN);
                     arrowZ.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.BLUE);
-                    pickX.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.RED);
-                    pickY.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.GREEN);
-                    pickZ.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.BLUE);
+                    pickX.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.0).setColor(egret3d.Color.RED);
+                    pickY.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.0).setColor(egret3d.Color.GREEN);
+                    pickZ.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.0).setColor(egret3d.Color.BLUE);
                     pickXY.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.YELLOW);
                     pickYZ.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.INDIGO);
                     pickZX.renderer.material.setDepth(false, false).setBlend(1 /* Blend */, 4000 /* Overlay */, 0.8).setColor(egret3d.Color.PURPLE);
@@ -4502,13 +4512,13 @@ var paper;
                             }
                             var material = child.gameObject.renderer.material;
                             if (highlights.indexOf(child.gameObject) >= 0) {
-                                this._highlightvalue[child.gameObject.uuid] ?
-                                    material.opacity = this._highlightvalue[child.gameObject.uuid].high :
+                                this._highlightsValue[child.gameObject.uuid] ?
+                                    material.opacity = this._highlightsValue[child.gameObject.uuid].high :
                                     material.opacity = 1.0;
                             }
                             else {
-                                this._highlightvalue[child.gameObject.uuid] ?
-                                    material.opacity = this._highlightvalue[child.gameObject.uuid].low :
+                                this._highlightsValue[child.gameObject.uuid] ?
+                                    material.opacity = this._highlightsValue[child.gameObject.uuid].low :
                                     material.opacity = 0.3;
                             }
                         }
@@ -4519,8 +4529,8 @@ var paper;
                             if (!child.gameObject.renderer) {
                                 continue;
                             }
-                            this._highlightvalue[child.gameObject.uuid] ?
-                                child.gameObject.renderer.material.opacity = this._highlightvalue[child.gameObject.uuid].default :
+                            this._highlightsValue[child.gameObject.uuid] ?
+                                child.gameObject.renderer.material.opacity = this._highlightsValue[child.gameObject.uuid].default :
                                 child.gameObject.renderer.material.opacity = 0.8;
                         }
                     }
@@ -4929,9 +4939,8 @@ var paper;
             };
             GUISystem.prototype._addToHierarchy = function (gameObject) {
                 if (gameObject.uuid in this._hierarchyFolders ||
-                    gameObject.tag === "EditorOnly" /* EditorOnly */ ||
-                    gameObject.hideFlags === 2 /* Hide */ ||
-                    gameObject.hideFlags === 3 /* HideAndDontSave */) {
+                    (gameObject.hideFlags & 6 /* Hide */) ||
+                    gameObject.scene === paper.Scene.editorScene) {
                     return true;
                 }
                 var parentFolder = this._hierarchyFolders[gameObject.transform.parent ? gameObject.transform.parent.gameObject.uuid : gameObject.scene.uuid];
@@ -5648,7 +5657,7 @@ var paper;
                 if (tag === void 0) { tag = "EditorOnly" /* EditorOnly */; }
                 if (scene === void 0) { scene = paper.Scene.editorScene; }
                 var gameObject = paper.GameObject.create(name, tag, scene);
-                gameObject.hideFlags = 3 /* HideAndDontSave */;
+                gameObject.tag = tag;
                 if (mesh) {
                     gameObject.addComponent(egret3d.MeshFilter).mesh = mesh;
                 }
@@ -7069,7 +7078,7 @@ var paper;
                     for (var index = 0; index < gameObj.transform.children.length; index++) {
                         var element = gameObj.transform.children[index];
                         var obj = element.gameObject;
-                        if (obj.hideFlags === 3 /* HideAndDontSave */) {
+                        if (obj.hideFlags & 8 /* DontSave */) {
                             continue;
                         }
                         this.setLinkedId(obj, ids);
@@ -8498,6 +8507,7 @@ var paper;
                     var icon = camera.gameObject.transform.find("__pickTarget");
                     if (!icon) {
                         icon = editor.EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, editor.EditorDefaultTexture.CAMERA_ICON).transform;
+                        icon.gameObject.hideFlags = 14 /* HideAndDontSave */;
                     }
                     var cameraPosition = egret3d.Camera.editor.gameObject.transform.position;
                     var eyeDistance = cameraPosition.getDistance(camera.gameObject.transform.position);
@@ -8559,12 +8569,13 @@ var paper;
             SceneSystem.prototype._updateLights = function () {
                 for (var _i = 0, _a = this._cameraAndLightCollecter.lights; _i < _a.length; _i++) {
                     var light = _a[_i];
-                    if (light.gameObject.tag === "EditorOnly" /* EditorOnly */) {
+                    if (light.gameObject.scene === paper.Scene.editorScene) {
                         continue;
                     }
                     var icon = light.gameObject.transform.find("__pickTarget");
                     if (!icon) {
                         icon = editor.EditorMeshHelper.createIcon("__pickTarget", light.gameObject, editor.EditorDefaultTexture.LIGHT_ICON).transform;
+                        icon.gameObject.hideFlags = 14 /* HideAndDontSave */;
                     }
                     var cameraPosition = egret3d.Camera.editor.gameObject.transform.position;
                     var eyeDistance = cameraPosition.getDistance(light.gameObject.transform.position);
@@ -8615,7 +8626,7 @@ var paper;
                 //
                 for (var _i = 0, _a = this._cameraAndLightCollecter.cameras; _i < _a.length; _i++) {
                     var camera = _a[_i];
-                    if (camera.gameObject.tag === "EditorOnly" /* EditorOnly */) {
+                    if (camera.gameObject.scene === paper.Scene.editorScene) {
                         continue;
                     }
                     var icon = camera.gameObject.transform.find("__pickTarget");
@@ -8625,7 +8636,7 @@ var paper;
                 }
                 for (var _b = 0, _d = this._cameraAndLightCollecter.lights; _b < _d.length; _b++) {
                     var light = _d[_b];
-                    if (light.gameObject.tag === "EditorOnly" /* EditorOnly */) {
+                    if (light.gameObject.scene === paper.Scene.editorScene) {
                         continue;
                     }
                     var icon = light.gameObject.transform.find("__pickTarget");

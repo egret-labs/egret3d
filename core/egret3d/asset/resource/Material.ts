@@ -609,9 +609,10 @@ namespace egret3d {
             if (cullEnabled) {
                 if (index < 0) {
                     enable!.push(gltf.EnableState.CullFace);
-                    functions!.frontFace = [frontFace];
-                    functions!.cullFace = [cullFace];
                 }
+
+                functions!.frontFace = [frontFace];
+                functions!.cullFace = [cullFace];
             }
             else if (index >= 0) {
                 enable!.splice(index, 1);

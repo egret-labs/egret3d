@@ -91,7 +91,7 @@ namespace egret3d {
             width: number = 1.0, height: number = 1.0, depth: number = 1.0,
             centerOffsetX: number = 0.0, centerOffsetY: number = 0.0, centerOffsetZ: number = 0.0,
             widthSegments: number = 1, heightSegments: number = 1, depthSegments: number = 1,
-            differentFace: boolean = false
+            differentFace: boolean = false, negateNormal: boolean = false,
         ) {
             // helper variables
             let meshVertexCount = 0;
@@ -167,7 +167,12 @@ namespace egret3d {
                         vector3[w] = depth > 0.0 ? 1.0 : - 1.0;
 
                         // now apply vector to normal buffer
-                        normals.push(vector3.x, vector3.y, vector3.z);
+                        if (negateNormal) {
+                            normals.push(-vector3.x, -vector3.y, -vector3.z);
+                        }
+                        else {
+                            normals.push(vector3.x, vector3.y, vector3.z);
+                        }
 
                         // uvs
                         uvs.push(
@@ -470,8 +475,8 @@ namespace egret3d {
 
                 for (i = 0; i <= tubularSegments; i++) {
 
-                    let u = i / tubularSegments * Math.PI * 2 * arc;
-                    let v = j / radialSegments * Math.PI * 2;
+                    const u = i / tubularSegments * Math.PI * 2 * arc;
+                    const v = j / radialSegments * Math.PI * 2;
 
                     // vertex
                     switch (axis) {
@@ -480,12 +485,14 @@ namespace egret3d {
                             vertex.y = (radius + tube * Math.cos(v)) * Math.cos(u);
                             vertex.z = (radius + tube * Math.cos(v)) * Math.sin(u);
                             break;
+
                         case 2:
                             vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
-                            vertex.y = tube * Math.sin(v);
+                            vertex.y = -tube * Math.sin(v);
                             vertex.z = (radius + tube * Math.cos(v)) * Math.sin(u);
                             break;
-                        default:
+
+                        case 3:
                             vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
                             vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
                             vertex.z = tube * Math.sin(v);

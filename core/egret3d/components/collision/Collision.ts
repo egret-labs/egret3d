@@ -2,7 +2,7 @@ namespace egret3d {
     const _helpVector3 = Vector3.create();
     const _helpRaycastInfo = RaycastInfo.create();
 
-    function _raycastCollider(ray: Readonly<Ray>, collider: BoxCollider | SphereCollider | CylinderCollider, raycastInfo: RaycastInfo, hit: boolean) {
+    function _raycastCollider(ray: Readonly<Ray>, collider: ICollider & IRaycast, raycastInfo: RaycastInfo, hit: boolean) {
         const helpRaycastInfo = _helpRaycastInfo;
         const normal = raycastInfo.normal;
         helpRaycastInfo.backfaceCulling = raycastInfo.backfaceCulling;
@@ -33,10 +33,8 @@ namespace egret3d {
         raycastInfos: RaycastInfo[]
     ) {
         if (
-            (
-                gameObject.hideFlags === paper.HideFlags.HideAndDontSave && gameObject.tag === paper.DefaultTags.EditorOnly &&
-                (!gameObject.transform.parent || gameObject.transform.parent.gameObject.activeInHierarchy)
-            ) ? gameObject.activeSelf : !gameObject.activeInHierarchy
+            (gameObject.hideFlags & paper.HideFlags.NotTouchable) ||
+            !gameObject.activeInHierarchy
         ) {
             return false;
         }
@@ -85,7 +83,6 @@ namespace egret3d {
         // TODO renderQueue.
         return a.distance - b.distance;
     }
-
     /**
      * 用世界空间坐标系的射线检测指定的实体。（不包含其子级）
      * @param ray 世界空间坐标系的射线。
@@ -117,6 +114,7 @@ namespace egret3d {
             const boxColliders = gameObject.getComponents(BoxCollider);
             const sphereColliders = gameObject.getComponents(SphereCollider);
             const cylinderColliders = gameObject.getComponents(CylinderCollider);
+            const meshColliders = gameObject.getComponents(MeshCollider);
 
             if (boxColliders.length > 0) {
                 for (const collider of boxColliders) {
@@ -168,6 +166,23 @@ namespace egret3d {
                     }
                 }
             }
+
+            if (meshColliders.length > 0) {
+                for (const collider of meshColliders) {
+                    if (!collider.enabled) {
+                        continue;
+                    }
+
+                    if (raycastInfo) {
+                        if (_raycastCollider(ray, collider, raycastInfo, hit)) {
+                            hit = true;
+                        }
+                    }
+                    else if (collider.raycast(ray)) {
+                        return true;
+                    }
+                }
+            }
         }
 
         if (raycastInfo && raycastInfo.transform) {
@@ -176,7 +191,6 @@ namespace egret3d {
 
         return false;
     }
-
     /**
      * 用世界空间坐标系的射线检测指定的实体或组件列表。
      * @param ray 射线。

@@ -347,10 +347,10 @@ namespace paper {
                     }
 
                     if (source.constructor === GameObject || source instanceof BaseComponent) {
-                        if (source.constructor === GameObject && (source as GameObject).hideFlags === paper.HideFlags.HideAndDontSave) {
+                        if (source.constructor === GameObject && (source as GameObject).hideFlags & paper.HideFlags.DontSave) {
                             return undefined; // Pass.
                         }
-                        else if (source.constructor === egret3d.Transform && (source as egret3d.Transform).gameObject.hideFlags === paper.HideFlags.HideAndDontSave) {
+                        else if (source.constructor === egret3d.Transform && (source as egret3d.Transform).gameObject.hideFlags & paper.HideFlags.DontSave) {
                             return undefined; // Pass.
                         }
 

@@ -466,11 +466,19 @@ var paper;
         /**
          *
          */
-        HideFlags[HideFlags["Hide"] = 2] = "Hide";
+        HideFlags[HideFlags["NotTouchable"] = 2] = "NotTouchable";
         /**
          *
          */
-        HideFlags[HideFlags["HideAndDontSave"] = 3] = "HideAndDontSave";
+        HideFlags[HideFlags["Hide"] = 6] = "Hide";
+        /**
+         *
+         */
+        HideFlags[HideFlags["DontSave"] = 8] = "DontSave";
+        /**
+         *
+         */
+        HideFlags[HideFlags["HideAndDontSave"] = 14] = "HideAndDontSave";
     })(HideFlags = paper.HideFlags || (paper.HideFlags = {}));
     /**
      *
@@ -482,7 +490,7 @@ var paper;
         DefaultNames["Global"] = "Global";
         DefaultNames["MainCamera"] = "Main Camera";
         DefaultNames["EditorCamera"] = "Editor Camera";
-        DefaultNames["EditorOnly"] = "Editor Only";
+        DefaultNames["Editor"] = "Editor";
         DefaultNames["MissingPrefab"] = "Missing Prefab";
     })(DefaultNames = paper.DefaultNames || (paper.DefaultNames = {}));
     /**
@@ -6295,6 +6303,9 @@ var egret3d;
             _this._lightmapScaleOffset = egret3d.Vector4.create();
             return _this;
         }
+        /**
+         * @internal
+         */
         MeshRenderer.prototype.recalculateLocalBox = function () {
             var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
             this._localBoundingBox.clear();
@@ -6324,6 +6335,9 @@ var egret3d;
             }
             return out;
         };
+        /**
+         * @internal
+         */
         MeshRenderer.prototype.raycast = function (p1, p2, p3) {
             var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
             if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh || meshFilter.mesh.isDisposed) {
@@ -6851,7 +6865,7 @@ var paper;
              */
             get: function () {
                 if (!this._editorScene) {
-                    this._editorScene = paper.Scene.createEmpty("Editor Only" /* EditorOnly */, false);
+                    this._editorScene = paper.Scene.createEmpty("Editor" /* Editor */, false);
                     this._scenes.pop(); // Remove editor scene from scenes.
                 }
                 return this._editorScene;
@@ -9750,10 +9764,10 @@ var paper;
                         return serializeAsset(source);
                     }
                     if (source.constructor === paper.GameObject || source instanceof paper.BaseComponent) {
-                        if (source.constructor === paper.GameObject && source.hideFlags === 3 /* HideAndDontSave */) {
+                        if (source.constructor === paper.GameObject && source.hideFlags & 8 /* DontSave */) {
                             return undefined; // Pass.
                         }
-                        else if (source.constructor === egret3d.Transform && source.gameObject.hideFlags === 3 /* HideAndDontSave */) {
+                        else if (source.constructor === egret3d.Transform && source.gameObject.hideFlags & 8 /* DontSave */) {
                             return undefined; // Pass.
                         }
                         if (parent) {
@@ -11279,7 +11293,6 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    var _helpVector3 = egret3d.Vector3.create();
     /**
      * 提供默认的几何网格资源的快速访问方式，以及创建几何网格或几何网格实体的方法。
      */
@@ -11324,7 +11337,7 @@ var egret3d;
                 mesh.name = "builtin/fullscreen_quad.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.FULLSCREEN_QUAD = mesh;
-                // 后期渲染专用，UV反转一下，这样shader中就不用反转了
+                // 后期渲染专用，UV 反转一下，这样 shader 中就不用反转。
                 var uvs = mesh.getUVs();
                 for (var i = 1, l = uvs.length; i < l; i += 2) {
                     uvs[i] = 1.0 - uvs[i];
@@ -12702,6 +12715,10 @@ var egret3d;
          * TODO
          */
         ColliderType[ColliderType["ConvexHull"] = 5] = "ConvexHull";
+        /**
+         * TODO
+         */
+        ColliderType[ColliderType["Mesh"] = 6] = "Mesh";
     })(ColliderType = egret3d.ColliderType || (egret3d.ColliderType = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -13050,6 +13067,102 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    /**
+     * 网格碰撞组件。
+     */
+    var MeshCollider = (function (_super) {
+        __extends(MeshCollider, _super);
+        function MeshCollider() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            /**
+             * @internal
+             */
+            _this.colliderType = egret3d.ColliderType.Mesh;
+            _this._localBoundingBox = egret3d.Box.create();
+            _this._mesh = null;
+            return _this;
+        }
+        /**
+         * @internal
+         */
+        MeshCollider.prototype.uninitialize = function () {
+            _super.prototype.uninitialize.call(this);
+            if (this._mesh) {
+                this._mesh.release();
+            }
+            this._mesh = null;
+        };
+        /**
+         * @internal
+         */
+        MeshCollider.prototype.raycast = function (ray, raycastInfo) {
+            var mesh = this._mesh;
+            if (mesh) {
+                var transform = this.gameObject.transform;
+                var worldToLocalMatrix = transform.worldToLocalMatrix;
+                var localRay = egret3d.helpRay.applyMatrix(worldToLocalMatrix, ray);
+                var localBoundingBox = this._localBoundingBox;
+                if (localBoundingBox.raycast(localRay) && mesh.raycast(localRay, raycastInfo)) {
+                    if (raycastInfo) {
+                        var localToWorldMatrix = transform.localToWorldMatrix;
+                        raycastInfo.distance = ray.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
+                        raycastInfo.transform = transform;
+                        var normal = raycastInfo.normal;
+                        if (normal) {
+                            // normal.applyDirection(localToWorldMatrix);
+                            normal.applyMatrix3(egret3d.helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
+                        }
+                    }
+                    return true;
+                }
+            }
+            return false;
+        };
+        Object.defineProperty(MeshCollider.prototype, "mesh", {
+            /**
+             * 该组件的网格资源。
+             */
+            get: function () {
+                return this._mesh;
+            },
+            set: function (value) {
+                if (this._mesh === value) {
+                    return;
+                }
+                if (this._mesh) {
+                    this._mesh.release();
+                }
+                if (value) {
+                    value.retain();
+                }
+                this._localBoundingBox.clear();
+                if (value && !value.isDisposed) {
+                    var vertices = value.getVertices();
+                    var position = egret3d.helpVector3A;
+                    for (var i = 0, l = vertices.length; i < l; i += 3) {
+                        position.set(vertices[i], vertices[i + 1], vertices[i + 2]);
+                        this._localBoundingBox.add(position);
+                    }
+                }
+                this._mesh = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        __decorate([
+            paper.editor.property("MESH" /* MESH */),
+            paper.serializedField("_mesh")
+        ], MeshCollider.prototype, "mesh", null);
+        MeshCollider = __decorate([
+            paper.allowMultiple
+        ], MeshCollider);
+        return MeshCollider;
+    }(paper.BaseComponent));
+    egret3d.MeshCollider = MeshCollider;
+    __reflect(MeshCollider.prototype, "egret3d.MeshCollider", ["egret3d.IMeshCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
     var _helpVector3 = egret3d.Vector3.create();
     var _helpRaycastInfo = egret3d.RaycastInfo.create();
     function _raycastCollider(ray, collider, raycastInfo, hit) {
@@ -13072,8 +13185,8 @@ var egret3d;
         return false;
     }
     function _raycastAll(ray, gameObject, maxDistance, cullingMask, raycastMesh, backfaceCulling, raycastInfos) {
-        if ((gameObject.hideFlags === 3 /* HideAndDontSave */ && gameObject.tag === "EditorOnly" /* EditorOnly */ &&
-            (!gameObject.transform.parent || gameObject.transform.parent.gameObject.activeInHierarchy)) ? gameObject.activeSelf : !gameObject.activeInHierarchy) {
+        if ((gameObject.hideFlags & 2 /* NotTouchable */) ||
+            !gameObject.activeInHierarchy) {
             return false;
         }
         var raycastInfo = egret3d.RaycastInfo.create();
@@ -13139,6 +13252,7 @@ var egret3d;
             var boxColliders = gameObject.getComponents(egret3d.BoxCollider);
             var sphereColliders = gameObject.getComponents(egret3d.SphereCollider);
             var cylinderColliders = gameObject.getComponents(egret3d.CylinderCollider);
+            var meshColliders = gameObject.getComponents(egret3d.MeshCollider);
             if (boxColliders.length > 0) {
                 for (var _i = 0, boxColliders_1 = boxColliders; _i < boxColliders_1.length; _i++) {
                     var collider = boxColliders_1[_i];
@@ -13174,6 +13288,22 @@ var egret3d;
             if (cylinderColliders.length > 0) {
                 for (var _b = 0, cylinderColliders_1 = cylinderColliders; _b < cylinderColliders_1.length; _b++) {
                     var collider = cylinderColliders_1[_b];
+                    if (!collider.enabled) {
+                        continue;
+                    }
+                    if (raycastInfo) {
+                        if (_raycastCollider(ray, collider, raycastInfo, hit)) {
+                            hit = true;
+                        }
+                    }
+                    else if (collider.raycast(ray)) {
+                        return true;
+                    }
+                }
+            }
+            if (meshColliders.length > 0) {
+                for (var _c = 0, meshColliders_1 = meshColliders; _c < meshColliders_1.length; _c++) {
+                    var collider = meshColliders_1[_c];
                     if (!collider.enabled) {
                         continue;
                     }
@@ -13815,7 +13945,7 @@ var egret3d;
         CameraAndLightSystem.prototype.onAwake = function () {
             var lightCamera = this._lightCamera;
             lightCamera.enabled = false; // Disable camera.
-            lightCamera.hideFlags = 3 /* HideAndDontSave */;
+            lightCamera.hideFlags = 14 /* HideAndDontSave */;
         };
         CameraAndLightSystem.prototype.onAddGameObject = function (_gameObject, group) {
             var groups = this.groups;
@@ -15519,7 +15649,8 @@ var paper;
             paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], GameObject.prototype, "isStatic", void 0);
         __decorate([
-            paper.serializedField
+            paper.serializedField,
+            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.HideFlags) }) // TODO
         ], GameObject.prototype, "hideFlags", void 0);
         __decorate([
             paper.serializedField,
@@ -15564,6 +15695,9 @@ var egret3d;
             _this._mesh = null;
             return _this;
         }
+        /**
+         * @internal
+         */
         MeshFilter.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
             if (this._mesh) {
@@ -23230,9 +23364,9 @@ var egret3d;
             if (cullEnabled) {
                 if (index < 0) {
                     enable.push(2884 /* CullFace */);
-                    functions.frontFace = [frontFace];
-                    functions.cullFace = [cullFace];
                 }
+                functions.frontFace = [frontFace];
+                functions.cullFace = [cullFace];
             }
             else if (index >= 0) {
                 enable.splice(index, 1);
@@ -24150,7 +24284,7 @@ var egret3d;
          * @param depthSegments 深度分段。
          * @param differentFace 是否使用不同材质。
          */
-        MeshBuilder.createCube = function (width, height, depth, centerOffsetX, centerOffsetY, centerOffsetZ, widthSegments, heightSegments, depthSegments, differentFace) {
+        MeshBuilder.createCube = function (width, height, depth, centerOffsetX, centerOffsetY, centerOffsetZ, widthSegments, heightSegments, depthSegments, differentFace, negateNormal) {
             if (width === void 0) { width = 1.0; }
             if (height === void 0) { height = 1.0; }
             if (depth === void 0) { depth = 1.0; }
@@ -24161,6 +24295,7 @@ var egret3d;
             if (heightSegments === void 0) { heightSegments = 1; }
             if (depthSegments === void 0) { depthSegments = 1; }
             if (differentFace === void 0) { differentFace = false; }
+            if (negateNormal === void 0) { negateNormal = false; }
             // helper variables
             var meshVertexCount = 0;
             var vector3 = _helpVector3;
@@ -24222,7 +24357,12 @@ var egret3d;
                         vector3[v] = 0.0;
                         vector3[w] = depth > 0.0 ? 1.0 : -1.0;
                         // now apply vector to normal buffer
-                        normals.push(vector3.x, vector3.y, vector3.z);
+                        if (negateNormal) {
+                            normals.push(-vector3.x, -vector3.y, -vector3.z);
+                        }
+                        else {
+                            normals.push(vector3.x, vector3.y, vector3.z);
+                        }
                         // uvs
                         uvs.push(ix / gridX, iy / gridY);
                         // counters
@@ -24490,10 +24630,10 @@ var egret3d;
                             break;
                         case 2:
                             vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
-                            vertex.y = tube * Math.sin(v);
+                            vertex.y = -tube * Math.sin(v);
                             vertex.z = (radius + tube * Math.cos(v)) * Math.sin(u);
                             break;
-                        default:
+                        case 3:
                             vertex.x = (radius + tube * Math.cos(v)) * Math.cos(u);
                             vertex.y = (radius + tube * Math.cos(v)) * Math.sin(u);
                             vertex.z = tube * Math.sin(v);

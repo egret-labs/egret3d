@@ -61,6 +61,7 @@ namespace paper.editor {
                 let icon = camera.gameObject.transform.find("__pickTarget") as egret3d.Transform;
                 if (!icon) {
                     icon = EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, EditorDefaultTexture.CAMERA_ICON).transform;
+                    icon.gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
                 }
 
                 const cameraPosition = egret3d.Camera.editor.gameObject.transform.position;
@@ -131,13 +132,14 @@ namespace paper.editor {
 
         private _updateLights() {
             for (const light of this._cameraAndLightCollecter.lights) {
-                if (light.gameObject.tag === DefaultTags.EditorOnly) { // TODO
+                if (light.gameObject.scene === Scene.editorScene) {
                     continue;
                 }
 
                 let icon = light.gameObject.transform.find("__pickTarget") as egret3d.Transform;
                 if (!icon) {
                     icon = EditorMeshHelper.createIcon("__pickTarget", light.gameObject, EditorDefaultTexture.LIGHT_ICON).transform;
+                    icon.gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
                 }
 
                 const cameraPosition = egret3d.Camera.editor.gameObject.transform.position;
@@ -197,7 +199,7 @@ namespace paper.editor {
 
             //
             for (const camera of this._cameraAndLightCollecter.cameras) {
-                if (camera.gameObject.tag === DefaultTags.EditorOnly) {
+                if (camera.gameObject.scene === Scene.editorScene) {
                     continue;
                 }
 
@@ -208,7 +210,7 @@ namespace paper.editor {
             }
 
             for (const light of this._cameraAndLightCollecter.lights) {
-                if (light.gameObject.tag === DefaultTags.EditorOnly) {
+                if (light.gameObject.scene === Scene.editorScene) {
                     continue;
                 }
 

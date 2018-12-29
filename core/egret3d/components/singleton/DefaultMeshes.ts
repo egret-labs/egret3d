@@ -1,5 +1,4 @@
 namespace egret3d {
-    const _helpVector3 = Vector3.create();
     /**
      * 提供默认的几何网格资源的快速访问方式，以及创建几何网格或几何网格实体的方法。
      */
@@ -68,7 +67,7 @@ namespace egret3d {
                 paper.Asset.register(mesh);
                 DefaultMeshes.FULLSCREEN_QUAD = mesh;
 
-                // 后期渲染专用，UV反转一下，这样shader中就不用反转了
+                // 后期渲染专用，UV 反转一下，这样 shader 中就不用反转。
                 const uvs = mesh.getUVs()!;
                 for (let i = 1, l = uvs.length; i < l; i += 2) {
                     uvs[i] = 1.0 - uvs[i];

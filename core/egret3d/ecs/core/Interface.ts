@@ -10,19 +10,27 @@ namespace paper {
         /**
          * 
          */
-        None,
+        None = 0b0000,
         /**
          * 
          */
-        NotEditable,
+        NotEditable = 0b0001,
         /**
          * 
          */
-        Hide,
+        NotTouchable = 0b0010,
         /**
          * 
          */
-        HideAndDontSave,
+        Hide = 0b0110,
+        /**
+         * 
+         */
+        DontSave = 0b1000,
+        /**
+         * 
+         */
+        HideAndDontSave = 0b1110,
     }
     /**
      * 
@@ -33,7 +41,7 @@ namespace paper {
         Global = "Global",
         MainCamera = "Main Camera",
         EditorCamera = "Editor Camera",
-        EditorOnly = "Editor Only",
+        Editor = "Editor",
         MissingPrefab = "Missing Prefab",
     }
     /**

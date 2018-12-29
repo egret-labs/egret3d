@@ -96,6 +96,7 @@
         "egret3d/components/collision/BoxCollider.ts",
         "egret3d/components/collision/SphereCollider.ts",
         "egret3d/components/collision/CylinderCollider.ts",
+        "egret3d/components/collision/MeshCollider.ts",
         "egret3d/components/collision/Collision.ts",
 
         "egret3d/components/camera/Camera.ts",
