@@ -1,9 +1,13 @@
 namespace egret3d {
+
     const enum LightSize {
         Directional = 11,
-        Point = 15,
         Spot = 18,
+        RectangleArea = 12,
+        Point = 15,
+        Hemisphere = 9,
     }
+
     const _helpVector3 = Vector3.create();
     /**
      * 相机渲染上下文。
@@ -21,18 +25,29 @@ namespace egret3d {
          * 
          */
         public readonly camera: Camera = null!;
-
-        public directLightCount: uint = 0;
-        public pointLightCount: uint = 0;
-        public spotLightCount: uint = 0;
-
-        // public readonly lightPosition: Float32Array = new Float32Array([0.0, 0.0, 0.0]);
-        // 12: dirX, dirY, dirZ, colorR, colorG, colorB, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
-        public directLightArray: Float32Array = new Float32Array(0);
-        // 16: x, y, z, colorR, colorG, colorB, distance, decay, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY, shadowCameraNear, shadowCameraFar,
-        public pointLightArray: Float32Array = new Float32Array(0);
-        // 18: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, distance, decay, coneCos, penumbraCos, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
-        public spotLightArray: Float32Array = new Float32Array(0);
+        /**
+         * 12: dirX, dirY, dirZ, colorR, colorG, colorB, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
+         * @internal
+         */
+        public directLightBuffer: Float32Array = new Float32Array(0);
+        /**
+         * 18: x, y, z, dirX, dirY, dirZ, colorR, colorG, colorB, distance, decay, coneCos, penumbraCos, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
+         * @internal
+         */
+        public spotLightBuffer: Float32Array = new Float32Array(0);
+        /**
+         * @internal
+         */
+        public rectangleAreaLightBuffer: Float32Array = new Float32Array(0);
+        /**
+         * 16: x, y, z, colorR, colorG, colorB, distance, decay, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY, shadowCameraNear, shadowCameraFar,
+         * @internal
+         */
+        public pointLightBuffer: Float32Array = new Float32Array(0);
+        /**
+         * @internal
+         */
+        public hemisphereLightBuffer: Float32Array = new Float32Array(0);
 
         public lightShadowCameraNear: number = 0.0;
         public lightShadowCameraFar: number = 0.0;
@@ -48,8 +63,8 @@ namespace egret3d {
 
         private readonly _postProcessingCamera: Camera = null!;
         private readonly _postProcessDrawCall: DrawCall = DrawCall.create();
-
         private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
+        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(CameraAndLightCollecter)!;
         /**
          * 此帧的非透明绘制信息列表。
          * - 已进行视锥剔除的。
@@ -138,10 +153,8 @@ namespace egret3d {
                 return materialA.renderQueue - materialB.renderQueue;
             }
         }
-        /**
-         * @internal
-         */
-        public _shadowFrustumCulling() {
+
+        private _shadowFrustumCulling() {
             const camera = this.camera;
             const cameraFrustum = camera.frustum;
             const shadowDrawCalls = this.shadowCalls;
@@ -160,10 +173,8 @@ namespace egret3d {
 
             shadowDrawCalls.sort(this._sortFromFarToNear);
         }
-        /**
-         * @internal
-         */
-        public _frustumCulling() {
+
+        private _frustumCulling() {
             const camera = this.camera;
             const cameraPosition = camera.gameObject.transform.position;
             const cameraFrustum = camera.frustum;
@@ -194,229 +205,179 @@ namespace egret3d {
             opaqueCalls.sort(this._sortOpaque);
             transparentCalls.sort(this._sortFromFarToNear);
         }
-        /**
-         * @internal
-         */
-        public _update() {
-            this._frustumCulling();
 
-            this.logDepthBufFC = 2.0 / (Math.log(this.camera.far + 1.0) / Math.LN2);
-        }
-        /**
-         * @internal
-         */
-        public updateLights(lights: ReadonlyArray<BaseLight>) {
-            let directLightCount = 0, pointLightCount = 0, spotLightCount = 0;
-            this.lightCastShadows = false;
-            for (const light of lights) { // TODO 如何 灯光组件关闭，此处有何影响。
-                if (light instanceof DirectionalLight) {
-                    directLightCount++;
-                }
-                else if (light instanceof PointLight) {
-                    pointLightCount++;
-                }
-                else if (light instanceof SpotLight) {
-                    spotLightCount++;
-                }
+        private _updateLights() {
+            const { directionalLights, spotLights, rectangleAreaLights, pointLights, hemisphereLights } = this._cameraAndLightCollecter;
+            const directLightCount = directionalLights.length;
+            const spotLightCount = spotLights.length;
+            const rectangleAreaLightCount = rectangleAreaLights.length;
+            const pointLightCount = pointLights.length;
+            const hemisphereLightCount = hemisphereLights.length;
+
+            if (this.directLightBuffer.length !== directLightCount * LightSize.Directional) {
+                this.directLightBuffer = new Float32Array(directLightCount * LightSize.Directional);
             }
 
-            // TODO
-            if (this.directLightArray.length !== directLightCount * LightSize.Directional) {
-                this.directLightArray = new Float32Array(directLightCount * LightSize.Directional);
+            if (this.spotLightBuffer.length !== spotLightCount * LightSize.Spot) {
+                this.spotLightBuffer = new Float32Array(spotLightCount * LightSize.Spot);
             }
 
-            if (this.pointLightArray.length !== pointLightCount * LightSize.Point) {
-                this.pointLightArray = new Float32Array(pointLightCount * LightSize.Point);
+            if (this.rectangleAreaLightBuffer.length !== rectangleAreaLightCount * LightSize.RectangleArea) {
+                this.rectangleAreaLightBuffer = new Float32Array(rectangleAreaLightCount * LightSize.RectangleArea);
             }
 
-            if (this.spotLightArray.length !== spotLightCount * LightSize.Spot) {
-                this.spotLightArray = new Float32Array(spotLightCount * LightSize.Spot);
+            if (this.pointLightBuffer.length !== pointLightCount * LightSize.Point) {
+                this.pointLightBuffer = new Float32Array(pointLightCount * LightSize.Point);
             }
 
-            if (this.directShadowMatrix.length !== directLightCount * 16) {
-                this.directShadowMatrix = new Float32Array(directLightCount * 16);
+            if (this.hemisphereLightBuffer.length !== hemisphereLightCount * LightSize.Hemisphere) {
+                this.hemisphereLightBuffer = new Float32Array(hemisphereLightCount * LightSize.Hemisphere);
             }
 
-            if (this.pointShadowMatrix.length !== pointLightCount * 16) {
-                this.pointShadowMatrix = new Float32Array(pointLightCount * 16);
-            }
+            const { directLightBuffer, spotLightBuffer, rectangleAreaLightBuffer, pointLightBuffer, hemisphereLightBuffer } = this;
 
-            if (this.spotShadowMatrix.length !== spotLightCount * 16) {
-                this.spotShadowMatrix = new Float32Array(spotLightCount * 16);
-            }
+            // if (this.directShadowMatrix.length !== directLightCount * 16) {
+            //     this.directShadowMatrix = new Float32Array(directLightCount * 16);
+            // }
 
-            this.directShadowMaps.length = directLightCount;
-            this.pointShadowMaps.length = pointLightCount;
-            this.spotShadowMaps.length = spotLightCount;
+            // if (this.pointShadowMatrix.length !== pointLightCount * 16) {
+            //     this.pointShadowMatrix = new Float32Array(pointLightCount * 16);
+            // }
 
-            let directLightIndex = 0, pointLightIndex = 0, spotLightIndex = 0, index = 0;
-            let lightArray = this.directLightArray;
+            // if (this.spotShadowMatrix.length !== spotLightCount * 16) {
+            //     this.spotShadowMatrix = new Float32Array(spotLightCount * 16);
+            // }
+
+            // this.directShadowMaps.length = directLightCount;
+            // this.pointShadowMaps.length = pointLightCount;
+            // this.spotShadowMaps.length = spotLightCount;
+
+            let index = 0, offset = 0;
+            const helpVector3 = _helpVector3;
             const worldToCameraMatrix = this.camera.worldToCameraMatrix;
 
-            for (const light of lights) {
-                switch (light.constructor) {
-                    case DirectionalLight: {
-                        light.gameObject.transform.getForward(_helpVector3);
-                        _helpVector3.applyDirection(worldToCameraMatrix);
-
-                        lightArray = this.directLightArray;
-                        index = directLightIndex * LightSize.Directional;
-                        // lightArray[index++] = dirHelper.x; // Right-hand.
-                        // lightArray[index++] = dirHelper.y;
-                        // lightArray[index++] = dirHelper.z;
-
-                        lightArray[index++] = -_helpVector3.x; // Left-hand.
-                        lightArray[index++] = -_helpVector3.y;
-                        lightArray[index++] = -_helpVector3.z;
-
-                        lightArray[index++] = light.color.r * light.intensity;
-                        lightArray[index++] = light.color.g * light.intensity;
-                        lightArray[index++] = light.color.b * light.intensity;
-                        break;
-                    }
-
-                    case PointLight: {
-                        const position = light.gameObject.transform.position.clone().release();
-                        position.applyMatrix(worldToCameraMatrix);
-                        lightArray = this.pointLightArray;
-                        index = pointLightIndex * LightSize.Point;
-
-                        lightArray[index++] = position.x;
-                        lightArray[index++] = position.y;
-                        lightArray[index++] = position.z;
-
-                        lightArray[index++] = light.color.r * light.intensity;
-                        lightArray[index++] = light.color.g * light.intensity;
-                        lightArray[index++] = light.color.b * light.intensity;
-
-                        const distance = (light as PointLight).distance;
-                        lightArray[index++] = distance;
-                        lightArray[index++] = distance === 0 ? 0 : (light as PointLight).decay;
-                        break;
-                    }
-
-                    case SpotLight: {
-                        const position = light.gameObject.transform.position.clone().release();
-                        position.applyMatrix(worldToCameraMatrix);
-                        light.gameObject.transform.getForward(_helpVector3);
-                        _helpVector3.applyDirection(worldToCameraMatrix);
-
-                        lightArray = this.spotLightArray;
-                        index = spotLightIndex * LightSize.Spot;
-
-                        lightArray[index++] = position.x;
-                        lightArray[index++] = position.y;
-                        lightArray[index++] = position.z;
-
-                        // lightArray[index++] = dirHelper.x; // Right-hand.
-                        // lightArray[index++] = dirHelper.y;
-                        // lightArray[index++] = dirHelper.z;
-
-                        lightArray[index++] = -_helpVector3.x; // Left-hand.
-                        lightArray[index++] = -_helpVector3.y;
-                        lightArray[index++] = -_helpVector3.z;
-
-                        lightArray[index++] = light.color.r * light.intensity;
-                        lightArray[index++] = light.color.g * light.intensity;
-                        lightArray[index++] = light.color.b * light.intensity;
-
-                        const distance = (light as SpotLight).distance;
-                        lightArray[index++] = distance;
-                        lightArray[index++] = distance === 0 ? 0 : (light as SpotLight).decay;
-                        lightArray[index++] = Math.cos((light as SpotLight).angle);
-                        lightArray[index++] = Math.cos((light as SpotLight).angle * (1 - (light as SpotLight).penumbra));
-                        break;
-                    }
-                }
-
+            for (const light of directionalLights) {
+                const intensity = light.intensity;
+                const color = light.color;
+                offset = (index++) * LightSize.Directional;
+                //
+                light.gameObject.transform.getForward(helpVector3).applyDirection(worldToCameraMatrix);
+                directLightBuffer[offset++] = -helpVector3.x; // Left-hand.
+                directLightBuffer[offset++] = -helpVector3.y;
+                directLightBuffer[offset++] = -helpVector3.z;
+                //
+                directLightBuffer[offset++] = color.r * intensity;
+                directLightBuffer[offset++] = color.g * intensity;
+                directLightBuffer[offset++] = color.b * intensity;
+                //
                 if (light.castShadows) {
-                    // lightArray[index++] = 1;
-                    // lightArray[index++] = -light.shadowBias; // Left-hand.
-                    // lightArray[index++] = light.shadowRadius;
-                    // lightArray[index++] = light.shadowSize;
-                    // lightArray[index++] = light.shadowSize;
-
-                    // switch (light.constructor) {
-                    //     case DirectionalLight:
-                    //         this.directShadowMatrix.set(light.shadowMatrix.rawData, directLightIndex * 16);
-                    //         this.directShadowMaps[directLightIndex++] = light.renderTarget.texture;
-                    //         break;
-
-                    //     case PointLight:
-                    //         lightArray[index++] = light.shadowCameraNear;
-                    //         lightArray[index++] = light.shadowCameraFar;
-                    //         this.pointShadowMatrix.set(light.shadowMatrix.rawData, pointLightIndex * 16);
-                    //         this.pointShadowMaps[pointLightIndex++] = light.renderTarget.texture;
-                    //         break;
-
-                    //     case SpotLight:
-                    //         this.spotShadowMatrix.set(light.shadowMatrix.rawData, spotLightIndex * 16);
-                    //         this.spotShadowMaps[spotLightIndex++] = light.renderTarget.texture;
-                    //         break;
-                    // }
-
-                    this.lightCastShadows = true;
+                    // directLightBuffer[offset++] = 1;
+                    // TODO shadow
                 }
                 else {
-                    lightArray[index++] = 0;
-                    lightArray[index++] = 0;
-                    lightArray[index++] = 0;
-                    lightArray[index++] = 0;
-
-                    switch (light.constructor) {
-                        case DirectionalLight:
-                            this.directShadowMaps[directLightIndex++] = null;
-                            break;
-
-                        case PointLight:
-                            lightArray[index++] = 0;
-                            lightArray[index++] = 0;
-                            this.pointShadowMaps[pointLightIndex++] = null;
-                            break;
-
-                        case SpotLight:
-                            this.spotShadowMaps[spotLightIndex++] = null;
-                            break;
-                    }
+                    directLightBuffer[offset++] = 0;
                 }
             }
 
-            const defines = this.defines;
-
-            if (directLightCount !== this.directLightCount) {
-                if (this.directLightCount > 0) {
-                    defines.removeDefine(ShaderDefine.NUM_DIR_LIGHTS, this.directLightCount);
+            index = 0;
+            for (const light of spotLights) {
+                const intensity = light.intensity;
+                const distance = light.distance;
+                const color = light.color;
+                offset = (index++) * LightSize.Spot;
+                //
+                helpVector3.applyMatrix(worldToCameraMatrix, light.gameObject.transform.position);
+                spotLightBuffer[offset++] = helpVector3.x;
+                spotLightBuffer[offset++] = helpVector3.y;
+                spotLightBuffer[offset++] = helpVector3.z;
+                //
+                light.gameObject.transform.getForward(helpVector3).applyDirection(worldToCameraMatrix);
+                spotLightBuffer[offset++] = -helpVector3.x; // Left-hand.
+                spotLightBuffer[offset++] = -helpVector3.y;
+                spotLightBuffer[offset++] = -helpVector3.z;
+                //
+                spotLightBuffer[offset++] = color.r * intensity;
+                spotLightBuffer[offset++] = color.g * intensity;
+                spotLightBuffer[offset++] = color.b * intensity;
+                //
+                spotLightBuffer[offset++] = distance;
+                spotLightBuffer[offset++] = distance === 0 ? 0 : light.decay;
+                spotLightBuffer[offset++] = Math.cos(light.angle);
+                spotLightBuffer[offset++] = Math.cos(light.angle * (1.0 - light.penumbra));
+                //
+                if (light.castShadows) {
+                    // spotLightBuffer[offset++] = 1;
+                    // TODO shadow
                 }
-
-                if (directLightCount > 0) {
-                    defines.addDefine(ShaderDefine.NUM_DIR_LIGHTS, directLightCount);
+                else {
+                    spotLightBuffer[offset++] = 0;
                 }
-
-                this.directLightCount = directLightCount;
             }
 
-            if (pointLightCount !== this.pointLightCount) {
-                if (this.pointLightCount > 0) {
-                    defines.removeDefine(ShaderDefine.NUM_POINT_LIGHTS, this.pointLightCount);
-                }
-
-                if (pointLightCount > 0) {
-                    defines.addDefine(ShaderDefine.NUM_POINT_LIGHTS, pointLightCount);
-                }
-
-                this.pointLightCount = pointLightCount;
+            index = 0;
+            for (const light of rectangleAreaLights) {
+                const intensity = light.intensity;
+                const color = light.color;
+                offset = (index++) * LightSize.RectangleArea;
+                //
+                helpVector3.applyMatrix(worldToCameraMatrix, light.gameObject.transform.position);
+                spotLightBuffer[offset++] = helpVector3.x;
+                spotLightBuffer[offset++] = helpVector3.y;
+                spotLightBuffer[offset++] = helpVector3.z;
+                //
+                spotLightBuffer[offset++] = color.r * intensity;
+                spotLightBuffer[offset++] = color.g * intensity;
+                spotLightBuffer[offset++] = color.b * intensity;
+                // TODO
             }
 
-            if (spotLightCount !== this.spotLightCount) {
-                if (this.spotLightCount > 0) {
-                    defines.removeDefine(ShaderDefine.NUM_SPOT_LIGHTS, this.spotLightCount);
+            index = 0;
+            for (const light of pointLights) {
+                const intensity = light.intensity;
+                const distance = light.distance;
+                const color = light.color;
+                offset = (index++) * LightSize.Point;
+                //
+                helpVector3.applyMatrix(worldToCameraMatrix, light.gameObject.transform.position);
+                pointLightBuffer[offset++] = helpVector3.x;
+                pointLightBuffer[offset++] = helpVector3.y;
+                pointLightBuffer[offset++] = helpVector3.z;
+                //
+                pointLightBuffer[offset++] = color.r * intensity;
+                pointLightBuffer[offset++] = color.g * intensity;
+                pointLightBuffer[offset++] = color.b * intensity;
+                //
+                pointLightBuffer[offset++] = distance;
+                pointLightBuffer[offset++] = distance === 0.0 ? 0.0 : light.decay;
+                //
+                if (light.castShadows) {
+                    // pointLightBuffer[offset++] = 1;
+                    // TODO shadow
                 }
-
-                if (spotLightCount > 0) {
-                    defines.addDefine(ShaderDefine.NUM_SPOT_LIGHTS, spotLightCount);
+                else {
+                    pointLightBuffer[offset++] = 0;
                 }
+            }
 
-                this.spotLightCount = spotLightCount;
+            index = 0;
+            for (const light of hemisphereLights) {
+                const intensity = light.intensity;
+                const color = light.color;
+                const groundColor = light.groundColor;
+                offset = (index++) * LightSize.Hemisphere;
+                //
+                light.gameObject.transform.getForward(helpVector3).applyDirection(worldToCameraMatrix);
+                hemisphereLightBuffer[offset++] = -helpVector3.x; // Left-hand.
+                hemisphereLightBuffer[offset++] = -helpVector3.y;
+                hemisphereLightBuffer[offset++] = -helpVector3.z;
+                //
+                hemisphereLightBuffer[offset++] = color.r * intensity;
+                hemisphereLightBuffer[offset++] = color.g * intensity;
+                hemisphereLightBuffer[offset++] = color.b * intensity;
+                //
+                hemisphereLightBuffer[offset++] = groundColor.r * intensity;
+                hemisphereLightBuffer[offset++] = groundColor.g * intensity;
+                hemisphereLightBuffer[offset++] = groundColor.b * intensity;
             }
         }
 
@@ -430,6 +391,14 @@ namespace egret3d {
         //     this.lightShadowCameraNear = light.shadowCameraNear;
         //     this.lightShadowCameraFar = light.shadowCameraFar;
         // }
+        /**
+         * @internal
+         */
+        public _update() {
+            this.logDepthBufFC = 2.0 / (Math.log(this.camera.far + 1.0) / Math.LN2);
+            this._frustumCulling();
+            this._updateLights();
+        }
 
         public blit(src: BaseTexture, material: Material | null = null, dest: RenderTexture | null = null) {
             if (!material) {

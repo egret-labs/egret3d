@@ -21,7 +21,7 @@ float clearCoatDHRApprox( const in float roughness, const in float dotNL ) {
 
 }
 
-#if defined(NUM_RECT_AREA_LIGHTS) && NUM_RECT_AREA_LIGHTS > 0
+#if NUM_RECT_AREA_LIGHTS > 0
 
 	void RE_Direct_RectArea_Physical( const in RectAreaLight rectAreaLight, const in GeometricContext geometry, const in PhysicalMaterial material, inout ReflectedLight reflectedLight ) {
 

@@ -6,54 +6,14 @@ async function main() {
 
 namespace examples {
 
-    export abstract class BaseExample {
-        abstract async start(): Promise<void>;
-
-        public async addBackground(): Promise<void> {
-            // Create camera.
-            egret3d.Camera.main;
-
-            { // Create light.
-                const gameObject = paper.GameObject.create("Light");
-                gameObject.transform.setLocalPosition(1.0, 20.0, -1.0);
-                gameObject.transform.lookAt(egret3d.Vector3.ZERO);
-
-                const light = gameObject.addComponent(egret3d.PointLight);
-                light.intensity = 1.0;
-            }
-
-            const textureA = await RES.getResAsync("textures/grid_a.png") as egret3d.Texture;
-            const textureB = await RES.getResAsync("textures/grid_b.png") as egret3d.Texture;
-
-            textureA.gltfTexture.extensions.paper.anisotropy = 8;
-            textureB.gltfTexture.extensions.paper.anisotropy = 8;
-
-            const mesh = egret3d.MeshBuilder.createCube(
-                40.0, 40.0, 40.0, 0.0, 20.0, 0.0, 40, 40, 40,
-                false, true
-            );
-
-            const gameObject = egret3d.DefaultMeshes.createObject(mesh, "Background");
-            gameObject.renderer!.materials = [
-                egret3d.DefaultMaterials.MESH_LAMBERT.clone()
-                    .setTexture(textureA)
-                    .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Front)
-                    .setUVTransform(egret3d.Matrix3.create().fromUVTransform(0.0, 0.0, 20, 20, 0.0, 0.0, 0.0).release())
-                ,
-                egret3d.DefaultMaterials.MESH_LAMBERT.clone()
-                    .setTexture(textureB)
-                    .setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent)
-                    .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Front)
-                ,
-            ];
-            gameObject.hideFlags = paper.HideFlags.NotTouchable;
-        }
+    export interface Example {
+        start(): Promise<void>;
     }
 }
 
 function exampleStart() {
     const exampleString = getCurrentExampleString();
-    let exampleClass: { new(): examples.BaseExample };
+    let exampleClass: { new(): examples.Example };
 
     if (exampleString.indexOf(".") > 0) { // Package
         const params = exampleString.split(".");
@@ -65,7 +25,7 @@ function exampleStart() {
 
     createGUI(exampleString);
 
-    const exampleObj: examples.BaseExample = new exampleClass();
+    const exampleObj: examples.Example = new exampleClass();
     exampleObj.start();
 
     function createGUI(exampleString: string) {
@@ -76,10 +36,13 @@ function exampleStart() {
             const element = namespaceExamples[k];
             if (element.constructor === Object) { // Package
                 for (const kB in element) {
-                    examples.push([k, kB].join("."));
+                    const childElement = element[kB];
+                    if (childElement.prototype && childElement.prototype.hasOwnProperty("start")) {
+                        examples.push([k, kB].join("."));
+                    }
                 }
             }
-            else {
+            else if (element.prototype && element.prototype.hasOwnProperty("start")) {
                 examples.push(k);
             }
         }
@@ -98,22 +61,26 @@ function exampleStart() {
     function getNewUrl(exampleString: string[] | string) {
         let url = location.href;
         const index = url.indexOf("?");
+
         if (index !== -1) {
             url = url.slice(0, index);
         }
+
         if (url.indexOf(".html") === -1) {
             url += "index.html";
         }
+
         url += "?example=" + exampleString;
+
         return url;
     }
 
     function getCurrentExampleString() {
         let appFile = "Test";
-
         let str = location.search;
         str = str.slice(1, str.length);
         const totalArray = str.split("&");
+
         for (let i = 0; i < totalArray.length; i++) {
             const itemArray = totalArray[i].split("=");
             if (itemArray.length === 2) {

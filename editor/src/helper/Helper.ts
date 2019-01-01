@@ -11,13 +11,5 @@ namespace paper.editor {
 
             return raycastInfos;
         }
-
-        public static raycast(raycastAble: egret3d.IRaycast, mousePositionX: number, mousePositionY: number) {
-            const camera = egret3d.Camera.editor;
-            const ray = camera.createRayByScreen(mousePositionX, mousePositionY);
-            const raycastInfo = egret3d.RaycastInfo.create();
-
-            return raycastAble.raycast(ray, raycastInfo) ? raycastInfo : null;
-        }
     }
 }

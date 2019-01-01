@@ -2,7 +2,9 @@
 
 	attribute vec2 uv2;
 	varying vec2 vUv2;
-	#ifdef USE_LIGHTMAP//Egret	
+	
+ 	// modified by egret
+	#ifdef USE_LIGHTMAP
 		uniform vec4 lightMapScaleOffset;
 	#endif
 

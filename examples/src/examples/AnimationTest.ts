@@ -1,6 +1,6 @@
 namespace examples {
 
-    export class AnimationTest extends BaseExample {
+    export class AnimationTest implements Example {
         async start() {
             // Load resource config.
             await RES.loadConfig("default.res.json", "resource/");

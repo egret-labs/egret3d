@@ -131,21 +131,24 @@ namespace paper.editor {
         }
 
         private _updateLights() {
-            for (const light of this._cameraAndLightCollecter.lights) {
-                if (light.gameObject.scene === Scene.editorScene) {
-                    continue;
-                }
+            const { directionalLights, spotLights, pointLights, hemisphereLights } = this._cameraAndLightCollecter;
+            for (const lights of [directionalLights, spotLights, pointLights, hemisphereLights]) {
+                for (const light of lights) {
+                    if (light.gameObject.scene === Scene.editorScene) {
+                        continue;
+                    }
 
-                let icon = light.gameObject.transform.find("__pickTarget") as egret3d.Transform;
-                if (!icon) {
-                    icon = EditorMeshHelper.createIcon("__pickTarget", light.gameObject, EditorDefaultTexture.LIGHT_ICON).transform;
-                    icon.gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
-                }
+                    let icon = light.gameObject.transform.find("__pickTarget") as egret3d.Transform;
+                    if (!icon) {
+                        icon = EditorMeshHelper.createIcon("__pickTarget", light.gameObject, EditorDefaultTexture.LIGHT_ICON).transform;
+                        icon.gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
+                    }
 
-                const cameraPosition = egret3d.Camera.editor.gameObject.transform.position;
-                const eyeDistance = cameraPosition.getDistance(light.gameObject.transform.position);
-                icon.gameObject.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
-                icon.gameObject.transform.rotation = egret3d.Camera.editor.gameObject.transform.rotation;
+                    const cameraPosition = egret3d.Camera.editor.gameObject.transform.position;
+                    const eyeDistance = cameraPosition.getDistance(light.gameObject.transform.position);
+                    icon.gameObject.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
+                    icon.gameObject.transform.rotation = egret3d.Camera.editor.gameObject.transform.rotation;
+                }
             }
         }
 
@@ -208,15 +211,18 @@ namespace paper.editor {
                     icon.gameObject.destroy();
                 }
             }
+            //
+            const { directionalLights, spotLights, pointLights, hemisphereLights } = this._cameraAndLightCollecter;
+            for (const lights of [directionalLights, spotLights, pointLights, hemisphereLights]) {
+                for (const light of lights) {
+                    if (light.gameObject.scene === Scene.editorScene) {
+                        continue;
+                    }
 
-            for (const light of this._cameraAndLightCollecter.lights) {
-                if (light.gameObject.scene === Scene.editorScene) {
-                    continue;
-                }
-
-                const icon = light.gameObject.transform.find("__pickTarget");
-                if (icon) {
-                    icon.gameObject.destroy();
+                    const icon = light.gameObject.transform.find("__pickTarget");
+                    if (icon) {
+                        icon.gameObject.destroy();
+                    }
                 }
             }
 

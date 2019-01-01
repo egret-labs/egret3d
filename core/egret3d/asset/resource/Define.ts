@@ -9,7 +9,6 @@ namespace egret3d {
 
         if (!define) {
             define = defines[defineString] = new Define(_index, _mask, defineString);
-
             _mask >>>= 1;
 
             if (_mask === 0) {
@@ -31,6 +30,14 @@ namespace egret3d {
      */
     export class Define {
         /**
+         * @internal
+         */
+        public isDefine: boolean = true;
+        /**
+         * @internal
+         */
+        public type: DefineLocation = DefineLocation.All;
+        /**
          * 掩码索引。
          */
         public readonly index: uint;
@@ -42,12 +49,7 @@ namespace egret3d {
          * 内容。
          */
         public readonly context: string;
-        /**
-         * @internal
-         */
-        public isDefine: boolean = true;
 
-        public type: DefineLocation = DefineLocation.All;
         public constructor(index: uint, mask: uint, context: string) {
             this.index = index;
             this.mask = mask;
@@ -158,7 +160,9 @@ namespace egret3d {
 
             return null;
         }
-        
+        /**
+         * 
+         */
         public get vertexDefinesString(): string {
             let definesString = "";
 
@@ -175,7 +179,9 @@ namespace egret3d {
 
             return definesString;
         }
-
+        /**
+         * 
+         */
         public get fragmentDefinesString(): string {
             let definesString = "";
 

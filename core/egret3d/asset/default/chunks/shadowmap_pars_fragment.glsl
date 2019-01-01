@@ -1,20 +1,20 @@
 #ifdef USE_SHADOWMAP
 
-	#if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0//Egret
+	#if NUM_DIR_LIGHTS > 0
 
 		uniform sampler2D directionalShadowMap[ NUM_DIR_LIGHTS ];
 		varying vec4 vDirectionalShadowCoord[ NUM_DIR_LIGHTS ];
 
 	#endif
 
-	#if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0//Egret
+	#if NUM_SPOT_LIGHTS > 0
 
 		uniform sampler2D spotShadowMap[ NUM_SPOT_LIGHTS ];
 		varying vec4 vSpotShadowCoord[ NUM_SPOT_LIGHTS ];
 
 	#endif
 
-	#if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0//Egret
+	#if NUM_POINT_LIGHTS > 0
 
 		uniform sampler2D pointShadowMap[ NUM_POINT_LIGHTS ];
 		varying vec4 vPointShadowCoord[ NUM_POINT_LIGHTS ];
@@ -62,7 +62,7 @@
 		float shadow = 1.0;
 
 		shadowCoord.xyz /= shadowCoord.w;
-		shadowCoord.z += shadowBias;//Egret Right-hand
+		shadowCoord.z += shadowBias; // modified by egret
 
 		// if ( something && something ) breaks ATI OpenGL shader compiler
 		// if ( all( something, something ) ) using this instead

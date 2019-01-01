@@ -1,6 +1,6 @@
 namespace examples {
 
-    export class Test extends BaseExample {
+    export class Test implements Example {
 
         async start() {
             // Load resource config.

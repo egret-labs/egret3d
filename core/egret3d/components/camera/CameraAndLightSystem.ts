@@ -8,7 +8,7 @@ namespace egret3d {
                 { componentClass: Camera }
             ],
             [
-                { componentClass: [DirectionalLight, PointLight, SpotLight] }
+                { componentClass: [DirectionalLight, PointLight, SpotLight, HemisphereLight] }
             ]
         ];
 
@@ -46,21 +46,17 @@ namespace egret3d {
 
         public onUpdate() {
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
-            const { cameras, lights } = cameraAndLightCollecter;
+            const { cameras } = cameraAndLightCollecter;
 
             this._drawCallCollecter._update();
 
             if (cameras.length > 0) {
                 cameraAndLightCollecter.sortCameras();
             }
-
-            if (lights.length > 0) {
-                cameraAndLightCollecter.lightDirty = true;
-            }
         }
 
         public onLateUpdate() {
-            this._cameraAndLightCollecter.lightDirty = false;
+            this._cameraAndLightCollecter.lightCountDirty = LightCountDirty.None;
         }
     }
 }

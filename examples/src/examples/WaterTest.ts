@@ -1,6 +1,6 @@
 namespace examples {
 
-    export class WaterTest extends BaseExample {
+    export class WaterTest implements Example {
 
         async start() {
             // Load resource config.
@@ -10,7 +10,7 @@ namespace examples {
             await RES.getResAsync("textures/water/water_smallwave01_generic_n.image.json");
             await RES.getResAsync("shaders/water/water.shader.json");
             // Create camera.
-            const camera = egret3d.Camera.main; 
+            const camera = egret3d.Camera.main;
 
             const waterImg = RES.getRes("textures/water/water_surface03_generic_ab.image.json");
             const waterNormal = RES.getRes("textures/water/water_smallwave01_generic_n.image.json");

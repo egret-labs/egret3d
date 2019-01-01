@@ -12,7 +12,7 @@ namespace examples {
                 gameObject.transform.lookAt(egret3d.Vector3.ZERO);
 
                 const light = gameObject.addComponent(egret3d.DirectionalLight);
-                light.intensity = 0.5;
+                light.intensity = 1.0;
             }
 
             const gameObject = paper.GameObject.create();
@@ -44,7 +44,7 @@ namespace examples {
             });
             gui.add(options, "texture").onChange(async (v: boolean) => {
                 if (v) {
-                    meshRenderer.material!.setTexture(await RES.getResAsync("textures/UV_Grid_Sm.jpg"));
+                    meshRenderer.material!.setTexture(await RES.getResAsync("threejs/textures/UV_Grid_Sm.jpg"));
                 }
                 else {
                     meshRenderer.material!.setTexture(null);

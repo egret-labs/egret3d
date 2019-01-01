@@ -182,13 +182,12 @@ export function checkValid(asset: gltf.GLTFEgret) {
     return true;
 }
 
-export function parseShader(file: string) {
-    const buffer = fs.readFileSync(file);
-    const result = buffer.toString()
-        .replace(/\r\n/g, '\n') // for windows
-        .replace(/\n/g, '\n') // for windows
-        .replace(/\r/g, '\n') // for windows
-        .replace(/\t/g, ' '); // for windows;
+export function transformGLSLCode(code: string) {
+    const transformedCode = code
+        .replace(/\r/g, '\n') // \r to \n
+        .replace(/[ \t]*\/\/.*\n/g, '\n') // remove //
+        .replace(/[ \t]*\/\*[\s\S]*?\*\//g, '\n') // remove /* */
+        .replace(/\n{2,}/g, '\n'); // \n+ to \n
 
-    return result;
+    return transformedCode;
 }

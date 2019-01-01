@@ -51,12 +51,12 @@ function filterFileList(folderPath, filter, maxDepth, currentDepth) {
 }
 exports.filterFileList = filterFileList;
 function parseIncludes(string, shaderChunks) {
-    var pattern = /#include +<([\w\d.]+)>/g;
+    var pattern = /^[ \t]*#include +<([\w\d./]+)>/gm;
     //
     function replace(_match, include) {
         var replace = shaderChunks[include];
         if (replace === undefined) {
-            console.warn('Can not resolve #include <' + include + '>');
+            // console.warn('Can not resolve #include <' + include + '>');
             return "";
             // throw new Error('Can not resolve #include <' + include + '>');
         }
@@ -95,7 +95,7 @@ function parseUniformType(string, name) {
             return shaderConfig.UNIFORM_TYPE_MAP[key];
         }
     }
-    console.log("   不支持的Uniform类型:" + name);
+    // console.log("   不支持的Uniform类型:" + name);
     return -1 /* STRUCT */;
 }
 exports.parseUniformType = parseUniformType;
@@ -143,7 +143,7 @@ function parseUniform(string, name) {
         }
     }
     else {
-        console.log("   没有设置默认值:" + name);
+        // console.log("   没有设置默认值:" + name);
         // uniform.value = [];
     }
     uniform.type = parseUniformType(string, name);
@@ -177,11 +177,12 @@ function checkValid(asset) {
 exports.checkValid = checkValid;
 function parseShader(file) {
     var buffer = fs.readFileSync(file);
-    var result = buffer.toString()
-        .replace(/\r\n/g, '\n') // for windows
-        .replace(/\n/g, '\n') // for windows
-        .replace(/\r/g, '\n') // for windows
-        .replace(/\t/g, ' '); // for windows;
-    return result;
+    var transformedCode = buffer.toString()
+        .replace(/\r/g, '\n') // \r to \n
+        .replace(/[ \t]*\/\/.*\n/g, '\n') // remove //
+        .replace(/[ \t]*\/\*[\s\S]*?\*\//g, '\n') // remove /* */
+        .replace(/\n{2,}/g, '\n') // \n+ to \n;
+
+    return transformedCode;
 }
 exports.parseShader = parseShader;

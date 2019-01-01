@@ -19,7 +19,10 @@ namespace egret3d {
         //
         NUM_DIR_LIGHTS = "NUM_DIR_LIGHTS",
         NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
+        NUM_RECT_AREA_LIGHTS = "NUM_RECT_AREA_LIGHTS",
         NUM_SPOT_LIGHTS = "NUM_SPOT_LIGHTS",
+        NUM_HEMI_LIGHTS = "NUM_HEMI_LIGHTS",
+        //
         SHADOWMAP_TYPE_PCF = "SHADOWMAP_TYPE_PCF",
         SHADOWMAP_TYPE_PCF_SOFT = "SHADOWMAP_TYPE_PCF_SOFT",
         DEPTH_PACKING_3200 = "DEPTH_PACKING 3200",
@@ -38,6 +41,8 @@ namespace egret3d {
         Opacity = "opacity",
         Size = "size",
         Map = "map",
+        BumpMap = "bumpMap",
+        RoughnessMap = "roughnessMap",
         EnvMap = "envMap",
         EmissiveMap = "emissiveMap",
         Specular = "specular",

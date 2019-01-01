@@ -63,6 +63,15 @@ var ColletEngineShaderCommand = /** @class */ (function () {
     };
     return ColletEngineShaderCommand;
 }());
+function transformGLSL(code){
+    var transformedCode = code
+        .replace(/\r/g, '\n') // \r to \n
+        .replace(/[ \t]*\/\/.*\n/g, '\n') // remove //
+        .replace(/[ \t]*\/\*[\s\S]*?\*\//g, '\n') // remove /* */
+        .replace(/\n{2,}/g, '\n') // \n+ to \n;
+
+    return transformedCode;
+}
 exports.ColletEngineShaderCommand = ColletEngineShaderCommand;
 var LoadCommonShaderCommand = /** @class */ (function () {
     function LoadCommonShaderCommand(commonDir) {
@@ -87,9 +96,9 @@ var LoadCommonShaderCommand = /** @class */ (function () {
             console.warn("缺少: common_frag_def.glsl");
         }
         //
-        shaderContext.shaderChunks["common"] = fs.readFileSync(commonFile, "utf-8");
-        shaderContext.shaderChunks["common_vert_def"] = fs.readFileSync(commonVertDefFile, "utf-8");
-        shaderContext.shaderChunks["common_frag_def"] = fs.readFileSync(commonFragDefFile, "utf-8");
+        shaderContext.shaderChunks["common"] = transformGLSL(fs.readFileSync(commonFile, "utf-8"));
+        shaderContext.shaderChunks["common_vert_def"] = transformGLSL(fs.readFileSync(commonVertDefFile, "utf-8"));
+        shaderContext.shaderChunks["common_frag_def"] = transformGLSL(fs.readFileSync(commonFragDefFile, "utf-8"));
     };
     return LoadCommonShaderCommand;
 }());
@@ -102,7 +111,7 @@ var ParseShaderCommand = /** @class */ (function () {
             var file = _a[_i];
             var fileName = path.basename(file);
             var chunkName = fileName.substring(0, fileName.indexOf("."));
-            shaderContext.shaderChunks[chunkName] = fs.readFileSync(file, "utf-8");
+            shaderContext.shaderChunks[chunkName] = transformGLSL(fs.readFileSync(file, "utf-8"));
         }
         for (var _b = 0, _c = shaderContext.libFiles; _b < _c.length; _b++) {
             var file = _c[_b];
@@ -110,7 +119,7 @@ var ParseShaderCommand = /** @class */ (function () {
             var dirName = path.dirname(file);
             var shaderName = fileName.substring(0, fileName.lastIndexOf("_"));
             var type = fileName.indexOf("frag") >= 0 ? 35632 /* FRAGMENT_SHADER */ : 35633 /* VERTEX_SHADER */;
-            var context = fs.readFileSync(file, "utf-8");
+            var context = transformGLSL(fs.readFileSync(file, "utf-8"));
             shaderContext.shaderLibs[fileName] = { fileName: fileName, context: context, type: type };
             if (!(shaderName in shaderContext.shaders)) {
                 shaderContext.shaders[shaderName] = { vert: "", frag: "", dir: dirName };

@@ -1,5 +1,6 @@
 namespace examples.materials {
-    export class MaterialsTest extends BaseExample {
+
+    export class MaterialsTest implements Example {
         async start() {
             // Load resource config.
             await RES.loadConfig("default.res.json", "resource/");

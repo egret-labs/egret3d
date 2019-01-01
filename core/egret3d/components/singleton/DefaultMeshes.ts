@@ -6,6 +6,11 @@ namespace egret3d {
         public static TRIANGLE: Mesh;
         public static QUAD: Mesh;
         public static QUAD_PARTICLE: Mesh;
+        /**
+         * 后期渲染使用的网格。
+         * @internal
+         */
+        public static FULLSCREEN_QUAD: Mesh;
         public static PLANE: Mesh;
         public static CUBE: Mesh;
         public static PYRAMID: Mesh;
@@ -19,11 +24,6 @@ namespace egret3d {
         public static LINE_Z: Mesh;
         public static CIRCLE_LINE: Mesh;
         public static CUBE_LINE: Mesh;
-
-        /**
-         * 后期渲染使用的网格。
-         */
-        public static FULLSCREEN_QUAD: Mesh;
 
         public initialize() {
             super.initialize();
@@ -96,7 +96,7 @@ namespace egret3d {
             }
 
             { // CONE.
-                const mesh = MeshBuilder.createCylinder(0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 16, 1);
+                const mesh = MeshBuilder.createCylinder(0.0, 0.5, 1.0, 0.0, 0.0, 0.0, 10, 1);
                 mesh.name = "builtin/cone.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.CONE = mesh;

@@ -1,6 +1,6 @@
 namespace examples.shaders {
 
-    export class Flash extends BaseExample {
+    export class Flash implements Example {
 
         async start() {
             // Load resource config.
@@ -26,7 +26,7 @@ namespace examples.shaders {
             // Load texture.
             const texture = await RES.getResAsync("textures/test.png") as egret3d.Texture;
             //
-            this.addBackground();
+            createGridRoom();
 
             { // MeshRenderer.
                 const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);

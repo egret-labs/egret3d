@@ -25,7 +25,7 @@
 
 		vec3 vSigmaX = dFdx( surf_pos );
 		vec3 vSigmaY = dFdy( surf_pos );
-		vec3 vN = surf_norm;		// normalized
+		vec3 vN = surf_norm; // normalized
 
 		vec3 R1 = cross( vSigmaY, vN );
 		vec3 R2 = cross( vN, vSigmaX );

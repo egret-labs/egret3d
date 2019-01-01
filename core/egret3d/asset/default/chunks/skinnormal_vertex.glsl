@@ -6,7 +6,7 @@
 	skinMatrix += skinWeight.z * boneMatZ;
 	skinMatrix += skinWeight.w * boneMatW;
 	
-	// modified by egret.
+	// modified by egret
 	// skinMatrix = bindMatrixInverse * skinMatrix * bindMatrix;
 
 	objectNormal = vec4( skinMatrix * vec4( objectNormal, 0.0 ) ).xyz;

@@ -1,15 +1,6 @@
 namespace egret3d.webgl {
-    const _patternA = /#include +<([\w\d.]+)>/g;
-    const _patternB = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
-
-    function _loopReplace(match: string, start: string, end: string, snippet: string) {
-        let unroll = "";
-        for (var i = parseInt(start); i < parseInt(end); i++) {
-            unroll += snippet.replace(/\[ i \]/g, '[ ' + i + ' ]');
-        }
-
-        return unroll;
-    }
+    const _patternInclude = /^[ \t]*#include +<([\w\d./]+)>/gm;
+    const _patternLoop = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
 
     function _replace(match: string, include: string): string {
         let flag = true;
@@ -24,7 +15,7 @@ namespace egret3d.webgl {
         }
 
         if (chunk) {
-            return chunk.replace(_patternA, _replace);
+            return chunk.replace(_patternInclude, _replace);
         }
 
         if (flag) {
@@ -34,12 +25,38 @@ namespace egret3d.webgl {
         return "";
     }
 
-    function _parseIncludes(string: string): string {
-        return string.replace(_patternA, _replace);
+    function _loopReplace(match: string, start: string, end: string, snippet: string) {
+        let unroll = "";
+        for (var i = parseInt(start); i < parseInt(end); i++) {
+            unroll += snippet.replace(/ i /g, " " + i + " ");
+        }
+
+        return unroll;
     }
 
+    function _parseIncludes(string: string): string {
+        return string.replace(_patternInclude, _replace);
+    }
+
+    function _replaceLightNums(string: string, cameraAndLightCollecter: CameraAndLightCollecter) {
+        return string
+            .replace(new RegExp(ShaderDefine.NUM_DIR_LIGHTS, "g"), cameraAndLightCollecter.directionalLights.length.toString())
+            .replace(new RegExp(ShaderDefine.NUM_SPOT_LIGHTS, "g"), cameraAndLightCollecter.spotLights.length.toString())
+            .replace(new RegExp(ShaderDefine.NUM_RECT_AREA_LIGHTS, "g"), cameraAndLightCollecter.rectangleAreaLights.length.toString())
+            .replace(new RegExp(ShaderDefine.NUM_POINT_LIGHTS, "g"), cameraAndLightCollecter.pointLights.length.toString())
+            .replace(new RegExp(ShaderDefine.NUM_HEMI_LIGHTS, "g"), cameraAndLightCollecter.hemisphereLights.length.toString())
+            ;
+    }
+
+    // function _replaceClippingPlaneNums(string: string, parameters) {
+    //     return string
+    //         .replace(/NUM_CLIPPING_PLANES/g, parameters.numClippingPlanes)
+    //         .replace(/UNION_CLIPPING_PLANES/g, (parameters.numClippingPlanes - parameters.numClipIntersection))
+    //         ;
+    // }
+
     function _unrollLoops(string: string) {
-        return string.replace(_patternB, _loopReplace);
+        return string.replace(_patternLoop, _loopReplace);
     }
     /**
      * @internal
@@ -112,6 +129,7 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             const shader = webgl.createShader(gltfShader.type)!;
             let shaderContent = _parseIncludes(gltfShader.uri!);
+            shaderContent = _replaceLightNums(shaderContent, this._cameraAndLightCollecter);
             shaderContent = _unrollLoops(shaderContent);
             webgl.shaderSource(shader, defines + shaderContent);
             webgl.compileShader(shader);
@@ -142,7 +160,12 @@ namespace egret3d.webgl {
             const matrix = drawCall.matrix;
             const globalUniforms = program.globalUniforms;
             let i = 0, l = globalUniforms.length;
+            //
+            this._modelViewMatrix.multiply(camera.worldToCameraMatrix, matrix);
+            this._modelViewPojectionMatrix.multiply(camera.worldToClipMatrix, matrix);
+            this._inverseModelViewMatrix.getNormalMatrix(this._modelViewMatrix);
 
+            // Global.
             if (forceUpdate) {
                 i = l;
 
@@ -160,7 +183,7 @@ namespace egret3d.webgl {
                     }
                 }
             }
-
+            // Scene.
             if (scene !== this._cacheScene) {
                 const fog = scene.fog;
                 i = l;
@@ -199,7 +222,7 @@ namespace egret3d.webgl {
 
                 this._cacheScene = scene;
             }
-
+            // Camera.
             if (camera !== this._cacheCamera) {
                 const rawData = camera.cameraToWorldMatrix.rawData;
                 i = l;
@@ -233,20 +256,32 @@ namespace egret3d.webgl {
                             break;
 
                         case gltf.UniformSemantics._DIRECTLIGHTS:
-                            if (context.directLightCount > 0) {
-                                webgl.uniform1fv(location, context.directLightArray);
-                            }
-                            break;
-
-                        case gltf.UniformSemantics._POINTLIGHTS:
-                            if (context.pointLightCount > 0) {
-                                webgl.uniform1fv(location, context.pointLightArray);
+                            if (context.directLightBuffer.byteLength > 0) {
+                                webgl.uniform1fv(location, context.directLightBuffer);
                             }
                             break;
 
                         case gltf.UniformSemantics._SPOTLIGHTS:
-                            if (context.spotLightCount > 0) {
-                                webgl.uniform1fv(location, context.spotLightArray);
+                            if (context.spotLightBuffer.byteLength > 0) {
+                                webgl.uniform1fv(location, context.spotLightBuffer);
+                            }
+                            break;
+
+                        case gltf.UniformSemantics._RECTAREALIGHTS:
+                            if (context.pointLightBuffer.length > 0) {
+                                webgl.uniform1fv(location, context.rectangleAreaLightBuffer);
+                            }
+                            break;
+
+                        case gltf.UniformSemantics._POINTLIGHTS:
+                            if (context.pointLightBuffer.length > 0) {
+                                webgl.uniform1fv(location, context.pointLightBuffer);
+                            }
+                            break;
+
+                        case gltf.UniformSemantics._HEMILIGHTS:
+                            if (context.hemisphereLightBuffer.byteLength > 0) {
+                                webgl.uniform1fv(location, context.hemisphereLightBuffer);
                             }
                             break;
 
@@ -259,12 +294,8 @@ namespace egret3d.webgl {
                 this._cacheCamera = camera;
             }
 
-            this._modelViewMatrix.multiply(camera.worldToCameraMatrix, matrix);
-            this._modelViewPojectionMatrix.multiply(camera.worldToClipMatrix, matrix);
-            this._inverseModelViewMatrix.getNormalMatrix(this._modelViewMatrix);
-
+            // Model.
             i = l;
-
             while (i--) {
                 const uniform = globalUniforms[i];
                 const { semantic, location } = uniform;
@@ -433,18 +464,7 @@ namespace egret3d.webgl {
                             webgl.uniform1i(location, value);
                         }
                         break;
-                    case gltf.UniformType.BOOL_VEC2:
-                    case gltf.UniformType.INT_VEC2:
-                        webgl.uniform2iv(location, value);
-                        break;
-                    case gltf.UniformType.BOOL_VEC3:
-                    case gltf.UniformType.INT_VEC3:
-                        webgl.uniform3iv(location, value);
-                        break;
-                    case gltf.UniformType.BOOL_VEC4:
-                    case gltf.UniformType.INT_VEC4:
-                        webgl.uniform4iv(location, value);
-                        break;
+
                     case gltf.UniformType.FLOAT:
                         if (globalUniform.size > 1) {
                             webgl.uniform1fv(location, value);
@@ -453,21 +473,42 @@ namespace egret3d.webgl {
                             webgl.uniform1f(location, value);
                         }
                         break;
+
+                    case gltf.UniformType.BOOL_VEC2:
+                    case gltf.UniformType.INT_VEC2:
+                        webgl.uniform2iv(location, value);
+                        break;
+
+                    case gltf.UniformType.BOOL_VEC3:
+                    case gltf.UniformType.INT_VEC3:
+                        webgl.uniform3iv(location, value);
+                        break;
+
+                    case gltf.UniformType.BOOL_VEC4:
+                    case gltf.UniformType.INT_VEC4:
+                        webgl.uniform4iv(location, value);
+                        break;
+
                     case gltf.UniformType.FLOAT_VEC2:
                         webgl.uniform2fv(location, value);
                         break;
+
                     case gltf.UniformType.FLOAT_VEC3:
                         webgl.uniform3fv(location, value);
                         break;
+
                     case gltf.UniformType.FLOAT_VEC4:
                         webgl.uniform4fv(location, value);
                         break;
+
                     case gltf.UniformType.FLOAT_MAT2:
                         webgl.uniformMatrix2fv(location, false, value);
                         break;
+
                     case gltf.UniformType.FLOAT_MAT3:
                         webgl.uniformMatrix3fv(location, false, value);
                         break;
+
                     case gltf.UniformType.FLOAT_MAT4:
                         webgl.uniformMatrix4fv(location, false, value);
                         break;
@@ -576,10 +617,6 @@ namespace egret3d.webgl {
                 Camera.current = camera;
                 camera._update();
                 //
-                if (this._cameraAndLightCollecter.lightDirty) {
-                    camera.context.updateLights(this._cameraAndLightCollecter.lights); // TODO 性能优化
-                }
-                //
                 let isAnyActivated = false;
                 const postprocessings = camera.gameObject.getComponents(CameraPostprocessing as any, true) as CameraPostprocessing[];
 
@@ -646,7 +683,7 @@ namespace egret3d.webgl {
             const mesh = drawCall.mesh;
             const shader = material.shader as WebGLShader;
             const programs = shader.programs;
-            const programKey = context.defines.definesMask + material.defines.definesMask + (renderer ? renderer.defines.definesMask : "") + scene.defines.definesMask;
+            const programKey = renderState.defines.definesMask + material.defines.definesMask + (renderer ? renderer.defines.definesMask : "") + scene.defines.definesMask;
             let program: WebGLProgramBinder | null = null;
 
             if (DEBUG) {
@@ -680,8 +717,8 @@ namespace egret3d.webgl {
                 const renderState = this._renderState;
                 renderState.customShaderChunks = shader.customs;
 
-                const vertexDefinesString = context.defines.vertexDefinesString + material.defines.vertexDefinesString + (renderer ? renderer.defines.vertexDefinesString : "") + scene.defines.vertexDefinesString;
-                const fragmentDefinesString = context.defines.fragmentDefinesString + material.defines.fragmentDefinesString + (renderer ? renderer.defines.fragmentDefinesString : "") + scene.defines.fragmentDefinesString;
+                const vertexDefinesString = renderState.defines.vertexDefinesString + material.defines.vertexDefinesString + (renderer ? renderer.defines.vertexDefinesString : "") + scene.defines.vertexDefinesString;
+                const fragmentDefinesString = renderState.defines.fragmentDefinesString + material.defines.fragmentDefinesString + (renderer ? renderer.defines.fragmentDefinesString : "") + scene.defines.fragmentDefinesString;
                 const extensions = shader.config.extensions!.KHR_techniques_webgl;
                 const vertexWebGLShader = this._getWebGLShader(extensions!.shaders[0], renderState.getPrefixVertex(vertexDefinesString))!; // TODO 顺序依赖
                 const fragmentWebGLShader = this._getWebGLShader(extensions!.shaders[1], renderState.getPrefixFragment(fragmentDefinesString))!;  // TODO 顺序依赖
@@ -699,9 +736,10 @@ namespace egret3d.webgl {
                     else {
                         console.error("program compile: " + shader.name + " error! ->" + webgl.getProgramInfoLog(webGLProgram));
                         webgl.deleteProgram(webGLProgram);
-                        webgl.deleteShader(vertexWebGLShader);
-                        webgl.deleteShader(fragmentWebGLShader);
                     }
+
+                    webgl.deleteShader(vertexWebGLShader);
+                    webgl.deleteShader(fragmentWebGLShader);
                 }
 
                 programs[programKey] = program;
@@ -784,21 +822,21 @@ namespace egret3d.webgl {
 
             const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
             const clock = this.clock;
-            const { cameras, lights } = this._cameraAndLightCollecter;
+            const { cameras } = this._cameraAndLightCollecter;
             const renderState = this._renderState;
             const editorScene = paper.Application.sceneManager.editorScene;
             this._clockBuffer[0] = clock.time;
 
             // Render lights shadow.
-            if (lights.length > 0) {
-                for (const light of lights) {
-                    if (!light.castShadows) {
-                        continue;
-                    }
+            // if (lights.length > 0) {
+            //     for (const light of lights) {
+            //         if (!light.castShadows) {
+            //             continue;
+            //         }
 
-                    // this._renderLightShadow(light);
-                }
-            }
+            //         // this._renderLightShadow(light);
+            //     }
+            // }
             // Render cameras.
             if (cameras.length > 0) {
                 this._egret2DOrderCount = 0;

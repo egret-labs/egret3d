@@ -15,6 +15,7 @@
             "dom",
             "es2015.promise"
         ],
+		"newLine": "LF",
         "outFile": "bin/egret3d.js"
     },
     "files": [
@@ -107,8 +108,10 @@
         "egret3d/components/light/Shadow.ts",
         "egret3d/components/light/BaseLight.ts",
         "egret3d/components/light/DirectionalLight.ts",
-        "egret3d/components/light/PointLight.ts",
         "egret3d/components/light/SpotLight.ts",
+        "egret3d/components/light/RectangleAreaLight.ts",
+        "egret3d/components/light/PointLight.ts",
+        "egret3d/components/light/HemisphereLight.ts",
 
         "egret3d/components/renderer/DrawCall.ts",
         "egret3d/components/renderer/Fog.ts",

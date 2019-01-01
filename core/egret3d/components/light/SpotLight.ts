@@ -8,13 +8,13 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public decay: number = 2.0;
+        public decay: number = 1.0;
         /**
          * 
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public distance: number = 0.0;
+        public distance: number = 100.0;
         /**
          * 
          */

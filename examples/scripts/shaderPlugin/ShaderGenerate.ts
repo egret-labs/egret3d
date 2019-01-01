@@ -96,9 +96,9 @@ export class LoadCommonShaderCommand implements IShaderCommand {
             console.warn("缺少: common_frag_def.glsl");
         }
         //
-        shaderContext.shaderChunks["common"] = fs.readFileSync(commonFile, "utf-8");
-        shaderContext.shaderChunks["common_vert_def"] = fs.readFileSync(commonVertDefFile, "utf-8");
-        shaderContext.shaderChunks["common_frag_def"] = fs.readFileSync(commonFragDefFile, "utf-8");
+        shaderContext.shaderChunks["common"] = ShaderUtils.transformGLSLCode(fs.readFileSync(commonFile, "utf-8"));
+        shaderContext.shaderChunks["common_vert_def"] = ShaderUtils.transformGLSLCode(fs.readFileSync(commonVertDefFile, "utf-8"));
+        shaderContext.shaderChunks["common_frag_def"] = ShaderUtils.transformGLSLCode(fs.readFileSync(commonFragDefFile, "utf-8"));
     }
 }
 
@@ -107,7 +107,7 @@ export class ParseShaderCommand implements IShaderCommand {
         for (const file of shaderContext.chunkFiles) {
             const fileName = path.basename(file);
             const chunkName = fileName.substring(0, fileName.indexOf("."));
-            shaderContext.shaderChunks[chunkName] = fs.readFileSync(file, "utf-8");
+            shaderContext.shaderChunks[chunkName] = ShaderUtils.transformGLSLCode(fs.readFileSync(file, "utf-8"));
         }
 
         for (const file of shaderContext.libFiles) {
@@ -115,7 +115,7 @@ export class ParseShaderCommand implements IShaderCommand {
             const dirName = path.dirname(file);
             const shaderName = fileName.substring(0, fileName.lastIndexOf("_"));
             const type = fileName.indexOf("frag") >= 0 ? gltf.ShaderStage.FRAGMENT_SHADER : gltf.ShaderStage.VERTEX_SHADER;
-            const context = fs.readFileSync(file, "utf-8");
+            const context = ShaderUtils.transformGLSLCode(fs.readFileSync(file, "utf-8"));
 
             shaderContext.shaderLibs[fileName] = { fileName, context, type };
             if (!(shaderName in shaderContext.shaders)) {
@@ -214,8 +214,7 @@ export class GenerateChunksCommand implements IShaderCommand {
             for (const file of shaderContext.chunkFiles) {
                 const name = path.basename(file).replace(/\.glsl$/, "");
                 console.log("处理:" + name);
-
-                all += "export const " + name + " = " + JSON.stringify(ShaderUtils.parseShader(file)) + ";\n";
+                all += "export const " + name + " = " + JSON.stringify(ShaderUtils.transformGLSLCode(fs.readFileSync(file, "utf-8"))) + ";\n";
             }
 
             all += "}\n";

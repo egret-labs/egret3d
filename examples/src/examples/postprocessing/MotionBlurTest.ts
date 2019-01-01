@@ -1,6 +1,6 @@
 namespace examples.postprocessing {
 
-    export class MotionBlurTest extends BaseExample {
+    export class MotionBlurTest implements Example {
 
         async start() {
             // Load resource config.

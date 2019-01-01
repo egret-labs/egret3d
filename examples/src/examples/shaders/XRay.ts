@@ -1,6 +1,6 @@
 namespace examples.shaders {
 
-    export class XRay extends BaseExample {
+    export class XRay implements Example {
 
         async start() {
             // Load resource config.
@@ -31,8 +31,7 @@ namespace examples.shaders {
                 .addUniform("_c", gltf.UniformType.FLOAT, 1.0)
                 .addUniform("_p", gltf.UniformType.FLOAT, 3.0);
             //
-            this.addBackground();
-
+            createGridRoom();
 
             { // MeshRenderer.
                 const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);

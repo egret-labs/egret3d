@@ -11,22 +11,6 @@ namespace behaviors {
         private _radius: number = 0.0;
         private _radian: number = 0.0;
 
-        public onAwake() {
-            console.info("onAwake");
-        }
-
-        public onEnable() {
-            console.info("onEnable");
-        }
-
-        public onStart() {
-            console.info("onStart");
-        }
-
-        public onFixedUpdate(ct: number, tt: number) {
-            // console.info("onFixedUpdate", ct, tt);
-        }
-
         public onUpdate(deltaTime: number): any {
             const transform = this.gameObject.transform;
             const position = transform.position;
@@ -63,18 +47,6 @@ namespace behaviors {
             }
 
             transform.lookAt(target);
-        }
-
-        public onLateUpdate(deltaTime: number) {
-            // console.info("onLateUpdate");
-        }
-
-        public onDisable() {
-            console.info("onDisable");
-        }
-
-        public onDestroy() {
-            console.info("onDestroy");
         }
     }
 }

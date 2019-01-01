@@ -1,6 +1,6 @@
 namespace examples.shaders {
 
-    export class Decal extends BaseExample {
+    export class Decal implements Example {
 
         async start() {
             // Load resource config.

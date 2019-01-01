@@ -1,5 +1,6 @@
 namespace examples {
-    export class BehaviourLifeCycleTest extends BaseExample {
+
+    export class BehaviourLifeCycleTest implements Example {
 
         async start() {
             // Create camera.

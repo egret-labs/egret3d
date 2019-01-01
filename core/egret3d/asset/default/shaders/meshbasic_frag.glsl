@@ -43,7 +43,7 @@ void main() {
 	// accumulation (baked indirect lighting only)
 	#ifdef USE_LIGHTMAP
 	
- 		// modified by egret.
+ 		// modified by egret
 		vec4 lightmapTex = texture2D(lightMap, vUv2);
 		// float power = pow( 2.0, lightmapTex.a * 255.0 - 128.0);
 		float power = 5.0 * lightmapTex.a;

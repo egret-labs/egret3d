@@ -1,5 +1,3 @@
-
-//------------------------------------------------
 uniform mat4 modelMatrix;
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
@@ -36,4 +34,3 @@ attribute vec2 uv;
 	attribute vec4 skinIndex;
 	attribute vec4 skinWeight;
 #endif
-//------------------------------------------------

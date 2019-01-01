@@ -17,6 +17,16 @@ namespace egret3d {
     //     });
     // }
 
+    function _transformGLSLCode(code: string) {
+        const transformedCode = code
+            .replace(/\r/g, '\n') // \r to \n
+            .replace(/[ \t]*\/\/.*\n/g, '\n') // remove //
+            .replace(/[ \t]*\/\*[\s\S]*?\*\//g, '\n') // remove /* */
+            .replace(/\n{2,}/g, '\n'); // \n+ to \n
+
+        return transformedCode;
+    }
+
     export const BitmapDataProcessor: RES.processor.Processor = {
 
         onLoadStart(host, resource) {
@@ -59,7 +69,7 @@ namespace egret3d {
 
                 return loadSubAssets(subAssets, resource).then((texts: string[]) => {
                     for (let i = 0, l = texts.length; i < l; ++i) {
-                        shaders[i].uri = texts[i];
+                        shaders[i].uri = _transformGLSLCode(texts[i]);
                     }
 
                     const shader = Shader.create(resource.name, result);
@@ -116,7 +126,8 @@ namespace egret3d {
                 const wrap = data.wrap;
 
                 let textureFormat = gltf.TextureFormat.RGBA;
-                if (format === "RGB") {''
+                if (format === "RGB") {
+                    ''
                     textureFormat = gltf.TextureFormat.RGB;
                 } else if (format === "Gray") {
                     textureFormat = gltf.TextureFormat.Luminance;

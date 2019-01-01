@@ -1,6 +1,6 @@
 #ifdef USE_SHADOWMAP
 
-	#if defined(NUM_DIR_LIGHTS) && NUM_DIR_LIGHTS > 0//Egret
+	#if NUM_DIR_LIGHTS > 0
 
 	#pragma unroll_loop
 	for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {
@@ -11,7 +11,7 @@
 
 	#endif
 
-	#if defined(NUM_SPOT_LIGHTS) && NUM_SPOT_LIGHTS > 0//Egret
+	#if NUM_SPOT_LIGHTS > 0
 
 	#pragma unroll_loop
 	for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {
@@ -22,7 +22,7 @@
 
 	#endif
 
-	#if defined(NUM_POINT_LIGHTS) && NUM_POINT_LIGHTS > 0//Egret
+	#if NUM_POINT_LIGHTS > 0
 
 	#pragma unroll_loop
 	for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {

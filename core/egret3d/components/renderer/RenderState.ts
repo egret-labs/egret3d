@@ -85,11 +85,15 @@ namespace egret3d {
         "cameraPosition": gltf.UniformSemantics._CAMERA_POS,
         "cameraForward": gltf.UniformSemantics._CAMERA_FORWARD,
         "cameraUp": gltf.UniformSemantics._CAMERA_UP,
+        
+        "boneMatrices[0]": gltf.UniformSemantics.JOINTMATRIX,
+
         "ambientLightColor": gltf.UniformSemantics._AMBIENTLIGHTCOLOR,
         "directionalLights[0]": gltf.UniformSemantics._DIRECTLIGHTS,
-        "pointLights[0]": gltf.UniformSemantics._POINTLIGHTS,
         "spotLights[0]": gltf.UniformSemantics._SPOTLIGHTS,
-        "boneMatrices[0]": gltf.UniformSemantics.JOINTMATRIX,
+        "rectAreaLights[0]": gltf.UniformSemantics._RECTAREALIGHTS,
+        "pointLights[0]": gltf.UniformSemantics._POINTLIGHTS,
+        "hemisphereLights[0]": gltf.UniformSemantics._HEMILIGHTS,
 
         "directionalShadowMatrix[0]": gltf.UniformSemantics._DIRECTIONSHADOWMAT,
         "spotShadowMatrix[0]": gltf.UniformSemantics._SPOTSHADOWMAT,
