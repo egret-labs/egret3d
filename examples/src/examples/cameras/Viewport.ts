@@ -1,8 +1,14 @@
 namespace examples.cameras {
 
-    export class CameraTestA implements Example {
+    export class Viewport implements Example {
 
         async start() {
+            const renderState = paper.GameObject.globalGameObject.getComponent(egret3d.RenderState)!;
+            renderState.toneMapping = egret3d.ToneMapping.Uncharted2ToneMapping;
+            renderState.toneMappingExposure = 3.0;
+            renderState.gammaInput = true;
+            renderState.gammaOutput = true;
+
             // Load resource config.
             await RES.loadConfig("default.res.json", "resource/");
             await RES.getResAsync("threejs/textures/brick_diffuse.jpg");
@@ -21,6 +27,7 @@ namespace examples.cameras {
         );
 
         public onAwake() {
+
             { // Main camera.
                 const mainCamera = this._mainCamera;
                 mainCamera.bufferMask = gltf.BufferMask.Depth;
@@ -61,15 +68,17 @@ namespace examples.cameras {
             const textureBump = RES.getRes("threejs/textures/brick_bump.jpg") as egret3d.Texture;
             const textureRoughness = RES.getRes("threejs/textures/brick_roughness.jpg") as egret3d.Texture;
             textureDiffuse.gltfTexture.extensions.paper.anisotropy = 4;
+            textureDiffuse.gltfTexture.extensions.paper.encoding = egret3d.TextureEncoding.sRGBEncoding;
             textureBump.gltfTexture.extensions.paper.anisotropy = 4;
             textureRoughness.gltfTexture.extensions.paper.anisotropy = 4;
 
             this._target.transform.setLocalPosition(0.0, 10.0, 0.0);
-            this._target.renderer!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_PHONG)
+            this._target.renderer!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_PHYSICAL)
                 .setTexture(textureDiffuse)
-                // .setTexture(egret3d.ShaderUniformName.BumpMap, textureBump)
-                // .setTexture(egret3d.ShaderUniformName.RoughnessMap, textureRoughness)
-                .setUVTransform(egret3d.Matrix3.create().fromUVTransform(0.0, 0.0, 10.0, 0.5, 0.0, 0.0, 0.0).release());
+                .setTexture(egret3d.ShaderUniformName.BumpMap, textureBump)
+                .setTexture(egret3d.ShaderUniformName.RoughnessMap, textureRoughness)
+                .setUVTransform(egret3d.Matrix3.create().fromUVTransform(0.0, 0.0, 10.0, 0.5, 0.0, 0.0, 0.0).release())
+                .addDefine("USE_NORMAL").addDefine("USE_ROUGHNESS").addDefine("STANDARD");
         }
 
         public onUpdate() {

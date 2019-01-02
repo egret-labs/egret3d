@@ -244,8 +244,8 @@ namespace egret3d {
             }
 
             if (decodingFunName) {
-                const renderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.RenderState);
                 const decodingStr = renderState.getTexelDecodingFunction(decodingFunName, encoding);
+
                 if (add) {
                     const define = this.defines.addDefine(decodingStr);
                     if (define) {
@@ -254,7 +254,7 @@ namespace egret3d {
                     }
                 }
                 else {
-                    this.removeDefine(decodingStr);
+                    this.defines.removeDefine(decodingStr);
                 }
             }
         }

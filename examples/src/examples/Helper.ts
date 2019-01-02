@@ -15,8 +15,8 @@ namespace examples {
             const textureA = await RES.getResAsync("textures/grid_a.png") as egret3d.Texture;
             const textureB = await RES.getResAsync("textures/grid_b.png") as egret3d.Texture;
 
-            textureA.gltfTexture.extensions.paper.anisotropy = 8;
-            textureB.gltfTexture.extensions.paper.anisotropy = 8;
+            textureA.gltfTexture.extensions.paper.anisotropy = 4;
+            textureB.gltfTexture.extensions.paper.anisotropy = 4;
 
             gameObject.renderer!.materials = [
                 egret3d.DefaultMaterials.MESH_LAMBERT.clone()
@@ -26,7 +26,7 @@ namespace examples {
                 ,
                 egret3d.DefaultMaterials.MESH_LAMBERT.clone()
                     .setTexture(textureB)
-                    .setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent)
+                    .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend)
                     .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Front)
                 ,
             ];
