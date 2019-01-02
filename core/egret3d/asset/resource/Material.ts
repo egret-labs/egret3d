@@ -613,11 +613,23 @@ namespace egret3d {
 
                 functions!.frontFace = [frontFace];
                 functions!.cullFace = [cullFace];
+
+                this.defines.removeDefine(ShaderDefine.DOUBLE_SIDED);
+
+                if (cullFace === gltf.CullFace.Back) {
+                    this.defines.addDefine(ShaderDefine.FLIP_SIDED);
+                }
+                else {
+                    this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
+                }
             }
             else if (index >= 0) {
                 enable!.splice(index, 1);
                 delete functions!.frontFace;
                 delete functions!.cullFace;
+
+                this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
+                this.defines.addDefine(ShaderDefine.DOUBLE_SIDED);
             }
 
             return this;

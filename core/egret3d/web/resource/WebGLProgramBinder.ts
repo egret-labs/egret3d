@@ -36,20 +36,14 @@ namespace egret3d.webgl {
         public readonly globalUniforms: WebGLActiveUniform[] = [];
         public readonly uniforms: WebGLActiveUniform[] = [];
         public readonly program: WebGLProgram;
-        public readonly vsShader: GlobalWeblGLShader;
-        public readonly fsShader: GlobalWeblGLShader;
 
-        public constructor(program: WebGLProgram, vsShader: GlobalWeblGLShader, fsShader: GlobalWeblGLShader) {
+        public constructor(program: WebGLProgram) {
             this.program = program;
-            this.vsShader = vsShader;
-            this.fsShader = fsShader;
         }
 
         public dispose() {
             const webgl = WebGLRenderState.webgl!;
             webgl.deleteProgram(this.program);
-            webgl.deleteShader(this.vsShader);
-            webgl.deleteShader(this.fsShader);
         }
 
         public extract(technique: gltf.Technique): this {

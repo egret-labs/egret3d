@@ -188,9 +188,7 @@ namespace egret3d {
             this._mesh = null;
             this._skinnedVertices = null;
         }
-        /**
-         * @internal
-         */
+        
         public recalculateLocalBox() {
             // TODO 蒙皮网格的 aabb 需要能自定义，或者强制更新。
             const mesh = this._mesh;

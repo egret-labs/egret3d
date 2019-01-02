@@ -109,72 +109,9 @@ declare namespace signals {
         removeAll(): void;
     }
 }
-/** An 8-bit signed integer. */
-declare type i8 = number;
-/** An 8-bit unsigned integer. */
-declare type u8 = number;
-/** A 16-bit signed integer. */
-declare type i16 = number;
-/** A 16-bit unsigned integer. */
-declare type u16 = number;
-/** A 32-bit signed integer. */
-declare type i32 = number;
-/** A 32-bit unsigned integer. */
-declare type u32 = number;
-/** A 64-bit signed integer. */
-declare type i64 = number;
-/** A 64-bit unsigned integer. */
-declare type u64 = number;
-/** A 32-bit float. */
-declare type f32 = number;
-/** A 64-bit float. */
-declare type f64 = number;
-/** A 1-bit unsigned integer. */
-declare type bool = any;
-/** A 32-bit unsigned integer when targeting WASM32 respectively a 64-bit unsigned integer when targeting WASM64. */
-declare type usize = number;
-/** An 8-bit signed integer. Alias of `i8`. */
-declare type sbyte = i8;
-/** An 8-bit unsigned integer. Alias of `u8`. */
-declare type byte = u8;
-/** A 16-bit signed integer. Alias of `i16`. */
-declare type short = i16;
-/** A 16-bit unsigned integer. Alias of `u16`. */
-declare type ushort = u16;
-/** A 32-bit signed integer. Alias of `i32`. */
-declare type int = i32;
-/** A 32-bit signed integer. Alias of `u32`. */
-declare type uint = u32;
-/** A 64-bit signed integer. Alias of `i64`. */
-declare type long = i64;
-/** A 64-bit unsigned integer. Alias of `u64`. */
-declare type ulong = u64;
-/** A 32-bit float. Alias of `f32`. */
-declare type float = f32;
-/** A 64-bit float. Alias of `f64`. */
-declare type double = f64;
-/** A 32-bit unsigned integer when targeting WASM32 respectively a 64-bit unsigned integer when targeting WASM64. Alias of `usize`. */
-declare type uintptr = usize;
-/** An 8-bit signed integer. Alias of `i8`. */
-declare type int8 = i8;
-/** An 8-bit unsigned integer. Alias of `u8`. */
-declare type uint8 = u8;
-/** A 16-bit signed integer. Alias of `i16`. */
-declare type int16 = i16;
-/** A 16-bit unsigned integer. Alias of `u16`. */
-declare type uint16 = u16;
-/** A 32-bit signed integer. Alias of `i32`. */
-declare type int32 = i32;
-/** A 32-bit signed integer. Alias of `u32`. */
-declare type uint32 = u32;
-/** A 64-bit signed integer. Alias of `i64`. */
-declare type int64 = i64;
-/** A 64-bit unsigned integer. Alias of `u64`. */
-declare type uint64 = u64;
-/** A 32-bit float. Alias of `f32`. */
-declare type float32 = f32;
-/** A 64-bit float. Alias of `f64`. */
-declare type float64 = f64;
+declare type int = number;
+declare type uint = number;
+declare type float = number;
 declare namespace paper {
     /**
      *
@@ -3301,6 +3238,10 @@ declare namespace paper {
         protected readonly _materials: (egret3d.Material | null)[];
         protected _recalculateSphere(): void;
         /**
+         * @private
+         */
+        onTransformChange(): void;
+        /**
          * 重新计算 AABB。
          */
         abstract recalculateLocalBox(): void;
@@ -4227,9 +4168,14 @@ declare namespace egret3d {
          */
         protected readonly _lightmapScaleOffset: Vector4;
         /**
+         * @private
+         */
+        recalculateLocalBox(): void;
+        /**
          * 实时获取网格资源的指定三角形顶点位置。
          */
         getTriangle(triangleIndex: uint, out?: Triangle): Triangle;
+        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
         /**
          * 该组件的光照图索引。
          */
@@ -5212,6 +5158,8 @@ declare namespace egret3d {
         SHADOWMAP_TYPE_PCF_SOFT = "SHADOWMAP_TYPE_PCF_SOFT",
         DEPTH_PACKING_3200 = "DEPTH_PACKING 3200",
         DEPTH_PACKING_3201 = "DEPTH_PACKING 3201",
+        FLIP_SIDED = "FLIP_SIDED",
+        DOUBLE_SIDED = "FLIP_SIDED",
         USE_FOG = "USE_FOG",
         FOG_EXP2 = "FOG_EXP2",
         FLIP_V = "FLIP_V",
@@ -6590,8 +6538,10 @@ declare namespace egret3d {
      * 网格碰撞组件。
      */
     class MeshCollider extends paper.BaseComponent implements IMeshCollider, IRaycast {
+        readonly colliderType: ColliderType;
         protected readonly _localBoundingBox: egret3d.Box;
         private _mesh;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
         /**
          * 该组件的网格资源。
          */
@@ -7548,6 +7498,7 @@ declare namespace egret3d {
         private _mesh;
         private _skinnedVertices;
         private _skinning(vertexOffset, vertexCount);
+        recalculateLocalBox(): void;
         /**
          * 实时获取网格资源的指定三角形顶点位置。
          * - 采用 CPU 蒙皮指定顶点。
@@ -9466,7 +9417,7 @@ declare namespace egret3d {
          * @param depthSegments 深度分段。
          * @param differentFace 是否使用不同材质。
          */
-        static createCube(width?: number, height?: number, depth?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, widthSegments?: uint, heightSegments?: uint, depthSegments?: uint, differentFace?: boolean, negateNormal?: boolean): Mesh;
+        static createCube(width?: number, height?: number, depth?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, widthSegments?: uint, heightSegments?: uint, depthSegments?: uint, differentFace?: boolean): Mesh;
         /**
          * 创建圆柱体网格。
          * @param radiusTop 顶部半径。

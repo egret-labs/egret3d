@@ -731,7 +731,7 @@ namespace egret3d.webgl {
 
                     const parameter = webgl.getProgramParameter(webGLProgram, gltf.Status.LinkStatus);
                     if (parameter) {
-                        program = new WebGLProgramBinder(webGLProgram, vertexWebGLShader, fragmentWebGLShader).extract(material.technique);
+                        program = new WebGLProgramBinder(webGLProgram).extract(material.technique);
                     }
                     else {
                         console.error("program compile: " + shader.name + " error! ->" + webgl.getProgramInfoLog(webGLProgram));

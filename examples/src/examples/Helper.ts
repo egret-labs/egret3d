@@ -5,7 +5,6 @@ namespace examples {
             40.0, 40.0, 40.0,
             0.0, 20.0, 0.0,
             40, 40, 40,
-            false, true
         );
         mesh.name = "gridroom.mesh.bin";
 

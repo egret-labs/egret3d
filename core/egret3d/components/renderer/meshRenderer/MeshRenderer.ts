@@ -11,7 +11,7 @@ namespace egret3d {
         @paper.serializedField
         protected readonly _lightmapScaleOffset: Vector4 = Vector4.create();
         /**
-         * @internal
+         * @private
          */
         public recalculateLocalBox() {
             const meshFilter = this.gameObject.getComponent(MeshFilter);
@@ -47,9 +47,7 @@ namespace egret3d {
 
             return out;
         }
-        /**
-         * @internal
-         */
+
         public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
             const meshFilter = this.gameObject.getComponent(MeshFilter);
             if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh || meshFilter.mesh.isDisposed) {

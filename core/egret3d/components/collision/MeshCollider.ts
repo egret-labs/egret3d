@@ -9,9 +9,6 @@ namespace egret3d {
      */
     @paper.allowMultiple
     export class MeshCollider extends paper.BaseComponent implements IMeshCollider, IRaycast {
-        /**
-         * @internal
-         */
         public readonly colliderType: ColliderType = ColliderType.Mesh;
 
         protected readonly _localBoundingBox: egret3d.Box = egret3d.Box.create();
@@ -28,9 +25,7 @@ namespace egret3d {
 
             this._mesh = null;
         }
-        /**
-         * @internal 
-         */
+        
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean {
             const mesh = this._mesh;
             if (mesh) {

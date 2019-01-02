@@ -63,7 +63,7 @@ namespace paper {
             this._materials.length = 0;
         }
         /**
-         * @internal
+         * @private
          */
         public onTransformChange() {
             this._boundingSphereDirty = true;

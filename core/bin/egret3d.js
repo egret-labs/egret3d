@@ -448,7 +448,6 @@ var __extends = this && this.__extends || function __extends(t, e) {
 for (var i in e) e.hasOwnProperty(i) && (t[i] = e[i]);
 r.prototype = e.prototype, t.prototype = new r();
 };
-// Core types
 var paper;
 (function (paper) {
     /**
@@ -3793,7 +3792,7 @@ var paper;
             this._materials.length = 0;
         };
         /**
-         * @internal
+         * @private
          */
         BaseRenderer.prototype.onTransformChange = function () {
             this._boundingSphereDirty = true;
@@ -6307,7 +6306,7 @@ var egret3d;
             return _this;
         }
         /**
-         * @internal
+         * @private
          */
         MeshRenderer.prototype.recalculateLocalBox = function () {
             var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
@@ -6338,9 +6337,6 @@ var egret3d;
             }
             return out;
         };
-        /**
-         * @internal
-         */
         MeshRenderer.prototype.raycast = function (p1, p2, p3) {
             var meshFilter = this.gameObject.getComponent(egret3d.MeshFilter);
             if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh || meshFilter.mesh.isDisposed) {
@@ -9834,6 +9830,9 @@ var egret3d;
         ShaderDefine["DEPTH_PACKING_3200"] = "DEPTH_PACKING 3200";
         ShaderDefine["DEPTH_PACKING_3201"] = "DEPTH_PACKING 3201";
         //
+        ShaderDefine["FLIP_SIDED"] = "FLIP_SIDED";
+        ShaderDefine["DOUBLE_SIDED"] = "FLIP_SIDED";
+        //
         ShaderDefine["USE_FOG"] = "USE_FOG";
         ShaderDefine["FOG_EXP2"] = "FOG_EXP2";
         //
@@ -13193,9 +13192,6 @@ var egret3d;
         __extends(MeshCollider, _super);
         function MeshCollider() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * @internal
-             */
             _this.colliderType = egret3d.ColliderType.Mesh;
             _this._localBoundingBox = egret3d.Box.create();
             _this._mesh = null;
@@ -13211,9 +13207,6 @@ var egret3d;
             }
             this._mesh = null;
         };
-        /**
-         * @internal
-         */
         MeshCollider.prototype.raycast = function (ray, raycastInfo) {
             var mesh = this._mesh;
             if (mesh) {
@@ -17039,9 +17032,6 @@ var egret3d;
             this._mesh = null;
             this._skinnedVertices = null;
         };
-        /**
-         * @internal
-         */
         SkinnedMeshRenderer.prototype.recalculateLocalBox = function () {
             // TODO 蒙皮网格的 aabb 需要能自定义，或者强制更新。
             var mesh = this._mesh;
@@ -24304,11 +24294,20 @@ var egret3d;
                 }
                 functions.frontFace = [frontFace];
                 functions.cullFace = [cullFace];
+                this.defines.removeDefine("FLIP_SIDED" /* DOUBLE_SIDED */);
+                if (cullFace === 1029 /* Back */) {
+                    this.defines.addDefine("FLIP_SIDED" /* FLIP_SIDED */);
+                }
+                else {
+                    this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
+                }
             }
             else if (index >= 0) {
                 enable.splice(index, 1);
                 delete functions.frontFace;
                 delete functions.cullFace;
+                this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
+                this.defines.addDefine("FLIP_SIDED" /* DOUBLE_SIDED */);
             }
             return this;
         };
@@ -25250,7 +25249,7 @@ var egret3d;
          * @param depthSegments 深度分段。
          * @param differentFace 是否使用不同材质。
          */
-        MeshBuilder.createCube = function (width, height, depth, centerOffsetX, centerOffsetY, centerOffsetZ, widthSegments, heightSegments, depthSegments, differentFace, negateNormal) {
+        MeshBuilder.createCube = function (width, height, depth, centerOffsetX, centerOffsetY, centerOffsetZ, widthSegments, heightSegments, depthSegments, differentFace) {
             if (width === void 0) { width = 1.0; }
             if (height === void 0) { height = 1.0; }
             if (depth === void 0) { depth = 1.0; }
@@ -25261,7 +25260,6 @@ var egret3d;
             if (heightSegments === void 0) { heightSegments = 1; }
             if (depthSegments === void 0) { depthSegments = 1; }
             if (differentFace === void 0) { differentFace = false; }
-            if (negateNormal === void 0) { negateNormal = false; }
             // helper variables
             var meshVertexCount = 0;
             var vector3 = egret3d.Vector3.create().release();
@@ -25294,12 +25292,7 @@ var egret3d;
                         vector3[u] = 0.0;
                         vector3[v] = 0.0;
                         vector3[w] = depth > 0.0 ? 1.0 : -1.0;
-                        if (negateNormal) {
-                            normals.push(-vector3.x, -vector3.y, -vector3.z);
-                        }
-                        else {
-                            normals.push(vector3.x, vector3.y, vector3.z);
-                        }
+                        normals.push(vector3.x, vector3.y, vector3.z);
                         // uvs
                         uvs.push(ix / gridX, iy / gridY);
                         // counters

@@ -115,7 +115,7 @@ namespace egret3d {
             width: number = 1.0, height: number = 1.0, depth: number = 1.0,
             centerOffsetX: number = 0.0, centerOffsetY: number = 0.0, centerOffsetZ: number = 0.0,
             widthSegments: uint = 1, heightSegments: uint = 1, depthSegments: uint = 1,
-            differentFace: boolean = false, negateNormal: boolean = false,
+            differentFace: boolean = false,
         ): Mesh {
             // helper variables
             let meshVertexCount = 0;
@@ -149,12 +149,7 @@ namespace egret3d {
                         vector3[u] = 0.0;
                         vector3[v] = 0.0;
                         vector3[w] = depth > 0.0 ? 1.0 : - 1.0;
-                        if (negateNormal) {
-                            normals.push(-vector3.x, -vector3.y, -vector3.z);
-                        }
-                        else {
-                            normals.push(vector3.x, vector3.y, vector3.z);
-                        }
+                        normals.push(vector3.x, vector3.y, vector3.z);
                         // uvs
                         uvs.push(
                             ix / gridX,

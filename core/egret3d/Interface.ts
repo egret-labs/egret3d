@@ -28,6 +28,9 @@ namespace egret3d {
         DEPTH_PACKING_3200 = "DEPTH_PACKING 3200",
         DEPTH_PACKING_3201 = "DEPTH_PACKING 3201",
         //
+        FLIP_SIDED = "FLIP_SIDED",
+        DOUBLE_SIDED = "FLIP_SIDED",
+        //
         USE_FOG = "USE_FOG",
         FOG_EXP2 = "FOG_EXP2",
         //
