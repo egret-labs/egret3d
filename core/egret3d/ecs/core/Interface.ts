@@ -121,16 +121,6 @@ namespace paper {
         End = 10000,
     }
     /**
-     * 渲染排序。
-     */
-    export const enum RenderQueue {
-        Background = 1000,
-        Geometry = 2000,
-        AlphaTest = 2450,
-        Transparent = 3000,
-        Overlay = 4000,
-    }
-    /**
      * 
      */
     export type GameObjectExtras = { linkedID?: string, rootID?: string, prefab?: Prefab };

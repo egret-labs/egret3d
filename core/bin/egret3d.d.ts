@@ -228,16 +228,6 @@ declare namespace paper {
         End = 10000,
     }
     /**
-     * 渲染排序。
-     */
-    const enum RenderQueue {
-        Background = 1000,
-        Geometry = 2000,
-        AlphaTest = 2450,
-        Transparent = 3000,
-        Overlay = 4000,
-    }
-    /**
      *
      */
     type GameObjectExtras = {
@@ -1378,6 +1368,61 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
+     * 渲染排序。
+     */
+    const enum RenderQueue {
+        Background = 1000,
+        Geometry = 2000,
+        Mask = 2450,
+        Blend = 3000,
+        Overlay = 4000,
+    }
+    /**
+     * 混合模式。
+     */
+    const enum BlendMode {
+        /**
+         * 不混合。
+         */
+        None = 0,
+        /**
+         * 正常。
+         */
+        Normal = 2,
+        /**
+         * 正常并预乘。
+         */
+        Normal_PreMultiply = 3,
+        /**
+         * 相加。
+         */
+        Additive = 4,
+        /**
+         * 相加并预乘。
+         */
+        Additive_PreMultiply = 5,
+        /**
+         * 相减。
+         */
+        Subtractive = 8,
+        /**
+         * 相减并预乘。
+         */
+        Subtractive_PreMultiply = 9,
+        /**
+         * 相乘。
+         */
+        Multiply = 16,
+        /**
+         * 相乘并预乘。
+         */
+        Multiply_PreMultiply = 17,
+        /**
+         * 自定义混合。
+         */
+        Custom = -1,
+    }
+    /**
      * 扩展 glTF。
      */
     interface GLTF extends gltf.GLTF {
@@ -1408,7 +1453,7 @@ declare namespace egret3d {
         extensions: {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
             paper: {
-                renderQueue: uint;
+                renderQueue: RenderQueue | uint;
                 /**
                  * 该值如果定义，则覆盖着色器中的值。
                  */
@@ -1640,25 +1685,6 @@ declare namespace gltf {
         DepthAndColor = 16640,
         StencilAndColor = 17408,
         All = 17664,
-    }
-    const enum BlendMode {
-        None = 0,
-        Blend = 1,
-        Blend_PreMultiply = 2,
-        Additive = 3,
-        Additive_PreMultiply = 4,
-        Subtractive = 5,
-        Subtractive_PreMultiply = 6,
-        Multiply = 7,
-        Multiply_PreMultiply = 8,
-        /**
-         * @deprecated
-         */
-        Add = 3,
-        /**
-         * @deprecated
-         */
-        Add_PreMultiply = 4,
     }
     const enum BlendEquation {
         Add = 32774,
@@ -3723,6 +3749,8 @@ declare namespace paper {
      */
     const enum Layer {
     }
+}
+declare namespace egret3d {
     /**
      * 渲染排序。
      */
@@ -8808,12 +8836,36 @@ declare namespace paper {
      * @deprecated
      */
     type CullingMask = Layer;
+    /**
+     * @deprecated
+     */
+    const CullingMask: any;
+    /**
+     * @deprecated
+     */
+    type RenderQueue = egret3d.RenderQueue;
+    /**
+     * @deprecated
+     */
+    const RenderQueue: any;
 }
 declare namespace gltf {
     /**
      * @deprecated
      */
+    type BlendMode = egret3d.BlendMode;
+    /**
+     * @deprecated
+     */
+    const BlendMode: any;
+    /**
+     * @deprecated
+     */
     type MeshAttributeType = AttributeSemantics;
+    /**
+     * @deprecated
+     */
+    const MeshAttributeType: any;
 }
 declare namespace egret3d {
     /**
@@ -8868,6 +8920,34 @@ declare namespace egret3d {
      * @deprecated
      */
     type RawScene = paper.RawScene;
+    const enum RenderQueue {
+        /**
+         * @deprecated
+         */
+        AlphaTest = 2450,
+        /**
+         * @deprecated
+         */
+        Transparent = 3000,
+    }
+    const enum BlendMode {
+        /**
+         * @deprecated
+         */
+        Blend = 2,
+        /**
+         * @deprecated
+         */
+        Blend_PreMultiply = 3,
+        /**
+         * @deprecated
+         */
+        Add = 4,
+        /**
+         * @deprecated
+         */
+        Add_PreMultiply = 5,
+    }
     /**
      * @deprecated
      */
@@ -8980,8 +9060,12 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+    /**
+     *
+     */
     const enum DefineLocation {
-        All = 0,
+        None = 2,
+        All = 3,
         Vertex = 1,
         Fragment = 2,
     }
@@ -9061,7 +9145,7 @@ declare namespace egret3d {
         /**
          * 该材质的渲染排序。
          */
-        renderQueue: paper.RenderQueue | uint;
+        renderQueue: RenderQueue | uint;
         /**
          *
          */
@@ -9109,9 +9193,16 @@ declare namespace egret3d {
          * 设置该材质的混合模式。
          * @param blend 混合模式。
          * @param renderQueue 渲染顺序。
-         * @param opacity 透明度。
+         * @param opacity 透明度。（未设置则不更改透明度）
          */
-        setBlend(blend: gltf.BlendMode, renderQueue: paper.RenderQueue, opacity?: number): this;
+        setBlend(blend: BlendMode, renderQueue: RenderQueue, opacity?: number): this;
+        /**
+         * @param blendEquations BlendEquation。
+         * @param blendFactors BlendFactor。
+         * @param renderQueue 渲染顺序。
+         * @param opacity 透明度。（未设置则不更改透明度）
+         */
+        setBlend(blendEquations: gltf.BlendEquation[], blendFactors: gltf.BlendFactor[], renderQueue: RenderQueue, opacity?: number): this;
         /**
          * 设置该材质剔除面片的模式。
          * @param cullEnabled 是否开启剔除。

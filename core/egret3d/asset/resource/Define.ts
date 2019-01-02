@@ -19,11 +19,14 @@ namespace egret3d {
 
         return define;
     }
-
+    /**
+     * 
+     */
     export const enum DefineLocation {
-        All,
-        Vertex,
-        Fragment
+        None = 0b10,
+        All = 0b11,
+        Vertex = 0b01,
+        Fragment = 0b10,
     }
     /**
      * @private
@@ -167,7 +170,7 @@ namespace egret3d {
             let definesString = "";
 
             for (const define of this._defines) {
-                if (define.type === DefineLocation.All || define.type === DefineLocation.Vertex) {
+                if (define.type & DefineLocation.Vertex) {
                     if (define.isDefine) {
                         definesString += "#define " + define.context + " \n";
                     }
@@ -186,7 +189,7 @@ namespace egret3d {
             let definesString = "";
 
             for (const define of this._defines) {
-                if (define.type === DefineLocation.All || define.type === DefineLocation.Fragment) {
+                if (define.type & DefineLocation.Fragment) {
                     if (define.isDefine) {
                         definesString += "#define " + define.context + " \n";
                     }

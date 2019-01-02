@@ -13,6 +13,9 @@ declare namespace paper {
         //Layer-auto-replace-start
         //Layer-auto-replace-end
     }
+}
+
+declare namespace egret3d {
     /**
      * 渲染排序。
      */

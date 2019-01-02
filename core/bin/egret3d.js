@@ -569,17 +569,6 @@ var paper;
         SystemOrder[SystemOrder["Disable"] = 9000] = "Disable";
         SystemOrder[SystemOrder["End"] = 10000] = "End";
     })(SystemOrder = paper.SystemOrder || (paper.SystemOrder = {}));
-    /**
-     * 渲染排序。
-     */
-    var RenderQueue;
-    (function (RenderQueue) {
-        RenderQueue[RenderQueue["Background"] = 1000] = "Background";
-        RenderQueue[RenderQueue["Geometry"] = 2000] = "Geometry";
-        RenderQueue[RenderQueue["AlphaTest"] = 2450] = "AlphaTest";
-        RenderQueue[RenderQueue["Transparent"] = 3000] = "Transparent";
-        RenderQueue[RenderQueue["Overlay"] = 4000] = "Overlay";
-    })(RenderQueue = paper.RenderQueue || (paper.RenderQueue = {}));
 })(paper || (paper = {}));
 var paper;
 (function (paper) {
@@ -2189,6 +2178,63 @@ var paper;
 var egret3d;
 (function (egret3d) {
     /**
+     * 渲染排序。
+     */
+    var RenderQueue;
+    (function (RenderQueue) {
+        RenderQueue[RenderQueue["Background"] = 1000] = "Background";
+        RenderQueue[RenderQueue["Geometry"] = 2000] = "Geometry";
+        RenderQueue[RenderQueue["Mask"] = 2450] = "Mask";
+        RenderQueue[RenderQueue["Blend"] = 3000] = "Blend";
+        RenderQueue[RenderQueue["Overlay"] = 4000] = "Overlay";
+    })(RenderQueue = egret3d.RenderQueue || (egret3d.RenderQueue = {}));
+    /**
+     * 混合模式。
+     */
+    var BlendMode;
+    (function (BlendMode) {
+        /**
+         * 不混合。
+         */
+        BlendMode[BlendMode["None"] = 0] = "None";
+        /**
+         * 正常。
+         */
+        BlendMode[BlendMode["Normal"] = 2] = "Normal";
+        /**
+         * 正常并预乘。
+         */
+        BlendMode[BlendMode["Normal_PreMultiply"] = 3] = "Normal_PreMultiply";
+        /**
+         * 相加。
+         */
+        BlendMode[BlendMode["Additive"] = 4] = "Additive";
+        /**
+         * 相加并预乘。
+         */
+        BlendMode[BlendMode["Additive_PreMultiply"] = 5] = "Additive_PreMultiply";
+        /**
+         * 相减。
+         */
+        BlendMode[BlendMode["Subtractive"] = 8] = "Subtractive";
+        /**
+         * 相减并预乘。
+         */
+        BlendMode[BlendMode["Subtractive_PreMultiply"] = 9] = "Subtractive_PreMultiply";
+        /**
+         * 相乘。
+         */
+        BlendMode[BlendMode["Multiply"] = 16] = "Multiply";
+        /**
+         * 相乘并预乘。
+         */
+        BlendMode[BlendMode["Multiply_PreMultiply"] = 17] = "Multiply_PreMultiply";
+        /**
+         * 自定义混合。
+         */
+        BlendMode[BlendMode["Custom"] = -1] = "Custom";
+    })(BlendMode = egret3d.BlendMode || (egret3d.BlendMode = {}));
+    /**
      * @private
      */
     var AnimationBlendType;
@@ -2213,26 +2259,6 @@ var gltf;
         BufferMask[BufferMask["StencilAndColor"] = 17408] = "StencilAndColor";
         BufferMask[BufferMask["All"] = 17664] = "All";
     })(BufferMask = gltf.BufferMask || (gltf.BufferMask = {}));
-    var BlendMode;
-    (function (BlendMode) {
-        BlendMode[BlendMode["None"] = 0] = "None";
-        BlendMode[BlendMode["Blend"] = 1] = "Blend";
-        BlendMode[BlendMode["Blend_PreMultiply"] = 2] = "Blend_PreMultiply";
-        BlendMode[BlendMode["Additive"] = 3] = "Additive";
-        BlendMode[BlendMode["Additive_PreMultiply"] = 4] = "Additive_PreMultiply";
-        BlendMode[BlendMode["Subtractive"] = 5] = "Subtractive";
-        BlendMode[BlendMode["Subtractive_PreMultiply"] = 6] = "Subtractive_PreMultiply";
-        BlendMode[BlendMode["Multiply"] = 7] = "Multiply";
-        BlendMode[BlendMode["Multiply_PreMultiply"] = 8] = "Multiply_PreMultiply";
-        /**
-         * @deprecated
-         */
-        BlendMode[BlendMode["Add"] = 3] = "Add";
-        /**
-         * @deprecated
-         */
-        BlendMode[BlendMode["Add_PreMultiply"] = 4] = "Add_PreMultiply";
-    })(BlendMode = gltf.BlendMode || (gltf.BlendMode = {}));
     var BlendEquation;
     (function (BlendEquation) {
         BlendEquation[BlendEquation["Add"] = 32774] = "Add";
@@ -11634,34 +11660,34 @@ var egret3d;
             DefaultShaders.MESH_PHONE_DOUBLESIDE = this._createShader("builtin/meshphong_doubleside.shader.json", egret3d.ShaderLib.meshphong, 2000 /* Geometry */, helpStates, ["USE_MAP" /* USE_MAP */]);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.MESH_PHYSICAL_DOUBLESIDE = this._createShader("builtin/meshphysical_doubleside.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(1 /* Blend */, 3000 /* Transparent */);
-            DefaultShaders.TRANSPARENT_COLOR = this._createShader("builtin/transparent_color.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(3 /* Additive */, 3000 /* Transparent */);
-            DefaultShaders.TRANSPARENT_ADDITIVE_COLOR = this._createShader("builtin/transparent_additive_color.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(1 /* Blend */, 3000 /* Transparent */);
-            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(1 /* Blend */, 3000 /* Transparent */);
-            DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(3 /* Add */, 3000 /* Transparent */);
-            DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(3 /* Add */, 3000 /* Transparent */);
-            DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(7 /* Multiply */, 3000 /* Transparent */);
-            DefaultShaders.TRANSPARENT_MULTIPLY = this._createShader("builtin/transparent_multiply.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(7 /* Multiply */, 3000 /* Transparent */);
-            DefaultShaders.TRANSPARENT_MULTIPLY_DOUBLESIDE = this._createShader("builtin/transparent_multiply_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(1 /* Blend */, 3000 /* Transparent */);
-            DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", egret3d.ShaderLib.particle, 3000 /* Transparent */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(3 /* Add */, 3000 /* Transparent */);
-            DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", egret3d.ShaderLib.particle, 3000 /* Transparent */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(7 /* Multiply */, 3000 /* Transparent */);
-            DefaultShaders.PARTICLE_MULTIPLY = this._createShader("builtin/particle_multiply.shader.json", egret3d.ShaderLib.particle, 3000 /* Transparent */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(2 /* Blend_PreMultiply */, 3000 /* Transparent */);
-            DefaultShaders.PARTICLE_BLEND_PREMULTIPLY = this._createShader("builtin/particle_blend_premultiply.shader.json", egret3d.ShaderLib.particle, 3000 /* Transparent */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(4 /* Add_PreMultiply */, 3000 /* Transparent */);
-            DefaultShaders.PARTICLE_ADDITIVE_PREMULTIPLY = this._createShader("builtin/particle_additive_premultiply.shader.json", egret3d.ShaderLib.particle, 3000 /* Transparent */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(8 /* Multiply_PreMultiply */, 3000 /* Transparent */);
-            DefaultShaders.PARTICLE_MULTIPLY_PREMULTIPLY = this._createShader("builtin/particle_multiply_premultiply.shader.json", egret3d.ShaderLib.particle, 3000 /* Transparent */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(2 /* Normal */, 3000 /* Blend */);
+            DefaultShaders.TRANSPARENT_COLOR = this._createShader("builtin/transparent_color.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(4 /* Additive */, 3000 /* Blend */);
+            DefaultShaders.TRANSPARENT_ADDITIVE_COLOR = this._createShader("builtin/transparent_additive_color.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(2 /* Normal */, 3000 /* Blend */);
+            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(2 /* Normal */, 3000 /* Blend */);
+            DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(4 /* Add */, 3000 /* Blend */);
+            DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(4 /* Add */, 3000 /* Blend */);
+            DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(16 /* Multiply */, 3000 /* Blend */);
+            DefaultShaders.TRANSPARENT_MULTIPLY = this._createShader("builtin/transparent_multiply.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(16 /* Multiply */, 3000 /* Blend */);
+            DefaultShaders.TRANSPARENT_MULTIPLY_DOUBLESIDE = this._createShader("builtin/transparent_multiply_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(2 /* Normal */, 3000 /* Blend */);
+            DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", egret3d.ShaderLib.particle, 3000 /* Blend */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(4 /* Add */, 3000 /* Blend */);
+            DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", egret3d.ShaderLib.particle, 3000 /* Blend */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(16 /* Multiply */, 3000 /* Blend */);
+            DefaultShaders.PARTICLE_MULTIPLY = this._createShader("builtin/particle_multiply.shader.json", egret3d.ShaderLib.particle, 3000 /* Blend */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(3 /* Blend_PreMultiply */, 3000 /* Blend */);
+            DefaultShaders.PARTICLE_BLEND_PREMULTIPLY = this._createShader("builtin/particle_blend_premultiply.shader.json", egret3d.ShaderLib.particle, 3000 /* Blend */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(5 /* Add_PreMultiply */, 3000 /* Blend */);
+            DefaultShaders.PARTICLE_ADDITIVE_PREMULTIPLY = this._createShader("builtin/particle_additive_premultiply.shader.json", egret3d.ShaderLib.particle, 3000 /* Blend */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(17 /* Multiply_PreMultiply */, 3000 /* Blend */);
+            DefaultShaders.PARTICLE_MULTIPLY_PREMULTIPLY = this._createShader("builtin/particle_multiply_premultiply.shader.json", egret3d.ShaderLib.particle, 3000 /* Blend */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
             helpMaterial.dispose();
         };
         return DefaultShaders;
@@ -11806,7 +11832,17 @@ var egret3d;
                         break;
                 }
             }
+            var defines = egret3d.renderState.defines;
             if (directLightCount !== directionalLights.length) {
+                if (directionalLights.length > 0) {
+                    defines.removeDefine("NUM_DIR_LIGHTS" /* NUM_DIR_LIGHTS */, directionalLights.length);
+                }
+                if (directLightCount > 0) {
+                    var define = defines.addDefine("NUM_DIR_LIGHTS" /* NUM_DIR_LIGHTS */, directLightCount);
+                    if (define) {
+                        define.type = 2 /* None */;
+                    }
+                }
                 this.lightCountDirty |= LightCountDirty.DirectionalLight;
                 directionalLights.length = directLightCount;
                 var index = 0;
@@ -11819,6 +11855,15 @@ var egret3d;
                 }
             }
             if (spotLightCount !== spotLights.length) {
+                if (spotLights.length > 0) {
+                    defines.removeDefine("NUM_SPOT_LIGHTS" /* NUM_SPOT_LIGHTS */, spotLights.length);
+                }
+                if (spotLightCount > 0) {
+                    var define = defines.addDefine("NUM_SPOT_LIGHTS" /* NUM_SPOT_LIGHTS */, spotLightCount);
+                    if (define) {
+                        define.type = 2 /* None */;
+                    }
+                }
                 this.lightCountDirty |= LightCountDirty.SpotLight;
                 spotLights.length = spotLightCount;
                 var index = 0;
@@ -11831,6 +11876,15 @@ var egret3d;
                 }
             }
             if (rectangleAreaLightCount !== rectangleAreaLights.length) {
+                if (rectangleAreaLights.length > 0) {
+                    defines.removeDefine("NUM_RECT_AREA_LIGHTS" /* NUM_RECT_AREA_LIGHTS */, rectangleAreaLights.length);
+                }
+                if (rectangleAreaLightCount > 0) {
+                    var define = defines.addDefine("NUM_RECT_AREA_LIGHTS" /* NUM_RECT_AREA_LIGHTS */, rectangleAreaLightCount);
+                    if (define) {
+                        define.type = 2 /* None */;
+                    }
+                }
                 this.lightCountDirty |= LightCountDirty.RectangleAreaLight;
                 rectangleAreaLights.length = rectangleAreaLightCount;
                 var index = 0;
@@ -11843,6 +11897,15 @@ var egret3d;
                 }
             }
             if (pointLightCount !== pointLights.length) {
+                if (pointLights.length > 0) {
+                    defines.removeDefine("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */, pointLights.length);
+                }
+                if (pointLightCount > 0) {
+                    var define = defines.addDefine("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */, pointLightCount);
+                    if (define) {
+                        define.type = 2 /* None */;
+                    }
+                }
                 this.lightCountDirty |= LightCountDirty.PointLight;
                 pointLights.length = pointLightCount;
                 var index = 0;
@@ -11855,6 +11918,15 @@ var egret3d;
                 }
             }
             if (hemisphereLightCount !== hemisphereLights.length) {
+                if (hemisphereLights.length > 0) {
+                    defines.removeDefine("NUM_HEMI_LIGHTS" /* NUM_HEMI_LIGHTS */, hemisphereLights.length);
+                }
+                if (hemisphereLightCount > 0) {
+                    var define = defines.addDefine("NUM_HEMI_LIGHTS" /* NUM_HEMI_LIGHTS */, hemisphereLightCount);
+                    if (define) {
+                        define.type = 2 /* None */;
+                    }
+                }
                 this.lightCountDirty |= LightCountDirty.HemisphereLight;
                 hemisphereLights.length = hemisphereLightCount;
                 var index = 0;
@@ -14572,7 +14644,7 @@ var egret3d;
                 if ((camera.cullingMask & renderer.gameObject.layer) !== 0 &&
                     (!renderer.frustumCulled || egret3d.math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))) {
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
-                    if (drawCall.material.renderQueue >= 3000 /* Transparent */) {
+                    if (drawCall.material.renderQueue >= 2450 /* Mask */) {
                         transparentCalls.push(drawCall);
                     }
                     else {
@@ -23239,6 +23311,28 @@ var egret3d;
     }());
     __reflect(CombineInstance.prototype, "CombineInstance");
 })(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    /**
+     * @deprecated
+     */
+    paper.CullingMask = paper.Layer;
+    /**
+     * @deprecated
+     */
+    paper.RenderQueue = egret3d.RenderQueue;
+})(paper || (paper = {}));
+var gltf;
+(function (gltf) {
+    /**
+     * @deprecated
+     */
+    gltf.BlendMode = egret3d.BlendMode;
+    /**
+     * @deprecated
+     */
+    gltf.MeshAttributeType = gltf.AttributeSemantics;
+})(gltf || (gltf = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -23277,6 +23371,36 @@ var egret3d;
      * @deprecated
      */
     egret3d.RawScene = paper.RawScene;
+    var RenderQueue;
+    (function (RenderQueue) {
+        /**
+         * @deprecated
+         */
+        RenderQueue[RenderQueue["AlphaTest"] = 2450] = "AlphaTest";
+        /**
+         * @deprecated
+         */
+        RenderQueue[RenderQueue["Transparent"] = 3000] = "Transparent";
+    })(RenderQueue = egret3d.RenderQueue || (egret3d.RenderQueue = {}));
+    var BlendMode;
+    (function (BlendMode) {
+        /**
+         * @deprecated
+         */
+        BlendMode[BlendMode["Blend"] = 2] = "Blend";
+        /**
+         * @deprecated
+         */
+        BlendMode[BlendMode["Blend_PreMultiply"] = 3] = "Blend_PreMultiply";
+        /**
+         * @deprecated
+         */
+        BlendMode[BlendMode["Add"] = 4] = "Add";
+        /**
+         * @deprecated
+         */
+        BlendMode[BlendMode["Add_PreMultiply"] = 5] = "Add_PreMultiply";
+    })(BlendMode = egret3d.BlendMode || (egret3d.BlendMode = {}));
     /**
      * @deprecated
      * @internal
@@ -23592,9 +23716,13 @@ var egret3d;
         }
         return define;
     }
+    /**
+     *
+     */
     var DefineLocation;
     (function (DefineLocation) {
-        DefineLocation[DefineLocation["All"] = 0] = "All";
+        DefineLocation[DefineLocation["None"] = 2] = "None";
+        DefineLocation[DefineLocation["All"] = 3] = "All";
         DefineLocation[DefineLocation["Vertex"] = 1] = "Vertex";
         DefineLocation[DefineLocation["Fragment"] = 2] = "Fragment";
     })(DefineLocation = egret3d.DefineLocation || (egret3d.DefineLocation = {}));
@@ -23610,7 +23738,7 @@ var egret3d;
             /**
              * @internal
              */
-            this.type = 0 /* All */;
+            this.type = 3 /* All */;
             this.index = index;
             this.mask = mask;
             this.context = context;
@@ -23717,7 +23845,7 @@ var egret3d;
                 var definesString = "";
                 for (var _i = 0, _a = this._defines; _i < _a.length; _i++) {
                     var define = _a[_i];
-                    if (define.type === 0 /* All */ || define.type === 1 /* Vertex */) {
+                    if (define.type & 1 /* Vertex */) {
                         if (define.isDefine) {
                             definesString += "#define " + define.context + " \n";
                         }
@@ -23739,7 +23867,7 @@ var egret3d;
                 var definesString = "";
                 for (var _i = 0, _a = this._defines; _i < _a.length; _i++) {
                     var define = _a[_i];
-                    if (define.type === 0 /* All */ || define.type === 2 /* Fragment */) {
+                    if (define.type & 2 /* Fragment */) {
                         if (define.isDefine) {
                             definesString += "#define " + define.context + " \n";
                         }
@@ -23880,6 +24008,24 @@ var egret3d;
                 else {
                     technique.states = egret3d.Shader.createDefaultStates();
                 }
+            }
+            //
+            if (technique.states.enable.indexOf(2884 /* CullFace */) >= 0) {
+                var frontFaceValue = technique.states.functions.frontFace;
+                var cullFaceValue = technique.states.functions.cullFace;
+                var frontFace = frontFaceValue && frontFaceValue.length > 0 ? frontFaceValue[0] : 2305 /* CCW */;
+                var cullFace = cullFaceValue && cullFaceValue.length > 0 ? cullFaceValue[0] : 1029 /* Back */;
+                this.defines.removeDefine("FLIP_SIDED" /* DOUBLE_SIDED */);
+                if (frontFace !== 2305 /* CCW */ || cullFace !== 1029 /* Back */) {
+                    this.defines.addDefine("FLIP_SIDED" /* FLIP_SIDED */);
+                }
+                else {
+                    this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
+                }
+            }
+            else {
+                this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
+                this.defines.addDefine("FLIP_SIDED" /* DOUBLE_SIDED */);
             }
             // Copy defines.
             if (materialDefines) {
@@ -24212,51 +24358,58 @@ var egret3d;
             this.defines.removeDefine(defineString, value);
             return this;
         };
-        /**
-         * 设置该材质的混合模式。
-         * @param blend 混合模式。
-         * @param renderQueue 渲染顺序。
-         * @param opacity 透明度。
-         */
-        Material.prototype.setBlend = function (blend, renderQueue, opacity) {
+        Material.prototype.setBlend = function (p0, p1, p2, p3) {
             var _a = this._technique.states, enable = _a.enable, functions = _a.functions;
-            switch (blend) {
-                case 3 /* Add */:
-                    functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
-                    functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 1 /* ONE */, 770 /* SRC_ALPHA */, 1 /* ONE */];
-                    break;
-                case 4 /* Add_PreMultiply */:
-                    functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
-                    functions.blendFuncSeparate = [1 /* ONE */, 1 /* ONE */, 1 /* ONE */, 1 /* ONE */];
-                    break;
-                case 1 /* Blend */:
-                    functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
-                    functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */, 1 /* ONE */, 771 /* ONE_MINUS_SRC_ALPHA */];
-                    break;
-                case 2 /* Blend_PreMultiply */:
-                    functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
-                    functions.blendFuncSeparate = [1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */, 1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */];
-                    break;
-                case 5 /* Subtractive */:
-                    functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
-                    functions.blendFuncSeparate = [0 /* ZERO */, 769 /* ONE_MINUS_SRC_COLOR */, 0 /* ZERO */, 769 /* ONE_MINUS_SRC_COLOR */];
-                    break;
-                case 6 /* Subtractive_PreMultiply */:
-                    functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
-                    functions.blendFuncSeparate = [0 /* ZERO */, 0 /* ZERO */, 769 /* ONE_MINUS_SRC_COLOR */, 771 /* ONE_MINUS_SRC_ALPHA */];
-                    break;
-                case 7 /* Multiply */:
-                    functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
-                    functions.blendFuncSeparate = [0 /* ZERO */, 768 /* SRC_COLOR */, 0 /* ZERO */, 768 /* SRC_COLOR */];
-                    break;
-                case 8 /* Multiply_PreMultiply */:
-                    functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
-                    functions.blendFuncSeparate = [0 /* ZERO */, 768 /* SRC_COLOR */, 0 /* ZERO */, 770 /* SRC_ALPHA */];
-                    break;
-                default:
-                    delete functions.blendEquationSeparate;
-                    delete functions.blendFuncSeparate;
-                    break;
+            var blend = Array.isArray(p0) ? -1 /* Custom */ : p0;
+            var renderQueue;
+            var opacity = undefined;
+            if (blend === -1 /* Custom */) {
+                functions.blendEquationSeparate = p0;
+                functions.blendFuncSeparate = p1;
+                renderQueue = p2;
+                opacity = p3;
+            }
+            else {
+                switch (blend) {
+                    case 4 /* Add */:
+                        functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
+                        functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 1 /* ONE */, 770 /* SRC_ALPHA */, 1 /* ONE */];
+                        break;
+                    case 5 /* Add_PreMultiply */:
+                        functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
+                        functions.blendFuncSeparate = [1 /* ONE */, 1 /* ONE */, 1 /* ONE */, 1 /* ONE */];
+                        break;
+                    case 2 /* Normal */:
+                        functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
+                        functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 771 /* ONE_MINUS_SRC_ALPHA */, 1 /* ONE */, 771 /* ONE_MINUS_SRC_ALPHA */];
+                        break;
+                    case 3 /* Normal_PreMultiply */:
+                        functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
+                        functions.blendFuncSeparate = [1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */, 1 /* ONE */, 32772 /* ONE_MINUS_CONSTANT_ALPHA */];
+                        break;
+                    case 8 /* Subtractive */:
+                        functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
+                        functions.blendFuncSeparate = [0 /* ZERO */, 769 /* ONE_MINUS_SRC_COLOR */, 0 /* ZERO */, 769 /* ONE_MINUS_SRC_COLOR */];
+                        break;
+                    case 9 /* Subtractive_PreMultiply */:
+                        functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
+                        functions.blendFuncSeparate = [0 /* ZERO */, 0 /* ZERO */, 769 /* ONE_MINUS_SRC_COLOR */, 771 /* ONE_MINUS_SRC_ALPHA */];
+                        break;
+                    case 16 /* Multiply */:
+                        functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
+                        functions.blendFuncSeparate = [0 /* ZERO */, 768 /* SRC_COLOR */, 0 /* ZERO */, 768 /* SRC_COLOR */];
+                        break;
+                    case 17 /* Multiply_PreMultiply */:
+                        functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
+                        functions.blendFuncSeparate = [0 /* ZERO */, 768 /* SRC_COLOR */, 0 /* ZERO */, 770 /* SRC_ALPHA */];
+                        break;
+                    default:
+                        delete functions.blendEquationSeparate;
+                        delete functions.blendFuncSeparate;
+                        break;
+                }
+                renderQueue = p1;
+                opacity = p2;
             }
             var index = enable.indexOf(3042 /* Blend */);
             if (blend === 0 /* None */) {
@@ -24295,7 +24448,7 @@ var egret3d;
                 functions.frontFace = [frontFace];
                 functions.cullFace = [cullFace];
                 this.defines.removeDefine("FLIP_SIDED" /* DOUBLE_SIDED */);
-                if (cullFace === 1029 /* Back */) {
+                if (frontFace !== 2305 /* CCW */ || cullFace !== 1029 /* Back */) {
                     this.defines.addDefine("FLIP_SIDED" /* FLIP_SIDED */);
                 }
                 else {
@@ -26712,20 +26865,16 @@ var egret3d;
          * @internal
          */
         var WebGLProgramBinder = (function () {
-            function WebGLProgramBinder(program, vsShader, fsShader) {
+            function WebGLProgramBinder(program) {
                 this.id = _hashCode++;
                 this.attributes = [];
                 this.globalUniforms = [];
                 this.uniforms = [];
                 this.program = program;
-                this.vsShader = vsShader;
-                this.fsShader = fsShader;
             }
             WebGLProgramBinder.prototype.dispose = function () {
                 var webgl = webgl_3.WebGLRenderState.webgl;
                 webgl.deleteProgram(this.program);
-                webgl.deleteShader(this.vsShader);
-                webgl.deleteShader(this.fsShader);
             };
             WebGLProgramBinder.prototype.extract = function (technique) {
                 var webgl = webgl_3.WebGLRenderState.webgl;
@@ -27865,7 +28014,7 @@ var egret3d;
                         webgl_12.linkProgram(webGLProgram);
                         var parameter = webgl_12.getProgramParameter(webGLProgram, 35714 /* LinkStatus */);
                         if (parameter) {
-                            program = new webgl_11.WebGLProgramBinder(webGLProgram, vertexWebGLShader, fragmentWebGLShader).extract(material.technique);
+                            program = new webgl_11.WebGLProgramBinder(webGLProgram).extract(material.technique);
                         }
                         else {
                             console.error("program compile: " + shader.name + " error! ->" + webgl_12.getProgramInfoLog(webGLProgram));

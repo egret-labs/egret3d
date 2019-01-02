@@ -41,7 +41,7 @@ namespace egret3d {
         /**
          * 该材质的渲染排序。
          */
-        public renderQueue: paper.RenderQueue | uint = paper.RenderQueue.Geometry;
+        public renderQueue: RenderQueue | uint = RenderQueue.Geometry;
         /**
          * 
          */
@@ -136,6 +136,27 @@ namespace egret3d {
                     technique.states = Shader.createDefaultStates();
                 }
             }
+            //
+            if (technique.states!.enable!.indexOf(gltf.EnableState.CullFace) >= 0) {
+                const frontFaceValue = technique.states.functions!.frontFace;
+                const cullFaceValue = technique.states.functions!.cullFace;
+                const frontFace = frontFaceValue && frontFaceValue.length > 0 ? frontFaceValue[0] : gltf.FrontFace.CCW;
+                const cullFace = cullFaceValue && cullFaceValue.length > 0 ? cullFaceValue[0] : gltf.CullFace.Back;
+
+                this.defines.removeDefine(ShaderDefine.DOUBLE_SIDED);
+
+                if (frontFace !== gltf.FrontFace.CCW || cullFace !== gltf.CullFace.Back) {
+                    this.defines.addDefine(ShaderDefine.FLIP_SIDED);
+                }
+                else {
+                    this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
+                }
+            }
+            else {
+                this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
+                this.defines.addDefine(ShaderDefine.DOUBLE_SIDED);
+            }
+
             // Copy defines.
             if (materialDefines) {
                 for (const define of materialDefines) {
@@ -166,7 +187,7 @@ namespace egret3d {
                     glTFMaterial = {
                         extensions: {
                             KHR_techniques_webgl: { technique: shaderOrConfig.name },
-                            paper: { renderQueue: shaderOrConfig._renderQueue ? shaderOrConfig._renderQueue : paper.RenderQueue.Geometry }
+                            paper: { renderQueue: shaderOrConfig._renderQueue ? shaderOrConfig._renderQueue : RenderQueue.Geometry }
                         }
                     };
                     config.materials = [glTFMaterial];
@@ -521,61 +542,83 @@ namespace egret3d {
          * 设置该材质的混合模式。
          * @param blend 混合模式。
          * @param renderQueue 渲染顺序。
-         * @param opacity 透明度。
+         * @param opacity 透明度。（未设置则不更改透明度）
          */
-        public setBlend(blend: gltf.BlendMode, renderQueue: paper.RenderQueue, opacity?: number): this {
+        public setBlend(blend: BlendMode, renderQueue: RenderQueue, opacity?: number): this;
+        /**
+         * @param blendEquations BlendEquation。
+         * @param blendFactors BlendFactor。
+         * @param renderQueue 渲染顺序。
+         * @param opacity 透明度。（未设置则不更改透明度）
+         */
+        public setBlend(blendEquations: gltf.BlendEquation[], blendFactors: gltf.BlendFactor[], renderQueue: RenderQueue, opacity?: number): this;
+        public setBlend(p0: BlendMode | (gltf.BlendEquation[]), p1: RenderQueue | (gltf.BlendFactor[]), p2?: number | RenderQueue, p3?: number): this {
             const { enable, functions } = this._technique.states!;
+            const blend = Array.isArray(p0) ? BlendMode.Custom : p0;
+            let renderQueue: RenderQueue;
+            let opacity: number | undefined = undefined;
 
-            switch (blend) {
-                case gltf.BlendMode.Add:
-                    functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
-                    functions!.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
-                    break;
+            if (blend === BlendMode.Custom) {
+                functions!.blendEquationSeparate = p0 as gltf.BlendEquation[];
+                functions!.blendFuncSeparate = p1 as gltf.BlendFactor[];
+                renderQueue = p2 as RenderQueue;
+                opacity = p3;
+            }
+            else {
+                switch (blend) {
+                    case BlendMode.Add:
+                        functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
+                        functions!.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
+                        break;
 
-                case gltf.BlendMode.Add_PreMultiply:
-                    functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
-                    functions!.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE];
-                    break;
+                    case BlendMode.Add_PreMultiply:
+                        functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
+                        functions!.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE];
+                        break;
 
-                case gltf.BlendMode.Blend:
-                    functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
-                    functions!.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
-                    break;
+                    case BlendMode.Normal:
+                        functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
+                        functions!.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
+                        break;
 
-                case gltf.BlendMode.Blend_PreMultiply:
-                    functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
-                    functions!.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA];
-                    break;
+                    case BlendMode.Normal_PreMultiply:
+                        functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
+                        functions!.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE_MINUS_CONSTANT_ALPHA];
+                        break;
 
-                case gltf.BlendMode.Subtractive:
-                    functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
-                    functions!.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.ONE_MINUS_SRC_COLOR, gltf.BlendFactor.ZERO, gltf.BlendFactor.ONE_MINUS_SRC_COLOR];
-                    break;
+                    case BlendMode.Subtractive:
+                        functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
+                        functions!.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.ONE_MINUS_SRC_COLOR, gltf.BlendFactor.ZERO, gltf.BlendFactor.ONE_MINUS_SRC_COLOR];
+                        break;
 
-                case gltf.BlendMode.Subtractive_PreMultiply:
-                    functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
-                    functions!.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.ZERO, gltf.BlendFactor.ONE_MINUS_SRC_COLOR, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
-                    break;
+                    case BlendMode.Subtractive_PreMultiply:
+                        functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
+                        functions!.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.ZERO, gltf.BlendFactor.ONE_MINUS_SRC_COLOR, gltf.BlendFactor.ONE_MINUS_SRC_ALPHA];
+                        break;
 
-                case gltf.BlendMode.Multiply:
-                    functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
-                    functions!.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_COLOR, gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_COLOR];
-                    break;
+                    case BlendMode.Multiply:
+                        functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
+                        functions!.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_COLOR, gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_COLOR];
+                        break;
 
-                case gltf.BlendMode.Multiply_PreMultiply:
-                    functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
-                    functions!.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_COLOR, gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_ALPHA];
-                    break;
+                    case BlendMode.Multiply_PreMultiply:
+                        functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
+                        functions!.blendFuncSeparate = [gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_COLOR, gltf.BlendFactor.ZERO, gltf.BlendFactor.SRC_ALPHA];
+                        break;
 
-                default:
-                    delete functions!.blendEquationSeparate;
-                    delete functions!.blendFuncSeparate;
-                    break;
+                    default:
+                        delete functions!.blendEquationSeparate;
+                        delete functions!.blendFuncSeparate;
+                        break;
+                }
+
+                renderQueue = p1 as RenderQueue;
+                opacity = p2;
             }
 
             const index = enable!.indexOf(gltf.EnableState.Blend);
 
-            if (blend === gltf.BlendMode.None) {
+            if (blend === BlendMode.None) {
                 if (index >= 0) {
                     enable!.splice(index, 1);
                 }
@@ -616,7 +659,7 @@ namespace egret3d {
 
                 this.defines.removeDefine(ShaderDefine.DOUBLE_SIDED);
 
-                if (cullFace === gltf.CullFace.Back) {
+                if (frontFace !== gltf.FrontFace.CCW || cullFace !== gltf.CullFace.Back) {
                     this.defines.addDefine(ShaderDefine.FLIP_SIDED);
                 }
                 else {

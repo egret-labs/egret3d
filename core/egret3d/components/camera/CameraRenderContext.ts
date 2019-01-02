@@ -191,7 +191,7 @@ namespace egret3d {
                     (!renderer.frustumCulled || math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))
                 ) {
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
-                    if (drawCall!.material!.renderQueue >= paper.RenderQueue.Transparent) {
+                    if (drawCall!.material!.renderQueue >= RenderQueue.Mask) {
                         transparentCalls.push(drawCall!);
                     }
                     else {

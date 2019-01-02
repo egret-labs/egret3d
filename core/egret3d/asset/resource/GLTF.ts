@@ -1,5 +1,60 @@
 namespace egret3d {
     /**
+     * 渲染排序。
+     */
+    export const enum RenderQueue {
+        Background = 1000,
+        Geometry = 2000,
+        Mask = 2450,
+        Blend = 3000,
+        Overlay = 4000,
+    }
+    /**
+     * 混合模式。
+     */
+    export const enum BlendMode {
+        /**
+         * 不混合。
+         */
+        None = 0,
+        /**
+         * 正常。
+         */
+        Normal = 0b000010,
+        /**
+         * 正常并预乘。
+         */
+        Normal_PreMultiply = 0b000011,
+        /**
+         * 相加。
+         */
+        Additive = 0b000100,
+        /**
+         * 相加并预乘。
+         */
+        Additive_PreMultiply = 0b000101,
+        /**
+         * 相减。
+         */
+        Subtractive = 0b001000,
+        /**
+         * 相减并预乘。
+         */
+        Subtractive_PreMultiply = 0b001001,
+        /**
+         * 相乘。
+         */
+        Multiply = 0b010000,
+        /**
+         * 相乘并预乘。
+         */
+        Multiply_PreMultiply = 0b010001,
+        /**
+         * 自定义混合。
+         */
+        Custom = -1,
+    }
+    /**
      * 扩展 glTF。
      */
     export interface GLTF extends gltf.GLTF {
@@ -30,7 +85,7 @@ namespace egret3d {
         extensions: {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
             paper: {
-                renderQueue: uint;
+                renderQueue: RenderQueue | uint;
                 /**
                  * 该值如果定义，则覆盖着色器中的值。
                  */
@@ -267,26 +322,6 @@ namespace gltf {
         DepthAndColor = Depth | Color,
         StencilAndColor = Stencil | Color,
         All = Depth | Stencil | Color,
-    }
-
-    export const enum BlendMode {
-        None = 0,
-        Blend = 1,
-        Blend_PreMultiply = 2,
-        Additive = 3,
-        Additive_PreMultiply = 4,
-        Subtractive = 5,
-        Subtractive_PreMultiply = 6,
-        Multiply = 7,
-        Multiply_PreMultiply = 8,
-        /**
-         * @deprecated
-         */
-        Add = 3,
-        /**
-         * @deprecated
-         */
-        Add_PreMultiply = 4,
     }
 
     export const enum BlendEquation {
@@ -560,7 +595,7 @@ declare namespace gltf {
         _RECTAREALIGHTS = "_RECTAREALIGHTS",
         _POINTLIGHTS = "_POINTLIGHTS",
         _HEMILIGHTS = "_HEMILIGHTS",
-        
+
         _DIRECTIONSHADOWMAT = "_DIRECTIONSHADOWMAT",
         _SPOTSHADOWMAT = "_SPOTSHADOWMAT",
         _POINTSHADOWMAT = "_POINTSHADOWMAT",
@@ -570,7 +605,7 @@ declare namespace gltf {
         _LIGHTMAPTEX = "_LIGHTMAPTEX",
         _LIGHTMAPINTENSITY = "_LIGHTMAPINTENSITY",
         _LIGHTMAP_SCALE_OFFSET = "_LIGHTMAP_SCALE_OFFSET",
-        
+
         _REFERENCEPOSITION = "_REFERENCEPOSITION",
         _NEARDICTANCE = "_NEARDICTANCE",
         _FARDISTANCE = "_FARDISTANCE",

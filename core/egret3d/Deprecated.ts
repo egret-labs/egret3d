@@ -3,13 +3,37 @@ namespace paper {
      * @deprecated
      */
     export type CullingMask = Layer;
+    /**
+     * @deprecated
+     */
+    export const CullingMask = (paper as any).Layer;
+    /**
+     * @deprecated
+     */
+    export type RenderQueue = egret3d.RenderQueue;
+    /**
+     * @deprecated
+     */
+    export const RenderQueue = (egret3d as any).RenderQueue;
 }
 
 namespace gltf {
     /**
      * @deprecated
      */
+    export type BlendMode = egret3d.BlendMode;
+    /**
+     * @deprecated
+     */
+    export const BlendMode = (egret3d as any).BlendMode;
+    /**
+     * @deprecated
+     */
     export type MeshAttributeType = AttributeSemantics;
+    /**
+     * @deprecated
+     */
+    export const MeshAttributeType = (gltf as any).AttributeSemantics;
 }
 
 namespace egret3d {
@@ -65,6 +89,36 @@ namespace egret3d {
      * @deprecated
      */
     export type RawScene = paper.RawScene;
+
+    export const enum RenderQueue {
+        /**
+         * @deprecated
+         */
+        AlphaTest = Mask,
+        /**
+         * @deprecated
+         */
+        Transparent = Blend,
+    }
+
+    export const enum BlendMode {
+        /**
+         * @deprecated
+         */
+        Blend = Normal,
+        /**
+         * @deprecated
+         */
+        Blend_PreMultiply = Normal_PreMultiply,
+        /**
+         * @deprecated
+         */
+        Add = Additive,
+        /**
+         * @deprecated
+         */
+        Add_PreMultiply = Additive_PreMultiply,
+    }
     /**
      * @deprecated
      * @internal
