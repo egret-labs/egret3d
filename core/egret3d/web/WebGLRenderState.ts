@@ -85,17 +85,17 @@ namespace egret3d.webgl {
             this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
             this.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4); // TODO
             this.maxAnisotropy = (this.textureFilterAnisotropic !== null) ? webgl.getParameter(this.textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
-
+            //
             this._getCommonExtensions();
             this._getCommonDefines();
-
+            //
             console.info("WebGL version:", this.version);
             console.info("Standard derivatives enabled:", this.standardDerivativesEnabled);
             console.info("Texture float enabled:", this.textureFloatEnabled);
             console.info("Frag depth enabled:", this.fragDepthEnabled);
             console.info("Texture filter anisotropic:", this.textureFilterAnisotropic);
             console.info("Shader texture LOD:", this.shaderTextureLOD);
-
+            //
             console.info("Maximum shader precision:", this.maxPrecision);
             console.info("Maximum texture count:", this.maxTextures);
             console.info("Maximum vertex texture count:", this.maxVertexTextures);

@@ -281,7 +281,7 @@ namespace egret3d.webgl {
 
             (event as any).isPrimary = true; // TODO
             (event as any).pointerId = touch.identifier + 2;
-            (event as any).pressure = (touch as any).force || 0.5; // TODO egret build bug
+            // (event as any).pressure = (touch as any).force || 0.5; // TODO egret build bug
             (event as any).tangentialPressure = 0;
             (event as any).twist = 0;
             (event as any).width = ((touch as any).radiusX || 0) * 2; // TODO egret build bug
@@ -340,7 +340,7 @@ namespace egret3d.webgl {
                                 const eachPointer = inputCollecter.getPointer(eachTouch.identifier + 2);
                                 const eachPointerEvent = eachPointer.event!;
 
-                                (eachPointerEvent as any).pressure = (eachTouch as any).force || 0.5; // TODO egret build bug
+                                // (eachPointerEvent as any).pressure = (eachTouch as any).force || 0.5; // TODO egret build bug
                                 (eachPointerEvent as any).width = ((eachTouch as any).radiusX || 0) * 2; // TODO egret build bug
                                 (eachPointerEvent as any).height = ((eachTouch as any).radiusY || 0) * 2; // TODO egret build bug
 
@@ -511,12 +511,13 @@ namespace egret3d.webgl {
             // Key events.
             window.removeEventListener("keydown", this._onKeyEvent);
             window.removeEventListener("keyup", this._onKeyEvent);
-            inputCollecter.clear();
+            inputCollecter._clear();
         }
 
         public onUpdate(deltaTime: number) {
             if (inputCollecter.isActiveAndEnabled) {
-                inputCollecter.update(deltaTime).clear();
+                inputCollecter._update(deltaTime);
+                inputCollecter._clear();
             }
         }
     }

@@ -657,11 +657,6 @@ namespace egret3d.webgl {
             const renderer = drawCall.renderer;
             material = material || drawCall.material;
 
-            if (material.isDisposed) {
-                console.warn("Material has been disposed.");
-                return;
-            }
-
             if (renderer && renderer.gameObject._beforeRenderBehaviors.length > 0) {
                 let flag = false;
 

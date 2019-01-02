@@ -5,7 +5,7 @@ namespace paper {
     export class Clock extends SingletonComponent {
         public maxFixedSubSteps: uint = 3;
         public fixedDeltaTime: number = 1.0 / 50.0; // TODO same as fps.
-        public timeScale = 1.0;
+        public timeScale: number = 1.0;
 
         private _frameCount: uint = 0;
         private _beginTime: number = 0.0;
@@ -17,7 +17,7 @@ namespace paper {
 
         public initialize() {
             super.initialize();
-            Time = clock = this;
+            (Time as Clock) = (clock as Clock) = this;
             this._beginTime = this.now * 0.001;
         }
         /**
@@ -92,11 +92,5 @@ namespace paper {
     /**
      * 全局时钟信息组件实例。
      */
-    export let clock: Clock = null!;
-
-    /**
-     * @deprecated 
-     * @see paper.clock
-     */
-    export let Time: Clock = null!;
+    export const clock: Clock = null!;
 }

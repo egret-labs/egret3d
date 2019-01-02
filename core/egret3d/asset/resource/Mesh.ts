@@ -11,7 +11,7 @@ namespace egret3d {
     /**
      * 网格资源。
      */
-    export class Mesh extends GLTFAsset implements egret3d.IRaycast {
+    export class Mesh extends GLTFAsset implements IRaycast {
         /**
          * 创建一个网格。
          * @param vertexCount 
@@ -131,6 +131,7 @@ namespace egret3d {
 
         protected _drawMode: gltf.DrawMode = gltf.DrawMode.Static;
         protected _vertexCount: uint = 0;
+        protected _wireframeIndex: int = -1;
         protected readonly _attributeNames: gltf.AttributeSemantics[] = [];
         protected readonly _attributeTypes: { [key: string]: gltf.AccessorType } = {};
         protected _glTFMesh: gltf.Mesh = null!;
@@ -383,6 +384,132 @@ namespace egret3d {
             return primitives.length - 1;
         }
         /**
+         * 为该网格添加线框子网格。
+         * @param materialIndex 
+         */
+        public addWireframeSubMesh(materialIndex: uint): this {
+            if (this._wireframeIndex < 0) {
+                let index = 0;
+                const wireframeIndices = [] as number[];
+
+                for (const primitive of this._glTFMesh!.primitives) {
+                    if (primitive.indices !== undefined) {
+                        const indices = this.getIndices(index)!;
+
+                        for (let i = 0, l = indices.length; i < l; i += 3) {
+                            const a = indices[i + 0];
+                            const b = indices[i + 1];
+                            const c = indices[i + 2];
+                            wireframeIndices.push(a, b, b, c, c, a);
+                        }
+                    }
+                    else {
+                        // TODO
+                    }
+
+                    index++;
+                }
+
+                if (wireframeIndices.length > 0) {
+                    this._wireframeIndex = this.addSubMesh(wireframeIndices.length, materialIndex, gltf.MeshPrimitiveMode.Lines);
+                    this.setIndices(wireframeIndices, this._wireframeIndex);
+                }
+            }
+
+            return this;
+        }
+        /**
+         * 删除该网格已添加的线框子网格。
+         */
+        public removeWireframeSubMesh(): this {
+            if (this._wireframeIndex >= 0) {
+                const { primitives } = this._glTFMesh!;
+                const primitive = primitives[this._wireframeIndex];
+                // TODO 添加线框后，不能再添加 submesh
+                primitives.splice(this._wireframeIndex, 1);
+                this.buffers.splice(primitive.indices!, 1);
+                this._wireframeIndex = -1;
+            }
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public normalizeNormals(): this {
+            const normals = this.getNormals();
+
+            if (normals) {
+                const normal = Vector3.create().release();
+
+                for (let i = 0, l = normals.length; i < l; i += 3) {
+                    normal.fromArray(normals, i).normalize().toArray(normals, i);
+                }
+
+                this.uploadVertexBuffer(gltf.AttributeSemantics.NORMAL);
+            }
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public computeVertexNormals(): this {
+            const normals = this.getNormals();
+
+            if (normals) {
+                const vertices = this.getVertices()!;
+                const indices = this.getIndices();
+
+                for (let i = 0, l = normals.length; i < l; i++) {
+                    normals[i] = 0.0;
+                }
+
+                const triangle = Triangle.create().release();
+                const normal = Vector3.create().release();
+
+                if (indices) {
+                    for (var i = 0, l = indices.length; i < l; i += 3) {
+                        const vA = indices[i + 0] * 3;
+                        const vB = indices[i + 1] * 3;
+                        const vC = indices[i + 2] * 3;
+                        triangle.fromArray(vertices, vA, vB, vC);
+                        triangle.getNormal(normal);
+
+                        normals[vA] += normal.x;
+                        normals[vA + 1] += normal.y;
+                        normals[vA + 2] += normal.z;
+
+                        normals[vB] += normal.x;
+                        normals[vB + 1] += normal.y;
+                        normals[vB + 2] += normal.z;
+
+                        normals[vC] += normal.x;
+                        normals[vC + 1] += normal.y;
+                        normals[vC + 2] += normal.z;
+                    }
+
+                    this.normalizeNormals();
+                }
+                else {
+                    for (let i = 0, l = vertices.length; i < i; i += 9) {
+                        triangle.fromArray(vertices, i);
+                        triangle.getNormal(normal);
+                        normal.toArray(normals, i);
+                        normal.toArray(normals, i + 3);
+                        normal.toArray(normals, i + 6);
+                    }
+
+                    this.uploadVertexBuffer(gltf.AttributeSemantics.NORMAL);
+                }
+            }
+            else {
+                // TODO
+            }
+
+            return this;
+        }
+        /**
          * 获取该网格顶点的位置属性数据。
          * - x0, y0, z0, x1, y1, z1, ...
          * @param offset 顶点偏移。（默认从第一个点开始）
@@ -461,7 +588,7 @@ namespace egret3d {
          * 获取该网格的顶点索引数据。
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
          */
-        public getIndices(subMeshIndex: uint = 0): Uint16Array | null {
+        public getIndices(subMeshIndex: uint = 0): Uint16Array | null { // TODO Uint32Array
             if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh!.primitives.length) {
                 const accessorIndex = this._glTFMesh!.primitives[subMeshIndex].indices;
                 if (accessorIndex === undefined) {
@@ -492,18 +619,6 @@ namespace egret3d {
             return target;
         }
         /**
-         * 当修改该网格的顶点属性后，调用此方法来更新顶点属性的缓冲区。
-         * @param uploadAttributes 
-         * @param offset 顶点偏移。（默认不偏移）
-         * @param count 顶点总数。（默认全部顶点）
-         */
-        public uploadVertexBuffer(uploadAttributes?: gltf.AttributeSemantics | (gltf.AttributeSemantics[]), offset?: uint, count?: uint): void { }
-        /**
-         * 当修改该网格的顶点索引后，调用此方法来更新顶点索引的缓冲区。
-         * @param subMeshIndex 子网格索引。（默认第一个子网格）
-         */
-        public uploadSubIndexBuffer(subMeshIndex?: uint): void { }
-        /**
          * 该网格的渲染模式。
          */
         public get drawMode(): gltf.DrawMode {
@@ -529,6 +644,12 @@ namespace egret3d {
          */
         public get attributeNames(): ReadonlyArray<string> {
             return this._attributeNames;
+        }
+        /**
+         * 获取该网格的 glTF 网格数据。
+         */
+        public get glTFMesh(): gltf.Mesh {
+            return this._glTFMesh!;
         }
         /**
          * @internal
@@ -558,11 +679,18 @@ namespace egret3d {
 
             return this._inverseBindMatrices;
         }
+
         /**
-         * 获取该网格的 glTF 网格数据。
+         * 当修改该网格的顶点属性后，调用此方法来更新顶点属性的缓冲区。
+         * @param uploadAttributes 
+         * @param offset 顶点偏移。（默认不偏移）
+         * @param count 顶点总数。（默认全部顶点）
          */
-        public get glTFMesh(): gltf.Mesh {
-            return this._glTFMesh!;
-        }
+        public uploadVertexBuffer(uploadAttributes?: gltf.AttributeSemantics | (gltf.AttributeSemantics[]), offset?: uint, count?: uint): void { }
+        /**
+         * 当修改该网格的顶点索引后，调用此方法来更新顶点索引的缓冲区。
+         * @param subMeshIndex 子网格索引。（默认第一个子网格）
+         */
+        public uploadSubIndexBuffer(subMeshIndex?: uint): void { }
     }
 }

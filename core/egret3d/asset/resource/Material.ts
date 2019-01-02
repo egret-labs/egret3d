@@ -244,7 +244,7 @@ namespace egret3d {
             }
 
             if (decodingFunName) {
-                const decodingStr = renderState.getTexelDecodingFunction(decodingFunName, encoding);
+                const decodingStr = renderState._getTexelDecodingFunction(decodingFunName, encoding);
 
                 if (add) {
                     const define = this.defines.addDefine(decodingStr);

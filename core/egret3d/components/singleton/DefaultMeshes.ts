@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 提供默认的几何网格资源的快速访问方式，以及创建几何网格或几何网格实体的方法。
+     * 提供默认的几何网格资源的快速访问方式。
      */
     export class DefaultMeshes extends paper.SingletonComponent {
         public static TRIANGLE: Mesh;
@@ -29,8 +29,11 @@ namespace egret3d {
             super.initialize();
             // TODO 颜色，更多类型。
 
+            const attributesA = [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0];
+            const attributesB = [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.NORMAL, gltf.AttributeSemantics.TEXCOORD_0];
+
             { // TRIANGLE.
-                const mesh = Mesh.create(3, 0, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
+                const mesh = Mesh.create(3, 0, attributesA);
                 mesh.name = "builtin/triangle.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.TRIANGLE = mesh;
@@ -124,7 +127,7 @@ namespace egret3d {
             }
 
             { // LINE_X.
-                const mesh = Mesh.create(4, 2, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
+                const mesh = Mesh.create(4, 2, attributesA);
                 mesh.name = "builtin/line_x.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
@@ -147,7 +150,7 @@ namespace egret3d {
             }
 
             { // LINE_Y.
-                const mesh = Mesh.create(4, 2, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
+                const mesh = Mesh.create(4, 2, attributesA);
                 mesh.name = "builtin/line_y.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
@@ -170,7 +173,7 @@ namespace egret3d {
             }
 
             { // LINE_Z.
-                const mesh = Mesh.create(4, 2, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
+                const mesh = Mesh.create(4, 2, attributesA);
                 mesh.name = "builtin/line_z.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);
@@ -200,7 +203,7 @@ namespace egret3d {
             }
 
             { // CUBE_LINE
-                const mesh = Mesh.create(8, 24, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0]);
+                const mesh = Mesh.create(8, 24, attributesA);
                 mesh.name = "builtin/cube_line.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
                 paper.Asset.register(mesh);

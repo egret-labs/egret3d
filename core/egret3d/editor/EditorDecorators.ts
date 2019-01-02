@@ -148,7 +148,9 @@ namespace paper.editor {
          * 组件。
          */
         COMPONENT = "COMPONENT",
-        /**声音 */
+        /**
+         * 声音。
+         */
         SOUND = "SOUND",
         /**
          * 按钮。

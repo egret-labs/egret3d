@@ -51,7 +51,7 @@ namespace paper {
         }
     }
     /**
-     * @internal
+     * 全局销毁信息收集组件实例。
      */
     export const disposeCollecter: DisposeCollecter = null!;
 }

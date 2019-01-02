@@ -36,7 +36,7 @@ namespace egret3d {
         PenEraser = 0b100000,
     }
     /**
-     * 按键枚举。
+     * 按键类型。
      */
     export const enum KeyCode {
         Unknown = "Unknown",
@@ -507,7 +507,7 @@ namespace egret3d {
         /**
          * @internal
          */
-        public update(deltaTime: number) {
+        public _update(deltaTime: number) {
             for (const pointer of this._downPointers) {
                 pointer.holdedTime = 0.0;
             }
@@ -531,13 +531,11 @@ namespace egret3d {
 
                 key.holdedTime += deltaTime;
             }
-
-            return this;
         }
         /**
          * @internal
          */
-        public clear() {
+        public _clear() {
             this.mouseWheel = 0;
 
             for (const k in this._pointers) {
@@ -564,14 +562,14 @@ namespace egret3d {
             if (this._downKeys.length > 0) {
                 this._downKeys.length = 0;
             }
-
-            return this;
         }
-
+        /**
+         * @internal
+         */
         public initialize() {
             super.initialize();
 
-            inputCollecter = this;
+            (inputCollecter as InputCollecter) = this;
             this._pointers[1] = this.defaultPointer;
         }
         /**
@@ -729,5 +727,5 @@ namespace egret3d {
     /**
      * 全局输入信息组件实例。
      */
-    export let inputCollecter: InputCollecter = null!;
+    export const inputCollecter: InputCollecter = null!;
 }

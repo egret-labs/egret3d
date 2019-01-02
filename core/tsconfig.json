@@ -178,7 +178,6 @@
         "egret3d/web/systems/InputSystem.ts",
         "egret3d/web/systems/EndSystem.ts",
 
-        "egret3d/Profile.ts",
         "egret3d/RunEgret.ts",
         "egret3d/Deprecated.ts"
     ]

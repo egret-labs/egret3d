@@ -15,6 +15,11 @@ namespace paper {
      * @deprecated
      */
     export const RenderQueue = (egret3d as any).RenderQueue;
+    /**
+     * @deprecated 
+     * @see paper.clock
+     */
+    export const Time: Clock = null!;
 }
 
 namespace gltf {

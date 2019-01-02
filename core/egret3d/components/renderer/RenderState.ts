@@ -3,7 +3,7 @@ namespace egret3d {
         return string !== "";
     }
     /**
-     * 
+     * 全局渲染状态组件。
      */
     export class RenderState extends paper.SingletonComponent {
         public version: number;
@@ -52,6 +52,14 @@ namespace egret3d {
         };
         public renderTarget: RenderTexture | null = null;
         public customShaderChunks: { [key: string]: string } | null = null;
+        /**
+         * 
+         */
+        public render: (camera: Camera, material?: Material) => void = null!;
+        /**
+         * 
+         */
+        public draw: (drawCall: DrawCall) => void = null!;
 
         protected _getCommonExtensions() {
             // fragmentExtensions.
@@ -84,7 +92,7 @@ namespace egret3d {
 
             defines += "#define GAMMA_FACTOR " + (this.gammaFactor > 0.0 ? this.gammaFactor : 1.0) + "\n";
             defines += ShaderChunk.encodings_pars_fragment;
-            defines += this.getTexelEncodingFunction("linearToOutputTexel", this.gammaOutput ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding) + " \n";
+            defines += this._getTexelEncodingFunction("linearToOutputTexel", this.gammaOutput ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding) + " \n";
 
             if (this.logarithmicDepthBuffer) {
                 defines += "#define USE_LOGDEPTHBUF \n";
@@ -144,19 +152,21 @@ namespace egret3d {
 
             return `vec3 toneMapping( vec3 color ) { return ${toneMappingName}ToneMapping( color ); } \n`;
         }
-
-        public render: (camera: Camera, material?: Material) => void = null!;
-        public draw: (drawCall: DrawCall) => void = null!;
-
-        public initialize(config?: any) {
-            super.initialize();
-
-            (renderState as RenderState) = this;
+        /**
+         * @internal
+         */
+        public _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+            const components = this._getEncodingComponents(encoding);
+            return 'vec4 ' + functionName + '( vec4 value ) { return LinearTo' + components[0] + components[1] + '; }';
         }
-
-        public updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null): void { }
-        public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void { }
-        public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: uint = 0): void { }
+        /**
+         * @internal
+         */
+        public _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+            const finialEncoding = (this.gammaInput && encoding === TextureEncoding.LinearEncoding) ? TextureEncoding.GammaEncoding : encoding;
+            const components = this._getEncodingComponents(finialEncoding);
+            return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
+        }
         /**
          * @internal
          */
@@ -192,21 +202,26 @@ namespace egret3d {
         /**
          * @internal
          */
-        public getTexelDecodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
-            const finialEncoding = (this.gammaInput && encoding === TextureEncoding.LinearEncoding) ? TextureEncoding.GammaEncoding : encoding;
-            const components = this._getEncodingComponents(finialEncoding);
-            return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
+        public initialize(config?: any) {
+            super.initialize();
+
+            (renderState as RenderState) = this;
         }
         /**
-         * @internal
+         * 
          */
-        public getTexelEncodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
-            const components = this._getEncodingComponents(encoding);
-            return 'vec4 ' + functionName + '( vec4 value ) { return LinearTo' + components[0] + components[1] + '; }';
-        }
+        public updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null): void { }
+        /**
+         * 
+         */
+        public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void { }
+        /**
+         * 
+         */
+        public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: uint = 0): void { }
     }
     /**
-     * 
+     * 全局渲染状态组件实例。
      */
     export const renderState: RenderState = null!;
 }
