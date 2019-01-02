@@ -5122,12 +5122,22 @@ declare namespace egret3d {
     const enum ShaderDefine {
         USE_COLOR = "USE_COLOR",
         USE_MAP = "USE_MAP",
-        USE_NORMALMAP = "USE_NORMALMAP",
+        USE_ALPHAMAP = "USE_ALPHAMAP",
+        USE_AOMAP = "USE_AOMAP",
         USE_BUMPMAP = "USE_BUMPMAP",
+        USE_NORMALMAP = "USE_NORMALMAP",
+        USE_SPECULARMAP = "USE_SPECULARMAP",
+        USE_ROUGHNESSMAP = "USE_ROUGHNESSMAP",
+        USE_METALNESSMAP = "USE_METALNESSMAP",
+        USE_DISPLACEMENTMAP = "USE_DISPLACEMENTMAP",
+        USE_EMISSIVEMAP = "USE_EMISSIVEMAP",
+        USE_ENVMAP = "USE_ENVMAP",
         USE_LIGHTMAP = "USE_LIGHTMAP",
         USE_SHADOWMAP = "USE_SHADOWMAP",
         USE_SKINNING = "USE_SKINNING",
         USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
+        TOON = "TOON",
+        STANDARD = "STANDARD",
         FLAT_SHADED = "FLAT_SHADED",
         ENVMAP_TYPE_CUBE_UV = "ENVMAP_TYPE_CUBE_UV",
         MAX_BONES = "MAX_BONES",
@@ -5150,6 +5160,15 @@ declare namespace egret3d {
         Opacity = "opacity",
         Size = "size",
         Map = "map",
+        AlphaMap = "alphaMap",
+        AOMap = "aoMap",
+        BumpMap = "bumpMap",
+        NormalMap = "normalMap",
+        SpecularMap = "specularMap",
+        GradientMap = "gradientMap",
+        RoughnessMap = "roughnessMap",
+        MetalnessMap = "metalnessMap",
+        DisplacementMap = "displacementMap",
         EnvMap = "envMap",
         EmissiveMap = "emissiveMap",
         Specular = "specular",
@@ -8775,8 +8794,8 @@ declare namespace egret3d {
         private _createTechnique(shader, glTFMaterial);
         private _reset(shaderOrConfig);
         private _retainOrReleaseTextures(isRatain, isOnce);
-        private _setTexelDecodingFunction(key, add, encoding?);
-        private _addOrRemoveTexturesEncodingDefine(add);
+        private _setTexelDefine(key, add, encoding?);
+        private _addOrRemoveTexturesDefine(add);
         retain(): this;
         release(): this;
         dispose(): boolean;
