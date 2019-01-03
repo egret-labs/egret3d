@@ -4575,7 +4575,7 @@ declare namespace egret3d {
     /**
      * 网格资源。
      */
-    class Mesh extends GLTFAsset implements egret3d.IRaycast {
+    class Mesh extends GLTFAsset implements IRaycast {
         /**
          * 创建一个网格。
          * @param vertexCount
@@ -4637,6 +4637,14 @@ declare namespace egret3d {
          * 删除该网格已添加的线框子网格。
          */
         removeWireframeSubMesh(): this;
+        /**
+         *
+         */
+        normalizeNormals(): this;
+        /**
+         *
+         */
+        computeVertexNormals(): this;
         /**
          * 获取该网格顶点的位置属性数据。
          * - x0, y0, z0, x1, y1, z1, ...
@@ -9378,6 +9386,7 @@ declare namespace egret3d {
         */
         static createSphere(radius?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, widthSegments?: uint, heightSegments?: uint, phiStart?: number, phiLength?: number, thetaStart?: number, thetaLength?: number): Mesh;
         static createTorusKnot(radius?: number, tube?: number, tubularSegments?: uint, radialSegments?: uint, p?: number, q?: number): Mesh;
+        private static _createPolyhedron(vertices, indices, radius, detail);
         private constructor();
     }
 }

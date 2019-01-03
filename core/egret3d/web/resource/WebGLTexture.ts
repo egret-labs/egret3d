@@ -38,21 +38,43 @@ namespace egret3d.webgl {
         }
 
         public setupTexture(index: uint) {
-            const image = this._image;
-            if (!image.uri) {
-                return;
-            }
-
             const webgl = WebGLRenderState.webgl!;
-            if (!this.webGLTexture) {
-                this.webGLTexture = webgl.createTexture();
-            }
 
+            let textureType: gltf.TextureType;
+            const image = this._image;
             const sampler = this._sampler;
             const paperExtension = this._gltfTexture!.extensions.paper!;
+            const mutilyLayers = paperExtension.layers !== undefined && paperExtension.layers > 1;
 
+            if (paperExtension.depth !== undefined && paperExtension.depth > 1) {
+                textureType = gltf.TextureType.Texture3D;
+            }
+            else if (paperExtension.faces !== undefined && paperExtension.faces > 1) {
+                if (mutilyLayers) {
+                    textureType = gltf.TextureType.TextureCubeArray;
+                }
+                else {
+                    textureType = gltf.TextureType.TextureCube;
+                }
+            }
+            else if (paperExtension.height! > 1) {
+                if (mutilyLayers) {
+                    textureType = gltf.TextureType.Texture2DArray;
+                }
+                else {
+                    textureType = gltf.TextureType.Texture2D;
+                }
+            }
+            else if (mutilyLayers) {
+                textureType = gltf.TextureType.Texture1DArray;
+            }
+            else {
+                textureType = gltf.TextureType.Texture1D;
+            }
+
+            this.webGLTexture = webgl.createTexture();
             webgl.activeTexture(webgl.TEXTURE0 + index);
-            webgl.bindTexture(webgl.TEXTURE_2D, this.webGLTexture);
+            webgl.bindTexture(textureType, this.webGLTexture);
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, paperExtension.premultiplyAlpha!);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, paperExtension.flipY!);
             webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, paperExtension.unpackAlignment!);
@@ -60,20 +82,38 @@ namespace egret3d.webgl {
             const isPowerTwo = isPowerOfTwo(paperExtension.width!, paperExtension.height!);
             setTexturexParameters(isPowerTwo, sampler, paperExtension.anisotropy || 1);
 
-            if (ArrayBuffer.isView(image.uri)) {
-                webgl.texImage2D(webgl.TEXTURE_2D, 0, paperExtension.format!, paperExtension.width!, paperExtension.height!, 0, paperExtension.format!, paperExtension.type!, image.uri);
+            if (image.uri !== undefined) {
+                if (Array.isArray(image.uri)) {
+                    let index = 0;
+
+                    for (const uri of image.uri) {
+                        webgl.texImage2D(textureType + (index++), 0, paperExtension.format!, paperExtension.format!, paperExtension.type!, uri as gltf.ImageSource);
+                    }
+                }
+                else {
+                    webgl.texImage2D(textureType, 0, paperExtension.format!, paperExtension.format!, paperExtension.type!, image.uri as gltf.ImageSource);
+                }
             }
-            else {
-                webgl.texImage2D(webgl.TEXTURE_2D, 0, paperExtension.format!, paperExtension.format!, webgl.UNSIGNED_BYTE, image.uri as gltf.ImageSource);
+            else if (image.bufferView !== undefined) {
+                if (Array.isArray(image.bufferView)) {
+                    let index = 0;
+
+                    for (const bufferView of image.bufferView) {
+                        webgl.texImage2D(textureType + (index++), 0, paperExtension.format!, paperExtension.width!, paperExtension.height!, 0, paperExtension.format!, paperExtension.type!, this.buffers[bufferView]);
+                    }
+                }
+                else {
+                    webgl.texImage2D(textureType, 0, paperExtension.format!, paperExtension.width!, paperExtension.height!, 0, paperExtension.format!, paperExtension.type!, this.buffers[image.bufferView]);
+                }
             }
 
             const minFilter = sampler.minFilter!;
             const canGenerateMipmap = isPowerTwo && minFilter !== gltf.TextureFilter.Nearest && minFilter !== gltf.TextureFilter.Linear;
             if (canGenerateMipmap) {
-                webgl.generateMipmap(webgl.TEXTURE_2D);
+                webgl.generateMipmap(textureType);
             }
 
-            if (image.uri.hasOwnProperty("src")) {
+            if (image.uri && image.uri.hasOwnProperty("src")) {
                 (image.uri as HTMLImageElement).src = ""; // wx
                 delete image.uri;
             }

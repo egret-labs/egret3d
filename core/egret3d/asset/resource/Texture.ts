@@ -62,7 +62,9 @@ namespace egret3d {
             extension.encoding = encoding;
             //
             if (ArrayBuffer.isView(source)) {
-                image.uri = source;
+                config.buffers = [];
+                config.buffers[0] = { byteLength: source.byteLength };
+                image.bufferView = 0;
             }
             else if (source) {
                 image.uri = source;
@@ -83,8 +85,8 @@ namespace egret3d {
         /**
          * @internal
          */
-        public initialize(name: string, config: GLTF) {
-            super.initialize(name, config, null);
+        public initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null) {
+            super.initialize(name, config, buffers);
 
             const gltfTexture = this._gltfTexture = this.config.textures![0] as GLTFTexture;
             this._image = this.config.images![gltfTexture.source!];
@@ -200,6 +202,7 @@ namespace egret3d {
         public static create(parametersOrName: CreateTextureParameters | string, config?: GLTF) {
             let name: string;
             let texture: Texture;
+            let buffers: ReadonlyArray<ArrayBufferView> | null = null;
 
             if (typeof parametersOrName === "string") {
                 name = parametersOrName;
@@ -207,11 +210,15 @@ namespace egret3d {
             else {
                 config = this._createConfig(parametersOrName as CreateTextureParameters);
                 name = (parametersOrName as CreateTextureParameters).name || "";
+
+                if (ArrayBuffer.isView(parametersOrName.source)) {
+                    buffers = [parametersOrName.source];
+                }
             }
 
             // Retargeting.
             texture = new egret3d.Texture();
-            texture.initialize(name, config!);
+            texture.initialize(name, config!, buffers);
 
             return texture;
         }

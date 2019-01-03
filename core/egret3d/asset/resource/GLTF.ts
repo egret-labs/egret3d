@@ -226,14 +226,6 @@ namespace egret3d {
          */
         mipmap?: boolean;
         /**
-         * @defaults false
-         */
-        depthBuffer?: boolean;
-        /**
-         * @defaults false
-         */
-        stencilBuffer?: boolean;
-        /**
          * @defaults 0
          */
         flipY?: 0 | 1;
@@ -244,11 +236,11 @@ namespace egret3d {
         /**
          * 纹理宽。
          */
-        width?: uint;
+        width?: uint; // init optional.
         /**
          * 纹理高。
          */
-        height?: uint;
+        height?: uint; // init optional.
         /**
          * @defaults 1
          */
@@ -272,6 +264,30 @@ namespace egret3d {
          * 纹理编码格式
          */
         encoding?: TextureEncoding;
+        /**
+         * 
+         */
+        depth?: uint;
+        /**
+         * 
+         */
+        layers?: uint;
+        /**
+         * 
+         */
+        faces?: uint;
+        /**
+         * 
+         */
+        levels?: uint;
+        /**
+         * @defaults false
+         */
+        depthBuffer?: boolean;
+        /**
+         * @defaults false
+         */
+        stencilBuffer?: boolean;
     }
     /**
      * 
@@ -558,6 +574,18 @@ declare namespace gltf {
         RGB = 6407,
         RGBA = 6408,
         Luminance = 6409,
+    }
+    /**
+     * 
+     */
+    export const enum TextureType {
+        Texture1D = -1,
+        Texture1DArray = -1,
+        Texture2D = 3553,
+        Texture2DArray = 3553,
+        Texture3D = 32879,
+        TextureCube = 34067,
+        TextureCubeArray = 34069,
     }
     /**
      * 
@@ -1074,15 +1102,15 @@ declare namespace gltf {
         /**
          * The uri of the image.
          */
-        uri?: string | ArrayBufferView | ImageSource;
+        uri?: string | ImageSource | ((string | ImageSource)[]);
         /**
          * The image's MIME type.
          */
-        mimeType?: "image/jpeg" | "image/png" | string;
+        mimeType?: "image/jpeg" | "image/png" | "image/ktx" | string;
         /**
          * The index of the bufferView that contains the image. Use this instead of the image's uri property.
          */
-        bufferView?: Index;
+        bufferView?: Index | (Index[]);
         name?: string;
         extensions?: any;
         extras?: any;

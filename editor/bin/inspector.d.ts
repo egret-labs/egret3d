@@ -204,6 +204,8 @@ declare namespace paper {
      */
     const enum Layer {
     }
+}
+declare namespace egret3d {
     /**
      * 渲染排序。
      */
