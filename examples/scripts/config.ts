@@ -130,8 +130,9 @@ const config: ResourceManagerConfig = {
                     ".prefab.json": "Prefab",
 
                     ".image.json": "TextureDesc",
-                    ".vs.glsl": 'GLVertexShader',
-                    ".fs.glsl": "GLFragmentShader",
+                    ".glsl": 'text',
+                    ".vs.glsl": 'text',
+                    ".fs.glsl": "text",
                     ".shader.json": "Shader",
                     ".mat.json": "Material",
                     ".mesh.bin": "Mesh",

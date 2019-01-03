@@ -9809,6 +9809,15 @@ var egret3d;
      * TODO
      * @internal
      */
+    egret3d.TextureDecodingFunction = {
+        "map": "mapTexelToLinear",
+        "envMap": "envMapTexelToLinear",
+        "emissiveMap": "emissiveMapTexelToLinear",
+    };
+    /**
+     * TODO
+     * @internal
+     */
     egret3d.ShaderTextureDefine = {
         "map": "USE_MAP" /* USE_MAP */,
         "alphaMap": "USE_ALPHAMAP" /* USE_ALPHAMAP */,
@@ -22532,6 +22541,7 @@ var egret3d;
              * @internal
              */
             this.isDefine = true;
+            this.name = "";
             this.type = 0 /* All */;
             this.index = index;
             this.mask = mask;
@@ -22628,6 +22638,24 @@ var egret3d;
                 defines.splice(index, 1);
                 this._update();
                 return define;
+            }
+            return null;
+        };
+        Defines.prototype.removeDefineByName = function (name) {
+            for (var _i = 0, _a = this._defines; _i < _a.length; _i++) {
+                var define = _a[_i];
+                if (define.name && define.name === name) {
+                    return this.removeDefine(define.context);
+                }
+            }
+            return null;
+        };
+        Defines.prototype.findDefineByName = function (name) {
+            for (var _i = 0, _a = this._defines; _i < _a.length; _i++) {
+                var define = _a[_i];
+                if (define.name && define.name === name) {
+                    return define;
+                }
             }
             return null;
         };
@@ -22765,8 +22793,8 @@ var egret3d;
                     value = sourceValue ? sourceValue.concat() : []; // TODO
                 }
                 else {
-                    // value = sourceValue ? sourceValue : (sourceValue === 0 ? 0 : []); // TODO 不应是数组。
-                    value = sourceValue ? sourceValue : 0; // TODO 不应是数组。
+                    value = sourceValue ? sourceValue : (sourceValue === 0 ? 0 : []); // TODO 不应是数组。
+                    // value = sourceValue ? sourceValue : 0; //
                 }
                 var targetUniform = technique.uniforms[k] = { type: type, value: value };
                 if (sourceUniform.semantic) {
@@ -22867,31 +22895,24 @@ var egret3d;
         };
         Material.prototype._setTexelDefine = function (key, add, encoding) {
             if (encoding === void 0) { encoding = 1 /* LinearEncoding */; }
-            var decodingFunName = "";
-            if (key === "map" /* Map */) {
-                decodingFunName = "mapTexelToLinear";
-            }
-            else if (key === "envMap" /* EnvMap */) {
-                decodingFunName = "envMapTexelToLinear";
-            }
-            else if (key === "emissiveMap" /* EmissiveMap */) {
-                decodingFunName = "emissiveMapTexelToLinear";
-            }
             var define = egret3d.ShaderTextureDefine[key]; //TODO
             if (define) {
                 add ? this.defines.addDefine(define) : this.defines.removeDefine(define);
             }
+            //
+            var decodingFunName = egret3d.TextureDecodingFunction[key]; //TODO
             if (decodingFunName) {
                 var decodingStr = egret3d.renderState.getTexelDecodingFunction(decodingFunName, encoding);
                 if (add) {
                     var define_1 = this.defines.addDefine(decodingStr);
                     if (define_1) {
                         define_1.isDefine = false;
+                        define_1.name = decodingFunName;
                         define_1.type = 2 /* Fragment */;
                     }
                 }
                 else {
-                    this.defines.removeDefine(decodingStr);
+                    this.defines.removeDefineByName(decodingFunName);
                 }
             }
         };
@@ -24812,7 +24833,8 @@ var egret3d;
                 var mipmap = data.mipmap;
                 var wrap = data.wrap;
                 var textureFormat = 6408 /* RGBA */;
-                if (format === "RGB") {
+                var exr = name.substring(name.lastIndexOf(".")); //兼容以前的
+                if (format === "RGB" || exr === ".jpg") {
                     textureFormat = 6407 /* RGB */;
                 }
                 else if (format === "Gray") {
@@ -24826,6 +24848,10 @@ var egret3d;
                 if (wrap.indexOf("Repeat") >= 0) {
                     repeat = true;
                 }
+                var anisotropy = 1;
+                if (data["anisotropy"] !== undefined) {
+                    anisotropy = data["anisotropy"];
+                }
                 var premultiplyAlpha = 0;
                 if (data["premultiply"] !== undefined) {
                     premultiplyAlpha = data["premultiply"] > 0 ? 1 : 0;
@@ -24834,7 +24860,7 @@ var egret3d;
                 if (imgResource) {
                     return host.load(imgResource, "bitmapdata").then(function (bitmapData) {
                         var texture = egret3d.Texture
-                            .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap: mipmap, premultiplyAlpha: premultiplyAlpha })
+                            .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap: mipmap, premultiplyAlpha: premultiplyAlpha, anisotropy: anisotropy })
                             .setLiner(linear)
                             .setRepeat(repeat);
                         paper.Asset.register(texture);
@@ -26445,6 +26471,9 @@ var egret3d;
                             if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
                                 var unit = globalUniform.textureUnits[0];
                                 var texture = value;
+                                if (!texture) {
+                                    texture = egret3d.DefaultTextures.WHITE;
+                                }
                                 webgl.uniform1i(location_7, unit);
                                 if (texture.webglTexture) {
                                     webgl.activeTexture(webgl.TEXTURE0 + unit);

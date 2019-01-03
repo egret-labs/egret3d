@@ -102,8 +102,8 @@ namespace egret3d {
                     value = sourceValue ? sourceValue.concat() : []; // TODO
                 }
                 else {
-                    // value = sourceValue ? sourceValue : (sourceValue === 0 ? 0 : []); // TODO 不应是数组。
-                    value = sourceValue ? sourceValue : 0; //
+                    value = sourceValue ? sourceValue : (sourceValue === 0 ? 0 : []); // TODO 不应是数组。
+                    // value = sourceValue ? sourceValue : 0; //
                 }
 
                 const targetUniform = technique.uniforms[k] = { type, value } as gltf.Uniform;
@@ -211,33 +211,24 @@ namespace egret3d {
         }
 
         private _setTexelDefine(key: string, add: boolean, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
-            let decodingFunName = "";
-            if (key === ShaderUniformName.Map) {
-                decodingFunName = "mapTexelToLinear";
-            }
-            else if (key === ShaderUniformName.EnvMap) {
-                decodingFunName = "envMapTexelToLinear";
-            }
-            else if (key === ShaderUniformName.EmissiveMap) {
-                decodingFunName = "emissiveMapTexelToLinear";
-            }
-
             const define = (egret3d as any).ShaderTextureDefine[key];//TODO
             if (define) {
                 add ? this.defines.addDefine(define) : this.defines.removeDefine(define);
             }
-
+            //
+            const decodingFunName = (egret3d as any).TextureDecodingFunction[key];//TODO
             if (decodingFunName) {
                 const decodingStr = renderState.getTexelDecodingFunction(decodingFunName, encoding);
                 if (add) {
                     const define = this.defines.addDefine(decodingStr);
                     if (define) {
                         define.isDefine = false;
+                        define.name = decodingFunName;
                         define.type = DefineLocation.Fragment;
                     }
                 }
                 else {
-                    this.defines.removeDefine(decodingStr);
+                    this.defines.removeDefineByName(decodingFunName);
                 }
             }
         }
@@ -249,7 +240,6 @@ namespace egret3d {
                 if (uniform.value &&
                     (uniform.type === gltf.UniformType.SAMPLER_2D || uniform.type === gltf.UniformType.SAMPLER_CUBE)
                 ) {
-                    // const texture = (uniform.value as BaseTexture) || DefaultTextures.WHITE;
                     const texture = (uniform.value as BaseTexture);
                     this._setTexelDefine(k, add, texture.gltfTexture.extensions.paper.encoding);
                 }

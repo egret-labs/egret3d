@@ -47,6 +47,7 @@ namespace egret3d {
          */
         public isDefine: boolean = true;
 
+        public name?: string = "";
         public type: DefineLocation = DefineLocation.All;
         public constructor(index: uint, mask: uint, context: string) {
             this.index = index;
@@ -158,7 +159,17 @@ namespace egret3d {
 
             return null;
         }
-        
+
+        public removeDefineByName(name: string): Define | null {
+            for (const define of this._defines) {
+                if (define.name && define.name === name) {
+                    return this.removeDefine(define.context);
+                }
+            }
+
+            return null;
+        }
+
         public get vertexDefinesString(): string {
             let definesString = "";
 

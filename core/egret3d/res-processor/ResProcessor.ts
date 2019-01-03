@@ -108,6 +108,7 @@ namespace egret3d {
                 mipmap: boolean;
                 wrap: string;
                 premultiply: any;
+                anisotropy: any;
             }): any => {
                 const name = data.name;
                 const filterMode = data.filterMode;
@@ -116,7 +117,8 @@ namespace egret3d {
                 const wrap = data.wrap;
 
                 let textureFormat = gltf.TextureFormat.RGBA;
-                if (format === "RGB") {
+                const exr = name.substring(name.lastIndexOf("."));//兼容以前的
+                if (format === "RGB" || exr === ".jpg") {
                     textureFormat = gltf.TextureFormat.RGB;
                 } else if (format === "Gray") {
                     textureFormat = gltf.TextureFormat.Luminance;
@@ -132,6 +134,11 @@ namespace egret3d {
                     repeat = true;
                 }
 
+                let anisotropy: uint = 1;
+                if (data["anisotropy"] !== undefined) {
+                    anisotropy = data["anisotropy"];
+                }
+
                 let premultiplyAlpha: 0 | 1 = 0;
                 if (data["premultiply"] !== undefined) {
                     premultiplyAlpha = data["premultiply"] > 0 ? 1 : 0;
@@ -141,7 +148,7 @@ namespace egret3d {
                 if (imgResource) {
                     return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
                         const texture = Texture
-                            .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap, premultiplyAlpha })
+                            .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap, premultiplyAlpha, anisotropy })
                             .setLiner(linear)
                             .setRepeat(repeat);
                         paper.Asset.register(texture);

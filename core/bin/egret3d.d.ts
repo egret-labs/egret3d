@@ -8731,6 +8731,7 @@ declare namespace egret3d {
          * 内容。
          */
         readonly context: string;
+        name?: string;
         type: DefineLocation;
         constructor(index: uint, mask: uint, context: string);
     }
@@ -8758,6 +8759,8 @@ declare namespace egret3d {
          *
          */
         removeDefine(defineString: string, value?: number): Define | null;
+        removeDefineByName(name: string): Define | null;
+        findDefineByName(name: string): Define | null;
         readonly vertexDefinesString: string;
         readonly fragmentDefinesString: string;
     }

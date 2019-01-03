@@ -67,6 +67,15 @@ namespace egret3d {
      * TODO
      * @internal
      */
+    export const TextureDecodingFunction: { [key: string]: string } = {
+        "map": "mapTexelToLinear",
+        "envMap": "envMapTexelToLinear",
+        "emissiveMap": "emissiveMapTexelToLinear",
+    };
+    /**
+     * TODO
+     * @internal
+     */
     export const ShaderTextureDefine: { [key: string]: ShaderDefine } = {
         "map": ShaderDefine.USE_MAP,
         "alphaMap": ShaderDefine.USE_ALPHAMAP,
