@@ -4575,7 +4575,7 @@ declare namespace egret3d {
     /**
      * 网格资源。
      */
-    class Mesh extends GLTFAsset implements egret3d.IRaycast {
+    class Mesh extends GLTFAsset implements IRaycast {
         /**
          * 创建一个网格。
          * @param vertexCount
@@ -4637,6 +4637,14 @@ declare namespace egret3d {
          * 删除该网格已添加的线框子网格。
          */
         removeWireframeSubMesh(): this;
+        /**
+         *
+         */
+        normalizeNormals(): this;
+        /**
+         *
+         */
+        computeVertexNormals(): this;
         /**
          * 获取该网格顶点的位置属性数据。
          * - x0, y0, z0, x1, y1, z1, ...
@@ -5193,12 +5201,22 @@ declare namespace egret3d {
     const enum ShaderDefine {
         USE_COLOR = "USE_COLOR",
         USE_MAP = "USE_MAP",
-        USE_NORMALMAP = "USE_NORMALMAP",
+        USE_ALPHAMAP = "USE_ALPHAMAP",
+        USE_AOMAP = "USE_AOMAP",
         USE_BUMPMAP = "USE_BUMPMAP",
+        USE_NORMALMAP = "USE_NORMALMAP",
+        USE_SPECULARMAP = "USE_SPECULARMAP",
+        USE_ROUGHNESSMAP = "USE_ROUGHNESSMAP",
+        USE_METALNESSMAP = "USE_METALNESSMAP",
+        USE_DISPLACEMENTMAP = "USE_DISPLACEMENTMAP",
+        USE_EMISSIVEMAP = "USE_EMISSIVEMAP",
+        USE_ENVMAP = "USE_ENVMAP",
         USE_LIGHTMAP = "USE_LIGHTMAP",
         USE_SHADOWMAP = "USE_SHADOWMAP",
         USE_SKINNING = "USE_SKINNING",
         USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
+        TOON = "TOON",
+        STANDARD = "STANDARD",
         FLAT_SHADED = "FLAT_SHADED",
         ENVMAP_TYPE_CUBE_UV = "ENVMAP_TYPE_CUBE_UV",
         MAX_BONES = "MAX_BONES",
@@ -5212,7 +5230,7 @@ declare namespace egret3d {
         DEPTH_PACKING_3200 = "DEPTH_PACKING 3200",
         DEPTH_PACKING_3201 = "DEPTH_PACKING 3201",
         FLIP_SIDED = "FLIP_SIDED",
-        DOUBLE_SIDED = "FLIP_SIDED",
+        DOUBLE_SIDED = "DOUBLE_SIDED",
         USE_FOG = "USE_FOG",
         FOG_EXP2 = "FOG_EXP2",
         FLIP_V = "FLIP_V",
@@ -5225,8 +5243,15 @@ declare namespace egret3d {
         Opacity = "opacity",
         Size = "size",
         Map = "map",
+        AlphaMap = "alphaMap",
+        AOMap = "aoMap",
         BumpMap = "bumpMap",
+        NormalMap = "normalMap",
+        SpecularMap = "specularMap",
+        GradientMap = "gradientMap",
         RoughnessMap = "roughnessMap",
+        MetalnessMap = "metalnessMap",
+        DisplacementMap = "displacementMap",
         EnvMap = "envMap",
         EmissiveMap = "emissiveMap",
         Specular = "specular",
@@ -8898,7 +8923,7 @@ declare namespace egret3d {
      *
      */
     const enum DefineLocation {
-        None = 2,
+        None = 0,
         All = 3,
         Vertex = 1,
         Fragment = 2,
@@ -8919,6 +8944,7 @@ declare namespace egret3d {
          * 内容。
          */
         readonly context: string;
+        name?: string;
         constructor(index: uint, mask: uint, context: string);
     }
     /**
@@ -8945,9 +8971,7 @@ declare namespace egret3d {
          *
          */
         removeDefine(defineString: string, value?: number): Define | null;
-        /**
-         *
-         */
+        removeDefineByName(name: string): Define | null;
         readonly vertexDefinesString: string;
         /**
          *
@@ -8987,8 +9011,8 @@ declare namespace egret3d {
         private _createTechnique(shader, glTFMaterial);
         private _reset(shaderOrConfig);
         private _retainOrReleaseTextures(isRatain, isOnce);
-        private _setTexelDecodingFunction(key, add, encoding?);
-        private _addOrRemoveTexturesDecodingDefine(add);
+        private _setTexelDefine(key, add, encoding?);
+        private _addOrRemoveTexturesDefine(add);
         retain(): this;
         release(): this;
         dispose(): boolean;
@@ -9378,6 +9402,7 @@ declare namespace egret3d {
         */
         static createSphere(radius?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, widthSegments?: uint, heightSegments?: uint, phiStart?: number, phiLength?: number, thetaStart?: number, thetaLength?: number): Mesh;
         static createTorusKnot(radius?: number, tube?: number, tubularSegments?: uint, radialSegments?: uint, p?: number, q?: number): Mesh;
+        private static _createPolyhedron(vertices, indices, radius, detail);
         private constructor();
     }
 }

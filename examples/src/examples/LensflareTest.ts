@@ -11,18 +11,18 @@ namespace examples {
             await RES.getResAsync("shaders/lensflare/a.shader.json");
             await RES.getResAsync("shaders/lensflare/b.shader.json");
             await RES.getResAsync("shaders/lensflare/lensflare.shader.json");
-            await RES.getResAsync("textures/lensflare/lensflare0.png");
-            await RES.getResAsync("textures/lensflare/lensflare1.png");
-            await RES.getResAsync("textures/lensflare/lensflare2.png");
-            await RES.getResAsync("textures/lensflare/lensflare3.png");
+            await RES.getResAsync("threejs/textures/lensflare/lensflare0.png");
+            await RES.getResAsync("threejs/textures/lensflare/lensflare1.png");
+            await RES.getResAsync("threejs/textures/lensflare/lensflare2.png");
+            await RES.getResAsync("threejs/textures/lensflare/lensflare3.png");
             // Create camera.
             egret3d.Camera.main;
 
             //
-            const lensflare0 = RES.getRes("textures/lensflare/lensflare0.png");
-            const lensflare1 = RES.getRes("textures/lensflare/lensflare1.png");
-            const lensflare2 = RES.getRes("textures/lensflare/lensflare2.png");
-            const lensflare3 = RES.getRes("textures/lensflare/lensflare3.png");
+            const lensflare0 = RES.getRes("threejs/textures/lensflare/lensflare0.png");
+            const lensflare1 = RES.getRes("threejs/textures/lensflare/lensflare1.png");
+            const lensflare2 = RES.getRes("threejs/textures/lensflare/lensflare2.png");
+            const lensflare3 = RES.getRes("threejs/textures/lensflare/lensflare3.png");
 
             const cube = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "cube");
             cube.transform.setLocalPosition(0, -1, 0);

@@ -517,11 +517,10 @@ namespace egret3d.webgl {
                         if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
                             const unit = globalUniform.textureUnits[0];
                             let texture = value as (WebGLTexture | WebGLRenderTexture | null);
-
-                            if (!texture || texture.isDisposed) {
+                            if(!texture || texture.isDisposed){
                                 texture = DefaultTextures.WHITE as WebGLTexture; // TODO
                             }
-
+                           
                             webgl.uniform1i(location, unit);
 
                             if (texture.webGLTexture) {

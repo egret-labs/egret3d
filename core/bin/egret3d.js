@@ -7701,6 +7701,68 @@ var egret3d;
             return this;
         };
         /**
+         *
+         */
+        Mesh.prototype.normalizeNormals = function () {
+            var normals = this.getNormals();
+            if (normals) {
+                var normal = egret3d.Vector3.create().release();
+                for (var i = 0, l = normals.length; i < l; i += 3) {
+                    normal.fromArray(normals, i).normalize().toArray(normals, i);
+                }
+                this.uploadVertexBuffer("NORMAL" /* NORMAL */);
+            }
+            return this;
+        };
+        /**
+         *
+         */
+        Mesh.prototype.computeVertexNormals = function () {
+            var normals = this.getNormals();
+            if (normals) {
+                var vertices = this.getVertices();
+                var indices = this.getIndices();
+                for (var i_1 = 0, l_1 = normals.length; i_1 < l_1; i_1++) {
+                    normals[i_1] = 0.0;
+                }
+                var triangle = egret3d.Triangle.create().release();
+                var normal = egret3d.Vector3.create().release();
+                if (indices) {
+                    for (var i = 0, l = indices.length; i < l; i += 3) {
+                        var vA = indices[i + 0] * 3;
+                        var vB = indices[i + 1] * 3;
+                        var vC = indices[i + 2] * 3;
+                        triangle.fromArray(vertices, vA, vB, vC);
+                        triangle.getNormal(normal);
+                        normals[vA] += normal.x;
+                        normals[vA + 1] += normal.y;
+                        normals[vA + 2] += normal.z;
+                        normals[vB] += normal.x;
+                        normals[vB + 1] += normal.y;
+                        normals[vB + 2] += normal.z;
+                        normals[vC] += normal.x;
+                        normals[vC + 1] += normal.y;
+                        normals[vC + 2] += normal.z;
+                    }
+                    this.normalizeNormals();
+                }
+                else {
+                    for (var i_2 = 0, l_2 = vertices.length; i_2 < i_2; i_2 += 9) {
+                        triangle.fromArray(vertices, i_2);
+                        triangle.getNormal(normal);
+                        normal.toArray(normals, i_2);
+                        normal.toArray(normals, i_2 + 3);
+                        normal.toArray(normals, i_2 + 6);
+                    }
+                    this.uploadVertexBuffer("NORMAL" /* NORMAL */);
+                }
+            }
+            else {
+                // TODO
+            }
+            return this;
+        };
+        /**
          * 获取该网格顶点的位置属性数据。
          * - x0, y0, z0, x1, y1, z1, ...
          * @param offset 顶点偏移。（默认从第一个点开始）
@@ -9897,12 +9959,22 @@ var egret3d;
     (function (ShaderDefine) {
         ShaderDefine["USE_COLOR"] = "USE_COLOR";
         ShaderDefine["USE_MAP"] = "USE_MAP";
-        ShaderDefine["USE_NORMALMAP"] = "USE_NORMALMAP";
+        ShaderDefine["USE_ALPHAMAP"] = "USE_ALPHAMAP";
+        ShaderDefine["USE_AOMAP"] = "USE_AOMAP";
         ShaderDefine["USE_BUMPMAP"] = "USE_BUMPMAP";
+        ShaderDefine["USE_NORMALMAP"] = "USE_NORMALMAP";
+        ShaderDefine["USE_SPECULARMAP"] = "USE_SPECULARMAP";
+        ShaderDefine["USE_ROUGHNESSMAP"] = "USE_ROUGHNESSMAP";
+        ShaderDefine["USE_METALNESSMAP"] = "USE_METALNESSMAP";
+        ShaderDefine["USE_DISPLACEMENTMAP"] = "USE_DISPLACEMENTMAP";
+        ShaderDefine["USE_EMISSIVEMAP"] = "USE_EMISSIVEMAP";
+        ShaderDefine["USE_ENVMAP"] = "USE_ENVMAP";
         ShaderDefine["USE_LIGHTMAP"] = "USE_LIGHTMAP";
         ShaderDefine["USE_SHADOWMAP"] = "USE_SHADOWMAP";
         ShaderDefine["USE_SKINNING"] = "USE_SKINNING";
         ShaderDefine["USE_SIZEATTENUATION"] = "USE_SIZEATTENUATION";
+        ShaderDefine["TOON"] = "TOON";
+        ShaderDefine["STANDARD"] = "STANDARD";
         //
         ShaderDefine["FLAT_SHADED"] = "FLAT_SHADED";
         ShaderDefine["ENVMAP_TYPE_CUBE_UV"] = "ENVMAP_TYPE_CUBE_UV";
@@ -9921,7 +9993,7 @@ var egret3d;
         ShaderDefine["DEPTH_PACKING_3201"] = "DEPTH_PACKING 3201";
         //
         ShaderDefine["FLIP_SIDED"] = "FLIP_SIDED";
-        ShaderDefine["DOUBLE_SIDED"] = "FLIP_SIDED";
+        ShaderDefine["DOUBLE_SIDED"] = "DOUBLE_SIDED";
         //
         ShaderDefine["USE_FOG"] = "USE_FOG";
         ShaderDefine["FOG_EXP2"] = "FOG_EXP2";
@@ -9937,14 +10009,48 @@ var egret3d;
         ShaderUniformName["Opacity"] = "opacity";
         ShaderUniformName["Size"] = "size";
         ShaderUniformName["Map"] = "map";
+        ShaderUniformName["AlphaMap"] = "alphaMap";
+        ShaderUniformName["AOMap"] = "aoMap";
         ShaderUniformName["BumpMap"] = "bumpMap";
+        ShaderUniformName["NormalMap"] = "normalMap";
+        ShaderUniformName["SpecularMap"] = "specularMap";
+        ShaderUniformName["GradientMap"] = "gradientMap";
         ShaderUniformName["RoughnessMap"] = "roughnessMap";
+        ShaderUniformName["MetalnessMap"] = "metalnessMap";
+        ShaderUniformName["DisplacementMap"] = "displacementMap";
         ShaderUniformName["EnvMap"] = "envMap";
         ShaderUniformName["EmissiveMap"] = "emissiveMap";
         ShaderUniformName["Specular"] = "specular";
         ShaderUniformName["Shininess"] = "shininess";
         ShaderUniformName["UVTransform"] = "uvTransform";
     })(ShaderUniformName = egret3d.ShaderUniformName || (egret3d.ShaderUniformName = {}));
+    /**
+     * TODO
+     * @internal
+     */
+    egret3d.TextureDecodingFunction = {
+        "map": "mapTexelToLinear",
+        "envMap": "envMapTexelToLinear",
+        "emissiveMap": "emissiveMapTexelToLinear",
+    };
+    /**
+     * TODO
+     * @internal
+     */
+    egret3d.ShaderTextureDefine = {
+        "map": "USE_MAP" /* USE_MAP */,
+        "alphaMap": "USE_ALPHAMAP" /* USE_ALPHAMAP */,
+        "aoMap": "USE_AOMAP" /* USE_AOMAP */,
+        "bumpMap": "USE_BUMPMAP" /* USE_BUMPMAP */,
+        "normalMap": "USE_NORMALMAP" /* USE_NORMALMAP */,
+        "specularMap": "USE_SPECULARMAP" /* USE_SPECULARMAP */,
+        "gradientMap": "TOON" /* TOON */,
+        "roughnessMap": "USE_ROUGHNESSMAP" /* USE_ROUGHNESSMAP */,
+        "metalnessMap": "USE_METALNESSMAP" /* USE_METALNESSMAP */,
+        "displacementMap": "USE_DISPLACEMENTMAP" /* USE_DISPLACEMENTMAP */,
+        "envMap": "USE_ENVMAP" /* USE_ENVMAP */,
+        "emissiveMap": "USE_EMISSIVEMAP" /* USE_EMISSIVEMAP */,
+    };
     /**
      *
      */
@@ -11401,8 +11507,10 @@ var egret3d;
         DefaultMeshes.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             // TODO 颜色，更多类型。
+            var attributesA = ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */];
+            var attributesB = ["POSITION" /* POSITION */, "NORMAL" /* NORMAL */, "TEXCOORD_0" /* TEXCOORD_0 */];
             {
-                var mesh = egret3d.Mesh.create(3, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
+                var mesh = egret3d.Mesh.create(3, 0, attributesA);
                 mesh.name = "builtin/triangle.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.TRIANGLE = mesh;
@@ -11483,7 +11591,7 @@ var egret3d;
                 DefaultMeshes.SPHERE = mesh;
             }
             {
-                var mesh = egret3d.Mesh.create(4, 2, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
+                var mesh = egret3d.Mesh.create(4, 2, attributesA);
                 mesh.name = "builtin/line_x.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
                 paper.Asset.register(mesh);
@@ -11503,7 +11611,7 @@ var egret3d;
                 mesh.setIndices([0, 1], 0);
             }
             {
-                var mesh = egret3d.Mesh.create(4, 2, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
+                var mesh = egret3d.Mesh.create(4, 2, attributesA);
                 mesh.name = "builtin/line_y.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
                 paper.Asset.register(mesh);
@@ -11523,7 +11631,7 @@ var egret3d;
                 mesh.setIndices([0, 1], 0);
             }
             {
-                var mesh = egret3d.Mesh.create(4, 2, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
+                var mesh = egret3d.Mesh.create(4, 2, attributesA);
                 mesh.name = "builtin/line_z.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
                 paper.Asset.register(mesh);
@@ -11549,7 +11657,7 @@ var egret3d;
                 DefaultMeshes.CIRCLE_LINE = mesh;
             }
             {
-                var mesh = egret3d.Mesh.create(8, 24, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
+                var mesh = egret3d.Mesh.create(8, 24, attributesA);
                 mesh.name = "builtin/cube_line.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
                 paper.Asset.register(mesh);
@@ -11685,17 +11793,17 @@ var egret3d;
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* Back */);
             DefaultShaders.LINEDASHED = this._createShader("builtin/linedashed.shader.json", egret3d.ShaderLib.linedashed, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* Back */);
-            DefaultShaders.VERTEX_COLOR = this._createShader("builtin/vertcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpStates, ["USE_MAP" /* USE_MAP */, "USE_COLOR" /* USE_COLOR */]);
+            DefaultShaders.VERTEX_COLOR = this._createShader("builtin/vertcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* Back */);
-            DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* Back */);
-            DefaultShaders.MESH_LAMBERT = this._createShader("builtin/meshlambert.shader.json", egret3d.ShaderLib.meshlambert, 2000 /* Geometry */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            DefaultShaders.MESH_LAMBERT = this._createShader("builtin/meshlambert.shader.json", egret3d.ShaderLib.meshlambert, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* Back */);
-            DefaultShaders.MESH_PHONG = this._createShader("builtin/meshphong.shader.json", egret3d.ShaderLib.meshphong, 2000 /* Geometry */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            DefaultShaders.MESH_PHONG = this._createShader("builtin/meshphong.shader.json", egret3d.ShaderLib.meshphong, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* Back */);
-            DefaultShaders.MESH_PHYSICAL = this._createShader("builtin/meshphysical.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            DefaultShaders.MESH_PHYSICAL = this._createShader("builtin/meshphysical.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", egret3d.ShaderLib.particle, 2000 /* Geometry */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
             helpMaterial.clearStates().setDepth(true, true);
@@ -11715,34 +11823,32 @@ var egret3d;
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.SPRITE = this._createShader("builtin/sprite.shader.json", egret3d.ShaderLib.sprite, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(false, false);
-            DefaultShaders.COPY = this._createShader("builtin/copy.shader.json", egret3d.ShaderLib.copy, 2000 /* Geometry */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            DefaultShaders.COPY = this._createShader("builtin/copy.shader.json", egret3d.ShaderLib.copy, 2000 /* Geometry */, helpStates);
             // deprecated
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_BASIC_DOUBLESIDE = this._createShader("builtin/meshbasic_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            DefaultShaders.MESH_BASIC_DOUBLESIDE = this._createShader("builtin/meshbasic_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_LAMBERT_DOUBLESIDE = this._createShader("builtin/meshlambert_doubleside.shader.json", egret3d.ShaderLib.meshlambert, 2000 /* Geometry */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            DefaultShaders.MESH_LAMBERT_DOUBLESIDE = this._createShader("builtin/meshlambert_doubleside.shader.json", egret3d.ShaderLib.meshlambert, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_PHONE_DOUBLESIDE = this._createShader("builtin/meshphong_doubleside.shader.json", egret3d.ShaderLib.meshphong, 2000 /* Geometry */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            DefaultShaders.MESH_PHONE_DOUBLESIDE = this._createShader("builtin/meshphong_doubleside.shader.json", egret3d.ShaderLib.meshphong, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MESH_PHYSICAL_DOUBLESIDE = this._createShader("builtin/meshphysical_doubleside.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(2 /* Normal */, 3000 /* Blend */);
-            DefaultShaders.TRANSPARENT_COLOR = this._createShader("builtin/transparent_color.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(4 /* Additive */, 3000 /* Blend */);
-            DefaultShaders.TRANSPARENT_ADDITIVE_COLOR = this._createShader("builtin/transparent_additive_color.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates);
+            DefaultShaders.MESH_PHYSICAL_DOUBLESIDE = this._createShader("builtin/meshphysical_doubleside.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpStates);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(gltf.BlendMode.Blend, 3000 /* Transparent */);
+            DefaultShaders.TRANSPARENT_COLOR = this._createShader("builtin/transparent_color.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(2 /* Normal */, 3000 /* Blend */);
             DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(2 /* Normal */, 3000 /* Blend */);
-            DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(4 /* Add */, 3000 /* Blend */);
-            DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(4 /* Add */, 3000 /* Blend */);
-            DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(16 /* Multiply */, 3000 /* Blend */);
-            DefaultShaders.TRANSPARENT_MULTIPLY = this._createShader("builtin/transparent_multiply.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(16 /* Multiply */, 3000 /* Blend */);
-            DefaultShaders.TRANSPARENT_MULTIPLY_DOUBLESIDE = this._createShader("builtin/transparent_multiply_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setBlend(2 /* Normal */, 3000 /* Blend */);
-            DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", egret3d.ShaderLib.particle, 3000 /* Blend */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(gltf.BlendMode.Blend, 3000 /* Transparent */);
+            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend, 3000 /* Transparent */);
+            DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(gltf.BlendMode.Add, 3000 /* Transparent */);
+            DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add, 3000 /* Transparent */);
+            DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(gltf.BlendMode.Multiply, 3000 /* Transparent */);
+            DefaultShaders.TRANSPARENT_MULTIPLY = this._createShader("builtin/transparent_multiply.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply, 3000 /* Transparent */);
+            DefaultShaders.TRANSPARENT_MULTIPLY_DOUBLESIDE = this._createShader("builtin/transparent_multiply_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
             helpMaterial.clearStates().setDepth(true, false).setBlend(4 /* Add */, 3000 /* Blend */);
             DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", egret3d.ShaderLib.particle, 3000 /* Blend */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
             helpMaterial.clearStates().setDepth(true, false).setBlend(16 /* Multiply */, 3000 /* Blend */);
@@ -11905,7 +12011,7 @@ var egret3d;
                 if (directLightCount > 0) {
                     var define = defines.addDefine("NUM_DIR_LIGHTS" /* NUM_DIR_LIGHTS */, directLightCount);
                     if (define) {
-                        define.type = 2 /* None */;
+                        define.type = 0 /* None */;
                     }
                 }
                 this.lightCountDirty |= LightCountDirty.DirectionalLight;
@@ -11926,7 +12032,7 @@ var egret3d;
                 if (spotLightCount > 0) {
                     var define = defines.addDefine("NUM_SPOT_LIGHTS" /* NUM_SPOT_LIGHTS */, spotLightCount);
                     if (define) {
-                        define.type = 2 /* None */;
+                        define.type = 0 /* None */;
                     }
                 }
                 this.lightCountDirty |= LightCountDirty.SpotLight;
@@ -11947,7 +12053,7 @@ var egret3d;
                 if (rectangleAreaLightCount > 0) {
                     var define = defines.addDefine("NUM_RECT_AREA_LIGHTS" /* NUM_RECT_AREA_LIGHTS */, rectangleAreaLightCount);
                     if (define) {
-                        define.type = 2 /* None */;
+                        define.type = 0 /* None */;
                     }
                 }
                 this.lightCountDirty |= LightCountDirty.RectangleAreaLight;
@@ -11968,7 +12074,7 @@ var egret3d;
                 if (pointLightCount > 0) {
                     var define = defines.addDefine("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */, pointLightCount);
                     if (define) {
-                        define.type = 2 /* None */;
+                        define.type = 0 /* None */;
                     }
                 }
                 this.lightCountDirty |= LightCountDirty.PointLight;
@@ -11989,7 +12095,7 @@ var egret3d;
                 if (hemisphereLightCount > 0) {
                     var define = defines.addDefine("NUM_HEMI_LIGHTS" /* NUM_HEMI_LIGHTS */, hemisphereLightCount);
                     if (define) {
-                        define.type = 2 /* None */;
+                        define.type = 0 /* None */;
                     }
                 }
                 this.lightCountDirty |= LightCountDirty.HemisphereLight;
@@ -16319,12 +16425,12 @@ var egret3d;
                     var jointIndex = index * 4;
                     p0.fromArray(vertices, vertexIndex);
                     p1.clear();
-                    for (var i_1 = 0; i_1 < 4; ++i_1) {
-                        var weight = weights[jointIndex + i_1];
+                    for (var i_3 = 0; i_3 < 4; ++i_3) {
+                        var weight = weights[jointIndex + i_3];
                         if (weight <= 0.01) {
                             continue;
                         }
-                        p1.add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + i_1] * 16), p0).multiplyScalar(weight));
+                        p1.add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + i_3] * 16), p0).multiplyScalar(weight));
                     }
                     p1.toArray(this._skinnedVertices, vertexIndex);
                 }
@@ -23040,7 +23146,7 @@ var egret3d;
      */
     var DefineLocation;
     (function (DefineLocation) {
-        DefineLocation[DefineLocation["None"] = 2] = "None";
+        DefineLocation[DefineLocation["None"] = 0] = "None";
         DefineLocation[DefineLocation["All"] = 3] = "All";
         DefineLocation[DefineLocation["Vertex"] = 1] = "Vertex";
         DefineLocation[DefineLocation["Fragment"] = 2] = "Fragment";
@@ -23058,6 +23164,7 @@ var egret3d;
              * @internal
              */
             this.type = 3 /* All */;
+            this.name = "";
             this.index = index;
             this.mask = mask;
             this.context = context;
@@ -23156,10 +23263,16 @@ var egret3d;
             }
             return null;
         };
+        Defines.prototype.removeDefineByName = function (name) {
+            for (var _i = 0, _a = this._defines; _i < _a.length; _i++) {
+                var define = _a[_i];
+                if (define.name && define.name === name) {
+                    return this.removeDefine(define.context);
+                }
+            }
+            return null;
+        };
         Object.defineProperty(Defines.prototype, "vertexDefinesString", {
-            /**
-             *
-             */
             get: function () {
                 var definesString = "";
                 for (var _i = 0, _a = this._defines; _i < _a.length; _i++) {
@@ -23288,9 +23401,8 @@ var egret3d;
                     if (sourceValue) {
                         value = paper.Asset.find(sourceValue) || egret3d.DefaultTextures.WHITE; // Missing texture.
                     }
-                    //Uniform提交的时候判断
-                    // if (!value) {
-                    //     value = egret3d.DefaultTextures.WHITE; // Default texture.
+                    // else if (!value) {
+                    //     value = egret3d.DefaultTextures.WHITE; // 非法数据.
                     // }
                 }
                 else if (Array.isArray(sourceValue)) {
@@ -23298,6 +23410,7 @@ var egret3d;
                 }
                 else {
                     value = sourceValue ? sourceValue : (sourceValue === 0 ? 0 : []); // TODO 不应是数组。
+                    // value = sourceValue ? sourceValue : 0; //
                 }
                 var targetUniform = technique.uniforms[k] = { type: type, value: value };
                 if (sourceUniform.semantic) {
@@ -23334,7 +23447,7 @@ var egret3d;
                 var cullFaceValue = technique.states.functions.cullFace;
                 var frontFace = frontFaceValue && frontFaceValue.length > 0 ? frontFaceValue[0] : 2305 /* CCW */;
                 var cullFace = cullFaceValue && cullFaceValue.length > 0 ? cullFaceValue[0] : 1029 /* Back */;
-                this.defines.removeDefine("FLIP_SIDED" /* DOUBLE_SIDED */);
+                this.defines.removeDefine("DOUBLE_SIDED" /* DOUBLE_SIDED */);
                 if (frontFace !== 2305 /* CCW */ || cullFace !== 1029 /* Back */) {
                     this.defines.addDefine("FLIP_SIDED" /* FLIP_SIDED */);
                 }
@@ -23344,7 +23457,7 @@ var egret3d;
             }
             else {
                 this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
-                this.defines.addDefine("FLIP_SIDED" /* DOUBLE_SIDED */);
+                this.defines.addDefine("DOUBLE_SIDED" /* DOUBLE_SIDED */);
             }
             // Copy defines.
             if (materialDefines) {
@@ -23368,7 +23481,7 @@ var egret3d;
             if (shaderOrConfig instanceof egret3d.Shader) {
                 if (this.config) {
                     this._retainOrReleaseTextures(false, false);
-                    this._addOrRemoveTexturesDecodingDefine(false);
+                    this._addOrRemoveTexturesDefine(false);
                     glTFMaterial = this.config.materials[0];
                 }
                 else {
@@ -23393,7 +23506,7 @@ var egret3d;
             this._technique = this._createTechnique(shader, glTFMaterial);
             this._shader = shader;
             this._retainOrReleaseTextures(true, false);
-            this._addOrRemoveTexturesDecodingDefine(true);
+            this._addOrRemoveTexturesDefine(true);
         };
         Material.prototype._retainOrReleaseTextures = function (isRatain, isOnce) {
             var uniforms = this._technique.uniforms;
@@ -23414,39 +23527,37 @@ var egret3d;
             }
             // isRatain ? this._shader.retain() : this._shader.release(); TODO
         };
-        Material.prototype._setTexelDecodingFunction = function (key, add, encoding) {
+        Material.prototype._setTexelDefine = function (key, add, encoding) {
             if (encoding === void 0) { encoding = 1 /* LinearEncoding */; }
-            var decodingFunName = "";
-            if (key === "map" /* Map */) {
-                decodingFunName = "mapTexelToLinear";
+            var define = egret3d.ShaderTextureDefine[key]; //TODO
+            if (define) {
+                add ? this.defines.addDefine(define) : this.defines.removeDefine(define);
             }
-            else if (key === "envMap" /* EnvMap */) {
-                decodingFunName = "envMapTexelToLinear";
-            }
-            else if (key === "emissiveMap" /* EmissiveMap */) {
-                decodingFunName = "emissiveMapTexelToLinear";
-            }
+            //
+            var decodingFunName = egret3d.TextureDecodingFunction[key]; //TODO
             if (decodingFunName) {
                 var decodingStr = egret3d.renderState._getTexelDecodingFunction(decodingFunName, encoding);
                 if (add) {
-                    var define = this.defines.addDefine(decodingStr);
-                    if (define) {
-                        define.isDefine = false;
-                        define.type = 2 /* Fragment */;
+                    var define_1 = this.defines.addDefine(decodingStr);
+                    if (define_1) {
+                        define_1.isDefine = false;
+                        define_1.name = decodingFunName;
+                        define_1.type = 2 /* Fragment */;
                     }
                 }
                 else {
-                    this.defines.removeDefine(decodingStr);
+                    this.defines.removeDefineByName(decodingFunName);
                 }
             }
         };
-        Material.prototype._addOrRemoveTexturesDecodingDefine = function (add) {
+        Material.prototype._addOrRemoveTexturesDefine = function (add) {
             var uniforms = this._technique.uniforms;
             for (var k in uniforms) {
                 var uniform = uniforms[k];
-                if ((uniform.type === 35678 /* SAMPLER_2D */ || uniform.type === 35680 /* SAMPLER_CUBE */)) {
-                    var texture = uniform.value || egret3d.DefaultTextures.WHITE;
-                    this._setTexelDecodingFunction(k, add, texture.gltfTexture.extensions.paper.encoding);
+                if (uniform.value &&
+                    (uniform.type === 35678 /* SAMPLER_2D */ || uniform.type === 35680 /* SAMPLER_CUBE */)) {
+                    var texture = uniform.value;
+                    this._setTexelDefine(k, add, texture.gltfTexture.extensions.paper.encoding);
                 }
             }
         };
@@ -23765,7 +23876,7 @@ var egret3d;
                 }
                 functions.frontFace = [frontFace];
                 functions.cullFace = [cullFace];
-                this.defines.removeDefine("FLIP_SIDED" /* DOUBLE_SIDED */);
+                this.defines.removeDefine("DOUBLE_SIDED" /* DOUBLE_SIDED */);
                 if (frontFace !== 2305 /* CCW */ || cullFace !== 1029 /* Back */) {
                     this.defines.addDefine("FLIP_SIDED" /* FLIP_SIDED */);
                 }
@@ -23778,7 +23889,7 @@ var egret3d;
                 delete functions.frontFace;
                 delete functions.cullFace;
                 this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
-                this.defines.addDefine("FLIP_SIDED" /* DOUBLE_SIDED */);
+                this.defines.addDefine("DOUBLE_SIDED" /* DOUBLE_SIDED */);
             }
             return this;
         };
@@ -23930,7 +24041,7 @@ var egret3d;
                         while (i--) {
                             existingTexture.release();
                         }
-                        this._setTexelDecodingFunction(p1, false, existingTexture.gltfTexture.extensions.paper.encoding);
+                        this._setTexelDefine(p1, false, existingTexture.gltfTexture.extensions.paper.encoding);
                     }
                     if (p2) {
                         var i = this.referenceCount;
@@ -23940,7 +24051,7 @@ var egret3d;
                         if (p2 instanceof egret3d.RenderTexture) {
                             this.addDefine("FLIP_V" /* FLIP_V */);
                         }
-                        this._setTexelDecodingFunction(p1, true), p2.gltfTexture.extensions.paper.encoding;
+                        this._setTexelDefine(p1, true), p2.gltfTexture.extensions.paper.encoding;
                     }
                     uniform.value = p2;
                 }
@@ -25235,6 +25346,166 @@ var egret3d;
             mesh.setIndices(indices);
             return mesh;
         };
+        MeshBuilder._createPolyhedron = function (vertices, indices, radius, detail) {
+            var vertexBuffer = [];
+            var uvBuffer = [];
+            // // the subdivision creates the vertex buffer data
+            // subdivide(detail);
+            // // all vertices should lie on a conceptual sphere with a given radius
+            // appplyRadius(radius);
+            // // finally, create the uv data
+            // generateUVs();
+            // // build non-indexed geometry
+            // this.addAttribute('position', new Float32BufferAttribute(vertexBuffer, 3));
+            // this.addAttribute('normal', new Float32BufferAttribute(vertexBuffer.slice(), 3));
+            // this.addAttribute('uv', new Float32BufferAttribute(uvBuffer, 2));
+            // if (detail === 0) {
+            //     this.computeVertexNormals(); // flat normals
+            // } else {
+            //     this.normalizeNormals(); // smooth normals
+            // }
+            // return 
+            // // helper functions
+            // function subdivide(detail) {
+            //     var a = new Vector3();
+            //     var b = new Vector3();
+            //     var c = new Vector3();
+            //     // iterate over all faces and apply a subdivison with the given detail value
+            //     for (var i = 0; i < indices.length; i += 3) {
+            //         // get the vertices of the face
+            //         getVertexByIndex(indices[i + 0], a);
+            //         getVertexByIndex(indices[i + 1], b);
+            //         getVertexByIndex(indices[i + 2], c);
+            //         // perform subdivision
+            //         subdivideFace(a, b, c, detail);
+            //     }
+            // }
+            // function subdivideFace(a, b, c, detail) {
+            //     var cols = Math.pow(2, detail);
+            //     // we use this multidimensional array as a data structure for creating the subdivision
+            //     var v = [];
+            //     var i, j;
+            //     // construct all of the vertices for this subdivision
+            //     for (i = 0; i <= cols; i++) {
+            //         v[i] = [];
+            //         var aj = a.clone().lerp(c, i / cols);
+            //         var bj = b.clone().lerp(c, i / cols);
+            //         var rows = cols - i;
+            //         for (j = 0; j <= rows; j++) {
+            //             if (j === 0 && i === cols) {
+            //                 v[i][j] = aj;
+            //             } else {
+            //                 v[i][j] = aj.clone().lerp(bj, j / rows);
+            //             }
+            //         }
+            //     }
+            //     // construct all of the faces
+            //     for (i = 0; i < cols; i++) {
+            //         for (j = 0; j < 2 * (cols - i) - 1; j++) {
+            //             var k = Math.floor(j / 2);
+            //             if (j % 2 === 0) {
+            //                 pushVertex(v[i][k + 1]);
+            //                 pushVertex(v[i + 1][k]);
+            //                 pushVertex(v[i][k]);
+            //             } else {
+            //                 pushVertex(v[i][k + 1]);
+            //                 pushVertex(v[i + 1][k + 1]);
+            //                 pushVertex(v[i + 1][k]);
+            //             }
+            //         }
+            //     }
+            // }
+            // function appplyRadius(radius) {
+            //     var vertex = new Vector3();
+            //     // iterate over the entire buffer and apply the radius to each vertex
+            //     for (var i = 0; i < vertexBuffer.length; i += 3) {
+            //         vertex.x = vertexBuffer[i + 0];
+            //         vertex.y = vertexBuffer[i + 1];
+            //         vertex.z = vertexBuffer[i + 2];
+            //         vertex.normalize().multiplyScalar(radius);
+            //         vertexBuffer[i + 0] = vertex.x;
+            //         vertexBuffer[i + 1] = vertex.y;
+            //         vertexBuffer[i + 2] = vertex.z;
+            //     }
+            // }
+            // function generateUVs() {
+            //     var vertex = new Vector3();
+            //     for (var i = 0; i < vertexBuffer.length; i += 3) {
+            //         vertex.x = vertexBuffer[i + 0];
+            //         vertex.y = vertexBuffer[i + 1];
+            //         vertex.z = vertexBuffer[i + 2];
+            //         var u = azimuth(vertex) / 2 / Math.PI + 0.5;
+            //         var v = inclination(vertex) / Math.PI + 0.5;
+            //         uvBuffer.push(u, 1 - v);
+            //     }
+            //     correctUVs();
+            //     correctSeam();
+            // }
+            // function correctSeam() {
+            //     // handle case when face straddles the seam, see #3269
+            //     for (var i = 0; i < uvBuffer.length; i += 6) {
+            //         // uv data of a single face
+            //         var x0 = uvBuffer[i + 0];
+            //         var x1 = uvBuffer[i + 2];
+            //         var x2 = uvBuffer[i + 4];
+            //         var max = Math.max(x0, x1, x2);
+            //         var min = Math.min(x0, x1, x2);
+            //         // 0.9 is somewhat arbitrary
+            //         if (max > 0.9 && min < 0.1) {
+            //             if (x0 < 0.2) uvBuffer[i + 0] += 1;
+            //             if (x1 < 0.2) uvBuffer[i + 2] += 1;
+            //             if (x2 < 0.2) uvBuffer[i + 4] += 1;
+            //         }
+            //     }
+            // }
+            // function pushVertex(vertex) {
+            //     vertexBuffer.push(vertex.x, vertex.y, vertex.z);
+            // }
+            // function getVertexByIndex(index, vertex) {
+            //     var stride = index * 3;
+            //     vertex.x = vertices[stride + 0];
+            //     vertex.y = vertices[stride + 1];
+            //     vertex.z = vertices[stride + 2];
+            // }
+            // function correctUVs() {
+            //     var a = new Vector3();
+            //     var b = new Vector3();
+            //     var c = new Vector3();
+            //     var centroid = new Vector3();
+            //     var uvA = new Vector2();
+            //     var uvB = new Vector2();
+            //     var uvC = new Vector2();
+            //     for (var i = 0, j = 0; i < vertexBuffer.length; i += 9, j += 6) {
+            //         a.set(vertexBuffer[i + 0], vertexBuffer[i + 1], vertexBuffer[i + 2]);
+            //         b.set(vertexBuffer[i + 3], vertexBuffer[i + 4], vertexBuffer[i + 5]);
+            //         c.set(vertexBuffer[i + 6], vertexBuffer[i + 7], vertexBuffer[i + 8]);
+            //         uvA.set(uvBuffer[j + 0], uvBuffer[j + 1]);
+            //         uvB.set(uvBuffer[j + 2], uvBuffer[j + 3]);
+            //         uvC.set(uvBuffer[j + 4], uvBuffer[j + 5]);
+            //         centroid.copy(a).add(b).add(c).divideScalar(3);
+            //         var azi = azimuth(centroid);
+            //         correctUV(uvA, j + 0, a, azi);
+            //         correctUV(uvB, j + 2, b, azi);
+            //         correctUV(uvC, j + 4, c, azi);
+            //     }
+            // }
+            // function correctUV(uv, stride, vector, azimuth) {
+            //     if ((azimuth < 0) && (uv.x === 1)) {
+            //         uvBuffer[stride] = uv.x - 1;
+            //     }
+            //     if ((vector.x === 0) && (vector.z === 0)) {
+            //         uvBuffer[stride] = azimuth / 2 / Math.PI + 0.5;
+            //     }
+            // }
+            // // Angle around the Y axis, counter-clockwise when looking from above.
+            // function azimuth(vector) {
+            //     return Math.atan2(vector.z, - vector.x);
+            // }
+            // // Angle above the XZ plane.
+            // function inclination(vector) {
+            //     return Math.atan2(- vector.y, Math.sqrt((vector.x * vector.x) + (vector.z * vector.z)));
+            // }
+        };
         return MeshBuilder;
     }());
     egret3d.MeshBuilder = MeshBuilder;
@@ -25468,8 +25739,8 @@ var egret3d;
                 var mipmap = data.mipmap;
                 var wrap = data.wrap;
                 var textureFormat = 6408 /* RGBA */;
-                if (format === "RGB") {
-                    '';
+                var exr = name.substring(name.lastIndexOf(".")); //兼容以前的
+                if (format === "RGB" || exr === ".jpg") {
                     textureFormat = 6407 /* RGB */;
                 }
                 else if (format === "Gray") {
@@ -25483,6 +25754,10 @@ var egret3d;
                 if (wrap.indexOf("Repeat") >= 0) {
                     repeat = true;
                 }
+                var anisotropy = 1;
+                if (data["anisotropy"] !== undefined) {
+                    anisotropy = data["anisotropy"];
+                }
                 var premultiplyAlpha = 0;
                 if (data["premultiply"] !== undefined) {
                     premultiplyAlpha = data["premultiply"] > 0 ? 1 : 0;
@@ -25491,7 +25766,7 @@ var egret3d;
                 if (imgResource) {
                     return host.load(imgResource, "bitmapdata").then(function (bitmapData) {
                         var texture = egret3d.Texture
-                            .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap: mipmap, premultiplyAlpha: premultiplyAlpha })
+                            .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap: mipmap, premultiplyAlpha: premultiplyAlpha, anisotropy: anisotropy })
                             .setLiner(linear)
                             .setRepeat(repeat);
                         paper.Asset.register(texture);
@@ -27143,8 +27418,8 @@ var egret3d;
                             if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
                                 var unit = globalUniform.textureUnits[0];
                                 var texture = value;
-                                if (!texture || texture.isDisposed) {
-                                    texture = egret3d.DefaultTextures.WHITE; // TODO
+                                if (!texture) {
+                                    texture = egret3d.DefaultTextures.WHITE;
                                 }
                                 webgl.uniform1i(location_7, unit);
                                 if (texture.webGLTexture) {

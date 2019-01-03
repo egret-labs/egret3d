@@ -5,12 +5,22 @@ namespace egret3d {
     export const enum ShaderDefine {
         USE_COLOR = "USE_COLOR",
         USE_MAP = "USE_MAP",
-        USE_NORMALMAP = "USE_NORMALMAP",
+        USE_ALPHAMAP = "USE_ALPHAMAP",
+        USE_AOMAP = "USE_AOMAP",
         USE_BUMPMAP = "USE_BUMPMAP",
+        USE_NORMALMAP = "USE_NORMALMAP",
+        USE_SPECULARMAP = "USE_SPECULARMAP",
+        USE_ROUGHNESSMAP = "USE_ROUGHNESSMAP",
+        USE_METALNESSMAP = "USE_METALNESSMAP",
+        USE_DISPLACEMENTMAP = "USE_DISPLACEMENTMAP",
+        USE_EMISSIVEMAP = "USE_EMISSIVEMAP",
+        USE_ENVMAP = "USE_ENVMAP",
         USE_LIGHTMAP = "USE_LIGHTMAP",
         USE_SHADOWMAP = "USE_SHADOWMAP",
         USE_SKINNING = "USE_SKINNING",
         USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
+        TOON = "TOON",
+        STANDARD = "STANDARD",
         //
         FLAT_SHADED = "FLAT_SHADED",
         ENVMAP_TYPE_CUBE_UV = "ENVMAP_TYPE_CUBE_UV",
@@ -29,7 +39,7 @@ namespace egret3d {
         DEPTH_PACKING_3201 = "DEPTH_PACKING 3201",
         //
         FLIP_SIDED = "FLIP_SIDED",
-        DOUBLE_SIDED = "FLIP_SIDED",
+        DOUBLE_SIDED = "DOUBLE_SIDED",
         //
         USE_FOG = "USE_FOG",
         FOG_EXP2 = "FOG_EXP2",
@@ -44,14 +54,49 @@ namespace egret3d {
         Opacity = "opacity",
         Size = "size",
         Map = "map",
+        AlphaMap = "alphaMap",
+        AOMap = "aoMap",
         BumpMap = "bumpMap",
+        NormalMap = "normalMap",
+        SpecularMap = "specularMap",
+        GradientMap = "gradientMap",
         RoughnessMap = "roughnessMap",
+        MetalnessMap = "metalnessMap",
+        DisplacementMap = "displacementMap",
         EnvMap = "envMap",
         EmissiveMap = "emissiveMap",
         Specular = "specular",
         Shininess = "shininess",
         UVTransform = "uvTransform",
     }
+    /**
+     * TODO
+     * @internal
+     */
+    export const TextureDecodingFunction: { [key: string]: string } = {
+        "map": "mapTexelToLinear",
+        "envMap": "envMapTexelToLinear",
+        "emissiveMap": "emissiveMapTexelToLinear",
+    };
+    /**
+     * TODO
+     * @internal
+     */
+    export const ShaderTextureDefine: { [key: string]: ShaderDefine } = {
+        "map": ShaderDefine.USE_MAP,
+        "alphaMap": ShaderDefine.USE_ALPHAMAP,
+        "aoMap": ShaderDefine.USE_AOMAP,
+        "bumpMap": ShaderDefine.USE_BUMPMAP,
+        "normalMap": ShaderDefine.USE_NORMALMAP,
+        "specularMap": ShaderDefine.USE_SPECULARMAP,
+        "gradientMap": ShaderDefine.TOON,
+        "roughnessMap": ShaderDefine.USE_ROUGHNESSMAP,
+        "metalnessMap": ShaderDefine.USE_METALNESSMAP,
+        "displacementMap": ShaderDefine.USE_DISPLACEMENTMAP,
+        "envMap": ShaderDefine.USE_ENVMAP,
+        "emissiveMap": ShaderDefine.USE_EMISSIVEMAP,
+    };
+
     /**
      * 
      */
