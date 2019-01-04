@@ -2,14 +2,14 @@ namespace egret3d.webgl {
     /**
      * @internal
      */
-    export interface IWebGLRenderTexture {
+    export interface IWebGLRenderTexture extends IWebGLTexture {
         frameBuffer: WebGLFramebuffer | null;
         renderBuffer: WebGLRenderbuffer | null;
     }
     /**
      * @internal
      */
-    export class WebGLRenderTexture extends RenderTexture implements IWebGLTexture, IWebGLRenderTexture {
+    export class WebGLRenderTexture extends RenderTexture implements IWebGLRenderTexture {
         public webGLTexture: GlobalWeblGLTexture | null = null;
         public frameBuffer: WebGLFramebuffer | null = null;
         public renderBuffer: WebGLRenderbuffer | null = null;
