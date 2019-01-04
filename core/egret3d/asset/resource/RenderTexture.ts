@@ -34,7 +34,7 @@ namespace egret3d {
         protected _mipmap: boolean = false;
 
         public initialize(name: string, config: GLTF) {
-            super.initialize(name, config);
+            super.initialize(name, config, null);
 
             const extension = this._gltfTexture!.extensions.paper!;
             this._mipmap = extension.mipmap!;

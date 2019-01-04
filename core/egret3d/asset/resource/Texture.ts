@@ -6,7 +6,7 @@ namespace egret3d {
         /**
          * 纹理数据源。
          */
-        source?: ArrayBufferView | gltf.ImageSource | null;
+        source?: ArrayBufferView | null;
     }
     /**
      * 基础纹理资源。
@@ -37,6 +37,8 @@ namespace egret3d {
                 unpackAlignment = gltf.TextureAlignment.Four,
                 encoding = TextureEncoding.LinearEncoding,
                 //
+                depth = 1, layers = 1, faces = 1, levels = 1,
+                //
                 depthBuffer = false, stencilBuffer = false,
             } = createTextureParameters as CreateTextureParameters;
             //
@@ -45,31 +47,38 @@ namespace egret3d {
             sampler.magFilter = magFilter;
             sampler.minFilter = minFilter;
 
-            extension.width = width;
-            extension.height = height;
-            extension.anisotropy = anisotropy;
-
             extension.mipmap = mipmap;
             extension.premultiplyAlpha = premultiplyAlpha;
             extension.flipY = flipY;
 
-            extension.depthBuffer = depthBuffer;
-            extension.stencilBuffer = stencilBuffer;
+            extension.width = width;
+            extension.height = height;
+            extension.anisotropy = anisotropy;
 
             extension.format = format;
             extension.type = type;
             extension.unpackAlignment = unpackAlignment;
             extension.encoding = encoding;
+
+            extension.depth = depth;
+            extension.layers = layers;
+            extension.faces = faces;
+            extension.levels = levels;
+
+            extension.depthBuffer = depthBuffer;
+            extension.stencilBuffer = stencilBuffer;
             //
-            if (ArrayBuffer.isView(source)) {
-                config.buffers = [];
-                config.buffers[0] = { byteLength: source.byteLength };
-                image.bufferView = 0;
-            }
-            else if (source) {
-                image.uri = source;
-                extension.width = source.width;
-                extension.height = source.height;
+            if (source) {
+                if (ArrayBuffer.isView(source)) {
+                    config.buffers = [];
+                    config.buffers[0] = { byteLength: source.byteLength };
+                    image.bufferView = 0;
+                }
+                else if (source) {
+                    image.uri = source;
+                    extension.width = source.width;
+                    extension.height = source.height;
+                }
             }
 
             return config;
@@ -198,11 +207,10 @@ namespace egret3d {
         /**
          * @private
          */
-        public static create(name: string, config: GLTF): Texture;
-        public static create(parametersOrName: CreateTextureParameters | string, config?: GLTF) {
+        public static create(name: string, config: GLTF, buffers?: ReadonlyArray<ArrayBufferView>): Texture;
+        public static create(parametersOrName: CreateTextureParameters | string, config?: GLTF, buffers?: ReadonlyArray<ArrayBufferView>) {
             let name: string;
             let texture: Texture;
-            let buffers: ReadonlyArray<ArrayBufferView> | null = null;
 
             if (typeof parametersOrName === "string") {
                 name = parametersOrName;
@@ -218,7 +226,7 @@ namespace egret3d {
 
             // Retargeting.
             texture = new egret3d.Texture();
-            texture.initialize(name, config!, buffers);
+            texture.initialize(name, config!, buffers || null);
 
             return texture;
         }
@@ -227,7 +235,7 @@ namespace egret3d {
          */
         public static createColorTexture(name: string, r: number, g: number, b: number): Texture {
             const texture = Texture.create({
-                name, source: new Uint8Array([r, g, b, 255]), width: 1, height: 1,
+                name, source: new Uint8Array([r, g, b, 255, r, g, b, 255, r, g, b, 255, r, g, b, 255]), width: 2, height: 2,
                 // mipmap: true,
                 wrapS: gltf.TextureWrappingMode.ClampToEdge, wrapT: gltf.TextureWrappingMode.ClampToEdge,
                 magFilter: gltf.TextureFilter.Linear, minFilter: gltf.TextureFilter.LinearMipMapLinear

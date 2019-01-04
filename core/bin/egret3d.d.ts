@@ -2273,14 +2273,6 @@ declare namespace egret3d {
          */
         mipmap?: boolean;
         /**
-         * @defaults false
-         */
-        depthBuffer?: boolean;
-        /**
-         * @defaults false
-         */
-        stencilBuffer?: boolean;
-        /**
          * @defaults 0
          */
         flipY?: 0 | 1;
@@ -2319,6 +2311,30 @@ declare namespace egret3d {
          * 纹理编码格式
          */
         encoding?: TextureEncoding;
+        /**
+         *
+         */
+        depth?: uint;
+        /**
+         *
+         */
+        layers?: uint;
+        /**
+         *
+         */
+        faces?: uint;
+        /**
+         *
+         */
+        levels?: uint;
+        /**
+         * @defaults false
+         */
+        depthBuffer?: boolean;
+        /**
+         * @defaults false
+         */
+        stencilBuffer?: boolean;
     }
     /**
      *
@@ -2594,6 +2610,18 @@ declare namespace gltf {
         RGB = 6407,
         RGBA = 6408,
         Luminance = 6409,
+    }
+    /**
+     *
+     */
+    const enum TextureType {
+        Texture1D = -1,
+        Texture1DArray = -1,
+        Texture2D = 3553,
+        Texture2DArray = 3553,
+        Texture3D = 32879,
+        TextureCube = 34067,
+        TextureCubeArray = 34069,
     }
     /**
      *
@@ -3074,15 +3102,15 @@ declare namespace gltf {
         /**
          * The uri of the image.
          */
-        uri?: string | ArrayBufferView | ImageSource;
+        uri?: string | ImageSource | ((string | ImageSource)[]);
         /**
          * The image's MIME type.
          */
-        mimeType?: "image/jpeg" | "image/png" | string;
+        mimeType?: "image/jpeg" | "image/png" | "image/ktx" | string;
         /**
          * The index of the bufferView that contains the image. Use this instead of the image's uri property.
          */
-        bufferView?: Index;
+        bufferView?: Index | (Index[]);
         name?: string;
         extensions?: any;
         extras?: any;
@@ -5201,12 +5229,22 @@ declare namespace egret3d {
     const enum ShaderDefine {
         USE_COLOR = "USE_COLOR",
         USE_MAP = "USE_MAP",
-        USE_NORMALMAP = "USE_NORMALMAP",
+        USE_ALPHAMAP = "USE_ALPHAMAP",
+        USE_AOMAP = "USE_AOMAP",
         USE_BUMPMAP = "USE_BUMPMAP",
+        USE_NORMALMAP = "USE_NORMALMAP",
+        USE_SPECULARMAP = "USE_SPECULARMAP",
+        USE_ROUGHNESSMAP = "USE_ROUGHNESSMAP",
+        USE_METALNESSMAP = "USE_METALNESSMAP",
+        USE_DISPLACEMENTMAP = "USE_DISPLACEMENTMAP",
+        USE_EMISSIVEMAP = "USE_EMISSIVEMAP",
+        USE_ENVMAP = "USE_ENVMAP",
         USE_LIGHTMAP = "USE_LIGHTMAP",
         USE_SHADOWMAP = "USE_SHADOWMAP",
         USE_SKINNING = "USE_SKINNING",
         USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
+        TOON = "TOON",
+        STANDARD = "STANDARD",
         FLAT_SHADED = "FLAT_SHADED",
         ENVMAP_TYPE_CUBE_UV = "ENVMAP_TYPE_CUBE_UV",
         MAX_BONES = "MAX_BONES",
@@ -5220,7 +5258,7 @@ declare namespace egret3d {
         DEPTH_PACKING_3200 = "DEPTH_PACKING 3200",
         DEPTH_PACKING_3201 = "DEPTH_PACKING 3201",
         FLIP_SIDED = "FLIP_SIDED",
-        DOUBLE_SIDED = "FLIP_SIDED",
+        DOUBLE_SIDED = "DOUBLE_SIDED",
         USE_FOG = "USE_FOG",
         FOG_EXP2 = "FOG_EXP2",
         FLIP_V = "FLIP_V",
@@ -5233,8 +5271,15 @@ declare namespace egret3d {
         Opacity = "opacity",
         Size = "size",
         Map = "map",
+        AlphaMap = "alphaMap",
+        AOMap = "aoMap",
         BumpMap = "bumpMap",
+        NormalMap = "normalMap",
+        SpecularMap = "specularMap",
+        GradientMap = "gradientMap",
         RoughnessMap = "roughnessMap",
+        MetalnessMap = "metalnessMap",
+        DisplacementMap = "displacementMap",
         EnvMap = "envMap",
         EmissiveMap = "emissiveMap",
         Specular = "specular",
@@ -6046,6 +6091,10 @@ declare namespace egret3d {
      */
     class DrawCallCollecter extends paper.SingletonComponent {
         /**
+         * 专用于天空盒渲染和绘制信息。
+         */
+        readonly skyBox: DrawCall;
+        /**
          * 此帧可能参与渲染的渲染组件列表。
          * - 未进行视锥剔除的。
          */
@@ -6628,6 +6677,208 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
+     * 相机组件。
+     */
+    class Camera extends paper.BaseComponent implements ITransformObserver {
+        /**
+         * 在渲染阶段正在执行渲染的相机。
+         * - 通常在后期渲染和渲染前生命周期中使用。
+         */
+        static current: Camera | null;
+        /**
+         * 当前场景的主相机。
+         * - 如果没有则创建一个。
+         */
+        static readonly main: Camera;
+        /**
+         * 编辑相机。
+         * - 如果没有则创建一个。
+         */
+        static readonly editor: Camera;
+        /**
+         * 该相机的绘制缓冲掩码。
+         */
+        bufferMask: gltf.BufferMask;
+        /**
+         * 该相机的渲染剔除掩码。
+         * - 用来选择性的渲染部分实体。
+         * - camera.cullingMask = paper.Layer.UI;
+         * - camera.cullingMask |= paper.Layer.UI;
+         * - camera.cullingMask &= ~paper.Layer.UI;
+         */
+        cullingMask: paper.Layer;
+        /**
+         * 该相机渲染排序。
+         * - 该值越低的相机优先绘制。
+         */
+        order: int;
+        /**
+         * 该相机的背景色。
+         */
+        readonly backgroundColor: Color;
+        /**
+         * 该相机的渲染上下文。
+         * @private
+         */
+        readonly context: CameraRenderContext;
+        private _nativeCulling;
+        private _nativeProjection;
+        private _nativeTransform;
+        private _dirtyMask;
+        private _opvalue;
+        private _fov;
+        private _near;
+        private _far;
+        private _size;
+        private readonly _viewport;
+        private readonly _pixelViewport;
+        private readonly _frustum;
+        private readonly _viewportMatrix;
+        private readonly _cullingMatrix;
+        private readonly _projectionMatrix;
+        private readonly _cameraToWorldMatrix;
+        private readonly _worldToCameraMatrix;
+        private readonly _worldToClipMatrix;
+        private readonly _clipToWorldMatrix;
+        private _renderTarget;
+        private _onStageResize();
+        initialize(): void;
+        uninitialize(): void;
+        onTransformChange(): void;
+        /**
+         * 将舞台坐标基于该相机的视角转换为世界坐标。
+         * @param stagePosition 舞台坐标。
+         * @param worldPosition 世界坐标。
+         */
+        stageToWorld(stagePosition: Readonly<IVector3>, worldPosition?: Vector3): Vector3;
+        /**
+         * 将舞台坐标基于该相机的视角转换为世界坐标。
+         * @param worldPosition 世界坐标。
+         * @param stagePosition 舞台坐标。
+         */
+        worldToStage(worldPosition: Readonly<IVector3>, stagePosition?: Vector3): Vector3;
+        /**
+         * 将舞台坐标基于该相机的视角转换为世界射线。
+         * @param stageX 舞台水平坐标。
+         * @param stageY 舞台垂直坐标。
+         * @param ray 射线。
+         */
+        stageToRay(stageX: number, stageY: number, ray?: Ray): Ray;
+        /**
+         *
+         */
+        resetCullingMatrix(): this;
+        /**
+         *
+         */
+        resetProjectionMatrix(): this;
+        /**
+         *
+         */
+        resetWorldToCameraMatrix(): this;
+        /**
+         * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间插值。
+         */
+        opvalue: number;
+        /**
+         * 该相机的视点到近裁剪面距离。
+         * - 该值过小会引起深度冲突。
+         */
+        near: number;
+        /**
+         * 该相机的视点到远裁剪面距离。
+         */
+        far: number;
+        /**
+         * 透视投影的视野。
+         */
+        fov: number;
+        /**
+         * 该相机的正交投影的尺寸。
+         */
+        size: number;
+        /**
+         * 该相机视口的宽高比。
+         */
+        readonly aspect: number;
+        /**
+         * 该相机渲染目标的尺寸。
+         */
+        readonly renderTargetSize: Readonly<ISize>;
+        /**
+         * 该相机归一化的渲染视口。
+         */
+        viewport: Readonly<Rectangle>;
+        /**
+         * 该相机像素化的渲染视口。
+         */
+        pixelViewport: Readonly<IRectangle>;
+        /**
+         *
+         */
+        readonly frustum: Readonly<Frustum>;
+        /**
+         * 该相机在世界空间坐标系的裁切矩阵。
+         */
+        cullingMatrix: Readonly<Matrix4>;
+        /**
+         * 该相机的投影矩阵。
+         */
+        projectionMatrix: Readonly<Matrix4>;
+        /**
+         * 从该相机空间坐标系到世界空间坐标系的变换矩阵。
+         */
+        readonly cameraToWorldMatrix: Readonly<Matrix4>;
+        /**
+         * 从世界空间坐标系到该相机空间坐标系的变换矩阵。
+         * - 当设置该矩阵时，该相机将使用设置值代替变换组件的矩阵进行渲染。
+         */
+        worldToCameraMatrix: Readonly<Matrix4>;
+        /**
+         * 从世界变换到该相机裁切空间的矩阵。
+         */
+        readonly worldToClipMatrix: Readonly<Matrix4>;
+        /**
+         * 从该相机裁切空间变换到世界的矩阵。
+         */
+        readonly clipToWorldMatrix: Readonly<Matrix4>;
+        /**
+         * 该相机的渲染目标。
+         * - 未设置该值则直接绘制到舞台。
+         */
+        renderTarget: RenderTexture | null;
+        /**
+         *
+         */
+        readonly postprocessingRenderTarget: RenderTexture;
+        /**
+         * @deprecated
+         */
+        getPosAtXPanelInViewCoordinateByScreenPos(screenPos: Vector2, z: number, out: Vector2): void;
+        /**
+         * @deprecated
+         */
+        calcScreenPosFromWorldPos(worldPos: Vector3, outScreenPos: Vector2): void;
+        /**
+         * @deprecated
+         */
+        calcWorldPosFromScreenPos(screenPos: Vector3, outWorldPos: Vector3): void;
+        /**
+         * @deprecated
+         */
+        createRayByScreen(screenPosX: number, screenPosY: number, ray?: Ray): Ray;
+        /**
+         * @deprecated
+         */
+        clearOption_Color: boolean;
+        /**
+         * @deprecated
+         */
+        clearOption_Depth: boolean;
+    }
+}
+declare namespace egret3d {
+    /**
      * 几何球体。
      */
     class Sphere extends paper.BaseRelease<Sphere> implements paper.ICCS<Sphere>, paper.ISerializable, IRaycast {
@@ -6684,14 +6935,6 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
-     */
-    abstract class CameraPostprocessing extends paper.BaseComponent {
-        render(camera: Camera): void;
-    }
-}
-declare namespace egret3d {
-    /**
      * 相机渲染上下文。
      */
     class CameraRenderContext {
@@ -6739,6 +6982,14 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
+}
+declare namespace egret3d {
+    /**
+     * 天空盒组件。
+     */
+    class SkyBox extends paper.BaseComponent {
+        material: Material | null;
+    }
 }
 declare namespace egret3d {
     /**
@@ -8906,7 +9157,7 @@ declare namespace egret3d {
      *
      */
     const enum DefineLocation {
-        None = 2,
+        None = 0,
         All = 3,
         Vertex = 1,
         Fragment = 2,
@@ -8927,6 +9178,10 @@ declare namespace egret3d {
          * 内容。
          */
         readonly context: string;
+        /**
+         * 名称。
+         */
+        name?: string;
         constructor(index: uint, mask: uint, context: string);
     }
     /**
@@ -8953,9 +9208,7 @@ declare namespace egret3d {
          *
          */
         removeDefine(defineString: string, value?: number): Define | null;
-        /**
-         *
-         */
+        removeDefineByName(name: string): Define | null;
         readonly vertexDefinesString: string;
         /**
          *
@@ -8995,8 +9248,8 @@ declare namespace egret3d {
         private _createTechnique(shader, glTFMaterial);
         private _reset(shaderOrConfig);
         private _retainOrReleaseTextures(isRatain, isOnce);
-        private _setTexelDecodingFunction(key, add, encoding?);
-        private _addOrRemoveTexturesDecodingDefine(add);
+        private _setTexelDefine(key, add, encoding?);
+        private _addOrRemoveTexturesDefine(add);
         retain(): this;
         release(): this;
         dispose(): boolean;
@@ -10794,203 +11047,9 @@ interface Window {
 }
 declare namespace egret3d {
     /**
-     * 相机组件。
+     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
      */
-    class Camera extends paper.BaseComponent implements ITransformObserver {
-        /**
-         * 在渲染阶段正在执行渲染的相机。
-         * - 通常在后期渲染和渲染前生命周期中使用。
-         */
-        static current: Camera | null;
-        /**
-         * 当前场景的主相机。
-         * - 如果没有则创建一个。
-         */
-        static readonly main: Camera;
-        /**
-         * 编辑相机。
-         * - 如果没有则创建一个。
-         */
-        static readonly editor: Camera;
-        /**
-         * 该相机的绘制缓冲掩码。
-         */
-        bufferMask: gltf.BufferMask;
-        /**
-         * 该相机的渲染剔除掩码。
-         * - 用来选择性的渲染部分实体。
-         * - camera.cullingMask = paper.Layer.UI;
-         * - camera.cullingMask |= paper.Layer.UI;
-         * - camera.cullingMask &= ~paper.Layer.UI;
-         */
-        cullingMask: paper.Layer;
-        /**
-         * 该相机渲染排序。
-         * - 该值越低的相机优先绘制。
-         */
-        order: int;
-        /**
-         * 该相机的背景色。
-         */
-        readonly backgroundColor: Color;
-        /**
-         * 该相机的渲染上下文。
-         * @private
-         */
-        readonly context: CameraRenderContext;
-        private _nativeCulling;
-        private _nativeProjection;
-        private _nativeTransform;
-        private _dirtyMask;
-        private _opvalue;
-        private _fov;
-        private _near;
-        private _far;
-        private _size;
-        private readonly _viewport;
-        private readonly _pixelViewport;
-        private readonly _frustum;
-        private readonly _viewportMatrix;
-        private readonly _cullingMatrix;
-        private readonly _projectionMatrix;
-        private readonly _cameraToWorldMatrix;
-        private readonly _worldToCameraMatrix;
-        private readonly _worldToClipMatrix;
-        private readonly _clipToWorldMatrix;
-        private _renderTarget;
-        private _onStageResize();
-        initialize(): void;
-        uninitialize(): void;
-        onTransformChange(): void;
-        /**
-         * 将舞台坐标基于该相机的视角转换为世界坐标。
-         * @param stagePosition 舞台坐标。
-         * @param worldPosition 世界坐标。
-         */
-        stageToWorld(stagePosition: Readonly<IVector3>, worldPosition?: Vector3): Vector3;
-        /**
-         * 将舞台坐标基于该相机的视角转换为世界坐标。
-         * @param worldPosition 世界坐标。
-         * @param stagePosition 舞台坐标。
-         */
-        worldToStage(worldPosition: Readonly<IVector3>, stagePosition?: Vector3): Vector3;
-        /**
-         * 将舞台坐标基于该相机的视角转换为世界射线。
-         * @param stageX 舞台水平坐标。
-         * @param stageY 舞台垂直坐标。
-         * @param ray 射线。
-         */
-        stageToRay(stageX: number, stageY: number, ray?: Ray): Ray;
-        /**
-         *
-         */
-        resetCullingMatrix(): this;
-        /**
-         *
-         */
-        resetProjectionMatrix(): this;
-        /**
-         *
-         */
-        resetWorldToCameraMatrix(): this;
-        /**
-         * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间插值。
-         */
-        opvalue: number;
-        /**
-         * 该相机的视点到近裁剪面距离。
-         * - 该值过小会引起深度冲突。
-         */
-        near: number;
-        /**
-         * 该相机的视点到远裁剪面距离。
-         */
-        far: number;
-        /**
-         * 透视投影的视野。
-         */
-        fov: number;
-        /**
-         * 该相机的正交投影的尺寸。
-         */
-        size: number;
-        /**
-         * 该相机视口的宽高比。
-         */
-        readonly aspect: number;
-        /**
-         * 该相机渲染目标的尺寸。
-         */
-        readonly renderTargetSize: Readonly<ISize>;
-        /**
-         * 该相机归一化的渲染视口。
-         */
-        viewport: Readonly<Rectangle>;
-        /**
-         * 该相机像素化的渲染视口。
-         */
-        pixelViewport: Readonly<IRectangle>;
-        /**
-         *
-         */
-        readonly frustum: Readonly<Frustum>;
-        /**
-         * 该相机在世界空间坐标系的裁切矩阵。
-         */
-        cullingMatrix: Readonly<Matrix4>;
-        /**
-         * 该相机的投影矩阵。
-         */
-        projectionMatrix: Readonly<Matrix4>;
-        /**
-         * 从该相机空间坐标系到世界空间坐标系的变换矩阵。
-         */
-        readonly cameraToWorldMatrix: Readonly<Matrix4>;
-        /**
-         * 从世界空间坐标系到该相机空间坐标系的变换矩阵。
-         * - 当设置该矩阵时，该相机将使用设置值代替变换组件的矩阵进行渲染。
-         */
-        worldToCameraMatrix: Readonly<Matrix4>;
-        /**
-         * 从世界变换到该相机裁切空间的矩阵。
-         */
-        readonly worldToClipMatrix: Readonly<Matrix4>;
-        /**
-         * 从该相机裁切空间变换到世界的矩阵。
-         */
-        readonly clipToWorldMatrix: Readonly<Matrix4>;
-        /**
-         * 该相机的渲染目标。
-         * - 未设置该值则直接绘制到舞台。
-         */
-        renderTarget: RenderTexture | null;
-        /**
-         *
-         */
-        readonly postprocessingRenderTarget: RenderTexture;
-        /**
-         * @deprecated
-         */
-        getPosAtXPanelInViewCoordinateByScreenPos(screenPos: Vector2, z: number, out: Vector2): void;
-        /**
-         * @deprecated
-         */
-        calcScreenPosFromWorldPos(worldPos: Vector3, outScreenPos: Vector2): void;
-        /**
-         * @deprecated
-         */
-        calcWorldPosFromScreenPos(screenPos: Vector3, outWorldPos: Vector3): void;
-        /**
-         * @deprecated
-         */
-        createRayByScreen(screenPosX: number, screenPosY: number, ray?: Ray): Ray;
-        /**
-         * @deprecated
-         */
-        clearOption_Color: boolean;
-        /**
-         * @deprecated
-         */
-        clearOption_Depth: boolean;
+    abstract class CameraPostprocessing extends paper.BaseComponent {
+        render(camera: Camera): void;
     }
 }

@@ -4,6 +4,10 @@ namespace egret3d {
      */
     export class DrawCallCollecter extends paper.SingletonComponent {
         /**
+         * 专用于天空盒渲染和绘制信息。
+         */
+        public readonly skyBox: DrawCall = DrawCall.create();
+        /**
          * 此帧可能参与渲染的渲染组件列表。
          * - 未进行视锥剔除的。
          */

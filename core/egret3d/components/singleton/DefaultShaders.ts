@@ -189,28 +189,28 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.MESH_PHYSICAL_DOUBLESIDE = this._createShader("builtin/meshphysical_doubleside.shader.json", ShaderLib.meshphysical as any, RenderQueue.Geometry, helpStates);
             
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(BlendMode.Blend, RenderQueue.Transparent);
             DefaultShaders.TRANSPARENT_COLOR = this._createShader("builtin/transparent_color.shader.json", ShaderLib.meshbasic as any, RenderQueue.Transparent, helpStates);
 
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(BlendMode.Normal, RenderQueue.Blend);
             DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", ShaderLib.meshbasic as any, RenderQueue.Blend, helpStates, [ShaderDefine.USE_MAP]);
 
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(BlendMode.Blend, RenderQueue.Transparent);
             DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", ShaderLib.meshbasic as any, RenderQueue.Transparent, helpStates);
 
-            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(BlendMode.Blend, RenderQueue.Transparent);
             DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", ShaderLib.meshbasic as any, RenderQueue.Transparent, helpStates);
 
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Add, RenderQueue.Transparent);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(BlendMode.Add, RenderQueue.Transparent);
             DefaultShaders.TRANSPARENT_ADDITIVE = this._createShader("builtin/transparent_additive.shader.json", ShaderLib.meshbasic as any, RenderQueue.Transparent, helpStates);
 
-            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Add, RenderQueue.Transparent);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(BlendMode.Add, RenderQueue.Transparent);
             DefaultShaders.TRANSPARENT_ADDITIVE_DOUBLESIDE = this._createShader("builtin/transparent_additive_doubleside.shader.json", ShaderLib.meshbasic as any, RenderQueue.Transparent, helpStates);
 
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Multiply, RenderQueue.Transparent);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(BlendMode.Multiply, RenderQueue.Transparent);
             DefaultShaders.TRANSPARENT_MULTIPLY = this._createShader("builtin/transparent_multiply.shader.json", ShaderLib.meshbasic as any, RenderQueue.Transparent, helpStates);
 
-            helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply, RenderQueue.Transparent);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(BlendMode.Multiply, RenderQueue.Transparent);
             DefaultShaders.TRANSPARENT_MULTIPLY_DOUBLESIDE = this._createShader("builtin/transparent_multiply_doubleside.shader.json", ShaderLib.meshbasic as any, RenderQueue.Transparent, helpStates);
 
             helpMaterial.clearStates().setDepth(true, false).setBlend(BlendMode.Add, RenderQueue.Blend);

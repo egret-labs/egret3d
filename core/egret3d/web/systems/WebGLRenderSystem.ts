@@ -150,7 +150,7 @@ namespace egret3d.webgl {
             return shader;
         }
 
-        private _updateGlobalUniforms(program: WebGLProgramBinder, context: CameraRenderContext, drawCall: DrawCall, renderer: paper.BaseRenderer | null, currentScene: paper.Scene, forceUpdate: boolean) {
+        private _updateGlobalUniforms(program: WebGLProgramBinder, context: CameraRenderContext, drawCall: DrawCall, renderer: paper.BaseRenderer | null, currentScene: paper.Scene | null, forceUpdate: boolean) {
             // if (renderer && renderer.receiveShadows && this.lightCastShadows) {
             //     shaderContextDefine += "#define USE_SHADOWMAP \n";
             //     shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
@@ -210,15 +210,17 @@ namespace egret3d.webgl {
             }
             // Scene.
             if (currentScene !== this._cacheScene) {
-                i = l;
+                if (currentScene) {
+                    i = l;
 
-                while (i--) {
-                    const { semantic, location } = globalUniforms[i];
+                    while (i--) {
+                        const { semantic, location } = globalUniforms[i];
 
-                    switch (semantic) {
-                        case gltf.UniformSemantics._LIGHTMAPINTENSITY:
-                            webgl.uniform1f(location, currentScene.lightmapIntensity);
-                            break;
+                        switch (semantic) {
+                            case gltf.UniformSemantics._LIGHTMAPINTENSITY:
+                                webgl.uniform1f(location, currentScene.lightmapIntensity);
+                                break;
+                        }
                     }
                 }
 
@@ -295,7 +297,6 @@ namespace egret3d.webgl {
 
                 this._cacheCamera = camera;
             }
-
             // Model.
             i = l;
             while (i--) {
@@ -332,7 +333,7 @@ namespace egret3d.webgl {
                         const lightmapIndex = (renderer as MeshRenderer).lightmapIndex;
                         if (lightmapIndex >= 0 && lightmapIndex !== this._cacheLightmapIndex) {
                             if (uniform.textureUnits && uniform.textureUnits.length === 1) {
-                                const texture = currentScene.lightmaps[lightmapIndex]!;//TODO可能有空
+                                const texture = currentScene!.lightmaps[lightmapIndex]!;//TODO可能有空
                                 const unit = uniform.textureUnits[0];
                                 webgl.uniform1i(location, unit);
 
@@ -580,8 +581,23 @@ namespace egret3d.webgl {
 
         private _render(camera: Camera, renderTarget: RenderTexture | null, material: Material | null) {
             const renderState = this._renderState;
+            const bufferMask = camera.bufferMask;
             renderState.updateViewport(camera.viewport, renderTarget);
-            renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
+            renderState.clearBuffer(bufferMask, camera.backgroundColor);
+            // Skybox.
+            if (bufferMask & gltf.BufferMask.Color) {
+                const skyBox = camera.gameObject.getComponent(SkyBox);
+                if (skyBox && skyBox.material) {
+                    const drawCall = this._drawCallCollecter.skyBox;
+
+                    // if (!drawCall.mesh){
+                    //     drawCall.mesh = skyBox.material.shader === DefaultShaders.CUBE
+                    // }
+
+                    this.draw(drawCall, skyBox.material);
+                }
+            }
+
             // Step 1 draw opaques.
             for (const drawCall of camera.context.opaqueCalls) {
                 this.draw(drawCall, material);
@@ -674,12 +690,13 @@ namespace egret3d.webgl {
             const renderState = this._renderState;
             const camera = Camera.current!;
             const context = camera.context;
-            const currentScene = renderer ? renderer.gameObject.scene : camera.gameObject.scene; // 后期渲染renderer为空，取camera的场景
+            const activeScene = this._activeScene!;
+            const currentScene = renderer ? renderer.gameObject.scene : null; // 后期渲染 renderer 为空。
             //
             const mesh = drawCall.mesh;
             const shader = material.shader as WebGLShader;
             const programs = shader.programs;
-            const programKey = renderState.defines.definesMask + material.defines.definesMask + (renderer ? renderer.defines.definesMask : "") + currentScene.defines.definesMask;
+            const programKey = renderState.defines.definesMask + material.defines.definesMask + (renderer ? renderer.defines.definesMask : "") + (currentScene || activeScene).defines.definesMask;
             let program: WebGLProgramBinder | null = null;
 
             if (DEBUG) {
@@ -711,11 +728,12 @@ namespace egret3d.webgl {
             else {
                 const webgl = WebGLRenderState.webgl!;
                 const renderState = this._renderState;
+                const vertexDefinesString = renderState.defines.vertexDefinesString + material.defines.vertexDefinesString + (renderer ? renderer.defines.vertexDefinesString : "") + (currentScene || activeScene).defines.vertexDefinesString;
+                const fragmentDefinesString = renderState.defines.fragmentDefinesString + material.defines.fragmentDefinesString + (renderer ? renderer.defines.fragmentDefinesString : "") + (currentScene || activeScene).defines.fragmentDefinesString;
+                const extensions = shader.config.extensions!.KHR_techniques_webgl;
+
                 renderState.customShaderChunks = shader.customs;
 
-                const vertexDefinesString = renderState.defines.vertexDefinesString + material.defines.vertexDefinesString + (renderer ? renderer.defines.vertexDefinesString : "") + currentScene.defines.vertexDefinesString;
-                const fragmentDefinesString = renderState.defines.fragmentDefinesString + material.defines.fragmentDefinesString + (renderer ? renderer.defines.fragmentDefinesString : "") + currentScene.defines.fragmentDefinesString;
-                const extensions = shader.config.extensions!.KHR_techniques_webgl;
                 const vertexWebGLShader = this._getWebGLShader(extensions!.shaders[0], renderState.getPrefixVertex(vertexDefinesString))!; // TODO 顺序依赖
                 const fragmentWebGLShader = this._getWebGLShader(extensions!.shaders[1], renderState.getPrefixFragment(fragmentDefinesString))!;  // TODO 顺序依赖
 
