@@ -15,6 +15,11 @@ namespace egret3d {
      */
     export class CameraAndLightCollecter extends paper.SingletonComponent {
         /**
+         * TODO
+         * @internal
+         */
+        public currentLight: BaseLight | null = null;
+        /**
          * 
          */
         public lightCountDirty: LightCountDirty = LightCountDirty.None;
@@ -22,6 +27,10 @@ namespace egret3d {
          * 
          */
         public readonly cameras: Camera[] = [];
+        /**
+         * 
+         */
+        public readonly lights: BaseLight[] = [];
         /**
          * 
          */
@@ -64,8 +73,9 @@ namespace egret3d {
          */
         public updateLights(gameObjects: ReadonlyArray<paper.GameObject>) {
             let directLightCount = 0, spotLightCount = 0, rectangleAreaLightCount = 0, pointLightCount = 0, hemisphereLightCount = 0;
-            const lights = [];
-            const { directionalLights, spotLights, rectangleAreaLights, pointLights, hemisphereLights } = this;
+            // const lights = [];
+            const { lights, directionalLights, spotLights, rectangleAreaLights, pointLights, hemisphereLights } = this;
+            lights.length = 0;
 
             for (const gameObject of gameObjects) {
                 const light = gameObject.getComponent(BaseLight as any, true) as BaseLight;
