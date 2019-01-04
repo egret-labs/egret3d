@@ -72,14 +72,18 @@ namespace egret3d {
             if (this._mode === value) {
                 return;
             }
-            
+
             const scene = this._scene;
             this._mode = value;
 
             switch (value) {
                 case FogMode.Fog:
                     scene.defines.addDefine(ShaderDefine.USE_FOG);
+                    scene.defines.removeDefine(ShaderDefine.FOG_EXP2);
+                    break;
+                    
                 case FogMode.FogEXP2:
+                    scene.defines.addDefine(ShaderDefine.USE_FOG);
                     scene.defines.addDefine(ShaderDefine.FOG_EXP2);
                     break;
 

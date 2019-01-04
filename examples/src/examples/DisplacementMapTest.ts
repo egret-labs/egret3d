@@ -52,10 +52,10 @@ namespace examples {
             const aoMap = RES.getRes("Assets/Models/ninja/ao.image.json");
             const displacementMap = RES.getRes("Assets/Models/ninja/displacement.image.json");
 
-            this._material = egret3d.Material.create(egret3d.DefaultShaders.MESH_PHYSICAL_DOUBLESIDE);
+            this._material = egret3d.Material.create(egret3d.DefaultShaders.MESH_PHYSICAL);
             this._material.setColor("diffuse", egret3d.Color.WHITE);
             this._material.setTexture("normalMap", normalMap).setTexture("aoMap", aoMap).setTexture("displacementMap", displacementMap);
-            this._material.removeDefine("USE_MAP").addDefine("USE_NORMALMAP").addDefine("USE_AOMAP").addDefine("USE_DISPLACEMENTMAP").addDefine("STANDARD").addDefine("DOUBLE_SIDED");
+            this._material.addDefine("STANDARD");
 
             this.gameObject.renderer!.material = this._material;
         }

@@ -83,6 +83,7 @@ namespace egret3d.webgl {
         private readonly _modelViewPojectionMatrix: Matrix4 = Matrix4.create();
         private readonly _inverseModelViewMatrix: Matrix3 = Matrix3.create();
         private readonly _clockBuffer: Float32Array = new Float32Array(4);
+        private _activeScene: paper.Scene | null = null;
         //
         private _cacheProgram: WebGLProgramBinder | null = null;
         private _cacheScene: paper.Scene | null = null;
@@ -149,7 +150,7 @@ namespace egret3d.webgl {
             return shader;
         }
 
-        private _updateGlobalUniforms(program: WebGLProgramBinder, context: CameraRenderContext, drawCall: DrawCall, renderer: paper.BaseRenderer | null, scene: paper.Scene, forceUpdate: boolean) {
+        private _updateGlobalUniforms(program: WebGLProgramBinder, context: CameraRenderContext, drawCall: DrawCall, renderer: paper.BaseRenderer | null, currentScene: paper.Scene, forceUpdate: boolean) {
             // if (renderer && renderer.receiveShadows && this.lightCastShadows) {
             //     shaderContextDefine += "#define USE_SHADOWMAP \n";
             //     shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
@@ -168,6 +169,8 @@ namespace egret3d.webgl {
             // Global.
             if (forceUpdate) {
                 i = l;
+                const activeScene = this._activeScene!;
+                const fog = activeScene.fog;
 
                 while (i--) {
                     const { semantic, location } = globalUniforms[i];
@@ -180,25 +183,10 @@ namespace egret3d.webgl {
                         case gltf.UniformSemantics._TONE_MAPPING_WHITE_POINT:
                             webgl.uniform1f(location, renderState.toneMappingWhitePoint);
                             break;
-                    }
-                }
-            }
-            // Scene.
-            if (scene !== this._cacheScene) {
-                const fog = scene.fog;
-                i = l;
 
-                while (i--) {
-                    const { semantic, location } = globalUniforms[i];
-
-                    switch (semantic) {
                         case gltf.UniformSemantics._AMBIENTLIGHTCOLOR:
-                            const currenAmbientColor = scene.ambientColor;
+                            const currenAmbientColor = activeScene.ambientColor;
                             webgl.uniform3f(location, currenAmbientColor.r, currenAmbientColor.g, currenAmbientColor.b);
-                            break;
-
-                        case gltf.UniformSemantics._LIGHTMAPINTENSITY:
-                            webgl.uniform1f(location, scene.lightmapIntensity);
                             break;
 
                         case gltf.UniformSemantics._FOG_NEAR:
@@ -219,8 +207,22 @@ namespace egret3d.webgl {
                             break;
                     }
                 }
+            }
+            // Scene.
+            if (currentScene !== this._cacheScene) {
+                i = l;
 
-                this._cacheScene = scene;
+                while (i--) {
+                    const { semantic, location } = globalUniforms[i];
+
+                    switch (semantic) {
+                        case gltf.UniformSemantics._LIGHTMAPINTENSITY:
+                            webgl.uniform1f(location, currentScene.lightmapIntensity);
+                            break;
+                    }
+                }
+
+                this._cacheScene = currentScene;
             }
             // Camera.
             if (camera !== this._cacheCamera) {
@@ -330,7 +332,7 @@ namespace egret3d.webgl {
                         const lightmapIndex = (renderer as MeshRenderer).lightmapIndex;
                         if (lightmapIndex >= 0 && lightmapIndex !== this._cacheLightmapIndex) {
                             if (uniform.textureUnits && uniform.textureUnits.length === 1) {
-                                const texture = scene.lightmaps[lightmapIndex]!;//TODO可能有空
+                                const texture = currentScene.lightmaps[lightmapIndex]!;//TODO可能有空
                                 const unit = uniform.textureUnits[0];
                                 webgl.uniform1i(location, unit);
 
@@ -517,7 +519,6 @@ namespace egret3d.webgl {
                         if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
                             const unit = globalUniform.textureUnits[0];
                             let texture = value as (WebGLTexture | WebGLRenderTexture | null);
-
                             if (!texture || texture.isDisposed) {
                                 texture = DefaultTextures.WHITE as WebGLTexture; // TODO
                             }
@@ -673,12 +674,12 @@ namespace egret3d.webgl {
             const renderState = this._renderState;
             const camera = Camera.current!;
             const context = camera.context;
-            const scene = renderer ? renderer.gameObject.scene : camera.gameObject.scene; // 后期渲染renderer为空，取camera的场景
+            const currentScene = renderer ? renderer.gameObject.scene : camera.gameObject.scene; // 后期渲染renderer为空，取camera的场景
             //
             const mesh = drawCall.mesh;
             const shader = material.shader as WebGLShader;
             const programs = shader.programs;
-            const programKey = renderState.defines.definesMask + material.defines.definesMask + (renderer ? renderer.defines.definesMask : "") + scene.defines.definesMask;
+            const programKey = renderState.defines.definesMask + material.defines.definesMask + (renderer ? renderer.defines.definesMask : "") + currentScene.defines.definesMask;
             let program: WebGLProgramBinder | null = null;
 
             if (DEBUG) {
@@ -712,8 +713,8 @@ namespace egret3d.webgl {
                 const renderState = this._renderState;
                 renderState.customShaderChunks = shader.customs;
 
-                const vertexDefinesString = renderState.defines.vertexDefinesString + material.defines.vertexDefinesString + (renderer ? renderer.defines.vertexDefinesString : "") + scene.defines.vertexDefinesString;
-                const fragmentDefinesString = renderState.defines.fragmentDefinesString + material.defines.fragmentDefinesString + (renderer ? renderer.defines.fragmentDefinesString : "") + scene.defines.fragmentDefinesString;
+                const vertexDefinesString = renderState.defines.vertexDefinesString + material.defines.vertexDefinesString + (renderer ? renderer.defines.vertexDefinesString : "") + currentScene.defines.vertexDefinesString;
+                const fragmentDefinesString = renderState.defines.fragmentDefinesString + material.defines.fragmentDefinesString + (renderer ? renderer.defines.fragmentDefinesString : "") + currentScene.defines.fragmentDefinesString;
                 const extensions = shader.config.extensions!.KHR_techniques_webgl;
                 const vertexWebGLShader = this._getWebGLShader(extensions!.shaders[0], renderState.getPrefixVertex(vertexDefinesString))!; // TODO 顺序依赖
                 const fragmentWebGLShader = this._getWebGLShader(extensions!.shaders[1], renderState.getPrefixFragment(fragmentDefinesString))!;  // TODO 顺序依赖
@@ -759,7 +760,7 @@ namespace egret3d.webgl {
                 const vertexAccessor = mesh.getAccessor(primitive.attributes.POSITION || 0); //
                 const bufferOffset = mesh.getBufferOffset(vertexAccessor);
                 // Update global uniforms.
-                this._updateGlobalUniforms(program, context, drawCall, renderer, scene, forceUpdate);
+                this._updateGlobalUniforms(program, context, drawCall, renderer, currentScene, forceUpdate);
                 // Update attributes.
                 if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
                     this._updateAttributes(program, mesh, subMeshIndex);
@@ -815,12 +816,7 @@ namespace egret3d.webgl {
                 return;
             }
 
-            const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
-            const clock = this.clock;
             const { cameras } = this._cameraAndLightCollecter;
-            const renderState = this._renderState;
-            const editorScene = paper.Application.sceneManager.editorScene;
-            this._clockBuffer[0] = clock.time;
 
             // Render lights shadow.
             // if (lights.length > 0) {
@@ -834,7 +830,13 @@ namespace egret3d.webgl {
             // }
             // Render cameras.
             if (cameras.length > 0) {
+                const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
+                const clock = this.clock;
+                const editorScene = paper.Scene.editorScene;
+
                 this._egret2DOrderCount = 0;
+                this._clockBuffer[0] = clock.time;
+                this._activeScene = paper.Scene.activeScene;
 
                 for (const camera of cameras) {
                     const scene = camera.gameObject.scene;
@@ -845,7 +847,7 @@ namespace egret3d.webgl {
                 }
             }
             else {
-                renderState.clearBuffer(gltf.BufferMask.Depth | gltf.BufferMask.Color, Color.BLACK);
+                this._renderState.clearBuffer(gltf.BufferMask.Depth | gltf.BufferMask.Color, Color.BLACK);
             }
         }
     }
