@@ -163,7 +163,8 @@ namespace egret3d {
                     this.addDefine(define);
                 }
             }
-            else if (shaderDefines) {
+            //TODO 兼容以前的
+            if (shaderDefines) {
                 for (const define of shaderDefines) {
                     this.addDefine(define);
                 }

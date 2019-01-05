@@ -11836,7 +11836,7 @@ var egret3d;
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(gltf.BlendMode.Blend, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT_COLOR = this._createShader("builtin/transparent_color.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(2 /* Normal */, 3000 /* Blend */);
-            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
+            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates);
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(gltf.BlendMode.Blend, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Blend, 3000 /* Transparent */);
@@ -23466,7 +23466,8 @@ var egret3d;
                     this.addDefine(define);
                 }
             }
-            else if (shaderDefines) {
+            //TODO 兼容以前的
+            if (shaderDefines) {
                 for (var _b = 0, shaderDefines_1 = shaderDefines; _b < shaderDefines_1.length; _b++) {
                     var define = shaderDefines_1[_b];
                     this.addDefine(define);
@@ -27418,8 +27419,8 @@ var egret3d;
                             if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
                                 var unit = globalUniform.textureUnits[0];
                                 var texture = value;
-                                if (!texture) {
-                                    texture = egret3d.DefaultTextures.WHITE;
+                                if (!texture || texture.isDisposed) {
+                                    texture = egret3d.DefaultTextures.WHITE; // TODO
                                 }
                                 webgl.uniform1i(location_7, unit);
                                 if (texture.webGLTexture) {

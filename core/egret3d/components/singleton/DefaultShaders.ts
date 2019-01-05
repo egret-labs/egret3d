@@ -193,7 +193,7 @@ namespace egret3d {
             DefaultShaders.TRANSPARENT_COLOR = this._createShader("builtin/transparent_color.shader.json", ShaderLib.meshbasic as any, RenderQueue.Transparent, helpStates);
 
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(BlendMode.Normal, RenderQueue.Blend);
-            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", ShaderLib.meshbasic as any, RenderQueue.Blend, helpStates, [ShaderDefine.USE_MAP]);
+            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", ShaderLib.meshbasic as any, RenderQueue.Blend, helpStates);
 
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back).setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
             DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", ShaderLib.meshbasic as any, RenderQueue.Transparent, helpStates);
