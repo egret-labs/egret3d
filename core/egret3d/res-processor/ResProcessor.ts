@@ -154,18 +154,21 @@ namespace egret3d {
                 if (data["premultiply"] !== undefined) {
                     premultiplyAlpha = data["premultiply"] > 0 ? 1 : 0;
                 }
-
+                const texture = Texture
+                    .create({ name: resource.name, format: textureFormat, mipmap, premultiplyAlpha, anisotropy })
+                    .setLiner(linear)
+                    .setRepeat(repeat);
+                paper.Asset.register(texture);
                 const imgResource = (RES.host.resourceConfig as any)["getResource"](name);
                 if (imgResource) {
                     return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
-                        const texture = Texture
-                            .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap, premultiplyAlpha, anisotropy })
-                            .setLiner(linear)
-                            .setRepeat(repeat);
-                        paper.Asset.register(texture);
-                        host.save(imgResource, bitmapData);
+                        //TODO 解决使用zip时，加载顺序不对导致显示上贴图丢失的问题
+                        texture.config.images![0].uri = bitmapData.source;
+                        texture.gltfTexture.extensions.paper.width = bitmapData.source.width;
+                        texture.gltfTexture.extensions.paper.height = bitmapData.source.height;
                         (texture as any)._bitmapData = bitmapData; // TODO
 
+                        host.save(imgResource, bitmapData);
                         return texture;
                     });
                 }

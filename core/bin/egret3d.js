@@ -11849,6 +11849,8 @@ var egret3d;
             DefaultShaders.TRANSPARENT_MULTIPLY = this._createShader("builtin/transparent_multiply.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT_MULTIPLY_DOUBLESIDE = this._createShader("builtin/transparent_multiply_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(2 /* Blend */, 3000 /* Blend */);
+            DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", egret3d.ShaderLib.particle, 3000 /* Blend */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
             helpMaterial.clearStates().setDepth(true, false).setBlend(4 /* Add */, 3000 /* Blend */);
             DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", egret3d.ShaderLib.particle, 3000 /* Blend */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
             helpMaterial.clearStates().setDepth(true, false).setBlend(16 /* Multiply */, 3000 /* Blend */);
@@ -25715,6 +25717,14 @@ var egret3d;
     egret3d.ImageProcessor = {
         onLoadStart: function (host, resource) {
             return host.load(resource, "bitmapdata").then(function (bitmapData) {
+                // let texture = paper.Asset.find(resource.name) as egret3d.Texture;
+                // if (texture) {
+                //     texture.config.images![0].uri = bitmapData.source;
+                //     texture.gltfTexture.extensions.paper.width = bitmapData.source.width;
+                //     texture.gltfTexture.extensions.paper.height = bitmapData.source.height;
+                //     (texture as any)._bitmapData = bitmapData; // TODO
+                //     return texture;
+                // }
                 var texture = egret3d.Texture
                     .create({ name: resource.name, source: bitmapData.source, format: 6408 /* RGBA */, mipmap: true })
                     .setLiner(true)
@@ -25763,15 +25773,28 @@ var egret3d;
                 if (data["premultiply"] !== undefined) {
                     premultiplyAlpha = data["premultiply"] > 0 ? 1 : 0;
                 }
+                var texture = egret3d.Texture
+                    .create({ name: resource.name, format: textureFormat, mipmap: mipmap, premultiplyAlpha: premultiplyAlpha, anisotropy: anisotropy })
+                    .setLiner(linear)
+                    .setRepeat(repeat);
+                paper.Asset.register(texture);
+                // const subAssets: paper.ISerializedData = { assets: [name] };
+                // return loadSubAssets(subAssets, resource).then(() => {
+                //     // (texture as any)._bitmapData = bitmapData; // TODO
+                //     return texture;
+                // });
                 var imgResource = RES.host.resourceConfig["getResource"](name);
                 if (imgResource) {
                     return host.load(imgResource, "bitmapdata").then(function (bitmapData) {
-                        var texture = egret3d.Texture
-                            .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap: mipmap, premultiplyAlpha: premultiplyAlpha, anisotropy: anisotropy })
-                            .setLiner(linear)
-                            .setRepeat(repeat);
-                        paper.Asset.register(texture);
+                        // const texture = Texture
+                        //     .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap, premultiplyAlpha, anisotropy })
+                        //     .setLiner(linear)
+                        //     .setRepeat(repeat);
+                        // paper.Asset.register(texture);
                         host.save(imgResource, bitmapData);
+                        texture.config.images[0].uri = bitmapData.source;
+                        texture.gltfTexture.extensions.paper.width = bitmapData.source.width;
+                        texture.gltfTexture.extensions.paper.height = bitmapData.source.height;
                         texture._bitmapData = bitmapData; // TODO
                         return texture;
                     });

@@ -213,6 +213,9 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(true, false).setBlend(gltf.BlendMode.Multiply, RenderQueue.Transparent);
             DefaultShaders.TRANSPARENT_MULTIPLY_DOUBLESIDE = this._createShader("builtin/transparent_multiply_doubleside.shader.json", ShaderLib.meshbasic as any, RenderQueue.Transparent, helpStates);
 
+            helpMaterial.clearStates().setDepth(true, false).setBlend(BlendMode.Blend, RenderQueue.Blend);
+            DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", ShaderLib.particle as any, RenderQueue.Blend, helpStates, [ShaderDefine.USE_COLOR]);
+
             helpMaterial.clearStates().setDepth(true, false).setBlend(BlendMode.Add, RenderQueue.Blend);
             DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", ShaderLib.particle as any, RenderQueue.Blend, helpStates, [ShaderDefine.USE_COLOR]);
 
