@@ -92,6 +92,14 @@ namespace egret3d {
             }
         }
         /**
+         * @interal
+         */
+        public initialize() {
+            super.initialize();
+
+            this.skyBox.subMeshIndex = 0;
+        }
+        /**
          * 添加绘制信息。
          * @param drawCall 
          */

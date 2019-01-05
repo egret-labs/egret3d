@@ -40,6 +40,7 @@ namespace egret3d {
         //
         FLIP_SIDED = "FLIP_SIDED",
         DOUBLE_SIDED = "DOUBLE_SIDED",
+        PREMULTIPLIED_ALPHA = "PREMULTIPLIED_ALPHA",
         //
         USE_FOG = "USE_FOG",
         FOG_EXP2 = "FOG_EXP2",
@@ -53,6 +54,7 @@ namespace egret3d {
         Diffuse = "diffuse",
         Opacity = "opacity",
         Size = "size",
+
         Map = "map",
         AlphaMap = "alphaMap",
         AOMap = "aoMap",
@@ -65,9 +67,18 @@ namespace egret3d {
         DisplacementMap = "displacementMap",
         EnvMap = "envMap",
         EmissiveMap = "emissiveMap",
+
+        Cube = "tCube",
+        Flip = "tFlip",
+
+        UVTransform = "uvTransform",
+
         Specular = "specular",
         Shininess = "shininess",
-        UVTransform = "uvTransform",
+
+        BumpScale = "bumpScale",
+        Roughness = "roughness",
+        Metalness = "metalness",
     }
     /**
      * TODO

@@ -590,9 +590,11 @@ namespace egret3d.webgl {
                 if (skyBox && skyBox.material) {
                     const drawCall = this._drawCallCollecter.skyBox;
 
-                    // if (!drawCall.mesh){
-                    //     drawCall.mesh = skyBox.material.shader === DefaultShaders.CUBE
-                    // }
+                    if (!drawCall.mesh) {
+                        drawCall.mesh = skyBox.material.shader === DefaultShaders.CUBE ? DefaultMeshes.CUBE : DefaultMeshes.SPHERE;
+                    }
+
+                    drawCall.matrix = camera.gameObject.transform.localToWorldMatrix;
 
                     this.draw(drawCall, skyBox.material);
                 }

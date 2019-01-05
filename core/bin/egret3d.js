@@ -4227,28 +4227,39 @@ var egret3d;
             sampler.wrapT = wrapT;
             sampler.magFilter = magFilter;
             sampler.minFilter = minFilter;
-            extension.width = width;
-            extension.height = height;
-            extension.anisotropy = anisotropy;
             extension.mipmap = mipmap;
             extension.premultiplyAlpha = premultiplyAlpha;
             extension.flipY = flipY;
-            extension.depthBuffer = depthBuffer;
-            extension.stencilBuffer = stencilBuffer;
+            extension.width = width;
+            extension.height = height;
+            extension.anisotropy = anisotropy;
             extension.format = format;
             extension.type = type;
             extension.unpackAlignment = unpackAlignment;
             extension.encoding = encoding;
+            extension.depth = depth;
+            extension.layers = layers;
+            extension.faces = faces;
+            extension.levels = levels;
+            extension.depthBuffer = depthBuffer;
+            extension.stencilBuffer = stencilBuffer;
             //
-            if (ArrayBuffer.isView(source)) {
-                config.buffers = [];
-                config.buffers[0] = { byteLength: source.byteLength };
-                image.bufferView = 0;
+            if (source) {
+                if (ArrayBuffer.isView(source)) {
+                    config.buffers = [];
+                    config.buffers[0] = { byteLength: source.byteLength };
+                    image.bufferView = 0;
+                }
+                else {
+                    image.uri = source; // 兼容
+                    extension.width = source.width;
+                    extension.height = source.height;
+                }
             }
-            else if (source) {
-                image.uri = source;
-                extension.width = source.width;
-                extension.height = source.height;
+            else if (image.uri) {
+                var source_1 = image.uri;
+                extension.width = source_1.width;
+                extension.height = source_1.height;
             }
             return config;
         };
@@ -4385,10 +4396,9 @@ var egret3d;
         function Texture() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        Texture.create = function (parametersOrName, config) {
+        Texture.create = function (parametersOrName, config, buffers) {
             var name;
             var texture;
-            var buffers = null;
             if (typeof parametersOrName === "string") {
                 name = parametersOrName;
             }
@@ -4401,7 +4411,7 @@ var egret3d;
             }
             // Retargeting.
             texture = new egret3d.Texture();
-            texture.initialize(name, config, buffers);
+            texture.initialize(name, config, buffers || null);
             return texture;
         };
         /**
@@ -10004,6 +10014,7 @@ var egret3d;
         //
         ShaderDefine["FLIP_SIDED"] = "FLIP_SIDED";
         ShaderDefine["DOUBLE_SIDED"] = "DOUBLE_SIDED";
+        ShaderDefine["PREMULTIPLIED_ALPHA"] = "PREMULTIPLIED_ALPHA";
         //
         ShaderDefine["USE_FOG"] = "USE_FOG";
         ShaderDefine["FOG_EXP2"] = "FOG_EXP2";
@@ -10030,9 +10041,14 @@ var egret3d;
         ShaderUniformName["DisplacementMap"] = "displacementMap";
         ShaderUniformName["EnvMap"] = "envMap";
         ShaderUniformName["EmissiveMap"] = "emissiveMap";
+        ShaderUniformName["Cube"] = "tCube";
+        ShaderUniformName["Flip"] = "tFlip";
+        ShaderUniformName["UVTransform"] = "uvTransform";
         ShaderUniformName["Specular"] = "specular";
         ShaderUniformName["Shininess"] = "shininess";
-        ShaderUniformName["UVTransform"] = "uvTransform";
+        ShaderUniformName["BumpScale"] = "bumpScale";
+        ShaderUniformName["Roughness"] = "roughness";
+        ShaderUniformName["Metalness"] = "metalness";
     })(ShaderUniformName = egret3d.ShaderUniformName || (egret3d.ShaderUniformName = {}));
     /**
      * TODO
@@ -11846,9 +11862,7 @@ var egret3d;
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(2 /* Blend */, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT_COLOR = this._createShader("builtin/transparent_color.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(2 /* Normal */, 3000 /* Blend */);
-            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates, ["USE_MAP" /* USE_MAP */]);
-            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(2 /* Blend */, 3000 /* Transparent */);
-            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
+            DefaultShaders.TRANSPARENT = this._createShader("builtin/transparent.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Blend */, helpStates);
             helpMaterial.clearStates().setDepth(true, false).setBlend(2 /* Blend */, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT_DOUBLESIDE = this._createShader("builtin/transparent_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
             helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1029 /* Back */).setBlend(4 /* Add */, 3000 /* Transparent */);
@@ -11859,6 +11873,8 @@ var egret3d;
             DefaultShaders.TRANSPARENT_MULTIPLY = this._createShader("builtin/transparent_multiply.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
             helpMaterial.clearStates().setDepth(true, false).setBlend(16 /* Multiply */, 3000 /* Transparent */);
             DefaultShaders.TRANSPARENT_MULTIPLY_DOUBLESIDE = this._createShader("builtin/transparent_multiply_doubleside.shader.json", egret3d.ShaderLib.meshbasic, 3000 /* Transparent */, helpStates);
+            helpMaterial.clearStates().setDepth(true, false).setBlend(2 /* Blend */, 3000 /* Blend */);
+            DefaultShaders.PARTICLE_BLEND = this._createShader("builtin/particle_blend.shader.json", egret3d.ShaderLib.particle, 3000 /* Blend */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
             helpMaterial.clearStates().setDepth(true, false).setBlend(4 /* Add */, 3000 /* Blend */);
             DefaultShaders.PARTICLE_ADDITIVE = this._createShader("builtin/particle_additive.shader.json", egret3d.ShaderLib.particle, 3000 /* Blend */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
             helpMaterial.clearStates().setDepth(true, false).setBlend(16 /* Multiply */, 3000 /* Blend */);
@@ -11906,6 +11922,7 @@ var egret3d;
             DefaultMaterials.LINEDASHED = this._createMaterial("builtin/linedashed.mat.json", egret3d.DefaultShaders.LINEDASHED);
             DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", egret3d.DefaultShaders.LINEDASHED)
                 .addDefine("USE_COLOR" /* USE_COLOR */);
+            DefaultMaterials.CUBE = this._createMaterial("builtin/cube.mat.json", egret3d.DefaultShaders.CUBE);
             DefaultMaterials.MISSING = this._createMaterial("builtin/missing.mat.json", egret3d.DefaultShaders.MESH_BASIC)
                 .setColor(egret3d.Color.PURPLE);
             DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/shadow_depth.mat.json", egret3d.DefaultShaders.DEPTH)
@@ -12079,7 +12096,7 @@ var egret3d;
             }
             if (pointLightCount !== pointLights.length) {
                 if (pointLights.length > 0) {
-                    defines.removeDefineByName("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */);
+                    defines.removeDefine("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */, pointLights.length);
                 }
                 if (pointLightCount > 0) {
                     var define = defines.addDefine("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */, pointLightCount);
@@ -12099,6 +12116,9 @@ var egret3d;
                 }
             }
             if (hemisphereLightCount !== hemisphereLights.length) {
+                if (hemisphereLights.length > 0) {
+                    defines.removeDefine("NUM_HEMI_LIGHTS" /* NUM_HEMI_LIGHTS */, hemisphereLights.length);
+                }
                 if (hemisphereLightCount > 0) {
                     var define = defines.addDefine("NUM_HEMI_LIGHTS" /* NUM_HEMI_LIGHTS */, hemisphereLightCount);
                     if (define) {
@@ -12249,6 +12269,13 @@ var egret3d;
             if (addDrawCalls.length > 0) {
                 addDrawCalls.length = 0;
             }
+        };
+        /**
+         * @interal
+         */
+        DrawCallCollecter.prototype.initialize = function () {
+            _super.prototype.initialize.call(this);
+            this.skyBox.subMeshIndex = 0;
         };
         /**
          * 添加绘制信息。
@@ -24263,7 +24290,8 @@ var egret3d;
                     this.addDefine(define);
                 }
             }
-            else if (shaderDefines) {
+            //TODO 兼容以前的
+            if (shaderDefines) {
                 for (var _b = 0, shaderDefines_1 = shaderDefines; _b < shaderDefines_1.length; _b++) {
                     var define = shaderDefines_1[_b];
                     this.addDefine(define);
@@ -26530,50 +26558,82 @@ var egret3d;
     egret3d.TextureProcessor = {
         onLoadStart: function (host, resource) {
             return host.load(resource, "json").then(function (data) {
-                var name = data.name;
-                var filterMode = data.filterMode;
-                var format = data.format;
-                var mipmap = data.mipmap;
-                var wrap = data.wrap;
-                var textureFormat = 6408 /* RGBA */;
-                var exr = name.substring(name.lastIndexOf(".")); //兼容以前的
-                if (format === "RGB" || exr === ".jpg") {
-                    textureFormat = 6407 /* RGB */;
-                }
-                else if (format === "Gray") {
-                    textureFormat = 6409 /* Luminance */;
-                }
-                var linear = true;
-                if (filterMode.indexOf("linear") < 0) {
-                    linear = false;
-                }
-                var repeat = false;
-                if (wrap.indexOf("Repeat") >= 0) {
-                    repeat = true;
-                }
-                var anisotropy = 1;
-                if (data["anisotropy"] !== undefined) {
-                    anisotropy = data["anisotropy"];
-                }
-                var premultiplyAlpha = 0;
-                if (data["premultiply"] !== undefined) {
-                    premultiplyAlpha = data["premultiply"] > 0 ? 1 : 0;
-                }
-                var imgResource = RES.host.resourceConfig["getResource"](name);
-                if (imgResource) {
-                    return host.load(imgResource, "bitmapdata").then(function (bitmapData) {
-                        var texture = egret3d.Texture
-                            .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap: mipmap, premultiplyAlpha: premultiplyAlpha, anisotropy: anisotropy })
-                            .setLiner(linear)
-                            .setRepeat(repeat);
-                        paper.Asset.register(texture);
-                        host.save(imgResource, bitmapData);
-                        texture._bitmapData = bitmapData; // TODO
-                        return texture;
-                    });
+                if ("asset" in data) {
+                    var glTFImage_1 = data.images[data.textures[0].source];
+                    if (glTFImage_1.uri) {
+                        var subAssets_1 = { assets: [] };
+                        if (Array.isArray(glTFImage_1.uri)) {
+                            for (var _i = 0, _a = glTFImage_1.uri; _i < _a.length; _i++) {
+                                var uri = _a[_i];
+                                subAssets_1.assets.push(uri);
+                            }
+                        }
+                        else {
+                            subAssets_1.assets.push(glTFImage_1.uri);
+                        }
+                        return loadSubAssets(subAssets_1, resource).then(function (images) {
+                            for (var i = 0, l = subAssets_1.assets.length; i < l; ++i) {
+                                var imageSource = images[i];
+                                if (Array.isArray(glTFImage_1.uri)) {
+                                    glTFImage_1.uri[i] = imageSource;
+                                }
+                                else {
+                                    glTFImage_1.uri = imageSource;
+                                }
+                                host.save(RES.host.resourceConfig["getResource"](subAssets_1.assets[i]), imageSource);
+                            }
+                            var texture = egret3d.Texture.create(resource.name, data);
+                            paper.Asset.register(texture);
+                            return texture;
+                        });
+                    }
                 }
                 else {
-                    throw new Error(); // TODO
+                    var name_2 = data.name;
+                    var filterMode = data.filterMode;
+                    var format = data.format;
+                    var mipmap_1 = data.mipmap;
+                    var wrap = data.wrap;
+                    var textureFormat_1 = 6408 /* RGBA */;
+                    var exr = name_2.substring(name_2.lastIndexOf(".")); //兼容以前的
+                    if (format === "RGB" || exr === ".jpg") {
+                        textureFormat_1 = 6407 /* RGB */;
+                    }
+                    else if (format === "Gray") {
+                        textureFormat_1 = 6409 /* Luminance */;
+                    }
+                    var linear_1 = true;
+                    if (filterMode.indexOf("linear") < 0) {
+                        linear_1 = false;
+                    }
+                    var repeat_1 = false;
+                    if (wrap.indexOf("Repeat") >= 0) {
+                        repeat_1 = true;
+                    }
+                    var anisotropy_1 = 1;
+                    if (data.anisotropy !== undefined) {
+                        anisotropy_1 = data.anisotropy;
+                    }
+                    var premultiplyAlpha_1 = 0;
+                    if (data.premultiply !== undefined) {
+                        premultiplyAlpha_1 = data.premultiply > 0 ? 1 : 0;
+                    }
+                    var imgResource_1 = RES.host.resourceConfig["getResource"](name_2);
+                    if (imgResource_1) {
+                        return host.load(imgResource_1, "bitmapdata").then(function (bitmapData) {
+                            var texture = egret3d.Texture
+                                .create({ name: resource.name, source: bitmapData.source, format: textureFormat_1, mipmap: mipmap_1, premultiplyAlpha: premultiplyAlpha_1, anisotropy: anisotropy_1 })
+                                .setLiner(linear_1)
+                                .setRepeat(repeat_1);
+                            paper.Asset.register(texture);
+                            host.save(imgResource_1, bitmapData);
+                            texture._bitmapData = bitmapData; // TODO
+                            return texture;
+                        });
+                    }
+                    else {
+                        throw new Error(); // TODO
+                    }
                 }
             });
         },
@@ -27274,19 +27334,19 @@ var egret3d;
                 var totalAttributes = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_ATTRIBUTES);
                 for (var i = 0; i < totalAttributes; i++) {
                     var webglActiveInfo = webgl.getActiveAttrib(webglProgram, i);
-                    var name_2 = webglActiveInfo.name;
-                    var location_1 = webgl.getAttribLocation(webglProgram, name_2);
+                    var name_3 = webglActiveInfo.name;
+                    var location_1 = webgl.getAttribLocation(webglProgram, name_3);
                     var semantic = "";
-                    if (!technique.attributes[name_2]) {
-                        semantic = egret3d.globalAttributeSemantics[name_2];
+                    if (!technique.attributes[name_3]) {
+                        semantic = egret3d.globalAttributeSemantics[name_3];
                         if (!semantic) {
-                            console.error("未知Uniform定义：" + name_2);
+                            console.error("未知Uniform定义：" + name_3);
                         }
                     }
                     else {
-                        semantic = technique.attributes[name_2].semantic;
+                        semantic = technique.attributes[name_3].semantic;
                     }
-                    attributes.push({ name: name_2, type: webglActiveInfo.type, size: webglActiveInfo.size, location: location_1, semantic: semantic });
+                    attributes.push({ name: name_3, type: webglActiveInfo.type, size: webglActiveInfo.size, location: location_1, semantic: semantic });
                 }
                 //
                 var globalUniforms = this.globalUniforms;
@@ -27294,25 +27354,25 @@ var egret3d;
                 var totalUniforms = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_UNIFORMS);
                 for (var i = 0; i < totalUniforms; i++) {
                     var webglActiveInfo = webgl.getActiveUniform(webglProgram, i);
-                    var name_3 = webglActiveInfo.name;
-                    var location_2 = webgl.getUniformLocation(webglProgram, name_3);
-                    var gltfUniform = technique.uniforms[name_3];
+                    var name_4 = webglActiveInfo.name;
+                    var location_2 = webgl.getUniformLocation(webglProgram, name_4);
+                    var gltfUniform = technique.uniforms[name_4];
                     var semantic = undefined;
                     if (!gltfUniform) {
-                        semantic = egret3d.globalUniformSemantics[name_3];
+                        semantic = egret3d.globalUniformSemantics[name_4];
                         if (!semantic) {
                             //不在自定义中，也不在全局Uniform中
-                            console.error("未知Uniform定义：" + name_3);
+                            console.error("未知Uniform定义：" + name_4);
                         }
                     }
                     else {
                         semantic = gltfUniform.semantic;
                     }
                     if (semantic) {
-                        globalUniforms.push({ name: name_3, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: semantic, location: location_2 });
+                        globalUniforms.push({ name: name_4, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: semantic, location: location_2 });
                     }
                     else {
-                        uniforms.push({ name: name_3, type: webglActiveInfo.type, size: webglActiveInfo.size, location: location_2 });
+                        uniforms.push({ name: name_4, type: webglActiveInfo.type, size: webglActiveInfo.size, location: location_2 });
                     }
                 }
                 //
@@ -27322,13 +27382,13 @@ var egret3d;
                 // Sort.
                 for (var _i = 0, activeUniforms_1 = activeUniforms; _i < activeUniforms_1.length; _i++) {
                     var uniform = activeUniforms_1[_i];
-                    var name_4 = uniform.name;
+                    var name_5 = uniform.name;
                     if (uniform.type === 35678 /* SAMPLER_2D */ || uniform.type === 35680 /* SAMPLER_CUBE */) {
-                        if (name_4.indexOf("[") > -1) {
-                            samplerArrayNames.push(name_4);
+                        if (name_5.indexOf("[") > -1) {
+                            samplerArrayNames.push(name_5);
                         }
                         else {
-                            samplerNames.push(name_4);
+                            samplerNames.push(name_5);
                         }
                     }
                 }
@@ -28318,9 +28378,10 @@ var egret3d;
                     var skyBox = camera.gameObject.getComponent(egret3d.SkyBox);
                     if (skyBox && skyBox.material) {
                         var drawCall = this._drawCallCollecter.skyBox;
-                        // if (!drawCall.mesh){
-                        //     drawCall.mesh = skyBox.material.shader === DefaultShaders.CUBE
-                        // }
+                        if (!drawCall.mesh) {
+                            drawCall.mesh = skyBox.material.shader === egret3d.DefaultShaders.CUBE ? egret3d.DefaultMeshes.CUBE : egret3d.DefaultMeshes.SPHERE;
+                        }
+                        drawCall.matrix = camera.gameObject.transform.localToWorldMatrix;
                         this.draw(drawCall, skyBox.material);
                     }
                 }
@@ -29133,6 +29194,7 @@ var egret3d;
         }
     }
 })(egret3d || (egret3d = {}));
+window.gltf = gltf;
 window.paper = paper;
 window.egret3d = egret3d;
 var egret3d;

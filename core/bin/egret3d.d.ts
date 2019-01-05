@@ -1993,7 +1993,7 @@ declare namespace egret3d {
         /**
          * 纹理数据源。
          */
-        source?: ArrayBufferView | gltf.ImageSource | null;
+        source?: gltf.ImageSource | ArrayBufferView | null;
     }
     /**
      * 基础纹理资源。
@@ -2049,7 +2049,7 @@ declare namespace egret3d {
         /**
          * @private
          */
-        static create(name: string, config: GLTF): Texture;
+        static create(name: string, config: GLTF, buffers?: ReadonlyArray<ArrayBufferView>): Texture;
         /**
          *
          */
@@ -5259,6 +5259,7 @@ declare namespace egret3d {
         DEPTH_PACKING_3201 = "DEPTH_PACKING 3201",
         FLIP_SIDED = "FLIP_SIDED",
         DOUBLE_SIDED = "DOUBLE_SIDED",
+        PREMULTIPLIED_ALPHA = "PREMULTIPLIED_ALPHA",
         USE_FOG = "USE_FOG",
         FOG_EXP2 = "FOG_EXP2",
         FLIP_V = "FLIP_V",
@@ -5282,9 +5283,14 @@ declare namespace egret3d {
         DisplacementMap = "displacementMap",
         EnvMap = "envMap",
         EmissiveMap = "emissiveMap",
+        Cube = "tCube",
+        Flip = "tFlip",
+        UVTransform = "uvTransform",
         Specular = "specular",
         Shininess = "shininess",
-        UVTransform = "uvTransform",
+        BumpScale = "bumpScale",
+        Roughness = "roughness",
+        Metalness = "metalness",
     }
     /**
      *
@@ -6013,6 +6019,10 @@ declare namespace egret3d {
         /**
          *
          */
+        static CUBE: Material;
+        /**
+         *
+         */
         static MISSING: Material;
         private _createMaterial(name, shader);
         initialize(): void;
@@ -6109,6 +6119,10 @@ declare namespace egret3d {
          */
         readonly addDrawCalls: (DrawCall | null)[];
         private _drawCallsDirty;
+        /**
+         * @interal
+         */
+        initialize(): void;
         /**
          * 添加绘制信息。
          * @param drawCall
@@ -11042,6 +11056,7 @@ declare namespace egret3d {
 }
 interface Window {
     canvas: HTMLCanvasElement;
+    gltf: any;
     paper: any;
     egret3d: any;
 }

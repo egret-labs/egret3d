@@ -127,8 +127,8 @@ namespace egret3d {
                         const subAssets: paper.ISerializedData = { assets: [] };
 
                         if (Array.isArray(glTFImage.uri)) {
-                            for (const uri in glTFImage.uri) {
-                                subAssets.assets!.push(uri);
+                            for (const uri of glTFImage.uri) {
+                                subAssets.assets!.push(uri as string);
                             }
                         }
                         else {
@@ -145,7 +145,7 @@ namespace egret3d {
                                 else {
                                     glTFImage.uri = imageSource;
                                 }
-                                host.save((RES.host.resourceConfig as any)["getResource"](name), imageSource);
+                                host.save((RES.host.resourceConfig as any)["getResource"](subAssets.assets![i]), imageSource);
                             }
 
                             const texture = Texture.create(resource.name, data);
@@ -182,13 +182,13 @@ namespace egret3d {
                     }
 
                     let anisotropy: uint = 1;
-                    if (data["anisotropy"] !== undefined) {
-                        anisotropy = data["anisotropy"];
+                    if (data.anisotropy !== undefined) {
+                        anisotropy = data.anisotropy;
                     }
 
                     let premultiplyAlpha: 0 | 1 = 0;
-                    if (data["premultiply"] !== undefined) {
-                        premultiplyAlpha = data["premultiply"] > 0 ? 1 : 0;
+                    if (data.premultiply !== undefined) {
+                        premultiplyAlpha = data.premultiply > 0 ? 1 : 0;
                     }
 
                     const imgResource = (RES.host.resourceConfig as any)["getResource"](name);

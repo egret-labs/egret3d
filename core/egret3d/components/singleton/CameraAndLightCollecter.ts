@@ -173,7 +173,7 @@ namespace egret3d {
 
             if (pointLightCount !== pointLights.length) {
                 if (pointLights.length > 0) {
-                    defines.removeDefineByName(ShaderDefine.NUM_POINT_LIGHTS);
+                    defines.removeDefine(ShaderDefine.NUM_POINT_LIGHTS, pointLights.length);
                 }
 
                 if (pointLightCount > 0) {
@@ -197,6 +197,10 @@ namespace egret3d {
             }
 
             if (hemisphereLightCount !== hemisphereLights.length) {
+                if (hemisphereLights.length > 0) {
+                    defines.removeDefine(ShaderDefine.NUM_HEMI_LIGHTS, hemisphereLights.length);
+                }
+
                 if (hemisphereLightCount > 0) {
                     const define = defines.addDefine(ShaderDefine.NUM_HEMI_LIGHTS, hemisphereLightCount);
                     if (define) {
