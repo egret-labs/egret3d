@@ -25717,14 +25717,6 @@ var egret3d;
     egret3d.ImageProcessor = {
         onLoadStart: function (host, resource) {
             return host.load(resource, "bitmapdata").then(function (bitmapData) {
-                // let texture = paper.Asset.find(resource.name) as egret3d.Texture;
-                // if (texture) {
-                //     texture.config.images![0].uri = bitmapData.source;
-                //     texture.gltfTexture.extensions.paper.width = bitmapData.source.width;
-                //     texture.gltfTexture.extensions.paper.height = bitmapData.source.height;
-                //     (texture as any)._bitmapData = bitmapData; // TODO
-                //     return texture;
-                // }
                 var texture = egret3d.Texture
                     .create({ name: resource.name, source: bitmapData.source, format: 6408 /* RGBA */, mipmap: true })
                     .setLiner(true)
@@ -25773,28 +25765,15 @@ var egret3d;
                 if (data["premultiply"] !== undefined) {
                     premultiplyAlpha = data["premultiply"] > 0 ? 1 : 0;
                 }
-                var texture = egret3d.Texture
-                    .create({ name: resource.name, format: textureFormat, mipmap: mipmap, premultiplyAlpha: premultiplyAlpha, anisotropy: anisotropy })
-                    .setLiner(linear)
-                    .setRepeat(repeat);
-                paper.Asset.register(texture);
-                // const subAssets: paper.ISerializedData = { assets: [name] };
-                // return loadSubAssets(subAssets, resource).then(() => {
-                //     // (texture as any)._bitmapData = bitmapData; // TODO
-                //     return texture;
-                // });
                 var imgResource = RES.host.resourceConfig["getResource"](name);
                 if (imgResource) {
                     return host.load(imgResource, "bitmapdata").then(function (bitmapData) {
-                        // const texture = Texture
-                        //     .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap, premultiplyAlpha, anisotropy })
-                        //     .setLiner(linear)
-                        //     .setRepeat(repeat);
-                        // paper.Asset.register(texture);
+                        var texture = egret3d.Texture
+                            .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap: mipmap, premultiplyAlpha: premultiplyAlpha, anisotropy: anisotropy })
+                            .setLiner(linear)
+                            .setRepeat(repeat);
+                        paper.Asset.register(texture);
                         host.save(imgResource, bitmapData);
-                        texture.config.images[0].uri = bitmapData.source;
-                        texture.gltfTexture.extensions.paper.width = bitmapData.source.width;
-                        texture.gltfTexture.extensions.paper.height = bitmapData.source.height;
                         texture._bitmapData = bitmapData; // TODO
                         return texture;
                     });
