@@ -39,14 +39,14 @@ namespace egret3d {
                     loader.removeEventListener(egret.Event.COMPLETE, onSuccess, this);
                     loader.removeEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
                     resolve(bitmapData);
-                }
+                };
 
                 const onError = () => {
                     loader.removeEventListener(egret.Event.COMPLETE, onSuccess, this);
                     loader.removeEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
                     const e = new RES.ResourceManagerError(1001, resource.url);
                     reject(e);
-                }
+                };
                 loader.addEventListener(egret.Event.COMPLETE, onSuccess, this);
                 loader.addEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
             })
@@ -122,8 +122,10 @@ namespace egret3d {
             } | GLTF): any => {
                 if ("asset" in data) {
                     const glTFImage = data.images![data.textures![0].source!];
+
                     if (glTFImage.uri) {
                         const subAssets: paper.ISerializedData = { assets: [] };
+
                         if (Array.isArray(glTFImage.uri)) {
                             for (const uri in glTFImage.uri) {
                                 subAssets.assets!.push(uri);
@@ -133,31 +135,21 @@ namespace egret3d {
                             subAssets.assets!.push(glTFImage.uri as string);
                         }
 
-                        return loadSubAssets(subAssets, resource).then(() => {
-                            const texture = Texture
-                                .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap, premultiplyAlpha, anisotropy })
-                                .setLiner(linear)
-                                .setRepeat(repeat);
+                        return loadSubAssets(subAssets, resource).then((images: gltf.ImageSource[]) => {
+                            for (let i = 0, l = subAssets.assets!.length; i < l; ++i) {
+                                const imageSource = images[i];
+                                if (Array.isArray(glTFImage.uri)) {
+                                    glTFImage.uri[i] = imageSource;
+
+                                }
+                                else {
+                                    glTFImage.uri = imageSource;
+                                }
+                                host.save((RES.host.resourceConfig as any)["getResource"](name), imageSource);
+                            }
+
+                            const texture = Texture.create(resource.name, data);
                             paper.Asset.register(texture);
-                            host.save(imgResource, bitmapData);
-                            (texture as any)._bitmapData = bitmapData; // TODO
-
-
-
-                            const material = Material.create(resource.name, result);
-                            paper.Asset.register(material);
-
-                            return material;
-                        });
-
-                        return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
-                            const texture = Texture
-                                .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap, premultiplyAlpha, anisotropy })
-                                .setLiner(linear)
-                                .setRepeat(repeat);
-                            paper.Asset.register(texture);
-                            host.save(imgResource, bitmapData);
-                            (texture as any)._bitmapData = bitmapData; // TODO
 
                             return texture;
                         });

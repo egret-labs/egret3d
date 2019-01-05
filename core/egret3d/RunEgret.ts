@@ -121,9 +121,11 @@ namespace egret3d {
 
 declare interface Window {
     canvas: HTMLCanvasElement;
+    gltf: any;
     paper: any;
     egret3d: any;
 }
 
+window.gltf = gltf;
 window.paper = paper;
 window.egret3d = egret3d;

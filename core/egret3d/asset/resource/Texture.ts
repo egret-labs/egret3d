@@ -6,7 +6,7 @@ namespace egret3d {
         /**
          * 纹理数据源。
          */
-        source?: ArrayBufferView | null;
+        source?: gltf.ImageSource | ArrayBufferView | null;
     }
     /**
      * 基础纹理资源。
@@ -74,11 +74,16 @@ namespace egret3d {
                     config.buffers[0] = { byteLength: source.byteLength };
                     image.bufferView = 0;
                 }
-                else if (source) {
-                    image.uri = source;
+                else {
+                    image.uri = source; // 兼容
                     extension.width = source.width;
                     extension.height = source.height;
                 }
+            }
+            else if (image.uri) {
+                const source = image.uri as gltf.ImageSource;
+                extension.width = source.width;
+                extension.height = source.height;
             }
 
             return config;
