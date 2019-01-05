@@ -8,12 +8,14 @@ namespace egret3d.webgl {
      * @internal
      */
     export interface IWebGLTexture {
+        type: gltf.TextureType;
         webGLTexture: GlobalWeblGLTexture | null;
     }
     /**
      * @internal
      */
     export class WebGLTexture extends egret3d.Texture implements IWebGLTexture {
+        public type: gltf.TextureType = gltf.TextureType.Texture2D;
         public webGLTexture: GlobalWeblGLTexture | null = null;
 
         public dispose() {
@@ -72,8 +74,9 @@ namespace egret3d.webgl {
                 textureType = gltf.TextureType.Texture1D;
             }
 
+            this.type = textureType;
             this.webGLTexture = webgl.createTexture();
-            webgl.activeTexture(webgl.TEXTURE0 + index);
+            webgl.activeTexture(gltf.TextureType.TextureZero + index);
             webgl.bindTexture(textureType, this.webGLTexture);
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, paperExtension.premultiplyAlpha!);
             webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, paperExtension.flipY!);

@@ -579,6 +579,8 @@ declare namespace gltf {
      * 
      */
     export const enum TextureType {
+        TextureZero = 33984,
+
         Texture1D = -1,
         Texture1DArray = -1,
         Texture2D = 3553,

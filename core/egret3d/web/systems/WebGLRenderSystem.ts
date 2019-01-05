@@ -528,7 +528,30 @@ namespace egret3d.webgl {
 
                             if (texture.webGLTexture) {
                                 webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                webgl.bindTexture(webgl.TEXTURE_2D, texture.webGLTexture);
+                                webgl.bindTexture(texture.type, texture.webGLTexture);
+                            }
+                            else {
+                                texture.setupTexture(unit);
+                            }
+                        }
+                        else {
+                            console.error("Error texture unit");
+                        }
+                        break;
+
+                    case gltf.UniformType.SAMPLER_CUBE:
+                        if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
+                            const unit = globalUniform.textureUnits[0];
+                            let texture = value as (WebGLTexture | WebGLRenderTexture | null);
+                            if (!texture || texture.isDisposed) {
+                                texture = DefaultTextures.WHITE as WebGLTexture; // TODO
+                            }
+
+                            webgl.uniform1i(location, unit);
+
+                            if (texture.webGLTexture) {
+                                webgl.activeTexture(webgl.TEXTURE0 + unit);
+                                webgl.bindTexture(webgl.TEXTURE_CUBE_MAP, texture.webGLTexture);
                             }
                             else {
                                 texture.setupTexture(unit);

@@ -27464,6 +27464,7 @@ var egret3d;
             __extends(WebGLTexture, _super);
             function WebGLTexture() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.type = 3553 /* Texture2D */;
                 _this.webGLTexture = null;
                 return _this;
             }
@@ -27516,6 +27517,7 @@ var egret3d;
                 else {
                     textureType = -1 /* Texture1D */;
                 }
+                this.type = textureType;
                 this.webGLTexture = webgl.createTexture();
                 webgl.activeTexture(webgl.TEXTURE0 + index);
                 webgl.bindTexture(textureType, this.webGLTexture);
@@ -27577,6 +27579,7 @@ var egret3d;
             __extends(WebGLRenderTexture, _super);
             function WebGLRenderTexture() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.type = 3553 /* Texture2D */;
                 _this.webGLTexture = null;
                 _this.frameBuffer = null;
                 _this.renderBuffer = null;
@@ -28325,7 +28328,27 @@ var egret3d;
                                 webgl.uniform1i(location_7, unit);
                                 if (texture.webGLTexture) {
                                     webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                    webgl.bindTexture(webgl.TEXTURE_2D, texture.webGLTexture);
+                                    webgl.bindTexture(texture.type, texture.webGLTexture);
+                                }
+                                else {
+                                    texture.setupTexture(unit);
+                                }
+                            }
+                            else {
+                                console.error("Error texture unit");
+                            }
+                            break;
+                        case 35680 /* SAMPLER_CUBE */:
+                            if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
+                                var unit = globalUniform.textureUnits[0];
+                                var texture = value;
+                                if (!texture || texture.isDisposed) {
+                                    texture = egret3d.DefaultTextures.WHITE; // TODO
+                                }
+                                webgl.uniform1i(location_7, unit);
+                                if (texture.webGLTexture) {
+                                    webgl.activeTexture(webgl.TEXTURE0 + unit);
+                                    webgl.bindTexture(webgl.TEXTURE_CUBE_MAP, texture.webGLTexture);
                                 }
                                 else {
                                     texture.setupTexture(unit);

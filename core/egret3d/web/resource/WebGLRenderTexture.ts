@@ -10,6 +10,7 @@ namespace egret3d.webgl {
      * @internal
      */
     export class WebGLRenderTexture extends RenderTexture implements IWebGLRenderTexture {
+        public type: gltf.TextureType = gltf.TextureType.Texture2D;
         public webGLTexture: GlobalWeblGLTexture | null = null;
         public frameBuffer: WebGLFramebuffer | null = null;
         public renderBuffer: WebGLRenderbuffer | null = null;

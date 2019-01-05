@@ -33,7 +33,9 @@
                 "paper": {
                     "width": 1024,
                     "height": 1024,
-                    "format": 6407
+                    "format": 6407,
+                    "faces": 6,
+                    "layers": 2
                 }
             }
         }
