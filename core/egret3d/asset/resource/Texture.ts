@@ -86,6 +86,9 @@ namespace egret3d {
             return config;
         }
 
+        public type: gltf.TextureType = gltf.TextureType.Texture2D;
+
+        protected _sourceDirty: boolean = true;
         protected _gltfTexture: GLTFTexture = null!;
         protected _image: gltf.Image = null!;
         protected _sampler: gltf.Sampler = null!;
@@ -139,10 +142,6 @@ namespace egret3d {
         /**
          * @internal
          */
-        public setupTexture(index: uint): void { }
-        /**
-         * @internal
-         */
         public initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null) {
             super.initialize(name, config, buffers);
 
@@ -165,6 +164,12 @@ namespace egret3d {
             this._sampler = null!;
 
             return true;
+        }
+        /**
+         * @internal
+         */
+        public bindTexture(index: uint): this {
+            return this;
         }
         /**
          * 
@@ -338,6 +343,16 @@ namespace egret3d {
             });
 
             return texture;
+        }
+        /**
+         * 
+         * @param source 
+         */
+        public uploadTexture(source?: gltf.ImageSource): this {
+            this._sourceDirty = true;
+            this._image.uri = source;
+
+            return this;
         }
     }
 }

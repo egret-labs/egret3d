@@ -7,52 +7,10 @@ namespace egret3d.webgl {
     /**
      * @internal
      */
-    export interface IWebGLTexture {
-        type: gltf.TextureType;
-        webGLTexture: GlobalWeblGLTexture | null;
-    }
-    /**
-     * @internal
-     */
-    export class WebGLTexture extends egret3d.Texture implements IWebGLTexture {
-        public type: gltf.TextureType = gltf.TextureType.Texture2D;
+    export class WebGLTexture extends egret3d.Texture {
         public webGLTexture: GlobalWeblGLTexture | null = null;
 
-        public dispose() {
-            const image = this._image;
-            if (image && image.uri) {
-
-                if (Array.isArray(image.uri)) {
-                    for (const uri of image.uri) {
-                        if (uri.hasOwnProperty("src")) {
-                            (uri as HTMLImageElement).src = ""; // wx
-                        }
-                    }
-                }
-                else {
-                    if (image.uri.hasOwnProperty("src")) {
-                        (image.uri as HTMLImageElement).src = ""; // wx
-                    }
-                }
-
-                delete image.uri;
-            }
-
-            if (!super.dispose()) {
-                return false;
-            }
-
-            if (this.webGLTexture) {
-                const webgl = WebGLRenderState.webgl!;
-                webgl.deleteTexture(this.webGLTexture);
-                //
-                this.webGLTexture = null;
-            }
-
-            return true;
-        }
-
-        public setupTexture(index: uint) {
+        private _uploadTexture(index: uint) {
             const webgl = WebGLRenderState.webgl!;
 
             let textureType: gltf.TextureType;
@@ -82,8 +40,11 @@ namespace egret3d.webgl {
             }
 
             this.type = textureType;
-            this.webGLTexture = webgl.createTexture();
-            webgl.activeTexture(gltf.TextureType.TextureZero + index);
+            if (!this.webGLTexture) {
+                this.webGLTexture = webgl.createTexture();
+            }
+
+            webgl.activeTexture(gltf.TextureType.Texture2DStart + index);
             webgl.bindTexture(textureType, this.webGLTexture);
             webgl.pixelStorei(gltf.WebGL.UNPACK_ALIGNMENT, extension.unpackAlignment || gltf.TextureAlignment.Four);
             webgl.pixelStorei(gltf.WebGL.UNPACK_FLIP_Y_WEBGL, extension.flipY || 0);
@@ -105,16 +66,17 @@ namespace egret3d.webgl {
             else if (image.bufferView !== undefined) {
                 const width = extension.width!;
                 const height = extension.height!;
+                const buffers = this.buffers;
 
                 if (Array.isArray(image.bufferView)) {
                     let index = 0;
 
                     for (const bufferView of image.bufferView) {
-                        webgl.texImage2D(uploadType + (index++), 0, format, width, height, 0, format, dataType, this.buffers[bufferView]);
+                        webgl.texImage2D(uploadType + (index++), 0, format, width, height, 0, format, dataType, buffers[bufferView]);
                     }
                 }
                 else {
-                    webgl.texImage2D(uploadType, 0, format, width, height, 0, format, dataType, this.buffers[image.bufferView]);
+                    webgl.texImage2D(uploadType, 0, format, width, height, 0, format, dataType, buffers[image.bufferView]);
                 }
             }
 
@@ -126,6 +88,56 @@ namespace egret3d.webgl {
                 (image.uri as HTMLImageElement).src = ""; // wx
                 delete image.uri;
             }
+
+            return this;
+        }
+
+        public dispose() {
+            const image = this._image;
+            if (image && image.uri) {
+
+                if (Array.isArray(image.uri)) {
+                    for (const uri of image.uri) {
+                        if (uri.hasOwnProperty("src")) {
+                            (uri as HTMLImageElement).src = ""; // wx
+                        }
+                    }
+                }
+                else {
+                    if (image.uri.hasOwnProperty("src")) {
+                        (image.uri as HTMLImageElement).src = ""; // wx
+                    }
+                }
+
+                delete image.uri;
+            }
+
+            if (!super.dispose()) {
+                return false;
+            }
+
+            if (this.webGLTexture) {
+                const webgl = WebGLRenderState.webgl!;
+                webgl.deleteTexture(this.webGLTexture);
+            }
+            
+            this.webGLTexture = null;
+
+            return true;
+        }
+
+        public bindTexture(index: uint) {
+            if (this._sourceDirty) {
+                this._uploadTexture(index);
+                this._sourceDirty = false;
+            }
+            else {
+                const webgl = WebGLRenderState.webgl!;
+                webgl.activeTexture(gltf.TextureType.Texture2DStart + index);
+                webgl.bindTexture(this.type, this.webGLTexture);
+            }
+
+            return this;
         }
     }
     // Retargeting.

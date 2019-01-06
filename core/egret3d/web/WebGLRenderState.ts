@@ -118,7 +118,7 @@ namespace egret3d.webgl {
             if (target) {
                 w = target.width;
                 h = target.height;
-                target.activateRenderTexture();
+                target.activateTexture();
             }
             else {
                 const stageViewport = stage.viewport;
@@ -152,14 +152,8 @@ namespace egret3d.webgl {
 
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: number = 0) {
             const webgl = WebGLRenderState.webgl!;
-            if (!(target as WebGLTexture | WebGLRenderTexture).webGLTexture) {
-                target.setupTexture(0);
-            }
-            else {
-                webgl.activeTexture(webgl.TEXTURE0);
-                webgl.bindTexture(webgl.TEXTURE_2D, (target as WebGLTexture | WebGLRenderTexture).webGLTexture);
-            }
 
+            target.bindTexture(0);
             webgl.copyTexImage2D(webgl.TEXTURE_2D, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0);//TODO
         }
 

@@ -336,14 +336,7 @@ namespace egret3d.webgl {
                                 const texture = currentScene!.lightmaps[lightmapIndex]!;//TODO可能有空
                                 const unit = uniform.textureUnits[0];
                                 webgl.uniform1i(location, unit);
-
-                                if ((texture as WebGLTexture).webGLTexture) {
-                                    webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                    webgl.bindTexture(webgl.TEXTURE_2D, (texture as WebGLTexture).webGLTexture);
-                                }
-                                else {
-                                    texture.setupTexture(unit);
-                                }
+                                texture.bindTexture(unit);
                             }
                             else {
                                 console.error("Error texture unit.");
@@ -525,14 +518,7 @@ namespace egret3d.webgl {
                             }
 
                             webgl.uniform1i(location, unit);
-
-                            if (texture.webGLTexture) {
-                                webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                webgl.bindTexture(texture.type, texture.webGLTexture);
-                            }
-                            else {
-                                texture.setupTexture(unit);
-                            }
+                            texture.bindTexture(unit);
                         }
                         else {
                             console.error("Error texture unit");
@@ -548,14 +534,7 @@ namespace egret3d.webgl {
                             }
 
                             webgl.uniform1i(location, unit);
-
-                            if (texture.webGLTexture) {
-                                webgl.activeTexture(webgl.TEXTURE0 + unit);
-                                webgl.bindTexture(webgl.TEXTURE_CUBE_MAP, texture.webGLTexture);
-                            }
-                            else {
-                                texture.setupTexture(unit);
-                            }
+                            texture.bindTexture(unit);
                         }
                         else {
                             console.error("Error texture unit");
