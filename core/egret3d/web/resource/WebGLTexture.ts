@@ -20,8 +20,21 @@ namespace egret3d.webgl {
 
         public dispose() {
             const image = this._image;
-            if (image && image.uri && image.uri.hasOwnProperty("src")) {
-                (image.uri as HTMLImageElement).src = ""; // wx
+            if (image && image.uri) {
+
+                if (Array.isArray(image.uri)) {
+                    for (const uri of image.uri) {
+                        if (uri.hasOwnProperty("src")) {
+                            (uri as HTMLImageElement).src = ""; // wx
+                        }
+                    }
+                }
+                else {
+                    if (image.uri.hasOwnProperty("src")) {
+                        (image.uri as HTMLImageElement).src = ""; // wx
+                    }
+                }
+
                 delete image.uri;
             }
 
@@ -43,76 +56,69 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
 
             let textureType: gltf.TextureType;
+            let uploadType: gltf.TextureType;
             const image = this._image;
             const sampler = this._sampler;
-            const paperExtension = this._gltfTexture!.extensions.paper!;
-            const mutilyLayers = paperExtension.layers !== undefined && paperExtension.layers > 1;
+            const extension = this._gltfTexture!.extensions.paper!;
+            const format = extension.format || gltf.TextureFormat.RGBA;
+            const dataType = extension.type || gltf.TextureDataType.UNSIGNED_BYTE;
+            // const isMutilyLayers = extension.layers !== undefined && extension.layers > 1; // TODO
 
-            if (paperExtension.depth !== undefined && paperExtension.depth > 1) {
+            if (extension.depth !== undefined && extension.depth > 1) {
                 textureType = gltf.TextureType.Texture3D;
+                uploadType = textureType;
             }
-            else if (paperExtension.faces !== undefined && paperExtension.faces > 1) {
-                if (mutilyLayers) {
-                    textureType = gltf.TextureType.TextureCubeArray;
-                }
-                else {
-                    textureType = gltf.TextureType.TextureCube;
-                }
+            else if (extension.faces !== undefined && extension.faces > 1) {
+                textureType = gltf.TextureType.TextureCube;
+                uploadType = gltf.TextureType.TextureCubeStart;
             }
-            else if (paperExtension.height! > 1) {
-                if (mutilyLayers) {
-                    textureType = gltf.TextureType.Texture2DArray;
-                }
-                else {
-                    textureType = gltf.TextureType.Texture2D;
-                }
-            }
-            else if (mutilyLayers) {
-                textureType = gltf.TextureType.Texture1DArray;
+            else if (extension.height! > 1) {
+                textureType = gltf.TextureType.Texture2D;
+                uploadType = textureType;
             }
             else {
                 textureType = gltf.TextureType.Texture1D;
+                uploadType = textureType;
             }
 
             this.type = textureType;
             this.webGLTexture = webgl.createTexture();
             webgl.activeTexture(gltf.TextureType.TextureZero + index);
             webgl.bindTexture(textureType, this.webGLTexture);
-            webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, paperExtension.premultiplyAlpha!);
-            webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, paperExtension.flipY!);
-            webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, paperExtension.unpackAlignment!);
-
-            const isPowerTwo = isPowerOfTwo(paperExtension.width!, paperExtension.height!);
-            setTexturexParameters(isPowerTwo, sampler, paperExtension.anisotropy || 1);
+            webgl.pixelStorei(gltf.WebGL.UNPACK_ALIGNMENT, extension.unpackAlignment || gltf.TextureAlignment.Four);
+            webgl.pixelStorei(gltf.WebGL.UNPACK_FLIP_Y_WEBGL, extension.flipY || 0);
+            webgl.pixelStorei(gltf.WebGL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, extension.premultiplyAlpha || 0);
+            setTexturexParameters(textureType, sampler, extension.anisotropy || 1);
 
             if (image.uri !== undefined) {
                 if (Array.isArray(image.uri)) {
                     let index = 0;
 
                     for (const uri of image.uri) {
-                        webgl.texImage2D(textureType + (index++), 0, paperExtension.format!, paperExtension.format!, paperExtension.type!, uri as gltf.ImageSource);
+                        webgl.texImage2D(uploadType + (index++), 0, format, format, dataType, uri as gltf.ImageSource);
                     }
                 }
                 else {
-                    webgl.texImage2D(textureType, 0, paperExtension.format!, paperExtension.format!, paperExtension.type!, image.uri as gltf.ImageSource);
+                    webgl.texImage2D(uploadType, 0, format, format, dataType, image.uri as gltf.ImageSource);
                 }
             }
             else if (image.bufferView !== undefined) {
+                const width = extension.width!;
+                const height = extension.height!;
+
                 if (Array.isArray(image.bufferView)) {
                     let index = 0;
 
                     for (const bufferView of image.bufferView) {
-                        webgl.texImage2D(textureType + (index++), 0, paperExtension.format!, paperExtension.width!, paperExtension.height!, 0, paperExtension.format!, paperExtension.type!, this.buffers[bufferView]);
+                        webgl.texImage2D(uploadType + (index++), 0, format, width, height, 0, format, dataType, this.buffers[bufferView]);
                     }
                 }
                 else {
-                    webgl.texImage2D(textureType, 0, paperExtension.format!, paperExtension.width!, paperExtension.height!, 0, paperExtension.format!, paperExtension.type!, this.buffers[image.bufferView]);
+                    webgl.texImage2D(uploadType, 0, format, width, height, 0, format, dataType, this.buffers[image.bufferView]);
                 }
             }
 
-            const minFilter = sampler.minFilter!;
-            const canGenerateMipmap = isPowerTwo && minFilter !== gltf.TextureFilter.Nearest && minFilter !== gltf.TextureFilter.Linear;
-            if (canGenerateMipmap) {
+            if (extension.levels === 0) {
                 webgl.generateMipmap(textureType);
             }
 

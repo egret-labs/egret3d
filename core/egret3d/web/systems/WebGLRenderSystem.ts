@@ -135,7 +135,7 @@ namespace egret3d.webgl {
             webgl.shaderSource(shader, defines + shaderContent);
             webgl.compileShader(shader);
 
-            const parameter = webgl.getShaderParameter(shader, gltf.Status.CompileStatus);
+            const parameter = webgl.getShaderParameter(shader, gltf.WebGL.CompileStatus);
             if (!parameter) {
                 console.error("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?");
                 // if (confirm("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
@@ -610,7 +610,7 @@ namespace egret3d.webgl {
             // Skybox.
             if (bufferMask & gltf.BufferMask.Color) {
                 const skyBox = camera.gameObject.getComponent(SkyBox);
-                if (skyBox && skyBox.material) {
+                if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
                     const drawCall = this._drawCallCollecter.skyBox;
 
                     if (!drawCall.mesh) {
@@ -622,7 +622,6 @@ namespace egret3d.webgl {
                     this.draw(drawCall, skyBox.material);
                 }
             }
-
             // Step 1 draw opaques.
             for (const drawCall of camera.context.opaqueCalls) {
                 this.draw(drawCall, material);
@@ -659,23 +658,23 @@ namespace egret3d.webgl {
                 Camera.current = camera;
                 camera._update();
                 //
-                let isAnyActivated = false;
+                let isPostprocessing = false;
                 const postprocessings = camera.gameObject.getComponents(CameraPostprocessing as any, true) as CameraPostprocessing[];
 
                 if (postprocessings.length > 0) {
                     for (const postprocessing of postprocessings) {
                         if (postprocessing.isActiveAndEnabled) {
-                            isAnyActivated = true;
+                            isPostprocessing = true;
                             break;
                         }
                     }
                 }
 
-                if (!isAnyActivated) {
+                if (!isPostprocessing) {
                     this._render(camera, camera.renderTarget, material);
                 }
                 else {
-                    this._render(camera, camera._readRenderTarget, material);
+                    this._render(camera, camera.postprocessingRenderTarget, material);
 
                     for (const postprocessing of postprocessings) {
                         if (postprocessing.isActiveAndEnabled) {
@@ -683,9 +682,7 @@ namespace egret3d.webgl {
                         }
                     }
 
-                    const temp = camera._readRenderTarget;
-                    camera._readRenderTarget = camera._writeRenderTarget;
-                    camera._writeRenderTarget = temp;
+                    camera.swapPostprocessingRenderTarget();
                 }
             }
             else {
@@ -768,7 +765,7 @@ namespace egret3d.webgl {
                     webgl.attachShader(webGLProgram, fragmentWebGLShader);
                     webgl.linkProgram(webGLProgram);
 
-                    const parameter = webgl.getProgramParameter(webGLProgram, gltf.Status.LinkStatus);
+                    const parameter = webgl.getProgramParameter(webGLProgram, gltf.WebGL.LinkStatus);
                     if (parameter) {
                         program = new WebGLProgramBinder(webGLProgram).extract(material.technique);
                     }

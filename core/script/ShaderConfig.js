@@ -135,6 +135,8 @@ exports.UNIFORM_TEMPLATE["maxMipLevel"] = { value: 0 };
 //particle
 exports.UNIFORM_TEMPLATE["u_worldPosition"] = { value: [0, 0, 0] };
 exports.UNIFORM_TEMPLATE["u_worldRotation"] = { value: [0, 0, 0, 1] };
+// cube
+exports.UNIFORM_TEMPLATE["tFlip"] = { value: 1.0 };
 //line
 exports.UNIFORM_TEMPLATE["resolution"] = { semantic: "_RESOLUTION" /* _RESOLUTION */ };
 exports.UNIFORM_TEMPLATE["scale"] = { value: 1 };

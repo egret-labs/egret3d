@@ -31,13 +31,8 @@ namespace egret3d {
             return renderTexture;
         }
 
-        protected _mipmap: boolean = false;
-
         public initialize(name: string, config: GLTF) {
             super.initialize(name, config, null);
-
-            const extension = this._gltfTexture!.extensions.paper!;
-            this._mipmap = extension.mipmap!;
         }
 
         public activateRenderTexture(index?: uint): void { }

@@ -245,7 +245,7 @@ namespace egret3d {
                 if (add) {
                     const define = this.defines.addDefine(decodingStr);
                     if (define) {
-                        define.isDefine = false;
+                        define.isCode = true;
                         define.name = decodingFunName;
                         define.type = DefineLocation.Fragment;
                     }
@@ -899,7 +899,7 @@ namespace egret3d {
                             this.addDefine(ShaderDefine.FLIP_V);
                         }
 
-                        this._setTexelDefine(p1, true), p2.gltfTexture.extensions.paper.encoding;
+                        this._setTexelDefine(p1, true, p2.gltfTexture.extensions.paper.encoding);
                     }
 
                     uniform.value = p2;

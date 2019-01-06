@@ -4202,10 +4202,7 @@ var egret3d;
         BaseTexture._createConfig = function (createTextureParameters) {
             var config = this.createConfig();
             config.images = [{}];
-            config.samplers = [{
-                    magFilter: 9728 /* Nearest */, minFilter: 9728 /* Nearest */,
-                    wrapS: 10497 /* Repeat */, wrapT: 10497 /* Repeat */,
-                }];
+            config.samplers = [{}];
             config.textures = [{ sampler: 0, source: 0, extensions: { paper: {} } }];
             //
             var gltfTexture = config.textures[0];
@@ -4213,21 +4210,16 @@ var egret3d;
             var sampler = config.samplers[gltfTexture.sampler];
             var extension = gltfTexture.extensions.paper;
             //
-            var _a = createTextureParameters, source = _a.source, _b = _a.width, width = _b === void 0 ? 0 : _b, _c = _a.height, height = _c === void 0 ? 0 : _c, _d = _a.mipmap, mipmap = _d === void 0 ? false : _d, _e = _a.premultiplyAlpha, premultiplyAlpha = _e === void 0 ? 0 : _e, _f = _a.flipY, flipY = _f === void 0 ? 0 : _f, _g = _a.anisotropy, anisotropy = _g === void 0 ? 1 : _g, _h = _a.format, format = _h === void 0 ? 6408 /* RGBA */ : _h, _j = _a.type, type = _j === void 0 ? 5121 /* UNSIGNED_BYTE */ : _j, _k = _a.wrapS, wrapS = _k === void 0 ? 10497 /* Repeat */ : _k, _l = _a.wrapT, wrapT = _l === void 0 ? 10497 /* Repeat */ : _l, _m = _a.magFilter, magFilter = _m === void 0 ? 9728 /* Nearest */ : _m, _o = _a.minFilter, minFilter = _o === void 0 ? 9728 /* Nearest */ : _o, _p = _a.unpackAlignment, unpackAlignment = _p === void 0 ? 4 /* Four */ : _p, _q = _a.encoding, encoding = _q === void 0 ? 1 /* LinearEncoding */ : _q, 
+            var _a = createTextureParameters, wrapS = _a.wrapS, wrapT = _a.wrapT, magFilter = _a.magFilter, minFilter = _a.minFilter, source = _a.source, width = _a.width, height = _a.height, premultiplyAlpha = _a.premultiplyAlpha, flipY = _a.flipY, anisotropy = _a.anisotropy, format = _a.format, type = _a.type, unpackAlignment = _a.unpackAlignment, encoding = _a.encoding, 
             //
-            _r = _a.depth, 
+            depth = _a.depth, layers = _a.layers, faces = _a.faces, levels = _a.levels, 
             //
-            depth = _r === void 0 ? 1 : _r, _s = _a.layers, layers = _s === void 0 ? 1 : _s, _t = _a.faces, faces = _t === void 0 ? 1 : _t, _u = _a.levels, levels = _u === void 0 ? 1 : _u, 
-            //
-            _v = _a.depthBuffer, 
-            //
-            depthBuffer = _v === void 0 ? false : _v, _w = _a.stencilBuffer, stencilBuffer = _w === void 0 ? false : _w;
+            depthBuffer = _a.depthBuffer, stencilBuffer = _a.stencilBuffer;
             //
             sampler.wrapS = wrapS;
             sampler.wrapT = wrapT;
             sampler.magFilter = magFilter;
             sampler.minFilter = minFilter;
-            extension.mipmap = mipmap;
             extension.premultiplyAlpha = premultiplyAlpha;
             extension.flipY = flipY;
             extension.width = width;
@@ -4263,6 +4255,47 @@ var egret3d;
             }
             return config;
         };
+        BaseTexture.prototype._formatLevelsAndSampler = function () {
+            var sampler = this._sampler;
+            var levels = this._gltfTexture.extensions.paper.levels;
+            if (!this.isPowerOfTwo) {
+                if (levels !== undefined && levels !== 1) {
+                    levels = this._gltfTexture.extensions.paper.levels = 1;
+                }
+                if (sampler.wrapS !== 33071 /* ClampToEdge */ || sampler.wrapT !== 33071 /* ClampToEdge */) {
+                    // console.warn('Texture is not power of two. Texture.wrapS and Texture.wrapT should be set to gltf.TextureWrap.CLAMP_TO_EDGE.');
+                    sampler.wrapS = 33071 /* ClampToEdge */;
+                    sampler.wrapT = 33071 /* ClampToEdge */;
+                }
+            }
+            else {
+                if (!sampler.wrapS) {
+                    sampler.wrapS = 10497 /* Repeat */;
+                }
+                if (!sampler.wrapT) {
+                    sampler.wrapT = 10497 /* Repeat */;
+                }
+            }
+            if (!sampler.magFilter) {
+                sampler.magFilter = 9728 /* Nearest */;
+            }
+            if (levels === undefined || levels === 1) {
+                if (sampler.minFilter === 9987 /* LinearMipMapLinear */ || sampler.minFilter === 9986 /* NearestMipMapLinear */) {
+                    sampler.minFilter = 9729 /* Linear */;
+                }
+                else if (!sampler.minFilter || sampler.minFilter === 9984 /* NearestMipmapNearest */ || sampler.minFilter === 9985 /* LinearMipmapNearest */) {
+                    sampler.minFilter = 9728 /* Nearest */;
+                }
+            }
+            else {
+                if (sampler.minFilter === 9729 /* Linear */) {
+                    sampler.minFilter = 9987 /* LinearMipMapLinear */;
+                }
+                else if (!sampler.minFilter || sampler.minFilter === 9728 /* Nearest */) {
+                    sampler.minFilter = 9984 /* NearestMipmapNearest */;
+                }
+            }
+        };
         /**
          * @internal
          */
@@ -4275,6 +4308,8 @@ var egret3d;
             var gltfTexture = this._gltfTexture = this.config.textures[0];
             this._image = this.config.images[gltfTexture.source];
             this._sampler = this.config.samplers[gltfTexture.sampler];
+            //
+            this._formatLevelsAndSampler();
         };
         /**
          * @internal
@@ -4291,26 +4326,46 @@ var egret3d;
         /**
          *
          */
-        BaseTexture.prototype.setLiner = function (linear) {
+        BaseTexture.prototype.setLiner = function (value) {
             var sampler = this._sampler;
-            if (this._gltfTexture.extensions.paper.mipmap) {
-                sampler.magFilter = linear ? 9729 /* Linear */ : 9728 /* Nearest */;
-                sampler.minFilter = linear ? 9987 /* LinearMipMapLinear */ : 9984 /* MearestMipmapNearest */;
+            var levels = this._gltfTexture.extensions.paper.levels;
+            sampler.magFilter = value ? 9729 /* Linear */ : 9728 /* Nearest */;
+            if (levels === undefined || levels === 1) {
+                sampler.minFilter = value ? 9729 /* Linear */ : 9728 /* Nearest */;
             }
             else {
-                sampler.magFilter = linear ? 9729 /* Linear */ : 9728 /* Nearest */;
-                sampler.minFilter = linear ? 9729 /* Linear */ : 9728 /* Nearest */;
+                sampler.minFilter = value ? 9987 /* LinearMipMapLinear */ : 9984 /* NearestMipmapNearest */;
             }
+            this._formatLevelsAndSampler();
             return this;
         };
         /**
          *
          */
-        BaseTexture.prototype.setRepeat = function (repeat) {
+        BaseTexture.prototype.setRepeat = function (value) {
             var sampler = this._sampler;
-            sampler.wrapS = sampler.wrapT = repeat ? 10497 /* Repeat */ : 33071 /* ClampToEdge */;
+            sampler.wrapS = sampler.wrapT = value ? 10497 /* Repeat */ : 33071 /* ClampToEdge */;
+            this._formatLevelsAndSampler();
             return this;
         };
+        /**
+         *
+         */
+        BaseTexture.prototype.setMipmap = function (value) {
+            this._gltfTexture.extensions.paper.levels = value ? 0 : 1;
+            this._formatLevelsAndSampler();
+            return this;
+        };
+        Object.defineProperty(BaseTexture.prototype, "isPowerOfTwo", {
+            /**
+             *
+             */
+            get: function () {
+                return egret3d.math.isPowerOfTwo(this.width) && egret3d.math.isPowerOfTwo(this.height);
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(BaseTexture.prototype, "width", {
             /**
              *
@@ -4336,35 +4391,31 @@ var egret3d;
              *
              */
             get: function () {
-                return this._gltfTexture.extensions.paper.format;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(BaseTexture.prototype, "memory", {
-            /**
-             *
-             */
-            get: function () {
-                var k = 0;
-                switch (this.format) {
-                    case 6407 /* RGB */:
-                    case 6409 /* Luminance */:
-                        k = 3;
-                        break;
-                    case 6408 /* RGBA */:
-                        k = 4;
-                        break;
-                }
-                if (this._gltfTexture.extensions.paper.mipmap) {
-                    k *= 2;
-                }
-                return this.width * this.height * k;
+                return this._gltfTexture.extensions.paper.format || 6408 /* RGBA */;
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(BaseTexture.prototype, "sampler", {
+            // /**
+            //  * 
+            //  */
+            // public get memory(): uint {
+            //     let k = 0;
+            //     switch (this.format) {
+            //         case gltf.TextureFormat.RGB:
+            //         case gltf.TextureFormat.Luminance:
+            //             k = 3;
+            //             break;
+            //         case gltf.TextureFormat.RGBA:
+            //             k = 4;
+            //             break;
+            //     }
+            //     if (this._gltfTexture.extensions.paper.mipmap) {
+            //         k *= 2;
+            //     }
+            //     return this.width * this.height * k;
+            // }
             /**
              *
              */
@@ -4420,9 +4471,8 @@ var egret3d;
         Texture.createColorTexture = function (name, r, g, b) {
             var texture = Texture.create({
                 name: name, source: new Uint8Array([r, g, b, 255, r, g, b, 255, r, g, b, 255, r, g, b, 255]), width: 2, height: 2,
-                // mipmap: true,
                 wrapS: 33071 /* ClampToEdge */, wrapT: 33071 /* ClampToEdge */,
-                magFilter: 9729 /* Linear */, minFilter: 9987 /* LinearMipMapLinear */
+                magFilter: 9729 /* Linear */, minFilter: 9729 /* Linear */
             });
             return texture;
         };
@@ -4443,9 +4493,9 @@ var egret3d;
             }
             var texture = Texture.create({
                 name: name, source: source, width: width, height: height,
-                mipmap: true,
                 wrapS: 10497 /* Repeat */, wrapT: 10497 /* Repeat */,
-                magFilter: 9729 /* Linear */, minFilter: 9987 /* LinearMipMapLinear */
+                magFilter: 9729 /* Linear */, minFilter: 9987 /* LinearMipMapLinear */,
+                levels: 0,
             });
             return texture;
         };
@@ -4884,6 +4934,92 @@ var gltf;
         FrontFace[FrontFace["CW"] = 2304] = "CW";
         FrontFace[FrontFace["CCW"] = 2305] = "CCW";
     })(FrontFace = gltf.FrontFace || (gltf.FrontFace = {}));
+    var MeshPrimitiveMode;
+    (function (MeshPrimitiveMode) {
+        MeshPrimitiveMode[MeshPrimitiveMode["Points"] = 0] = "Points";
+        MeshPrimitiveMode[MeshPrimitiveMode["Lines"] = 1] = "Lines";
+        MeshPrimitiveMode[MeshPrimitiveMode["LineLoop"] = 2] = "LineLoop";
+        MeshPrimitiveMode[MeshPrimitiveMode["LineStrip"] = 3] = "LineStrip";
+        MeshPrimitiveMode[MeshPrimitiveMode["Triangles"] = 4] = "Triangles";
+        MeshPrimitiveMode[MeshPrimitiveMode["TrianglesStrip"] = 5] = "TrianglesStrip";
+        MeshPrimitiveMode[MeshPrimitiveMode["TrianglesFan"] = 6] = "TrianglesFan";
+    })(MeshPrimitiveMode = gltf.MeshPrimitiveMode || (gltf.MeshPrimitiveMode = {}));
+    /**
+     *
+     */
+    var DrawMode;
+    (function (DrawMode) {
+        DrawMode[DrawMode["Stream"] = 35040] = "Stream";
+        DrawMode[DrawMode["Static"] = 35044] = "Static";
+        DrawMode[DrawMode["Dynamic"] = 35048] = "Dynamic";
+    })(DrawMode = gltf.DrawMode || (gltf.DrawMode = {}));
+    /**
+     *
+     */
+    var TextureFormat;
+    (function (TextureFormat) {
+        TextureFormat[TextureFormat["RGB"] = 6407] = "RGB";
+        TextureFormat[TextureFormat["RGBA"] = 6408] = "RGBA";
+        TextureFormat[TextureFormat["Luminance"] = 6409] = "Luminance";
+        TextureFormat[TextureFormat["RGBA4"] = 32854] = "RGBA4";
+    })(TextureFormat = gltf.TextureFormat || (gltf.TextureFormat = {}));
+    /**
+     *
+     */
+    var TextureDataType;
+    (function (TextureDataType) {
+        TextureDataType[TextureDataType["UNSIGNED_BYTE"] = 5121] = "UNSIGNED_BYTE";
+        TextureDataType[TextureDataType["UNSIGNED_SHORT_5_6_5"] = 33635] = "UNSIGNED_SHORT_5_6_5";
+        TextureDataType[TextureDataType["UNSIGNED_SHORT_4_4_4_4"] = 32819] = "UNSIGNED_SHORT_4_4_4_4";
+        TextureDataType[TextureDataType["UNSIGNED_SHORT_5_5_5_1"] = 32820] = "UNSIGNED_SHORT_5_5_5_1";
+    })(TextureDataType = gltf.TextureDataType || (gltf.TextureDataType = {}));
+    /**
+     *
+     */
+    var TextureFilter;
+    (function (TextureFilter) {
+        TextureFilter[TextureFilter["Nearest"] = 9728] = "Nearest";
+        TextureFilter[TextureFilter["Linear"] = 9729] = "Linear";
+        TextureFilter[TextureFilter["NearestMipmapNearest"] = 9984] = "NearestMipmapNearest";
+        TextureFilter[TextureFilter["LinearMipmapNearest"] = 9985] = "LinearMipmapNearest";
+        TextureFilter[TextureFilter["NearestMipMapLinear"] = 9986] = "NearestMipMapLinear";
+        TextureFilter[TextureFilter["LinearMipMapLinear"] = 9987] = "LinearMipMapLinear";
+    })(TextureFilter = gltf.TextureFilter || (gltf.TextureFilter = {}));
+    /**
+     *
+     */
+    var TextureWrappingMode;
+    (function (TextureWrappingMode) {
+        TextureWrappingMode[TextureWrappingMode["Repeat"] = 10497] = "Repeat";
+        TextureWrappingMode[TextureWrappingMode["ClampToEdge"] = 33071] = "ClampToEdge";
+        TextureWrappingMode[TextureWrappingMode["MirroredRepeat"] = 33648] = "MirroredRepeat";
+    })(TextureWrappingMode = gltf.TextureWrappingMode || (gltf.TextureWrappingMode = {}));
+    /**
+     *
+     */
+    var EnableState;
+    (function (EnableState) {
+        EnableState[EnableState["Blend"] = 3042] = "Blend";
+        EnableState[EnableState["CullFace"] = 2884] = "CullFace";
+        EnableState[EnableState["DepthTest"] = 2929] = "DepthTest";
+        EnableState[EnableState["StencilTest"] = 2960] = "StencilTest";
+        EnableState[EnableState["PolygonOffsetFill"] = 32823] = "PolygonOffsetFill";
+        EnableState[EnableState["SampleAlphaToCoverage"] = 32926] = "SampleAlphaToCoverage";
+    })(EnableState = gltf.EnableState || (gltf.EnableState = {}));
+    /**
+     *
+     */
+    var DepthFunc;
+    (function (DepthFunc) {
+        DepthFunc[DepthFunc["Never"] = 512] = "Never";
+        DepthFunc[DepthFunc["Less"] = 513] = "Less";
+        DepthFunc[DepthFunc["Lequal"] = 515] = "Lequal";
+        DepthFunc[DepthFunc["Equal"] = 514] = "Equal";
+        DepthFunc[DepthFunc["Greater"] = 516] = "Greater";
+        DepthFunc[DepthFunc["NotEqual"] = 517] = "NotEqual";
+        DepthFunc[DepthFunc["GEqual"] = 518] = "GEqual";
+        DepthFunc[DepthFunc["Always"] = 519] = "Always";
+    })(DepthFunc = gltf.DepthFunc || (gltf.DepthFunc = {}));
 })(gltf || (gltf = {}));
 var paper;
 (function (paper) {
@@ -7325,9 +7461,7 @@ var egret3d;
     var RenderTexture = (function (_super) {
         __extends(RenderTexture, _super);
         function RenderTexture() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._mipmap = false;
-            return _this;
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         RenderTexture.create = function (parametersOrName, config) {
             var name;
@@ -7346,8 +7480,6 @@ var egret3d;
         };
         RenderTexture.prototype.initialize = function (name, config) {
             _super.prototype.initialize.call(this, name, config, null);
-            var extension = this._gltfTexture.extensions.paper;
-            this._mipmap = extension.mipmap;
         };
         RenderTexture.prototype.activateRenderTexture = function (index) { };
         RenderTexture.prototype.generateMipmap = function () { return false; };
@@ -11832,7 +11964,7 @@ var egret3d;
             DefaultShaders.MESH_PHYSICAL = this._createShader("builtin/meshphysical.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", egret3d.ShaderLib.particle, 2000 /* Geometry */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
-            helpMaterial.clearStates().setDepth(true, true);
+            helpMaterial.clearStates().setDepth(false, false);
             DefaultShaders.CUBE = this._createShader("builtin/cube.shader.json", egret3d.ShaderLib.cube, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.DEPTH = this._createShader("builtin/depth.shader.json", egret3d.ShaderLib.depth, 2000 /* Geometry */, helpStates);
@@ -13817,13 +13949,7 @@ var egret3d;
             _this._worldToCameraMatrix = egret3d.Matrix4.create();
             _this._worldToClipMatrix = egret3d.Matrix4.create();
             _this._clipToWorldMatrix = egret3d.Matrix4.create();
-            /**
-             * @internal
-             */
             _this._readRenderTarget = null;
-            /**
-             * @internal
-             */
             _this._writeRenderTarget = null;
             _this._renderTarget = null;
             return _this;
@@ -13890,9 +14016,6 @@ var egret3d;
         };
         Camera.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
-            //TODO
-            this._readRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, depthBuffer: true }).retain();
-            this._writeRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, depthBuffer: true }).retain();
             this.transform.registerObserver(this);
             egret3d.stage.onScreenResize.add(this._onStageResize, this);
             egret3d.stage.onResize.add(this._onStageResize, this);
@@ -14006,6 +14129,15 @@ var egret3d;
          */
         Camera.prototype.resetWorldToCameraMatrix = function () {
             this._nativeTransform = false;
+            return this;
+        };
+        /**
+         *
+         */
+        Camera.prototype.swapPostprocessingRenderTarget = function () {
+            var temp = this._writeRenderTarget;
+            this._readRenderTarget = this._writeRenderTarget;
+            this._writeRenderTarget = temp;
             return this;
         };
         Object.defineProperty(Camera.prototype, "opvalue", {
@@ -14392,6 +14524,12 @@ var egret3d;
              *
              */
             get: function () {
+                if (!this._readRenderTarget) {
+                    this._readRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, depthBuffer: true }).retain();
+                }
+                if (!this._writeRenderTarget) {
+                    this._writeRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, depthBuffer: true }).retain();
+                }
                 return this._readRenderTarget;
             },
             enumerable: true,
@@ -23980,15 +24118,7 @@ var egret3d;
             /**
              * @internal
              */
-            this.isDefine = true;
-            /**
-             * @internal
-             */
             this.type = 3 /* All */;
-            /**
-             * 名称。
-             */
-            this.name = "";
             this.index = index;
             this.mask = mask;
             this.context = context;
@@ -24102,11 +24232,11 @@ var egret3d;
                 for (var _i = 0, _a = this._defines; _i < _a.length; _i++) {
                     var define = _a[_i];
                     if (define.type & 1 /* Vertex */) {
-                        if (define.isDefine) {
-                            definesString += "#define " + define.context + " \n";
+                        if (define.isCode) {
+                            definesString += define.context + " \n";
                         }
                         else {
-                            definesString += define.context + " \n";
+                            definesString += "#define " + define.context + " \n";
                         }
                     }
                 }
@@ -24124,11 +24254,11 @@ var egret3d;
                 for (var _i = 0, _a = this._defines; _i < _a.length; _i++) {
                     var define = _a[_i];
                     if (define.type & 2 /* Fragment */) {
-                        if (define.isDefine) {
-                            definesString += "#define " + define.context + " \n";
+                        if (define.isCode) {
+                            definesString += define.context + " \n";
                         }
                         else {
-                            definesString += define.context + " \n";
+                            definesString += "#define " + define.context + " \n";
                         }
                     }
                 }
@@ -24365,7 +24495,7 @@ var egret3d;
                 if (add) {
                     var define_1 = this.defines.addDefine(decodingStr);
                     if (define_1) {
-                        define_1.isDefine = false;
+                        define_1.isCode = true;
                         define_1.name = decodingFunName;
                         define_1.type = 2 /* Fragment */;
                     }
@@ -24876,7 +25006,7 @@ var egret3d;
                         if (p2 instanceof egret3d.RenderTexture) {
                             this.addDefine("FLIP_V" /* FLIP_V */);
                         }
-                        this._setTexelDefine(p1, true), p2.gltfTexture.extensions.paper.encoding;
+                        this._setTexelDefine(p1, true, p2.gltfTexture.extensions.paper.encoding);
                     }
                     uniform.value = p2;
                 }
@@ -26341,7 +26471,7 @@ var egret3d;
     var ShaderLib;
     (function (ShaderLib) {
         ShaderLib.copy = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "copy_vert", "type": 35633, "uri": "varying vec2 vUv;\nvoid main() {\n\tvUv = uv;\n\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}" }, { "name": "copy_frag", "type": 35632, "uri": "uniform float opacity;\nuniform sampler2D map;\nvarying vec2 vUv;\nvoid main() {\n\tvec4 texel = texture2D( map, vUv );\n\tgl_FragColor = opacity * texel;\n}" }], "techniques": [{ "name": "copy", "attributes": {}, "uniforms": { "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
-        ShaderLib.cube = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "cube_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n\tgl_Position.z = gl_Position.w;\n}\n" }, { "name": "cube_frag", "type": 35632, "uri": "uniform samplerCube tCube;\nuniform float tFlip;\nuniform float opacity;\nvarying vec3 vWorldPosition;\nvoid main() {\n\tgl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );\n\tgl_FragColor.a *= opacity;\n}\n" }], "techniques": [{ "name": "cube", "attributes": {}, "uniforms": { "tCube": { "type": 35680 }, "tFlip": { "type": 5126 }, "opacity": { "type": 5126, "value": 1 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
+        ShaderLib.cube = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "cube_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n\tgl_Position.z = gl_Position.w;\n}\n" }, { "name": "cube_frag", "type": 35632, "uri": "uniform samplerCube tCube;\nuniform float tFlip;\nuniform float opacity;\nvarying vec3 vWorldPosition;\nvoid main() {\n\tgl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );\n\tgl_FragColor.a *= opacity;\n}\n" }], "techniques": [{ "name": "cube", "attributes": {}, "uniforms": { "tCube": { "type": 35680 }, "tFlip": { "type": 5126, "value": 1 }, "opacity": { "type": 5126, "value": 1 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.depth = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "depth_vert", "type": 35633, "uri": "#include <common>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <skinbase_vertex>\n\t#ifdef USE_DISPLACEMENTMAP\n\t\t#include <beginnormal_vertex>\n\t\t#include <morphnormal_vertex>\n\t\t#include <skinnormal_vertex>\n\t#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n}\n" }, { "name": "depth_frag", "type": 35632, "uri": "#if DEPTH_PACKING == 3200\n\tuniform float opacity;\n#endif\n#include <common>\n#include <packing>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( 1.0 );\n\t#if DEPTH_PACKING == 3200\n\t\tdiffuseColor.a = opacity;\n\t#endif\n\t#include <map_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <logdepthbuf_fragment>\n\t#if DEPTH_PACKING == 3200\n\t\tgl_FragColor = vec4( vec3( 1.0 - gl_FragCoord.z ), opacity );\n\t#elif DEPTH_PACKING == 3201\n\t\tgl_FragColor = packDepthToRGBA( gl_FragCoord.z );\n\t#endif\n}\n" }], "techniques": [{ "name": "depth", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.distanceRGBA = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "distanceRGBA_vert", "type": 35633, "uri": "#define DISTANCE\nvarying vec3 vWorldPosition;\n#include <common>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <skinbase_vertex>\n\t#ifdef USE_DISPLACEMENTMAP\n\t\t#include <beginnormal_vertex>\n\t\t#include <morphnormal_vertex>\n\t\t#include <skinnormal_vertex>\n\t#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <worldpos_vertex>\n\t#include <clipping_planes_vertex>\n\tvWorldPosition = worldPosition.xyz;\n}\n" }, { "name": "distanceRGBA_frag", "type": 35632, "uri": "#define DISTANCE\nuniform vec3 referencePosition;\nuniform float nearDistance;\nuniform float farDistance;\nvarying vec3 vWorldPosition;\n#include <common>\n#include <packing>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main () {\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( 1.0 );\n\t#include <map_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\tfloat dist = length( vWorldPosition - referencePosition );\n\tdist = ( dist - nearDistance ) / ( farDistance - nearDistance );\n\tdist = saturate( dist );\n\tgl_FragColor = packDepthToRGBA( dist );\n}\n" }], "techniques": [{ "name": "distanceRGBA", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.equirect = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "equirect_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n}\n" }, { "name": "equirect_frag", "type": 35632, "uri": "uniform sampler2D tEquirect;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = asin( clamp( direction.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV );\n}\n" }], "techniques": [{ "name": "equirect", "attributes": {}, "uniforms": { "tEquirect": { "type": 35678 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
@@ -26475,6 +26605,7 @@ var egret3d;
     //         loader.addEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
     //     });
     // }
+    var _onlyImages = {};
     function _transformGLSLCode(code) {
         var transformedCode = code
             .replace(/\r/g, '\n') // \r to \n
@@ -26539,10 +26670,15 @@ var egret3d;
     egret3d.ImageProcessor = {
         onLoadStart: function (host, resource) {
             return host.load(resource, "bitmapdata").then(function (bitmapData) {
+                if (_onlyImages[resource.name]) {
+                    delete _onlyImages[resource.name];
+                    return bitmapData.source;
+                }
                 var texture = egret3d.Texture
-                    .create({ name: resource.name, source: bitmapData.source, format: 6408 /* RGBA */, mipmap: true })
+                    .create({ name: resource.name, source: bitmapData.source })
                     .setLiner(true)
-                    .setRepeat(true);
+                    .setRepeat(true)
+                    .setMipmap(true);
                 paper.Asset.register(texture);
                 return texture;
             });
@@ -26559,16 +26695,19 @@ var egret3d;
         onLoadStart: function (host, resource) {
             return host.load(resource, "json").then(function (data) {
                 if ("asset" in data) {
-                    var glTFImage_1 = data.images[data.textures[0].source];
+                    var dataA_1 = data;
+                    var glTFImage_1 = dataA_1.images[dataA_1.textures[0].source];
                     if (glTFImage_1.uri) {
                         var subAssets_1 = { assets: [] };
                         if (Array.isArray(glTFImage_1.uri)) {
                             for (var _i = 0, _a = glTFImage_1.uri; _i < _a.length; _i++) {
                                 var uri = _a[_i];
+                                _onlyImages[uri] = true;
                                 subAssets_1.assets.push(uri);
                             }
                         }
                         else {
+                            _onlyImages[glTFImage_1.uri] = true;
                             subAssets_1.assets.push(glTFImage_1.uri);
                         }
                         return loadSubAssets(subAssets_1, resource).then(function (images) {
@@ -26582,18 +26721,19 @@ var egret3d;
                                 }
                                 host.save(RES.host.resourceConfig["getResource"](subAssets_1.assets[i]), imageSource);
                             }
-                            var texture = egret3d.Texture.create(resource.name, data);
+                            var texture = egret3d.Texture.create(resource.name, dataA_1);
                             paper.Asset.register(texture);
                             return texture;
                         });
                     }
                 }
                 else {
-                    var name_2 = data.name;
-                    var filterMode = data.filterMode;
-                    var format = data.format;
-                    var mipmap_1 = data.mipmap;
-                    var wrap = data.wrap;
+                    var dataB = data;
+                    var name_2 = dataB.name;
+                    var filterMode = dataB.filterMode;
+                    var format = dataB.format;
+                    var mipmap_1 = dataB.mipmap;
+                    var wrap = dataB.wrap;
                     var textureFormat_1 = 6408 /* RGBA */;
                     var exr = name_2.substring(name_2.lastIndexOf(".")); //兼容以前的
                     if (format === "RGB" || exr === ".jpg") {
@@ -26611,29 +26751,25 @@ var egret3d;
                         repeat_1 = true;
                     }
                     var anisotropy_1 = 1;
-                    if (data.anisotropy !== undefined) {
-                        anisotropy_1 = data.anisotropy;
+                    if (dataB.anisotropy !== undefined) {
+                        anisotropy_1 = dataB.anisotropy;
                     }
                     var premultiplyAlpha_1 = 0;
-                    if (data.premultiply !== undefined) {
-                        premultiplyAlpha_1 = data.premultiply > 0 ? 1 : 0;
+                    if (dataB.premultiply !== undefined) {
+                        premultiplyAlpha_1 = dataB.premultiply > 0 ? 1 : 0;
                     }
-                    var imgResource_1 = RES.host.resourceConfig["getResource"](name_2);
-                    if (imgResource_1) {
-                        return host.load(imgResource_1, "bitmapdata").then(function (bitmapData) {
-                            var texture = egret3d.Texture
-                                .create({ name: resource.name, source: bitmapData.source, format: textureFormat_1, mipmap: mipmap_1, premultiplyAlpha: premultiplyAlpha_1, anisotropy: anisotropy_1 })
-                                .setLiner(linear_1)
-                                .setRepeat(repeat_1);
-                            paper.Asset.register(texture);
-                            host.save(imgResource_1, bitmapData);
-                            texture._bitmapData = bitmapData; // TODO
-                            return texture;
-                        });
-                    }
-                    else {
-                        throw new Error(); // TODO
-                    }
+                    var subAssets = { assets: [name_2] };
+                    _onlyImages[name_2] = true;
+                    return loadSubAssets(subAssets, resource).then(function (images) {
+                        var texture = egret3d.Texture
+                            .create({ name: resource.name, source: images[0], format: textureFormat_1, premultiplyAlpha: premultiplyAlpha_1, anisotropy: anisotropy_1 })
+                            .setLiner(linear_1)
+                            .setMipmap(mipmap_1)
+                            .setRepeat(repeat_1);
+                        paper.Asset.register(texture);
+                        host.save(RES.host.resourceConfig["getResource"](name_2), images[0]); // TODO
+                        return texture;
+                    });
                 }
             });
         },
@@ -27218,49 +27354,14 @@ var egret3d;
         /**
          * @internal
          */
-        function isPowerOfTwo(width, height) {
-            return egret3d.math.isPowerOfTwo(width) && egret3d.math.isPowerOfTwo(height);
-        }
-        webgl_2.isPowerOfTwo = isPowerOfTwo;
-        /**
-         * @internal
-         */
-        function filterFallback(f) {
-            if (f === 9728 /* Nearest */ || f === 9984 /* MearestMipmapNearest */ || f === 9986 /* NearestMipMapLinear */) {
-                return 9728 /* Nearest */;
-            }
-            return 9729 /* Linear */;
-        }
-        webgl_2.filterFallback = filterFallback;
-        /**
-         * @internal
-         */
-        function setTexturexParameters(isPowerOfTwo, sampler, anisotropy) {
+        function setTexturexParameters(type, sampler, anisotropy) {
             var webgl = webgl_2.WebGLRenderState.webgl;
-            var magFilter = sampler.magFilter;
-            var minFilter = sampler.minFilter;
-            var wrapS = sampler.wrapS;
-            var wrapT = sampler.wrapT;
-            if (isPowerOfTwo) {
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, magFilter);
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, minFilter);
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, wrapS);
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, wrapT);
-            }
-            else {
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
-                if (wrapS !== 33071 /* ClampToEdge */ || wrapT !== 33071 /* ClampToEdge */) {
-                    console.warn('Texture is not power of two. Texture.wrapS and Texture.wrapT should be set to gltf.TextureWrap.CLAMP_TO_EDGE.');
-                }
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, filterFallback(magFilter));
-                webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, filterFallback(minFilter));
-                if (minFilter !== 9728 /* Nearest */ && minFilter !== 9729 /* Linear */) {
-                    console.warn('Texture is not power of two. Texture.minFilter should be set to gltf.TextureFilter.NEAREST or gltf.TextureFilter.LINEAR.');
-                }
-            }
+            webgl.texParameteri(type, 10240 /* TEXTURE_MAG_FILTER */, sampler.magFilter);
+            webgl.texParameteri(type, 10241 /* TEXTURE_MIN_FILTER */, sampler.minFilter);
+            webgl.texParameteri(type, 10242 /* TEXTURE_WRAP_S */, sampler.wrapS);
+            webgl.texParameteri(type, 10243 /* TEXTURE_WRAP_T */, sampler.wrapT);
             if (egret3d.renderState.textureFilterAnisotropic && anisotropy > 1) {
-                webgl.texParameterf(webgl.TEXTURE_2D, egret3d.renderState.textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(anisotropy, egret3d.renderState.maxAnisotropy));
+                webgl.texParameterf(type, egret3d.renderState.textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(anisotropy, egret3d.renderState.maxAnisotropy));
             }
         }
         webgl_2.setTexturexParameters = setTexturexParameters;
@@ -27470,8 +27571,20 @@ var egret3d;
             }
             WebGLTexture.prototype.dispose = function () {
                 var image = this._image;
-                if (image && image.uri && image.uri.hasOwnProperty("src")) {
-                    image.uri.src = ""; // wx
+                if (image && image.uri) {
+                    if (Array.isArray(image.uri)) {
+                        for (var _i = 0, _a = image.uri; _i < _a.length; _i++) {
+                            var uri = _a[_i];
+                            if (uri.hasOwnProperty("src")) {
+                                uri.src = ""; // wx
+                            }
+                        }
+                    }
+                    else {
+                        if (image.uri.hasOwnProperty("src")) {
+                            image.uri.src = ""; // wx
+                        }
+                    }
                     delete image.uri;
                 }
                 if (!_super.prototype.dispose.call(this)) {
@@ -27488,71 +27601,64 @@ var egret3d;
             WebGLTexture.prototype.setupTexture = function (index) {
                 var webgl = webgl_4.WebGLRenderState.webgl;
                 var textureType;
+                var uploadType;
                 var image = this._image;
                 var sampler = this._sampler;
-                var paperExtension = this._gltfTexture.extensions.paper;
-                var mutilyLayers = paperExtension.layers !== undefined && paperExtension.layers > 1;
-                if (paperExtension.depth !== undefined && paperExtension.depth > 1) {
+                var extension = this._gltfTexture.extensions.paper;
+                var format = extension.format || 6408 /* RGBA */;
+                var dataType = extension.type || 5121 /* UNSIGNED_BYTE */;
+                // const isMutilyLayers = extension.layers !== undefined && extension.layers > 1; // TODO
+                if (extension.depth !== undefined && extension.depth > 1) {
                     textureType = 32879 /* Texture3D */;
+                    uploadType = textureType;
                 }
-                else if (paperExtension.faces !== undefined && paperExtension.faces > 1) {
-                    if (mutilyLayers) {
-                        textureType = 34069 /* TextureCubeArray */;
-                    }
-                    else {
-                        textureType = 34067 /* TextureCube */;
-                    }
+                else if (extension.faces !== undefined && extension.faces > 1) {
+                    textureType = 34067 /* TextureCube */;
+                    uploadType = 34069 /* TextureCubeStart */;
                 }
-                else if (paperExtension.height > 1) {
-                    if (mutilyLayers) {
-                        textureType = 3553 /* Texture2DArray */;
-                    }
-                    else {
-                        textureType = 3553 /* Texture2D */;
-                    }
-                }
-                else if (mutilyLayers) {
-                    textureType = -1 /* Texture1DArray */;
+                else if (extension.height > 1) {
+                    textureType = 3553 /* Texture2D */;
+                    uploadType = textureType;
                 }
                 else {
                     textureType = -1 /* Texture1D */;
+                    uploadType = textureType;
                 }
                 this.type = textureType;
                 this.webGLTexture = webgl.createTexture();
-                webgl.activeTexture(webgl.TEXTURE0 + index);
+                webgl.activeTexture(33984 /* TextureZero */ + index);
                 webgl.bindTexture(textureType, this.webGLTexture);
-                webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, paperExtension.premultiplyAlpha);
-                webgl.pixelStorei(webgl.UNPACK_FLIP_Y_WEBGL, paperExtension.flipY);
-                webgl.pixelStorei(webgl.UNPACK_ALIGNMENT, paperExtension.unpackAlignment);
-                var isPowerTwo = webgl_4.isPowerOfTwo(paperExtension.width, paperExtension.height);
-                webgl_4.setTexturexParameters(isPowerTwo, sampler, paperExtension.anisotropy || 1);
+                webgl.pixelStorei(3317 /* UNPACK_ALIGNMENT */, extension.unpackAlignment || 4 /* Four */);
+                webgl.pixelStorei(37440 /* UNPACK_FLIP_Y_WEBGL */, extension.flipY || 0);
+                webgl.pixelStorei(37441 /* UNPACK_PREMULTIPLY_ALPHA_WEBGL */, extension.premultiplyAlpha || 0);
+                webgl_4.setTexturexParameters(textureType, sampler, extension.anisotropy || 1);
                 if (image.uri !== undefined) {
                     if (Array.isArray(image.uri)) {
                         var index_1 = 0;
                         for (var _i = 0, _a = image.uri; _i < _a.length; _i++) {
                             var uri = _a[_i];
-                            webgl.texImage2D(textureType + (index_1++), 0, paperExtension.format, paperExtension.format, paperExtension.type, uri);
+                            webgl.texImage2D(uploadType + (index_1++), 0, format, format, dataType, uri);
                         }
                     }
                     else {
-                        webgl.texImage2D(textureType, 0, paperExtension.format, paperExtension.format, paperExtension.type, image.uri);
+                        webgl.texImage2D(uploadType, 0, format, format, dataType, image.uri);
                     }
                 }
                 else if (image.bufferView !== undefined) {
+                    var width = extension.width;
+                    var height = extension.height;
                     if (Array.isArray(image.bufferView)) {
                         var index_2 = 0;
                         for (var _b = 0, _c = image.bufferView; _b < _c.length; _b++) {
                             var bufferView = _c[_b];
-                            webgl.texImage2D(textureType + (index_2++), 0, paperExtension.format, paperExtension.width, paperExtension.height, 0, paperExtension.format, paperExtension.type, this.buffers[bufferView]);
+                            webgl.texImage2D(uploadType + (index_2++), 0, format, width, height, 0, format, dataType, this.buffers[bufferView]);
                         }
                     }
                     else {
-                        webgl.texImage2D(textureType, 0, paperExtension.format, paperExtension.width, paperExtension.height, 0, paperExtension.format, paperExtension.type, this.buffers[image.bufferView]);
+                        webgl.texImage2D(uploadType, 0, format, width, height, 0, format, dataType, this.buffers[image.bufferView]);
                     }
                 }
-                var minFilter = sampler.minFilter;
-                var canGenerateMipmap = isPowerTwo && minFilter !== 9728 /* Nearest */ && minFilter !== 9729 /* Linear */;
-                if (canGenerateMipmap) {
+                if (extension.levels === 0) {
                     webgl.generateMipmap(textureType);
                 }
                 if (image.uri && image.uri.hasOwnProperty("src")) {
@@ -27588,62 +27694,77 @@ var egret3d;
             WebGLRenderTexture.prototype._setupFrameBufferTexture = function (frameBuffer, texture, textureTarget, type, width, height, format, attachment) {
                 var webgl = webgl_6.WebGLRenderState.webgl;
                 webgl.texImage2D(textureTarget, 0, format, width, height, 0, format, type, null);
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
-                webgl.framebufferTexture2D(webgl.FRAMEBUFFER, attachment, textureTarget, texture, 0);
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+                webgl.bindFramebuffer(36160 /* FrameBuffer */, frameBuffer);
+                webgl.framebufferTexture2D(36160 /* FrameBuffer */, attachment, textureTarget, texture, 0);
+                webgl.bindFramebuffer(36160 /* FrameBuffer */, null);
             };
             WebGLRenderTexture.prototype._setupRenderBufferStorage = function (frameBuffer, renderBuffer, depthBuffer, stencilBuffer, width, height) {
                 var webgl = webgl_6.WebGLRenderState.webgl;
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
+                webgl.bindFramebuffer(36160 /* FrameBuffer */, frameBuffer);
                 //
-                webgl.bindRenderbuffer(webgl.RENDERBUFFER, renderBuffer);
+                webgl.bindRenderbuffer(36161 /* RenderBuffer */, renderBuffer);
                 if (depthBuffer && stencilBuffer) {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_STENCIL, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_STENCIL_ATTACHMENT, webgl.RENDERBUFFER, renderBuffer);
+                    webgl.renderbufferStorage(36161 /* RenderBuffer */, 34041 /* DEPTH_STENCIL */, width, height);
+                    webgl.framebufferRenderbuffer(36160 /* FrameBuffer */, 33306 /* DEPTH_STENCIL_ATTACHMENT */, 36161 /* RenderBuffer */, renderBuffer);
                 }
                 else if (depthBuffer) {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_COMPONENT16, width, height);
-                    webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, renderBuffer);
+                    webgl.renderbufferStorage(36161 /* RenderBuffer */, 33189 /* DEPTH_COMPONENT16 */, width, height);
+                    webgl.framebufferRenderbuffer(36160 /* FrameBuffer */, 36096 /* DEPTH_ATTACHMENT */, 36161 /* RenderBuffer */, renderBuffer);
                 }
                 else {
-                    webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.RGBA4, width, height);
+                    webgl.renderbufferStorage(36161 /* RenderBuffer */, 32854 /* RGBA4 */, width, height);
                 }
-                webgl.bindRenderbuffer(webgl.RENDERBUFFER, null);
+                webgl.bindRenderbuffer(36161 /* RenderBuffer */, null);
                 //
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+                webgl.bindFramebuffer(36160 /* FrameBuffer */, null);
             };
             WebGLRenderTexture.prototype._setupDepthRenderbuffer = function (frameBuffer, renderBuffer, depthBuffer, stencilBuffer, width, height) {
                 var webgl = webgl_6.WebGLRenderState.webgl;
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
+                webgl.bindFramebuffer(36160 /* FrameBuffer */, frameBuffer);
                 this._setupRenderBufferStorage(frameBuffer, renderBuffer, depthBuffer, stencilBuffer, width, height);
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+                webgl.bindFramebuffer(36160 /* FrameBuffer */, null);
             };
             WebGLRenderTexture.prototype._setupRenderTexture = function () {
-                var sampler = this._sampler;
-                var paperExtension = this._gltfTexture.extensions.paper;
-                var width = paperExtension.width;
-                var height = paperExtension.height;
-                var format = paperExtension.format;
-                var depth = paperExtension.depthBuffer;
-                var stencil = paperExtension.stencilBuffer;
-                //
                 var webgl = webgl_6.WebGLRenderState.webgl;
+                var type;
+                var uploadType;
+                var sampler = this._sampler;
+                var extension = this._gltfTexture.extensions.paper;
+                var width = extension.width;
+                var height = extension.height;
+                var format = extension.format || 6408 /* RGBA */;
+                var depth = extension.depthBuffer || false;
+                var stencil = extension.stencilBuffer || false;
+                if (extension.depth !== undefined && extension.depth > 1) {
+                    type = 32879 /* Texture3D */;
+                    uploadType = type;
+                }
+                else if (extension.faces !== undefined && extension.faces > 1) {
+                    type = 34067 /* TextureCube */;
+                    uploadType = 34069 /* TextureCubeStart */;
+                }
+                else if (extension.height > 1) {
+                    type = 3553 /* Texture2D */;
+                    uploadType = type;
+                }
+                else {
+                    type = -1 /* Texture1D */;
+                    uploadType = type;
+                }
+                this.type = type;
                 if (!this.frameBuffer) {
                     this.frameBuffer = webgl.createFramebuffer();
                 }
                 if (!this.webGLTexture) {
                     this.webGLTexture = webgl.createTexture();
                 }
-                webgl.bindTexture(webgl.TEXTURE_2D, this.webGLTexture);
-                var isPowerTwo = webgl_6.isPowerOfTwo(width, height);
-                webgl_6.setTexturexParameters(isPowerTwo, sampler, paperExtension.anisotropy || 1);
-                this._setupFrameBufferTexture(this.frameBuffer, this.webGLTexture, webgl.TEXTURE_2D, 5121 /* UNSIGNED_BYTE */, width, height, format, webgl.COLOR_ATTACHMENT0);
-                var minFilter = sampler.minFilter;
-                var canGenerateMipmap = isPowerTwo && minFilter !== 9728 /* Nearest */ && minFilter !== 9729 /* Linear */;
-                if (canGenerateMipmap) {
-                    webgl.generateMipmap(webgl.TEXTURE_2D);
+                webgl.bindTexture(type, this.webGLTexture);
+                webgl_6.setTexturexParameters(type, sampler, extension.anisotropy || 1);
+                this._setupFrameBufferTexture(this.frameBuffer, this.webGLTexture, type, 5121 /* UNSIGNED_BYTE */, width, height, format, 36064 /* COLOR_ATTACHMENT0 */);
+                if (extension.layers === 0) {
+                    webgl.generateMipmap(type);
                 }
-                webgl.bindTexture(webgl.TEXTURE_2D, null);
+                webgl.bindTexture(type, null);
                 if (depth || stencil) {
                     if (!this.renderBuffer) {
                         this.renderBuffer = webgl.createRenderbuffer();
@@ -27676,14 +27797,14 @@ var egret3d;
                     this._setupRenderTexture();
                 }
                 var webgl = webgl_6.WebGLRenderState.webgl;
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.frameBuffer);
+                webgl.bindFramebuffer(36160 /* FrameBuffer */, this.frameBuffer);
             };
             WebGLRenderTexture.prototype.generateMipmap = function () {
-                if (this._mipmap) {
+                if (this._gltfTexture.extensions.paper.levels === 0) {
                     var webgl_7 = webgl_6.WebGLRenderState.webgl;
-                    webgl_7.bindTexture(webgl_7.TEXTURE_2D, this.webGLTexture);
-                    webgl_7.generateMipmap(webgl_7.TEXTURE_2D);
-                    webgl_7.bindTexture(webgl_7.TEXTURE_2D, null);
+                    webgl_7.bindTexture(this.type, this.webGLTexture);
+                    webgl_7.generateMipmap(this.type);
+                    webgl_7.bindTexture(this.type, null);
                     return true;
                 }
                 return false;
@@ -28399,7 +28520,7 @@ var egret3d;
                 // Skybox.
                 if (bufferMask & 16384 /* Color */) {
                     var skyBox = camera.gameObject.getComponent(egret3d.SkyBox);
-                    if (skyBox && skyBox.material) {
+                    if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
                         var drawCall = this._drawCallCollecter.skyBox;
                         if (!drawCall.mesh) {
                             drawCall.mesh = skyBox.material.shader === egret3d.DefaultShaders.CUBE ? egret3d.DefaultMeshes.CUBE : egret3d.DefaultMeshes.SPHERE;
@@ -28445,31 +28566,29 @@ var egret3d;
                     egret3d.Camera.current = camera;
                     camera._update();
                     //
-                    var isAnyActivated = false;
+                    var isPostprocessing = false;
                     var postprocessings = camera.gameObject.getComponents(egret3d.CameraPostprocessing, true);
                     if (postprocessings.length > 0) {
                         for (var _i = 0, postprocessings_1 = postprocessings; _i < postprocessings_1.length; _i++) {
                             var postprocessing = postprocessings_1[_i];
                             if (postprocessing.isActiveAndEnabled) {
-                                isAnyActivated = true;
+                                isPostprocessing = true;
                                 break;
                             }
                         }
                     }
-                    if (!isAnyActivated) {
+                    if (!isPostprocessing) {
                         this._render(camera, camera.renderTarget, material);
                     }
                     else {
-                        this._render(camera, camera._readRenderTarget, material);
+                        this._render(camera, camera.postprocessingRenderTarget, material);
                         for (var _a = 0, postprocessings_2 = postprocessings; _a < postprocessings_2.length; _a++) {
                             var postprocessing = postprocessings_2[_a];
                             if (postprocessing.isActiveAndEnabled) {
                                 postprocessing.render(camera);
                             }
                         }
-                        var temp = camera._readRenderTarget;
-                        camera._readRenderTarget = camera._writeRenderTarget;
-                        camera._writeRenderTarget = temp;
+                        camera.swapPostprocessingRenderTarget();
                     }
                 }
                 else {

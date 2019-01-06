@@ -35,10 +35,6 @@ namespace egret3d {
         /**
          * @internal
          */
-        public isDefine: boolean = true;
-        /**
-         * @internal
-         */
         public type: DefineLocation = DefineLocation.All;
         /**
          * 掩码索引。
@@ -53,9 +49,13 @@ namespace egret3d {
          */
         public readonly context: string;
         /**
+         * @internal
+         */
+        public isCode?: boolean;
+        /**
          * 名称。
          */
-        public name?: string = "";
+        public name?: string;
 
         public constructor(index: uint, mask: uint, context: string) {
             this.index = index;
@@ -183,11 +183,11 @@ namespace egret3d {
 
             for (const define of this._defines) {
                 if (define.type & DefineLocation.Vertex) {
-                    if (define.isDefine) {
-                        definesString += "#define " + define.context + " \n";
+                    if (define.isCode) {
+                        definesString += define.context + " \n";
                     }
                     else {
-                        definesString += define.context + " \n";
+                        definesString += "#define " + define.context + " \n";
                     }
                 }
             }
@@ -202,11 +202,11 @@ namespace egret3d {
 
             for (const define of this._defines) {
                 if (define.type & DefineLocation.Fragment) {
-                    if (define.isDefine) {
-                        definesString += "#define " + define.context + " \n";
+                    if (define.isCode) {
+                        definesString += define.context + " \n";
                     }
                     else {
-                        definesString += define.context + " \n";
+                        definesString += "#define " + define.context + " \n";
                     }
                 }
             }

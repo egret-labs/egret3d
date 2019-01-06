@@ -19,50 +19,71 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
 
             webgl.texImage2D(textureTarget, 0, format, width, height, 0, format, type, null);
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, attachment, textureTarget, texture, 0);
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+            webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, frameBuffer);
+            webgl.framebufferTexture2D(gltf.WebGL.FrameBuffer, attachment, textureTarget, texture, 0);
+            webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
         }
 
         private _setupRenderBufferStorage(frameBuffer: WebGLFramebuffer, renderBuffer: WebGLRenderbuffer, depthBuffer: boolean, stencilBuffer: boolean, width: number, height: number): void {
             const webgl = WebGLRenderState.webgl!;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
+            webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, frameBuffer);
             //
-            webgl.bindRenderbuffer(webgl.RENDERBUFFER, renderBuffer);
+            webgl.bindRenderbuffer(gltf.WebGL.RenderBuffer, renderBuffer);
             if (depthBuffer && stencilBuffer) {
-                webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_STENCIL, width, height);
-                webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_STENCIL_ATTACHMENT, webgl.RENDERBUFFER, renderBuffer);
+                webgl.renderbufferStorage(gltf.WebGL.RenderBuffer, gltf.WebGL.DEPTH_STENCIL, width, height);
+                webgl.framebufferRenderbuffer(gltf.WebGL.FrameBuffer, gltf.WebGL.DEPTH_STENCIL_ATTACHMENT, gltf.WebGL.RenderBuffer, renderBuffer);
             }
             else if (depthBuffer) {
-                webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_COMPONENT16, width, height);
-                webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, renderBuffer);
+                webgl.renderbufferStorage(gltf.WebGL.RenderBuffer, gltf.WebGL.DEPTH_COMPONENT16, width, height);
+                webgl.framebufferRenderbuffer(gltf.WebGL.FrameBuffer, gltf.WebGL.DEPTH_ATTACHMENT, gltf.WebGL.RenderBuffer, renderBuffer);
             }
             else {
-                webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.RGBA4, width, height);
+                webgl.renderbufferStorage(gltf.WebGL.RenderBuffer, gltf.TextureFormat.RGBA4, width, height);
             }
 
-            webgl.bindRenderbuffer(webgl.RENDERBUFFER, null);
+            webgl.bindRenderbuffer(gltf.WebGL.RenderBuffer, null);
             //
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+            webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
         }
 
         private _setupDepthRenderbuffer(frameBuffer: WebGLFramebuffer, renderBuffer: WebGLRenderbuffer, depthBuffer: boolean, stencilBuffer: boolean, width: number, height: number) {
             const webgl = WebGLRenderState.webgl!;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
+            webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, frameBuffer);
             this._setupRenderBufferStorage(frameBuffer, renderBuffer, depthBuffer, stencilBuffer, width, height);
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+            webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
         }
 
         private _setupRenderTexture(): void {
-            const sampler = this._sampler;
-            const paperExtension = this._gltfTexture!.extensions.paper!;
-            const width = paperExtension.width!;
-            const height = paperExtension.height!;
-            const format = paperExtension.format!;
-            const depth = paperExtension.depthBuffer!;
-            const stencil = paperExtension.stencilBuffer!;
-            //
             const webgl = WebGLRenderState.webgl!;
+
+            let type: gltf.TextureType;
+            let uploadType: gltf.TextureType;
+            const sampler = this._sampler;
+            const extension = this._gltfTexture!.extensions.paper!;
+            const width = extension.width!;
+            const height = extension.height!;
+            const format = extension.format || gltf.TextureFormat.RGBA;
+            const depth = extension.depthBuffer || false;
+            const stencil = extension.stencilBuffer || false;
+
+            if (extension.depth !== undefined && extension.depth > 1) {
+                type = gltf.TextureType.Texture3D;
+                uploadType = type;
+            }
+            else if (extension.faces !== undefined && extension.faces > 1) {
+                type = gltf.TextureType.TextureCube;
+                uploadType = gltf.TextureType.TextureCubeStart;
+            }
+            else if (extension.height! > 1) {
+                type = gltf.TextureType.Texture2D;
+                uploadType = type;
+            }
+            else {
+                type = gltf.TextureType.Texture1D;
+                uploadType = type;
+            }
+
+            this.type = type;
 
             if (!this.frameBuffer) {
                 this.frameBuffer = webgl.createFramebuffer()!;
@@ -72,19 +93,17 @@ namespace egret3d.webgl {
                 this.webGLTexture = webgl.createTexture()!;
             }
 
-            webgl.bindTexture(webgl.TEXTURE_2D, this.webGLTexture);
+            webgl.bindTexture(type, this.webGLTexture);
 
-            const isPowerTwo = isPowerOfTwo(width, height);
-            setTexturexParameters(isPowerTwo, sampler, paperExtension.anisotropy || 1);
-            this._setupFrameBufferTexture(this.frameBuffer, this.webGLTexture, webgl.TEXTURE_2D, gltf.TextureDataType.UNSIGNED_BYTE, width, height, format, webgl.COLOR_ATTACHMENT0);
+            setTexturexParameters(type, sampler, extension.anisotropy || 1);
+            this._setupFrameBufferTexture(this.frameBuffer, this.webGLTexture, type, gltf.TextureDataType.UNSIGNED_BYTE, width, height, format, gltf.WebGL.COLOR_ATTACHMENT0);
 
-            const minFilter = sampler.minFilter!;
-            const canGenerateMipmap = isPowerTwo && minFilter !== gltf.TextureFilter.Nearest && minFilter !== gltf.TextureFilter.Linear;
-            if (canGenerateMipmap) {
-                webgl.generateMipmap(webgl.TEXTURE_2D);
+
+            if (extension.layers === 0) {
+                webgl.generateMipmap(type);
             }
 
-            webgl.bindTexture(webgl.TEXTURE_2D, null);
+            webgl.bindTexture(type, null);
 
             if (depth || stencil) {
                 if (!this.renderBuffer) {
@@ -126,15 +145,15 @@ namespace egret3d.webgl {
             }
 
             const webgl = WebGLRenderState.webgl!;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.frameBuffer);
+            webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, this.frameBuffer);
         }
 
         public generateMipmap(): boolean {
-            if (this._mipmap) {
+            if (this._gltfTexture.extensions.paper.levels === 0) {
                 const webgl = WebGLRenderState.webgl!;
-                webgl.bindTexture(webgl.TEXTURE_2D, this.webGLTexture);
-                webgl.generateMipmap(webgl.TEXTURE_2D);
-                webgl.bindTexture(webgl.TEXTURE_2D, null);
+                webgl.bindTexture(this.type, this.webGLTexture);
+                webgl.generateMipmap(this.type);
+                webgl.bindTexture(this.type, null);
 
                 return true;
             }

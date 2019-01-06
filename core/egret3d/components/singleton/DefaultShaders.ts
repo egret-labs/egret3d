@@ -148,7 +148,7 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", ShaderLib.particle as any, RenderQueue.Geometry, helpStates, [ShaderDefine.USE_COLOR]);
 
-            helpMaterial.clearStates().setDepth(true, true);
+            helpMaterial.clearStates().setDepth(false, false);
             DefaultShaders.CUBE = this._createShader("builtin/cube.shader.json", ShaderLib.cube as any, RenderQueue.Geometry, helpStates);
 
             helpMaterial.clearStates().setDepth(true, true);

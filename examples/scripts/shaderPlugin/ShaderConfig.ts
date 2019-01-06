@@ -141,11 +141,13 @@ UNIFORM_TEMPLATE["envMapIntensity"] = { value: 1 };
 UNIFORM_TEMPLATE["flipEnvMap"] = { value: 1 };
 UNIFORM_TEMPLATE["maxMipLevel"] = { value: 0 };
 
-//particle
+// particle
 UNIFORM_TEMPLATE["u_worldPosition"] = { value: [0, 0, 0] };
 UNIFORM_TEMPLATE["u_worldRotation"] = { value: [0, 0, 0, 1] };
+// cube
+UNIFORM_TEMPLATE["tFlip"] = { value: 1.0 };
 
-//line
+// line
 UNIFORM_TEMPLATE["resolution"] = { semantic: gltf.UniformSemanticType._RESOLUTION };
 UNIFORM_TEMPLATE["scale"] = { value: 1 };
 UNIFORM_TEMPLATE["linewidth"] = { value: 1 };

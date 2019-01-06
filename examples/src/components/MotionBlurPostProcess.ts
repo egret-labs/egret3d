@@ -50,7 +50,7 @@ namespace components {
             const postProcessingRenderTarget = camera.postprocessingRenderTarget;
 
             if (!this._depthRenderTarget) {
-                this._depthRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, mipmap: true, premultiplyAlpha: 1 }).setLiner(false).setRepeat(false);
+                this._depthRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, premultiplyAlpha: 1 }).setLiner(false).setRepeat(false).setMipmap(true);
             }
 
             depthMaterial.setFloat("mNear", camera.near).setFloat("mFar", camera.far);

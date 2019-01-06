@@ -44,7 +44,9 @@ namespace examples.cameras {
                 subCamera.viewport.set(0.5, 0.0, 0.5, 1.0);
                 subCamera.transform.setLocalPosition(0.0, 20.0, 10.0);
                 subCamera.gameObject.addComponent(behaviors.RotateComponent).target = this._target;
-                subCamera.gameObject.addComponent(egret3d.SkyBox).material = egret3d.DefaultMaterials.CUBE.clone().setTexture(egret3d.ShaderUniformName.Cube, RES.getRes("threejs/textures/cube/MilkyWay/milky_way.image.json"));
+                subCamera.gameObject.addComponent(egret3d.SkyBox).material = egret3d.DefaultMaterials.CUBE.clone()
+                    .setTexture(egret3d.ShaderUniformName.Cube, RES.getRes("threejs/textures/cube/MilkyWay/milky_way.image.json"))
+                    ;
             }
 
             { // Create light.
@@ -63,12 +65,6 @@ namespace examples.cameras {
 
                 const light = gameObject.addComponent(egret3d.HemisphereLight);
                 light.intensity = 0.5;
-            }
-
-            {
-                const mesh = egret3d.DefaultMeshes.SPHERE.clone().addWireframeSubMesh(1);
-                const gameObject = egret3d.DefaultMeshes.createObject(mesh);
-                gameObject.renderer!.materials = [null, egret3d.DefaultMaterials.LINEDASHED];
             }
 
             // createGridRoom();

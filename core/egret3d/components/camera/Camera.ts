@@ -122,14 +122,8 @@ namespace egret3d {
         private readonly _worldToCameraMatrix: Matrix4 = Matrix4.create();
         private readonly _worldToClipMatrix: Matrix4 = Matrix4.create();
         private readonly _clipToWorldMatrix: Matrix4 = Matrix4.create();
-        /**
-         * @internal
-         */
-        public _readRenderTarget: RenderTexture = null!;
-        /**
-         * @internal
-         */
-        public _writeRenderTarget: RenderTexture = null!;
+        private _readRenderTarget: RenderTexture | null = null;
+        private _writeRenderTarget: RenderTexture | null = null;
         private _renderTarget: RenderTexture | null = null;
         /**
          * 该相机渲染前更新。
@@ -153,9 +147,6 @@ namespace egret3d {
 
         public initialize() {
             super.initialize();
-            //TODO
-            this._readRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true }).retain();
-            this._writeRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true }).retain();
 
             this.transform.registerObserver(this);
             stage.onScreenResize.add(this._onStageResize, this);
@@ -177,8 +168,8 @@ namespace egret3d {
                 this._renderTarget.release();
             }
 
-            this._readRenderTarget = null!;
-            this._writeRenderTarget = null!;
+            this._readRenderTarget = null;
+            this._writeRenderTarget = null;
             this._renderTarget = null;
 
             stage.onScreenResize.remove(this._onStageResize, this);
@@ -303,6 +294,16 @@ namespace egret3d {
          */
         public resetWorldToCameraMatrix(): this {
             this._nativeTransform = false;
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public swapPostprocessingRenderTarget(): this {
+            const temp = this._writeRenderTarget;
+            this._readRenderTarget = this._writeRenderTarget;
+            this._writeRenderTarget = temp;
 
             return this;
         }
@@ -690,6 +691,14 @@ namespace egret3d {
          * 
          */
         public get postprocessingRenderTarget(): RenderTexture {
+            if (!this._readRenderTarget) {
+                this._readRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true }).retain();
+            }
+
+            if (!this._writeRenderTarget) {
+                this._writeRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true }).retain();
+            }
+
             return this._readRenderTarget;
         }
 

@@ -2004,14 +2004,23 @@ declare namespace egret3d {
         protected _gltfTexture: GLTFTexture;
         protected _image: gltf.Image;
         protected _sampler: gltf.Sampler;
+        private _formatLevelsAndSampler();
         /**
          *
          */
-        setLiner(linear: boolean): this;
+        setLiner(value: boolean): this;
         /**
          *
          */
-        setRepeat(repeat: boolean): this;
+        setRepeat(value: boolean): this;
+        /**
+         *
+         */
+        setMipmap(value: boolean): this;
+        /**
+         *
+         */
+        readonly isPowerOfTwo: boolean;
         /**
          *
          */
@@ -2024,10 +2033,6 @@ declare namespace egret3d {
          *
          */
         readonly format: gltf.TextureFormat;
-        /**
-         *
-         */
-        readonly memory: uint;
         /**
          *
          */
@@ -2269,10 +2274,6 @@ declare namespace egret3d {
      */
     interface GLTFEgretTextureExtension {
         /**
-         * @defaults false
-         */
-        mipmap?: boolean;
-        /**
          * @defaults 0
          */
         flipY?: 0 | 1;
@@ -2312,19 +2313,19 @@ declare namespace egret3d {
          */
         encoding?: TextureEncoding;
         /**
-         *
+         * @defaults 1
          */
         depth?: uint;
         /**
-         *
+         * @defaults 1
          */
         layers?: uint;
         /**
-         *
+         * @defaults 1
          */
         faces?: uint;
         /**
-         *
+         * @defaults 1
          */
         levels?: uint;
         /**
@@ -2532,19 +2533,90 @@ declare namespace gltf {
         CW = 2304,
         CCW = 2305,
     }
+    const enum MeshPrimitiveMode {
+        Points = 0,
+        Lines = 1,
+        LineLoop = 2,
+        LineStrip = 3,
+        Triangles = 4,
+        TrianglesStrip = 5,
+        TrianglesFan = 6,
+    }
+    /**
+     *
+     */
+    const enum DrawMode {
+        Stream = 35040,
+        Static = 35044,
+        Dynamic = 35048,
+    }
+    /**
+     *
+     */
+    const enum TextureFormat {
+        RGB = 6407,
+        RGBA = 6408,
+        Luminance = 6409,
+        RGBA4 = 32854,
+    }
+    /**
+     *
+     */
+    const enum TextureDataType {
+        UNSIGNED_BYTE = 5121,
+        UNSIGNED_SHORT_5_6_5 = 33635,
+        UNSIGNED_SHORT_4_4_4_4 = 32819,
+        UNSIGNED_SHORT_5_5_5_1 = 32820,
+    }
+    /**
+     *
+     */
+    const enum TextureFilter {
+        Nearest = 9728,
+        Linear = 9729,
+        NearestMipmapNearest = 9984,
+        LinearMipmapNearest = 9985,
+        NearestMipMapLinear = 9986,
+        LinearMipMapLinear = 9987,
+    }
+    /**
+     *
+     */
+    const enum TextureWrappingMode {
+        Repeat = 10497,
+        ClampToEdge = 33071,
+        MirroredRepeat = 33648,
+    }
+    /**
+     *
+     */
+    const enum EnableState {
+        Blend = 3042,
+        CullFace = 2884,
+        DepthTest = 2929,
+        StencilTest = 2960,
+        PolygonOffsetFill = 32823,
+        SampleAlphaToCoverage = 32926,
+    }
+    /**
+     *
+     */
+    const enum DepthFunc {
+        Never = 512,
+        Less = 513,
+        Lequal = 515,
+        Equal = 514,
+        Greater = 516,
+        NotEqual = 517,
+        GEqual = 518,
+        Always = 519,
+    }
 }
 declare namespace gltf {
     /**
      * glTF index.
      */
     type Index = uint;
-    /**
-     *
-     */
-    const enum Status {
-        CompileStatus = 35713,
-        LinkStatus = 35714,
-    }
     /**
      * BufferView target.
      */
@@ -2563,15 +2635,6 @@ declare namespace gltf {
         Int = 5124,
         UnsignedInt = 5125,
         Float = 5126,
-    }
-    const enum MeshPrimitiveMode {
-        Points = 0,
-        Lines = 1,
-        LineLoop = 2,
-        LineStrip = 3,
-        Triangles = 4,
-        TrianglesStrip = 5,
-        TrianglesFan = 6,
     }
     /**
      * The uniform type.  All valid values correspond to WebGL enums.
@@ -2598,58 +2661,13 @@ declare namespace gltf {
     /**
      *
      */
-    const enum DrawMode {
-        Stream = 35040,
-        Static = 35044,
-        Dynamic = 35048,
-    }
-    /**
-     *
-     */
-    const enum TextureFormat {
-        RGB = 6407,
-        RGBA = 6408,
-        Luminance = 6409,
-    }
-    /**
-     *
-     */
     const enum TextureType {
+        TextureZero = 33984,
+        TextureCubeStart = 34069,
         Texture1D = -1,
-        Texture1DArray = -1,
         Texture2D = 3553,
-        Texture2DArray = 3553,
         Texture3D = 32879,
         TextureCube = 34067,
-        TextureCubeArray = 34069,
-    }
-    /**
-     *
-     */
-    const enum TextureDataType {
-        UNSIGNED_BYTE = 5121,
-        UNSIGNED_SHORT_5_6_5 = 33635,
-        UNSIGNED_SHORT_4_4_4_4 = 32819,
-        UNSIGNED_SHORT_5_5_5_1 = 32820,
-    }
-    /**
-     *
-     */
-    const enum TextureFilter {
-        Nearest = 9728,
-        Linear = 9729,
-        MearestMipmapNearest = 9984,
-        LinearMipmapNearest = 9985,
-        NearestMipMapLinear = 9986,
-        LinearMipMapLinear = 9987,
-    }
-    /**
-     *
-     */
-    const enum TextureWrappingMode {
-        Repeat = 10497,
-        ClampToEdge = 33071,
-        MirroredRepeat = 33648,
     }
     /**
      *
@@ -2666,30 +2684,6 @@ declare namespace gltf {
     const enum ShaderStage {
         Fragment = 35632,
         Vertex = 35633,
-    }
-    /**
-     *
-     */
-    const enum EnableState {
-        Blend = 3042,
-        CullFace = 2884,
-        DepthTest = 2929,
-        StencilTest = 2960,
-        PolygonOffsetFill = 32823,
-        SampleAlphaToCoverage = 32926,
-    }
-    /**
-     *
-     */
-    const enum DepthFunc {
-        Never = 512,
-        Less = 513,
-        Lequal = 515,
-        Equal = 514,
-        Greater = 516,
-        NotEqual = 517,
-        GEqual = 518,
-        Always = 519,
     }
     /**
      *
@@ -4593,7 +4587,6 @@ declare namespace egret3d {
          * @private
          */
         static create(name: string, config: GLTF): RenderTexture;
-        protected _mipmap: boolean;
         initialize(name: string, config: GLTF): void;
         activateRenderTexture(index?: uint): void;
         generateMipmap(): boolean;
@@ -6754,6 +6747,8 @@ declare namespace egret3d {
         private readonly _worldToCameraMatrix;
         private readonly _worldToClipMatrix;
         private readonly _clipToWorldMatrix;
+        private _readRenderTarget;
+        private _writeRenderTarget;
         private _renderTarget;
         private _onStageResize();
         initialize(): void;
@@ -6790,6 +6785,10 @@ declare namespace egret3d {
          *
          */
         resetWorldToCameraMatrix(): this;
+        /**
+         *
+         */
+        swapPostprocessingRenderTarget(): this;
         /**
          * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间插值。
          */
@@ -9710,6 +9709,7 @@ declare namespace egret3d.ShaderLib {
                         };
                         "tFlip": {
                             "type": number;
+                            "value": number;
                         };
                         "opacity": {
                             "type": number;
