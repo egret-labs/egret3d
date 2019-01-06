@@ -290,7 +290,7 @@ namespace egret3d.particle {
             this._comp = comp;
             this._renderer = renderer;
 
-            const mesh = renderer.batchMesh ? renderer.batchMesh : createBatchMesh(renderer, comp.main.maxParticles).retain();
+            const mesh = renderer.batchMesh ? renderer.batchMesh : createBatchMesh(renderer, comp.main.maxParticles);//TODO .retain()
             this._vertexStride = renderer.renderMode === ParticleRenderMode.Mesh ? renderer.mesh!.vertexCount : 4;
 
             this._startPositionBuffer = mesh.getAttributes(gltf.AttributeSemantics._START_POSITION)!;

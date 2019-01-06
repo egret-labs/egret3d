@@ -21207,7 +21207,7 @@ var egret3d;
             ParticleBatcher.prototype.init = function (comp, renderer) {
                 this._comp = comp;
                 this._renderer = renderer;
-                var mesh = renderer.batchMesh ? renderer.batchMesh : particle.createBatchMesh(renderer, comp.main.maxParticles).retain();
+                var mesh = renderer.batchMesh ? renderer.batchMesh : particle.createBatchMesh(renderer, comp.main.maxParticles);
                 this._vertexStride = renderer.renderMode === 4 /* Mesh */ ? renderer.mesh.vertexCount : 4;
                 this._startPositionBuffer = mesh.getAttributes("_START_POSITION" /* _START_POSITION */);
                 this._startVelocityBuffer = mesh.getAttributes("_START_VELOCITY" /* _START_VELOCITY */);
@@ -21232,6 +21232,7 @@ var egret3d;
                 if (!renderer.batchMaterial) {
                     renderer.batchMaterial = renderer.materials[0].clone().retain();
                 }
+                //刚创建的时候，vbo,ibo为空调用无效，只有active一直被交换设置，才会需要调用
                 mesh.uploadSubIndexBuffer();
                 mesh.uploadVertexBuffer();
             };
