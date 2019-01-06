@@ -21207,7 +21207,7 @@ var egret3d;
             ParticleBatcher.prototype.init = function (comp, renderer) {
                 this._comp = comp;
                 this._renderer = renderer;
-                var mesh = renderer.batchMesh ? renderer.batchMesh : particle.createBatchMesh(renderer, comp.main.maxParticles);
+                var mesh = renderer.batchMesh ? renderer.batchMesh : particle.createBatchMesh(renderer, comp.main.maxParticles).retain();
                 this._vertexStride = renderer.renderMode === 4 /* Mesh */ ? renderer.mesh.vertexCount : 4;
                 this._startPositionBuffer = mesh.getAttributes("_START_POSITION" /* _START_POSITION */);
                 this._startVelocityBuffer = mesh.getAttributes("_START_VELOCITY" /* _START_VELOCITY */);
@@ -21229,8 +21229,11 @@ var egret3d;
                     this._startTimeBuffer[i] = 0.0;
                 }
                 renderer.batchMesh = mesh;
-                renderer.batchMaterial = renderer.materials[0].clone().retain();
+                if (!renderer.batchMaterial) {
+                    renderer.batchMaterial = renderer.materials[0].clone().retain();
+                }
                 mesh.uploadSubIndexBuffer();
+                mesh.uploadVertexBuffer();
             };
             ParticleBatcher.prototype.update = function (elapsedTime) {
                 if (!this._comp || this._comp.isPaused) {

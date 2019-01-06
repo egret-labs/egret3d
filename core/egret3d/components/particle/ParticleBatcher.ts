@@ -290,7 +290,7 @@ namespace egret3d.particle {
             this._comp = comp;
             this._renderer = renderer;
 
-            const mesh = renderer.batchMesh ? renderer.batchMesh : createBatchMesh(renderer, comp.main.maxParticles);
+            const mesh = renderer.batchMesh ? renderer.batchMesh : createBatchMesh(renderer, comp.main.maxParticles).retain();
             this._vertexStride = renderer.renderMode === ParticleRenderMode.Mesh ? renderer.mesh!.vertexCount : 4;
 
             this._startPositionBuffer = mesh.getAttributes(gltf.AttributeSemantics._START_POSITION)!;
@@ -315,8 +315,12 @@ namespace egret3d.particle {
             }
 
             renderer.batchMesh = mesh;
-            renderer.batchMaterial = renderer.materials[0]!.clone().retain();
+            if(!renderer.batchMaterial){
+                renderer.batchMaterial = renderer.materials[0]!.clone().retain();
+            }
+            //刚创建的时候，vbo,ibo为空调用无效，只有active一直被交换设置，才会需要调用
             mesh.uploadSubIndexBuffer();
+            mesh.uploadVertexBuffer();
         }
 
         public update(elapsedTime: number) {
