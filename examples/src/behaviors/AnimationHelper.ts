@@ -80,6 +80,10 @@ namespace behaviors {
             const animation = this.gameObject.getComponent(egret3d.Animation);
             if (animation) {
                 for (const animationAsset of animation.animations) {
+                    if (!animationAsset) {
+                        continue;
+                    }
+
                     for (const glftAnimation of animationAsset.config.animations as egret3d.GLTFAnimation[]) {
                         for (const animationClip of glftAnimation.extensions.paper.clips) {
                             this._animations.push({ label: animationClip.name, value: animationClip.name });

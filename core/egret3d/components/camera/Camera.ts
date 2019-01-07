@@ -154,8 +154,8 @@ namespace egret3d {
         public initialize() {
             super.initialize();
             //TODO
-            this._readRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true }).retain();
-            this._writeRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true }).retain();
+            this._readRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true }).setRepeat(false).retain();
+            this._writeRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true }).setRepeat(false).retain();
 
             this.transform.registerObserver(this);
             stage.onScreenResize.add(this._onStageResize, this);

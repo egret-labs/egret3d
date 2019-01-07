@@ -28,7 +28,6 @@ namespace egret3d {
         for (const obj of instances) {
             _colletCombineInstance(obj, allCombines);
         }
-        console.log("合并前:" + beforeCombineCount);
         let afterCombineCount = 0;
         //2.相同材质的合并
         for (const key in allCombines) {
@@ -39,7 +38,7 @@ namespace egret3d {
             }
         }
 
-        console.log("合并后:" + afterCombineCount + "节省:" + (beforeCombineCount - afterCombineCount));
+        console.log("combine", beforeCombineCount, "to", beforeCombineCount - afterCombineCount);
 
         cacheInstances.length = 0;
     }

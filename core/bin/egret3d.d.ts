@@ -7732,7 +7732,7 @@ declare namespace egret3d {
         /**
          * 动画数据列表。
          */
-        animations: ReadonlyArray<AnimationAsset>;
+        animations: ReadonlyArray<AnimationAsset | null>;
         /**
          *
          */

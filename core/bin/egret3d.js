@@ -17760,7 +17760,9 @@ var egret3d;
             _super.prototype.uninitialize.call(this);
             for (var _i = 0, _a = this._animations; _i < _a.length; _i++) {
                 var animation = _a[_i];
-                animation.release();
+                if (animation) {
+                    animation.release();
+                }
             }
             var fadeStatess = this._fadeStates;
             for (var _b = 0, fadeStatess_1 = fadeStatess; _b < fadeStatess_1.length; _b++) {
@@ -17800,9 +17802,11 @@ var egret3d;
             var animationAsset = null;
             var animationClip = null;
             for (var _i = 0, _a = this._animations; _i < _a.length; _i++) {
-                var eachAnimationAsset = _a[_i];
-                animationAsset = eachAnimationAsset;
-                animationClip = eachAnimationAsset.getAnimationClip(animationClipName);
+                animationAsset = _a[_i];
+                if (!animationAsset) {
+                    continue;
+                }
+                animationClip = animationAsset.getAnimationClip(animationClipName);
                 if (animationClip !== null) {
                     break;
                 }
@@ -17902,8 +17906,11 @@ var egret3d;
                 else {
                     var animations = this._animations;
                     if (animations.length > 0) {
-                        animationClipNameOrNames = animations[0].config.animations[0].extensions.paper.clips[0].name;
-                        animationState = this.fadeIn(animationClipNameOrNames, 0.0, playTimes);
+                        var defaultAnimationAsset = animations[0];
+                        if (defaultAnimationAsset) {
+                            animationClipNameOrNames = defaultAnimationAsset.config.animations[0].extensions.paper.clips[0].name;
+                            animationState = this.fadeIn(animationClipNameOrNames, 0.0, playTimes);
+                        }
                     }
                 }
             }
@@ -17962,6 +17969,9 @@ var egret3d;
         Animation.prototype.hasAnimation = function (animationClipName) {
             for (var _i = 0, _a = this._animations; _i < _a.length; _i++) {
                 var animationAsset = _a[_i];
+                if (!animationAsset) {
+                    continue;
+                }
                 var animationClip = animationAsset.getAnimationClip(animationClipName);
                 if (animationClip) {
                     return true;
@@ -17991,7 +18001,9 @@ var egret3d;
                 var animations = this._animations;
                 for (var _i = 0, animations_1 = animations; _i < animations_1.length; _i++) {
                     var animation = animations_1[_i];
-                    animation.release();
+                    if (animation) {
+                        animation.release();
+                    }
                 }
                 if (value !== animations) {
                     animations.length = 0;
@@ -18002,7 +18014,9 @@ var egret3d;
                 }
                 for (var _b = 0, animations_2 = animations; _b < animations_2.length; _b++) {
                     var animation = animations_2[_b];
-                    animation.retain();
+                    if (animation) {
+                        animation.retain();
+                    }
                 }
             },
             enumerable: true,
@@ -21207,7 +21221,7 @@ var egret3d;
             ParticleBatcher.prototype.init = function (comp, renderer) {
                 this._comp = comp;
                 this._renderer = renderer;
-                var mesh = renderer.batchMesh ? renderer.batchMesh : particle.createBatchMesh(renderer, comp.main.maxParticles);
+                var mesh = renderer.batchMesh ? renderer.batchMesh : particle.createBatchMesh(renderer, comp.main.maxParticles); //TODO .retain()
                 this._vertexStride = renderer.renderMode === 4 /* Mesh */ ? renderer.mesh.vertexCount : 4;
                 this._startPositionBuffer = mesh.getAttributes("_START_POSITION" /* _START_POSITION */);
                 this._startVelocityBuffer = mesh.getAttributes("_START_VELOCITY" /* _START_VELOCITY */);
@@ -22400,7 +22414,6 @@ var egret3d;
             var obj = instances_1[_i];
             _colletCombineInstance(obj, allCombines);
         }
-        console.log("合并前:" + beforeCombineCount);
         var afterCombineCount = 0;
         //2.相同材质的合并
         for (var key in allCombines) {
@@ -22411,7 +22424,7 @@ var egret3d;
                 afterCombineCount++;
             }
         }
-        console.log("合并后:" + afterCombineCount + "节省:" + (beforeCombineCount - afterCombineCount));
+        console.log("combine", beforeCombineCount, "to", beforeCombineCount - afterCombineCount);
         cacheInstances.length = 0;
     }
     egret3d.combine = combine;
@@ -28430,8 +28443,8 @@ var egret3d;
         Camera.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             //TODO
-            this._readRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, depthBuffer: true }).retain();
-            this._writeRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, depthBuffer: true }).retain();
+            this._readRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, depthBuffer: true }).setRepeat(false).retain();
+            this._writeRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, depthBuffer: true }).setRepeat(false).retain();
             this.transform.registerObserver(this);
             egret3d.stage.onScreenResize.add(this._onStageResize, this);
             egret3d.stage.onResize.add(this._onStageResize, this);

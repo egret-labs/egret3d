@@ -17,7 +17,7 @@ namespace egret3d {
          * @internal
          */
         public _statesDirty: boolean = false;
-        private readonly _animations: AnimationAsset[] = [];
+        private readonly _animations: (AnimationAsset | null)[] = [];
         /**
          * @internal
          */
@@ -47,7 +47,9 @@ namespace egret3d {
             super.uninitialize();
 
             for (const animation of this._animations) {
-                animation.release();
+                if (animation) {
+                    animation.release();
+                }
             }
 
             const fadeStatess = this._fadeStates;
@@ -90,9 +92,12 @@ namespace egret3d {
             let animationAsset: AnimationAsset | null = null;
             let animationClip: GLTFAnimationClip | null = null;
 
-            for (const eachAnimationAsset of this._animations) {
-                animationAsset = eachAnimationAsset;
-                animationClip = eachAnimationAsset.getAnimationClip(animationClipName);
+            for (animationAsset of this._animations) {
+                if (!animationAsset) {
+                    continue;
+                }
+
+                animationClip = animationAsset.getAnimationClip(animationClipName);
                 if (animationClip !== null) {
                     break;
                 }
@@ -200,8 +205,11 @@ namespace egret3d {
                 else {
                     const animations = this._animations;
                     if (animations.length > 0) {
-                        animationClipNameOrNames = (animations[0].config.animations![0] as GLTFAnimation).extensions.paper.clips[0].name;
-                        animationState = this.fadeIn(animationClipNameOrNames as string, 0.0, playTimes);
+                        const defaultAnimationAsset = animations[0];
+                        if (defaultAnimationAsset) {
+                            animationClipNameOrNames = (defaultAnimationAsset.config.animations![0] as GLTFAnimation).extensions.paper.clips[0].name;
+                            animationState = this.fadeIn(animationClipNameOrNames as string, 0.0, playTimes);
+                        }
                     }
                 }
             }
@@ -254,6 +262,10 @@ namespace egret3d {
          */
         public hasAnimation(animationClipName: string): boolean {
             for (const animationAsset of this._animations) {
+                if (!animationAsset) {
+                    continue;
+                }
+
                 const animationClip = animationAsset.getAnimationClip(animationClipName);
                 if (animationClip) {
                     return true;
@@ -273,14 +285,16 @@ namespace egret3d {
          * 动画数据列表。
          */
         @paper.serializedField("_animations")
-        public get animations(): ReadonlyArray<AnimationAsset> {
+        public get animations(): ReadonlyArray<AnimationAsset | null> {
             return this._animations;
         }
-        public set animations(value: ReadonlyArray<AnimationAsset>) {
+        public set animations(value: ReadonlyArray<AnimationAsset | null>) {
             const animations = this._animations;
 
             for (const animation of animations) {
-                animation.release();
+                if (animation) {
+                    animation.release();
+                }
             }
 
             if (value !== animations) {
@@ -292,7 +306,9 @@ namespace egret3d {
             }
 
             for (const animation of animations) {
-                animation.retain();
+                if (animation) {
+                    animation.retain();
+                }
             }
         }
         /**
