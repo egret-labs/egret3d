@@ -45,8 +45,24 @@ namespace egret3d {
             return true;
         }
 
+        export function randFloat(low: number, high: number): number {
+            return low + Math.random() * (high - low);
+        }
+
+        export function randFloatSpread(range: number): number {
+            return range * (0.5 - Math.random());
+        }
+
         export function isPowerOfTwo(value: number): boolean {
             return (value & (value - 1)) === 0 && value !== 0;
+        }
+
+        export function ceilPowerOfTwo(value: number): uint {
+            return Math.pow(2, Math.ceil(Math.log(value) / Math.LN2));
+        }
+
+        export function floorPowerOfTwo(value: number): uint {
+            return Math.pow(2, Math.floor(Math.log(value) / Math.LN2));
         }
     }
     /**

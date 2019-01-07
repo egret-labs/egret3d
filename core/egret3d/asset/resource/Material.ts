@@ -347,9 +347,7 @@ namespace egret3d {
         setBoolean(id: string, value: boolean) {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
-                if (uniform.value !== value) {
-                    uniform.value = value;
-                }
+                uniform.value = value;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -361,9 +359,7 @@ namespace egret3d {
         setInt(id: string, value: int) {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
-                if (uniform.value !== value) {
-                    uniform.value = value;
-                }
+                uniform.value = value;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -387,9 +383,7 @@ namespace egret3d {
         setFloat(id: string, value: number) {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
-                if (uniform.value !== value) {
-                    uniform.value = value;
-                }
+                uniform.value = value;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -413,10 +407,8 @@ namespace egret3d {
         setVector2(id: string, value: Readonly<IVector2>) {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
-                if (uniform.value[0] !== value.x || uniform.value[1] !== value.y) {
-                    uniform.value[0] = value.x;
-                    uniform.value[1] = value.y;
-                }
+                uniform.value[0] = value.x;
+                uniform.value[1] = value.y;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -440,11 +432,9 @@ namespace egret3d {
         setVector3(id: string, value: Readonly<IVector3>) {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
-                if (uniform.value[0] !== value.x || uniform.value[1] !== value.y || uniform.value[2] !== value.z) {
-                    uniform.value[0] = value.x;
-                    uniform.value[1] = value.y;
-                    uniform.value[2] = value.z;
-                }
+                uniform.value[0] = value.x;
+                uniform.value[1] = value.y;
+                uniform.value[2] = value.z;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -468,12 +458,10 @@ namespace egret3d {
         setVector4(id: string, value: Readonly<IVector4>) {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
-                if (uniform.value[0] !== value.x || uniform.value[1] !== value.y || uniform.value[2] !== value.z || uniform.value[3] !== value.w) {
-                    uniform.value[0] = value.x;
-                    uniform.value[1] = value.y;
-                    uniform.value[2] = value.z;
-                    uniform.value[3] = value.w;
-                }
+                uniform.value[0] = value.x;
+                uniform.value[1] = value.y;
+                uniform.value[2] = value.z;
+                uniform.value[3] = value.w;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -619,11 +607,15 @@ namespace egret3d {
                 if (index >= 0) {
                     enable!.splice(index, 1);
                 }
+                //
+                functions!.depthMask = [true];
             }
             else {
                 if (index < 0) {
                     enable!.push(gltf.EnableState.Blend);
                 }
+                //
+                functions!.depthMask = [false];
             }
 
             if (renderQueue) { // 兼容
@@ -781,24 +773,26 @@ namespace egret3d {
          * 设置该材质的主颜色。
          * @param value 颜色。
          */
-        public setColor(value: Readonly<IColor>): this;
+        public setColor(value: Readonly<IColor> | uint): this;
         /**
-         * 设置该材质的指定颜色。
+         * 设置该材质的主颜色。
          * @param uniformName uniform 名称。
          * @param value 颜色。
          */
-        public setColor(uniformName: string, value: Readonly<IColor>): this;
-        public setColor(p1: Readonly<IColor> | string, p2?: Readonly<IColor>) {
-            let uniformName: string;
-            if (p1.hasOwnProperty("r")) {
-                uniformName = ShaderUniformName.Diffuse;
-                p2 = p1 as Readonly<IColor>;
-            }
-            else {
-                uniformName = p1 as string;
+        public setColor(uniformName: string, value: Readonly<IColor> | uint): this;
+        public setColor(p1: Readonly<IColor> | uint | string, p2?: Readonly<IColor> | uint) {
+            if (typeof p1 !== "string") {
+                p2 = p1 as Readonly<IColor> | uint;
+                p1 = ShaderUniformName.Diffuse;
             }
 
-            this.setVector3(uniformName, Vector3.create(p2!.r, p2!.g, p2!.b).release());
+            if (typeof p2 === "number") {
+                const color = Color.create().fromHex(p2).release();
+                this.setVector3(p1, Vector3.create(color.r, color.g, color.b).release());
+            }
+            else {
+                this.setVector3(p1, Vector3.create(p2!.r, p2!.g, p2!.b).release());
+            }
 
             return this;
         }

@@ -43,7 +43,17 @@ namespace examples {
             const camera = egret3d.Camera.main;
             const inputCollecter = this.gameObject.getComponent(egret3d.InputCollecter)!;
             const defaultPointer = inputCollecter.defaultPointer;
-            //
+            // Mouse wheel.
+            const mouseWheel = inputCollecter.mouseWheel * 0.5;
+            if (mouseWheel !== 0.0) {
+                this._cubeLeft.transform.rotate(mouseWheel, 0.0, 0.0);
+                this._cubeMiddle.transform.rotate(mouseWheel, 0.0, 0.0);
+                this._cubeRight.transform.rotate(mouseWheel, 0.0, 0.0);
+                this._cubeBack.transform.rotate(mouseWheel, 0.0, 0.0);
+                this._cubeForward.transform.rotate(mouseWheel, 0.0, 0.0);
+                this._cubeEraser.transform.rotate(mouseWheel, 0.0, 0.0);
+            }
+            // Mouse key or default touch.
             if (defaultPointer.isDown()) {
                 this._cubeLeft.transform.setLocalScale(2.0, 2.0, 2.0);
             }
@@ -110,7 +120,7 @@ namespace examples {
                 this._cubeEraser.transform.setLocalScale(1.0, 1.0, 1.0);
                 this._cubeEraser.transform.setLocalEuler(0.0, 0.0, 0.0);
             }
-
+            // Muti-touch.
             for (const pointer of inputCollecter.getDownPointers()) {
                 if (!(pointer.event!.pointerId in this._holdCubes)) {
                     const cube = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
@@ -139,7 +149,7 @@ namespace examples {
                     delete this._holdCubes[pointer.event!.pointerId];
                 }
             }
-
+            // Key board.
             for (const key of inputCollecter.getDownKeys()) {
                 console.log("KeyDown", key.event!.code, key.event!.key, key.event!.keyCode);
             }

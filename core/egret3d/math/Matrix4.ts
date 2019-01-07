@@ -434,7 +434,7 @@ namespace egret3d {
                 // this;
             }
             else {
-                this.lerp(orthographicMatrix, this, opvalue);
+                this.lerp(orthographicMatrix, this, Math.pow(opvalue, 8));
             }
 
             return this;

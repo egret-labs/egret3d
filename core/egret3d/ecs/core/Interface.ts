@@ -103,6 +103,7 @@ namespace paper {
         IgnoreRayCast = BuiltinLayer2,
         Water = BuiltinLayer4,
         UI = BuiltinLayer5,
+        Editor = BuiltinLayer7,
     }
     /**
      * 系统排序。

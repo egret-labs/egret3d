@@ -172,7 +172,7 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.SPRITE = this._createShader("builtin/sprite.shader.json", ShaderLib.sprite as any, RenderQueue.Geometry, helpStates);
 
-            helpMaterial.clearStates().setDepth(false, false);
+            helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.COPY = this._createShader("builtin/copy.shader.json", ShaderLib.copy as any, RenderQueue.Geometry, helpStates);
 
 

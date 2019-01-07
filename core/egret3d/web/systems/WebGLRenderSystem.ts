@@ -587,25 +587,23 @@ namespace egret3d.webgl {
             renderState.updateViewport(camera.viewport, renderTarget);
             renderState.clearBuffer(bufferMask, camera.backgroundColor);
             // Skybox.
-            if (bufferMask & gltf.BufferMask.Color) {
-                const skyBox = camera.gameObject.getComponent(SkyBox);
-                if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
-                    const drawCall = this._drawCallCollecter.skyBox;
+            const skyBox = camera.gameObject.getComponent(SkyBox);
+            if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
+                const drawCall = this._drawCallCollecter.skyBox;
 
-                    if (!drawCall.mesh) {
-                        drawCall.mesh = skyBox.material.shader === DefaultShaders.CUBE ? DefaultMeshes.CUBE : DefaultMeshes.SPHERE;
-                    }
-
-                    drawCall.matrix = camera.gameObject.transform.localToWorldMatrix;
-
-                    this.draw(drawCall, skyBox.material);
+                if (!drawCall.mesh) {
+                    drawCall.mesh = skyBox.material.shader === DefaultShaders.CUBE ? DefaultMeshes.CUBE : DefaultMeshes.SPHERE;
                 }
+
+                drawCall.matrix = camera.gameObject.transform.localToWorldMatrix;
+
+                this.draw(drawCall, skyBox.material);
             }
-            // Step 1 draw opaques.
+            // Draw opaques.
             for (const drawCall of camera.context.opaqueCalls) {
                 this.draw(drawCall, material);
             }
-            // Step 2 draw transparents.
+            // Draw transparents.
             for (const drawCall of camera.context.transparentCalls) {
                 this.draw(drawCall, material);
             }
@@ -847,6 +845,7 @@ namespace egret3d.webgl {
             //         // this._renderLightShadow(light);
             //     }
             // }
+
             // Render cameras.
             if (cameras.length > 0) {
                 const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
@@ -860,7 +859,7 @@ namespace egret3d.webgl {
                 for (const camera of cameras) {
                     const scene = camera.gameObject.scene;
 
-                    if (isPlayerMode ? scene !== editorScene : scene === editorScene) {
+                    if (camera.renderTarget || (isPlayerMode ? scene !== editorScene : scene === editorScene)) {
                         this.render(camera);
                     }
                 }

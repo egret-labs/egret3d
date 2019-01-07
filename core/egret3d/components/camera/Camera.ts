@@ -62,8 +62,9 @@ namespace egret3d {
                 gameObject.transform.lookAt(Vector3.ZERO);
 
                 const camera = gameObject.addComponent(Camera);
+                camera.cullingMask = paper.Layer.Everything;
                 camera.cullingMask &= ~paper.Layer.UI; // TODO 更明确的 UI 编辑方案。
-                camera.far = 10000.0;
+                camera.far = 30000.0;
             }
 
             return gameObject.getOrAddComponent(Camera);
@@ -83,7 +84,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((paper as any).Layer) }) // TODO
-        public cullingMask: paper.Layer = paper.Layer.Everything;
+        public cullingMask: paper.Layer = paper.Layer.Default;
         /**
          * 该相机渲染排序。
          * - 该值越低的相机优先绘制。
@@ -316,6 +317,13 @@ namespace egret3d {
             return this._opvalue;
         }
         public set opvalue(value: number) {
+            if (value !== value || value < 0.0) {
+                value = 0.0;
+            }
+            else if (value > 1.0) {
+                value = 1.0;
+            }
+
             if (this._opvalue === value) {
                 return;
             }
@@ -340,12 +348,16 @@ namespace egret3d {
             return this._near;
         }
         public set near(value: number) {
-            if (value >= this.far) {
-                value = this.far - 0.01;
+            if (value >= this._far) {
+                value = this._far - 0.01;
             }
 
             if (value < 0.01) {
                 value = 0.01;
+            }
+
+            if (this._near === value) {
+                return;
             }
 
             this._near = value;
@@ -371,8 +383,8 @@ namespace egret3d {
                 value = this._near + 0.01;
             }
 
-            if (value >= 10000.0) {
-                value = 10000.0;
+            if (this._far === value) {
+                return;
             }
 
             this._far = value;
@@ -384,6 +396,10 @@ namespace egret3d {
                     this._dirtyMask |= DirtyMask.Culling;
                 }
             }
+            // 
+            if (renderState.logarithmicDepthBuffer) {
+                this.context.logDepthBufFC = 2.0 / (Math.log(this._far + 1.0) / Math.LN2);
+            }
         }
         /**
          * 透视投影的视野。
@@ -394,6 +410,13 @@ namespace egret3d {
             return this._fov;
         }
         public set fov(value: number) {
+            if (value !== value || value < 0.0) {
+                value = 0.01;
+            }
+            else if (value > Math.PI - 0.01) {
+                value = Math.PI - 0.01;
+            }
+
             if (this._fov === value) {
                 return;
             }

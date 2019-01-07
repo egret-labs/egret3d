@@ -210,6 +210,7 @@ declare namespace paper {
         IgnoreRayCast = 4,
         Water = 16,
         UI = 32,
+        Editor = 128,
     }
     /**
      * 系统排序。
@@ -2001,6 +2002,8 @@ declare namespace egret3d {
      */
     abstract class BaseTexture extends GLTFAsset {
         protected static _createConfig(createTextureParameters: CreateTextureParameters): GLTF;
+        type: gltf.TextureType;
+        protected _sourceDirty: boolean;
         protected _gltfTexture: GLTFTexture;
         protected _image: gltf.Image;
         protected _sampler: gltf.Sampler;
@@ -2059,6 +2062,11 @@ declare namespace egret3d {
          *
          */
         static createColorTexture(name: string, r: number, g: number, b: number): Texture;
+        /**
+         *
+         * @param source
+         */
+        uploadTexture(source?: gltf.ImageSource): this;
     }
 }
 declare namespace egret3d {
@@ -2662,7 +2670,7 @@ declare namespace gltf {
      *
      */
     const enum TextureType {
-        TextureZero = 33984,
+        Texture2DStart = 33984,
         TextureCubeStart = 34069,
         Texture1D = -1,
         Texture2D = 3553,
@@ -4155,7 +4163,11 @@ declare namespace egret3d {
          */
         function lerp(from: number, to: number, t: number): number;
         function frustumIntersectsSphere(frustum: Readonly<Frustum>, sphere: Readonly<Sphere>): boolean;
+        function randFloat(low: number, high: number): number;
+        function randFloatSpread(range: number): number;
         function isPowerOfTwo(value: number): boolean;
+        function ceilPowerOfTwo(value: number): uint;
+        function floorPowerOfTwo(value: number): uint;
     }
     /**
      * 内联的数字常数枚举。
@@ -4587,8 +4599,17 @@ declare namespace egret3d {
          * @private
          */
         static create(name: string, config: GLTF): RenderTexture;
-        initialize(name: string, config: GLTF): void;
-        activateRenderTexture(index?: uint): void;
+        protected _bufferDirty: boolean;
+        /**
+         *
+         * @param index
+         */
+        activateTexture(index?: uint): this;
+        /**
+         *
+         * @param source
+         */
+        uploadTexture(width: uint, height: uint): this;
         generateMipmap(): boolean;
     }
 }
@@ -9347,13 +9368,13 @@ declare namespace egret3d {
          * 设置该材质的主颜色。
          * @param value 颜色。
          */
-        setColor(value: Readonly<IColor>): this;
+        setColor(value: Readonly<IColor> | uint): this;
         /**
-         * 设置该材质的指定颜色。
+         * 设置该材质的主颜色。
          * @param uniformName uniform 名称。
          * @param value 颜色。
          */
-        setColor(uniformName: string, value: Readonly<IColor>): this;
+        setColor(uniformName: string, value: Readonly<IColor> | uint): this;
         /**
          * 获取该材质的 UV 变换矩阵。
          * @param out 矩阵。

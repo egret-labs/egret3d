@@ -120,7 +120,7 @@ namespace egret3d.webgl {
                 const webgl = WebGLRenderState.webgl!;
                 webgl.deleteTexture(this.webGLTexture);
             }
-            
+
             this.webGLTexture = null;
 
             return true;

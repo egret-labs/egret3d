@@ -395,7 +395,7 @@ namespace egret3d {
          * @internal
          */
         public _update() {
-            this.logDepthBufFC = 2.0 / (Math.log(this.camera.far + 1.0) / Math.LN2);
+
             this._frustumCulling();
             this._updateLights();
         }
