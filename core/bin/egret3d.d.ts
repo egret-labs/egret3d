@@ -6017,6 +6017,10 @@ declare namespace egret3d {
         /**
          *
          */
+        readonly lights: BaseLight[];
+        /**
+         *
+         */
         readonly directionalLights: DirectionalLight[];
         /**
          *
@@ -6704,7 +6708,7 @@ declare namespace egret3d {
      * @beta 这是一个试验性质的 API，有可能会被删除或修改。
      */
     abstract class CameraPostprocessing extends paper.BaseComponent {
-        render(camera: Camera): void;
+        onRender(camera: Camera): void;
     }
 }
 declare namespace egret3d {
@@ -6797,7 +6801,7 @@ declare namespace egret3d {
         /**
          *
          */
-        update: ((light: BaseLight, shadow: LightShadow) => void) | null;
+        update: (() => void) | null;
         /**
          * 禁止实例化。
          */
@@ -6907,7 +6911,7 @@ declare namespace egret3d {
      */
     class DirectionalLight extends BaseLight {
         initialize(): void;
-        private _updateShadow(light, shadow);
+        private _updateShadow();
     }
 }
 declare namespace egret3d {
@@ -6931,7 +6935,8 @@ declare namespace egret3d {
          *
          */
         penumbra: number;
-        updateShadow(camera: Camera): void;
+        initialize(): void;
+        private _updateShadow();
     }
 }
 declare namespace egret3d {

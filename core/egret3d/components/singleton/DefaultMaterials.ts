@@ -77,9 +77,12 @@ namespace egret3d {
                 .setColor(Color.PURPLE);
 
             DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/shadow_depth.mat.json", DefaultShaders.DEPTH)
+                .setDepth(true, true)
+                .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back)
                 .addDefine(ShaderDefine.DEPTH_PACKING_3201);
 
-            DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", DefaultShaders.DISTANCE_RGBA);
+            DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", DefaultShaders.DISTANCE_RGBA)
+                .setDepth(true, true);
 
             DefaultMaterials.COPY = this._createMaterial("builtin/copy.mat.json", DefaultShaders.COPY);
         }

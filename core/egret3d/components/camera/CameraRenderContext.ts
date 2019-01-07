@@ -54,7 +54,8 @@ namespace egret3d {
          * @internal
          */
         public hemisphereLightBuffer: Float32Array = new Float32Array(0);
-        
+
+        //TODO
         public lightShadowCameraNear: number = 0.0;
         public lightShadowCameraFar: number = 0.0;
         public lightCastShadows: boolean = false;
@@ -219,6 +220,7 @@ namespace egret3d {
             const rectangleAreaLightCount = rectangleAreaLights.length;
             const pointLightCount = pointLights.length;
             const hemisphereLightCount = hemisphereLights.length;
+            this.lightCastShadows = false;
 
             if (this.directLightBuffer.length !== directLightCount * LightSize.Directional) {
                 this.directLightBuffer = new Float32Array(directLightCount * LightSize.Directional);
@@ -280,12 +282,13 @@ namespace egret3d {
                 if (light.castShadows) {
                     const shadow = light.shadow;
                     directLightBuffer[offset++] = 1;
-                    directLightBuffer[offset++] = -shadow.bias;//Left-hand.
+                    directLightBuffer[offset++] = shadow.bias;//Left-hand.
                     directLightBuffer[offset++] = shadow.radius;
                     directLightBuffer[offset++] = shadow.size;
                     directLightBuffer[offset++] = shadow.size;
                     directShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Directional);
                     directShadowMaps[shadowIndex++] = shadow.renderTarget;
+                    this.lightCastShadows = true;
                 }
                 else {
                     directLightBuffer[offset++] = 0;
@@ -327,6 +330,7 @@ namespace egret3d {
                     spotLightBuffer[offset++] = shadow.size;
                     spotShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Spot);
                     spotShadowMaps[shadowIndex++] = shadow.renderTarget;
+                    this.lightCastShadows = true;
                 }
                 else {
                     spotLightBuffer[offset++] = 0;
@@ -382,6 +386,7 @@ namespace egret3d {
 
                     pointShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Point);
                     pointShadowMaps[shadowIndex++] = shadow.renderTarget;
+                    this.lightCastShadows = true;
                 }
                 else {
                     pointLightBuffer[offset++] = 0;
@@ -427,8 +432,13 @@ namespace egret3d {
          */
         public _update() {
             this.logDepthBufFC = 2.0 / (Math.log(this.camera.far + 1.0) / Math.LN2);
-            this._frustumCulling();
-            this._updateLights();
+            if (this._cameraAndLightCollecter.currentLight) {
+                this._shadowFrustumCulling();
+            }
+            else {
+                this._frustumCulling();
+                this._updateLights();
+            }
         }
 
         public blit(src: BaseTexture, material: Material | null = null, dest: RenderTexture | null = null) {

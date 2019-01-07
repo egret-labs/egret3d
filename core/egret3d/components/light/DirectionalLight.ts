@@ -8,7 +8,7 @@ namespace egret3d {
             super.initialize();
 
             // this.shadow.renderTarget = new GlRenderTarget("DirectionalLightShadow", this.shadow.size, this.shadow.size, true); // TODO
-            this.shadow.update = this._updateShadow;
+            this.shadow.update = this._updateShadow.bind(this);
         }
 
         private _updateShadow() {
@@ -27,8 +27,15 @@ namespace egret3d {
                 );
             }
             //
-            shadowCamera.worldToCameraMatrix = transform.worldToLocalMatrix;
-            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(shadowCamera.fov, 0.5, 500, 10.0, 0.0, shadowCamera.aspect, stage.matchFactor).release();
+            shadowCamera.transform.position.copy(transform.position).update();
+            shadowCamera.transform.lookAt(Vector3.ZERO);
+            // shadowCamera.transform.rotation.copy(transform.rotation).update();
+            // shadowCamera.far = 500;
+            // shadowCamera.near = 0.5;
+            // shadowCamera.size = 10.0;
+            // shadowCamera.opvalue = 0.0;
+            // shadowCamera.worldToCameraMatrix = transform.worldToLocalMatrix;
+            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(shadowCamera.fov, shadow.near, shadow.far, 10.0, 0.0, 1.0, stage.matchFactor).release();
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             shadowMatrix.set(
                 0.5, 0.0, 0.0, 0.5,
@@ -37,9 +44,8 @@ namespace egret3d {
                 0.0, 0.0, 0.0, 1.0
             );
 
-            shadowMatrix.multiply(shadowCamera.worldToClipMatrix);
-
-            //生成阴影贴图
+            shadowMatrix.multiply(shadowCamera.projectionMatrix);
+            shadowMatrix.multiply(shadowCamera.worldToCameraMatrix);
         }
 
         // private _updateShadow(light: DirectionalLight, shadow: LightShadow) {

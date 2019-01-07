@@ -77,7 +77,6 @@ namespace egret3d.webgl {
         private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
         private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(RenderState) as WebGLRenderState;
-        private readonly _shadowState: gltf.States = { enable: [gltf.EnableState.DepthTest], functions: { depthFunc: [gltf.DepthFunc.Lequal] } };
         //
         private readonly _modelViewMatrix: Matrix4 = Matrix4.create();
         private readonly _modelViewPojectionMatrix: Matrix4 = Matrix4.create();
@@ -121,10 +120,7 @@ namespace egret3d.webgl {
         }
 
         private _updateGlobalUniforms(program: WebGLProgramBinder, context: CameraRenderContext, drawCall: DrawCall, renderer: paper.BaseRenderer | null, scene: paper.Scene, forceUpdate: boolean) {
-            // if (renderer && renderer.receiveShadows && this.lightCastShadows) {
-            //     shaderContextDefine += "#define USE_SHADOWMAP \n";
-            //     shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
-            // }
+
             const webgl = WebGLRenderState.webgl!;
             const renderState = this._renderState;
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
@@ -632,12 +628,24 @@ namespace egret3d.webgl {
             const collecter = this._cameraAndLightCollecter;
             if (collecter.currentLight !== light) {
                 collecter.currentLight = light;
+                const shadow = light.shadow;
+                const camera = shadow.camera;
+                Camera.current = camera;
+                const renderState = this._renderState;
                 //update shadowMatrix
-                light.shadow.update!();
+                shadow.update!();
+                //update draw call
+                camera._update();
+                renderState.updateViewport(camera.viewport, shadow.renderTarget);
+                renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.WHITE);
                 //generate depth map
-                
+                const drawCalls = camera.context.shadowCalls;
+                const shadowMaterial = (light.constructor === PointLight) ? DefaultMaterials.SHADOW_DISTANCE : DefaultMaterials.SHADOW_DEPTH;
+                for (const drawCall of drawCalls) {
+                    this.draw(drawCall, shadowMaterial);
+                }
             }
-
+            Camera.current = null;
             collecter.currentLight = null;
         }
 
@@ -703,6 +711,19 @@ namespace egret3d.webgl {
             const camera = Camera.current!;
             const context = camera.context;
             const scene = renderer ? renderer.gameObject.scene : camera.gameObject.scene; // 后期渲染renderer为空，取camera的场景
+
+            //TODO
+            if (renderer) {
+                if (context.lightCastShadows && renderer.receiveShadows) {
+                    renderer.defines.addDefine(ShaderDefine.USE_SHADOWMAP);
+                    renderer.defines.addDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
+                }
+                else {
+                    renderer.defines.removeDefine(ShaderDefine.USE_SHADOWMAP);
+                    renderer.defines.removeDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
+                }
+            }
+
             //
             const mesh = drawCall.mesh;
             const shader = material.shader as WebGLShader;
@@ -854,9 +875,7 @@ namespace egret3d.webgl {
 
             // Render lights shadow.
             if (lights.length > 0) {
-
-                renderState.updateState(this._shadowState);
-                renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.WHITE);
+                // renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.WHITE);
                 for (const light of lights) {
                     if (!light.castShadows || !light.shadow.update) {
                         continue;

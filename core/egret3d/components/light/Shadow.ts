@@ -28,12 +28,12 @@ namespace egret3d {
          * 
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: 9999 })
-        public near: number = 0.03;
+        public near: number = 0.5;
         /**
          * 
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.02, maximum: 10000 })
-        public far: number = 0.03;
+        public far: number = 500.0;
         /**
          * @private
          */
