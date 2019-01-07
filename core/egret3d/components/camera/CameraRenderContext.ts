@@ -344,13 +344,13 @@ namespace egret3d {
                 offset = (index++) * LightSize.RectangleArea;
                 //
                 helpVector3.applyMatrix(worldToCameraMatrix, light.gameObject.transform.position);
-                spotLightBuffer[offset++] = helpVector3.x;
-                spotLightBuffer[offset++] = helpVector3.y;
-                spotLightBuffer[offset++] = helpVector3.z;
+                rectangleAreaLightBuffer[offset++] = helpVector3.x;
+                rectangleAreaLightBuffer[offset++] = helpVector3.y;
+                rectangleAreaLightBuffer[offset++] = helpVector3.z;
                 //
-                spotLightBuffer[offset++] = color.r * intensity;
-                spotLightBuffer[offset++] = color.g * intensity;
-                spotLightBuffer[offset++] = color.b * intensity;
+                rectangleAreaLightBuffer[offset++] = color.r * intensity;
+                rectangleAreaLightBuffer[offset++] = color.g * intensity;
+                rectangleAreaLightBuffer[offset++] = color.b * intensity;
                 // TODO
                 light.castShadows = false;//TODO 不支持阴影，防止贴图报错
             }
