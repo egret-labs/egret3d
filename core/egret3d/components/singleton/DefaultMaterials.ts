@@ -22,6 +22,10 @@ namespace egret3d {
         /**
          * 
          */
+        public static MESH_PHONG: Material;
+        /**
+         * 
+         */
         public static LINEDASHED: Material;
         /**
          * 
@@ -67,6 +71,8 @@ namespace egret3d {
             DefaultMaterials.MESH_LAMBERT_DOUBLESIDE = this._createMaterial("builtin/meshlambert_doubleside.mat.json", DefaultShaders.MESH_LAMBERT)
                 .setTexture(DefaultTextures.WHITE)
                 .setCullFace(false);
+
+            DefaultMaterials.MESH_PHONG = this._createMaterial("builtin/meshphong.mat.json", DefaultShaders.MESH_PHONG);
 
             DefaultMaterials.LINEDASHED = this._createMaterial("builtin/linedashed.mat.json", DefaultShaders.LINEDASHED);
 

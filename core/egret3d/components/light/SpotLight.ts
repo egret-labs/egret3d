@@ -51,6 +51,7 @@ namespace egret3d {
             }
             //
             shadowCamera.transform.position.copy(transform.position).update();
+            // shadowCamera.transform.rotation.copy(transform.rotation).update();
             shadowCamera.transform.lookAt(Vector3.ZERO);
 
             shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(this.angle * 2.0, shadow.near, shadow.far, 0.0, 1.0, 1.0, stage.matchFactor).release();
@@ -65,19 +66,5 @@ namespace egret3d {
             shadowMatrix.multiply(shadowCamera.projectionMatrix);
             shadowMatrix.multiply(shadowCamera.worldToCameraMatrix);
         }
-
-        // public updateShadow(camera: Camera) {
-            // if (!this.renderTarget) {
-            //     this.renderTarget = new GlRenderTarget("SpotLight", this.shadowSize, this.shadowSize); //
-            // }
-
-            // camera.fov = this.angle;
-            // camera.opvalue = 1.0;
-            // camera.renderTarget = this.renderTarget;
-            // camera.gameObject.transform.localToWorldMatrix.copy(this.gameObject.transform.localToWorldMatrix); //
-
-            // this.viewPortPixel.set(0, 0, this.shadowSize, this.shadowSize);
-            // this._updateShadowMatrix(camera,);
-        // }
     }
 }

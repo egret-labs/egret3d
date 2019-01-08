@@ -68,10 +68,10 @@ IncidentLight directLight;
 		spotLight.position = vec3(spotLights[ i  * 18 + 0], spotLights[ i  * 18 + 1], spotLights[ i  * 18 + 2]);
 		spotLight.direction = vec3(spotLights[ i  * 18 + 3], spotLights[ i  * 18 + 4], spotLights[ i  * 18 + 5]);
 		spotLight.color = vec3(spotLights[ i  * 18 + 6], spotLights[ i  * 18 + 7], spotLights[ i  * 18 + 8]);
-		spotLight.distance = spotLights[ i  * 18 + 9]
-		spotLight.decay = spotLights[ i  * 18 + 10]
-		spotLight.coneCos = spotLights[ i  * 18 + 11]
-		spotLight.penumbraCos = spotLights[ i  * 18 + 12]
+		spotLight.distance = spotLights[ i  * 18 + 9];
+		spotLight.decay = spotLights[ i  * 18 + 10];
+		spotLight.coneCos = spotLights[ i  * 18 + 11];
+		spotLight.penumbraCos = spotLights[ i  * 18 + 12];
 
 		getSpotDirectLightIrradiance( spotLight, geometry, directLight );
 
