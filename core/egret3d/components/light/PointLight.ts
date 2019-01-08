@@ -7,9 +7,18 @@ namespace egret3d {
         new Vector3(0, 1, 0), new Vector3(0, 1, 0), new Vector3(0, 1, 0),
         new Vector3(0, 1, 0), new Vector3(0, 0, 1), new Vector3(0, 0, - 1)
     ];
+    //  xzXZ
+    //   y Y
+    //
+    // X - Positive x direction
+    // x - Negative x direction
+    // Y - Positive y direction
+    // y - Negative y direction
+    // Z - Positive z direction
+    // z - Negative z direction
     const _viewPortsScale = [
-        new Vector4(2, 1, 1, 1), new Vector4(0, 1, 1, 1), new Vector4(3, 1, 1, 1),
-        new Vector4(1, 1, 1, 1), new Vector4(3, 0, 1, 1), new Vector4(1, 0, 1, 1)
+        new Rectangle(2, 1, 1, 1), new Rectangle(0, 1, 1, 1), new Rectangle(3, 1, 1, 1),
+        new Rectangle(1, 1, 1, 1), new Rectangle(3, 0, 1, 1), new Rectangle(1, 0, 1, 1)
     ];
     /**
      * 点光组件。
@@ -36,27 +45,29 @@ namespace egret3d {
             this.shadow.update = this._updateShadow.bind(this);
         }
 
-        private _updateShadow() {
+        private _updateShadow(face: number) {
             const shadow = this.shadow;
             const shadowMatrix = shadow.matrix;
             const shadowCamera = shadow.camera;
             const transform = this.gameObject.transform;
+            const shadowSize = Math.min(shadow.size, renderState.maxTextureSize);
             if (!shadow.renderTarget) {
-                const shadowSize = Math.min(shadow.size, renderState.maxTextureSize);
                 shadow.renderTarget = RenderTexture.create(
                     {
-                        width: shadowSize, height: shadowSize,
+                        width: shadowSize * 4.0, height: shadowSize * 2.0,
                         minFilter: gltf.TextureFilter.Nearest, magFilter: gltf.TextureFilter.Nearest,
                         format: gltf.TextureFormat.RGBA
                     }
                 );
             }
 
-            shadowCamera.transform.position.copy(transform.position).update();
-            // shadowCamera.transform.rotation.copy(transform.rotation).update();
-            shadowCamera.transform.lookAt(Vector3.ZERO);
-
+            const lightPosition = transform.position;
+            shadowCamera.transform.position.copy(lightPosition).update();
+            shadowCamera.transform.lookAt(lightPosition.clone().add(_targets[face]).release(), _ups[face]);
+            shadowCamera.viewport = _viewPortsScale[face].clone().multiplyScalar(shadowSize).release();
             shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(Math.PI * 0.5, shadow.near, shadow.far, 0.0, 1.0, 1.0, stage.matchFactor).release();
+
+            shadowMatrix.fromTranslate(lightPosition.clone().multiplyScalar(-1).release());
         }
 
         // public updateShadow(camera: Camera) {

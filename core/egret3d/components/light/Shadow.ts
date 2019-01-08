@@ -50,7 +50,7 @@ namespace egret3d {
          * 
          */
         // public update: ((light: BaseLight, shadow: LightShadow) => void) | null = null;
-        public update: (() => void) | null = null;
+        public update: ((face: number) => void) | null = null;
         /**
          * 禁止实例化。
          */

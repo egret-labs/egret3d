@@ -82,6 +82,19 @@ namespace egret3d {
             return this;
         }
 
+        public multiplyScalar(scalar: number, input?: Readonly<IRectangle>): this {
+            if (!input) {
+                input = this;
+            }
+
+            this.x = scalar * input.x;
+            this.y = scalar * input.y;
+            this.w = scalar * input.w;
+            this.h = scalar * input.h;
+
+            return this;
+        }
+
         public contains(pointOrRect: Readonly<IVector2 | Rectangle>): boolean {
             const minX = this.x;
             const minY = this.y;

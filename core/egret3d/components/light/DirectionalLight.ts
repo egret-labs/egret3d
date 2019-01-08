@@ -27,6 +27,7 @@ namespace egret3d {
                 );
             }
             //
+            shadowCamera.viewport.set(0, 0, 1, 1);
             shadowCamera.transform.position.copy(transform.position).update();
             shadowCamera.transform.lookAt(Vector3.ZERO);
             // shadowCamera.transform.rotation.copy(transform.rotation).update();
