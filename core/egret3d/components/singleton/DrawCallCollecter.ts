@@ -1,12 +1,16 @@
 namespace egret3d {
     /**
-     * 全局绘制信息收集组件。
+     * 全局绘制信息组件。
      */
     export class DrawCallCollecter extends paper.SingletonComponent {
         /**
-         * 专用于天空盒渲染和绘制信息。
+         * 专用于天空盒渲染的绘制信息。
          */
         public readonly skyBox: DrawCall = DrawCall.create();
+        /**
+         * 专用于后期渲染的绘制信息。
+         */
+        public readonly postprocessing: DrawCall = DrawCall.create();
         /**
          * 此帧可能参与渲染的渲染组件列表。
          * - 未进行视锥剔除的。
@@ -97,7 +101,12 @@ namespace egret3d {
         public initialize() {
             super.initialize();
 
+            (drawCallCollecter as DrawCallCollecter) = this;
+
             this.skyBox.subMeshIndex = 0;
+            this.postprocessing.matrix = Matrix4.IDENTITY;
+            this.postprocessing.subMeshIndex = 0;
+            this.postprocessing.mesh = DefaultMeshes.FULLSCREEN_QUAD;
         }
         /**
          * 添加绘制信息。
@@ -152,4 +161,8 @@ namespace egret3d {
             return this.renderers.indexOf(renderer) >= 0;
         }
     }
+    /**
+     * 全局绘制信息收集组件实例。
+     */
+    export const drawCallCollecter: DrawCallCollecter = null!;
 }

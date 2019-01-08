@@ -210,7 +210,8 @@ declare namespace paper {
         IgnoreRayCast = 4,
         Water = 16,
         UI = 32,
-        Editor = 128,
+        Editor = 64,
+        EditorUI = 128,
     }
     /**
      * 系统排序。
@@ -6055,13 +6056,21 @@ declare namespace egret3d {
         HemisphereLight = 16,
     }
     /**
-     * 激活的摄像机和灯光。
+     * 全局摄像机和灯光组件。
      */
     class CameraAndLightCollecter extends paper.SingletonComponent {
         /**
          *
          */
         lightCountDirty: LightCountDirty;
+        /**
+         *
+         */
+        readonly postprocessingCamera: Camera;
+        /**
+         *
+         */
+        readonly shadowCamera: Camera;
         /**
          *
          */
@@ -6108,16 +6117,24 @@ declare namespace egret3d {
          */
         readonly lightCount: uint;
     }
+    /**
+     * 全局摄像机和灯光组件实例。
+     */
+    const cameraAndLightCollecter: CameraAndLightCollecter;
 }
 declare namespace egret3d {
     /**
-     * 全局绘制信息收集组件。
+     * 全局绘制信息组件。
      */
     class DrawCallCollecter extends paper.SingletonComponent {
         /**
-         * 专用于天空盒渲染和绘制信息。
+         * 专用于天空盒渲染的绘制信息。
          */
         readonly skyBox: DrawCall;
+        /**
+         * 专用于后期渲染的绘制信息。
+         */
+        readonly postprocessing: DrawCall;
         /**
          * 此帧可能参与渲染的渲染组件列表。
          * - 未进行视锥剔除的。
@@ -6151,6 +6168,10 @@ declare namespace egret3d {
          */
         hasDrawCalls(renderer: paper.BaseRenderer): boolean;
     }
+    /**
+     * 全局绘制信息收集组件实例。
+     */
+    const drawCallCollecter: DrawCallCollecter;
 }
 declare namespace egret3d {
     /**
@@ -6572,7 +6593,7 @@ declare namespace egret3d {
     /**
      * 矩形。
      */
-    class Rectangle extends paper.BaseRelease<Box> implements IRectangle, paper.ICCS<Rectangle>, paper.ISerializable {
+    class Rectangle extends paper.BaseRelease<Rectangle> implements IRectangle, paper.ICCS<Rectangle>, paper.ISerializable {
         private static readonly _instances;
         /**
          * 创建一个矩形。
@@ -6772,6 +6793,7 @@ declare namespace egret3d {
         private _writeRenderTarget;
         private _renderTarget;
         private _onStageResize();
+        private _onViewportUpdate(value);
         initialize(): void;
         uninitialize(): void;
         onTransformChange(): void;
@@ -6993,8 +7015,6 @@ declare namespace egret3d {
         directShadowMatrix: Float32Array;
         spotShadowMatrix: Float32Array;
         pointShadowMatrix: Float32Array;
-        private readonly _postProcessingCamera;
-        private readonly _postProcessDrawCall;
         private readonly _drawCallCollecter;
         private readonly _cameraAndLightCollecter;
         /**
@@ -7012,7 +7032,6 @@ declare namespace egret3d {
         private _shadowFrustumCulling();
         private _frustumCulling();
         private _updateLights();
-        blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null): void;
     }
 }
 declare namespace egret3d {
@@ -11086,6 +11105,7 @@ declare namespace egret3d {
      * @beta 这是一个试验性质的 API，有可能会被删除或修改。
      */
     abstract class CameraPostprocessing extends paper.BaseComponent {
-        render(camera: Camera): void;
+        abstract render(camera: Camera): void;
+        blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null): void;
     }
 }

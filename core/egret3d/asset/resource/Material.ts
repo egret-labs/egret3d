@@ -820,10 +820,18 @@ namespace egret3d {
          * @param matrix 矩阵。
          */
         public setUVTransform(matrix: Readonly<Matrix3>): this {
-            const array = new Array(9); // TODO
-            matrix.toArray(array);
+            const uniform = this._technique.uniforms[ShaderUniformName.UVTransform];
 
-            return this.setMatrixv(ShaderUniformName.UVTransform, array as any);
+            if (uniform) {
+                const array = (uniform.value && Array.isArray(uniform.value)) ? uniform.value : new Array(9);
+                matrix.toArray(array);
+                this.setMatrixv(ShaderUniformName.UVTransform, array as any);
+            }
+            else if (DEBUG) {
+                console.error("Invalid glTF technique uniform.");
+            }
+
+            return this;
         }
         /**
          * 获取该材质的主贴图。

@@ -61,8 +61,6 @@ namespace egret3d {
         public spotShadowMatrix: Float32Array = new Float32Array(0);
         public pointShadowMatrix: Float32Array = new Float32Array(0);
 
-        private readonly _postProcessingCamera: Camera = null!;
-        private readonly _postProcessDrawCall: DrawCall = DrawCall.create();
         private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(CameraAndLightCollecter)!;
         /**
@@ -88,37 +86,7 @@ namespace egret3d {
          */
         public constructor(camera: Camera) {
             this.camera = camera;
-
-            {
-                const gameObjectName = "PostProcessing Camera";
-                const transform = paper.GameObject.globalGameObject.transform.find(gameObjectName);
-                let gameObject: paper.GameObject | null = null;
-
-                if (transform) {
-                    gameObject = transform.gameObject;
-                    this._postProcessingCamera = gameObject.getComponent(Camera)!;
-                }
-                else {
-                    gameObject = paper.GameObject.create(gameObjectName, paper.DefaultTags.Untagged, paper.Scene.globalScene);
-                    // gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
-                    gameObject.parent = paper.GameObject.globalGameObject; // TODO remove
-
-                    const postProcessingCamera = gameObject.addComponent(Camera);
-                    postProcessingCamera.enabled = false;
-                    postProcessingCamera.opvalue = 0.0;
-                    postProcessingCamera.size = 1.0;
-                    postProcessingCamera.near = 0.01;
-                    postProcessingCamera.far = 1.0;
-                    postProcessingCamera.projectionMatrix = Matrix4.IDENTITY;
-                    this._postProcessingCamera = postProcessingCamera;
-                }
-            }
-            //
-            this._postProcessDrawCall.matrix = Matrix4.IDENTITY;
-            this._postProcessDrawCall.subMeshIndex = 0;
-            this._postProcessDrawCall.mesh = DefaultMeshes.FULLSCREEN_QUAD;
         }
-
         /**
          * 所有非透明的, 按照从近到远排序
          */
@@ -398,25 +366,6 @@ namespace egret3d {
 
             this._frustumCulling();
             this._updateLights();
-        }
-
-        public blit(src: BaseTexture, material: Material | null = null, dest: RenderTexture | null = null) {
-            if (!material) {
-                material = DefaultMaterials.COPY;
-                material.setTexture(src);
-            }
-
-            const postProcessingCamera = this._postProcessingCamera;
-            const postProcessDrawCall = this._postProcessDrawCall;
-            postProcessDrawCall.material = material;
-
-            renderState.updateViewport(postProcessingCamera.viewport, dest);
-            renderState.clearBuffer(gltf.BufferMask.Depth | gltf.BufferMask.Color, Color.WHITE);
-            postProcessingCamera.projectionMatrix.identity(); // TODO
-            const saveCamera = Camera.current;
-            Camera.current = postProcessingCamera;
-            renderState.draw(postProcessDrawCall);
-            Camera.current = saveCamera;
         }
     }
 }

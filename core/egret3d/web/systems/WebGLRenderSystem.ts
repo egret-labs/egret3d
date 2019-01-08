@@ -583,9 +583,9 @@ namespace egret3d.webgl {
 
         private _render(camera: Camera, renderTarget: RenderTexture | null, material: Material | null) {
             const renderState = this._renderState;
-            const bufferMask = camera.bufferMask;
+            // const bufferMask = camera.bufferMask;
             renderState.updateViewport(camera.viewport, renderTarget);
-            renderState.clearBuffer(bufferMask, camera.backgroundColor);
+            renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
             // Skybox.
             const skyBox = camera.gameObject.getComponent(SkyBox);
             if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
@@ -662,7 +662,7 @@ namespace egret3d.webgl {
                     camera.swapPostprocessingRenderTarget();
                 }
             }
-            else {
+            else { // 后期渲染或 onBeforeRender 会执行此逻辑。
                 this._render(camera, camera.renderTarget, material);
             }
             //
@@ -859,7 +859,7 @@ namespace egret3d.webgl {
                 for (const camera of cameras) {
                     const scene = camera.gameObject.scene;
 
-                    if (camera.renderTarget || (isPlayerMode ? scene !== editorScene : scene === editorScene)) {
+                    if (camera.renderTarget || camera._previewRenderTarget || (isPlayerMode ? scene !== editorScene : scene === editorScene)) {
                         this.render(camera);
                     }
                 }

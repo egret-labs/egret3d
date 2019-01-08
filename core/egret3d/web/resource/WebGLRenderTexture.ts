@@ -43,7 +43,7 @@ namespace egret3d.webgl {
 
             webgl.bindTexture(type, this.webGLTexture);
             setTexturexParameters(type, sampler, extension.anisotropy || 1);
-            webgl.texImage2D(dataType, 0, format, width, height, 0, format, type, null);
+            webgl.texImage2D(type, 0, format, width, height, 0, format, dataType, null);
 
             if (extension.layers === 0) {
                 webgl.generateMipmap(type);
@@ -55,41 +55,40 @@ namespace egret3d.webgl {
             const extension = this._gltfTexture!.extensions.paper!;
             const width = extension.width!;
             const height = extension.height!;
-            const dataType = extension.type || gltf.TextureDataType.UNSIGNED_BYTE;
-            const depth = extension.depthBuffer || false;
-            const stencil = extension.stencilBuffer || false;
+            const depthBuffer = extension.depthBuffer || false;
+            const stencilBuffer = extension.stencilBuffer || false;
 
             if (!this.frameBuffer) {
                 this.frameBuffer = webgl.createFramebuffer()!;
             }
 
+            webgl.bindTexture(this.type, this.webGLTexture);
             webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, this.frameBuffer);
-            webgl.framebufferTexture2D(gltf.WebGL.FrameBuffer, gltf.WebGL.COLOR_ATTACHMENT0, dataType, this.webGLTexture, 0);
+            webgl.framebufferTexture2D(gltf.WebGL.FrameBuffer, gltf.WebGL.COLOR_ATTACHMENT0, this.type, this.webGLTexture, 0);
 
-            if (depth || stencil) {
+            if (depthBuffer || stencilBuffer) {
                 if (!this.renderBuffer) {
                     this.renderBuffer = webgl.createRenderbuffer()!;
                 }
 
                 webgl.bindRenderbuffer(gltf.WebGL.RenderBuffer, this.renderBuffer);
 
-                if (depth && stencil) {
+                if (depthBuffer && stencilBuffer) {
                     webgl.renderbufferStorage(gltf.WebGL.RenderBuffer, gltf.WebGL.DEPTH_STENCIL, width, height);
                     webgl.framebufferRenderbuffer(gltf.WebGL.FrameBuffer, gltf.WebGL.DEPTH_STENCIL_ATTACHMENT, gltf.WebGL.RenderBuffer, this.renderBuffer);
                 }
-                else if (depth) {
+                else if (depthBuffer) {
                     webgl.renderbufferStorage(gltf.WebGL.RenderBuffer, gltf.WebGL.DEPTH_COMPONENT16, width, height);
                     webgl.framebufferRenderbuffer(gltf.WebGL.FrameBuffer, gltf.WebGL.DEPTH_ATTACHMENT, gltf.WebGL.RenderBuffer, this.renderBuffer);
                 }
                 else {
                     webgl.renderbufferStorage(gltf.WebGL.RenderBuffer, gltf.TextureFormat.RGBA4, width, height);
                 }
-
-                webgl.bindRenderbuffer(gltf.WebGL.RenderBuffer, null);
             }
 
-            webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
-            webgl.bindTexture(this.type, null); // TODO 是否需要解绑。
+            // webgl.bindTexture(this.type, null);
+            // webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
+            // webgl.bindRenderbuffer(gltf.WebGL.RenderBuffer, null);
         }
 
         public dispose() {
@@ -142,9 +141,14 @@ namespace egret3d.webgl {
                 this._uploadBuffer();
                 this._bufferDirty = false;
             }
+            else {
+                const webgl = WebGLRenderState.webgl!;
+                webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, this.frameBuffer);
 
-            const webgl = WebGLRenderState.webgl!;
-            webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, this.frameBuffer);
+                if (this.renderBuffer) {
+                    webgl.bindRenderbuffer(gltf.WebGL.RenderBuffer, this.renderBuffer);
+                }
+            }
 
             return this;
         }
@@ -154,7 +158,7 @@ namespace egret3d.webgl {
                 const webgl = WebGLRenderState.webgl!;
                 webgl.bindTexture(this.type, this.webGLTexture);
                 webgl.generateMipmap(this.type);
-                webgl.bindTexture(this.type, null);
+                // webgl.bindTexture(this.type, null);
 
                 return true;
             }

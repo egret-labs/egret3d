@@ -27,7 +27,7 @@ namespace paper.editor {
         }
 
         public onAwake() {
-            GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
+            GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture); // TODO
             //
             if (Application.playerMode === PlayerMode.Editor) {
                 Application.systemManager.register(SceneSystem, SystemOrder.LateUpdate);

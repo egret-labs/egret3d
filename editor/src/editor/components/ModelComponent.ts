@@ -11,7 +11,7 @@ namespace paper.editor {
         public static readonly onGameObjectSelected: signals.Signal = new signals.Signal();
         public static readonly onGameObjectUnselected: signals.Signal = new signals.Signal();
         /**
-         * 所有选中的实体。
+         * 全部选中的实体。
          */
         public readonly selectedGameObjects: GameObject[] = [];
         /**
@@ -19,7 +19,7 @@ namespace paper.editor {
          */
         public selectedScene: Scene | null = null;
         /**
-         * 
+         * 指向的实体。
          */
         public hoveredGameObject: GameObject | null = null;
         /**

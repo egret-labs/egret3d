@@ -27,7 +27,7 @@ namespace examples.cameras {
                 subCamera.far = 1000.0;
                 subCamera.near = 150.0;
                 subCamera.bufferMask = gltf.BufferMask.Depth;
-                subCamera.viewport.set(0.0, 0.0, 0.5, 1.0);
+                subCamera.viewport.set(0.0, 0.0, 0.5, 1.0).update();
                 subCamera.transform.setLocalPosition(0.0, 0.0, 0.0);
             }
 
@@ -36,7 +36,7 @@ namespace examples.cameras {
                 mainCamera.far = 10000.0;
                 mainCamera.near = 1500.0;
                 mainCamera.backgroundColor.set(0.0, 0.0, 0.0);
-                mainCamera.viewport.set(0.5, 0.0, 0.5, 1.0);
+                mainCamera.viewport.set(0.5, 0.0, 0.5, 1.0).update();
                 mainCamera.transform.setLocalPosition(0.0, 0.0, -2500.0).lookAt(this._subCamera.transform);
             }
 
@@ -53,8 +53,7 @@ namespace examples.cameras {
                 //
                 const gameObject = egret3d.DefaultMeshes.createObject(mesh, "Stars");
                 gameObject.renderer!.material = egret3d.Material.create(egret3d.DefaultShaders.POINTS)
-                    .setColor(0x888888)
-                    .setFloat(egret3d.ShaderUniformName.Size, 1.0);
+                    .setColor(0x888888);
             }
 
             { // Create game objects.

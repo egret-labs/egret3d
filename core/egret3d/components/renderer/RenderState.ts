@@ -23,7 +23,7 @@ namespace egret3d {
         public maxBoneCount: uint = 24;
         public maxPrecision: string = "";
 
-        public logarithmicDepthBuffer: boolean = true;
+        public logarithmicDepthBuffer: boolean = false;
         public toneMapping: ToneMapping = ToneMapping.None;
         public toneMappingExposure: number = 1.0;
         public toneMappingWhitePoint: number = 1.0;
@@ -59,7 +59,7 @@ namespace egret3d {
         /**
          * 
          */
-        public draw: (drawCall: DrawCall) => void = null!;
+        public draw: (drawCall: DrawCall, material?: Material | null) => void = null!;
 
         protected _getCommonExtensions() {
             // fragmentExtensions.
@@ -84,15 +84,16 @@ namespace egret3d {
             this.commonDefines = defines;
             // fragmentDefines
             defines = "";
-            defines += "#define GAMMA_FACTOR " + (this.gammaFactor > 0.0 ? this.gammaFactor : 1.0) + "\n";
-            defines += ShaderChunk.encodings_pars_fragment;
-            defines += this._getTexelEncodingFunction("linearToOutputTexel", this.gammaOutput ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding) + " \n";
 
             if (this.toneMapping !== ToneMapping.None) {
                 defines += "#define TONE_MAPPING \n";
                 defines += ShaderChunk.tonemapping_pars_fragment + " \n";
                 defines += this._getToneMappingFunction(this.toneMapping) + " \n";
             }
+
+            defines += "#define GAMMA_FACTOR " + (this.gammaFactor > 0.0 ? this.gammaFactor : 1.0) + "\n";
+            defines += ShaderChunk.encodings_pars_fragment;
+            defines += this._getTexelEncodingFunction("linearToOutputTexel", this.gammaOutput ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding) + " \n";
 
             if (this.logarithmicDepthBuffer) {
                 defines += "#define USE_LOGDEPTHBUF \n";

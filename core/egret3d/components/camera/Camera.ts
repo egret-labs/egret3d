@@ -63,7 +63,7 @@ namespace egret3d {
 
                 const camera = gameObject.addComponent(Camera);
                 camera.cullingMask = paper.Layer.Everything;
-                camera.cullingMask &= ~paper.Layer.UI; // TODO 更明确的 UI 编辑方案。
+                camera.cullingMask &= ~(paper.Layer.UI | paper.Layer.EditorUI); // TODO 更明确的 UI 编辑方案。
                 camera.far = 30000.0;
             }
 
@@ -127,6 +127,10 @@ namespace egret3d {
         private _writeRenderTarget: RenderTexture | null = null;
         private _renderTarget: RenderTexture | null = null;
         /**
+         * @private
+         */
+        public _previewRenderTarget: RenderTexture | null = null;
+        /**
          * 该相机渲染前更新。
          * @internal
          */
@@ -139,10 +143,31 @@ namespace egret3d {
 
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
+
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
             }
 
-            if (!this._nativeCulling) {
-                this._dirtyMask |= DirtyMask.Culling;
+            const { w, h } = stage.viewport;
+            const readRenderTarget = this._readRenderTarget;
+            const writeRenderTarget = this._writeRenderTarget;
+
+            if (readRenderTarget) {
+                readRenderTarget.uploadTexture(w, h);
+            }
+
+            if (writeRenderTarget) {
+                writeRenderTarget.uploadTexture(w, h);
+            }
+        }
+
+        private _onViewportUpdate(value: Readonly<Rectangle>): void {
+            if (value === this._viewport) {
+                this.viewport = value;
+            }
+            else {
+                this.pixelViewport = value;
             }
         }
 
@@ -152,6 +177,9 @@ namespace egret3d {
             this.transform.registerObserver(this);
             stage.onScreenResize.add(this._onStageResize, this);
             stage.onResize.add(this._onStageResize, this);
+
+            this._viewport.onUpdateTarget = this._pixelViewport.onUpdateTarget = this;
+            this._viewport.onUpdate = this._pixelViewport.onUpdate = this._onViewportUpdate;
         }
 
         public uninitialize() {
@@ -171,7 +199,7 @@ namespace egret3d {
 
             this._readRenderTarget = null;
             this._writeRenderTarget = null;
-            this._renderTarget = null;
+            this._previewRenderTarget = null;
 
             stage.onScreenResize.remove(this._onStageResize, this);
             stage.onResize.remove(this._onStageResize, this);
@@ -652,10 +680,10 @@ namespace egret3d {
 
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
-            }
 
-            if (!this._nativeCulling) {
-                this._dirtyMask |= DirtyMask.Culling;
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
             }
         }
         /**
@@ -701,6 +729,7 @@ namespace egret3d {
             }
 
             this._renderTarget = value;
+            this._dirtyMask |= DirtyMask.PixelViewport;
 
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;

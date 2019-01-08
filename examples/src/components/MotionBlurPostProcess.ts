@@ -73,7 +73,7 @@ namespace components {
 
             material.setTexture("tDepth", this._depthRenderTarget);
 
-            context.blit(postProcessingRenderTarget, this._material);
+            this.blit(postProcessingRenderTarget, this._material);
 
             this._preMatrix.copy(camera.worldToClipMatrix);
         }

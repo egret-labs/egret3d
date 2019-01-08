@@ -235,6 +235,8 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
+}
+declare namespace paper.editor {
     /**
      *
      */
@@ -258,7 +260,7 @@ declare namespace paper.editor {
         static readonly onGameObjectSelected: signals.Signal;
         static readonly onGameObjectUnselected: signals.Signal;
         /**
-         * 所有选中的实体。
+         * 全部选中的实体。
          */
         readonly selectedGameObjects: GameObject[];
         /**
@@ -266,7 +268,7 @@ declare namespace paper.editor {
          */
         selectedScene: Scene | null;
         /**
-         *
+         * 指向的实体。
          */
         hoveredGameObject: GameObject | null;
         /**
@@ -312,8 +314,6 @@ declare namespace paper.editor {
         initialize(): void;
         update(): void;
     }
-}
-declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }
@@ -390,6 +390,49 @@ declare namespace paper.editor {
         static removeEventListener(type: string, fun: Function, thisObj: any): void;
         static dispatchEvent(event: BaseEvent): void;
         private static initEditEnvironment();
+    }
+}
+declare namespace paper.editor {
+    /**
+     * TODO
+     */
+    class SceneSystem extends BaseSystem {
+        readonly interests: {
+            componentClass: typeof egret3d.Transform;
+        }[][];
+        private readonly _cameraAndLightCollecter;
+        private readonly _modelComponent;
+        private readonly _keyEscape;
+        private readonly _keyDelete;
+        private readonly _keyE;
+        private readonly _keyW;
+        private readonly _keyR;
+        private readonly _keyX;
+        private readonly _keyF;
+        private _transformController;
+        private _drawer;
+        private _boxesDrawer;
+        private _boxColliderDrawer;
+        private _sphereColliderDrawer;
+        private _cylinderColliderDrawer;
+        private _skeletonDrawer;
+        private _cameraViewportDrawer;
+        private _worldAxisesDrawer;
+        private _gridDrawer;
+        private _cameraViewFrustum;
+        private _onGameObjectHovered;
+        private _onGameObjectSelectChanged;
+        private _onGameObjectSelected;
+        private _onGameObjectUnselected;
+        private _updateCameras();
+        private _updateLights();
+        lookAtSelected(): void;
+        onAwake(): void;
+        onEnable(): void;
+        onDisable(): void;
+        onUpdate(): void;
+        private static readonly _defalutPosition;
+        private _clearDefaultPointerDownPosition();
     }
 }
 declare namespace paper.editor {
@@ -801,43 +844,4 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
-    /**
-     * TODO
-     */
-    class SceneSystem extends BaseSystem {
-        readonly interests: {
-            componentClass: typeof egret3d.Transform;
-        }[][];
-        private readonly _cameraAndLightCollecter;
-        private readonly _modelComponent;
-        private readonly _keyEscape;
-        private readonly _keyDelete;
-        private readonly _keyE;
-        private readonly _keyW;
-        private readonly _keyR;
-        private readonly _keyX;
-        private readonly _keyF;
-        private _orbitControls;
-        private _transformController;
-        private _boxesDrawer;
-        private _boxColliderDrawer;
-        private _sphereColliderDrawer;
-        private _cylinderColliderDrawer;
-        private _skeletonDrawer;
-        private _cameraViewFrustum;
-        private _worldAxisesDrawer;
-        private _gridDrawer;
-        private _onGameObjectHovered;
-        private _onGameObjectSelectChanged;
-        private _onGameObjectSelected;
-        private _onGameObjectUnselected;
-        private _updateCameras();
-        private _updateLights();
-        lookAtSelected(): void;
-        onEnable(): void;
-        onDisable(): void;
-        onUpdate(): void;
-        private static readonly _defalutPosition;
-        private _clearDefaultPointerDownPosition();
-    }
 }

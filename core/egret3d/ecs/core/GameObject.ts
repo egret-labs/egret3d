@@ -41,7 +41,7 @@ namespace paper {
          */
         public static get globalGameObject() {
             if (!this._globalGameObject) {
-                this._globalGameObject = GameObject.create(DefaultNames.Global, DefaultTags.Global, Application.sceneManager.globalScene);
+                this._globalGameObject = GameObject.create(DefaultNames.Global, DefaultTags.Global, Scene.globalScene);
                 this._globalGameObject.dontDestroy = true;
             }
 
@@ -783,7 +783,7 @@ namespace paper {
          * - 设置此属性时，可能改变该实体的父级。
          */
         public get dontDestroy() {
-            return this._scene === Application.sceneManager.globalScene;
+            return this._scene === Scene.globalScene;
         }
         public set dontDestroy(value: boolean) {
             if (this.dontDestroy === value) {
@@ -795,7 +795,7 @@ namespace paper {
             }
 
             if (value) {
-                this._addToScene(Application.sceneManager.globalScene);
+                this._addToScene(Scene.globalScene);
             }
             else {
                 if (this === GameObject._globalGameObject) {
@@ -803,7 +803,7 @@ namespace paper {
                     return;
                 }
 
-                this._addToScene(Application.sceneManager.activeScene);
+                this._addToScene(Scene.activeScene);
             }
 
             for (const child of this.transform.children) {

@@ -20,16 +20,18 @@ namespace paper.editor {
         private readonly _keyX: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyX);
         private readonly _keyF: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyF);
 
-        private _orbitControls: OrbitControls | null = null;
         private _transformController: TransformController | null = null;
+        private _drawer: GameObject | null = null;
+
         private _boxesDrawer: BoxesDrawer | null = null;
         private _boxColliderDrawer: BoxColliderDrawer | null = null;
         private _sphereColliderDrawer: SphereColliderDrawer | null = null;
         private _cylinderColliderDrawer: CylinderColliderDrawer | null = null;
         private _skeletonDrawer: SkeletonDrawer | null = null;
-        private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
+        private _cameraViewportDrawer: CameraViewportDrawer | null = null;
         private _worldAxisesDrawer: WorldAxisesDrawer | null = null;
         private _gridDrawer: GridDrawer | null = null;
+        private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
 
         private _onGameObjectHovered = (_c: any, value: GameObject | null) => {
         }
@@ -153,15 +155,20 @@ namespace paper.editor {
         }
 
         public lookAtSelected() {
-            this._orbitControls!.distance = 10.0;
-            this._orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);
+            const orbitControls = egret3d.Camera.editor.gameObject.getComponent(OrbitControls)!;
+            orbitControls!.distance = 10.0;
+            orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);
 
             if (this._modelComponent.selectedGameObject) {
-                this._orbitControls!.lookAtPoint.copy(this._modelComponent.selectedGameObject.transform.position);
+                orbitControls!.lookAtPoint.copy(this._modelComponent.selectedGameObject.transform.position);
             }
             else {
-                this._orbitControls!.lookAtPoint.copy(egret3d.Vector3.ZERO);
+                orbitControls!.lookAtPoint.copy(egret3d.Vector3.ZERO);
             }
+        }
+
+        public onAwake() {
+            // GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
         }
 
         public onEnable() {
@@ -171,20 +178,25 @@ namespace paper.editor {
             ModelComponent.onGameObjectUnselected.add(this._onGameObjectUnselected, this);
 
             const editorCamera = egret3d.Camera.editor;
+            editorCamera.gameObject.addComponent(OrbitControls);
             editorCamera.enabled = true;
 
-            this._orbitControls = editorCamera.gameObject.addComponent(OrbitControls);
-            this._transformController = EditorMeshHelper.createGameObject("TransformController").addComponent(TransformController);
+            this._transformController = EditorMeshHelper.createGameObject("Transform Controller").addComponent(TransformController);
             this._transformController.gameObject.activeSelf = false;
-            this._boxesDrawer = EditorMeshHelper.createGameObject("BoxesDrawer").addComponent(BoxesDrawer);
-            this._boxColliderDrawer = EditorMeshHelper.createGameObject("BoxColliderDrawer").addComponent(BoxColliderDrawer);
-            this._sphereColliderDrawer = EditorMeshHelper.createGameObject("SphereColliderDrawer").addComponent(SphereColliderDrawer);
-            this._cylinderColliderDrawer = EditorMeshHelper.createGameObject("CylinderColliderDrawer").addComponent(CylinderColliderDrawer);
-            this._skeletonDrawer = EditorMeshHelper.createGameObject("SkeletonDrawer").addComponent(SkeletonDrawer);
-            this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera");
+
+            this._drawer = EditorMeshHelper.createGameObject("Drawer");
+
+            this._boxesDrawer = this._drawer.addComponent(BoxesDrawer);
+            this._boxColliderDrawer = this._drawer.addComponent(BoxColliderDrawer);
+            this._sphereColliderDrawer = this._drawer.addComponent(SphereColliderDrawer);
+            this._cylinderColliderDrawer = this._drawer.addComponent(CylinderColliderDrawer);
+            this._skeletonDrawer = this._drawer.addComponent(SkeletonDrawer);
+            this._cameraViewportDrawer = this._drawer.addComponent(CameraViewportDrawer);
+            this._gridDrawer = this._drawer.addComponent(GridDrawer);
+
+            this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera Wire Frame");
             this._cameraViewFrustum.activeSelf = false;
             // this._worldAxisesDrawer = EditorMeshHelper.createGameObject("WorldAxisesDrawer").addComponent(WorldAxisesDrawer);
-            this._gridDrawer = EditorMeshHelper.createGameObject("GridDrawer").addComponent(GridDrawer);
 
             // TODO
             // const mainCamera = egret3d.Camera.main;
@@ -197,8 +209,6 @@ namespace paper.editor {
             ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectChanged, this);
             ModelComponent.onGameObjectSelected.remove(this._onGameObjectSelected, this);
             ModelComponent.onGameObjectUnselected.remove(this._onGameObjectUnselected, this);
-
-            const editorCamera = egret3d.Camera.editor;
 
             //
             for (const camera of this._cameraAndLightCollecter.cameras) {
@@ -226,35 +236,28 @@ namespace paper.editor {
                 }
             }
 
+            const editorCamera = egret3d.Camera.editor;
             editorCamera.gameObject.removeComponent(OrbitControls);
             editorCamera.enabled = false;
-            this._orbitControls = null;
 
             this._transformController!.gameObject.destroy();
+            this._drawer!.destroy();
+
             this._transformController = null;
-
-            this._boxesDrawer!.gameObject.destroy();
+            this._drawer = null;
             this._boxesDrawer = null;
-
-            this._boxColliderDrawer!.gameObject.destroy();
             this._boxColliderDrawer = null;
-
-            this._sphereColliderDrawer!.gameObject.destroy();
             this._sphereColliderDrawer = null;
-
-            this._cylinderColliderDrawer!.gameObject.destroy();
             this._cylinderColliderDrawer = null;
-
-            this._skeletonDrawer!.gameObject.destroy();
             this._skeletonDrawer = null;
+            this._cameraViewportDrawer = null;
+            this._gridDrawer = null;
 
             this._cameraViewFrustum!.destroy();
             this._cameraViewFrustum = null;
 
             // this._worldAxisesDrawer!.gameObject.destroy();
             // this._worldAxisesDrawer = null;
-            this._gridDrawer!.gameObject.destroy();
-            this._gridDrawer = null;
         }
 
         public onUpdate() {
@@ -411,8 +414,10 @@ namespace paper.editor {
             this._sphereColliderDrawer!.update();
             this._cylinderColliderDrawer!.update();
             this._skeletonDrawer!.update();
-            // this._worldAxisesDrawer!.update();
+            this._cameraViewportDrawer!.update();
             this._gridDrawer!.update();
+
+            // this._worldAxisesDrawer!.update();
 
             this._updateCameras();
             this._updateLights();
