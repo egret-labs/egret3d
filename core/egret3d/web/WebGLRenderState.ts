@@ -107,12 +107,12 @@ namespace egret3d.webgl {
             console.info("Maximum anisotropy:", this.maxAnisotropy);
         }
 
-        public updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null) { // TODO
+        public updateViewport(camera: Camera, target: RenderTexture | null) { // TODO
             const webgl = WebGLRenderState.webgl!;
             let w: number;
             let h: number;
 
-            this.viewPort.copy(viewport);
+            const viewport = this.viewport.copy(camera.viewport);
             this.renderTarget = target;
 
             if (target) {
@@ -124,7 +124,7 @@ namespace egret3d.webgl {
                 const stageViewport = stage.viewport;
                 w = stageViewport.w;
                 h = stageViewport.h;
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+                webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
             }
 
             webgl.viewport(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h);
@@ -154,14 +154,14 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
 
             target.bindTexture(0);
-            webgl.copyTexImage2D(webgl.TEXTURE_2D, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0);//TODO
+            webgl.copyTexImage2D(target.type, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0);//TODO
         }
 
         public updateState(state: gltf.States | null) {
             const webgl = WebGLRenderState.webgl!;
             const stateEnables = this._stateEnables;
             const cacheStateEnable = this._cacheStateEnable;
-
+            //
             for (const e of stateEnables) {
                 const b = state ? state.enable && state.enable.indexOf(e) >= 0 : false;
                 if (cacheStateEnable[e] !== b) {

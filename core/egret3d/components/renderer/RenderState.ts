@@ -40,7 +40,7 @@ namespace egret3d {
         public fragmentDefines: string = "";
 
         public readonly clearColor: Color = Color.create();
-        public readonly viewPort: Rectangle = Rectangle.create();
+        public readonly viewport: Rectangle = Rectangle.create();
         public readonly defines: Defines = new Defines();
         public readonly defaultCustomShaderChunks: Readonly<{ [key: string]: string }> = {
             custom_vertex: "",
@@ -212,7 +212,7 @@ namespace egret3d {
         /**
          * 
          */
-        public updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null): void { }
+        public updateViewport(camera: Camera, target: RenderTexture | null): void { }
         /**
          * 
          */

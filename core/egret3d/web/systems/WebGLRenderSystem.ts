@@ -584,7 +584,7 @@ namespace egret3d.webgl {
         private _render(camera: Camera, renderTarget: RenderTexture | null, material: Material | null) {
             const renderState = this._renderState;
             // const bufferMask = camera.bufferMask;
-            renderState.updateViewport(camera.viewport, renderTarget);
+            renderState.updateViewport(camera, renderTarget);
             renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
             // Skybox.
             const skyBox = camera.gameObject.getComponent(SkyBox);
@@ -608,7 +608,7 @@ namespace egret3d.webgl {
                 this.draw(drawCall, material);
             }
             //
-            if (renderTarget && renderTarget.generateMipmap()) {
+            if (renderState.renderTarget && renderState.renderTarget.generateMipmap()) {
                 renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
             }
             // Render 2D.
@@ -631,6 +631,8 @@ namespace egret3d.webgl {
         }
 
         public render(camera: Camera, material: Material | null = null) {
+            const renderTarget = camera.renderTarget || camera._previewRenderTarget;
+
             if (Camera.current !== camera) {
                 Camera.current = camera;
                 camera._update();
@@ -648,7 +650,7 @@ namespace egret3d.webgl {
                 }
 
                 if (!isPostprocessing) {
-                    this._render(camera, camera.renderTarget, material);
+                    this._render(camera, renderTarget, material);
                 }
                 else {
                     this._render(camera, camera.postprocessingRenderTarget, material);
@@ -663,7 +665,7 @@ namespace egret3d.webgl {
                 }
             }
             else { // 后期渲染或 onBeforeRender 会执行此逻辑。
-                this._render(camera, camera.renderTarget, material);
+                this._render(camera, renderTarget, material);
             }
             //
             Camera.current = null;

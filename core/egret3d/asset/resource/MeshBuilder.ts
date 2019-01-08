@@ -582,7 +582,7 @@ namespace egret3d {
         }
 
         public static createTorusKnot(
-            radius: number = 0.5, tube: number = 1.0,
+            radius: number = 0.5, tube: number = 0.2,
             tubularSegments: uint = 64, radialSegments: uint = 8,
             p: number = 2.0, q: number = 3.0,
         ): Mesh {
