@@ -10,8 +10,6 @@ namespace paper.editor {
         public static CAMERA_ICON: egret3d.Texture;
         public static LIGHT_ICON: egret3d.Texture;
 
-        public static CAMERA_TARGET: egret3d.RenderTexture;
-
         public initialize() {
             {
                 const image = new Image();
@@ -33,10 +31,6 @@ namespace paper.editor {
                     }).setLiner(true).setRepeat(false).setMipmap(false);
                     EditorDefaultTexture.LIGHT_ICON = texture;
                 };
-            }
-
-            {
-                EditorDefaultTexture.CAMERA_TARGET = egret3d.RenderTexture.create({ width: 512, height: 512 });
             }
         }
     }

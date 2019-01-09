@@ -8,6 +8,7 @@ namespace egret3d {
         public static MATERIAL_COLOR: Shader;
 
         public static MESH_BASIC: Shader;
+        public static MESH_NORMAL: Shader;
         public static MESH_LAMBERT: Shader;
         public static MESH_PHONG: Shader;
         public static MESH_PHYSICAL: Shader;
@@ -18,7 +19,6 @@ namespace egret3d {
         public static DEPTH: Shader;
         public static DISTANCE_RGBA: Shader;
         public static EQUIRECT: Shader;
-        public static NORMAL: Shader;
         public static POINTS: Shader;
         public static SHADOW: Shader;
         public static SPRITE: Shader;
@@ -137,6 +137,9 @@ namespace egret3d {
             DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", ShaderLib.meshbasic as any, RenderQueue.Geometry, helpStates);
 
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
+            DefaultShaders.MESH_NORMAL = this._createShader("builtin/meshnormal.shader.json", ShaderLib.normal as any, RenderQueue.Geometry, helpStates);
+
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
             DefaultShaders.MESH_LAMBERT = this._createShader("builtin/meshlambert.shader.json", ShaderLib.meshlambert as any, RenderQueue.Geometry, helpStates);
 
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
@@ -159,9 +162,6 @@ namespace egret3d {
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.EQUIRECT = this._createShader("builtin/equirect.shader.json", ShaderLib.equirect as any, RenderQueue.Geometry, helpStates);
-
-            helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.NORMAL = this._createShader("builtin/normal.shader.json", ShaderLib.normal as any, RenderQueue.Geometry, helpStates);
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.POINTS = this._createShader("builtin/points.shader.json", ShaderLib.points as any, RenderQueue.Geometry, helpStates);

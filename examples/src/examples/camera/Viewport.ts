@@ -1,11 +1,11 @@
-namespace examples.cameras {
+namespace examples.camera {
 
     export class Viewport implements Example {
 
         async start() {
             // Load resource config.
             await RES.loadConfig("default.res.json", "resource/");
-
+            //
             paper.GameObject.globalGameObject.addComponent(Update);
         }
     }
@@ -29,6 +29,8 @@ namespace examples.cameras {
                 subCamera.bufferMask = gltf.BufferMask.Depth;
                 subCamera.viewport.set(0.0, 0.0, 0.5, 1.0).update();
                 subCamera.transform.setLocalPosition(0.0, 0.0, 0.0);
+                //
+                paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent)!.select(subCamera.gameObject);
             }
 
             { // Main camera.
@@ -61,9 +63,9 @@ namespace examples.cameras {
                 const meshB = egret3d.MeshBuilder.createSphere(50.0, 0.0, 0.0, 0.0, 16, 8).addWireframeSubMesh(1);
                 const meshC = egret3d.MeshBuilder.createSphere(5.0, 0.0, 0.0, 0.0, 16, 8).addWireframeSubMesh(1);
 
-                const gameObjectA = this._gameObjectA = egret3d.DefaultMeshes.createObject(meshA, "Target A");
-                const gameObjectB = this._gameObjectB = egret3d.DefaultMeshes.createObject(meshB, "Target B");
-                const gameObjectC = this._gameObjectC = egret3d.DefaultMeshes.createObject(meshC, "Target C");
+                const gameObjectA = this._gameObjectA = egret3d.DefaultMeshes.createObject(meshA, "Object A");
+                const gameObjectB = this._gameObjectB = egret3d.DefaultMeshes.createObject(meshB, "Object B");
+                const gameObjectC = this._gameObjectC = egret3d.DefaultMeshes.createObject(meshC, "Object C");
 
                 gameObjectA.renderer!.materials = [null, egret3d.DefaultMaterials.MESH_BASIC.clone().setColor(egret3d.Color.WHITE)];
                 gameObjectB.renderer!.materials = [null, egret3d.DefaultMaterials.MESH_BASIC.clone().setColor(egret3d.Color.GREEN)];
@@ -91,8 +93,7 @@ namespace examples.cameras {
             subCamera.far = gameObjectA.transform.localPosition.length;
             subCamera.fov = (35.0 + 30.0 * Math.sin(0.5 * r)) * egret3d.Const.DEG_RAD;
             subCamera.size = 300.0 + 100.0 * Math.sin(r);
-
-            this._subCamera.transform.lookAt(gameObjectA.transform);
+            subCamera.transform.lookAt(gameObjectA.transform);
         }
     }
 }

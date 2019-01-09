@@ -438,7 +438,7 @@ namespace egret3d {
             return this._fov;
         }
         public set fov(value: number) {
-            if (value !== value || value < 0.0) {
+            if (value !== value || value < 0.01) {
                 value = 0.01;
             }
             else if (value > Math.PI - 0.01) {
@@ -463,11 +463,15 @@ namespace egret3d {
          * 该相机的正交投影的尺寸。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01 })
         public get size(): number {
             return this._size;
         }
         public set size(value: number) {
+            if (value !== value || value < 0.01) {
+                value = 0.01;
+            }
+
             if (this._size === value) {
                 return;
             }
@@ -712,6 +716,7 @@ namespace egret3d {
          * 该相机的渲染目标。
          * - 未设置该值则直接绘制到舞台。
          */
+        @paper.serializedField
         public get renderTarget(): RenderTexture | null {
             return this._renderTarget;
         }

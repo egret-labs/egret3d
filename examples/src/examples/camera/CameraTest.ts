@@ -1,4 +1,4 @@
-namespace examples {
+namespace examples.camera {
 
     export class CameraTest {
 
@@ -60,7 +60,7 @@ namespace examples {
     }
 
     class StageToWorldTest extends paper.Behaviour {
-        // @paper.editor.property(paper.editor.EditType.VECTOR3) TODO
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
         public readonly stagePosition: egret3d.Vector3 = egret3d.Vector3.create();
 
         public onAwake() {

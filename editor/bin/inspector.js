@@ -3248,6 +3248,7 @@ var paper;
             __extends(CameraViewportDrawer, _super);
             function CameraViewportDrawer() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._cameraRenderTexture = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h });
                 _this._editorUI = editor.EditorMeshHelper.createGameObject("Editor UI Camera").addComponent(egret3d.Camera);
                 _this._drawer = editor.EditorMeshHelper.createGameObject("Plane", egret3d.DefaultMeshes.PLANE, egret3d.DefaultMaterials.MESH_BASIC.clone());
                 _this._camera = null;
@@ -3257,20 +3258,21 @@ var paper;
                 if (this._camera === camera) {
                     return;
                 }
-                if (this._camera && this._camera.renderTarget === editor.EditorDefaultTexture.CAMERA_TARGET) {
-                    this._camera.renderTarget = null;
+                if (this._camera && this._camera._previewRenderTarget === this._cameraRenderTexture) {
+                    this._camera._previewRenderTarget = null;
                 }
-                if (camera && !camera.renderTarget) {
-                    camera.renderTarget = editor.EditorDefaultTexture.CAMERA_TARGET;
+                if (camera && !camera._previewRenderTarget) {
+                    camera._previewRenderTarget = this._cameraRenderTexture;
                 }
                 this._camera = camera;
             };
             CameraViewportDrawer.prototype.initialize = function () {
+                var _this = this;
                 _super.prototype.initialize.call(this);
                 var drawer = this._drawer;
                 drawer.layer = 128 /* EditorUI */;
                 drawer.parent = this.gameObject;
-                drawer.renderer.material.setTexture(editor.EditorDefaultTexture.CAMERA_TARGET);
+                drawer.renderer.material.setTexture(this._cameraRenderTexture);
                 drawer.transform.setLocalPosition(0.0, 100.0, 100.0);
                 this._editorUI.order = 1;
                 this._editorUI.bufferMask = 256 /* Depth */;
@@ -3279,9 +3281,13 @@ var paper;
                 this._editorUI.size = 10.0;
                 this._editorUI.viewport.set(0.0, 0.0, 0.2, 0.2).update();
                 this._editorUI.gameObject.transform.setLocalPosition(0.0, 100.0, 0.0);
+                egret3d.stage.onResize.add(function () {
+                    _this._cameraRenderTexture.uploadTexture(egret3d.stage.viewport.w, egret3d.stage.viewport.h);
+                });
             };
             CameraViewportDrawer.prototype.uninitialize = function () {
                 _super.prototype.uninitialize.call(this);
+                this._cameraRenderTexture.dispose();
                 this._updateCamera(null);
             };
             CameraViewportDrawer.prototype.update = function () {
@@ -3398,9 +3404,6 @@ var paper;
                         }).setLiner(true).setRepeat(false).setMipmap(false);
                         EditorDefaultTexture.LIGHT_ICON = texture;
                     };
-                }
-                {
-                    EditorDefaultTexture.CAMERA_TARGET = egret3d.RenderTexture.create({ width: 512, height: 512 });
                 }
             };
             return EditorDefaultTexture;

@@ -107,18 +107,18 @@ namespace egret3d.webgl {
             console.info("Maximum anisotropy:", this.maxAnisotropy);
         }
 
-        public updateViewport(camera: Camera, target: RenderTexture | null) { // TODO
+        public updateViewport(camera: Camera, renderTarget: RenderTexture | null) { // TODO
             const webgl = WebGLRenderState.webgl!;
             let w: number;
             let h: number;
 
             const viewport = this.viewport.copy(camera.viewport);
-            this.renderTarget = target;
+            this.renderTarget = renderTarget;
 
-            if (target) {
-                w = target.width;
-                h = target.height;
-                target.activateTexture();
+            if (renderTarget) {
+                w = renderTarget.width;
+                h = renderTarget.height;
+                renderTarget.activateTexture();
             }
             else {
                 const stageViewport = stage.viewport;
@@ -154,7 +154,7 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
 
             target.bindTexture(0);
-            webgl.copyTexImage2D(target.type, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0);//TODO
+            webgl.copyTexImage2D(target.type, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0); //TODO
         }
 
         public updateState(state: gltf.States | null) {

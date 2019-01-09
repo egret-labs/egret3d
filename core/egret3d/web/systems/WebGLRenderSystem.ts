@@ -38,13 +38,17 @@ namespace egret3d.webgl {
         return string.replace(_patternInclude, _replace);
     }
 
-    function _replaceLightNums(string: string, cameraAndLightCollecter: CameraAndLightCollecter) {
+    function _replaceShaderNums(string: string) {
+        const { directionalLights, spotLights, rectangleAreaLights, pointLights, hemisphereLights } = cameraAndLightCollecter;
+
         return string
-            .replace(new RegExp(ShaderDefine.NUM_DIR_LIGHTS, "g"), cameraAndLightCollecter.directionalLights.length.toString())
-            .replace(new RegExp(ShaderDefine.NUM_SPOT_LIGHTS, "g"), cameraAndLightCollecter.spotLights.length.toString())
-            .replace(new RegExp(ShaderDefine.NUM_RECT_AREA_LIGHTS, "g"), cameraAndLightCollecter.rectangleAreaLights.length.toString())
-            .replace(new RegExp(ShaderDefine.NUM_POINT_LIGHTS, "g"), cameraAndLightCollecter.pointLights.length.toString())
-            .replace(new RegExp(ShaderDefine.NUM_HEMI_LIGHTS, "g"), cameraAndLightCollecter.hemisphereLights.length.toString())
+            .replace(new RegExp(ShaderDefine.NUM_DIR_LIGHTS, "g"), directionalLights.length.toString())
+            .replace(new RegExp(ShaderDefine.NUM_SPOT_LIGHTS, "g"), spotLights.length.toString())
+            .replace(new RegExp(ShaderDefine.NUM_RECT_AREA_LIGHTS, "g"), rectangleAreaLights.length.toString())
+            .replace(new RegExp(ShaderDefine.NUM_POINT_LIGHTS, "g"), pointLights.length.toString())
+            .replace(new RegExp(ShaderDefine.NUM_HEMI_LIGHTS, "g"), hemisphereLights.length.toString())
+            .replace(new RegExp(ShaderDefine.NUM_CLIPPING_PLANES, "g"), "0")
+            .replace(new RegExp(ShaderDefine.UNION_CLIPPING_PLANES, "g"), "0")
             ;
     }
 
@@ -130,7 +134,7 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             const shader = webgl.createShader(gltfShader.type)!;
             let shaderContent = _parseIncludes(gltfShader.uri!);
-            shaderContent = _replaceLightNums(shaderContent, this._cameraAndLightCollecter);
+            shaderContent = _replaceShaderNums(shaderContent);
             shaderContent = _unrollLoops(shaderContent);
             webgl.shaderSource(shader, defines + shaderContent);
             webgl.compileShader(shader);
@@ -611,7 +615,7 @@ namespace egret3d.webgl {
             if (renderState.renderTarget && renderState.renderTarget.generateMipmap()) {
                 renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
             }
-            // Render 2D.
+            // Egret 2D.
             const webgl = WebGLRenderState.webgl!;
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1); // TODO 解决字体模糊。
 

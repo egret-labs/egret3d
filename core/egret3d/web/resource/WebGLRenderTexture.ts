@@ -42,6 +42,9 @@ namespace egret3d.webgl {
             }
 
             webgl.bindTexture(type, this.webGLTexture);
+            // webgl.pixelStorei(gltf.WebGL.UNPACK_ALIGNMENT, extension.unpackAlignment || gltf.TextureAlignment.Four);
+            // webgl.pixelStorei(gltf.WebGL.UNPACK_FLIP_Y_WEBGL, extension.flipY || 0);
+            // webgl.pixelStorei(gltf.WebGL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, extension.premultiplyAlpha || 0);
             setTexturexParameters(type, sampler, extension.anisotropy || 1);
             webgl.texImage2D(type, 0, format, width, height, 0, format, dataType, null);
 

@@ -207,8 +207,27 @@ namespace egret3d {
             return value;
         }
         /**
-         * TODO applyMatrix
+         * 
          */
+        public applyMatrix(matrix: Readonly<Matrix4>): this {
+            const helpVector3 = egret3d.Vector3.create().release();
+            const vertices = this.getVertices()!;
+            const normals = this.getNormals();
+
+            for (let i = 0, l = vertices.length; i < l; i += 3) {
+                helpVector3.fromArray(vertices, i).applyMatrix(matrix).toArray(vertices, i);
+            }
+
+            if (normals) {
+                const normalMatrix = egret3d.Matrix3.create().getNormalMatrix(matrix).release();
+
+                for (let i = 0, l = normals.length; i < l; i += 3) {
+                    helpVector3.fromArray(normals, i).applyMatrix3(normalMatrix).normalize().toArray(normals, i);
+                }
+            }
+
+            return this;
+        }
         /**
          * 
          */

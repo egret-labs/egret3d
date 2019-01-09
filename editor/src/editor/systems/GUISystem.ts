@@ -177,8 +177,8 @@ namespace paper.editor {
         private _addToHierarchy(gameObject: GameObject) {
             if (
                 gameObject.uuid in this._hierarchyFolders ||
-                (gameObject.hideFlags & HideFlags.Hide)
-                // gameObject.scene === Scene.editorScene
+                (gameObject.hideFlags & HideFlags.Hide) ||
+                gameObject.scene === Scene.editorScene
             ) {
                 return true;
             }
