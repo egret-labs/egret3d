@@ -249,6 +249,8 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
+}
+declare namespace paper.editor {
     /**
      *
      */
@@ -400,7 +402,6 @@ declare namespace paper.editor {
         readonly interests: {
             componentClass: typeof egret3d.Transform;
         }[][];
-        private readonly _cameraAndLightCollecter;
         private readonly _modelComponent;
         private readonly _keyEscape;
         private readonly _keyDelete;
@@ -411,7 +412,9 @@ declare namespace paper.editor {
         private readonly _keyF;
         private _transformController;
         private _drawer;
+        private _touchDrawer;
         private _boxesDrawer;
+        private _iconDrawer;
         private _boxColliderDrawer;
         private _sphereColliderDrawer;
         private _cylinderColliderDrawer;

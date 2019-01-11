@@ -3,10 +3,9 @@ namespace paper.editor {
      * @internal
      */
     export class EditorMeshHelper {
-        public static createGameObject(name: string, mesh: egret3d.Mesh | null = null, material: egret3d.Material | null = null, tag: string = paper.DefaultTags.EditorOnly, scene: paper.Scene = paper.Scene.editorScene) {
-            const gameObject = paper.GameObject.create(name, tag, scene);
-            gameObject.tag = tag;
-            gameObject.layer = paper.Layer.Editor;
+        public static createGameObject(name: string, mesh: egret3d.Mesh | null = null, material: egret3d.Material | null = null) {
+            const gameObject = GameObject.create(name, DefaultTags.EditorOnly, Scene.editorScene);
+            gameObject.layer = Layer.Editor;
 
             if (mesh) {
                 gameObject.addComponent(egret3d.MeshFilter).mesh = mesh;
@@ -19,35 +18,32 @@ namespace paper.editor {
             return gameObject;
         }
 
-        public static createIcon(name: string, parent: paper.GameObject, icon: egret3d.Texture) {
-            const material = egret3d.Material.create(egret3d.DefaultShaders.TRANSPARENT);
-            material.renderQueue = paper.RenderQueue.Overlay - 1;
-            material.setTexture(egret3d.ShaderUniformName.Map, icon);
-            material.setColor(egret3d.ShaderUniformName.Diffuse, egret3d.Color.RED);
-            const iconObj = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material, parent.tag, parent.scene);
-            iconObj.transform.setParent(parent.transform);
-            iconObj.addComponent(GizmoPickComponent).pickTarget = parent;
-
-            return iconObj;
-        }
-
-        public static createLine(name: string, color: egret3d.Color, opacity: number, scene: Scene) {
-            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.LINEDASHED.clone(), paper.DefaultTags.EditorOnly, scene);
-            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, opacity);
+        public static createIcon(name: string, icon: egret3d.Texture) {
+            const material = egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC); // TODO sprite raycast
+            material.setTexture(icon).setColor(egret3d.Color.RED).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay - 1, 1.0)
+            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material);
+            gameObject.addComponent(GizmoPickComponent);
 
             return gameObject;
         }
 
-        public static createBox(name: string, color: egret3d.Color, opacity: number, scene: Scene) {
-            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone(), paper.DefaultTags.EditorOnly, scene);
-            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, opacity);
+        public static createLine(name: string, color: egret3d.Color, opacity: number) {
+            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.LINEDASHED.clone());
+            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend, opacity);
 
             return gameObject;
         }
 
-        public static createCircle(name: string, color: egret3d.Color, opacity: number, scene: Scene) {
-            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone(), paper.DefaultTags.EditorOnly, scene);
-            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, opacity);
+        public static createBox(name: string, color: egret3d.Color, opacity: number) {
+            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone());
+            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend, opacity);
+
+            return gameObject;
+        }
+
+        public static createCircle(name: string, color: egret3d.Color, opacity: number) {
+            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone());
+            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend, opacity);
 
             return gameObject;
         }
