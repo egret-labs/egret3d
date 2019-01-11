@@ -77,6 +77,16 @@ namespace egret3d {
         CineonToneMapping = 4,
     }
     /**
+     * 
+     */
+    export const enum TextureUVMapping {
+        UV = 0,
+        Cube = 1,
+        CubeUV = 2,
+        Equirectangular = 3,
+        Spherical = 4,
+    }
+    /**
      * 内置提供的全局 Attribute。
      * @private
      */
@@ -284,6 +294,14 @@ namespace egret3d {
          * @defaults false
          */
         stencilBuffer?: boolean;
+        /**
+         * @defaults Normal
+         */
+        mapping?: TextureUVMapping;
+        /**
+         * @defaults false
+         */
+        reflection?: boolean;
     }
     /**
      * 

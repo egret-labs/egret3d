@@ -4568,6 +4568,51 @@ var egret3d;
              */
             _this.draw = null;
             return _this;
+            // public setGamma(factor: number, input: boolean, output: boolean) {
+            //     factor = (factor > 1.0 ? factor : 1.0);
+            //     const nameA = "GammaA";
+            //     const nameB = "GammaB";
+            //     this.defines.removeDefine(ShaderDefine.GAMMA_FACTOR, this._gammaFactor);
+            //     this.defines.removeDefineByName(nameA);
+            //     this.defines.removeDefineByName(nameB);
+            //     let define = this.defines.addDefine(ShaderDefine.GAMMA_FACTOR, factor)!;
+            //     define.type = DefineLocation.Fragment;
+            //     define = this.defines.addDefine(ShaderChunk.encodings_pars_fragment)!;
+            //     define.name = nameA;
+            //     define.isCode = true;
+            //     define.type = DefineLocation.Fragment;
+            //     define = this.defines.addDefine(this._getTexelEncodingFunction("linearToOutputTexel", output ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding))!;
+            //     define.name = nameB;
+            //     define.isCode = true;
+            //     define.type = DefineLocation.Fragment;
+            //     this._gammaFactor = factor;
+            //     this._gammaInput = input;
+            //     this._gammaOutput = output;
+            //     return this;
+            // }
+            // public setToneMapping(toneMapping: ToneMapping, exposure: number = 1.0, whitePoint: number = 1.0) {
+            //     if (this._toneMapping !== toneMapping) {
+            //         const nameA = "ToneMappingA";
+            //         const nameB = "ToneMappingB";
+            //         this.defines.removeDefine(ShaderDefine.TONE_MAPPING);
+            //         this.defines.removeDefineByName(nameA);
+            //         this.defines.removeDefineByName(nameB);
+            //         let define = this.defines.addDefine(ShaderDefine.TONE_MAPPING)!;
+            //         define.type = DefineLocation.Fragment;
+            //         define = this.defines.addDefine(ShaderChunk.tonemapping_pars_fragment)!;
+            //         define.name = nameA;
+            //         define.isCode = true;
+            //         define.type = DefineLocation.Fragment;
+            //         define = this.defines.addDefine(this._getToneMappingFunction(toneMapping))!;
+            //         define.name = nameB;
+            //         define.isCode = true;
+            //         define.type = DefineLocation.Fragment;
+            //     }
+            //     this._toneMapping = toneMapping;
+            //     this.toneMappingExposure = exposure;
+            //     this.toneMappingWhitePoint = whitePoint;
+            //     return this;
+            // }
         }
         RenderState.prototype._getCommonExtensions = function () {
             // fragmentExtensions.
@@ -4640,7 +4685,7 @@ var egret3d;
                     toneMappingName = 'OptimizedCineon';
                     break;
                 default:
-                    throw new Error('unsupported toneMapping: ' + toneMapping);
+                    throw new Error('Unsupported toneMapping: ' + toneMapping);
             }
             return "vec3 toneMapping( vec3 color ) { return " + toneMappingName + "ToneMapping( color ); } \n";
         };
@@ -4804,6 +4849,24 @@ var egret3d;
         ToneMapping[ToneMapping["Uncharted2ToneMapping"] = 3] = "Uncharted2ToneMapping";
         ToneMapping[ToneMapping["CineonToneMapping"] = 4] = "CineonToneMapping";
     })(ToneMapping = egret3d.ToneMapping || (egret3d.ToneMapping = {}));
+    /**
+     *
+     */
+    var TextureUVMapping;
+    (function (TextureUVMapping) {
+        /**
+         * @internal
+         */
+        TextureUVMapping[TextureUVMapping["Reflection"] = 1] = "Reflection";
+        TextureUVMapping[TextureUVMapping["UV"] = 0] = "UV";
+        TextureUVMapping[TextureUVMapping["CubeReflection"] = 3] = "CubeReflection";
+        TextureUVMapping[TextureUVMapping["CubeRefraction"] = 2] = "CubeRefraction";
+        TextureUVMapping[TextureUVMapping["CubeUVReflection"] = 5] = "CubeUVReflection";
+        TextureUVMapping[TextureUVMapping["CubeUVRefraction"] = 4] = "CubeUVRefraction";
+        TextureUVMapping[TextureUVMapping["EquirectangularReflection"] = 9] = "EquirectangularReflection";
+        TextureUVMapping[TextureUVMapping["EquirectangularRefraction"] = 8] = "EquirectangularRefraction";
+        TextureUVMapping[TextureUVMapping["SphericalReflection"] = 16] = "SphericalReflection";
+    })(TextureUVMapping = egret3d.TextureUVMapping || (egret3d.TextureUVMapping = {}));
     /**
      * 内置提供的全局 Attribute。
      * @private
@@ -10167,6 +10230,10 @@ var egret3d;
      */
     var ShaderDefine;
     (function (ShaderDefine) {
+        //
+        ShaderDefine["TONE_MAPPING"] = "TONE_MAPPING";
+        ShaderDefine["GAMMA_FACTOR"] = "GAMMA_FACTOR";
+        //
         ShaderDefine["USE_COLOR"] = "USE_COLOR";
         ShaderDefine["USE_MAP"] = "USE_MAP";
         ShaderDefine["USE_ALPHAMAP"] = "USE_ALPHAMAP";
@@ -10186,8 +10253,18 @@ var egret3d;
         ShaderDefine["TOON"] = "TOON";
         ShaderDefine["STANDARD"] = "STANDARD";
         //
-        ShaderDefine["FLAT_SHADED"] = "FLAT_SHADED";
+        ShaderDefine["TEXTURE_LOD_EXT"] = "TEXTURE_LOD_EXT";
+        //
+        ShaderDefine["ENVMAP_TYPE_CUBE"] = "ENVMAP_TYPE_CUBE";
         ShaderDefine["ENVMAP_TYPE_CUBE_UV"] = "ENVMAP_TYPE_CUBE_UV";
+        ShaderDefine["ENVMAP_TYPE_EQUIREC"] = "ENVMAP_TYPE_EQUIREC";
+        ShaderDefine["ENVMAP_TYPE_SPHERE"] = "ENVMAP_TYPE_SPHERE";
+        ShaderDefine["ENVMAP_MODE_REFLECTION"] = "ENVMAP_MODE_REFLECTION";
+        ShaderDefine["ENVMAP_BLENDING_MULTIPLY"] = "ENVMAP_BLENDING_MULTIPLY";
+        ShaderDefine["ENVMAP_BLENDING_MIX"] = "ENVMAP_BLENDING_MIX";
+        ShaderDefine["ENVMAP_BLENDING_ADD"] = "ENVMAP_BLENDING_ADD";
+        //
+        ShaderDefine["FLAT_SHADED"] = "FLAT_SHADED";
         //
         ShaderDefine["MAX_BONES"] = "MAX_BONES";
         //
@@ -15256,13 +15333,13 @@ var egret3d;
                 offset = (index++) * 12 /* RectangleArea */;
                 //
                 helpVector3.applyMatrix(worldToCameraMatrix, light.gameObject.transform.position);
-                spotLightBuffer[offset++] = helpVector3.x;
-                spotLightBuffer[offset++] = helpVector3.y;
-                spotLightBuffer[offset++] = helpVector3.z;
+                rectangleAreaLightBuffer[offset++] = helpVector3.x;
+                rectangleAreaLightBuffer[offset++] = helpVector3.y;
+                rectangleAreaLightBuffer[offset++] = helpVector3.z;
                 //
-                spotLightBuffer[offset++] = color.r * intensity;
-                spotLightBuffer[offset++] = color.g * intensity;
-                spotLightBuffer[offset++] = color.b * intensity;
+                rectangleAreaLightBuffer[offset++] = color.r * intensity;
+                rectangleAreaLightBuffer[offset++] = color.g * intensity;
+                rectangleAreaLightBuffer[offset++] = color.b * intensity;
                 // TODO
             }
             index = 0;
@@ -24236,10 +24313,6 @@ var egret3d;
      */
     var Define = (function () {
         function Define(index, mask, context) {
-            /**
-             * @internal
-             */
-            this.type = 3 /* All */;
             this.index = index;
             this.mask = mask;
             this.context = context;
@@ -24352,7 +24425,7 @@ var egret3d;
                 var definesString = "";
                 for (var _i = 0, _a = this._defines; _i < _a.length; _i++) {
                     var define = _a[_i];
-                    if (define.type & 1 /* Vertex */) {
+                    if (define.type === undefined || (define.type & 1 /* Vertex */)) {
                         if (define.isCode) {
                             definesString += define.context + " \n";
                         }
@@ -24374,7 +24447,7 @@ var egret3d;
                 var definesString = "";
                 for (var _i = 0, _a = this._defines; _i < _a.length; _i++) {
                     var define = _a[_i];
-                    if (define.type & 2 /* Fragment */) {
+                    if (define.type === undefined || (define.type & 2 /* Fragment */)) {
                         if (define.isCode) {
                             definesString += define.context + " \n";
                         }
@@ -24538,14 +24611,14 @@ var egret3d;
             if (materialDefines) {
                 for (var _i = 0, materialDefines_1 = materialDefines; _i < materialDefines_1.length; _i++) {
                     var define = materialDefines_1[_i];
-                    this.addDefine(define);
+                    this.defines.addDefine(define);
                 }
             }
             //TODO 兼容以前的
             if (shaderDefines) {
                 for (var _b = 0, shaderDefines_1 = shaderDefines; _b < shaderDefines_1.length; _b++) {
                     var define = shaderDefines_1[_b];
-                    this.addDefine(define);
+                    this.defines.addDefine(define);
                 }
             }
             return technique;
@@ -24603,16 +24676,61 @@ var egret3d;
             }
             // isRatain ? this._shader.retain() : this._shader.release(); TODO
         };
-        Material.prototype._setTexelDefine = function (key, add, encoding) {
-            if (encoding === void 0) { encoding = 1 /* LinearEncoding */; }
+        Material.prototype._setTexelDefine = function (key, add, texture) {
             var define = egret3d.ShaderTextureDefine[key]; //TODO
             if (define) {
                 add ? this.defines.addDefine(define) : this.defines.removeDefine(define);
             }
             //
+            if (texture instanceof egret3d.RenderTexture) {
+                if (add) {
+                    this.defines.addDefine("FLIP_V" /* FLIP_V */);
+                }
+                else {
+                    this.defines.removeDefine("FLIP_V" /* FLIP_V */);
+                }
+            }
+            //
+            if (key === "envMap" /* EnvMap */) {
+                var mapping = texture.gltfTexture.extensions.paper.mapping;
+                var typeDefine = "ENVMAP_TYPE_CUBE" /* ENVMAP_TYPE_CUBE */;
+                var blendDefine = "ENVMAP_BLENDING_MULTIPLY" /* ENVMAP_BLENDING_MULTIPLY */; // TODO
+                switch (mapping) {
+                    case 3 /* CubeReflection */:
+                    case 2 /* CubeRefraction */:
+                        typeDefine = "ENVMAP_TYPE_CUBE" /* ENVMAP_TYPE_CUBE */;
+                        break;
+                    case 5 /* CubeUVReflection */:
+                    case 4 /* CubeUVRefraction */:
+                        typeDefine = "ENVMAP_TYPE_CUBE_UV" /* ENVMAP_TYPE_CUBE_UV */;
+                        break;
+                    case 9 /* EquirectangularReflection */:
+                    case 8 /* EquirectangularRefraction */:
+                        typeDefine = "ENVMAP_TYPE_EQUIREC" /* ENVMAP_TYPE_EQUIREC */;
+                        break;
+                    case 16 /* SphericalReflection */:
+                        typeDefine = "ENVMAP_TYPE_SPHERE" /* ENVMAP_TYPE_SPHERE */;
+                        break;
+                }
+                if (add) {
+                    this.defines.addDefine(typeDefine);
+                    this.defines.addDefine(blendDefine);
+                    if (mapping & 1 /* Reflection */) {
+                        this.defines.addDefine("ENVMAP_MODE_REFLECTION" /* ENVMAP_MODE_REFLECTION */);
+                    }
+                }
+                else {
+                    this.defines.removeDefine(typeDefine);
+                    this.defines.removeDefine(blendDefine);
+                    if (mapping & 1 /* Reflection */) {
+                        this.defines.removeDefine("ENVMAP_MODE_REFLECTION" /* ENVMAP_MODE_REFLECTION */);
+                    }
+                }
+            }
+            //
             var decodingFunName = egret3d.TextureDecodingFunction[key]; //TODO
             if (decodingFunName) {
-                var decodingStr = egret3d.renderState._getTexelDecodingFunction(decodingFunName, encoding);
+                var decodingStr = egret3d.renderState._getTexelDecodingFunction(decodingFunName, texture.gltfTexture.extensions.paper.encoding);
                 if (add) {
                     var define_1 = this.defines.addDefine(decodingStr);
                     if (define_1) {
@@ -24633,7 +24751,7 @@ var egret3d;
                 if (uniform.value &&
                     (uniform.type === 35678 /* SAMPLER_2D */ || uniform.type === 35680 /* SAMPLER_CUBE */)) {
                     var texture = uniform.value;
-                    this._setTexelDefine(k, add, texture.gltfTexture.extensions.paper.encoding);
+                    this._setTexelDefine(k, add, texture);
                 }
             }
         };
@@ -25118,17 +25236,14 @@ var egret3d;
                         while (i--) {
                             existingTexture.release();
                         }
-                        this._setTexelDefine(p1, false, existingTexture.gltfTexture.extensions.paper.encoding);
+                        this._setTexelDefine(p1, false, existingTexture);
                     }
                     if (p2) {
                         var i = this.referenceCount;
                         while (i--) {
                             p2.retain();
                         }
-                        if (p2 instanceof egret3d.RenderTexture) {
-                            this.addDefine("FLIP_V" /* FLIP_V */);
-                        }
-                        this._setTexelDefine(p1, true, p2.gltfTexture.extensions.paper.encoding);
+                        this._setTexelDefine(p1, true, p2);
                     }
                     uniform.value = p2;
                 }
@@ -26657,7 +26772,7 @@ var egret3d;
         ShaderChunk.gradientmap_pars_fragment = "#ifdef TOON\n\tuniform sampler2D gradientMap;\n\tvec3 getGradientIrradiance( vec3 normal, vec3 lightDirection ) {\n\t\tfloat dotNL = dot( normal, lightDirection );\n\t\tvec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );\n\t\t#ifdef USE_GRADIENTMAP\n\t\t\treturn texture2D( gradientMap, coord ).rgb;\n\t\t#else\n\t\t\treturn ( coord.x < 0.7 ) ? vec3( 0.7 ) : vec3( 1.0 );\n\t\t#endif\n\t}\n#endif\n";
         ShaderChunk.lightmap_fragment = "#ifdef USE_LIGHTMAP\n\treflectedLight.indirectDiffuse += PI * texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\n#endif\n";
         ShaderChunk.lightmap_pars_fragment = "#ifdef USE_LIGHTMAP\n\tuniform sampler2D lightMap;\n\tuniform float lightMapIntensity;\n#endif";
-        ShaderChunk.lights_fragment_begin = "\nGeometricContext geometry;\ngeometry.position = - vViewPosition;\ngeometry.normal = normal;\ngeometry.viewDir = normalize( vViewPosition );\nIncidentLight directLight;\n#if (NUM_POINT_LIGHTS > 0 ) && defined( RE_Direct )\n\tPointLight pointLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\t\tpointLight.position = vec3(pointLights[ i  * 15 + 0], pointLights[ i  * 15 + 1], pointLights[ i  * 15 + 2]);\n\t\tpointLight.color = vec3(pointLights[ i  * 15 + 3], pointLights[ i  * 15 + 4], pointLights[ i  * 15 + 5]);\n\t\tpointLight.distance = pointLights[ i  * 15 + 6];\n\t\tpointLight.decay = pointLights[ i  * 15 + 7];\n\t\tgetPointDirectLightIrradiance( pointLight, geometry, directLight );\n\t\t#ifdef USE_SHADOWMAP\n\t\tpointLight.shadow = int(pointLights[ i  * 15 + 8]);\n\t\tpointLight.shadowBias = pointLights[ i  * 15 + 9];\n\t\tpointLight.shadowRadius = pointLights[ i  * 15 + 10];\n\t\tpointLight.shadowMapSize = vec2(pointLights[ i  * 15 + 11], pointLights[ i  * 15 + 12]);\n\t\tpointLight.shadowCameraNear = pointLights[ i  * 15 + 13];\n\t\tpointLight.shadowCameraFar = pointLights[ i  * 15 + 14];\n\t\tdirectLight.color *= all( bvec2( pointLight.shadow, directLight.visible ) ) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n\t\t#endif\n\t\tRE_Direct( directLight, geometry, material, reflectedLight );\n\t}\n#endif\n#if (NUM_SPOT_LIGHTS > 0 ) && defined( RE_Direct )\n\tSpotLight spotLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\t\tspotLight.position = vec3(spotLights[ i  * 18 + 0], spotLights[ i  * 18 + 1], spotLights[ i  * 18 + 2]);\n\t\tspotLight.direction = vec3(spotLights[ i  * 18 + 3], spotLights[ i  * 18 + 4], spotLights[ i  * 18 + 5]);\n\t\tspotLight.color = vec3(spotLights[ i  * 18 + 6], spotLights[ i  * 18 + 7], spotLights[ i  * 18 + 8]);\n\t\tspotLight.distance = spotLights[ i  * 18 + 9]\n\t\tspotLight.decay = spotLights[ i  * 18 + 10]\n\t\tspotLight.coneCos = spotLights[ i  * 18 + 11]\n\t\tspotLight.penumbraCos = spotLights[ i  * 18 + 12]\n\t\tgetSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\t\t#ifdef USE_SHADOWMAP\n\t\t\n\t\tspotLight.shadow = int(spotLights[ i  * 18 + 13]);\n\t\tspotLight.shadowBias = spotLights[ i  * 18 + 14];\n\t\tspotLight.shadowRadius = spotLights[ i  * 18 + 15];\n\t\tspotLight.shadowMapSize = vec2(spotLights[ i  * 18 + 16], spotLights[ i  * 18 + 17]);\n\t\tdirectLight.color *= all( bvec2( spotLight.shadow, directLight.visible ) ) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;\n\t\t#endif\n\t\tRE_Direct( directLight, geometry, material, reflectedLight );\n\t}\n#endif\n#if (NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )\n\tDirectionalLight directionalLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\t\tdirectionalLight.direction = vec3(directionalLights[ i  * 11 + 0], directionalLights[ i  * 11 + 1], directionalLights[ i  * 11 + 2]);\n\t\tdirectionalLight.color = vec3(directionalLights[ i  * 11 + 3], directionalLights[ i  * 11 + 4], directionalLights[ i  * 11 + 5]);\n\t\tgetDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\t\t#ifdef USE_SHADOWMAP\n\t\tdirectionalLight.shadow = int(directionalLights[ i  * 11 + 6]);\n\t\tdirectionalLight.shadowBias = directionalLights[ i  * 11 + 7];\n\t\tdirectionalLight.shadowRadius = directionalLights[ i  * 11 + 8];\n\t\tdirectionalLight.shadowMapSize = vec2(directionalLights[ i  * 11 + 9], directionalLights[ i  * 11 + 10]);\n\t\tdirectLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n\t\t#endif\n\t\tRE_Direct( directLight, geometry, material, reflectedLight );\n\t}\n#endif\n#if (NUM_RECT_AREA_LIGHTS > 0 ) && defined( RE_Direct_RectArea )\n\tRectAreaLight rectAreaLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_RECT_AREA_LIGHTS; i ++ ) {\n\t\trectAreaLight.position = vec3(rectAreaLights[ i  * 12 + 0], rectAreaLights[ i  * 12 + 1], rectAreaLights[ i  * 12 + 2]);\n\t\trectAreaLight.color = vec3(rectAreaLights[ i  * 12 + 3], rectAreaLights[ i  * 12 + 4], rectAreaLights[ i  * 12 + 5]);\n\t\trectAreaLight.halfWidth = vec3(rectAreaLights[ i  * 12 + 6], rectAreaLights[ i  * 12 + 7], rectAreaLights[ i  * 12 + 8]);\n\t\trectAreaLight.halfHeight = vec3(rectAreaLights[ i  * 12 + 9], rectAreaLights[ i  * 12 + 10], rectAreaLights[ i  * 12 + 11]);\n\t\tRE_Direct_RectArea( rectAreaLight, geometry, material, reflectedLight );\n\t}\n#endif\n#if defined( RE_IndirectDiffuse )\n\tvec3 irradiance = getAmbientLightIrradiance( ambientLightColor );\n\t#if (NUM_HEMI_LIGHTS > 0 )\n\t\t\n\t\tHemisphereLight hemisphereLight;\n\t\t#pragma unroll_loop\n\t\tfor ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\t\t\themisphereLight.direction = vec3(hemisphereLights[ i  * 9 + 0], hemisphereLights[ i  * 9 + 1], hemisphereLights[ i  * 9 + 2]);\n\t\t\themisphereLight.skyColor = vec3(hemisphereLights[ i  * 9 + 3], hemisphereLights[ i  * 9 + 4], hemisphereLights[ i  * 9 + 5]);\n\t\t\themisphereLight.groundColor = vec3(hemisphereLights[ i  * 9 + 6], hemisphereLights[ i  * 9 + 7], hemisphereLights[ i  * 9 + 8]);\n\t\t\tirradiance += getHemisphereLightIrradiance( hemisphereLight, geometry );\n\t\t}\n\t#endif\n#endif\n#if defined( RE_IndirectSpecular )\n\tvec3 radiance = vec3( 0.0 );\n\tvec3 clearCoatRadiance = vec3( 0.0 );\n#endif\n";
+        ShaderChunk.lights_fragment_begin = "\nGeometricContext geometry;\ngeometry.position = - vViewPosition;\ngeometry.normal = normal;\ngeometry.viewDir = normalize( vViewPosition );\nIncidentLight directLight;\n#if (NUM_POINT_LIGHTS > 0 ) && defined( RE_Direct )\n\tPointLight pointLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\t\tpointLight.position = vec3(pointLights[ i  * 15 + 0], pointLights[ i  * 15 + 1], pointLights[ i  * 15 + 2]);\n\t\tpointLight.color = vec3(pointLights[ i  * 15 + 3], pointLights[ i  * 15 + 4], pointLights[ i  * 15 + 5]);\n\t\tpointLight.distance = pointLights[ i  * 15 + 6];\n\t\tpointLight.decay = pointLights[ i  * 15 + 7];\n\t\tgetPointDirectLightIrradiance( pointLight, geometry, directLight );\n\t\t#ifdef USE_SHADOWMAP\n\t\tpointLight.shadow = int(pointLights[ i  * 15 + 8]);\n\t\tpointLight.shadowBias = pointLights[ i  * 15 + 9];\n\t\tpointLight.shadowRadius = pointLights[ i  * 15 + 10];\n\t\tpointLight.shadowMapSize = vec2(pointLights[ i  * 15 + 11], pointLights[ i  * 15 + 12]);\n\t\tpointLight.shadowCameraNear = pointLights[ i  * 15 + 13];\n\t\tpointLight.shadowCameraFar = pointLights[ i  * 15 + 14];\n\t\tdirectLight.color *= all( bvec2( pointLight.shadow, directLight.visible ) ) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n\t\t#endif\n\t\tRE_Direct( directLight, geometry, material, reflectedLight );\n\t}\n#endif\n#if (NUM_SPOT_LIGHTS > 0 ) && defined( RE_Direct )\n\tSpotLight spotLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\t\tspotLight.position = vec3(spotLights[ i  * 18 + 0], spotLights[ i  * 18 + 1], spotLights[ i  * 18 + 2]);\n\t\tspotLight.direction = vec3(spotLights[ i  * 18 + 3], spotLights[ i  * 18 + 4], spotLights[ i  * 18 + 5]);\n\t\tspotLight.color = vec3(spotLights[ i  * 18 + 6], spotLights[ i  * 18 + 7], spotLights[ i  * 18 + 8]);\n\t\tspotLight.distance = spotLights[ i  * 18 + 9];\n\t\tspotLight.decay = spotLights[ i  * 18 + 10];\n\t\tspotLight.coneCos = spotLights[ i  * 18 + 11];\n\t\tspotLight.penumbraCos = spotLights[ i  * 18 + 12];\n\t\tgetSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\t\t#ifdef USE_SHADOWMAP\n\t\t\n\t\tspotLight.shadow = int(spotLights[ i  * 18 + 13]);\n\t\tspotLight.shadowBias = spotLights[ i  * 18 + 14];\n\t\tspotLight.shadowRadius = spotLights[ i  * 18 + 15];\n\t\tspotLight.shadowMapSize = vec2(spotLights[ i  * 18 + 16], spotLights[ i  * 18 + 17]);\n\t\tdirectLight.color *= all( bvec2( spotLight.shadow, directLight.visible ) ) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;\n\t\t#endif\n\t\tRE_Direct( directLight, geometry, material, reflectedLight );\n\t}\n#endif\n#if (NUM_DIR_LIGHTS > 0 ) && defined( RE_Direct )\n\tDirectionalLight directionalLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\t\tdirectionalLight.direction = vec3(directionalLights[ i  * 11 + 0], directionalLights[ i  * 11 + 1], directionalLights[ i  * 11 + 2]);\n\t\tdirectionalLight.color = vec3(directionalLights[ i  * 11 + 3], directionalLights[ i  * 11 + 4], directionalLights[ i  * 11 + 5]);\n\t\tgetDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\t\t#ifdef USE_SHADOWMAP\n\t\tdirectionalLight.shadow = int(directionalLights[ i  * 11 + 6]);\n\t\tdirectionalLight.shadowBias = directionalLights[ i  * 11 + 7];\n\t\tdirectionalLight.shadowRadius = directionalLights[ i  * 11 + 8];\n\t\tdirectionalLight.shadowMapSize = vec2(directionalLights[ i  * 11 + 9], directionalLights[ i  * 11 + 10]);\n\t\tdirectLight.color *= all( bvec2( directionalLight.shadow, directLight.visible ) ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n\t\t#endif\n\t\tRE_Direct( directLight, geometry, material, reflectedLight );\n\t}\n#endif\n#if (NUM_RECT_AREA_LIGHTS > 0 ) && defined( RE_Direct_RectArea )\n\tRectAreaLight rectAreaLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_RECT_AREA_LIGHTS; i ++ ) {\n\t\trectAreaLight.position = vec3(rectAreaLights[ i  * 12 + 0], rectAreaLights[ i  * 12 + 1], rectAreaLights[ i  * 12 + 2]);\n\t\trectAreaLight.color = vec3(rectAreaLights[ i  * 12 + 3], rectAreaLights[ i  * 12 + 4], rectAreaLights[ i  * 12 + 5]);\n\t\trectAreaLight.halfWidth = vec3(rectAreaLights[ i  * 12 + 6], rectAreaLights[ i  * 12 + 7], rectAreaLights[ i  * 12 + 8]);\n\t\trectAreaLight.halfHeight = vec3(rectAreaLights[ i  * 12 + 9], rectAreaLights[ i  * 12 + 10], rectAreaLights[ i  * 12 + 11]);\n\t\tRE_Direct_RectArea( rectAreaLight, geometry, material, reflectedLight );\n\t}\n#endif\n#if defined( RE_IndirectDiffuse )\n\tvec3 irradiance = getAmbientLightIrradiance( ambientLightColor );\n\t#if (NUM_HEMI_LIGHTS > 0 )\n\t\t\n\t\tHemisphereLight hemisphereLight;\n\t\t#pragma unroll_loop\n\t\tfor ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\t\t\themisphereLight.direction = vec3(hemisphereLights[ i  * 9 + 0], hemisphereLights[ i  * 9 + 1], hemisphereLights[ i  * 9 + 2]);\n\t\t\themisphereLight.skyColor = vec3(hemisphereLights[ i  * 9 + 3], hemisphereLights[ i  * 9 + 4], hemisphereLights[ i  * 9 + 5]);\n\t\t\themisphereLight.groundColor = vec3(hemisphereLights[ i  * 9 + 6], hemisphereLights[ i  * 9 + 7], hemisphereLights[ i  * 9 + 8]);\n\t\t\tirradiance += getHemisphereLightIrradiance( hemisphereLight, geometry );\n\t\t}\n\t#endif\n#endif\n#if defined( RE_IndirectSpecular )\n\tvec3 radiance = vec3( 0.0 );\n\tvec3 clearCoatRadiance = vec3( 0.0 );\n#endif\n";
         ShaderChunk.lights_fragment_end = "#if defined( RE_IndirectDiffuse )\n\tRE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );\n#endif\n#if defined( RE_IndirectSpecular )\n\tRE_IndirectSpecular( radiance, clearCoatRadiance, geometry, material, reflectedLight );\n#endif\n";
         ShaderChunk.lights_fragment_maps = "#if defined( RE_IndirectDiffuse )\n\t#ifdef USE_LIGHTMAP\n\t\tvec3 lightMapIrradiance = texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\n\t\t#ifndef PHYSICALLY_CORRECT_LIGHTS\n\t\t\tlightMapIrradiance *= PI;\n\t\t#endif\n\t\tirradiance += lightMapIrradiance;\n\t#endif\n\t#if defined( USE_ENVMAP ) && defined( PHYSICAL ) && defined( ENVMAP_TYPE_CUBE_UV )\n\t\tirradiance += getLightProbeIndirectIrradiance(\n geometry, maxMipLevel );\n\t#endif\n#endif\n#if defined( USE_ENVMAP ) && defined( RE_IndirectSpecular )\n\tradiance += getLightProbeIndirectRadiance(\n geometry, Material_BlinnShininessExponent( material ), maxMipLevel );\n\t#ifndef STANDARD\n\t\tclearCoatRadiance += getLightProbeIndirectRadiance(\n geometry, Material_ClearCoat_BlinnShininessExponent( material ), maxMipLevel );\n\t#endif\n#endif\n";
         ShaderChunk.lights_lambert_vertex = "vec3 diffuse = vec3( 1.0 );\nGeometricContext geometry;\ngeometry.position = mvPosition.xyz;\ngeometry.normal = normalize( transformedNormal );\ngeometry.viewDir = normalize( -mvPosition.xyz );\nGeometricContext backGeometry;\nbackGeometry.position = geometry.position;\nbackGeometry.normal = -geometry.normal;\nbackGeometry.viewDir = geometry.viewDir;\nvLightFront = vec3( 0.0 );\n#ifdef DOUBLE_SIDED\n\tvLightBack = vec3( 0.0 );\n#endif\nIncidentLight directLight;\nfloat dotNL;\nvec3 directLightColor_Diffuse;\n#if NUM_POINT_LIGHTS > 0\n\tPointLight pointLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\t\tpointLight.position = vec3(pointLights[ i  * 15 + 0], pointLights[ i  * 15 + 1], pointLights[ i  * 15 + 2]);\n\t\tpointLight.color = vec3(pointLights[ i  * 15 + 3], pointLights[ i  * 15 + 4], pointLights[ i  * 15 + 5]);\n\t\tpointLight.distance = pointLights[ i  * 15 + 6];\n\t\tpointLight.decay = pointLights[ i  * 15 + 7];\n\t\tgetPointDirectLightIrradiance( pointLight, geometry, directLight );\n\t\tdotNL = dot( geometry.normal, directLight.direction );\n\t\tdirectLightColor_Diffuse = PI * directLight.color;\n\t\tvLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n\t\t#ifdef DOUBLE_SIDED\n\t\t\tvLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\t\t#endif\n\t}\n#endif\n#if NUM_SPOT_LIGHTS > 0\n\tSpotLight spotLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\t\tspotLight.position = vec3(spotLights[ i  * 18 + 0], spotLights[ i  * 18 + 1], spotLights[ i  * 18 + 2]);\n\t\tspotLight.direction = vec3(spotLights[ i  * 18 + 3], spotLights[ i  * 18 + 4], spotLights[ i  * 18 + 5]);\n\t\tspotLight.color = vec3(spotLights[ i  * 18 + 6], spotLights[ i  * 18 + 7], spotLights[ i  * 18 + 8]);\n\t\tspotLight.distance = spotLights[ i  * 18 + 9];\n\t\tspotLight.decay = spotLights[ i  * 18 + 10];\n\t\tspotLight.coneCos = spotLights[ i  * 18 + 11];\n\t\tspotLight.penumbraCos = spotLights[ i  * 18 + 12];\n\t\tgetSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\t\tdotNL = dot( geometry.normal, directLight.direction );\n\t\tdirectLightColor_Diffuse = PI * directLight.color;\n\t\tvLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n\t\t#ifdef DOUBLE_SIDED\n\t\t\tvLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\t\t#endif\n\t}\n#endif\n#if NUM_DIR_LIGHTS > 0\n\tDirectionalLight directionalLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\t\tdirectionalLight.direction = vec3(directionalLights[ i  * 11 + 0], directionalLights[ i  * 11 + 1], directionalLights[ i  * 11 + 2]);\n\t\tdirectionalLight.color = vec3(directionalLights[ i  * 11 + 3], directionalLights[ i  * 11 + 4], directionalLights[ i  * 11 + 5]);\n\t\tgetDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\t\tdotNL = dot( geometry.normal, directLight.direction );\n\t\tdirectLightColor_Diffuse = PI * directLight.color;\n\t\tvLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n\t\t#ifdef DOUBLE_SIDED\n\t\t\tvLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\t\t#endif\n\t}\n#endif\n#if NUM_HEMI_LIGHTS > 0\n\tHemisphereLight hemisphereLight;\n\t\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\t\themisphereLight.direction = vec3(hemisphereLights[ i  * 9 + 0], hemisphereLights[ i  * 9 + 1], hemisphereLights[ i  * 9 + 2]);\n\t\themisphereLight.skyColor = vec3(hemisphereLights[ i  * 9 + 3], hemisphereLights[ i  * 9 + 4], hemisphereLights[ i  * 9 + 5]);\n\t\themisphereLight.groundColor = vec3(hemisphereLights[ i  * 9 + 6], hemisphereLights[ i  * 9 + 7], hemisphereLights[ i  * 9 + 8]);\n\t\tvLightFront += getHemisphereLightIrradiance( hemisphereLight, geometry );\n\t\t#ifdef DOUBLE_SIDED\n\t\t\tvLightBack += getHemisphereLightIrradiance( hemisphereLight, backGeometry );\n\t\t#endif\n\t}\n#endif\n";

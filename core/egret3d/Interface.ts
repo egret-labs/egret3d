@@ -3,6 +3,10 @@ namespace egret3d {
      * Shader 通用宏定义。
      */
     export const enum ShaderDefine {
+        //
+        TONE_MAPPING = "TONE_MAPPING",
+        GAMMA_FACTOR = "GAMMA_FACTOR",
+        //
         USE_COLOR = "USE_COLOR",
         USE_MAP = "USE_MAP",
         USE_ALPHAMAP = "USE_ALPHAMAP",
@@ -22,8 +26,18 @@ namespace egret3d {
         TOON = "TOON",
         STANDARD = "STANDARD",
         //
-        FLAT_SHADED = "FLAT_SHADED",
+        TEXTURE_LOD_EXT = "TEXTURE_LOD_EXT",
+        //
+        ENVMAP_TYPE_CUBE = "ENVMAP_TYPE_CUBE",
         ENVMAP_TYPE_CUBE_UV = "ENVMAP_TYPE_CUBE_UV",
+        ENVMAP_TYPE_EQUIREC = "ENVMAP_TYPE_EQUIREC",
+        ENVMAP_TYPE_SPHERE = "ENVMAP_TYPE_SPHERE",
+        ENVMAP_MODE_REFLECTION = "ENVMAP_MODE_REFLECTION",
+        ENVMAP_BLENDING_MULTIPLY = "ENVMAP_BLENDING_MULTIPLY",
+        ENVMAP_BLENDING_MIX = "ENVMAP_BLENDING_MIX",
+        ENVMAP_BLENDING_ADD = "ENVMAP_BLENDING_ADD",
+        //
+        FLAT_SHADED = "FLAT_SHADED",
         //
         MAX_BONES = "MAX_BONES",
         //

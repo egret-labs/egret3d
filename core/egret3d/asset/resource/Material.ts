@@ -160,13 +160,13 @@ namespace egret3d {
             // Copy defines.
             if (materialDefines) {
                 for (const define of materialDefines) {
-                    this.addDefine(define);
+                    this.defines.addDefine(define);
                 }
             }
             //TODO 兼容以前的
             if (shaderDefines) {
                 for (const define of shaderDefines) {
-                    this.addDefine(define);
+                    this.defines.addDefine(define);
                 }
             }
 
@@ -232,15 +232,64 @@ namespace egret3d {
             // isRatain ? this._shader.retain() : this._shader.release(); TODO
         }
 
-        private _setTexelDefine(key: string, add: boolean, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+        private _setTexelDefine(key: string, add: boolean, texture: BaseTexture) {
+            const extension = texture.gltfTexture.extensions.paper;
+
             const define = (egret3d as any).ShaderTextureDefine[key];//TODO
             if (define) {
                 add ? this.defines.addDefine(define) : this.defines.removeDefine(define);
             }
             //
+            if (texture instanceof RenderTexture) {
+                if (add) {
+                    this.defines.addDefine(ShaderDefine.FLIP_V);
+                }
+                else {
+                    this.defines.removeDefine(ShaderDefine.FLIP_V);
+                }
+            }
+            //
+            if (key === ShaderUniformName.EnvMap) {
+                let { mapping, reflection } = extension;
+                let typeDefine = ShaderDefine.ENVMAP_TYPE_CUBE;
+                let blendDefine = ShaderDefine.ENVMAP_BLENDING_MULTIPLY; // TODO
+
+                switch (mapping) {
+                    case TextureUVMapping.Cube:
+                    default:
+                        typeDefine = ShaderDefine.ENVMAP_TYPE_CUBE;
+                        break;
+                    case TextureUVMapping.CubeUV:
+                        typeDefine = ShaderDefine.ENVMAP_TYPE_CUBE_UV;
+                        break;
+                    case TextureUVMapping.Equirectangular:
+                        typeDefine = ShaderDefine.ENVMAP_TYPE_EQUIREC;
+                        break;
+                    case TextureUVMapping.Spherical:
+                        typeDefine = ShaderDefine.ENVMAP_TYPE_SPHERE;
+                        reflection = false;
+                        break;
+                }
+
+                if (add) {
+                    this.defines.addDefine(typeDefine);
+                    this.defines.addDefine(blendDefine);
+                    if (reflection) {
+                        this.defines.addDefine(ShaderDefine.ENVMAP_MODE_REFLECTION);
+                    }
+                }
+                else {
+                    this.defines.removeDefine(typeDefine);
+                    this.defines.removeDefine(blendDefine);
+                    if (reflection) {
+                        this.defines.removeDefine(ShaderDefine.ENVMAP_MODE_REFLECTION);
+                    }
+                }
+            }
+            //
             const decodingFunName = (egret3d as any).TextureDecodingFunction[key];//TODO
             if (decodingFunName) {
-                const decodingStr = renderState._getTexelDecodingFunction(decodingFunName, encoding);
+                const decodingStr = renderState._getTexelDecodingFunction(decodingFunName, extension.encoding);
 
                 if (add) {
                     const define = this.defines.addDefine(decodingStr);
@@ -264,7 +313,7 @@ namespace egret3d {
                     (uniform.type === gltf.UniformType.SAMPLER_2D || uniform.type === gltf.UniformType.SAMPLER_CUBE)
                 ) {
                     const texture = (uniform.value as BaseTexture);
-                    this._setTexelDefine(k, add, texture.gltfTexture.extensions.paper.encoding);
+                    this._setTexelDefine(k, add, texture);
                 }
             }
         }
@@ -888,7 +937,8 @@ namespace egret3d {
                         while (i--) {
                             existingTexture.release();
                         }
-                        this._setTexelDefine(p1, false, existingTexture.gltfTexture.extensions.paper.encoding);
+
+                        this._setTexelDefine(p1, false, existingTexture);
                     }
 
                     if (p2) {
@@ -897,11 +947,7 @@ namespace egret3d {
                             p2.retain();
                         }
 
-                        if (p2 instanceof RenderTexture) {
-                            this.addDefine(ShaderDefine.FLIP_V);
-                        }
-
-                        this._setTexelDefine(p1, true, p2.gltfTexture.extensions.paper.encoding);
+                        this._setTexelDefine(p1, true, p2);
                     }
 
                     uniform.value = p2;
