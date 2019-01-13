@@ -641,10 +641,12 @@ namespace egret3d.webgl {
                     //update draw call
                     camera._update();
                     renderState.viewPort.copy(camera.viewport);
-                    renderState.renderTarget = shadow.renderTarget;
-                    renderState.renderTarget.activateRenderTexture();
+                    if (renderState.renderTarget !== shadow.renderTarget) {
+                        renderState.renderTarget = shadow.renderTarget;
+                        renderState.renderTarget.activateRenderTexture();
+                        renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.WHITE);
+                    }
                     webgl.viewport(camera.viewport.x, camera.viewport.y, camera.viewport.w, camera.viewport.h);
-                    renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.WHITE);
                     // renderState.updateViewport(camera.viewport, shadow.renderTarget);
                     const drawCalls = camera.context.shadowCalls;
                     for (const drawCall of drawCalls) {

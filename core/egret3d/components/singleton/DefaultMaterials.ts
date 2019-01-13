@@ -89,6 +89,7 @@ namespace egret3d {
 
             DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", DefaultShaders.DISTANCE_RGBA)
                 .setDepth(true, true)
+                .addDefine(ShaderDefine.FLIP_SIDED).addDefine(ShaderDefine.USE_SHADOWMAP)
                 .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
 
             DefaultMaterials.COPY = this._createMaterial("builtin/copy.mat.json", DefaultShaders.COPY);
