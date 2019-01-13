@@ -7,7 +7,6 @@ namespace egret3d {
         public initialize() {
             super.initialize();
 
-            // this.shadow.renderTarget = new GlRenderTarget("DirectionalLightShadow", this.shadow.size, this.shadow.size, true); // TODO
             this.shadow.update = this._updateShadow.bind(this);
         }
 
@@ -16,8 +15,8 @@ namespace egret3d {
             const shadowMatrix = shadow.matrix;
             const shadowCamera = shadow.camera;
             const transform = this.gameObject.transform;
+            const shadowSize = Math.min(shadow.size, renderState.maxTextureSize);
             if (!shadow.renderTarget) {
-                const shadowSize = Math.min(shadow.size, renderState.maxTextureSize);
                 shadow.renderTarget = RenderTexture.create(
                     {
                         width: shadowSize, height: shadowSize,
@@ -27,16 +26,11 @@ namespace egret3d {
                 );
             }
             //
-            shadowCamera.viewport.set(0, 0, 1, 1);
+            shadowCamera.viewport.set(0, 0, shadowSize, shadowSize);
             shadowCamera.transform.position.copy(transform.position).update();
-            shadowCamera.transform.lookAt(Vector3.ZERO);
-            // shadowCamera.transform.rotation.copy(transform.rotation).update();
-            // shadowCamera.far = 500;
-            // shadowCamera.near = 0.5;
-            // shadowCamera.size = 10.0;
-            // shadowCamera.opvalue = 0.0;
+            shadowCamera.transform.rotation.copy(transform.rotation).update();
             // shadowCamera.worldToCameraMatrix = transform.worldToLocalMatrix;
-            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(shadowCamera.fov, shadow.near, shadow.far, 10.0, 0.0, 1.0, stage.matchFactor).release();
+            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(shadowCamera.fov, shadow.near, shadow.far, 30.0, 0.0, 1.0, stage.matchFactor).release();
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             shadowMatrix.set(
                 0.5, 0.0, 0.0, 0.5,

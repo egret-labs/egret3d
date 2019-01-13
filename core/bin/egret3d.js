@@ -15671,7 +15671,6 @@ var egret3d;
         }
         DirectionalLight.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
-            // this.shadow.renderTarget = new GlRenderTarget("DirectionalLightShadow", this.shadow.size, this.shadow.size, true); // TODO
             this.shadow.update = this._updateShadow.bind(this);
         };
         DirectionalLight.prototype._updateShadow = function () {
@@ -15679,8 +15678,8 @@ var egret3d;
             var shadowMatrix = shadow.matrix;
             var shadowCamera = shadow.camera;
             var transform = this.gameObject.transform;
+            var shadowSize = Math.min(shadow.size, egret3d.renderState.maxTextureSize);
             if (!shadow.renderTarget) {
-                var shadowSize = Math.min(shadow.size, egret3d.renderState.maxTextureSize);
                 shadow.renderTarget = egret3d.RenderTexture.create({
                     width: shadowSize, height: shadowSize,
                     minFilter: 9728 /* Nearest */, magFilter: 9728 /* Nearest */,
@@ -15688,16 +15687,11 @@ var egret3d;
                 });
             }
             //
-            shadowCamera.viewport.set(0, 0, 1, 1);
+            shadowCamera.viewport.set(0, 0, shadowSize, shadowSize);
             shadowCamera.transform.position.copy(transform.position).update();
-            shadowCamera.transform.lookAt(egret3d.Vector3.ZERO);
-            // shadowCamera.transform.rotation.copy(transform.rotation).update();
-            // shadowCamera.far = 500;
-            // shadowCamera.near = 0.5;
-            // shadowCamera.size = 10.0;
-            // shadowCamera.opvalue = 0.0;
+            shadowCamera.transform.rotation.copy(transform.rotation).update();
             // shadowCamera.worldToCameraMatrix = transform.worldToLocalMatrix;
-            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(shadowCamera.fov, shadow.near, shadow.far, 10.0, 0.0, 1.0, egret3d.stage.matchFactor).release();
+            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(shadowCamera.fov, shadow.near, shadow.far, 30.0, 0.0, 1.0, egret3d.stage.matchFactor).release();
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             shadowMatrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0);
             shadowMatrix.multiply(shadowCamera.projectionMatrix);
@@ -15744,8 +15738,8 @@ var egret3d;
             var shadowMatrix = shadow.matrix;
             var shadowCamera = shadow.camera;
             var transform = this.gameObject.transform;
+            var shadowSize = Math.min(shadow.size, egret3d.renderState.maxTextureSize);
             if (!shadow.renderTarget) {
-                var shadowSize = Math.min(shadow.size, egret3d.renderState.maxTextureSize);
                 shadow.renderTarget = egret3d.RenderTexture.create({
                     width: shadowSize, height: shadowSize,
                     minFilter: 9728 /* Nearest */, magFilter: 9728 /* Nearest */,
@@ -15753,10 +15747,9 @@ var egret3d;
                 });
             }
             //
-            shadowCamera.viewport.set(0, 0, 1, 1);
             shadowCamera.transform.position.copy(transform.position).update();
-            // shadowCamera.transform.rotation.copy(transform.rotation).update();
-            shadowCamera.transform.lookAt(egret3d.Vector3.ZERO);
+            shadowCamera.transform.rotation.copy(transform.rotation).update();
+            shadowCamera.viewport.set(0, 0, shadowSize, shadowSize);
             shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(this.angle * 2.0, shadow.near, shadow.far, 0.0, 1.0, 1.0, egret3d.stage.matchFactor).release();
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             shadowMatrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0);
