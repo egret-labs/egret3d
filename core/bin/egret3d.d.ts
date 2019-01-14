@@ -2226,13 +2226,10 @@ declare namespace egret3d {
      */
     const enum TextureUVMapping {
         UV = 0,
-        CubeReflection = 3,
-        CubeRefraction = 2,
-        CubeUVReflection = 5,
-        CubeUVRefraction = 4,
-        EquirectangularReflection = 9,
-        EquirectangularRefraction = 8,
-        SphericalReflection = 16,
+        Cube = 1,
+        CubeUV = 2,
+        Equirectangular = 3,
+        Spherical = 4,
     }
     /**
      * 内置提供的全局 Attribute。
@@ -2351,10 +2348,6 @@ declare namespace egret3d {
          */
         levels?: uint;
         /**
-         * @defaults Normal
-         */
-        mapping?: TextureUVMapping;
-        /**
          * @defaults false
          */
         depthBuffer?: boolean;
@@ -2362,6 +2355,14 @@ declare namespace egret3d {
          * @defaults false
          */
         stencilBuffer?: boolean;
+        /**
+         * @defaults Normal
+         */
+        mapping?: TextureUVMapping;
+        /**
+         * @defaults false
+         */
+        reflection?: boolean;
     }
     /**
      *
@@ -2455,19 +2456,6 @@ declare namespace egret3d {
     /**
      * @private
      */
-    interface StateMachineNode {
-        _parent?: StateMachineNode;
-    }
-    /**
-     * @private
-     */
-    interface StateMachine extends StateMachineNode {
-        name: string;
-        nodes: StateMachineNode[];
-    }
-    /**
-     * @private
-     */
     const enum AnimationBlendType {
         E1D = 0,
     }
@@ -2477,6 +2465,18 @@ declare namespace egret3d {
     interface AnimationParameter {
         type: int;
         value: boolean | int | number;
+    }
+    /**
+     * @private
+     */
+    interface StateMachineNode {
+        name: string;
+    }
+    /**
+     * @private
+     */
+    interface StateMachine extends StateMachineNode {
+        nodes: StateMachineNode[];
     }
     /**
      * @private
@@ -2502,7 +2502,6 @@ declare namespace egret3d {
      */
     interface AnimationTree extends AnimationBaseNode {
         blendType: AnimationBlendType;
-        name: string;
         parameters: string[];
         nodes: AnimationBaseNode[];
     }
@@ -2511,7 +2510,6 @@ declare namespace egret3d {
      */
     interface AnimationNode extends AnimationBaseNode {
         asset: string;
-        clip: string;
     }
 }
 declare namespace gltf {
@@ -8047,7 +8045,7 @@ declare namespace egret3d {
         /**
          *
          */
-        getState(animationName: string, layerIndex?: uint): AnimationState | null;
+        getState(animationName: string, layerIndex?: uint): AnimationBaseState | null;
         /**
          *
          */
@@ -8088,15 +8086,44 @@ declare namespace egret3d {
         progress: number;
         time: number;
         totalTime: number;
-        readonly states: AnimationState[];
+        readonly states: AnimationBaseState[];
         private constructor();
         onClear(): void;
         fadeOut(totalTime: number): this;
     }
     /**
+     *
+     */
+    abstract class AnimationBaseState extends paper.BaseRelease<AnimationBaseState> {
+        /**
+         *
+         */
+        weight: number;
+        /**
+         * @private
+         */
+        animationLayer: AnimationLayer;
+        /**
+         * @private
+         */
+        animationNode: AnimationBaseNode | null;
+        protected constructor();
+        onClear(): void;
+        /**
+         *
+         */
+        readonly abstract name: string;
+    }
+    /**
+     *
+     */
+    class AnimationTreeState extends AnimationBaseState {
+        private static readonly _instances;
+    }
+    /**
      * 动画状态。
      */
-    class AnimationState extends paper.BaseRelease<AnimationState> {
+    class AnimationState extends AnimationBaseState {
         private static readonly _instances;
         /**
          * 动画总播放次数。
@@ -8107,21 +8134,9 @@ declare namespace egret3d {
          */
         currentPlayTimes: uint;
         /**
-         *
-         */
-        weight: number;
-        /**
          * @private
          */
         readonly channels: AnimationChannel[];
-        /**
-         * @private
-         */
-        animationLayer: AnimationLayer;
-        /**
-         * @private
-         */
-        animationNode: AnimationNode;
         /**
          * @private
          */
@@ -8134,7 +8149,6 @@ declare namespace egret3d {
          * 播放的动画剪辑。
          */
         animationClip: GLTFAnimationClip;
-        private constructor();
         onClear(): void;
         /**
          * 继续该动画状态的播放。
@@ -8245,6 +8259,7 @@ declare namespace egret3d {
         private readonly _events;
         private _animation;
         private _updateAnimationFadeState(animationFadeState, deltaTime);
+        private _updateAnimationTreeState(animationTreeState);
         private _updateAnimationState(animationFadeState, animationState, deltaTime, forceUpdate);
         onAddComponent(component: Animation): void;
         onUpdate(deltaTime: number): void;
@@ -9632,7 +9647,7 @@ declare namespace egret3d {
          */
         addLayer(name: string): AnimationLayer;
         createAnimationTree(machineOrTreen: StateMachine | AnimationTree, name: string): AnimationTree;
-        createAnimationNode(machineOrTreen: StateMachine | AnimationTree, asset: string, clip: string): AnimationNode;
+        createAnimationNode(machineOrTreen: StateMachine | AnimationTree, asset: string, name: string): AnimationNode;
         /**
          * 获取或添加一个动画层。
          * - 层索引强制连续。

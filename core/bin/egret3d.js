@@ -4854,18 +4854,11 @@ var egret3d;
      */
     var TextureUVMapping;
     (function (TextureUVMapping) {
-        /**
-         * @internal
-         */
-        TextureUVMapping[TextureUVMapping["Reflection"] = 1] = "Reflection";
         TextureUVMapping[TextureUVMapping["UV"] = 0] = "UV";
-        TextureUVMapping[TextureUVMapping["CubeReflection"] = 3] = "CubeReflection";
-        TextureUVMapping[TextureUVMapping["CubeRefraction"] = 2] = "CubeRefraction";
-        TextureUVMapping[TextureUVMapping["CubeUVReflection"] = 5] = "CubeUVReflection";
-        TextureUVMapping[TextureUVMapping["CubeUVRefraction"] = 4] = "CubeUVRefraction";
-        TextureUVMapping[TextureUVMapping["EquirectangularReflection"] = 9] = "EquirectangularReflection";
-        TextureUVMapping[TextureUVMapping["EquirectangularRefraction"] = 8] = "EquirectangularRefraction";
-        TextureUVMapping[TextureUVMapping["SphericalReflection"] = 16] = "SphericalReflection";
+        TextureUVMapping[TextureUVMapping["Cube"] = 1] = "Cube";
+        TextureUVMapping[TextureUVMapping["CubeUV"] = 2] = "CubeUV";
+        TextureUVMapping[TextureUVMapping["Equirectangular"] = 3] = "Equirectangular";
+        TextureUVMapping[TextureUVMapping["Spherical"] = 4] = "Spherical";
     })(TextureUVMapping = egret3d.TextureUVMapping || (egret3d.TextureUVMapping = {}));
     /**
      * 内置提供的全局 Attribute。
@@ -18883,10 +18876,6 @@ var egret3d;
              * 动画速度。
              */
             _this.timeScale = 1.0;
-            /**
-             * @internal
-             */
-            _this._statesDirty = false;
             _this._animations = [];
             /**
              * @internal
@@ -18951,21 +18940,6 @@ var egret3d;
             if (playTimes === void 0) { playTimes = -1; }
             if (layerIndex === void 0) { layerIndex = 0; }
             if (layerAdditive === void 0) { layerAdditive = false; }
-            // 
-            var animationAsset = null;
-            var animationClip = null;
-            for (var _i = 0, _a = this._animations; _i < _a.length; _i++) {
-                var eachAnimationAsset = _a[_i];
-                animationAsset = eachAnimationAsset;
-                animationClip = eachAnimationAsset.getAnimationClip(animationClipName);
-                if (animationClip !== null) {
-                    break;
-                }
-            }
-            if (!animationAsset || !animationClip) {
-                console.warn("There is no animation clip named \"" + animationClipName + "\" in the \"" + this.gameObject.path + "\" gameObject.", animationClipName, this.gameObject.path);
-                return null;
-            }
             //
             if (!this._animationController) {
                 this._animationController = egret3d.AnimationController.create("Default" /* Default */).retain();
@@ -18978,30 +18952,73 @@ var egret3d;
             }
             var animationLayer = animationController.getOrAddLayer(layerIndex);
             animationLayer.additive = layerAdditive;
-            var animationNode = {
-                asset: "",
-                clip: "",
-                timeScale: 1.0,
-            };
+            // const animationNode: AnimationNode = {
+            //     asset: "",
+            //     clip: "",
+            //     timeScale: 1.0,
+            // }; TODO
+            // 
+            var animationAsset = null;
+            var animationClip = null;
+            var animationTree = null;
+            for (var _i = 0, _a = this._animations; _i < _a.length; _i++) {
+                var eachAnimationAsset = _a[_i];
+                animationAsset = eachAnimationAsset;
+                animationClip = eachAnimationAsset.getAnimationClip(animationClipName);
+                if (animationClip !== null) {
+                    break;
+                }
+            }
+            if (!animationAsset || !animationClip) {
+                for (var _b = 0, _c = animationLayer.machine.nodes; _b < _c.length; _b++) {
+                    var node = _c[_b];
+                    if (node.name === animationClipName) {
+                        animationTree = node;
+                    }
+                }
+                if (!animationTree) {
+                    console.warn("There is no animation clip named \"" + animationClipName + "\" in the \"" + this.gameObject.path + "\" gameObject.", animationClipName, this.gameObject.path);
+                    return null;
+                }
+            }
             //
             var fadeStatess = this._fadeStates;
             if (layerIndex >= fadeStatess.length) {
                 fadeStatess[layerIndex] = [];
             }
-            for (var _b = 0, _c = fadeStatess[layerIndex]; _b < _c.length; _b++) {
-                var fadeStates = _c[_b];
+            for (var _d = 0, _e = fadeStatess[layerIndex]; _d < _e.length; _d++) {
+                var fadeStates = _e[_d];
                 fadeStates.fadeOut(fadeTime);
             }
+            //
             var lastFadeState = egret3d.AnimationFadeState.create();
             lastFadeState.totalTime = fadeTime;
             fadeStatess[layerIndex].push(lastFadeState);
+            if (animationTree) {
+                var animationTreeState = egret3d.AnimationTreeState.create();
+                lastFadeState.states.push(animationTreeState);
+                for (var _f = 0, _g = animationTree.nodes; _f < _g.length; _f++) {
+                    var animationNode = _g[_f];
+                    animationAsset = paper.Asset.find(animationNode.asset);
+                    if (animationAsset) {
+                        animationClip = animationAsset.getAnimationClip(animationNode.name);
+                        if (animationClip) {
+                            var animationState_1 = egret3d.AnimationState.create();
+                            animationState_1._parent = animationTreeState;
+                            animationState_1._initialize(this, animationLayer, null, animationAsset, animationClip);
+                            animationState_1.playTimes = playTimes < 0 ? (animationClip.playTimes || 0) : playTimes;
+                            lastFadeState.states.push(animationState_1);
+                        }
+                    }
+                }
+                return null;
+            }
             //
             var animationState = egret3d.AnimationState.create();
-            animationState._initialize(this, animationLayer, animationNode, animationAsset, animationClip);
+            animationState._initialize(this, animationLayer, null, animationAsset, animationClip);
             animationState.playTimes = playTimes < 0 ? (animationClip.playTimes || 0) : playTimes;
             lastFadeState.states.push(animationState);
             //
-            this._statesDirty = true;
             this._lastAnimationLayer = animationLayer;
             return animationState;
         };
@@ -19072,7 +19089,7 @@ var egret3d;
             if (layerIndex === void 0) { layerIndex = 0; }
             if (animationName) {
                 var animationState = this.getState(animationName, layerIndex);
-                if (animationState) {
+                if (animationState && animationState.constructor === egret3d.AnimationState) {
                     animationState.stop();
                 }
             }
@@ -19084,7 +19101,9 @@ var egret3d;
                         var fadeState = fadeStates_2[_a];
                         for (var _b = 0, _c = fadeState.states; _b < _c.length; _b++) {
                             var animationState = _c[_b];
-                            animationState.stop();
+                            if (animationState.constructor === egret3d.AnimationState) {
+                                animationState.stop();
+                            }
                         }
                     }
                 }
@@ -19103,7 +19122,7 @@ var egret3d;
                     var fadeState = fadeStates[i];
                     for (var _i = 0, _a = fadeState.states; _i < _a.length; _i++) {
                         var animationState = _a[_i];
-                        if (animationState.animationClip.name === animationName) {
+                        if (animationState.name === animationName) {
                             return animationState;
                         }
                     }
@@ -19130,7 +19149,7 @@ var egret3d;
              */
             get: function () {
                 var lastAnimationState = this.lastAnimationState;
-                return lastAnimationState ? lastAnimationState.animationClip.name : "";
+                return lastAnimationState ? lastAnimationState.name : "";
             },
             enumerable: true,
             configurable: true
@@ -19185,11 +19204,13 @@ var egret3d;
                     var fadeStatess = this._fadeStates;
                     if (fadeStatess.length > layerIndex) {
                         var fadeStates = fadeStatess[layerIndex];
-                        if (fadeStates.length === 0) {
-                            return null;
+                        if (fadeStates.length > 0) {
+                            var animationStates = fadeStates[fadeStates.length - 1].states;
+                            var animationState = animationStates[animationStates.length - 1];
+                            if (animationState.constructor === egret3d.AnimationState) {
+                                return animationState;
+                            }
                         }
-                        var animationStates = fadeStates[fadeStates.length - 1].states;
-                        return animationStates[animationStates.length - 1];
                     }
                 }
                 return null;
@@ -19273,12 +19294,70 @@ var egret3d;
     egret3d.AnimationFadeState = AnimationFadeState;
     __reflect(AnimationFadeState.prototype, "egret3d.AnimationFadeState");
     /**
+     *
+     */
+    var AnimationBaseState = (function (_super) {
+        __extends(AnimationBaseState, _super);
+        function AnimationBaseState() {
+            return _super.call(this) || this;
+        }
+        AnimationBaseState.prototype.onClear = function () {
+            this.weight = 1.0;
+            this.animationLayer = null;
+            this.animationNode = null;
+            this._globalWeight = 0.0;
+            this._globalTimeScale = 1.0;
+            this._parent = null;
+        };
+        return AnimationBaseState;
+    }(paper.BaseRelease));
+    egret3d.AnimationBaseState = AnimationBaseState;
+    __reflect(AnimationBaseState.prototype, "egret3d.AnimationBaseState");
+    /**
+     *
+     */
+    var AnimationTreeState = (function (_super) {
+        __extends(AnimationTreeState, _super);
+        function AnimationTreeState() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        /**
+         * @internal
+         */
+        AnimationTreeState.create = function () {
+            var instance;
+            if (this._instances.length > 0) {
+                instance = this._instances.pop();
+                instance._released = false;
+            }
+            else {
+                instance = new AnimationTreeState();
+                instance.onClear();
+            }
+            return instance;
+        };
+        Object.defineProperty(AnimationTreeState.prototype, "name", {
+            /**
+             * @internal
+             */
+            get: function () {
+                return this.animationNode.name;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        AnimationTreeState._instances = [];
+        return AnimationTreeState;
+    }(AnimationBaseState));
+    egret3d.AnimationTreeState = AnimationTreeState;
+    __reflect(AnimationTreeState.prototype, "egret3d.AnimationTreeState");
+    /**
      * 动画状态。
      */
     var AnimationState = (function (_super) {
         __extends(AnimationState, _super);
         function AnimationState() {
-            var _this = _super.call(this) || this;
+            var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
              * @private
              */
@@ -19301,23 +19380,22 @@ var egret3d;
             return instance;
         };
         AnimationState.prototype.onClear = function () {
+            _super.prototype.onClear.call(this);
             for (var _i = 0, _a = this.channels; _i < _a.length; _i++) {
                 var channel = _a[_i];
                 channel.release();
             }
             this.playTimes = 0;
             this.currentPlayTimes = 0;
-            this.weight = 1.0;
             this.channels.length = 0;
-            this.animationNode = null;
             this.animationAsset = null;
             this.animation = null;
             this.animationClip = null;
             this._playheadEnabled = true;
             this._playState = -1;
+            this._timeScale = 1.0;
             this._time = 0.0;
             this._currentTime = -1.0;
-            this._globalWeight = 0.0;
         };
         /**
          * @internal
@@ -19461,13 +19539,13 @@ var egret3d;
              * 该动画状态的播放速度。
              */
             get: function () {
-                return this.animationNode.timeScale;
+                return this._timeScale;
             },
             set: function (value) {
-                if (true && value !== value) {
-                    throw new Error();
+                if (value !== value) {
+                    value = 0.0;
                 }
-                this.animationNode.timeScale = value;
+                this._timeScale = value;
             },
             enumerable: true,
             configurable: true
@@ -19492,9 +19570,19 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(AnimationState.prototype, "name", {
+            /**
+             * @internal
+             */
+            get: function () {
+                return this.animationClip ? this.animationClip.name : "";
+            },
+            enumerable: true,
+            configurable: true
+        });
         AnimationState._instances = [];
         return AnimationState;
-    }(paper.BaseRelease));
+    }(AnimationBaseState));
     egret3d.AnimationState = AnimationState;
     __reflect(AnimationState.prototype, "egret3d.AnimationState");
 })(egret3d || (egret3d = {}));
@@ -19999,15 +20087,17 @@ var egret3d;
                 }
             }
         };
+        AnimationSystem.prototype._updateAnimationTreeState = function (animationTreeState) {
+        };
         AnimationSystem.prototype._updateAnimationState = function (animationFadeState, animationState, deltaTime, forceUpdate) {
             var animation = this._animation;
             var gameObject = animation.gameObject;
             var animationLayer = animationState.animationLayer;
             // const animationNode = animationState.animationNode;
             var weight = animationLayer.weight * animationFadeState.progress * animationState.weight;
-            // if (this.parent) { TODO
-            //     this._globalWeight *= this.parent._globalWeight;
-            // }
+            if (animationState._parent) {
+                weight *= animationState._parent._globalWeight;
+            }
             animationState._globalWeight = weight;
             // Update time.
             if (animationState._playheadEnabled) {
@@ -20178,9 +20268,6 @@ var egret3d;
                     var blendLayer = blendlayers[k];
                     blendLayer.clear();
                 }
-                if (animation._statesDirty) {
-                    animation._statesDirty = false;
-                }
                 for (var i = animationFadeStates.length - 1; i >= 0; i--) {
                     var fadeStates = animationFadeStates[i];
                     for (var j = 0, r = 0, lJ = fadeStates.length; j < lJ; ++j) {
@@ -20202,12 +20289,15 @@ var egret3d;
                             }
                             for (var _b = 0, _c = fadeState.states; _b < _c.length; _b++) {
                                 var animationState = _c[_b];
-                                this._updateAnimationState(fadeState, animationState, deltaTime, forceUpdate);
+                                if (animationState.constructor === egret3d.AnimationTreeState) {
+                                }
+                                else {
+                                    this._updateAnimationState(fadeState, animationState, deltaTime, forceUpdate);
+                                }
                             }
                         }
                         if (j === lJ - 1 && r > 0) {
                             fadeStates.length -= r;
-                            animation._statesDirty = true;
                         }
                     }
                 }
@@ -24677,6 +24767,7 @@ var egret3d;
             // isRatain ? this._shader.retain() : this._shader.release(); TODO
         };
         Material.prototype._setTexelDefine = function (key, add, texture) {
+            var extension = texture.gltfTexture.extensions.paper;
             var define = egret3d.ShaderTextureDefine[key]; //TODO
             if (define) {
                 add ? this.defines.addDefine(define) : this.defines.removeDefine(define);
@@ -24692,37 +24783,36 @@ var egret3d;
             }
             //
             if (key === "envMap" /* EnvMap */) {
-                var mapping = texture.gltfTexture.extensions.paper.mapping;
+                var mapping = extension.mapping, reflection = extension.reflection;
                 var typeDefine = "ENVMAP_TYPE_CUBE" /* ENVMAP_TYPE_CUBE */;
                 var blendDefine = "ENVMAP_BLENDING_MULTIPLY" /* ENVMAP_BLENDING_MULTIPLY */; // TODO
                 switch (mapping) {
-                    case 3 /* CubeReflection */:
-                    case 2 /* CubeRefraction */:
+                    case 1 /* Cube */:
+                    default:
                         typeDefine = "ENVMAP_TYPE_CUBE" /* ENVMAP_TYPE_CUBE */;
                         break;
-                    case 5 /* CubeUVReflection */:
-                    case 4 /* CubeUVRefraction */:
+                    case 2 /* CubeUV */:
                         typeDefine = "ENVMAP_TYPE_CUBE_UV" /* ENVMAP_TYPE_CUBE_UV */;
                         break;
-                    case 9 /* EquirectangularReflection */:
-                    case 8 /* EquirectangularRefraction */:
+                    case 3 /* Equirectangular */:
                         typeDefine = "ENVMAP_TYPE_EQUIREC" /* ENVMAP_TYPE_EQUIREC */;
                         break;
-                    case 16 /* SphericalReflection */:
+                    case 4 /* Spherical */:
                         typeDefine = "ENVMAP_TYPE_SPHERE" /* ENVMAP_TYPE_SPHERE */;
+                        reflection = false;
                         break;
                 }
                 if (add) {
                     this.defines.addDefine(typeDefine);
                     this.defines.addDefine(blendDefine);
-                    if (mapping & 1 /* Reflection */) {
+                    if (reflection) {
                         this.defines.addDefine("ENVMAP_MODE_REFLECTION" /* ENVMAP_MODE_REFLECTION */);
                     }
                 }
                 else {
                     this.defines.removeDefine(typeDefine);
                     this.defines.removeDefine(blendDefine);
-                    if (mapping & 1 /* Reflection */) {
+                    if (reflection) {
                         this.defines.removeDefine("ENVMAP_MODE_REFLECTION" /* ENVMAP_MODE_REFLECTION */);
                     }
                 }
@@ -24730,7 +24820,7 @@ var egret3d;
             //
             var decodingFunName = egret3d.TextureDecodingFunction[key]; //TODO
             if (decodingFunName) {
-                var decodingStr = egret3d.renderState._getTexelDecodingFunction(decodingFunName, texture.gltfTexture.extensions.paper.encoding);
+                var decodingStr = egret3d.renderState._getTexelDecodingFunction(decodingFunName, extension.encoding);
                 if (add) {
                     var define_1 = this.defines.addDefine(decodingStr);
                     if (define_1) {
@@ -25733,8 +25823,8 @@ var egret3d;
         };
         AnimationController.prototype.createAnimationTree = function (machineOrTreen, name) {
             var animationTree = {
-                timeScale: 1.0,
                 blendType: 0 /* E1D */,
+                timeScale: 1.0,
                 name: name,
                 parameters: [],
                 nodes: []
@@ -25745,10 +25835,10 @@ var egret3d;
             }
             return animationTree;
         };
-        AnimationController.prototype.createAnimationNode = function (machineOrTreen, asset, clip) {
+        AnimationController.prototype.createAnimationNode = function (machineOrTreen, asset, name) {
             var animationNode = {
                 asset: asset,
-                clip: clip,
+                name: name,
                 timeScale: 1.0,
             };
             var nodes = machineOrTreen.nodes;

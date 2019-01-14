@@ -1,6 +1,15 @@
 namespace examples {
 
     export function createGridRoom() {
+        { // Create light.
+            const gameObject = paper.GameObject.create("Point Light");
+            gameObject.transform.setLocalPosition(1.0, 10.0, -1.0);
+            gameObject.transform.lookAt(egret3d.Vector3.ZERO);
+
+            const light = gameObject.addComponent(egret3d.PointLight);
+            light.intensity = 1.0;
+        }
+
         const mesh = egret3d.MeshBuilder.createCube(
             40.0, 40.0, 40.0,
             0.0, 20.0, 0.0,
@@ -10,6 +19,7 @@ namespace examples {
 
         const gameObject = egret3d.DefaultMeshes.createObject(mesh, "Background");
         gameObject.hideFlags = paper.HideFlags.NotTouchable;
+        gameObject.activeSelf = false;
 
         async function loadResource() {
             const textureA = await RES.getResAsync("textures/grid_a.png") as egret3d.Texture;
@@ -30,6 +40,7 @@ namespace examples {
                     .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Front)
                 ,
             ];
+            gameObject.activeSelf = true;
         }
 
         loadResource();

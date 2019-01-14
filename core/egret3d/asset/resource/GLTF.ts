@@ -393,19 +393,6 @@ namespace egret3d {
     /**
      * @private
      */
-    export interface StateMachineNode {
-        _parent?: StateMachineNode;
-    }
-    /**
-     * @private
-     */
-    export interface StateMachine extends StateMachineNode {
-        name: string;
-        nodes: StateMachineNode[];
-    }
-    /**
-     * @private
-     */
     export const enum AnimationBlendType {
         E1D = 0,
     }
@@ -415,6 +402,22 @@ namespace egret3d {
     export interface AnimationParameter {
         type: int;
         value: boolean | int | number;
+    }
+    /**
+     * @private
+     */
+    export interface StateMachineNode {
+        name: string;
+        /**
+         * @internal
+         */
+        _parent?: StateMachineNode;
+    }
+    /**
+     * @private
+     */
+    export interface StateMachine extends StateMachineNode {
+        nodes: StateMachineNode[];
     }
     /**
      * @private
@@ -444,7 +447,6 @@ namespace egret3d {
      */
     export interface AnimationTree extends AnimationBaseNode {
         blendType: AnimationBlendType;
-        name: string;
         parameters: string[];
         nodes: AnimationBaseNode[];
     }
@@ -453,7 +455,6 @@ namespace egret3d {
      */
     export interface AnimationNode extends AnimationBaseNode {
         asset: string;
-        clip: string;
     }
 }
 

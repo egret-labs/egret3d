@@ -13,10 +13,6 @@ namespace egret3d {
          */
         @paper.editor.property(paper.editor.EditType.FLOAT)
         public timeScale: number = 1.0;
-        /**
-         * @internal
-         */
-        public _statesDirty: boolean = false;
         private readonly _animations: AnimationAsset[] = [];
         /**
          * @internal
@@ -86,22 +82,6 @@ namespace egret3d {
             fadeTime: number, playTimes: int = -1,
             layerIndex: uint = 0, layerAdditive: boolean = false,
         ): AnimationState | null {
-            // 
-            let animationAsset: AnimationAsset | null = null;
-            let animationClip: GLTFAnimationClip | null = null;
-
-            for (const eachAnimationAsset of this._animations) {
-                animationAsset = eachAnimationAsset;
-                animationClip = eachAnimationAsset.getAnimationClip(animationClipName);
-                if (animationClip !== null) {
-                    break;
-                }
-            }
-
-            if (!animationAsset || !animationClip) {
-                console.warn(`There is no animation clip named "${animationClipName}" in the "${this.gameObject.path}" gameObject.`, animationClipName, this.gameObject.path);
-                return null;
-            }
             //
             if (!this._animationController) {
                 this._animationController = AnimationController.create(paper.DefaultNames.Default).retain();
@@ -117,11 +97,36 @@ namespace egret3d {
 
             const animationLayer = animationController.getOrAddLayer(layerIndex);
             animationLayer.additive = layerAdditive;
-            const animationNode: AnimationNode = {
-                asset: "",
-                clip: "",
-                timeScale: 1.0,
-            };
+            // const animationNode: AnimationNode = {
+            //     asset: "",
+            //     clip: "",
+            //     timeScale: 1.0,
+            // }; TODO
+            // 
+            let animationAsset: AnimationAsset | null = null;
+            let animationClip: GLTFAnimationClip | null = null;
+            let animationTree: AnimationTree | null = null;
+
+            for (const eachAnimationAsset of this._animations) {
+                animationAsset = eachAnimationAsset;
+                animationClip = eachAnimationAsset.getAnimationClip(animationClipName);
+                if (animationClip !== null) {
+                    break;
+                }
+            }
+
+            if (!animationAsset || !animationClip) {
+                for (const node of animationLayer.machine.nodes) { // TODO
+                    if (node.name === animationClipName) {
+                        animationTree = node as AnimationTree;
+                    }
+                }
+
+                if (!animationTree) {
+                    console.warn(`There is no animation clip named "${animationClipName}" in the "${this.gameObject.path}" gameObject.`, animationClipName, this.gameObject.path);
+                    return null;
+                }
+            }
             //
             const fadeStatess = this._fadeStates;
             if (layerIndex >= fadeStatess.length) {
@@ -131,17 +136,37 @@ namespace egret3d {
             for (const fadeStates of fadeStatess[layerIndex]) {
                 fadeStates.fadeOut(fadeTime);
             }
-
+            //
             const lastFadeState = AnimationFadeState.create();
             lastFadeState.totalTime = fadeTime;
             fadeStatess[layerIndex].push(lastFadeState);
+
+            if (animationTree) {
+                const animationTreeState = AnimationTreeState.create();
+                lastFadeState.states.push(animationTreeState);
+
+                for (const animationNode of animationTree.nodes as AnimationNode[]) { // TODO
+                    animationAsset = paper.Asset.find<AnimationAsset>(animationNode.asset);
+                    if (animationAsset) {
+                        animationClip = animationAsset.getAnimationClip(animationNode.name);
+                        if (animationClip) {
+                            const animationState = AnimationState.create();
+                            animationState._parent = animationTreeState;
+                            animationState._initialize(this, animationLayer, null, animationAsset, animationClip);
+                            animationState.playTimes = playTimes < 0 ? (animationClip.playTimes || 0) : playTimes;
+                            lastFadeState.states.push(animationState);
+                        }
+                    }
+                }
+
+                return null;
+            }
             //
             const animationState = AnimationState.create();
-            animationState._initialize(this, animationLayer, animationNode, animationAsset, animationClip);
-            animationState.playTimes = playTimes < 0 ? (animationClip.playTimes || 0) : playTimes;
+            animationState._initialize(this, animationLayer, null, animationAsset!, animationClip!);
+            animationState.playTimes = playTimes < 0 ? (animationClip!.playTimes || 0) : playTimes;
             lastFadeState.states.push(animationState);
             //
-            this._statesDirty = true;
             this._lastAnimationLayer = animationLayer;
 
             return animationState;
@@ -165,6 +190,7 @@ namespace egret3d {
 
             const clipNames = animationLayer._clipNames;
             clipNames.length = 0;
+
             if (Array.isArray(animationClipNameOrNames)) {
                 if (animationClipNameOrNames.length > 0) {
                     for (const animationName of animationClipNameOrNames) {
@@ -214,8 +240,8 @@ namespace egret3d {
         public stop(animationName: string | null = null, layerIndex: uint = 0): void {
             if (animationName) {
                 const animationState = this.getState(animationName, layerIndex);
-                if (animationState) {
-                    animationState.stop();
+                if (animationState && animationState.constructor === AnimationState) {
+                    (animationState as AnimationState).stop();
                 }
             }
             else {
@@ -223,7 +249,9 @@ namespace egret3d {
                 for (const fadeStates of fadeStatess) {
                     for (const fadeState of fadeStates) {
                         for (const animationState of fadeState.states) {
-                            animationState.stop();
+                            if (animationState.constructor === AnimationState) {
+                                (animationState as AnimationState).stop();
+                            }
                         }
                     }
                 }
@@ -232,7 +260,7 @@ namespace egret3d {
         /**
          * 
          */
-        public getState(animationName: string, layerIndex: uint = 0): AnimationState | null {
+        public getState(animationName: string, layerIndex: uint = 0): AnimationBaseState | null {
             const fadeStatess = this._fadeStates;
             if (fadeStatess.length > layerIndex) {
                 const fadeStates = fadeStatess[layerIndex];
@@ -240,7 +268,7 @@ namespace egret3d {
                 while (i--) {
                     const fadeState = fadeStates[i];
                     for (const animationState of fadeState.states) {
-                        if (animationState.animationClip.name === animationName) {
+                        if (animationState.name === animationName) {
                             return animationState;
                         }
                     }
@@ -267,7 +295,7 @@ namespace egret3d {
          */
         public get lastAnimationnName(): string {
             const lastAnimationState = this.lastAnimationState;
-            return lastAnimationState ? lastAnimationState.animationClip.name : "";
+            return lastAnimationState ? lastAnimationState.name : "";
         }
         /**
          * 动画数据列表。
@@ -307,18 +335,21 @@ namespace egret3d {
         public get lastAnimationState(): AnimationState | null {
             const animationController = this._animationController;
             const lastAnimationLayer = this._lastAnimationLayer;
+
             if (animationController && lastAnimationLayer) {
                 const layerIndex = animationController.layers.indexOf(lastAnimationLayer);
                 const fadeStatess = this._fadeStates;
+
                 if (fadeStatess.length > layerIndex) {
                     const fadeStates = fadeStatess[layerIndex];
-                    if (fadeStates.length === 0) {
-                        return null;
+
+                    if (fadeStates.length > 0) {
+                        const animationStates = fadeStates[fadeStates.length - 1].states;
+                        const animationState = animationStates[animationStates.length - 1];
+                        if (animationState.constructor === AnimationState) {
+                            return animationState as AnimationState;
+                        }
                     }
-
-                    const animationStates = fadeStates[fadeStates.length - 1].states;
-
-                    return animationStates[animationStates.length - 1];
                 }
             }
 
