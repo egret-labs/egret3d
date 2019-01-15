@@ -470,15 +470,15 @@ var paper;
         /**
          *
          */
-        HideFlags[HideFlags["Hide"] = 6] = "Hide";
+        HideFlags[HideFlags["DontSave"] = 4] = "DontSave";
         /**
          *
          */
-        HideFlags[HideFlags["DontSave"] = 8] = "DontSave";
+        HideFlags[HideFlags["Hide"] = 10] = "Hide";
         /**
          *
          */
-        HideFlags[HideFlags["HideAndDontSave"] = 14] = "HideAndDontSave";
+        HideFlags[HideFlags["HideAndDontSave"] = 0] = "HideAndDontSave";
     })(HideFlags = paper.HideFlags || (paper.HideFlags = {}));
     /**
      *
@@ -10181,10 +10181,10 @@ var paper;
                         return serializeAsset(source);
                     }
                     if (source.constructor === paper.GameObject || source instanceof paper.BaseComponent) {
-                        if (source.constructor === paper.GameObject && source.hideFlags & 8 /* DontSave */) {
+                        if (source.constructor === paper.GameObject && source.hideFlags & 4 /* DontSave */) {
                             return undefined; // Pass.
                         }
-                        else if (source.constructor === egret3d.Transform && source.gameObject.hideFlags & 8 /* DontSave */) {
+                        else if (source.constructor === egret3d.Transform && source.gameObject.hideFlags & 4 /* DontSave */) {
                             return undefined; // Pass.
                         }
                         if (parent) {
@@ -15432,7 +15432,7 @@ var egret3d;
         CameraAndLightSystem.prototype.onAwake = function () {
             var lightCamera = this._lightCamera;
             lightCamera.enabled = false; // Disable camera.
-            lightCamera.hideFlags = 14 /* HideAndDontSave */;
+            lightCamera.hideFlags = 0 /* HideAndDontSave */;
         };
         CameraAndLightSystem.prototype.onAddGameObject = function (_gameObject, group) {
             var groups = this.groups;
@@ -18996,6 +18996,8 @@ var egret3d;
             fadeStatess[layerIndex].push(lastFadeState);
             if (animationTree) {
                 var animationTreeState = egret3d.AnimationTreeState.create();
+                animationTreeState.animationLayer = animationLayer;
+                animationTreeState.animationNode = animationTree;
                 lastFadeState.states.push(animationTreeState);
                 for (var _f = 0, _g = animationTree.nodes; _f < _g.length; _f++) {
                     var animationNode = _g[_f];
@@ -19621,14 +19623,22 @@ var egret3d;
             this.dirty = 0;
             this.totalWeight = 0.0;
             this.weight = 1.0;
+            this.layer = null;
         };
         AnimationBinder.prototype.updateBlend = function (animationState) {
             var globalWeight = animationState._globalWeight;
             if (this.dirty > 0) {
-                if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
+                if (this.layer === animationState.animationLayer) {
+                    this.dirty++;
+                    this.weight = globalWeight;
+                    this.totalWeight += this.weight;
+                    return true;
+                }
+                else if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
                     this.dirty++;
                     this.weight = globalWeight * (1.0 - this.totalWeight);
                     this.totalWeight += this.weight;
+                    this.layer = animationState.animationLayer;
                     return true;
                 }
                 return false;
@@ -19636,6 +19646,7 @@ var egret3d;
             this.dirty++;
             this.totalWeight += globalWeight;
             this.weight = globalWeight;
+            this.layer = animationState.animationLayer;
             return true;
         };
         AnimationBinder.prototype.onUpdateTranslation = function () {
@@ -20087,16 +20098,28 @@ var egret3d;
                 }
             }
         };
-        AnimationSystem.prototype._updateAnimationTreeState = function (animationTreeState) {
+        AnimationSystem.prototype._updateAnimationTreeState = function (animationFadeState, animationTreeState) {
+            var animationLayer = animationTreeState.animationLayer;
+            var weight = animationLayer.weight * animationTreeState.weight;
+            if (animationTreeState._parent) {
+                weight *= animationTreeState._parent._globalWeight;
+            }
+            else {
+                weight *= animationFadeState.progress;
+            }
+            animationTreeState._globalWeight = weight;
         };
         AnimationSystem.prototype._updateAnimationState = function (animationFadeState, animationState, deltaTime, forceUpdate) {
             var animation = this._animation;
             var gameObject = animation.gameObject;
             var animationLayer = animationState.animationLayer;
             // const animationNode = animationState.animationNode;
-            var weight = animationLayer.weight * animationFadeState.progress * animationState.weight;
+            var weight = animationLayer.weight * animationState.weight;
             if (animationState._parent) {
                 weight *= animationState._parent._globalWeight;
+            }
+            else {
+                weight *= animationFadeState.progress;
             }
             animationState._globalWeight = weight;
             // Update time.
@@ -20290,6 +20313,7 @@ var egret3d;
                             for (var _b = 0, _c = fadeState.states; _b < _c.length; _b++) {
                                 var animationState = _c[_b];
                                 if (animationState.constructor === egret3d.AnimationTreeState) {
+                                    this._updateAnimationTreeState(fadeState, animationState);
                                 }
                                 else {
                                     this._updateAnimationState(fadeState, animationState, deltaTime, forceUpdate);

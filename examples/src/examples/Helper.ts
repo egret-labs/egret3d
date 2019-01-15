@@ -2,12 +2,10 @@ namespace examples {
 
     export function createGridRoom() {
         { // Create light.
-            const gameObject = paper.GameObject.create("Point Light");
-            gameObject.transform.setLocalPosition(1.0, 10.0, -1.0);
-            gameObject.transform.lookAt(egret3d.Vector3.ZERO);
-
-            const light = gameObject.addComponent(egret3d.PointLight);
-            light.intensity = 1.0;
+            const pointLight = paper.GameObject.create("Point Light").addComponent(egret3d.PointLight);
+            pointLight.transform.setLocalPosition(0.0, 5.0, -10.0);
+            //
+            pointLight.gameObject.addComponent(behaviors.RotateComponent).rotateSpeed *= -2.0;
         }
 
         const mesh = egret3d.MeshBuilder.createCube(

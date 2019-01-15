@@ -132,15 +132,15 @@ declare namespace paper {
         /**
          *
          */
-        Hide = 6,
+        DontSave = 4,
         /**
          *
          */
-        DontSave = 8,
+        Hide = 10,
         /**
          *
          */
-        HideAndDontSave = 14,
+        HideAndDontSave = 0,
     }
     /**
      *
@@ -8192,6 +8192,7 @@ declare namespace egret3d {
         weight: number;
         components: paper.BaseComponent | ReadonlyArray<paper.BaseComponent>;
         bindPose: any;
+        layer: AnimationLayer | null;
         updateTarget: (() => void);
         private constructor();
         onClear(): void;
@@ -8259,7 +8260,7 @@ declare namespace egret3d {
         private readonly _events;
         private _animation;
         private _updateAnimationFadeState(animationFadeState, deltaTime);
-        private _updateAnimationTreeState(animationTreeState);
+        private _updateAnimationTreeState(animationFadeState, animationTreeState);
         private _updateAnimationState(animationFadeState, animationState, deltaTime, forceUpdate);
         onAddComponent(component: Animation): void;
         onUpdate(deltaTime: number): void;

@@ -428,7 +428,6 @@ declare namespace paper.editor {
         private _onGameObjectSelected;
         private _onGameObjectUnselected;
         private _updateCameras();
-        private _updateLights();
         lookAtSelected(): void;
         onAwake(): void;
         onEnable(): void;

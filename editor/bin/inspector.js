@@ -4070,7 +4070,7 @@ var paper;
                                 helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).toArray(vertices, offset + 3);
                             }
                             else {
-                                bone.getRight(helpVertex3B).applyDirection(worldToLocalMatrix).multiplyScalar(0.25); // Bone length.
+                                bone.getForward(helpVertex3B).applyDirection(worldToLocalMatrix).multiplyScalar(0.1); // Bone length.
                                 helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).toArray(vertices, offset);
                                 helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
                             }
@@ -5275,91 +5275,57 @@ var paper;
                 return _this;
             }
             SceneSystem.prototype._updateCameras = function () {
-                // const editorCamera = egret3d.Camera.editor;
-                // for (const camera of this._cameraAndLightCollecter.cameras) {
-                //     if (camera === editorCamera) {
-                //         continue;
-                //     }
-                //     let icon = camera.gameObject.transform.find("__pickTarget") as egret3d.Transform;
-                //     if (!icon) {
-                //         icon = EditorMeshHelper.createIcon("__pickTarget", camera.gameObject, EditorDefaultTexture.CAMERA_ICON).transform;
-                //         icon.gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
-                //     }
-                //     const cameraPosition = egret3d.Camera.editor.gameObject.transform.position;
-                //     const eyeDistance = cameraPosition.getDistance(camera.gameObject.transform.position);
-                //     icon.gameObject.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
-                //     icon.gameObject.transform.rotation = egret3d.Camera.editor.gameObject.transform.rotation;
-                // }
-                // const setPoint = (cameraProject: egret3d.Matrix, positions: Float32Array, x: number, y: number, z: number, points: number[]) => {
-                //     const vector = egret3d.Vector3.create();
-                //     const matrix = egret3d.Matrix4.create();
-                //     vector.set(x, y, z).applyMatrix(matrix.inverse(cameraProject)).applyMatrix(egret3d.Matrix4.IDENTITY);
-                //     if (points !== undefined) {
-                //         for (var i = 0, l = points.length; i < l; i++) {
-                //             const index = points[i] * 3;
-                //             positions[index + 0] = vector.x;
-                //             positions[index + 1] = vector.y;
-                //             positions[index + 2] = vector.z;
-                //         }
-                //     }
-                //     vector.release();
-                //     matrix.release();
-                // };
-                // const cameraViewFrustum = this._cameraViewFrustum!;
-                // if (cameraViewFrustum.activeSelf) {
-                //     const selectedCamera = this._modelComponent.selectedGameObject!.getComponent(egret3d.Camera)!;
-                //     cameraViewFrustum.transform.position = selectedCamera.gameObject.transform.position;
-                //     cameraViewFrustum.transform.rotation = selectedCamera.gameObject.transform.rotation;
-                //     const mesh = cameraViewFrustum.getComponent(egret3d.MeshFilter)!.mesh!;
-                //     const cameraProject = selectedCamera.projectionMatrix;
-                //     const positions = mesh.getVertices()!;
-                //     // center / target
-                //     setPoint(cameraProject, positions, 0, 0, -1, [38, 41]);
-                //     setPoint(cameraProject, positions, 0, 0, 1, [39]);
-                //     // near,
-                //     setPoint(cameraProject, positions, -1, -1, -1, [0, 7, 16, 25]);
-                //     setPoint(cameraProject, positions, 1, -1, -1, [1, 2, 18, 27]);
-                //     setPoint(cameraProject, positions, -1, 1, -1, [5, 6, 20, 29]);
-                //     setPoint(cameraProject, positions, 1, 1, - 1, [3, 4, 22, 31]);
-                //     // far,
-                //     setPoint(cameraProject, positions, -1, -1, 1, [8, 15, 17]);
-                //     setPoint(cameraProject, positions, 1, -1, 1, [9, 10, 19]);
-                //     setPoint(cameraProject, positions, -1, 1, 1, [13, 14, 21]);
-                //     setPoint(cameraProject, positions, 1, 1, 1, [11, 12, 23]);
-                //     // up,
-                //     setPoint(cameraProject, positions, 0.7, 1.1, -1, [32, 37]);
-                //     setPoint(cameraProject, positions, -0.7, 1.1, -1, [33, 34]);
-                //     setPoint(cameraProject, positions, 0, 2, -1, [35, 36]);
-                //     // cross,
-                //     setPoint(cameraProject, positions, -1, 0, 1, [42]);
-                //     setPoint(cameraProject, positions, 1, 0, 1, [43]);
-                //     setPoint(cameraProject, positions, 0, -1, 1, [44]);
-                //     setPoint(cameraProject, positions, 0, 1, 1, [45]);
-                //     setPoint(cameraProject, positions, -1, 0, -1, [46]);
-                //     setPoint(cameraProject, positions, 1, 0, -1, [47]);
-                //     setPoint(cameraProject, positions, 0, -1, -1, [48]);
-                //     setPoint(cameraProject, positions, 0, 1, -1, [49]);
-                //     mesh.uploadVertexBuffer(gltf.AttributeSemantics.POSITION);
-                // }
-            };
-            SceneSystem.prototype._updateLights = function () {
-                // const { directionalLights, spotLights, pointLights, hemisphereLights } = this._cameraAndLightCollecter;
-                // for (const lights of [directionalLights, spotLights, pointLights, hemisphereLights]) {
-                //     for (const light of lights) {
-                //         if (light.gameObject.scene === Scene.editorScene) {
-                //             continue;
-                //         }
-                //         let icon = light.gameObject.transform.find("__pickTarget") as egret3d.Transform;
-                //         if (!icon) {
-                //             icon = EditorMeshHelper.createIcon("__pickTarget", light.gameObject, EditorDefaultTexture.LIGHT_ICON).transform;
-                //             icon.gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
-                //         }
-                //         const cameraPosition = egret3d.Camera.editor.gameObject.transform.position;
-                //         const eyeDistance = cameraPosition.getDistance(light.gameObject.transform.position);
-                //         icon.gameObject.transform.setLocalScale(egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 40).release());
-                //         icon.gameObject.transform.rotation = egret3d.Camera.editor.gameObject.transform.rotation;
-                //     }
-                // }
+                var setPoint = function (cameraProject, positions, x, y, z, points) {
+                    var vector = egret3d.Vector3.create();
+                    var matrix = egret3d.Matrix4.create();
+                    vector.set(x, y, z).applyMatrix(matrix.inverse(cameraProject)).applyMatrix(egret3d.Matrix4.IDENTITY);
+                    if (points !== undefined) {
+                        for (var i = 0, l = points.length; i < l; i++) {
+                            var index = points[i] * 3;
+                            positions[index + 0] = vector.x;
+                            positions[index + 1] = vector.y;
+                            positions[index + 2] = vector.z;
+                        }
+                    }
+                    vector.release();
+                    matrix.release();
+                };
+                var cameraViewFrustum = this._cameraViewFrustum;
+                if (cameraViewFrustum.activeSelf) {
+                    var selectedCamera = this._modelComponent.selectedGameObject.getComponent(egret3d.Camera);
+                    cameraViewFrustum.transform.position = selectedCamera.gameObject.transform.position;
+                    cameraViewFrustum.transform.rotation = selectedCamera.gameObject.transform.rotation;
+                    var mesh = cameraViewFrustum.getComponent(egret3d.MeshFilter).mesh;
+                    var cameraProject = selectedCamera.projectionMatrix;
+                    var positions = mesh.getVertices();
+                    // center / target
+                    setPoint(cameraProject, positions, 0, 0, -1, [38, 41]);
+                    setPoint(cameraProject, positions, 0, 0, 1, [39]);
+                    // near,
+                    setPoint(cameraProject, positions, -1, -1, -1, [0, 7, 16, 25]);
+                    setPoint(cameraProject, positions, 1, -1, -1, [1, 2, 18, 27]);
+                    setPoint(cameraProject, positions, -1, 1, -1, [5, 6, 20, 29]);
+                    setPoint(cameraProject, positions, 1, 1, -1, [3, 4, 22, 31]);
+                    // far,
+                    setPoint(cameraProject, positions, -1, -1, 1, [8, 15, 17]);
+                    setPoint(cameraProject, positions, 1, -1, 1, [9, 10, 19]);
+                    setPoint(cameraProject, positions, -1, 1, 1, [13, 14, 21]);
+                    setPoint(cameraProject, positions, 1, 1, 1, [11, 12, 23]);
+                    // up,
+                    setPoint(cameraProject, positions, 0.7, 1.1, -1, [32, 37]);
+                    setPoint(cameraProject, positions, -0.7, 1.1, -1, [33, 34]);
+                    setPoint(cameraProject, positions, 0, 2, -1, [35, 36]);
+                    // cross,
+                    setPoint(cameraProject, positions, -1, 0, 1, [42]);
+                    setPoint(cameraProject, positions, 1, 0, 1, [43]);
+                    setPoint(cameraProject, positions, 0, -1, 1, [44]);
+                    setPoint(cameraProject, positions, 0, 1, 1, [45]);
+                    setPoint(cameraProject, positions, -1, 0, -1, [46]);
+                    setPoint(cameraProject, positions, 1, 0, -1, [47]);
+                    setPoint(cameraProject, positions, 0, -1, -1, [48]);
+                    setPoint(cameraProject, positions, 0, 1, -1, [49]);
+                    mesh.uploadVertexBuffer("POSITION" /* POSITION */);
+                }
             };
             SceneSystem.prototype.lookAtSelected = function () {
                 var orbitControls = egret3d.Camera.editor.gameObject.getComponent(editor.OrbitControls);
@@ -5572,7 +5538,6 @@ var paper;
                 this._gridDrawer.update();
                 // this._worldAxisesDrawer!.update();
                 this._updateCameras();
-                this._updateLights();
             };
             SceneSystem.prototype._clearDefaultPointerDownPosition = function () {
                 var defaultPointer = egret3d.inputCollecter.defaultPointer;
@@ -7033,7 +6998,7 @@ var paper;
                     for (var index = 0; index < gameObj.transform.children.length; index++) {
                         var element = gameObj.transform.children[index];
                         var obj = element.gameObject;
-                        if (obj.hideFlags & 8 /* DontSave */) {
+                        if (obj.hideFlags & 4 /* DontSave */) {
                             continue;
                         }
                         this.setLinkedId(obj, ids);
@@ -8580,7 +8545,7 @@ var paper;
             };
             GUISystem.prototype._addToHierarchy = function (gameObject) {
                 if (gameObject.uuid in this._hierarchyFolders ||
-                    (gameObject.hideFlags & 6 /* Hide */) ||
+                    (gameObject.hideFlags & 10 /* Hide */) ||
                     gameObject.scene === paper.Scene.editorScene) {
                     return true;
                 }

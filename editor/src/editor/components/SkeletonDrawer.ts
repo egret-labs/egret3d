@@ -52,7 +52,7 @@ namespace paper.editor {
                             helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).toArray(vertices, offset + 3);
                         }
                         else {
-                            bone.getRight(helpVertex3B).applyDirection(worldToLocalMatrix).multiplyScalar(0.25); // Bone length.
+                            bone.getForward(helpVertex3B).applyDirection(worldToLocalMatrix).multiplyScalar(0.1); // Bone length.
                             helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).toArray(vertices, offset);
                             helpVertex3A.applyMatrix(worldToLocalMatrix, bone.position).add(helpVertex3B).toArray(vertices, offset + 3);
                         }

@@ -143,6 +143,8 @@ namespace egret3d {
 
             if (animationTree) {
                 const animationTreeState = AnimationTreeState.create();
+                animationTreeState.animationLayer = animationLayer;
+                animationTreeState.animationNode = animationTree;
                 lastFadeState.states.push(animationTreeState);
 
                 for (const animationNode of animationTree.nodes as AnimationNode[]) { // TODO
