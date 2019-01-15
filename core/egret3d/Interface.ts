@@ -84,10 +84,13 @@ namespace egret3d {
         EnvMap = "envMap",
         EmissiveMap = "emissiveMap",
 
-        Cube = "tCube",
+        CubeMap = "tCube",
         Flip = "tFlip",
 
         UVTransform = "uvTransform",
+
+        Reflectivity = "reflectivity",
+        RefractionRatio = "refractionRatio",
 
         Specular = "specular",
         Shininess = "shininess",

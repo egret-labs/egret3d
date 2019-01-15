@@ -5,6 +5,7 @@ namespace examples {
         async start() {
             // Load resource config.
             await RES.loadConfig("default.res.json", "resource/");
+            //
             await RES.getResAsync("threejs/textures/brick_diffuse.jpg");
             await RES.getResAsync("threejs/textures/brick_bump.jpg");
             await RES.getResAsync("threejs/textures/brick_roughness.jpg");

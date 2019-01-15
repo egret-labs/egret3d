@@ -1,0 +1,44 @@
+{
+    "version": "4",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {},
+    "extensionsRequired": [
+        "paper"
+    ],
+    "extensionsUsed": [
+        "paper"
+    ],
+    "images": [
+        {
+            "uri": [
+                "threejs/textures/cube/SwedishRoyalCastle/px.jpg",
+                "threejs/textures/cube/SwedishRoyalCastle/nx.jpg",
+                "threejs/textures/cube/SwedishRoyalCastle/py.jpg",
+                "threejs/textures/cube/SwedishRoyalCastle/ny.jpg",
+                "threejs/textures/cube/SwedishRoyalCastle/pz.jpg",
+                "threejs/textures/cube/SwedishRoyalCastle/nz.jpg"
+            ]
+        }
+    ],
+    "samplers": [
+        {}
+    ],
+    "textures": [
+        {
+            "sampler": 0,
+            "source": 0,
+            "extensions": {
+                "paper": {
+                    "width": 256,
+                    "height": 256,
+                    "format": 6407,
+                    "faces": 6,
+                    "levels": 0,
+                    "mapping": 1
+                }
+            }
+        }
+    ]
+}

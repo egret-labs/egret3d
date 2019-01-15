@@ -478,7 +478,7 @@ var paper;
         /**
          *
          */
-        HideFlags[HideFlags["HideAndDontSave"] = 0] = "HideAndDontSave";
+        HideFlags[HideFlags["HideAndDontSave"] = 14] = "HideAndDontSave";
     })(HideFlags = paper.HideFlags || (paper.HideFlags = {}));
     /**
      *
@@ -10303,9 +10303,11 @@ var egret3d;
         ShaderUniformName["DisplacementMap"] = "displacementMap";
         ShaderUniformName["EnvMap"] = "envMap";
         ShaderUniformName["EmissiveMap"] = "emissiveMap";
-        ShaderUniformName["Cube"] = "tCube";
+        ShaderUniformName["CubeMap"] = "tCube";
         ShaderUniformName["Flip"] = "tFlip";
         ShaderUniformName["UVTransform"] = "uvTransform";
+        ShaderUniformName["Reflectivity"] = "reflectivity";
+        ShaderUniformName["RefractionRatio"] = "refractionRatio";
         ShaderUniformName["Specular"] = "specular";
         ShaderUniformName["Shininess"] = "shininess";
         ShaderUniformName["BumpScale"] = "bumpScale";
@@ -12100,6 +12102,8 @@ var egret3d;
             DefaultShaders.MESH_PHONG = this._createShader("builtin/meshphong.shader.json", egret3d.ShaderLib.meshphong, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* Back */);
             DefaultShaders.MESH_PHYSICAL = this._createShader("builtin/meshphysical.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpStates);
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, 2305 /* CCW */, 1029 /* Back */);
+            DefaultShaders.MESH_STANDARD = this._createShader("builtin/meshstandard.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpStates, ["STANDARD" /* STANDARD */]);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", egret3d.ShaderLib.particle, 2000 /* Geometry */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
             helpMaterial.clearStates().setDepth(false, false);
@@ -15432,7 +15436,7 @@ var egret3d;
         CameraAndLightSystem.prototype.onAwake = function () {
             var lightCamera = this._lightCamera;
             lightCamera.enabled = false; // Disable camera.
-            lightCamera.hideFlags = 0 /* HideAndDontSave */;
+            lightCamera.hideFlags = 14 /* HideAndDontSave */;
         };
         CameraAndLightSystem.prototype.onAddGameObject = function (_gameObject, group) {
             var groups = this.groups;
@@ -24807,7 +24811,7 @@ var egret3d;
             }
             //
             if (key === "envMap" /* EnvMap */) {
-                var mapping = extension.mapping, reflection = extension.reflection;
+                var mapping = extension.mapping, _a = extension.reflection, reflection = _a === void 0 ? true : _a;
                 var typeDefine = "ENVMAP_TYPE_CUBE" /* ENVMAP_TYPE_CUBE */;
                 var blendDefine = "ENVMAP_BLENDING_MULTIPLY" /* ENVMAP_BLENDING_MULTIPLY */; // TODO
                 switch (mapping) {

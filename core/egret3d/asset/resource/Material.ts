@@ -250,7 +250,7 @@ namespace egret3d {
             }
             //
             if (key === ShaderUniformName.EnvMap) {
-                let { mapping, reflection } = extension;
+                let { mapping, reflection = true } = extension;
                 let typeDefine = ShaderDefine.ENVMAP_TYPE_CUBE;
                 let blendDefine = ShaderDefine.ENVMAP_BLENDING_MULTIPLY; // TODO
 
@@ -274,6 +274,7 @@ namespace egret3d {
                 if (add) {
                     this.defines.addDefine(typeDefine);
                     this.defines.addDefine(blendDefine);
+
                     if (reflection) {
                         this.defines.addDefine(ShaderDefine.ENVMAP_MODE_REFLECTION);
                     }
@@ -281,6 +282,7 @@ namespace egret3d {
                 else {
                     this.defines.removeDefine(typeDefine);
                     this.defines.removeDefine(blendDefine);
+
                     if (reflection) {
                         this.defines.removeDefine(ShaderDefine.ENVMAP_MODE_REFLECTION);
                     }

@@ -299,7 +299,7 @@ namespace egret3d {
          */
         mapping?: TextureUVMapping;
         /**
-         * @defaults false
+         * @defaults true
          */
         reflection?: boolean;
     }

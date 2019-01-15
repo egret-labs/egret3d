@@ -140,7 +140,7 @@ declare namespace paper {
         /**
          *
          */
-        HideAndDontSave = 0,
+        HideAndDontSave = 14,
     }
     /**
      *
@@ -2360,7 +2360,7 @@ declare namespace egret3d {
          */
         mapping?: TextureUVMapping;
         /**
-         * @defaults false
+         * @defaults true
          */
         reflection?: boolean;
     }
@@ -5326,9 +5326,11 @@ declare namespace egret3d {
         DisplacementMap = "displacementMap",
         EnvMap = "envMap",
         EmissiveMap = "emissiveMap",
-        Cube = "tCube",
+        CubeMap = "tCube",
         Flip = "tFlip",
         UVTransform = "uvTransform",
+        Reflectivity = "reflectivity",
+        RefractionRatio = "refractionRatio",
         Specular = "specular",
         Shininess = "shininess",
         BumpScale = "bumpScale",
@@ -5945,12 +5947,12 @@ declare namespace egret3d {
     class DefaultShaders extends paper.SingletonComponent {
         static LINEDASHED: Shader;
         static VERTEX_COLOR: Shader;
-        static MATERIAL_COLOR: Shader;
         static MESH_BASIC: Shader;
         static MESH_NORMAL: Shader;
         static MESH_LAMBERT: Shader;
         static MESH_PHONG: Shader;
         static MESH_PHYSICAL: Shader;
+        static MESH_STANDARD: Shader;
         static PARTICLE: Shader;
         static CUBE: Shader;
         static DEPTH: Shader;
@@ -5960,6 +5962,10 @@ declare namespace egret3d {
         static SHADOW: Shader;
         static SPRITE: Shader;
         static COPY: Shader;
+        /**
+         * @deprecated
+         */
+        static MATERIAL_COLOR: Shader;
         /**
          * @deprecated
          */

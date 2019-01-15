@@ -30,7 +30,7 @@ namespace paper {
         /**
          * 
          */
-        HideAndDontSave = Hide & DontSave,
+        HideAndDontSave = Hide | DontSave,
     }
     /**
      * 
