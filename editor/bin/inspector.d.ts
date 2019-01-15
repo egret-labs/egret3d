@@ -442,6 +442,7 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
+    function getQueryValues(uri: string): any;
 }
 declare namespace paper.editor {
     const context: EventDispatcher;

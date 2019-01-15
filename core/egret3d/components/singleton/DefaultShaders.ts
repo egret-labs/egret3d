@@ -5,13 +5,13 @@ namespace egret3d {
     export class DefaultShaders extends paper.SingletonComponent {
         public static LINEDASHED: Shader;
         public static VERTEX_COLOR: Shader;
-        public static MATERIAL_COLOR: Shader;
 
         public static MESH_BASIC: Shader;
         public static MESH_NORMAL: Shader;
         public static MESH_LAMBERT: Shader;
         public static MESH_PHONG: Shader;
         public static MESH_PHYSICAL: Shader;
+        public static MESH_STANDARD: Shader;
 
         public static PARTICLE: Shader;
 
@@ -24,6 +24,10 @@ namespace egret3d {
         public static SPRITE: Shader;
         public static COPY: Shader;
 
+        /**
+         * @deprecated
+         */
+        public static MATERIAL_COLOR: Shader;
         /**
          * @deprecated
          */
@@ -147,6 +151,9 @@ namespace egret3d {
 
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
             DefaultShaders.MESH_PHYSICAL = this._createShader("builtin/meshphysical.shader.json", ShaderLib.meshphysical as any, RenderQueue.Geometry, helpStates);
+
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
+            DefaultShaders.MESH_STANDARD = this._createShader("builtin/meshstandard.shader.json", ShaderLib.meshphysical as any, RenderQueue.Geometry, helpStates, [ShaderDefine.STANDARD]);
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", ShaderLib.particle as any, RenderQueue.Geometry, helpStates, [ShaderDefine.USE_COLOR]);

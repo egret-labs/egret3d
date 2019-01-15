@@ -4779,7 +4779,16 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
-        var containerHTML = "\n    <div class=\"egret-hierarchy\" style=\"margin: auto;height: 100%;background: #000000;\"></div>\n    <div class=\"egret-inspector\" style=\"margin: auto;height: 100%;background: #000000;\"></div>\n";
+        var containerHTML = "\n        <div class=\"egret-hierarchy\" style=\"margin: auto;height: 100%;background: #000000;\"></div>\n        <div class=\"egret-inspector\" style=\"margin: auto;height: 100%;background: #000000;\"></div>\n    ";
+        var ShowState;
+        (function (ShowState) {
+            ShowState[ShowState["None"] = 0] = "None";
+            ShowState[ShowState["FPS"] = 1] = "FPS";
+            ShowState[ShowState["Hierarchy"] = 2] = "Hierarchy";
+            ShowState[ShowState["Inspector"] = 4] = "Inspector";
+            ShowState[ShowState["HierarchyAndInspector"] = 6] = "HierarchyAndInspector";
+            ShowState[ShowState["All"] = 7] = "All";
+        })(ShowState || (ShowState = {}));
         /**
          * @internal
          */
@@ -4788,25 +4797,28 @@ var paper;
             function EditorSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this._isMobile = false;
+                _this._showStates = 0 /* None */;
+                _this._fpsIndex = 0;
                 _this._guiComponent = paper.Application.playerMode === 2 /* Editor */ ? null : paper.GameObject.globalGameObject.getOrAddComponent(editor.GUIComponent);
-                _this._fpsHided = false;
+                _this._fpsShowQueue = [true, false, false, true];
                 return _this;
             }
-            EditorSystem.prototype._hideFPS = function () {
-                var guiComponent = this._guiComponent;
-                var statsDOM = guiComponent.stats.dom;
-                if (this._fpsHided) {
-                    statsDOM.style.display = "block";
+            EditorSystem.prototype._updateFPSShowState = function () {
+                if (this._guiComponent) {
+                    var statsDOM = this._guiComponent.stats.dom;
+                    if (this._showStates & 1 /* FPS */) {
+                        statsDOM.style.display = "block";
+                    }
+                    else {
+                        statsDOM.style.display = "none";
+                    }
                 }
-                else {
-                    statsDOM.style.display = "none";
-                }
-                this._fpsHided = !this._fpsHided;
             };
             EditorSystem.prototype.onAwake = function () {
                 paper.GameObject.globalGameObject.getOrAddComponent(editor.EditorDefaultTexture); // TODO
                 //
                 if (paper.Application.playerMode === 2 /* Editor */) {
+                    this._showStates = 0 /* None */;
                     paper.Application.systemManager.register(editor.SceneSystem, 6000 /* LateUpdate */);
                 }
                 else {
@@ -4845,33 +4857,26 @@ var paper;
                             inspector_1[0].appendChild(guiComponent_1.inspector.domElement);
                         }
                     };
+                    var quaryValues = editor.getQueryValues(location.search);
                     this._isMobile = paper.Application.isMobile;
-                    if (this._isMobile) {
-                        // TODO 前置组件。
-                        // const loadScript = (url: string, callback: any) => {
-                        //     const script = document.createElement("script");
-                        //     script.onload = () => callback();
-                        //     script.src = url;
-                        //     document.body.appendChild(script);
-                        // };
-                        // loadScript(
-                        //     "https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js",
-                        //     () => {
-                        //         new VConsole();
-                        //     }
-                        // );
-                        guiComponent_1.hierarchy.close();
-                        guiComponent_1.inspector.close();
-                        if (!dat.GUI.hide) {
-                            dat.GUI.toggleHide();
-                        }
-                        if (!this._fpsHided) {
-                            this._hideFPS();
-                        }
+                    this._showStates = 0 /* None */;
+                    if (quaryValues.FPS === 1 || (quaryValues.FPS !== 0 && !this._isMobile)) {
+                        this._showStates |= 1 /* FPS */;
+                        this._fpsIndex = 0;
                     }
                     else {
+                        this._fpsIndex = 1;
+                        this._updateFPSShowState();
+                    }
+                    if (quaryValues.GUI === 1 || (quaryValues.GUI !== 0 && !this._isMobile)) {
+                        this._showStates |= 6 /* HierarchyAndInspector */;
                         hierarchy_1[0].appendChild(guiComponent_1.hierarchy.domElement);
                         inspector_1[0].appendChild(guiComponent_1.inspector.domElement);
+                    }
+                    else {
+                        dat.GUI.toggleHide();
+                        guiComponent_1.hierarchy.close();
+                        guiComponent_1.inspector.close();
                     }
                     paper.Application.systemManager.register(editor.GUISystem, 6000 /* LateUpdate */ + 1); // Make sure the GUISystem update after the SceneSystem.
                 }
@@ -4887,7 +4892,17 @@ var paper;
                 guiComponent.stats.update();
                 guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["webgl"]["WebGLRenderSystem"]).deltaTime, 200);
                 if (egret3d.inputCollecter.getKey("KeyH" /* KeyH */).isDown(false)) {
-                    this._hideFPS();
+                    this._fpsIndex++;
+                    if (this._fpsIndex >= this._fpsShowQueue.length) {
+                        this._fpsIndex = 0;
+                    }
+                    if (this._fpsShowQueue[this._fpsIndex]) {
+                        this._showStates |= 1 /* FPS */;
+                    }
+                    else {
+                        this._showStates &= ~1 /* FPS */;
+                    }
+                    this._updateFPSShowState();
                 }
                 // TODO dc tc vc
                 var isMobile = paper.Application.isMobile;
@@ -4908,9 +4923,6 @@ var paper;
                         if (!dat.GUI.hide) {
                             dat.GUI.toggleHide();
                         }
-                        if (!this._fpsHided) {
-                            this._hideFPS();
-                        }
                     }
                     else {
                         if (guiComponent.hierarchy.closed) {
@@ -4927,9 +4939,6 @@ var paper;
                         }
                         if (dat.GUI.hide) {
                             dat.GUI.toggleHide();
-                        }
-                        if (this._fpsHided) {
-                            this._hideFPS();
                         }
                     }
                     this._isMobile = isMobile;
@@ -5678,6 +5687,24 @@ var paper;
         }());
         editor.Helper = Helper;
         __reflect(Helper.prototype, "paper.editor.Helper");
+        function getQueryValues(uri) {
+            var match;
+            var pl = /\+/g, // Regex for replacing addition symbol with a space
+            search = /([^&=]+)=?([^&]*)/g, decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); }, query = uri.substring(1);
+            var result = {};
+            while (match = search.exec(query)) {
+                var value = decode(match[2]);
+                var numberValue = Number(value);
+                if (numberValue === numberValue) {
+                    result[decode(match[1])] = numberValue;
+                }
+                else {
+                    result[decode(match[1])] = value;
+                }
+            }
+            return result;
+        }
+        editor.getQueryValues = getQueryValues;
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 /// <reference path="./EventDispatcher.ts" />
