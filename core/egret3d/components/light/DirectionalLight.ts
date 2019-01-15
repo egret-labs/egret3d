@@ -29,8 +29,7 @@ namespace egret3d {
             shadowCamera.viewport.set(0, 0, shadowSize, shadowSize);
             shadowCamera.transform.position.copy(transform.position).update();
             shadowCamera.transform.rotation.copy(transform.rotation).update();
-            // shadowCamera.worldToCameraMatrix = transform.worldToLocalMatrix;
-            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(shadowCamera.fov, shadow.near, shadow.far, 30.0, 0.0, 1.0, stage.matchFactor).release();
+            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(0.0, shadow.near, shadow.far, 30.0, 0.0, 1.0, stage.matchFactor).release();
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             shadowMatrix.set(
                 0.5, 0.0, 0.0, 0.5,
@@ -42,13 +41,5 @@ namespace egret3d {
             shadowMatrix.multiply(shadowCamera.projectionMatrix);
             shadowMatrix.multiply(shadowCamera.worldToCameraMatrix);
         }
-
-        // private _updateShadow(light: DirectionalLight, shadow: LightShadow) {
-        // shadow.camera.opvalue = 0.0; // Orthographic camera.
-        // shadow.camera.renderTarget = shadow.renderTarget;
-        // // shadow.viewPortPixel.set(0, 0, this.shadowSize, this.shadowSize);
-
-        // this._updateShadowMatrix(camera);
-        // }
     }
 }

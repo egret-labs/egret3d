@@ -14667,7 +14667,6 @@ var egret3d;
             /**
              *
              */
-            // public update: ((light: BaseLight, shadow: LightShadow) => void) | null = null;
             this.update = null;
         }
         /**
@@ -15690,8 +15689,7 @@ var egret3d;
             shadowCamera.viewport.set(0, 0, shadowSize, shadowSize);
             shadowCamera.transform.position.copy(transform.position).update();
             shadowCamera.transform.rotation.copy(transform.rotation).update();
-            // shadowCamera.worldToCameraMatrix = transform.worldToLocalMatrix;
-            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(shadowCamera.fov, shadow.near, shadow.far, 30.0, 0.0, 1.0, egret3d.stage.matchFactor).release();
+            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(0.0, shadow.near, shadow.far, 30.0, 0.0, 1.0, egret3d.stage.matchFactor).release();
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             shadowMatrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0);
             shadowMatrix.multiply(shadowCamera.projectionMatrix);
@@ -15832,6 +15830,7 @@ var egret3d;
         new egret3d.Rectangle(2, 1, 1, 1), new egret3d.Rectangle(0, 1, 1, 1), new egret3d.Rectangle(3, 1, 1, 1),
         new egret3d.Rectangle(1, 1, 1, 1), new egret3d.Rectangle(3, 0, 1, 1), new egret3d.Rectangle(1, 0, 1, 1)
     ];
+    var _pointLightFov = Math.PI * 0.5;
     /**
      * 点光组件。
      */
@@ -15848,40 +15847,6 @@ var egret3d;
              */
             _this.distance = 100.0;
             return _this;
-            // public updateShadow(camera: Camera) {
-            // if (!this.renderTarget) {
-            //     this.renderTarget = new GlRenderTarget("PointLight", this.shadowSize * 4, this.shadowSize * 2); //   4x2  cube
-            // }
-            // camera.fov = Math.PI * 0.5;
-            // camera.opvalue = 1.0;
-            // camera.renderTarget = this.renderTarget;
-            // const context = camera.context;
-            // camera.calcProjectMatrix(1.0, context.matrix_p);
-            // const shadowMatrix = this.shadowMatrix;
-            // shadowMatrix.fromTranslate(this.gameObject.transform.position.clone().multiplyScalar(-1).release());
-            // }
-            // public updateFace(camera: Camera, faceIndex: number) {
-            // TODO
-            // const position = this.gameObject.transform.position.clone().release();
-            // helpVector3A.set(
-            //     position.x + _targets[faceIndex].x,
-            //     position.y + _targets[faceIndex].y,
-            //     position.z + _targets[faceIndex].z,
-            // );
-            // this.viewPortPixel.x = _viewPortsScale[faceIndex].x * this.shadowSize;
-            // this.viewPortPixel.y = _viewPortsScale[faceIndex].y * this.shadowSize;
-            // this.viewPortPixel.w = _viewPortsScale[faceIndex].z * this.shadowSize;
-            // this.viewPortPixel.h = _viewPortsScale[faceIndex].w * this.shadowSize;
-            // const cameraTransform = camera.gameObject.transform;
-            // cameraTransform.setPosition(position); // TODO support copy matrix.
-            // cameraTransform.lookAt(helpVector3A, _ups[faceIndex]);
-            // // const temp = cameraTransform.getWorldMatrix().clone().release();
-            // // temp.rawData[12] = -temp.rawData[12];//Left-hand
-            // const context = camera.context;
-            // context.matrix_v.copy(cameraTransform.worldToLocalMatrix);
-            // context.matrix_vp.multiply(context.matrix_p, context.matrix_v);
-            // context.updateLightDepth(this);
-            // }
         }
         PointLight.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
@@ -15903,8 +15868,8 @@ var egret3d;
             var lightPosition = transform.position;
             shadowCamera.transform.position.copy(lightPosition).update();
             shadowCamera.transform.lookAt(lightPosition.clone().add(_targets[face]).release(), _ups[face]);
-            shadowCamera.viewport = _viewPortsScale[face].clone().multiplyScalar(shadowSize).release();
-            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(Math.PI * 0.5, shadow.near, shadow.far, 0.0, 1.0, 1.0, egret3d.stage.matchFactor).release();
+            shadowCamera.viewport.copy(_viewPortsScale[face]).multiplyScalar(shadowSize);
+            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(_pointLightFov, shadow.near, shadow.far, 0.0, 1.0, 1.0, egret3d.stage.matchFactor).release();
             shadowMatrix.fromTranslate(lightPosition.clone().multiplyScalar(-1).release());
         };
         __decorate([
@@ -27697,31 +27662,6 @@ var egret3d;
                 //
                 this._cacheProgram = null;
             };
-            // private _renderShadow(light: BaseLight) {
-            // const camera = this._lightCamera;
-            // const renderState = this._renderState;
-            // const isPointLight = light.constructor === PointLight;
-            // const shadowMaterial = isPointLight ? DefaultMaterials.SHADOW_DISTANCE : DefaultMaterials.SHADOW_DEPTH;
-            // const drawCalls = this._drawCallCollecter;
-            // const shadowCalls = drawCalls.shadowCalls;
-            // const webgl = WebGLRenderState.webgl!;
-            // light.updateShadow(camera);
-            // light.renderTarget.use();
-            // renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, Color.WHITE);
-            // for (let i = 0, l = isPointLight ? 6 : 1; i < l; ++i) {
-            //     const context = camera.context;
-            //     if (isPointLight) {
-            //         light.updateFace(camera, i);
-            //     }
-            //     webgl.viewport(light.viewPortPixel.x, light.viewPortPixel.y, light.viewPortPixel.w, light.viewPortPixel.h);
-            //     webgl.depthRange(0, 1);
-            //     drawCalls.shadowFrustumCulling(camera);
-            //     for (const drawCall of shadowCalls) {
-            //         this._draw(context, drawCall, shadowMaterial);
-            //     }
-            // }
-            // webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-            // }
             WebGLRenderSystem.prototype._renderShadow = function (light) {
                 var collecter = this._cameraAndLightCollecter;
                 if (collecter.currentLight !== light) {
@@ -27738,19 +27678,20 @@ var egret3d;
                         shadow.update(i);
                         //update draw call
                         camera._update();
-                        renderState_1.viewPort.copy(camera.viewport);
                         if (renderState_1.renderTarget !== shadow.renderTarget) {
                             renderState_1.renderTarget = shadow.renderTarget;
                             renderState_1.renderTarget.activateRenderTexture();
                             renderState_1.clearBuffer(16640 /* DepthAndColor */, egret3d.Color.WHITE);
                         }
+                        // renderState.viewPort.copy(camera.viewport);//TODO
                         webgl_12.viewport(camera.viewport.x, camera.viewport.y, camera.viewport.w, camera.viewport.h);
-                        // renderState.updateViewport(camera.viewport, shadow.renderTarget);
                         var drawCalls = camera.context.shadowCalls;
                         for (var _i = 0, drawCalls_3 = drawCalls; _i < drawCalls_3.length; _i++) {
                             var drawCall = drawCalls_3[_i];
                             this.draw(drawCall, shadowMaterial);
                         }
+                        //
+                        this._cacheCamera = null;
                     }
                 }
                 egret3d.Camera.current = null;
@@ -27818,11 +27759,11 @@ var egret3d;
                 if (renderer) {
                     if (context.lightCastShadows && renderer.receiveShadows) {
                         renderer.defines.addDefine("USE_SHADOWMAP" /* USE_SHADOWMAP */);
-                        // renderer.defines.addDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
+                        renderer.defines.addDefine("SHADOWMAP_TYPE_PCF" /* SHADOWMAP_TYPE_PCF */);
                     }
                     else {
                         renderer.defines.removeDefine("USE_SHADOWMAP" /* USE_SHADOWMAP */);
-                        // renderer.defines.removeDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
+                        renderer.defines.removeDefine("SHADOWMAP_TYPE_PCF" /* SHADOWMAP_TYPE_PCF */);
                     }
                 }
                 //

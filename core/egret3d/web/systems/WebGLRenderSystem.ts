@@ -594,36 +594,6 @@ namespace egret3d.webgl {
             this._cacheProgram = null;
         }
 
-        // private _renderShadow(light: BaseLight) {
-        // const camera = this._lightCamera;
-        // const renderState = this._renderState;
-        // const isPointLight = light.constructor === PointLight;
-        // const shadowMaterial = isPointLight ? DefaultMaterials.SHADOW_DISTANCE : DefaultMaterials.SHADOW_DEPTH;
-        // const drawCalls = this._drawCallCollecter;
-        // const shadowCalls = drawCalls.shadowCalls;
-        // const webgl = WebGLRenderState.webgl!;
-
-        // light.updateShadow(camera);
-        // light.renderTarget.use();
-        // renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, Color.WHITE);
-
-        // for (let i = 0, l = isPointLight ? 6 : 1; i < l; ++i) {
-        //     const context = camera.context;
-        //     if (isPointLight) {
-        //         light.updateFace(camera, i);
-        //     }
-        //     webgl.viewport(light.viewPortPixel.x, light.viewPortPixel.y, light.viewPortPixel.w, light.viewPortPixel.h);
-        //     webgl.depthRange(0, 1);
-        //     drawCalls.shadowFrustumCulling(camera);
-
-        //     for (const drawCall of shadowCalls) {
-        //         this._draw(context, drawCall, shadowMaterial);
-        //     }
-        // }
-
-        // webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-        // }
-
         private _renderShadow(light: BaseLight) {
             const collecter = this._cameraAndLightCollecter;
             if (collecter.currentLight !== light) {
@@ -640,18 +610,20 @@ namespace egret3d.webgl {
                     shadow.update!(i);
                     //update draw call
                     camera._update();
-                    renderState.viewPort.copy(camera.viewport);
                     if (renderState.renderTarget !== shadow.renderTarget) {
                         renderState.renderTarget = shadow.renderTarget;
                         renderState.renderTarget.activateRenderTexture();
                         renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.WHITE);
                     }
+                    // renderState.viewPort.copy(camera.viewport);//TODO
                     webgl.viewport(camera.viewport.x, camera.viewport.y, camera.viewport.w, camera.viewport.h);
-                    // renderState.updateViewport(camera.viewport, shadow.renderTarget);
                     const drawCalls = camera.context.shadowCalls;
                     for (const drawCall of drawCalls) {
                         this.draw(drawCall, shadowMaterial);
                     }
+
+                    //
+                    this._cacheCamera = null;
                 }
             }
             Camera.current = null;
@@ -725,11 +697,11 @@ namespace egret3d.webgl {
             if (renderer) {
                 if (context.lightCastShadows && renderer.receiveShadows) {
                     renderer.defines.addDefine(ShaderDefine.USE_SHADOWMAP);
-                    // renderer.defines.addDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
+                    renderer.defines.addDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
                 }
                 else {
                     renderer.defines.removeDefine(ShaderDefine.USE_SHADOWMAP);
-                    // renderer.defines.removeDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
+                    renderer.defines.removeDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
                 }
             }
 
