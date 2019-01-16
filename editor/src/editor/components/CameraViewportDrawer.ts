@@ -25,6 +25,14 @@ namespace paper.editor {
             this._camera = camera;
         }
 
+        private _onStageResize() {
+            const editorUI = this._editorUI;
+            const drawer = this._drawer;
+            egret3d.stage.matchFactor;
+            drawer.transform.setLocalScale(editorUI.pixelViewport.w * 0.1);
+            // this._cameraRenderTexture.uploadTexture(egret3d.stage.viewport.w, egret3d.stage.viewport.h);
+        }
+
         public initialize() {
             super.initialize();
 
@@ -43,11 +51,7 @@ namespace paper.editor {
             editorUI.viewport.set(0.0, 0.0, 0.2, 0.2).update();
             editorUI.gameObject.transform.setLocalPosition(0.0, 100.0, 0.0);
 
-            egret3d.stage.onResize.add(() => {
-                egret3d.stage.matchFactor;
-                drawer.transform.setLocalScale(editorUI.pixelViewport.w * 0.1);
-                // this._cameraRenderTexture.uploadTexture(egret3d.stage.viewport.w, egret3d.stage.viewport.h);
-            });
+            egret3d.stage.onResize.add(this._onStageResize, this);
         }
 
         public uninitialize() {
@@ -55,6 +59,7 @@ namespace paper.editor {
 
             this._cameraRenderTexture.dispose();
             this._updateCamera(null);
+            egret3d.stage.onResize.remove(this._onStageResize, this);
         }
 
         public update() {

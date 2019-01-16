@@ -20,7 +20,7 @@ namespace egret3d {
         return define;
     }
     /**
-     * 
+     * @private
      */
     export const enum DefineLocation {
         None = 0b00,
@@ -67,6 +67,45 @@ namespace egret3d {
      * @private
      */
     export class Defines {
+        public static link(definess: (Defines | null)[], location: DefineLocation) {
+            let definesString = "";
+            const linked = [] as (Define | string)[];
+
+            for (const defines of definess) {
+                if (!defines) {
+                    continue;
+                }
+
+                for (const define of defines._defines) {
+                    if (define.type === undefined || (define.type & location)) {
+                        if (define.name) {
+                            if (linked.indexOf(define.name) >= 0) {
+                                continue;
+                            }
+
+                            linked.push(define.name);
+                        }
+                        else {
+                            if (linked.indexOf(define) >= 0) {
+                                continue;
+                            }
+
+                            linked.push(define);
+                        }
+
+                        if (define.isCode) {
+                            definesString += define.context + " \n";
+                        }
+                        else {
+                            definesString += "#define " + define.context + " \n";
+                        }
+                    }
+                }
+            }
+
+            return definesString;
+        }
+
         public definesMask: string = "";
 
         // mask, string, array,
@@ -176,42 +215,6 @@ namespace egret3d {
             }
 
             return null;
-        }
-
-        public get vertexDefinesString(): string {
-            let definesString = "";
-
-            for (const define of this._defines) {
-                if (define.type === undefined || (define.type & DefineLocation.Vertex)) {
-                    if (define.isCode) {
-                        definesString += define.context + " \n";
-                    }
-                    else {
-                        definesString += "#define " + define.context + " \n";
-                    }
-                }
-            }
-
-            return definesString;
-        }
-        /**
-         * 
-         */
-        public get fragmentDefinesString(): string {
-            let definesString = "";
-
-            for (const define of this._defines) {
-                if (define.type === undefined || (define.type & DefineLocation.Fragment)) {
-                    if (define.isCode) {
-                        definesString += define.context + " \n";
-                    }
-                    else {
-                        definesString += "#define " + define.context + " \n";
-                    }
-                }
-            }
-
-            return definesString;
         }
     }
 }

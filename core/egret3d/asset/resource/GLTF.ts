@@ -298,10 +298,6 @@ namespace egret3d {
          * @defaults Normal
          */
         mapping?: TextureUVMapping;
-        /**
-         * @defaults true
-         */
-        reflection?: boolean;
     }
     /**
      * 

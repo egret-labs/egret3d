@@ -1,6 +1,6 @@
 namespace examples.materials {
 
-    export class Cubemap implements Example {
+    export class CubeMap implements Example {
 
         async start() {
             // Load resource config.
@@ -45,20 +45,17 @@ namespace examples.materials {
                 const gameObjectA = paper.Prefab.create("Assets/Models/Threejs/WaltHead.prefab.json")!;
                 gameObjectA.transform.setLocalScale(15.0).translate(0.0, -500.0, 0.0);
                 gameObjectA.getComponentInChildren(egret3d.MeshRenderer)!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT)
-                    .setTexture(egret3d.ShaderUniformName.EnvMap, texture)
                     .setColor(0xFFFFFF);
 
                 const gameObjectB = paper.Prefab.create("Assets/Models/Threejs/WaltHead.prefab.json")!;
-                gameObjectB.transform.setLocalScale(15.0).translate(-900.0, -500.0, 0.0);
+                gameObjectB.transform.setLocalScale(15.0).translate(900.0, -500.0, 0.0);
                 gameObjectB.getComponentInChildren(egret3d.MeshRenderer)!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT)
-                    .setTexture(egret3d.ShaderUniformName.EnvMap, texture)
                     .setColor(0xFFEE00)
-                    .setFloat(egret3d.ShaderUniformName.RefractionRatio, 0.95);
+                    .setFloat(egret3d.ShaderUniformName.RefractionRatio, 0.95).addDefine(egret3d.ShaderDefine.ENVMAP_MODE_REFRACTION);
 
                 const gameObjectC = paper.Prefab.create("Assets/Models/Threejs/WaltHead.prefab.json")!;
-                gameObjectC.transform.setLocalScale(15.0).translate(900.0, -500.0, 0.0);
+                gameObjectC.transform.setLocalScale(15.0).translate(-900.0, -500.0, 0.0);
                 gameObjectC.getComponentInChildren(egret3d.MeshRenderer)!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT)
-                    .setTexture(egret3d.ShaderUniformName.EnvMap, texture)
                     .setColor(0xFF6600)
                     .setFloat(egret3d.ShaderUniformName.Reflectivity, 0.3);
             }

@@ -55,7 +55,7 @@
 
 	vec3 getLightProbeIndirectRadiance( /*const in SpecularLightProbe specularLightProbe,*/ const in GeometricContext geometry, const in float blinnShininessExponent, const in int maxMIPLevel ) {
 
-		#ifdef ENVMAP_MODE_REFLECTION
+		#ifndef ENVMAP_MODE_REFRACTION // modified by egret
 
 			vec3 reflectVec = reflect( -geometry.viewDir, geometry.normal );
 

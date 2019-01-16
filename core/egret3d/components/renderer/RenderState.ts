@@ -25,7 +25,7 @@ namespace egret3d {
 
         public logarithmicDepthBuffer: boolean = false;
 
-        public toneMapping: ToneMapping = ToneMapping.None;
+        public toneMapping: ToneMapping = ToneMapping.LinearToneMapping;
         public toneMappingExposure: number = 1.0;
         public toneMappingWhitePoint: number = 1.0;
 
@@ -154,20 +154,85 @@ namespace egret3d {
 
             return `vec3 toneMapping( vec3 color ) { return ${toneMappingName}ToneMapping( color ); } \n`;
         }
-        /**
-         * @internal
-         */
-        public _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+
+        protected _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
             const components = this._getEncodingComponents(encoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return LinearTo' + components[0] + components[1] + '; }';
+        }
+
+        protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+            const finialEncoding = (this.gammaInput && encoding === TextureEncoding.LinearEncoding) ? TextureEncoding.GammaEncoding : encoding;
+            const components = this._getEncodingComponents(finialEncoding);
+            return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
         }
         /**
          * @internal
          */
-        public _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
-            const finialEncoding = (this.gammaInput && encoding === TextureEncoding.LinearEncoding) ? TextureEncoding.GammaEncoding : encoding;
-            const components = this._getEncodingComponents(finialEncoding);
-            return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
+        public _updateTextureDefine(mapName: string, texture: BaseTexture | null, defines: Defines | null = null) {
+            defines = defines || this.defines;
+
+            const mapNameDefine = (egret3d as any).ShaderTextureDefine[mapName];//TODO
+            defines.removeDefine(mapNameDefine);
+            defines.removeDefine(ShaderDefine.FLIP_V);
+            //
+            if (texture) {
+                defines.addDefine(mapNameDefine);
+
+                if (texture instanceof RenderTexture) {
+                    defines.addDefine(ShaderDefine.FLIP_V);
+                }
+            }
+
+            const decodingFunName = (egret3d as any).TextureDecodingFunction[mapName]; // TODO
+            if (decodingFunName) {
+                defines.removeDefineByName(decodingFunName);
+
+                if (texture) {
+                    const decodingCode = this._getTexelDecodingFunction(decodingFunName, texture.gltfTexture.extensions.paper.encoding);
+                    const define = defines.addDefine(decodingCode)!;
+                    define.isCode = true;
+                    define.name = decodingFunName;
+                    define.type = DefineLocation.Fragment;
+                }
+            }
+            //
+            if (mapName === ShaderUniformName.EnvMap) {
+                const nameA = "envMapA";
+                const nameB = "envMapB";
+
+                defines.removeDefineByName(nameA);
+                defines.removeDefineByName(nameB);
+
+                if (texture) {
+                    const { mapping } = texture.gltfTexture.extensions.paper;
+                    let typeDefine = ShaderDefine.ENVMAP_TYPE_CUBE;
+                    let blendDefine = ShaderDefine.ENVMAP_BLENDING_MULTIPLY; // TODO
+                    let define: Define;
+
+                    switch (mapping) {
+                        case TextureUVMapping.Cube:
+                        default:
+                            typeDefine = ShaderDefine.ENVMAP_TYPE_CUBE;
+                            break;
+                        case TextureUVMapping.CubeUV:
+                            typeDefine = ShaderDefine.ENVMAP_TYPE_CUBE_UV;
+                            break;
+                        case TextureUVMapping.Equirectangular:
+                            typeDefine = ShaderDefine.ENVMAP_TYPE_EQUIREC;
+                            break;
+                        case TextureUVMapping.Spherical:
+                            typeDefine = ShaderDefine.ENVMAP_TYPE_SPHERE;
+                            break;
+                    }
+
+                    define = defines.addDefine(typeDefine)!;
+                    define.type = DefineLocation.Fragment;
+                    define.name = nameA;
+                    define = defines.addDefine(blendDefine)!;
+                    define.type = DefineLocation.Fragment;
+                    define.name = nameB;
+                }
+            }
         }
         /**
          * @internal

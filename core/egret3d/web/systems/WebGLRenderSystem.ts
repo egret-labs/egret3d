@@ -92,6 +92,7 @@ namespace egret3d.webgl {
         private _cacheProgram: WebGLProgramBinder | null = null;
         private _cacheScene: paper.Scene | null = null;
         private _cacheCamera: Camera | null = null;
+        private _cacheSkyBoxTexture: BaseTexture | null = null;
         //
         private _cacheMesh: Mesh | null = null;
         private _cacheSubMeshIndex: int = -1;
@@ -516,9 +517,9 @@ namespace egret3d.webgl {
                     case gltf.UniformType.SAMPLER_2D:
                         if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
                             const unit = globalUniform.textureUnits[0];
-                            let texture = value as (WebGLTexture | WebGLRenderTexture | null);
+                            let texture = value as (BaseTexture | null);
                             if (!texture || texture.isDisposed) {
-                                texture = DefaultTextures.WHITE as WebGLTexture; // TODO
+                                texture = DefaultTextures.WHITE; // TODO
                             }
 
                             webgl.uniform1i(location, unit);
@@ -532,9 +533,9 @@ namespace egret3d.webgl {
                     case gltf.UniformType.SAMPLER_CUBE:
                         if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
                             const unit = globalUniform.textureUnits[0];
-                            let texture = value as (WebGLTexture | WebGLRenderTexture | null);
+                            let texture = value as (BaseTexture | null);
                             if (!texture || texture.isDisposed) {
-                                texture = DefaultTextures.WHITE as WebGLTexture; // TODO
+                                texture = this._cacheSkyBoxTexture || DefaultTextures.WHITE; // TODO
                             }
 
                             webgl.uniform1i(location, unit);
@@ -594,14 +595,25 @@ namespace egret3d.webgl {
             const skyBox = camera.gameObject.getComponent(SkyBox);
             if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
                 const drawCall = this._drawCallCollecter.skyBox;
+                const material = skyBox.material;
+                const texture = material.getTexture(ShaderUniformName.CubeMap);
+
+                if (this._cacheSkyBoxTexture !== texture) {
+                    renderState._updateTextureDefine(ShaderUniformName.EnvMap, texture);
+                    this._cacheSkyBoxTexture = texture;
+                }
 
                 if (!drawCall.mesh) {
-                    drawCall.mesh = skyBox.material.shader === DefaultShaders.CUBE ? DefaultMeshes.CUBE : DefaultMeshes.SPHERE;
+                    drawCall.mesh = material.shader === DefaultShaders.CUBE ? DefaultMeshes.CUBE : DefaultMeshes.SPHERE;
                 }
 
                 drawCall.matrix = camera.gameObject.transform.localToWorldMatrix;
 
-                this.draw(drawCall, skyBox.material);
+                this.draw(drawCall, material);
+            }
+            else if (this._cacheSkyBoxTexture) {
+                renderState._updateTextureDefine(ShaderUniformName.EnvMap, null);
+                this._cacheSkyBoxTexture = null;
             }
             // Draw opaques.
             for (const drawCall of camera.context.opaqueCalls) {
@@ -733,14 +745,18 @@ namespace egret3d.webgl {
             else {
                 const webgl = WebGLRenderState.webgl!;
                 const renderState = this._renderState;
-                const vertexDefinesString = renderState.defines.vertexDefinesString + material.defines.vertexDefinesString + (renderer ? renderer.defines.vertexDefinesString : "") + (currentScene || activeScene).defines.vertexDefinesString;
-                const fragmentDefinesString = renderState.defines.fragmentDefinesString + material.defines.fragmentDefinesString + (renderer ? renderer.defines.fragmentDefinesString : "") + (currentScene || activeScene).defines.fragmentDefinesString;
                 const extensions = shader.config.extensions!.KHR_techniques_webgl;
+                const defines = [
+                    material.defines,
+                    renderer ? renderer.defines : null,
+                    (currentScene || activeScene).defines,
+                    renderState.defines,
+                ];
 
                 renderState.customShaderChunks = shader.customs;
 
-                const vertexWebGLShader = this._getWebGLShader(extensions!.shaders[0], renderState.getPrefixVertex(vertexDefinesString))!; // TODO 顺序依赖
-                const fragmentWebGLShader = this._getWebGLShader(extensions!.shaders[1], renderState.getPrefixFragment(fragmentDefinesString))!;  // TODO 顺序依赖
+                const vertexWebGLShader = this._getWebGLShader(extensions!.shaders[0], renderState.getPrefixVertex(Defines.link(defines, DefineLocation.Vertex)))!; // TODO 顺序依赖
+                const fragmentWebGLShader = this._getWebGLShader(extensions!.shaders[1], renderState.getPrefixFragment(Defines.link(defines, DefineLocation.Fragment)))!;  // TODO 顺序依赖
 
                 if (vertexWebGLShader && fragmentWebGLShader) {
                     const webGLProgram = webgl.createProgram()!;
