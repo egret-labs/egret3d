@@ -2,7 +2,7 @@ namespace egret3d {
     /**
      * 
      */
-    export interface CreateTextureParameters extends gltf.Sampler, GLTFEgretTextureExtension {
+    export interface CreateTextureParameters extends gltf.Sampler, GLTFTextureExtension {
         /**
          * 纹理数据源。
          */
@@ -37,7 +37,7 @@ namespace egret3d {
                 //
                 depth, layers, faces, levels,
                 //
-                depthBuffer, stencilBuffer,
+                depthBuffer = true, stencilBuffer = false,
             } = createTextureParameters as CreateTextureParameters;
             //
             sampler.wrapS = wrapS;
@@ -48,8 +48,8 @@ namespace egret3d {
             extension.premultiplyAlpha = premultiplyAlpha;
             extension.flipY = flipY;
 
-            extension.width = width;
-            extension.height = height;
+            extension.width = width; // TODO min size
+            extension.height = height; // TODO min size
             extension.anisotropy = anisotropy;
 
             extension.format = format;

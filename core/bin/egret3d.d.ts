@@ -1784,7 +1784,7 @@ declare namespace egret3d {
          */
         transformNormal(value: Vector3, out?: Vector3): Vector3;
         private static _perspectiveProjectMatrix(left, right, top, bottom, near, far, out);
-        private static orthographicProjectLH(width, height, znear, zfar, out);
+        private static _orthographicProjectLH(width, height, znear, zfar, out);
     }
 }
 declare namespace egret3d {
@@ -1991,7 +1991,7 @@ declare namespace egret3d {
     /**
      *
      */
-    interface CreateTextureParameters extends gltf.Sampler, GLTFEgretTextureExtension {
+    interface CreateTextureParameters extends gltf.Sampler, GLTFTextureExtension {
         /**
          * 纹理数据源。
          */
@@ -2293,7 +2293,7 @@ declare namespace egret3d {
     /**
      *
      */
-    interface GLTFEgretTextureExtension {
+    interface GLTFTextureExtension {
         /**
          * @defaults 0
          */
@@ -2350,7 +2350,7 @@ declare namespace egret3d {
          */
         levels?: uint;
         /**
-         * @defaults false
+         * @defaults true
          */
         depthBuffer?: boolean;
         /**
@@ -2367,7 +2367,7 @@ declare namespace egret3d {
      */
     interface GLTFTexture extends gltf.Texture {
         extensions: {
-            paper: GLTFEgretTextureExtension;
+            paper: GLTFTextureExtension;
         };
     }
     /**
@@ -7076,15 +7076,15 @@ declare namespace egret3d {
         /**
          *
          */
-        size: uint;
-        /**
-         *
-         */
         near: number;
         /**
          *
          */
         far: number;
+        /**
+         *
+         */
+        size: number;
         /**
          * @private
          */
@@ -7092,17 +7092,22 @@ declare namespace egret3d {
         /**
          * @private
          */
-        renderTarget: RenderTexture;
+        readonly renderTarget: RenderTexture;
         /**
-         *
+         * @private
          */
-        update: ((face: number) => void) | null;
+        onUpdate: ((face: uint) => void) | null;
+        private _textureSize;
         /**
          * 禁止实例化。
          */
         private constructor();
         serialize(): number[];
         deserialize(data: ReadonlyArray<number>): this;
+        /**
+         *
+         */
+        textureSize: uint;
     }
 }
 declare namespace paper {

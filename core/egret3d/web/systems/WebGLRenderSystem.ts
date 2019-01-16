@@ -621,7 +621,7 @@ namespace egret3d.webgl {
 
                 for (let i = 0, l = (isPoint ? 6 : 1); i < l; i++) {
                     //update shadowMatrix
-                    shadow.update!(i);
+                    shadow.onUpdate!(i);
                     //update draw call
                     camera._update();
 
@@ -882,7 +882,7 @@ namespace egret3d.webgl {
                 // Render lights shadow.
                 if (lights.length > 0) {
                     for (const light of lights) {
-                        if (!light.castShadows || !light.shadow.update) {
+                        if (!light.castShadows || !light.shadow.onUpdate) {
                             continue;
                         }
 

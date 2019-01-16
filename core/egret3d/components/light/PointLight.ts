@@ -45,7 +45,7 @@ namespace egret3d {
         public initialize() {
             super.initialize();
 
-            this.shadow.update = this._updateShadow.bind(this);
+            this.shadow.onUpdate = this._updateShadow.bind(this);
         }
 
         private _updateShadow(face: number) {
@@ -53,15 +53,12 @@ namespace egret3d {
             const shadowMatrix = shadow.matrix;
             const shadowCamera = cameraAndLightCollecter.shadowCamera;
             const transform = this.gameObject.transform;
-            const shadowSize = Math.min(shadow.size, renderState.maxTextureSize);
-            if (!shadow.renderTarget) {
-                shadow.renderTarget = RenderTexture.create({ width: shadowSize * 4.0, height: shadowSize * 2.0 });
-            }
+            const textureSize = Math.min(shadow.textureSize, renderState.maxTextureSize);
 
             const lightPosition = transform.position;
-            shadowCamera.transform.position.copy(lightPosition).update();
+            shadowCamera.transform.localPosition = lightPosition;
             shadowCamera.transform.lookAt(lightPosition.clone().add(_targets[face]).release(), _ups[face]);
-            shadowCamera.viewport.copy(_viewPortsScale[face]).multiplyScalar(shadowSize);
+            shadowCamera.viewport.copy(_viewPortsScale[face]).multiplyScalar(textureSize);
             shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(_pointLightFov, shadow.near, shadow.far, 0.0, 1.0, 1.0, stage.matchFactor).release();
 
             shadowMatrix.fromTranslate(lightPosition.clone().multiplyScalar(-1).release());

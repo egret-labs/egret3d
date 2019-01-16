@@ -424,7 +424,7 @@ namespace egret3d {
                 const width = widthX + (widthY - widthX) * matchFactor;
                 const height = heightX + (heightY - heightX) * matchFactor;
 
-                Matrix4.orthographicProjectLH(width, height, near, far, orthographicMatrix);
+                Matrix4._orthographicProjectLH(width, height, near, far, orthographicMatrix);
             }
 
             if (opvalue === 0.0) {
@@ -1090,7 +1090,7 @@ namespace egret3d {
             return out;
         }
 
-        private static orthographicProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix4): Matrix4 {
+        private static _orthographicProjectLH(width: number, height: number, znear: number, zfar: number, out: Matrix4): Matrix4 {
             const hw = 2.0 / width;
             const hh = 2.0 / height;
             const id = 2.0 / (zfar - znear);

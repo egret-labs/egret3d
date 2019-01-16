@@ -44,6 +44,9 @@ namespace egret3d {
          * @param source 
          */
         public uploadTexture(width: uint, height: uint): this {
+            width = Math.min(width, renderState.maxTextureSize);
+            height = Math.min(height, renderState.maxTextureSize);
+
             this._sourceDirty = true;
             this._bufferDirty = true;
             this._gltfTexture.extensions.paper.width = width;

@@ -230,7 +230,7 @@ namespace egret3d {
     /**
      * 
      */
-    export interface GLTFEgretTextureExtension {
+    export interface GLTFTextureExtension {
         /**
          * @defaults 0
          */
@@ -287,7 +287,7 @@ namespace egret3d {
          */
         levels?: uint;
         /**
-         * @defaults false
+         * @defaults true
          */
         depthBuffer?: boolean;
         /**
@@ -304,7 +304,7 @@ namespace egret3d {
      */
     export interface GLTFTexture extends gltf.Texture {
         extensions: {
-            paper: GLTFEgretTextureExtension,
+            paper: GLTFTextureExtension,
         };
     }
     /**

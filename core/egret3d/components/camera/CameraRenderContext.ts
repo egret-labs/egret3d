@@ -274,8 +274,8 @@ namespace egret3d {
                     directLightBuffer[offset++] = 1;
                     directLightBuffer[offset++] = shadow.bias;
                     directLightBuffer[offset++] = shadow.radius;
-                    directLightBuffer[offset++] = shadow.size;
-                    directLightBuffer[offset++] = shadow.size;
+                    directLightBuffer[offset++] = shadow.textureSize;
+                    directLightBuffer[offset++] = shadow.textureSize;
                     directShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Directional);
                     directShadowMaps[shadowIndex++] = shadow.renderTarget;
                     renderState.castShadows = true;
@@ -316,8 +316,8 @@ namespace egret3d {
                     spotLightBuffer[offset++] = 1;
                     spotLightBuffer[offset++] = shadow.bias;
                     spotLightBuffer[offset++] = shadow.radius;
-                    spotLightBuffer[offset++] = shadow.size;
-                    spotLightBuffer[offset++] = shadow.size;
+                    spotLightBuffer[offset++] = shadow.textureSize;
+                    spotLightBuffer[offset++] = shadow.textureSize;
                     spotShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Spot);
                     spotShadowMaps[shadowIndex++] = shadow.renderTarget;
                     renderState.castShadows = true;
@@ -369,8 +369,8 @@ namespace egret3d {
                     pointLightBuffer[offset++] = 1;
                     pointLightBuffer[offset++] = shadow.bias;
                     pointLightBuffer[offset++] = shadow.radius;
-                    pointLightBuffer[offset++] = shadow.size;
-                    pointLightBuffer[offset++] = shadow.size;
+                    pointLightBuffer[offset++] = shadow.textureSize;
+                    pointLightBuffer[offset++] = shadow.textureSize;
                     pointLightBuffer[offset++] = shadow.near;
                     pointLightBuffer[offset++] = shadow.far;
 

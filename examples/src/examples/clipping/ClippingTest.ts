@@ -27,30 +27,34 @@ namespace examples.clipping {
 
             { // Create lights.
                 paper.Scene.activeScene.ambientColor.fromHex(0x505050);
-
-                // const spotLight = paper.GameObject.create("Spot Light").addComponent(egret3d.SpotLight);
-                // spotLight.angle = Math.PI / 5.0;
-                // spotLight.penumbra = 0.2;
-                // spotLight.color.fromHex(0xFFFFFF);
-                // spotLight.transform.setLocalPosition(2.0, 3.0, 3.0);
-                // spotLight.castShadows = true;
-                // spotLight.shadow.near = 3.0;
-                // spotLight.shadow.far = 10.0;
                 //
-
+                const spotLight = paper.GameObject.create("Spot Light").addComponent(egret3d.SpotLight);
+                spotLight.angle = Math.PI / 5.0;
+                spotLight.penumbra = 0.2;
+                spotLight.color.fromHex(0xFFFFFF);
+                spotLight.castShadows = true;
+                spotLight.shadow.textureSize = 1024;
+                spotLight.shadow.near = 3.0;
+                spotLight.shadow.far = 10.0;
+                spotLight.transform.setLocalPosition(2.0, 3.0, 3.0).lookAt(egret3d.Vector3.ZERO);
+                //
                 const directionalLight = paper.GameObject.create("Directional Light").addComponent(egret3d.DirectionalLight);
                 directionalLight.intensity = 1.0;
                 directionalLight.color.fromHex(0x55505A);
-                directionalLight.transform.setLocalPosition(0.0, 3.0, 0.0);
-                // directionalLight.castShadows = true;
-                // directionalLight.shadow.near = 1.0;
-                // directionalLight.shadow.far = 10.0;
-                //
+                directionalLight.castShadows = true;
+                directionalLight.shadow.textureSize = 1024;
+                directionalLight.shadow.near = 1.0;
+                directionalLight.shadow.far = 10.0;
+                directionalLight.shadow.size = 10;
+                directionalLight.transform.setLocalPosition(0.0, 3.0, 0.0).lookAt(egret3d.Vector3.ZERO);
             }
 
             { // Create game object.
                 const gameObject = this._gameObject = egret3d.DefaultMeshes.createObject(egret3d.MeshBuilder.createTorusKnot(0.4, 0.08, 95, 20), "Object");
-                gameObject.renderer!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_PHONG)
+                const renderer = gameObject.renderer!;
+                renderer.castShadows = true;
+                renderer.receiveShadows = true;
+                renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_PHONG)
                     .setColor(0x80EE10)
                     .setFloat(egret3d.ShaderUniformName.Shininess, 100.0)
                     .setCullFace(false);
@@ -61,7 +65,9 @@ namespace examples.clipping {
 
             { // Create background.
                 const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.PLANE, "Background");
-                gameObject.renderer!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_PHONG)
+                const renderer = gameObject.renderer!;
+                renderer.receiveShadows = true;
+                renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_PHONG)
                     .setColor(0xA0ADAF)
                     .setFloat(egret3d.ShaderUniformName.Shininess, 150.0)
                     .setCullFace(false);
