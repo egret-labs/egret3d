@@ -22,15 +22,15 @@ namespace paper {
         /**
          * 
          */
-        Hide = 0b0110,
+        DontSave = 0b0100,
         /**
          * 
          */
-        DontSave = 0b1000,
+        Hide = 0b1000 | NotTouchable,
         /**
          * 
          */
-        HideAndDontSave = 0b1110,
+        HideAndDontSave = Hide | DontSave,
     }
     /**
      * 
@@ -103,6 +103,8 @@ namespace paper {
         IgnoreRayCast = BuiltinLayer2,
         Water = BuiltinLayer4,
         UI = BuiltinLayer5,
+        Editor = BuiltinLayer6,
+        EditorUI = BuiltinLayer7,
     }
     /**
      * 系统排序。

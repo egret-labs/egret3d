@@ -53,9 +53,8 @@ namespace egret3d {
 
         public createAnimationTree(machineOrTreen: StateMachine | AnimationTree, name: string): AnimationTree {
             const animationTree: AnimationTree = {
-                timeScale: 1.0,
-
                 blendType: AnimationBlendType.E1D,
+                timeScale: 1.0,
                 name: name,
                 parameters: [],
                 nodes: []
@@ -69,10 +68,10 @@ namespace egret3d {
             return animationTree;
         }
 
-        public createAnimationNode(machineOrTreen: StateMachine | AnimationTree, asset: string, clip: string): AnimationNode {
+        public createAnimationNode(machineOrTreen: StateMachine | AnimationTree, asset: string, name: string): AnimationNode {
             const animationNode: AnimationNode = {
-                asset: asset,
-                clip: clip,
+                asset,
+                name,
                 timeScale: 1.0,
             };
 

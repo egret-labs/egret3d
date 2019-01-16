@@ -34,6 +34,10 @@ namespace egret3d {
         /**
          * 
          */
+        public static CUBE: Material;
+        /**
+         * 
+         */
         public static MISSING: Material;
         /**
          * @internal
@@ -78,6 +82,8 @@ namespace egret3d {
 
             DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", DefaultShaders.LINEDASHED)
                 .addDefine(ShaderDefine.USE_COLOR);
+
+            DefaultMaterials.CUBE = this._createMaterial("builtin/cube.mat.json", DefaultShaders.CUBE);
 
             DefaultMaterials.MISSING = this._createMaterial("builtin/missing.mat.json", DefaultShaders.MESH_BASIC)
                 .setColor(Color.PURPLE);

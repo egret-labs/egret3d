@@ -302,7 +302,9 @@ namespace egret3d {
                 this.scale = scale;
             }
         }
-
+        /**
+         * @internal
+         */
         public initialize() {
             super.initialize();
 
@@ -318,14 +320,15 @@ namespace egret3d {
             this._localScale.onUpdate = this._scale.onUpdate = this._onScaleUpdate;
             this._addToCollecter();
         }
-
+        /**
+         * @internal
+         */
         public uninitialize() {
             super.uninitialize();
 
             this._children.length = 0;
             this._observers.length = 0;
         }
-
         /**
          * @internal
          */
@@ -519,6 +522,7 @@ namespace egret3d {
          */
         public setLocalPosition(position: Readonly<IVector3>): this;
         /**
+         * 设置该组件的本地位置。
          * @param x 位置的 X 坐标。
          * @param y 位置的 Y 坐标。
          * @param z 位置的 Z 坐标。
@@ -564,6 +568,7 @@ namespace egret3d {
          */
         public setLocalRotation(rotation: Readonly<IVector4>): this;
         /**
+         * 设置该组件的本地四元数旋转。
          * @param x 四元数dX 分量。
          * @param y 四元数dY 分量。
          * @param z 四元数dZ 分量。
@@ -610,6 +615,7 @@ namespace egret3d {
          */
         public setLocalEuler(euler: Readonly<IVector3>, order?: EulerOrder): this;
         /**
+         * 设置该组件的本地欧拉旋转。（弧度制）
          * @param x 
          * @param y 
          * @param z 
@@ -662,6 +668,7 @@ namespace egret3d {
          */
         public setLocalEulerAngles(euler: Readonly<IVector3>, order?: EulerOrder): this;
         /**
+         * 设置该组件的本地欧拉旋转。（角度制）
          * @param x 
          * @param y 
          * @param z 
@@ -715,6 +722,7 @@ namespace egret3d {
          */
         public setLocalScale(scale: Readonly<IVector3>): this;
         /**
+         * 设置该组件的本地缩放。
          * @param x X 轴缩放。
          * @param y Y 轴缩放。
          * @param z Z 轴缩放。
@@ -822,6 +830,7 @@ namespace egret3d {
          */
         public setRotation(rotation: Readonly<IVector4>): this;
         /**
+         * 设置该组件的本地四元数旋转。
          * @param x 
          * @param y 
          * @param z 
@@ -879,6 +888,7 @@ namespace egret3d {
          */
         public setEuler(euler: Readonly<IVector3>, order?: EulerOrder): this;
         /**
+         * 该组件的世界欧拉旋转。（弧度制）
          * @param x 
          * @param y 
          * @param z 
@@ -927,6 +937,7 @@ namespace egret3d {
          */
         public setEulerAngles(euler: Readonly<IVector3>, order?: EulerOrder): this;
         /**
+         * 该组件的世界欧拉旋转。（角度制）
          * @param x 
          * @param y 
          * @param z 

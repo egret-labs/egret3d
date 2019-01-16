@@ -77,6 +77,16 @@ namespace egret3d {
         CineonToneMapping = 4,
     }
     /**
+     * 
+     */
+    export const enum TextureUVMapping {
+        UV = 0,
+        Cube = 1,
+        CubeUV = 2,
+        Equirectangular = 3,
+        Spherical = 4,
+    }
+    /**
      * 内置提供的全局 Attribute。
      * @private
      */
@@ -222,18 +232,6 @@ namespace egret3d {
      */
     export interface GLTFEgretTextureExtension {
         /**
-         * @defaults false
-         */
-        mipmap?: boolean;
-        /**
-         * @defaults false
-         */
-        depthBuffer?: boolean;
-        /**
-         * @defaults false
-         */
-        stencilBuffer?: boolean;
-        /**
          * @defaults 0
          */
         flipY?: 0 | 1;
@@ -244,11 +242,11 @@ namespace egret3d {
         /**
          * 纹理宽。
          */
-        width?: uint;
+        width?: uint; // init optional.
         /**
          * 纹理高。
          */
-        height?: uint;
+        height?: uint; // init optional.
         /**
          * @defaults 1
          */
@@ -272,6 +270,34 @@ namespace egret3d {
          * 纹理编码格式
          */
         encoding?: TextureEncoding;
+        /**
+         * @defaults 1
+         */
+        depth?: uint;
+        /**
+         * @defaults 1
+         */
+        layers?: uint;
+        /**
+         * @defaults 1
+         */
+        faces?: uint;
+        /**
+         * @defaults 1
+         */
+        levels?: uint;
+        /**
+         * @defaults false
+         */
+        depthBuffer?: boolean;
+        /**
+         * @defaults false
+         */
+        stencilBuffer?: boolean;
+        /**
+         * @defaults Normal
+         */
+        mapping?: TextureUVMapping;
     }
     /**
      * 
@@ -363,19 +389,6 @@ namespace egret3d {
     /**
      * @private
      */
-    export interface StateMachineNode {
-        _parent?: StateMachineNode;
-    }
-    /**
-     * @private
-     */
-    export interface StateMachine extends StateMachineNode {
-        name: string;
-        nodes: StateMachineNode[];
-    }
-    /**
-     * @private
-     */
     export const enum AnimationBlendType {
         E1D = 0,
     }
@@ -385,6 +398,22 @@ namespace egret3d {
     export interface AnimationParameter {
         type: int;
         value: boolean | int | number;
+    }
+    /**
+     * @private
+     */
+    export interface StateMachineNode {
+        name: string;
+        /**
+         * @internal
+         */
+        _parent?: StateMachineNode;
+    }
+    /**
+     * @private
+     */
+    export interface StateMachine extends StateMachineNode {
+        nodes: StateMachineNode[];
     }
     /**
      * @private
@@ -414,7 +443,6 @@ namespace egret3d {
      */
     export interface AnimationTree extends AnimationBaseNode {
         blendType: AnimationBlendType;
-        name: string;
         parameters: string[];
         nodes: AnimationBaseNode[];
     }
@@ -423,7 +451,6 @@ namespace egret3d {
      */
     export interface AnimationNode extends AnimationBaseNode {
         asset: string;
-        clip: string;
     }
 }
 
@@ -478,20 +505,123 @@ namespace gltf {
         CW = 2304,
         CCW = 2305,
     }
+
+    export const enum MeshPrimitiveMode {
+        Points = 0,
+        Lines = 1,
+        LineLoop = 2,
+        LineStrip = 3,
+        Triangles = 4,
+        TrianglesStrip = 5,
+        TrianglesFan = 6,
+    }
+    /**
+     * 
+     */
+    export const enum DrawMode {
+        Stream = 35040,
+        Static = 35044,
+        Dynamic = 35048,
+    }
+    /**
+     * 
+     */
+    export const enum TextureFormat {
+        RGB = 6407,
+        RGBA = 6408,
+        Luminance = 6409,
+
+        RGBA4 = 32854,
+    }
+    /**
+     * 
+     */
+    export const enum TextureDataType {
+        UNSIGNED_BYTE = 5121,
+        UNSIGNED_SHORT_5_6_5 = 33635,
+        UNSIGNED_SHORT_4_4_4_4 = 32819,
+        UNSIGNED_SHORT_5_5_5_1 = 32820,
+    }
+    /**
+     * 
+     */
+    export const enum TextureFilter {
+        Nearest = 9728,
+        Linear = 9729,
+
+        NearestMipmapNearest = 9984,
+        LinearMipmapNearest = 9985,
+        NearestMipMapLinear = 9986,
+        LinearMipMapLinear = 9987,
+    }
+    /**
+     * 
+     */
+    export const enum TextureWrappingMode {
+        Repeat = 10497,
+        ClampToEdge = 33071,
+        MirroredRepeat = 33648,
+    }
+    /**
+     * 
+     */
+    export const enum EnableState {
+        Blend = 3042,
+        CullFace = 2884,
+        DepthTest = 2929,
+        StencilTest = 2960,
+        PolygonOffsetFill = 32823,
+        SampleAlphaToCoverage = 32926,
+    }
+    /**
+     * 
+     */
+    export const enum DepthFunc {
+        Never = 512,
+        Less = 513,
+        Lequal = 515,
+        Equal = 514,
+        Greater = 516,
+        NotEqual = 517,
+        GEqual = 518,
+        Always = 519,
+    }
 }
 
 declare namespace gltf {
     /**
-     * glTF index.
+     * @internal
      */
-    export type Index = uint;//35713
-    /**
-     * 
-     */
-    export const enum Status {
+    export const enum WebGL {
+        UNPACK_ALIGNMENT = 3317,
+        UNPACK_FLIP_Y_WEBGL = 37440,
+        UNPACK_PREMULTIPLY_ALPHA_WEBGL = 37441,
+
+        DEPTH_STENCIL_ATTACHMENT = 33306,
+        DEPTH_STENCIL = 34041,
+        DEPTH_ATTACHMENT = 36096,
+
+        DEPTH_COMPONENT = 6402,
+        DEPTH_COMPONENT16 = 33189,
+
+        COLOR_ATTACHMENT0 = 36064,
+
+        TEXTURE_MAG_FILTER = 10240,
+        TEXTURE_MIN_FILTER = 10241,
+
+        TEXTURE_WRAP_S = 10242,
+        TEXTURE_WRAP_T = 10243,
+
+        FrameBuffer = 36160,
+        RenderBuffer = 36161,
+
         CompileStatus = 35713,
         LinkStatus = 35714,
     }
+    /**
+     * glTF index.
+     */
+    export type Index = uint;//35713
     /**
      * BufferView target.
      */
@@ -510,16 +640,6 @@ declare namespace gltf {
         Int = 5124,
         UnsignedInt = 5125,
         Float = 5126,
-    }
-
-    export const enum MeshPrimitiveMode {
-        Points = 0,
-        Lines = 1,
-        LineLoop = 2,
-        LineStrip = 3,
-        Triangles = 4,
-        TrianglesStrip = 5,
-        TrianglesFan = 6,
     }
     /**
      * The uniform type.  All valid values correspond to WebGL enums.
@@ -546,47 +666,14 @@ declare namespace gltf {
     /**
      * 
      */
-    export const enum DrawMode {
-        Stream = 35040,
-        Static = 35044,
-        Dynamic = 35048,
-    }
-    /**
-     * 
-     */
-    export const enum TextureFormat {
-        RGB = 6407,
-        RGBA = 6408,
-        Luminance = 6409,
-    }
-    /**
-     * 
-     */
-    export const enum TextureDataType {
-        UNSIGNED_BYTE = 5121,
-        UNSIGNED_SHORT_5_6_5 = 33635,
-        UNSIGNED_SHORT_4_4_4_4 = 32819,
-        UNSIGNED_SHORT_5_5_5_1 = 32820,
-    }
-    /**
-     * 
-     */
-    export const enum TextureFilter {
-        Nearest = 9728,
-        Linear = 9729,
+    export const enum TextureType {
+        Texture2DStart = 33984,
+        TextureCubeStart = 34069,
 
-        MearestMipmapNearest = 9984,
-        LinearMipmapNearest = 9985,
-        NearestMipMapLinear = 9986,
-        LinearMipMapLinear = 9987,
-    }
-    /**
-     * 
-     */
-    export const enum TextureWrappingMode {
-        Repeat = 10497,
-        ClampToEdge = 33071,
-        MirroredRepeat = 33648,
+        Texture1D = -1,
+        Texture2D = 3553,
+        Texture3D = 32879,
+        TextureCube = 34067,
     }
     /**
      * 
@@ -603,30 +690,6 @@ declare namespace gltf {
     export const enum ShaderStage {
         Fragment = 35632,
         Vertex = 35633,
-    }
-    /**
-     * 
-     */
-    export const enum EnableState {
-        Blend = 3042,
-        CullFace = 2884,
-        DepthTest = 2929,
-        StencilTest = 2960,
-        PolygonOffsetFill = 32823,
-        SampleAlphaToCoverage = 32926,
-    }
-    /**
-     * 
-     */
-    export const enum DepthFunc {
-        Never = 512,
-        Less = 513,
-        Lequal = 515,
-        Equal = 514,
-        Greater = 516,
-        NotEqual = 517,
-        GEqual = 518,
-        Always = 519,
     }
     /**
      * 
@@ -1074,15 +1137,15 @@ declare namespace gltf {
         /**
          * The uri of the image.
          */
-        uri?: string | ArrayBufferView | ImageSource;
+        uri?: string | ImageSource | ((string | ImageSource)[]);
         /**
          * The image's MIME type.
          */
-        mimeType?: "image/jpeg" | "image/png" | string;
+        mimeType?: "image/jpeg" | "image/png" | "image/ktx" | string;
         /**
          * The index of the bufferView that contains the image. Use this instead of the image's uri property.
          */
-        bufferView?: Index;
+        bufferView?: Index | (Index[]);
         name?: string;
         extensions?: any;
         extras?: any;

@@ -28,7 +28,7 @@ namespace egret3d {
         public progress: number;
         public time: number;
         public totalTime: number;
-        public readonly states: AnimationState[] = [];
+        public readonly states: AnimationBaseState[] = [];
 
         private constructor() {
             super();
@@ -69,9 +69,84 @@ namespace egret3d {
         }
     }
     /**
+     * 
+     */
+    export abstract class AnimationBaseState extends paper.BaseRelease<AnimationBaseState>{
+        /**
+         * 
+         */
+        public weight: number;
+        /**
+         * @private
+         */
+        public animationLayer: AnimationLayer;
+        /**
+         * @private
+         */
+        public animationNode: AnimationBaseNode | null;
+        /**
+         * @internal
+         */
+        public _globalWeight: number;
+        /**
+         * @internal
+         */
+        public _globalTimeScale: number;
+        /**
+         * @internal
+         */
+        public _parent: AnimationTreeState | null;
+
+        protected constructor() {
+            super();
+        }
+
+        public onClear() {
+            this.weight = 1.0;
+            this.animationLayer = null!;
+            this.animationNode = null;
+
+            this._globalWeight = 0.0;
+            this._globalTimeScale = 1.0;
+            this._parent = null;
+        }
+        /**
+         * 
+         */
+        public abstract get name(): string;
+    }
+    /**
+     * 
+     */
+    export class AnimationTreeState extends AnimationBaseState {
+        private static readonly _instances: AnimationTreeState[] = [];
+        /**
+         * @internal
+         */
+        public static create(): AnimationTreeState {
+            let instance: AnimationTreeState;
+            if (this._instances.length > 0) {
+                instance = this._instances.pop()!;
+                instance._released = false;
+            }
+            else {
+                instance = new AnimationTreeState();
+                instance.onClear();
+            }
+
+            return instance;
+        }
+        /**
+         * @internal
+         */
+        public get name() {
+            return (this.animationNode as AnimationTree).name;
+        }
+    }
+    /**
      * 动画状态。
      */
-    export class AnimationState extends paper.BaseRelease<AnimationState> {
+    export class AnimationState extends AnimationBaseState {
         private static readonly _instances: AnimationState[] = [];
         /**
          * @internal
@@ -98,21 +173,9 @@ namespace egret3d {
          */
         public currentPlayTimes: uint;
         /**
-         * 
-         */
-        public weight: number;
-        /**
          * @private
          */
         public readonly channels: AnimationChannel[] = [];
-        /**
-         * @private
-         */
-        public animationLayer: AnimationLayer;
-        /**
-         * @private
-         */
-        public animationNode: AnimationNode;
         /**
          * @private
          */
@@ -125,7 +188,6 @@ namespace egret3d {
          * 播放的动画剪辑。
          */
         public animationClip: GLTFAnimationClip;
-        // public parent: AnimationState | null;
         /**
          * 是否允许播放。
          * @internal
@@ -141,45 +203,42 @@ namespace egret3d {
          * 本地播放时间。
          * @internal
          */
+        public _timeScale: number;
+        /**
+         * 本地播放时间。
+         * @internal
+         */
         public _time: number;
         /**
          * 当前动画时间。
          * @internal
          */
         public _currentTime: number;
-        /**
-         * @internal
-         */
-        public _globalWeight: number;
-
-        private constructor() {
-            super();
-        }
 
         public onClear() {
+            super.onClear();
+
             for (const channel of this.channels) {
                 channel.release();
             }
 
             this.playTimes = 0;
             this.currentPlayTimes = 0;
-            this.weight = 1.0;
             this.channels.length = 0;
-            this.animationNode = null!;
             this.animationAsset = null!;
             this.animation = null!;
             this.animationClip = null!;
 
             this._playheadEnabled = true;
             this._playState = -1;
+            this._timeScale = 1.0;
             this._time = 0.0;
             this._currentTime = -1.0;
-            this._globalWeight = 0.0;
         }
         /**
          * @internal
          */
-        public _initialize(animation: Animation, animationLayer: AnimationLayer, animationNode: AnimationNode, animationAsset: AnimationAsset, animationClip: GLTFAnimationClip) {
+        public _initialize(animation: Animation, animationLayer: AnimationLayer, animationNode: AnimationNode | null, animationAsset: AnimationAsset, animationClip: GLTFAnimationClip) {
             const assetConfig = animationAsset.config;
 
             this.animationAsset = animationAsset;
@@ -296,7 +355,7 @@ namespace egret3d {
         /**
          * 继续该动画状态的播放。
          */
-        public play() {
+        public play(): this {
             this._playheadEnabled = true;
 
             return this;
@@ -304,7 +363,7 @@ namespace egret3d {
         /**
          * 停止该动画状态的播放。
          */
-        public stop() {
+        public stop(): this {
             this._playheadEnabled = false;
 
             return this;
@@ -312,39 +371,45 @@ namespace egret3d {
         /**
          * 该动画状态是否正在播放。
          */
-        public get isPlaying() {
+        public get isPlaying(): boolean {
             return this._playheadEnabled && this._playState !== 1;
         }
         /**
          * 该动画状态是否播放完毕。
          */
-        public get isCompleted() {
+        public get isCompleted(): boolean {
             return this._playState === 1;
         }
         /**
          * 该动画状态的播放速度。
          */
         public get timeScale(): number {
-            return this.animationNode.timeScale;
+            return this._timeScale;
         }
         public set timeScale(value: number) {
-            if (DEBUG && value !== value) {
-                throw new Error();
+            if (value !== value) {
+                value = 0.0;
             }
 
-            this.animationNode.timeScale = value;
+            this._timeScale = value;
         }
         /**
          * 该动画状态的总播放时间。
          */
-        public get totalTime() {
+        public get totalTime(): number {
             return this.animationClip.duration;
         }
         /**
          * 该动画状态的当前播放时间。
          */
-        public get currentTime() {
+        public get currentTime(): number {
             return this._currentTime;
+        }
+        /**
+         * @internal
+         */
+        public get name() {
+            return this.animationClip ? this.animationClip.name : "";
         }
     }
 }

@@ -15,13 +15,13 @@ namespace paper.editor {
 
             for (let i = 0, l = Math.max(this._drawer.length, colliders ? colliders.length : 0); i < l; ++i) {
                 if (i + 1 > this._drawer.length) {
-                    const gameObject = EditorMeshHelper.createGameObject(`CylinderCollider_${i}`);
+                    const gameObject = EditorMeshHelper.createGameObject(`Cylinder Collider ${i}`);
                     gameObject.parent = this.gameObject;
-                    EditorMeshHelper.createCircle("Top", egret3d.Color.YELLOW, 0.4, Scene.editorScene).transform
+                    EditorMeshHelper.createCircle("Top", egret3d.Color.YELLOW, 0.4).transform
                         .setParent(gameObject.transform).setLocalPosition(0.0, 0.5, 0.0).setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
-                    EditorMeshHelper.createLine("Height", egret3d.Color.YELLOW, 0.4, Scene.editorScene).transform
+                    EditorMeshHelper.createLine("Height", egret3d.Color.YELLOW, 0.4).transform
                         .setParent(gameObject.transform).setLocalPosition(0.0, -0.5, 0.0);
-                    EditorMeshHelper.createCircle("Bottom", egret3d.Color.YELLOW, 0.4, Scene.editorScene).transform
+                    EditorMeshHelper.createCircle("Bottom", egret3d.Color.YELLOW, 0.4).transform
                         .setParent(gameObject.transform).setLocalPosition(0.0, -0.5, 0.0).setLocalEuler(-Math.PI * 0.5, 0.0, 0.0);
 
                     this._drawer.push(gameObject);

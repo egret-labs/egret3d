@@ -15,13 +15,13 @@ namespace paper.editor {
 
             for (let i = 0, l = Math.max(this._drawer.length, colliders ? colliders.length : 0); i < l; ++i) {
                 if (i + 1 > this._drawer.length) {
-                    const gameObject = EditorMeshHelper.createGameObject(`SphereCollider_${i}`);
+                    const gameObject = EditorMeshHelper.createGameObject(`SphereCollider ${i}`);
                     gameObject.parent = this.gameObject;
-                    EditorMeshHelper.createCircle("AxisX", egret3d.Color.YELLOW, 0.4, Scene.editorScene).transform
+                    EditorMeshHelper.createCircle("AxisX", egret3d.Color.YELLOW, 0.4).transform
                         .setParent(gameObject.transform);
-                    EditorMeshHelper.createCircle("AxisY", egret3d.Color.YELLOW, 0.4, Scene.editorScene).transform
+                    EditorMeshHelper.createCircle("AxisY", egret3d.Color.YELLOW, 0.4).transform
                         .setParent(gameObject.transform).setLocalEuler(0.0, 0.0, Math.PI * 0.5);
-                    EditorMeshHelper.createCircle("AxisZ", egret3d.Color.YELLOW, 0.4, Scene.editorScene).transform
+                    EditorMeshHelper.createCircle("AxisZ", egret3d.Color.YELLOW, 0.4).transform
                         .setParent(gameObject.transform).setLocalEuler(0.0, Math.PI * 0.5, 0.0);
 
                     this._drawer.push(gameObject);

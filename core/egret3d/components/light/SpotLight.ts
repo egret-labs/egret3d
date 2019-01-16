@@ -37,7 +37,7 @@ namespace egret3d {
         private _updateShadow() {
             const shadow = this.shadow;
             const shadowMatrix = shadow.matrix;
-            const shadowCamera = shadow.camera;
+            const shadowCamera = cameraAndLightCollecter.shadowCamera;
             const transform = this.gameObject.transform;
             const shadowSize = Math.min(shadow.size, renderState.maxTextureSize);
             if (!shadow.renderTarget) {

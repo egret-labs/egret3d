@@ -4,8 +4,8 @@ namespace paper.editor {
      * @internal
      */
     export class GridDrawer extends BaseComponent {
-        private readonly _gridA: GameObject = this._createGrid("GridA");
-        private readonly _gridB: GameObject = this._createGrid("GridB", 100.0 * _step, 100 * _step);
+        private readonly _gridA: GameObject = this._createGrid("Grid A");
+        private readonly _gridB: GameObject = this._createGrid("Grid B", 100.0 * _step, 100 * _step);
 
         private _createGrid(name: string, size: number = 100.0, divisions: number = 100) {
             const step = size / divisions;

@@ -10,7 +10,7 @@
 
 		vec3 worldNormal = inverseTransformDirection( transformedNormal, viewMatrix );
 
-		#ifdef ENVMAP_MODE_REFLECTION
+		#ifndef ENVMAP_MODE_REFRACTION // modified by egret
 
 			vReflect = reflect( cameraToVertex, worldNormal );
 

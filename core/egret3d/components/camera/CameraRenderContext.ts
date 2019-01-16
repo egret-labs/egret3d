@@ -54,22 +54,31 @@ namespace egret3d {
          * @internal
          */
         public hemisphereLightBuffer: Float32Array = new Float32Array(0);
-
-        //TODO
-        public lightShadowCameraNear: number = 0.0;
-        public lightShadowCameraFar: number = 0.0;
-        public lightCastShadows: boolean = false;
-
-        public readonly directShadowMaps: (WebGLTexture | null)[] = [];
-        public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
-        public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
-
+        /**
+         * @internal
+         */
         public directShadowMatrix: Float32Array = new Float32Array(0);
+        /**
+         * @internal
+         */
         public spotShadowMatrix: Float32Array = new Float32Array(0);
+        /**
+         * @internal
+         */
         public pointShadowMatrix: Float32Array = new Float32Array(0);
+        /**
+         * @internal
+         */
+        public readonly directShadowMaps: (WebGLTexture | null)[] = [];
+        /**
+         * @internal
+         */
+        public readonly spotShadowMaps: (WebGLTexture | null)[] = [];
+        /**
+         * @internal
+         */
+        public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
 
-        private readonly _postProcessingCamera: Camera = null!;
-        private readonly _postProcessDrawCall: DrawCall = DrawCall.create();
         private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(CameraAndLightCollecter)!;
         /**
@@ -95,37 +104,7 @@ namespace egret3d {
          */
         public constructor(camera: Camera) {
             this.camera = camera;
-
-            {
-                const gameObjectName = "PostProcessing Camera";
-                const transform = paper.GameObject.globalGameObject.transform.find(gameObjectName);
-                let gameObject: paper.GameObject | null = null;
-
-                if (transform) {
-                    gameObject = transform.gameObject;
-                    this._postProcessingCamera = gameObject.getComponent(Camera)!;
-                }
-                else {
-                    gameObject = paper.GameObject.create(gameObjectName, paper.DefaultTags.Untagged, paper.Scene.globalScene);
-                    // gameObject.hideFlags = paper.HideFlags.HideAndDontSave;
-                    gameObject.parent = paper.GameObject.globalGameObject; // TODO remove
-
-                    const postProcessingCamera = gameObject.addComponent(Camera);
-                    postProcessingCamera.enabled = false;
-                    postProcessingCamera.opvalue = 0.0;
-                    postProcessingCamera.size = 1.0;
-                    postProcessingCamera.near = 0.01;
-                    postProcessingCamera.far = 1.0;
-                    postProcessingCamera.projectionMatrix = Matrix4.IDENTITY;
-                    this._postProcessingCamera = postProcessingCamera;
-                }
-            }
-            //
-            this._postProcessDrawCall.matrix = Matrix4.IDENTITY;
-            this._postProcessDrawCall.subMeshIndex = 0;
-            this._postProcessDrawCall.mesh = DefaultMeshes.FULLSCREEN_QUAD;
         }
-
         /**
          * 所有非透明的, 按照从近到远排序
          */
@@ -220,8 +199,8 @@ namespace egret3d {
             const rectangleAreaLightCount = rectangleAreaLights.length;
             const pointLightCount = pointLights.length;
             const hemisphereLightCount = hemisphereLights.length;
-            this.lightCastShadows = false;
-
+            renderState.castShadows = false;
+            //
             if (this.directLightBuffer.length !== directLightCount * LightSize.Directional) {
                 this.directLightBuffer = new Float32Array(directLightCount * LightSize.Directional);
             }
@@ -246,20 +225,31 @@ namespace egret3d {
                 this.directShadowMatrix = new Float32Array(directLightCount * ShadowSize.Directional);
             }
 
-            if (this.pointShadowMatrix.length !== pointLightCount * ShadowSize.Point) {
-                this.pointShadowMatrix = new Float32Array(pointLightCount * ShadowSize.Point);
-            }
-
             if (this.spotShadowMatrix.length !== spotLightCount * ShadowSize.Spot) {
                 this.spotShadowMatrix = new Float32Array(spotLightCount * ShadowSize.Spot);
             }
-            const { directLightBuffer, spotLightBuffer, rectangleAreaLightBuffer, pointLightBuffer, hemisphereLightBuffer } = this;
-            const { directShadowMatrix, pointShadowMatrix, spotShadowMatrix } = this;
-            const { directShadowMaps, pointShadowMaps, spotShadowMaps } = this;
 
-            directShadowMaps.length = directLightCount;
-            pointShadowMaps.length = pointLightCount;
-            spotShadowMaps.length = spotLightCount;
+            if (this.pointShadowMatrix.length !== pointLightCount * ShadowSize.Point) {
+                this.pointShadowMatrix = new Float32Array(pointLightCount * ShadowSize.Point);
+            }
+            //
+            const {
+                directLightBuffer, spotLightBuffer, rectangleAreaLightBuffer, pointLightBuffer, hemisphereLightBuffer,
+                directShadowMatrix, spotShadowMatrix, pointShadowMatrix,
+                directShadowMaps, spotShadowMaps, pointShadowMaps,
+            } = this;
+
+            if (directShadowMaps.length !== directLightCount) {
+                directShadowMaps.length = directLightCount;
+            }
+
+            if (spotShadowMaps.length !== spotLightCount) {
+                spotShadowMaps.length = spotLightCount;
+            }
+
+            if (pointShadowMaps.length !== pointLightCount) {
+                pointShadowMaps.length = pointLightCount;
+            }
 
             let index = 0, shadowIndex = 0, offset = 0;
             const helpVector3 = _helpVector3;
@@ -288,7 +278,7 @@ namespace egret3d {
                     directLightBuffer[offset++] = shadow.size;
                     directShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Directional);
                     directShadowMaps[shadowIndex++] = shadow.renderTarget;
-                    this.lightCastShadows = true;
+                    renderState.castShadows = true;
                 }
                 else {
                     directLightBuffer[offset++] = 0;
@@ -330,7 +320,7 @@ namespace egret3d {
                     spotLightBuffer[offset++] = shadow.size;
                     spotShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Spot);
                     spotShadowMaps[shadowIndex++] = shadow.renderTarget;
-                    this.lightCastShadows = true;
+                    renderState.castShadows = true;
                 }
                 else {
                     spotLightBuffer[offset++] = 0;
@@ -386,7 +376,7 @@ namespace egret3d {
 
                     pointShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Point);
                     pointShadowMaps[shadowIndex++] = shadow.renderTarget;
-                    this.lightCastShadows = true;
+                    renderState.castShadows = true;
                 }
                 else {
                     pointLightBuffer[offset++] = 0;
@@ -420,7 +410,10 @@ namespace egret3d {
          * @internal
          */
         public _update() {
-            this.logDepthBufFC = 2.0 / (Math.log(this.camera.far + 1.0) / Math.LN2);
+            if (renderState.logarithmicDepthBuffer) {
+                this.logDepthBufFC = 2.0 / (Math.log(this.camera.far + 1.0) / Math.LN2);
+            }
+
             if (this._cameraAndLightCollecter.currentLight) {
                 this._shadowFrustumCulling();
             }
@@ -428,25 +421,6 @@ namespace egret3d {
                 this._frustumCulling();
                 this._updateLights();
             }
-        }
-
-        public blit(src: BaseTexture, material: Material | null = null, dest: RenderTexture | null = null) {
-            if (!material) {
-                material = DefaultMaterials.COPY;
-                material.setTexture(src);
-            }
-
-            const postProcessingCamera = this._postProcessingCamera;
-            const postProcessDrawCall = this._postProcessDrawCall;
-            postProcessDrawCall.material = material;
-
-            renderState.updateViewport(postProcessingCamera.viewport, dest);
-            renderState.clearBuffer(gltf.BufferMask.Depth | gltf.BufferMask.Color, Color.WHITE);
-            postProcessingCamera.projectionMatrix.identity(); // TODO
-            const saveCamera = Camera.current;
-            Camera.current = postProcessingCamera;
-            renderState.draw(postProcessDrawCall);
-            Camera.current = saveCamera;
         }
     }
 }

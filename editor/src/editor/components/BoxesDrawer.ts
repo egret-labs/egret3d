@@ -3,7 +3,7 @@ namespace paper.editor {
      * @internal
      */
     export class BoxesDrawer extends BaseComponent {
-        private readonly _hoverBox: GameObject = EditorMeshHelper.createBox("HoverBox", egret3d.Color.WHITE, 0.6, Scene.editorScene);
+        private readonly _hoverBox: GameObject = EditorMeshHelper.createBox("Hover Box", egret3d.Color.WHITE, 0.6);
         private readonly _drawer: GameObject[] = [];
 
         public initialize() {
@@ -30,7 +30,7 @@ namespace paper.editor {
 
             for (let i = 0, l = Math.max(this._drawer.length, selectedGameObjects ? selectedGameObjects.length : 0); i < l; ++i) {
                 if (i + 1 > this._drawer.length) {
-                    const gameObject = EditorMeshHelper.createBox(`Box_${i}`, egret3d.Color.INDIGO, 0.8, Scene.editorScene);
+                    const gameObject = EditorMeshHelper.createBox(`Box ${i}`, egret3d.Color.INDIGO, 0.8);
                     gameObject.parent = this.gameObject;
                     this._drawer.push(gameObject);
                 }

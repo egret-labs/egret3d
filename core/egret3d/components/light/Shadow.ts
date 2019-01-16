@@ -41,10 +41,6 @@ namespace egret3d {
         /**
          * @private
          */
-        public readonly camera: Camera = paper.GameObject.globalGameObject.getComponent(Camera)!;
-        /**
-         * @private
-         */
         public renderTarget: RenderTexture = null!;
         /**
          * 

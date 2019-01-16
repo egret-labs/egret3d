@@ -1,35 +1,53 @@
 namespace paper.editor {
     const containerHTML = `
-    <div class="egret-hierarchy" style="margin: auto;height: 100%;background: #000000;"></div>
-    <div class="egret-inspector" style="margin: auto;height: 100%;background: #000000;"></div>
-`;
+        <div class="egret-hierarchy" style="margin: auto;height: 100%;background: #000000;"></div>
+        <div class="egret-inspector" style="margin: auto;height: 100%;background: #000000;"></div>
+    `;
+
+    type QuaryValues = {
+        FPS?: 0 | 1,
+        GUI?: 0 | 1,
+        DEBUG?: 0 | 1,
+    };
+
+    const enum ShowState {
+        None = 0b000,
+
+        FPS = 0b001,
+        Hierarchy = 0b010,
+        Inspector = 0b100,
+
+        HierarchyAndInspector = Hierarchy | Inspector,
+        All = FPS | Hierarchy | Inspector,
+    }
     /**
      * @internal
      */
     export class EditorSystem extends BaseSystem {
         private _isMobile: boolean = false;
+        private _showStates: ShowState = ShowState.None;
+        private _fpsIndex: uint = 0;
         private readonly _guiComponent: GUIComponent | null = Application.playerMode === PlayerMode.Editor ? null : GameObject.globalGameObject.getOrAddComponent(GUIComponent);
+        private readonly _fpsShowQueue: boolean[] = [true, false, false, true];
 
-        private _fpsHided: boolean = false;
+        private _updateFPSShowState() {
+            if (this._guiComponent) {
+                const statsDOM = this._guiComponent.stats.dom;
 
-        private _hideFPS() {
-            const guiComponent = this._guiComponent!;
-            const statsDOM = guiComponent.stats.dom;
-
-            if (this._fpsHided) {
-                statsDOM.style.display = "block";
+                if (this._showStates & ShowState.FPS) {
+                    statsDOM.style.display = "block";
+                }
+                else {
+                    statsDOM.style.display = "none";
+                }
             }
-            else {
-                statsDOM.style.display = "none";
-            }
-
-            this._fpsHided = !this._fpsHided;
         }
 
         public onAwake() {
-            GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
+            GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture); // TODO
             //
             if (Application.playerMode === PlayerMode.Editor) {
+                this._showStates = ShowState.None;
                 Application.systemManager.register(SceneSystem, SystemOrder.LateUpdate);
             }
             else {
@@ -74,36 +92,28 @@ namespace paper.editor {
                     }
                 };
 
+                const quaryValues = getQueryValues(location.search) as QuaryValues;
                 this._isMobile = paper.Application.isMobile;
+                this._showStates = ShowState.None;
 
-                if (this._isMobile) {
-                    // TODO 前置组件。
-                    // const loadScript = (url: string, callback: any) => {
-                    //     const script = document.createElement("script");
-                    //     script.onload = () => callback();
-                    //     script.src = url;
-                    //     document.body.appendChild(script);
-                    // };
-                    // loadScript(
-                    //     "https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js",
-                    //     () => {
-                    //         new VConsole();
-                    //     }
-                    // );
-                    guiComponent.hierarchy.close();
-                    guiComponent.inspector.close();
-
-                    if (!dat.GUI.hide) {
-                        dat.GUI.toggleHide();
-                    }
-
-                    if (!this._fpsHided) {
-                        this._hideFPS();
-                    }
+                if (quaryValues.FPS === 1 || (quaryValues.FPS !== 0 && !this._isMobile)) {
+                    this._showStates |= ShowState.FPS;
+                    this._fpsIndex = 0;
                 }
                 else {
+                    this._fpsIndex = 1;
+                    this._updateFPSShowState();
+                }
+
+                if (quaryValues.GUI === 1 || (quaryValues.GUI !== 0 && !this._isMobile)) {
+                    this._showStates |= ShowState.HierarchyAndInspector;
                     hierarchy[0].appendChild(guiComponent.hierarchy.domElement);
                     inspector[0].appendChild(guiComponent.inspector.domElement);
+                }
+                else {
+                    dat.GUI.toggleHide();
+                    guiComponent.hierarchy.close();
+                    guiComponent.inspector.close();
                 }
 
                 Application.systemManager.register(GUISystem, SystemOrder.LateUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
@@ -127,7 +137,20 @@ namespace paper.editor {
             );
 
             if (egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyH).isDown(false)) {
-                this._hideFPS();
+                this._fpsIndex++;
+
+                if (this._fpsIndex >= this._fpsShowQueue.length) {
+                    this._fpsIndex = 0;
+                }
+
+                if (this._fpsShowQueue[this._fpsIndex]) {
+                    this._showStates |= ShowState.FPS;
+                }
+                else {
+                    this._showStates &= ~ShowState.FPS;
+                }
+
+                this._updateFPSShowState();
             }
 
             // TODO dc tc vc
@@ -152,10 +175,6 @@ namespace paper.editor {
                     if (!dat.GUI.hide) {
                         dat.GUI.toggleHide();
                     }
-
-                    if (!this._fpsHided) {
-                        this._hideFPS();
-                    }
                 }
                 else {
                     if (guiComponent.hierarchy.closed) {
@@ -174,10 +193,6 @@ namespace paper.editor {
 
                     if (dat.GUI.hide) {
                         dat.GUI.toggleHide();
-                    }
-
-                    if (this._fpsHided) {
-                        this._hideFPS();
                     }
                 }
 

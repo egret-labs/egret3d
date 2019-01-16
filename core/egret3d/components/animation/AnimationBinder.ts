@@ -24,6 +24,7 @@ namespace egret3d {
         public weight: number;
         public components: paper.BaseComponent | ReadonlyArray<paper.BaseComponent>;
         public bindPose: any;
+        public layer: AnimationLayer | null;
         public updateTarget: (() => void);
 
         private constructor() {
@@ -46,16 +47,25 @@ namespace egret3d {
             this.dirty = 0;
             this.totalWeight = 0.0;
             this.weight = 1.0;
+            this.layer = null;
         }
 
         public updateBlend(animationState: AnimationState) {
             const globalWeight = animationState._globalWeight;
 
             if (this.dirty > 0) {
-                if (this.totalWeight < 1.0 - Const.EPSILON) {
+                if (this.layer === animationState.animationLayer) {
+                    this.dirty++;
+                    this.weight = globalWeight;
+                    this.totalWeight += this.weight;
+
+                    return true;
+                }
+                else if (this.totalWeight < 1.0 - Const.EPSILON) {
                     this.dirty++;
                     this.weight = globalWeight * (1.0 - this.totalWeight);
                     this.totalWeight += this.weight;
+                    this.layer = animationState.animationLayer;
 
                     return true;
                 }
@@ -66,6 +76,7 @@ namespace egret3d {
             this.dirty++;
             this.totalWeight += globalWeight;
             this.weight = globalWeight;
+            this.layer = animationState.animationLayer;
 
             return true;
         }

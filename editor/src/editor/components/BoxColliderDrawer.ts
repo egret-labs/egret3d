@@ -12,10 +12,10 @@ namespace paper.editor {
         public update() {
             const selectedGameObject = super.update();
             const colliders = selectedGameObject ? selectedGameObject.getComponents(egret3d.BoxCollider) : null;
-
+            
             for (let i = 0, l = Math.max(this._drawer.length, colliders ? colliders.length : 0); i < l; ++i) {
                 if (i + 1 > this._drawer.length) {
-                    const gameObject = EditorMeshHelper.createBox(`BoxCollider_${i}`, egret3d.Color.YELLOW, 0.4, Scene.editorScene);
+                    const gameObject = EditorMeshHelper.createBox(`Box Collider ${i}`, egret3d.Color.YELLOW, 0.4);
                     gameObject.parent = this.gameObject;
                     this._drawer.push(gameObject);
                 }

@@ -17,6 +17,8 @@ namespace egret3d {
     //     });
     // }
 
+    const _onlyImages: { [key: string]: boolean } = {};
+
     function _transformGLSLCode(code: string) {
         const transformedCode = code
             .replace(/\r/g, '\n') // \r to \n
@@ -39,23 +41,23 @@ namespace egret3d {
                     loader.removeEventListener(egret.Event.COMPLETE, onSuccess, this);
                     loader.removeEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
                     resolve(bitmapData);
-                }
+                };
 
                 const onError = () => {
                     loader.removeEventListener(egret.Event.COMPLETE, onSuccess, this);
                     loader.removeEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
                     const e = new RES.ResourceManagerError(1001, resource.url);
                     reject(e);
-                }
+                };
                 loader.addEventListener(egret.Event.COMPLETE, onSuccess, this);
                 loader.addEventListener(egret.IOErrorEvent.IO_ERROR, onError, this);
-            })
+            });
         },
 
         onRemoveStart(host, resource) {
             return Promise.resolve();
         }
-    }
+    };
 
     export const ShaderProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
@@ -91,11 +93,19 @@ namespace egret3d {
     export const ImageProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
             return host.load(resource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
+                if (_onlyImages[resource.name]) {
+                    delete _onlyImages[resource.name];
+
+                    return bitmapData.source;
+                }
+
                 const texture = Texture
-                    .create({ name: resource.name, source: bitmapData.source, format: gltf.TextureFormat.RGBA, mipmap: true })
+                    .create({ name: resource.name, source: bitmapData.source })
                     .setLiner(true)
-                    .setRepeat(true);
+                    .setRepeat(true)
+                    .setMipmap(true);
                 paper.Asset.register(texture);
+
                 return texture;
             });
         },
@@ -109,68 +119,109 @@ namespace egret3d {
         }
     };
 
+    type ImageConfig = {
+        name: string;
+        filterMode: string;
+        format: string;
+        mipmap: boolean;
+        wrap: string;
+        premultiply: any;
+        anisotropy: any;
+    };
+
     export const TextureProcessor: RES.processor.Processor = {
         onLoadStart(host, resource) {
-            return host.load(resource, "json").then((data: {
-                name: string;
-                filterMode: string;
-                format: string;
-                mipmap: boolean;
-                wrap: string;
-                premultiply: any;
-                anisotropy: any;
-            }): any => {
-                const name = data.name;
-                const filterMode = data.filterMode;
-                const format = data.format;
-                const mipmap = data.mipmap;
-                const wrap = data.wrap;
+            return host.load(resource, "json").then((data: ImageConfig | GLTF): any => {
+                if ("asset" in data) {
+                    const dataA = data as GLTF;
+                    const glTFImage = dataA.images![dataA.textures![0].source!];
 
-                let textureFormat = gltf.TextureFormat.RGBA;
-                const exr = name.substring(name.lastIndexOf("."));//兼容以前的
-                if (format === "RGB" || exr === ".jpg") {
-                    textureFormat = gltf.TextureFormat.RGB;
-                }
-                else if (format === "Gray") {
-                    textureFormat = gltf.TextureFormat.Luminance;
-                }
+                    if (glTFImage.uri) {
+                        const subAssets: paper.ISerializedData = { assets: [] };
 
-                let linear: boolean = true;
-                if (filterMode.indexOf("linear") < 0) {
-                    linear = false;
-                }
+                        if (Array.isArray(glTFImage.uri)) {
+                            for (const uri of glTFImage.uri) {
+                                _onlyImages[uri as string] = true;
+                                subAssets.assets!.push(uri as string);
+                            }
+                        }
+                        else {
+                            _onlyImages[glTFImage.uri as string] = true;
+                            subAssets.assets!.push(glTFImage.uri as string);
+                        }
 
-                let repeat: boolean = false;
-                if (wrap.indexOf("Repeat") >= 0) {
-                    repeat = true;
-                }
+                        return loadSubAssets(subAssets, resource).then((images: gltf.ImageSource[]) => {
+                            for (let i = 0, l = subAssets.assets!.length; i < l; ++i) {
+                                const imageSource = images[i];
+                                if (Array.isArray(glTFImage.uri)) {
+                                    glTFImage.uri[i] = imageSource;
 
-                let anisotropy: uint = 1;
-                if (data["anisotropy"] !== undefined) {
-                    anisotropy = data["anisotropy"];
-                }
+                                }
+                                else {
+                                    glTFImage.uri = imageSource;
+                                }
 
-                let premultiplyAlpha: 0 | 1 = 0;
-                if (data["premultiply"] !== undefined) {
-                    premultiplyAlpha = data["premultiply"] > 0 ? 1 : 0;
-                }
+                                host.save((RES.host.resourceConfig as any)["getResource"](subAssets.assets![i]), imageSource);
+                            }
 
-                const imgResource = (RES.host.resourceConfig as any)["getResource"](name);
-                if (imgResource) {
-                    return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
+                            const texture = Texture.create(resource.name, dataA);
+                            paper.Asset.register(texture);
+
+                            return texture;
+                        });
+                    }
+                }
+                else {
+                    const dataB = data as ImageConfig;
+                    const name = dataB.name;
+                    const filterMode = dataB.filterMode;
+                    const format = dataB.format;
+                    const mipmap = dataB.mipmap;
+                    const wrap = dataB.wrap;
+
+                    let textureFormat = gltf.TextureFormat.RGBA;
+                    const exr = name.substring(name.lastIndexOf("."));//兼容以前的
+                    if (format === "RGB" || exr === ".jpg") {
+                        textureFormat = gltf.TextureFormat.RGB;
+                    }
+                    else if (format === "Gray") {
+                        textureFormat = gltf.TextureFormat.Luminance;
+                    }
+
+                    let linear: boolean = true;
+                    if (filterMode.indexOf("linear") < 0) {
+                        linear = false;
+                    }
+
+                    let repeat: boolean = false;
+                    if (wrap.indexOf("Repeat") >= 0) {
+                        repeat = true;
+                    }
+
+                    let anisotropy: uint = 1;
+                    if (dataB.anisotropy !== undefined) {
+                        anisotropy = dataB.anisotropy;
+                    }
+
+                    let premultiplyAlpha: 0 | 1 = 0;
+                    if (dataB.premultiply !== undefined) {
+                        premultiplyAlpha = dataB.premultiply > 0 ? 1 : 0;
+                    }
+
+                    const subAssets: paper.ISerializedData = { assets: [name] };
+                    _onlyImages[name as string] = true;
+
+                    return loadSubAssets(subAssets, resource).then((images: gltf.ImageSource[]) => {
                         const texture = Texture
-                            .create({ name: resource.name, source: bitmapData.source, format: textureFormat, mipmap, premultiplyAlpha, anisotropy })
+                            .create({ name: resource.name, source: images[0], format: textureFormat, premultiplyAlpha, anisotropy })
                             .setLiner(linear)
+                            .setMipmap(mipmap)
                             .setRepeat(repeat);
                         paper.Asset.register(texture);
-                        host.save(imgResource, bitmapData);
-                        (texture as any)._bitmapData = bitmapData; // TODO
+                        host.save((RES.host.resourceConfig as any)["getResource"](name), images[0]); // TODO
 
                         return texture;
                     });
-                }
-                else {
-                    throw new Error(); // TODO
                 }
             });
         },

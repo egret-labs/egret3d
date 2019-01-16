@@ -107,24 +107,24 @@ namespace egret3d.webgl {
             console.info("Maximum anisotropy:", this.maxAnisotropy);
         }
 
-        public updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null) { // TODO
+        public updateViewport(camera: Camera, renderTarget: RenderTexture | null) { // TODO
             const webgl = WebGLRenderState.webgl!;
             let w: number;
             let h: number;
 
-            this.viewPort.copy(viewport);
-            this.renderTarget = target;
+            const viewport = this.viewport.copy(camera.viewport);
+            this.renderTarget = renderTarget;
 
-            if (target) {
-                w = target.width;
-                h = target.height;
-                target.activateRenderTexture();
+            if (renderTarget) {
+                w = renderTarget.width;
+                h = renderTarget.height;
+                renderTarget.activateTexture();
             }
             else {
                 const stageViewport = stage.viewport;
                 w = stageViewport.w;
                 h = stageViewport.h;
-                webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+                webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
             }
 
             webgl.viewport(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h);
@@ -152,22 +152,16 @@ namespace egret3d.webgl {
 
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: number = 0) {
             const webgl = WebGLRenderState.webgl!;
-            if (!(target as WebGLTexture | WebGLRenderTexture).webGLTexture) {
-                target.setupTexture(0);
-            }
-            else {
-                webgl.activeTexture(webgl.TEXTURE0);
-                webgl.bindTexture(webgl.TEXTURE_2D, (target as WebGLTexture | WebGLRenderTexture).webGLTexture);
-            }
 
-            webgl.copyTexImage2D(webgl.TEXTURE_2D, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0);//TODO
+            target.bindTexture(0);
+            webgl.copyTexImage2D(target.type, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0); //TODO
         }
 
         public updateState(state: gltf.States | null) {
             const webgl = WebGLRenderState.webgl!;
             const stateEnables = this._stateEnables;
             const cacheStateEnable = this._cacheStateEnable;
-
+            //
             for (const e of stateEnables) {
                 const b = state ? state.enable && state.enable.indexOf(e) >= 0 : false;
                 if (cacheStateEnable[e] !== b) {
