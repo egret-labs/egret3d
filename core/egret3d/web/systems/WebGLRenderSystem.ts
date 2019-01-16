@@ -77,7 +77,6 @@ namespace egret3d.webgl {
         private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
         private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(RenderState) as WebGLRenderState;
-        private readonly _lightCamera: Camera = paper.GameObject.globalGameObject.getOrAddComponent(Camera);
         //
         private readonly _modelViewMatrix: Matrix4 = Matrix4.create();
         private readonly _modelViewPojectionMatrix: Matrix4 = Matrix4.create();
@@ -87,6 +86,7 @@ namespace egret3d.webgl {
         private _cacheProgram: WebGLProgramBinder | null = null;
         private _cacheScene: paper.Scene | null = null;
         private _cacheCamera: Camera | null = null;
+        private _cacheLight: BaseLight | null = null;
         //
         private _cacheMesh: Mesh | null = null;
         private _cacheSubMeshIndex: int = -1;
@@ -94,36 +94,6 @@ namespace egret3d.webgl {
         private _cacheMaterial: Material | null = null;
         //
         private _cacheLightmapIndex: int = -1;
-
-        // private _renderLightShadow(light: BaseLight) {
-        // const camera = this._lightCamera;
-        // const renderState = this._renderState;
-        // const isPointLight = light.constructor === PointLight;
-        // const shadowMaterial = isPointLight ? DefaultMaterials.SHADOW_DISTANCE : DefaultMaterials.SHADOW_DEPTH;
-        // const drawCalls = this._drawCallCollecter;
-        // const shadowCalls = drawCalls.shadowCalls;
-        // const webgl = WebGLRenderState.webgl!;
-
-        // light.updateShadow(camera);
-        // light.renderTarget.use();
-        // renderState.clearBuffer(gltf.BufferBit.DEPTH_BUFFER_BIT | gltf.BufferBit.COLOR_BUFFER_BIT, Color.WHITE);
-
-        // for (let i = 0, l = isPointLight ? 6 : 1; i < l; ++i) {
-        //     const context = camera.context;
-        //     if (isPointLight) {
-        //         light.updateFace(camera, i);
-        //     }
-        //     webgl.viewport(light.viewPortPixel.x, light.viewPortPixel.y, light.viewPortPixel.w, light.viewPortPixel.h);
-        //     webgl.depthRange(0, 1);
-        //     drawCalls.shadowFrustumCulling(camera);
-
-        //     for (const drawCall of shadowCalls) {
-        //         this._draw(context, drawCall, shadowMaterial);
-        //     }
-        // }
-
-        // webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-        // }
 
         private _getWebGLShader(gltfShader: gltf.Shader, defines: string) {
             const webgl = WebGLRenderState.webgl!;
@@ -150,12 +120,10 @@ namespace egret3d.webgl {
         }
 
         private _updateGlobalUniforms(program: WebGLProgramBinder, context: CameraRenderContext, drawCall: DrawCall, renderer: paper.BaseRenderer | null, scene: paper.Scene, forceUpdate: boolean) {
-            // if (renderer && renderer.receiveShadows && this.lightCastShadows) {
-            //     shaderContextDefine += "#define USE_SHADOWMAP \n";
-            //     shaderContextDefine += "#define SHADOWMAP_TYPE_PCF \n";
-            // }
+
             const webgl = WebGLRenderState.webgl!;
             const renderState = this._renderState;
+            const cameraAndLightCollecter = this._cameraAndLightCollecter;
             const camera = context.camera;
             const matrix = drawCall.matrix;
             const globalUniforms = program.globalUniforms;
@@ -294,6 +262,29 @@ namespace egret3d.webgl {
                 this._cacheCamera = camera;
             }
 
+            //TODO
+            if (cameraAndLightCollecter.currentLight && this._cacheLight !== cameraAndLightCollecter.currentLight) {
+                const light = this._cacheLight = cameraAndLightCollecter.currentLight;
+                i = l;
+                while (i--) {
+                    const { semantic, location } = globalUniforms[i];
+                    const rawData = light.transform.localToWorldMatrix.rawData;
+                    switch (semantic!) {
+                        case gltf.UniformSemantics._REFERENCEPOSITION:
+                            webgl.uniform3f(location, rawData[12], rawData[13], rawData[14]);
+                            break;
+
+                        case gltf.UniformSemantics._NEARDICTANCE:
+                            webgl.uniform1f(location, light.shadow.near);
+                            break;
+
+                        case gltf.UniformSemantics._FARDISTANCE:
+                            webgl.uniform1f(location, light.shadow.far);
+                            break;
+                    }
+                }
+            }
+
             // Model.
             i = l;
             while (i--) {
@@ -355,89 +346,81 @@ namespace egret3d.webgl {
                         webgl.uniform4f(location, lightmapScaleOffset.x, lightmapScaleOffset.y, lightmapScaleOffset.z, lightmapScaleOffset.w);
                         break;
 
-                    // case gltf.UniformSemantics._NEARDICTANCE:
-                    //     webgl.uniform1f(location, context.lightShadowCameraNear);
-                    //     break;
+                    case gltf.UniformSemantics._DIRECTIONSHADOWMAT:
+                        webgl.uniformMatrix4fv(location, false, context.directShadowMatrix);
+                        break;
+                    case gltf.UniformSemantics._SPOTSHADOWMAT:
+                        webgl.uniformMatrix4fv(location, false, context.spotShadowMatrix);
+                        break;
+                    case gltf.UniformSemantics._POINTSHADOWMAT:
+                        webgl.uniformMatrix4fv(location, false, context.pointShadowMatrix);
+                        break;
 
-                    // case gltf.UniformSemantics._FARDISTANCE:
-                    //     webgl.uniform1f(location, context.lightShadowCameraFar);
-                    //     break;
+                    case gltf.UniformSemantics._DIRECTIONSHADOWMAP:
+                        const directShadowLen = context.directShadowMaps.length;
+                        if (directShadowLen > 0 && uniform.textureUnits) {
+                            const units = uniform.textureUnits;
+                            webgl.uniform1iv(location, units);
 
-                    // case gltf.UniformSemantics._DIRECTIONSHADOWMAT:
-                    //     webgl.uniformMatrix4fv(location, false, context.directShadowMatrix);
-                    //     break;
-                    // case gltf.UniformSemantics._SPOTSHADOWMAT:
-                    //     webgl.uniformMatrix4fv(location, false, context.spotShadowMatrix);
-                    //     break;
-                    // case gltf.UniformSemantics._POINTSHADOWMAT:
-                    //     webgl.uniformMatrix4fv(location, false, context.pointShadowMatrix);
-                    //     break;
+                            for (let i = 0, l = units.length; i < l; i++) {
+                                if (context.directShadowMaps[i]) {
+                                    const unit = units[i];
+                                    const texture = context.directShadowMaps[i] as WebGLTexture;
+                                    if ((texture as WebGLTexture).webGLTexture) {
+                                        webgl.activeTexture(webgl.TEXTURE0 + unit);
+                                        webgl.bindTexture(webgl.TEXTURE_2D, (texture as WebGLTexture).webGLTexture);
+                                    }
+                                    else {
+                                        texture.setupTexture(unit);
+                                    }
+                                }
+                            }
+                        }
+                        break;
 
-                    // case gltf.UniformSemantics._DIRECTIONSHADOWMAP:
-                    //     const directShadowLen = context.directShadowMaps.length;
-                    //     if (directShadowLen > 0 && glUniform.textureUnits) {
-                    //         const units = glUniform.textureUnits;
-                    //         webgl.uniform1iv(location, units);
+                    case gltf.UniformSemantics._POINTSHADOWMAP:
+                        const pointShadowLen = context.pointShadowMaps.length;
+                        if (pointShadowLen > 0 && uniform.textureUnits) {
+                            const units = uniform.textureUnits;
+                            webgl.uniform1iv(location, units);
 
-                    //         for (let i = 0, l = units.length; i < l; i++) {
-                    //             if (context.directShadowMaps[i]) {
-                    //                 const unit = units[i];
-                    //                 const texture = context.directShadowMaps[i] as WebGLTexture;
-                    //                 if (texture.dirty) {
-                    //                     texture.setupTexture(unit);
-                    //                 }
-                    //                 else {
-                    //                     webgl.activeTexture(webgl.TEXTURE0 + unit);
-                    //                     webgl.bindTexture(webgl.TEXTURE_2D, texture.webglTexture);
-                    //                 }
-                    //             }
-                    //         }
-                    //     }
-                    //     break;
+                            for (let i = 0, l = units.length; i < l; i++) {
+                                if (context.pointShadowMaps[i]) {
+                                    const unit = units[i];
+                                    const texture = context.pointShadowMaps[i] as WebGLTexture;
+                                    if ((texture as WebGLTexture).webGLTexture) {
+                                        webgl.activeTexture(webgl.TEXTURE0 + unit);
+                                        webgl.bindTexture(webgl.TEXTURE_2D, (texture as WebGLTexture).webGLTexture);
+                                    }
+                                    else {
+                                        texture.setupTexture(unit);
+                                    }
+                                }
+                            }
+                        }
+                        break;
 
-                    // case gltf.UniformSemantics._POINTSHADOWMAP:
-                    //     const pointShadowLen = context.pointShadowMaps.length;
-                    //     if (pointShadowLen > 0 && glUniform.textureUnits) {
-                    //         const units = glUniform.textureUnits;
-                    //         webgl.uniform1iv(location, units);
+                    case gltf.UniformSemantics._SPOTSHADOWMAP:
+                        const spotShadowLen = context.spotShadowMaps.length;
+                        if (spotShadowLen > 0 && uniform.textureUnits) {
+                            const units = uniform.textureUnits;
+                            webgl.uniform1iv(location, units);
 
-                    //         for (let i = 0, l = units.length; i < l; i++) {
-                    //             if (context.pointShadowMaps[i]) {
-                    //                 const unit = units[i];
-                    //                 const texture = context.pointShadowMaps[i] as WebGLTexture;
-                    //                 if (texture.dirty) {
-                    //                     texture.setupTexture(unit);
-                    //                 }
-                    //                 else {
-                    //                     webgl.activeTexture(webgl.TEXTURE0 + unit);
-                    //                     webgl.bindTexture(webgl.TEXTURE_2D, texture.webglTexture);
-                    //                 }
-                    //             }
-                    //         }
-                    //     }
-                    //     break;
-
-                    // case gltf.UniformSemantics._SPOTSHADOWMAP:
-                    //     const spotShadowLen = context.spotShadowMaps.length;
-                    //     if (spotShadowLen > 0 && glUniform.textureUnits) {
-                    //         const units = glUniform.textureUnits;
-                    //         webgl.uniform1iv(location, units);
-
-                    //         for (let i = 0, l = units.length; i < l; i++) {
-                    //             if (context.spotShadowMaps[i]) {
-                    //                 const unit = units[i];
-                    //                 const texture = context.spotShadowMaps[i] as WebGLTexture;
-                    //                 if (texture.dirty) {
-                    //                     texture.setupTexture(unit);
-                    //                 }
-                    //                 else {
-                    //                     webgl.activeTexture(webgl.TEXTURE0 + unit);
-                    //                     webgl.bindTexture(webgl.TEXTURE_2D, texture.webglTexture);
-                    //                 }
-                    //             }
-                    //         }
-                    //     }
-                    //     break;
+                            for (let i = 0, l = units.length; i < l; i++) {
+                                if (context.spotShadowMaps[i]) {
+                                    const unit = units[i];
+                                    const texture = context.spotShadowMaps[i] as WebGLTexture;
+                                    if ((texture as WebGLTexture).webGLTexture) {
+                                        webgl.activeTexture(webgl.TEXTURE0 + unit);
+                                        webgl.bindTexture(webgl.TEXTURE_2D, (texture as WebGLTexture).webGLTexture);
+                                    }
+                                    else {
+                                        texture.setupTexture(unit);
+                                    }
+                                }
+                            }
+                        }
+                        break;
                 }
             }
         }
@@ -517,10 +500,10 @@ namespace egret3d.webgl {
                         if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
                             const unit = globalUniform.textureUnits[0];
                             let texture = value as (WebGLTexture | WebGLRenderTexture | null);
-                            if(!texture || texture.isDisposed){
+                            if (!texture || texture.isDisposed) {
                                 texture = DefaultTextures.WHITE as WebGLTexture; // TODO
                             }
-                           
+
                             webgl.uniform1i(location, unit);
 
                             if (texture.webGLTexture) {
@@ -611,6 +594,42 @@ namespace egret3d.webgl {
             this._cacheProgram = null;
         }
 
+        private _renderShadow(light: BaseLight) {
+            const collecter = this._cameraAndLightCollecter;
+            if (collecter.currentLight !== light) {
+                collecter.currentLight = light;
+                const shadow = light.shadow;
+                const camera = Camera.current = shadow.camera;
+                const renderState = this._renderState;
+                const isPoint = light.constructor === PointLight;
+                const webgl = WebGLRenderState.webgl!;
+                //generate depth map
+                const shadowMaterial = (isPoint) ? DefaultMaterials.SHADOW_DISTANCE : DefaultMaterials.SHADOW_DEPTH;
+                for (let i = 0, l = (isPoint ? 6 : 1); i < l; i++) {
+                    //update shadowMatrix
+                    shadow.update!(i);
+                    //update draw call
+                    camera._update();
+                    if (renderState.renderTarget !== shadow.renderTarget) {
+                        renderState.renderTarget = shadow.renderTarget;
+                        renderState.renderTarget.activateRenderTexture();
+                        renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.WHITE);
+                    }
+                    // renderState.viewPort.copy(camera.viewport);//TODO
+                    webgl.viewport(camera.viewport.x, camera.viewport.y, camera.viewport.w, camera.viewport.h);
+                    const drawCalls = camera.context.shadowCalls;
+                    for (const drawCall of drawCalls) {
+                        this.draw(drawCall, shadowMaterial);
+                    }
+
+                    //
+                    this._cacheCamera = null;
+                }
+            }
+            Camera.current = null;
+            collecter.currentLight = null;
+        }
+
         public render(camera: Camera, material: Material | null = null) {
             if (Camera.current !== camera) {
                 Camera.current = camera;
@@ -636,7 +655,7 @@ namespace egret3d.webgl {
 
                     for (const postprocessing of postprocessings) {
                         if (postprocessing.isActiveAndEnabled) {
-                            postprocessing.render(camera);
+                            postprocessing.onRender(camera);
                         }
                     }
 
@@ -673,6 +692,19 @@ namespace egret3d.webgl {
             const camera = Camera.current!;
             const context = camera.context;
             const scene = renderer ? renderer.gameObject.scene : camera.gameObject.scene; // 后期渲染renderer为空，取camera的场景
+
+            //TODO
+            if (renderer) {
+                if (context.lightCastShadows && renderer.receiveShadows) {
+                    renderer.defines.addDefine(ShaderDefine.USE_SHADOWMAP);
+                    renderer.defines.addDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
+                }
+                else {
+                    renderer.defines.removeDefine(ShaderDefine.USE_SHADOWMAP);
+                    renderer.defines.removeDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
+                }
+            }
+
             //
             const mesh = drawCall.mesh;
             const shader = material.shader as WebGLShader;
@@ -746,6 +778,7 @@ namespace egret3d.webgl {
                     this._cacheProgram = program;
                     this._cacheScene = null;
                     this._cacheCamera = null;
+                    this._cacheLight = null;
                     this._cacheMesh = null;
                     this._cacheMaterial = null;
                     this._cacheLightmapIndex = -1;
@@ -816,21 +849,21 @@ namespace egret3d.webgl {
 
             const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
             const clock = this.clock;
-            const { cameras } = this._cameraAndLightCollecter;
+            const { lights, cameras } = this._cameraAndLightCollecter;
             const renderState = this._renderState;
             const editorScene = paper.Application.sceneManager.editorScene;
             this._clockBuffer[0] = clock.time;
 
             // Render lights shadow.
-            // if (lights.length > 0) {
-            //     for (const light of lights) {
-            //         if (!light.castShadows) {
-            //             continue;
-            //         }
+            if (lights.length > 0) {
+                for (const light of lights) {
+                    if (!light.castShadows || !light.shadow.update) {
+                        continue;
+                    }
 
-            //         // this._renderLightShadow(light);
-            //     }
-            // }
+                    this._renderShadow(light);
+                }
+            }
             // Render cameras.
             if (cameras.length > 0) {
                 this._egret2DOrderCount = 0;

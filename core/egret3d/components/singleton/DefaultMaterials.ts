@@ -22,6 +22,10 @@ namespace egret3d {
         /**
          * 
          */
+        public static MESH_PHONG: Material;
+        /**
+         * 
+         */
         public static LINEDASHED: Material;
         /**
          * 
@@ -68,6 +72,8 @@ namespace egret3d {
                 .setTexture(DefaultTextures.WHITE)
                 .setCullFace(false);
 
+            DefaultMaterials.MESH_PHONG = this._createMaterial("builtin/meshphong.mat.json", DefaultShaders.MESH_PHONG);
+
             DefaultMaterials.LINEDASHED = this._createMaterial("builtin/linedashed.mat.json", DefaultShaders.LINEDASHED);
 
             DefaultMaterials.LINEDASHED_COLOR = this._createMaterial("builtin/linedashed_color.mat.json", DefaultShaders.LINEDASHED)
@@ -77,9 +83,14 @@ namespace egret3d {
                 .setColor(Color.PURPLE);
 
             DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/shadow_depth.mat.json", DefaultShaders.DEPTH)
+                .setDepth(true, true)
+                .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back)
                 .addDefine(ShaderDefine.DEPTH_PACKING_3201);
 
-            DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", DefaultShaders.DISTANCE_RGBA);
+            DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", DefaultShaders.DISTANCE_RGBA)
+                .setDepth(true, true)
+                .addDefine(ShaderDefine.FLIP_SIDED).addDefine(ShaderDefine.USE_SHADOWMAP)
+                .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
 
             DefaultMaterials.COPY = this._createMaterial("builtin/copy.mat.json", DefaultShaders.COPY);
         }

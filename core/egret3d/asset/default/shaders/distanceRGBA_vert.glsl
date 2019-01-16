@@ -23,7 +23,7 @@ void main() {
 
 	#endif
 
-	#include <begin_vertex>
+	#include <begin_vertex>	
 	#include <morphtarget_vertex>
 	#include <skinning_vertex>
 	#include <displacementmap_vertex>
@@ -31,6 +31,9 @@ void main() {
 	#include <worldpos_vertex>
 	#include <clipping_planes_vertex>
 
+	// modified by egret
+	gl_Position.x *= -1.0;
+	
 	vWorldPosition = worldPosition.xyz;
 
 }

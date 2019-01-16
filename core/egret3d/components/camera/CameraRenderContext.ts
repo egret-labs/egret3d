@@ -8,6 +8,12 @@ namespace egret3d {
         Hemisphere = 9,
     }
 
+    const enum ShadowSize {
+        Directional = 16,
+        Spot = 16,
+        Point = 16,
+    }
+
     const _helpVector3 = Vector3.create();
     /**
      * 相机渲染上下文。
@@ -49,6 +55,7 @@ namespace egret3d {
          */
         public hemisphereLightBuffer: Float32Array = new Float32Array(0);
 
+        //TODO
         public lightShadowCameraNear: number = 0.0;
         public lightShadowCameraFar: number = 0.0;
         public lightCastShadows: boolean = false;
@@ -213,6 +220,7 @@ namespace egret3d {
             const rectangleAreaLightCount = rectangleAreaLights.length;
             const pointLightCount = pointLights.length;
             const hemisphereLightCount = hemisphereLights.length;
+            this.lightCastShadows = false;
 
             if (this.directLightBuffer.length !== directLightCount * LightSize.Directional) {
                 this.directLightBuffer = new Float32Array(directLightCount * LightSize.Directional);
@@ -233,26 +241,27 @@ namespace egret3d {
             if (this.hemisphereLightBuffer.length !== hemisphereLightCount * LightSize.Hemisphere) {
                 this.hemisphereLightBuffer = new Float32Array(hemisphereLightCount * LightSize.Hemisphere);
             }
+            //
+            if (this.directShadowMatrix.length !== directLightCount * ShadowSize.Directional) {
+                this.directShadowMatrix = new Float32Array(directLightCount * ShadowSize.Directional);
+            }
 
+            if (this.pointShadowMatrix.length !== pointLightCount * ShadowSize.Point) {
+                this.pointShadowMatrix = new Float32Array(pointLightCount * ShadowSize.Point);
+            }
+
+            if (this.spotShadowMatrix.length !== spotLightCount * ShadowSize.Spot) {
+                this.spotShadowMatrix = new Float32Array(spotLightCount * ShadowSize.Spot);
+            }
             const { directLightBuffer, spotLightBuffer, rectangleAreaLightBuffer, pointLightBuffer, hemisphereLightBuffer } = this;
+            const { directShadowMatrix, pointShadowMatrix, spotShadowMatrix } = this;
+            const { directShadowMaps, pointShadowMaps, spotShadowMaps } = this;
 
-            // if (this.directShadowMatrix.length !== directLightCount * 16) {
-            //     this.directShadowMatrix = new Float32Array(directLightCount * 16);
-            // }
+            directShadowMaps.length = directLightCount;
+            pointShadowMaps.length = pointLightCount;
+            spotShadowMaps.length = spotLightCount;
 
-            // if (this.pointShadowMatrix.length !== pointLightCount * 16) {
-            //     this.pointShadowMatrix = new Float32Array(pointLightCount * 16);
-            // }
-
-            // if (this.spotShadowMatrix.length !== spotLightCount * 16) {
-            //     this.spotShadowMatrix = new Float32Array(spotLightCount * 16);
-            // }
-
-            // this.directShadowMaps.length = directLightCount;
-            // this.pointShadowMaps.length = pointLightCount;
-            // this.spotShadowMaps.length = spotLightCount;
-
-            let index = 0, offset = 0;
+            let index = 0, shadowIndex = 0, offset = 0;
             const helpVector3 = _helpVector3;
             const worldToCameraMatrix = this.camera.worldToCameraMatrix;
 
@@ -271,15 +280,22 @@ namespace egret3d {
                 directLightBuffer[offset++] = color.b * intensity;
                 //
                 if (light.castShadows) {
-                    // directLightBuffer[offset++] = 1;
-                    // TODO shadow
+                    const shadow = light.shadow;
+                    directLightBuffer[offset++] = 1;
+                    directLightBuffer[offset++] = shadow.bias;
+                    directLightBuffer[offset++] = shadow.radius;
+                    directLightBuffer[offset++] = shadow.size;
+                    directLightBuffer[offset++] = shadow.size;
+                    directShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Directional);
+                    directShadowMaps[shadowIndex++] = shadow.renderTarget;
+                    this.lightCastShadows = true;
                 }
                 else {
                     directLightBuffer[offset++] = 0;
                 }
             }
 
-            index = 0;
+            index = shadowIndex = 0;
             for (const light of spotLights) {
                 const intensity = light.intensity;
                 const distance = light.distance;
@@ -306,32 +322,40 @@ namespace egret3d {
                 spotLightBuffer[offset++] = Math.cos(light.angle * (1.0 - light.penumbra));
                 //
                 if (light.castShadows) {
-                    // spotLightBuffer[offset++] = 1;
-                    // TODO shadow
+                    const shadow = light.shadow;
+                    spotLightBuffer[offset++] = 1;
+                    spotLightBuffer[offset++] = shadow.bias;
+                    spotLightBuffer[offset++] = shadow.radius;
+                    spotLightBuffer[offset++] = shadow.size;
+                    spotLightBuffer[offset++] = shadow.size;
+                    spotShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Spot);
+                    spotShadowMaps[shadowIndex++] = shadow.renderTarget;
+                    this.lightCastShadows = true;
                 }
                 else {
                     spotLightBuffer[offset++] = 0;
                 }
             }
 
-            index = 0;
+            index = shadowIndex = 0;
             for (const light of rectangleAreaLights) {
                 const intensity = light.intensity;
                 const color = light.color;
                 offset = (index++) * LightSize.RectangleArea;
                 //
                 helpVector3.applyMatrix(worldToCameraMatrix, light.gameObject.transform.position);
-                spotLightBuffer[offset++] = helpVector3.x;
-                spotLightBuffer[offset++] = helpVector3.y;
-                spotLightBuffer[offset++] = helpVector3.z;
+                rectangleAreaLightBuffer[offset++] = helpVector3.x;
+                rectangleAreaLightBuffer[offset++] = helpVector3.y;
+                rectangleAreaLightBuffer[offset++] = helpVector3.z;
                 //
-                spotLightBuffer[offset++] = color.r * intensity;
-                spotLightBuffer[offset++] = color.g * intensity;
-                spotLightBuffer[offset++] = color.b * intensity;
+                rectangleAreaLightBuffer[offset++] = color.r * intensity;
+                rectangleAreaLightBuffer[offset++] = color.g * intensity;
+                rectangleAreaLightBuffer[offset++] = color.b * intensity;
                 // TODO
+                light.castShadows = false;//TODO 不支持阴影，防止贴图报错
             }
 
-            index = 0;
+            index = shadowIndex = 0;
             for (const light of pointLights) {
                 const intensity = light.intensity;
                 const distance = light.distance;
@@ -351,15 +375,25 @@ namespace egret3d {
                 pointLightBuffer[offset++] = distance === 0.0 ? 0.0 : light.decay;
                 //
                 if (light.castShadows) {
-                    // pointLightBuffer[offset++] = 1;
-                    // TODO shadow
+                    const shadow = light.shadow;
+                    pointLightBuffer[offset++] = 1;
+                    pointLightBuffer[offset++] = shadow.bias;
+                    pointLightBuffer[offset++] = shadow.radius;
+                    pointLightBuffer[offset++] = shadow.size;
+                    pointLightBuffer[offset++] = shadow.size;
+                    pointLightBuffer[offset++] = shadow.near;
+                    pointLightBuffer[offset++] = shadow.far;
+
+                    pointShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Point);
+                    pointShadowMaps[shadowIndex++] = shadow.renderTarget;
+                    this.lightCastShadows = true;
                 }
                 else {
                     pointLightBuffer[offset++] = 0;
                 }
             }
 
-            index = 0;
+            index = shadowIndex = 0;
             for (const light of hemisphereLights) {
                 const intensity = light.intensity;
                 const color = light.color;
@@ -378,26 +412,22 @@ namespace egret3d {
                 hemisphereLightBuffer[offset++] = groundColor.r * intensity;
                 hemisphereLightBuffer[offset++] = groundColor.g * intensity;
                 hemisphereLightBuffer[offset++] = groundColor.b * intensity;
+
+                light.castShadows = false;//TODO 不支持阴影，防止贴图报错
             }
         }
-
-        // public updateLightDepth(light: BaseLight) {
-        //     const position = light.gameObject.transform.position;
-        //     //
-        //     this.lightPosition[0] = position.x;
-        //     this.lightPosition[1] = position.y;
-        //     this.lightPosition[2] = position.z;
-        //     //
-        //     this.lightShadowCameraNear = light.shadowCameraNear;
-        //     this.lightShadowCameraFar = light.shadowCameraFar;
-        // }
         /**
          * @internal
          */
         public _update() {
             this.logDepthBufFC = 2.0 / (Math.log(this.camera.far + 1.0) / Math.LN2);
-            this._frustumCulling();
-            this._updateLights();
+            if (this._cameraAndLightCollecter.currentLight) {
+                this._shadowFrustumCulling();
+            }
+            else {
+                this._frustumCulling();
+                this._updateLights();
+            }
         }
 
         public blit(src: BaseTexture, material: Material | null = null, dest: RenderTexture | null = null) {

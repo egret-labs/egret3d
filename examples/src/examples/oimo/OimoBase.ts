@@ -12,6 +12,7 @@ namespace examples.oimo {
 
                 const light = gameObject.addComponent(egret3d.DirectionalLight);
                 light.intensity = 0.5;
+                light.shadow.bias = -0.002;
                 light.castShadows = true;
             }
 
@@ -21,7 +22,7 @@ namespace examples.oimo {
                 gameObject.transform.setLocalScale(groundSize);
 
                 const renderer = gameObject.getComponent(egret3d.MeshRenderer)!;
-                renderer.castShadows = true;
+                // renderer.castShadows = true;
                 renderer.receiveShadows = true;
                 renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT);
 
