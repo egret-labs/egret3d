@@ -24905,17 +24905,17 @@ var egret3d;
                 var cullFaceValue = technique.states.functions.cullFace;
                 var frontFace = frontFaceValue && frontFaceValue.length > 0 ? frontFaceValue[0] : 2305 /* CCW */;
                 var cullFace = cullFaceValue && cullFaceValue.length > 0 ? cullFaceValue[0] : 1029 /* Back */;
-                // this.defines.removeDefine(ShaderDefine.DOUBLE_SIDED);
-                // if (frontFace !== gltf.FrontFace.CCW || cullFace !== gltf.CullFace.Back) {
-                //     this.defines.addDefine(ShaderDefine.FLIP_SIDED);
-                // }
-                // else {
-                //     this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
-                // }
+                this.defines.removeDefine("DOUBLE_SIDED" /* DOUBLE_SIDED */);
+                if (frontFace !== 2305 /* CCW */ || cullFace !== 1029 /* Back */) {
+                    this.defines.addDefine("FLIP_SIDED" /* FLIP_SIDED */);
+                }
+                else {
+                    this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
+                }
             }
             else {
-                // this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
-                // this.defines.addDefine(ShaderDefine.DOUBLE_SIDED);
+                this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
+                this.defines.addDefine("DOUBLE_SIDED" /* DOUBLE_SIDED */);
             }
             // Copy defines.
             if (materialDefines) {
@@ -25304,20 +25304,20 @@ var egret3d;
                 }
                 functions.frontFace = [frontFace];
                 functions.cullFace = [cullFace];
-                // this.defines.removeDefine(ShaderDefine.DOUBLE_SIDED);
-                // if (frontFace !== gltf.FrontFace.CCW || cullFace !== gltf.CullFace.Back) {
-                //     this.defines.addDefine(ShaderDefine.FLIP_SIDED);
-                // }
-                // else {
-                //     this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
-                // }
+                this.defines.removeDefine("DOUBLE_SIDED" /* DOUBLE_SIDED */);
+                if (frontFace !== 2305 /* CCW */ || cullFace !== 1029 /* Back */) {
+                    this.defines.addDefine("FLIP_SIDED" /* FLIP_SIDED */);
+                }
+                else {
+                    this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
+                }
             }
             else if (index >= 0) {
                 enable.splice(index, 1);
                 delete functions.frontFace;
                 delete functions.cullFace;
-                // this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
-                // this.defines.addDefine(ShaderDefine.DOUBLE_SIDED);
+                this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
+                this.defines.addDefine("DOUBLE_SIDED" /* DOUBLE_SIDED */);
             }
             return this;
         };
@@ -28586,12 +28586,6 @@ var egret3d;
                 .replace(new RegExp("NUM_CLIPPING_PLANES" /* NUM_CLIPPING_PLANES */, "g"), "0")
                 .replace(new RegExp("UNION_CLIPPING_PLANES" /* UNION_CLIPPING_PLANES */, "g"), "0");
         }
-        // function _replaceClippingPlaneNums(string: string, parameters) {
-        //     return string
-        //         .replace(/NUM_CLIPPING_PLANES/g, parameters.numClippingPlanes)
-        //         .replace(/UNION_CLIPPING_PLANES/g, (parameters.numClippingPlanes - parameters.numClipIntersection))
-        //         ;
-        // }
         function _unrollLoops(string) {
             return string.replace(_patternLoop, _loopReplace);
         }
@@ -29204,33 +29198,31 @@ var egret3d;
                     program = programs[programKey];
                 }
                 else {
-                    var webgl_16 = webgl_14.WebGLRenderState.webgl;
-                    var renderState_2 = this._renderState;
                     var extensions = shader.config.extensions.KHR_techniques_webgl;
                     var defines = [
                         material.defines,
                         renderer ? renderer.defines : null,
                         (currentScene || activeScene).defines,
-                        renderState_2.defines,
+                        renderState.defines,
                     ];
-                    renderState_2.customShaderChunks = shader.customs;
-                    var vertexWebGLShader = this._getWebGLShader(extensions.shaders[0], renderState_2.getPrefixVertex(egret3d.Defines.link(defines, 1 /* Vertex */))); // TODO 顺序依赖
-                    var fragmentWebGLShader = this._getWebGLShader(extensions.shaders[1], renderState_2.getPrefixFragment(egret3d.Defines.link(defines, 2 /* Fragment */))); // TODO 顺序依赖
+                    renderState.customShaderChunks = shader.customs;
+                    var vertexWebGLShader = this._getWebGLShader(extensions.shaders[0], renderState.getPrefixVertex(egret3d.Defines.link(defines, 1 /* Vertex */))); // TODO 顺序依赖
+                    var fragmentWebGLShader = this._getWebGLShader(extensions.shaders[1], renderState.getPrefixFragment(egret3d.Defines.link(defines, 2 /* Fragment */))); // TODO 顺序依赖
                     if (vertexWebGLShader && fragmentWebGLShader) {
-                        var webGLProgram = webgl_16.createProgram();
-                        webgl_16.attachShader(webGLProgram, vertexWebGLShader);
-                        webgl_16.attachShader(webGLProgram, fragmentWebGLShader);
-                        webgl_16.linkProgram(webGLProgram);
-                        var parameter = webgl_16.getProgramParameter(webGLProgram, 35714 /* LinkStatus */);
+                        var webGLProgram = webgl.createProgram();
+                        webgl.attachShader(webGLProgram, vertexWebGLShader);
+                        webgl.attachShader(webGLProgram, fragmentWebGLShader);
+                        webgl.linkProgram(webGLProgram);
+                        var parameter = webgl.getProgramParameter(webGLProgram, 35714 /* LinkStatus */);
                         if (parameter) {
                             program = new webgl_14.WebGLProgramBinder(webGLProgram).extract(material.technique);
                         }
                         else {
-                            console.error("program compile: " + shader.name + " error! ->" + webgl_16.getProgramInfoLog(webGLProgram));
-                            webgl_16.deleteProgram(webGLProgram);
+                            console.error("program compile: " + shader.name + " error! ->" + webgl.getProgramInfoLog(webGLProgram));
+                            webgl.deleteProgram(webGLProgram);
                         }
-                        webgl_16.deleteShader(vertexWebGLShader);
-                        webgl_16.deleteShader(fragmentWebGLShader);
+                        webgl.deleteShader(vertexWebGLShader);
+                        webgl.deleteShader(fragmentWebGLShader);
                     }
                     programs[programKey] = program;
                 }
@@ -29306,18 +29298,7 @@ var egret3d;
                 if (!webgl_14.WebGLRenderState.webgl) {
                     return;
                 }
-                var _a = this._cameraAndLightCollecter, lights = _a.lights, cameras = _a.cameras;
-                // Render lights shadow.
-                if (lights.length > 0) {
-                    this._activeScene = paper.Scene.activeScene;
-                    for (var _i = 0, lights_6 = lights; _i < lights_6.length; _i++) {
-                        var light = lights_6[_i];
-                        if (!light.castShadows || !light.shadow.update) {
-                            continue;
-                        }
-                        this._renderShadow(light);
-                    }
-                }
+                var _a = this._cameraAndLightCollecter, cameras = _a.cameras, lights = _a.lights;
                 // Render cameras.
                 if (cameras.length > 0) {
                     var isPlayerMode = paper.Application.playerMode === 0 /* Player */;
@@ -29326,6 +29307,16 @@ var egret3d;
                     this._egret2DOrderCount = 0;
                     this._clockBuffer[0] = clock.time;
                     this._activeScene = paper.Scene.activeScene;
+                    // Render lights shadow.
+                    if (lights.length > 0) {
+                        for (var _i = 0, lights_6 = lights; _i < lights_6.length; _i++) {
+                            var light = lights_6[_i];
+                            if (!light.castShadows || !light.shadow.update) {
+                                continue;
+                            }
+                            this._renderShadow(light);
+                        }
+                    }
                     for (var _b = 0, cameras_1 = cameras; _b < cameras_1.length; _b++) {
                         var camera = cameras_1[_b];
                         var scene = camera.gameObject.scene;

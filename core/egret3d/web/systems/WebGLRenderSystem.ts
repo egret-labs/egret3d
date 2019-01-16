@@ -52,13 +52,6 @@ namespace egret3d.webgl {
             ;
     }
 
-    // function _replaceClippingPlaneNums(string: string, parameters) {
-    //     return string
-    //         .replace(/NUM_CLIPPING_PLANES/g, parameters.numClippingPlanes)
-    //         .replace(/UNION_CLIPPING_PLANES/g, (parameters.numClippingPlanes - parameters.numClipIntersection))
-    //         ;
-    // }
-
     function _unrollLoops(string: string) {
         return string.replace(_patternLoop, _loopReplace);
     }
@@ -764,8 +757,6 @@ namespace egret3d.webgl {
                 program = programs[programKey];
             }
             else {
-                const webgl = WebGLRenderState.webgl!;
-                const renderState = this._renderState;
                 const extensions = shader.config.extensions!.KHR_techniques_webgl;
                 const defines = [
                     material.defines,
@@ -877,19 +868,7 @@ namespace egret3d.webgl {
                 return;
             }
 
-            const { lights, cameras } = this._cameraAndLightCollecter;
-            // Render lights shadow.
-            if (lights.length > 0) {
-                this._activeScene = paper.Scene.activeScene;
-
-                for (const light of lights) {
-                    if (!light.castShadows || !light.shadow.update) {
-                        continue;
-                    }
-
-                    this._renderShadow(light);
-                }
-            }
+            const { cameras, lights } = this._cameraAndLightCollecter;
             // Render cameras.
             if (cameras.length > 0) {
                 const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
@@ -899,6 +878,17 @@ namespace egret3d.webgl {
                 this._egret2DOrderCount = 0;
                 this._clockBuffer[0] = clock.time;
                 this._activeScene = paper.Scene.activeScene;
+
+                // Render lights shadow.
+                if (lights.length > 0) {
+                    for (const light of lights) {
+                        if (!light.castShadows || !light.shadow.update) {
+                            continue;
+                        }
+
+                        this._renderShadow(light);
+                    }
+                }
 
                 for (const camera of cameras) {
                     const scene = camera.gameObject.scene;

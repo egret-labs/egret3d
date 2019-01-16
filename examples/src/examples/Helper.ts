@@ -3,6 +3,8 @@ namespace examples {
     export function createGridRoom() {
         { // Create light.
             const pointLight = paper.GameObject.create("Point Light").addComponent(egret3d.PointLight);
+            pointLight.decay = 0.0;
+            pointLight.distance = 0.0;
             pointLight.transform.setLocalPosition(0.0, 5.0, -10.0);
             //
             pointLight.gameObject.addComponent(behaviors.RotateComponent).rotateSpeed *= -2.0;
