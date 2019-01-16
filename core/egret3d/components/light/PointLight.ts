@@ -7,7 +7,7 @@ namespace egret3d {
         new Vector3(0, 1, 0), new Vector3(0, 1, 0), new Vector3(0, 1, 0),
         new Vector3(0, 1, 0), new Vector3(0, 0, 1), new Vector3(0, 0, - 1)
     ];
-    
+
     //  xzXZ
     //   y Y
     //
@@ -55,13 +55,7 @@ namespace egret3d {
             const transform = this.gameObject.transform;
             const shadowSize = Math.min(shadow.size, renderState.maxTextureSize);
             if (!shadow.renderTarget) {
-                shadow.renderTarget = RenderTexture.create(
-                    {
-                        width: shadowSize * 4.0, height: shadowSize * 2.0,
-                        minFilter: gltf.TextureFilter.Nearest, magFilter: gltf.TextureFilter.Nearest,
-                        format: gltf.TextureFormat.RGBA
-                    }
-                );
+                shadow.renderTarget = RenderTexture.create({ width: shadowSize * 4.0, height: shadowSize * 2.0 });
             }
 
             const lightPosition = transform.position;

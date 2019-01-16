@@ -143,18 +143,18 @@ namespace egret3d {
                 const frontFace = frontFaceValue && frontFaceValue.length > 0 ? frontFaceValue[0] : gltf.FrontFace.CCW;
                 const cullFace = cullFaceValue && cullFaceValue.length > 0 ? cullFaceValue[0] : gltf.CullFace.Back;
 
-                this.defines.removeDefine(ShaderDefine.DOUBLE_SIDED);
+                // this.defines.removeDefine(ShaderDefine.DOUBLE_SIDED);
 
-                if (frontFace !== gltf.FrontFace.CCW || cullFace !== gltf.CullFace.Back) {
-                    this.defines.addDefine(ShaderDefine.FLIP_SIDED);
-                }
-                else {
-                    this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
-                }
+                // if (frontFace !== gltf.FrontFace.CCW || cullFace !== gltf.CullFace.Back) {
+                //     this.defines.addDefine(ShaderDefine.FLIP_SIDED);
+                // }
+                // else {
+                //     this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
+                // }
             }
             else {
-                this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
-                this.defines.addDefine(ShaderDefine.DOUBLE_SIDED);
+                // this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
+                // this.defines.addDefine(ShaderDefine.DOUBLE_SIDED);
             }
 
             // Copy defines.
@@ -653,22 +653,22 @@ namespace egret3d {
                 functions!.frontFace = [frontFace];
                 functions!.cullFace = [cullFace];
 
-                this.defines.removeDefine(ShaderDefine.DOUBLE_SIDED);
+                // this.defines.removeDefine(ShaderDefine.DOUBLE_SIDED);
 
-                if (frontFace !== gltf.FrontFace.CCW || cullFace !== gltf.CullFace.Back) {
-                    this.defines.addDefine(ShaderDefine.FLIP_SIDED);
-                }
-                else {
-                    this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
-                }
+                // if (frontFace !== gltf.FrontFace.CCW || cullFace !== gltf.CullFace.Back) {
+                //     this.defines.addDefine(ShaderDefine.FLIP_SIDED);
+                // }
+                // else {
+                //     this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
+                // }
             }
             else if (index >= 0) {
                 enable!.splice(index, 1);
                 delete functions!.frontFace;
                 delete functions!.cullFace;
 
-                this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
-                this.defines.addDefine(ShaderDefine.DOUBLE_SIDED);
+                // this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
+                // this.defines.addDefine(ShaderDefine.DOUBLE_SIDED);
             }
 
             return this;

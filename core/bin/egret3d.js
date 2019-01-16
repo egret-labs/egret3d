@@ -14381,7 +14381,7 @@ var egret3d;
                 if (light.castShadows) {
                     var shadow = light.shadow;
                     directLightBuffer[offset++] = 1;
-                    directLightBuffer[offset++] = shadow.bias; //Left-hand.
+                    directLightBuffer[offset++] = shadow.bias;
                     directLightBuffer[offset++] = shadow.radius;
                     directLightBuffer[offset++] = shadow.size;
                     directLightBuffer[offset++] = shadow.size;
@@ -14423,7 +14423,7 @@ var egret3d;
                 if (light.castShadows) {
                     var shadow = light.shadow;
                     spotLightBuffer[offset++] = 1;
-                    spotLightBuffer[offset++] = -shadow.bias; //Left-hand.
+                    spotLightBuffer[offset++] = shadow.bias;
                     spotLightBuffer[offset++] = shadow.radius;
                     spotLightBuffer[offset++] = shadow.size;
                     spotLightBuffer[offset++] = shadow.size;
@@ -14476,7 +14476,7 @@ var egret3d;
                 if (light.castShadows) {
                     var shadow = light.shadow;
                     pointLightBuffer[offset++] = 1;
-                    pointLightBuffer[offset++] = -shadow.bias; //Left-hand.
+                    pointLightBuffer[offset++] = shadow.bias;
                     pointLightBuffer[offset++] = shadow.radius;
                     pointLightBuffer[offset++] = shadow.size;
                     pointLightBuffer[offset++] = shadow.size;
@@ -14513,16 +14513,6 @@ var egret3d;
                 light.castShadows = false; //TODO 不支持阴影，防止贴图报错
             }
         };
-        // public updateLightDepth(light: BaseLight) {
-        //     const position = light.gameObject.transform.position;
-        //     //
-        //     this.lightPosition[0] = position.x;
-        //     this.lightPosition[1] = position.y;
-        //     this.lightPosition[2] = position.z;
-        //     //
-        //     this.lightShadowCameraNear = light.shadowCameraNear;
-        //     this.lightShadowCameraFar = light.shadowCameraFar;
-        // }
         /**
          * @internal
          */
@@ -14690,7 +14680,7 @@ var egret3d;
             paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
         ], LightShadow.prototype, "radius", void 0);
         __decorate([
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: -0.01, maximum: 0.01, step: 0.0001 })
         ], LightShadow.prototype, "bias", void 0);
         __decorate([
             paper.editor.property("UINT" /* UINT */)
@@ -15679,11 +15669,7 @@ var egret3d;
             var transform = this.gameObject.transform;
             var shadowSize = Math.min(shadow.size, egret3d.renderState.maxTextureSize);
             if (!shadow.renderTarget) {
-                shadow.renderTarget = egret3d.RenderTexture.create({
-                    width: shadowSize, height: shadowSize,
-                    minFilter: 9728 /* Nearest */, magFilter: 9728 /* Nearest */,
-                    format: 6408 /* RGBA */
-                });
+                shadow.renderTarget = egret3d.RenderTexture.create({ width: shadowSize, height: shadowSize });
             }
             //
             shadowCamera.viewport.set(0, 0, shadowSize, shadowSize);
@@ -15738,11 +15724,7 @@ var egret3d;
             var transform = this.gameObject.transform;
             var shadowSize = Math.min(shadow.size, egret3d.renderState.maxTextureSize);
             if (!shadow.renderTarget) {
-                shadow.renderTarget = egret3d.RenderTexture.create({
-                    width: shadowSize, height: shadowSize,
-                    minFilter: 9728 /* Nearest */, magFilter: 9728 /* Nearest */,
-                    format: 6408 /* RGBA */
-                });
+                shadow.renderTarget = egret3d.RenderTexture.create({ width: shadowSize, height: shadowSize });
             }
             //
             shadowCamera.transform.position.copy(transform.position).update();
@@ -15859,11 +15841,7 @@ var egret3d;
             var transform = this.gameObject.transform;
             var shadowSize = Math.min(shadow.size, egret3d.renderState.maxTextureSize);
             if (!shadow.renderTarget) {
-                shadow.renderTarget = egret3d.RenderTexture.create({
-                    width: shadowSize * 4.0, height: shadowSize * 2.0,
-                    minFilter: 9728 /* Nearest */, magFilter: 9728 /* Nearest */,
-                    format: 6408 /* RGBA */
-                });
+                shadow.renderTarget = egret3d.RenderTexture.create({ width: shadowSize * 4.0, height: shadowSize * 2.0 });
             }
             var lightPosition = transform.position;
             shadowCamera.transform.position.copy(lightPosition).update();
@@ -23582,17 +23560,17 @@ var egret3d;
                 var cullFaceValue = technique.states.functions.cullFace;
                 var frontFace = frontFaceValue && frontFaceValue.length > 0 ? frontFaceValue[0] : 2305 /* CCW */;
                 var cullFace = cullFaceValue && cullFaceValue.length > 0 ? cullFaceValue[0] : 1029 /* Back */;
-                this.defines.removeDefine("DOUBLE_SIDED" /* DOUBLE_SIDED */);
-                if (frontFace !== 2305 /* CCW */ || cullFace !== 1029 /* Back */) {
-                    this.defines.addDefine("FLIP_SIDED" /* FLIP_SIDED */);
-                }
-                else {
-                    this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
-                }
+                // this.defines.removeDefine(ShaderDefine.DOUBLE_SIDED);
+                // if (frontFace !== gltf.FrontFace.CCW || cullFace !== gltf.CullFace.Back) {
+                //     this.defines.addDefine(ShaderDefine.FLIP_SIDED);
+                // }
+                // else {
+                //     this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
+                // }
             }
             else {
-                this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
-                this.defines.addDefine("DOUBLE_SIDED" /* DOUBLE_SIDED */);
+                // this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
+                // this.defines.addDefine(ShaderDefine.DOUBLE_SIDED);
             }
             // Copy defines.
             if (materialDefines) {
@@ -24011,20 +23989,20 @@ var egret3d;
                 }
                 functions.frontFace = [frontFace];
                 functions.cullFace = [cullFace];
-                this.defines.removeDefine("DOUBLE_SIDED" /* DOUBLE_SIDED */);
-                if (frontFace !== 2305 /* CCW */ || cullFace !== 1029 /* Back */) {
-                    this.defines.addDefine("FLIP_SIDED" /* FLIP_SIDED */);
-                }
-                else {
-                    this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
-                }
+                // this.defines.removeDefine(ShaderDefine.DOUBLE_SIDED);
+                // if (frontFace !== gltf.FrontFace.CCW || cullFace !== gltf.CullFace.Back) {
+                //     this.defines.addDefine(ShaderDefine.FLIP_SIDED);
+                // }
+                // else {
+                //     this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
+                // }
             }
             else if (index >= 0) {
                 enable.splice(index, 1);
                 delete functions.frontFace;
                 delete functions.cullFace;
-                this.defines.removeDefine("FLIP_SIDED" /* FLIP_SIDED */);
-                this.defines.addDefine("DOUBLE_SIDED" /* DOUBLE_SIDED */);
+                // this.defines.removeDefine(ShaderDefine.FLIP_SIDED);
+                // this.defines.addDefine(ShaderDefine.DOUBLE_SIDED);
             }
             return this;
         };

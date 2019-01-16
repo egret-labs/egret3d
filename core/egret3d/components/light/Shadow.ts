@@ -17,7 +17,7 @@ namespace egret3d {
         /**
          * 
          */
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: -0.01, maximum: 0.01, step: 0.0001 })
         public bias: number = 0.01;
         /**
          * 

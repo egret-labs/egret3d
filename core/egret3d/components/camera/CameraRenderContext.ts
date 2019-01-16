@@ -282,7 +282,7 @@ namespace egret3d {
                 if (light.castShadows) {
                     const shadow = light.shadow;
                     directLightBuffer[offset++] = 1;
-                    directLightBuffer[offset++] = shadow.bias;//Left-hand.
+                    directLightBuffer[offset++] = shadow.bias;
                     directLightBuffer[offset++] = shadow.radius;
                     directLightBuffer[offset++] = shadow.size;
                     directLightBuffer[offset++] = shadow.size;
@@ -324,7 +324,7 @@ namespace egret3d {
                 if (light.castShadows) {
                     const shadow = light.shadow;
                     spotLightBuffer[offset++] = 1;
-                    spotLightBuffer[offset++] = -shadow.bias;//Left-hand.
+                    spotLightBuffer[offset++] = shadow.bias;
                     spotLightBuffer[offset++] = shadow.radius;
                     spotLightBuffer[offset++] = shadow.size;
                     spotLightBuffer[offset++] = shadow.size;
@@ -377,7 +377,7 @@ namespace egret3d {
                 if (light.castShadows) {
                     const shadow = light.shadow;
                     pointLightBuffer[offset++] = 1;
-                    pointLightBuffer[offset++] = -shadow.bias;//Left-hand.
+                    pointLightBuffer[offset++] = shadow.bias;
                     pointLightBuffer[offset++] = shadow.radius;
                     pointLightBuffer[offset++] = shadow.size;
                     pointLightBuffer[offset++] = shadow.size;
@@ -416,17 +416,6 @@ namespace egret3d {
                 light.castShadows = false;//TODO 不支持阴影，防止贴图报错
             }
         }
-
-        // public updateLightDepth(light: BaseLight) {
-        //     const position = light.gameObject.transform.position;
-        //     //
-        //     this.lightPosition[0] = position.x;
-        //     this.lightPosition[1] = position.y;
-        //     this.lightPosition[2] = position.z;
-        //     //
-        //     this.lightShadowCameraNear = light.shadowCameraNear;
-        //     this.lightShadowCameraFar = light.shadowCameraFar;
-        // }
         /**
          * @internal
          */

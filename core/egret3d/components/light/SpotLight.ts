@@ -41,13 +41,7 @@ namespace egret3d {
             const transform = this.gameObject.transform;
             const shadowSize = Math.min(shadow.size, renderState.maxTextureSize);
             if (!shadow.renderTarget) {
-                shadow.renderTarget = RenderTexture.create(
-                    {
-                        width: shadowSize, height: shadowSize,
-                        minFilter: gltf.TextureFilter.Nearest, magFilter: gltf.TextureFilter.Nearest,
-                        format: gltf.TextureFormat.RGBA
-                    }
-                );
+                shadow.renderTarget = RenderTexture.create({ width: shadowSize, height: shadowSize });
             }
             //
             shadowCamera.transform.position.copy(transform.position).update();
