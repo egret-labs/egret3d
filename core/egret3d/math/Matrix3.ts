@@ -1,5 +1,9 @@
 namespace egret3d {
-
+    const _mat3Array = [
+        1.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0
+    ];
     /**
      * 3×3 矩阵。
      */
@@ -14,14 +18,25 @@ namespace egret3d {
          * @param rawData 
          * @param offsetOrByteOffset 
          */
-        public static create() {
+        public static create(rawData?: ArrayLike<number>, offsetOrByteOffset: number = 0) {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!.identity();
                 instance._released = false;
+                if (rawData) {
+                    if (rawData instanceof ArrayBuffer) {
+                        instance.fromBuffer(rawData, offsetOrByteOffset);
+                    }
+                    else {
+                        instance.fromArray(rawData, offsetOrByteOffset);
+                    }
+                }
+                else {
+                    instance.identity();
+                }
                 return instance;
             }
 
-            return new Matrix3();
+            return new Matrix3(rawData, offsetOrByteOffset);
         }
 
         /**
@@ -34,19 +49,22 @@ namespace egret3d {
          * 请使用 `egret3d.Matrix3.create()` 创建实例。
          * @see egret3d.Matrix3.create()
          */
-        private constructor() {
+        private constructor(rawData?: ArrayLike<number>, offsetOrByteOffset: number = 0) {
             super();
 
-            // if (rawData) {
-            //     this.rawData = rawData;
-            // }
-            // else {
+            if (rawData && rawData instanceof ArrayBuffer) {
+                this.fromBuffer(rawData, offsetOrByteOffset);
+            }
+            else {
+                this.rawData = new Float32Array(9);
+                this.fromArray(rawData || _mat3Array);
+            }
             // TODO
-            this.rawData = new Float32Array([
-                1.0, 0.0, 0.0,
-                0.0, 1.0, 0.0,
-                0.0, 0.0, 1.0,
-            ]);
+            // this.rawData = new Float32Array([
+            //     1.0, 0.0, 0.0,
+            //     0.0, 1.0, 0.0,
+            //     0.0, 0.0, 1.0,
+            // ]);
             // }
         }
 
@@ -117,7 +135,7 @@ namespace egret3d {
             rawData[0] = vector.x; rawData[1] = 0.0; rawData[2] = 0.0;
             rawData[3] = 0.0; rawData[4] = vector.y; rawData[5] = 0.0;
             rawData[6] = 0.0; rawData[7] = 0.0; rawData[8] = vector.z;
-            
+
             return this;
         }
 

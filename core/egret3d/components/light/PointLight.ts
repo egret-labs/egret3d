@@ -55,7 +55,7 @@ namespace egret3d {
             const transform = this.gameObject.transform;
             const shadowSize = Math.min(shadow.size, renderState.maxTextureSize);
             if (!shadow.renderTarget) {
-                shadow.renderTarget = RenderTexture.create({ width: shadowSize * 4.0, height: shadowSize * 2.0 });
+                shadow.renderTarget = RenderTexture.create({ width: shadowSize * 4.0, height: shadowSize * 2.0, depthBuffer: true });
             }
 
             const lightPosition = transform.position;

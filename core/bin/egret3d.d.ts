@@ -4200,7 +4200,7 @@ declare namespace egret3d {
          * @param rawData
          * @param offsetOrByteOffset
          */
-        static create(): Matrix3;
+        static create(rawData?: ArrayLike<number>, offsetOrByteOffset?: number): Matrix3;
         /**
          * 矩阵原始数据。
          * @readonly
